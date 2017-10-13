@@ -1,0 +1,22 @@
+{
+	"folders": [
+		{
+			"path": "appservice"
+		},
+		{
+			"path": "kudu"
+		}
+	],
+	"settings": {
+		"editor.formatOnSave": true,
+		"editor.insertSpaces": true,
+		"editor.tabSize": 4,
+		"files.trimTrailingWhitespace": true,
+		"search.exclude": {
+			"lib": true,
+			"**/node_modules": true
+		},
+		"tslint.autoFixOnSave": true,
+		"tslint.ignoreDefinitionFiles": true
+	}
+}
