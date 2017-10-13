@@ -1,0 +1,24 @@
+language: node_js
+
+node_js:
+  - 'stable'
+
+addons:
+  apt:
+    packages:
+      - libunwind8
+
+env:
+  - PACKAGE_DIR=appservice
+  - PACKAGE_DIR=kudu
+
+script:
+  - cd $PACKAGE_DIR
+  - npm install
+  - npm run build
+  - npm run lint
+
+notifications:
+  email:
+    on_success: never
+    on_failure: always

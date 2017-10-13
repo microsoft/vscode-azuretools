@@ -1,0 +1,48 @@
+{
+    "name": "vscode-azureappservice",
+    "author": "Microsoft Corporation",
+    "version": "0.1.0",
+    "description": "Common tools for developing Azure App Service extensions for VS Code",
+    "tags": [
+        "azure",
+        "vscode"
+    ],
+    "keywords": [
+        "azure",
+        "vscode"
+    ],
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Microsoft/vscode-azuretools"
+    },
+    "bugs": {
+        "url": "https://github.com/Microsoft/vscode-azuretools/issues"
+    },
+    "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/master/appservice/README.md",
+    "scripts": {
+        "build": "tsc -p ./",
+        "compile": "tsc -watch -p ./",
+        "lint": "tslint --project tsconfig.json -e src/*.d.ts --type-check -t verbose",
+        "prepare": "node ./node_modules/vscode/bin/install"
+    },
+    "dependencies": {
+        "archiver": "^2.0.3",
+        "azure-arm-website": "^1.0.0-preview",
+        "vscode-azurekudu": "0.1.0",
+        "ms-rest": "^2.2.2",
+        "ms-rest-azure": "^2.4.0"
+    },
+    "devDependencies": {
+        "@types/archiver": "^2.0.0",
+        "typescript": "^2.5.3",
+        "tslint": "^5.7.0",
+        "tslint-microsoft-contrib": "5.0.1",
+        "vscode": "^1.1.5"
+    },
+    "engines": {
+        "vscode": "^1.16.0"
+    }
+}
