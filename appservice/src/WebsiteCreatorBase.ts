@@ -9,7 +9,7 @@ import { WizardBase, WizardResult, WizardStep, SubscriptionStepBase, QuickPickIt
 import { SubscriptionModels, ResourceManagementClient, ResourceModels } from 'azure-arm-resource';
 import WebSiteManagementClient = require('azure-arm-website');
 import * as WebSiteModels from '../node_modules/azure-arm-website/lib/models';
-import * as util from './util';
+import * as ui from './utils/ui';
 
 export type WebsiteOS = "linux" | "windows";
 export type AppKind = "app" | "functionapp";
@@ -27,7 +27,7 @@ export abstract class WebsiteCreatorBase extends WizardBase {
     async run(promptOnly = false): Promise<WizardResult> {
         // If not signed in, execute the sign in command and wait for it...
         if (this.azureAccount.signInStatus !== 'LoggedIn') {
-            await vscode.commands.executeCommand(util.getSignInCommandString());
+            await vscode.commands.executeCommand(ui.getSignInCommandString());
         }
         // Now check again, if still not signed in, cancel.
         if (this.azureAccount.signInStatus !== 'LoggedIn') {
@@ -146,7 +146,7 @@ export class ResourceGroupStep extends WebsiteCreatorStepBase {
         const subscription = this.getSelectedSubscription();
         const resourceClient = new ResourceManagementClient(this.azureAccount.getCredentialByTenantId(subscription.tenantId), subscription.subscriptionId);
         var resourceGroups: ResourceModels.ResourceGroup[];
-        const resourceGroupsTask = util.listAll(resourceClient.resourceGroups, resourceClient.resourceGroups.list());
+        const resourceGroupsTask = ui.listAll(resourceClient.resourceGroups, resourceClient.resourceGroups.list());
         var locationsTask = this.azureAccount.getLocationsBySubscription(this.getSelectedSubscription());
         var locations: SubscriptionModels.Location[];
         var newRgName: string;
@@ -260,7 +260,7 @@ export class AppServicePlanStep extends WebsiteCreatorStepBase {
         // That's why we use list instead of listByResourceGroup below; and show resource group name in the quick pick list.
 
         let plans: WebSiteModels.AppServicePlan[];
-        const plansTask = util.listAll(client.appServicePlans, client.appServicePlans.list()).then(result => {
+        const plansTask = ui.listAll(client.appServicePlans, client.appServicePlans.list()).then(result => {
             const quickPickItems = [createNewItem];
             plans = result;
             plans.forEach(plan => {
@@ -590,8 +590,8 @@ export class WebsiteNameStep extends WebsiteCreatorStepBase {
         const resourceClient = new ResourceManagementClient(this.azureAccount.getCredentialByTenantId(subscription.tenantId), subscription.subscriptionId);
         const webSiteClient = new WebSiteManagementClient(this.azureAccount.getCredentialByTenantId(subscription.tenantId), subscription.subscriptionId);
 
-        const resourceGroupsTask = util.listAll(resourceClient.resourceGroups, resourceClient.resourceGroups.list());
-        const plansTask = util.listAll(webSiteClient.appServicePlans, webSiteClient.appServicePlans.list());
+        const resourceGroupsTask = ui.listAll(resourceClient.resourceGroups, resourceClient.resourceGroups.list());
+        const plansTask = ui.listAll(webSiteClient.appServicePlans, webSiteClient.appServicePlans.list());
 
         var groups: ResourceModels.ResourceGroup[];
         let plans: WebSiteModels.AppServicePlan[];
