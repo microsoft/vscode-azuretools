@@ -30,6 +30,8 @@
 // tslint:disable:no-any
 // tslint:disable:prefer-for-of
 // tslint:disable:no-empty-interface
+// tslint:disable:no-unsafe-any
+// tslint:disable:promise-function-async
 
 // tslint:disable:newline-before-return
 // tslint:disable:no-single-line-block-comment

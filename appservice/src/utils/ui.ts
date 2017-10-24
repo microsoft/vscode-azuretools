@@ -6,6 +6,8 @@
  // TEMPORARILY DISABLE
 // tslint:disable:export-name
 // tslint:disable:typedef
+// tslint:disable:strict-boolean-expressions
+// tslint:disable:no-unsafe-any
 
 // tslint:disable:newline-before-return
 // tslint:disable:interface-name
