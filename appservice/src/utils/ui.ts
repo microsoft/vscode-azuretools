@@ -3,6 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+ // TEMPORARILY DISABLE
+// tslint:disable:export-name
+// tslint:disable:typedef
+
+// tslint:disable:newline-before-return
+// tslint:disable:interface-name
+
 export namespace uiUtils {
 
     export interface PartialList<T> extends Array<T> {
@@ -22,5 +29,5 @@ export namespace uiUtils {
     export function getSignInCommandString(): string {
         return 'azure-account.login';
     }
-    
+
 }

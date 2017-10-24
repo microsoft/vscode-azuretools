@@ -15,4 +15,3 @@ export class WizardFailedError extends Error {
         this.stepIndex = stepIndex;
     }
 }
-

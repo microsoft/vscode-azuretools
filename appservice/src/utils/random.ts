@@ -3,6 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+// TEMPORARILY DISABLE
+// tslint:disable:export-name
+// tslint:disable:typedef
+
+// tslint:disable:newline-before-return
+
 import * as crypto from "crypto";
 
 export namespace randomUtils {

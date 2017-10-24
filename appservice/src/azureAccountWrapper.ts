@@ -3,6 +3,37 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+// TEMPORARILY DISABLE
+// tslint:disable:ordered-imports
+// tslint:disable:no-unexternalized-strings
+// tslint:disable:no-require-imports
+// tslint:disable:no-parameter-properties
+// tslint:disable:member-ordering
+// tslint:disable:typedef
+// tslint:disable:triple-equals
+// tslint:disable:variable-name
+// tslint:disable:member-access
+// tslint:disable:prefer-const
+// tslint:disable:max-classes-per-file
+// tslint:disable:no-var-keyword
+// tslint:disable:no-multiline-string
+// tslint:disable:prefer-template
+// tslint:disable:semicolon
+// tslint:disable:no-consecutive-blank-lines
+// tslint:disable:no-shadowed-variable
+// tslint:disable:no-constant-condition
+// tslint:disable:no-increment-decrement
+// tslint:disable:align
+// tslint:disable:no-empty
+// tslint:disable:no-non-null-assertion
+// tslint:disable:no-unnecessary-local-variable
+// tslint:disable:no-any
+
+// tslint:disable:newline-before-return
+// tslint:disable:no-single-line-block-comment
+// tslint:disable:interface-name
+// tslint:disable:function-name
+
 import { ExtensionContext, extensions, Disposable } from 'vscode';
 import { ServiceClientCredentials } from 'ms-rest';
 import { SubscriptionClient, SubscriptionModels } from 'azure-arm-resource';
