@@ -9,8 +9,7 @@ export namespace randomUtils {
 
     export function getRandomHexString(length: number): string {
         const buffer = crypto.randomBytes(Math.ceil(length / 2));
-        let s = buffer.toString("hex").slice(0, length);
-        return s;
+        return buffer.toString('hex').slice(0, length);
     }
 
 }
