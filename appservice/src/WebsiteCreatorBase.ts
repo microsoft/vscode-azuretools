@@ -28,6 +28,10 @@
 // tslint:disable:no-non-null-assertion
 // tslint:disable:no-unnecessary-local-variable
 // tslint:disable:no-any
+// tslint:disable:no-use-before-declare
+// tslint:disable:promise-function-async
+// tslint:disable:strict-boolean-expressions
+// tslint:disable:no-unsafe-any
 
 // tslint:disable:newline-before-return
 // tslint:disable:no-single-line-block-comment
