@@ -53,8 +53,7 @@ export async function zipDirectory(folderPath: string): Promise<string> {
         zipper.pipe(zipOutput);
         zipper.glob('**/*', {
             cwd: folderPath,
-            dot: true,
-            ignore: 'node_modules{,/**}'
+            dot: true
         });
         void zipper.finalize();
     });
