@@ -142,7 +142,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object"
+                            "$ref": "#/definitions/DeployResult"
+                        }
+                    },
+                    "202": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DeployResult"
                         }
                     }
                 }
@@ -219,7 +225,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object"
+                            "$ref": "#/definitions/DeployResult"
+                        }
+                    },
+                    "202": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DeployResult"
                         }
                     }
                 }
@@ -5501,10 +5513,7 @@
                 "consumes": [
                     "multipart/form-data"
                 ],
-                "produces": [
-                    "application/json",
-                    "text/json"
-                ],
+                "produces": [],
                 "parameters": [
                     {
                         "name": "file",
@@ -5523,10 +5532,10 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object"
-                        }
+                        "description": "No Content"
+                    },
+                    "202": {
+                        "description": "No Content"
                     }
                 }
             }
@@ -6895,6 +6904,80 @@
                 "ExitCode": {
                     "format": "int32",
                     "type": "integer"
+                }
+            }
+        },
+        "DeployResult": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "status": {
+                    "format": "int32",
+                    "enum": [
+                        0,
+                        1,
+                        2,
+                        3,
+                        4
+                    ],
+                    "type": "integer"
+                },
+                "status_text": {
+                    "type": "string"
+                },
+                "author_email": {
+                    "type": "string"
+                },
+                "author": {
+                    "type": "string"
+                },
+                "deployer": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "progress": {
+                    "type": "string"
+                },
+                "received_time": {
+                    "format": "date-time",
+                    "type": "string"
+                },
+                "start_time": {
+                    "format": "date-time",
+                    "type": "string"
+                },
+                "end_time": {
+                    "format": "date-time",
+                    "type": "string"
+                },
+                "last_success_end_time": {
+                    "format": "date-time",
+                    "type": "string"
+                },
+                "complete": {
+                    "type": "boolean"
+                },
+                "active": {
+                    "type": "boolean"
+                },
+                "is_temp": {
+                    "type": "boolean"
+                },
+                "is_readonly": {
+                    "type": "boolean"
+                },
+                "url": {
+                    "type": "string"
+                },
+                "log_url": {
+                    "type": "string"
+                },
+                "site_name": {
+                    "type": "string"
                 }
             }
         },
