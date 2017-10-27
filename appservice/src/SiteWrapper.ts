@@ -10,7 +10,7 @@ import * as fs from 'fs';
 import { BasicAuthenticationCredentials } from 'ms-rest';
 import * as vscode from 'vscode';
 import KuduClient from 'vscode-azurekudu';
-import * as KuduModels from 'vscode-azurekudu/lib/models';
+import { DeployResult } from 'vscode-azurekudu/lib/models';
 import * as FileUtilities from './FileUtilities';
 
 export class SiteWrapper {
@@ -71,7 +71,6 @@ export class SiteWrapper {
 
     public async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<void> {
         outputChannel.show();
-        outputChannel.appendLine(`Starting deployment to '${this.appName}'...`);
         const kuduClient: KuduClient = await this.getKuduClient(client);
 
         let zipFilePath: string;
@@ -80,45 +79,57 @@ export class SiteWrapper {
             zipFilePath = fsPath;
         } else if (await FileUtilities.isDirectory(fsPath)) {
             createdZip = true;
-            outputChannel.appendLine('Creating zip package...');
+            this.log(outputChannel, 'Creating zip package...');
             zipFilePath = await FileUtilities.zipDirectory(fsPath);
         } else {
             throw new Error('Path specified is not a folder or a zip file');
         }
 
         try {
-            outputChannel.appendLine('Stopping Web App...');
-            await this.stop(client);
-
-            outputChannel.appendLine('Deleting existing deployment...');
-            await this.executeCommand(kuduClient, outputChannel, 'rm -rf wwwroot', '/home/site/');
-            outputChannel.appendLine('Uploading Zip package...');
-            const fileStream: fs.ReadStream = fs.createReadStream(zipFilePath);
-            await kuduClient.zip.putItem(fileStream, 'site/wwwroot/');
+            this.log(outputChannel, 'Starting deployment...');
+            await kuduClient.pushDeployment.zipPushDeploy(fs.createReadStream(zipFilePath), { isAsync: true });
+            await this.waitForDeploymentToComplete(kuduClient, outputChannel);
+        } catch (error) {
+            // tslint:disable-next-line:no-unsafe-any
+            if (error && error.response && error.response.body) {
+                // Autorest doesn't support plain/text as a MIME type, so we have to get the error message from the response body ourselves
+                // https://github.com/Azure/autorest/issues/1527
+                // tslint:disable-next-line:no-unsafe-any
+                throw new Error(error.response.body);
+            } else {
+                throw error;
+            }
         } finally {
             if (createdZip) {
                 await FileUtilities.deleteFile(zipFilePath);
             }
         }
 
-        const siteConfig: WebSiteModels.SiteConfig = await this.getSiteConfig(client);
-        if (siteConfig.linuxFxVersion && siteConfig.linuxFxVersion.startsWith('node')) {
-            outputChannel.appendLine('Installing npm packages...');
-            await this.executeCommand(kuduClient, outputChannel, 'npm install --production', '/home/site/wwwroot/');
-        }
-
-        outputChannel.appendLine('Starting Web App...');
-        await this.start(client);
-        outputChannel.appendLine(`Deployment to '${this.appName}' completed.`);
+        this.log(outputChannel, 'Deployment completed.');
     }
 
-    private async executeCommand(kuduClient: KuduClient, outputChannel: vscode.OutputChannel, command: string, workingDir: string = '/'): Promise<void> {
-        const result: KuduModels.CommandResult = await kuduClient.command.executeCommand({ command: command, dir: workingDir });
-        if (result.exitCode !== 0) {
-            throw new Error(result.error);
-        } else if (result.output) {
-            outputChannel.appendLine(result.output);
+    private async waitForDeploymentToComplete(kuduClient: KuduClient, outputChannel: vscode.OutputChannel, pollingInterval: number = 5000): Promise<void> {
+        // Unfortunately, Kudu doesn't provide a unique id for a deployment right after it's started
+        // However, Kudu only supports one deployment at a time, so 'latest' will work in most cases
+        let deploymentId: string = 'latest';
+        let deployment: DeployResult = await kuduClient.deployment.getResult(deploymentId);
+        while (!deployment.complete) {
+            if (!deployment.isTemp && deployment.id) {
+                // Switch from 'latest' to the permanent/unique id as soon as it's available
+                deploymentId = deployment.id;
+            }
+
+            if (deployment.progress) {
+                this.log(outputChannel, deployment.progress);
+            }
+
+            await new Promise((resolve: () => void): void => { setTimeout(resolve, pollingInterval); });
+            deployment = await kuduClient.deployment.getResult(deploymentId);
         }
+    }
+
+    private log(outputChannel: vscode.OutputChannel, message: string): void {
+        outputChannel.appendLine(`${(new Date()).toLocaleTimeString()} ${this.appName}: ${message}`);
     }
 
     private async getKuduClient(client: WebSiteManagementClient): Promise<KuduClient> {
