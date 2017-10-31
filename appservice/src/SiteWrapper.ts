@@ -70,6 +70,12 @@ export class SiteWrapper {
     }
 
     public async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<void> {
+        const yes: string = 'Yes';
+        const warning: string = `Are you sure you want to deploy to "${this.appName}"? This will overwrite any previous deployment and cannot be undone.`;
+        if (await vscode.window.showWarningMessage(warning, yes) !== yes) {
+            return;
+        }
+
         outputChannel.show();
         const kuduClient: KuduClient = await this.getKuduClient(client);
 
