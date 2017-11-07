@@ -167,8 +167,8 @@ export class SiteWrapper {
             } else if (err.message.indexOf('error: failed to push') >= 0) {
                 const input: string | undefined = await vscode.window.showErrorMessage(pushReject, yes);
                 if (input === 'Yes') {
-                    // await localGit.push(['-f', remote, 'HEAD:master']);
-                    // HANDLE WITH GUIDANCE
+                    await (<(a: string, b: string, c: object) => Promise<void>>localGit.push)(remote, 'HEAD:master', { '--force': true });
+                    // Ugly casting neccessary due to bug in simple-git. Issue filed
                 } else {
                     throw new errors.UserCancelledError();
                 }
