@@ -8,10 +8,11 @@ import WebSiteManagementClient = require('azure-arm-website');
 import { Site, SiteConfig, User } from 'azure-arm-website/lib/models';
 import * as fs from 'fs';
 import { BasicAuthenticationCredentials } from 'ms-rest';
+import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
 import KuduClient from 'vscode-azurekudu';
 import { DeployResult } from 'vscode-azurekudu/lib/models';
-import { ArgumentError } from './errors';
+import * as errors from './errors';
 import * as FileUtilities from './FileUtilities';
 import { localize } from './localize';
 
@@ -19,16 +20,19 @@ export class SiteWrapper {
     public readonly resourceGroup: string;
     public readonly name: string;
     public readonly slotName?: string;
+    private readonly _gitUrl: string;
 
     constructor(site: Site) {
         if (!site.name || !site.resourceGroup || !site.type) {
-            throw new ArgumentError(site);
+            throw new errors.ArgumentError(site);
         }
 
         const isSlot: boolean = site.type.toLowerCase() === 'microsoft.web/sites/slots';
         this.resourceGroup = site.resourceGroup;
         this.name = isSlot ? site.name.substring(0, site.name.lastIndexOf('/')) : site.name;
         this.slotName = isSlot ? site.name.substring(site.name.lastIndexOf('/') + 1) : undefined;
+        // the scm url used for git repo is in index 1 of enabledHostNames, not 0
+        this._gitUrl = `${site.enabledHostNames[1]}:443/${site.repositorySiteName}.git`;
     }
 
     public get appName(): string {
@@ -116,6 +120,66 @@ export class SiteWrapper {
         this.log(outputChannel, 'Deployment completed.');
     }
 
+    public async localGitDeploy(fsPath: string, client: WebSiteManagementClient, servicePlan: string): Promise<void> {
+        let taskResults: [WebSiteModels.User, WebSiteModels.SiteConfigResource, WebSiteModels.DeploymentCollection];
+        const yes: string = 'Yes';
+        const pushReject: string = 'Push rejected due to Git history diverging. Force push?';
+
+        if (!this.slotName) {
+            // API calls for Web App
+            taskResults = await Promise.all([
+                client.webApps.listPublishingCredentials(this.resourceGroup, this.appName),
+                client.webApps.getConfiguration(this.resourceGroup, this.appName),
+                client.webApps.listDeployments(this.resourceGroup, this.appName)
+            ]);
+        } else {
+            // API calls for Deployment Slot
+            taskResults = await Promise.all([
+                client.webApps.listPublishingCredentialsSlot(this.resourceGroup, this.appName, this.slotName),
+                client.webApps.getConfigurationSlot(this.resourceGroup, this.appName, this.slotName),
+                client.webApps.listDeploymentsSlot(this.resourceGroup, this.appName, this.slotName)
+            ]);
+        }
+
+        const publishCredentials: WebSiteModels.User = taskResults[0];
+        const config: WebSiteModels.SiteConfigResource = taskResults[1];
+        const oldDeployment: WebSiteModels.DeploymentCollection = taskResults[2];
+        if (config.scmType !== 'LocalGit') {
+            // SCM must be set to LocalGit prior to deployment
+            await this.updateScmType(client, config);
+        }
+        // credentials for accessing Azure Remote Repo
+        const username: string = publishCredentials.publishingUserName;
+        const password: string = publishCredentials.publishingPassword;
+        const remote: string = `https://${username}:${password}@${this._gitUrl}`;
+        const localGit: git.SimpleGit = git(fsPath);
+        try {
+
+            const status: git.StatusResult = await localGit.status();
+            if (status.files.length > 0) {
+                const uncommit: string = `${status.files.length} uncommitted change(s) in local repo "${fsPath}"`;
+                vscode.window.showWarningMessage(uncommit);
+            }
+            await localGit.push(remote, 'HEAD:master');
+        } catch (err) {
+            if (err.message.indexOf('spawn git ENOENT') >= 0) {
+                throw new errors.GitNotInstalledError();
+            } else if (err.message.indexOf('error: failed to push') >= 0) {
+                const input: string | undefined = await vscode.window.showErrorMessage(pushReject, yes);
+                if (input === 'Yes') {
+                    // await localGit.push(['-f', remote, 'HEAD:master']);
+                    // HANDLE WITH GUIDANCE
+                } else {
+                    throw new errors.UserCancelledError();
+                }
+            } else {
+                throw new errors.LocalGitDeployError(err, servicePlan);
+            }
+        }
+
+        await this.validateNewDeployment(client, oldDeployment, this._gitUrl);
+    }
+
     private async waitForDeploymentToComplete(kuduClient: KuduClient, outputChannel: vscode.OutputChannel, pollingInterval: number = 5000): Promise<void> {
         // Unfortunately, Kudu doesn't provide a unique id for a deployment right after it's started
         // However, Kudu only supports one deployment at a time, so 'latest' will work in most cases
@@ -149,5 +213,37 @@ export class SiteWrapper {
         const cred: BasicAuthenticationCredentials = new BasicAuthenticationCredentials(user.publishingUserName, user.publishingPassword);
 
         return new KuduClient(cred, `https://${this.appName}.scm.azurewebsites.net`);
+    }
+
+    private async updateScmType(client: WebSiteManagementClient, config: WebSiteModels.SiteConfigResource): Promise<void> {
+        const oldScmType: string = config.scmType;
+        const updateScm: string = `Deployment source for "${this.appName}" is set as "${oldScmType}".  Change to "LocalGit"?`;
+        const yes: string = 'Yes';
+        let input: string | undefined;
+
+        const updateConfig: WebSiteModels.SiteConfigResource = config;
+        updateConfig.scmType = 'LocalGit';
+        // to update one property, a complete config file must be sent
+        input = await vscode.window.showWarningMessage(updateScm, yes);
+        if (input === 'Yes') {
+            !this.slotName ?
+                await client.webApps.updateConfiguration(this.resourceGroup, this.appName, updateConfig) :
+                await client.webApps.updateConfigurationSlot(this.resourceGroup, this.appName, updateConfig, this.slotName);
+        } else {
+            throw new errors.UserCancelledError();
+        }
+    }
+
+    private async validateNewDeployment(client: WebSiteManagementClient, oldDeployments: WebSiteModels.DeploymentCollection, repo: string): Promise<void> {
+        const repoIsCurrent: string = `Azure Remote Repo is current with ${repo}`;
+        // to verify the deployment was succesful, get new deployments and compare to old list
+        const newDeployments: WebSiteModels.DeploymentCollection = !this.slotName ?
+            await client.webApps.listDeployments(this.resourceGroup, this.appName) :
+            await client.webApps.listDeploymentsSlot(this.resourceGroup, this.appName, this.slotName);
+        // if the oldDeployments has a length of 0, then this was the first deployment
+        if (newDeployments.length && oldDeployments.length &&
+            newDeployments[0].deploymentId === oldDeployments[0].deploymentId) {
+            throw new Error(repoIsCurrent);
+        }
     }
 }

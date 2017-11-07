@@ -34,10 +34,12 @@
         "azure-arm-resource": "^3.0.0-preview",
         "azure-arm-storage": "^3.1.0",
         "azure-arm-website": "^1.0.0-preview",
-        "vscode-azurekudu": "^0.1.2",
         "ms-rest": "^2.2.2",
         "ms-rest-azure": "^2.4.0",
-        "vscode-nls": "^2.0.2"
+        "vscode-nls": "^2.0.2",
+        "opn": "^5.1.0",
+        "simple-git": "^1.80.1",
+        "vscode-azurekudu": "^0.1.2"
     },
     "devDependencies": {
         "@types/archiver": "^2.0.0",
