@@ -36,18 +36,17 @@
         "azure-arm-website": "^1.0.0-preview",
         "ms-rest": "^2.2.2",
         "ms-rest-azure": "^2.4.4",
-        "vscode-nls": "^2.0.2",
         "opn": "^5.1.0",
         "simple-git": "^1.80.1",
-        "vscode-azurekudu": "^0.1.2"
+        "vscode-azurekudu": "^0.1.2",
+        "vscode-nls": "^2.0.2"
     },
     "devDependencies": {
         "@types/archiver": "^2.0.0",
         "typescript": "^2.5.3",
         "tslint": "^5.7.0",
         "tslint-microsoft-contrib": "5.0.1",
-        "vscode": "^1.1.5",
-        "azure-arm-resource": "^2.0.0-preview"
+        "vscode": "^1.1.5"
     },
     "engines": {
         "vscode": "^1.16.0"

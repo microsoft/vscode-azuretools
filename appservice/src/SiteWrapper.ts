@@ -5,7 +5,7 @@
 
 // tslint:disable-next-line:no-require-imports
 import WebSiteManagementClient = require('azure-arm-website');
-import { Site, SiteConfig, SiteConfigResource, User } from 'azure-arm-website/lib/models';
+import { Site, SiteConfigResource, User } from 'azure-arm-website/lib/models';
 import * as fs from 'fs';
 import { BasicAuthenticationCredentials } from 'ms-rest';
 import * as git from 'simple-git/promise';
@@ -69,15 +69,21 @@ export class SiteWrapper {
             await client.webApps.listPublishingCredentials(this.resourceGroup, this.name);
     }
 
-    public async getSiteConfig(client: WebSiteManagementClient): Promise<SiteConfig> {
+    public async getSiteConfig(client: WebSiteManagementClient): Promise<SiteConfigResource> {
         return this.slotName ?
             await client.webApps.getConfigurationSlot(this.resourceGroup, this.name, this.slotName) :
             await client.webApps.getConfiguration(this.resourceGroup, this.name);
     }
 
+    public async updateConfiguration(client: WebSiteManagementClient, config: SiteConfigResource): Promise<SiteConfigResource> {
+        return this.slotName ?
+            await client.webApps.updateConfigurationSlot(this.resourceGroup, this.appName, config, this.slotName) :
+            await client.webApps.updateConfiguration(this.resourceGroup, this.appName, config);
+    }
+
     public async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<void> {
         const yes: string = 'Yes';
-        const warning: string = `Are you sure you want to deploy to "${this.appName}"? This will overwrite any previous deployment and cannot be undone.`;
+        const warning: string = localize('zipWarning', `Are you sure you want to deploy to "${this.appName}"? This will overwrite any previous deployment and cannot be undone.`);
         if (await vscode.window.showWarningMessage(warning, yes) !== yes) {
             return;
         }
@@ -120,32 +126,24 @@ export class SiteWrapper {
         this.log(outputChannel, 'Deployment completed.');
     }
 
-    public async localGitDeploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, servicePlan: string): Promise<void> {
-        vscode.window.showInformationMessage('It updated to 2.2');
-        let taskResults: [User, SiteConfigResource];
+    public async localGitDeploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, servicePlan: string): Promise<string | undefined> {
         const kuduClient: KuduClient = await this.getKuduClient(client);
         const yes: string = 'Yes';
-        const pushReject: string = 'Push rejected due to Git history diverging. Force push?';
+        const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging. Force push?');
+        const success: string = 'success';
+        const scmType: string = 'LocalGit';
 
-        if (!this.slotName) {
-            // API calls for Web App
-            taskResults = await Promise.all([
-                client.webApps.listPublishingCredentials(this.resourceGroup, this.appName),
-                client.webApps.getConfiguration(this.resourceGroup, this.appName)
-            ]);
-        } else {
-            // API calls for Deployment Slot
-            taskResults = await Promise.all([
-                client.webApps.listPublishingCredentialsSlot(this.resourceGroup, this.appName, this.slotName),
-                client.webApps.getConfigurationSlot(this.resourceGroup, this.appName, this.slotName)
-            ]);
-        }
+        const [publishCredentials, config]: [User, SiteConfigResource] = await Promise.all([
+            this.getWebAppPublishCredential(client),
+            this.getSiteConfig(client)
+        ]);
 
-        const publishCredentials: User = taskResults[0];
-        const config: SiteConfigResource = taskResults[1];
         if (config.scmType !== 'LocalGit') {
             // SCM must be set to LocalGit prior to deployment
-            await this.updateScmType(client, config);
+            const scmUpdate: string | undefined = await this.updateScmType(client, config, scmType);
+            if (!scmUpdate) {
+                return undefined;
+            }
         }
         // credentials for accessing Azure Remote Repo
         const username: string = publishCredentials.publishingUserName;
@@ -156,7 +154,7 @@ export class SiteWrapper {
 
             const status: git.StatusResult = await localGit.status();
             if (status.files.length > 0) {
-                const uncommit: string = `${status.files.length} uncommitted change(s) in local repo "${fsPath}"`;
+                const uncommit: string = localize('localGitUncommit', `${status.files.length} uncommitted change(s) in local repo "${fsPath}"`);
                 vscode.window.showWarningMessage(uncommit);
             }
             await localGit.push(remote, 'HEAD:master');
@@ -167,10 +165,11 @@ export class SiteWrapper {
             } else if (err.message.indexOf('error: failed to push') >= 0) { // tslint:disable-line:no-unsafe-any
                 const input: string | undefined = await vscode.window.showErrorMessage(pushReject, yes);
                 if (input === 'Yes') {
-                    await (<(a: string, b: string, c: object) => Promise<void>>localGit.push)(remote, 'HEAD:master', { '-f': true });
-                    // Ugly casting neccessary due to bug in simple-git. Issue filed
+                    await (<(remote: string, branch: string, options: object) => Promise<void>>localGit.push)(remote, 'HEAD:master', { '-f': true });
+                    // Ugly casting neccessary due to bug in simple-git. Issue filed:
+                    // https://github.com/steveukx/git-js/issues/218
                 } else {
-                    throw new errors.UserCancelledError();
+                    return undefined;
                 }
             } else {
                 // tslint:disable-next-line:no-unsafe-any
@@ -179,6 +178,7 @@ export class SiteWrapper {
         }
 
         await this.waitForDeploymentToComplete(kuduClient, outputChannel);
+        return success;
     }
 
     private async waitForDeploymentToComplete(kuduClient: KuduClient, outputChannel: vscode.OutputChannel, pollingInterval: number = 5000): Promise<void> {
@@ -216,22 +216,19 @@ export class SiteWrapper {
         return new KuduClient(cred, `https://${this.appName}.scm.azurewebsites.net`);
     }
 
-    private async updateScmType(client: WebSiteManagementClient, config: SiteConfigResource): Promise<void> {
+    private async updateScmType(client: WebSiteManagementClient, config: SiteConfigResource, scmType: string): Promise<string | undefined> {
         const oldScmType: string = config.scmType;
-        const updateScm: string = `Deployment source for "${this.appName}" is set as "${oldScmType}".  Change to "LocalGit"?`;
+        const updateScm: string = localize('updateScm', `Deployment source for "${this.appName}" is set as "${oldScmType}".  Change to "${scmType}"?`);
         const yes: string = 'Yes';
         let input: string | undefined;
 
         const updateConfig: SiteConfigResource = config;
-        updateConfig.scmType = 'LocalGit';
+        updateConfig.scmType = scmType;
         // to update one property, a complete config file must be sent
         input = await vscode.window.showWarningMessage(updateScm, yes);
         if (input === 'Yes') {
-            !this.slotName ?
-                await client.webApps.updateConfiguration(this.resourceGroup, this.appName, updateConfig) :
-                await client.webApps.updateConfigurationSlot(this.resourceGroup, this.appName, updateConfig, this.slotName);
-        } else {
-            throw new errors.UserCancelledError();
+            this.updateConfiguration(client, updateConfig);
         }
+        return input;
     }
 }
