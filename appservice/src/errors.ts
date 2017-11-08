@@ -30,6 +30,7 @@ export class ArgumentError extends Error {
 export class GitNotInstalledError extends Error {
     constructor() {
         super();
+        // tslint:disable-next-line:no-floating-promises
         this.showInstallPrompt();
     }
 
@@ -37,6 +38,7 @@ export class GitNotInstalledError extends Error {
         const installString: string = 'Install';
         const input: string | undefined = await window.showErrorMessage('Git must be installed to use Local Git Deploy.', installString);
         if (input === installString) {
+            // tslint:disable-next-line:no-unsafe-any
             opn('https://git-scm.com/downloads');
         }
     }

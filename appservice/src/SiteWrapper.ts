@@ -120,8 +120,10 @@ export class SiteWrapper {
         this.log(outputChannel, 'Deployment completed.');
     }
 
-    public async localGitDeploy(fsPath: string, client: WebSiteManagementClient, servicePlan: string): Promise<void> {
-        let taskResults: [WebSiteModels.User, WebSiteModels.SiteConfigResource, WebSiteModels.DeploymentCollection];
+    public async localGitDeploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, servicePlan: string): Promise<void> {
+        vscode.window.showInformationMessage('It updated to 2.2');
+        let taskResults: [WebSiteModels.User, WebSiteModels.SiteConfigResource];
+        const kuduClient: KuduClient = await this.getKuduClient(client);
         const yes: string = 'Yes';
         const pushReject: string = 'Push rejected due to Git history diverging. Force push?';
 
@@ -129,21 +131,18 @@ export class SiteWrapper {
             // API calls for Web App
             taskResults = await Promise.all([
                 client.webApps.listPublishingCredentials(this.resourceGroup, this.appName),
-                client.webApps.getConfiguration(this.resourceGroup, this.appName),
-                client.webApps.listDeployments(this.resourceGroup, this.appName)
+                client.webApps.getConfiguration(this.resourceGroup, this.appName)
             ]);
         } else {
             // API calls for Deployment Slot
             taskResults = await Promise.all([
                 client.webApps.listPublishingCredentialsSlot(this.resourceGroup, this.appName, this.slotName),
-                client.webApps.getConfigurationSlot(this.resourceGroup, this.appName, this.slotName),
-                client.webApps.listDeploymentsSlot(this.resourceGroup, this.appName, this.slotName)
+                client.webApps.getConfigurationSlot(this.resourceGroup, this.appName, this.slotName)
             ]);
         }
 
         const publishCredentials: WebSiteModels.User = taskResults[0];
         const config: WebSiteModels.SiteConfigResource = taskResults[1];
-        const oldDeployment: WebSiteModels.DeploymentCollection = taskResults[2];
         if (config.scmType !== 'LocalGit') {
             // SCM must be set to LocalGit prior to deployment
             await this.updateScmType(client, config);
@@ -162,22 +161,24 @@ export class SiteWrapper {
             }
             await localGit.push(remote, 'HEAD:master');
         } catch (err) {
+            // tslint:disable-next-line:no-unsafe-any
             if (err.message.indexOf('spawn git ENOENT') >= 0) {
                 throw new errors.GitNotInstalledError();
-            } else if (err.message.indexOf('error: failed to push') >= 0) {
+            } else if (err.message.indexOf('error: failed to push') >= 0) { // tslint:disable-line:no-unsafe-any
                 const input: string | undefined = await vscode.window.showErrorMessage(pushReject, yes);
                 if (input === 'Yes') {
-                    await (<(a: string, b: string, c: object) => Promise<void>>localGit.push)(remote, 'HEAD:master', { '--force': true });
+                    await (<(a: string, b: string, c: object) => Promise<void>>localGit.push)(remote, 'HEAD:master', { '-f': true });
                     // Ugly casting neccessary due to bug in simple-git. Issue filed
                 } else {
                     throw new errors.UserCancelledError();
                 }
             } else {
+                // tslint:disable-next-line:no-unsafe-any
                 throw new errors.LocalGitDeployError(err, servicePlan);
             }
         }
 
-        await this.validateNewDeployment(client, oldDeployment, this._gitUrl);
+        await this.waitForDeploymentToComplete(kuduClient, outputChannel);
     }
 
     private async waitForDeploymentToComplete(kuduClient: KuduClient, outputChannel: vscode.OutputChannel, pollingInterval: number = 5000): Promise<void> {
@@ -231,19 +232,6 @@ export class SiteWrapper {
                 await client.webApps.updateConfigurationSlot(this.resourceGroup, this.appName, updateConfig, this.slotName);
         } else {
             throw new errors.UserCancelledError();
-        }
-    }
-
-    private async validateNewDeployment(client: WebSiteManagementClient, oldDeployments: WebSiteModels.DeploymentCollection, repo: string): Promise<void> {
-        const repoIsCurrent: string = `Azure Remote Repo is current with ${repo}`;
-        // to verify the deployment was succesful, get new deployments and compare to old list
-        const newDeployments: WebSiteModels.DeploymentCollection = !this.slotName ?
-            await client.webApps.listDeployments(this.resourceGroup, this.appName) :
-            await client.webApps.listDeploymentsSlot(this.resourceGroup, this.appName, this.slotName);
-        // if the oldDeployments has a length of 0, then this was the first deployment
-        if (newDeployments.length && oldDeployments.length &&
-            newDeployments[0].deploymentId === oldDeployments[0].deploymentId) {
-            throw new Error(repoIsCurrent);
         }
     }
 }
