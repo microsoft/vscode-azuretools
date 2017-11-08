@@ -5,7 +5,7 @@
 
 // tslint:disable-next-line:no-require-imports
 import WebSiteManagementClient = require('azure-arm-website');
-import { Site, SiteConfig, User } from 'azure-arm-website/lib/models';
+import { Site, SiteConfig, SiteConfigResource, User } from 'azure-arm-website/lib/models';
 import * as fs from 'fs';
 import { BasicAuthenticationCredentials } from 'ms-rest';
 import * as git from 'simple-git/promise';
@@ -122,7 +122,7 @@ export class SiteWrapper {
 
     public async localGitDeploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, servicePlan: string): Promise<void> {
         vscode.window.showInformationMessage('It updated to 2.2');
-        let taskResults: [WebSiteModels.User, WebSiteModels.SiteConfigResource];
+        let taskResults: [User, SiteConfigResource];
         const kuduClient: KuduClient = await this.getKuduClient(client);
         const yes: string = 'Yes';
         const pushReject: string = 'Push rejected due to Git history diverging. Force push?';
@@ -141,8 +141,8 @@ export class SiteWrapper {
             ]);
         }
 
-        const publishCredentials: WebSiteModels.User = taskResults[0];
-        const config: WebSiteModels.SiteConfigResource = taskResults[1];
+        const publishCredentials: User = taskResults[0];
+        const config: SiteConfigResource = taskResults[1];
         if (config.scmType !== 'LocalGit') {
             // SCM must be set to LocalGit prior to deployment
             await this.updateScmType(client, config);
@@ -208,7 +208,7 @@ export class SiteWrapper {
     private async getKuduClient(client: WebSiteManagementClient): Promise<KuduClient> {
         const user: User = await this.getWebAppPublishCredential(client);
         if (!user.publishingUserName || !user.publishingPassword) {
-            throw new ArgumentError(user);
+            throw new errors.ArgumentError(user);
         }
 
         const cred: BasicAuthenticationCredentials = new BasicAuthenticationCredentials(user.publishingUserName, user.publishingPassword);
@@ -216,13 +216,13 @@ export class SiteWrapper {
         return new KuduClient(cred, `https://${this.appName}.scm.azurewebsites.net`);
     }
 
-    private async updateScmType(client: WebSiteManagementClient, config: WebSiteModels.SiteConfigResource): Promise<void> {
+    private async updateScmType(client: WebSiteManagementClient, config: SiteConfigResource): Promise<void> {
         const oldScmType: string = config.scmType;
         const updateScm: string = `Deployment source for "${this.appName}" is set as "${oldScmType}".  Change to "LocalGit"?`;
         const yes: string = 'Yes';
         let input: string | undefined;
 
-        const updateConfig: WebSiteModels.SiteConfigResource = config;
+        const updateConfig: SiteConfigResource = config;
         updateConfig.scmType = 'LocalGit';
         // to update one property, a complete config file must be sent
         input = await vscode.window.showWarningMessage(updateScm, yes);
