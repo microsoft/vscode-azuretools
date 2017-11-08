@@ -92,6 +92,7 @@ export class SiteStep extends WizardStep {
         switch (this._appKind) {
             case AppKind.functionapp:
                 this._website.siteConfig = await this.getFunctionAppSiteConfig(this._website.siteConfig.linuxFxVersion);
+                break;
             case AppKind.app:
             default:
                 this._website.siteConfig = { linuxFxVersion: this._website.siteConfig.linuxFxVersion };
