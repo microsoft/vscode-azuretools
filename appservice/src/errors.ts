@@ -3,6 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { localize } from "./localize";
+
 export class UserCancelledError extends Error { }
 
 export class WizardFailedError extends Error {
@@ -13,5 +15,11 @@ export class WizardFailedError extends Error {
         this.message = error.message;
         this.stepTitle = stepTitle;
         this.stepIndex = stepIndex;
+    }
+}
+
+export class ArgumentError extends Error {
+    constructor(obj: object) {
+        super(localize('azFunc.argumentError', 'Invalid {0}.', obj.constructor.name));
     }
 }

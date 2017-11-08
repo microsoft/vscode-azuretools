@@ -3,6 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-export * from './SiteWrapper';
-export * from './createAppService/createFunctionApp';
-export * from './createAppService/createWebApp';
+import * as nls from 'vscode-nls';
+
+export const localize: nls.LocalizeFunc = nls.config(process.env.VSCODE_NLS_CONFIG)();
