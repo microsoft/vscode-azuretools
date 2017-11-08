@@ -8,11 +8,12 @@ import WebSiteManagementClient = require('azure-arm-website');
 import { Site, SiteConfigResource, User } from 'azure-arm-website/lib/models';
 import * as fs from 'fs';
 import { BasicAuthenticationCredentials } from 'ms-rest';
+import * as opn from 'opn';
 import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
 import KuduClient from 'vscode-azurekudu';
 import { DeployResult } from 'vscode-azurekudu/lib/models';
-import * as errors from './errors';
+import { ArgumentError } from './errors';
 import * as FileUtilities from './FileUtilities';
 import { localize } from './localize';
 
@@ -24,7 +25,7 @@ export class SiteWrapper {
 
     constructor(site: Site) {
         if (!site.name || !site.resourceGroup || !site.type) {
-            throw new errors.ArgumentError(site);
+            throw new ArgumentError(site);
         }
 
         const isSlot: boolean = site.type.toLowerCase() === 'microsoft.web/sites/slots';
@@ -126,7 +127,7 @@ export class SiteWrapper {
         this.log(outputChannel, 'Deployment completed.');
     }
 
-    public async localGitDeploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, servicePlan: string): Promise<DeployResult | undefined> {
+    public async localGitDeploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<DeployResult | undefined> {
         const kuduClient: KuduClient = await this.getKuduClient(client);
         const yes: string = 'Yes';
         const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging. Force push?');
@@ -161,7 +162,8 @@ export class SiteWrapper {
         } catch (err) {
             // tslint:disable-next-line:no-unsafe-any
             if (err.message.indexOf('spawn git ENOENT') >= 0) {
-                throw new errors.GitNotInstalledError();
+                await this.showInstallPrompt();
+                return undefined;
             } else if (err.message.indexOf('error: failed to push') >= 0) { // tslint:disable-line:no-unsafe-any
                 const input: string | undefined = await vscode.window.showErrorMessage(pushReject, yes);
                 if (input === 'Yes') {
@@ -172,8 +174,7 @@ export class SiteWrapper {
                     return undefined;
                 }
             } else {
-                // tslint:disable-next-line:no-unsafe-any
-                throw new errors.LocalGitDeployError(err, servicePlan);
+                return undefined;
             }
         }
         return await this.waitForDeploymentToComplete(kuduClient, outputChannel);
@@ -208,7 +209,7 @@ export class SiteWrapper {
     private async getKuduClient(client: WebSiteManagementClient): Promise<KuduClient> {
         const user: User = await this.getWebAppPublishCredential(client);
         if (!user.publishingUserName || !user.publishingPassword) {
-            throw new errors.ArgumentError(user);
+            throw new ArgumentError(user);
         }
 
         const cred: BasicAuthenticationCredentials = new BasicAuthenticationCredentials(user.publishingUserName, user.publishingPassword);
@@ -230,5 +231,14 @@ export class SiteWrapper {
             return newConfig.scmType;
         }
         return undefined;
+    }
+
+    private async showInstallPrompt(): Promise<void> {
+        const installString: string = 'Install';
+        const input: string | undefined = await vscode.window.showErrorMessage('Git must be installed to use Local Git Deploy.', installString);
+        if (input === installString) {
+            // tslint:disable-next-line:no-unsafe-any
+            opn('https://git-scm.com/downloads');
+        }
     }
 }
