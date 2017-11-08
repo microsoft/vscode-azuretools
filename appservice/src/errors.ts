@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from "./localize";
 import * as opn from 'opn';
 import { window } from 'vscode';
+import { localize } from "./localize";
 
 export class UserCancelledError extends Error { }
 

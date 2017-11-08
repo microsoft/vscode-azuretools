@@ -138,7 +138,7 @@ export class SiteWrapper {
             this.getSiteConfig(client)
         ]);
 
-        if (config.scmType !== 'LocalGit') {
+        if (config.scmType !== scmType) {
             // SCM must be set to LocalGit prior to deployment
             const scmUpdate: string | undefined = await this.updateScmType(client, config, scmType);
             if (!scmUpdate) {
@@ -227,7 +227,7 @@ export class SiteWrapper {
         // to update one property, a complete config file must be sent
         input = await vscode.window.showWarningMessage(updateScm, yes);
         if (input === 'Yes') {
-            this.updateConfiguration(client, updateConfig);
+            await this.updateConfiguration(client, updateConfig);
         }
         return input;
     }
