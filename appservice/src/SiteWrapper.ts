@@ -83,7 +83,7 @@ export class SiteWrapper {
 
     public async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<void> {
         const yes: string = 'Yes';
-        const warning: string = localize('zipWarning', `Are you sure you want to deploy to "${this.appName}"? This will overwrite any previous deployment and cannot be undone.`);
+        const warning: string = localize('zipWarning', 'Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', this.appName);
         if (await vscode.window.showWarningMessage(warning, yes) !== yes) {
             return;
         }
@@ -126,11 +126,10 @@ export class SiteWrapper {
         this.log(outputChannel, 'Deployment completed.');
     }
 
-    public async localGitDeploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, servicePlan: string): Promise<string | undefined> {
+    public async localGitDeploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, servicePlan: string): Promise<DeployResult | undefined> {
         const kuduClient: KuduClient = await this.getKuduClient(client);
         const yes: string = 'Yes';
         const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging. Force push?');
-        const success: string = 'success';
         const scmType: string = 'LocalGit';
 
         const [publishCredentials, config]: [User, SiteConfigResource] = await Promise.all([
@@ -141,7 +140,8 @@ export class SiteWrapper {
         if (config.scmType !== scmType) {
             // SCM must be set to LocalGit prior to deployment
             const scmUpdate: string | undefined = await this.updateScmType(client, config, scmType);
-            if (!scmUpdate) {
+            if (scmUpdate !== scmType) {
+                // if the new config scmType doesn't equal LocalGit, user either canceled or there was an error
                 return undefined;
             }
         }
@@ -154,7 +154,7 @@ export class SiteWrapper {
 
             const status: git.StatusResult = await localGit.status();
             if (status.files.length > 0) {
-                const uncommit: string = localize('localGitUncommit', `${status.files.length} uncommitted change(s) in local repo "${fsPath}"`);
+                const uncommit: string = localize('localGitUncommit', '{0} uncommitted change(s) in local repo "{1}"', status.files.length, fsPath);
                 vscode.window.showWarningMessage(uncommit);
             }
             await localGit.push(remote, 'HEAD:master');
@@ -176,12 +176,10 @@ export class SiteWrapper {
                 throw new errors.LocalGitDeployError(err, servicePlan);
             }
         }
-
-        await this.waitForDeploymentToComplete(kuduClient, outputChannel);
-        return success;
+        return await this.waitForDeploymentToComplete(kuduClient, outputChannel);
     }
 
-    private async waitForDeploymentToComplete(kuduClient: KuduClient, outputChannel: vscode.OutputChannel, pollingInterval: number = 5000): Promise<void> {
+    private async waitForDeploymentToComplete(kuduClient: KuduClient, outputChannel: vscode.OutputChannel, pollingInterval: number = 5000): Promise<DeployResult> {
         // Unfortunately, Kudu doesn't provide a unique id for a deployment right after it's started
         // However, Kudu only supports one deployment at a time, so 'latest' will work in most cases
         let deploymentId: string = 'latest';
@@ -199,6 +197,8 @@ export class SiteWrapper {
             await new Promise((resolve: () => void): void => { setTimeout(resolve, pollingInterval); });
             deployment = await kuduClient.deployment.getResult(deploymentId);
         }
+
+        return deployment;
     }
 
     private log(outputChannel: vscode.OutputChannel, message: string): void {
@@ -218,17 +218,17 @@ export class SiteWrapper {
 
     private async updateScmType(client: WebSiteManagementClient, config: SiteConfigResource, scmType: string): Promise<string | undefined> {
         const oldScmType: string = config.scmType;
-        const updateScm: string = localize('updateScm', `Deployment source for "${this.appName}" is set as "${oldScmType}".  Change to "${scmType}"?`);
+        const updateScm: string = localize('updateScm', 'Deployment source for "{0}" is set as "{1}".  Change to "{2}"?', this.appName, oldScmType, scmType);
         const yes: string = 'Yes';
         let input: string | undefined;
 
-        const updateConfig: SiteConfigResource = config;
-        updateConfig.scmType = scmType;
+        config.scmType = scmType;
         // to update one property, a complete config file must be sent
         input = await vscode.window.showWarningMessage(updateScm, yes);
         if (input === 'Yes') {
-            await this.updateConfiguration(client, updateConfig);
+            const newConfig: SiteConfigResource = await this.updateConfiguration(client, config);
+            return newConfig.scmType;
         }
-        return input;
+        return undefined;
     }
 }
