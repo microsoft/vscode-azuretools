@@ -5,22 +5,24 @@
 
 // tslint:disable-next-line:no-require-imports
 import WebSiteManagementClient = require('azure-arm-website');
-import * as WebSiteModels from 'azure-arm-website/lib/models';
+import { Site, SiteConfig, User } from 'azure-arm-website/lib/models';
 import * as fs from 'fs';
 import { BasicAuthenticationCredentials } from 'ms-rest';
 import * as vscode from 'vscode';
 import KuduClient from 'vscode-azurekudu';
 import { DeployResult } from 'vscode-azurekudu/lib/models';
+import { ArgumentError } from './errors';
 import * as FileUtilities from './FileUtilities';
+import { localize } from './localize';
 
 export class SiteWrapper {
     public readonly resourceGroup: string;
     public readonly name: string;
     public readonly slotName?: string;
 
-    constructor(site: WebSiteModels.Site) {
+    constructor(site: Site) {
         if (!site.name || !site.resourceGroup || !site.type) {
-            throw new Error('Invalid site.');
+            throw new ArgumentError(site);
         }
 
         const isSlot: boolean = site.type.toLowerCase() === 'microsoft.web/sites/slots';
@@ -50,20 +52,20 @@ export class SiteWrapper {
     }
 
     public async getState(client: WebSiteManagementClient): Promise<string | undefined> {
-        const currentSite: WebSiteModels.Site = this.slotName ?
+        const currentSite: Site = this.slotName ?
             await client.webApps.getSlot(this.resourceGroup, this.name, this.slotName) :
             await client.webApps.get(this.resourceGroup, this.name);
 
         return currentSite.state;
     }
 
-    public async getWebAppPublishCredential(client: WebSiteManagementClient): Promise<WebSiteModels.User> {
+    public async getWebAppPublishCredential(client: WebSiteManagementClient): Promise<User> {
         return this.slotName ?
             await client.webApps.listPublishingCredentialsSlot(this.resourceGroup, this.name, this.slotName) :
             await client.webApps.listPublishingCredentials(this.resourceGroup, this.name);
     }
 
-    public async getSiteConfig(client: WebSiteManagementClient): Promise<WebSiteModels.SiteConfig> {
+    public async getSiteConfig(client: WebSiteManagementClient): Promise<SiteConfig> {
         return this.slotName ?
             await client.webApps.getConfigurationSlot(this.resourceGroup, this.name, this.slotName) :
             await client.webApps.getConfiguration(this.resourceGroup, this.name);
@@ -88,7 +90,7 @@ export class SiteWrapper {
             this.log(outputChannel, 'Creating zip package...');
             zipFilePath = await FileUtilities.zipDirectory(fsPath);
         } else {
-            throw new Error('Path specified is not a folder or a zip file');
+            throw new Error(localize('NotAZipError', 'Path specified is not a folder or a zip file'));
         }
 
         try {
@@ -139,9 +141,9 @@ export class SiteWrapper {
     }
 
     private async getKuduClient(client: WebSiteManagementClient): Promise<KuduClient> {
-        const user: WebSiteModels.User = await this.getWebAppPublishCredential(client);
+        const user: User = await this.getWebAppPublishCredential(client);
         if (!user.publishingUserName || !user.publishingPassword) {
-            throw new Error('Invalid publishing credentials.');
+            throw new ArgumentError(user);
         }
 
         const cred: BasicAuthenticationCredentials = new BasicAuthenticationCredentials(user.publishingUserName, user.publishingPassword);

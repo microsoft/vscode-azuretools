@@ -11,6 +11,7 @@
 		"editor.formatOnSave": true,
 		"editor.insertSpaces": true,
 		"editor.tabSize": 4,
+		"files.insertFinalNewline": true,
 		"files.trimTrailingWhitespace": true,
 		"search.exclude": {
 			"lib": true,
