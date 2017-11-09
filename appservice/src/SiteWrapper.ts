@@ -227,6 +227,7 @@ export class SiteWrapper {
         // to update one property, a complete config file must be sent
         input = await vscode.window.showWarningMessage(updateScm, yes);
         if (input === 'Yes') {
+            // tslint:disable-next-line:no-floating-promises
             const newConfig: SiteConfigResource = await this.updateConfiguration(client, config);
             return newConfig.scmType;
         }
