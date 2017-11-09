@@ -130,9 +130,8 @@ export class SiteWrapper {
     }
 
     public async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<void> {
-        const yes: string = this._yes;
         const warning: string = localize('zipWarning', 'Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', this.appName);
-        if (await vscode.window.showWarningMessage(warning, yes) !== yes) {
+        if (await vscode.window.showWarningMessage(warning, this._yes) !== this._yes) {
             return;
         }
 
@@ -176,7 +175,6 @@ export class SiteWrapper {
 
     public async localGitDeploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<DeployResult | undefined> {
         const kuduClient: KuduClient = await this.getKuduClient(client);
-        const yes: string = this._yes;
         const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging. Force push?');
         const scmType: string = 'LocalGit';
 
@@ -212,7 +210,7 @@ export class SiteWrapper {
                 await this.showInstallPrompt();
                 return undefined;
             } else if (err.message.indexOf('error: failed to push') >= 0) { // tslint:disable-line:no-unsafe-any
-                const input: string | undefined = await vscode.window.showErrorMessage(pushReject, yes);
+                const input: string | undefined = await vscode.window.showErrorMessage(pushReject, this._yes);
                 if (input === this._yes) {
                     await (<(remote: string, branch: string, options: object) => Promise<void>>localGit.push)(remote, 'HEAD:master', { '-f': true });
                     // Ugly casting neccessary due to bug in simple-git. Issue filed:
@@ -267,12 +265,11 @@ export class SiteWrapper {
     private async updateScmType(client: WebSiteManagementClient, config: SiteConfigResource, scmType: string): Promise<string | undefined> {
         const oldScmType: string = config.scmType;
         const updateScm: string = localize('updateScm', 'Deployment source for "{0}" is set as "{1}".  Change to "{2}"?', this.appName, oldScmType, scmType);
-        const yes: string = this._yes;
         let input: string | undefined;
 
         config.scmType = scmType;
         // to update one property, a complete config file must be sent
-        input = await vscode.window.showWarningMessage(updateScm, yes);
+        input = await vscode.window.showWarningMessage(updateScm, this._yes);
         if (input === this._yes) {
             // tslint:disable-next-line:no-floating-promises
             const newConfig: SiteConfigResource = await this.updateConfiguration(client, config);
