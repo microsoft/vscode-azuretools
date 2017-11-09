@@ -142,7 +142,7 @@ export class SiteStep extends WizardStep {
                 },
                 {
                     name: 'FUNCTIONS_EXTENSION_VERSION',
-                    value: '~2' // This means use latest version with major version "2"
+                    value: 'latest'
                 },
                 {
                     name: 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING',
