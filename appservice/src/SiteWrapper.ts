@@ -174,7 +174,7 @@ export class SiteWrapper {
                     return undefined;
                 }
             } else {
-                return undefined;
+                throw err;
             }
         }
         return await this.waitForDeploymentToComplete(kuduClient, outputChannel);

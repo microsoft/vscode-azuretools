@@ -23,4 +23,3 @@ export class ArgumentError extends Error {
         super(localize('azFunc.argumentError', 'Invalid {0}.', obj.constructor.name));
     }
 }
-
