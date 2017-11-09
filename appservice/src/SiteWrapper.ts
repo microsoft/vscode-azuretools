@@ -5,7 +5,7 @@
 
 // tslint:disable-next-line:no-require-imports
 import WebSiteManagementClient = require('azure-arm-website');
-import { Site, SiteConfigResource, User } from 'azure-arm-website/lib/models';
+import { AppServicePlan, Site, SiteConfigResource, User } from 'azure-arm-website/lib/models';
 import * as fs from 'fs';
 import { BasicAuthenticationCredentials } from 'ms-rest';
 import * as opn from 'opn';
@@ -21,10 +21,16 @@ export class SiteWrapper {
     public readonly resourceGroup: string;
     public readonly name: string;
     public readonly slotName?: string;
+    public readonly planResourceGroup: string;
+    public readonly planName: string;
     private readonly _gitUrl: string;
 
+    private readonly _yes: string = localize('Yes', 'Yes');
+    private readonly _no: string = localize('No', 'No');
+
     constructor(site: Site) {
-        if (!site.name || !site.resourceGroup || !site.type) {
+        const matches: RegExpMatchArray | null = site.serverFarmId.match(/\/subscriptions\/(.*)\/resourceGroups\/(.*)\/providers\/Microsoft.Web\/serverfarms\/(.*)/);
+        if (!site.name || !site.resourceGroup || !site.type || matches === null || matches.length < 4) {
             throw new ArgumentError(site);
         }
 
@@ -34,6 +40,9 @@ export class SiteWrapper {
         this.slotName = isSlot ? site.name.substring(site.name.lastIndexOf('/') + 1) : undefined;
         // the scm url used for git repo is in index 1 of enabledHostNames, not 0
         this._gitUrl = `${site.enabledHostNames[1]}:443/${site.repositorySiteName}.git`;
+
+        this.planResourceGroup = matches[2];
+        this.planName = matches[3];
     }
 
     public get appName(): string {
@@ -82,10 +91,47 @@ export class SiteWrapper {
             await client.webApps.updateConfiguration(this.resourceGroup, this.appName, config);
     }
 
+    public async getAppServicePlan(client: WebSiteManagementClient): Promise<AppServicePlan> {
+        return await client.appServicePlans.get(this.planResourceGroup, this.planName);
+    }
+
+    public async deleteSite(client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<void> {
+        const confirmMessage: string = localize('deleteConfirmation', 'Are you sure you want to delete "{0}"?', this.appName);
+        if (await vscode.window.showWarningMessage(confirmMessage, this._yes) !== this._yes) {
+            return;
+        }
+
+        let plan: AppServicePlan | undefined;
+        let deletePlan: boolean = false;
+
+        if (!this.slotName) {
+            // API calls not necessary for deployment slots
+            plan = await this.getAppServicePlan(client);
+        }
+
+        if (!this.slotName && plan.numberOfSites < 2) {
+            const message: string = localize('deleteLastServicePlan', 'This is the last app in the App Service plan "{0}". Do you want to delete this App Service plan to prevent unexpected charges?', plan.name);
+            const input: string | undefined = await vscode.window.showWarningMessage(message, this._yes, this._no);
+            if (input === undefined) {
+                return;
+            } else {
+                deletePlan = input === this._yes;
+            }
+        }
+
+        outputChannel.show();
+        outputChannel.appendLine(localize('Deleting', 'Deleting "{0}"...', this.appName));
+        if (this.slotName) {
+            await client.webApps.deleteSlot(this.resourceGroup, this.name, this.slotName);
+        } else {
+            await client.webApps.deleteMethod(this.resourceGroup, this.name, { deleteEmptyServerFarm: deletePlan });
+        }
+        outputChannel.appendLine(localize('DeleteSucceeded', 'Successfully deleted "{0}".', this.appName));
+    }
+
     public async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<void> {
-        const yes: string = 'Yes';
         const warning: string = localize('zipWarning', 'Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', this.appName);
-        if (await vscode.window.showWarningMessage(warning, yes) !== yes) {
+        if (await vscode.window.showWarningMessage(warning, this._yes) !== this._yes) {
             return;
         }
 
@@ -129,7 +175,6 @@ export class SiteWrapper {
 
     public async localGitDeploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<DeployResult | undefined> {
         const kuduClient: KuduClient = await this.getKuduClient(client);
-        const yes: string = 'Yes';
         const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging. Force push?');
         const scmType: string = 'LocalGit';
 
@@ -165,8 +210,8 @@ export class SiteWrapper {
                 await this.showInstallPrompt();
                 return undefined;
             } else if (err.message.indexOf('error: failed to push') >= 0) { // tslint:disable-line:no-unsafe-any
-                const input: string | undefined = await vscode.window.showErrorMessage(pushReject, yes);
-                if (input === 'Yes') {
+                const input: string | undefined = await vscode.window.showErrorMessage(pushReject, this._yes);
+                if (input === this._yes) {
                     await (<(remote: string, branch: string, options: object) => Promise<void>>localGit.push)(remote, 'HEAD:master', { '-f': true });
                     // Ugly casting neccessary due to bug in simple-git. Issue filed:
                     // https://github.com/steveukx/git-js/issues/218
@@ -220,13 +265,12 @@ export class SiteWrapper {
     private async updateScmType(client: WebSiteManagementClient, config: SiteConfigResource, scmType: string): Promise<string | undefined> {
         const oldScmType: string = config.scmType;
         const updateScm: string = localize('updateScm', 'Deployment source for "{0}" is set as "{1}".  Change to "{2}"?', this.appName, oldScmType, scmType);
-        const yes: string = 'Yes';
         let input: string | undefined;
 
         config.scmType = scmType;
         // to update one property, a complete config file must be sent
-        input = await vscode.window.showWarningMessage(updateScm, yes);
-        if (input === 'Yes') {
+        input = await vscode.window.showWarningMessage(updateScm, this._yes);
+        if (input === this._yes) {
             // tslint:disable-next-line:no-floating-promises
             const newConfig: SiteConfigResource = await this.updateConfiguration(client, config);
             return newConfig.scmType;
