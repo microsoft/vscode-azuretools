@@ -185,28 +185,14 @@ export class SiteWrapper {
     public async localGitDeploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<DeployResult | undefined> {
         const kuduClient: KuduClient = await this.getKuduClient(client);
         const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging. Force push?');
-        const scmType: string = 'LocalGit';
+        const publishCredentials: User = await this.getWebAppPublishCredential(client);
 
-        const [publishCredentials, config]: [User, SiteConfigResource] = await Promise.all([
-            this.getWebAppPublishCredential(client),
-            this.getSiteConfig(client)
-        ]);
-
-        if (config.scmType !== scmType) {
-            // SCM must be set to LocalGit prior to deployment
-            const scmUpdate: string | undefined = await this.updateScmType(client, config, scmType);
-            if (scmUpdate !== scmType) {
-                // if the new config scmType doesn't equal LocalGit, user either canceled or there was an error
-                return undefined;
-            }
-        }
         // credentials for accessing Azure Remote Repo
         const username: string = publishCredentials.publishingUserName;
         const password: string = publishCredentials.publishingPassword;
         const remote: string = `https://${username}:${password}@${this._gitUrl}`;
         const localGit: git.SimpleGit = git(fsPath);
         try {
-
             const status: git.StatusResult = await localGit.status();
             if (status.files.length > 0) {
                 const uncommit: string = localize('localGitUncommit', '{0} uncommitted change(s) in local repo "{1}"', status.files.length, fsPath);
