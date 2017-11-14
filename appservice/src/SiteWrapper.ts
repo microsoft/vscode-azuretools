@@ -17,6 +17,15 @@ import { ArgumentError } from './errors';
 import * as FileUtilities from './FileUtilities';
 import { localize } from './localize';
 
+const noSupport: string = localize('noSupport', 'This deployment source is not currently supported and will be deployed by zip.');
+// Deployment sources supported by Web Apps
+const SCM_TYPES: vscode.QuickPickItem[] = [
+    { label: 'None', description: ''}, // default scmType config
+    { label: 'LocalGit', description: ''},
+    { label: 'GitHub', description: noSupport }, // not yet supported by extension-- default to "Zip Deploy"
+    { label: 'BitbucketGit', description: noSupport } // not yet supported by extension-- default to "Zip Deploy"
+];
+
 export class SiteWrapper {
     public readonly resourceGroup: string;
     public readonly name: string;
@@ -223,6 +232,20 @@ export class SiteWrapper {
             }
         }
         return await this.waitForDeploymentToComplete(kuduClient, outputChannel);
+    }
+
+    public async showScmPrompt(currentScmType: string): Promise<string> {
+        const placeHolder: string = localize('scmPrompt', 'Current ScmType is "{0}".  Select a new deployment source.', currentScmType);
+        const scmQuickPicks: vscode.QuickPickItem[] = [];
+        // generate quickPicks to not include current type
+        for (const scmQuickPick of SCM_TYPES) {
+            if (scmQuickPick.label !== currentScmType) {
+                scmQuickPicks.push(scmQuickPick);
+            }
+        }
+
+        const quickPick: vscode.QuickPickItem = await vscode.window.showQuickPick(scmQuickPicks, { placeHolder: placeHolder });
+        return quickPick.label;
     }
 
     private async waitForDeploymentToComplete(kuduClient: KuduClient, outputChannel: vscode.OutputChannel, pollingInterval: number = 5000): Promise<DeployResult> {
