@@ -220,7 +220,14 @@ export class SiteWrapper {
         return await this.waitForDeploymentToComplete(kuduClient, outputChannel);
     }
 
-    public async showScmPrompt(currentScmType: string): Promise<string> {
+    public async editScmType(client: WebSiteManagementClient): Promise<string> {
+        const config: SiteConfigResource = await this.getSiteConfig(client);
+        const newScmType: string = await this.showScmPrompt(config.scmType);
+        // returns the updated scmType
+        return await this.updateScmType(client, config, newScmType);
+    }
+
+    private async showScmPrompt(currentScmType: string): Promise<string> {
         const placeHolder: string = localize('scmPrompt', 'Current ScmType is "{0}".  Select a new deployment source.', currentScmType);
         const scmQuickPicks: vscode.QuickPickItem[] = [];
         // generate quickPicks to not include current type
@@ -272,19 +279,10 @@ export class SiteWrapper {
     }
 
     private async updateScmType(client: WebSiteManagementClient, config: SiteConfigResource, scmType: string): Promise<string | undefined> {
-        const oldScmType: string = config.scmType;
-        const updateScm: string = localize('updateScm', 'Deployment source for "{0}" is set as "{1}".  Change to "{2}"?', this.appName, oldScmType, scmType);
-        let input: string | undefined;
-
         config.scmType = scmType;
         // to update one property, a complete config file must be sent
-        input = await vscode.window.showWarningMessage(updateScm, this._yes);
-        if (input === this._yes) {
-            // tslint:disable-next-line:no-floating-promises
-            const newConfig: SiteConfigResource = await this.updateConfiguration(client, config);
-            return newConfig.scmType;
-        }
-        return undefined;
+        const newConfig: SiteConfigResource = await this.updateConfiguration(client, config);
+        return newConfig.scmType;
     }
 
     private async showInstallPrompt(): Promise<void> {
