@@ -17,13 +17,11 @@ import { ArgumentError } from './errors';
 import * as FileUtilities from './FileUtilities';
 import { localize } from './localize';
 
-const noSupport: string = localize('noSupport', 'This deployment source is not currently supported and will be deployed by zip.');
+const noSupport: string = localize('noSupport', 'This deployment source is not currently supported in VS Code and will be deployed by zip.');
 // Deployment sources supported by Web Apps
 const SCM_TYPES: vscode.QuickPickItem[] = [
     { label: 'None', description: ''}, // default scmType config
-    { label: 'LocalGit', description: ''},
-    { label: 'GitHub', description: noSupport }, // not yet supported by extension-- default to "Zip Deploy"
-    { label: 'BitbucketGit', description: noSupport } // not yet supported by extension-- default to "Zip Deploy"
+    { label: 'LocalGit', description: ''}
 ];
 
 export class SiteWrapper {
@@ -228,7 +226,7 @@ export class SiteWrapper {
     }
 
     private async showScmPrompt(currentScmType: string): Promise<string | undefined> {
-        const placeHolder: string = localize('scmPrompt', 'Current ScmType is "{0}".  Select a new deployment source.', currentScmType);
+        const placeHolder: string = localize('scmPrompt', 'Current deployment source is "{0}".  Select a new source.', currentScmType);
         const scmQuickPicks: vscode.QuickPickItem[] = [];
         // generate quickPicks to not include current type
         for (const scmQuickPick of SCM_TYPES) {
