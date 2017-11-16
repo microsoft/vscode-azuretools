@@ -227,7 +227,7 @@ export class SiteWrapper {
         return await this.updateScmType(client, config, newScmType);
     }
 
-    private async showScmPrompt(currentScmType: string): Promise<string> {
+    private async showScmPrompt(currentScmType: string): Promise<string | undefined> {
         const placeHolder: string = localize('scmPrompt', 'Current ScmType is "{0}".  Select a new deployment source.', currentScmType);
         const scmQuickPicks: vscode.QuickPickItem[] = [];
         // generate quickPicks to not include current type
@@ -238,7 +238,7 @@ export class SiteWrapper {
         }
 
         const quickPick: vscode.QuickPickItem = await vscode.window.showQuickPick(scmQuickPicks, { placeHolder: placeHolder });
-        return quickPick.label;
+        return quickPick ? quickPick.label : undefined;
     }
 
     private async waitForDeploymentToComplete(kuduClient: KuduClient, outputChannel: vscode.OutputChannel, pollingInterval: number = 5000): Promise<DeployResult> {
