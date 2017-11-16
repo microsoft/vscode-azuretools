@@ -21,7 +21,7 @@ export class CreatingTreeItem implements IAzureTreeItem {
     }
 
     public get label(): string {
-        return localize('creatingNode', '{0} (Creating...)', this._label);
+        return localize('creatingNode', 'Creating {0}...', this._label);
     }
 
     public get iconPath(): { light: string, dark: string } {
