@@ -7,7 +7,7 @@ import { Subscription } from 'azure-arm-resource/lib/subscription/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment } from 'ms-rest-azure';
 import * as opn from 'opn';
-import { AzureExplorer, IAzureNode, IAzureParentNode, IAzureTreeItem } from '../../index';
+import { AzureTreeDataProvider, IAzureNode, IAzureParentNode, IAzureTreeItem } from '../../index';
 import { ArgumentError, NotImplementedError } from '../errors';
 
 export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAzureNode<T> {
@@ -50,16 +50,16 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
         }
     }
 
-    public get explorer(): AzureExplorer {
+    public get treeDataProvider(): AzureTreeDataProvider {
         if (this.parent) {
-            return this.parent.explorer;
+            return this.parent.treeDataProvider;
         } else {
             throw new ArgumentError(this);
         }
     }
 
     public refresh(): void {
-        this.explorer.refresh(this.parent, false);
+        this.treeDataProvider.refresh(this.parent, false);
     }
 
     public openInPortal(): void {

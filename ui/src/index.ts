@@ -3,5 +3,5 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-export { AzureExplorer } from './explorer/AzureExplorer';
+export { AzureTreeDataProvider } from './treeDataProvider/AzureTreeDataProvider';
 export { UserCancelledError } from './errors';

@@ -38,7 +38,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
                 const newTreeItem: IAzureTreeItem = await this.treeItem.createChild(this, (label: string): void => {
                     creatingNode = new AzureNode(this, new CreatingTreeItem(label));
                     this._creatingNodes.push(creatingNode);
-                    this.explorer.refresh(this, false);
+                    this.treeDataProvider.refresh(this, false);
                 });
 
                 const newNode: AzureNode = this.createNewNode(newTreeItem);
@@ -47,7 +47,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
             } finally {
                 if (creatingNode) {
                     this._creatingNodes.splice(this._creatingNodes.indexOf(creatingNode), 1);
-                    this.explorer.refresh(this, false);
+                    this.treeDataProvider.refresh(this, false);
                 }
             }
         } else {
@@ -83,7 +83,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
     public addNodeToCache(node: AzureNode): void {
         if (this._cachedChildren) {
             this._cachedChildren.unshift(node);
-            this.explorer.refresh(this, false);
+            this.treeDataProvider.refresh(this, false);
         }
     }
 
@@ -92,7 +92,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
             const index: number = this._cachedChildren.indexOf(node);
             if (index !== -1) {
                 this._cachedChildren.splice(index, 1);
-                this.explorer.refresh(this, false);
+                this.treeDataProvider.refresh(this, false);
             }
         }
     }
@@ -111,7 +111,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
             picks.push(new PickWithData<GetNodeFunction>(
                 async (): Promise<AzureNode> => {
                     await this.loadMoreChildren();
-                    this.explorer.refresh(this, false);
+                    this.treeDataProvider.refresh(this, false);
                     return this;
                 },
                 LoadMoreTreeItem.label

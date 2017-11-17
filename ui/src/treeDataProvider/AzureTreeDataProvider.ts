@@ -16,7 +16,7 @@ import { AzureParentNode } from './AzureParentNode';
 import { LoadMoreTreeItem } from './LoadMoreTreeItem';
 import { SubscriptionNode } from './SubscriptionNode';
 
-export class AzureExplorer implements TreeDataProvider<IAzureNode>, Disposable {
+export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disposable {
     public static readonly subscriptionContextValue: string = SubscriptionNode.contextValue;
 
     private _onDidChangeTreeDataEmitter: EventEmitter<IAzureNode> = new EventEmitter<IAzureNode>();
@@ -75,7 +75,7 @@ export class AzureExplorer implements TreeDataProvider<IAzureNode>, Disposable {
             return node.creatingNodes
                 .concat(await node.getCachedChildren())
                 .concat(node.treeItem.hasMoreChildren() ? new AzureNode(node, new LoadMoreTreeItem(this._loadMoreCommandId)) : []);
-        } else { // Root of explorer
+        } else { // Root of tree
             this._subscriptionNodes = [];
 
             let commandLabel: string | undefined;

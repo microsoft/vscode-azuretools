@@ -9,11 +9,11 @@ import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment } from 'ms-rest-azure';
 import { Uri, TreeDataProvider, Disposable, TreeItem, Event } from 'vscode';
 
-export declare class AzureExplorer implements TreeDataProvider<IAzureNode>, Disposable {
+export declare class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disposable {
     public static readonly subscriptionContextValue: string;
     public onDidChangeTreeData: Event<IAzureNode>;
     /**
-     * Azure Explorer
+     * Azure Tree Data Provider
      * @param resourceProvider Describes the resources to be displayed under subscription nodes
      * @param loadMoreCommandId The command your extension will register for the 'Load More...' node
      */
@@ -27,24 +27,24 @@ export declare class AzureExplorer implements TreeDataProvider<IAzureNode>, Disp
 }
 
 /**
- * The AzureExplorer returns instances of IAzureNode, which are wrappers for IAzureTreeItem with relevant context and functions from the explorer
+ * The AzureTreeDataProvider returns instances of IAzureNode, which are wrappers for IAzureTreeItem with relevant context and functions from the tree
  */
 export interface IAzureNode<T extends IAzureTreeItem = IAzureTreeItem> {
     readonly treeItem: T;
     readonly parent?: IAzureParentNode;
-    readonly explorer: AzureExplorer;
+    readonly treeDataProvider: AzureTreeDataProvider;
     readonly credentials: ServiceClientCredentials;
     readonly subscription: Subscription;
     readonly tenantId: string;
     readonly environment: AzureEnvironment;
 
     /**
-     * Refresh this node in the explorer
+     * Refresh this node in the tree
      */
     refresh(): void;
 
     /**
-     * This class wraps IAzureTreeItem.deleteTreeItem and ensures the explorer is updated correctly when an item is deleted
+     * This class wraps IAzureTreeItem.deleteTreeItem and ensures the tree is updated correctly when an item is deleted
      */
     deleteNode(): Promise<IAzureNode>;
 
@@ -56,7 +56,7 @@ export interface IAzureNode<T extends IAzureTreeItem = IAzureTreeItem> {
 
 export interface IAzureParentNode<T extends IAzureTreeItem = IAzureTreeItem> extends IAzureNode<T> {
     /**
-     * This class wraps IChildProvider.createChild and ensures the explorer is updated correctly when an item is created
+     * This class wraps IChildProvider.createChild and ensures the tree is updated correctly when an item is created
      */
     createChild(): Promise<IAzureNode>;
 

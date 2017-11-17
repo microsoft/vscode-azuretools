@@ -7,16 +7,16 @@ import { Subscription } from 'azure-arm-resource/lib/subscription/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment } from 'ms-rest-azure';
 import * as path from 'path';
-import { AzureExplorer, IChildProvider } from '../../index';
+import { AzureTreeDataProvider, IChildProvider } from '../../index';
 import { AzureSubscription } from '../azure-account.api';
 import { AzureParentNode } from './AzureParentNode';
 
 export class SubscriptionNode extends AzureParentNode {
     public static readonly contextValue: string = 'azureSubscription';
     private readonly _subscriptionInfo: AzureSubscription;
-    private readonly _explorer: AzureExplorer;
+    private readonly _treeDataProvider: AzureTreeDataProvider;
 
-    public constructor(explorer: AzureExplorer, childProvider: IChildProvider, id: string, label: string, subscriptionInfo: AzureSubscription) {
+    public constructor(treeDataProvider: AzureTreeDataProvider, childProvider: IChildProvider, id: string, label: string, subscriptionInfo: AzureSubscription) {
         super(undefined, {
             id: id,
             label: label,
@@ -27,7 +27,7 @@ export class SubscriptionNode extends AzureParentNode {
             hasMoreChildren: <typeof childProvider.hasMoreChildren>childProvider.hasMoreChildren.bind(childProvider),
             loadMoreChildren: <typeof childProvider.loadMoreChildren>childProvider.loadMoreChildren.bind(childProvider)
         });
-        this._explorer = explorer;
+        this._treeDataProvider = treeDataProvider;
         this._subscriptionInfo = subscriptionInfo;
     }
 
@@ -47,7 +47,7 @@ export class SubscriptionNode extends AzureParentNode {
         return this._subscriptionInfo.session.environment;
     }
 
-    public get explorer(): AzureExplorer {
-        return this._explorer;
+    public get treeDataProvider(): AzureTreeDataProvider {
+        return this._treeDataProvider;
     }
 }

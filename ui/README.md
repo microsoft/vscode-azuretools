@@ -4,11 +4,11 @@ This package provides common Azure UI elements for VS Code extensions.
 
 > NOTE: This package throws a `UserCancelledError` if the user cancels an operation. This error should be handle appropriately by your extension.
 
-## Azure Explorer
-![Explorer](resources/Explorer.png)
+## Azure Tree Data Provider
+![ExampleTree](resources/ExampleTree.png)
 
 ### Display Azure Resources
-Follow these steps to create your basic Azure Explorer:
+Follow these steps to create your basic Azure Tree:
 1. Implement an `IAzureTreeItem` (or `IAzureParentTreeItem`) describing the items to be displayed under your subscription:
     ```typescript
     export class WebAppTreeItem implements IAzureTreeItem {
@@ -47,11 +47,11 @@ Follow these steps to create your basic Azure Explorer:
         }
     }
     ```
-1. Instantiate a new instance of `AzureExplorer` in your extension's `activate()` method, passing the `resourceProvider` and `loadMoreCommandId`. The `loadMoreCommandId` maps the 'Load More...' node to the command registered by your extension.
+1. Instantiate a new instance of `AzureTreeDataProvider` in your extension's `activate()` method, passing the `resourceProvider` and `loadMoreCommandId`. The `loadMoreCommandId` maps the 'Load More...' node to the command registered by your extension.
     ```typescript
-    const appServiceExplorer = new AzureExplorer(new WebAppProvider(), 'appService.LoadMore');
-    context.subscriptions.push(appServiceExplorer);
-    context.subscriptions.push(vscode.window.registerTreeDataProvider('azureAppService', appServiceExplorer));
+    const treeDataProvider = new AzureTreeDataProvider(new WebAppProvider(), 'appService.LoadMore');
+    context.subscriptions.push(treeDataProvider);
+    context.subscriptions.push(vscode.window.registerTreeDataProvider('azureAppService', treeDataProvider));
     ```
 
 ### Advanced Scenarios
@@ -59,15 +59,15 @@ The above steps will display your Azure Resources, but that's just the beginning
 ```typescript
 context.subscriptions.push(vscode.commands.registerCommand('appService.Browse', async (node: IAzureNode<WebAppTreeItem>) => {
     if (!node) {
-        node = <IAzureNode<WebAppTreeItem>>await appServiceExplorer.showNodePicker(WebAppTreeItem.contextValue);
+        node = <IAzureNode<WebAppTreeItem>>await treeDataProvider.showNodePicker(WebAppTreeItem.contextValue);
     }
 
     node.treeItem.browse();
 }));
 ```
-> NOTE: The AzureExplorer returns instances of `IAzureNode` with relevant context from the tree (i.e. Subscription information). You can still access your tree item directly through the `IAzureNode.treeItem` property as seen above.
+> NOTE: The AzureTreeDataProvider returns instances of `IAzureNode` with relevant context from the tree (i.e. Subscription information). You can still access your tree item directly through the `IAzureNode.treeItem` property as seen above.
 
-For a more advanced scenario, you can also implement the `createChild` method on your `IChildProvider`. This will ensure the 'Create' option is displayed in the node picker and will automatically display a 'Creating...' node in the explorer:
+For a more advanced scenario, you can also implement the `createChild` method on your `IChildProvider`. This will ensure the 'Create' option is displayed in the node picker and will automatically display a 'Creating...' node in the tree:
 
 ![CreateNodePicker](resources/CreateNodePicker.png) ![CreatingNode](resources/CreatingNode.png)
 ```typescript
