@@ -6,7 +6,6 @@
 // tslint:disable-next-line:no-require-imports
 import WebSiteManagementClient = require('azure-arm-website');
 import { AppServicePlan, Site, SiteConfigResource, User } from 'azure-arm-website/lib/models';
-import * as WebSiteModels from '../node_modules/azure-arm-website/lib/models';
 import * as fs from 'fs';
 import { BasicAuthenticationCredentials } from 'ms-rest';
 import * as opn from 'opn';
@@ -14,10 +13,10 @@ import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
 import KuduClient from 'vscode-azurekudu';
 import { DeployResult } from 'vscode-azurekudu/lib/models';
+import * as WebSiteModels from '../node_modules/azure-arm-website/lib/models';
 import { ArgumentError } from './errors';
 import * as FileUtilities from './FileUtilities';
 import { localize } from './localize';
-import { WebsiteOS } from './createAppService/AppKind';
 
 export class SiteWrapper {
     public readonly resourceGroup: string;
