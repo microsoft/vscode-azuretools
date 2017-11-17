@@ -11,6 +11,7 @@ addons:
 env:
   - PACKAGE_DIR=appservice
   - PACKAGE_DIR=kudu
+  - PACKAGE_DIR=ui
 
 script:
   - cd $PACKAGE_DIR
