@@ -5,8 +5,8 @@
 
 // tslint:disable-next-line:no-require-imports
 import WebSiteManagementClient = require('azure-arm-website');
-import * as WebSiteModels from '../node_modules/azure-arm-website/lib/models';
 import { AppServicePlan, Site, SiteConfigResource, User } from 'azure-arm-website/lib/models';
+import * as WebSiteModels from '../node_modules/azure-arm-website/lib/models';
 import * as fs from 'fs';
 import { BasicAuthenticationCredentials } from 'ms-rest';
 import * as opn from 'opn';
@@ -17,6 +17,7 @@ import { DeployResult } from 'vscode-azurekudu/lib/models';
 import { ArgumentError } from './errors';
 import * as FileUtilities from './FileUtilities';
 import { localize } from './localize';
+import { WebsiteOS } from './createAppService/AppKind';
 
 export class SiteWrapper {
     public readonly resourceGroup: string;
@@ -229,7 +230,7 @@ export class SiteWrapper {
     }
 
     public async isHttpLogsEnabled(client: WebSiteManagementClient): Promise<boolean> {
-        const logsConfig = this.slotName ? await client.webApps.getDiagnosticLogsConfigurationSlot(this.resourceGroup, this.name, this.slotName) :
+        const logsConfig: WebSiteModels.SiteLogsConfig = this.slotName ? await client.webApps.getDiagnosticLogsConfigurationSlot(this.resourceGroup, this.name, this.slotName) :
             await client.webApps.getDiagnosticLogsConfiguration(this.resourceGroup, this.name);
         return logsConfig.httpLogs && logsConfig.httpLogs.fileSystem && logsConfig.httpLogs.fileSystem.enabled;
     }
