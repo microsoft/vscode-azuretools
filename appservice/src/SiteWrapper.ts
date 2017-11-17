@@ -5,7 +5,7 @@
 
 // tslint:disable-next-line:no-require-imports
 import WebSiteManagementClient = require('azure-arm-website');
-import { AppServicePlan, Site, SiteConfigResource, User } from 'azure-arm-website/lib/models';
+import { AppServicePlan, Site, SiteConfigResource, SiteLogsConfig, User } from 'azure-arm-website/lib/models';
 import * as fs from 'fs';
 import { BasicAuthenticationCredentials } from 'ms-rest';
 import * as opn from 'opn';
@@ -19,6 +19,7 @@ import { localize } from './localize';
 
 export class SiteWrapper {
     public readonly resourceGroup: string;
+    public readonly location: string;
     public readonly name: string;
     public readonly slotName?: string;
     public readonly planResourceGroup: string;
@@ -36,6 +37,7 @@ export class SiteWrapper {
 
         const isSlot: boolean = site.type.toLowerCase() === 'microsoft.web/sites/slots';
         this.resourceGroup = site.resourceGroup;
+        this.location = site.location;
         this.name = isSlot ? site.name.substring(0, site.name.lastIndexOf('/')) : site.name;
         this.slotName = isSlot ? site.name.substring(site.name.lastIndexOf('/') + 1) : undefined;
         // the scm url used for git repo is in index 1 of enabledHostNames, not 0
@@ -223,6 +225,31 @@ export class SiteWrapper {
             }
         }
         return await this.waitForDeploymentToComplete(kuduClient, outputChannel);
+    }
+
+    public async isHttpLogsEnabled(client: WebSiteManagementClient): Promise<boolean> {
+        const logsConfig: SiteLogsConfig = this.slotName ? await client.webApps.getDiagnosticLogsConfigurationSlot(this.resourceGroup, this.name, this.slotName) :
+            await client.webApps.getDiagnosticLogsConfiguration(this.resourceGroup, this.name);
+        return logsConfig.httpLogs && logsConfig.httpLogs.fileSystem && logsConfig.httpLogs.fileSystem.enabled;
+    }
+
+    public async enableHttpLogs(client: WebSiteManagementClient): Promise<void> {
+        const logsConfig: SiteLogsConfig = {
+            location: this.location,
+            httpLogs: {
+                fileSystem: {
+                    enabled: true,
+                    retentionInDays: 7,
+                    retentionInMb: 35
+                }
+            }
+        };
+
+        if (this.slotName) {
+            await client.webApps.updateDiagnosticLogsConfigSlot(this.resourceGroup, this.name, logsConfig, this.slotName);
+        } else {
+            await client.webApps.updateDiagnosticLogsConfig(this.resourceGroup, this.name, logsConfig);
+        }
     }
 
     private async waitForDeploymentToComplete(kuduClient: KuduClient, outputChannel: vscode.OutputChannel, pollingInterval: number = 5000): Promise<DeployResult> {
