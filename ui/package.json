@@ -1,5 +1,5 @@
 {
-    "name": "vscode-azureui",
+    "name": "vscode-azureextensionui",
     "author": "Microsoft Corporation",
     "version": "0.1.0",
     "description": "Common UI tools for developing Azure extensions for VS Code",

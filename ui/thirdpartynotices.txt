@@ -1,5 +1,5 @@
 THIRD-PARTY SOFTWARE NOTICES AND INFORMATION
-For vscode-azureui package
+For vscode-azureextensionui package
 
 This extension uses Open Source components. You can find the source code of their
 open source projects along with the license information below. We acknowledge and
