@@ -6,7 +6,7 @@
 import * as path from 'path';
 import { Disposable, Event, EventEmitter, Extension, extensions, TreeDataProvider, TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { IAzureNode, IChildProvider } from '../../index';
-import { AzureAccount, AzureSubscription } from '../azure-account.api';
+import { AzureAccount, AzureLoginStatus, AzureSubscription } from '../azure-account.api';
 import { ArgumentError } from '../errors';
 import { IUserInterface, PickWithData } from '../IUserInterface';
 import { localize } from '../localize';
@@ -43,7 +43,13 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
         }
 
         this._disposables.push(this._azureAccount.onFiltersChanged(() => this.refresh()));
-        this._disposables.push(this._azureAccount.onStatusChanged(() => this.refresh()));
+        this._disposables.push(this._azureAccount.onStatusChanged((status: AzureLoginStatus) => {
+            // Ignore status change to 'LoggedIn' and wait for the 'onFiltersChanged' event to fire instead
+            // (so that the tree stays in 'Loading...' state until the filters are actually ready)
+            if (status !== 'LoggedIn') {
+                this.refresh();
+            }
+        }));
     }
 
     public dispose(): void {
