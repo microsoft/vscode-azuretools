@@ -46,7 +46,7 @@ export interface IAzureNode<T extends IAzureTreeItem = IAzureTreeItem> {
     /**
      * This class wraps IAzureTreeItem.deleteTreeItem and ensures the tree is updated correctly when an item is deleted
      */
-    deleteNode(): Promise<IAzureNode>;
+    deleteNode(): Promise<void>;
 
     /**
      * This method combines the environment.portalLink and IAzureTreeItem.id to open the resource in the portal
@@ -75,7 +75,7 @@ export interface IAzureTreeItem {
     iconPath?: string | Uri | { light: string | Uri; dark: string | Uri };
     commandId?: string;
     contextValue: string;
-    deleteTreeItem?(node: IAzureNode): Promise<IAzureTreeItem>;
+    deleteTreeItem?(node: IAzureNode): Promise<void>;
 }
 
 export interface IChildProvider {

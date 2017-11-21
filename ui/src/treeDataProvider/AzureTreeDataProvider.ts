@@ -88,7 +88,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
             const loginCommandId: string = 'azure-account.login';
             if (this._azureAccount.status === 'Initializing' || this._azureAccount.status === 'LoggingIn') {
                 return [new AzureNode(undefined, {
-                    label: localize('azFunc.loadingNode', 'Loading...'),
+                    label: localize('loadingNode', 'Loading...'),
                     commandId: loginCommandId,
                     contextValue: 'azureCommandNode',
                     id: loginCommandId,
@@ -98,9 +98,9 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
                     }
                 })];
             } else if (this._azureAccount.status === 'LoggedOut') {
-                return [new AzureNode(undefined, { label: localize('azFunc.signInNode', 'Sign in to Azure...'), commandId: loginCommandId, contextValue: 'azureCommandNode', id: loginCommandId })];
+                return [new AzureNode(undefined, { label: localize('signInNode', 'Sign in to Azure...'), commandId: loginCommandId, contextValue: 'azureCommandNode', id: loginCommandId })];
             } else if (this._azureAccount.filters.length === 0) {
-                commandLabel = localize('azFunc.noSubscriptionsNode', 'No subscriptions found. Edit filters...');
+                commandLabel = localize('noSubscriptionsNode', 'No subscriptions found. Edit filters...');
                 return [new AzureNode(undefined, { label: commandLabel, commandId: 'azure-account.selectSubscriptions', contextValue: 'azureCommandNode', id: 'azure-account.selectSubscriptions' })];
 
             } else {
@@ -133,13 +133,13 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
 
     public async showNodePicker(expectedContextValue: string): Promise<IAzureNode> {
         const picks: PickWithData<SubscriptionNode>[] = this._subscriptionNodes.map((n: SubscriptionNode) => new PickWithData<SubscriptionNode>(n, n.treeItem.label, n.subscription.subscriptionId));
-        let node: AzureNode = (await this._ui.showQuickPick<SubscriptionNode>(picks, localize('azFunc.selectSubscription', 'Select a Subscription'))).data;
+        let node: AzureNode = (await this._ui.showQuickPick<SubscriptionNode>(picks, localize('selectSubscription', 'Select a Subscription'))).data;
 
         while (node.treeItem.contextValue !== expectedContextValue) {
             if (node instanceof AzureParentNode) {
                 node = await node.pickChildNode(expectedContextValue, this._ui);
             } else {
-                throw new Error(localize('azFunc.noResourcesError', 'No matching resources found.'));
+                throw new Error(localize('noResourcesError', 'No matching resources found.'));
             }
         }
 
