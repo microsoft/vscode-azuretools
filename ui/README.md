@@ -1,4 +1,4 @@
-# VSCode Azure SDK for Node.js - UI Tools
+# VSCode Azure SDK for Node.js - UI Tools (Preview)
 
 This package provides common Azure UI elements for VS Code extensions.
 
