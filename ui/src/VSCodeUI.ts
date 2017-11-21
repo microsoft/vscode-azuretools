@@ -49,7 +49,7 @@ export class VSCodeUI implements IUserInterface {
             canSelectFiles: false,
             canSelectFolders: true,
             canSelectMany: false,
-            openLabel: localize('azFunc.select', 'Select')
+            openLabel: localize('select', 'Select')
         };
         const result: vscode.Uri[] | undefined = await vscode.window.showOpenDialog(options);
 

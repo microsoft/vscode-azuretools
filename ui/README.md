@@ -1,8 +1,8 @@
-# VSCode Azure SDK for Node.js - UI Tools
+# VSCode Azure SDK for Node.js - UI Tools (Preview)
 
 This package provides common Azure UI elements for VS Code extensions.
 
-> NOTE: This package throws a `UserCancelledError` if the user cancels an operation. This error should be handle appropriately by your extension.
+> NOTE: This package throws a `UserCancelledError` if the user cancels an operation. This error should be handled appropriately by your extension.
 
 ## Azure Tree Data Provider
 ![ExampleTree](resources/ExampleTree.png)
