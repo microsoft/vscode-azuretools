@@ -17,6 +17,12 @@ import { ArgumentError } from './errors';
 import * as FileUtilities from './FileUtilities';
 import { localize } from './localize';
 
+// Deployment sources supported by Web Apps
+const SCM_TYPES: vscode.QuickPickItem[] = [
+    { label: 'None', description: ''}, // default scmType config
+    { label: 'LocalGit', description: ''}
+];
+
 export class SiteWrapper {
     public readonly resourceGroup: string;
     public readonly location: string;
@@ -178,28 +184,14 @@ export class SiteWrapper {
     public async localGitDeploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<DeployResult | undefined> {
         const kuduClient: KuduClient = await this.getKuduClient(client);
         const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging. Force push?');
-        const scmType: string = 'LocalGit';
+        const publishCredentials: User = await this.getWebAppPublishCredential(client);
 
-        const [publishCredentials, config]: [User, SiteConfigResource] = await Promise.all([
-            this.getWebAppPublishCredential(client),
-            this.getSiteConfig(client)
-        ]);
-
-        if (config.scmType !== scmType) {
-            // SCM must be set to LocalGit prior to deployment
-            const scmUpdate: string | undefined = await this.updateScmType(client, config, scmType);
-            if (scmUpdate !== scmType) {
-                // if the new config scmType doesn't equal LocalGit, user either canceled or there was an error
-                return undefined;
-            }
-        }
         // credentials for accessing Azure Remote Repo
         const username: string = publishCredentials.publishingUserName;
         const password: string = publishCredentials.publishingPassword;
         const remote: string = `https://${username}:${password}@${this._gitUrl}`;
         const localGit: git.SimpleGit = git(fsPath);
         try {
-
             const status: git.StatusResult = await localGit.status();
             if (status.files.length > 0) {
                 const uncommit: string = localize('localGitUncommit', '{0} uncommitted change(s) in local repo "{1}"', status.files.length, fsPath);
@@ -252,6 +244,27 @@ export class SiteWrapper {
         }
     }
 
+    public async editScmType(client: WebSiteManagementClient): Promise<string> {
+        const config: SiteConfigResource = await this.getSiteConfig(client);
+        const newScmType: string = await this.showScmPrompt(config.scmType);
+        // returns the updated scmType
+        return await this.updateScmType(client, config, newScmType);
+    }
+
+    private async showScmPrompt(currentScmType: string): Promise<string | undefined> {
+        const placeHolder: string = localize('scmPrompt', 'Current deployment source is "{0}".  Select a new source.', currentScmType);
+        const scmQuickPicks: vscode.QuickPickItem[] = [];
+        // generate quickPicks to not include current type
+        for (const scmQuickPick of SCM_TYPES) {
+            if (scmQuickPick.label !== currentScmType) {
+                scmQuickPicks.push(scmQuickPick);
+            }
+        }
+
+        const quickPick: vscode.QuickPickItem = await vscode.window.showQuickPick(scmQuickPicks, { placeHolder: placeHolder });
+        return quickPick ? quickPick.label : undefined;
+    }
+
     private async waitForDeploymentToComplete(kuduClient: KuduClient, outputChannel: vscode.OutputChannel, pollingInterval: number = 5000): Promise<DeployResult> {
         // Unfortunately, Kudu doesn't provide a unique id for a deployment right after it's started
         // However, Kudu only supports one deployment at a time, so 'latest' will work in most cases
@@ -290,19 +303,10 @@ export class SiteWrapper {
     }
 
     private async updateScmType(client: WebSiteManagementClient, config: SiteConfigResource, scmType: string): Promise<string | undefined> {
-        const oldScmType: string = config.scmType;
-        const updateScm: string = localize('updateScm', 'Deployment source for "{0}" is set as "{1}".  Change to "{2}"?', this.appName, oldScmType, scmType);
-        let input: string | undefined;
-
         config.scmType = scmType;
         // to update one property, a complete config file must be sent
-        input = await vscode.window.showWarningMessage(updateScm, this._yes);
-        if (input === this._yes) {
-            // tslint:disable-next-line:no-floating-promises
-            const newConfig: SiteConfigResource = await this.updateConfiguration(client, config);
-            return newConfig.scmType;
-        }
-        return undefined;
+        const newConfig: SiteConfigResource = await this.updateConfiguration(client, config);
+        return newConfig.scmType;
     }
 
     private async showInstallPrompt(): Promise<void> {
