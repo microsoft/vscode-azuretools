@@ -19,8 +19,8 @@ import { localize } from './localize';
 
 // Deployment sources supported by Web Apps
 const SCM_TYPES: vscode.QuickPickItem[] = [
-    { label: 'None', description: ''}, // default scmType config
-    { label: 'LocalGit', description: ''}
+    { label: 'None', description: '' }, // default scmType config
+    { label: 'LocalGit', description: '' }
 ];
 
 export class SiteWrapper {
@@ -244,11 +244,11 @@ export class SiteWrapper {
         }
     }
 
-    public async editScmType(client: WebSiteManagementClient): Promise<string> {
+    public async editScmType(client: WebSiteManagementClient): Promise<string | undefined> {
         const config: SiteConfigResource = await this.getSiteConfig(client);
         const newScmType: string = await this.showScmPrompt(config.scmType);
         // returns the updated scmType
-        return await this.updateScmType(client, config, newScmType);
+        return newScmType ? await this.updateScmType(client, config, newScmType) : undefined;
     }
 
     private async showScmPrompt(currentScmType: string): Promise<string | undefined> {
