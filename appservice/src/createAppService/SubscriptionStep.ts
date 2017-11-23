@@ -56,7 +56,7 @@ export class SubscriptionStep extends WizardStep {
     }
 
     public async execute(): Promise<void> {
-        this.wizard.writeline(localize('UsingSubscription', 'Using Subscription "{0} ({1})".', this.subscription.displayName, this.subscription.subscriptionId));
+        this.wizard.writeline(localize('azApp.UsingSubscription', 'Using Subscription "{0} ({1})".', this.subscription.displayName, this.subscription.subscriptionId));
     }
 
     private async getSubscriptionsAsQuickPickItems(): Promise<IQuickPickItemWithData<AzureResourceFilter>[]> {

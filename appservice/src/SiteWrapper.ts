@@ -116,7 +116,7 @@ export class SiteWrapper {
         }
 
         if (!this.slotName && plan.numberOfSites < 2) {
-            const message: string = localize('deleteLastServicePlan', 'This is the last app in the App Service plan "{0}". Do you want to delete this App Service plan to prevent unexpected charges?', plan.name);
+            const message: string = localize('azApp.deleteLastServicePlan', 'This is the last app in the App Service plan "{0}". Do you want to delete this App Service plan to prevent unexpected charges?', plan.name);
             const input: vscode.MessageItem | undefined = await vscode.window.showWarningMessage(message, DialogResponses.yes, DialogResponses.no, DialogResponses.cancel);
             if (input === undefined) {
                 return;
@@ -126,17 +126,17 @@ export class SiteWrapper {
         }
 
         outputChannel.show();
-        outputChannel.appendLine(localize('Deleting', 'Deleting "{0}"...', this.appName));
+        outputChannel.appendLine(localize('azApp.Deleting', 'Deleting "{0}"...', this.appName));
         if (this.slotName) {
             await client.webApps.deleteSlot(this.resourceGroup, this.name, this.slotName);
         } else {
             await client.webApps.deleteMethod(this.resourceGroup, this.name, { deleteEmptyServerFarm: deletePlan });
         }
-        outputChannel.appendLine(localize('DeleteSucceeded', 'Successfully deleted "{0}".', this.appName));
+        outputChannel.appendLine(localize('azApp.DeleteSucceeded', 'Successfully deleted "{0}".', this.appName));
     }
 
     public async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<void> {
-        const warning: string = localize('zipWarning', 'Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', this.appName);
+        const warning: string = localize('azApp.zipWarning', 'Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', this.appName);
         if (await vscode.window.showWarningMessage(warning, DialogResponses.yes, DialogResponses.cancel) !== DialogResponses.yes) {
             return;
         }
@@ -153,7 +153,7 @@ export class SiteWrapper {
             this.log(outputChannel, 'Creating zip package...');
             zipFilePath = await FileUtilities.zipDirectory(fsPath);
         } else {
-            throw new Error(localize('NotAZipError', 'Path specified is not a folder or a zip file'));
+            throw new Error(localize('azApp.NotAZipError', 'Path specified is not a folder or a zip file'));
         }
 
         try {
@@ -250,7 +250,7 @@ export class SiteWrapper {
     }
 
     private async showScmPrompt(currentScmType: string): Promise<string | undefined> {
-        const placeHolder: string = localize('scmPrompt', 'Current deployment source is "{0}".  Select a new source.', currentScmType);
+        const placeHolder: string = localize('azApp.scmPrompt', 'Current deployment source is "{0}".  Select a new source.', currentScmType);
         const scmQuickPicks: vscode.QuickPickItem[] = [];
         // generate quickPicks to not include current type
         for (const scmQuickPick of SCM_TYPES) {
