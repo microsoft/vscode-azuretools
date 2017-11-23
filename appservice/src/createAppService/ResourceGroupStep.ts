@@ -21,7 +21,7 @@ export class ResourceGroupStep extends WizardStep {
     private _rg: ResourceGroup;
     private readonly _createNewItem: IQuickPickItemWithData<ResourceGroup> = {
         persistenceId: '',
-        label: localize('NewResourceGroup', '$(plus) Create New Resource Group'),
+        label: localize('azApp.NewResourceGroup', '$(plus) Create New Resource Group'),
         description: null,
         data: null
     };
@@ -61,11 +61,11 @@ export class ResourceGroupStep extends WizardStep {
                 value = value ? value.trim() : '';
 
                 if (resourceGroups.findIndex((rg: ResourceGroup) => rg.name.localeCompare(value) === 0) >= 0) {
-                    return localize('ResourceGroupAlreadyExists', 'Resource group name "{0}" already exists.', value);
+                    return localize('azApp.ResourceGroupAlreadyExists', 'Resource group name "{0}" already exists.', value);
                 }
 
                 if (!value.match(/^[a-z0-9.\-_()]{0,89}[a-z0-9\-_()]$/ig)) {
-                    return localize('ResourceGroupRegExpError', 'Resource group name should be 1-90 characters long and can only include alphanumeric characters, periods, underscores, hyphens and parenthesis and cannot end in a period.');
+                    return localize('azApp.ResourceGroupRegExpError', 'Resource group name should be 1-90 characters long and can only include alphanumeric characters, periods, underscores, hyphens and parenthesis and cannot end in a period.');
                 }
 
                 return undefined;
@@ -93,15 +93,15 @@ export class ResourceGroupStep extends WizardStep {
 
     public async execute(): Promise<void> {
         if (!this._createNew) {
-            this.wizard.writeline(localize('UsingResourceGroup', 'Using resource group "{0} ({1})".', this._rg.name, this._rg.location));
+            this.wizard.writeline(localize('azApp.UsingResourceGroup', 'Using resource group "{0} ({1})".', this._rg.name, this._rg.location));
             return;
         }
 
-        this.wizard.writeline(localize('CreatingResourceGroup', 'Creating new resource group "{0} ({1})"...', this._rg.name, this._rg.location));
+        this.wizard.writeline(localize('azApp.CreatingResourceGroup', 'Creating new resource group "{0} ({1})"...', this._rg.name, this._rg.location));
         const credentials: ServiceClientCredentials = this.wizard.subscriptionStep.credentials; const subscription: Subscription = this.wizard.subscriptionStep.subscription;
         const resourceClient: ResourceManagementClient = new ResourceManagementClient(credentials, subscription.subscriptionId);
         this._rg = await resourceClient.resourceGroups.createOrUpdate(this._rg.name, this._rg);
-        this.wizard.writeline(localize('CreatedResourceGroup', 'Created resource group "{0} ({1})".', this._rg.name, this._rg.location));
+        this.wizard.writeline(localize('azApp.CreatedResourceGroup', 'Created resource group "{0} ({1})".', this._rg.name, this._rg.location));
     }
 
     get resourceGroup(): ResourceGroup {

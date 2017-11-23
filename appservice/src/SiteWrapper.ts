@@ -13,6 +13,7 @@ import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
 import KuduClient from 'vscode-azurekudu';
 import { DeployResult } from 'vscode-azurekudu/lib/models';
+import { DialogResponses} from './DialogResponses';
 import { ArgumentError } from './errors';
 import * as FileUtilities from './FileUtilities';
 import { localize } from './localize';
@@ -31,9 +32,6 @@ export class SiteWrapper {
     public readonly planResourceGroup: string;
     public readonly planName: string;
     private readonly _gitUrl: string;
-
-    private readonly _yes: string = localize('Yes', 'Yes');
-    private readonly _no: string = localize('No', 'No');
 
     constructor(site: Site) {
         const matches: RegExpMatchArray | null = site.serverFarmId.match(/\/subscriptions\/(.*)\/resourceGroups\/(.*)\/providers\/Microsoft.Web\/serverfarms\/(.*)/);
@@ -104,8 +102,8 @@ export class SiteWrapper {
     }
 
     public async deleteSite(client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<void> {
-        const confirmMessage: string = localize('deleteConfirmation', 'Are you sure you want to delete "{0}"?', this.appName);
-        if (await vscode.window.showWarningMessage(confirmMessage, this._yes) !== this._yes) {
+        const confirmMessage: string = localize('azApp.deleteConfirmation', 'Are you sure you want to delete "{0}"?', this.appName);
+        if (await vscode.window.showWarningMessage(confirmMessage, DialogResponses.yes, DialogResponses.cancel) !== DialogResponses.yes) {
             return;
         }
 
@@ -119,11 +117,11 @@ export class SiteWrapper {
 
         if (!this.slotName && plan.numberOfSites < 2) {
             const message: string = localize('deleteLastServicePlan', 'This is the last app in the App Service plan "{0}". Do you want to delete this App Service plan to prevent unexpected charges?', plan.name);
-            const input: string | undefined = await vscode.window.showWarningMessage(message, this._yes, this._no);
+            const input: vscode.MessageItem | undefined = await vscode.window.showWarningMessage(message, DialogResponses.yes, DialogResponses.no, DialogResponses.cancel);
             if (input === undefined) {
                 return;
             } else {
-                deletePlan = input === this._yes;
+                deletePlan = input === DialogResponses.yes;
             }
         }
 
@@ -139,7 +137,7 @@ export class SiteWrapper {
 
     public async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<void> {
         const warning: string = localize('zipWarning', 'Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', this.appName);
-        if (await vscode.window.showWarningMessage(warning, this._yes) !== this._yes) {
+        if (await vscode.window.showWarningMessage(warning, DialogResponses.yes, DialogResponses.cancel) !== DialogResponses.yes) {
             return;
         }
 
@@ -183,7 +181,7 @@ export class SiteWrapper {
 
     public async localGitDeploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<DeployResult | undefined> {
         const kuduClient: KuduClient = await this.getKuduClient(client);
-        const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging. Force push?');
+        const pushReject: string = localize('azApp.localGitPush', 'Push rejected due to Git history diverging. Force push?');
         const publishCredentials: User = await this.getWebAppPublishCredential(client);
 
         // credentials for accessing Azure Remote Repo
@@ -194,7 +192,7 @@ export class SiteWrapper {
         try {
             const status: git.StatusResult = await localGit.status();
             if (status.files.length > 0) {
-                const uncommit: string = localize('localGitUncommit', '{0} uncommitted change(s) in local repo "{1}"', status.files.length, fsPath);
+                const uncommit: string = localize('azApp.localGitUncommit', '{0} uncommitted change(s) in local repo "{1}"', status.files.length, fsPath);
                 vscode.window.showWarningMessage(uncommit);
             }
             await localGit.push(remote, 'HEAD:master');
@@ -204,8 +202,8 @@ export class SiteWrapper {
                 await this.showInstallPrompt();
                 return undefined;
             } else if (err.message.indexOf('error: failed to push') >= 0) { // tslint:disable-line:no-unsafe-any
-                const input: string | undefined = await vscode.window.showErrorMessage(pushReject, this._yes);
-                if (input === this._yes) {
+                const input: vscode.MessageItem | undefined = await vscode.window.showErrorMessage(pushReject, DialogResponses.yes, DialogResponses.cancel);
+                if (input === DialogResponses.yes) {
                     await (<(remote: string, branch: string, options: object) => Promise<void>>localGit.push)(remote, 'HEAD:master', { '-f': true });
                     // Ugly casting neccessary due to bug in simple-git. Issue filed:
                     // https://github.com/steveukx/git-js/issues/218
