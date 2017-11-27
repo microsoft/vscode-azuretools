@@ -1,7 +1,7 @@
 {
     "name": "vscode-azurekudu",
     "author": "Microsoft Corporation",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "description": "Client used to interact with Kudu.",
     "tags": [
         "azure",
