@@ -31,15 +31,17 @@ export class SiteWrapper {
     public readonly slotName?: string;
     public readonly planResourceGroup: string;
     public readonly planName: string;
+    public readonly id: string;
     private readonly _gitUrl: string;
 
     constructor(site: Site) {
         const matches: RegExpMatchArray | null = site.serverFarmId.match(/\/subscriptions\/(.*)\/resourceGroups\/(.*)\/providers\/Microsoft.Web\/serverfarms\/(.*)/);
-        if (!site.name || !site.resourceGroup || !site.type || matches === null || matches.length < 4) {
+        if (!site.id || !site.name || !site.resourceGroup || !site.type || matches === null || matches.length < 4) {
             throw new ArgumentError(site);
         }
 
         const isSlot: boolean = site.type.toLowerCase() === 'microsoft.web/sites/slots';
+        this.id = site.id;
         this.resourceGroup = site.resourceGroup;
         this.location = site.location;
         this.name = isSlot ? site.name.substring(0, site.name.lastIndexOf('/')) : site.name;
@@ -242,6 +244,17 @@ export class SiteWrapper {
         }
     }
 
+    public async getKuduClient(client: WebSiteManagementClient): Promise<KuduClient> {
+        const user: User = await this.getWebAppPublishCredential(client);
+        if (!user.publishingUserName || !user.publishingPassword) {
+            throw new ArgumentError(user);
+        }
+
+        const cred: BasicAuthenticationCredentials = new BasicAuthenticationCredentials(user.publishingUserName, user.publishingPassword);
+
+        return new KuduClient(cred, `https://${this.appName}.scm.azurewebsites.net`);
+    }
+
     public async editScmType(client: WebSiteManagementClient): Promise<string | undefined> {
         const config: SiteConfigResource = await this.getSiteConfig(client);
         const newScmType: string = await this.showScmPrompt(config.scmType);
@@ -287,17 +300,6 @@ export class SiteWrapper {
 
     private log(outputChannel: vscode.OutputChannel, message: string): void {
         outputChannel.appendLine(`${(new Date()).toLocaleTimeString()} ${this.appName}: ${message}`);
-    }
-
-    private async getKuduClient(client: WebSiteManagementClient): Promise<KuduClient> {
-        const user: User = await this.getWebAppPublishCredential(client);
-        if (!user.publishingUserName || !user.publishingPassword) {
-            throw new ArgumentError(user);
-        }
-
-        const cred: BasicAuthenticationCredentials = new BasicAuthenticationCredentials(user.publishingUserName, user.publishingPassword);
-
-        return new KuduClient(cred, `https://${this.appName}.scm.azurewebsites.net`);
     }
 
     private async updateScmType(client: WebSiteManagementClient, config: SiteConfigResource, scmType: string): Promise<string | undefined> {
