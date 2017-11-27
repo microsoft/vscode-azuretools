@@ -38,12 +38,12 @@ export class AppServiceCreator extends WizardBase {
         // Rather than expose 'AzureAccount' types in the index.ts contract, simply get it inside of this npm package
         const azureAccountExtension: vscode.Extension<AzureAccount> | undefined = vscode.extensions.getExtension<AzureAccount>('ms-vscode.azure-account');
         if (!azureAccountExtension) {
-            throw new Error(localize('azApp.NoAccountExtensionError', 'The Azure Account Extension is required for the App Service tools.'));
+            throw new Error(localize('NoAccountExtensionError', 'The Azure Account Extension is required for the App Service tools.'));
         } else {
             this.azureAccount = azureAccountExtension.exports;
         }
 
-        this.subscriptionStep = new SubscriptionStep(this, this.azureAccount, localize('azApp.selectSubscription', 'Select the subscription to create the new {0} in.', getAppKindDisplayName(appKind)), this._credentials, this._subscription);
+        this.subscriptionStep = new SubscriptionStep(this, this.azureAccount, localize('selectSubscription', 'Select the subscription to create the new {0} in.', getAppKindDisplayName(appKind)), this._credentials, this._subscription);
         this.websiteNameStep = new SiteNameStep(this, appKind);
         this.resourceGroupStep = new ResourceGroupStep(this);
 

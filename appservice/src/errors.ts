@@ -20,6 +20,6 @@ export class WizardFailedError extends Error {
 
 export class ArgumentError extends Error {
     constructor(obj: object) {
-        super(localize('azApp.argumentError', 'Invalid {0}.', obj.constructor.name));
+        super(localize('argumentError', 'Invalid {0}.', obj.constructor.name));
     }
 }

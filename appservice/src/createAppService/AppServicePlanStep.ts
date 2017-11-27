@@ -26,7 +26,7 @@ export class AppServicePlanStep extends WizardStep {
     private readonly _websiteOS: WebsiteOS;
     private readonly _createNewItem: IQuickPickItemWithData<AppServicePlan> = {
         persistenceId: '$new',
-        label: localize('azApp.CreateNewAppServicePlan', '$(plus) Create New App Service Plan'),
+        label: localize('CreateNewAppServicePlan', '$(plus) Create New App Service Plan'),
         description: '',
         data: this._plan
     };
@@ -64,16 +64,16 @@ export class AppServicePlanStep extends WizardStep {
         const plans: AppServicePlan[] = await plansTask;
         newPlanName = await this.showInputBox({
             value: suggestedName,
-            prompt: localize('azApp.AppServicePlanPrompt', 'Enter the name of the new App Service Plan.'),
+            prompt: localize('AppServicePlanPrompt', 'Enter the name of the new App Service Plan.'),
             validateInput: (value: string): string | undefined => {
                 value = value ? value.trim() : '';
 
                 if (plans.findIndex((plan: AppServicePlan) => plan.resourceGroup.toLowerCase() === rg.name && value.localeCompare(plan.name) === 0) >= 0) {
-                    return localize('azApp.AppServicePlanAlreadyExists', 'App Service name "{0}" already exists in resource group "{1}".', value, rg.name);
+                    return localize('AppServicePlanAlreadyExists', 'App Service name "{0}" already exists in resource group "{1}".', value, rg.name);
                 }
 
                 if (!value.match(/^[a-z0-9\-]{1,40}$/ig)) {
-                    return localize('azApp.AppServicePlanRegExpError', 'App Service name should be 1-40 characters long and can only include alphanumeric characters and hyphens.');
+                    return localize('AppServicePlanRegExpError', 'App Service name should be 1-40 characters long and can only include alphanumeric characters and hyphens.');
                 }
 
                 return undefined;
@@ -89,7 +89,7 @@ export class AppServicePlanStep extends WizardStep {
                 data: s
             };
         });
-        const sku: SkuDescription = await this.showQuickPick(pricingTiers, { placeHolder: localize('azApp.PricingTierPlaceholder', 'Choose your pricing tier.') }, 'NewWebApp.PricingTier');
+        const sku: SkuDescription = await this.showQuickPick(pricingTiers, { placeHolder: localize('PricingTierPlaceholder', 'Choose your pricing tier.') }, 'NewWebApp.PricingTier');
         this._createNew = true;
 
         this._plan = {
@@ -103,17 +103,17 @@ export class AppServicePlanStep extends WizardStep {
 
     public async execute(): Promise<void> {
         if (!this._createNew) {
-            this.wizard.writeline(localize('azApp.UsingAppServicePlan', 'Using App Service plan "{0} ({1})".', this._plan.appServicePlanName, this._plan.sku.name));
+            this.wizard.writeline(localize('UsingAppServicePlan', 'Using App Service plan "{0} ({1})".', this._plan.appServicePlanName, this._plan.sku.name));
             return;
         }
 
-        this.wizard.writeline(localize('azApp.CreatingAppServicePlan', 'Creating new App Service plan "{0} ({1})"...', this._plan.appServicePlanName, this._plan.sku.name));
+        this.wizard.writeline(localize('CreatingAppServicePlan', 'Creating new App Service plan "{0} ({1})"...', this._plan.appServicePlanName, this._plan.sku.name));
         const credentials: ServiceClientCredentials = this.wizard.subscriptionStep.credentials;
         const subscription: Subscription = this.wizard.subscriptionStep.subscription;
         const rg: ResourceGroup = this.wizard.resourceGroupStep.resourceGroup;
         const websiteClient: WebSiteManagementClient = new WebSiteManagementClient(credentials, subscription.subscriptionId);
         this._plan = await websiteClient.appServicePlans.createOrUpdate(rg.name, this._plan.appServicePlanName, this._plan);
-        this.wizard.writeline(localize('azApp.CreatedAppServicePlan', 'Created App Service plan "{0} ({1})".', this._plan.appServicePlanName, this._plan.sku.name));
+        this.wizard.writeline(localize('CreatedAppServicePlan', 'Created App Service plan "{0} ({1})".', this._plan.appServicePlanName, this._plan.sku.name));
     }
 
     public get servicePlan(): AppServicePlan {

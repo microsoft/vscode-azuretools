@@ -23,7 +23,7 @@ export class StorageAccountStep extends WizardStep {
     private _resourceGroup: string;
     private readonly _createNewItem: IQuickPickItemWithData<StorageAccount> = {
         persistenceId: '',
-        label: localize('azApp.NewStorageAccount', '$(plus) Create New Storage Account'),
+        label: localize('NewStorageAccount', '$(plus) Create New Storage Account'),
         description: null,
         data: null
     };
@@ -66,7 +66,7 @@ export class StorageAccountStep extends WizardStep {
                     value = value ? value.trim() : '';
 
                     if (!value.match(/^[a-z0-9]{3,24}$/ig)) {
-                        return localize('azApp.StorageAccountRegExpError', 'Storage account name must contain 3-24 lowercase characters or numbers');
+                        return localize('StorageAccountRegExpError', 'Storage account name must contain 3-24 lowercase characters or numbers');
                     }
 
                     return null;
@@ -92,11 +92,11 @@ export class StorageAccountStep extends WizardStep {
 
     public async execute(): Promise<void> {
         if (!this._createNew) {
-            this.wizard.writeline(localize('azApp.UsingStorageAccount', 'Using storage account "{0} ({1}, {2})".', this._account.name, this._account.location, this._account.sku.name));
+            this.wizard.writeline(localize('UsingStorageAccount', 'Using storage account "{0} ({1}, {2})".', this._account.name, this._account.location, this._account.sku.name));
             return;
         }
 
-        this.wizard.writeline(localize('azApp.CreatingNewStorageAccount', 'Creating new storage account "{0} ({1}, {2})"...', this._account.name, this._account.location, this._account.sku.name));
+        this.wizard.writeline(localize('CreatingNewStorageAccount', 'Creating new storage account "{0} ({1}, {2})"...', this._account.name, this._account.location, this._account.sku.name));
         const credentials: ServiceClientCredentials = this.wizard.subscriptionStep.credentials;
         const subscription: Subscription = this.wizard.subscriptionStep.subscription;
         const storageClient: StorageManagementClient = new StorageManagementClient(credentials, subscription.subscriptionId);
@@ -109,7 +109,7 @@ export class StorageAccountStep extends WizardStep {
                 location: this._account.location
             }
         );
-        this.wizard.writeline(localize('azApp.CreatedStorageAccount', 'Created storage account "{0} ({1}, {2})".', this._account.name, this._account.location, this._account.sku.name));
+        this.wizard.writeline(localize('CreatedStorageAccount', 'Created storage account "{0} ({1}, {2})".', this._account.name, this._account.location, this._account.sku.name));
     }
 
     public get resourceGroup(): string {
