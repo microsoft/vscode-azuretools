@@ -5,7 +5,7 @@
 
 import * as path from 'path';
 import { Disposable, Event, EventEmitter, Extension, extensions, TreeDataProvider, TreeItem, TreeItemCollapsibleState } from 'vscode';
-import { IAzureNode, IChildProvider } from '../../index';
+import { IAzureNode, IAzureParentTreeItem, IChildProvider } from '../../index';
 import { AzureAccount, AzureLoginStatus, AzureSubscription } from '../azure-account.api';
 import { ArgumentError } from '../errors';
 import { IUserInterface, PickWithData } from '../IUserInterface';
@@ -14,6 +14,7 @@ import { VSCodeUI } from '../VSCodeUI';
 import { AzureNode } from './AzureNode';
 import { AzureParentNode } from './AzureParentNode';
 import { LoadMoreTreeItem } from './LoadMoreTreeItem';
+import { RootNode } from './RootNode';
 import { SubscriptionNode } from './SubscriptionNode';
 
 export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disposable {
@@ -25,13 +26,15 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
     private _resourceProvider: IChildProvider;
     private _ui: IUserInterface;
     private _azureAccount: AzureAccount;
+    private _rootNodes: AzureNode[];
 
     private _subscriptionNodes: IAzureNode[] = [];
     private _disposables: Disposable[] = [];
 
-    constructor(resourceProvider: IChildProvider, loadMoreCommandId: string, ui: IUserInterface = new VSCodeUI()) {
+    constructor(resourceProvider: IChildProvider, loadMoreCommandId: string, rootTreeItems?: IAzureParentTreeItem[], ui: IUserInterface = new VSCodeUI()) {
         this._resourceProvider = resourceProvider;
         this._loadMoreCommandId = loadMoreCommandId;
+        this._rootNodes = rootTreeItems ? rootTreeItems.map((treeItem: IAzureParentTreeItem) => new RootNode(this, treeItem)) : [];
         this._ui = ui;
 
         // Rather than expose 'AzureAccount' types in the index.ts contract, simply get it inside of this npm package
@@ -82,12 +85,14 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
                 .concat(await node.getCachedChildren())
                 .concat(node.treeItem.hasMoreChildren() ? new AzureNode(node, new LoadMoreTreeItem(this._loadMoreCommandId)) : []);
         } else { // Root of tree
+            let nodes: IAzureNode[];
+
             this._subscriptionNodes = [];
 
             let commandLabel: string | undefined;
             const loginCommandId: string = 'azure-account.login';
             if (this._azureAccount.status === 'Initializing' || this._azureAccount.status === 'LoggingIn') {
-                return [new AzureNode(undefined, {
+                nodes = [new AzureNode(undefined, {
                     label: localize('loadingNode', 'Loading...'),
                     commandId: loginCommandId,
                     contextValue: 'azureCommandNode',
@@ -98,11 +103,10 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
                     }
                 })];
             } else if (this._azureAccount.status === 'LoggedOut') {
-                return [new AzureNode(undefined, { label: localize('signInNode', 'Sign in to Azure...'), commandId: loginCommandId, contextValue: 'azureCommandNode', id: loginCommandId })];
+                nodes = [new AzureNode(undefined, { label: localize('signInNode', 'Sign in to Azure...'), commandId: loginCommandId, contextValue: 'azureCommandNode', id: loginCommandId })];
             } else if (this._azureAccount.filters.length === 0) {
                 commandLabel = localize('noSubscriptionsNode', 'No subscriptions found. Edit filters...');
-                return [new AzureNode(undefined, { label: commandLabel, commandId: 'azure-account.selectSubscriptions', contextValue: 'azureCommandNode', id: 'azure-account.selectSubscriptions' })];
-
+                nodes = [new AzureNode(undefined, { label: commandLabel, commandId: 'azure-account.selectSubscriptions', contextValue: 'azureCommandNode', id: 'azure-account.selectSubscriptions' })];
             } else {
                 this._subscriptionNodes = this._azureAccount.filters.map((subscriptionInfo: AzureSubscription) => {
                     if (subscriptionInfo.subscription.subscriptionId === undefined || subscriptionInfo.subscription.displayName === undefined) {
@@ -111,8 +115,10 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
                         return new SubscriptionNode(this, this._resourceProvider, subscriptionInfo.subscription.subscriptionId, subscriptionInfo.subscription.displayName, subscriptionInfo);
                     }
                 });
-                return this._subscriptionNodes;
+                nodes = this._subscriptionNodes;
             }
+
+            return nodes.concat(this._rootNodes);
         }
     }
 

@@ -56,11 +56,13 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
     }
 
     public async loadMoreChildren(): Promise<void> {
+        let clearCache: boolean = false;
         if (this._cachedChildren === undefined) {
             this._cachedChildren = [];
+            clearCache = true;
         }
 
-        const newTreeItems: IAzureTreeItem[] = await this.treeItem.loadMoreChildren(this);
+        const newTreeItems: IAzureTreeItem[] = await this.treeItem.loadMoreChildren(this, clearCache);
         this._cachedChildren = this._cachedChildren.concat(newTreeItems.map((t: IAzureTreeItem) => this.createNewNode(t)));
     }
 
