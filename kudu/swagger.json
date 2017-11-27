@@ -1064,6 +1064,12 @@
                         "schema": {
                             "type": "object"
                         }
+                    },
+                    "204": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
                     }
                 }
             }
@@ -1083,7 +1089,10 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/FunctionEnvelope"
+                            }
                         }
                     }
                 }
@@ -7040,6 +7049,44 @@
                         4096
                     ],
                     "type": "integer"
+                }
+            }
+        },
+        "FunctionEnvelope": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "function_app_id": {
+                    "type": "string"
+                },
+                "script_root_path_href": {
+                    "type": "string"
+                },
+                "script_href": {
+                    "type": "string"
+                },
+                "config_href": {
+                    "type": "string"
+                },
+                "secrets_file_href": {
+                    "type": "string"
+                },
+                "href": {
+                    "type": "string"
+                },
+                "config": {
+                    "type": "object"
+                },
+                "files": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "test_data": {
+                    "type": "string"
                 }
             }
         },
