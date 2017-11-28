@@ -3,13 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+// tslint:disable-next-line:no-require-imports
 import WebSiteManagementClient = require('azure-arm-website');
-import * as WebSiteModels from 'azure-arm-website/lib/models';
+import { StringDictionary } from 'azure-arm-website/lib/models';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { SiteWrapper } from 'vscode-azureappservice';
 import { IAzureNode, IAzureParentTreeItem, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
+import { SiteWrapper } from '../SiteWrapper';
 import { nodeUtils } from '../utils/nodeUtils';
+import { AppSettingTreeItem } from './AppSettingTreeItem';
 
 export class AppSettingsTreeItem implements IAzureParentTreeItem {
     public static contextValue: string = 'applicationSettings';
@@ -17,22 +19,20 @@ export class AppSettingsTreeItem implements IAzureParentTreeItem {
     public readonly childTypeLabel: string = 'App Setting';
     public readonly contextValue: string = AppSettingsTreeItem.contextValue;
     private readonly _siteWrapper: SiteWrapper;
-    private readonly _site: WebSiteModels.Site;
-    private _settings: WebSiteModels.StringDictionary;
+    private _settings: StringDictionary;
 
-    constructor(site: WebSiteModels.Site) {
-        this._siteWrapper = new SiteWrapper(site);
-        this._site = site;
+    constructor(siteWrapper: SiteWrapper) {
+        this._siteWrapper = siteWrapper;
     }
 
     public get id(): string {
-        return `${this._site.id}/application`;
+        return `${this._siteWrapper.id}/application`;
     }
 
     public get iconPath(): { light: string, dark: string } {
         return {
-            light: path.join(__filename, '..', '..', '..', '..', 'resources', 'light', 'AppSettings_color.svg'),
-            dark: path.join(__filename, '..', '..', '..', '..', 'resources', 'dark', 'AppSettings_color.svg')
+            light: path.join(__filename, '..', '..', '..', 'resources', 'light', 'AppSettings_color.svg'),
+            dark: path.join(__filename, '..', '..', '..', 'resources', 'dark', 'AppSettings_color.svg')
         };
     }
 
@@ -76,20 +76,24 @@ export class AppSettingsTreeItem implements IAzureParentTreeItem {
             await this.loadMoreChildren(node);
         }
 
-        const newKey = await vscode.window.showInputBox({
+        const newKey: string | undefined = await vscode.window.showInputBox({
             ignoreFocusOut: true,
             prompt: 'Enter new setting key',
-            validateInput: v => this.validateNewKeyInput(v)
+            validateInput: (v?: string): string | undefined => this.validateNewKeyInput(v)
         });
 
-        if (!newKey) {
+        if (newKey === undefined) {
             throw new UserCancelledError();
         }
 
-        const newValue = await vscode.window.showInputBox({
+        const newValue: string | undefined = await vscode.window.showInputBox({
             ignoreFocusOut: true,
             prompt: `Enter setting value for "${newKey}"`
-        }) || '';
+        });
+
+        if (newValue === undefined) {
+            throw new UserCancelledError();
+        }
 
         if (!this._settings.properties) {
             this._settings.properties = {};
@@ -101,7 +105,7 @@ export class AppSettingsTreeItem implements IAzureParentTreeItem {
         return new AppSettingTreeItem(newKey, newValue);
     }
 
-    public validateNewKeyInput(newKey: string, oldKey?: string): string | undefined {
+    public validateNewKeyInput(newKey?: string, oldKey?: string): string | undefined {
         newKey = newKey ? newKey.trim() : '';
         oldKey = oldKey ? oldKey.trim().toLowerCase() : oldKey;
         if (newKey.length === 0) {
@@ -118,7 +122,7 @@ export class AppSettingsTreeItem implements IAzureParentTreeItem {
         return undefined;
     }
 
-    private async applySettings(client: WebSiteManagementClient): Promise<WebSiteModels.StringDictionary> {
+    private async applySettings(client: WebSiteManagementClient): Promise<StringDictionary> {
         return this._siteWrapper.slotName ?
             await client.webApps.updateApplicationSettingsSlot(this._siteWrapper.resourceGroup, this._siteWrapper.name, this._settings, this._siteWrapper.slotName) :
             await client.webApps.updateApplicationSettings(this._siteWrapper.resourceGroup, this._siteWrapper.name, this._settings);

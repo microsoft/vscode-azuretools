@@ -3,13 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import WebSiteManagementClient = require('azure-arm-website');
-import * as WebSiteModels from 'azure-arm-website/lib/models';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { SiteWrapper } from 'vscode-azureappservice';
-import { IAzureNode, IAzureParentTreeItem, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
+import { IAzureNode, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
 import { nodeUtils } from '../utils/nodeUtils';
+import { AppSettingsTreeItem } from './AppSettingsTreeItem';
 
 export class AppSettingTreeItem implements IAzureTreeItem {
     public static contextValue: string = 'applicationSettingItem';
@@ -33,20 +31,20 @@ export class AppSettingTreeItem implements IAzureTreeItem {
 
     public get iconPath(): { light: string, dark: string } {
         return {
-            light: path.join(__filename, '..', '..', '..', '..', 'resources', 'light', 'Item_16x_vscode.svg'),
-            dark: path.join(__filename, '..', '..', '..', '..', 'resources', 'dark', 'Item_16x_vscode.svg')
+            light: path.join(__filename, '..', '..', '..', 'resources', 'light', 'Item_16x_vscode.svg'),
+            dark: path.join(__filename, '..', '..', '..', 'resources', 'dark', 'Item_16x_vscode.svg')
         };
     }
 
     public async edit(node: IAzureNode): Promise<void> {
-        const newValue = await vscode.window.showInputBox({
+        const newValue: string | undefined = await vscode.window.showInputBox({
             ignoreFocusOut: true,
             prompt: `Enter setting value for "${this.key}"`,
             value: this.value
         });
 
         if (newValue === undefined) {
-            return;
+            throw new UserCancelledError();
         }
 
         this.value = newValue;
@@ -55,16 +53,16 @@ export class AppSettingTreeItem implements IAzureTreeItem {
     }
 
     public async rename(node: IAzureNode): Promise<void> {
-        const oldKey = this.key;
-        const newKey = await vscode.window.showInputBox({
+        const oldKey: string = this.key;
+        const newKey: string | undefined = await vscode.window.showInputBox({
             ignoreFocusOut: true,
             prompt: `Enter a new name for "${oldKey}"`,
             value: this.key,
-            validateInput: v => (<AppSettingsTreeItem>node.parent.treeItem).validateNewKeyInput(v, oldKey)
+            validateInput: (v?: string): string | undefined => (<AppSettingsTreeItem>node.parent.treeItem).validateNewKeyInput(v, oldKey)
         });
 
-        if (!newKey) {
-            return;
+        if (newKey === undefined) {
+            throw new UserCancelledError();
         }
 
         this.key = newKey;
@@ -75,7 +73,7 @@ export class AppSettingTreeItem implements IAzureTreeItem {
     public async deleteTreeItem(node: IAzureNode): Promise<void> {
         const okayAction: vscode.MessageItem = { title: 'Delete' };
         const cancelAction: vscode.MessageItem = { title: 'Cancel', isCloseAffordance: true };
-        const result = await vscode.window.showWarningMessage(`Are you sure you want to delete setting "${this.key}"?`, okayAction, cancelAction);
+        const result: vscode.MessageItem = await vscode.window.showWarningMessage(`Are you sure you want to delete setting "${this.key}"?`, okayAction, cancelAction);
 
         if (result === okayAction) {
             await (<AppSettingsTreeItem>node.parent.treeItem).deleteSettingItem(nodeUtils.getWebSiteClient(node), this.key);

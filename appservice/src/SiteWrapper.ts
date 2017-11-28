@@ -11,9 +11,10 @@ import { BasicAuthenticationCredentials } from 'ms-rest';
 import * as opn from 'opn';
 import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
+import { UserCancelledError } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { DeployResult } from 'vscode-azurekudu/lib/models';
-import { DialogResponses} from './DialogResponses';
+import { DialogResponses } from './DialogResponses';
 import { ArgumentError } from './errors';
 import * as FileUtilities from './FileUtilities';
 import { localize } from './localize';
@@ -106,7 +107,7 @@ export class SiteWrapper {
     public async deleteSite(client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<void> {
         const confirmMessage: string = localize('deleteConfirmation', 'Are you sure you want to delete "{0}"?', this.appName);
         if (await vscode.window.showWarningMessage(confirmMessage, DialogResponses.yes, DialogResponses.cancel) !== DialogResponses.yes) {
-            return;
+            throw new UserCancelledError();
         }
 
         let plan: AppServicePlan | undefined;
@@ -121,7 +122,7 @@ export class SiteWrapper {
             const message: string = localize('deleteLastServicePlan', 'This is the last app in the App Service plan "{0}". Do you want to delete this App Service plan to prevent unexpected charges?', plan.name);
             const input: vscode.MessageItem | undefined = await vscode.window.showWarningMessage(message, DialogResponses.yes, DialogResponses.no, DialogResponses.cancel);
             if (input === undefined) {
-                return;
+                throw new UserCancelledError();
             } else {
                 deletePlan = input === DialogResponses.yes;
             }
@@ -140,7 +141,7 @@ export class SiteWrapper {
     public async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<void> {
         const warning: string = localize('zipWarning', 'Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', this.appName);
         if (await vscode.window.showWarningMessage(warning, DialogResponses.yes, DialogResponses.cancel) !== DialogResponses.yes) {
-            return;
+            throw new UserCancelledError();
         }
 
         outputChannel.show();
@@ -210,7 +211,7 @@ export class SiteWrapper {
                     // Ugly casting neccessary due to bug in simple-git. Issue filed:
                     // https://github.com/steveukx/git-js/issues/218
                 } else {
-                    return undefined;
+                    throw new UserCancelledError();
                 }
             } else {
                 throw err;
@@ -259,10 +260,10 @@ export class SiteWrapper {
         const config: SiteConfigResource = await this.getSiteConfig(client);
         const newScmType: string = await this.showScmPrompt(config.scmType);
         // returns the updated scmType
-        return newScmType ? await this.updateScmType(client, config, newScmType) : undefined;
+        return await this.updateScmType(client, config, newScmType);
     }
 
-    private async showScmPrompt(currentScmType: string): Promise<string | undefined> {
+    private async showScmPrompt(currentScmType: string): Promise<string> {
         const placeHolder: string = localize('scmPrompt', 'Current deployment source is "{0}".  Select a new source.', currentScmType);
         const scmQuickPicks: vscode.QuickPickItem[] = [];
         // generate quickPicks to not include current type
@@ -273,7 +274,11 @@ export class SiteWrapper {
         }
 
         const quickPick: vscode.QuickPickItem = await vscode.window.showQuickPick(scmQuickPicks, { placeHolder: placeHolder });
-        return quickPick ? quickPick.label : undefined;
+        if (quickPick === undefined) {
+            throw new UserCancelledError();
+        } else {
+            return quickPick.label;
+        }
     }
 
     private async waitForDeploymentToComplete(kuduClient: KuduClient, outputChannel: vscode.OutputChannel, pollingInterval: number = 5000): Promise<DeployResult> {

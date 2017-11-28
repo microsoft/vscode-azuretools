@@ -7,21 +7,11 @@ import { Subscription } from 'azure-arm-resource/lib/subscription/models';
 import { Site } from 'azure-arm-website/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { Memento, OutputChannel } from 'vscode';
-import { UserCancelledError } from '../errors';
 import { AppKind, WebsiteOS } from './AppKind';
 import { AppServiceCreator } from './AppServiceCreator';
 
 export async function createFunctionApp(outputChannel: OutputChannel, persistence: Memento, credentials?: ServiceClientCredentials, subscription?: Subscription): Promise<Site | undefined> {
     const creator: AppServiceCreator = new AppServiceCreator(outputChannel, persistence, AppKind.functionapp, WebsiteOS.windows, credentials, subscription);
-    try {
-        await creator.run();
-        return creator.siteStep.site;
-    } catch (error) {
-        if (error instanceof UserCancelledError) {
-            // Return undefined rather than exposing UserCancelledError in index.ts contract
-            return undefined;
-        } else {
-            throw error;
-        }
-    }
+    await creator.run();
+    return creator.siteStep.site;
 }

@@ -5,8 +5,6 @@
 
 import { localize } from "./localize";
 
-export class UserCancelledError extends Error { }
-
 export class WizardFailedError extends Error {
     public readonly stepTitle: string;
     public readonly stepIndex: number;

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { UserCancelledError } from '../errors';
+import { UserCancelledError } from 'vscode-azureextensionui';
 import { IQuickPickItemWithData } from './IQuickPickItemWithData';
 import { WizardBase } from './WizardBase';
 
