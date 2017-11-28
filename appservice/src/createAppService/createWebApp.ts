@@ -10,8 +10,12 @@ import { Memento, OutputChannel } from 'vscode';
 import { AppKind, WebsiteOS } from './AppKind';
 import { AppServiceCreator } from './AppServiceCreator';
 
-export async function createWebApp(outputChannel: OutputChannel, persistence: Memento, credentials?: ServiceClientCredentials, subscription?: Subscription): Promise<Site | undefined> {
+export async function createWebApp(outputChannel: OutputChannel, persistence: Memento, credentials?: ServiceClientCredentials, subscription?: Subscription, showCreatingNode?: (label: string) => void): Promise<Site | undefined> {
     const creator: AppServiceCreator = new AppServiceCreator(outputChannel, persistence, AppKind.app, WebsiteOS.linux, credentials, subscription);
-    await creator.run();
+    await creator.prompt();
+    if (showCreatingNode) {
+        showCreatingNode(creator.websiteNameStep.websiteName);
+    }
+    await creator.execute();
     return creator.siteStep.site;
 }
