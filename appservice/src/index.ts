@@ -6,3 +6,5 @@
 export * from './SiteWrapper';
 export * from './createAppService/createFunctionApp';
 export * from './createAppService/createWebApp';
+export * from './tree/AppSettingsTreeItem';
+export * from './tree/AppSettingTreeItem';

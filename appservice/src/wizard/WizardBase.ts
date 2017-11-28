@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Memento, OutputChannel } from 'vscode';
-import { UserCancelledError, WizardFailedError } from '../errors';
+import { UserCancelledError } from 'vscode-azureextensionui';
+import { WizardFailedError } from '../errors';
 import { WizardStep } from './WizardStep';
 
 export abstract class WizardBase {
