@@ -19,8 +19,7 @@ export abstract class WizardBase {
         this.persistence = persistence;
     }
 
-    public async run(): Promise<void> {
-        // Go through the prompts...
+    public async prompt(): Promise<void> {
         for (const step of this._steps) {
             try {
                 await step.prompt();
@@ -28,9 +27,10 @@ export abstract class WizardBase {
                 this.onError(<Error>err, step);
             }
         }
+    }
 
+    public async execute(): Promise<void> {
         this._outputChannel.show(true);
-        // Execute each step...
         for (const step of this._steps) {
             try {
                 await step.execute();
