@@ -208,14 +208,14 @@ export class SiteWrapper {
             zipFilePath = fsPath;
         } else if (await FileUtilities.isDirectory(fsPath)) {
             createdZip = true;
-            this.log(outputChannel, 'Creating zip package...');
+            this.log(outputChannel, localize('zipCreate', 'Creating zip package...'));
             zipFilePath = await FileUtilities.zipDirectory(fsPath);
         } else {
             throw new Error(localize('NotAZipError', 'Path specified is not a folder or a zip file'));
         }
 
         try {
-            this.log(outputChannel, 'Starting deployment...');
+            this.log(outputChannel, localize('deployStart', 'Starting deployment...'));
             await kuduClient.pushDeployment.zipPushDeploy(fs.createReadStream(zipFilePath), { isAsync: true });
             await this.waitForDeploymentToComplete(kuduClient, outputChannel);
         } catch (error) {
@@ -234,7 +234,7 @@ export class SiteWrapper {
             }
         }
 
-        this.log(outputChannel, 'Deployment completed.');
+        this.log(outputChannel, localize('deployComplete', 'Deployment completed.'));
     }
 
     private async localGitDeploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<void> {
@@ -274,7 +274,7 @@ export class SiteWrapper {
         }
         this.log(outputChannel, (localize('localGitDeploy', `Deploying Local Git repository to "${this.appName}"...`)));
         await this.waitForDeploymentToComplete(kuduClient, outputChannel);
-        this.log(outputChannel, 'Deployment completed.');
+        this.log(outputChannel, localize('deployComplete', 'Deployment completed.'));
     }
 
     private async showScmPrompt(currentScmType: string): Promise<string> {
@@ -329,8 +329,8 @@ export class SiteWrapper {
     }
 
     private async showInstallPrompt(): Promise<void> {
-        const installString: string = 'Install';
-        const input: string | undefined = await vscode.window.showErrorMessage('Git must be installed to use Local Git Deploy.', installString);
+        const installString: string = localize('Install', 'Install');
+        const input: string | undefined = await vscode.window.showErrorMessage(localize('GitRequired', 'Git must be installed to use Local Git Deploy.'), installString);
         if (input === installString) {
             // tslint:disable-next-line:no-unsafe-any
             opn('https://git-scm.com/downloads');
