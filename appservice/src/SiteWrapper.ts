@@ -96,8 +96,8 @@ export class SiteWrapper {
 
     public async updateConfiguration(client: WebSiteManagementClient, config: SiteConfigResource): Promise<SiteConfigResource> {
         return this.slotName ?
-            await client.webApps.updateConfigurationSlot(this.resourceGroup, this.appName, config, this.slotName) :
-            await client.webApps.updateConfiguration(this.resourceGroup, this.appName, config);
+            await client.webApps.updateConfigurationSlot(this.resourceGroup, this.name, config, this.slotName) :
+            await client.webApps.updateConfiguration(this.resourceGroup, this.name, config);
     }
 
     public async getAppServicePlan(client: WebSiteManagementClient): Promise<AppServicePlan> {
@@ -138,86 +138,16 @@ export class SiteWrapper {
         outputChannel.appendLine(localize('DeleteSucceeded', 'Successfully deleted "{0}".', this.appName));
     }
 
-    public async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<void> {
-        const warning: string = localize('zipWarning', 'Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', this.appName);
-        if (await vscode.window.showWarningMessage(warning, DialogResponses.yes, DialogResponses.cancel) !== DialogResponses.yes) {
-            throw new UserCancelledError();
+    public async deploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<void> {
+        const config: SiteConfigResource = await this.getSiteConfig(client);
+        switch (config.scmType) {
+            case 'LocalGit':
+                await this.localGitDeploy(fsPath, client, outputChannel);
+                break;
+            default:
+                await this.deployZip(fsPath, client, outputChannel);
+                break;
         }
-
-        outputChannel.show();
-        const kuduClient: KuduClient = await this.getKuduClient(client);
-
-        let zipFilePath: string;
-        let createdZip: boolean = false;
-        if (FileUtilities.getFileExtension(fsPath) === 'zip') {
-            zipFilePath = fsPath;
-        } else if (await FileUtilities.isDirectory(fsPath)) {
-            createdZip = true;
-            this.log(outputChannel, 'Creating zip package...');
-            zipFilePath = await FileUtilities.zipDirectory(fsPath);
-        } else {
-            throw new Error(localize('NotAZipError', 'Path specified is not a folder or a zip file'));
-        }
-
-        try {
-            this.log(outputChannel, 'Starting deployment...');
-            await kuduClient.pushDeployment.zipPushDeploy(fs.createReadStream(zipFilePath), { isAsync: true });
-            await this.waitForDeploymentToComplete(kuduClient, outputChannel);
-        } catch (error) {
-            // tslint:disable-next-line:no-unsafe-any
-            if (error && error.response && error.response.body) {
-                // Autorest doesn't support plain/text as a MIME type, so we have to get the error message from the response body ourselves
-                // https://github.com/Azure/autorest/issues/1527
-                // tslint:disable-next-line:no-unsafe-any
-                throw new Error(error.response.body);
-            } else {
-                throw error;
-            }
-        } finally {
-            if (createdZip) {
-                await FileUtilities.deleteFile(zipFilePath);
-            }
-        }
-
-        this.log(outputChannel, 'Deployment completed.');
-    }
-
-    public async localGitDeploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<DeployResult | undefined> {
-        const kuduClient: KuduClient = await this.getKuduClient(client);
-        const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging. Force push?');
-        const publishCredentials: User = await this.getWebAppPublishCredential(client);
-
-        // credentials for accessing Azure Remote Repo
-        const username: string = publishCredentials.publishingUserName;
-        const password: string = publishCredentials.publishingPassword;
-        const remote: string = `https://${username}:${password}@${this._gitUrl}`;
-        const localGit: git.SimpleGit = git(fsPath);
-        try {
-            const status: git.StatusResult = await localGit.status();
-            if (status.files.length > 0) {
-                const uncommit: string = localize('localGitUncommit', '{0} uncommitted change(s) in local repo "{1}"', status.files.length, fsPath);
-                vscode.window.showWarningMessage(uncommit);
-            }
-            await localGit.push(remote, 'HEAD:master');
-        } catch (err) {
-            // tslint:disable-next-line:no-unsafe-any
-            if (err.message.indexOf('spawn git ENOENT') >= 0) {
-                await this.showInstallPrompt();
-                return undefined;
-            } else if (err.message.indexOf('error: failed to push') >= 0) { // tslint:disable-line:no-unsafe-any
-                const input: vscode.MessageItem | undefined = await vscode.window.showErrorMessage(pushReject, DialogResponses.yes, DialogResponses.cancel);
-                if (input === DialogResponses.yes) {
-                    await (<(remote: string, branch: string, options: object) => Promise<void>>localGit.push)(remote, 'HEAD:master', { '-f': true });
-                    // Ugly casting neccessary due to bug in simple-git. Issue filed:
-                    // https://github.com/steveukx/git-js/issues/218
-                } else {
-                    throw new UserCancelledError();
-                }
-            } else {
-                throw err;
-            }
-        }
-        return await this.waitForDeploymentToComplete(kuduClient, outputChannel);
     }
 
     public async isHttpLogsEnabled(client: WebSiteManagementClient): Promise<boolean> {
@@ -261,6 +191,90 @@ export class SiteWrapper {
         const newScmType: string = await this.showScmPrompt(config.scmType);
         // returns the updated scmType
         return await this.updateScmType(client, config, newScmType);
+    }
+
+    private async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<void> {
+        const warning: string = localize('zipWarning', 'Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', this.appName);
+        if (await vscode.window.showWarningMessage(warning, DialogResponses.yes, DialogResponses.cancel) !== DialogResponses.yes) {
+            throw new UserCancelledError();
+        }
+
+        outputChannel.show();
+        const kuduClient: KuduClient = await this.getKuduClient(client);
+
+        let zipFilePath: string;
+        let createdZip: boolean = false;
+        if (FileUtilities.getFileExtension(fsPath) === 'zip') {
+            zipFilePath = fsPath;
+        } else if (await FileUtilities.isDirectory(fsPath)) {
+            createdZip = true;
+            this.log(outputChannel, 'Creating zip package...');
+            zipFilePath = await FileUtilities.zipDirectory(fsPath);
+        } else {
+            throw new Error(localize('NotAZipError', 'Path specified is not a folder or a zip file'));
+        }
+
+        try {
+            this.log(outputChannel, 'Starting deployment...');
+            await kuduClient.pushDeployment.zipPushDeploy(fs.createReadStream(zipFilePath), { isAsync: true });
+            await this.waitForDeploymentToComplete(kuduClient, outputChannel);
+        } catch (error) {
+            // tslint:disable-next-line:no-unsafe-any
+            if (error && error.response && error.response.body) {
+                // Autorest doesn't support plain/text as a MIME type, so we have to get the error message from the response body ourselves
+                // https://github.com/Azure/autorest/issues/1527
+                // tslint:disable-next-line:no-unsafe-any
+                throw new Error(error.response.body);
+            } else {
+                throw error;
+            }
+        } finally {
+            if (createdZip) {
+                await FileUtilities.deleteFile(zipFilePath);
+            }
+        }
+
+        this.log(outputChannel, 'Deployment completed.');
+    }
+
+    private async localGitDeploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<void> {
+        const kuduClient: KuduClient = await this.getKuduClient(client);
+        const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging. Force push?');
+        const publishCredentials: User = await this.getWebAppPublishCredential(client);
+
+        // credentials for accessing Azure Remote Repo
+        const username: string = publishCredentials.publishingUserName;
+        const password: string = publishCredentials.publishingPassword;
+        const remote: string = `https://${username}:${password}@${this._gitUrl}`;
+        const localGit: git.SimpleGit = git(fsPath);
+        try {
+            const status: git.StatusResult = await localGit.status();
+            if (status.files.length > 0) {
+                const uncommit: string = localize('localGitUncommit', '{0} uncommitted change(s) in local repo "{1}"', status.files.length, fsPath);
+                vscode.window.showWarningMessage(uncommit);
+            }
+            await localGit.push(remote, 'HEAD:master');
+        } catch (err) {
+            // tslint:disable-next-line:no-unsafe-any
+            if (err.message.indexOf('spawn git ENOENT') >= 0) {
+                await this.showInstallPrompt();
+                return undefined;
+            } else if (err.message.indexOf('error: failed to push') >= 0) { // tslint:disable-line:no-unsafe-any
+                const input: vscode.MessageItem | undefined = await vscode.window.showErrorMessage(pushReject, DialogResponses.yes, DialogResponses.cancel);
+                if (input === DialogResponses.yes) {
+                    await (<(remote: string, branch: string, options: object) => Promise<void>>localGit.push)(remote, 'HEAD:master', { '-f': true });
+                    // Ugly casting neccessary due to bug in simple-git. Issue filed:
+                    // https://github.com/steveukx/git-js/issues/218
+                } else {
+                    throw new UserCancelledError();
+                }
+            } else {
+                throw err;
+            }
+        }
+        this.log(outputChannel, (localize('localGitDeploy', `Deploying Local Git repository to "${this.appName}"...`)));
+        await this.waitForDeploymentToComplete(kuduClient, outputChannel);
+        this.log(outputChannel, 'Deployment completed.');
     }
 
     private async showScmPrompt(currentScmType: string): Promise<string> {
