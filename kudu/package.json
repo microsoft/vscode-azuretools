@@ -31,7 +31,7 @@
         "moment": "^2.18.1"
     },
     "devDependencies": {
-        "autorest": "^2.0.4147",
+        "autorest": "2.0.4147",
         "typescript": "^2.5.3"
     }
 }
