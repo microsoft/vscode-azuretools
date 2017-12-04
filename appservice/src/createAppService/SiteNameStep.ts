@@ -10,7 +10,6 @@ import { Subscription } from 'azure-arm-resource/lib/subscription/models';
 import WebSiteManagementClient = require('azure-arm-website');
 import { AppServicePlan, ResourceNameAvailability } from 'azure-arm-website/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
-import * as vscode from 'vscode';
 import { uiUtils } from '../utils/uiUtils';
 import { WizardStep } from '../wizard/WizardStep';
 import { AppKind, getAppKindDisplayName } from './AppKind';
@@ -33,31 +32,17 @@ export class SiteNameStep extends WizardStep {
         const subscription: Subscription = this.wizard.subscriptionStep.subscription;
         const client: WebSiteManagementClient = new WebSiteManagementClient(credentials, subscription.subscriptionId);
         let siteName: string;
-        let siteNameOkay: boolean = false;
-
-        while (!siteNameOkay) {
-            siteName = await this.showInputBox({
-                prompt: `Enter a globally unique name for the new ${getAppKindDisplayName(this._appKind)}. (${this.stepProgressText})`,
-                validateInput: (value: string): string | undefined => {
-                    value = value ? value.trim() : '';
-
-                    if (!value.match(/^[a-z0-9\-]{1,60}$/ig)) {
-                        return 'Name should be 1-60 characters long and can only include alphanumeric characters and hyphens.';
-                    }
-
-                    return undefined;
+        siteName = await this.showInputBox({
+            prompt: `Enter a globally unique name for the new ${getAppKindDisplayName(this._appKind)}. (${this.stepProgressText})`,
+            validateInput: async (value: string): Promise<string | undefined> => {
+                value = value ? value.trim() : '';
+                const nameAvailability: ResourceNameAvailability = await client.checkNameAvailability(value, 'site');
+                if (!nameAvailability.nameAvailable) {
+                    return nameAvailability.message;
                 }
-            });
-            siteName = siteName.trim();
-
-            // Check if the name has already been taken...
-            const nameAvailability: ResourceNameAvailability = await client.checkNameAvailability(siteName, 'site');
-            siteNameOkay = nameAvailability.nameAvailable;
-
-            if (!siteNameOkay) {
-                await vscode.window.showWarningMessage(nameAvailability.message);
+                return undefined;
             }
-        }
+        });
 
         this._websiteName = siteName;
         this._computeRelatedNamePromise = this.generateRelatedName(siteName);
