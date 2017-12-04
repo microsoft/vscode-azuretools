@@ -8,7 +8,6 @@ import { Subscription } from 'azure-arm-resource/lib/subscription/models';
 import StorageManagementClient = require('azure-arm-storage');
 import { CheckNameAvailabilityResult, StorageAccount } from 'azure-arm-storage/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
-import * as vscode from 'vscode';
 import { QuickPickOptions } from 'vscode';
 import { localize } from '../localize';
 import { IQuickPickItemWithData } from '../wizard/IQuickPickItemWithData';
@@ -57,30 +56,18 @@ export class StorageAccountStep extends WizardStep {
 
         const suggestedName: string = await this.wizard.websiteNameStep.computeRelatedName();
         let newAccountName: string;
-        let nameValid: boolean = false;
-        while (!nameValid) {
-            newAccountName = await this.showInputBox({
-                value: suggestedName,
+        newAccountName = await this.showInputBox({
+            value: suggestedName,
                 prompt: 'Enter the name of the new storage account.',
-                validateInput: (value: string): string => {
+                validateInput: async (value: string): Promise <string | undefined>=> {
                     value = value ? value.trim() : '';
-
-                    if (!value.match(/^[a-z0-9]{3,24}$/ig)) {
-                        return localize('StorageAccountRegExpError', 'Storage account name must contain 3-24 lowercase characters or numbers');
+                    const nameAvailabilityResult: CheckNameAvailabilityResult = await storageClient.storageAccounts.checkNameAvailability(newAccountName);
+                    if (!nameAvailabilityResult.nameAvailable) {
+                        return nameAvailabilityResult.message;
                     }
-
-                    return null;
+                    return undefined;
                 }
             });
-
-            // Check if the name has already been taken...
-            const nameAvailabilityResult: CheckNameAvailabilityResult = await storageClient.storageAccounts.checkNameAvailability(newAccountName);
-            if (!nameAvailabilityResult.nameAvailable) {
-                await vscode.window.showWarningMessage(nameAvailabilityResult.message);
-            } else {
-                nameValid = true;
-            }
-        }
 
         this._account = {
             name: newAccountName.trim(),
