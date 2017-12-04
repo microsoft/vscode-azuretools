@@ -1121,7 +1121,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object"
+                            "$ref": "#/definitions/FunctionSecrets"
                         }
                     }
                 }
@@ -1142,7 +1142,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object"
+                            "$ref": "#/definitions/MasterKey"
                         }
                     }
                 }
@@ -1163,7 +1163,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object"
+                            "type": "string"
                         }
                     }
                 }
@@ -7086,6 +7086,25 @@
                     }
                 },
                 "test_data": {
+                    "type": "string"
+                }
+            }
+        },
+        "FunctionSecrets": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "trigger_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "MasterKey": {
+            "type": "object",
+            "properties": {
+                "masterKey": {
                     "type": "string"
                 }
             }
