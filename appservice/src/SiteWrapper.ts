@@ -138,14 +138,14 @@ export class SiteWrapper {
         outputChannel.appendLine(localize('DeleteSucceeded', 'Successfully deleted "{0}".', this.appName));
     }
 
-    public async deploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<void> {
+    public async deploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, onCreate?: boolean): Promise<void> {
         const config: SiteConfigResource = await this.getSiteConfig(client);
         switch (config.scmType) {
             case 'LocalGit':
                 await this.localGitDeploy(fsPath, client, outputChannel);
                 break;
             default:
-                await this.deployZip(fsPath, client, outputChannel);
+                await this.deployZip(fsPath, client, outputChannel, onCreate);
                 break;
         }
     }
@@ -193,10 +193,12 @@ export class SiteWrapper {
         return await this.updateScmType(client, config, newScmType);
     }
 
-    private async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<void> {
-        const warning: string = localize('zipWarning', 'Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', this.appName);
-        if (await vscode.window.showWarningMessage(warning, DialogResponses.yes, DialogResponses.cancel) !== DialogResponses.yes) {
-            throw new UserCancelledError();
+    private async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, onCreate?: boolean): Promise<void> {
+        if (!onCreate) {
+            const warning: string = localize('zipWarning', 'Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', this.appName);
+            if (await vscode.window.showWarningMessage(warning, DialogResponses.yes, DialogResponses.cancel) !== DialogResponses.yes) {
+                throw new UserCancelledError();
+            }
         }
 
         outputChannel.show();
