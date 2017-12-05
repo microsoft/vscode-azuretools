@@ -63,7 +63,9 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
         }
 
         const newTreeItems: IAzureTreeItem[] = await this.treeItem.loadMoreChildren(this, clearCache);
-        this._cachedChildren = this._cachedChildren.concat(newTreeItems.map((t: IAzureTreeItem) => this.createNewNode(t)));
+        this._cachedChildren = this._cachedChildren
+            .concat(newTreeItems.map((t: IAzureTreeItem) => this.createNewNode(t)))
+            .sort((n1: AzureNode, n2: AzureNode) => n1.treeItem.label.localeCompare(n2.treeItem.label));
     }
 
     public async pickChildNode(expectedContextValue: string, ui: IUserInterface): Promise<AzureNode> {
