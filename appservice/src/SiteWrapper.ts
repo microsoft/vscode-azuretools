@@ -20,10 +20,9 @@ import * as FileUtilities from './FileUtilities';
 import { localize } from './localize';
 
 // Deployment sources supported by Web Apps
-const SCM_TYPES: vscode.QuickPickItem[] = [
-    { label: 'None', description: '' }, // default scmType config
-    { label: 'LocalGit', description: '' }
-];
+const SCM_TYPES: string[] = [
+    'None', // default scmType config
+    'LocalGit'];
 
 export class SiteWrapper {
     public readonly resourceGroup: string;
@@ -280,17 +279,22 @@ export class SiteWrapper {
     }
 
     private async showScmPrompt(currentScmType: string): Promise<string> {
-        const placeHolder: string = localize('scmPrompt', 'Current deployment source is "{0}".  Select a new source.', currentScmType);
+        const placeHolder: string = localize('scmPrompt', 'Select a new source.');
+        const currentSource: string = localize('currentSource', '(Current source)');
         const scmQuickPicks: vscode.QuickPickItem[] = [];
         // generate quickPicks to not include current type
         for (const scmQuickPick of SCM_TYPES) {
-            if (scmQuickPick.label !== currentScmType) {
-                scmQuickPicks.push(scmQuickPick);
+            if (scmQuickPick === currentScmType) {
+                // put the current source at the top of the list
+                scmQuickPicks.unshift({ label: scmQuickPick, description: currentSource });
+            } else {
+                scmQuickPicks.push({ label: scmQuickPick, description: '' });
             }
         }
 
         const quickPick: vscode.QuickPickItem = await vscode.window.showQuickPick(scmQuickPicks, { placeHolder: placeHolder });
-        if (quickPick === undefined) {
+        if (quickPick === undefined || quickPick.description === currentSource) {
+            // if the user clicks the current source, treat it as a cancel
             throw new UserCancelledError();
         } else {
             return quickPick.label;
