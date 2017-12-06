@@ -280,7 +280,7 @@ export class SiteWrapper {
 
     private async showScmPrompt(currentScmType: string): Promise<string> {
         const placeHolder: string = localize('scmPrompt', 'Select a new source.');
-        const currentSource: string = localize('currentSource', '(Current source)')
+        const currentSource: string = localize('currentSource', '(Current source)');
         const scmQuickPicks: vscode.QuickPickItem[] = [];
         // generate quickPicks to not include current type
         for (const scmQuickPick of SCM_TYPES) {
