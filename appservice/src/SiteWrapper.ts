@@ -18,7 +18,6 @@ import { DialogResponses } from './DialogResponses';
 import { ArgumentError } from './errors';
 import * as FileUtilities from './FileUtilities';
 import { localize } from './localize';
-import { currentId } from 'async_hooks';
 
 // Deployment sources supported by Web Apps
 const SCM_TYPES: string[] = [
