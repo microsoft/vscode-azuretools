@@ -31,9 +31,11 @@
     },
     "dependencies": {
         "azure-arm-resource": "^3.0.0-preview",
+        "fs-extra": "^4.0.3",
         "ms-rest": "^2.2.2",
         "ms-rest-azure": "^2.4.4",
         "opn": "^5.1.0",
+        "path": "^0.12.7",
         "vscode-nls": "^2.0.2"
     },
     "devDependencies": {
