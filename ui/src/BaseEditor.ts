@@ -92,7 +92,7 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
         if (!this.ignoreSave && filePath) {
             const context: ContextT = this.fileMap[filePath][1];
             const showSaveWarning: boolean | undefined = vscode.workspace.getConfiguration().get(this.showSavePromptKey);
-            let shouldUpdateRemote = false;
+            let shouldUpdateRemote: boolean = false;
 
             if (showSaveWarning) {
                 const message: string = await this.getSaveConfirmationText(context);
