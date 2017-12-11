@@ -273,6 +273,8 @@ export class SiteWrapper {
                 throw err;
             }
         }
+
+        outputChannel.show();
         this.log(outputChannel, (localize('localGitDeploy', `Deploying Local Git repository to "${this.appName}"...`)));
         await this.waitForDeploymentToComplete(kuduClient, outputChannel);
         this.log(outputChannel, localize('deployComplete', 'Deployment completed.'));
