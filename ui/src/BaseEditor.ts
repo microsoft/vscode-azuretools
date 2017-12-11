@@ -7,13 +7,13 @@ import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { TemporaryFile } from './utils/temporaryFile';
+import { UserCancelledError } from './errors';
+import { localize } from "./localize";
 
 class DialogResponses {
-    static readonly OK: string = "OK";
-    static readonly DontShowAgain: string = "Don't Show Again";
+    static readonly OK: string = localize('OK', "OK");
+    static readonly DontShowAgain: string = localize('dontShow', "Don't Show Again");
 }
-
-export class UserCancelledError extends Error { }
 
 export abstract class BaseEditor<ContextT> implements vscode.Disposable {
     private fileMap: { [key: string]: [vscode.TextDocument, ContextT] } = {};
@@ -32,21 +32,21 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
         var size = await this.getSize(context);
         var fileName = await this.getFilename(context);
         var splitFileName = fileName.split(".");
-        var extension = splitFileName[splitFileName.length-1];
+        var extension = splitFileName[splitFileName.length - 1];
 
-        this.appendToOutput(`Opening '${fileName}' ...`);
+        this.appendToOutput(localize('opening', 'Opening "{0}" ...', fileName));
         if (size > 50 /*Megabytes*/) {
-            let message = `'${fileName}' is too large to download. Please use Storage Explorer for files over 50 Megabytes.`;
-            
+            let message = localize('tooLargeError', '"{0}" is too large to download.', fileName);
+
             await vscode.window.showWarningMessage(message, DialogResponses.OK);
-            this.appendLineToOutput(" Failed.");
-            this.appendLineToOutput(`Error Details: ${message}`);
+            this.appendLineToOutput(localize('failed', "Failed."));
+            this.appendLineToOutput(localize('errorDetails', 'Error Details: {0}', message));
         } else if (extension === "exe" || extension === "img" || extension === "zip") {
-            let message = `'${fileName}' has an unsupported file extension. Please use Storage Explorer to download or modify this file.`;
-            
+            let message = localize('unsupportedError', '"{0}" has an unsupported file extension.', fileName);
+
             await vscode.window.showWarningMessage(message, DialogResponses.OK);
-            this.appendLineToOutput(" Failed.");
-            this.appendLineToOutput(`Error Details: ${message}`);
+            this.appendLineToOutput(localize('failed', " Failed."));
+            this.appendLineToOutput(localize('errorDetails', 'Error Details: {0}', message));
         } else {
             try {
                 const localFilePath = await TemporaryFile.create(fileName)
@@ -58,26 +58,26 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
                 this.appendLineToOutput(` Done.`);
             } catch (error) {
                 var details: string;
-                
-                if(!!error.message) {
+
+                if (!!error.message) {
                     details = error.message;
                 } else {
                     details = JSON.stringify(error);
                 }
 
-                this.appendLineToOutput(" Failed.");
-                this.appendLineToOutput(`Error Details: ${details}`);
+                this.appendLineToOutput(localize('failed', " Failed."));
+                this.appendLineToOutput(localize('errorDetails', 'Error Details: {0}', details));
 
-                await vscode.window.showWarningMessage(`Unable to download "${fileName}". Please check Output for more information.`, DialogResponses.OK);
+                await vscode.window.showWarningMessage(localize('downloadError', 'Unable to download "{0}". Please check Output for more information.', fileName), DialogResponses.OK);
             }
-            
+
         }
     }
 
     public async updateMatchingcontext(doc): Promise<void> {
         const filePath = Object.keys(this.fileMap).find((filePath) => path.relative(doc.fsPath, filePath) === '');
         if (filePath) {
-            var [ textDocument, context] = this.fileMap[filePath];
+            var [textDocument, context] = this.fileMap[filePath];
             await this.updateRemote(context, textDocument);
         }
     }
@@ -88,26 +88,26 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
 
     private async updateRemote(context: ContextT, doc: vscode.TextDocument): Promise<void> {
         var filename = await this.getFilename(context);
-        this.appendToOutput(`Updating '${filename}' ...`);
+        this.appendToOutput(localize('updating', 'Updating "{0}" ...', filename));
         try {
             const updatedData: string = await this.updateData(context, doc.getText());
-            this.appendLineToOutput(` Done.`);
+            this.appendLineToOutput(localize('done', ' Done.'));
             await this.updateEditor(updatedData, vscode.window.activeTextEditor);
         } catch (error) {
-            this.appendLineToOutput(" Failed.");
-            this.appendLineToOutput(`Error Details: ${error}`);
+            this.appendLineToOutput(localize('failed', " Failed."));
+            this.appendLineToOutput(localize('errorDetails', 'Error Details: {0}', error));
         }
     }
 
     protected appendToOutput(value: string) {
-        if(!!this.outputChanel) {
+        if (!!this.outputChanel) {
             this.outputChanel.append(value);
             this.outputChanel.show(true);
         }
     }
 
     protected appendLineToOutput(value: string) {
-        if(!!this.outputChanel) {
+        if (!!this.outputChanel) {
             this.outputChanel.appendLine(value);
             this.outputChanel.show(true);
         }
@@ -131,7 +131,7 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
             const context: ContextT = this.fileMap[filePath][1];
             const showSaveWarning: boolean | undefined = vscode.workspace.getConfiguration().get(this.showSavePromptKey);
             if (showSaveWarning) {
-                
+
                 const message: string = await this.getSaveConfirmationText(context);
                 const result: string | undefined = await vscode.window.showWarningMessage(message, DialogResponses.OK, DialogResponses.DontShowAgain);
 
@@ -153,7 +153,7 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
                 const lastLine = editor.document.lineAt(editor.document.lineCount - 1);
                 editBuilder.delete(new vscode.Range(new vscode.Position(0, 0), new vscode.Position(lastLine.range.start.line, lastLine.range.end.character)));
             }
-    
+
             editBuilder.insert(new vscode.Position(0, 0), data);
         });
     }
