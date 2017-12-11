@@ -58,16 +58,16 @@ export class StorageAccountStep extends WizardStep {
         let newAccountName: string;
         newAccountName = await this.showInputBox({
             value: suggestedName,
-                prompt: 'Enter the name of the new storage account.',
-                validateInput: async (value: string): Promise <string | undefined> => {
-                    value = value ? value.trim() : '';
-                    const nameAvailabilityResult: CheckNameAvailabilityResult = await storageClient.storageAccounts.checkNameAvailability(newAccountName);
-                    if (!nameAvailabilityResult.nameAvailable) {
-                        return nameAvailabilityResult.message;
-                    }
-                    return undefined;
+            prompt: 'Enter the name of the new storage account.',
+            validateInput: async (value: string): Promise<string | undefined> => {
+                value = value ? value.trim() : '';
+                const nameAvailabilityResult: CheckNameAvailabilityResult = await storageClient.storageAccounts.checkNameAvailability(value);
+                if (!nameAvailabilityResult.nameAvailable) {
+                    return nameAvailabilityResult.message;
                 }
-            });
+                return undefined;
+            }
+        });
 
         this._account = {
             name: newAccountName.trim(),
