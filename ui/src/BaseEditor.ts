@@ -6,15 +6,10 @@
 import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { DialogResponses } from './DialogResponses' ;
 import { UserCancelledError } from './errors';
 import { localize } from "./localize";
 import { TemporaryFile } from './utils/TemporaryFile';
-
-// tslint:disable-next-line:typedef
-const dialogResponses = {
-    OK: localize('OK', "OK"),
-    DontShowAgain: localize('dontShow', "Don't Show Again")
-};
 
 // tslint:disable-next-line:no-unsafe-any
 export abstract class BaseEditor<ContextT> implements vscode.Disposable {
@@ -40,13 +35,13 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
         if (size > 50 /*Megabytes*/) {
             const message: string = localize('tooLargeError', '"{0}" is too large to download.', fileName);
 
-            await vscode.window.showWarningMessage(message, dialogResponses.OK);
+            await vscode.window.showWarningMessage(message, DialogResponses.OK);
             this.appendLineToOutput(localize('failed', "Failed."));
             this.appendLineToOutput(localize('errorDetails', 'Error Details: {0}', message));
         } else if (extension === 'exe' || extension === 'img' || extension === 'zip') {
             const message: string = localize('unsupportedError', '"{0}" has an unsupported file extension.', fileName);
 
-            await vscode.window.showWarningMessage(message, dialogResponses.OK);
+            await vscode.window.showWarningMessage(message, DialogResponses.OK);
             this.appendLineToOutput(localize('failed', " Failed."));
             this.appendLineToOutput(localize('errorDetails', 'Error Details: {0}', message));
         } else {
@@ -73,7 +68,7 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
                 this.appendLineToOutput(localize('failed', " Failed."));
                 this.appendLineToOutput(localize('errorDetails', 'Error Details: {0}', details));
 
-                await vscode.window.showWarningMessage(localize('downloadError', 'Unable to download "{0}". Please check Output for more information.', fileName), dialogResponses.OK);
+                await vscode.window.showWarningMessage(localize('downloadError', 'Unable to download "{0}". Please check Output for more information.', fileName), DialogResponses.OK);
             }
 
         }
@@ -97,20 +92,28 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
         if (!this.ignoreSave && filePath) {
             const context: ContextT = this.fileMap[filePath][1];
             const showSaveWarning: boolean | undefined = vscode.workspace.getConfiguration().get(this.showSavePromptKey);
+            let shouldUpdateRemote = false;
+
             if (showSaveWarning) {
-
                 const message: string = await this.getSaveConfirmationText(context);
-                const result: string | undefined = await vscode.window.showWarningMessage(message, dialogResponses.OK, dialogResponses.DontShowAgain);
+                const result: vscode.MessageItem | undefined = await vscode.window.showWarningMessage(message, DialogResponses.upload, DialogResponses.dontWarn, DialogResponses.dontUpload);
 
-                if (!result) {
-                    throw new UserCancelledError();
-                } else if (result === dialogResponses.DontShowAgain) {
+                if (result === DialogResponses.upload) {
+                    shouldUpdateRemote = true;
+                } else if (result === DialogResponses.dontWarn) {
                     await vscode.workspace.getConfiguration().update(this.showSavePromptKey, false, vscode.ConfigurationTarget.Global);
                     await globalState.update(this.showSavePromptKey, true);
+                    shouldUpdateRemote = true; // upload and don't warm me again
+                } else {
+                    throw new UserCancelledError();
                 }
+            } else {
+                shouldUpdateRemote = true;
             }
 
-            await this.updateRemote(context, doc);
+            if (shouldUpdateRemote) {
+                await this.updateRemote(context, doc);
+            }
         }
     }
 
