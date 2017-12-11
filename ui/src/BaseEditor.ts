@@ -8,7 +8,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { UserCancelledError } from './errors';
 import { localize } from "./localize";
-import { TemporaryFile } from './utils/temporaryFile';
+import { TemporaryFile } from './utils/TemporaryFile';
 
 // tslint:disable-next-line:typedef
 const dialogResponses = {
@@ -51,6 +51,7 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
             this.appendLineToOutput(localize('errorDetails', 'Error Details: {0}', message));
         } else {
             try {
+                // tslint:disable-next-line:no-unsafe-any
                 const localFilePath: string = await TemporaryFile.create(fileName);
                 const document: vscode.TextDocument = await vscode.workspace.openTextDocument(localFilePath);
                 this.fileMap[localFilePath] = [document, context];
