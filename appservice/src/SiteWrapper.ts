@@ -210,7 +210,11 @@ export class SiteWrapper {
         } else if (await FileUtilities.isDirectory(fsPath)) {
             createdZip = true;
             this.log(outputChannel, localize('zipCreate', 'Creating zip package...'));
-            zipFilePath = await FileUtilities.zipDirectory(fsPath);
+            const zipDeployConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('zipDeploy');
+            const globPattern: string = zipDeployConfig.get<string>('globPattern');
+            const ignorePattern: string = zipDeployConfig.get<string>('ignorePattern');
+
+            zipFilePath = await FileUtilities.zipDirectory(fsPath, globPattern, ignorePattern);
         } else {
             throw new Error(localize('NotAZipError', 'Path specified is not a folder or a zip file'));
         }

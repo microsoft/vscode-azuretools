@@ -38,7 +38,7 @@ export async function deleteFile(fsPath: string): Promise<void> {
     });
 }
 
-export async function zipDirectory(folderPath: string): Promise<string> {
+export async function zipDirectory(folderPath: string, globPattern: string = '**/*', ignorePattern: string = undefined): Promise<string> {
     if (!folderPath.endsWith(path.sep)) {
         folderPath += path.sep;
     }
@@ -51,9 +51,10 @@ export async function zipDirectory(folderPath: string): Promise<string> {
         const zipper: archiver.Archiver = archiver('zip', { zlib: { level: 9 } });
         zipper.on('error', reject);
         zipper.pipe(zipOutput);
-        zipper.glob('**/*', {
+        zipper.glob(globPattern, {
             cwd: folderPath,
-            dot: true
+            dot: true,
+            ignore: ignorePattern
         });
         void zipper.finalize();
     });
