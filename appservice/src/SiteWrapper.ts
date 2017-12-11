@@ -211,7 +211,9 @@ export class SiteWrapper {
             createdZip = true;
             this.log(outputChannel, localize('zipCreate', 'Creating zip package...'));
             const zipDeployConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('zipDeploy');
+            // tslint:disable-next-line:no-backbone-get-set-outside-model
             const globPattern: string = zipDeployConfig.get<string>('globPattern');
+            // tslint:disable-next-line:no-backbone-get-set-outside-model
             const ignorePattern: string = zipDeployConfig.get<string>('ignorePattern');
 
             zipFilePath = await FileUtilities.zipDirectory(fsPath, globPattern, ignorePattern);
