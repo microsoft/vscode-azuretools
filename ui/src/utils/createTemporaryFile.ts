@@ -9,7 +9,7 @@ import * as os from 'os';
 import * as path from 'path';
 
 export async function createTemporaryFile(fileName: string): Promise<string> {
-    const randomFolderNameLength: number = 12; 
+    const randomFolderNameLength: number = 12;
     const buffer: Buffer = crypto.randomBytes(Math.ceil(randomFolderNameLength / 2));
     const folderName: string = buffer.toString('hex').slice(0, randomFolderNameLength);
     const filePath: string = path.join(os.tmpdir(), folderName, fileName);

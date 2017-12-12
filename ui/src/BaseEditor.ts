@@ -9,7 +9,7 @@ import * as vscode from 'vscode';
 import { DialogResponses } from './DialogResponses' ;
 import { UserCancelledError } from './errors';
 import { localize } from "./localize";
-import { TemporaryFile } from './utils/TemporaryFile';
+import { createTemporaryFile } from './utils/createTemporaryFile';
 
 // tslint:disable-next-line:no-unsafe-any
 export abstract class BaseEditor<ContextT> implements vscode.Disposable {
@@ -28,23 +28,21 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
     public async showEditor(context: ContextT, sizeLimit?: number /* in Megabytes */): Promise<void> {
         const fileName: string = await this.getFilename(context);
 
-        this.appendToOutput(localize('opening', 'Opening "{0}" ...', fileName));
-        if (sizeLimit) {
+        this.appendLineToOutput(localize('opening', 'Opening "{0}"...', fileName));
+        if (sizeLimit !== undefined) {
             const size: number = await this.getSize(context);
             if (size > sizeLimit) {
                 const message: string = localize('tooLargeError', '"{0}" is too large to download.', fileName);
-                this.appendLineToOutput(localize('failed', " Failed."));
                 throw new Error(message);
             }
-        }  else {
-            const localFilePath: string = await TemporaryFile.create(fileName);
-            const document: vscode.TextDocument = await vscode.workspace.openTextDocument(localFilePath);
-            this.fileMap[localFilePath] = [document, context];
-            const data: string = await this.getData(context);
-            const textEditor: vscode.TextEditor = await vscode.window.showTextDocument(document);
-            await this.updateEditor(data, textEditor);
-            // this.appendLineToOutput(' Done.');
         }
+
+        const localFilePath: string = await createTemporaryFile(fileName);
+        const document: vscode.TextDocument = await vscode.workspace.openTextDocument(localFilePath);
+        this.fileMap[localFilePath] = [document, context];
+        const data: string = await this.getData(context);
+        const textEditor: vscode.TextEditor = await vscode.window.showTextDocument(document);
+        await this.updateEditor(data, textEditor);
     }
 
     public async updateMatchingContext(doc: vscode.Uri): Promise<void> {
@@ -56,7 +54,6 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
     }
 
     public async dispose(): Promise<void> {
-        // tslint:disable-next-line:no-unsafe-any
         Object.keys(this.fileMap).forEach(async (key: string) => await fse.remove(path.dirname(key)));
     }
 
@@ -65,28 +62,18 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
         if (!this.ignoreSave && filePath) {
             const context: ContextT = this.fileMap[filePath][1];
             const showSaveWarning: boolean | undefined = vscode.workspace.getConfiguration().get(this.showSavePromptKey);
-            let shouldUpdateRemote: boolean = false;
 
             if (showSaveWarning) {
                 const message: string = await this.getSaveConfirmationText(context);
                 const result: vscode.MessageItem | undefined = await vscode.window.showWarningMessage(message, DialogResponses.upload, DialogResponses.dontWarn, DialogResponses.dontUpload);
-
-                if (result === DialogResponses.upload) {
-                    shouldUpdateRemote = true;
-                } else if (result === DialogResponses.dontWarn) {
+                if (result === DialogResponses.dontWarn) {
                     await vscode.workspace.getConfiguration().update(this.showSavePromptKey, false, vscode.ConfigurationTarget.Global);
                     await globalState.update(this.showSavePromptKey, true);
-                    shouldUpdateRemote = true; // upload and don't warm me again
-                } else {
+                } else if (result === DialogResponses.dontUpload) {
                     throw new UserCancelledError();
                 }
-            } else {
-                shouldUpdateRemote = true;
             }
-
-            if (shouldUpdateRemote) {
-                await this.updateRemote(context, doc);
-            }
+            await this.updateRemote(context, doc);
         }
     }
 
@@ -106,9 +93,9 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
 
     private async updateRemote(context: ContextT, doc: vscode.TextDocument): Promise<void> {
         const filename: string = await this.getFilename(context);
-        this.appendToOutput(localize('updating', 'Updating "{0}" ...', filename));
+        this.appendLineToOutput(localize('updating', 'Updating "{0}" ...', filename));
         const updatedData: string = await this.updateData(context, doc.getText());
-        this.appendLineToOutput(localize('done', ' Done.'));
+        this.appendLineToOutput(localize('done', ' Updated "{0}"', filename));
         await this.updateEditor(updatedData, vscode.window.activeTextEditor);
     }
 
@@ -116,8 +103,11 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
         if (!!textEditor) {
             await BaseEditor.writeToEditor(textEditor, data);
             this.ignoreSave = true;
-            await textEditor.document.save();
-            this.ignoreSave = false;
+            try {
+                await textEditor.document.save();
+            } finally {
+                this.ignoreSave = false;
+            }
         }
     }
     // tslint:disable-next-line:member-ordering
