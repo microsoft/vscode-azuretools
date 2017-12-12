@@ -37,26 +37,13 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
                 throw new Error(message);
             }
         }  else {
-            try {
-                const localFilePath: string = await TemporaryFile.create(fileName);
-                const document: vscode.TextDocument = await vscode.workspace.openTextDocument(localFilePath);
-                this.fileMap[localFilePath] = [document, context];
-                const data: string = await this.getData(context);
-                const textEditor: vscode.TextEditor = await vscode.window.showTextDocument(document);
-                await this.updateEditor(data, textEditor);
-                this.appendLineToOutput(' Done.');
-            } catch (error) {
-                let message: string;
-                this.appendLineToOutput(localize('failed', " Failed."));
-                // tslint:disable-next-line:no-unsafe-any
-                if (!!error.message) {
-                    // tslint:disable-next-line:no-unsafe-any
-                    message = error.message;
-                } else {
-                    message = JSON.stringify(error);
-                }
-                throw new Error(message);
-            }
+            const localFilePath: string = await TemporaryFile.create(fileName);
+            const document: vscode.TextDocument = await vscode.workspace.openTextDocument(localFilePath);
+            this.fileMap[localFilePath] = [document, context];
+            const data: string = await this.getData(context);
+            const textEditor: vscode.TextEditor = await vscode.window.showTextDocument(document);
+            await this.updateEditor(data, textEditor);
+            // this.appendLineToOutput(' Done.');
         }
     }
 
