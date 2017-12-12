@@ -26,14 +26,16 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
     public abstract getSaveConfirmationText(context: ContextT): Promise<string>;
 
     public async showEditor(context: ContextT, sizeLimit?: number /* in Megabytes */): Promise<void> {
-        const size: number = await this.getSize(context);
         const fileName: string = await this.getFilename(context);
 
         this.appendToOutput(localize('opening', 'Opening "{0}" ...', fileName));
-        if (sizeLimit !== undefined && size > sizeLimit) {
-            const message: string = localize('tooLargeError', '"{0}" is too large to download.', fileName);
-            this.appendLineToOutput(localize('failed', " Failed."));
-            throw new Error(message);
+        if (sizeLimit) {
+            const size: number = await this.getSize(context);
+            if (size > sizeLimit) {
+                const message: string = localize('tooLargeError', '"{0}" is too large to download.', fileName);
+                this.appendLineToOutput(localize('failed', " Failed."));
+                throw new Error(message);
+            }
         }  else {
             try {
                 const localFilePath: string = await TemporaryFile.create(fileName);
