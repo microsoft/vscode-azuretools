@@ -1,7 +1,7 @@
 {
     "name": "vscode-azureextensionui",
     "author": "Microsoft Corporation",
-    "version": "0.3.1",
+    "version": "0.4.0",
     "description": "Common UI tools for developing Azure extensions for VS Code",
     "tags": [
         "azure",
@@ -31,12 +31,14 @@
     },
     "dependencies": {
         "azure-arm-resource": "^3.0.0-preview",
+        "fs-extra": "^4.0.3",
         "ms-rest": "^2.2.2",
         "ms-rest-azure": "^2.4.4",
         "opn": "^5.1.0",
         "vscode-nls": "^2.0.2"
     },
     "devDependencies": {
+        "@types/fs-extra": "^4.0.6",
         "typescript": "^2.5.3",
         "tslint": "^5.7.0",
         "tslint-microsoft-contrib": "5.0.1",

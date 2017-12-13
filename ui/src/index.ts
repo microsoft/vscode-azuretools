@@ -5,3 +5,4 @@
 
 export { AzureTreeDataProvider } from './treeDataProvider/AzureTreeDataProvider';
 export { UserCancelledError } from './errors';
+export { BaseEditor } from './BaseEditor';
