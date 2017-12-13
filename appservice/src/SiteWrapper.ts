@@ -137,14 +137,14 @@ export class SiteWrapper {
         outputChannel.appendLine(localize('DeleteSucceeded', 'Successfully deleted "{0}".', this.appName));
     }
 
-    public async deploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, confirmDeployment: boolean = true): Promise<void> {
+    public async deploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, confirmDeployment: boolean = true): Promise<void> {
         const config: SiteConfigResource = await this.getSiteConfig(client);
         switch (config.scmType) {
             case 'LocalGit':
                 await this.localGitDeploy(fsPath, client, outputChannel);
                 break;
             default:
-                await this.deployZip(fsPath, client, outputChannel, confirmDeployment);
+                await this.deployZip(fsPath, client, outputChannel, configurationSectionName, confirmDeployment);
                 break;
         }
     }
@@ -192,7 +192,7 @@ export class SiteWrapper {
         return await this.updateScmType(client, config, newScmType);
     }
 
-    private async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, confirmDeployment: boolean): Promise<void> {
+    private async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, confirmDeployment: boolean): Promise<void> {
         if (confirmDeployment) {
             const warning: string = localize('zipWarning', 'Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', this.appName);
             if (await vscode.window.showWarningMessage(warning, DialogResponses.yes, DialogResponses.cancel) !== DialogResponses.yes) {
@@ -210,7 +210,13 @@ export class SiteWrapper {
         } else if (await FileUtilities.isDirectory(fsPath)) {
             createdZip = true;
             this.log(outputChannel, localize('zipCreate', 'Creating zip package...'));
-            zipFilePath = await FileUtilities.zipDirectory(fsPath);
+            const zipDeployConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration(configurationSectionName);
+            // tslint:disable-next-line:no-backbone-get-set-outside-model
+            const globPattern: string = zipDeployConfig.get<string>('zipGlobPattern');
+            // tslint:disable-next-line:no-backbone-get-set-outside-model
+            const ignorePattern: string = zipDeployConfig.get<string>('zipIgnorePattern');
+
+            zipFilePath = await FileUtilities.zipDirectory(fsPath, globPattern, ignorePattern);
         } else {
             throw new Error(localize('NotAZipError', 'Path specified is not a folder or a zip file'));
         }
