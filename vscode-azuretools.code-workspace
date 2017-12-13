@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "kudu"
+		},
+		{
+			"path": "ui"
 		}
 	],
 	"settings": {
