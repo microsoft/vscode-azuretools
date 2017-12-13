@@ -7,7 +7,7 @@
 import { Subscription } from 'azure-arm-resource/lib/subscription/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment } from 'ms-rest-azure';
-import { Uri, TreeDataProvider, Disposable, TreeItem, Event, OutputChannel } from 'vscode';
+import { Uri, TreeDataProvider, Disposable, TreeItem, Event, OutputChannel, Memento, TextDocument } from 'vscode';
 
 export declare class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disposable {
     public static readonly subscriptionContextValue: string;
@@ -132,7 +132,7 @@ export declare abstract class BaseEditor<ContextT> implements Disposable {
     abstract getFilename(context: ContextT): Promise<string>;
 
     /**
-     * Implement this to return the size in MB.  Only required if you use a sizeLimit in showEditor
+     * Implement this to return the size in MB.
      */
     abstract getSize(context: ContextT): Promise<number>;
 
@@ -141,6 +141,7 @@ export declare abstract class BaseEditor<ContextT> implements Disposable {
      */
     abstract getSaveConfirmationText(context: ContextT): Promise<string>;
     
+    onDidSaveTextDocument(globalState: Memento, doc: TextDocument): Promise<void>;
     showEditor(context: ContextT, sizeLimit?: number): Promise<void>;
     dispose(): Promise<void>;
 }
