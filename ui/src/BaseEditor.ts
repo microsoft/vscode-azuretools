@@ -77,8 +77,6 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
         }
     }
 
-    public 
-
     protected appendLineToOutput(value: string): void {
         if (!!this.outputChannel) {
             this.outputChannel.appendLine(value);
