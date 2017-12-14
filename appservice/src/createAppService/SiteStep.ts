@@ -101,7 +101,8 @@ export class SiteStep extends WizardStep {
         this._website = await websiteClient.webApps.createOrUpdate(rg.name, this._website.name, this._website);
         this._website.siteConfig = await websiteClient.webApps.getConfiguration(rg.name, this._website.name);
 
-        this.wizard.writeline(localize('CreatedNewApp', 'Created new {0} "{1}": {2}', getAppKindDisplayName(this._appKind), this._website.name, `https://${this._website.defaultHostName}`));
+        this.wizard.writeline(localize('CreatedNewApp', '>>>>>> Created new {0} "{1}": {2}', getAppKindDisplayName(this._appKind), this._website.name, `https://${this._website.defaultHostName} <<<<<<`));
+        this.wizard.writeline('');
     }
 
     get site(): Site {
