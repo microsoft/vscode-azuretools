@@ -22,7 +22,8 @@ import { localize } from './localize';
 // Deployment sources supported by Web Apps
 const SCM_TYPES: string[] = [
     'None', // default scmType config
-    'LocalGit'];
+    'LocalGit',
+    'GitHub'];
 
 export class SiteWrapper {
     public readonly resourceGroup: string;
@@ -140,10 +141,10 @@ export class SiteWrapper {
     public async deploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, confirmDeployment: boolean = true): Promise<void> {
         const config: SiteConfigResource = await this.getSiteConfig(client);
         switch (config.scmType) {
-            case 'LocalGit':
+            case SCM_TYPES[1]: // 'LocalGit'
                 await this.localGitDeploy(fsPath, client, outputChannel);
                 break;
-            default:
+            default: //'None' or any other non-supported scmType
                 await this.deployZip(fsPath, client, outputChannel, configurationSectionName, confirmDeployment);
                 break;
         }
@@ -188,6 +189,17 @@ export class SiteWrapper {
     public async editScmType(client: WebSiteManagementClient): Promise<string | undefined> {
         const config: SiteConfigResource = await this.getSiteConfig(client);
         const newScmType: string = await this.showScmPrompt(config.scmType);
+
+        if (newScmType === SCM_TYPES[2]) {
+            const sourceControls = await client.listSourceControls();
+            // Source controls come in as an array, 0: "GitHub", 1: "Bitbucket", 2: "Dropbox", 3: "OneDrive"
+            if (!sourceControls[0].token) {
+                // if there is no OAuth2 token, then GitHub is not set up in the Portal
+                this.showGitHubAuthPrompt();
+                return undefined;
+            }
+ 
+        }
         // returns the updated scmType
         return await this.updateScmType(client, config, newScmType);
     }
@@ -348,6 +360,16 @@ export class SiteWrapper {
         if (input === installString) {
             // tslint:disable-next-line:no-unsafe-any
             opn('https://git-scm.com/downloads');
+        }
+    }
+
+    private async showGitHubAuthPrompt(): Promise<void> {
+        const authorizeAzure: string = localize('gitHubNotAuth', 'Authorize Azure on GitHub');
+        const setupGithub: string = localize('GitRequired', 'Azure must be setup to use GitHub.');
+        const input: string | undefined = await vscode.window.showErrorMessage(setupGithub, authorizeAzure);
+        if (input === authorizeAzure) {
+            // tslint:disable-next-line:no-unsafe-any
+            opn('https://blogs.msdn.microsoft.com/benjaminperkins/2017/05/10/deploy-github-source-code-repositories-to-an-azure-app-service/');
         }
     }
 }
