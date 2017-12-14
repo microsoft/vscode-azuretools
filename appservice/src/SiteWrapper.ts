@@ -147,6 +147,9 @@ export class SiteWrapper {
                 await this.deployZip(fsPath, client, outputChannel, configurationSectionName, confirmDeployment);
                 break;
         }
+
+        outputChannel.appendLine(localize('deployComplete', '>>>>>> Deployment to "{0}" completed. <<<<<<', this.appName));
+        outputChannel.appendLine('');
     }
 
     public async isHttpLogsEnabled(client: WebSiteManagementClient): Promise<boolean> {
@@ -240,8 +243,6 @@ export class SiteWrapper {
                 await FileUtilities.deleteFile(zipFilePath);
             }
         }
-
-        this.log(outputChannel, localize('deployComplete', 'Deployment completed.'));
     }
 
     private async localGitDeploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<void> {
@@ -283,7 +284,6 @@ export class SiteWrapper {
         outputChannel.show();
         this.log(outputChannel, (localize('localGitDeploy', `Deploying Local Git repository to "${this.appName}"...`)));
         await this.waitForDeploymentToComplete(kuduClient, outputChannel);
-        this.log(outputChannel, localize('deployComplete', 'Deployment completed.'));
     }
 
     private async showScmPrompt(currentScmType: string): Promise<string> {
