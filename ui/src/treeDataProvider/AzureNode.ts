@@ -26,6 +26,14 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
         }
     }
 
+    public get userId(): string {
+        if (this.parent) {
+            return this.parent.userId;
+        } else {
+            throw new ArgumentError(this);
+        }
+    }
+
     public get subscription(): Subscription {
         if (this.parent) {
             return this.parent.subscription;
