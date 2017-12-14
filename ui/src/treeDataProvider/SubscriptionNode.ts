@@ -35,6 +35,10 @@ export class SubscriptionNode extends AzureParentNode {
         return this._subscriptionInfo.session.tenantId;
     }
 
+    public get userId(): string {
+        return this._subscriptionInfo.session.userId;
+    }
+
     public get subscription(): Subscription {
         return this._subscriptionInfo.subscription;
     }

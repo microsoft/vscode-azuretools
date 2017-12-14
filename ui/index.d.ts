@@ -37,6 +37,7 @@ export interface IAzureNode<T extends IAzureTreeItem = IAzureTreeItem> {
     readonly credentials: ServiceClientCredentials;
     readonly subscription: Subscription;
     readonly tenantId: string;
+    readonly userId: string;
     readonly environment: AzureEnvironment;
 
     /**
@@ -109,23 +110,23 @@ export interface IAzureParentTreeItem extends IAzureTreeItem, IChildProvider {
 export declare class UserCancelledError extends Error { }
 
 export declare abstract class BaseEditor<ContextT> implements Disposable {
-     /**
-     * Implement this interface if you need to download and upload remote files
-     * @param showSavePromptKey Key used globally by VS Code to determine whether or not to show the savePrompt
-     * @param outputChannel OutputChannel where output will be displayed when editor performs actions 
-     */
+    /**
+    * Implement this interface if you need to download and upload remote files
+    * @param showSavePromptKey Key used globally by VS Code to determine whether or not to show the savePrompt
+    * @param outputChannel OutputChannel where output will be displayed when editor performs actions
+    */
     constructor(showSavePromptKey: string, outputChannel?: OutputChannel | undefined);
 
     /**
      * Implement this to retrieve data from your remote server, returns the file as a string
      */
     abstract getData(context: ContextT): Promise<string>;
-    
+
     /**
      * Implement this to allow for remote updating
      */
     abstract updateData(context: ContextT, data: string): Promise<string>;
-    
+
     /**
      * Implement this to return the file name from the remote
      */
@@ -140,7 +141,7 @@ export declare abstract class BaseEditor<ContextT> implements Disposable {
      * Implement this to edit what is displayed to the user when uploading the file to the remote
      */
     abstract getSaveConfirmationText(context: ContextT): Promise<string>;
-    
+
     onDidSaveTextDocument(globalState: Memento, doc: TextDocument): Promise<void>;
     showEditor(context: ContextT, sizeLimit?: number): Promise<void>;
     dispose(): Promise<void>;
