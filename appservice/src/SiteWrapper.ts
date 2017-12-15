@@ -5,7 +5,7 @@
 
 // tslint:disable-next-line:no-require-imports
 import WebSiteManagementClient = require('azure-arm-website');
-import { AppServicePlan, Site, SiteConfigResource, SiteLogsConfig, User } from 'azure-arm-website/lib/models';
+import { AppServicePlan, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, User } from 'azure-arm-website/lib/models';
 import * as fs from 'fs';
 import { BasicAuthenticationCredentials } from 'ms-rest';
 import * as opn from 'opn';
@@ -18,6 +18,9 @@ import { DialogResponses } from './DialogResponses';
 import { ArgumentError } from './errors';
 import * as FileUtilities from './FileUtilities';
 import { localize } from './localize';
+import { IQuickPickItemWithData } from './wizard/IQuickPickItemWithData';
+
+const request = require('request-promise'); // there is no default export
 
 // Deployment sources supported by Web Apps
 const SCM_TYPES: string[] = [
@@ -143,6 +146,9 @@ export class SiteWrapper {
         switch (config.scmType) {
             case SCM_TYPES[1]: // 'LocalGit'
                 await this.localGitDeploy(fsPath, client, outputChannel);
+                break;
+            case SCM_TYPES[2]: // 'GitHub'
+                await this.gitHubDeploy(fsPath, client, outputChannel);
                 break;
             default: //'None' or any other non-supported scmType
                 await this.deployZip(fsPath, client, outputChannel, configurationSectionName, confirmDeployment);
@@ -296,6 +302,100 @@ export class SiteWrapper {
         this.log(outputChannel, (localize('localGitDeploy', `Deploying Local Git repository to "${this.appName}"...`)));
         await this.waitForDeploymentToComplete(kuduClient, outputChannel);
         this.log(outputChannel, localize('deployComplete', 'Deployment completed.'));
+    }
+
+    private async gitHubDeploy(_fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<void> {
+        const oAuth2Token = (await client.listSourceControls())[0].token;
+        if (!oAuth2Token) {
+            this.showGitHubAuthPrompt();
+            return undefined;
+        }
+
+        const oldSourceControl = await client.webApps.list(this.resourceGroup, this.appName);
+        console.log(oldSourceControl);
+
+        const gitHubUser = await this.getJsonRequest('https://api.github.com/user', oAuth2Token);
+        
+        const gitHubOrgs = await this.getJsonRequest('https://api.github.com/user/orgs', oAuth2Token);
+        const orgQuickPicks = this.createQuickPickFromJsons([gitHubUser], 'login', undefined, ['repos_url']).concat(this.createQuickPickFromJsons(gitHubOrgs, 'login', undefined, ['repos_url']));
+        const orgQuickPick: IQuickPickItemWithData<{}> = await vscode.window.showQuickPick(orgQuickPicks, { placeHolder: 'Choose your organization.' });
+        
+        const gitHubRepos = await this.getJsonRequest(orgQuickPick.data["repos_url"], oAuth2Token);
+        const repoQuickPicks = this.createQuickPickFromJsons(gitHubRepos, 'name', undefined,  ['url', 'html_url']);
+        const repoQuickPick: IQuickPickItemWithData<{}> = await vscode.window.showQuickPick(repoQuickPicks, { placeHolder: 'Choose project.' });
+
+        const gitHubBranches = await this.getJsonRequest(`${repoQuickPick.data["url"]}/branches`, oAuth2Token);
+        const branchQuickPicks = this.createQuickPickFromJsons(gitHubBranches, 'name');
+        const branchQuickPick: IQuickPickItemWithData<{}> = await vscode.window.showQuickPick(branchQuickPicks, { placeHolder: 'Choose branch.' });
+        
+        const siteSourceControl: SiteSourceControl = {
+            location: this.location,
+            repoUrl: repoQuickPick.data["html_url"],
+            branch: branchQuickPick.label,
+            isManualIntegration: false,
+            deploymentRollbackEnabled: false,
+            isMercurial: false
+        };
+
+        const newSourceControl = await client.webApps.createOrUpdateSourceControl(this.resourceGroup, this.name, siteSourceControl);
+        if (newSourceControl) {
+            outputChannel.appendLine('GitHub deployment configuration is complete.');
+        }
+    }
+
+    private async getJsonRequest(url: string, token: string): Promise<Object[]> {
+        // Reference for GitHub REST routes
+        // https://developer.github.com/v3/
+        // Note: blank after user implies look up authorized user
+        
+        const gitHubResponse = await request.get(url, {
+            headers: {
+                'Authorization': `token ${token}`,
+                'User-Agent': 'vscode-azureappservice-extension'
+            }
+        });
+
+        return JSON.parse(gitHubResponse);
+    }
+
+    /** 
+     * @param label Property of JSON that will be used as the QuickPicks label
+     * @param description Optional property of JSON that will be used as QuickPicks description
+     * * @param description Optional property of JSON that will be used as QuickPicks data saved as a NameValue pair
+     */
+    private createQuickPickFromJsons(jsons: Object[], label: string, description?: string, data?: string[]): IQuickPickItemWithData<{}>[] {
+        const quickPicks: IQuickPickItemWithData<{}>[] = [];
+        for (const json of jsons) {
+            let dataValuePair = {};
+
+            if (!json[label]) {
+                // skip if this JSON does not have this label
+                continue;
+            }
+
+            if (description && !json[description]) {
+                // if the label exists, but the description does not, then description will just be left blank
+                description = undefined;
+            }
+
+            if (data) {
+                // construct value pair based off data labels provided
+                for (const property of data) {
+                     // required to construct first otherwise cannot use property as key name
+                    dataValuePair[property] = json[property]
+                }
+            }
+
+            console.log(dataValuePair);
+            
+            quickPicks.push( { 
+                label: json[label], 
+                description: `${description ? json[description] : ''}`,
+                data: dataValuePair
+            });
+        }
+
+        return quickPicks;
     }
 
     private async showScmPrompt(currentScmType: string): Promise<string> {
