@@ -167,3 +167,11 @@ export declare class AzureActionHandler {
 
 export type TelemetryProperties = { [key: string]: string; };
 export type TelemetryMeasurements = { [key: string]: number };
+
+export declare function parseError(error: any): IParsedError;
+
+export interface IParsedError {
+    errorType: string;
+    message: string;
+    isUserCancelledError: boolean;
+}

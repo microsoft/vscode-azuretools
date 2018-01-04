@@ -6,8 +6,9 @@
 import { commands, Event, ExtensionContext, OutputChannel, window } from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
 import { TelemetryMeasurements, TelemetryProperties } from '../index';
+import { IParsedError } from '../index';
 import { localize } from './localize';
-import { IParsedError, parseError } from './parseError';
+import { parseError } from './parseError';
 
 // tslint:disable:no-any no-unsafe-any
 

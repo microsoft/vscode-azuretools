@@ -9,7 +9,7 @@ This package provides common Azure UI elements for VS Code extensions:
 
 ## Azure Action Handler
 
-Use the Azure Action Handler to consistently display error messages and track commands with telemetry. You should contruct the handler and register commands/events in your extension's `activate()` method. The simplest example is to register a command (in this case, refreshing a node):
+Use the Azure Action Handler to consistently display error messages and track commands with telemetry. You should construct the handler and register commands/events in your extension's `activate()` method. The simplest example is to register a command (in this case, refreshing a node):
 ```typescript
 const actionHandler: AzureActionHandler = new AzureActionHandler(context, outputChannel, reporter);
 actionHandler.registerCommand('yourExtension.Refresh', (node: IAzureNode) => { node.refresh(); });

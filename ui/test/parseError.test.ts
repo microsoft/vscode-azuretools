@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
+import { IParsedError } from '../index';
 import { UserCancelledError } from '../src/errors';
-import { IParsedError, parseError } from '../src/parseError';
+import { parseError } from '../src/parseError';
 
 suite('Error Parsing Tests', () => {
     test('Generic Error', () => {

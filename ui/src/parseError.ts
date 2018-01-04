@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { IParsedError } from '../index';
 import { localize } from './localize';
 
 // tslint:disable-next-line:no-any
@@ -40,10 +41,4 @@ export function parseError(error: any): IParsedError {
         // See https://github.com/Microsoft/vscode-azuretools/issues/51 for more info
         isUserCancelledError: errorType === 'UserCancelledError'
     };
-}
-
-export interface IParsedError {
-    errorType: string;
-    message: string;
-    isUserCancelledError: boolean;
 }

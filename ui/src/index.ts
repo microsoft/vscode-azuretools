@@ -7,3 +7,4 @@ export { AzureTreeDataProvider } from './treeDataProvider/AzureTreeDataProvider'
 export { UserCancelledError } from './errors';
 export { BaseEditor } from './BaseEditor';
 export { AzureActionHandler } from './AzureActionHandler';
+export { parseError } from './parseError';
