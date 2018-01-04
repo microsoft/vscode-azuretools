@@ -43,7 +43,6 @@ export class AzureActionHandler {
     private wrapCallback(callbackId: string, callback: (trackTelemetry: () => void, properties: TelemetryProperties, measurements: TelemetryMeasurements, ...args: any[]) => any): (...args: any[]) => Promise<any> {
         return async (...args: any[]): Promise<any> => {
             const start: number = Date.now();
-            let errorData: IParsedError | undefined;
             const properties: TelemetryProperties = {};
             const measurements: TelemetryMeasurements = {};
             properties.result = 'Succeeded';
@@ -52,13 +51,15 @@ export class AzureActionHandler {
             try {
                 await Promise.resolve(callback(() => { sendTelemetry = true; }, properties, measurements, ...args));
             } catch (error) {
-                errorData = parseError(error);
+                const errorData: IParsedError = parseError(error);
                 // NOTE: Intentionally not using 'error instanceof UserCancelledError' because that doesn't work if multiple versions of the UI package are used in one extension
                 // See https://github.com/Microsoft/vscode-azuretools/issues/51 for more info
                 if (errorData.errorType === 'UserCancelledError') {
                     properties.result = 'Canceled';
                 } else {
                     properties.result = 'Failed';
+                    properties.error = errorData.errorType;
+                    properties.errorMessage = errorData.message;
                     // Always append the error to the output channel, but only 'show' the output channel for multiline errors
                     this._outputChannel.appendLine(localize('outputError', 'Error: {0}', errorData.message));
                     if (errorData.message.includes('\n')) {
@@ -72,12 +73,6 @@ export class AzureActionHandler {
                 if (this._telemetryReporter && sendTelemetry) {
                     const end: number = Date.now();
                     measurements.duration = (end - start) / 1000;
-
-                    if (errorData && errorData.errorType !== 'UserCancelledError') {
-                        properties.error = errorData.errorType;
-                        properties.errorMessage = errorData.message;
-                    }
-
                     this._telemetryReporter.sendTelemetryEvent(callbackId, properties, measurements);
                 }
             }
