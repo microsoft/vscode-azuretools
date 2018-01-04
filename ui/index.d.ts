@@ -7,7 +7,8 @@
 import { Subscription } from 'azure-arm-resource/lib/subscription/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment } from 'ms-rest-azure';
-import { Uri, TreeDataProvider, Disposable, TreeItem, Event, OutputChannel, Memento, TextDocument } from 'vscode';
+import { Uri, TreeDataProvider, Disposable, TreeItem, Event, OutputChannel, Memento, TextDocument, ExtensionContext } from 'vscode';
+import TelemetryReporter from 'vscode-extension-telemetry';
 
 export declare class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disposable {
     public static readonly subscriptionContextValue: string;
@@ -142,8 +143,27 @@ export declare abstract class BaseEditor<ContextT> implements Disposable {
      */
     abstract getSaveConfirmationText(context: ContextT): Promise<string>;
 
-    onDidSaveTextDocument(globalState: Memento, doc: TextDocument): Promise<void>;
+    onDidSaveTextDocument(trackTelemetry: () => void, globalState: Memento, doc: TextDocument): Promise<void>;
     showEditor(context: ContextT, sizeLimit?: number): Promise<void>;
     dispose(): Promise<void>;
 }
 
+/**
+ * Used to register VSCode commands and events. It wraps your callback with consistent error and telemetry handling
+ */
+export declare class AzureActionHandler {
+    constructor(extensionContext: ExtensionContext, outputChannel: OutputChannel, telemetryReporter?: TelemetryReporter);
+
+    registerCommand(commandId: string, callback: (...args: any[]) => any): void
+    registerCommandWithCustomTelemetry(commandId: string, callback: (properties: TelemetryProperties, measurements: TelemetryMeasurements, ...args: any[]) => any): void;
+
+    /**
+     * NOTE: An event callback must call trackTelemetry() in order for it to be "opted-in" for telemetry. This is meant to be called _after_ the event has determined that it apples to that extension
+     * For example, we might not want to track _every_ onDidSaveEvent, just the save events for our files
+     */
+    registerEvent<T>(eventId: string, event: Event<T>, callback: (trackTelemetry: () => void, ...args: any[]) => any): void;
+    registerEventWithCustomTelemetry<T>(eventId: string, event: Event<T>, callback: (trackTelemetry: () => void, properties: TelemetryProperties, measurements: TelemetryMeasurements, ...args: any[]) => any): void;
+}
+
+export type TelemetryProperties = { [key: string]: string; };
+export type TelemetryMeasurements = { [key: string]: number };

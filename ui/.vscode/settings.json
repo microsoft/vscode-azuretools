@@ -5,7 +5,7 @@
     "files.insertFinalNewline": true,
     "files.trimTrailingWhitespace": true,
     "search.exclude": {
-        "lib": true,
+        "out": true,
         "**/node_modules": true
     },
     "tslint.autoFixOnSave": true,
