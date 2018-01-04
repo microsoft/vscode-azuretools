@@ -35,11 +35,15 @@ export function parseError(error: any): IParsedError {
 
     return {
         errorType: errorType,
-        message: message
+        message: message,
+        // NOTE: Intentionally not using 'error instanceof UserCancelledError' because that doesn't work if multiple versions of the UI package are used in one extension
+        // See https://github.com/Microsoft/vscode-azuretools/issues/51 for more info
+        isUserCancelledError: errorType === 'UserCancelledError'
     };
 }
 
 export interface IParsedError {
     errorType: string;
     message: string;
+    isUserCancelledError: boolean;
 }
