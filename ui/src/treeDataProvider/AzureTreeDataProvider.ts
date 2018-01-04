@@ -98,8 +98,8 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
                     contextValue: 'azureCommandNode',
                     id: loginCommandId,
                     iconPath: {
-                        light: path.join(__filename, '..', '..', '..', 'resources', 'light', 'Loading.svg'),
-                        dark: path.join(__filename, '..', '..', '..', 'resources', 'dark', 'Loading.svg')
+                        light: path.join(__filename, '..', '..', '..', '..', 'resources', 'light', 'Loading.svg'),
+                        dark: path.join(__filename, '..', '..', '..', '..', 'resources', 'dark', 'Loading.svg')
                     }
                 })];
             } else if (this._azureAccount.status === 'LoggedOut') {

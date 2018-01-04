@@ -26,8 +26,8 @@ export class CreatingTreeItem implements IAzureTreeItem {
 
     public get iconPath(): { light: string, dark: string } {
         return {
-            light: path.join(__filename, '..', '..', '..', 'resources', 'light', 'Loading.svg'),
-            dark: path.join(__filename, '..', '..', '..', 'resources', 'dark', 'Loading.svg')
+            light: path.join(__filename, '..', '..', '..', '..', 'resources', 'light', 'Loading.svg'),
+            dark: path.join(__filename, '..', '..', '..', '..', 'resources', 'dark', 'Loading.svg')
         };
     }
 }
