@@ -66,8 +66,12 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
         }
     }
 
-    public refresh(): void {
-        this.treeDataProvider.refresh(this.parent, false);
+    public async refresh(): Promise<void> {
+        if (this.treeItem.refreshLabel) {
+            await this.treeItem.refreshLabel(this);
+        }
+
+        await this.treeDataProvider.refresh(this.parent, false /* clearCache */);
     }
 
     public openInPortal(): void {

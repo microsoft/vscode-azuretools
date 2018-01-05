@@ -122,9 +122,15 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
         }
     }
 
-    public refresh(node?: IAzureNode, clearCache: boolean = true): void {
-        if (node instanceof AzureParentNode && clearCache) {
-            node.clearCache();
+    public async refresh(node?: IAzureNode, clearCache: boolean = true): Promise<void> {
+        if (clearCache) {
+            if (node && node.treeItem.refreshLabel) {
+                await node.treeItem.refreshLabel(node);
+            }
+
+            if (node instanceof AzureParentNode) {
+                node.clearCache();
+            }
         }
 
         this._onDidChangeTreeDataEmitter.fire(node);

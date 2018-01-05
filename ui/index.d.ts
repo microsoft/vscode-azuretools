@@ -22,7 +22,7 @@ export declare class AzureTreeDataProvider implements TreeDataProvider<IAzureNod
     constructor(resourceProvider: IChildProvider, loadMoreCommandId: string, rootTreeItems?: IAzureTreeItem[]);
     public getTreeItem(node: IAzureNode): TreeItem;
     public getChildren(node?: IAzureParentNode): Promise<IAzureNode[]>;
-    public refresh(node?: IAzureNode, clearCache?: boolean): void;
+    public refresh(node?: IAzureNode, clearCache?: boolean): Promise<void>;
     public loadMore(node: IAzureNode): Promise<void>;
     public showNodePicker(expectedContextValue: string): Promise<IAzureNode>;
     public dispose(): void;
@@ -44,7 +44,7 @@ export interface IAzureNode<T extends IAzureTreeItem = IAzureTreeItem> {
     /**
      * Refresh this node in the tree
      */
-    refresh(): void;
+    refresh(): Promise<void>;
 
     /**
      * This class wraps IAzureTreeItem.deleteTreeItem and ensures the tree is updated correctly when an item is deleted
@@ -79,6 +79,7 @@ export interface IAzureTreeItem {
     commandId?: string;
     contextValue: string;
     deleteTreeItem?(node: IAzureNode): Promise<void>;
+    refreshLabel?(node: IAzureNode): Promise<void>;
 }
 
 export interface IChildProvider {
@@ -105,7 +106,7 @@ export interface IAzureParentTreeItem extends IAzureTreeItem, IChildProvider {
      * If this treeItem should not show up in the node picker, implement this to provide a child that corresponds to the expectedContextValue
      * Otherwise, all children will be shown in the node picker
      */
-    pickTreeItem?(expectedContextValue: string): IAzureParentTreeItem | undefined;
+    pickTreeItem?(expectedContextValue: string): IAzureTreeItem | undefined;
 }
 
 export declare class UserCancelledError extends Error { }
