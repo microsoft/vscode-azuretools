@@ -82,7 +82,7 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
         if (this.treeItem.deleteTreeItem) {
             await this.treeItem.deleteTreeItem(this);
             if (this.parent) {
-                this.parent.removeNodeFromCache(this);
+                await this.parent.removeNodeFromCache(this);
             }
         } else {
             throw new NotImplementedError('deleteTreeItem', this.treeItem);
@@ -91,5 +91,5 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
 }
 
 export interface IAzureParentNodeInternal extends IAzureParentNode {
-    removeNodeFromCache(node: AzureNode): void;
+    removeNodeFromCache(node: AzureNode): Promise<void>;
 }

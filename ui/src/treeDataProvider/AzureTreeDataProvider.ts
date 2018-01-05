@@ -45,12 +45,12 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
             this._azureAccount = azureAccountExtension.exports;
         }
 
-        this._disposables.push(this._azureAccount.onFiltersChanged(() => this.refresh()));
-        this._disposables.push(this._azureAccount.onStatusChanged((status: AzureLoginStatus) => {
+        this._disposables.push(this._azureAccount.onFiltersChanged(async () => await this.refresh()));
+        this._disposables.push(this._azureAccount.onStatusChanged(async (status: AzureLoginStatus) => {
             // Ignore status change to 'LoggedIn' and wait for the 'onFiltersChanged' event to fire instead
             // (so that the tree stays in 'Loading...' state until the filters are actually ready)
             if (status !== 'LoggedIn') {
-                this.refresh();
+                await this.refresh();
             }
         }));
     }
