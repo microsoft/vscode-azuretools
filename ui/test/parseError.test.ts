@@ -8,6 +8,7 @@ import { IParsedError } from '../index';
 import { UserCancelledError } from '../src/errors';
 import { parseError } from '../src/parseError';
 
+// tslint:disable-next-line:max-func-body-length
 suite('Error Parsing Tests', () => {
     test('Generic Error', () => {
         const pe: IParsedError = parseError(new Error('test'));
@@ -52,9 +53,23 @@ suite('Error Parsing Tests', () => {
     });
 
     test('Object', () => {
+        const pe: IParsedError = parseError({ myfield: 1 });
+        assert.equal(pe.errorType, 'object');
+        assert.equal(pe.message, '{"myfield":1}');
+        assert.equal(pe.isUserCancelledError, false);
+    });
+
+    test('Object with errorCode', () => {
         const pe: IParsedError = parseError({ errorCode: 1 });
-        assert.equal(pe.errorType, 'Object');
+        assert.equal(pe.errorType, '1');
         assert.equal(pe.message, '{"errorCode":1}');
+        assert.equal(pe.isUserCancelledError, false);
+    });
+
+    test('Object with errorCode and message', () => {
+        const pe: IParsedError = parseError({ message: JSON.stringify({ message: 'hi', Code: 432 }) });
+        assert.equal(pe.errorType, '432');
+        assert.equal(pe.message, 'hi');
         assert.equal(pe.isUserCancelledError, false);
     });
 
@@ -102,6 +117,68 @@ suite('Error Parsing Tests', () => {
         const pe: IParsedError = parseError(undefined);
         assert.equal(pe.errorType, 'undefined');
         assert.equal(pe.message, 'Unknown Error');
+        assert.equal(pe.isUserCancelledError, false);
+    });
+
+    test('Zero', () => {
+        const pe: IParsedError = parseError(0);
+        assert.equal(pe.errorType, 'number');
+        assert.equal(pe.message, '0');
+        assert.equal(pe.isUserCancelledError, false);
+    });
+
+    test('Empty', () => {
+        const pe: IParsedError = parseError('');
+        assert.equal(pe.errorType, 'string');
+        assert.equal(pe.message, 'Unknown Error');
+        assert.equal(pe.isUserCancelledError, false);
+    });
+
+    test('Error in object body', () => {
+        const err: {} = {
+            code: 400,
+            body: {
+                code: 'BadRequest',
+                message: 'Message: {\"Errors\":[\"The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100.\"]}\r\nActivityId: c11a5bcd-bf76-43c0-b713-b28e423599c4, Request URI: /apps/4c8d65d7-216b-46b4-abb7-52c1a0c7123f/services/36df4f13-26ef-48cf-bc7b-9ab28c345ca3/partitions/68d75b64-4651-4c15-b2a5-fc5550bab323/replicas/131570875506839239p, RequestStats: , SDK: Microsoft.Azure.Documents.Common/1.19.121.4'
+            },
+            activityId: '12345678-bf76-43c0-b713-b28e423599c4'
+        };
+        const pe: IParsedError = parseError(err);
+
+        assert.equal(pe.errorType, 'BadRequest');
+        assert.equal(pe.message, 'The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100.');
+        assert.equal(pe.isUserCancelledError, false);
+    });
+
+    test('Multiple errors in object body', () => {
+        const err: {} = {
+            code: 400,
+            body: {
+                code: 300,
+                message: 'Message: {\"Errors\":[\"The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100.\", \"The offer should have a valid timestamp.\"]}\r\nActivityId: c11a5bcd-bf76-43c0-b713-b28e423599c4, Request URI: /apps/4c8d65d7-216b-46b4-abb7-52c1a0c7123f/services/36df4f13-26ef-48cf-bc7b-9ab28c345ca3/partitions/68d75b64-4651-4c15-b2a5-fc5550bab323/replicas/131570875506839239p, RequestStats: , SDK: Microsoft.Azure.Documents.Common/1.19.121.4'
+            },
+            activityId: '12345678-bf76-43c0-b713-b28e423599c4'
+        };
+        const pe: IParsedError = parseError(err);
+
+        assert.equal(pe.errorType, '300');
+        assert.equal(pe.message, 'The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100.');
+        assert.equal(pe.isUserCancelledError, false);
+    });
+
+    test('Multiple errors in stringified body', () => {
+        const err: {} = {
+            code: 400,
+            body: JSON.stringify({
+                code: 'BadRequest2',
+                message: 'Message: {\"Errors\":[\"The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100.\" ,\"The offer should have a valid timestamp.\"]}\r\nActivityId: c11a5bcd-bf76-43c0-b713-b28e423599c4, Request URI: /apps/4c8d65d7-216b-46b4-abb7-52c1a0c7123f/services/36df4f13-26ef-48cf-bc7b-9ab28c345ca3/partitions/68d75b64-4651-4c15-b2a5-fc5550bab323/replicas/131570875506839239p, RequestStats: , SDK: Microsoft.Azure.Documents.Common/1.19.121.4'
+            }),
+            activityId: '12345678-bf76-43c0-b713-b28e423599c4'
+        };
+        const pe: IParsedError = parseError(err);
+
+        assert.equal(pe.errorType, 'BadRequest2');
+        assert.equal(pe.message, 'The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100.');
         assert.equal(pe.isUserCancelledError, false);
     });
 });
