@@ -66,8 +66,12 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
         }
     }
 
-    public refresh(): void {
-        this.treeDataProvider.refresh(this.parent, false);
+    public async refresh(): Promise<void> {
+        if (this.treeItem.refreshLabel) {
+            await this.treeItem.refreshLabel(this);
+        }
+
+        await this.treeDataProvider.refresh(this.parent, false /* clearCache */);
     }
 
     public openInPortal(): void {
@@ -78,7 +82,7 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
         if (this.treeItem.deleteTreeItem) {
             await this.treeItem.deleteTreeItem(this);
             if (this.parent) {
-                this.parent.removeNodeFromCache(this);
+                await this.parent.removeNodeFromCache(this);
             }
         } else {
             throw new NotImplementedError('deleteTreeItem', this.treeItem);
@@ -87,5 +91,5 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
 }
 
 export interface IAzureParentNodeInternal extends IAzureParentNode {
-    removeNodeFromCache(node: AzureNode): void;
+    removeNodeFromCache(node: AzureNode): Promise<void>;
 }
