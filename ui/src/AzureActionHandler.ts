@@ -41,24 +41,22 @@ export class AzureActionHandler {
         this._extensionContext.subscriptions.push(event(this.wrapCallback(eventId, callback)));
     }
 
+    public async callWithTelemetry(callbackId: string, callback: (properties: TelemetryProperties, measurements: TelemetryMeasurements) => any): Promise<any> {
+        return await this.callWithTelemetryInternal(callbackId, (trackTelemetry: () => void, properties: TelemetryProperties, measurements: TelemetryMeasurements) => {
+            trackTelemetry();
+            return callback(properties, measurements);
+        });
+    }
+
     private wrapCallback(callbackId: string, callback: (trackTelemetry: () => void, properties: TelemetryProperties, measurements: TelemetryMeasurements, ...args: any[]) => any): (...args: any[]) => Promise<any> {
         return async (...args: any[]): Promise<any> => {
-            const start: number = Date.now();
-            const properties: TelemetryProperties = {};
-            const measurements: TelemetryMeasurements = {};
-            properties.result = 'Succeeded';
-            let sendTelemetry: boolean = false;
-
             try {
-                await Promise.resolve(callback(() => { sendTelemetry = true; }, properties, measurements, ...args));
+                return await this.callWithTelemetryInternal(callbackId, (trackTelemetry: () => void, properties: TelemetryProperties, measurements: TelemetryMeasurements) => {
+                    return callback(trackTelemetry, properties, measurements, ...args);
+                });
             } catch (error) {
                 const errorData: IParsedError = parseError(error);
-                if (errorData.isUserCancelledError) {
-                    properties.result = 'Canceled';
-                } else {
-                    properties.result = 'Failed';
-                    properties.error = errorData.errorType;
-                    properties.errorMessage = errorData.message;
+                if (!errorData.isUserCancelledError) {
                     // Always append the error to the output channel, but only 'show' the output channel for multiline errors
                     this._outputChannel.appendLine(localize('outputError', 'Error: {0}', errorData.message));
                     if (errorData.message.includes('\n')) {
@@ -68,13 +66,38 @@ export class AzureActionHandler {
                         window.showErrorMessage(errorData.message);
                     }
                 }
-            } finally {
-                if (this._telemetryReporter && sendTelemetry) {
-                    const end: number = Date.now();
-                    measurements.duration = (end - start) / 1000;
-                    this._telemetryReporter.sendTelemetryEvent(callbackId, properties, measurements);
-                }
+
+                return undefined;
             }
         };
+    }
+
+    private async callWithTelemetryInternal(callbackId: string, callback: (trackTelemetry: () => void, properties: TelemetryProperties, measurements: TelemetryMeasurements) => any): Promise<any> {
+        const start: number = Date.now();
+        const properties: TelemetryProperties = {};
+        const measurements: TelemetryMeasurements = {};
+        properties.result = 'Succeeded';
+        let sendTelemetry: boolean = false;
+
+        try {
+            return await Promise.resolve(callback(() => { sendTelemetry = true; }, properties, measurements));
+        } catch (error) {
+            const errorData: IParsedError = parseError(error);
+            if (errorData.isUserCancelledError) {
+                properties.result = 'Canceled';
+            } else {
+                properties.result = 'Failed';
+                properties.error = errorData.errorType;
+                properties.errorMessage = errorData.message;
+            }
+
+            throw error;
+        } finally {
+            if (this._telemetryReporter && sendTelemetry) {
+                const end: number = Date.now();
+                measurements.duration = (end - start) / 1000;
+                this._telemetryReporter.sendTelemetryEvent(callbackId, properties, measurements);
+            }
+        }
     }
 }
