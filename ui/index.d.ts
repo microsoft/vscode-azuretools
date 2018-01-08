@@ -164,6 +164,11 @@ export declare class AzureActionHandler {
      */
     registerEvent<T>(eventId: string, event: Event<T>, callback: (trackTelemetry: () => void, ...args: any[]) => any): void;
     registerEventWithCustomTelemetry<T>(eventId: string, event: Event<T>, callback: (trackTelemetry: () => void, properties: TelemetryProperties, measurements: TelemetryMeasurements, ...args: any[]) => any): void;
+
+    /**
+     * Use this method for generic calls that you want to track telemetry for, but that aren't registered with VS Code
+     */
+    callWithTelemetry(callbackId: string, callback: (properties: TelemetryProperties, measurements: TelemetryMeasurements) => any): Promise<any>;
 }
 
 export type TelemetryProperties = { [key: string]: string; };
