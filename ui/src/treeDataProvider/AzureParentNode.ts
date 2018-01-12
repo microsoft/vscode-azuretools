@@ -69,19 +69,21 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
             .sort((n1: AzureNode, n2: AzureNode) => n1.treeItem.label.localeCompare(n2.treeItem.label));
     }
 
-    public async pickChildNode(expectedContextValue: string, ui: IUserInterface): Promise<AzureNode> {
+    public async pickChildNode(expectedContextValues: string[], ui: IUserInterface): Promise<AzureNode> {
         if (this.treeItem.pickTreeItem) {
             const children: AzureNode[] = await this.getCachedChildren();
-            const treeItem: IAzureTreeItem | undefined = this.treeItem.pickTreeItem(expectedContextValue);
-            if (treeItem) {
-                const node: AzureNode | undefined = children.find((n: AzureNode) => n.treeItem.id === treeItem.id);
-                if (node) {
-                    return node;
+            for (const val of expectedContextValues) {
+                const treeItem: IAzureTreeItem | undefined = this.treeItem.pickTreeItem(val);
+                if (treeItem) {
+                    const node: AzureNode | undefined = children.find((n: AzureNode) => n.treeItem.id === treeItem.id);
+                    if (node) {
+                        return node;
+                    }
                 }
             }
         }
 
-        const pick: PickWithData<GetNodeFunction> = await ui.showQuickPick<GetNodeFunction>(this.getQuickPicks(), localize('azFunc.selectNode', 'Select a {0}', this.treeItem.childTypeLabel));
+        const pick: PickWithData<GetNodeFunction> = await ui.showQuickPick<GetNodeFunction>(this.getQuickPicks(expectedContextValues), localize('azFunc.selectNode', 'Select a {0}', this.treeItem.childTypeLabel));
         return await pick.data();
     }
 
@@ -102,8 +104,10 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
         }
     }
 
-    private async getQuickPicks(): Promise<PickWithData<GetNodeFunction>[]> {
-        const nodes: AzureNode[] = await this.getCachedChildren();
+    private async getQuickPicks(expectedContextValues: string[]): Promise<PickWithData<GetNodeFunction>[]> {
+        let nodes: AzureNode[] = await this.getCachedChildren();
+        nodes = nodes.filter((node: AzureNode) => node.includeInNodePicker(expectedContextValues));
+
         const picks: PickWithData<GetNodeFunction>[] = nodes.map((n: AzureNode) => new PickWithData(async (): Promise<AzureNode> => await Promise.resolve(n), n.treeItem.label));
         if (this.treeItem.createChild && this.treeItem.childTypeLabel) {
             picks.unshift(new PickWithData<GetNodeFunction>(

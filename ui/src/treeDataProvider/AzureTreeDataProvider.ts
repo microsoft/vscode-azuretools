@@ -143,13 +143,23 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
         }
     }
 
-    public async showNodePicker(expectedContextValue: string): Promise<IAzureNode> {
-        const picks: PickWithData<SubscriptionNode>[] = this._subscriptionNodes.map((n: SubscriptionNode) => new PickWithData<SubscriptionNode>(n, n.treeItem.label, n.subscription.subscriptionId));
-        let node: AzureNode = (await this._ui.showQuickPick<SubscriptionNode>(picks, localize('selectSubscription', 'Select a Subscription'))).data;
+    public async showNodePicker(expectedContextValues: string | string[], startingNode?: IAzureNode): Promise<IAzureNode> {
+        if (!Array.isArray(expectedContextValues)) {
+            expectedContextValues = [expectedContextValues];
+        }
 
-        while (node.treeItem.contextValue !== expectedContextValue) {
+        let node: IAzureNode;
+        if (startingNode) {
+            node = startingNode;
+        } else {
+            let picks: PickWithData<IAzureNode>[] = this._subscriptionNodes.map((n: SubscriptionNode) => new PickWithData(n, n.treeItem.label, n.subscription.subscriptionId));
+            picks = picks.concat(this._rootNodes.filter((n: AzureNode) => n.includeInNodePicker(<string[]>expectedContextValues)).map((n: AzureNode) => new PickWithData(n, n.treeItem.label)));
+            node = (await this._ui.showQuickPick<IAzureNode>(picks, localize('selectSubscription', 'Select a Subscription'))).data;
+        }
+
+        while (!expectedContextValues.some((val: string) => node.treeItem.contextValue === val)) {
             if (node instanceof AzureParentNode) {
-                node = await node.pickChildNode(expectedContextValue, this._ui);
+                node = await node.pickChildNode(expectedContextValues, this._ui);
             } else {
                 throw new Error(localize('noResourcesError', 'No matching resources found.'));
             }
