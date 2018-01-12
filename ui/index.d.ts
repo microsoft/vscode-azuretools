@@ -24,7 +24,7 @@ export declare class AzureTreeDataProvider implements TreeDataProvider<IAzureNod
     public getChildren(node?: IAzureParentNode): Promise<IAzureNode[]>;
     public refresh(node?: IAzureNode, clearCache?: boolean): Promise<void>;
     public loadMore(node: IAzureNode): Promise<void>;
-    public showNodePicker(expectedContextValue: string): Promise<IAzureNode>;
+    public showNodePicker(expectedContextValues: string | string[], startingNode?: IAzureNode): Promise<IAzureNode>
     public dispose(): void;
 }
 
@@ -80,6 +80,12 @@ export interface IAzureTreeItem {
     contextValue: string;
     deleteTreeItem?(node: IAzureNode): Promise<void>;
     refreshLabel?(node: IAzureNode): Promise<void>;
+
+    /**
+     * Optional function to filter nodes displayed in the node picker
+     * If not implemented, it's assumed that 'isAncestorOf' evaluates to true
+     */
+    isAncestorOf?(contextValue: string): boolean;
 }
 
 export interface IChildProvider {

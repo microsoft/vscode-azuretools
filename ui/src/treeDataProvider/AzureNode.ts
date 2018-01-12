@@ -78,6 +78,14 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
         (<(s: string) => void>opn)(`${this.environment.portalUrl}/${this.tenantId}/#resource${this.treeItem.id}`);
     }
 
+    public includeInNodePicker(expectedContextValues: string[]): boolean {
+        return expectedContextValues.some((val: string) => {
+            return this.treeItem.contextValue === val ||
+                !this.treeItem.isAncestorOf ||
+                this.treeItem.isAncestorOf(val);
+        });
+    }
+
     public async deleteNode(): Promise<void> {
         if (this.treeItem.deleteTreeItem) {
             await this.treeItem.deleteTreeItem(this);
