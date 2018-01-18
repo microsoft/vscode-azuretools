@@ -12,7 +12,8 @@ export function parseError(error: any): IParsedError {
     let errorType: string = '';
     let message: string = '';
 
-    error = unpackErrorFromBody(error);
+    error = unpackErrorFromField(error, 'response');
+    error = unpackErrorFromField(error, 'body');
 
     if (typeof (error) === 'object' && error !== null) {
         if (error.constructor !== Object) {
@@ -52,7 +53,7 @@ function parseIfJson(o: any): any {
     if (typeof o === 'string' && o.indexOf('{') >= 0) {
         try {
             return JSON.parse(o);
-        } catch {
+        } catch (err) {
             // ignore
         }
     }
@@ -70,7 +71,7 @@ function getCode(o: any, defaultCode: string): string {
 
 function unpackErrorsInMessage(message: string): string {
     // Handle messages like this from Azure (just handle first error for now)
-    //   ["Errors":["The offer should have valid throughput ¡­",
+    //   ["Errors":["The offer should have valid throughput ï¿½ï¿½",
     if (message) {
         const errorsInMessage: RegExpMatchArray | null = message.match(/"Errors":\[\s*"([^"]+)"/);
         if (errorsInMessage !== null) {
@@ -82,20 +83,20 @@ function unpackErrorsInMessage(message: string): string {
     return message;
 }
 
-function unpackErrorFromBody(error: any): any {
+function unpackErrorFromField(error: any, prop: string): any {
     // Handle objects from Azure SDK that contain the error information in a "body" field (serialized or not)
-    let body: any = error && error.body;
-    if (body) {
-        if (typeof body === 'string' && body.indexOf('{') >= 0) {
+    let field: any = error && error[prop];
+    if (field) {
+        if (typeof field === 'string' && field.indexOf('{') >= 0) {
             try {
-                body = JSON.parse(body);
+                field = JSON.parse(field);
             } catch (err) {
                 // Ignore
             }
         }
 
-        if (typeof body === 'object') {
-            return body;
+        if (typeof field === 'object') {
+            return field;
         }
     }
 
