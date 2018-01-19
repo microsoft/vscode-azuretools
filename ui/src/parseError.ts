@@ -71,7 +71,7 @@ function getCode(o: any, defaultCode: string): string {
 
 function unpackErrorsInMessage(message: string): string {
     // Handle messages like this from Azure (just handle first error for now)
-    //   ["Errors":["The offer should have valid throughput ��",
+    //   ["Errors":["The offer should have valid throughput]]",
     if (message) {
         const errorsInMessage: RegExpMatchArray | null = message.match(/"Errors":\[\s*"([^"]+)"/);
         if (errorsInMessage !== null) {
