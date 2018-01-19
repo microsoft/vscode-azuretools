@@ -181,4 +181,38 @@ suite('Error Parsing Tests', () => {
         assert.equal(pe.message, 'The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100.');
         assert.equal(pe.isUserCancelledError, false);
     });
+
+    test('Error in object response', () => {
+        const err: {} = {
+            code: 400,
+            response: JSON.stringify({
+                code: 'BadRequest4',
+                message: 'Message: {\"Errors\":[\"The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100.\" ,\"The offer should have a valid timestamp.\"]}\r\nActivityId: c11a5bcd-bf76-43c0-b713-b28e423599c4, Request URI: /apps/4c8d65d7-216b-46b4-abb7-52c1a0c7123f/services/36df4f13-26ef-48cf-bc7b-9ab28c345ca3/partitions/68d75b64-4651-4c15-b2a5-fc5550bab323/replicas/131570875506839239p, RequestStats: , SDK: Microsoft.Azure.Documents.Common/1.19.121.4'
+            }),
+            activityId: '12345678-bf76-43c0-b713-b28e423599c4'
+        };
+        const pe: IParsedError = parseError(err);
+
+        assert.equal(pe.errorType, 'BadRequest4');
+        assert.equal(pe.message, 'The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100.');
+        assert.equal(pe.isUserCancelledError, false);
+    });
+
+    test('Error in object response in string body', () => {
+        const err: {} = {
+            code: 400,
+            response: {
+                body: JSON.stringify({
+                    code: 'BadRequest5',
+                    message: 'Message: {\"Errors\":[\"The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100.\" ,\"The offer should have a valid timestamp.\"]}\r\nActivityId: c11a5bcd-bf76-43c0-b713-b28e423599c4, Request URI: /apps/4c8d65d7-216b-46b4-abb7-52c1a0c7123f/services/36df4f13-26ef-48cf-bc7b-9ab28c345ca3/partitions/68d75b64-4651-4c15-b2a5-fc5550bab323/replicas/131570875506839239p, RequestStats: , SDK: Microsoft.Azure.Documents.Common/1.19.121.4'
+                })
+            },
+            activityId: '12345678-bf76-43c0-b713-b28e423599c4'
+        };
+        const pe: IParsedError = parseError(err);
+
+        assert.equal(pe.errorType, 'BadRequest5');
+        assert.equal(pe.message, 'The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100.');
+        assert.equal(pe.isUserCancelledError, false);
+    });
 });
