@@ -4,7 +4,7 @@
             "version": "v1",
             "title": "Kudu.Services.Web"
         },
-        "host": "localhost:26647",
+        "host": "scm.azurewebsites.net",
         "schemes": [
             "https"
         ],
@@ -1233,7 +1233,7 @@
                     }
                 }
             },
-            "/test12.git/info/refs": {
+            "/swagger.git/info/refs": {
                 "get": {
                     "tags": [
                         "InfoRefs"
