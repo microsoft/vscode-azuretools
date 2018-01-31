@@ -61,7 +61,7 @@ export interface IAzureParentNode<T extends IAzureTreeItem = IAzureTreeItem> ext
     /**
      * This class wraps IChildProvider.createChild and ensures the tree is updated correctly when an item is created
      */
-    createChild(): Promise<IAzureNode>;
+    createChild(userOptions?: any): Promise<IAzureNode>;
 
     getCachedChildren(): Promise<IAzureNode[]>
 }
@@ -100,8 +100,9 @@ export interface IChildProvider {
 
     /**
      * Implement this if you want the 'create' option to show up in the node picker
+     * @param options User-defined options that are passed to the IAzureParentTreeItem.createChild call
      */
-    createChild?(node: IAzureNode, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem>;
+    createChild?(node: IAzureNode, showCreatingNode: (label: string) => void, userOptions?: {}): Promise<IAzureTreeItem>;
 }
 
 /**
