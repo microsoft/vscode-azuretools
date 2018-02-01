@@ -102,7 +102,7 @@ export interface IChildProvider {
      * Implement this if you want the 'create' option to show up in the node picker
      * @param options User-defined options that are passed to the IAzureParentTreeItem.createChild call
      */
-    createChild?(node: IAzureNode, showCreatingNode: (label: string) => void, userOptions?: {}): Promise<IAzureTreeItem>;
+    createChild?(node: IAzureNode, showCreatingNode: (label: string) => void, userOptions?: any): Promise<IAzureTreeItem>;
 }
 
 /**
