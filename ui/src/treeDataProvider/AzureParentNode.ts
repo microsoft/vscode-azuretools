@@ -40,7 +40,8 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
                     this._creatingNodes.push(creatingNode);
                     //tslint:disable-next-line:no-floating-promises
                     this.treeDataProvider.refresh(this, false);
-                }, userOptions);
+                },
+                    userOptions);
 
                 const newNode: AzureNode = this.createNewNode(newTreeItem);
                 await this.addNodeToCache(newNode);
