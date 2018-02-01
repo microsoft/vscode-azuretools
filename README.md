@@ -12,7 +12,17 @@ This project provides Node.js packages that make it easy to consume and manage A
 
 In order to quickly develop and debug these packages locally, follow these instructions:
 1. Navigate to the package you are developing and run `npm install`, `npm run build`, and `npm link`
-1. Navigate to the project you want to reference the package and run `npm link <name of package>`
+1. Navigate to the project that references the package you're developing and run `npm link <name of package>`
+
+Example:
+```
+    cd ~/repos/vscode-azuretools/ui
+    npm install
+    npm run build
+    npm link
+    cd ~/repos/vscode-azurestorage
+    npm link vscode-azureextensionui
+```
 
 ## Contributing
 
