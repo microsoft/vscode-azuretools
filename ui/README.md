@@ -107,7 +107,7 @@ For a more advanced scenario, you can also implement the `createChild` method on
 
 ![CreateNodePicker](resources/CreateNodePicker.png) ![CreatingNode](resources/CreatingNode.png)
 ```typescript
-public async createChild(node: IAzureNode, showCreatingNode: (label: string) => void, _userOptions?: {}): Promise<IAzureTreeItem> {
+public async createChild(node: IAzureNode, showCreatingNode: (label: string) => void, _userOptions?: any): Promise<IAzureTreeItem> {
     const webAppName = await vscode.window.showInputBox({ prompt: 'Enter the name of your new Web App' });
     showCreatingNode(webAppName);
     const newSite: Site | undefined = await createWebApp(webAppName, node.credentials, node.subscription);
