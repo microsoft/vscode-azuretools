@@ -7,7 +7,6 @@ import { IAzureParentTreeItem, IAzureTreeItem } from '../../index';
 import { NotImplementedError } from '../errors';
 import { IUserInterface, PickWithData } from '../IUserInterface';
 import { localize } from '../localize';
-import { insertionSearch } from '../utils/insertionSearch';
 import { AzureNode, IAzureParentNodeInternal } from './AzureNode';
 import { CreatingTreeItem } from './CreatingTreeItem';
 import { LoadMoreTreeItem } from './LoadMoreTreeItem';
@@ -93,7 +92,15 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
 
     public async addNodeToCache(node: AzureNode): Promise<void> {
         if (this._cachedChildren) {
-            const index: number = insertionSearch(node, this._cachedChildren);
+            // set index to the last element by default
+            let index: number = this._cachedChildren.length;
+            // tslint:disable-next-line:no-increment-decrement
+            for (let i: number = 0; i < this._cachedChildren.length; i++) {
+                if (node.treeItem.label.localeCompare(this._cachedChildren[i].treeItem.label) < 1) {
+                    index = i;
+                    break;
+                }
+            }
             this._cachedChildren.splice(index, 0, node);
             await this.treeDataProvider.refresh(this, false);
         }
