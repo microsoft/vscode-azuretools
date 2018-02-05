@@ -1,7 +1,7 @@
 {
     "name": "vscode-azureextensionui",
     "author": "Microsoft Corporation",
-    "version": "0.4.0",
+    "version": "0.5.5",
     "description": "Common UI tools for developing Azure extensions for VS Code",
     "tags": [
         "azure",
@@ -11,7 +11,7 @@
         "azure",
         "vscode"
     ],
-    "main": "lib/index.js",
+    "main": "out/src/index.js",
     "types": "index.d.ts",
     "license": "MIT",
     "repository": {
@@ -27,6 +27,7 @@
         "prepack": "tsc -p ./",
         "compile": "tsc -watch -p ./",
         "lint": "tslint --project tsconfig.json -e src/*.d.ts -t verbose",
+        "test": "mocha out/test/**/*.js --ui tdd",
         "prepare": "node ./node_modules/vscode/bin/install"
     },
     "dependencies": {
@@ -35,10 +36,13 @@
         "ms-rest": "^2.2.2",
         "ms-rest-azure": "^2.4.4",
         "opn": "^5.1.0",
+        "vscode-extension-telemetry": "^0.0.10",
         "vscode-nls": "^2.0.2"
     },
     "devDependencies": {
         "@types/fs-extra": "^4.0.6",
+        "@types/mocha": "^2.2.32",
+        "mocha": "^2.3.3",
         "typescript": "^2.5.3",
         "tslint": "^5.7.0",
         "tslint-microsoft-contrib": "5.0.1",

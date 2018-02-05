@@ -1,8 +1,44 @@
 # VSCode Azure SDK for Node.js - UI Tools (Preview)
 
-This package provides common Azure UI elements for VS Code extensions.
+This package provides common Azure UI elements for VS Code extensions:
+* [AzureActionHandler](#azure-action-handler): Displays error messages and optionally adds telemetry to commands/events.
+* [AzureTreeDataProvider](#azure-tree-data-provider): Displays an Azure Explorer with Azure Subscriptions and child nodes of your implementation.
+* [AzureBaseEditor](#azure-base-editor): Displays a text editor with upload support to Azure.
 
-> NOTE: This package throws a `UserCancelledError` if the user cancels an operation. This error should be handled appropriately by your extension.
+> NOTE: This package throws a `UserCancelledError` if the user cancels an operation. If you do not use the AzureActionHandler, you must handle this exception in your extension.
+
+## Azure Action Handler
+
+Use the Azure Action Handler to consistently display error messages and track commands with telemetry. You should construct the handler and register commands/events in your extension's `activate()` method. The simplest example is to register a command (in this case, refreshing a node):
+```typescript
+const actionHandler: AzureActionHandler = new AzureActionHandler(context, outputChannel, reporter);
+actionHandler.registerCommand('yourExtension.Refresh', (node: IAzureNode) => { node.refresh(); });
+```
+Here are a few of the benefits this provides:
+* Parses Azure errors of the form `{ "Code": "Conflict", "Message": "This is the actual message" }` and only displays the 'Message' property
+* Displays single line errors normally and multi-line errors in the output window
+* If you pass a TelemetryReporter, tracks multiple properties in addition to the [common extension properties](https://github.com/Microsoft/vscode-extension-telemetry#common-properties):
+  * result (Succeeded, Failed, or Canceled)
+  * duration
+  * error
+
+If you want to add custom telemetry proprties, use `registerCommandWithCustomTelemetry` and add your own properties or measurements:
+```typescript
+actionHandler.registerCommandWithCustomTelemetry('yourExtension.Refresh', async (properties: TelemetryProperties, measurements: TelemetryMeasurements) => {
+    properties.customProp = "example prop";
+    measurements.customMeas = 49;
+});
+```
+
+Finally, you can also register events. The main difference is that your callback must take in the `trackTelemetry` parameter. Events are not tracked by default (since they can happen very frequently). You must call `trackTelemetry()` to signal that this event is indeed handled by your extension. For example, if your extension only handles `json` files in the `onDidSaveTextDocument`, it might look like this:
+```typescript
+actionHandler.registerEvent('yourExtension.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, (trackTelemetry: () => void, doc: vscode.TextDocument) => {
+    if (doc.fileExtension === 'json') {
+        trackTelemetry();
+        // custom logic here
+    }
+});
+```
 
 ## Azure Tree Data Provider
 ![ExampleTree](resources/ExampleTree.png)
@@ -71,7 +107,7 @@ For a more advanced scenario, you can also implement the `createChild` method on
 
 ![CreateNodePicker](resources/CreateNodePicker.png) ![CreatingNode](resources/CreatingNode.png)
 ```typescript
-public async createChild(node: IAzureNode, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
+public async createChild(node: IAzureNode, showCreatingNode: (label: string) => void, _userOptions?: any): Promise<IAzureTreeItem> {
     const webAppName = await vscode.window.showInputBox({ prompt: 'Enter the name of your new Web App' });
     showCreatingNode(webAppName);
     const newSite: Site | undefined = await createWebApp(webAppName, node.credentials, node.subscription);
@@ -82,6 +118,10 @@ public async createChild(node: IAzureNode, showCreatingNode: (label: string) => 
     }
 }
 ```
+
+## Azure Base Editor
+
+Documentation coming soon...
 
 ## License
 [MIT](LICENSE.md)

@@ -7,7 +7,8 @@
 import { Subscription } from 'azure-arm-resource/lib/subscription/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment } from 'ms-rest-azure';
-import { Uri, TreeDataProvider, Disposable, TreeItem, Event, OutputChannel, Memento, TextDocument } from 'vscode';
+import { Uri, TreeDataProvider, Disposable, TreeItem, Event, OutputChannel, Memento, TextDocument, ExtensionContext } from 'vscode';
+import TelemetryReporter from 'vscode-extension-telemetry';
 
 export declare class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disposable {
     public static readonly subscriptionContextValue: string;
@@ -21,9 +22,9 @@ export declare class AzureTreeDataProvider implements TreeDataProvider<IAzureNod
     constructor(resourceProvider: IChildProvider, loadMoreCommandId: string, rootTreeItems?: IAzureTreeItem[]);
     public getTreeItem(node: IAzureNode): TreeItem;
     public getChildren(node?: IAzureParentNode): Promise<IAzureNode[]>;
-    public refresh(node?: IAzureNode, clearCache?: boolean): void;
+    public refresh(node?: IAzureNode, clearCache?: boolean): Promise<void>;
     public loadMore(node: IAzureNode): Promise<void>;
-    public showNodePicker(expectedContextValue: string): Promise<IAzureNode>;
+    public showNodePicker(expectedContextValues: string | string[], startingNode?: IAzureNode): Promise<IAzureNode>
     public dispose(): void;
 }
 
@@ -37,12 +38,13 @@ export interface IAzureNode<T extends IAzureTreeItem = IAzureTreeItem> {
     readonly credentials: ServiceClientCredentials;
     readonly subscription: Subscription;
     readonly tenantId: string;
+    readonly userId: string;
     readonly environment: AzureEnvironment;
 
     /**
      * Refresh this node in the tree
      */
-    refresh(): void;
+    refresh(): Promise<void>;
 
     /**
      * This class wraps IAzureTreeItem.deleteTreeItem and ensures the tree is updated correctly when an item is deleted
@@ -59,7 +61,7 @@ export interface IAzureParentNode<T extends IAzureTreeItem = IAzureTreeItem> ext
     /**
      * This class wraps IChildProvider.createChild and ensures the tree is updated correctly when an item is created
      */
-    createChild(): Promise<IAzureNode>;
+    createChild(userOptions?: any): Promise<IAzureNode>;
 
     getCachedChildren(): Promise<IAzureNode[]>
 }
@@ -77,6 +79,13 @@ export interface IAzureTreeItem {
     commandId?: string;
     contextValue: string;
     deleteTreeItem?(node: IAzureNode): Promise<void>;
+    refreshLabel?(node: IAzureNode): Promise<void>;
+
+    /**
+     * Optional function to filter nodes displayed in the node picker
+     * If not implemented, it's assumed that 'isAncestorOf' evaluates to true
+     */
+    isAncestorOf?(contextValue: string): boolean;
 }
 
 export interface IChildProvider {
@@ -91,8 +100,9 @@ export interface IChildProvider {
 
     /**
      * Implement this if you want the 'create' option to show up in the node picker
+     * @param options User-defined options that are passed to the IAzureParentTreeItem.createChild call
      */
-    createChild?(node: IAzureNode, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem>;
+    createChild?(node: IAzureNode, showCreatingNode: (label: string) => void, userOptions?: any): Promise<IAzureTreeItem>;
 }
 
 /**
@@ -103,29 +113,29 @@ export interface IAzureParentTreeItem extends IAzureTreeItem, IChildProvider {
      * If this treeItem should not show up in the node picker, implement this to provide a child that corresponds to the expectedContextValue
      * Otherwise, all children will be shown in the node picker
      */
-    pickTreeItem?(expectedContextValue: string): IAzureParentTreeItem | undefined;
+    pickTreeItem?(expectedContextValue: string): IAzureTreeItem | undefined;
 }
 
 export declare class UserCancelledError extends Error { }
 
 export declare abstract class BaseEditor<ContextT> implements Disposable {
-     /**
-     * Implement this interface if you need to download and upload remote files
-     * @param showSavePromptKey Key used globally by VS Code to determine whether or not to show the savePrompt
-     * @param outputChannel OutputChannel where output will be displayed when editor performs actions 
-     */
+    /**
+    * Implement this interface if you need to download and upload remote files
+    * @param showSavePromptKey Key used globally by VS Code to determine whether or not to show the savePrompt
+    * @param outputChannel OutputChannel where output will be displayed when editor performs actions
+    */
     constructor(showSavePromptKey: string, outputChannel?: OutputChannel | undefined);
 
     /**
      * Implement this to retrieve data from your remote server, returns the file as a string
      */
     abstract getData(context: ContextT): Promise<string>;
-    
+
     /**
      * Implement this to allow for remote updating
      */
     abstract updateData(context: ContextT, data: string): Promise<string>;
-    
+
     /**
      * Implement this to return the file name from the remote
      */
@@ -140,9 +150,41 @@ export declare abstract class BaseEditor<ContextT> implements Disposable {
      * Implement this to edit what is displayed to the user when uploading the file to the remote
      */
     abstract getSaveConfirmationText(context: ContextT): Promise<string>;
-    
-    onDidSaveTextDocument(globalState: Memento, doc: TextDocument): Promise<void>;
+
+    onDidSaveTextDocument(trackTelemetry: () => void, globalState: Memento, doc: TextDocument): Promise<void>;
     showEditor(context: ContextT, sizeLimit?: number): Promise<void>;
     dispose(): Promise<void>;
 }
 
+/**
+ * Used to register VSCode commands and events. It wraps your callback with consistent error and telemetry handling
+ */
+export declare class AzureActionHandler {
+    constructor(extensionContext: ExtensionContext, outputChannel: OutputChannel, telemetryReporter?: TelemetryReporter);
+
+    registerCommand(commandId: string, callback: (...args: any[]) => any): void
+    registerCommandWithCustomTelemetry(commandId: string, callback: (properties: TelemetryProperties, measurements: TelemetryMeasurements, ...args: any[]) => any): void;
+
+    /**
+     * NOTE: An event callback must call trackTelemetry() in order for it to be "opted-in" for telemetry. This is meant to be called _after_ the event has determined that it apples to that extension
+     * For example, we might not want to track _every_ onDidSaveEvent, just the save events for our files
+     */
+    registerEvent<T>(eventId: string, event: Event<T>, callback: (trackTelemetry: () => void, ...args: any[]) => any): void;
+    registerEventWithCustomTelemetry<T>(eventId: string, event: Event<T>, callback: (trackTelemetry: () => void, properties: TelemetryProperties, measurements: TelemetryMeasurements, ...args: any[]) => any): void;
+
+    /**
+     * Use this method for generic calls that you want to track telemetry for, but that aren't registered with VS Code
+     */
+    callWithTelemetry(callbackId: string, callback: (properties: TelemetryProperties, measurements: TelemetryMeasurements) => any): Promise<any>;
+}
+
+export type TelemetryProperties = { [key: string]: string; };
+export type TelemetryMeasurements = { [key: string]: number };
+
+export declare function parseError(error: any): IParsedError;
+
+export interface IParsedError {
+    errorType: string;
+    message: string;
+    isUserCancelledError: boolean;
+}

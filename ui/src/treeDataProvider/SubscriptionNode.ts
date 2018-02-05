@@ -21,7 +21,7 @@ export class SubscriptionNode extends AzureParentNode {
             id: id,
             label: label,
             contextValue: SubscriptionNode.contextValue,
-            iconPath: path.join(__filename, '..', '..', '..', 'resources', 'azureSubscription.svg'),
+            iconPath: path.join(__filename, '..', '..', '..', '..', 'resources', 'azureSubscription.svg'),
             childTypeLabel: childProvider.childTypeLabel,
             createChild: childProvider.createChild ? <typeof childProvider.createChild>childProvider.createChild.bind(childProvider) : undefined,
             hasMoreChildren: <typeof childProvider.hasMoreChildren>childProvider.hasMoreChildren.bind(childProvider),
@@ -33,6 +33,10 @@ export class SubscriptionNode extends AzureParentNode {
 
     public get tenantId(): string {
         return this._subscriptionInfo.session.tenantId;
+    }
+
+    public get userId(): string {
+        return this._subscriptionInfo.session.userId;
     }
 
     public get subscription(): Subscription {

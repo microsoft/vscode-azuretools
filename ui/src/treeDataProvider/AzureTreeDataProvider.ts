@@ -45,12 +45,12 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
             this._azureAccount = azureAccountExtension.exports;
         }
 
-        this._disposables.push(this._azureAccount.onFiltersChanged(() => this.refresh()));
-        this._disposables.push(this._azureAccount.onStatusChanged((status: AzureLoginStatus) => {
+        this._disposables.push(this._azureAccount.onFiltersChanged(async () => await this.refresh()));
+        this._disposables.push(this._azureAccount.onStatusChanged(async (status: AzureLoginStatus) => {
             // Ignore status change to 'LoggedIn' and wait for the 'onFiltersChanged' event to fire instead
             // (so that the tree stays in 'Loading...' state until the filters are actually ready)
             if (status !== 'LoggedIn') {
-                this.refresh();
+                await this.refresh();
             }
         }));
     }
@@ -98,8 +98,8 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
                     contextValue: 'azureCommandNode',
                     id: loginCommandId,
                     iconPath: {
-                        light: path.join(__filename, '..', '..', '..', 'resources', 'light', 'Loading.svg'),
-                        dark: path.join(__filename, '..', '..', '..', 'resources', 'dark', 'Loading.svg')
+                        light: path.join(__filename, '..', '..', '..', '..', 'resources', 'light', 'Loading.svg'),
+                        dark: path.join(__filename, '..', '..', '..', '..', 'resources', 'dark', 'Loading.svg')
                     }
                 })];
             } else if (this._azureAccount.status === 'LoggedOut') {
@@ -122,9 +122,15 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
         }
     }
 
-    public refresh(node?: IAzureNode, clearCache: boolean = true): void {
-        if (node instanceof AzureParentNode && clearCache) {
-            node.clearCache();
+    public async refresh(node?: IAzureNode, clearCache: boolean = true): Promise<void> {
+        if (clearCache) {
+            if (node && node.treeItem.refreshLabel) {
+                await node.treeItem.refreshLabel(node);
+            }
+
+            if (node instanceof AzureParentNode) {
+                node.clearCache();
+            }
         }
 
         this._onDidChangeTreeDataEmitter.fire(node);
@@ -137,13 +143,23 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
         }
     }
 
-    public async showNodePicker(expectedContextValue: string): Promise<IAzureNode> {
-        const picks: PickWithData<SubscriptionNode>[] = this._subscriptionNodes.map((n: SubscriptionNode) => new PickWithData<SubscriptionNode>(n, n.treeItem.label, n.subscription.subscriptionId));
-        let node: AzureNode = (await this._ui.showQuickPick<SubscriptionNode>(picks, localize('selectSubscription', 'Select a Subscription'))).data;
+    public async showNodePicker(expectedContextValues: string | string[], startingNode?: IAzureNode): Promise<IAzureNode> {
+        if (!Array.isArray(expectedContextValues)) {
+            expectedContextValues = [expectedContextValues];
+        }
 
-        while (node.treeItem.contextValue !== expectedContextValue) {
+        let node: IAzureNode;
+        if (startingNode) {
+            node = startingNode;
+        } else {
+            let picks: PickWithData<IAzureNode>[] = this._subscriptionNodes.map((n: SubscriptionNode) => new PickWithData(n, n.treeItem.label, n.subscription.subscriptionId));
+            picks = picks.concat(this._rootNodes.filter((n: AzureNode) => n.includeInNodePicker(<string[]>expectedContextValues)).map((n: AzureNode) => new PickWithData(n, n.treeItem.label)));
+            node = (await this._ui.showQuickPick<IAzureNode>(picks, localize('selectSubscription', 'Select a Subscription'))).data;
+        }
+
+        while (!expectedContextValues.some((val: string) => node.treeItem.contextValue === val)) {
             if (node instanceof AzureParentNode) {
-                node = await node.pickChildNode(expectedContextValue, this._ui);
+                node = await node.pickChildNode(expectedContextValues, this._ui);
             } else {
                 throw new Error(localize('noResourcesError', 'No matching resources found.'));
             }

@@ -1,7 +1,7 @@
 {
     "name": "vscode-azurekudu",
     "author": "Microsoft Corporation",
-    "version": "0.1.4",
+    "version": "0.1.5",
     "description": "Client used to interact with Kudu.",
     "tags": [
         "azure",
@@ -24,7 +24,8 @@
     "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/master/kudu/README.md",
     "scripts": {
         "build": "autorest --version=2.0.4147 --input-file=swagger.json --package-name=vscode-azurekudu --title=KuduClient --output-folder=lib --nodejs --add-credentials --license-header=MICROSOFT_MIT_NO_VERSION;tsc -p ./",
-        "lint": "echo 'Lint is not enabled for this package'"
+        "lint": "echo 'Lint is not enabled for this package'",
+        "test": "echo 'Test is not enabled for this package'"
     },
     "dependencies": {
         "ms-rest": "^2.2.2",

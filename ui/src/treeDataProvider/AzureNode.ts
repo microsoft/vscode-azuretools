@@ -26,6 +26,14 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
         }
     }
 
+    public get userId(): string {
+        if (this.parent) {
+            return this.parent.userId;
+        } else {
+            throw new ArgumentError(this);
+        }
+    }
+
     public get subscription(): Subscription {
         if (this.parent) {
             return this.parent.subscription;
@@ -58,19 +66,31 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
         }
     }
 
-    public refresh(): void {
-        this.treeDataProvider.refresh(this.parent, false);
+    public async refresh(): Promise<void> {
+        if (this.treeItem.refreshLabel) {
+            await this.treeItem.refreshLabel(this);
+        }
+
+        await this.treeDataProvider.refresh(this.parent, false /* clearCache */);
     }
 
     public openInPortal(): void {
         (<(s: string) => void>opn)(`${this.environment.portalUrl}/${this.tenantId}/#resource${this.treeItem.id}`);
     }
 
+    public includeInNodePicker(expectedContextValues: string[]): boolean {
+        return expectedContextValues.some((val: string) => {
+            return this.treeItem.contextValue === val ||
+                !this.treeItem.isAncestorOf ||
+                this.treeItem.isAncestorOf(val);
+        });
+    }
+
     public async deleteNode(): Promise<void> {
         if (this.treeItem.deleteTreeItem) {
             await this.treeItem.deleteTreeItem(this);
             if (this.parent) {
-                this.parent.removeNodeFromCache(this);
+                await this.parent.removeNodeFromCache(this);
             }
         } else {
             throw new NotImplementedError('deleteTreeItem', this.treeItem);
@@ -79,5 +99,5 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
 }
 
 export interface IAzureParentNodeInternal extends IAzureParentNode {
-    removeNodeFromCache(node: AzureNode): void;
+    removeNodeFromCache(node: AzureNode): Promise<void>;
 }

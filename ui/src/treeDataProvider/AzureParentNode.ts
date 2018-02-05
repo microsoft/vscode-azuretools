@@ -31,23 +31,27 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
         this._cachedChildren = undefined;
     }
 
-    public async createChild(): Promise<AzureNode> {
+    public async createChild(userOptions?: {}): Promise<AzureNode> {
         if (this.treeItem.createChild) {
             let creatingNode: AzureNode | undefined;
             try {
-                const newTreeItem: IAzureTreeItem = await this.treeItem.createChild(this, (label: string): void => {
-                    creatingNode = new AzureNode(this, new CreatingTreeItem(label));
-                    this._creatingNodes.push(creatingNode);
-                    this.treeDataProvider.refresh(this, false);
-                });
+                const newTreeItem: IAzureTreeItem = await this.treeItem.createChild(
+                    this,
+                    (label: string): void => {
+                        creatingNode = new AzureNode(this, new CreatingTreeItem(label));
+                        this._creatingNodes.push(creatingNode);
+                        //tslint:disable-next-line:no-floating-promises
+                        this.treeDataProvider.refresh(this, false);
+                    },
+                    userOptions);
 
                 const newNode: AzureNode = this.createNewNode(newTreeItem);
-                this.addNodeToCache(newNode);
+                await this.addNodeToCache(newNode);
                 return newNode;
             } finally {
                 if (creatingNode) {
                     this._creatingNodes.splice(this._creatingNodes.indexOf(creatingNode), 1);
-                    this.treeDataProvider.refresh(this, false);
+                    await this.treeDataProvider.refresh(this, false);
                 }
             }
         } else {
@@ -68,41 +72,54 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
             .sort((n1: AzureNode, n2: AzureNode) => n1.treeItem.label.localeCompare(n2.treeItem.label));
     }
 
-    public async pickChildNode(expectedContextValue: string, ui: IUserInterface): Promise<AzureNode> {
+    public async pickChildNode(expectedContextValues: string[], ui: IUserInterface): Promise<AzureNode> {
         if (this.treeItem.pickTreeItem) {
             const children: AzureNode[] = await this.getCachedChildren();
-            const treeItem: IAzureTreeItem | undefined = this.treeItem.pickTreeItem(expectedContextValue);
-            if (treeItem) {
-                const node: AzureNode | undefined = children.find((n: AzureNode) => n.treeItem.id === treeItem.id);
-                if (node) {
-                    return node;
+            for (const val of expectedContextValues) {
+                const treeItem: IAzureTreeItem | undefined = this.treeItem.pickTreeItem(val);
+                if (treeItem) {
+                    const node: AzureNode | undefined = children.find((n: AzureNode) => n.treeItem.id === treeItem.id);
+                    if (node) {
+                        return node;
+                    }
                 }
             }
         }
 
-        const pick: PickWithData<GetNodeFunction> = await ui.showQuickPick<GetNodeFunction>(this.getQuickPicks(), localize('azFunc.selectNode', 'Select a {0}', this.treeItem.childTypeLabel));
+        const pick: PickWithData<GetNodeFunction> = await ui.showQuickPick<GetNodeFunction>(this.getQuickPicks(expectedContextValues), localize('azFunc.selectNode', 'Select a {0}', this.treeItem.childTypeLabel));
         return await pick.data();
     }
 
-    public addNodeToCache(node: AzureNode): void {
+    public async addNodeToCache(node: AzureNode): Promise<void> {
         if (this._cachedChildren) {
-            this._cachedChildren.unshift(node);
-            this.treeDataProvider.refresh(this, false);
+            // set index to the last element by default
+            let index: number = this._cachedChildren.length;
+            // tslint:disable-next-line:no-increment-decrement
+            for (let i: number = 0; i < this._cachedChildren.length; i++) {
+                if (node.treeItem.label.localeCompare(this._cachedChildren[i].treeItem.label) < 1) {
+                    index = i;
+                    break;
+                }
+            }
+            this._cachedChildren.splice(index, 0, node);
+            await this.treeDataProvider.refresh(this, false);
         }
     }
 
-    public removeNodeFromCache(node: AzureNode): void {
+    public async removeNodeFromCache(node: AzureNode): Promise<void> {
         if (this._cachedChildren) {
             const index: number = this._cachedChildren.indexOf(node);
             if (index !== -1) {
                 this._cachedChildren.splice(index, 1);
-                this.treeDataProvider.refresh(this, false);
+                await this.treeDataProvider.refresh(this, false);
             }
         }
     }
 
-    private async getQuickPicks(): Promise<PickWithData<GetNodeFunction>[]> {
-        const nodes: AzureNode[] = await this.getCachedChildren();
+    private async getQuickPicks(expectedContextValues: string[]): Promise<PickWithData<GetNodeFunction>[]> {
+        let nodes: AzureNode[] = await this.getCachedChildren();
+        nodes = nodes.filter((node: AzureNode) => node.includeInNodePicker(expectedContextValues));
+
         const picks: PickWithData<GetNodeFunction>[] = nodes.map((n: AzureNode) => new PickWithData(async (): Promise<AzureNode> => await Promise.resolve(n), n.treeItem.label));
         if (this.treeItem.createChild && this.treeItem.childTypeLabel) {
             picks.unshift(new PickWithData<GetNodeFunction>(
@@ -115,7 +132,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
             picks.push(new PickWithData<GetNodeFunction>(
                 async (): Promise<AzureNode> => {
                     await this.loadMoreChildren();
-                    this.treeDataProvider.refresh(this, false);
+                    await this.treeDataProvider.refresh(this, false);
                     return this;
                 },
                 LoadMoreTreeItem.label

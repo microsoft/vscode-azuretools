@@ -1233,7 +1233,7 @@
                 }
             }
         },
-        "/test.git/info/refs": {
+        "/swagger.git/info/refs": {
             "get": {
                 "tags": [
                     "InfoRefs"
@@ -4299,10 +4299,7 @@
                 ],
                 "operationId": "LiveScmEditor_GetItem",
                 "consumes": [],
-                "produces": [
-                    "application/json",
-                    "text/json"
-                ],
+                "produces": [],
                 "parameters": [
                     {
                         "name": "path",
@@ -4313,10 +4310,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object"
-                        }
+                        "description": "No Content"
                     }
                 }
             },
@@ -4396,10 +4390,7 @@
                 ],
                 "operationId": "LiveScmEditor_GetItem",
                 "consumes": [],
-                "produces": [
-                    "application/json",
-                    "text/json"
-                ],
+                "produces": [],
                 "parameters": [
                     {
                         "name": "path",
@@ -4410,10 +4401,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object"
-                        }
+                        "description": "No Content"
                     }
                 }
             }
@@ -4425,10 +4413,7 @@
                 ],
                 "operationId": "LiveScmEditor_GetItem",
                 "consumes": [],
-                "produces": [
-                    "application/json",
-                    "text/json"
-                ],
+                "produces": [],
                 "parameters": [
                     {
                         "name": "path",
@@ -4439,10 +4424,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object"
-                        }
+                        "description": "No Content"
                     }
                 }
             },
@@ -4522,10 +4504,7 @@
                 ],
                 "operationId": "LiveScmEditor_GetItem",
                 "consumes": [],
-                "produces": [
-                    "application/json",
-                    "text/json"
-                ],
+                "produces": [],
                 "parameters": [
                     {
                         "name": "path",
@@ -4536,10 +4515,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object"
-                        }
+                        "description": "No Content"
                     }
                 }
             }
@@ -6159,10 +6135,7 @@
                 ],
                 "operationId": "Vfs_GetItem",
                 "consumes": [],
-                "produces": [
-                    "application/json",
-                    "text/json"
-                ],
+                "produces": [],
                 "parameters": [
                     {
                         "name": "path",
@@ -6173,10 +6146,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object"
-                        }
+                        "description": "No Content"
                     }
                 }
             },
@@ -6256,10 +6226,7 @@
                 ],
                 "operationId": "Vfs_GetItem",
                 "consumes": [],
-                "produces": [
-                    "application/json",
-                    "text/json"
-                ],
+                "produces": [],
                 "parameters": [
                     {
                         "name": "path",
@@ -6270,10 +6237,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object"
-                        }
+                        "description": "No Content"
                     }
                 }
             }
@@ -6285,10 +6249,7 @@
                 ],
                 "operationId": "Vfs_GetItem",
                 "consumes": [],
-                "produces": [
-                    "application/json",
-                    "text/json"
-                ],
+                "produces": [],
                 "parameters": [
                     {
                         "name": "path",
@@ -6299,10 +6260,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object"
-                        }
+                        "description": "No Content"
                     }
                 }
             },
@@ -6382,10 +6340,7 @@
                 ],
                 "operationId": "Vfs_GetItem",
                 "consumes": [],
-                "produces": [
-                    "application/json",
-                    "text/json"
-                ],
+                "produces": [],
                 "parameters": [
                     {
                         "name": "path",
@@ -6396,10 +6351,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object"
-                        }
+                        "description": "No Content"
                     }
                 }
             }
@@ -6709,10 +6661,7 @@
                 ],
                 "operationId": "Zip_GetItem",
                 "consumes": [],
-                "produces": [
-                    "application/json",
-                    "text/json"
-                ],
+                "produces": [],
                 "parameters": [
                     {
                         "name": "path",
@@ -6723,10 +6672,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object"
-                        }
+                        "description": "No Content"
                     }
                 }
             },
@@ -6773,10 +6719,7 @@
                 ],
                 "operationId": "Zip_GetItem",
                 "consumes": [],
-                "produces": [
-                    "application/json",
-                    "text/json"
-                ],
+                "produces": [],
                 "parameters": [
                     {
                         "name": "path",
@@ -6787,10 +6730,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object"
-                        }
+                        "description": "No Content"
                     }
                 }
             }
@@ -6802,10 +6742,7 @@
                 ],
                 "operationId": "Zip_GetItem",
                 "consumes": [],
-                "produces": [
-                    "application/json",
-                    "text/json"
-                ],
+                "produces": [],
                 "parameters": [
                     {
                         "name": "path",
@@ -6816,10 +6753,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object"
-                        }
+                        "description": "No Content"
                     }
                 }
             },
@@ -6866,10 +6800,7 @@
                 ],
                 "operationId": "Zip_GetItem",
                 "consumes": [],
-                "produces": [
-                    "application/json",
-                    "text/json"
-                ],
+                "produces": [],
                 "parameters": [
                     {
                         "name": "path",
@@ -6880,10 +6811,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object"
-                        }
+                        "description": "No Content"
                     }
                 }
             }
