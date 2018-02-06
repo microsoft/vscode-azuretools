@@ -18,6 +18,7 @@ import { DeployResult } from 'vscode-azurekudu/lib/models';
 import { DialogResponses } from './DialogResponses';
 import { ArgumentError } from './errors';
 import * as FileUtilities from './FileUtilities';
+import { ILogStream } from './ILogStream';
 import { localize } from './localize';
 
 // Deployment sources supported by Web Apps
@@ -104,6 +105,18 @@ export class SiteWrapper {
             await client.webApps.updateConfiguration(this.resourceGroup, this.name, config);
     }
 
+    public async getLogsConfig(client: WebSiteManagementClient): Promise<SiteLogsConfig> {
+        return this.slotName ?
+            await client.webApps.getDiagnosticLogsConfigurationSlot(this.resourceGroup, this.name, this.slotName) :
+            await client.webApps.getDiagnosticLogsConfiguration(this.resourceGroup, this.name);
+    }
+
+    public async updateLogsConfig(client: WebSiteManagementClient, config: SiteLogsConfig): Promise<SiteLogsConfig> {
+        return this.slotName ?
+            await client.webApps.updateDiagnosticLogsConfigSlot(this.resourceGroup, this.name, config, this.slotName) :
+            await client.webApps.updateDiagnosticLogsConfig(this.resourceGroup, this.name, config);
+    }
+
     public async getAppServicePlan(client: WebSiteManagementClient): Promise<AppServicePlan> {
         return await client.appServicePlans.get(this.planResourceGroup, this.planName);
     }
@@ -158,12 +171,11 @@ export class SiteWrapper {
     }
 
     public async isHttpLogsEnabled(client: WebSiteManagementClient): Promise<boolean> {
-        const logsConfig: SiteLogsConfig = this.slotName ? await client.webApps.getDiagnosticLogsConfigurationSlot(this.resourceGroup, this.name, this.slotName) :
-            await client.webApps.getDiagnosticLogsConfiguration(this.resourceGroup, this.name);
+        const logsConfig: SiteLogsConfig = await this.getLogsConfig(client);
         return logsConfig.httpLogs && logsConfig.httpLogs.fileSystem && logsConfig.httpLogs.fileSystem.enabled;
     }
 
-    public async enableHttpLogs(client: WebSiteManagementClient): Promise<void> {
+    public async enableHttpLogs(client: WebSiteManagementClient): Promise<SiteLogsConfig> {
         const logsConfig: SiteLogsConfig = {
             location: this.location,
             httpLogs: {
@@ -175,11 +187,7 @@ export class SiteWrapper {
             }
         };
 
-        if (this.slotName) {
-            await client.webApps.updateDiagnosticLogsConfigSlot(this.resourceGroup, this.name, logsConfig, this.slotName);
-        } else {
-            await client.webApps.updateDiagnosticLogsConfig(this.resourceGroup, this.name, logsConfig);
-        }
+        return await this.updateLogsConfig(client, logsConfig);
     }
 
     public async getKuduClient(client: WebSiteManagementClient): Promise<KuduClient> {
@@ -203,7 +211,7 @@ export class SiteWrapper {
     /**
      * Starts the log-streaming service. Call 'dispose()' on the returned object when you want to stop the service.
      */
-    public async startStreamingLogs(client: KuduClient, actionHandler: AzureActionHandler, outputChannel: vscode.OutputChannel, path: string = ''): Promise<vscode.Disposable> {
+    public async startStreamingLogs(client: KuduClient, actionHandler: AzureActionHandler, outputChannel: vscode.OutputChannel, path: string = ''): Promise<ILogStream> {
         const httpRequest: WebResource = new WebResource();
         await new Promise((resolve: () => void, reject: (err: Error) => void): void => {
             client.credentials.signRequest(httpRequest, (err: Error) => {
@@ -216,18 +224,18 @@ export class SiteWrapper {
         });
 
         const requestApi: request.RequestAPI<request.Request, request.CoreOptions, {}> = request.defaults(httpRequest);
-        const disposable: vscode.Disposable = { dispose: undefined };
+        const logStream: ILogStream = { dispose: undefined, isConnected: true };
         // Intentionally setting up a separate telemetry event and not awaiting the result here since log stream is a long-running action
         // tslint:disable-next-line:no-floating-promises
         actionHandler.callWithTelemetry('appService.streamingLogs', async () => {
             await new Promise((resolve: () => void, reject: (err: Error) => void): void => {
                 const logsRequest: request.Request = requestApi(`${this.kuduUrl}/api/logstream/${path}`);
-                const disconnectMessage: string = localize('logStreamDisconnected', 'Disconnected from log-streaming service.');
-                disposable.dispose = (): void => {
+                logStream.dispose = (): void => {
                     logsRequest.removeAllListeners();
                     logsRequest.destroy();
                     outputChannel.show();
-                    outputChannel.appendLine(disconnectMessage);
+                    outputChannel.appendLine(localize('logStreamDisconnected', 'Disconnected from log-streaming service.'));
+                    logStream.isConnected = false;
                     resolve();
                 };
 
@@ -239,13 +247,12 @@ export class SiteWrapper {
                     outputChannel.appendLine(parseError(err).message);
                     reject(err);
                 }).on('complete', () => {
-                    outputChannel.appendLine(disconnectMessage);
-                    resolve();
+                    logStream.dispose();
                 });
             });
         });
 
-        return disposable;
+        return logStream;
     }
 
     private async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, confirmDeployment: boolean): Promise<void> {
