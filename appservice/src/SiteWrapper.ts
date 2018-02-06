@@ -203,7 +203,7 @@ export class SiteWrapper {
     /**
      * Starts the log-streaming service. Call 'dispose()' on the returned object when you want to stop the service.
      */
-    public async startStreamingLogs(client: KuduClient, actionHandler: AzureActionHandler, outputChannel: vscode.OutputChannel, path: string = ''): Promise<vscode.Disposable | undefined> {
+    public async startStreamingLogs(client: KuduClient, actionHandler: AzureActionHandler, outputChannel: vscode.OutputChannel, path: string = ''): Promise<vscode.Disposable> {
         const httpRequest: WebResource = new WebResource();
         await new Promise((resolve: () => void, reject: (err: Error) => void): void => {
             client.credentials.signRequest(httpRequest, (err: Error) => {
@@ -216,21 +216,19 @@ export class SiteWrapper {
         });
 
         const requestApi: request.RequestAPI<request.Request, request.CoreOptions, {}> = request.defaults(httpRequest);
-        let disposable: vscode.Disposable | undefined;
+        const disposable: vscode.Disposable = { dispose: undefined };
         // Intentionally setting up a separate telemetry event and not awaiting the result here since log stream is a long-running action
         // tslint:disable-next-line:no-floating-promises
         actionHandler.callWithTelemetry('appService.streamingLogs', async () => {
             await new Promise((resolve: () => void, reject: (err: Error) => void): void => {
                 const logsRequest: request.Request = requestApi(`${this.kuduUrl}/api/logstream/${path}`);
                 const disconnectMessage: string = localize('logStreamDisconnected', 'Disconnected from log-streaming service.');
-                disposable = {
-                    dispose: (): void => {
-                        logsRequest.removeAllListeners();
-                        logsRequest.destroy();
-                        outputChannel.show();
-                        outputChannel.appendLine(disconnectMessage);
-                        resolve();
-                    }
+                disposable.dispose = (): void => {
+                    logsRequest.removeAllListeners();
+                    logsRequest.destroy();
+                    outputChannel.show();
+                    outputChannel.appendLine(disconnectMessage);
+                    resolve();
                 };
 
                 outputChannel.show();
