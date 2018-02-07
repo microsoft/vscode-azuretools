@@ -68,6 +68,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
     public getTreeItem(node: IAzureNode): TreeItem {
         return {
             label: node.treeItem.label,
+            id: node.treeItem.id,
             collapsibleState: node instanceof AzureParentNode ? TreeItemCollapsibleState.Collapsed : undefined,
             contextValue: node.treeItem.contextValue,
             iconPath: node.treeItem.iconPath,
