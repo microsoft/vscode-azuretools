@@ -71,9 +71,12 @@ export interface IAzureParentNode<T extends IAzureTreeItem = IAzureTreeItem> ext
  */
 export interface IAzureTreeItem {
     /**
-     * A unique id to identify this tree item. This id is also used for openInPortal
+     * This is is used for the openInPortal action. It is also used per the following documentation copied from VS Code:
+     * Optional id for the tree item that has to be unique across tree. The id is used to preserve the selection and expansion state of the tree item.
+     *
+     * If not provided, an id is generated using the tree item's label. **Note** that when labels change, ids will change and that selection and expansion state cannot be kept stable anymore.
      */
-    id: string;
+    id?: string;
     label: string;
     iconPath?: string | Uri | { light: string | Uri; dark: string | Uri };
     commandId?: string;
