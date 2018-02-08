@@ -155,7 +155,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
         } else {
             let picks: PickWithData<IAzureNode>[] = this._subscriptionNodes.map((n: SubscriptionNode) => new PickWithData(n, n.treeItem.label, n.subscription.subscriptionId));
             picks = picks.concat(this._rootNodes.filter((n: AzureNode) => n.includeInNodePicker(<string[]>expectedContextValues)).map((n: AzureNode) => new PickWithData(n, n.treeItem.label)));
-            node = (await this._ui.showQuickPick<IAzureNode>(picks, localize('selectSubscription', 'Select a Subscription'))).data;
+            node = (await this._ui.showQuickPick<IAzureNode>(picks, localize('selectSubscription', 'Select a Subscription'), true /* ignoreFocusOut */)).data;
         }
 
         while (!expectedContextValues.some((val: string) => node.treeItem.contextValue === val)) {

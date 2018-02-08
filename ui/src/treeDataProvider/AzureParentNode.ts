@@ -88,7 +88,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
             }
         }
 
-        const pick: PickWithData<GetNodeFunction> = await ui.showQuickPick<GetNodeFunction>(this.getQuickPicks(expectedContextValues), localize('azFunc.selectNode', 'Select a {0}', this.treeItem.childTypeLabel));
+        const pick: PickWithData<GetNodeFunction> = await ui.showQuickPick<GetNodeFunction>(this.getQuickPicks(expectedContextValues), localize('azFunc.selectNode', 'Select a {0}', this.treeItem.childTypeLabel), true /* ignoreFocusOut */);
         return await pick.data();
     }
 
