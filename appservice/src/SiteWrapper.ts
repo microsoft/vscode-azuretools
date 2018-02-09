@@ -5,28 +5,28 @@
 
 // tslint:disable-next-line:no-require-imports
 import WebSiteManagementClient = require('azure-arm-website');
-import { AppServicePlan, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, User } from 'azure-arm-website/lib/models';
+import { AppServicePlan, NameValuePair, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, User } from 'azure-arm-website/lib/models';
 import * as fs from 'fs';
-import { BasicAuthenticationCredentials } from 'ms-rest';
+import { BasicAuthenticationCredentials, HttpOperationResponse } from 'ms-rest';
 import * as opn from 'opn';
+// tslint:disable-next-line:no-require-imports
+import request = require('request-promise'); // there is no default export
 import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
-import { UserCancelledError } from 'vscode-azureextensionui';
+import { IAzureNode, UserCancelledError } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { DeployResult } from 'vscode-azurekudu/lib/models';
 import { DialogResponses } from './DialogResponses';
 import { ArgumentError } from './errors';
 import * as FileUtilities from './FileUtilities';
 import { localize } from './localize';
+import { nodeUtils } from './utils/nodeUtils';
 import { IQuickPickItemWithData } from './wizard/IQuickPickItemWithData';
-
-const request = require('request-promise'); // there is no default export
 
 // Deployment sources supported by Web Apps
 const SCM_TYPES: string[] = [
     'None', // default scmType config
-    'LocalGit',
-    'GitHub'];
+    'LocalGit'];
 
 export class SiteWrapper {
     public readonly resourceGroup: string;
@@ -147,9 +147,6 @@ export class SiteWrapper {
             case SCM_TYPES[1]: // 'LocalGit'
                 await this.localGitDeploy(fsPath, client, outputChannel);
                 break;
-            case SCM_TYPES[2]: // 'GitHub'
-                await this.gitHubDeploy(fsPath, client, outputChannel);
-                break;
             default: //'None' or any other non-supported scmType
                 await this.deployZip(fsPath, client, outputChannel, configurationSectionName, confirmDeployment);
                 break;
@@ -157,6 +154,60 @@ export class SiteWrapper {
 
         outputChannel.appendLine(localize('deployComplete', '>>>>>> Deployment to "{0}" completed. <<<<<<', this.appName));
         outputChannel.appendLine('');
+    }
+
+    public async connectToGitHub(node: IAzureNode, outputChannel: vscode.OutputChannel): Promise<void> {
+
+        type gitHubOrgData = { repos_url?: string };
+        type gitHubReposData = { repos_url?: string, url?: string, html_url?: string };
+
+        const client: WebSiteManagementClient = nodeUtils.getWebSiteClient(node);
+        const oAuth2Token: string = (await client.listSourceControls())[0].token;
+        if (!oAuth2Token) {
+            this.showGitHubAuthPrompt(node);
+            return;
+        }
+
+        const gitHubUser: Object[] = await this.getJsonRequest('https://api.github.com/user', oAuth2Token);
+
+        const gitHubOrgs: Object[] = await this.getJsonRequest('https://api.github.com/user/orgs', oAuth2Token);
+        const orgQuickPicks: IQuickPickItemWithData<{}>[] = this.createQuickPickFromJsons([gitHubUser], 'login', undefined, ['repos_url']).concat(this.createQuickPickFromJsons(gitHubOrgs, 'login', undefined, ['repos_url']));
+        const orgQuickPick: gitHubOrgData = (await vscode.window.showQuickPick(orgQuickPicks, { placeHolder: 'Choose your organization.', ignoreFocusOut: true })).data;
+
+        const gitHubRepos: Object[] = await this.getJsonRequest(orgQuickPick.repos_url, oAuth2Token);
+        const repoQuickPicks: IQuickPickItemWithData<{}>[] = this.createQuickPickFromJsons(gitHubRepos, 'name', undefined, ['url', 'html_url']);
+        const repoQuickPick: gitHubReposData = (await vscode.window.showQuickPick(repoQuickPicks, { placeHolder: 'Choose project.', ignoreFocusOut: true })).data;
+
+        const gitHubBranches: Object[] = await this.getJsonRequest(`${repoQuickPick.url}/branches`, oAuth2Token);
+        const branchQuickPicks: IQuickPickItemWithData<{}>[] = this.createQuickPickFromJsons(gitHubBranches, 'name');
+        const branchQuickPick: IQuickPickItemWithData<{}> = await vscode.window.showQuickPick(branchQuickPicks, { placeHolder: 'Choose branch.', ignoreFocusOut: true });
+
+        const siteSourceControl: SiteSourceControl = {
+            location: this.location,
+            repoUrl: repoQuickPick.html_url,
+            branch: branchQuickPick.label,
+            isManualIntegration: false,
+            deploymentRollbackEnabled: true,
+            isMercurial: false
+        };
+        this.log(outputChannel, 'Web app is being connected to GitHub repo.');
+        let newSourceControl: HttpOperationResponse<SiteSourceControl | void>;
+        try {
+            newSourceControl = await client.webApps.createOrUpdateSourceControlWithHttpOperationResponse(this.resourceGroup, this.name, siteSourceControl);
+            console.log(newSourceControl);
+        } catch (err) {
+            console.log('Starting sync');
+            try {
+                newSourceControl = await client.webApps.syncRepositoryWithHttpOperationResponse(this.resourceGroup, this.name);
+                console.log(newSourceControl);
+            } catch (error) {
+                console.log(error);
+            }
+        } finally {
+            this.log(outputChannel, 'Web app has been connected to GitHub repo.');
+        }
+
+        // await this.waitForDeploymentToComplete((await this.getKuduClient(client)), outputChannel, 50000);
     }
 
     public async isHttpLogsEnabled(client: WebSiteManagementClient): Promise<boolean> {
@@ -198,17 +249,6 @@ export class SiteWrapper {
     public async editScmType(client: WebSiteManagementClient): Promise<string | undefined> {
         const config: SiteConfigResource = await this.getSiteConfig(client);
         const newScmType: string = await this.showScmPrompt(config.scmType);
-
-        if (newScmType === SCM_TYPES[2]) {
-            const sourceControls = await client.listSourceControls();
-            // Source controls come in as an array, 0: "GitHub", 1: "Bitbucket", 2: "Dropbox", 3: "OneDrive"
-            if (!sourceControls[0].token) {
-                // if there is no OAuth2 token, then GitHub is not set up in the Portal
-                this.showGitHubAuthPrompt();
-                return undefined;
-            }
- 
-        }
         // returns the updated scmType
         return await this.updateScmType(client, config, newScmType);
     }
@@ -304,53 +344,14 @@ export class SiteWrapper {
         await this.waitForDeploymentToComplete(kuduClient, outputChannel);
     }
 
-    private async gitHubDeploy(_fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<void> {
-        const oAuth2Token = (await client.listSourceControls())[0].token;
-        if (!oAuth2Token) {
-            this.showGitHubAuthPrompt();
-            return undefined;
-        }
-
-        const oldSourceControl = await client.webApps.list(this.resourceGroup, this.appName);
-        console.log(oldSourceControl);
-
-        const gitHubUser = await this.getJsonRequest('https://api.github.com/user', oAuth2Token);
-        
-        const gitHubOrgs = await this.getJsonRequest('https://api.github.com/user/orgs', oAuth2Token);
-        const orgQuickPicks = this.createQuickPickFromJsons([gitHubUser], 'login', undefined, ['repos_url']).concat(this.createQuickPickFromJsons(gitHubOrgs, 'login', undefined, ['repos_url']));
-        const orgQuickPick: IQuickPickItemWithData<{}> = await vscode.window.showQuickPick(orgQuickPicks, { placeHolder: 'Choose your organization.' });
-        
-        const gitHubRepos = await this.getJsonRequest(orgQuickPick.data["repos_url"], oAuth2Token);
-        const repoQuickPicks = this.createQuickPickFromJsons(gitHubRepos, 'name', undefined,  ['url', 'html_url']);
-        const repoQuickPick: IQuickPickItemWithData<{}> = await vscode.window.showQuickPick(repoQuickPicks, { placeHolder: 'Choose project.' });
-
-        const gitHubBranches = await this.getJsonRequest(`${repoQuickPick.data["url"]}/branches`, oAuth2Token);
-        const branchQuickPicks = this.createQuickPickFromJsons(gitHubBranches, 'name');
-        const branchQuickPick: IQuickPickItemWithData<{}> = await vscode.window.showQuickPick(branchQuickPicks, { placeHolder: 'Choose branch.' });
-        
-        const siteSourceControl: SiteSourceControl = {
-            location: this.location,
-            repoUrl: repoQuickPick.data["html_url"],
-            branch: branchQuickPick.label,
-            isManualIntegration: false,
-            deploymentRollbackEnabled: false,
-            isMercurial: false
-        };
-
-        const newSourceControl = await client.webApps.createOrUpdateSourceControl(this.resourceGroup, this.name, siteSourceControl);
-        if (newSourceControl) {
-            outputChannel.appendLine('GitHub deployment configuration is complete.');
-        }
-    }
-
     private async getJsonRequest(url: string, token: string): Promise<Object[]> {
         // Reference for GitHub REST routes
         // https://developer.github.com/v3/
         // Note: blank after user implies look up authorized user
-        
-        const gitHubResponse = await request.get(url, {
+
+        const gitHubResponse: string = await request.get(url, {
             headers: {
-                'Authorization': `token ${token}`,
+                Authorization: `token ${token}`,
                 'User-Agent': 'vscode-azureappservice-extension'
             }
         });
@@ -358,15 +359,15 @@ export class SiteWrapper {
         return JSON.parse(gitHubResponse);
     }
 
-    /** 
+    /**
      * @param label Property of JSON that will be used as the QuickPicks label
      * @param description Optional property of JSON that will be used as QuickPicks description
-     * * @param description Optional property of JSON that will be used as QuickPicks data saved as a NameValue pair
+     * @param description Optional property of JSON that will be used as QuickPicks data saved as a NameValue pair
      */
     private createQuickPickFromJsons(jsons: Object[], label: string, description?: string, data?: string[]): IQuickPickItemWithData<{}>[] {
         const quickPicks: IQuickPickItemWithData<{}>[] = [];
         for (const json of jsons) {
-            let dataValuePair = {};
+            const dataValuePair: NameValuePair = {};
 
             if (!json[label]) {
                 // skip if this JSON does not have this label
@@ -381,15 +382,13 @@ export class SiteWrapper {
             if (data) {
                 // construct value pair based off data labels provided
                 for (const property of data) {
-                     // required to construct first otherwise cannot use property as key name
-                    dataValuePair[property] = json[property]
+                    // required to construct first otherwise cannot use property as key name
+                    dataValuePair[property] = json[property];
                 }
             }
 
-            console.log(dataValuePair);
-            
-            quickPicks.push( { 
-                label: json[label], 
+            quickPicks.push({
+                label: json[label],
                 description: `${description ? json[description] : ''}`,
                 data: dataValuePair
             });
@@ -425,6 +424,9 @@ export class SiteWrapper {
         // Unfortunately, Kudu doesn't provide a unique id for a deployment right after it's started
         // However, Kudu only supports one deployment at a time, so 'latest' will work in most cases
         let deploymentId: string = 'latest';
+        const deployments: {} = await kuduClient.deployment.getDeployResults();
+        console.log(deployments);
+
         let deployment: DeployResult = await kuduClient.deployment.getResult(deploymentId);
         while (!deployment.complete) {
             if (!deployment.isTemp && deployment.id) {
@@ -463,13 +465,12 @@ export class SiteWrapper {
         }
     }
 
-    private async showGitHubAuthPrompt(): Promise<void> {
-        const authorizeAzure: string = localize('gitHubNotAuth', 'Authorize Azure on GitHub');
-        const setupGithub: string = localize('GitRequired', 'Azure must be setup to use GitHub.');
+    private async showGitHubAuthPrompt(node: IAzureNode): Promise<void> {
+        const authorizeAzure: string = localize('gitHubNotAuth', 'Authorize');
+        const setupGithub: string = localize('GitRequired', 'Azure must be authorized on GitHub under Deployment Options.');
         const input: string | undefined = await vscode.window.showErrorMessage(setupGithub, authorizeAzure);
         if (input === authorizeAzure) {
-            // tslint:disable-next-line:no-unsafe-any
-            opn('https://blogs.msdn.microsoft.com/benjaminperkins/2017/05/10/deploy-github-source-code-repositories-to-an-azure-app-service/');
+            node.openInPortal();
         }
     }
 }
