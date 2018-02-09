@@ -19,6 +19,7 @@ import { DeployResult } from 'vscode-azurekudu/lib/models';
 import { DialogResponses } from './DialogResponses';
 import { ArgumentError } from './errors';
 import * as FileUtilities from './FileUtilities';
+import { ILogStream } from './ILogStream';
 import { localize } from './localize';
 import { nodeUtils } from './utils/nodeUtils';
 import { IQuickPickItemWithData } from './wizard/IQuickPickItemWithData';
@@ -61,6 +62,10 @@ export class SiteWrapper {
         return this.name + (this.slotName ? `-${this.slotName}` : '');
     }
 
+    public get kuduUrl(): string {
+        return `https://${this.appName}.scm.azurewebsites.net`;
+    }
+
     public async stop(client: WebSiteManagementClient): Promise<void> {
         if (this.slotName) {
             await client.webApps.stopSlot(this.resourceGroup, this.name, this.slotName);
@@ -101,6 +106,18 @@ export class SiteWrapper {
         return this.slotName ?
             await client.webApps.updateConfigurationSlot(this.resourceGroup, this.name, config, this.slotName) :
             await client.webApps.updateConfiguration(this.resourceGroup, this.name, config);
+    }
+
+    public async getLogsConfig(client: WebSiteManagementClient): Promise<SiteLogsConfig> {
+        return this.slotName ?
+            await client.webApps.getDiagnosticLogsConfigurationSlot(this.resourceGroup, this.name, this.slotName) :
+            await client.webApps.getDiagnosticLogsConfiguration(this.resourceGroup, this.name);
+    }
+
+    public async updateLogsConfig(client: WebSiteManagementClient, config: SiteLogsConfig): Promise<SiteLogsConfig> {
+        return this.slotName ?
+            await client.webApps.updateDiagnosticLogsConfigSlot(this.resourceGroup, this.name, config, this.slotName) :
+            await client.webApps.updateDiagnosticLogsConfig(this.resourceGroup, this.name, config);
     }
 
     public async getAppServicePlan(client: WebSiteManagementClient): Promise<AppServicePlan> {
@@ -211,12 +228,11 @@ export class SiteWrapper {
     }
 
     public async isHttpLogsEnabled(client: WebSiteManagementClient): Promise<boolean> {
-        const logsConfig: SiteLogsConfig = this.slotName ? await client.webApps.getDiagnosticLogsConfigurationSlot(this.resourceGroup, this.name, this.slotName) :
-            await client.webApps.getDiagnosticLogsConfiguration(this.resourceGroup, this.name);
+        const logsConfig: SiteLogsConfig = await this.getLogsConfig(client);
         return logsConfig.httpLogs && logsConfig.httpLogs.fileSystem && logsConfig.httpLogs.fileSystem.enabled;
     }
 
-    public async enableHttpLogs(client: WebSiteManagementClient): Promise<void> {
+    public async enableHttpLogs(client: WebSiteManagementClient): Promise<SiteLogsConfig> {
         const logsConfig: SiteLogsConfig = {
             location: this.location,
             httpLogs: {
@@ -228,11 +244,7 @@ export class SiteWrapper {
             }
         };
 
-        if (this.slotName) {
-            await client.webApps.updateDiagnosticLogsConfigSlot(this.resourceGroup, this.name, logsConfig, this.slotName);
-        } else {
-            await client.webApps.updateDiagnosticLogsConfig(this.resourceGroup, this.name, logsConfig);
-        }
+        return await this.updateLogsConfig(client, logsConfig);
     }
 
     public async getKuduClient(client: WebSiteManagementClient): Promise<KuduClient> {
@@ -243,7 +255,7 @@ export class SiteWrapper {
 
         const cred: BasicAuthenticationCredentials = new BasicAuthenticationCredentials(user.publishingUserName, user.publishingPassword);
 
-        return new KuduClient(cred, `https://${this.appName}.scm.azurewebsites.net`);
+        return new KuduClient(cred, this.kuduUrl);
     }
 
     public async editScmType(client: WebSiteManagementClient): Promise<string | undefined> {
@@ -251,6 +263,53 @@ export class SiteWrapper {
         const newScmType: string = await this.showScmPrompt(config.scmType);
         // returns the updated scmType
         return await this.updateScmType(client, config, newScmType);
+    }
+
+    /**
+     * Starts the log-streaming service. Call 'dispose()' on the returned object when you want to stop the service.
+     */
+    public async startStreamingLogs(client: KuduClient, actionHandler: AzureActionHandler, outputChannel: vscode.OutputChannel, path: string = ''): Promise<ILogStream> {
+        const httpRequest: WebResource = new WebResource();
+        await new Promise((resolve: () => void, reject: (err: Error) => void): void => {
+            client.credentials.signRequest(httpRequest, (err: Error) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+
+        const requestApi: request.RequestAPI<request.Request, request.CoreOptions, {}> = request.defaults(httpRequest);
+        const logStream: ILogStream = { dispose: undefined, isConnected: true };
+        // Intentionally setting up a separate telemetry event and not awaiting the result here since log stream is a long-running action
+        // tslint:disable-next-line:no-floating-promises
+        actionHandler.callWithTelemetry('appService.streamingLogs', async () => {
+            await new Promise((resolve: () => void, reject: (err: Error) => void): void => {
+                const logsRequest: request.Request = requestApi(`${this.kuduUrl}/api/logstream/${path}`);
+                logStream.dispose = (): void => {
+                    logsRequest.removeAllListeners();
+                    logsRequest.destroy();
+                    outputChannel.show();
+                    outputChannel.appendLine(localize('logStreamDisconnected', 'Disconnected from log-streaming service.'));
+                    logStream.isConnected = false;
+                    resolve();
+                };
+
+                outputChannel.show();
+                logsRequest.on('data', (chunk: Buffer | string) => {
+                    outputChannel.appendLine(chunk.toString());
+                }).on('error', (err: Error) => {
+                    outputChannel.appendLine(localize('logStreamError', 'Error connecting to log-streaming service:'));
+                    outputChannel.appendLine(parseError(err).message);
+                    reject(err);
+                }).on('complete', () => {
+                    logStream.dispose();
+                });
+            });
+        });
+
+        return logStream;
     }
 
     private async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, confirmDeployment: boolean): Promise<void> {

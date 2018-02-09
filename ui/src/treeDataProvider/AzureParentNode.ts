@@ -76,9 +76,11 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
         if (this.treeItem.pickTreeItem) {
             const children: AzureNode[] = await this.getCachedChildren();
             for (const val of expectedContextValues) {
-                const treeItem: IAzureTreeItem | undefined = this.treeItem.pickTreeItem(val);
-                if (treeItem) {
-                    const node: AzureNode | undefined = children.find((n: AzureNode) => n.treeItem.id === treeItem.id);
+                const pickedItem: IAzureTreeItem | undefined = this.treeItem.pickTreeItem(val);
+                if (pickedItem) {
+                    const node: AzureNode | undefined = children.find((n: AzureNode) => {
+                        return (!!pickedItem.id && n.treeItem.id === pickedItem.id) || (n.treeItem.label === pickedItem.label);
+                    });
                     if (node) {
                         return node;
                     }
@@ -86,7 +88,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
             }
         }
 
-        const pick: PickWithData<GetNodeFunction> = await ui.showQuickPick<GetNodeFunction>(this.getQuickPicks(expectedContextValues), localize('azFunc.selectNode', 'Select a {0}', this.treeItem.childTypeLabel));
+        const pick: PickWithData<GetNodeFunction> = await ui.showQuickPick<GetNodeFunction>(this.getQuickPicks(expectedContextValues), localize('azFunc.selectNode', 'Select a {0}', this.treeItem.childTypeLabel), true /* ignoreFocusOut */);
         return await pick.data();
     }
 

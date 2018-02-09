@@ -49,7 +49,7 @@ export class AppSettingTreeItem implements IAzureTreeItem {
 
         this.value = newValue;
         await (<AppSettingsTreeItem>node.parent.treeItem).editSettingItem(nodeUtils.getWebSiteClient(node), this.key, this.key, newValue);
-        node.refresh();
+        await node.refresh();
     }
 
     public async rename(node: IAzureNode): Promise<void> {
@@ -67,7 +67,7 @@ export class AppSettingTreeItem implements IAzureTreeItem {
 
         this.key = newKey;
         await (<AppSettingsTreeItem>node.parent.treeItem).editSettingItem(nodeUtils.getWebSiteClient(node), oldKey, newKey, this.value);
-        node.refresh();
+        await node.refresh();
     }
 
     public async deleteTreeItem(node: IAzureNode): Promise<void> {

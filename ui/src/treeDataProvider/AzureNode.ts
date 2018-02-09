@@ -71,11 +71,15 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
             await this.treeItem.refreshLabel(this);
         }
 
-        await this.treeDataProvider.refresh(this.parent, false /* clearCache */);
+        await this.treeDataProvider.refresh(this);
     }
 
     public openInPortal(): void {
-        (<(s: string) => void>opn)(`${this.environment.portalUrl}/${this.tenantId}/#resource${this.treeItem.id}`);
+        if (!this.treeItem.id) {
+            throw new NotImplementedError('id', this.treeItem);
+        } else {
+            (<(s: string) => void>opn)(`${this.environment.portalUrl}/${this.tenantId}/#resource${this.treeItem.id}`);
+        }
     }
 
     public includeInNodePicker(expectedContextValues: string[]): boolean {
