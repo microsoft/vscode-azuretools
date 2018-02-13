@@ -7,13 +7,13 @@
 import WebSiteManagementClient = require('azure-arm-website');
 import { AppServicePlan, NameValuePair, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, User } from 'azure-arm-website/lib/models';
 import * as fs from 'fs';
-import { BasicAuthenticationCredentials, HttpOperationResponse } from 'ms-rest';
+import { BasicAuthenticationCredentials, WebResource } from 'ms-rest';
 import * as opn from 'opn';
-// tslint:disable-next-line:no-require-imports
-import request = require('request-promise'); // there is no default export
+import * as request from 'request';
+import * as requestP from 'request-promise';
 import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
-import { IAzureNode, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureActionHandler, IAzureNode, IParsedError, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { DeployResult } from 'vscode-azurekudu/lib/models';
 import { DialogResponses } from './DialogResponses';
@@ -185,17 +185,17 @@ export class SiteWrapper {
             return;
         }
 
-        const gitHubUser: Object[] = await this.getJsonRequest('https://api.github.com/user', oAuth2Token);
+        const gitHubUser: Object[] = await this.getJsonRequest('https://api.github.com/user', oAuth2Token, node);
 
-        const gitHubOrgs: Object[] = await this.getJsonRequest('https://api.github.com/user/orgs', oAuth2Token);
+        const gitHubOrgs: Object[] = await this.getJsonRequest('https://api.github.com/user/orgs', oAuth2Token, node);
         const orgQuickPicks: IQuickPickItemWithData<{}>[] = this.createQuickPickFromJsons([gitHubUser], 'login', undefined, ['repos_url']).concat(this.createQuickPickFromJsons(gitHubOrgs, 'login', undefined, ['repos_url']));
         const orgQuickPick: gitHubOrgData = (await vscode.window.showQuickPick(orgQuickPicks, { placeHolder: 'Choose your organization.', ignoreFocusOut: true })).data;
 
-        const gitHubRepos: Object[] = await this.getJsonRequest(orgQuickPick.repos_url, oAuth2Token);
+        const gitHubRepos: Object[] = await this.getJsonRequest(orgQuickPick.repos_url, oAuth2Token, node);
         const repoQuickPicks: IQuickPickItemWithData<{}>[] = this.createQuickPickFromJsons(gitHubRepos, 'name', undefined, ['url', 'html_url']);
         const repoQuickPick: gitHubReposData = (await vscode.window.showQuickPick(repoQuickPicks, { placeHolder: 'Choose project.', ignoreFocusOut: true })).data;
 
-        const gitHubBranches: Object[] = await this.getJsonRequest(`${repoQuickPick.url}/branches`, oAuth2Token);
+        const gitHubBranches: Object[] = await this.getJsonRequest(`${repoQuickPick.url}/branches`, oAuth2Token, node);
         const branchQuickPicks: IQuickPickItemWithData<{}>[] = this.createQuickPickFromJsons(gitHubBranches, 'name');
         const branchQuickPick: IQuickPickItemWithData<{}> = await vscode.window.showQuickPick(branchQuickPicks, { placeHolder: 'Choose branch.', ignoreFocusOut: true });
 
@@ -207,24 +207,22 @@ export class SiteWrapper {
             deploymentRollbackEnabled: true,
             isMercurial: false
         };
-        this.log(outputChannel, 'Web app is being connected to GitHub repo.');
-        let newSourceControl: HttpOperationResponse<SiteSourceControl | void>;
+
+        this.log(outputChannel, `"${this.appName}" is being connected to GitHub repo. This may take a several minutes...`);
         try {
-            newSourceControl = await client.webApps.createOrUpdateSourceControlWithHttpOperationResponse(this.resourceGroup, this.name, siteSourceControl);
-            console.log(newSourceControl);
+            await client.webApps.createOrUpdateSourceControlWithHttpOperationResponse(this.resourceGroup, this.name, siteSourceControl);
         } catch (err) {
-            console.log('Starting sync');
             try {
-                newSourceControl = await client.webApps.syncRepositoryWithHttpOperationResponse(this.resourceGroup, this.name);
-                console.log(newSourceControl);
+                await client.webApps.syncRepository(this.resourceGroup, this.name);
             } catch (error) {
-                console.log(error);
+                const parsedError: IParsedError = JSON.parse(parseError(error).message);
+                if (parsedError.statusCode !== 200) {
+                    throw error;
+                }
             }
-        } finally {
-            this.log(outputChannel, 'Web app has been connected to GitHub repo.');
         }
 
-        // await this.waitForDeploymentToComplete((await this.getKuduClient(client)), outputChannel, 50000);
+        this.log(outputChannel, `"${this.appName}" has been connected to GitHub repo.`);
     }
 
     public async isHttpLogsEnabled(client: WebSiteManagementClient): Promise<boolean> {
@@ -286,7 +284,7 @@ export class SiteWrapper {
         // tslint:disable-next-line:no-floating-promises
         actionHandler.callWithTelemetry('appService.streamingLogs', async () => {
             await new Promise((resolve: () => void, reject: (err: Error) => void): void => {
-                const logsRequest: request.Request = requestApi(`${this.kuduUrl}/api/logstream/${path}`);
+                const logsRequest: request.Request = requestApi(`${this.kuduUrl} / api / logstream / ${path}`);
                 logStream.dispose = (): void => {
                     logsRequest.removeAllListeners();
                     logsRequest.destroy();
@@ -403,19 +401,33 @@ export class SiteWrapper {
         await this.waitForDeploymentToComplete(kuduClient, outputChannel);
     }
 
-    private async getJsonRequest(url: string, token: string): Promise<Object[]> {
+    private async getJsonRequest(url: string, token: string, node: IAzureNode): Promise<Object[]> {
         // Reference for GitHub REST routes
         // https://developer.github.com/v3/
         // Note: blank after user implies look up authorized user
-
-        const gitHubResponse: string = await request.get(url, {
-            headers: {
-                Authorization: `token ${token}`,
-                'User-Agent': 'vscode-azureappservice-extension'
+        try {
+            const gitHubResponse: string = await requestP.get(url, {
+                headers: {
+                    Authorization: `token ${token}`,
+                    'User-Agent': 'vscode-azureappservice-extension'
+                }
+            });
+            return JSON.parse(gitHubResponse);
+        } catch (error) {
+            if (error.message.indexOf('401 - "{\"message\":\"Bad credentials\",\"documentation_url\":\"https://developer.github.com/v3\"}"')) {
+                const tokenExpired: string = localize('tokenExpired', 'Azure\'s GitHub token has expired.  Reauthorized in the Portal under "Deployment options."');
+                const goToPortal: string = localize('goToPortal', 'Go to Portal');
+                const input: string | undefined = await vscode.window.showErrorMessage(tokenExpired, goToPortal);
+                if (input === goToPortal) {
+                    node.openInPortal();
+                    throw new UserCancelledError();
+                } else {
+                    throw new UserCancelledError();
+                }
+            } else {
+                throw error;
             }
-        });
-
-        return JSON.parse(gitHubResponse);
+        }
     }
 
     /**
@@ -479,13 +491,15 @@ export class SiteWrapper {
         }
     }
 
-    private async waitForDeploymentToComplete(kuduClient: KuduClient, outputChannel: vscode.OutputChannel, pollingInterval: number = 5000): Promise<DeployResult> {
+    private async waitForDeploymentToComplete(kuduClient: KuduClient, outputChannel: vscode.OutputChannel, pollingInterval: number = 5000, tempId?: string): Promise<DeployResult> {
         // Unfortunately, Kudu doesn't provide a unique id for a deployment right after it's started
         // However, Kudu only supports one deployment at a time, so 'latest' will work in most cases
-        let deploymentId: string = 'latest';
-        const deployments: {} = await kuduClient.deployment.getDeployResults();
-        console.log(deployments);
+        if (tempId) {
+            // const deployment = await kuduClient.deployment.getResult(tempId);
+            // console.log(deployment);
+        }
 
+        let deploymentId: string = 'latest';
         let deployment: DeployResult = await kuduClient.deployment.getResult(deploymentId);
         while (!deployment.complete) {
             if (!deployment.isTemp && deployment.id) {
@@ -525,10 +539,10 @@ export class SiteWrapper {
     }
 
     private async showGitHubAuthPrompt(node: IAzureNode): Promise<void> {
-        const authorizeAzure: string = localize('gitHubNotAuth', 'Authorize');
-        const setupGithub: string = localize('GitRequired', 'Azure must be authorized on GitHub under Deployment Options.');
-        const input: string | undefined = await vscode.window.showErrorMessage(setupGithub, authorizeAzure);
-        if (input === authorizeAzure) {
+        const goToPortal: string = localize('goToPortal', 'Go to Portal');
+        const setupGithub: string = localize('GitRequired', 'Authorize Azure for GitHub under "Deployment options."');
+        const input: string | undefined = await vscode.window.showErrorMessage(setupGithub, goToPortal);
+        if (input === goToPortal) {
             node.openInPortal();
         }
     }
