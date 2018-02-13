@@ -126,7 +126,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
         if (this.treeItem.createChild && this.treeItem.childTypeLabel) {
             picks.unshift(new PickWithData<GetNodeFunction>(
                 async (): Promise<AzureNode> => await this.createChild(),
-                localize('NodePickerCreateNew', '$(plus) Create New {0}', this.treeItem.childTypeLabel)
+                localize('nodePickerCreateNew', '$(plus) Create New {0}', this.treeItem.childTypeLabel)
             ));
         }
 
