@@ -7,10 +7,11 @@
 import WebSiteManagementClient = require('azure-arm-website');
 import { AppServicePlan, Site, SiteConfigResource, SiteLogsConfig, User } from 'azure-arm-website/lib/models';
 import * as fs from 'fs';
-import { BasicAuthenticationCredentials, WebResource } from 'ms-rest';
+import { BasicAuthenticationCredentials, ServiceClientCredentials, TokenCredentials, WebResource } from 'ms-rest';
 import * as opn from 'opn';
 import * as request from 'request';
 import * as git from 'simple-git/promise';
+import { setInterval } from 'timers';
 import * as vscode from 'vscode';
 import { AzureActionHandler, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
@@ -34,11 +35,13 @@ export class SiteWrapper {
     public readonly planResourceGroup: string;
     public readonly planName: string;
     public readonly id: string;
+    public readonly defaultHostName: string;
+    public readonly isFunctionApp: boolean;
     private readonly _gitUrl: string;
 
     constructor(site: Site) {
         const matches: RegExpMatchArray | null = site.serverFarmId.match(/\/subscriptions\/(.*)\/resourceGroups\/(.*)\/providers\/Microsoft.Web\/serverfarms\/(.*)/);
-        if (!site.id || !site.name || !site.resourceGroup || !site.type || matches === null || matches.length < 4) {
+        if (!site.id || !site.name || !site.resourceGroup || !site.type || !site.defaultHostName || matches === null || matches.length < 4) {
             throw new ArgumentError(site);
         }
 
@@ -50,6 +53,8 @@ export class SiteWrapper {
         this.slotName = isSlot ? site.name.substring(site.name.lastIndexOf('/') + 1) : undefined;
         // the scm url used for git repo is in index 1 of enabledHostNames, not 0
         this._gitUrl = `${site.enabledHostNames[1]}:443/${site.repositorySiteName}.git`;
+        this.defaultHostName = site.defaultHostName;
+        this.isFunctionApp = site.kind === 'functionapp';
 
         this.planResourceGroup = matches[2];
         this.planName = matches[3];
@@ -212,34 +217,38 @@ export class SiteWrapper {
      * Starts the log-streaming service. Call 'dispose()' on the returned object when you want to stop the service.
      */
     public async startStreamingLogs(client: KuduClient, actionHandler: AzureActionHandler, outputChannel: vscode.OutputChannel, path: string = ''): Promise<ILogStream> {
+        outputChannel.show();
+        outputChannel.appendLine(localize('connectingToLogStream', 'Connecting to log stream...'));
         const httpRequest: WebResource = new WebResource();
-        await new Promise((resolve: () => void, reject: (err: Error) => void): void => {
-            client.credentials.signRequest(httpRequest, (err: Error) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            });
-        });
+        await signRequest(httpRequest, client.credentials);
 
         const requestApi: request.RequestAPI<request.Request, request.CoreOptions, {}> = request.defaults(httpRequest);
         const logStream: ILogStream = { dispose: undefined, isConnected: true };
         // Intentionally setting up a separate telemetry event and not awaiting the result here since log stream is a long-running action
         // tslint:disable-next-line:no-floating-promises
         actionHandler.callWithTelemetry('appService.streamingLogs', async () => {
+            let timerId: NodeJS.Timer | undefined;
+            if (this.isFunctionApp) {
+                // For Function Apps, we have to ping "/admin/host/status" every minute for logging to work
+                // https://github.com/Microsoft/vscode-azurefunctions/issues/227
+                await this.pingFunctionApp(client);
+                timerId = setInterval(async () => await this.pingFunctionApp(client), 60 * 1000);
+            }
+
             await new Promise((resolve: () => void, reject: (err: Error) => void): void => {
                 const logsRequest: request.Request = requestApi(`${this.kuduUrl}/api/logstream/${path}`);
                 logStream.dispose = (): void => {
                     logsRequest.removeAllListeners();
                     logsRequest.destroy();
                     outputChannel.show();
+                    if (timerId) {
+                        clearInterval(timerId);
+                    }
                     outputChannel.appendLine(localize('logStreamDisconnected', 'Disconnected from log-streaming service.'));
                     logStream.isConnected = false;
                     resolve();
                 };
 
-                outputChannel.show();
                 logsRequest.on('data', (chunk: Buffer | string) => {
                     outputChannel.appendLine(chunk.toString());
                 }).on('error', (err: Error) => {
@@ -253,6 +262,13 @@ export class SiteWrapper {
         });
 
         return logStream;
+    }
+
+    private async pingFunctionApp(kuduClient: KuduClient): Promise<void> {
+        const requestOptions: WebResource = new WebResource();
+        const adminKey: string = await kuduClient.functionModel.getAdminToken();
+        await signRequest(requestOptions, new TokenCredentials(adminKey));
+        request.get(`https://${this.defaultHostName}/admin/host/status`, requestOptions);
     }
 
     private async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, confirmDeployment: boolean): Promise<void> {
@@ -410,4 +426,16 @@ export class SiteWrapper {
             opn('https://git-scm.com/downloads');
         }
     }
+}
+
+async function signRequest(req: WebResource, cred: ServiceClientCredentials): Promise<void> {
+    await new Promise((resolve: () => void, reject: (err: Error) => void): void => {
+        cred.signRequest(req, (err: Error) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
+    });
 }
