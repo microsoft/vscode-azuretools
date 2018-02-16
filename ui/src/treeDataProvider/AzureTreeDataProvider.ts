@@ -68,7 +68,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
     public getTreeItem(node: IAzureNode): TreeItem {
         return {
             label: node.treeItem.label,
-            id: node.treeItem.id,
+            id: node.id,
             collapsibleState: node instanceof AzureParentNode ? TreeItemCollapsibleState.Collapsed : undefined,
             contextValue: node.treeItem.contextValue,
             iconPath: node.treeItem.iconPath,
@@ -171,5 +171,21 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
         }
 
         return node;
+    }
+
+    public async findNode(id: string): Promise<IAzureNode | undefined> {
+        let children: IAzureNode[] = await this.getChildren();
+
+        // tslint:disable-next-line:no-constant-condition
+        while (true) {
+            const node: IAzureNode | undefined = children.find((child: IAzureNode) => id.startsWith(child.id));
+            if (node && node.id === id) {
+                return node;
+            } else if (node instanceof AzureParentNode) {
+                children = await node.getCachedChildren();
+            } else {
+                throw new Error(localize('noMatchingNode', 'Failed to find node with id "{0}".', id));
+            }
+        }
     }
 }
