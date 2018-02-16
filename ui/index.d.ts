@@ -35,7 +35,7 @@ export declare class AzureTreeDataProvider implements TreeDataProvider<IAzureNod
 export interface IAzureNode<T extends IAzureTreeItem = IAzureTreeItem> {
     /**
      * This id represents the effective/serializable id of the node in the tree. It always starts with the parent's id and ends with either the IAzureTreeItem.id property (if implemented) or IAzureTreeItem.label property
-     * This is used for AzureTreeDataProvider.findNode() and IAzureNode.openInPortal
+     * This is used for AzureTreeDataProvider.findNode and IAzureNode.openInPortal
      */
     readonly id: string;
     readonly treeItem: T;
