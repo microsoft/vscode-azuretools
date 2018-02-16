@@ -27,7 +27,8 @@ import { IQuickPickItemWithData } from './wizard/IQuickPickItemWithData';
 // Deployment sources supported by Web Apps
 const SCM_TYPES: string[] = [
     'None', // default scmType config
-    'LocalGit'];
+    'LocalGit',
+    'GitHub'];
 
 export class SiteWrapper {
     public readonly resourceGroup: string;
@@ -164,6 +165,8 @@ export class SiteWrapper {
             case SCM_TYPES[1]: // 'LocalGit'
                 await this.localGitDeploy(fsPath, client, outputChannel);
                 break;
+            case SCM_TYPES[2]: // 'GitHub'
+                throw new Error(localize('gitHubConnected', '"{0}" is connected to a GitHub repository. Push to GitHub to continously deploy.', this.appName));
             default: //'None' or any other non-supported scmType
                 await this.deployZip(fsPath, client, outputChannel, configurationSectionName, confirmDeployment);
                 break;
@@ -213,9 +216,12 @@ export class SiteWrapper {
             await client.webApps.createOrUpdateSourceControlWithHttpOperationResponse(this.resourceGroup, this.name, siteSourceControl);
         } catch (err) {
             try {
+                // a resync will fix the first broken build
+                // https://github.com/projectkudu/kudu/issues/2277
                 await client.webApps.syncRepository(this.resourceGroup, this.name);
             } catch (error) {
                 const parsedError: IParsedError = JSON.parse(parseError(error).message);
+                // The portal returns 200, but is expecting a 204 which causes it to throw an error even after a successful sync
                 if (parsedError.statusCode !== 200) {
                     throw error;
                 }
@@ -256,11 +262,21 @@ export class SiteWrapper {
         return new KuduClient(cred, this.kuduUrl);
     }
 
-    public async editScmType(client: WebSiteManagementClient): Promise<string | undefined> {
+    public async editScmType(node: IAzureNode, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<string | undefined> {
         const config: SiteConfigResource = await this.getSiteConfig(client);
         const newScmType: string = await this.showScmPrompt(config.scmType);
+        if (newScmType === SCM_TYPES[2]) {
+            if (config.scmType !== SCM_TYPES[0]) {
+                // GitHub cannot be configured if there is an existing configuration source-- a limitation of Azure
+                throw new Error(localize('configurationError', 'Configuration type must be set to "None" to connect to a GitHub repository.');
+            }
+            await this.connectToGitHub(node, outputChannel);
+        } else {
+            await this.updateScmType(client, config, newScmType);
+        }
+        this.log(outputChannel, localize('deploymentSourceUpdated,', 'Deployment source has been updated to "{0}".', newScmType));
         // returns the updated scmType
-        return await this.updateScmType(client, config, newScmType);
+        return newScmType;
     }
 
     /**
@@ -415,11 +431,13 @@ export class SiteWrapper {
             return JSON.parse(gitHubResponse);
         } catch (error) {
             if (error.message.indexOf('401 - "{\"message\":\"Bad credentials\",\"documentation_url\":\"https://developer.github.com/v3\"}"')) {
+                // the default error is just "Bad Credentials," which is an unhelpful error message
                 const tokenExpired: string = localize('tokenExpired', 'Azure\'s GitHub token has expired.  Reauthorized in the Portal under "Deployment options."');
                 const goToPortal: string = localize('goToPortal', 'Go to Portal');
                 const input: string | undefined = await vscode.window.showErrorMessage(tokenExpired, goToPortal);
                 if (input === goToPortal) {
                     node.openInPortal();
+                    // this needs to be replaced with a custom error
                     throw new UserCancelledError();
                 } else {
                     throw new UserCancelledError();
@@ -433,7 +451,7 @@ export class SiteWrapper {
     /**
      * @param label Property of JSON that will be used as the QuickPicks label
      * @param description Optional property of JSON that will be used as QuickPicks description
-     * @param description Optional property of JSON that will be used as QuickPicks data saved as a NameValue pair
+     * @param data Optional property of JSON that will be used as QuickPicks data saved as a NameValue pair
      */
     private createQuickPickFromJsons(jsons: Object[], label: string, description?: string, data?: string[]): IQuickPickItemWithData<{}>[] {
         const quickPicks: IQuickPickItemWithData<{}>[] = [];
@@ -441,7 +459,7 @@ export class SiteWrapper {
             const dataValuePair: NameValuePair = {};
 
             if (!json[label]) {
-                // skip if this JSON does not have this label
+                // skip this JSON if it doesn't have this label
                 continue;
             }
 
@@ -527,6 +545,7 @@ export class SiteWrapper {
         // to update one property, a complete config file must be sent
         const newConfig: SiteConfigResource = await this.updateConfiguration(client, config);
         return newConfig.scmType;
+
     }
 
     private async showInstallPrompt(): Promise<void> {
