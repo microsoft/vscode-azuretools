@@ -18,6 +18,20 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
         this.treeItem = treeItem;
     }
 
+    public get id(): string {
+        let id: string = this.treeItem.id || this.treeItem.label;
+        if (!id.startsWith('/')) {
+            id = `/${id}`;
+        }
+
+        // For the sake of backwards compat, only add the parent's id if it's not already there
+        if (this.parent && !id.startsWith(this.parent.id)) {
+            id = `${this.parent.id}${id}`;
+        }
+
+        return id;
+    }
+
     public get tenantId(): string {
         if (this.parent) {
             return this.parent.tenantId;
@@ -75,11 +89,7 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
     }
 
     public openInPortal(): void {
-        if (!this.treeItem.id) {
-            throw new NotImplementedError('id', this.treeItem);
-        } else {
-            (<(s: string) => void>opn)(`${this.environment.portalUrl}/${this.tenantId}/#resource${this.treeItem.id}`);
-        }
+        (<(s: string) => void>opn)(`${this.environment.portalUrl}/${this.tenantId}/#resource${this.id}`);
     }
 
     public includeInNodePicker(expectedContextValues: string[]): boolean {

@@ -24,7 +24,8 @@ export declare class AzureTreeDataProvider implements TreeDataProvider<IAzureNod
     public getChildren(node?: IAzureParentNode): Promise<IAzureNode[]>;
     public refresh(node?: IAzureNode, clearCache?: boolean): Promise<void>;
     public loadMore(node: IAzureNode): Promise<void>;
-    public showNodePicker(expectedContextValues: string | string[], startingNode?: IAzureNode): Promise<IAzureNode>
+    public showNodePicker(expectedContextValues: string | string[], startingNode?: IAzureNode): Promise<IAzureNode>;
+    public findNode(id: string): Promise<IAzureNode | undefined>;
     public dispose(): void;
 }
 
@@ -32,6 +33,11 @@ export declare class AzureTreeDataProvider implements TreeDataProvider<IAzureNod
  * The AzureTreeDataProvider returns instances of IAzureNode, which are wrappers for IAzureTreeItem with relevant context and functions from the tree
  */
 export interface IAzureNode<T extends IAzureTreeItem = IAzureTreeItem> {
+    /**
+     * This id represents the effective/serializable id of the node in the tree. It always starts with the parent's id and ends with either the IAzureTreeItem.id property (if implemented) or IAzureTreeItem.label property
+     * This is used for AzureTreeDataProvider.findNode() and IAzureNode.openInPortal
+     */
+    readonly id: string;
     readonly treeItem: T;
     readonly parent?: IAzureParentNode;
     readonly treeDataProvider: AzureTreeDataProvider;

@@ -18,7 +18,7 @@ export class SubscriptionNode extends AzureParentNode {
 
     public constructor(treeDataProvider: AzureTreeDataProvider, childProvider: IChildProvider, id: string, label: string, subscriptionInfo: AzureSubscription) {
         super(undefined, {
-            id: id,
+            id: `/subscriptions/${id}`,
             label: label,
             contextValue: SubscriptionNode.contextValue,
             iconPath: path.join(__filename, '..', '..', '..', '..', 'resources', 'azureSubscription.svg'),
