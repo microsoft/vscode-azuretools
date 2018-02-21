@@ -68,7 +68,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
     public getTreeItem(node: IAzureNode): TreeItem {
         return {
             label: node.treeItem.label,
-            id: node.treeItem.id,
+            id: node.id,
             collapsibleState: node instanceof AzureParentNode ? TreeItemCollapsibleState.Collapsed : undefined,
             contextValue: node.treeItem.contextValue,
             iconPath: node.treeItem.iconPath,
@@ -92,6 +92,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
 
             let commandLabel: string | undefined;
             const loginCommandId: string = 'azure-account.login';
+            const createCommandId: string = 'azure-account.createAccount';
             if (this._azureAccount.status === 'Initializing' || this._azureAccount.status === 'LoggingIn') {
                 nodes = [new AzureNode(undefined, {
                     label: localize('loadingNode', 'Loading...'),
@@ -104,7 +105,10 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
                     }
                 })];
             } else if (this._azureAccount.status === 'LoggedOut') {
-                nodes = [new AzureNode(undefined, { label: localize('signInNode', 'Sign in to Azure...'), commandId: loginCommandId, contextValue: 'azureCommandNode', id: loginCommandId })];
+                nodes = [
+                    new AzureNode(undefined, { label: localize('signInNode', 'Sign in to Azure...'), commandId: loginCommandId, contextValue: 'azureCommandNode', id: loginCommandId }),
+                    new AzureNode(undefined, { label: localize('createNode', 'Create a Free Azure Account...'), commandId: createCommandId, contextValue: 'azureCommandNode', id: createCommandId })
+                ];
             } else if (this._azureAccount.filters.length === 0) {
                 commandLabel = localize('noSubscriptionsNode', 'No subscriptions found. Edit filters...');
                 nodes = [new AzureNode(undefined, { label: commandLabel, commandId: 'azure-account.selectSubscriptions', contextValue: 'azureCommandNode', id: 'azure-account.selectSubscriptions' })];
@@ -167,5 +171,21 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
         }
 
         return node;
+    }
+
+    public async findNode(id: string): Promise<IAzureNode | undefined> {
+        let children: IAzureNode[] = await this.getChildren();
+
+        // tslint:disable-next-line:no-constant-condition
+        while (true) {
+            const node: IAzureNode | undefined = children.find((child: IAzureNode) => id.startsWith(child.id));
+            if (node && node.id === id) {
+                return node;
+            } else if (node instanceof AzureParentNode) {
+                children = await node.getCachedChildren();
+            } else {
+                throw new Error(localize('noMatchingNode', 'Failed to find node with id "{0}".', id));
+            }
+        }
     }
 }

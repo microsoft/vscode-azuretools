@@ -12,13 +12,13 @@ import { AzureSubscription } from '../azure-account.api';
 import { AzureParentNode } from './AzureParentNode';
 
 export class SubscriptionNode extends AzureParentNode {
-    public static readonly contextValue: string = 'azureSubscription';
+    public static readonly contextValue: string = 'azureextensionui.azureSubscription';
     private readonly _subscriptionInfo: AzureSubscription;
     private readonly _treeDataProvider: AzureTreeDataProvider;
 
     public constructor(treeDataProvider: AzureTreeDataProvider, childProvider: IChildProvider, id: string, label: string, subscriptionInfo: AzureSubscription) {
         super(undefined, {
-            id: id,
+            id: `/subscriptions/${id}`,
             label: label,
             contextValue: SubscriptionNode.contextValue,
             iconPath: path.join(__filename, '..', '..', '..', '..', 'resources', 'azureSubscription.svg'),
