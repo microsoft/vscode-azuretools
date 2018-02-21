@@ -22,13 +22,15 @@ import * as FileUtilities from './FileUtilities';
 import { ILogStream } from './ILogStream';
 import { localize } from './localize';
 import { nodeUtils } from './utils/nodeUtils';
+import { uiUtils } from './utils/uiUtils';
 import { IQuickPickItemWithData } from './wizard/IQuickPickItemWithData';
 
 // Deployment sources supported by Web Apps
-const SCM_TYPES: string[] = [
-    'None', // default scmType config
-    'LocalGit',
-    'GitHub'];
+export enum ScmType {
+    None = 'None', // default scmType
+    LocalGit = 'LocalGit',
+    GitHub = 'GitHub'
+}
 
 export class SiteWrapper {
     public readonly resourceGroup: string;
@@ -162,11 +164,11 @@ export class SiteWrapper {
     public async deploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, confirmDeployment: boolean = true): Promise<void> {
         const config: SiteConfigResource = await this.getSiteConfig(client);
         switch (config.scmType) {
-            case SCM_TYPES[1]: // 'LocalGit'
+            case ScmType.LocalGit:
                 await this.localGitDeploy(fsPath, client, outputChannel);
                 break;
-            case SCM_TYPES[2]: // 'GitHub'
-                throw new Error(localize('gitHubConnected', '"{0}" is connected to a GitHub repository. Push to GitHub to continously deploy.', this.appName));
+            case ScmType.GitHub:
+                throw new Error(localize('gitHubConnected', '"{0}" is connected to a GitHub repository. Push to GitHub repository to deploy.', this.appName));
             default: //'None' or any other non-supported scmType
                 await this.deployZip(fsPath, client, outputChannel, configurationSectionName, confirmDeployment);
                 break;
@@ -174,61 +176,6 @@ export class SiteWrapper {
 
         outputChannel.appendLine(localize('deployComplete', '>>>>>> Deployment to "{0}" completed. <<<<<<', this.appName));
         outputChannel.appendLine('');
-    }
-
-    public async connectToGitHub(node: IAzureNode, outputChannel: vscode.OutputChannel): Promise<void> {
-
-        type gitHubOrgData = { repos_url?: string };
-        type gitHubReposData = { repos_url?: string, url?: string, html_url?: string };
-
-        const client: WebSiteManagementClient = nodeUtils.getWebSiteClient(node);
-        const oAuth2Token: string = (await client.listSourceControls())[0].token;
-        if (!oAuth2Token) {
-            this.showGitHubAuthPrompt(node);
-            return;
-        }
-
-        const gitHubUser: Object[] = await this.getJsonRequest('https://api.github.com/user', oAuth2Token, node);
-
-        const gitHubOrgs: Object[] = await this.getJsonRequest('https://api.github.com/user/orgs', oAuth2Token, node);
-        const orgQuickPicks: IQuickPickItemWithData<{}>[] = this.createQuickPickFromJsons([gitHubUser], 'login', undefined, ['repos_url']).concat(this.createQuickPickFromJsons(gitHubOrgs, 'login', undefined, ['repos_url']));
-        const orgQuickPick: gitHubOrgData = (await vscode.window.showQuickPick(orgQuickPicks, { placeHolder: 'Choose your organization.', ignoreFocusOut: true })).data;
-
-        const gitHubRepos: Object[] = await this.getJsonRequest(orgQuickPick.repos_url, oAuth2Token, node);
-        const repoQuickPicks: IQuickPickItemWithData<{}>[] = this.createQuickPickFromJsons(gitHubRepos, 'name', undefined, ['url', 'html_url']);
-        const repoQuickPick: gitHubReposData = (await vscode.window.showQuickPick(repoQuickPicks, { placeHolder: 'Choose project.', ignoreFocusOut: true })).data;
-
-        const gitHubBranches: Object[] = await this.getJsonRequest(`${repoQuickPick.url}/branches`, oAuth2Token, node);
-        const branchQuickPicks: IQuickPickItemWithData<{}>[] = this.createQuickPickFromJsons(gitHubBranches, 'name');
-        const branchQuickPick: IQuickPickItemWithData<{}> = await vscode.window.showQuickPick(branchQuickPicks, { placeHolder: 'Choose branch.', ignoreFocusOut: true });
-
-        const siteSourceControl: SiteSourceControl = {
-            location: this.location,
-            repoUrl: repoQuickPick.html_url,
-            branch: branchQuickPick.label,
-            isManualIntegration: false,
-            deploymentRollbackEnabled: true,
-            isMercurial: false
-        };
-
-        this.log(outputChannel, `"${this.appName}" is being connected to GitHub repo. This may take a several minutes...`);
-        try {
-            await client.webApps.createOrUpdateSourceControlWithHttpOperationResponse(this.resourceGroup, this.name, siteSourceControl);
-        } catch (err) {
-            try {
-                // a resync will fix the first broken build
-                // https://github.com/projectkudu/kudu/issues/2277
-                await client.webApps.syncRepository(this.resourceGroup, this.name);
-            } catch (error) {
-                const parsedError: IParsedError = JSON.parse(parseError(error).message);
-                // The portal returns 200, but is expecting a 204 which causes it to throw an error even after a successful sync
-                if (parsedError.statusCode !== 200) {
-                    throw error;
-                }
-            }
-        }
-
-        this.log(outputChannel, `"${this.appName}" has been connected to GitHub repo.`);
     }
 
     public async isHttpLogsEnabled(client: WebSiteManagementClient): Promise<boolean> {
@@ -262,13 +209,14 @@ export class SiteWrapper {
         return new KuduClient(cred, this.kuduUrl);
     }
 
-    public async editScmType(node: IAzureNode, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<string | undefined> {
+    public async editScmType(node: IAzureNode, outputChannel: vscode.OutputChannel): Promise<string | undefined> {
+        const client: WebSiteManagementClient = nodeUtils.getWebSiteClient(node);
         const config: SiteConfigResource = await this.getSiteConfig(client);
         const newScmType: string = await this.showScmPrompt(config.scmType);
-        if (newScmType === SCM_TYPES[2]) {
-            if (config.scmType !== SCM_TYPES[0]) {
+        if (newScmType === ScmType.GitHub) {
+            if (config.scmType !== ScmType.None) {
                 // GitHub cannot be configured if there is an existing configuration source-- a limitation of Azure
-                throw new Error(localize('configurationError', 'Configuration type must be set to "None" to connect to a GitHub repository.');
+                throw new Error(localize('configurationError', 'Configuration type must be set to "None" to connect to a GitHub repository.'));
             }
             await this.connectToGitHub(node, outputChannel);
         } else {
@@ -300,7 +248,7 @@ export class SiteWrapper {
         // tslint:disable-next-line:no-floating-promises
         actionHandler.callWithTelemetry('appService.streamingLogs', async () => {
             await new Promise((resolve: () => void, reject: (err: Error) => void): void => {
-                const logsRequest: request.Request = requestApi(`${this.kuduUrl} / api / logstream / ${path}`);
+                const logsRequest: request.Request = requestApi(`${this.kuduUrl}/api/logstream/${path}`);
                 logStream.dispose = (): void => {
                     logsRequest.removeAllListeners();
                     logsRequest.destroy();
@@ -491,7 +439,7 @@ export class SiteWrapper {
         const currentSource: string = localize('currentSource', '(Current source)');
         const scmQuickPicks: vscode.QuickPickItem[] = [];
         // generate quickPicks to not include current type
-        for (const scmQuickPick of SCM_TYPES) {
+        for (const scmQuickPick of Object.keys(ScmType)) {
             if (scmQuickPick === currentScmType) {
                 // put the current source at the top of the list
                 scmQuickPicks.unshift({ label: scmQuickPick, description: currentSource });
@@ -509,14 +457,9 @@ export class SiteWrapper {
         }
     }
 
-    private async waitForDeploymentToComplete(kuduClient: KuduClient, outputChannel: vscode.OutputChannel, pollingInterval: number = 5000, tempId?: string): Promise<DeployResult> {
+    private async waitForDeploymentToComplete(kuduClient: KuduClient, outputChannel: vscode.OutputChannel, pollingInterval: number = 5000): Promise<DeployResult> {
         // Unfortunately, Kudu doesn't provide a unique id for a deployment right after it's started
         // However, Kudu only supports one deployment at a time, so 'latest' will work in most cases
-        if (tempId) {
-            // const deployment = await kuduClient.deployment.getResult(tempId);
-            // console.log(deployment);
-        }
-
         let deploymentId: string = 'latest';
         let deployment: DeployResult = await kuduClient.deployment.getResult(deploymentId);
         while (!deployment.complete) {
@@ -554,6 +497,59 @@ export class SiteWrapper {
         if (input === installString) {
             // tslint:disable-next-line:no-unsafe-any
             opn('https://git-scm.com/downloads');
+        }
+    }
+
+    private async connectToGitHub(node: IAzureNode, outputChannel: vscode.OutputChannel): Promise<void> {
+
+        type gitHubOrgData = { repos_url?: string };
+        type gitHubReposData = { repos_url?: string, url?: string, html_url?: string };
+
+        const client: WebSiteManagementClient = nodeUtils.getWebSiteClient(node);
+        const oAuth2Token: string = (await client.listSourceControls())[0].token;
+        if (!oAuth2Token) {
+            this.showGitHubAuthPrompt(node);
+            return;
+        }
+
+        const gitHubUser: Object[] = await this.getJsonRequest('https://api.github.com/user', oAuth2Token, node);
+
+        const gitHubOrgs: Object[] = await this.getJsonRequest('https://api.github.com/user/orgs', oAuth2Token, node);
+        const orgQuickPicks: IQuickPickItemWithData<{}>[] = this.createQuickPickFromJsons([gitHubUser], 'login', undefined, ['repos_url']).concat(this.createQuickPickFromJsons(gitHubOrgs, 'login', undefined, ['repos_url']));
+        const orgQuickPick: gitHubOrgData = (await uiUtils.showQuickPickWithData(orgQuickPicks, { placeHolder: 'Choose your organization.', ignoreFocusOut: true })).data;
+
+        const gitHubRepos: Object[] = await this.getJsonRequest(orgQuickPick.repos_url, oAuth2Token, node);
+        const repoQuickPicks: IQuickPickItemWithData<{}>[] = this.createQuickPickFromJsons(gitHubRepos, 'name', undefined, ['url', 'html_url']);
+        const repoQuickPick: gitHubReposData = (await uiUtils.showQuickPickWithData(repoQuickPicks, { placeHolder: 'Choose project.', ignoreFocusOut: true })).data;
+
+        const gitHubBranches: Object[] = await this.getJsonRequest(`${repoQuickPick.url}/branches`, oAuth2Token, node);
+        const branchQuickPicks: IQuickPickItemWithData<{}>[] = this.createQuickPickFromJsons(gitHubBranches, 'name');
+        const branchQuickPick: IQuickPickItemWithData<{}> = await uiUtils.showQuickPickWithData(branchQuickPicks, { placeHolder: 'Choose branch.', ignoreFocusOut: true });
+
+        const siteSourceControl: SiteSourceControl = {
+            location: this.location,
+            repoUrl: repoQuickPick.html_url,
+            branch: branchQuickPick.label,
+            isManualIntegration: false,
+            deploymentRollbackEnabled: true,
+            isMercurial: false
+        };
+
+        this.log(outputChannel, `"${this.appName}" is being connected to GitHub repo. This may take several minutes...`);
+        try {
+            await client.webApps.createOrUpdateSourceControlWithHttpOperationResponse(this.resourceGroup, this.name, siteSourceControl);
+        } catch (err) {
+            try {
+                // a resync will fix the first broken build
+                // https://github.com/projectkudu/kudu/issues/2277
+                await client.webApps.syncRepository(this.resourceGroup, this.name);
+            } catch (error) {
+                const parsedError: IParsedError = JSON.parse(parseError(error).message);
+                // The portal returns 200, but is expecting a 204 which causes it to throw an error even after a successful sync
+                if (parsedError.statusCode !== 200) {
+                    throw error;
+                }
+            }
         }
     }
 
