@@ -196,4 +196,5 @@ export interface IParsedError {
     errorType: string;
     message: string;
     isUserCancelledError: boolean;
+    statusCode?: number;
 }
