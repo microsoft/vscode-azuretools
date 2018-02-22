@@ -5,15 +5,16 @@
 
 // tslint:disable-next-line:no-require-imports
 import WebSiteManagementClient = require('azure-arm-website');
-import { AppServicePlan, Site, SiteConfigResource, SiteLogsConfig, User } from 'azure-arm-website/lib/models';
+import { AppServicePlan, NameValuePair, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, User } from 'azure-arm-website/lib/models';
 import * as fs from 'fs';
 import { BasicAuthenticationCredentials, ServiceClientCredentials, TokenCredentials, WebResource } from 'ms-rest';
 import * as opn from 'opn';
 import * as request from 'request';
+import * as requestP from 'request-promise';
 import * as git from 'simple-git/promise';
 import { setInterval } from 'timers';
 import * as vscode from 'vscode';
-import { AzureActionHandler, parseError, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureActionHandler, IAzureNode, IParsedError, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { DeployResult } from 'vscode-azurekudu/lib/models';
 import { DialogResponses } from './DialogResponses';
@@ -21,11 +22,16 @@ import { ArgumentError } from './errors';
 import * as FileUtilities from './FileUtilities';
 import { ILogStream } from './ILogStream';
 import { localize } from './localize';
+import { nodeUtils } from './utils/nodeUtils';
+import { uiUtils } from './utils/uiUtils';
+import { IQuickPickItemWithData } from './wizard/IQuickPickItemWithData';
 
 // Deployment sources supported by Web Apps
-const SCM_TYPES: string[] = [
-    'None', // default scmType config
-    'LocalGit'];
+export enum ScmType {
+    None = 'None', // default scmType
+    LocalGit = 'LocalGit',
+    GitHub = 'GitHub'
+}
 
 export class SiteWrapper {
     public readonly resourceGroup: string;
@@ -163,10 +169,12 @@ export class SiteWrapper {
     public async deploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, confirmDeployment: boolean = true): Promise<void> {
         const config: SiteConfigResource = await this.getSiteConfig(client);
         switch (config.scmType) {
-            case 'LocalGit':
+            case ScmType.LocalGit:
                 await this.localGitDeploy(fsPath, client, outputChannel);
                 break;
-            default:
+            case ScmType.GitHub:
+                throw new Error(localize('gitHubConnected', '"{0}" is connected to a GitHub repository. Push to GitHub repository to deploy.', this.appName));
+            default: //'None' or any other non-supported scmType
                 await this.deployZip(fsPath, client, outputChannel, configurationSectionName, confirmDeployment);
                 break;
         }
@@ -206,11 +214,22 @@ export class SiteWrapper {
         return new KuduClient(cred, this.kuduUrl);
     }
 
-    public async editScmType(client: WebSiteManagementClient): Promise<string | undefined> {
+    public async editScmType(node: IAzureNode, outputChannel: vscode.OutputChannel): Promise<string | undefined> {
+        const client: WebSiteManagementClient = nodeUtils.getWebSiteClient(node);
         const config: SiteConfigResource = await this.getSiteConfig(client);
         const newScmType: string = await this.showScmPrompt(config.scmType);
+        if (newScmType === ScmType.GitHub) {
+            if (config.scmType !== ScmType.None) {
+                // GitHub cannot be configured if there is an existing configuration source-- a limitation of Azure
+                throw new Error(localize('configurationError', 'Configuration type must be set to "None" to connect to a GitHub repository.'));
+            }
+            await this.connectToGitHub(node, outputChannel);
+        } else {
+            await this.updateScmType(client, config, newScmType);
+        }
+        this.log(outputChannel, localize('deploymentSourceUpdated,', 'Deployment source has been updated to "{0}".', newScmType));
         // returns the updated scmType
-        return await this.updateScmType(client, config, newScmType);
+        return newScmType;
     }
 
     /**
@@ -362,12 +381,78 @@ export class SiteWrapper {
         await this.waitForDeploymentToComplete(kuduClient, outputChannel);
     }
 
+    private async getJsonRequest(url: string, requestOptions: WebResource, node: IAzureNode): Promise<Object[]> {
+        // Reference for GitHub REST routes
+        // https://developer.github.com/v3/
+        // Note: blank after user implies look up authorized user
+        try {
+            // tslint:disable-next-line:no-unsafe-any
+            const gitHubResponse: string = await requestP.get(url, <WebResource>requestOptions);
+            return <Object[]>JSON.parse(gitHubResponse);
+        } catch (error) {
+            const parsedError: IParsedError  = parseError(error);
+            if (parsedError.message.indexOf('Bad credentials') > -1) {
+                // the default error is just "Bad Credentials," which is an unhelpful error message
+                const tokenExpired: string = localize('tokenExpired', 'Azure\'s GitHub token has expired.  Reauthorize in the Portal under "Deployment options."');
+                const goToPortal: string = localize('goToPortal', 'Go to Portal');
+                const input: string | undefined = await vscode.window.showErrorMessage(tokenExpired, goToPortal);
+                if (input === goToPortal) {
+                    node.openInPortal();
+                    // https://github.com/Microsoft/vscode-azuretools/issues/78
+                    throw new UserCancelledError();
+                } else {
+                    throw new UserCancelledError();
+                }
+            } else {
+                throw error;
+            }
+        }
+    }
+
+    /**
+     * @param label Property of JSON that will be used as the QuickPicks label
+     * @param description Optional property of JSON that will be used as QuickPicks description
+     * @param data Optional property of JSON that will be used as QuickPicks data saved as a NameValue pair
+     */
+    private createQuickPickFromJsons(jsons: Object[], label: string, description?: string, data?: string[]): IQuickPickItemWithData<{}>[] {
+        const quickPicks: IQuickPickItemWithData<{}>[] = [];
+        for (const json of jsons) {
+            const dataValuePair: NameValuePair = {};
+
+            if (!json[label]) {
+                // skip this JSON if it doesn't have this label
+                continue;
+            }
+
+            if (description && !json[description]) {
+                // if the label exists, but the description does not, then description will just be left blank
+                description = undefined;
+            }
+
+            if (data) {
+                // construct value pair based off data labels provided
+                for (const property of data) {
+                    // required to construct first otherwise cannot use property as key name
+                    dataValuePair[property] = json[property];
+                }
+            }
+
+            quickPicks.push({
+                label: <string>json[label],
+                description: `${description ? json[description] : ''}`,
+                data: dataValuePair
+            });
+        }
+
+        return quickPicks;
+    }
+
     private async showScmPrompt(currentScmType: string): Promise<string> {
         const placeHolder: string = localize('scmPrompt', 'Select a new source.');
         const currentSource: string = localize('currentSource', '(Current source)');
         const scmQuickPicks: vscode.QuickPickItem[] = [];
         // generate quickPicks to not include current type
-        for (const scmQuickPick of SCM_TYPES) {
+        for (const scmQuickPick of Object.keys(ScmType)) {
             if (scmQuickPick === currentScmType) {
                 // put the current source at the top of the list
                 scmQuickPicks.unshift({ label: scmQuickPick, description: currentSource });
@@ -416,6 +501,7 @@ export class SiteWrapper {
         // to update one property, a complete config file must be sent
         const newConfig: SiteConfigResource = await this.updateConfiguration(client, config);
         return newConfig.scmType;
+
     }
 
     private async showInstallPrompt(): Promise<void> {
@@ -424,6 +510,71 @@ export class SiteWrapper {
         if (input === installString) {
             // tslint:disable-next-line:no-unsafe-any
             opn('https://git-scm.com/downloads');
+        }
+    }
+
+    private async connectToGitHub(node: IAzureNode, outputChannel: vscode.OutputChannel): Promise<void> {
+
+        type gitHubOrgData = { repos_url?: string };
+        type gitHubReposData = { repos_url?: string, url?: string, html_url?: string };
+
+        const client: WebSiteManagementClient = nodeUtils.getWebSiteClient(node);
+        const requestOptions: WebResource = new WebResource();
+        requestOptions.headers = { ['User-Agent'] : 'vscode-azureappservice-extension' };
+        const oAuth2Token: string = (await client.listSourceControls())[0].token;
+        if (!oAuth2Token) {
+            await this.showGitHubAuthPrompt(node);
+            return;
+        }
+
+        await signRequest(requestOptions, new TokenCredentials(oAuth2Token));
+        const gitHubUser: Object[] = await this.getJsonRequest('https://api.github.com/user', requestOptions, node);
+
+        const gitHubOrgs: Object[] = await this.getJsonRequest('https://api.github.com/user/orgs', requestOptions, node);
+        const orgQuickPicks: IQuickPickItemWithData<{}>[] = this.createQuickPickFromJsons([gitHubUser], 'login', undefined, ['repos_url']).concat(this.createQuickPickFromJsons(gitHubOrgs, 'login', undefined, ['repos_url']));
+        const orgQuickPick: gitHubOrgData = (await uiUtils.showQuickPickWithData(orgQuickPicks, { placeHolder: 'Choose your organization.', ignoreFocusOut: true })).data;
+
+        const gitHubRepos: Object[] = await this.getJsonRequest(orgQuickPick.repos_url, requestOptions, node);
+        const repoQuickPicks: IQuickPickItemWithData<{}>[] = this.createQuickPickFromJsons(gitHubRepos, 'name', undefined, ['url', 'html_url']);
+        const repoQuickPick: gitHubReposData = (await uiUtils.showQuickPickWithData(repoQuickPicks, { placeHolder: 'Choose project.', ignoreFocusOut: true })).data;
+
+        const gitHubBranches: Object[] = await this.getJsonRequest(`${repoQuickPick.url}/branches`, requestOptions, node);
+        const branchQuickPicks: IQuickPickItemWithData<{}>[] = this.createQuickPickFromJsons(gitHubBranches, 'name');
+        const branchQuickPick: IQuickPickItemWithData<{}> = await uiUtils.showQuickPickWithData(branchQuickPicks, { placeHolder: 'Choose branch.', ignoreFocusOut: true });
+
+        const siteSourceControl: SiteSourceControl = {
+            location: this.location,
+            repoUrl: repoQuickPick.html_url,
+            branch: branchQuickPick.label,
+            isManualIntegration: false,
+            deploymentRollbackEnabled: true,
+            isMercurial: false
+        };
+
+        this.log(outputChannel, `"${this.appName}" is being connected to GitHub repo. This may take several minutes...`);
+        try {
+            await client.webApps.createOrUpdateSourceControlWithHttpOperationResponse(this.resourceGroup, this.name, siteSourceControl);
+        } catch (err) {
+            try {
+                // a resync will fix the first broken build
+                // https://github.com/projectkudu/kudu/issues/2277
+                await client.webApps.syncRepository(this.resourceGroup, this.name);
+            } catch (error) {
+                const parsedError: IParsedError = parseError(error);
+                // The portal returns 200, but is expecting a 204 which causes it to throw an error even after a successful sync
+                if (parsedError.message.indexOf('"statusCode":200') === -1) {
+                    throw error;
+                }
+            }
+        }
+    }
+
+    private async showGitHubAuthPrompt(node: IAzureNode): Promise<void> {
+        const goToPortal: string = localize('goToPortal', 'Go to Portal');
+        const setupGithub: string = localize('GitRequired', 'Authorize Azure for GitHub under "Deployment options."');
+        const input: string | undefined = await vscode.window.showErrorMessage(setupGithub, goToPortal);
+        if (input === goToPortal) {
+            node.openInPortal();
         }
     }
 }
