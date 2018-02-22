@@ -283,11 +283,12 @@ export class SiteWrapper {
         return logStream;
     }
 
-    private async pingFunctionApp(kuduClient: KuduClient): Promise<void> {
+    public async pingFunctionApp(kuduClient: KuduClient): Promise<void> {
         const requestOptions: WebResource = new WebResource();
         const adminKey: string = await kuduClient.functionModel.getAdminToken();
         await signRequest(requestOptions, new TokenCredentials(adminKey));
-        request.get(`https://${this.defaultHostName}/admin/host/status`, requestOptions);
+        // tslint:disable-next-line:no-unsafe-any
+        await requestP.get(`https://${this.defaultHostName}/admin/host/status`, requestOptions);
     }
 
     private async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, confirmDeployment: boolean): Promise<void> {
@@ -390,7 +391,7 @@ export class SiteWrapper {
             const gitHubResponse: string = await requestP.get(url, <WebResource>requestOptions);
             return <Object[]>JSON.parse(gitHubResponse);
         } catch (error) {
-            const parsedError: IParsedError  = parseError(error);
+            const parsedError: IParsedError = parseError(error);
             if (parsedError.message.indexOf('Bad credentials') > -1) {
                 // the default error is just "Bad Credentials," which is an unhelpful error message
                 const tokenExpired: string = localize('tokenExpired', 'Azure\'s GitHub token has expired.  Reauthorize in the Portal under "Deployment options."');
@@ -520,7 +521,7 @@ export class SiteWrapper {
 
         const client: WebSiteManagementClient = nodeUtils.getWebSiteClient(node);
         const requestOptions: WebResource = new WebResource();
-        requestOptions.headers = { ['User-Agent'] : 'vscode-azureappservice-extension' };
+        requestOptions.headers = { ['User-Agent']: 'vscode-azureappservice-extension' };
         const oAuth2Token: string = (await client.listSourceControls())[0].token;
         if (!oAuth2Token) {
             await this.showGitHubAuthPrompt(node);
