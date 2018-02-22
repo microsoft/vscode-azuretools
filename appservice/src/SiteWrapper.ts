@@ -386,17 +386,19 @@ export class SiteWrapper {
         // https://developer.github.com/v3/
         // Note: blank after user implies look up authorized user
         try {
-            const gitHubResponse: string = await requestP.get(url, requestOptions);
-            return JSON.parse(gitHubResponse);
+            // tslint:disable-next-line:no-unsafe-any
+            const gitHubResponse: string = await requestP.get(url, <WebResource>requestOptions);
+            return <Object[]>JSON.parse(gitHubResponse);
         } catch (error) {
-            if (error.message.indexOf('401 - "{\"message\":\"Bad credentials\",\"documentation_url\":\"https://developer.github.com/v3\"}"') > -1) {
+            const parsedError: IParsedError  = parseError(error);
+            if (parsedError.message.indexOf('Bad credentials') > -1) {
                 // the default error is just "Bad Credentials," which is an unhelpful error message
                 const tokenExpired: string = localize('tokenExpired', 'Azure\'s GitHub token has expired.  Reauthorize in the Portal under "Deployment options."');
                 const goToPortal: string = localize('goToPortal', 'Go to Portal');
                 const input: string | undefined = await vscode.window.showErrorMessage(tokenExpired, goToPortal);
                 if (input === goToPortal) {
                     node.openInPortal();
-                    // this needs to be replaced with a custom error
+                    // https://github.com/Microsoft/vscode-azuretools/issues/78
                     throw new UserCancelledError();
                 } else {
                     throw new UserCancelledError();
@@ -436,7 +438,7 @@ export class SiteWrapper {
             }
 
             quickPicks.push({
-                label: json[label],
+                label: <string>json[label],
                 description: `${description ? json[description] : ''}`,
                 data: dataValuePair
             });
@@ -521,7 +523,7 @@ export class SiteWrapper {
         requestOptions.headers = { ['User-Agent'] : 'vscode-azureappservice-extension' };
         const oAuth2Token: string = (await client.listSourceControls())[0].token;
         if (!oAuth2Token) {
-            this.showGitHubAuthPrompt(node);
+            await this.showGitHubAuthPrompt(node);
             return;
         }
 
@@ -558,9 +560,9 @@ export class SiteWrapper {
                 // https://github.com/projectkudu/kudu/issues/2277
                 await client.webApps.syncRepository(this.resourceGroup, this.name);
             } catch (error) {
-                const parsedError: IParsedError = JSON.parse(parseError(error).message);
+                const parsedError: IParsedError = parseError(error);
                 // The portal returns 200, but is expecting a 204 which causes it to throw an error even after a successful sync
-                if (parsedError.statusCode !== 200) {
+                if (parsedError.message.indexOf('"statusCode":200') === -1) {
                     throw error;
                 }
             }

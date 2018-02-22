@@ -9,7 +9,7 @@ are grateful to these developers for their contribution to open source.
 2. simple-git (https://github.com/steveukx/git-js)
 3. opn (https://github.com/sindresorhus/opn
 4. request (https://github.com/request/request)
-5. request-promise (https://github.com/request/request-promise/blob/master/LICENSE)
+5. request-promise (https://github.com/request/request-promise)
 
 node-archiver NOTICES BEGIN HERE
 =============================
