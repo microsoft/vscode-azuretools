@@ -381,22 +381,17 @@ export class SiteWrapper {
         await this.waitForDeploymentToComplete(kuduClient, outputChannel);
     }
 
-    private async getJsonRequest(url: string, token: string, node: IAzureNode): Promise<Object[]> {
+    private async getJsonRequest(url: string, requestOptions: WebResource, node: IAzureNode): Promise<Object[]> {
         // Reference for GitHub REST routes
         // https://developer.github.com/v3/
         // Note: blank after user implies look up authorized user
         try {
-            const gitHubResponse: string = await requestP.get(url, {
-                headers: {
-                    Authorization: `token ${token}`,
-                    'User-Agent': 'vscode-azureappservice-extension'
-                }
-            });
+            const gitHubResponse: string = await requestP.get(url, requestOptions);
             return JSON.parse(gitHubResponse);
         } catch (error) {
-            if (error.message.indexOf('401 - "{\"message\":\"Bad credentials\",\"documentation_url\":\"https://developer.github.com/v3\"}"')) {
+            if (error.message.indexOf('401 - "{\"message\":\"Bad credentials\",\"documentation_url\":\"https://developer.github.com/v3\"}"') > -1) {
                 // the default error is just "Bad Credentials," which is an unhelpful error message
-                const tokenExpired: string = localize('tokenExpired', 'Azure\'s GitHub token has expired.  Reauthorized in the Portal under "Deployment options."');
+                const tokenExpired: string = localize('tokenExpired', 'Azure\'s GitHub token has expired.  Reauthorize in the Portal under "Deployment options."');
                 const goToPortal: string = localize('goToPortal', 'Go to Portal');
                 const input: string | undefined = await vscode.window.showErrorMessage(tokenExpired, goToPortal);
                 if (input === goToPortal) {
@@ -522,23 +517,26 @@ export class SiteWrapper {
         type gitHubReposData = { repos_url?: string, url?: string, html_url?: string };
 
         const client: WebSiteManagementClient = nodeUtils.getWebSiteClient(node);
+        const requestOptions: WebResource = new WebResource();
+        requestOptions.headers = { ['User-Agent'] : 'vscode-azureappservice-extension' };
         const oAuth2Token: string = (await client.listSourceControls())[0].token;
         if (!oAuth2Token) {
             this.showGitHubAuthPrompt(node);
             return;
         }
 
-        const gitHubUser: Object[] = await this.getJsonRequest('https://api.github.com/user', oAuth2Token, node);
+        await signRequest(requestOptions, new TokenCredentials(oAuth2Token));
+        const gitHubUser: Object[] = await this.getJsonRequest('https://api.github.com/user', requestOptions, node);
 
-        const gitHubOrgs: Object[] = await this.getJsonRequest('https://api.github.com/user/orgs', oAuth2Token, node);
+        const gitHubOrgs: Object[] = await this.getJsonRequest('https://api.github.com/user/orgs', requestOptions, node);
         const orgQuickPicks: IQuickPickItemWithData<{}>[] = this.createQuickPickFromJsons([gitHubUser], 'login', undefined, ['repos_url']).concat(this.createQuickPickFromJsons(gitHubOrgs, 'login', undefined, ['repos_url']));
         const orgQuickPick: gitHubOrgData = (await uiUtils.showQuickPickWithData(orgQuickPicks, { placeHolder: 'Choose your organization.', ignoreFocusOut: true })).data;
 
-        const gitHubRepos: Object[] = await this.getJsonRequest(orgQuickPick.repos_url, oAuth2Token, node);
+        const gitHubRepos: Object[] = await this.getJsonRequest(orgQuickPick.repos_url, requestOptions, node);
         const repoQuickPicks: IQuickPickItemWithData<{}>[] = this.createQuickPickFromJsons(gitHubRepos, 'name', undefined, ['url', 'html_url']);
         const repoQuickPick: gitHubReposData = (await uiUtils.showQuickPickWithData(repoQuickPicks, { placeHolder: 'Choose project.', ignoreFocusOut: true })).data;
 
-        const gitHubBranches: Object[] = await this.getJsonRequest(`${repoQuickPick.url}/branches`, oAuth2Token, node);
+        const gitHubBranches: Object[] = await this.getJsonRequest(`${repoQuickPick.url}/branches`, requestOptions, node);
         const branchQuickPicks: IQuickPickItemWithData<{}>[] = this.createQuickPickFromJsons(gitHubBranches, 'name');
         const branchQuickPick: IQuickPickItemWithData<{}> = await uiUtils.showQuickPickWithData(branchQuickPicks, { placeHolder: 'Choose branch.', ignoreFocusOut: true });
 
