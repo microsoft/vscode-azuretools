@@ -4348,6 +4348,12 @@
                         "schema": {
                             "type": "object"
                         }
+                    },
+                    "204": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
                     }
                 }
             },
@@ -4458,6 +4464,12 @@
                 ],
                 "responses": {
                     "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "204": {
                         "description": "OK",
                         "schema": {
                             "type": "object"
@@ -6184,6 +6196,12 @@
                         "schema": {
                             "type": "object"
                         }
+                    },
+                    "204": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
                     }
                 }
             },
@@ -6294,6 +6312,12 @@
                 ],
                 "responses": {
                     "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "204": {
                         "description": "OK",
                         "schema": {
                             "type": "object"
@@ -6710,6 +6734,12 @@
                         "schema": {
                             "type": "object"
                         }
+                    },
+                    "204": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
                     }
                 }
             },
@@ -6787,6 +6817,12 @@
                 ],
                 "responses": {
                     "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "204": {
                         "description": "OK",
                         "schema": {
                             "type": "object"
