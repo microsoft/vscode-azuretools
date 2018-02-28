@@ -7,7 +7,7 @@
 import WebSiteManagementClient = require('azure-arm-website');
 import { AppServicePlan, HostNameSslState, NameValuePair, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, User } from 'azure-arm-website/lib/models';
 import * as fs from 'fs';
-import * as http from 'http';
+import {IncomingMessage} from 'http';
 import { BasicAuthenticationCredentials, HttpOperationResponse, ServiceClientCredentials, TokenCredentials, WebResource } from 'ms-rest';
 import * as opn from 'opn';
 import * as request from 'request';
@@ -309,14 +309,14 @@ export class SiteWrapper {
             uri: uri,
             resolveWithFullResponse: true
         };
-        let response: http.IncomingMessage;
+        let response: IncomingMessage;
         for (let i: number = 0; i < pollingAttempts; i += 1) {
             try {
                 await new Promise((resolve: () => void): void => { setTimeout(resolve, pollingInterval); });
                 // wait for the polling interval to send a request
                 this.log(outputChannel, validatingDeployment);
                 // tslint:disable-next-line:no-unsafe-any
-                response = <http.IncomingMessage>(await requestP(options));
+                response = <IncomingMessage>(await requestP(options));
                 // request throws an error for 400-500 responses
                 if (response.statusCode >= 200 && response.statusCode < 400) {
                     // a status code 200-300 indicates success
