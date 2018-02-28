@@ -7,11 +7,12 @@
 import WebSiteManagementClient = require('azure-arm-website');
 import { AppServicePlan, HostNameSslState, NameValuePair, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, User } from 'azure-arm-website/lib/models';
 import * as fs from 'fs';
-import { BasicAuthenticationCredentials, ServiceClientCredentials, TokenCredentials, WebResource } from 'ms-rest';
+import { BasicAuthenticationCredentials, HttpOperationResponse, ServiceClientCredentials, TokenCredentials, WebResource } from 'ms-rest';
 import * as opn from 'opn';
 import * as request from 'request';
 import * as requestP from 'request-promise';
 import * as git from 'simple-git/promise';
+import { Readable } from 'stream';
 import { setInterval } from 'timers';
 import * as vscode from 'vscode';
 import { AzureActionHandler, IAzureNode, IParsedError, parseError, UserCancelledError } from 'vscode-azureextensionui';
@@ -20,6 +21,7 @@ import { DeployResult } from 'vscode-azurekudu/lib/models';
 import { DialogResponses } from './DialogResponses';
 import { ArgumentError } from './errors';
 import * as FileUtilities from './FileUtilities';
+import { IFileResult } from './IFileResult';
 import { ILogStream } from './ILogStream';
 import { localize } from './localize';
 import { nodeUtils } from './utils/nodeUtils';
@@ -300,6 +302,36 @@ export class SiteWrapper {
         const response = await requestP.get(uri);
         console.log(response.headers);
         return 200;
+    }
+
+    public async getFile(client: KuduClient, filePath: string): Promise<IFileResult> {
+        // tslint:disable:no-unsafe-any
+        // tslint:disable-next-line:no-any
+        const response: any = (<any>await client.vfs.getItemWithHttpOperationResponse(filePath)).response;
+        if (response && response.body && response.headers && response.headers.etag) {
+            return { data: response.body, etag: response.headers.etag };
+            // tslint:enable:no-unsafe-any
+        } else {
+            throw new Error(localize('failedToFindFile', 'Failed to find file with path "{0}".', filePath));
+        }
+    }
+
+    /**
+     * Returns the latest etag of the updated file
+     */
+    public async putFile(client: KuduClient, data: Readable | string, filePath: string, etag: string): Promise<string> {
+        let stream: Readable;
+        if (typeof data === 'string') {
+            stream = new Readable();
+            stream._read = function (_size: number): void {
+                this.push(data);
+                this.push(null);
+            };
+        } else {
+            stream = data;
+        }
+        const result: HttpOperationResponse<{}> = await client.vfs.putItemWithHttpOperationResponse(stream, filePath, { customHeaders: { ['If-Match']: etag } });
+        return <string>result.response.headers.etag;
     }
 
     private async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, confirmDeployment: boolean): Promise<void> {

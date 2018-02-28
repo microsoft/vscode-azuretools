@@ -3,10 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-export * from './SiteWrapper';
-export * from './createAppService/createFunctionApp';
-export * from './createAppService/createWebApp';
-export * from './tree/AppSettingsTreeItem';
-export * from './tree/AppSettingTreeItem';
-export * from './ILogStream';
-export * from './IFileResult';
+export interface IFileResult {
+    data: string;
+    etag: string;
+}
