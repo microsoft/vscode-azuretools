@@ -6,6 +6,7 @@
 import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { IActionContext } from '..';
 import { DialogResponses } from './DialogResponses';
 import { UserCancelledError } from './errors';
 import { localize } from "./localize";
@@ -57,10 +58,11 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
         Object.keys(this.fileMap).forEach(async (key: string) => await fse.remove(path.dirname(key)));
     }
 
-    public async onDidSaveTextDocument(trackTelemetry: () => void, globalState: vscode.Memento, doc: vscode.TextDocument): Promise<void> {
+    public async onDidSaveTextDocument(actionContext: IActionContext, globalState: vscode.Memento, doc: vscode.TextDocument): Promise<void> {
+        actionContext.sendTelemetry = false;
         const filePath: string | undefined = Object.keys(this.fileMap).find((fsPath: string) => path.relative(doc.uri.fsPath, fsPath) === '');
         if (!this.ignoreSave && filePath) {
-            trackTelemetry();
+            actionContext.sendTelemetry = true;
             const context: ContextT = this.fileMap[filePath][1];
             const showSaveWarning: boolean | undefined = vscode.workspace.getConfiguration().get(this.showSavePromptKey);
 

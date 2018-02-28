@@ -22,19 +22,20 @@ Here are a few of the benefits this provides:
   * duration
   * error
 
-If you want to add custom telemetry proprties, use `registerCommandWithCustomTelemetry` and add your own properties or measurements:
+If you want to add custom telemetry proprties, use the action's context and add your own properties or measurements:
 ```typescript
-actionHandler.registerCommandWithCustomTelemetry('yourExtension.Refresh', async (properties: TelemetryProperties, measurements: TelemetryMeasurements) => {
-    properties.customProp = "example prop";
-    measurements.customMeas = 49;
+actionHandler.registerCommand('yourExtension.Refresh', function (this: IActionContext): void {
+    this.properties.customProp = "example prop";
+    this.measurements.customMeas = 49;
 });
 ```
 
-Finally, you can also register events. The main difference is that your callback must take in the `trackTelemetry` parameter. Events are not tracked by default (since they can happen very frequently). You must call `trackTelemetry()` to signal that this event is indeed handled by your extension. For example, if your extension only handles `json` files in the `onDidSaveTextDocument`, it might look like this:
+Finally, you can also register events. By default, every event is tracked in telemetry. It is *highly recommended* to leverage the IActionContext.sendTelemetry parameter to filter only the events that apply to your extension. For example, if your extension only handles `json` files in the `onDidSaveTextDocument`, it might look like this:
 ```typescript
-actionHandler.registerEvent('yourExtension.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, (trackTelemetry: () => void, doc: vscode.TextDocument) => {
+actionHandler.registerEvent('yourExtension.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, async function (this: IActionContext, doc: vscode.TextDocument): Promise<void> {
+    this.sendTelemetry = false;
     if (doc.fileExtension === 'json') {
-        trackTelemetry();
+        this.sendTelemetry = true;
         // custom logic here
     }
 });

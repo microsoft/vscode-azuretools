@@ -160,7 +160,7 @@ export declare abstract class BaseEditor<ContextT> implements Disposable {
      */
     abstract getSaveConfirmationText(context: ContextT): Promise<string>;
 
-    onDidSaveTextDocument(trackTelemetry: () => void, globalState: Memento, doc: TextDocument): Promise<void>;
+    onDidSaveTextDocument(actionContext: IActionContext, globalState: Memento, doc: TextDocument): Promise<void>;
     showEditor(context: ContextT, sizeLimit?: number): Promise<void>;
     dispose(): Promise<void>;
 }
@@ -171,20 +171,26 @@ export declare abstract class BaseEditor<ContextT> implements Disposable {
 export declare class AzureActionHandler {
     constructor(extensionContext: ExtensionContext, outputChannel: OutputChannel, telemetryReporter?: TelemetryReporter);
 
-    registerCommand(commandId: string, callback: (...args: any[]) => any): void
-    registerCommandWithCustomTelemetry(commandId: string, callback: (properties: TelemetryProperties, measurements: TelemetryMeasurements, ...args: any[]) => any): void;
+    registerCommand(commandId: string, callback: (this: IActionContext, ...args: any[]) => any): void;
 
     /**
-     * NOTE: An event callback must call trackTelemetry() in order for it to be "opted-in" for telemetry. This is meant to be called _after_ the event has determined that it apples to that extension
-     * For example, we might not want to track _every_ onDidSaveEvent, just the save events for our files
+     * NOTE: By default, this sends a telemetry event every single time the event fires. It it recommended to use 'this.sendTelemetry' to only send events if they apply to your extension
      */
-    registerEvent<T>(eventId: string, event: Event<T>, callback: (trackTelemetry: () => void, ...args: any[]) => any): void;
-    registerEventWithCustomTelemetry<T>(eventId: string, event: Event<T>, callback: (trackTelemetry: () => void, properties: TelemetryProperties, measurements: TelemetryMeasurements, ...args: any[]) => any): void;
+    registerEvent<T>(eventId: string, event: Event<T>, callback: (this: IActionContext, ...args: any[]) => any): void;
 
     /**
-     * Use this method for generic calls that you want to track telemetry for, but that aren't registered with VS Code
+     * Use these methods for generic calls that you want to handle, but that aren't registered with VS Code
      */
-    callWithTelemetry(callbackId: string, callback: (properties: TelemetryProperties, measurements: TelemetryMeasurements) => any): Promise<any>;
+    static callWithTelemetry(callbackId: string, telemetryReporter: TelemetryReporter | undefined, callback: (this: IActionContext) => any): Promise<any>;
+    static callWithTelemetryAndErrorHandling(callbackId: string, telemetryReporter: TelemetryReporter | undefined, outputChannel: OutputChannel | undefined, callback: (this: IActionContext) => any): Promise<any>;
+}
+
+export interface IActionContext {
+    properties: TelemetryProperties;
+    measurements: TelemetryMeasurements;
+    sendTelemetry: boolean;
+    displayError: boolean;
+    swallowError: boolean;
 }
 
 export type TelemetryProperties = { [key: string]: string; };
