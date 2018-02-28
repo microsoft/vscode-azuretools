@@ -168,7 +168,7 @@ export class SiteWrapper {
         outputChannel.appendLine(localize('DeleteSucceeded', 'Successfully deleted "{0}".', this.appName));
     }
 
-    public async deploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, confirmDeployment: boolean = true): Promise<void> {
+    public async deploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, hideDeployConfirmation: boolean = false): Promise<void> {
         const config: SiteConfigResource = await this.getSiteConfig(client);
         switch (config.scmType) {
             case ScmType.LocalGit:
@@ -177,7 +177,7 @@ export class SiteWrapper {
             case ScmType.GitHub:
                 throw new Error(localize('gitHubConnected', '"{0}" is connected to a GitHub repository. Push to GitHub repository to deploy.', this.appName));
             default: //'None' or any other non-supported scmType
-                await this.deployZip(fsPath, client, outputChannel, configurationSectionName, confirmDeployment);
+                await this.deployZip(fsPath, client, outputChannel, configurationSectionName, hideDeployConfirmation);
                 break;
         }
 
@@ -323,8 +323,8 @@ export class SiteWrapper {
         return <string>result.response.headers.etag;
     }
 
-    private async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, confirmDeployment: boolean): Promise<void> {
-        if (confirmDeployment) {
+    private async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, hideDeployConfirmation: boolean): Promise<void> {
+        if (!hideDeployConfirmation) {
             const warning: string = localize('zipWarning', 'Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', this.appName);
             if (await vscode.window.showWarningMessage(warning, DialogResponses.yes, DialogResponses.cancel) !== DialogResponses.yes) {
                 throw new UserCancelledError();
