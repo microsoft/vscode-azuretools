@@ -199,6 +199,34 @@ export class SiteStep extends WizardStep {
             {
                 name: 'node|8.1',
                 displayName: 'Node.js 8.1'
+            },
+            {
+                name: 'php|5.6',
+                displayName: 'PHP 5.6'
+            },
+            {
+                name: 'php|7.0',
+                displayName: 'PHP 7.0'
+            },
+            {
+                name: 'php|7.2',
+                displayName: 'PHP 7.2'
+            },
+            {
+                name: 'dotnetcore|1.0',
+                displayName: '.NET Core 1.0'
+            },
+            {
+                name: 'dotnetcore|1.1',
+                displayName: '.NET Core 1.1'
+            },
+            {
+                name: 'dotnetcore|2.0',
+                displayName: '.NET Core 2.0'
+            },
+            {
+                name: 'ruby|2.3',
+                displayName: 'Ruby 2.3'
             }
         ];
     }
