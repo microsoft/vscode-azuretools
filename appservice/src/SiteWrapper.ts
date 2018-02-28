@@ -18,6 +18,7 @@ import * as vscode from 'vscode';
 import { AzureActionHandler, IAzureNode, IParsedError, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { DeployResult } from 'vscode-azurekudu/lib/models';
+import TelemetryReporter from 'vscode-extension-telemetry';
 import { DialogResponses } from './DialogResponses';
 import { ArgumentError } from './errors';
 import * as FileUtilities from './FileUtilities';
@@ -237,7 +238,7 @@ export class SiteWrapper {
     /**
      * Starts the log-streaming service. Call 'dispose()' on the returned object when you want to stop the service.
      */
-    public async startStreamingLogs(client: KuduClient, actionHandler: AzureActionHandler, outputChannel: vscode.OutputChannel, path: string = ''): Promise<ILogStream> {
+    public async startStreamingLogs(client: KuduClient, reporter: TelemetryReporter | undefined, outputChannel: vscode.OutputChannel, path: string = ''): Promise<ILogStream> {
         outputChannel.show();
         outputChannel.appendLine(localize('connectingToLogStream', 'Connecting to log stream...'));
         const httpRequest: WebResource = new WebResource();
@@ -247,7 +248,7 @@ export class SiteWrapper {
         const logStream: ILogStream = { dispose: undefined, isConnected: true };
         // Intentionally setting up a separate telemetry event and not awaiting the result here since log stream is a long-running action
         // tslint:disable-next-line:no-floating-promises
-        actionHandler.callWithTelemetry('appService.streamingLogs', async () => {
+        AzureActionHandler.callWithTelemetry('appService.streamingLogs', reporter, async () => {
             let timerId: NodeJS.Timer | undefined;
             if (this.isFunctionApp) {
                 // For Function Apps, we have to ping "/admin/host/status" every minute for logging to work
