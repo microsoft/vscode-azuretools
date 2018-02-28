@@ -5,7 +5,7 @@
 
 // tslint:disable-next-line:no-require-imports
 import WebSiteManagementClient = require('azure-arm-website');
-import { AppServicePlan, NameValuePair, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, User } from 'azure-arm-website/lib/models';
+import { AppServicePlan, HostNameSslState, NameValuePair, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, User } from 'azure-arm-website/lib/models';
 import * as fs from 'fs';
 import { BasicAuthenticationCredentials, ServiceClientCredentials, TokenCredentials, WebResource } from 'ms-rest';
 import * as opn from 'opn';
@@ -43,6 +43,7 @@ export class SiteWrapper {
     public readonly id: string;
     public readonly defaultHostName: string;
     public readonly isFunctionApp: boolean;
+    public readonly isSsl: boolean;
     private readonly _gitUrl: string;
 
     constructor(site: Site) {
@@ -61,6 +62,8 @@ export class SiteWrapper {
         this._gitUrl = `${site.enabledHostNames[1]}:443/${site.repositorySiteName}.git`;
         this.defaultHostName = site.defaultHostName;
         this.isFunctionApp = site.kind === 'functionapp';
+        this.isSsl = site.hostNameSslStates.some((value: HostNameSslState) =>
+            value.name === site.defaultHostName && value.sslState === 'Enabled');
 
         this.planResourceGroup = matches[2];
         this.planName = matches[3];
@@ -289,6 +292,14 @@ export class SiteWrapper {
         await signRequest(requestOptions, new TokenCredentials(adminKey));
         // tslint:disable-next-line:no-unsafe-any
         await requestP.get(`https://${this.defaultHostName}/admin/host/status`, requestOptions);
+    }
+
+    public async validateDeployment(): Promise<number> {
+        // tslint:disable-next-line:no-http-string
+        const uri: string = `${this.isSsl ? 'https://' : 'http://'}${this.defaultHostName}`;
+        const response = await requestP.get(uri);
+        console.log(response.headers);
+        return 200;
     }
 
     private async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, confirmDeployment: boolean): Promise<void> {
