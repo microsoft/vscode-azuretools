@@ -27,7 +27,7 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
         // For the sake of backwards compat, only add the parent's id if it's not already there
         if (this.parent && !id.startsWith(this.parent.id)) {
             id = `${this.parent.id}${id}`;
-        }
+            }
 
         return id;
     }
@@ -88,8 +88,9 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
         await this.treeDataProvider.refresh(this);
     }
 
-    public openInPortal(): void {
-        (<(s: string) => void>opn)(`${this.environment.portalUrl}/${this.tenantId}/#resource${this.id}`);
+    public openInPortal(id?: string): void {
+        id = id === undefined ? this.id : id;
+        (<(s: string) => void>opn)(`${this.environment.portalUrl}/${this.tenantId}/#resource${id}`);
     }
 
     public includeInNodePicker(expectedContextValues: string[]): boolean {
