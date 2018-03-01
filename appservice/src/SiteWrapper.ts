@@ -15,7 +15,7 @@ import * as git from 'simple-git/promise';
 import { Readable } from 'stream';
 import { setInterval } from 'timers';
 import * as vscode from 'vscode';
-import { AzureActionHandler, IAzureNode, IParsedError, parseError, UserCancelledError } from 'vscode-azureextensionui';
+import { callWithTelemetryAndErrorHandling, IActionContext, IAzureNode, IParsedError, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { DeployResult } from 'vscode-azurekudu/lib/models';
 import TelemetryReporter from 'vscode-extension-telemetry';
@@ -247,18 +247,21 @@ export class SiteWrapper {
         const requestApi: request.RequestAPI<request.Request, request.CoreOptions, {}> = request.defaults(httpRequest);
         const logStream: ILogStream = { dispose: undefined, isConnected: true };
         // Intentionally setting up a separate telemetry event and not awaiting the result here since log stream is a long-running action
+        // tslint:disable-next-line:no-var-self
+        const me: SiteWrapper = this;
         // tslint:disable-next-line:no-floating-promises
-        AzureActionHandler.callWithTelemetry('appService.streamingLogs', reporter, async () => {
+        callWithTelemetryAndErrorHandling('appService.streamingLogs', reporter, undefined, async function (this: IActionContext): Promise<void> {
+            this.suppressErrorDisplay = true;
             let timerId: NodeJS.Timer | undefined;
-            if (this.isFunctionApp) {
+            if (me.isFunctionApp) {
                 // For Function Apps, we have to ping "/admin/host/status" every minute for logging to work
                 // https://github.com/Microsoft/vscode-azurefunctions/issues/227
-                await this.pingFunctionApp(client);
-                timerId = setInterval(async () => await this.pingFunctionApp(client), 60 * 1000);
+                await me.pingFunctionApp(client);
+                timerId = setInterval(async () => await me.pingFunctionApp(client), 60 * 1000);
             }
 
             await new Promise((resolve: () => void, reject: (err: Error) => void): void => {
-                const logsRequest: request.Request = requestApi(`${this.kuduUrl}/api/logstream/${path}`);
+                const logsRequest: request.Request = requestApi(`${me.kuduUrl}/api/logstream/${path}`);
                 logStream.dispose = (): void => {
                     logsRequest.removeAllListeners();
                     logsRequest.destroy();
