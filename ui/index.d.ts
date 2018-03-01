@@ -58,9 +58,9 @@ export interface IAzureNode<T extends IAzureTreeItem = IAzureTreeItem> {
     deleteNode(): Promise<void>;
 
     /**
-     * This method combines the environment.portalLink and IAzureTreeItem.id to open the resource in the portal
+     * This method combines the environment.portalLink and IAzureTreeItem.id to open the resource in the portal. Optionally, an id can be passed to manually open nodes that may not be in the explorer.
      */
-    openInPortal(): void;
+    openInPortal(id?: string): void;
 }
 
 export interface IAzureParentNode<T extends IAzureTreeItem = IAzureTreeItem> extends IAzureNode<T> {

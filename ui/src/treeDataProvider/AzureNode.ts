@@ -25,8 +25,7 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
         }
 
         // For the sake of backwards compat, only add the parent's id if it's not already there
-        if (this.parent && !id.startsWith(this.parent.id) && !this.parent.id.includes('deploymentSlots')) {
-            // portal changed the path for individual slots to have the 'slots' path, but all when viewing all slots, it is 'deploymentSlots'
+        if (this.parent && !id.startsWith(this.parent.id)) {
             id = `${this.parent.id}${id}`;
             }
 
@@ -89,8 +88,10 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
         await this.treeDataProvider.refresh(this);
     }
 
-    public openInPortal(): void {
-        (<(s: string) => void>opn)(`${this.environment.portalUrl}/${this.tenantId}/#resource${this.id}`);
+    public openInPortal(id?: string): void {
+        id ?
+            (<(s: string) => void>opn)(`${this.environment.portalUrl}/${this.tenantId}/#resource/${id}`) :
+            (<(s: string) => void>opn)(`${this.environment.portalUrl}/${this.tenantId}/#resource${this.id}`);
     }
 
     public includeInNodePicker(expectedContextValues: string[]): boolean {
