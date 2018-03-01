@@ -562,7 +562,7 @@ export class SiteWrapper {
         requestOptions.headers = { ['User-Agent']: 'vscode-azureappservice-extension' };
         const oAuth2Token: string = (await client.listSourceControls())[0].token;
         if (!oAuth2Token) {
-            await this.showGitHubAuthPrompt(node);
+            await this.showGitHubAuthPrompt();
             return;
         }
 
@@ -597,9 +597,11 @@ export class SiteWrapper {
             try {
                 // a resync will fix the first broken build
                 // https://github.com/projectkudu/kudu/issues/2277
-                this.slotName ?
-                    await client.webApps.syncRepositorySlot(this.resourceGroup, this.name, this.slotName) :
+                if (this.slotName) {
+                    await client.webApps.syncRepositorySlot(this.resourceGroup, this.name, this.slotName);
+                } else {
                     await client.webApps.syncRepository(this.resourceGroup, this.name);
+                }
             } catch (error) {
                 const parsedError: IParsedError = parseError(error);
                 // The portal returns 200, but is expecting a 204 which causes it to throw an error even after a successful sync
@@ -610,11 +612,12 @@ export class SiteWrapper {
         }
     }
 
-    private async showGitHubAuthPrompt(node: IAzureNode): Promise<void> {
+    private async showGitHubAuthPrompt(): Promise<void> {
         const goToPortal: string = localize('learnMore', 'Learn More');
         const setupGithub: string = localize('GitRequired', 'Connect your App to a GitHub repository to authorize Azure.');
         const input: string | undefined = await vscode.window.showErrorMessage(setupGithub, goToPortal);
         if (input === goToPortal) {
+            // tslint:disable-next-line:no-unsafe-any
             opn('https://aka.ms/B7g6sw');
         }
     }
