@@ -21,12 +21,3 @@ export class ArgumentError extends Error {
         super(localize('argumentError', 'Invalid {0}.', obj.constructor.name));
     }
 }
-
-export class DeploymentFailedError extends Error {
-    public readonly statusCode: number;
-    constructor(statusCode: number, statusMessage: string) {
-        super();
-        this.statusCode = statusCode;
-        this.message = statusMessage;
-    }
-}

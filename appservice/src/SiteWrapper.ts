@@ -20,7 +20,7 @@ import { AzureActionHandler, IAzureNode, IParsedError, parseError, UserCancelled
 import KuduClient from 'vscode-azurekudu';
 import { DeployResult } from 'vscode-azurekudu/lib/models';
 import { DialogResponses } from './DialogResponses';
-import { ArgumentError, DeploymentFailedError } from './errors';
+import { ArgumentError } from './errors';
 import * as FileUtilities from './FileUtilities';
 import { IFileResult } from './IFileResult';
 import { ILogStream } from './ILogStream';
@@ -29,6 +29,7 @@ import { nodeUtils } from './utils/nodeUtils';
 import { uiUtils } from './utils/uiUtils';
 import { IQuickPickItemWithData } from './wizard/IQuickPickItemWithData';
 
+export type responseStatus = { code: number, message: string};
 // Deployment sources supported by Web Apps
 export enum ScmType {
     None = 'None', // default scmType
@@ -187,7 +188,6 @@ export class SiteWrapper {
 
         outputChannel.appendLine(localize('deployComplete', '>>>>>> Deployment to "{0}" completed. <<<<<<', this.appName));
         outputChannel.appendLine('');
-        await this.validateDeployment(outputChannel);
     }
 
     public async isHttpLogsEnabled(client: WebSiteManagementClient): Promise<boolean> {
@@ -298,9 +298,8 @@ export class SiteWrapper {
         await requestP.get(`https://${this.defaultHostName}/admin/host/status`, requestOptions);
     }
 
-    public async validateDeployment(outputChannel: vscode.OutputChannel, pollingInterval: number = 5000, pollingAttempts: number = 12): Promise<boolean> {
+    public async validateDeployment(outputChannel: vscode.OutputChannel, pollingInterval: number = 5000, pollingAttempts: number = 12): Promise<responseStatus[]> {
         // by default, try for a minute before we declare that the deployment failed
-
         // tslint:disable-next-line:no-http-string
         const uri: string = `${this.isSsl ? 'https://' : 'http://'}${this.defaultHostName}`;
         const validatingDeployment: string = `Validating your ${this.isFunctionApp ? 'function' : 'web'} app successfully deployed.`;
@@ -310,6 +309,7 @@ export class SiteWrapper {
             resolveWithFullResponse: true
         };
         let response: IncomingMessage;
+        const statuses: responseStatus[] = [];
         for (let i: number = 0; i < pollingAttempts; i += 1) {
             try {
                 await new Promise((resolve: () => void): void => { setTimeout(resolve, pollingInterval); });
@@ -320,19 +320,19 @@ export class SiteWrapper {
                 // request throws an error for 400-500 responses
                 if (response.statusCode >= 200 && response.statusCode < 400) {
                     // a status code 200-300 indicates success
-                    return true;
+                    statuses.push({ code: response.statusCode, message: response.statusMessage });
+                    return statuses;
                 }
             } catch (error) {
+                // tslint:disable-next-line:no-unsafe-any
+                statuses.push({ code: error.response.statusCode, message: error.response.statusMessage });
                 if (i === pollingAttempts - 1) {
-                    // throw the error on the last attempt
-                    // tslint:disable-next-line:no-unsafe-any
-                    throw new DeploymentFailedError(error.response.statusCode, error.response.statsuMessage);
+                    return statuses;
                 }
-
             }
         }
-        // it shouldn't reach here, but if it did, then an error was not caught so assumed to be true
-        return true;
+
+        return statuses;
     }
 
     public async getFile(client: KuduClient, filePath: string): Promise<IFileResult> {
