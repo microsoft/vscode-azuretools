@@ -174,23 +174,31 @@ export declare class AzureActionHandler {
     registerCommand(commandId: string, callback: (this: IActionContext, ...args: any[]) => any): void;
 
     /**
-     * NOTE: By default, this sends a telemetry event every single time the event fires. It it recommended to use 'this.sendTelemetry' to only send events if they apply to your extension
+     * NOTE: By default, this sends a telemetry event every single time the event fires. It it recommended to use 'this.suppressTelemetry' to only send events if they apply to your extension
      */
     registerEvent<T>(eventId: string, event: Event<T>, callback: (this: IActionContext, ...args: any[]) => any): void;
-
-    /**
-     * Use these methods for generic calls that you want to handle, but that aren't registered with VS Code
-     */
-    static callWithTelemetry(callbackId: string, telemetryReporter: TelemetryReporter | undefined, callback: (this: IActionContext) => any): Promise<any>;
-    static callWithTelemetryAndErrorHandling(callbackId: string, telemetryReporter: TelemetryReporter | undefined, outputChannel: OutputChannel | undefined, callback: (this: IActionContext) => any): Promise<any>;
 }
+
+export declare function callWithTelemetryAndErrorHandling(callbackId: string, telemetryReporter: TelemetryReporter | undefined, outputChannel: OutputChannel | undefined, callback: (this: IActionContext) => any): Promise<any>;
 
 export interface IActionContext {
     properties: TelemetryProperties;
     measurements: TelemetryMeasurements;
-    sendTelemetry: boolean;
-    displayError: boolean;
-    swallowError: boolean;
+
+    /**
+     * Defaults to `false`
+     */
+    suppressTelemetry: boolean;
+
+    /**
+     * Defaults to `false`
+     */
+    suppressErrorDisplay: boolean;
+
+    /**
+     * Defaults to `false`
+     */
+    rethrowError: boolean;
 }
 
 export type TelemetryProperties = { [key: string]: string; };

@@ -30,12 +30,12 @@ actionHandler.registerCommand('yourExtension.Refresh', function (this: IActionCo
 });
 ```
 
-Finally, you can also register events. By default, every event is tracked in telemetry. It is *highly recommended* to leverage the IActionContext.sendTelemetry parameter to filter only the events that apply to your extension. For example, if your extension only handles `json` files in the `onDidSaveTextDocument`, it might look like this:
+Finally, you can also register events. By default, every event is tracked in telemetry. It is *highly recommended* to leverage the IActionContext.suppressTelemetry parameter to filter only the events that apply to your extension. For example, if your extension only handles `json` files in the `onDidSaveTextDocument`, it might look like this:
 ```typescript
 actionHandler.registerEvent('yourExtension.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, async function (this: IActionContext, doc: vscode.TextDocument): Promise<void> {
-    this.sendTelemetry = false;
+    this.suppressTelemetry = true;
     if (doc.fileExtension === 'json') {
-        this.sendTelemetry = true;
+        this.suppressTelemetry = false;
         // custom logic here
     }
 });
