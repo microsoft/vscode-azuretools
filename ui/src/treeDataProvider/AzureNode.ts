@@ -90,7 +90,7 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
 
     public openInPortal(id?: string): void {
         id = id === undefined ? id : this.id;
-        (<(s: string) => void>opn)(`${this.environment.portalUrl}/${this.tenantId}/#resource/${id}`);
+        (<(s: string) => void>opn)(`${this.environment.portalUrl}/${this.tenantId}/#resource${id}`);
     }
 
     public includeInNodePicker(expectedContextValues: string[]): boolean {
