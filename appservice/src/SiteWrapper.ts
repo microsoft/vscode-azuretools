@@ -139,7 +139,13 @@ export class SiteWrapper {
             await client.webApps.createOrUpdateSourceControlSlot(this.resourceGroup, this.name, siteSourceControl, this.slotName) :
             await client.webApps.createOrUpdateSourceControl(this.resourceGroup, this.name, siteSourceControl);
     }
-
+                                                                
+    public async syncRepository(client: WebSiteManagementClient) {
+        return this.slotName ?
+            await client.webApps.syncRepositorySlot(this.resourceGroup, this.name, this.slotName) :
+            await client.webApps.syncRepository(this.resourceGroup, this.name);
+    }
+                                                                
     public async deleteSite(client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<void> {
         const confirmMessage: string = localize('deleteConfirmation', 'Are you sure you want to delete "{0}"?', this.appName);
         if (await vscode.window.showWarningMessage(confirmMessage, DialogResponses.yes, DialogResponses.cancel) !== DialogResponses.yes) {
@@ -597,11 +603,7 @@ export class SiteWrapper {
             try {
                 // a resync will fix the first broken build
                 // https://github.com/projectkudu/kudu/issues/2277
-                if (this.slotName) {
-                    await client.webApps.syncRepositorySlot(this.resourceGroup, this.name, this.slotName);
-                } else {
-                    await client.webApps.syncRepository(this.resourceGroup, this.name);
-                }
+                this.syncRepository(client);
             } catch (error) {
                 const parsedError: IParsedError = parseError(error);
                 // The portal returns 200, but is expecting a 204 which causes it to throw an error even after a successful sync
@@ -613,10 +615,10 @@ export class SiteWrapper {
     }
 
     private async showGitHubAuthPrompt(): Promise<void> {
-        const goToPortal: string = localize('learnMore', 'Learn More');
-        const setupGithub: string = localize('GitRequired', 'Connect your App to a GitHub repository to authorize Azure.');
-        const input: string | undefined = await vscode.window.showErrorMessage(setupGithub, goToPortal);
-        if (input === goToPortal) {
+        const learnMore: string = localize('learnMore', 'Learn More');
+        const setupGithub: string = localize('setupGithub', 'You must give Azure access to your GitHub account.');
+        const input: string | undefined = await vscode.window.showErrorMessage(setupGithub, learnMore);
+        if (input === learnMOre) {
             // tslint:disable-next-line:no-unsafe-any
             opn('https://aka.ms/B7g6sw');
         }
