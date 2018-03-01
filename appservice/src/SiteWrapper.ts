@@ -134,6 +134,18 @@ export class SiteWrapper {
         return await client.appServicePlans.get(this.planResourceGroup, this.planName);
     }
 
+    public async updateSourceControl(client: WebSiteManagementClient, siteSourceControl: SiteSourceControl): Promise<SiteSourceControl> {
+        return this.slotName ?
+            await client.webApps.createOrUpdateSourceControlSlot(this.resourceGroup, this.name, siteSourceControl, this.slotName) :
+            await client.webApps.createOrUpdateSourceControl(this.resourceGroup, this.name, siteSourceControl);
+    }
+                                                                
+    public async syncRepository(client: WebSiteManagementClient) {
+        return this.slotName ?
+            await client.webApps.syncRepositorySlot(this.resourceGroup, this.name, this.slotName) :
+            await client.webApps.syncRepository(this.resourceGroup, this.name);
+    }
+                                                                
     public async deleteSite(client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<void> {
         const confirmMessage: string = localize('deleteConfirmation', 'Are you sure you want to delete "{0}"?', this.appName);
         if (await vscode.window.showWarningMessage(confirmMessage, DialogResponses.yes, DialogResponses.cancel) !== DialogResponses.yes) {
@@ -556,7 +568,7 @@ export class SiteWrapper {
         requestOptions.headers = { ['User-Agent']: 'vscode-azureappservice-extension' };
         const oAuth2Token: string = (await client.listSourceControls())[0].token;
         if (!oAuth2Token) {
-            await this.showGitHubAuthPrompt(node);
+            await this.showGitHubAuthPrompt();
             return;
         }
 
@@ -584,14 +596,14 @@ export class SiteWrapper {
             isMercurial: false
         };
 
-        this.log(outputChannel, `"${this.appName}" is being connected to GitHub repo. This may take several minutes...`);
+        this.log(outputChannel, `"${this.appName}" is being connected to the GitHub repo. This may take several minutes...`);
         try {
-            await client.webApps.createOrUpdateSourceControlWithHttpOperationResponse(this.resourceGroup, this.name, siteSourceControl);
+            await this.updateSourceControl(client, siteSourceControl);
         } catch (err) {
             try {
                 // a resync will fix the first broken build
                 // https://github.com/projectkudu/kudu/issues/2277
-                await client.webApps.syncRepository(this.resourceGroup, this.name);
+                this.syncRepository(client);
             } catch (error) {
                 const parsedError: IParsedError = parseError(error);
                 // The portal returns 200, but is expecting a 204 which causes it to throw an error even after a successful sync
@@ -602,12 +614,13 @@ export class SiteWrapper {
         }
     }
 
-    private async showGitHubAuthPrompt(node: IAzureNode): Promise<void> {
-        const goToPortal: string = localize('goToPortal', 'Go to Portal');
-        const setupGithub: string = localize('GitRequired', 'Authorize Azure for GitHub under "Deployment options."');
-        const input: string | undefined = await vscode.window.showErrorMessage(setupGithub, goToPortal);
-        if (input === goToPortal) {
-            node.openInPortal();
+    private async showGitHubAuthPrompt(): Promise<void> {
+        const learnMore: string = localize('learnMore', 'Learn More');
+        const setupGithub: string = localize('setupGithub', 'You must give Azure access to your GitHub account.');
+        const input: string | undefined = await vscode.window.showErrorMessage(setupGithub, learnMore);
+        if (input === learnMOre) {
+            // tslint:disable-next-line:no-unsafe-any
+            opn('https://aka.ms/B7g6sw');
         }
     }
 }
