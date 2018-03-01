@@ -171,7 +171,7 @@
         "no-var-requires": true,
         "no-var-self": true,
         "no-void-expression": [
-            false, //
+            false, // changed
             "ignore-arrow-function-shorthand" // changed
         ],
         "object-literal-sort-keys": false,
