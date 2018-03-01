@@ -30,7 +30,6 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
             id = `${this.parent.id}${id}`;
             }
 
-        console.log(id);
         return id;
     }
 
