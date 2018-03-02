@@ -548,7 +548,7 @@ export class SiteWrapper {
             deployment = await kuduClient.deployment.getResult(deploymentId);
         }
         if (deployment.id === previousDeploymentId) {
-            throw new Error('Deployment was unsuccessful and fell back to last active deployment.');
+            throw new Error(localize('unsuccessfulDeployment', 'Deployment was unsuccessful and fell back to last active deployment.'));
         }
         return deployment;
     }
