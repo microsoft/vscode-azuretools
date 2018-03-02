@@ -185,11 +185,16 @@ export class SiteWrapper {
         const config: SiteConfigResource = await this.getSiteConfig(client);
         const kuduClient: KuduClient = await this.getKuduClient(client);
         const deploymentId: string = 'latest';
-        let previousDeploymentId: string;
+        const expectedErrorMessage: string = 'Deployment \'latest\' not found.';
+        let previousDeploymentId: string | undefined;
         try {
             previousDeploymentId = (await kuduClient.deployment.getResult(deploymentId)).id;
             // current active deployment used to verify new deployment was successful
         } catch (error) {
+            const parsedError: IParsedError = parseError(error);
+            if (!parsedError.message.includes(expectedErrorMessage)) {
+                throw new Error(parsedError.message);
+            }
             // swallow the error-- getResult('latest') should only fail if this is the first deployment
         }
 
@@ -529,7 +534,7 @@ export class SiteWrapper {
         }
     }
 
-    private async waitForDeploymentToComplete(kuduClient: KuduClient, outputChannel: vscode.OutputChannel, previousDeploymentId?: string,  pollingInterval: number = 5000): Promise<DeployResult> {
+    private async waitForDeploymentToComplete(kuduClient: KuduClient, outputChannel: vscode.OutputChannel, previousDeploymentId?: string, pollingInterval: number = 5000): Promise<DeployResult> {
         // Unfortunately, Kudu doesn't provide a unique id for a deployment right after it's started
         // However, Kudu only supports one deployment at a time, so 'latest' will work in most cases
         let deploymentId: string = 'latest';
@@ -548,7 +553,7 @@ export class SiteWrapper {
             deployment = await kuduClient.deployment.getResult(deploymentId);
         }
         if (deployment.id === previousDeploymentId) {
-            throw new Error(localize('unsuccessfulDeployment', 'Deployment was unsuccessful and fell back to last active deployment.'));
+            throw new Error(localize('unsuccessfulDeployment', 'The deployment was unsuccessful. If this is a Local Git deployment, this could be a duplicate deployment.'));
         }
         return deployment;
     }
