@@ -50,7 +50,7 @@ export class AppServicePlanStep extends WizardStep {
         let newPlanName: string;
 
         // Cache hosting plan separately per subscription
-        const quickPickOptions: QuickPickOptions = { placeHolder: `Select an App Service. (${this.stepProgressText}) ` };
+        const quickPickOptions: QuickPickOptions = { placeHolder: `Select an App Service Plan. (${this.stepProgressText}) ` };
         const appServicePlan: AppServicePlan = await this.showQuickPick(this.getQuickPicks(plansTask), quickPickOptions, `NewWebApp.AppHostingPlan/${subscription.id}`);
 
         if (appServicePlan !== this._createNewItem.data) {
