@@ -185,16 +185,11 @@ export class SiteWrapper {
         const config: SiteConfigResource = await this.getSiteConfig(client);
         const kuduClient: KuduClient = await this.getKuduClient(client);
         const deploymentId: string = 'latest';
-        const expectedErrorMessage: string = 'Deployment \'latest\' not found.';
         let previousDeploymentId: string | undefined;
         try {
             previousDeploymentId = (await kuduClient.deployment.getResult(deploymentId)).id;
             // current active deployment used to verify new deployment was successful
         } catch (error) {
-            const parsedError: IParsedError = parseError(error);
-            if (!parsedError.message.includes(expectedErrorMessage)) {
-                throw new Error(parsedError.message);
-            }
             // swallow the error-- getResult('latest') should only fail if this is the first deployment
         }
 
