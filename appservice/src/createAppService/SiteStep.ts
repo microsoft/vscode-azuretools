@@ -190,7 +190,7 @@ export class SiteStep extends WizardStep {
             },
             {
                 name: 'node|6.11',
-                displayName: 'Node.js 6.11 (LTS - Recommended for new apps)'
+                displayName: 'Node.js 6.11'
             },
             {
                 name: 'node|8.0',
@@ -210,7 +210,7 @@ export class SiteStep extends WizardStep {
             },
             {
                 name: 'node|8.9',
-                displayName: 'Node.js 8.9'
+                displayName: 'Node.js 8.9 (LTS - Recommended for new apps)'
             },
             {
                 name: 'node|9.4',
