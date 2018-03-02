@@ -183,14 +183,24 @@ export class SiteWrapper {
 
     public async deploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, confirmDeployment: boolean = true): Promise<void> {
         const config: SiteConfigResource = await this.getSiteConfig(client);
+        const kuduClient: KuduClient = await this.getKuduClient(client);
+        const deploymentId: string = 'latest';
+        let previousDeploymentId: string | undefined;
+        try {
+            previousDeploymentId = (await kuduClient.deployment.getResult(deploymentId)).id;
+            // current active deployment used to verify new deployment was successful
+        } catch (error) {
+            // swallow the error-- getResult('latest') should only fail if this is the first deployment
+        }
+
         switch (config.scmType) {
             case ScmType.LocalGit:
-                await this.localGitDeploy(fsPath, client, outputChannel);
+                await this.localGitDeploy(fsPath, client, outputChannel, previousDeploymentId);
                 break;
             case ScmType.GitHub:
                 throw new Error(localize('gitHubConnected', '"{0}" is connected to a GitHub repository. Push to GitHub repository to deploy.', this.appName));
             default: //'None' or any other non-supported scmType
-                await this.deployZip(fsPath, client, outputChannel, configurationSectionName, confirmDeployment);
+                await this.deployZip(fsPath, client, outputChannel, configurationSectionName, confirmDeployment, previousDeploymentId);
                 break;
         }
 
@@ -339,7 +349,7 @@ export class SiteWrapper {
         return <string>result.response.headers.etag;
     }
 
-    private async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, confirmDeployment: boolean): Promise<void> {
+    private async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, confirmDeployment: boolean, previousDeploymentId?: string): Promise<void> {
         if (confirmDeployment) {
             const warning: string = localize('zipWarning', 'Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', this.appName);
             if (await vscode.window.showWarningMessage(warning, DialogResponses.yes, DialogResponses.cancel) !== DialogResponses.yes) {
@@ -371,7 +381,7 @@ export class SiteWrapper {
         try {
             this.log(outputChannel, localize('deployStart', 'Starting deployment...'));
             await kuduClient.pushDeployment.zipPushDeploy(fs.createReadStream(zipFilePath), { isAsync: true });
-            await this.waitForDeploymentToComplete(kuduClient, outputChannel);
+            await this.waitForDeploymentToComplete(kuduClient, outputChannel, previousDeploymentId);
         } catch (error) {
             // tslint:disable-next-line:no-unsafe-any
             if (error && error.response && error.response.body) {
@@ -389,7 +399,7 @@ export class SiteWrapper {
         }
     }
 
-    private async localGitDeploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<void> {
+    private async localGitDeploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, previousDeploymentId?: string): Promise<void> {
         const kuduClient: KuduClient = await this.getKuduClient(client);
         const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging. Force push?');
         const publishCredentials: User = await this.getWebAppPublishCredential(client);
@@ -427,7 +437,7 @@ export class SiteWrapper {
 
         outputChannel.show();
         this.log(outputChannel, (localize('localGitDeploy', `Deploying Local Git repository to "${this.appName}"...`)));
-        await this.waitForDeploymentToComplete(kuduClient, outputChannel);
+        await this.waitForDeploymentToComplete(kuduClient, outputChannel, previousDeploymentId);
     }
 
     private async getJsonRequest(url: string, requestOptions: WebResource, node: IAzureNode): Promise<Object[]> {
@@ -519,7 +529,7 @@ export class SiteWrapper {
         }
     }
 
-    private async waitForDeploymentToComplete(kuduClient: KuduClient, outputChannel: vscode.OutputChannel, pollingInterval: number = 5000): Promise<DeployResult> {
+    private async waitForDeploymentToComplete(kuduClient: KuduClient, outputChannel: vscode.OutputChannel, previousDeploymentId?: string, pollingInterval: number = 5000): Promise<DeployResult> {
         // Unfortunately, Kudu doesn't provide a unique id for a deployment right after it's started
         // However, Kudu only supports one deployment at a time, so 'latest' will work in most cases
         let deploymentId: string = 'latest';
@@ -537,7 +547,9 @@ export class SiteWrapper {
             await new Promise((resolve: () => void): void => { setTimeout(resolve, pollingInterval); });
             deployment = await kuduClient.deployment.getResult(deploymentId);
         }
-
+        if (previousDeploymentId !== undefined && deployment.id === previousDeploymentId) {
+            throw new Error(localize('unsuccessfulDeployment', 'The deployment was unsuccessful. If this is a Local Git deployment, this could be a duplicate deployment.'));
+        }
         return deployment;
     }
 
