@@ -5,8 +5,9 @@
 
 // tslint:disable-next-line:no-require-imports
 import WebSiteManagementClient = require('azure-arm-website');
-import { AppServicePlan, NameValuePair, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, User } from 'azure-arm-website/lib/models';
+import { AppServicePlan, HostNameSslState, NameValuePair, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, User } from 'azure-arm-website/lib/models';
 import * as fs from 'fs';
+import {IncomingMessage} from 'http';
 import { BasicAuthenticationCredentials, HttpOperationResponse, ServiceClientCredentials, TokenCredentials, WebResource } from 'ms-rest';
 import * as opn from 'opn';
 import * as request from 'request';
@@ -29,6 +30,7 @@ import { nodeUtils } from './utils/nodeUtils';
 import { uiUtils } from './utils/uiUtils';
 import { IQuickPickItemWithData } from './wizard/IQuickPickItemWithData';
 
+export type responseStatus = { code: number, message: string};
 // Deployment sources supported by Web Apps
 export enum ScmType {
     None = 'None', // default scmType
@@ -46,6 +48,7 @@ export class SiteWrapper {
     public readonly id: string;
     public readonly defaultHostName: string;
     public readonly isFunctionApp: boolean;
+    public readonly isSsl: boolean;
     private readonly _gitUrl: string;
 
     constructor(site: Site) {
@@ -64,6 +67,8 @@ export class SiteWrapper {
         this._gitUrl = `${site.enabledHostNames[1]}:443/${site.repositorySiteName}.git`;
         this.defaultHostName = site.defaultHostName;
         this.isFunctionApp = site.kind === 'functionapp';
+        this.isSsl = site.hostNameSslStates.some((value: HostNameSslState) =>
+            value.name === site.defaultHostName && value.sslState === 'Enabled');
 
         this.planResourceGroup = matches[2];
         this.planName = matches[3];
@@ -307,6 +312,43 @@ export class SiteWrapper {
         await signRequest(requestOptions, new TokenCredentials(adminKey));
         // tslint:disable-next-line:no-unsafe-any
         await requestP.get(`https://${this.defaultHostName}/admin/host/status`, requestOptions);
+    }
+
+    public async validateDeployment(outputChannel: vscode.OutputChannel, pollingInterval: number = 5000, pollingAttempts: number = 12): Promise<responseStatus[]> {
+        // by default, try for a minute before we declare that the deployment failed
+        // tslint:disable-next-line:no-http-string
+        const uri: string = `${this.isSsl ? 'https://' : 'http://'}${this.defaultHostName}`;
+        const validatingDeployment: string = `Validating your ${this.isFunctionApp ? 'function' : 'web'} app successfully deployed.`;
+        const options: {} = {
+            method: 'GET',
+            uri: uri,
+            resolveWithFullResponse: true
+        };
+        let response: IncomingMessage;
+        const statuses: responseStatus[] = [];
+        for (let i: number = 0; i < pollingAttempts; i += 1) {
+            try {
+                await new Promise((resolve: () => void): void => { setTimeout(resolve, pollingInterval); });
+                // wait for the polling interval to send a request
+                this.log(outputChannel, validatingDeployment);
+                // tslint:disable-next-line:no-unsafe-any
+                response = <IncomingMessage>(await requestP(options));
+                // request throws an error for 400-500 responses
+                if (response.statusCode >= 200 && response.statusCode < 400) {
+                    // a status code 200-300 indicates success
+                    statuses.push({ code: response.statusCode, message: response.statusMessage });
+                    return statuses;
+                }
+            } catch (error) {
+                // tslint:disable-next-line:no-unsafe-any
+                statuses.push({ code: error.response.statusCode, message: error.response.statusMessage });
+                if (i === pollingAttempts - 1) {
+                    return statuses;
+                }
+            }
+        }
+
+        return statuses;
     }
 
     public async getFile(client: KuduClient, filePath: string): Promise<IFileResult> {
