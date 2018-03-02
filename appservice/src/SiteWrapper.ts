@@ -547,7 +547,7 @@ export class SiteWrapper {
             await new Promise((resolve: () => void): void => { setTimeout(resolve, pollingInterval); });
             deployment = await kuduClient.deployment.getResult(deploymentId);
         }
-        if (deployment.id === previousDeploymentId) {
+        if (previousDeploymentId !== undefined && deployment.id === previousDeploymentId) {
             throw new Error(localize('unsuccessfulDeployment', 'The deployment was unsuccessful. If this is a Local Git deployment, this could be a duplicate deployment.'));
         }
         return deployment;
