@@ -201,8 +201,22 @@ export interface IActionContext {
     rethrowError: boolean;
 }
 
-export type TelemetryProperties = { [key: string]: string; };
-export type TelemetryMeasurements = { [key: string]: number };
+export interface TelemetryProperties {
+    /**
+     * Defaults to `false`
+     * This is used to more accurately track usage, since activation events generally shouldn't 'count' as usage
+     */
+    isActivationEvent: 'true' | 'false';
+    result: 'Succeeded' | 'Failed' | 'Canceled';
+    error: string;
+    errorMessage: string;
+    [key: string]: string;
+}
+
+export interface TelemetryMeasurements {
+    duration: number;
+    [key: string]: number;
+}
 
 export declare function parseError(error: any): IParsedError;
 
