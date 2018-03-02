@@ -38,7 +38,7 @@ export async function deleteFile(fsPath: string): Promise<void> {
     });
 }
 
-export async function zipDirectory(folderPath: string, globPattern: string = '**/*', ignorePattern?: string): Promise<string> {
+export async function zipDirectory(folderPath: string, globPattern: string = '**/*', ignorePattern?: string | string[]): Promise<string> {
     if (!folderPath.endsWith(path.sep)) {
         folderPath += path.sep;
     }

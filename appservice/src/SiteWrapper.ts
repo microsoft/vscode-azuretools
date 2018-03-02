@@ -357,11 +357,11 @@ export class SiteWrapper {
         } else if (await FileUtilities.isDirectory(fsPath)) {
             createdZip = true;
             this.log(outputChannel, localize('zipCreate', 'Creating zip package...'));
-            const zipDeployConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration(configurationSectionName);
+            const zipDeployConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration(configurationSectionName, vscode.Uri.file(fsPath));
             // tslint:disable-next-line:no-backbone-get-set-outside-model
             const globPattern: string = zipDeployConfig.get<string>('zipGlobPattern');
             // tslint:disable-next-line:no-backbone-get-set-outside-model
-            const ignorePattern: string = zipDeployConfig.get<string>('zipIgnorePattern');
+            const ignorePattern: string | string[] = zipDeployConfig.get<string | string[]>('zipIgnorePattern');
 
             zipFilePath = await FileUtilities.zipDirectory(fsPath, globPattern, ignorePattern);
         } else {
