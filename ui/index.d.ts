@@ -112,6 +112,14 @@ export interface IChildProvider {
      * @param options User-defined options that are passed to the IAzureParentTreeItem.createChild call
      */
     createChild?(node: IAzureNode, showCreatingNode: (label: string) => void, userOptions?: any): Promise<IAzureTreeItem>;
+
+    /**
+     * Implement this if you want non-default (i.e. non-alphabetical) sorting of child nodes.
+     * @param node1 The first node to compare
+     * @param node2 The second node to compare
+     * @returns A negative number if the node1 occurs before node2; positive if node1 occurs after node2; 0 if they are equivalent
+     */
+    compareChildren?(node1: IAzureNode, node2: IAzureNode): number
 }
 
 /**

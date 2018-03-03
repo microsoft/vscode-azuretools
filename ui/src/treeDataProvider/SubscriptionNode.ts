@@ -13,6 +13,7 @@ import { AzureParentNode } from './AzureParentNode';
 
 export class SubscriptionNode extends AzureParentNode {
     public static readonly contextValue: string = 'azureextensionui.azureSubscription';
+
     private readonly _subscriptionInfo: AzureSubscription;
     private readonly _treeDataProvider: AzureTreeDataProvider;
 
@@ -23,6 +24,7 @@ export class SubscriptionNode extends AzureParentNode {
             contextValue: SubscriptionNode.contextValue,
             iconPath: path.join(__filename, '..', '..', '..', '..', 'resources', 'azureSubscription.svg'),
             childTypeLabel: childProvider.childTypeLabel,
+            compareChildren: childProvider.compareChildren,
             createChild: childProvider.createChild ? <typeof childProvider.createChild>childProvider.createChild.bind(childProvider) : undefined,
             hasMoreChildren: <typeof childProvider.hasMoreChildren>childProvider.hasMoreChildren.bind(childProvider),
             loadMoreChildren: <typeof childProvider.loadMoreChildren>childProvider.loadMoreChildren.bind(childProvider)
