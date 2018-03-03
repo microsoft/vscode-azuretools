@@ -66,7 +66,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
             clearCache = true;
         }
 
-        const sortCallback: ((n1: IAzureNode, n2: IAzureNode) => number) =
+        const sortCallback: (n1: IAzureNode, n2: IAzureNode) => number =
             this.treeItem.compareChildren
                 ? this.treeItem.compareChildren
                 : (n1: AzureNode, n2: AzureNode): number => n1.treeItem.label.localeCompare(n2.treeItem.label);
