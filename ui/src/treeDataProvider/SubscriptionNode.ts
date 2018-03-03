@@ -13,7 +13,6 @@ import { AzureParentNode } from './AzureParentNode';
 
 export class SubscriptionNode extends AzureParentNode {
     public static readonly contextValue: string = 'azureextensionui.azureSubscription';
-
     private readonly _subscriptionInfo: AzureSubscription;
     private readonly _treeDataProvider: AzureTreeDataProvider;
 
