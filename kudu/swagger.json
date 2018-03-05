@@ -92,7 +92,10 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/DeployResult"
+                            }
                         }
                     }
                 }
@@ -113,7 +116,10 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/DeployResult"
+                            }
                         }
                     }
                 }
@@ -308,7 +314,10 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/LogEntry"
+                            }
                         }
                     }
                 }
@@ -337,7 +346,10 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/LogEntry"
+                            }
                         }
                     }
                 }
@@ -372,7 +384,10 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/LogEntry"
+                            }
                         }
                     }
                 }
@@ -407,7 +422,10 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/LogEntry"
+                            }
                         }
                     }
                 }
@@ -6950,6 +6968,33 @@
                     "type": "string"
                 },
                 "site_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "LogEntry": {
+            "type": "object",
+            "properties": {
+                "log_time": {
+                    "format": "date-time",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "type": {
+                    "format": "int32",
+                    "enum": [
+                        0,
+                        1,
+                        2
+                    ],
+                    "type": "integer"
+                },
+                "details_url": {
                     "type": "string"
                 }
             }
