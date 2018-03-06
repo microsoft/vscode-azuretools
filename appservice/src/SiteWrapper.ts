@@ -26,6 +26,7 @@ import { IFileResult } from './IFileResult';
 import { ILogStream } from './ILogStream';
 import { localize } from './localize';
 import { nodeUtils } from './utils/nodeUtils';
+import { randomUtils } from './utils/randomUtils';
 import { uiUtils } from './utils/uiUtils';
 import { IQuickPickItemWithData } from './wizard/IQuickPickItemWithData';
 
@@ -181,7 +182,12 @@ export class SiteWrapper {
         outputChannel.appendLine(localize('DeleteSucceeded', 'Successfully deleted "{0}".', this.appName));
     }
 
-    public async deploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, confirmDeployment: boolean = true): Promise<void> {
+    public async deploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, confirmDeployment: boolean = true, telemetryProperties?: { [key: string]: string }): Promise<void> {
+        if (telemetryProperties) {
+            telemetryProperties.sourceHash = randomUtils.getPseudononymousStringHash(fsPath);
+            telemetryProperties.destHash = randomUtils.getPseudononymousStringHash(this.appName);
+        }
+
         const config: SiteConfigResource = await this.getSiteConfig(client);
         switch (config.scmType) {
             case ScmType.LocalGit:
