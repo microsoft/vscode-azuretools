@@ -29,7 +29,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
     private _resourceProvider: IChildProvider;
     private _ui: IUserInterface;
     private _azureAccount: AzureAccount;
-    private _rootNodes: AzureNode[];
+    private _customRootNodes: AzureNode[];
     private _telemetryReporter: TelemetryReporter | undefined;
 
     private _subscriptionNodes: IAzureNode[] = [];
@@ -38,7 +38,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
     constructor(resourceProvider: IChildProvider, loadMoreCommandId: string, rootTreeItems?: IAzureParentTreeItem[], telemetryReporter?: TelemetryReporter, ui: IUserInterface = new VSCodeUI()) {
         this._resourceProvider = resourceProvider;
         this._loadMoreCommandId = loadMoreCommandId;
-        this._rootNodes = rootTreeItems ? rootTreeItems.map((treeItem: IAzureParentTreeItem) => new RootNode(this, treeItem)) : [];
+        this._customRootNodes = rootTreeItems ? rootTreeItems.map((treeItem: IAzureParentTreeItem) => new RootNode(this, treeItem)) : [];
         this._ui = ui;
         this._telemetryReporter = telemetryReporter;
 
@@ -99,52 +99,16 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
                 if (node !== undefined) {
                     actionContext.properties.contextValue = node.treeItem.contextValue;
 
-                    result = node.creatingNodes
-                        .concat(await node.getCachedChildren())
-                        .concat(node.treeItem.hasMoreChildren() ? new AzureNode(node, new LoadMoreTreeItem(thisTree._loadMoreCommandId)) : []);
-                } else { // Root of tree
-                    actionContext.properties.isActivationEvent = 'true';
-                    actionContext.properties.contextValue = 'root';
-                    actionContext.properties.accountStatus = thisTree._azureAccount.status;
+                    const cachedChildren: AzureNode[] = await node.getCachedChildren();
+                    const hasMoreChildren: boolean = node.treeItem.hasMoreChildren();
+                    actionContext.properties.hasMoreChildren = String(hasMoreChildren);
 
-                    let nodes: IAzureNode[];
-
-                    thisTree._subscriptionNodes = [];
-
-                    let commandLabel: string | undefined;
-                    const loginCommandId: string = 'azure-account.login';
-                    const createCommandId: string = 'azure-account.createAccount';
-                    if (thisTree._azureAccount.status === 'Initializing' || thisTree._azureAccount.status === 'LoggingIn') {
-                        nodes = [new AzureNode(undefined, {
-                            label: localize('loadingNode', 'Loading...'),
-                            commandId: loginCommandId,
-                            contextValue: 'azureCommandNode',
-                            id: loginCommandId,
-                            iconPath: {
-                                light: path.join(__filename, '..', '..', '..', '..', 'resources', 'light', 'Loading.svg'),
-                                dark: path.join(__filename, '..', '..', '..', '..', 'resources', 'dark', 'Loading.svg')
-                            }
-                        })];
-                    } else if (thisTree._azureAccount.status === 'LoggedOut') {
-                        nodes = [
-                            new AzureNode(undefined, { label: localize('signInNode', 'Sign in to Azure...'), commandId: loginCommandId, contextValue: 'azureCommandNode', id: loginCommandId }),
-                            new AzureNode(undefined, { label: localize('createNode', 'Create a Free Azure Account...'), commandId: createCommandId, contextValue: 'azureCommandNode', id: createCommandId })
-                        ];
-                    } else if (thisTree._azureAccount.filters.length === 0) {
-                        commandLabel = localize('noSubscriptionsNode', 'No subscriptions found. Edit filters...');
-                        nodes = [new AzureNode(undefined, { label: commandLabel, commandId: 'azure-account.selectSubscriptions', contextValue: 'azureCommandNode', id: 'azure-account.selectSubscriptions' })];
-                    } else {
-                        thisTree._subscriptionNodes = thisTree._azureAccount.filters.map((subscriptionInfo: AzureSubscription) => {
-                            if (subscriptionInfo.subscription.subscriptionId === undefined || subscriptionInfo.subscription.displayName === undefined) {
-                                throw new ArgumentError(subscriptionInfo);
-                            } else {
-                                return new SubscriptionNode(thisTree, thisTree._resourceProvider, subscriptionInfo.subscription.subscriptionId, subscriptionInfo.subscription.displayName, subscriptionInfo);
-                            }
-                        });
-                        nodes = thisTree._subscriptionNodes;
+                    result = node.creatingNodes.concat(cachedChildren);
+                    if (hasMoreChildren) {
+                        result = result.concat(new AzureNode(node, new LoadMoreTreeItem(thisTree._loadMoreCommandId)));
                     }
-
-                    result = nodes.concat(thisTree._rootNodes);
+                } else { // Root of tree
+                    result = await thisTree.getRootNodes(actionContext);
                 }
 
                 this.measurements.childCount = result.length;
@@ -189,7 +153,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
             node = startingNode;
         } else {
             let picks: PickWithData<IAzureNode>[] = this._subscriptionNodes.map((n: SubscriptionNode) => new PickWithData(n, n.treeItem.label, n.subscription.subscriptionId));
-            picks = picks.concat(this._rootNodes.filter((n: AzureNode) => n.includeInNodePicker(<string[]>expectedContextValues)).map((n: AzureNode) => new PickWithData(n, n.treeItem.label)));
+            picks = picks.concat(this._customRootNodes.filter((n: AzureNode) => n.includeInNodePicker(<string[]>expectedContextValues)).map((n: AzureNode) => new PickWithData(n, n.treeItem.label)));
             node = (await this._ui.showQuickPick<IAzureNode>(picks, localize('selectSubscription', 'Select a Subscription'), true /* ignoreFocusOut */)).data;
         }
 
@@ -218,5 +182,50 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
                 throw new Error(localize('noMatchingNode', 'Failed to find node with id "{0}".', id));
             }
         }
+    }
+
+    private async getRootNodes(actionContext: IActionContext): Promise<IAzureNode[]> {
+        actionContext.properties.isActivationEvent = 'true';
+        actionContext.properties.contextValue = 'root';
+        actionContext.properties.accountStatus = this._azureAccount.status;
+
+        let nodes: IAzureNode[];
+
+        this._subscriptionNodes = [];
+
+        let commandLabel: string | undefined;
+        const loginCommandId: string = 'azure-account.login';
+        const createCommandId: string = 'azure-account.createAccount';
+        if (this._azureAccount.status === 'Initializing' || this._azureAccount.status === 'LoggingIn') {
+            nodes = [new AzureNode(undefined, {
+                label: localize('loadingNode', 'Loading...'),
+                commandId: loginCommandId,
+                contextValue: 'azureCommandNode',
+                id: loginCommandId,
+                iconPath: {
+                    light: path.join(__filename, '..', '..', '..', '..', 'resources', 'light', 'Loading.svg'),
+                    dark: path.join(__filename, '..', '..', '..', '..', 'resources', 'dark', 'Loading.svg')
+                }
+            })];
+        } else if (this._azureAccount.status === 'LoggedOut') {
+            nodes = [
+                new AzureNode(undefined, { label: localize('signInNode', 'Sign in to Azure...'), commandId: loginCommandId, contextValue: 'azureCommandNode', id: loginCommandId }),
+                new AzureNode(undefined, { label: localize('createNode', 'Create a Free Azure Account...'), commandId: createCommandId, contextValue: 'azureCommandNode', id: createCommandId })
+            ];
+        } else if (this._azureAccount.filters.length === 0) {
+            commandLabel = localize('noSubscriptionsNode', 'No subscriptions found. Edit filters...');
+            nodes = [new AzureNode(undefined, { label: commandLabel, commandId: 'azure-account.selectSubscriptions', contextValue: 'azureCommandNode', id: 'azure-account.selectSubscriptions' })];
+        } else {
+            this._subscriptionNodes = this._azureAccount.filters.map((subscriptionInfo: AzureSubscription) => {
+                if (subscriptionInfo.subscription.subscriptionId === undefined || subscriptionInfo.subscription.displayName === undefined) {
+                    throw new ArgumentError(subscriptionInfo);
+                } else {
+                    return new SubscriptionNode(this, this._resourceProvider, subscriptionInfo.subscription.subscriptionId, subscriptionInfo.subscription.displayName, subscriptionInfo);
+                }
+            });
+            nodes = this._subscriptionNodes;
+        }
+
+        return nodes.concat(this._customRootNodes);
     }
 }
