@@ -539,7 +539,7 @@ export class SiteWrapper {
                     .sort((a: DeployResult, b: DeployResult) => b.receivedTime.valueOf() - a.receivedTime.valueOf())
                     .shift();
                 if (!deployment.isTemp) {
-                    // Once the deployment is permanent, we can use use that id rather than searching based on received time
+                    // Once the deployment is permanent, we can use that id rather than searching based on received time
                     permanentId = deployment.id;
                 }
             }
@@ -552,8 +552,8 @@ export class SiteWrapper {
             try {
                 logEntries = <LogEntry[]>await kuduClient.deployment.getLogEntry(deployment.id);
             } catch (error) {
-                // Swallow 404 errors for temp deployments
-                // (it's expected that the temp logs don't exist once the deployment switches to permanent)
+                // Swallow 404 errors for a deployment while its still in the "temp" phase
+                // (We can't reliably get logs until the deployment has shifted to the "permanent" phase)
                 // tslint:disable-next-line:no-unsafe-any
                 if (!deployment.isTemp || !error || error.statusCode !== 404) {
                     throw error;
@@ -588,6 +588,7 @@ export class SiteWrapper {
 
             if (deployment.complete) {
                 if (deployment.isTemp) {
+                    // If the deployment completed without making it to the "permanent" phase, it must have failed
                     throw new Error(localize('deploymentFailed', 'Deployment to "{0}" failed. See output channel for more details.', this.appName));
                 } else {
                     return;
