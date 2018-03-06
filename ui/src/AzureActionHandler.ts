@@ -7,6 +7,7 @@ import { commands, Event, ExtensionContext, OutputChannel } from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
 import { IActionContext } from '../index';
 import { callWithTelemetryAndErrorHandling } from './callWithTelemetryAndErrorHandling';
+import { AzureNode } from './treeDataProvider/AzureNode';
 
 // tslint:disable:no-any no-unsafe-any
 
@@ -23,6 +24,11 @@ export class AzureActionHandler {
     public registerCommand(commandId: string, callback: (this: IActionContext, ...args: any[]) => any): void {
         this._extensionContext.subscriptions.push(commands.registerCommand(commandId, async (...args: any[]): Promise<any> => {
             return await callWithTelemetryAndErrorHandling(commandId, this._telemetryReporter, this._outputChannel, function (this: IActionContext): any {
+                if (args.length > 0 && args[0] instanceof AzureNode) {
+                    const node: AzureNode = <AzureNode>args[0];
+                    this.properties.contextValue = node.treeItem.contextValue;
+                }
+
                 return callback.call(this, ...args);
             });
         }));
