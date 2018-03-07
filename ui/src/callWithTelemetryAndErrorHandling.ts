@@ -14,13 +14,19 @@ import { parseError } from './parseError';
 export async function callWithTelemetryAndErrorHandling(callbackId: string, telemetryReporter: TelemetryReporter | undefined, outputChannel: OutputChannel | undefined, callback: (this: IActionContext) => any): Promise<any> {
     const start: number = Date.now();
     const context: IActionContext = {
-        properties: {},
-        measurements: {},
+        properties: {
+            isActivationEvent: 'false',
+            result: 'Succeeded',
+            error: '',
+            errorMessage: ''
+        },
+        measurements: {
+            duration: 0
+        },
         suppressTelemetry: false,
         suppressErrorDisplay: false,
         rethrowError: false
     };
-    context.properties.result = 'Succeeded';
 
     try {
         return await Promise.resolve(callback.call(context));

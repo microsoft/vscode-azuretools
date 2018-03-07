@@ -17,7 +17,7 @@ import { setInterval } from 'timers';
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling, IActionContext, IAzureNode, IParsedError, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
-import { DeployResult } from 'vscode-azurekudu/lib/models';
+import { DeployResult, LogEntry } from 'vscode-azurekudu/lib/models';
 import TelemetryReporter from 'vscode-extension-telemetry';
 import { DialogResponses } from './DialogResponses';
 import { ArgumentError } from './errors';
@@ -368,11 +368,11 @@ export class SiteWrapper {
         } else if (await FileUtilities.isDirectory(fsPath)) {
             createdZip = true;
             this.log(outputChannel, localize('zipCreate', 'Creating zip package...'));
-            const zipDeployConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration(configurationSectionName);
+            const zipDeployConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration(configurationSectionName, vscode.Uri.file(fsPath));
             // tslint:disable-next-line:no-backbone-get-set-outside-model
             const globPattern: string = zipDeployConfig.get<string>('zipGlobPattern');
             // tslint:disable-next-line:no-backbone-get-set-outside-model
-            const ignorePattern: string = zipDeployConfig.get<string>('zipIgnorePattern');
+            const ignorePattern: string | string[] = zipDeployConfig.get<string | string[]>('zipIgnorePattern');
 
             zipFilePath = await FileUtilities.zipDirectory(fsPath, globPattern, ignorePattern);
         } else {
@@ -530,30 +530,102 @@ export class SiteWrapper {
         }
     }
 
-    private async waitForDeploymentToComplete(kuduClient: KuduClient, outputChannel: vscode.OutputChannel, pollingInterval: number = 5000): Promise<DeployResult> {
-        // Unfortunately, Kudu doesn't provide a unique id for a deployment right after it's started
-        // However, Kudu only supports one deployment at a time, so 'latest' will work in most cases
-        let deploymentId: string = 'latest';
-        let deployment: DeployResult = await kuduClient.deployment.getResult(deploymentId);
-        while (!deployment.complete) {
-            if (!deployment.isTemp && deployment.id) {
-                // Switch from 'latest' to the permanent/unique id as soon as it's available
-                deploymentId = deployment.id;
+    private async waitForDeploymentToComplete(kuduClient: KuduClient, outputChannel: vscode.OutputChannel, pollingInterval: number = 5000): Promise<void> {
+        const alreadyDisplayedLogs: string[] = [];
+        let nextTimeToDisplayWaitingLog: number = Date.now();
+        let permanentId: string | undefined;
+        let initialReceivedTime: Date | undefined;
+        let deployment: DeployResult | undefined;
+
+        // tslint:disable-next-line:no-constant-condition
+        while (true) {
+            [deployment, permanentId, initialReceivedTime] = await this.getLatestDeployment(kuduClient, permanentId, initialReceivedTime);
+
+            if (deployment === undefined || !deployment.id) {
+                throw new Error(localize('failedToFindDeployment', 'Failed to get status of deployment.'));
             }
 
-            if (deployment.progress) {
-                this.log(outputChannel, deployment.progress);
+            let logEntries: LogEntry[] = [];
+            try {
+                logEntries = <LogEntry[]>await kuduClient.deployment.getLogEntry(deployment.id);
+            } catch (error) {
+                // Swallow 404 errors for a deployment while its still in the "temp" phase
+                // (We can't reliably get logs until the deployment has shifted to the "permanent" phase)
+                // tslint:disable-next-line:no-unsafe-any
+                if (!deployment.isTemp || !error || error.statusCode !== 404) {
+                    throw error;
+                }
             }
 
-            await new Promise((resolve: () => void): void => { setTimeout(resolve, pollingInterval); });
-            deployment = await kuduClient.deployment.getResult(deploymentId);
+            const newLogEntries: LogEntry[] = logEntries.filter((newEntry: LogEntry) => !alreadyDisplayedLogs.some((oldId: string) => newEntry.id === oldId));
+            if (newLogEntries.length === 0) {
+                if (Date.now() > nextTimeToDisplayWaitingLog) {
+                    this.log(outputChannel, localize('waitingForComand', 'Waiting for long running command to finish...'));
+                    nextTimeToDisplayWaitingLog = Date.now() + 60 * 1000;
+                }
+            } else {
+                for (const newEntry of newLogEntries) {
+                    if (newEntry.id) {
+                        alreadyDisplayedLogs.push(newEntry.id);
+                        if (newEntry.message) {
+                            this.log(outputChannel, newEntry.message, newEntry.logTime);
+                        }
+
+                        if (newEntry.detailsUrl) {
+                            const entryDetails: LogEntry[] = await kuduClient.deployment.getLogEntryDetails(deployment.id, newEntry.id);
+                            for (const entryDetail of entryDetails) {
+                                if (entryDetail.message) {
+                                    this.log(outputChannel, entryDetail.message, entryDetail.logTime);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (deployment.complete) {
+                if (deployment.isTemp) {
+                    // If the deployment completed without making it to the "permanent" phase, it must have failed
+                    throw new Error(localize('deploymentFailed', 'Deployment to "{0}" failed. See output channel for more details.', this.appName));
+                } else {
+                    return;
+                }
+            } else {
+                await new Promise((resolve: () => void): void => { setTimeout(resolve, pollingInterval); });
+            }
         }
-
-        return deployment;
     }
 
-    private log(outputChannel: vscode.OutputChannel, message: string): void {
-        outputChannel.appendLine(`${(new Date()).toLocaleTimeString()} ${this.appName}: ${message}`);
+    private async getLatestDeployment(kuduClient: KuduClient, permanentId: string | undefined, initialReceivedTime: Date | undefined): Promise<[DeployResult, string | undefined, Date | undefined]> {
+        let deployment: DeployResult | undefined;
+        if (permanentId) {
+            // Use "permanentId" to find the deployment during its "permanent" phase
+            deployment = await kuduClient.deployment.getResult(permanentId);
+        } else if (initialReceivedTime) {
+            // Use "initialReceivedTime" to find the deployment during its "temp" phase
+            deployment = (await kuduClient.deployment.getDeployResults())
+                .filter((deployResult: DeployResult) => deployResult.receivedTime && deployResult.receivedTime >= initialReceivedTime)
+                .sort((a: DeployResult, b: DeployResult) => b.receivedTime.valueOf() - a.receivedTime.valueOf())
+                .shift();
+            if (!deployment.isTemp) {
+                // Make note of the id once the deplyoment has shifted to the "permanent" phase, so that we can use that to find the deployment going forward
+                permanentId = deployment.id;
+            }
+        } else {
+            // Use "latest" to get the deployment before we know the "initialReceivedTime" or "permanentId"
+            deployment = await kuduClient.deployment.getResult('latest');
+            if (deployment && deployment.receivedTime) {
+                // Make note of the initialReceivedTime, so that we can use that to find the deployment going forward
+                initialReceivedTime = deployment.receivedTime;
+            }
+        }
+
+        return [deployment, permanentId, initialReceivedTime];
+    }
+
+    private log(outputChannel: vscode.OutputChannel, message: string, date?: Date): void {
+        date = date || new Date();
+        outputChannel.appendLine(`${date.toLocaleTimeString()} ${this.appName}: ${message}`);
     }
 
     private async updateScmType(client: WebSiteManagementClient, config: SiteConfigResource, scmType: string): Promise<string | undefined> {
