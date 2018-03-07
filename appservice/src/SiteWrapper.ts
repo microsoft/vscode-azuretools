@@ -596,7 +596,7 @@ export class SiteWrapper {
         }
     }
 
-    private async getLatestDeployment(kuduClient: KuduClient, permanentId: string | undefined, initialReceivedTime: Date | undefined): Promise<[DeployResult, string | undefined, Date | undefined]> {
+    private async getLatestDeployment(kuduClient: KuduClient, permanentId: string | undefined, initialReceivedTime: Date | undefined): Promise<[DeployResult | undefined, string | undefined, Date | undefined]> {
         let deployment: DeployResult | undefined;
         if (permanentId) {
             // Use "permanentId" to find the deployment during its "permanent" phase
@@ -607,7 +607,7 @@ export class SiteWrapper {
                 .filter((deployResult: DeployResult) => deployResult.receivedTime && deployResult.receivedTime >= initialReceivedTime)
                 .sort((a: DeployResult, b: DeployResult) => b.receivedTime.valueOf() - a.receivedTime.valueOf())
                 .shift();
-            if (!deployment.isTemp) {
+            if (deployment && !deployment.isTemp) {
                 // Make note of the id once the deplyoment has shifted to the "permanent" phase, so that we can use that to find the deployment going forward
                 permanentId = deployment.id;
             }
