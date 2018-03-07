@@ -183,12 +183,13 @@ export class SiteWrapper {
     }
 
     public async deploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, confirmDeployment: boolean = true, telemetryProperties?: TelemetryProperties): Promise<void> {
+        const config: SiteConfigResource = await this.getSiteConfig(client);
         if (telemetryProperties) {
             telemetryProperties.sourceHash = randomUtils.getPseudononymousStringHash(fsPath);
             telemetryProperties.destHash = randomUtils.getPseudononymousStringHash(this.appName);
+            telemetryProperties.scmType = config.scmType;
         }
 
-        const config: SiteConfigResource = await this.getSiteConfig(client);
         switch (config.scmType) {
             case ScmType.LocalGit:
                 await this.localGitDeploy(fsPath, client, outputChannel);
