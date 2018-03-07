@@ -188,6 +188,7 @@ export class SiteWrapper {
             telemetryProperties.sourceHash = randomUtils.getPseudononymousStringHash(fsPath);
             telemetryProperties.destHash = randomUtils.getPseudononymousStringHash(this.appName);
             telemetryProperties.scmType = config.scmType;
+            telemetryProperties.isSlot = this.slotName ? 'true' : 'false';
         }
 
         switch (config.scmType) {
