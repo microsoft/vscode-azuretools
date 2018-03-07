@@ -15,7 +15,7 @@ import * as git from 'simple-git/promise';
 import { Readable } from 'stream';
 import { setInterval } from 'timers';
 import * as vscode from 'vscode';
-import { callWithTelemetryAndErrorHandling, IActionContext, IAzureNode, IParsedError, parseError, UserCancelledError } from 'vscode-azureextensionui';
+import { callWithTelemetryAndErrorHandling, IActionContext, IAzureNode, IParsedError, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { DeployResult } from 'vscode-azurekudu/lib/models';
 import TelemetryReporter from 'vscode-extension-telemetry';
@@ -182,7 +182,7 @@ export class SiteWrapper {
         outputChannel.appendLine(localize('DeleteSucceeded', 'Successfully deleted "{0}".', this.appName));
     }
 
-    public async deploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, confirmDeployment: boolean = true, telemetryProperties?: { [key: string]: string }): Promise<void> {
+    public async deploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, confirmDeployment: boolean = true, telemetryProperties?: TelemetryProperties): Promise<void> {
         if (telemetryProperties) {
             telemetryProperties.sourceHash = randomUtils.getPseudononymousStringHash(fsPath);
             telemetryProperties.destHash = randomUtils.getPseudononymousStringHash(this.appName);
