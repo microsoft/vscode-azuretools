@@ -198,7 +198,7 @@ export class SiteWrapper {
             case ScmType.GitHub:
                 throw new Error(localize('gitHubConnected', '"{0}" is connected to a GitHub repository. Push to GitHub repository to deploy.', this.appName));
             default: //'None' or any other non-supported scmType
-                await this.deployZip(fsPath, client, outputChannel, configurationSectionName, confirmDeployment);
+                await this.deployZip(fsPath, client, outputChannel, configurationSectionName, confirmDeployment, telemetryProperties);
                 break;
         }
 
@@ -347,10 +347,13 @@ export class SiteWrapper {
         return <string>result.response.headers.etag;
     }
 
-    private async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, confirmDeployment: boolean): Promise<void> {
+    private async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, confirmDeployment: boolean, telemetryProperties?: TelemetryProperties): Promise<void> {
         if (confirmDeployment) {
             const warning: string = localize('zipWarning', 'Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', this.appName);
             if (await vscode.window.showWarningMessage(warning, DialogResponses.yes, DialogResponses.cancel) !== DialogResponses.yes) {
+                if (telemetryProperties) {
+                    telemetryProperties.cancelStep = 'confirmDestructiveDeployment';
+                }
                 throw new UserCancelledError();
             }
         }
