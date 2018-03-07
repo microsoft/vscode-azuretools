@@ -183,16 +183,15 @@ export class SiteWrapper {
 
     public async deploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, confirmDeployment: boolean = true): Promise<void> {
         const config: SiteConfigResource = await this.getSiteConfig(client);
-        const deploySendTime: Date = new Date();
 
         switch (config.scmType) {
             case ScmType.LocalGit:
-                await this.localGitDeploy(fsPath, client, outputChannel, deploySendTime);
+                await this.localGitDeploy(fsPath, client, outputChannel);
                 break;
             case ScmType.GitHub:
                 throw new Error(localize('gitHubConnected', '"{0}" is connected to a GitHub repository. Push to GitHub repository to deploy.', this.appName));
             default: //'None' or any other non-supported scmType
-                await this.deployZip(fsPath, client, outputChannel, configurationSectionName, confirmDeployment, deploySendTime);
+                await this.deployZip(fsPath, client, outputChannel, configurationSectionName, confirmDeployment);
                 break;
         }
 
@@ -341,7 +340,7 @@ export class SiteWrapper {
         return <string>result.response.headers.etag;
     }
 
-    private async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, confirmDeployment: boolean, deploySendTime: Date): Promise<void> {
+    private async deployZip(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, confirmDeployment: boolean): Promise<void> {
         if (confirmDeployment) {
             const warning: string = localize('zipWarning', 'Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', this.appName);
             if (await vscode.window.showWarningMessage(warning, DialogResponses.yes, DialogResponses.cancel) !== DialogResponses.yes) {
@@ -373,7 +372,7 @@ export class SiteWrapper {
         try {
             this.log(outputChannel, localize('deployStart', 'Starting deployment...'));
             await kuduClient.pushDeployment.zipPushDeploy(fs.createReadStream(zipFilePath), { isAsync: true });
-            await this.waitForDeploymentToComplete(kuduClient, outputChannel, deploySendTime);
+            await this.waitForDeploymentToComplete(kuduClient, outputChannel);
         } catch (error) {
             // tslint:disable-next-line:no-unsafe-any
             if (error && error.response && error.response.body) {
@@ -391,7 +390,7 @@ export class SiteWrapper {
         }
     }
 
-    private async localGitDeploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, deploySendTime: Date): Promise<void> {
+    private async localGitDeploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel): Promise<void> {
         const kuduClient: KuduClient = await this.getKuduClient(client);
         const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging. Force push?');
         const publishCredentials: User = await this.getWebAppPublishCredential(client);
@@ -429,7 +428,7 @@ export class SiteWrapper {
 
         outputChannel.show();
         this.log(outputChannel, (localize('localGitDeploy', `Deploying Local Git repository to "${this.appName}"...`)));
-        await this.waitForDeploymentToComplete(kuduClient, outputChannel, deploySendTime);
+        await this.waitForDeploymentToComplete(kuduClient, outputChannel);
     }
 
     private async getJsonRequest(url: string, requestOptions: WebResource, node: IAzureNode): Promise<Object[]> {
@@ -521,28 +520,16 @@ export class SiteWrapper {
         }
     }
 
-    private async waitForDeploymentToComplete(kuduClient: KuduClient, outputChannel: vscode.OutputChannel, deploySendTime: Date, pollingInterval: number = 5000): Promise<void> {
+    private async waitForDeploymentToComplete(kuduClient: KuduClient, outputChannel: vscode.OutputChannel, pollingInterval: number = 5000): Promise<void> {
         const alreadyDisplayedLogs: string[] = [];
         let nextTimeToDisplayWaitingLog: number = Date.now();
         let permanentId: string | undefined;
+        let initialReceivedTime: Date | undefined;
         let deployment: DeployResult | undefined;
 
         // tslint:disable-next-line:no-constant-condition
         while (true) {
-            if (permanentId) {
-                deployment = await kuduClient.deployment.getResult(permanentId);
-            } else {
-                // Unfortunately, Kudu doesn't provide a unique/permanent id for a deployment right after it's started
-                // Instead, search for the deployment that was received just after we started the deployment
-                deployment = (await kuduClient.deployment.getDeployResults())
-                    .filter((deployResult: DeployResult) => deployResult.receivedTime && deployResult.receivedTime > deploySendTime)
-                    .sort((a: DeployResult, b: DeployResult) => b.receivedTime.valueOf() - a.receivedTime.valueOf())
-                    .shift();
-                if (!deployment.isTemp) {
-                    // Once the deployment is permanent, we can use that id rather than searching based on received time
-                    permanentId = deployment.id;
-                }
-            }
+            [deployment, permanentId, initialReceivedTime] = await this.getLatestDeployment(kuduClient, permanentId, initialReceivedTime);
 
             if (deployment === undefined || !deployment.id) {
                 throw new Error(localize('failedToFindDeployment', 'Failed to get status of deployment.'));
@@ -597,6 +584,33 @@ export class SiteWrapper {
                 await new Promise((resolve: () => void): void => { setTimeout(resolve, pollingInterval); });
             }
         }
+    }
+
+    private async getLatestDeployment(kuduClient: KuduClient, permanentId: string | undefined, initialReceivedTime: Date | undefined): Promise<[DeployResult, string | undefined, Date | undefined]> {
+        let deployment: DeployResult | undefined;
+        if (permanentId) {
+            // Use "permanentId" to find the deployment during its "permanent" phase
+            deployment = await kuduClient.deployment.getResult(permanentId);
+        } else if (initialReceivedTime) {
+            // Use "initialReceivedTime" to find the deployment during its "temp" phase
+            deployment = (await kuduClient.deployment.getDeployResults())
+                .filter((deployResult: DeployResult) => deployResult.receivedTime && deployResult.receivedTime >= initialReceivedTime)
+                .sort((a: DeployResult, b: DeployResult) => b.receivedTime.valueOf() - a.receivedTime.valueOf())
+                .shift();
+            if (!deployment.isTemp) {
+                // Make note of the id once the deplyoment has shifted to the "permanent" phase, so that we can use that to find the deployment going forward
+                permanentId = deployment.id;
+            }
+        } else {
+            // Use "latest" to get the deployment before we know the "initialReceivedTime" or "permanentId"
+            deployment = await kuduClient.deployment.getResult('latest');
+            if (deployment && deployment.receivedTime) {
+                // Make note of the initialReceivedTime, so that we can use that to find the deployment going forward
+                initialReceivedTime = deployment.receivedTime;
+            }
+        }
+
+        return [deployment, permanentId, initialReceivedTime];
     }
 
     private log(outputChannel: vscode.OutputChannel, message: string, date?: Date): void {
