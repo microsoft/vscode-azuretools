@@ -3,9 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { TelemetryMeasurements, TelemetryProperties } from "..";
 import { localize } from "./localize";
 
-export class UserCancelledError extends Error {
+export interface IHasTelemetryInfo {
+    telemetry?: {
+        properties?: TelemetryProperties;
+        metrics?: TelemetryMeasurements;
+    };
+}
+
+export class UserCancelledError extends Error implements IHasTelemetryInfo {
+    public telemetry?: {
+        properties?: TelemetryProperties;
+        metrics?: TelemetryMeasurements;
+    };
+
     constructor() {
         super(localize('userCancelledError', 'Operation cancelled.'));
     }

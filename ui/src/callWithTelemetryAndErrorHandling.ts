@@ -8,7 +8,7 @@ import TelemetryReporter from 'vscode-extension-telemetry';
 import { IActionContext } from '../index';
 import { IParsedError } from '../index';
 import { localize } from './localize';
-import { parseError } from './parseError';
+import { addTelemetryInfo, parseError } from './parseError';
 
 // tslint:disable-next-line:no-any
 export async function callWithTelemetryAndErrorHandling(callbackId: string, telemetryReporter: TelemetryReporter | undefined, outputChannel: OutputChannel | undefined, callback: (this: IActionContext) => any): Promise<any> {
@@ -34,6 +34,10 @@ export async function callWithTelemetryAndErrorHandling(callbackId: string, tele
             context.properties.result = 'Failed';
             context.properties.error = errorData.errorType;
             context.properties.errorMessage = errorData.message;
+        }
+
+        if (telemetryReporter && !context.suppressTelemetry) {
+            addTelemetryInfo(errorData, context.properties, context.measurements);
         }
 
         if (!context.suppressErrorDisplay && outputChannel) {

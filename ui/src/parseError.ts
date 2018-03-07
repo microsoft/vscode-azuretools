@@ -3,8 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IParsedError } from '../index';
+import { IParsedError, TelemetryMeasurements, TelemetryProperties } from '../index';
 import { localize } from './localize';
+
+export function addTelemetryInfo(parsedError: IParsedError, telemetryProperties: TelemetryProperties, telemetryMeasurements: TelemetryMeasurements): void {
+    if (parsedError && parsedError.telemetry) {
+        // TODO: merge parsedError.telemetry.properties into telemetryProperties
+        // TODO: merge parsedError.telemetry.measurements into telemetryMeasurements
+    }
+}
 
 // tslint:disable:no-unsafe-any
 // tslint:disable:no-any
@@ -45,7 +52,8 @@ export function parseError(error: any): IParsedError {
         message: message,
         // NOTE: Intentionally not using 'error instanceof UserCancelledError' because that doesn't work if multiple versions of the UI package are used in one extension
         // See https://github.com/Microsoft/vscode-azuretools/issues/51 for more info
-        isUserCancelledError: errorType === 'UserCancelledError'
+        isUserCancelledError: errorType === 'UserCancelledError',
+        telemetry: error ? error.telemetry : undefined
     };
 }
 

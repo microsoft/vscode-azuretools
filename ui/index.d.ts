@@ -9,6 +9,7 @@ import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment } from 'ms-rest-azure';
 import { Uri, TreeDataProvider, Disposable, TreeItem, Event, OutputChannel, Memento, TextDocument, ExtensionContext } from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
+import { IHasTelemetryInfo } from './src/errors';
 
 export declare class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disposable {
     public static readonly subscriptionContextValue: string;
@@ -206,7 +207,7 @@ export type TelemetryMeasurements = { [key: string]: number };
 
 export declare function parseError(error: any): IParsedError;
 
-export interface IParsedError {
+export interface IParsedError extends IHasTelemetryInfo {
     errorType: string;
     message: string;
     isUserCancelledError: boolean;
