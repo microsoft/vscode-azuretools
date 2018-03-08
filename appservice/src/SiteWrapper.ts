@@ -202,7 +202,13 @@ export class SiteWrapper {
                 break;
         }
 
-        outputChannel.appendLine(localize('deployComplete', '>>>>>> Deployment to "{0}" completed. <<<<<<', this.appName));
+        const displayUrl: string = this.isFunctionApp ? '' : this.defaultHostName;
+        outputChannel.appendLine(
+            displayUrl ?
+                localize('deployCompleteWithUrl', '>>>>>> Deployment to "{0}" completed: {1} <<<<<<', this.appName, displayUrl) :
+                localize('deployComplete', '>>>>>> Deployment to "{0}" completed. <<<<<<', this.appName)
+        );
+
         outputChannel.appendLine('');
     }
 
