@@ -197,9 +197,13 @@ export class SiteWrapper {
                 telemetryProperties.hasCors = config.cors ? 'true' : 'false';
                 telemetryProperties.hasIpSecurityRestrictions = config.ipSecurityRestrictions && config.ipSecurityRestrictions.length > 0 ? 'true' : 'false';
                 telemetryProperties.javaVersion = config.javaVersion;
-
-                // Do this last in case it fails
-                telemetryProperties.state = await this.getState(client);
+                this.getState(client).then(
+                    (state: string) => {
+                        telemetryProperties.state = state;
+                    },
+                    () => {
+                        // ignore
+                    });
             } catch (error) {
                 // Ignore
             }
