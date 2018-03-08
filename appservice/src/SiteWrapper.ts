@@ -185,10 +185,24 @@ export class SiteWrapper {
     public async deploy(fsPath: string, client: WebSiteManagementClient, outputChannel: vscode.OutputChannel, configurationSectionName: string, confirmDeployment: boolean = true, telemetryProperties?: TelemetryProperties): Promise<void> {
         const config: SiteConfigResource = await this.getSiteConfig(client);
         if (telemetryProperties) {
-            telemetryProperties.sourceHash = randomUtils.getPseudononymousStringHash(fsPath);
-            telemetryProperties.destHash = randomUtils.getPseudononymousStringHash(this.appName);
-            telemetryProperties.scmType = config.scmType;
-            telemetryProperties.isSlot = this.slotName ? 'true' : 'false';
+            try {
+                telemetryProperties.sourceHash = randomUtils.getPseudononymousStringHash(fsPath);
+                telemetryProperties.destHash = randomUtils.getPseudononymousStringHash(this.appName);
+                telemetryProperties.scmType = config.scmType;
+                telemetryProperties.isSlot = this.slotName ? 'true' : 'false';
+                telemetryProperties.alwaysOn = config.alwaysOn ? 'true' : 'false';
+                telemetryProperties.linuxFxVersion = config.linuxFxVersion;
+                telemetryProperties.nodeVersion = config.nodeVersion;
+                telemetryProperties.pythonVersion = config.pythonVersion;
+                telemetryProperties.hasCors = config.cors ? 'true' : 'false';
+                telemetryProperties.hasIpSecurityRestrictions = config.ipSecurityRestrictions && config.ipSecurityRestrictions.length > 0 ? 'true' : 'false';
+                telemetryProperties.javaVersion = config.javaVersion;
+
+                // Do this last in case it fails
+                telemetryProperties.state = await this.getState(client);
+            } catch (error) {
+                // Ignore
+            }
         }
 
         switch (config.scmType) {
@@ -205,7 +219,7 @@ export class SiteWrapper {
         const displayUrl: string = this.isFunctionApp ? '' : this.defaultHostName;
         outputChannel.appendLine(
             displayUrl ?
-                localize('deployCompleteWithUrl', '>>>>>> Deployment to "{0}" completed: {1} <<<<<<', this.appName, displayUrl) :
+                localize('deployCompleteWithUrl', '>>>>>> Deployment to "{0}" completed: {1} <<<<<<', this.appName, `https://${displayUrl}`) :
                 localize('deployComplete', '>>>>>> Deployment to "{0}" completed. <<<<<<', this.appName)
         );
 
