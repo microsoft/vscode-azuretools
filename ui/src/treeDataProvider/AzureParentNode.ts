@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IAzureParentTreeItem, IAzureTreeItem } from '../../index';
+import { IAzureNode, IAzureParentTreeItem, IAzureTreeItem } from '../../index';
 import { NotImplementedError } from '../errors';
 import { IUserInterface, PickWithData } from '../IUserInterface';
 import { localize } from '../localize';
@@ -66,10 +66,15 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
             clearCache = true;
         }
 
+        const sortCallback: (n1: IAzureNode, n2: IAzureNode) => number =
+            this.treeItem.compareChildren
+                ? this.treeItem.compareChildren
+                : (n1: AzureNode, n2: AzureNode): number => n1.treeItem.label.localeCompare(n2.treeItem.label);
+
         const newTreeItems: IAzureTreeItem[] = await this.treeItem.loadMoreChildren(this, clearCache);
         this._cachedChildren = this._cachedChildren
             .concat(newTreeItems.map((t: IAzureTreeItem) => this.createNewNode(t)))
-            .sort((n1: AzureNode, n2: AzureNode) => n1.treeItem.label.localeCompare(n2.treeItem.label));
+            .sort(sortCallback);
     }
 
     public async pickChildNode(expectedContextValues: string[], ui: IUserInterface): Promise<AzureNode> {
