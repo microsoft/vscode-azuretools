@@ -18,8 +18,9 @@ export declare class AzureTreeDataProvider implements TreeDataProvider<IAzureNod
      * @param resourceProvider Describes the resources to be displayed under subscription nodes
      * @param loadMoreCommandId The command your extension will register for the 'Load More...' node
      * @param rootTreeItems Any nodes other than the subscriptions that should be shown at the root of the explorer
+     * @param telemetryReporter Optionally used to track telemetry for the tree
      */
-    constructor(resourceProvider: IChildProvider, loadMoreCommandId: string, rootTreeItems?: IAzureTreeItem[]);
+    constructor(resourceProvider: IChildProvider, loadMoreCommandId: string, rootTreeItems?: IAzureTreeItem[], telemetryReporter?: TelemetryReporter);
     public getTreeItem(node: IAzureNode): TreeItem;
     public getChildren(node?: IAzureParentNode): Promise<IAzureNode[]>;
     public refresh(node?: IAzureNode, clearCache?: boolean): Promise<void>;
