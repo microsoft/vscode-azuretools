@@ -3,14 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// tslint:disable-next-line:no-require-imports
-import WebSiteManagementClient = require('azure-arm-website');
 import { StringDictionary } from 'azure-arm-website/lib/models';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IAzureNode, IAzureParentTreeItem, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
-import { SiteWrapper } from '../SiteWrapper';
-import { nodeUtils } from '../utils/nodeUtils';
+import { SiteClient } from '../SiteClient';
 import { AppSettingTreeItem } from './AppSettingTreeItem';
 
 export class AppSettingsTreeItem implements IAzureParentTreeItem {
@@ -18,15 +15,15 @@ export class AppSettingsTreeItem implements IAzureParentTreeItem {
     public readonly label: string = 'Application Settings';
     public readonly childTypeLabel: string = 'App Setting';
     public readonly contextValue: string = AppSettingsTreeItem.contextValue;
-    private readonly _siteWrapper: SiteWrapper;
+    private readonly _client: SiteClient;
     private _settings: StringDictionary;
 
-    constructor(siteWrapper: SiteWrapper) {
-        this._siteWrapper = siteWrapper;
+    constructor(client: SiteClient) {
+        this._client = client;
     }
 
     public get id(): string {
-        return `${this._siteWrapper.id}/application`;
+        return 'application';
     }
 
     public get iconPath(): { light: string, dark: string } {
@@ -40,12 +37,8 @@ export class AppSettingsTreeItem implements IAzureParentTreeItem {
         return false;
     }
 
-    public async loadMoreChildren(node: IAzureNode<AppSettingsTreeItem>): Promise<IAzureTreeItem[]> {
-        const client: WebSiteManagementClient = nodeUtils.getWebSiteClient(node);
-        this._settings = this._siteWrapper.slotName ?
-            await client.webApps.listApplicationSettingsSlot(this._siteWrapper.resourceGroup, this._siteWrapper.name, this._siteWrapper.slotName) :
-            await client.webApps.listApplicationSettings(this._siteWrapper.resourceGroup, this._siteWrapper.name);
-
+    public async loadMoreChildren(): Promise<IAzureTreeItem[]> {
+        this._settings = await this._client.listApplicationSettings();
         const treeItems: IAzureTreeItem[] = [];
         Object.keys(this._settings.properties).forEach((key: string) => {
             treeItems.push(new AppSettingTreeItem(key, this._settings.properties[key]));
@@ -54,26 +47,26 @@ export class AppSettingsTreeItem implements IAzureParentTreeItem {
         return treeItems;
     }
 
-    public async editSettingItem(client: WebSiteManagementClient, oldKey: string, newKey: string, value: string): Promise<void> {
+    public async editSettingItem(oldKey: string, newKey: string, value: string): Promise<void> {
         if (this._settings.properties) {
             if (oldKey !== newKey) {
                 delete this._settings.properties[oldKey];
             }
             this._settings.properties[newKey] = value;
         }
-        await this.applySettings(client);
+        await this._client.updateApplicationSettings(this._settings);
     }
 
-    public async deleteSettingItem(client: WebSiteManagementClient, key: string): Promise<void> {
+    public async deleteSettingItem(key: string): Promise<void> {
         if (this._settings.properties) {
             delete this._settings.properties[key];
         }
-        await this.applySettings(client);
+        await this._client.updateApplicationSettings(this._settings);
     }
 
-    public async createChild(node: IAzureNode<AppSettingsTreeItem>, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
+    public async createChild(_node: IAzureNode<AppSettingsTreeItem>, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
         if (!this._settings) {
-            await this.loadMoreChildren(node);
+            await this.loadMoreChildren();
         }
 
         const newKey: string | undefined = await vscode.window.showInputBox({
@@ -101,7 +94,7 @@ export class AppSettingsTreeItem implements IAzureParentTreeItem {
 
         showCreatingNode(newKey);
         this._settings.properties[newKey] = newValue;
-        await this.applySettings(nodeUtils.getWebSiteClient(node));
+        await this._client.updateApplicationSettings(this._settings);
         return new AppSettingTreeItem(newKey, newValue);
     }
 
@@ -120,11 +113,5 @@ export class AppSettingsTreeItem implements IAzureParentTreeItem {
         }
 
         return undefined;
-    }
-
-    private async applySettings(client: WebSiteManagementClient): Promise<StringDictionary> {
-        return this._siteWrapper.slotName ?
-            await client.webApps.updateApplicationSettingsSlot(this._siteWrapper.resourceGroup, this._siteWrapper.name, this._settings, this._siteWrapper.slotName) :
-            await client.webApps.updateApplicationSettings(this._siteWrapper.resourceGroup, this._siteWrapper.name, this._settings);
     }
 }
