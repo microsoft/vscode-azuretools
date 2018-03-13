@@ -3,8 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as vscode from 'vscode';
+import { SiteClient } from '../SiteClient';
 
-export interface ILogStream extends vscode.Disposable {
-    isConnected: boolean;
+export function formatDeployLog(client: SiteClient, message: string, date?: Date): string {
+    date = date || new Date();
+    return `${date.toLocaleTimeString()} ${client.fullName}: ${message}`;
 }

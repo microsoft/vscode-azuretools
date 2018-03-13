@@ -3,7 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-export interface IFileResult {
-    data: string;
-    etag: string;
+// Deployment sources supported by Web Apps
+export enum ScmType {
+    None = 'None', // default scmType
+    LocalGit = 'LocalGit',
+    GitHub = 'GitHub'
 }

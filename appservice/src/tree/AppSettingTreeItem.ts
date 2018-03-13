@@ -6,7 +6,6 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IAzureNode, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
-import { nodeUtils } from '../utils/nodeUtils';
 import { AppSettingsTreeItem } from './AppSettingsTreeItem';
 
 export class AppSettingTreeItem implements IAzureTreeItem {
@@ -48,7 +47,7 @@ export class AppSettingTreeItem implements IAzureTreeItem {
         }
 
         this.value = newValue;
-        await (<AppSettingsTreeItem>node.parent.treeItem).editSettingItem(nodeUtils.getWebSiteClient(node), this.key, this.key, newValue);
+        await (<AppSettingsTreeItem>node.parent.treeItem).editSettingItem(this.key, this.key, newValue);
         await node.refresh();
     }
 
@@ -66,7 +65,7 @@ export class AppSettingTreeItem implements IAzureTreeItem {
         }
 
         this.key = newKey;
-        await (<AppSettingsTreeItem>node.parent.treeItem).editSettingItem(nodeUtils.getWebSiteClient(node), oldKey, newKey, this.value);
+        await (<AppSettingsTreeItem>node.parent.treeItem).editSettingItem(oldKey, newKey, this.value);
         await node.refresh();
     }
 
@@ -76,7 +75,7 @@ export class AppSettingTreeItem implements IAzureTreeItem {
         const result: vscode.MessageItem = await vscode.window.showWarningMessage(`Are you sure you want to delete setting "${this.key}"?`, okayAction, cancelAction);
 
         if (result === okayAction) {
-            await (<AppSettingsTreeItem>node.parent.treeItem).deleteSettingItem(nodeUtils.getWebSiteClient(node), this.key);
+            await (<AppSettingsTreeItem>node.parent.treeItem).deleteSettingItem(this.key);
         } else {
             throw new UserCancelledError();
         }
