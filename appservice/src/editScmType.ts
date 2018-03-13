@@ -6,7 +6,7 @@
 import { SiteConfigResource } from 'azure-arm-website/lib/models';
 import * as vscode from 'vscode';
 import { IAzureNode, UserCancelledError } from 'vscode-azureextensionui';
-import { connectToGitHub } from './connectToGithub';
+import { connectToGitHub } from './connectToGitHub';
 import { localize } from './localize';
 import { ScmType } from './ScmType';
 import { SiteClient } from './SiteClient';
