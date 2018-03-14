@@ -12,15 +12,16 @@ import * as FileUtilities from '../FileUtilities';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { formatDeployLog } from './formatDeployLog';
+import { StringDictionary } from 'azure-arm-website/lib/models';
 // import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
 export async function deployRunFromZip(client: SiteClient, fsPath: string, outputChannel: vscode.OutputChannel, configurationSectionName: string, telemetryProperties?: TelemetryProperties): Promise<void> {
     // if (confirmDeployment) {
     //     const warning: string = localize('zipWarning', 'Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', client.fullName);
     //     if (await vscode.window.showWarningMessage(warning, DialogResponses.yes, DialogResponses.cancel) !== DialogResponses.yes) {
-             if (telemetryProperties) {
-                 telemetryProperties.cancelStep = 'confirmDestructiveDeployment';
-             }
+    if (telemetryProperties) {
+        telemetryProperties.cancelStep = 'confirmDestructiveDeployment';
+    }
     //         throw new UserCancelledError();
     //     }
     // }
@@ -49,6 +50,10 @@ export async function deployRunFromZip(client: SiteClient, fsPath: string, outpu
     try {
         outputChannel.appendLine(formatDeployLog(client, localize('deployStart', 'Starting deployment...')));
         // await waitForDeploymentToComplete(client, kuduClient, outputChannel);
+        const WEBSITE_USE_ZIP: string = 'WEBSITE_USE_ZIP';
+        const appSettings: StringDictionary = await client.listApplicationSettings();
+        appSettings.properties[WEBSITE_USE_ZIP] = '1';
+        await client.updateApplicationSettings(appSettings);
     } catch (error) {
         // tslint:disable-next-line:no-unsafe-any
         if (error && error.response && error.response.body) {

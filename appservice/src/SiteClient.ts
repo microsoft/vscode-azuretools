@@ -4,10 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 // tslint:disable-next-line:no-require-imports
+import StorageManagementClient = require('azure-arm-storage');
+// tslint:disable-next-line:no-require-imports
 import WebSiteManagementClient = require('azure-arm-website');
 import { AppServicePlan, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SourceControlCollection, StringDictionary, User, WebAppInstanceCollection } from 'azure-arm-website/lib/models';
 import { IAzureNode } from 'vscode-azureextensionui';
 import { ArgumentError } from './errors';
+import { StorageAccountListResult } from 'azure-arm-storage/lib/models';
 
 /**
  * Wrapper of a WebSiteManagementClient for use with a specific Site
@@ -76,6 +79,10 @@ export class SiteClient {
 
     private get _client(): WebSiteManagementClient {
         return new WebSiteManagementClient(this._node.credentials, this._node.subscriptionId);
+    }
+
+    private get _storageClient(): StorageManagementClient {
+        return new StorageManagementClient(this._node.credentials, this._node.subscription.subscriptionId);
     }
 
     public async stop(): Promise<void> {
@@ -168,5 +175,9 @@ export class SiteClient {
 
     public async listSourceControls(): Promise<SourceControlCollection> {
         return await this._client.listSourceControls();
+    }
+
+    public async listStorageAccounts(): Promise<StorageAccountListResult> {
+        return await this._storageClient.storageAccounts.list();
     }
 }
