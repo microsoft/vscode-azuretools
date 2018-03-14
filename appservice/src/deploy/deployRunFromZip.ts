@@ -3,24 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as fs from 'fs';
+// import * as fs from 'fs';
 import * as vscode from 'vscode';
-import { TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
-import { DialogResponses } from '../DialogResponses';
+import { TelemetryProperties } from 'vscode-azureextensionui';
+// import { DialogResponses } from '../DialogResponses';
 import * as FileUtilities from '../FileUtilities';
-import { getKuduClient } from '../getKuduClient';
+// import { getKuduClient } from '../getKuduClient';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { formatDeployLog } from './formatDeployLog';
-import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
+// import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
 export async function deployRunFromZip(client: SiteClient, fsPath: string, outputChannel: vscode.OutputChannel, configurationSectionName: string, telemetryProperties?: TelemetryProperties): Promise<void> {
     // if (confirmDeployment) {
     //     const warning: string = localize('zipWarning', 'Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', client.fullName);
     //     if (await vscode.window.showWarningMessage(warning, DialogResponses.yes, DialogResponses.cancel) !== DialogResponses.yes) {
-    //         if (telemetryProperties) {
-    //             telemetryProperties.cancelStep = 'confirmDestructiveDeployment';
-    //         }
+             if (telemetryProperties) {
+                 telemetryProperties.cancelStep = 'confirmDestructiveDeployment';
+             }
     //         throw new UserCancelledError();
     //     }
     // }
