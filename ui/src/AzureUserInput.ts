@@ -24,9 +24,9 @@ export class AzureUserInput implements IAzureUserInput {
         }
 
         let persistenceKey: string | undefined;
-        const hashData: string | undefined = (<IAzureQuickPickOptions>options).id || options.placeHolder;
-        if (hashData) {
-            persistenceKey = `showQuickPick.${randomUtils.getPseudononymousStringHash(hashData)}`;
+        const unhashedKey: string | undefined = (<IAzureQuickPickOptions>options).id || options.placeHolder;
+        if (unhashedKey) {
+            persistenceKey = `showQuickPick.${randomUtils.getPseudononymousStringHash(unhashedKey)}`;
         }
 
         const result: T | undefined = await vscode.window.showQuickPick(this.getOrderedItems(items, persistenceKey), options);

@@ -322,7 +322,7 @@ export declare class TestUserInput implements IAzureUserInput {
  */
 export interface IAzureQuickPickItem<T = undefined> extends QuickPickItem {
     /**
-     * An optional id to uniqely identify this item items across sessions, used in persisting previous selections
+     * An optional id to uniquely identify this item across sessions, used in persisting previous selections
      * If not specified, a hash of the label will be used
      */
     id?: string;
@@ -371,4 +371,7 @@ export declare namespace DialogResponses {
     export const learnMore: MessageItem;
     export const dontWarnAgain: MessageItem;
     export const skipForNow: MessageItem;
+    export const upload: MessageItem;
+    export const alwaysUpload: MessageItem;
+    export const dontUpload: MessageItem;
 }
