@@ -6,16 +6,11 @@
 import { Subscription } from 'azure-arm-resource/lib/subscription/models';
 import { Site } from 'azure-arm-website/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
-import { Memento, OutputChannel } from 'vscode';
+import { OutputChannel } from 'vscode';
+import { IActionContext, IAzureUserInput } from 'vscode-azureextensionui';
 import { AppKind, WebsiteOS } from './AppKind';
-import { AppServiceCreator } from './AppServiceCreator';
+import { createAppService } from './createAppService';
 
-export async function createFunctionApp(outputChannel: OutputChannel, persistence: Memento, credentials?: ServiceClientCredentials, subscription?: Subscription, showCreatingNode?: (label: string) => void): Promise<Site | undefined> {
-    const creator: AppServiceCreator = new AppServiceCreator(outputChannel, persistence, AppKind.functionapp, WebsiteOS.windows, credentials, subscription);
-    await creator.prompt();
-    if (showCreatingNode) {
-        showCreatingNode(creator.websiteNameStep.websiteName);
-    }
-    await creator.execute();
-    return creator.siteStep.site;
+export async function createFunctionApp(outputChannel: OutputChannel, ui: IAzureUserInput, actionContext: IActionContext, credentials: ServiceClientCredentials, subscription: Subscription, showCreatingNode?: (label: string) => void): Promise<Site> {
+    return await createAppService(AppKind.functionapp, WebsiteOS.windows, outputChannel, ui, actionContext, credentials, subscription, showCreatingNode);
 }

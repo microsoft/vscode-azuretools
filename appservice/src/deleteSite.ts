@@ -5,16 +5,13 @@
 
 import { AppServicePlan } from 'azure-arm-website/lib/models';
 import * as vscode from 'vscode';
-import { UserCancelledError } from 'vscode-azureextensionui';
-import { DialogResponses } from './DialogResponses';
+import { DialogResponses, IAzureUserInput } from 'vscode-azureextensionui';
 import { localize } from './localize';
 import { SiteClient } from './SiteClient';
 
-export async function deleteSite(client: SiteClient, outputChannel: vscode.OutputChannel): Promise<void> {
+export async function deleteSite(client: SiteClient, ui: IAzureUserInput, outputChannel: vscode.OutputChannel): Promise<void> {
     const confirmMessage: string = localize('deleteConfirmation', 'Are you sure you want to delete "{0}"?', client.fullName);
-    if (await vscode.window.showWarningMessage(confirmMessage, DialogResponses.yes, DialogResponses.cancel) !== DialogResponses.yes) {
-        throw new UserCancelledError();
-    }
+    await ui.showWarningMessage(confirmMessage, DialogResponses.deleteResponse, DialogResponses.cancel);
 
     let plan: AppServicePlan | undefined;
     let deletePlan: boolean = false;
@@ -26,12 +23,8 @@ export async function deleteSite(client: SiteClient, outputChannel: vscode.Outpu
 
     if (!client.isSlot && plan.numberOfSites < 2) {
         const message: string = localize('deleteLastServicePlan', 'This is the last app in the App Service plan "{0}". Do you want to delete this App Service plan to prevent unexpected charges?', plan.name);
-        const input: vscode.MessageItem | undefined = await vscode.window.showWarningMessage(message, DialogResponses.yes, DialogResponses.no, DialogResponses.cancel);
-        if (input === undefined) {
-            throw new UserCancelledError();
-        } else {
-            deletePlan = input === DialogResponses.yes;
-        }
+        const input: vscode.MessageItem = await ui.showWarningMessage(message, DialogResponses.yes, DialogResponses.no, DialogResponses.cancel);
+        deletePlan = input === DialogResponses.yes;
     }
 
     outputChannel.show();

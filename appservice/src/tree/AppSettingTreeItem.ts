@@ -4,8 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as path from 'path';
-import * as vscode from 'vscode';
-import { IAzureNode, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
+import { DialogResponses, IAzureNode, IAzureTreeItem } from 'vscode-azureextensionui';
 import { AppSettingsTreeItem } from './AppSettingsTreeItem';
 
 export class AppSettingTreeItem implements IAzureTreeItem {
@@ -36,15 +35,10 @@ export class AppSettingTreeItem implements IAzureTreeItem {
     }
 
     public async edit(node: IAzureNode): Promise<void> {
-        const newValue: string | undefined = await vscode.window.showInputBox({
-            ignoreFocusOut: true,
+        const newValue: string = await node.ui.showInputBox({
             prompt: `Enter setting value for "${this.key}"`,
             value: this.value
         });
-
-        if (newValue === undefined) {
-            throw new UserCancelledError();
-        }
 
         this.value = newValue;
         await (<AppSettingsTreeItem>node.parent.treeItem).editSettingItem(this.key, this.key, newValue);
@@ -53,16 +47,11 @@ export class AppSettingTreeItem implements IAzureTreeItem {
 
     public async rename(node: IAzureNode): Promise<void> {
         const oldKey: string = this.key;
-        const newKey: string | undefined = await vscode.window.showInputBox({
-            ignoreFocusOut: true,
+        const newKey: string = await node.ui.showInputBox({
             prompt: `Enter a new name for "${oldKey}"`,
             value: this.key,
             validateInput: (v?: string): string | undefined => (<AppSettingsTreeItem>node.parent.treeItem).validateNewKeyInput(v, oldKey)
         });
-
-        if (newKey === undefined) {
-            throw new UserCancelledError();
-        }
 
         this.key = newKey;
         await (<AppSettingsTreeItem>node.parent.treeItem).editSettingItem(oldKey, newKey, this.value);
@@ -70,14 +59,7 @@ export class AppSettingTreeItem implements IAzureTreeItem {
     }
 
     public async deleteTreeItem(node: IAzureNode): Promise<void> {
-        const okayAction: vscode.MessageItem = { title: 'Delete' };
-        const cancelAction: vscode.MessageItem = { title: 'Cancel', isCloseAffordance: true };
-        const result: vscode.MessageItem = await vscode.window.showWarningMessage(`Are you sure you want to delete setting "${this.key}"?`, okayAction, cancelAction);
-
-        if (result === okayAction) {
-            await (<AppSettingsTreeItem>node.parent.treeItem).deleteSettingItem(this.key);
-        } else {
-            throw new UserCancelledError();
-        }
+        await node.ui.showWarningMessage(`Are you sure you want to delete setting "${this.key}"?`, DialogResponses.deleteResponse, DialogResponses.cancel);
+        await (<AppSettingsTreeItem>node.parent.treeItem).deleteSettingItem(this.key);
     }
 }

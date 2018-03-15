@@ -5,8 +5,7 @@
 
 import { StringDictionary } from 'azure-arm-website/lib/models';
 import * as path from 'path';
-import * as vscode from 'vscode';
-import { IAzureNode, IAzureParentTreeItem, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
+import { IAzureNode, IAzureParentTreeItem, IAzureTreeItem } from 'vscode-azureextensionui';
 import { SiteClient } from '../SiteClient';
 import { AppSettingTreeItem } from './AppSettingTreeItem';
 
@@ -64,29 +63,19 @@ export class AppSettingsTreeItem implements IAzureParentTreeItem {
         await this._client.updateApplicationSettings(this._settings);
     }
 
-    public async createChild(_node: IAzureNode<AppSettingsTreeItem>, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
+    public async createChild(node: IAzureNode<AppSettingsTreeItem>, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
         if (!this._settings) {
             await this.loadMoreChildren();
         }
 
-        const newKey: string | undefined = await vscode.window.showInputBox({
-            ignoreFocusOut: true,
+        const newKey: string = await node.ui.showInputBox({
             prompt: 'Enter new setting key',
             validateInput: (v?: string): string | undefined => this.validateNewKeyInput(v)
         });
 
-        if (newKey === undefined) {
-            throw new UserCancelledError();
-        }
-
-        const newValue: string | undefined = await vscode.window.showInputBox({
-            ignoreFocusOut: true,
+        const newValue: string = await node.ui.showInputBox({
             prompt: `Enter setting value for "${newKey}"`
         });
-
-        if (newValue === undefined) {
-            throw new UserCancelledError();
-        }
 
         if (!this._settings.properties) {
             this._settings.properties = {};

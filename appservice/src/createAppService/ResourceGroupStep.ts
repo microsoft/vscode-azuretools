@@ -7,34 +7,26 @@ import { ResourceManagementClient, SubscriptionClient } from 'azure-arm-resource
 import { ResourceGroup } from 'azure-arm-resource/lib/resource/models';
 import { Location, Subscription } from 'azure-arm-resource/lib/subscription/models';
 import { ServiceClientCredentials } from 'ms-rest';
-import { QuickPickOptions } from 'vscode';
+import { OutputChannel, QuickPickOptions } from 'vscode';
+import { AzureWizardStep, IAzureQuickPickOptions, IAzureUserInput } from 'vscode-azureextensionui';
+import { IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { localize } from '../localize';
 import { uiUtils } from '../utils/uiUtils';
-import { IQuickPickItemWithData } from '../wizard/IQuickPickItemWithData';
-import { WizardStep } from '../wizard/WizardStep';
-import { AppServiceCreator } from './AppServiceCreator';
+import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
-export class ResourceGroupStep extends WizardStep {
-    protected readonly wizard: AppServiceCreator;
-
+export class ResourceGroupStep extends AzureWizardStep<IAppServiceWizardContext> {
     private _createNew: boolean;
-    private _rg: ResourceGroup;
-    private readonly _createNewItem: IQuickPickItemWithData<ResourceGroup> = {
-        persistenceId: '',
+
+    private readonly _createNewItem: IAzureQuickPickItem<ResourceGroup> = {
         label: localize('NewResourceGroup', '$(plus) Create New Resource Group'),
         description: null,
         data: null
     };
 
-    constructor(wizard: AppServiceCreator) {
-        super(wizard);
-    }
+    public async prompt(wizardContext: IAppServiceWizardContext, ui: IAzureUserInput): Promise<IAppServiceWizardContext> {
 
-    public async prompt(): Promise<void> {
-        const quickPickOptions: QuickPickOptions = { placeHolder: `Select a resource group. (${this.stepProgressText})` };
-
-        const credentials: ServiceClientCredentials = this.wizard.subscriptionStep.credentials;
-        const subscription: Subscription = this.wizard.subscriptionStep.subscription;
+        const credentials: ServiceClientCredentials = wizardContext.credentials;
+        const subscription: Subscription = wizardContext.subscription;
 
         const resourceClient: ResourceManagementClient = new ResourceManagementClient(credentials, subscription.subscriptionId);
         const resourceGroupsTask: Promise<ResourceGroup[]> = uiUtils.listAll(resourceClient.resourceGroups, resourceClient.resourceGroups.list());
@@ -43,18 +35,19 @@ export class ResourceGroupStep extends WizardStep {
         const locationsTask: Promise<Location[]> = client.subscriptions.listLocations(subscription.subscriptionId);
 
         // Cache resource group separately per subscription
-        const resourceGroup: ResourceGroup = await this.showQuickPick(this.getQuickPicks(resourceGroupsTask, locationsTask), quickPickOptions, `"NewWebApp.ResourceGroup/${subscription.id}`);
+        const quickPickOptions: IAzureQuickPickOptions = { placeHolder: 'Select a resource group.', id: `NewWebApp.ResourceGroup/${subscription.id}` };
+        const resourceGroup: ResourceGroup = (await ui.showQuickPick(this.getQuickPicks(resourceGroupsTask, locationsTask), quickPickOptions)).data;
 
         if (resourceGroup) {
             this._createNew = false;
-            this._rg = resourceGroup;
-            return;
+            wizardContext.resourceGroup = resourceGroup;
+            return wizardContext;
         }
 
         this._createNew = true;
-        const suggestedName: string = await this.wizard.websiteNameStep.computeRelatedName();
+        const suggestedName: string = await wizardContext.relatedNameTask;
         const resourceGroups: ResourceGroup[] = await resourceGroupsTask;
-        const newRgName: string = await this.showInputBox({
+        const newRgName: string = await ui.showInputBox({
             value: suggestedName,
             prompt: 'Enter the name of the new resource group.',
             validateInput: (value: string): string | undefined => {
@@ -73,50 +66,45 @@ export class ResourceGroupStep extends WizardStep {
         });
 
         const locations: Location[] = await locationsTask;
-        const locationPickItems: IQuickPickItemWithData<Location>[] = locations.map<IQuickPickItemWithData<Location>>((l: Location) => {
+        const locationPickItems: IAzureQuickPickItem<Location>[] = locations.map<IAzureQuickPickItem<Location>>((l: Location) => {
             return {
                 label: l.displayName,
                 description: `(${l.name})`,
                 detail: '',
-                persistenceId: l.name,
+                id: l.name,
                 data: l
             };
         });
         const locationPickOptions: QuickPickOptions = { placeHolder: 'Select the location for the new resource group.' };
-        const location: Location = await this.showQuickPick(locationPickItems, locationPickOptions, 'NewWebApp.Location');
+        const location: Location = (await ui.showQuickPick(locationPickItems, locationPickOptions)).data;
 
-        this._rg = {
+        wizardContext.resourceGroup = {
             name: newRgName.trim(),
             location: location.name
         };
+
+        return wizardContext;
     }
 
-    public async execute(): Promise<void> {
+    public async execute(wizardContext: IAppServiceWizardContext, outputChannel: OutputChannel): Promise<IAppServiceWizardContext> {
         if (!this._createNew) {
-            this.wizard.writeline(localize('UsingResourceGroup', 'Using resource group "{0} ({1})".', this._rg.name, this._rg.location));
-            return;
+            outputChannel.appendLine(localize('UsingResourceGroup', 'Using resource group "{0} ({1})".', wizardContext.resourceGroup.name, wizardContext.resourceGroup.location));
+            return wizardContext;
         }
 
-        this.wizard.writeline(localize('CreatingResourceGroup', 'Creating new resource group "{0} ({1})"...', this._rg.name, this._rg.location));
-        const credentials: ServiceClientCredentials = this.wizard.subscriptionStep.credentials; const subscription: Subscription = this.wizard.subscriptionStep.subscription;
+        outputChannel.appendLine(localize('CreatingResourceGroup', 'Creating new resource group "{0} ({1})"...', wizardContext.resourceGroup.name, wizardContext.resourceGroup.location));
+        const credentials: ServiceClientCredentials = wizardContext.credentials; const subscription: Subscription = wizardContext.subscription;
         const resourceClient: ResourceManagementClient = new ResourceManagementClient(credentials, subscription.subscriptionId);
-        this._rg = await resourceClient.resourceGroups.createOrUpdate(this._rg.name, this._rg);
-        this.wizard.writeline(localize('CreatedResourceGroup', 'Created resource group "{0} ({1})".', this._rg.name, this._rg.location));
+        wizardContext.resourceGroup = await resourceClient.resourceGroups.createOrUpdate(wizardContext.resourceGroup.name, wizardContext.resourceGroup);
+        outputChannel.appendLine(localize('CreatedResourceGroup', 'Created resource group "{0} ({1})".', wizardContext.resourceGroup.name, wizardContext.resourceGroup.location));
+        return wizardContext;
     }
 
-    get resourceGroup(): ResourceGroup {
-        return this._rg;
-    }
-
-    get createNew(): boolean {
-        return this._createNew;
-    }
-
-    private async getQuickPicks(resourceGroupsTask: Promise<ResourceGroup[]>, locationsTask: Promise<Location[]>): Promise<IQuickPickItemWithData<ResourceGroup>[]> {
+    private async getQuickPicks(resourceGroupsTask: Promise<ResourceGroup[]>, locationsTask: Promise<Location[]>): Promise<IAzureQuickPickItem<ResourceGroup>[]> {
         const [resourceGroups, locations]: [ResourceGroup[], Location[]] = await Promise.all([resourceGroupsTask, locationsTask]);
         return [this._createNewItem].concat(resourceGroups.map((rg: ResourceGroup) => {
             return {
-                persistenceId: rg.id,
+                id: rg.id,
                 label: rg.name,
                 description: locations.find((l: Location) => l.name.toLowerCase() === rg.location.toLowerCase()).displayName,
                 detail: '',
