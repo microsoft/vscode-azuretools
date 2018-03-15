@@ -8,12 +8,10 @@ import { TokenCredentials, WebResource } from 'ms-rest';
 import * as opn from 'opn';
 import * as requestP from 'request-promise';
 import * as vscode from 'vscode';
-import { IAzureNode, IParsedError, parseError, UserCancelledError } from 'vscode-azureextensionui';
+import { IAzureNode, IAzureQuickPickItem, IParsedError, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import { localize } from './localize';
 import { signRequest } from './signRequest';
 import { SiteClient } from './SiteClient';
-import { uiUtils } from './utils/uiUtils';
-import { IQuickPickItemWithData } from './wizard/IQuickPickItemWithData';
 
 export async function connectToGitHub(node: IAzureNode, client: SiteClient, outputChannel: vscode.OutputChannel): Promise<void> {
     type gitHubOrgData = { repos_url?: string };
@@ -31,16 +29,16 @@ export async function connectToGitHub(node: IAzureNode, client: SiteClient, outp
     const gitHubUser: Object[] = await getJsonRequest('https://api.github.com/user', requestOptions, node);
 
     const gitHubOrgs: Object[] = await getJsonRequest('https://api.github.com/user/orgs', requestOptions, node);
-    const orgQuickPicks: IQuickPickItemWithData<{}>[] = createQuickPickFromJsons([gitHubUser], 'login', undefined, ['repos_url']).concat(createQuickPickFromJsons(gitHubOrgs, 'login', undefined, ['repos_url']));
-    const orgQuickPick: gitHubOrgData = (await uiUtils.showQuickPickWithData(orgQuickPicks, { placeHolder: 'Choose your organization.', ignoreFocusOut: true })).data;
+    const orgQuickPicks: IAzureQuickPickItem<{}>[] = createQuickPickFromJsons([gitHubUser], 'login', undefined, ['repos_url']).concat(createQuickPickFromJsons(gitHubOrgs, 'login', undefined, ['repos_url']));
+    const orgQuickPick: gitHubOrgData = (await node.ui.showQuickPick(orgQuickPicks, { placeHolder: 'Choose your organization.' })).data;
 
     const gitHubRepos: Object[] = await getJsonRequest(orgQuickPick.repos_url, requestOptions, node);
-    const repoQuickPicks: IQuickPickItemWithData<{}>[] = createQuickPickFromJsons(gitHubRepos, 'name', undefined, ['url', 'html_url']);
-    const repoQuickPick: gitHubReposData = (await uiUtils.showQuickPickWithData(repoQuickPicks, { placeHolder: 'Choose project.', ignoreFocusOut: true })).data;
+    const repoQuickPicks: IAzureQuickPickItem<{}>[] = createQuickPickFromJsons(gitHubRepos, 'name', undefined, ['url', 'html_url']);
+    const repoQuickPick: gitHubReposData = (await node.ui.showQuickPick(repoQuickPicks, { placeHolder: 'Choose project.' })).data;
 
     const gitHubBranches: Object[] = await getJsonRequest(`${repoQuickPick.url}/branches`, requestOptions, node);
-    const branchQuickPicks: IQuickPickItemWithData<{}>[] = createQuickPickFromJsons(gitHubBranches, 'name');
-    const branchQuickPick: IQuickPickItemWithData<{}> = await uiUtils.showQuickPickWithData(branchQuickPicks, { placeHolder: 'Choose branch.', ignoreFocusOut: true });
+    const branchQuickPicks: IAzureQuickPickItem<{}>[] = createQuickPickFromJsons(gitHubBranches, 'name');
+    const branchQuickPick: IAzureQuickPickItem<{}> = await node.ui.showQuickPick(branchQuickPicks, { placeHolder: 'Choose branch.' });
 
     const siteSourceControl: SiteSourceControl = {
         location: client.location,
@@ -112,8 +110,8 @@ async function getJsonRequest(url: string, requestOptions: WebResource, node: IA
  * @param description Optional property of JSON that will be used as QuickPicks description
  * @param data Optional property of JSON that will be used as QuickPicks data saved as a NameValue pair
  */
-function createQuickPickFromJsons(jsons: Object[], label: string, description?: string, data?: string[]): IQuickPickItemWithData<{}>[] {
-    const quickPicks: IQuickPickItemWithData<{}>[] = [];
+function createQuickPickFromJsons(jsons: Object[], label: string, description?: string, data?: string[]): IAzureQuickPickItem<{}>[] {
+    const quickPicks: IAzureQuickPickItem<{}>[] = [];
     for (const json of jsons) {
         const dataValuePair: NameValuePair = {};
 

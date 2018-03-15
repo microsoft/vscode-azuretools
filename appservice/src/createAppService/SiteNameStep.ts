@@ -10,30 +10,19 @@ import { Subscription } from 'azure-arm-resource/lib/subscription/models';
 import WebSiteManagementClient = require('azure-arm-website');
 import { AppServicePlan, ResourceNameAvailability } from 'azure-arm-website/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
+import { AzureWizardStep, IAzureUserInput } from 'vscode-azureextensionui';
 import { uiUtils } from '../utils/uiUtils';
-import { WizardStep } from '../wizard/WizardStep';
-import { AppKind, getAppKindDisplayName } from './AppKind';
-import { AppServiceCreator } from './AppServiceCreator';
+import { getAppKindDisplayName } from './AppKind';
+import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
-export class SiteNameStep extends WizardStep {
-    protected readonly wizard: AppServiceCreator;
-
-    private _websiteName: string;
-    private _computeRelatedNamePromise: Promise<string>;
-    private readonly _appKind: AppKind;
-
-    constructor(wizard: AppServiceCreator, appKind: AppKind) {
-        super(wizard);
-        this._appKind = appKind;
-    }
-
-    public async prompt(): Promise<void> {
-        const credentials: ServiceClientCredentials = this.wizard.subscriptionStep.credentials;
-        const subscription: Subscription = this.wizard.subscriptionStep.subscription;
+export class SiteNameStep extends AzureWizardStep<IAppServiceWizardContext> {
+    public async prompt(wizardContext: IAppServiceWizardContext, ui: IAzureUserInput): Promise<IAppServiceWizardContext> {
+        const credentials: ServiceClientCredentials = wizardContext.credentials;
+        const subscription: Subscription = wizardContext.subscription;
         const client: WebSiteManagementClient = new WebSiteManagementClient(credentials, subscription.subscriptionId);
         let siteName: string;
-        siteName = await this.showInputBox({
-            prompt: `Enter a globally unique name for the new ${getAppKindDisplayName(this._appKind)}. (${this.stepProgressText})`,
+        siteName = await ui.showInputBox({
+            prompt: `Enter a globally unique name for the new ${getAppKindDisplayName(wizardContext.appKind)}.`,
             validateInput: async (value: string): Promise<string | undefined> => {
                 value = value ? value.trim() : '';
                 const nameAvailability: ResourceNameAvailability = await client.checkNameAvailability(value, 'site');
@@ -44,20 +33,14 @@ export class SiteNameStep extends WizardStep {
             }
         });
 
-        this._websiteName = siteName;
-        this._computeRelatedNamePromise = this.generateRelatedName(siteName);
+        wizardContext.websiteName = siteName;
+        wizardContext.relatedNameTask = this.generateRelatedName(wizardContext, siteName);
+
+        return wizardContext;
     }
 
-    // tslint:disable-next-line:no-empty
-    public async execute(): Promise<void> {
-    }
-
-    public get websiteName(): string {
-        return this._websiteName;
-    }
-
-    public async computeRelatedName(): Promise<string> {
-        return await this._computeRelatedNamePromise;
+    public async execute(wizardContext: IAppServiceWizardContext): Promise<IAppServiceWizardContext> {
+        return wizardContext;
     }
 
     protected async isNameAvailable(name: string, resourceGroups: ResourceGroup[], appServicePlans: AppServicePlan[]): Promise<boolean> {
@@ -76,9 +59,9 @@ export class SiteNameStep extends WizardStep {
      * Get a suggested base name for resources related to a given site name
      * @param siteName Site name
      */
-    private async generateRelatedName(siteName: string): Promise<string> {
-        const credentials: ServiceClientCredentials = this.wizard.subscriptionStep.credentials;
-        const subscription: Subscription = this.wizard.subscriptionStep.subscription;
+    private async generateRelatedName(wizardContext: IAppServiceWizardContext, siteName: string): Promise<string> {
+        const credentials: ServiceClientCredentials = wizardContext.credentials;
+        const subscription: Subscription = wizardContext.subscription;
         const resourceClient: ResourceManagementClient = new ResourceManagementClient(credentials, subscription.subscriptionId);
         const webSiteClient: WebSiteManagementClient = new WebSiteManagementClient(credentials, subscription.subscriptionId);
 

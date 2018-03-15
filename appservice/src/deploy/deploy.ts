@@ -5,7 +5,7 @@
 
 import { SiteConfigResource } from 'azure-arm-website/lib/models';
 import * as vscode from 'vscode';
-import { TelemetryProperties } from 'vscode-azureextensionui';
+import { IAzureUserInput, TelemetryProperties } from 'vscode-azureextensionui';
 import { localize } from '../localize';
 import { ScmType } from '../ScmType';
 import { SiteClient } from '../SiteClient';
@@ -13,7 +13,7 @@ import { randomUtils } from '../utils/randomUtils';
 import { deployZip } from './deployZip';
 import { localGitDeploy } from './localGitDeploy';
 
-export async function deploy(client: SiteClient, fsPath: string, outputChannel: vscode.OutputChannel, configurationSectionName: string, confirmDeployment: boolean = true, telemetryProperties?: TelemetryProperties): Promise<void> {
+export async function deploy(client: SiteClient, fsPath: string, outputChannel: vscode.OutputChannel, ui: IAzureUserInput, configurationSectionName: string, confirmDeployment: boolean = true, telemetryProperties?: TelemetryProperties): Promise<void> {
     const config: SiteConfigResource = await client.getSiteConfig();
     if (telemetryProperties) {
         try {
@@ -42,12 +42,12 @@ export async function deploy(client: SiteClient, fsPath: string, outputChannel: 
 
     switch (config.scmType) {
         case ScmType.LocalGit:
-            await localGitDeploy(client, fsPath, outputChannel);
+            await localGitDeploy(client, fsPath, outputChannel, ui);
             break;
         case ScmType.GitHub:
             throw new Error(localize('gitHubConnected', '"{0}" is connected to a GitHub repository. Push to GitHub repository to deploy.', client.fullName));
         default: //'None' or any other non-supported scmType
-            await deployZip(client, fsPath, outputChannel, configurationSectionName, confirmDeployment, telemetryProperties);
+            await deployZip(client, fsPath, outputChannel, ui, configurationSectionName, confirmDeployment, telemetryProperties);
             break;
     }
 

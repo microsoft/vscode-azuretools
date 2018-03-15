@@ -7,18 +7,16 @@ import { User } from 'azure-arm-website/lib/models';
 import * as opn from 'opn';
 import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
-import { UserCancelledError } from 'vscode-azureextensionui';
+import { DialogResponses, IAzureUserInput } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
-import { DialogResponses } from '../DialogResponses';
 import { getKuduClient } from '../getKuduClient';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { formatDeployLog } from './formatDeployLog';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
-export async function localGitDeploy(client: SiteClient, fsPath: string, outputChannel: vscode.OutputChannel): Promise<void> {
+export async function localGitDeploy(client: SiteClient, fsPath: string, outputChannel: vscode.OutputChannel, ui: IAzureUserInput): Promise<void> {
     const kuduClient: KuduClient = await getKuduClient(client);
-    const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging. Force push?');
     const publishCredentials: User = await client.getWebAppPublishCredential();
 
     // credentials for accessing Azure Remote Repo
@@ -29,8 +27,9 @@ export async function localGitDeploy(client: SiteClient, fsPath: string, outputC
     try {
         const status: git.StatusResult = await localGit.status();
         if (status.files.length > 0) {
-            const uncommit: string = localize('localGitUncommit', '{0} uncommitted change(s) in local repo "{1}"', status.files.length, fsPath);
-            vscode.window.showWarningMessage(uncommit);
+            const message: string = localize('localGitUncommit', '{0} uncommitted change(s) in local repo "{1}"', status.files.length, fsPath);
+            const deployAnyway: vscode.MessageItem = { title: localize('deployAnyway', 'Deploy Anyway') };
+            await ui.showWarningMessage(message, deployAnyway, DialogResponses.cancel);
         }
         await localGit.push(remote, 'HEAD:master');
     } catch (err) {
@@ -43,13 +42,12 @@ export async function localGitDeploy(client: SiteClient, fsPath: string, outputC
                 opn('https://git-scm.com/downloads');
             }
             return undefined;
-        } else if (err.message.indexOf('error: failed to push') >= 0) { // tslint:disable-line:no-unsafe-any
-            const input: vscode.MessageItem | undefined = await vscode.window.showErrorMessage(pushReject, DialogResponses.yes, DialogResponses.cancel);
-            if (input === DialogResponses.yes) {
-                await localGit.push(remote, 'HEAD:master', { '-f': true });
-            } else {
-                throw new UserCancelledError();
-            }
+            // tslint:disable-next-line:no-unsafe-any
+        } else if (err.message.indexOf('error: failed to push') >= 0) {
+            const forcePush: vscode.MessageItem = { title: localize('forcePush', 'Force Push') };
+            const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging.');
+            await vscode.window.showErrorMessage(pushReject, forcePush, DialogResponses.cancel);
+            await localGit.push(remote, 'HEAD:master', { '-f': true });
         } else {
             throw err;
         }

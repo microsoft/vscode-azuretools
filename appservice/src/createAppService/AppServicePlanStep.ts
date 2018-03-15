@@ -9,60 +9,43 @@ import { Subscription } from 'azure-arm-resource/lib/subscription/models';
 import WebSiteManagementClient = require('azure-arm-website');
 import { AppServicePlan, SkuDescription } from 'azure-arm-website/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
-import { QuickPickOptions } from 'vscode';
+import { OutputChannel } from 'vscode';
+import { AzureWizardStep, IAzureQuickPickOptions, IAzureUserInput } from 'vscode-azureextensionui';
+import { IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { localize } from '../localize';
 import { uiUtils } from '../utils/uiUtils';
-import { IQuickPickItemWithData } from '../wizard/IQuickPickItemWithData';
-import { WizardStep } from '../wizard/WizardStep';
-import { AppKind, getAppServicePlanModelKind, WebsiteOS } from './AppKind';
-import { AppServiceCreator } from './AppServiceCreator';
+import { getAppServicePlanModelKind, WebsiteOS } from './AppKind';
+import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
-export class AppServicePlanStep extends WizardStep {
-    protected readonly wizard: AppServiceCreator;
-
+export class AppServicePlanStep extends AzureWizardStep<IAppServiceWizardContext> {
     private _createNew: boolean;
-    private _plan: AppServicePlan;
-    private readonly _appKind: AppKind;
-    private readonly _websiteOS: WebsiteOS;
-    private readonly _createNewItem: IQuickPickItemWithData<AppServicePlan> = {
-        persistenceId: '$new',
-        label: localize('CreateNewAppServicePlan', '$(plus) Create New App Service Plan'),
-        description: '',
-        data: this._plan
-    };
 
-    constructor(wizard: AppServiceCreator, appKind: AppKind, websiteOS: WebsiteOS) {
-        super(wizard);
-        this._appKind = appKind;
-        this._websiteOS = websiteOS;
-    }
-
-    public async prompt(): Promise<void> {
-        const credentials: ServiceClientCredentials = this.wizard.subscriptionStep.credentials;
-        const subscription: Subscription = this.wizard.subscriptionStep.subscription;
+    public async prompt(wizardContext: IAppServiceWizardContext, ui: IAzureUserInput): Promise<IAppServiceWizardContext> {
+        const credentials: ServiceClientCredentials = wizardContext.credentials;
+        const subscription: Subscription = wizardContext.subscription;
         const client: WebSiteManagementClient = new WebSiteManagementClient(credentials, subscription.subscriptionId);
         // You can create a web app and associate it with a plan from another resource group.
         // That's why we use list instead of listByResourceGroup below; and show resource group name in the quick pick list.
 
         const plansTask: Promise<AppServicePlan[]> = uiUtils.listAll(client.appServicePlans, client.appServicePlans.list());
 
-        const rg: ResourceGroup = this.wizard.resourceGroupStep.resourceGroup;
+        const rg: ResourceGroup = wizardContext.resourceGroup;
         let newPlanName: string;
 
         // Cache hosting plan separately per subscription
-        const quickPickOptions: QuickPickOptions = { placeHolder: `Select an App Service Plan. (${this.stepProgressText}) ` };
-        const appServicePlan: AppServicePlan = await this.showQuickPick(this.getQuickPicks(plansTask), quickPickOptions, `NewWebApp.AppHostingPlan/${subscription.id}`);
+        const quickPickOptions: IAzureQuickPickOptions = { placeHolder: 'Select an App Service Plan.', id: `NewWebApp.AppHostingPlan/${subscription.id}` };
+        const appServicePlan: AppServicePlan = (await ui.showQuickPick(this.getQuickPicks(wizardContext, plansTask), quickPickOptions)).data;
 
-        if (appServicePlan !== this._createNewItem.data) {
+        if (appServicePlan !== undefined) {
             this._createNew = false;
-            this._plan = appServicePlan;
-            return;
+            wizardContext.plan = appServicePlan;
+            return wizardContext;
         }
 
         // Prompt for new plan information.
-        const suggestedName: string = await this.wizard.websiteNameStep.computeRelatedName();
+        const suggestedName: string = await wizardContext.relatedNameTask;
         const plans: AppServicePlan[] = await plansTask;
-        newPlanName = await this.showInputBox({
+        newPlanName = await ui.showInputBox({
             value: suggestedName,
             prompt: localize('AppServicePlanPrompt', 'Enter the name of the new App Service Plan.'),
             validateInput: (value: string): string | undefined => {
@@ -80,61 +63,60 @@ export class AppServicePlanStep extends WizardStep {
             }
         });
 
-        const pricingTiers: IQuickPickItemWithData<SkuDescription>[] = this.getPlanSkus().map((s: SkuDescription) => {
+        const pricingTiers: IAzureQuickPickItem<SkuDescription>[] = this.getPlanSkus().map((s: SkuDescription) => {
             return {
-                persistenceId: s.name,
                 label: s.name,
                 description: s.tier,
                 detail: '',
                 data: s
             };
         });
-        const sku: SkuDescription = await this.showQuickPick(pricingTiers, { placeHolder: localize('PricingTierPlaceholder', 'Choose your pricing tier.') }, 'NewWebApp.PricingTier');
+        const sku: SkuDescription = (await ui.showQuickPick(pricingTiers, { placeHolder: localize('PricingTierPlaceholder', 'Choose your pricing tier.') })).data;
         this._createNew = true;
 
-        this._plan = {
+        wizardContext.plan = {
             appServicePlanName: newPlanName.trim(),
-            kind: getAppServicePlanModelKind(this._appKind, this._websiteOS),
+            kind: getAppServicePlanModelKind(wizardContext.appKind, wizardContext.websiteOS),
             sku: sku,
             location: rg.location,
-            reserved: this._websiteOS === WebsiteOS.linux  // The secret property - must be set to true to make it a Linux plan. Confirmed by the team who owns this API.
+            reserved: wizardContext.websiteOS === WebsiteOS.linux  // The secret property - must be set to true to make it a Linux plan. Confirmed by the team who owns this API.
         };
+
+        return wizardContext;
     }
 
-    public async execute(): Promise<void> {
+    public async execute(wizardContext: IAppServiceWizardContext, outputChannel: OutputChannel): Promise<IAppServiceWizardContext> {
         if (!this._createNew) {
-            this.wizard.writeline(localize('UsingAppServicePlan', 'Using App Service plan "{0} ({1})".', this._plan.appServicePlanName, this._plan.sku.name));
-            return;
+            outputChannel.appendLine(localize('UsingAppServicePlan', 'Using App Service plan "{0} ({1})".', wizardContext.plan.appServicePlanName, wizardContext.plan.sku.name));
+            return wizardContext;
         }
 
-        this.wizard.writeline(localize('CreatingAppServicePlan', 'Creating new App Service plan "{0} ({1})"...', this._plan.appServicePlanName, this._plan.sku.name));
-        const credentials: ServiceClientCredentials = this.wizard.subscriptionStep.credentials;
-        const subscription: Subscription = this.wizard.subscriptionStep.subscription;
-        const rg: ResourceGroup = this.wizard.resourceGroupStep.resourceGroup;
+        outputChannel.appendLine(localize('CreatingAppServicePlan', 'Creating new App Service plan "{0} ({1})"...', wizardContext.plan.appServicePlanName, wizardContext.plan.sku.name));
+        const credentials: ServiceClientCredentials = wizardContext.credentials;
+        const subscription: Subscription = wizardContext.subscription;
+        const rg: ResourceGroup = wizardContext.resourceGroup;
         const websiteClient: WebSiteManagementClient = new WebSiteManagementClient(credentials, subscription.subscriptionId);
-        this._plan = await websiteClient.appServicePlans.createOrUpdate(rg.name, this._plan.appServicePlanName, this._plan);
-        this.wizard.writeline(localize('CreatedAppServicePlan', 'Created App Service plan "{0} ({1})".', this._plan.appServicePlanName, this._plan.sku.name));
+        wizardContext.plan = await websiteClient.appServicePlans.createOrUpdate(rg.name, wizardContext.plan.appServicePlanName, wizardContext.plan);
+        outputChannel.appendLine(localize('CreatedAppServicePlan', 'Created App Service plan "{0} ({1})".', wizardContext.plan.appServicePlanName, wizardContext.plan.sku.name));
+        return wizardContext;
     }
 
-    public get servicePlan(): AppServicePlan {
-        return this._plan;
-    }
-
-    public get createNew(): boolean {
-        return this._createNew;
-    }
-
-    private async getQuickPicks(plansTask: Promise<AppServicePlan[]>): Promise<IQuickPickItemWithData<AppServicePlan>[]> {
+    private async getQuickPicks(wizardContext: IAppServiceWizardContext, plansTask: Promise<AppServicePlan[]>): Promise<IAzureQuickPickItem<AppServicePlan>[]> {
         const plans: AppServicePlan[] = await plansTask;
-        const quickPickItems: IQuickPickItemWithData<AppServicePlan>[] = [this._createNewItem];
+        const quickPickItems: IAzureQuickPickItem<AppServicePlan>[] = [{
+            id: '$new',
+            label: localize('CreateNewAppServicePlan', '$(plus) Create New App Service Plan'),
+            description: '',
+            data: wizardContext.plan
+        }];
         plans.forEach((plan: AppServicePlan) => {
             // Plan kinds can look like "app,linux", etc. for Linux
             const isLinux: boolean = plan.kind.toLowerCase().split(',').find((value: string) => value === WebsiteOS.linux) !== null;
-            const isCompatible: boolean = (this._websiteOS === WebsiteOS.linux) === isLinux;
+            const isCompatible: boolean = (wizardContext.websiteOS === WebsiteOS.linux) === isLinux;
 
             if (isCompatible) {
                 quickPickItems.push({
-                    persistenceId: plan.id,
+                    id: plan.id,
                     label: plan.appServicePlanName,
                     description: `${plan.sku.name} (${plan.geoRegion})`,
                     detail: plan.resourceGroup,
