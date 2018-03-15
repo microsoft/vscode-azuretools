@@ -7,7 +7,7 @@ import { Subscription } from 'azure-arm-resource/lib/subscription/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment } from 'ms-rest-azure';
 import * as opn from 'opn';
-import { AzureTreeDataProvider, IAzureNode, IAzureParentNode, IAzureTreeItem } from '../../index';
+import { AzureTreeDataProvider, IAzureNode, IAzureParentNode, IAzureTreeItem, IAzureUserInput } from '../../index';
 import { ArgumentError, NotImplementedError } from '../errors';
 
 export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAzureNode<T> {
@@ -27,7 +27,7 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
         // For the sake of backwards compat, only add the parent's id if it's not already there
         if (this.parent && !id.startsWith(this.parent.id)) {
             id = `${this.parent.id}${id}`;
-            }
+        }
 
         return id;
     }
@@ -75,6 +75,14 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
     public get treeDataProvider(): AzureTreeDataProvider {
         if (this.parent) {
             return this.parent.treeDataProvider;
+        } else {
+            throw new ArgumentError(this);
+        }
+    }
+
+    public get ui(): IAzureUserInput {
+        if (this.parent) {
+            return this.parent.ui;
         } else {
             throw new ArgumentError(this);
         }

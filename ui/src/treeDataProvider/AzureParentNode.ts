@@ -3,9 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IAzureNode, IAzureParentTreeItem, IAzureTreeItem } from '../../index';
+import { IAzureNode, IAzureParentTreeItem, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureTreeItem } from '../../index';
 import { NotImplementedError } from '../errors';
-import { IUserInterface, PickWithData } from '../IUserInterface';
 import { localize } from '../localize';
 import { AzureNode, IAzureParentNodeInternal } from './AzureNode';
 import { CreatingTreeItem } from './CreatingTreeItem';
@@ -77,7 +76,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
             .sort(sortCallback);
     }
 
-    public async pickChildNode(expectedContextValues: string[], ui: IUserInterface): Promise<AzureNode> {
+    public async pickChildNode(expectedContextValues: string[]): Promise<AzureNode> {
         if (this.treeItem.pickTreeItem) {
             const children: AzureNode[] = await this.getCachedChildren();
             for (const val of expectedContextValues) {
@@ -93,8 +92,11 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
             }
         }
 
-        const pick: PickWithData<GetNodeFunction> = await ui.showQuickPick<GetNodeFunction>(this.getQuickPicks(expectedContextValues), localize('selectNode', 'Select a {0}', this.treeItem.childTypeLabel), true /* ignoreFocusOut */);
-        return await pick.data();
+        const options: IAzureQuickPickOptions = {
+            placeHolder: localize('selectNode', 'Select a {0}', this.treeItem.childTypeLabel)
+        };
+        const getNode: GetNodeFunction = (await this.ui.showQuickPick(this.getQuickPicks(expectedContextValues), options)).data;
+        return await getNode();
     }
 
     public async addNodeToCache(node: AzureNode): Promise<void> {
@@ -123,27 +125,37 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
         }
     }
 
-    private async getQuickPicks(expectedContextValues: string[]): Promise<PickWithData<GetNodeFunction>[]> {
+    private async getQuickPicks(expectedContextValues: string[]): Promise<IAzureQuickPickItem<GetNodeFunction>[]> {
         let nodes: AzureNode[] = await this.getCachedChildren();
         nodes = nodes.filter((node: AzureNode) => node.includeInNodePicker(expectedContextValues));
 
-        const picks: PickWithData<GetNodeFunction>[] = nodes.map((n: AzureNode) => new PickWithData(async (): Promise<AzureNode> => await Promise.resolve(n), n.treeItem.label));
+        const picks: IAzureQuickPickItem<GetNodeFunction>[] = nodes.map((n: AzureNode) => {
+            return {
+                label: n.treeItem.label,
+                description: '',
+                id: n.id,
+                data: async (): Promise<AzureNode> => await Promise.resolve(n)
+            };
+        });
+
         if (this.treeItem.createChild && this.treeItem.childTypeLabel) {
-            picks.unshift(new PickWithData<GetNodeFunction>(
-                async (): Promise<AzureNode> => await this.createChild(),
-                localize('nodePickerCreateNew', '$(plus) Create New {0}', this.treeItem.childTypeLabel)
-            ));
+            picks.unshift({
+                label: localize('nodePickerCreateNew', '$(plus) Create New {0}', this.treeItem.childTypeLabel),
+                description: '',
+                data: async (): Promise<AzureNode> => await this.createChild()
+            });
         }
 
         if (this.treeItem.hasMoreChildren()) {
-            picks.push(new PickWithData<GetNodeFunction>(
-                async (): Promise<AzureNode> => {
+            picks.push({
+                label: LoadMoreTreeItem.label,
+                description: '',
+                data: async (): Promise<AzureNode> => {
                     await this.loadMoreChildren();
                     await this.treeDataProvider.refresh(this, false);
                     return this;
-                },
-                LoadMoreTreeItem.label
-            ));
+                }
+            });
         }
 
         return picks;

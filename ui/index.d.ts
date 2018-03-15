@@ -7,7 +7,7 @@
 import { Subscription } from 'azure-arm-resource/lib/subscription/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment } from 'ms-rest-azure';
-import { Uri, TreeDataProvider, Disposable, TreeItem, Event, OutputChannel, Memento, TextDocument, ExtensionContext } from 'vscode';
+import { Uri, TreeDataProvider, Disposable, TreeItem, Event, OutputChannel, Memento, InputBoxOptions, QuickPickItem, QuickPickOptions, TextDocument, ExtensionContext, MessageItem, OpenDialogOptions } from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
 
 export declare class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disposable {
@@ -17,10 +17,11 @@ export declare class AzureTreeDataProvider implements TreeDataProvider<IAzureNod
      * Azure Tree Data Provider
      * @param resourceProvider Describes the resources to be displayed under subscription nodes
      * @param loadMoreCommandId The command your extension will register for the 'Load More...' node
-     * @param rootTreeItems Any nodes other than the subscriptions that should be shown at the root of the explorer
+     * @param ui Used to get input from the user
      * @param telemetryReporter Optionally used to track telemetry for the tree
+     * @param rootTreeItems Any nodes other than the subscriptions that should be shown at the root of the explorer
      */
-    constructor(resourceProvider: IChildProvider, loadMoreCommandId: string, rootTreeItems?: IAzureTreeItem[], telemetryReporter?: TelemetryReporter);
+    constructor(resourceProvider: IChildProvider, loadMoreCommandId: string, ui: IAzureUserInput, telemetryReporter: TelemetryReporter | undefined, rootTreeItems?: IAzureParentTreeItem[]);
     public getTreeItem(node: IAzureNode): TreeItem;
     public getChildren(node?: IAzureParentNode): Promise<IAzureNode[]>;
     public refresh(node?: IAzureNode, clearCache?: boolean): Promise<void>;
@@ -47,6 +48,7 @@ export interface IAzureNode<T extends IAzureTreeItem = IAzureTreeItem> {
     readonly tenantId: string;
     readonly userId: string;
     readonly environment: AzureEnvironment;
+    readonly ui: IAzureUserInput;
 
     /**
      * Refresh this node in the tree
@@ -233,4 +235,143 @@ export interface IParsedError {
     errorType: string;
     message: string;
     isUserCancelledError: boolean;
+}
+
+/**
+ * Wrapper interface of several `vscode.window` methods that handle user input. The main reason for this interface
+ * is to facilitate unit testing in non-interactive mode with the `TestUserInput` class.
+ * However, the `AzureUserInput` class does have a few minor differences from default vscode behavior:
+ * 1. Automatically throws a `UserCancelledError` instead of returning undefined when a user cancels
+ * 2. Persists 'recently used' items in quick picks and displays them at the top
+ */
+export interface IAzureUserInput {
+    /**
+     * Shows a selection list.
+     * Automatically persists the 'recently used' item and displays that at the top of the list
+     *
+     * @param items An array of items, or a promise that resolves to an array of items.
+     * @param options Configures the behavior of the selection list.
+     * @throws `UserCancelledError` if the user cancels.
+     * @return A promise that resolves to the item the user picked.
+     */
+    showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T>;
+
+    /**
+     * Opens an input box to ask the user for input.
+     *
+     * @param options Configures the behavior of the input box.
+     * @throws `UserCancelledError` if the user cancels.
+     * @return A promise that resolves to a string the user provided.
+     */
+    showInputBox(options: InputBoxOptions): Promise<string>;
+
+    /**
+     * Show a warning message.
+     *
+     * @param message The message to show.
+     * @param items A set of items that will be rendered as actions in the message.
+     * @throws `UserCancelledError` if the user cancels.
+     * @return A thenable that resolves to the selected item when being dismissed.
+     */
+    showWarningMessage(message: string, ...items: MessageItem[]): Promise<MessageItem>;
+
+    /**
+     * Shows a file open dialog to the user which allows to select a file
+     * for opening-purposes.
+     *
+     * @param options Options that control the dialog.
+     * @throws `UserCancelledError` if the user cancels.
+     * @returns A promise that resolves to the selected resources.
+     */
+    showOpenDialog(options: OpenDialogOptions): Promise<Uri[]>;
+}
+
+/**
+ * Wrapper class of several `vscode.window` methods that handle user input.
+ */
+export declare class AzureUserInput implements IAzureUserInput {
+    /**
+     * @param persistence Used to persist previous selections in the QuickPick.
+     */
+    public constructor(persistence: Memento);
+
+    public showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T>;
+    public showInputBox(options: InputBoxOptions): Promise<string>;
+    public showWarningMessage(message: string, ...items: MessageItem[]): Promise<MessageItem>;
+    public showOpenDialog(options: OpenDialogOptions): Promise<Uri[]>;
+}
+
+/**
+ * Wrapper class of several `vscode.window` methods that handle user input.
+ * This class is meant to be used for testing in non-interactive mode.
+ */
+export declare class TestUserInput implements IAzureUserInput {
+    /**
+     * @param inputs An ordered array of inputs that will be used instead of interactively prompting in VS Code.
+     */
+    public constructor(inputs: (string | undefined)[]);
+
+    public showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T>;
+    public showInputBox(options: InputBoxOptions): Promise<string>;
+    public showWarningMessage(message: string, ...items: MessageItem[]): Promise<MessageItem>;
+    public showOpenDialog(options: OpenDialogOptions): Promise<Uri[]>;
+}
+
+/**
+ * Provides additional options for QuickPickItems used in Azure Extensions
+ */
+export interface IAzureQuickPickItem<T = undefined> extends QuickPickItem {
+    /**
+     * An optional id to uniquely identify this item across sessions, used in persisting previous selections
+     * If not specified, a hash of the label will be used
+     */
+    id?: string;
+
+    data: T;
+}
+
+/**
+ * Provides additional options for QuickPicks used in Azure Extensions
+ */
+export interface IAzureQuickPickOptions extends QuickPickOptions {
+    /**
+     * An optional id to identify this QuickPick across sessions, used in persisting previous selections
+     * If not specified, a hash of the placeHolder will be used
+     */
+    id?: string;
+}
+
+/**
+ * A wizard that links several user input steps together
+ */
+export declare class AzureWizard<T> {
+    /**
+     * @param steps The steps to perform, in order
+     * @param wizardContext A context object that should be used to pass information between steps
+     */
+    public constructor(steps: AzureWizardStep<T>[], wizardContext: T);
+
+    public prompt(actionContext: IActionContext, ui: IAzureUserInput): Promise<T>;
+    public execute(actionContext: IActionContext, outputChannel: OutputChannel): Promise<T>;
+}
+
+export declare abstract class AzureWizardStep<T> {
+    public abstract prompt(wizardContext: T, ui: IAzureUserInput): Promise<T>;
+    public abstract execute(wizardContext: T, outputChannel: OutputChannel): Promise<T>;
+}
+
+/**
+ * Common dialog responses used in Azure extensions
+ */
+export declare namespace DialogResponses {
+    export const yes: MessageItem;
+    export const no: MessageItem;
+    export const cancel: MessageItem;
+    export const deleteResponse: MessageItem;
+    export const learnMore: MessageItem;
+    export const dontWarnAgain: MessageItem;
+    export const skipForNow: MessageItem;
+    export const upload: MessageItem;
+    export const alwaysUpload: MessageItem;
+    export const dontUpload: MessageItem;
 }
