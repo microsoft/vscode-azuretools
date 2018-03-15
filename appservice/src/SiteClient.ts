@@ -181,7 +181,7 @@ export class SiteClient {
         return await this._storageClient.storageAccounts.list();
     }
 
-    public async listStorageAccountKeys(accountName: string): Promise<StorageAccountListKeysResult> {
-        return await this._storageClient.storageAccounts.listKeys(this.resourceGroup, accountName);
+    public async listStorageAccountKeys(resourceGroup: string, accountName: string): Promise<StorageAccountListKeysResult> {
+        return await this._storageClient.storageAccounts.listKeys(resourceGroup, accountName);
     }
 }

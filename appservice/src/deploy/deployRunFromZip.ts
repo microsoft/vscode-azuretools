@@ -8,7 +8,6 @@ import * as vscode from 'vscode';
 import { TelemetryProperties } from 'vscode-azureextensionui';
 // import { DialogResponses } from '../DialogResponses';
 import * as FileUtilities from '../FileUtilities';
-// import { getKuduClient } from '../getKuduClient';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { formatDeployLog } from './formatDeployLog';
@@ -17,9 +16,7 @@ import { StorageAccountListResult } from 'azure-arm-storage/lib/models';
 import { uiUtils } from '../utils/uiUtils';
 import { IQuickPickItemWithData } from '../wizard/IQuickPickItemWithData';
 import { StorageAccount, StorageAccountListKeysResult } from 'azure-arm-storage/lib/models';
-// import * as azureStorage from "azure-storage";
-
-// import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
+import * as azureStorage from "azure-storage";
 
 export async function deployRunFromZip(client: SiteClient, fsPath: string, outputChannel: vscode.OutputChannel, telemetryProperties?: TelemetryProperties): Promise<void> {
     // if (confirmDeployment) {
@@ -57,16 +54,13 @@ export async function deployRunFromZip(client: SiteClient, fsPath: string, outpu
             };
         });
 
-        const storageAccount: StorageAccount = (await uiUtils.showQuickPickWithData(storageAccountQuickPicks, { placeHolder: 'Choose your organization.', ignoreFocusOut: true })).data;
-        const storageAccountKeys: StorageAccountListKeysResult = await client.listStorageAccountKeys(storageAccount.name);
-        console.log(storageAccountKeys);
-        // const blobService: BlobService = await azureStorage.createBlobService(storageAccount.name, storageAccountKeys.keys[0]);
-        // console.log(blobService);
+        const storageAccount: StorageAccount = (await uiUtils.showQuickPickWithData(storageAccountQuickPicks, { placeHolder: 'Choose a storage account to host the zip file.', ignoreFocusOut: true })).data;
+        const blobService: azureStorage.BlobService = await createBlobService(client, storageAccount);
+        const blobUrl: string = await createBlobFromZip(blobService, zipFilePath);
         outputChannel.appendLine(formatDeployLog(client, localize('deployStart', 'Starting deployment...')));
-        // await waitForDeploymentToComplete(client, kuduClient, outputChannel);
         const WEBSITE_USE_ZIP: string = 'WEBSITE_USE_ZIP';
         const appSettings: StringDictionary = await client.listApplicationSettings();
-        appSettings.properties[WEBSITE_USE_ZIP] = '1';
+        appSettings.properties[WEBSITE_USE_ZIP] = blobUrl.replace('%3A', ':');
         await client.updateApplicationSettings(appSettings);
     } catch (error) {
         // tslint:disable-next-line:no-unsafe-any
@@ -83,4 +77,91 @@ export async function deployRunFromZip(client: SiteClient, fsPath: string, outpu
             await FileUtilities.deleteFile(zipFilePath);
         }
     }
+}
+
+function parseAzureResourceId(resourceId: string): { [key: string]: string } {
+    const invalidIdErr: Error = new Error('Invalid Account ID.');
+    const result: {} = {};
+
+    if (!resourceId || resourceId.length < 2 || resourceId.charAt(0) !== '/') {
+        throw invalidIdErr;
+    }
+
+    const parts: string[] = resourceId.substring(1).split('/');
+
+    if (parts.length % 2 !== 0) {
+        throw invalidIdErr;
+    }
+
+    for (let i: number = 0; i < parts.length; i += 2) {
+        const key: string = parts[i];
+        const value: string = parts[i + 1];
+
+        if (key === '' || value === '') {
+            throw invalidIdErr;
+        }
+
+        result[key] = value;
+    }
+
+    return result;
+}
+
+async function createBlobService(client: SiteClient, sa: StorageAccount): Promise<azureStorage.BlobService> {
+    const parsedId: { [key: string]: string } = parseAzureResourceId(sa.id);
+    const resourceGroups: string = 'resourceGroups';
+    const saResourceGroup: string = parsedId[resourceGroups];
+    const storageAccountKeys: StorageAccountListKeysResult = await client.listStorageAccountKeys(saResourceGroup, sa.name);
+    return (await azureStorage.createBlobService(sa.name, storageAccountKeys.keys[0].value));
+
+}
+
+async function createBlobFromZip(blobService: azureStorage.BlobService, zipFilePath: string): Promise<string> {
+    const containerName = 'testing-container';
+    await new Promise<void>((resolve, reject) => {
+        blobService.createContainerIfNotExists(containerName, { publicAccessLevel: "blob" }, (err: Error) => {
+        if (err) {
+            reject(err);
+        } else {
+            resolve();
+        }
+     });
+    });
+
+    await new Promise<void>((resolve, reject) => {
+        blobService.createBlockBlobFromLocalFile(containerName, zipFilePath, zipFilePath, (error: Error, _result: azureStorage.BlobService.BlobResult, _response: azureStorage.ServiceResponse) => {
+            if (!!error) {
+                let errorAny = <any>error;
+                if (!!errorAny.code) {
+                    let humanReadableMessage = `Unable to save '${zipFilePath}', blob service returned error code "${errorAny.code}"`;
+                    switch (errorAny.code) {
+                        case "ENOTFOUND":
+                            humanReadableMessage += " - Please check connection.";
+                            break;
+                        default:
+                            break;
+                    }
+                    reject(humanReadableMessage);
+                } else {
+                    reject(error);
+                }
+            } else {
+                resolve();
+            }
+        });
+    });
+    const sasToken: string = blobService.generateSharedAccessSignature(containerName, zipFilePath, <azureStorage.common.SharedAccessPolicy>{ AccessPolicy: {
+        Start: azureStorage.date.secondsFromNow(0),
+        Expiry: azureStorage.date.minutesFromNow(60),
+        Permissions: azureStorage.BlobUtilities.SharedAccessPermissions.READ + azureStorage.BlobUtilities.SharedAccessPermissions.LIST,
+        ResourceTypes: azureStorage.BlobUtilities.BlobContainerPublicAccessType.BLOB
+
+        }
+    });
+
+    console.log(containerName);
+    console.log(zipFilePath);
+    console.log(sasToken);
+
+    return blobService.getUrl(containerName, zipFilePath, sasToken, true);
 }
