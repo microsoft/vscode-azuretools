@@ -7,7 +7,7 @@ import { Subscription } from 'azure-arm-resource/lib/subscription/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment } from 'ms-rest-azure';
 import * as path from 'path';
-import { AzureTreeDataProvider, IChildProvider } from '../../index';
+import { AzureTreeDataProvider, IAzureUserInput, IChildProvider } from '../../index';
 import { AzureSubscription } from '../azure-account.api';
 import { AzureParentNode } from './AzureParentNode';
 
@@ -15,8 +15,9 @@ export class SubscriptionNode extends AzureParentNode {
     public static readonly contextValue: string = 'azureextensionui.azureSubscription';
     private readonly _subscriptionInfo: AzureSubscription;
     private readonly _treeDataProvider: AzureTreeDataProvider;
+    private readonly _ui: IAzureUserInput;
 
-    public constructor(treeDataProvider: AzureTreeDataProvider, childProvider: IChildProvider, id: string, label: string, subscriptionInfo: AzureSubscription) {
+    public constructor(treeDataProvider: AzureTreeDataProvider, ui: IAzureUserInput, childProvider: IChildProvider, id: string, label: string, subscriptionInfo: AzureSubscription) {
         super(undefined, {
             id: `/subscriptions/${id}`,
             label: label,
@@ -29,6 +30,7 @@ export class SubscriptionNode extends AzureParentNode {
             loadMoreChildren: <typeof childProvider.loadMoreChildren>childProvider.loadMoreChildren.bind(childProvider)
         });
         this._treeDataProvider = treeDataProvider;
+        this._ui = ui;
         this._subscriptionInfo = subscriptionInfo;
     }
 
@@ -54,5 +56,9 @@ export class SubscriptionNode extends AzureParentNode {
 
     public get treeDataProvider(): AzureTreeDataProvider {
         return this._treeDataProvider;
+    }
+
+    public get ui(): IAzureUserInput {
+        return this._ui;
     }
 }
