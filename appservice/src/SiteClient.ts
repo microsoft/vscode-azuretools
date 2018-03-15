@@ -10,7 +10,7 @@ import WebSiteManagementClient = require('azure-arm-website');
 import { AppServicePlan, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SourceControlCollection, StringDictionary, User, WebAppInstanceCollection } from 'azure-arm-website/lib/models';
 import { IAzureNode } from 'vscode-azureextensionui';
 import { ArgumentError } from './errors';
-import { StorageAccountListResult } from 'azure-arm-storage/lib/models';
+import { StorageAccountListResult, StorageAccountListKeysResult } from 'azure-arm-storage/lib/models';
 
 /**
  * Wrapper of a WebSiteManagementClient for use with a specific Site
@@ -179,5 +179,9 @@ export class SiteClient {
 
     public async listStorageAccounts(): Promise<StorageAccountListResult> {
         return await this._storageClient.storageAccounts.list();
+    }
+
+    public async listStorageAccountKeys(accountName: string): Promise<StorageAccountListKeysResult> {
+        return await this._storageClient.storageAccounts.listKeys(this.resourceGroup, accountName);
     }
 }
