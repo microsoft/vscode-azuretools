@@ -117,9 +117,11 @@ async function createBlobService(client: SiteClient, sa: StorageAccount): Promis
 }
 
 async function createBlobFromZip(blobService: azureStorage.BlobService, zipFilePath: string): Promise<string> {
-    const containerName = 'testing-container';
-    await new Promise<void>((resolve, reject) => {
-        blobService.createContainerIfNotExists(containerName, { publicAccessLevel: "blob" }, (err: Error) => {
+    const containerName: string = 'azureappservice-run-from-zip';
+    const zipName: string = zipFilePath.substring(zipFilePath.lastIndexOf('/')); // parse the file path because Storage doesn't like C: in the blob name
+    // tslint:disable-next-line:no-any
+    await new Promise<void>((resolve: any, reject: any): void => {
+        blobService.createContainerIfNotExists(containerName, { publicAccessLevel: 'blob' }, (err: Error) => {
         if (err) {
             reject(err);
         } else {
@@ -128,15 +130,17 @@ async function createBlobFromZip(blobService: azureStorage.BlobService, zipFileP
      });
     });
 
-    await new Promise<void>((resolve, reject) => {
-        blobService.createBlockBlobFromLocalFile(containerName, zipFilePath, zipFilePath, (error: Error, _result: azureStorage.BlobService.BlobResult, _response: azureStorage.ServiceResponse) => {
+    // tslint:disable-next-line:no-any
+    await new Promise<void>((resolve: any, reject: any): void => {
+        blobService.createBlockBlobFromLocalFile(containerName, zipName, zipFilePath, (error: Error, _result: azureStorage.BlobService.BlobResult, _response: azureStorage.ServiceResponse) => {
             if (!!error) {
-                let errorAny = <any>error;
+                // tslint:disable-next-line:no-any
+                const errorAny: any = error;
                 if (!!errorAny.code) {
-                    let humanReadableMessage = `Unable to save '${zipFilePath}', blob service returned error code "${errorAny.code}"`;
+                    let humanReadableMessage: string = `Unable to save '${zipName}', blob service returned error code "${errorAny.code}"`;
                     switch (errorAny.code) {
-                        case "ENOTFOUND":
-                            humanReadableMessage += " - Please check connection.";
+                        case 'ENOTFOUND':
+                            humanReadableMessage +=  ' - Please check connection.';
                             break;
                         default:
                             break;
@@ -150,18 +154,14 @@ async function createBlobFromZip(blobService: azureStorage.BlobService, zipFileP
             }
         });
     });
-    const sasToken: string = blobService.generateSharedAccessSignature(containerName, zipFilePath, <azureStorage.common.SharedAccessPolicy>{ AccessPolicy: {
-        Start: azureStorage.date.secondsFromNow(0),
+    const sasToken: string = blobService.generateSharedAccessSignature(containerName, zipName, <azureStorage.common.SharedAccessPolicy>{ AccessPolicy: {
+        Permissions: azureStorage.BlobUtilities.SharedAccessPermissions.READ,
+        Start: azureStorage.date.secondsFromNow(-10),
+        // for clock desync
         Expiry: azureStorage.date.minutesFromNow(60),
-        Permissions: azureStorage.BlobUtilities.SharedAccessPermissions.READ + azureStorage.BlobUtilities.SharedAccessPermissions.LIST,
         ResourceTypes: azureStorage.BlobUtilities.BlobContainerPublicAccessType.BLOB
-
         }
     });
 
-    console.log(containerName);
-    console.log(zipFilePath);
-    console.log(sasToken);
-
-    return blobService.getUrl(containerName, zipFilePath, sasToken, true);
+    return blobService.getUrl(containerName, zipName, sasToken, true);
 }
