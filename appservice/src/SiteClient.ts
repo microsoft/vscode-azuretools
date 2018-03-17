@@ -5,12 +5,12 @@
 
 // tslint:disable-next-line:no-require-imports
 import StorageManagementClient = require('azure-arm-storage');
+import { StorageAccountListKeysResult, StorageAccountListResult } from 'azure-arm-storage/lib/models';
 // tslint:disable-next-line:no-require-imports
 import WebSiteManagementClient = require('azure-arm-website');
 import { AppServicePlan, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SourceControlCollection, StringDictionary, User, WebAppInstanceCollection } from 'azure-arm-website/lib/models';
 import { IAzureNode } from 'vscode-azureextensionui';
 import { ArgumentError } from './errors';
-import { StorageAccountListResult, StorageAccountListKeysResult } from 'azure-arm-storage/lib/models';
 
 /**
  * Wrapper of a WebSiteManagementClient for use with a specific Site
