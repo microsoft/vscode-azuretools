@@ -42,7 +42,7 @@ export class SiteNameStep extends AzureNameStep<IAppServiceWizardContext> {
         return wizardContext;
     }
 
-    protected async isNameAvailable(wizardContext: IAppServiceWizardContext, name: string): Promise<boolean> {
+    protected async isRelatedNameAvailable(wizardContext: IAppServiceWizardContext, name: string): Promise<boolean> {
         const tasks: Promise<boolean>[] = [ResourceGroupStep.isNameAvailable(wizardContext, name)];
         if (wizardContext.appKind === AppKind.functionapp) {
             tasks.push(StorageAccountStep.isNameAvailable(wizardContext, name));
