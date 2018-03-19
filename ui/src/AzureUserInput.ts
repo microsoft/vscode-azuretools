@@ -42,6 +42,10 @@ export class AzureUserInput implements IAzureUserInput {
     }
 
     public async showInputBox(options: vscode.InputBoxOptions): Promise<string> {
+        if (options.ignoreFocusOut === undefined) {
+            options.ignoreFocusOut = true;
+        }
+
         const result: string | undefined = await vscode.window.showInputBox(options);
 
         if (result === undefined) {
@@ -88,6 +92,8 @@ export class AzureUserInput implements IAzureUserInput {
                         previousItem.description = recentlyUsed;
                     } else if (!previousItem.detail) {
                         previousItem.detail = recentlyUsed;
+                    } else {
+                        previousItem.description = `${previousItem.description} ${recentlyUsed}`;
                     }
 
                     items.unshift(previousItem);

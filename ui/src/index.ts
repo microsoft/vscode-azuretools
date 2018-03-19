@@ -3,14 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-export { AzureTreeDataProvider } from './treeDataProvider/AzureTreeDataProvider';
-export { UserCancelledError } from './errors';
-export { BaseEditor } from './BaseEditor';
-export { AzureActionHandler } from './AzureActionHandler';
-export { parseError } from './parseError';
-export { callWithTelemetryAndErrorHandling } from './callWithTelemetryAndErrorHandling';
-export { AzureUserInput } from './AzureUserInput';
-export { TestUserInput } from './TestUserInput';
-export { DialogResponses } from './DialogResponses';
-export { AzureWizard } from './wizard/AzureWizard';
-export { AzureWizardStep } from './wizard/AzureWizardStep';
+export * from './treeDataProvider/AzureTreeDataProvider';
+export * from './errors';
+export * from './BaseEditor';
+export * from './AzureActionHandler';
+export * from './parseError';
+export * from './callWithTelemetryAndErrorHandling';
+export * from './AzureUserInput';
+export * from './TestUserInput';
+export * from './DialogResponses';
+export * from './wizard/AzureWizard';
+export * from './wizard/AzureWizardStep';
+export * from './wizard/AzureNameStep';
+export * from './wizard/LocationStep';
+export * from './wizard/ResourceGroupStep';
+export * from './wizard/StorageAccountStep';
