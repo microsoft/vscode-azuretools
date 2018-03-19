@@ -8,7 +8,7 @@ import { IAzureNamingRules, IRelatedNameWizardContext } from "../../index";
 import { AzureWizardStep } from "./AzureWizardStep";
 
 export abstract class AzureNameStep<T extends IRelatedNameWizardContext> extends AzureWizardStep<T> {
-    protected abstract isNameAvailable(wizardContext: T, name: string): Promise<boolean>;
+    protected abstract isRelatedNameAvailable(wizardContext: T, name: string): Promise<boolean>;
 
     protected async generateRelatedName(wizardContext: T, name: string, namingRules: IAzureNamingRules | IAzureNamingRules[]): Promise<string | undefined> {
         if (!isArray(namingRules)) {
@@ -29,7 +29,7 @@ export abstract class AzureNameStep<T extends IRelatedNameWizardContext> extends
         let newName: string;
         while (count < maxTries) {
             newName = this.generateSuffixedName(preferredName, count, minLength, maxLength);
-            if (await this.isNameAvailable(wizardContext, newName)) {
+            if (await this.isRelatedNameAvailable(wizardContext, newName)) {
                 return newName;
             }
             count += 1;

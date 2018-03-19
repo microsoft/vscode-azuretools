@@ -414,7 +414,7 @@ export interface IRelatedNameWizardContext {
 
 /**
  * A generic class for a step that specifies the name of a new resource, used to generate a related name for other new resources.
- * You must implement `isNameAvailable` and assign `wizardContext.relatedNameTask` to the result of `generateRelatedName`
+ * You must implement `isRelatedNameAvailable` and assign `wizardContext.relatedNameTask` to the result of `generateRelatedName`
  */
 export declare abstract class AzureNameStep<T extends IRelatedNameWizardContext> extends AzureWizardStep<T> {
     /**
@@ -422,7 +422,7 @@ export declare abstract class AzureNameStep<T extends IRelatedNameWizardContext>
      * @param wizardContext The context of the wizard.
      * @param name The name that will be checked.
      */
-    protected abstract isNameAvailable(wizardContext: T, name: string): Promise<boolean>;
+    protected abstract isRelatedNameAvailable(wizardContext: T, name: string): Promise<boolean>;
 
     /**
      * Generates a related name for new resources
