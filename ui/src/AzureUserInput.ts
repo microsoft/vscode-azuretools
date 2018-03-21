@@ -29,12 +29,12 @@ export class AzureUserInput implements IAzureUserInput {
             persistenceKey = `showQuickPick.${randomUtils.getPseudononymousStringHash(unhashedKey)}`;
         }
 
-        const result: T | undefined = await vscode.window.showQuickPick(this.getOrderedItems(items, persistenceKey), options);
+        const result: T | undefined = await vscode.window.showQuickPick(this.getOrderedItems(items, persistenceKey, (<IAzureQuickPickOptions>options).suppressPersistence), options);
         if (result === undefined) {
             throw new UserCancelledError();
         }
 
-        if (persistenceKey) {
+        if (persistenceKey && !(<IAzureQuickPickItem><{}>result).suppressPersistence) {
             this._persistence.update(persistenceKey, getPersistenceValue(result));
         }
 
@@ -73,10 +73,10 @@ export class AzureUserInput implements IAzureUserInput {
     /**
      * See if the previous value selected by the user is in the list, and move it to the top as default
      */
-    private async getOrderedItems<T extends QuickPickItem>(items: T[] | Thenable<T[]>, persistenceKey: string | undefined): Promise<T[]> {
+    private async getOrderedItems<T extends QuickPickItem>(items: T[] | Thenable<T[]>, persistenceKey: string | undefined, suppressPersistence: boolean | undefined): Promise<T[]> {
         items = await Promise.resolve(items);
 
-        if (persistenceKey) {
+        if (persistenceKey && !suppressPersistence) {
             const previousValue: string | undefined = this._persistence.get(persistenceKey);
             if (previousValue) {
                 const index: number = items.findIndex((item: T) => getPersistenceValue(item) === previousValue);
