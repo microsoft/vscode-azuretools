@@ -4,11 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 
-import { Subscription } from 'azure-arm-resource/lib/subscription/models';
+import { Subscription, Location } from 'azure-arm-resource/lib/subscription/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment } from 'ms-rest-azure';
 import { Uri, TreeDataProvider, Disposable, TreeItem, Event, OutputChannel, Memento, InputBoxOptions, QuickPickItem, QuickPickOptions, TextDocument, ExtensionContext, MessageItem, OpenDialogOptions } from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
+import { ResourceGroup } from 'azure-arm-resource/lib/resource/models';
+import { StorageAccount, CheckNameAvailabilityResult } from 'azure-arm-storage/lib/models';
 
 export declare class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disposable {
     public static readonly subscriptionContextValue: string;
@@ -368,6 +370,142 @@ export declare class AzureWizard<T> {
 export declare abstract class AzureWizardStep<T> {
     public abstract prompt(wizardContext: T, ui: IAzureUserInput): Promise<T>;
     public abstract execute(wizardContext: T, outputChannel: OutputChannel): Promise<T>;
+}
+
+export interface ISubscriptionWizardContext {
+    credentials: ServiceClientCredentials;
+    subscription: Subscription;
+}
+
+export interface ILocationWizardContext extends ISubscriptionWizardContext {
+    /**
+     * The location to use for new resources
+     * This value will be defined after `LocationStep.prompt` occurs or after you call `LocationStep.setLocation`
+     */
+    location?: Location;
+
+    /**
+     * The task used to get locations.
+     * By specifying this in the context, we can ensure that Azure is only queried once for the entire wizard
+     */
+    locationsTask?: Promise<Location[]>;
+}
+
+export declare class LocationStep<T extends ILocationWizardContext> extends AzureWizardStep<T> {
+    /**
+     * This will set the wizard context's location (in which case the user will _not_ be prompted for location)
+     * For example, if the user selects an existing resource, you might want to use that location as the default for the wizard's other resources
+     * @param wizardContext The context of the wizard
+     * @param name The name or display name of the location
+     */
+    public static setLocation<T extends ILocationWizardContext>(wizardContext: T, name: string): Promise<void>;
+
+    /**
+     * Used to get locations. By passing in the context, we can ensure that Azure is only queried once for the entire wizard
+     * @param wizardContext The context of the wizard.
+     */
+    public static getLocations<T extends ILocationWizardContext>(wizardContext: T): Promise<Location[]>;
+
+    public prompt(wizardContext: T, ui: IAzureUserInput): Promise<T>;
+    public execute(wizardContext: T, outputChannel: OutputChannel): Promise<T>;
+}
+
+export interface IAzureNamingRules {
+    minLength: number;
+    maxLength: number;
+
+    /**
+     * A RegExp specifying the invalid characters.
+     * For example, /[^a-z0-9]/ would specify that only lowercase, alphanumeric characters are allowed.
+     */
+    invalidCharsRegExp: RegExp;
+
+    /**
+     * Specify this if only lowercase letters are allowed
+     * This is a separate property than `invalidCharsRegExp` because the behavior can be different.
+     * For example, when generating a relatedName, we can convert uppercase letters to lowercase instead of just removing them.
+     */
+    lowercaseOnly?: boolean;
+}
+
+export interface IRelatedNameWizardContext {
+    /**
+     * A task that evaluates to the related name that should be used as the default for other new resources or undefined if a unique name could not be found
+     * The task will be defined after `AzureNameStep.prompt` occurs.
+     */
+    relatedNameTask?: Promise<string | undefined>;
+}
+
+/**
+ * A generic class for a step that specifies the name of a new resource, used to generate a related name for other new resources.
+ * You must implement `isRelatedNameAvailable` and assign `wizardContext.relatedNameTask` to the result of `generateRelatedName`
+ */
+export declare abstract class AzureNameStep<T extends IRelatedNameWizardContext> extends AzureWizardStep<T> {
+    /**
+     * This method will by called by `generateRelatedName` when trying to find a unique suffix for the related name
+     * @param wizardContext The context of the wizard.
+     * @param name The name that will be checked.
+     */
+    protected abstract isRelatedNameAvailable(wizardContext: T, name: string): Promise<boolean>;
+
+    /**
+     * Generates a related name for new resources
+     * @param wizardContext The context of the wizard.
+     * @param name The original name to base the related name on.
+     * @param namingRules The rules that the name must adhere to. You may specify an array of rules if the related name will be used for multiple resource types.
+     * @returns A name that conforms to the namingRules and has a numeric suffix attached to make the name unique, or undefined if a unique name could not be found
+     */
+    protected generateRelatedName(wizardContext: T, name: string, namingRules: IAzureNamingRules | IAzureNamingRules[]): Promise<string | undefined>;
+}
+
+export interface IResourceGroupWizardContext extends ILocationWizardContext, IRelatedNameWizardContext {
+    /**
+     * The resource group to use for new resources.
+     * If an existing resource group is picked, this value will be defined after `ResourceGroupStep.prompt` occurs
+     * If a new resource group is picked, this value will be defined after `ResourceGroupStep.execute` occurs
+     */
+    resourceGroup?: ResourceGroup;
+
+    /**
+     * The task used to get existing resource groups.
+     * By specifying this in the context, we can ensure that Azure is only queried once for the entire wizard
+     */
+    resourceGroupsTask?: Promise<ResourceGroup[]>;
+}
+
+export declare const resourceGroupNamingRules: IAzureNamingRules;
+export declare class ResourceGroupStep<T extends IResourceGroupWizardContext> extends AzureWizardStep<T> {
+    /**
+     * Used to get existing resource groups. By passing in the context, we can ensure that Azure is only queried once for the entire wizard
+     * @param wizardContext The context of the wizard.
+     */
+    public static getResouceGroups<T extends IResourceGroupWizardContext>(wizardContext: T): Promise<ResourceGroup[]>;
+
+    /**
+     * Checks existing resource groups in the wizard's subscription to see if the name is available.
+     * @param wizardContext The context of the wizard.
+     */
+    public static isNameAvailable<T extends IResourceGroupWizardContext>(wizardContext: T, name: string): Promise<boolean>;
+
+    public prompt(wizardContext: T, ui: IAzureUserInput): Promise<T>;
+    public execute(wizardContext: T, outputChannel: OutputChannel): Promise<T>;
+}
+
+export interface IStorageAccountWizardContext extends IResourceGroupWizardContext {
+    /**
+     * The storage account to use.
+     * If an existing storage account is picked, this value will be defined after `StorageAccountStep.prompt` occurs
+     * If a new storage account is picked, this value will be defined after `StorageAccountStep.execute` occurs
+     */
+    storageAccount?: StorageAccount;
+}
+
+export declare const storageAccountNamingRules: IAzureNamingRules;
+export declare class StorageAccountStep<T extends IStorageAccountWizardContext> extends AzureWizardStep<T> {
+    public static isNameAvailable<T extends IStorageAccountWizardContext>(wizardContext: T, name: string): Promise<boolean>;
+
+    public prompt(wizardContext: T, ui: IAzureUserInput): Promise<T>;
+    public execute(wizardContext: T, outputChannel: OutputChannel): Promise<T>;
 }
 
 /**
