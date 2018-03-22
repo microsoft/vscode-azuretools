@@ -328,6 +328,11 @@ export interface IAzureQuickPickItem<T = undefined> extends QuickPickItem {
     id?: string;
 
     data: T;
+
+    /**
+     * Optionally used to suppress persistence for this item, defaults to `false`
+     */
+    suppressPersistence?: boolean;
 }
 
 /**
@@ -339,6 +344,11 @@ export interface IAzureQuickPickOptions extends QuickPickOptions {
      * If not specified, a hash of the placeHolder will be used
      */
     id?: string;
+
+    /**
+     * Optionally used to suppress persistence for this quick pick, defaults to `false`
+     */
+    suppressPersistence?: boolean;
 }
 
 /**
