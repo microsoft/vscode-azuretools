@@ -11,18 +11,25 @@ import { localize } from '../localize';
 import { AzureWizardStep } from './AzureWizardStep';
 
 export class LocationStep<T extends ILocationWizardContext> extends AzureWizardStep<T> {
-    public async prompt(wizardContext: T, ui: IAzureUserInput): Promise<T> {
-        const client: SubscriptionClient = new SubscriptionClient(wizardContext.credentials);
-        // tslint:disable-next-line:no-non-null-assertion
-        const locationsTask: Promise<Location[]> = client.subscriptions.listLocations(wizardContext.subscription.subscriptionId!);
+    public static async setLocation<T extends ILocationWizardContext>(wizardContext: T, name: string): Promise<void> {
+        const locations: Location[] = await LocationStep.getLocations(wizardContext);
+        wizardContext.location = locations.find((l: Location) => name === l.name || name === l.displayName);
+    }
 
-        if (wizardContext.defaultLocationName) {
-            wizardContext.location = (await locationsTask).find((l: Location) => wizardContext.defaultLocationName === l.name || wizardContext.defaultLocationName === l.displayName);
+    public static async getLocations<T extends ILocationWizardContext>(wizardContext: T): Promise<Location[]> {
+        if (wizardContext.locationsTask === undefined) {
+            const client: SubscriptionClient = new SubscriptionClient(wizardContext.credentials);
+            // tslint:disable-next-line:no-non-null-assertion
+            wizardContext.locationsTask = client.subscriptions.listLocations(wizardContext.subscription.subscriptionId!);
         }
 
+        return await wizardContext.locationsTask;
+    }
+
+    public async prompt(wizardContext: T, ui: IAzureUserInput): Promise<T> {
         if (!wizardContext.location) {
             const options: QuickPickOptions = { placeHolder: localize('selectLocation', 'Select a location for new resources.') };
-            wizardContext.location = (await ui.showQuickPick(this.getQuickPicks(locationsTask), options)).data;
+            wizardContext.location = (await ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
         }
 
         return wizardContext;
@@ -32,8 +39,9 @@ export class LocationStep<T extends ILocationWizardContext> extends AzureWizardS
         return wizardContext;
     }
 
-    private async getQuickPicks(locationsTask: Promise<Location[]>): Promise<IAzureQuickPickItem<Location>[]> {
-        return (await locationsTask).map((l: Location) => {
+    private async getQuickPicks(wizardContext: T): Promise<IAzureQuickPickItem<Location>[]> {
+        const locations: Location[] = await LocationStep.getLocations(wizardContext);
+        return locations.map((l: Location) => {
             return {
                 // tslint:disable-next-line:no-non-null-assertion
                 label: l.displayName!,

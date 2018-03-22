@@ -10,6 +10,7 @@ import { OutputChannel } from 'vscode';
 import { IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, IStorageAccountWizardContext } from '../../index';
 import { localize } from '../localize';
 import { AzureWizardStep } from './AzureWizardStep';
+import { LocationStep } from './LocationStep';
 
 export const storageAccountNamingRules: IAzureNamingRules = {
     minLength: 3,
@@ -35,7 +36,8 @@ export class StorageAccountStep<T extends IStorageAccountWizardContext> extends 
         wizardContext.storageAccount = (await ui.showQuickPick(this.getQuickPicks(client.storageAccounts.list()), quickPickOptions)).data;
 
         if (wizardContext.storageAccount) {
-            wizardContext.defaultLocationName = wizardContext.storageAccount.location;
+            // tslint:disable-next-line:no-non-null-assertion
+            await LocationStep.setLocation(wizardContext, wizardContext.storageAccount.location!);
         } else {
             const suggestedName: string | undefined = wizardContext.relatedNameTask ? await wizardContext.relatedNameTask : undefined;
             this._newName = (await ui.showInputBox({

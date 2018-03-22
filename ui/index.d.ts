@@ -369,19 +369,33 @@ export interface ISubscriptionWizardContext {
 
 export interface ILocationWizardContext extends ISubscriptionWizardContext {
     /**
-     * You may specify the defaultLocationName if you don't want the `LocationStep` to prompt for a location
-     * For example, if the user selects an existing resource, you might want to use that location as the default for the wizard's other resources
-     */
-    defaultLocationName?: string;
-
-    /**
      * The location to use for new resources
-     * This value will be defined after `LocationStep.prompt` occurs.
+     * This value will be defined after `LocationStep.prompt` occurs or after you call `LocationStep.setLocation`
      */
     location?: Location;
+
+    /**
+     * The task used to get locations.
+     * By specifying this in the context, we can ensure that Azure is only queried once for the entire wizard
+     */
+    locationsTask?: Promise<Location[]>;
 }
 
 export declare class LocationStep<T extends ILocationWizardContext> extends AzureWizardStep<T> {
+    /**
+     * This will set the wizard context's location (in which case the user will _not_ be prompted for location)
+     * For example, if the user selects an existing resource, you might want to use that location as the default for the wizard's other resources
+     * @param wizardContext The context of the wizard
+     * @param name The name or display name of the location
+     */
+    public static setLocation<T extends ILocationWizardContext>(wizardContext: T, name: string): Promise<void>;
+
+    /**
+     * Used to get locations. By passing in the context, we can ensure that Azure is only queried once for the entire wizard
+     * @param wizardContext The context of the wizard.
+     */
+    public static getLocations<T extends ILocationWizardContext>(wizardContext: T): Promise<Location[]>;
+
     public prompt(wizardContext: T, ui: IAzureUserInput): Promise<T>;
     public execute(wizardContext: T, outputChannel: OutputChannel): Promise<T>;
 }

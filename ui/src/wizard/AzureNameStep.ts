@@ -24,7 +24,7 @@ export abstract class AzureNameStep<T extends IRelatedNameWizardContext> extends
         const minLength: number = Math.max(...namingRules.map((n: IAzureNamingRules) => n.minLength));
         const maxLength: number = Math.min(...namingRules.map((n: IAzureNamingRules) => n.maxLength));
 
-        const maxTries: number = 1000;
+        const maxTries: number = 100;
         let count: number = 1;
         let newName: string;
         while (count < maxTries) {
