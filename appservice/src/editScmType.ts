@@ -5,7 +5,7 @@
 
 import { SiteConfigResource } from 'azure-arm-website/lib/models';
 import * as vscode from 'vscode';
-import { IAzureNode, IAzureQuickPickItem, IAzureUserInput, UserCancelledError } from 'vscode-azureextensionui';
+import { IAzureNode, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, UserCancelledError } from 'vscode-azureextensionui';
 import { connectToGitHub } from './connectToGitHub';
 import { localize } from './localize';
 import { ScmType } from './ScmType';
@@ -31,7 +31,6 @@ export async function editScmType(client: SiteClient, node: IAzureNode, outputCh
 }
 
 async function showScmPrompt(ui: IAzureUserInput, currentScmType: string): Promise<string> {
-    const placeHolder: string = localize('scmPrompt', 'Select a new source.');
     const currentSource: string = localize('currentSource', '(Current source)');
     const scmQuickPicks: IAzureQuickPickItem<string | undefined>[] = [];
     // generate quickPicks to not include current type
@@ -44,7 +43,11 @@ async function showScmPrompt(ui: IAzureUserInput, currentScmType: string): Promi
         }
     }
 
-    const newScmType: string | undefined = (await ui.showQuickPick(scmQuickPicks, { placeHolder: placeHolder })).data;
+    const options: IAzureQuickPickOptions = {
+        placeHolder: localize('scmPrompt', 'Select a new source.'),
+        suppressPersistence: true
+    };
+    const newScmType: string | undefined = (await ui.showQuickPick(scmQuickPicks, options)).data;
     if (newScmType === undefined) {
         // if the user clicks the current source, treat it as a cancel
         throw new UserCancelledError();
