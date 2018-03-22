@@ -7,7 +7,7 @@
 import WebSiteManagementClient = require('azure-arm-website');
 import { AppServicePlan, SkuDescription } from 'azure-arm-website/lib/models';
 import { OutputChannel } from 'vscode';
-import { AzureWizardStep, IAzureNamingRules, IAzureQuickPickOptions, IAzureUserInput } from 'vscode-azureextensionui';
+import { AzureWizardStep, IAzureNamingRules, IAzureQuickPickOptions, IAzureUserInput, LocationStep } from 'vscode-azureextensionui';
 import { IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { localize } from '../localize';
 import { uiUtils } from '../utils/uiUtils';
@@ -48,7 +48,7 @@ export class AppServicePlanStep extends AzureWizardStep<IAppServiceWizardContext
         wizardContext.plan = (await ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
 
         if (wizardContext.plan) {
-            wizardContext.defaultLocationName = wizardContext.plan.location;
+            await LocationStep.setLocation(wizardContext, wizardContext.plan.location);
         } else {
             this._newName = (await ui.showInputBox({
                 value: await wizardContext.relatedNameTask,
