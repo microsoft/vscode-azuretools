@@ -3,27 +3,36 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ResourceGroup } from 'azure-arm-resource/lib/resource/models';
-import { Subscription } from 'azure-arm-resource/lib/subscription/models';
-import { StorageAccount } from 'azure-arm-storage/lib/models';
 import { AppServicePlan, Site } from 'azure-arm-website/lib/models';
-import { ServiceClientCredentials } from 'ms-rest';
+import { IResourceGroupWizardContext, IStorageAccountWizardContext } from 'vscode-azureextensionui';
 import { AppKind, WebsiteOS } from './AppKind';
 
-export interface IAppServiceWizardContext {
+export interface IAppServiceWizardContext extends IResourceGroupWizardContext, IStorageAccountWizardContext {
     appKind: AppKind;
     websiteOS: WebsiteOS;
-    credentials: ServiceClientCredentials;
-    subscription: Subscription;
 
-    resourceGroup?: ResourceGroup;
-
+    /**
+     * The newly created site
+     * This will be defined after `SiteStep.execute` occurs.
+     */
     site?: Site;
-    websiteName?: string;
-    relatedNameTask?: Promise<string>;
-    plan?: AppServicePlan | undefined;
 
-    storageAccount?: StorageAccount;
-    storageResourceGroup?: string;
-    createNewStorageAccount?: boolean;
+    /**
+     * The name of the new site
+     * This will be defined after `SiteNameStep.prompt` occurs.
+     */
+    siteName?: string;
+
+    /**
+     * The App Service plan to use.
+     * If an existing plan is picked, this value will be defined after `AppServicePlanStep.prompt` occurs
+     * If a new plan is picked, this value will be defined after `AppServicePlanStep.execute` occurs
+     */
+    plan?: AppServicePlan;
+
+    /**
+     * The task used to get existing plans.
+     * By specifying this in the context, we can ensure that Azure is only queried once for the entire wizard
+     */
+    plansTask?: Promise<AppServicePlan[]>;
 }

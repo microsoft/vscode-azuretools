@@ -118,7 +118,12 @@
             "classes"
         ],
         "export-name": true,
-        "function-name": true,
+        "function-name": [
+            true,
+            {
+                "static-method-regex": "^[a-z][a-zA-Z_\\d]+$" // changed
+            }
+        ],
         "import-name": false, // changed
         "interface-name": true,
         "jsdoc-format": true,

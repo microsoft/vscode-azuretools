@@ -3,15 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ResourceGroup } from 'azure-arm-resource/lib/resource/models';
-import { Subscription } from 'azure-arm-resource/lib/subscription/models';
 // tslint:disable-next-line:no-require-imports
 import StorageManagementClient = require('azure-arm-storage');
 import { StorageAccountListKeysResult } from 'azure-arm-storage/lib/models';
 // tslint:disable-next-line:no-require-imports
 import WebSiteManagementClient = require('azure-arm-website');
 import { SiteConfig } from 'azure-arm-website/lib/models';
-import { ServiceClientCredentials } from 'ms-rest';
 import { OutputChannel } from 'vscode';
 import { IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { AzureWizardStep, IAzureUserInput } from 'vscode-azureextensionui';
@@ -26,69 +23,40 @@ interface ILinuxRuntimeStack {
 }
 
 export class SiteStep extends AzureWizardStep<IAppServiceWizardContext> {
+    private _newStorageAccount: boolean;
+    private _newLinuxFxVersion: string | undefined;
+
     public async prompt(wizardContext: IAppServiceWizardContext, ui: IAzureUserInput): Promise<IAppServiceWizardContext> {
-        const siteName: string = wizardContext.websiteName;
+        this._newStorageAccount = wizardContext.storageAccount === undefined;
 
-        let runtimeStack: string;
-        const runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[] = [];
-        const linuxRuntimeStacks: ILinuxRuntimeStack[] = this.getLinuxRuntimeStack();
-
-        linuxRuntimeStacks.forEach((rt: ILinuxRuntimeStack) => {
-            runtimeItems.push({
+        const runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[] = this.getLinuxRuntimeStack().map((rt: ILinuxRuntimeStack) => {
+            return {
                 id: rt.name,
                 label: rt.displayName,
                 description: '',
                 data: rt
-            });
+            };
         });
 
         if (wizardContext.websiteOS === WebsiteOS.linux) {
-            const pickedItem: ILinuxRuntimeStack = (await ui.showQuickPick(runtimeItems, { placeHolder: 'Select Linux runtime stack.' })).data;
-            runtimeStack = pickedItem.name;
-        } else {
-            runtimeStack = undefined;
+            this._newLinuxFxVersion = (await ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new Linux app.' })).data.name;
         }
-
-        const rg: ResourceGroup = wizardContext.resourceGroup;
-
-        wizardContext.site = {
-            name: siteName,
-            kind: getSiteModelKind(wizardContext.appKind, wizardContext.websiteOS),
-            location: rg.location,
-            serverFarmId: wizardContext.plan ? wizardContext.plan.id : undefined,
-            siteConfig: {
-                linuxFxVersion: runtimeStack
-                // The rest will be filled in during execute
-            }
-        };
 
         return wizardContext;
     }
 
     public async execute(wizardContext: IAppServiceWizardContext, outputChannel: OutputChannel): Promise<IAppServiceWizardContext> {
-        outputChannel.appendLine(localize('CreatingNewApp', 'Creating new {0} "{1}"...', getAppKindDisplayName(wizardContext.appKind), wizardContext.site.name));
-        const credentials: ServiceClientCredentials = wizardContext.credentials;
-        const subscription: Subscription = wizardContext.subscription;
-        const rg: ResourceGroup = wizardContext.resourceGroup;
-        const websiteClient: WebSiteManagementClient = new WebSiteManagementClient(credentials, subscription.subscriptionId);
+        outputChannel.appendLine(localize('CreatingNewApp', 'Creating {0} "{1}"...', getAppKindDisplayName(wizardContext.appKind), wizardContext.siteName));
 
-        // If the plan is also newly created, its resource ID won't be available at this step's prompt stage, but should be available now.
-        if (!wizardContext.site.serverFarmId) {
-            wizardContext.site.serverFarmId = wizardContext.plan ? wizardContext.plan.id : undefined;
-        }
-
-        // Finish putting together the site configuration
-        switch (wizardContext.appKind) {
-            case AppKind.functionapp:
-                wizardContext.site.siteConfig = await this.getFunctionAppSiteConfig(wizardContext, wizardContext.site.siteConfig.linuxFxVersion);
-                break;
-            case AppKind.app:
-            default:
-                wizardContext.site.siteConfig = { linuxFxVersion: wizardContext.site.siteConfig.linuxFxVersion };
-        }
-
-        wizardContext.site = await websiteClient.webApps.createOrUpdate(rg.name, wizardContext.site.name, wizardContext.site);
-        wizardContext.site.siteConfig = await websiteClient.webApps.getConfiguration(rg.name, wizardContext.site.name);
+        const websiteClient: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscription.subscriptionId);
+        wizardContext.site = await websiteClient.webApps.createOrUpdate(wizardContext.resourceGroup.name, wizardContext.siteName, {
+            name: wizardContext.siteName,
+            kind: getSiteModelKind(wizardContext.appKind, wizardContext.websiteOS),
+            location: wizardContext.location.name,
+            serverFarmId: wizardContext.plan ? wizardContext.plan.id : undefined,
+            clientAffinityEnabled: wizardContext.appKind === AppKind.app,
+            siteConfig: await this.getNewSiteConfig(wizardContext)
+        });
 
         outputChannel.appendLine(localize('CreatedNewApp', '>>>>>> Created new {0} "{1}": {2}', getAppKindDisplayName(wizardContext.appKind), wizardContext.site.name, `https://${wizardContext.site.defaultHostName} <<<<<<`));
         outputChannel.appendLine('');
@@ -96,28 +64,30 @@ export class SiteStep extends AzureWizardStep<IAppServiceWizardContext> {
         return wizardContext;
     }
 
-    private async getFunctionAppSiteConfig(wizardContext: IAppServiceWizardContext, linuxFxVersion: string): Promise<SiteConfig> {
-        const maxFileShareNameLength: number = 63;
-        const credentials: ServiceClientCredentials = wizardContext.credentials;
-        const subscription: Subscription = wizardContext.subscription;
-        const storageClient: StorageManagementClient = new StorageManagementClient(credentials, subscription.subscriptionId);
+    private async getNewSiteConfig(wizardContext: IAppServiceWizardContext): Promise<SiteConfig> {
+        const newSiteConfig: SiteConfig = {
+            linuxFxVersion: this._newLinuxFxVersion
+        };
 
-        const keysResult: StorageAccountListKeysResult = await storageClient.storageAccounts.listKeys(wizardContext.storageResourceGroup, wizardContext.storageAccount.name);
+        if (wizardContext.appKind === AppKind.functionapp) {
+            const maxFileShareNameLength: number = 63;
+            const storageClient: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscription.subscriptionId);
 
-        let fileShareName: string = wizardContext.site.name.toLocaleLowerCase() + '-content'.slice(0, maxFileShareNameLength);
-        if (!wizardContext.createNewStorageAccount) {
-            const randomLetters: number = 4;
-            fileShareName = `${fileShareName.slice(0, maxFileShareNameLength - randomLetters - 1)}-${randomUtils.getRandomHexString(randomLetters)}`;
-        }
+            const [, storageResourceGroup] = wizardContext.storageAccount.id.match(/\/resourceGroups\/([^/]+)\//);
+            const keysResult: StorageAccountListKeysResult = await storageClient.storageAccounts.listKeys(storageResourceGroup, wizardContext.storageAccount.name);
 
-        let storageConnectionString: string = '';
-        if (keysResult.keys && keysResult.keys[0].value) {
-            storageConnectionString = `DefaultEndpointsProtocol=https;AccountName=${wizardContext.storageAccount.name};AccountKey=${keysResult.keys[0].value}`;
-        }
+            let fileShareName: string = wizardContext.siteName.toLocaleLowerCase() + '-content'.slice(0, maxFileShareNameLength);
+            if (!this._newStorageAccount) {
+                const randomLetters: number = 4;
+                fileShareName = `${fileShareName.slice(0, maxFileShareNameLength - randomLetters - 1)}-${randomUtils.getRandomHexString(randomLetters)}`;
+            }
 
-        return <SiteConfig>{
-            linuxFxVersion: linuxFxVersion,
-            appSettings: [
+            let storageConnectionString: string = '';
+            if (keysResult.keys && keysResult.keys[0].value) {
+                storageConnectionString = `DefaultEndpointsProtocol=https;AccountName=${wizardContext.storageAccount.name};AccountKey=${keysResult.keys[0].value}`;
+            }
+
+            newSiteConfig.appSettings = [
                 {
                     name: 'AzureWebJobsDashboard',
                     value: storageConnectionString
@@ -142,9 +112,10 @@ export class SiteStep extends AzureWizardStep<IAppServiceWizardContext> {
                     name: 'WEBSITE_NODE_DEFAULT_VERSION',
                     value: '6.5.0'
                 }
-            ],
-            clientAffinityEnabled: false
-        };
+            ];
+        }
+
+        return newSiteConfig;
     }
 
     private getLinuxRuntimeStack(): ILinuxRuntimeStack[] {
