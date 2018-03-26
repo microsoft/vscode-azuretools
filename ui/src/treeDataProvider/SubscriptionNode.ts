@@ -3,24 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Subscription } from 'azure-arm-resource/lib/subscription/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment } from 'ms-rest-azure';
 import * as path from 'path';
 import { AzureTreeDataProvider, IAzureUserInput, IChildProvider } from '../../index';
-import { AzureSubscription } from '../azure-account.api';
+import { AzureSession } from '../azure-account.api';
 import { AzureParentNode } from './AzureParentNode';
 
 export class SubscriptionNode extends AzureParentNode {
     public static readonly contextValue: string = 'azureextensionui.azureSubscription';
-    private readonly _subscriptionInfo: AzureSubscription;
+
+    public readonly subscriptionId: string;
+    public readonly subscriptionDisplayName: string;
+
     private readonly _treeDataProvider: AzureTreeDataProvider;
+    private readonly _session: AzureSession;
     private readonly _ui: IAzureUserInput;
 
-    public constructor(treeDataProvider: AzureTreeDataProvider, ui: IAzureUserInput, childProvider: IChildProvider, id: string, label: string, subscriptionInfo: AzureSubscription) {
+    public constructor(treeDataProvider: AzureTreeDataProvider, ui: IAzureUserInput, childProvider: IChildProvider, nodeId: string, session: AzureSession, subscriptionDisplayName: string, subscriptionId: string) {
         super(undefined, {
-            id: `/subscriptions/${id}`,
-            label: label,
+            id: nodeId,
+            label: subscriptionDisplayName,
             contextValue: SubscriptionNode.contextValue,
             iconPath: path.join(__filename, '..', '..', '..', '..', 'resources', 'azureSubscription.svg'),
             childTypeLabel: childProvider.childTypeLabel,
@@ -31,27 +34,26 @@ export class SubscriptionNode extends AzureParentNode {
         });
         this._treeDataProvider = treeDataProvider;
         this._ui = ui;
-        this._subscriptionInfo = subscriptionInfo;
+        this._session = session;
+
+        this.subscriptionId = subscriptionId;
+        this.subscriptionDisplayName = subscriptionDisplayName;
     }
 
     public get tenantId(): string {
-        return this._subscriptionInfo.session.tenantId;
+        return this._session.tenantId;
     }
 
     public get userId(): string {
-        return this._subscriptionInfo.session.userId;
-    }
-
-    public get subscription(): Subscription {
-        return this._subscriptionInfo.subscription;
+        return this._session.userId;
     }
 
     public get credentials(): ServiceClientCredentials {
-        return this._subscriptionInfo.session.credentials;
+        return this._session.credentials;
     }
 
     public get environment(): AzureEnvironment {
-        return this._subscriptionInfo.session.environment;
+        return this._session.environment;
     }
 
     public get treeDataProvider(): AzureTreeDataProvider {

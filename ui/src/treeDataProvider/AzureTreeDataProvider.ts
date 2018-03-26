@@ -4,11 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as path from 'path';
-import * as vscode from 'vscode';
 import { Disposable, Event, EventEmitter, Extension, extensions, QuickPickOptions, TreeDataProvider, TreeItem, TreeItemCollapsibleState } from 'vscode';
+import * as vscode from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
 import { IActionContext, IAzureNode, IAzureParentTreeItem, IAzureQuickPickItem, IAzureUserInput, IChildProvider } from '../../index';
-import { AzureAccount, AzureLoginStatus, AzureSubscription } from '../azure-account.api';
+import { AzureAccount, AzureLoginStatus, AzureResourceFilter } from '../azure-account.api';
 import { callWithTelemetryAndErrorHandling } from '../callWithTelemetryAndErrorHandling';
 import { ArgumentError, UserCancelledError } from '../errors';
 import { localize } from '../localize';
@@ -188,8 +188,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
                 return {
                     data: n,
                     label: n.treeItem.label,
-                    // tslint:disable-next-line:no-non-null-assertion
-                    description: n.subscription.subscriptionId!
+                    description: n.subscriptionId
                 };
             });
         } else {
@@ -248,11 +247,13 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
             commandLabel = localize('noSubscriptionsNode', 'No subscriptions found. Edit filters...');
             nodes = [new AzureNode(undefined, { label: commandLabel, commandId: 'azure-account.selectSubscriptions', contextValue: 'azureCommandNode', id: 'azure-account.selectSubscriptions' })];
         } else {
-            this._subscriptionNodes = this._azureAccount.filters.map((subscriptionInfo: AzureSubscription) => {
-                if (subscriptionInfo.subscription.subscriptionId === undefined || subscriptionInfo.subscription.displayName === undefined) {
-                    throw new ArgumentError(subscriptionInfo);
+            this._subscriptionNodes = this._azureAccount.filters.map((filter: AzureResourceFilter) => {
+                if (filter.subscription.id === undefined || filter.subscription.displayName === undefined || filter.subscription.subscriptionId === undefined) {
+                    throw new ArgumentError(filter);
                 } else {
-                    return new SubscriptionNode(this, this._ui, this._resourceProvider, subscriptionInfo.subscription.subscriptionId, subscriptionInfo.subscription.displayName, subscriptionInfo);
+                    // filter.subscription.id is the The fully qualified ID of the subscription (For example, /subscriptions/00000000-0000-0000-0000-000000000000) and should be used as the node's id for the purposes of OpenInPortal
+                    // filter.subscription.subscriptionId is just the guid and is used in all other cases when creating clients for managing Azure resources
+                    return new SubscriptionNode(this, this._ui, this._resourceProvider, filter.subscription.id, filter.session, filter.subscription.displayName, filter.subscription.subscriptionId);
                 }
             });
             nodes = this._subscriptionNodes;

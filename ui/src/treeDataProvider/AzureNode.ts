@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Subscription } from 'azure-arm-resource/lib/subscription/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment } from 'ms-rest-azure';
 import * as opn from 'opn';
@@ -48,9 +47,17 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
         }
     }
 
-    public get subscription(): Subscription {
+    public get subscriptionId(): string {
         if (this.parent) {
-            return this.parent.subscription;
+            return this.parent.subscriptionId;
+        } else {
+            throw new ArgumentError(this);
+        }
+    }
+
+    public get subscriptionDisplayName(): string {
+        if (this.parent) {
+            return this.parent.subscriptionDisplayName;
         } else {
             throw new ArgumentError(this);
         }
