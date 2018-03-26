@@ -77,7 +77,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
             .sort(sortCallback);
     }
 
-    public async pickChildNode(expectedContextValues: string[], onNodeCreatedFromQuickPickEmitter: EventEmitter<IAzureNode>): Promise<AzureNode> {
+    public async pickChildNode(expectedContextValues: string[], onNodeCreatedFromQuickPickEmitter?: EventEmitter<IAzureNode>): Promise<AzureNode> {
         if (this.treeItem.pickTreeItem) {
             const children: AzureNode[] = await this.getCachedChildren();
             for (const val of expectedContextValues) {
@@ -126,7 +126,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
         }
     }
 
-    private async getQuickPicks(expectedContextValues: string[], onNodeCreatedFromQuickPickEmitter: EventEmitter<IAzureNode>): Promise<IAzureQuickPickItem<GetNodeFunction>[]> {
+    private async getQuickPicks(expectedContextValues: string[], onNodeCreatedFromQuickPickEmitter?: EventEmitter<IAzureNode>): Promise<IAzureQuickPickItem<GetNodeFunction>[]> {
         let nodes: AzureNode[] = await this.getCachedChildren();
         nodes = nodes.filter((node: AzureNode) => node.includeInNodePicker(expectedContextValues));
 
@@ -145,7 +145,9 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
                 description: '',
                 data: async (): Promise<AzureNode> => {
                     const newNode: AzureNode = await this.createChild();
-                    onNodeCreatedFromQuickPickEmitter.fire(newNode);
+                    if (onNodeCreatedFromQuickPickEmitter) {
+                        onNodeCreatedFromQuickPickEmitter.fire(newNode);
+                    }
                     return newNode;
                 }
             });
