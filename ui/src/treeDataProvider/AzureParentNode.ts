@@ -47,7 +47,9 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
 
                 const newNode: AzureNode = this.createNewNode(newTreeItem);
                 await this.addNodeToCache(newNode);
-                onNodeCreateEmitter.fire(newNode);
+                if (onNodeCreateEmitter) {
+                    onNodeCreateEmitter.fire(newNode);
+                }
                 return newNode;
             } finally {
                 if (creatingNode) {
@@ -144,8 +146,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
             picks.unshift({
                 label: localize('nodePickerCreateNew', '$(plus) Create New {0}', this.treeItem.childTypeLabel),
                 description: '',
-                data: async (): Promise<AzureNode> => await this.createChild(undefined, onNodeCreateEmitter);
-
+                data: async (): Promise<AzureNode> => await this.createChild(undefined, onNodeCreateEmitter)
             });
         }
 

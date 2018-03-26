@@ -161,7 +161,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
         let node: IAzureNode = startingNode || await this.promptForRootNode(expectedContextValues);
         while (!expectedContextValues.some((val: string) => node.treeItem.contextValue === val)) {
             if (node instanceof AzureParentNode) {
-                node = await node.pickChildNode(expectedContextValues, this._onNodeCreate);
+                node = await node.pickChildNode(expectedContextValues, this._onNodeCreateEmitter);
             } else {
                 throw new Error(localize('noResourcesError', 'No matching resources found.'));
             }
