@@ -19,8 +19,7 @@ export class LocationStep<T extends ILocationWizardContext> extends AzureWizardS
     public static async getLocations<T extends ILocationWizardContext>(wizardContext: T): Promise<Location[]> {
         if (wizardContext.locationsTask === undefined) {
             const client: SubscriptionClient = new SubscriptionClient(wizardContext.credentials);
-            // tslint:disable-next-line:no-non-null-assertion
-            wizardContext.locationsTask = client.subscriptions.listLocations(wizardContext.subscription.subscriptionId!);
+            wizardContext.locationsTask = client.subscriptions.listLocations(wizardContext.subscriptionId);
         }
 
         return await wizardContext.locationsTask;

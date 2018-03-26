@@ -23,16 +23,14 @@ export class StorageAccountStep<T extends IStorageAccountWizardContext> extends 
     private _newName: string;
 
     public static async isNameAvailable<T extends IStorageAccountWizardContext>(wizardContext: T, name: string): Promise<boolean> {
-        // tslint:disable-next-line:no-non-null-assertion
-        const storageClient: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscription.subscriptionId!);
+        const storageClient: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
         return !!(await storageClient.storageAccounts.checkNameAvailability(name)).nameAvailable;
     }
 
     public async prompt(wizardContext: T, ui: IAzureUserInput): Promise<T> {
-        // tslint:disable-next-line:no-non-null-assertion
-        const client: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscription.subscriptionId!);
+        const client: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
 
-        const quickPickOptions: IAzureQuickPickOptions = { placeHolder: 'Select a storage account that supports blobs, queues and tables.', id: `StorageAccountStep/${wizardContext.subscription.subscriptionId}` };
+        const quickPickOptions: IAzureQuickPickOptions = { placeHolder: 'Select a storage account that supports blobs, queues and tables.', id: `StorageAccountStep/${wizardContext.subscriptionId}` };
         wizardContext.storageAccount = (await ui.showQuickPick(this.getQuickPicks(client.storageAccounts.list()), quickPickOptions)).data;
 
         if (wizardContext.storageAccount) {
@@ -60,8 +58,7 @@ export class StorageAccountStep<T extends IStorageAccountWizardContext> extends 
             const newSku: Sku = { name: 'Standard_LRS' };
             outputChannel.appendLine(localize('CreatingStorageAccount', 'Creating storage account "{0}" in location "{1}" with sku "{2}"...', this._newName, newLocation, newSku.name));
 
-            // tslint:disable-next-line:no-non-null-assertion
-            const storageClient: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscription.subscriptionId!);
+            const storageClient: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
             wizardContext.storageAccount = await storageClient.storageAccounts.create(
                 // tslint:disable-next-line:no-non-null-assertion
                 wizardContext.resourceGroup!.name!,
