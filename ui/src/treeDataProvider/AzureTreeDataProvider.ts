@@ -28,7 +28,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
     public static readonly subscriptionContextValue: string = SubscriptionNode.contextValue;
 
     private _onDidChangeTreeDataEmitter: EventEmitter<IAzureNode> = new EventEmitter<IAzureNode>();
-    private _onNodeCreatedFromQuickPickEmitter: EventEmitter<IAzureNode> = new EventEmitter<IAzureNode>();
+    private _onNodeCreateEmitter: EventEmitter<IAzureNode> = new EventEmitter<IAzureNode>();
 
     private readonly _loadMoreCommandId: string;
     private _resourceProvider: IChildProvider;
@@ -75,8 +75,8 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
         return this._onDidChangeTreeDataEmitter.event;
     }
 
-    public get onNodeCreatedFromQuickPick(): Event<IAzureNode> {
-        return this._onNodeCreatedFromQuickPickEmitter.event;
+    public get onNodeCreate(): Event<IAzureNode> {
+        return this._onNodeCreateEmitter.event;
     }
 
     public getTreeItem(node: IAzureNode): TreeItem {
@@ -161,7 +161,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
         let node: IAzureNode = startingNode || await this.promptForRootNode(expectedContextValues);
         while (!expectedContextValues.some((val: string) => node.treeItem.contextValue === val)) {
             if (node instanceof AzureParentNode) {
-                node = await node.pickChildNode(expectedContextValues, this._onNodeCreatedFromQuickPickEmitter);
+                node = await node.pickChildNode(expectedContextValues, this._onNodeCreate);
             } else {
                 throw new Error(localize('noResourcesError', 'No matching resources found.'));
             }
