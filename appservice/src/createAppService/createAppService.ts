@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Subscription } from 'azure-arm-resource/lib/subscription/models';
 import { Site } from 'azure-arm-website/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { OutputChannel } from 'vscode';
@@ -14,7 +13,17 @@ import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 import { SiteNameStep } from './SiteNameStep';
 import { SiteStep } from './SiteStep';
 
-export async function createAppService(appKind: AppKind, websiteOS: WebsiteOS, outputChannel: OutputChannel, ui: IAzureUserInput, actionContext: IActionContext, credentials: ServiceClientCredentials, subscription: Subscription, showCreatingNode?: (label: string) => void): Promise<Site> {
+export async function createAppService(
+    appKind: AppKind,
+    websiteOS: WebsiteOS,
+    outputChannel: OutputChannel,
+    ui: IAzureUserInput,
+    actionContext: IActionContext,
+    credentials: ServiceClientCredentials,
+    subscriptionId: string,
+    subscriptionDisplayName: string,
+    showCreatingNode?: (label: string) => void): Promise<Site> {
+
     const steps: AzureWizardStep<IAppServiceWizardContext>[] = [];
     steps.push(new SiteNameStep());
     steps.push(new ResourceGroupStep());
@@ -32,7 +41,8 @@ export async function createAppService(appKind: AppKind, websiteOS: WebsiteOS, o
     let wizardContext: IAppServiceWizardContext = {
         appKind: appKind,
         websiteOS: websiteOS,
-        subscription: subscription,
+        subscriptionId: subscriptionId,
+        subscriptionDisplayName: subscriptionDisplayName,
         credentials: credentials
     };
     const wizard: AzureWizard<IAppServiceWizardContext> = new AzureWizard(steps, wizardContext);

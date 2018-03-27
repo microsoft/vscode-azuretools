@@ -26,8 +26,7 @@ export class AppServicePlanStep extends AzureWizardStep<IAppServiceWizardContext
 
     public static async getPlans(wizardContext: IAppServiceWizardContext): Promise<AppServicePlan[]> {
         if (wizardContext.plansTask === undefined) {
-            // tslint:disable-next-line:no-non-null-assertion
-            const client: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscription.subscriptionId!);
+            const client: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
             wizardContext.plansTask = uiUtils.listAll(client.appServicePlans, client.appServicePlans.list());
         }
 
@@ -44,7 +43,7 @@ export class AppServicePlanStep extends AzureWizardStep<IAppServiceWizardContext
 
     public async prompt(wizardContext: IAppServiceWizardContext, ui: IAzureUserInput): Promise<IAppServiceWizardContext> {
         // Cache hosting plan separately per subscription
-        const options: IAzureQuickPickOptions = { placeHolder: 'Select an App Service plan.', id: `AppServicePlanStep/${wizardContext.subscription.subscriptionId}` };
+        const options: IAzureQuickPickOptions = { placeHolder: 'Select an App Service plan.', id: `AppServicePlanStep/${wizardContext.subscriptionId}` };
         wizardContext.plan = (await ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
 
         if (wizardContext.plan) {
@@ -74,7 +73,7 @@ export class AppServicePlanStep extends AzureWizardStep<IAppServiceWizardContext
             outputChannel.appendLine(localize('UsingAppServicePlan', 'Using App Service plan "{0}" with pricing tier "{1}".', wizardContext.plan.appServicePlanName, wizardContext.plan.sku.name));
         } else {
             outputChannel.appendLine(localize('CreatingAppServicePlan', 'Creating App Service plan "{0}" with pricing tier "{1}"...', this._newName, this._newSku.name));
-            const websiteClient: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscription.subscriptionId);
+            const websiteClient: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
             wizardContext.plan = await websiteClient.appServicePlans.createOrUpdate(wizardContext.resourceGroup.name, this._newName, {
                 appServicePlanName: this._newName,
                 kind: getAppServicePlanModelKind(wizardContext.appKind, wizardContext.websiteOS),

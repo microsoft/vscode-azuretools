@@ -75,7 +75,7 @@ export class SiteClient {
     }
 
     private get _client(): WebSiteManagementClient {
-        return new WebSiteManagementClient(this._node.credentials, this._node.subscription.subscriptionId);
+        return new WebSiteManagementClient(this._node.credentials, this._node.subscriptionId);
     }
 
     public async stop(): Promise<void> {
