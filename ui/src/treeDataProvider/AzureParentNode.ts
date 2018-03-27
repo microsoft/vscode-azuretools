@@ -14,6 +14,13 @@ import { LoadMoreTreeItem } from './LoadMoreTreeItem';
 export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeItem> extends AzureNode<T> implements IAzureParentNodeInternal {
     private _cachedChildren: AzureNode[] | undefined;
     private _creatingNodes: AzureNode[] = [];
+    private _onNodeCreateEmitter: EventEmitter<IAzureNode>;
+
+    public constructor(parent: IAzureParentNodeInternal | undefined, treeItem: T, onNodeCreateEmitter: EventEmitter<IAzureNode>) {
+        super(parent, treeItem);
+        this._onNodeCreateEmitter = onNodeCreateEmitter;
+
+    }
 
     public async getCachedChildren(): Promise<AzureNode[]> {
         if (this._cachedChildren === undefined) {
@@ -31,7 +38,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
         this._cachedChildren = undefined;
     }
 
-    public async createChild(userOptions?: {}, onNodeCreateEmitter?: EventEmitter<IAzureNode>): Promise<AzureNode> {
+    public async createChild(userOptions?: {}): Promise<AzureNode> {
         if (this.treeItem.createChild) {
             let creatingNode: AzureNode | undefined;
             try {
@@ -47,9 +54,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
 
                 const newNode: AzureNode = this.createNewNode(newTreeItem);
                 await this.addNodeToCache(newNode);
-                if (onNodeCreateEmitter) {
-                    onNodeCreateEmitter.fire(newNode);
-                }
+                this._onNodeCreateEmitter.fire(newNode);
                 return newNode;
             } finally {
                 if (creatingNode) {
@@ -80,7 +85,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
             .sort(sortCallback);
     }
 
-    public async pickChildNode(expectedContextValues: string[], onNodeCreateEmitter?: EventEmitter<IAzureNode>): Promise<AzureNode> {
+    public async pickChildNode(expectedContextValues: string[]): Promise<AzureNode> {
         if (this.treeItem.pickTreeItem) {
             const children: AzureNode[] = await this.getCachedChildren();
             for (const val of expectedContextValues) {
@@ -99,7 +104,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
         const options: IAzureQuickPickOptions = {
             placeHolder: localize('selectNode', 'Select a {0}', this.treeItem.childTypeLabel)
         };
-        const getNode: GetNodeFunction = (await this.ui.showQuickPick(this.getQuickPicks(expectedContextValues, onNodeCreateEmitter), options)).data;
+        const getNode: GetNodeFunction = (await this.ui.showQuickPick(this.getQuickPicks(expectedContextValues), options)).data;
         return await getNode();
     }
 
@@ -129,7 +134,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
         }
     }
 
-    private async getQuickPicks(expectedContextValues: string[], onNodeCreateEmitter?: EventEmitter<IAzureNode>): Promise<IAzureQuickPickItem<GetNodeFunction>[]> {
+    private async getQuickPicks(expectedContextValues: string[]): Promise<IAzureQuickPickItem<GetNodeFunction>[]> {
         let nodes: AzureNode[] = await this.getCachedChildren();
         nodes = nodes.filter((node: AzureNode) => node.includeInNodePicker(expectedContextValues));
 
@@ -146,7 +151,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
             picks.unshift({
                 label: localize('nodePickerCreateNew', '$(plus) Create New {0}', this.treeItem.childTypeLabel),
                 description: '',
-                data: async (): Promise<AzureNode> => await this.createChild(undefined, onNodeCreateEmitter)
+                data: async (): Promise<AzureNode> => await this.createChild()
             });
         }
 
@@ -169,7 +174,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
         const parentTreeItem: IAzureParentTreeItem = <IAzureParentTreeItem>treeItem;
         // tslint:disable-next-line:strict-boolean-expressions
         if (parentTreeItem.loadMoreChildren) {
-            return new AzureParentNode(this, parentTreeItem);
+            return new AzureParentNode(this, parentTreeItem, this._onNodeCreateEmitter);
         } else {
             return new AzureNode(this, treeItem);
         }

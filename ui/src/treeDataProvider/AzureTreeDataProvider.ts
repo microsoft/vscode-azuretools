@@ -45,7 +45,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
         this._loadMoreCommandId = loadMoreCommandId;
         this._ui = ui;
         this._telemetryReporter = telemetryReporter;
-        this._customRootNodes = rootTreeItems ? rootTreeItems.map((treeItem: IAzureParentTreeItem) => new RootNode(this, ui, treeItem)) : [];
+        this._customRootNodes = rootTreeItems ? rootTreeItems.map((treeItem: IAzureParentTreeItem) => new RootNode(this, ui, treeItem, this._onNodeCreateEmitter)) : [];
 
         // Rather than expose 'AzureAccount' types in the index.ts contract, simply get it inside of this npm package
         const azureAccountExtension: Extension<AzureAccount> | undefined = extensions.getExtension<AzureAccount>('ms-vscode.azure-account');
@@ -161,7 +161,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
         let node: IAzureNode = startingNode || await this.promptForRootNode(expectedContextValues);
         while (!expectedContextValues.some((val: string) => node.treeItem.contextValue === val)) {
             if (node instanceof AzureParentNode) {
-                node = await node.pickChildNode(expectedContextValues, this._onNodeCreateEmitter);
+                node = await node.pickChildNode(expectedContextValues);
             } else {
                 throw new Error(localize('noResourcesError', 'No matching resources found.'));
             }
@@ -257,7 +257,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
                 if (subscriptionInfo.subscription.subscriptionId === undefined || subscriptionInfo.subscription.displayName === undefined) {
                     throw new ArgumentError(subscriptionInfo);
                 } else {
-                    return new SubscriptionNode(this, this._ui, this._resourceProvider, subscriptionInfo.subscription.subscriptionId, subscriptionInfo.subscription.displayName, subscriptionInfo);
+                    return new SubscriptionNode(this, this._ui, this._resourceProvider, subscriptionInfo.subscription.subscriptionId, subscriptionInfo.subscription.displayName, subscriptionInfo, this._onNodeCreateEmitter);
                 }
             });
             nodes = this._subscriptionNodes;

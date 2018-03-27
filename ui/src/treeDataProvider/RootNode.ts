@@ -3,15 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureTreeDataProvider, IAzureParentTreeItem, IAzureUserInput } from "../../index";
+import { EventEmitter } from 'vscode';
+import { AzureTreeDataProvider, IAzureNode, IAzureParentTreeItem, IAzureUserInput } from "../../index";
 import { AzureParentNode } from "./AzureParentNode";
 
 export class RootNode extends AzureParentNode {
     private readonly _treeDataProvider: AzureTreeDataProvider;
     private readonly _ui: IAzureUserInput;
 
-    public constructor(treeDataProvider: AzureTreeDataProvider, ui: IAzureUserInput, treeItem: IAzureParentTreeItem) {
-        super(undefined, treeItem);
+    public constructor(treeDataProvider: AzureTreeDataProvider, ui: IAzureUserInput, treeItem: IAzureParentTreeItem, onNodeCreateEmitter: EventEmitter<IAzureNode>) {
+        super(undefined, treeItem, onNodeCreateEmitter);
         this._treeDataProvider = treeDataProvider;
         this._ui = ui;
     }
