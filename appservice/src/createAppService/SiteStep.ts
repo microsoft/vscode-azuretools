@@ -48,7 +48,7 @@ export class SiteStep extends AzureWizardStep<IAppServiceWizardContext> {
     public async execute(wizardContext: IAppServiceWizardContext, outputChannel: OutputChannel): Promise<IAppServiceWizardContext> {
         outputChannel.appendLine(localize('CreatingNewApp', 'Creating {0} "{1}"...', getAppKindDisplayName(wizardContext.appKind), wizardContext.siteName));
 
-        const websiteClient: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscription.subscriptionId);
+        const websiteClient: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
         wizardContext.site = await websiteClient.webApps.createOrUpdate(wizardContext.resourceGroup.name, wizardContext.siteName, {
             name: wizardContext.siteName,
             kind: getSiteModelKind(wizardContext.appKind, wizardContext.websiteOS),
@@ -71,7 +71,7 @@ export class SiteStep extends AzureWizardStep<IAppServiceWizardContext> {
 
         if (wizardContext.appKind === AppKind.functionapp) {
             const maxFileShareNameLength: number = 63;
-            const storageClient: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscription.subscriptionId);
+            const storageClient: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
 
             const [, storageResourceGroup] = wizardContext.storageAccount.id.match(/\/resourceGroups\/([^/]+)\//);
             const keysResult: StorageAccountListKeysResult = await storageClient.storageAccounts.listKeys(storageResourceGroup, wizardContext.storageAccount.name);

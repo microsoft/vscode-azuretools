@@ -22,8 +22,7 @@ export class ResourceGroupStep<T extends IResourceGroupWizardContext> extends Az
 
     public static async getResouceGroups<T extends IResourceGroupWizardContext>(wizardContext: T): Promise<ResourceGroup[]> {
         if (wizardContext.resourceGroupsTask === undefined) {
-            // tslint:disable-next-line:no-non-null-assertion
-            const client: ResourceManagementClient = new ResourceManagementClient(wizardContext.credentials, wizardContext.subscription.subscriptionId!);
+            const client: ResourceManagementClient = new ResourceManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
             wizardContext.resourceGroupsTask = uiUtils.listAll(client.resourceGroups, client.resourceGroups.list());
         }
 
@@ -37,7 +36,7 @@ export class ResourceGroupStep<T extends IResourceGroupWizardContext> extends Az
 
     public async prompt(wizardContext: T, ui: IAzureUserInput): Promise<T> {
         // Cache resource group separately per subscription
-        const options: IAzureQuickPickOptions = { placeHolder: 'Select a resource group for new resources.', id: `ResourceGroupStep/${wizardContext.subscription.subscriptionId}` };
+        const options: IAzureQuickPickOptions = { placeHolder: 'Select a resource group for new resources.', id: `ResourceGroupStep/${wizardContext.subscriptionId}` };
         wizardContext.resourceGroup = (await ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
 
         if (!wizardContext.resourceGroup) {
@@ -59,8 +58,7 @@ export class ResourceGroupStep<T extends IResourceGroupWizardContext> extends Az
             // tslint:disable-next-line:no-non-null-assertion
             const newLocation: string = wizardContext.location!.name!;
             outputChannel.appendLine(localize('CreatingResourceGroup', 'Creating resource group "{0}" in location "{1}"...', this._newName, newLocation));
-            // tslint:disable-next-line:no-non-null-assertion
-            const resourceClient: ResourceManagementClient = new ResourceManagementClient(wizardContext.credentials, wizardContext.subscription.subscriptionId!);
+            const resourceClient: ResourceManagementClient = new ResourceManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
             wizardContext.resourceGroup = await resourceClient.resourceGroups.createOrUpdate(this._newName, { location: newLocation });
             outputChannel.appendLine(localize('CreatedResourceGroup', 'Successfully created resource group "{0}".', this._newName));
         }
@@ -97,7 +95,7 @@ export class ResourceGroupStep<T extends IResourceGroupWizardContext> extends Az
         } else if (name.endsWith('.')) {
             return localize('invalidEndingChar', "The name cannot end in a period.");
         } else if (!await ResourceGroupStep.isNameAvailable(wizardContext, name)) {
-            return localize('nameAlreadyExists', 'Resource group "{0}" already exists in subscription "{1}".', name, wizardContext.subscription.displayName);
+            return localize('nameAlreadyExists', 'Resource group "{0}" already exists in subscription "{1}".', name, wizardContext.subscriptionDisplayName);
         } else {
             return undefined;
         }

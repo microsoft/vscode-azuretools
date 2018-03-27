@@ -3,8 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-
-import { Subscription, Location } from 'azure-arm-resource/lib/subscription/models';
+import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment } from 'ms-rest-azure';
 import { Uri, TreeDataProvider, Disposable, TreeItem, Event, OutputChannel, Memento, InputBoxOptions, QuickPickItem, QuickPickOptions, TextDocument, ExtensionContext, MessageItem, OpenDialogOptions } from 'vscode';
@@ -46,7 +45,8 @@ export interface IAzureNode<T extends IAzureTreeItem = IAzureTreeItem> {
     readonly parent?: IAzureParentNode;
     readonly treeDataProvider: AzureTreeDataProvider;
     readonly credentials: ServiceClientCredentials;
-    readonly subscription: Subscription;
+    readonly subscriptionDisplayName: string;
+    readonly subscriptionId: string;
     readonly tenantId: string;
     readonly userId: string;
     readonly environment: AzureEnvironment;
@@ -374,7 +374,8 @@ export declare abstract class AzureWizardStep<T> {
 
 export interface ISubscriptionWizardContext {
     credentials: ServiceClientCredentials;
-    subscription: Subscription;
+    subscriptionId: string;
+    subscriptionDisplayName: string;
 }
 
 export interface ILocationWizardContext extends ISubscriptionWizardContext {
