@@ -13,8 +13,8 @@ import { AzureParentNode } from './AzureParentNode';
 export class SubscriptionNode extends AzureParentNode {
     public static readonly contextValue: string = 'azureextensionui.azureSubscription';
 
-    public readonly subscriptionId: string;
-    public readonly subscriptionDisplayName: string;
+    private readonly _subscriptionId: string;
+    private readonly _subscriptionDisplayName: string;
 
     private readonly _treeDataProvider: AzureTreeDataProvider;
     private readonly _session: AzureSession;
@@ -36,8 +36,16 @@ export class SubscriptionNode extends AzureParentNode {
         this._ui = ui;
         this._session = session;
 
-        this.subscriptionId = subscriptionId;
-        this.subscriptionDisplayName = subscriptionDisplayName;
+        this._subscriptionId = subscriptionId;
+        this._subscriptionDisplayName = subscriptionDisplayName;
+    }
+
+    public get subscriptionId(): string {
+        return this._subscriptionId;
+    }
+
+    public get subscriptionDisplayName(): string {
+        return this._subscriptionDisplayName;
     }
 
     public get tenantId(): string {
