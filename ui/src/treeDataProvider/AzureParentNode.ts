@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { EventEmitter } from 'vscode';
 import { IAzureNode, IAzureParentTreeItem, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureTreeItem } from '../../index';
 import { NotImplementedError } from '../errors';
 import { localize } from '../localize';
@@ -13,6 +14,13 @@ import { LoadMoreTreeItem } from './LoadMoreTreeItem';
 export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeItem> extends AzureNode<T> implements IAzureParentNodeInternal {
     private _cachedChildren: AzureNode[] | undefined;
     private _creatingNodes: AzureNode[] = [];
+    private _onNodeCreateEmitter: EventEmitter<IAzureNode>;
+
+    public constructor(parent: IAzureParentNodeInternal | undefined, treeItem: T, onNodeCreateEmitter: EventEmitter<IAzureNode>) {
+        super(parent, treeItem);
+        this._onNodeCreateEmitter = onNodeCreateEmitter;
+
+    }
 
     public async getCachedChildren(): Promise<AzureNode[]> {
         if (this._cachedChildren === undefined) {
@@ -46,6 +54,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
 
                 const newNode: AzureNode = this.createNewNode(newTreeItem);
                 await this.addNodeToCache(newNode);
+                this._onNodeCreateEmitter.fire(newNode);
                 return newNode;
             } finally {
                 if (creatingNode) {
@@ -165,7 +174,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
         const parentTreeItem: IAzureParentTreeItem = <IAzureParentTreeItem>treeItem;
         // tslint:disable-next-line:strict-boolean-expressions
         if (parentTreeItem.loadMoreChildren) {
-            return new AzureParentNode(this, parentTreeItem);
+            return new AzureParentNode(this, parentTreeItem, this._onNodeCreateEmitter);
         } else {
             return new AzureNode(this, treeItem);
         }

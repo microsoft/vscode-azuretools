@@ -28,6 +28,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
     public static readonly subscriptionContextValue: string = SubscriptionNode.contextValue;
 
     private _onDidChangeTreeDataEmitter: EventEmitter<IAzureNode> = new EventEmitter<IAzureNode>();
+    private _onNodeCreateEmitter: EventEmitter<IAzureNode> = new EventEmitter<IAzureNode>();
 
     private readonly _loadMoreCommandId: string;
     private _resourceProvider: IChildProvider;
@@ -44,7 +45,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
         this._loadMoreCommandId = loadMoreCommandId;
         this._ui = ui;
         this._telemetryReporter = telemetryReporter;
-        this._customRootNodes = rootTreeItems ? rootTreeItems.map((treeItem: IAzureParentTreeItem) => new RootNode(this, ui, treeItem)) : [];
+        this._customRootNodes = rootTreeItems ? rootTreeItems.map((treeItem: IAzureParentTreeItem) => new RootNode(this, ui, treeItem, this._onNodeCreateEmitter)) : [];
 
         // Rather than expose 'AzureAccount' types in the index.ts contract, simply get it inside of this npm package
         const azureAccountExtension: Extension<AzureAccount> | undefined = extensions.getExtension<AzureAccount>('ms-vscode.azure-account');
@@ -72,6 +73,10 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
 
     public get onDidChangeTreeData(): Event<IAzureNode> {
         return this._onDidChangeTreeDataEmitter.event;
+    }
+
+    public get onNodeCreate(): Event<IAzureNode> {
+        return this._onNodeCreateEmitter.event;
     }
 
     public getTreeItem(node: IAzureNode): TreeItem {
@@ -253,7 +258,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
                 } else {
                     // filter.subscription.id is the The fully qualified ID of the subscription (For example, /subscriptions/00000000-0000-0000-0000-000000000000) and should be used as the node's id for the purposes of OpenInPortal
                     // filter.subscription.subscriptionId is just the guid and is used in all other cases when creating clients for managing Azure resources
-                    return new SubscriptionNode(this, this._ui, this._resourceProvider, filter.subscription.id, filter.session, filter.subscription.displayName, filter.subscription.subscriptionId);
+                    return new SubscriptionNode(this, this._ui, this._resourceProvider, filter.subscription.id, filter.session, filter.subscription.displayName, filter.subscription.subscriptionId, this._onNodeCreateEmitter);
                 }
             });
             nodes = this._subscriptionNodes;
