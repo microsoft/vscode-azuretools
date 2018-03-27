@@ -8,7 +8,7 @@ import { AzureEnvironment } from 'ms-rest-azure';
 import * as path from 'path';
 import { EventEmitter } from 'vscode';
 import { AzureTreeDataProvider, IAzureNode, IAzureUserInput, IChildProvider } from '../../index';
-import { AzureSession, AzureSubscription } from '../azure-account.api';
+import { AzureSession } from '../azure-account.api';
 import { AzureParentNode } from './AzureParentNode';
 
 export class SubscriptionNode extends AzureParentNode {
