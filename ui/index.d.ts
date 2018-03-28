@@ -66,6 +66,11 @@ export interface IAzureNode<T extends IAzureTreeItem = IAzureTreeItem> {
      * This method combines the environment.portalLink and IAzureTreeItem.id to open the resource in the portal. Optionally, an id can be passed to manually open nodes that may not be in the explorer.
      */
     openInPortal(id?: string): void;
+
+    /**
+     * Displays a 'Loading...' icon and temporarily changes the node's description while `callback` is being run
+     */
+    runWithTemporaryDescription(description: string, callback: () => Promise<void>): Promise<void>;
 }
 
 export interface IAzureParentNode<T extends IAzureTreeItem = IAzureTreeItem> extends IAzureNode<T> {
@@ -89,6 +94,11 @@ export interface IAzureTreeItem {
      */
     id?: string;
     label: string;
+
+    /**
+     * Additional information about a node that is appended to the label with the format `label (description)`
+     */
+    description?: string;
     iconPath?: string | Uri | { light: string | Uri; dark: string | Uri };
     commandId?: string;
     contextValue: string;
