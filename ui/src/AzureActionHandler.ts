@@ -23,22 +23,34 @@ export class AzureActionHandler {
 
     public registerCommand(commandId: string, callback: (this: IActionContext, ...args: any[]) => any): void {
         this._extensionContext.subscriptions.push(commands.registerCommand(commandId, async (...args: any[]): Promise<any> => {
-            return await callWithTelemetryAndErrorHandling(commandId, this._telemetryReporter, this._outputChannel, function (this: IActionContext): any {
-                if (args.length > 0 && args[0] instanceof AzureNode) {
-                    const node: AzureNode = <AzureNode>args[0];
-                    this.properties.contextValue = node.treeItem.contextValue;
-                }
+            return await callWithTelemetryAndErrorHandling(
+                commandId,
+                this._telemetryReporter,
+                this._outputChannel,
+                function (this: IActionContext): any {
+                    if (args.length > 0 && args[0] instanceof AzureNode) {
+                        const node: AzureNode = <AzureNode>args[0];
+                        this.properties.contextValue = node.treeItem.contextValue;
+                    }
 
-                return callback.call(this, ...args);
-            });
+                    return callback.call(this, ...args);
+                },
+                this._extensionContext
+            );
         }));
     }
 
     public registerEvent<T>(eventId: string, event: Event<T>, callback: (this: IActionContext, ...args: any[]) => any): void {
         this._extensionContext.subscriptions.push(event(async (...args: any[]): Promise<any> => {
-            return await callWithTelemetryAndErrorHandling(eventId, this._telemetryReporter, this._outputChannel, function (this: IActionContext): any {
-                return callback.call(this, ...args);
-            });
+            return await callWithTelemetryAndErrorHandling(
+                eventId,
+                this._telemetryReporter,
+                this._outputChannel,
+                function (this: IActionContext): any {
+                    return callback.call(this, ...args);
+                },
+                this._extensionContext
+            );
         }));
     }
 }
