@@ -49,6 +49,7 @@ export async function connectToGitHub(node: IAzureNode, client: SiteClient, outp
         isMercurial: false
     };
 
+    outputChannel.show(true);
     outputChannel.appendLine(`"${client.fullName}" is being connected to the GitHub repo. This may take several minutes...`);
     try {
         await client.updateSourceControl(siteSourceControl);
