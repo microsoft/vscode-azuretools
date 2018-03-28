@@ -8,6 +8,11 @@ import * as path from "path";
 import { IAzureTreeItem } from "../../index";
 import { localize } from "../localize";
 
+export const loadingIconPath: { light: string, dark: string } = {
+    light: path.join(__filename, '..', '..', '..', '..', 'resources', 'light', 'Loading.svg'),
+    dark: path.join(__filename, '..', '..', '..', '..', 'resources', 'dark', 'Loading.svg')
+};
+
 export class CreatingTreeItem implements IAzureTreeItem {
     public static contextValue: string = 'azureCreating';
     public readonly contextValue: string = CreatingTreeItem.contextValue;
@@ -25,9 +30,6 @@ export class CreatingTreeItem implements IAzureTreeItem {
     }
 
     public get iconPath(): { light: string, dark: string } {
-        return {
-            light: path.join(__filename, '..', '..', '..', '..', 'resources', 'light', 'Loading.svg'),
-            dark: path.join(__filename, '..', '..', '..', '..', 'resources', 'dark', 'Loading.svg')
-        };
+        return loadingIconPath;
     }
 }

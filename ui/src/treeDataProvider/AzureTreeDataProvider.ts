@@ -79,13 +79,13 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
         return this._onNodeCreateEmitter.event;
     }
 
-    public getTreeItem(node: IAzureNode): TreeItem {
+    public getTreeItem(node: AzureNode): TreeItem {
         return {
-            label: node.treeItem.label,
+            label: node.label,
             id: node.id,
             collapsibleState: node instanceof AzureParentNode ? TreeItemCollapsibleState.Collapsed : undefined,
             contextValue: node.treeItem.contextValue,
-            iconPath: node.treeItem.iconPath,
+            iconPath: node.iconPath,
             command: node.treeItem.commandId ? {
                 command: node.treeItem.commandId,
                 title: '',

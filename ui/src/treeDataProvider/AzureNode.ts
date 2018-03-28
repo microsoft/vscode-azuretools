@@ -6,15 +6,25 @@
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment } from 'ms-rest-azure';
 import * as opn from 'opn';
+import { Uri } from 'vscode';
 import { AzureTreeDataProvider, IAzureNode, IAzureParentNode, IAzureTreeItem, IAzureUserInput } from '../../index';
 import { ArgumentError, NotImplementedError } from '../errors';
+import { localize } from '../localize';
+import { loadingIconPath } from './CreatingTreeItem';
 
 export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAzureNode<T> {
     public readonly treeItem: T;
     public readonly parent: IAzureParentNodeInternal | undefined;
+
+    private _temporaryDescription?: string;
+
     public constructor(parent: IAzureParentNodeInternal | undefined, treeItem: T) {
         this.parent = parent;
         this.treeItem = treeItem;
+    }
+
+    private get _effectiveDescription(): string | undefined {
+        return this._temporaryDescription || this.treeItem.description;
     }
 
     public get id(): string {
@@ -29,6 +39,14 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
         }
 
         return id;
+    }
+
+    public get iconPath(): string | Uri | { light: string | Uri; dark: string | Uri } | undefined {
+        return this._temporaryDescription ? loadingIconPath : this.treeItem.iconPath;
+    }
+
+    public get label(): string {
+        return this._effectiveDescription ? `${this.treeItem.label} (${this._effectiveDescription})` : this.treeItem.label;
     }
 
     public get tenantId(): string {
@@ -117,13 +135,26 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
     }
 
     public async deleteNode(): Promise<void> {
-        if (this.treeItem.deleteTreeItem) {
-            await this.treeItem.deleteTreeItem(this);
-            if (this.parent) {
-                await this.parent.removeNodeFromCache(this);
+        await this.runWithTemporaryDescription(localize('deleting', 'Deleting...'), async () => {
+            if (this.treeItem.deleteTreeItem) {
+                await this.treeItem.deleteTreeItem(this);
+                if (this.parent) {
+                    await this.parent.removeNodeFromCache(this);
+                }
+            } else {
+                throw new NotImplementedError('deleteTreeItem', this.treeItem);
             }
-        } else {
-            throw new NotImplementedError('deleteTreeItem', this.treeItem);
+        });
+    }
+
+    public async runWithTemporaryDescription(description: string, callback: () => Promise<void>): Promise<void> {
+        this._temporaryDescription = description;
+        try {
+            await this.refresh();
+            await callback();
+        } finally {
+            this._temporaryDescription = undefined;
+            await this.refresh();
         }
     }
 }
