@@ -14,6 +14,7 @@ import { StorageAccount, CheckNameAvailabilityResult } from 'azure-arm-storage/l
 export declare class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disposable {
     public static readonly subscriptionContextValue: string;
     public onDidChangeTreeData: Event<IAzureNode>;
+    public onNodeCreate: Event<IAzureNode>;
     /**
      * Azure Tree Data Provider
      * @param resourceProvider Describes the resources to be displayed under subscription nodes
