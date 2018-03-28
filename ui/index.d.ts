@@ -523,4 +523,5 @@ export declare namespace DialogResponses {
     export const upload: MessageItem;
     export const alwaysUpload: MessageItem;
     export const dontUpload: MessageItem;
+    export const reportAnIssue: MessageItem;
 }
