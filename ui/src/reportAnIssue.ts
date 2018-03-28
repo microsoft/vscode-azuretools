@@ -4,15 +4,18 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as opn from 'opn';
-import * as path from 'path';
+import { ExtensionContext } from 'vscode';
 import { IParsedError } from '../index';
 
-export function reportIssue(parsedError: IParsedError, extensionPath?: string): void {
+/**
+ * Used to open the browser to the "New Issue" page on GitHub with relevant context pre-filled in the issue body
+ */
+export function reportAnIssue(parsedError: IParsedError, extensionContext?: ExtensionContext): void {
     let packageJson: IPackageJson | undefined;
-    if (extensionPath) {
+    if (extensionContext) {
         try {
             // tslint:disable-next-line:non-literal-require
-            packageJson = <IPackageJson>require(path.join(extensionPath, 'package.json'));
+            packageJson = <IPackageJson>require(extensionContext.asAbsolutePath('package.json'));
         } catch (error) {
             // ignore errors
         }

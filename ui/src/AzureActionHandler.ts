@@ -35,7 +35,7 @@ export class AzureActionHandler {
 
                     return callback.call(this, ...args);
                 },
-                this._extensionContext.extensionPath
+                this._extensionContext
             );
         }));
     }
@@ -49,7 +49,7 @@ export class AzureActionHandler {
                 function (this: IActionContext): any {
                     return callback.call(this, ...args);
                 },
-                this._extensionContext.extensionPath
+                this._extensionContext
             );
         }));
     }
