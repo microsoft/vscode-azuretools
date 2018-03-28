@@ -17,4 +17,5 @@ export namespace DialogResponses {
     export const upload: MessageItem = { title: localize('upload', "Upload") };
     export const alwaysUpload: MessageItem = { title: localize('alwaysUpload', "Always upload") };
     export const dontUpload: MessageItem = { title: localize('dontUpload', "Don't upload"), isCloseAffordance: true };
+    export const reportIssue: MessageItem = { title: localize('reportIssue', "Report issue") };
 }

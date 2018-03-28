@@ -3,15 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { OutputChannel, window } from 'vscode';
+import { MessageItem, OutputChannel, window } from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
 import { IActionContext } from '../index';
 import { IParsedError } from '../index';
+import { DialogResponses } from './DialogResponses';
 import { localize } from './localize';
 import { parseError } from './parseError';
+import { reportIssue } from './reportIssue';
 
 // tslint:disable-next-line:no-any
-export async function callWithTelemetryAndErrorHandling(callbackId: string, telemetryReporter: TelemetryReporter | undefined, outputChannel: OutputChannel | undefined, callback: (this: IActionContext) => any): Promise<any> {
+export async function callWithTelemetryAndErrorHandling(callbackId: string, telemetryReporter: TelemetryReporter | undefined, outputChannel: OutputChannel | undefined, callback: (this: IActionContext) => any, extensionPath?: string): Promise<any> {
     const start: number = Date.now();
     const context: IActionContext = {
         properties: {
@@ -45,11 +47,17 @@ export async function callWithTelemetryAndErrorHandling(callbackId: string, tele
         if (!context.suppressErrorDisplay && outputChannel) {
             // Always append the error to the output channel, but only 'show' the output channel for multiline errors
             outputChannel.appendLine(localize('outputError', 'Error: {0}', errorData.message));
+
+            let result: MessageItem | undefined;
             if (errorData.message.includes('\n')) {
                 outputChannel.show();
-                window.showErrorMessage(localize('multilineError', 'An error has occured. Check output window for more details.'));
+                result = await window.showErrorMessage(localize('multilineError', 'An error has occured. Check output window for more details.'), DialogResponses.reportIssue);
             } else {
-                window.showErrorMessage(errorData.message);
+                result = await window.showErrorMessage(errorData.message, DialogResponses.reportIssue);
+            }
+
+            if (result === DialogResponses.reportIssue) {
+                reportIssue(errorData, extensionPath);
             }
         }
 

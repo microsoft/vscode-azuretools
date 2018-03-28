@@ -192,7 +192,12 @@ export declare class AzureActionHandler {
     registerEvent<T>(eventId: string, event: Event<T>, callback: (this: IActionContext, ...args: any[]) => any): void;
 }
 
-export declare function callWithTelemetryAndErrorHandling(callbackId: string, telemetryReporter: TelemetryReporter | undefined, outputChannel: OutputChannel | undefined, callback: (this: IActionContext) => any): Promise<any>;
+export declare function callWithTelemetryAndErrorHandling(callbackId: string, telemetryReporter: TelemetryReporter | undefined, outputChannel: OutputChannel | undefined, callback: (this: IActionContext) => any, extensionPath?: string): Promise<any>;
+
+/**
+ * Used to open the browser to the "New Issue" page on GitHub with relevant context pre-filled in the issue body
+ */
+export declare function reportIssue(parsedError: IParsedError, extensionPath?: string): void;
 
 export interface IActionContext {
     properties: TelemetryProperties;
@@ -523,4 +528,5 @@ export declare namespace DialogResponses {
     export const upload: MessageItem;
     export const alwaysUpload: MessageItem;
     export const dontUpload: MessageItem;
+    export const reportIssue: MessageItem;
 }
