@@ -57,7 +57,7 @@ export async function callWithTelemetryAndErrorHandling(callbackId: string, tele
             }
 
             if (result === DialogResponses.reportAnIssue) {
-                reportAnIssue(errorData, extensionContext);
+                reportAnIssue(callbackId, errorData, extensionContext);
             }
         }
 
