@@ -215,4 +215,26 @@ suite('Error Parsing Tests', () => {
         assert.equal(pe.message, 'The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100.');
         assert.equal(pe.isUserCancelledError, false);
     });
+
+    test('Error with multiple nested messages, including a "response.body" that fails to JSON parse', () => {
+        const err: {} = {
+            code: '111AuthorizationFailed',
+            message: '111The client with object id does not have authorization to perform action Microsoft.Web/serverfarms/read over scope.',
+            body: {
+                code: '222AuthorizationFailed',
+                message: '222The client with object id does not have authorization to perform action Microsoft.Web/serverfarms/read over scope.'
+            },
+            response: {
+                body: '"{"error":{"code":"333AuthorizationFailed","message":"333The client with object id does not have authorization to perform action Microsoft.Web/serverfarms/read over scope.."}}"',
+                statusCode: 403
+            },
+            statusCode: 403
+        };
+
+        const pe: IParsedError = parseError(err);
+
+        assert.equal(pe.errorType, '111AuthorizationFailed');
+        assert.equal(pe.message, '111The client with object id does not have authorization to perform action Microsoft.Web/serverfarms/read over scope.');
+        assert.equal(pe.isUserCancelledError, false);
+    });
 });

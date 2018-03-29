@@ -12,9 +12,6 @@ export function parseError(error: any): IParsedError {
     let errorType: string = '';
     let message: string = '';
 
-    error = unpackErrorFromField(error, 'response');
-    error = unpackErrorFromField(error, 'body');
-
     if (typeof (error) === 'object' && error !== null) {
         if (error.constructor !== Object) {
             errorType = error.constructor.name;
@@ -22,6 +19,14 @@ export function parseError(error: any): IParsedError {
 
         errorType = getCode(error, errorType);
         message = getMessage(error, message);
+
+        if (!errorType || !message) {
+            error = unpackErrorFromField(error, 'response');
+            error = unpackErrorFromField(error, 'body');
+
+            errorType = getCode(error, errorType);
+            message = getMessage(error, message);
+        }
 
         // Azure errors have a JSON object in the message
         const parsedMessage: any = parseIfJson(error.message);
