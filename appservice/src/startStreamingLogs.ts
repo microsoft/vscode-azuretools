@@ -32,44 +32,54 @@ export async function startStreamingLogs(client: SiteClient, reporter: Telemetry
     await signRequest(httpRequest, kuduClient.credentials);
 
     const requestApi: request.RequestAPI<request.Request, request.CoreOptions, {}> = request.defaults(httpRequest);
-    const logStream: ILogStream = { dispose: undefined, isConnected: true };
-    // Intentionally setting up a separate telemetry event and not awaiting the result here since log stream is a long-running action
-    // tslint:disable-next-line:no-floating-promises
-    callWithTelemetryAndErrorHandling('appService.streamingLogs', reporter, undefined, async function (this: IActionContext): Promise<void> {
-        this.suppressErrorDisplay = true;
-        let timerId: NodeJS.Timer | undefined;
-        if (client.isFunctionApp) {
-            // For Function Apps, we have to ping "/admin/host/status" every minute for logging to work
-            // https://github.com/Microsoft/vscode-azurefunctions/issues/227
-            await pingFunctionApp(client);
-            timerId = setInterval(async () => await pingFunctionApp(client), 60 * 1000);
-        }
+    return await new Promise((onLogStreamCreated: (logStream: ILogStream) => void): void => {
+        // Intentionally setting up a separate telemetry event and not awaiting the result here since log stream is a long-running action
+        // tslint:disable-next-line:no-floating-promises
+        callWithTelemetryAndErrorHandling('appService.streamingLogs', reporter, undefined, async function (this: IActionContext): Promise<void> {
+            this.suppressErrorDisplay = true;
+            let timerId: NodeJS.Timer | undefined;
+            if (client.isFunctionApp) {
+                // For Function Apps, we have to ping "/admin/host/status" every minute for logging to work
+                // https://github.com/Microsoft/vscode-azurefunctions/issues/227
+                await pingFunctionApp(client);
+                timerId = setInterval(async () => await pingFunctionApp(client), 60 * 1000);
+            }
 
-        await new Promise((resolve: () => void, reject: (err: Error) => void): void => {
-            const logsRequest: request.Request = requestApi(`${client.kuduUrl}/api/logstream/${path}`);
-            logStream.dispose = (): void => {
-                logsRequest.removeAllListeners();
-                logsRequest.destroy();
-                outputChannel.show();
-                if (timerId) {
-                    clearInterval(timerId);
-                }
-                outputChannel.appendLine(localize('logStreamDisconnected', 'Disconnected from log-streaming service.'));
-                logStream.isConnected = false;
-                resolve();
-            };
+            await new Promise((onLogStreamEnded: () => void, reject: (err: Error) => void): void => {
+                let logStream: ILogStream;
+                const logsRequest: request.Request = requestApi(`${client.kuduUrl}/api/logstream/${path}`);
+                logStream = {
+                    dispose: (): void => {
+                        logsRequest.removeAllListeners();
+                        logsRequest.destroy();
+                        outputChannel.show();
+                        if (timerId) {
+                            clearInterval(timerId);
+                        }
+                        outputChannel.appendLine(localize('logStreamDisconnected', 'Disconnected from log-streaming service.'));
+                        logStream.isConnected = false;
+                        onLogStreamEnded();
+                    },
+                    isConnected: true
+                };
 
-            logsRequest.on('data', (chunk: Buffer | string) => {
-                outputChannel.appendLine(chunk.toString());
-            }).on('error', (err: Error) => {
-                outputChannel.appendLine(localize('logStreamError', 'Error connecting to log-streaming service:'));
-                outputChannel.appendLine(parseError(err).message);
-                reject(err);
-            }).on('complete', () => {
-                logStream.dispose();
+                logsRequest.on('data', (chunk: Buffer | string) => {
+                    outputChannel.appendLine(chunk.toString());
+                }).on('error', (err: Error) => {
+                    if (timerId) {
+                        clearInterval(timerId);
+                    }
+                    logStream.isConnected = false;
+                    outputChannel.show();
+                    outputChannel.appendLine(localize('logStreamError', 'Error connecting to log-streaming service:'));
+                    outputChannel.appendLine(parseError(err).message);
+                    reject(err);
+                }).on('complete', () => {
+                    logStream.dispose();
+                });
+
+                onLogStreamCreated(logStream);
             });
         });
     });
-
-    return logStream;
 }
