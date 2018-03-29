@@ -10,7 +10,7 @@ import { IParsedError } from '../index';
 /**
  * Used to open the browser to the "New Issue" page on GitHub with relevant context pre-filled in the issue body
  */
-export function reportAnIssue(parsedError: IParsedError, extensionContext?: ExtensionContext): void {
+export function reportAnIssue(actionId: string, parsedError: IParsedError, extensionContext?: ExtensionContext): void {
     let packageJson: IPackageJson | undefined;
     if (extensionContext) {
         try {
@@ -30,6 +30,7 @@ export function reportAnIssue(parsedError: IParsedError, extensionContext?: Exte
 Repro steps:
 <Enter steps to reproduce issue>
 
+Action: ${actionId}
 Error type: ${parsedError.errorType}
 Error Message: ${parsedError.message}
 
