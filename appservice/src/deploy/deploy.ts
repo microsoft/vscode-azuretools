@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SiteConfigResource } from 'azure-arm-website/lib/models';
+import { AppServicePlan, SiteConfigResource } from 'azure-arm-website/lib/models';
 import * as vscode from 'vscode';
 import { IAzureUserInput, TelemetryProperties } from 'vscode-azureextensionui';
 import { localize } from '../localize';
@@ -31,6 +31,17 @@ export async function deploy(client: SiteClient, fsPath: string, outputChannel: 
             client.getState().then(
                 (state: string) => {
                     telemetryProperties.state = state;
+                },
+                () => {
+                    // ignore
+                });
+            client.getAppServicePlan().then(
+                (plan: AppServicePlan) => {
+                    telemetryProperties.planStatus = plan.status;
+                    telemetryProperties.planKind = plan.kind;
+                    if (plan.sku) {
+                        telemetryProperties.planSize = plan.sku.size;
+                    }
                 },
                 () => {
                     // ignore
