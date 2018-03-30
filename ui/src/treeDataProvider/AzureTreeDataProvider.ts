@@ -181,7 +181,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
             } else if (node instanceof AzureParentNode) {
                 children = await node.getCachedChildren();
             } else {
-                throw new Error(localize('noMatchingNode', 'Failed to find node with id "{0}".', id));
+                return undefined;
             }
         }
     }
