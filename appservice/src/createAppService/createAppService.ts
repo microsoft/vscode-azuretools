@@ -10,12 +10,13 @@ import { AzureWizard, AzureWizardStep, IActionContext, IAzureUserInput, Location
 import { AppKind, WebsiteOS } from './AppKind';
 import { AppServicePlanStep } from './AppServicePlanStep';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
+import { OSStep } from './OSStep';
 import { SiteNameStep } from './SiteNameStep';
 import { SiteStep } from './SiteStep';
 
 export async function createAppService(
     appKind: AppKind,
-    websiteOS: WebsiteOS,
+    websiteOS: WebsiteOS | undefined,
     outputChannel: OutputChannel,
     ui: IAzureUserInput,
     actionContext: IActionContext,
@@ -27,6 +28,9 @@ export async function createAppService(
     const steps: AzureWizardStep<IAppServiceWizardContext>[] = [];
     steps.push(new SiteNameStep());
     steps.push(new ResourceGroupStep());
+    if (websiteOS === undefined) {
+        steps.push(new OSStep());
+    }
     switch (appKind) {
         case AppKind.functionapp:
             steps.push(new StorageAccountStep());
