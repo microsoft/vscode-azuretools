@@ -7,7 +7,7 @@ import { Site } from 'azure-arm-website/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { OutputChannel } from 'vscode';
 import { IActionContext, IAzureUserInput } from 'vscode-azureextensionui';
-import { AppKind, WebsiteOS } from './AppKind';
+import { AppKind } from './AppKind';
 import { createAppService } from './createAppService';
 
 export async function createWebApp(
@@ -18,5 +18,5 @@ export async function createWebApp(
     subscriptionId: string,
     subscriptionDisplayName: string,
     showCreatingNode?: (label: string) => void): Promise<Site> {
-    return await createAppService(AppKind.app, WebsiteOS.linux, outputChannel, ui, actionContext, credentials, subscriptionId, subscriptionDisplayName, showCreatingNode);
+    return await createAppService(AppKind.app, undefined, outputChannel, ui, actionContext, credentials, subscriptionId, subscriptionDisplayName, showCreatingNode);
 }

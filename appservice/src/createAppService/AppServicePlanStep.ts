@@ -43,7 +43,7 @@ export class AppServicePlanStep extends AzureWizardStep<IAppServiceWizardContext
 
     public async prompt(wizardContext: IAppServiceWizardContext, ui: IAzureUserInput): Promise<IAppServiceWizardContext> {
         // Cache hosting plan separately per subscription
-        const options: IAzureQuickPickOptions = { placeHolder: 'Select an App Service plan.', id: `AppServicePlanStep/${wizardContext.subscriptionId}` };
+        const options: IAzureQuickPickOptions = { placeHolder: `Select a ${wizardContext.websiteOS} App Service plan.`, id: `AppServicePlanStep/${wizardContext.subscriptionId}` };
         wizardContext.plan = (await ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
 
         if (wizardContext.plan) {
@@ -110,7 +110,10 @@ export class AppServicePlanStep extends AzureWizardStep<IAppServiceWizardContext
 
         const plans: AppServicePlan[] = await AppServicePlanStep.getPlans(wizardContext);
         for (const plan of plans) {
-            if (plan.kind.toLowerCase().includes(wizardContext.websiteOS)) {
+            const isNewSiteLinux: boolean = wizardContext.websiteOS === WebsiteOS.linux;
+            const isPlanLinux: boolean = plan.kind.toLowerCase().includes(WebsiteOS.linux);
+            // plan.kind will contain "linux" for Linux plans, but will _not_ contain "windows" for Windows plans. Thus we check "isLinux" for both cases
+            if (isNewSiteLinux === isPlanLinux) {
                 picks.push({
                     id: plan.id,
                     label: plan.appServicePlanName,

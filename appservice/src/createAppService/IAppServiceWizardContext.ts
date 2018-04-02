@@ -9,7 +9,12 @@ import { AppKind, WebsiteOS } from './AppKind';
 
 export interface IAppServiceWizardContext extends IResourceGroupWizardContext, IStorageAccountWizardContext {
     appKind: AppKind;
-    websiteOS: WebsiteOS;
+
+    /**
+     * The OS for the new site
+     * This will be defined after `OSStep.prompt` occurs.
+     */
+    websiteOS?: WebsiteOS;
 
     /**
      * The newly created site
