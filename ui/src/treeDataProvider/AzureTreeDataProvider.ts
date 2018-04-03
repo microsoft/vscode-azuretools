@@ -229,6 +229,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
 
         let nodes: IAzureNode[];
 
+        const existingSubscriptionNodes: IAzureNode[] = this._subscriptionNodes;
         this._subscriptionNodes = [];
 
         let commandLabel: string | undefined;
@@ -256,9 +257,15 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
                 if (filter.subscription.id === undefined || filter.subscription.displayName === undefined || filter.subscription.subscriptionId === undefined) {
                     throw new ArgumentError(filter);
                 } else {
-                    // filter.subscription.id is the The fully qualified ID of the subscription (For example, /subscriptions/00000000-0000-0000-0000-000000000000) and should be used as the node's id for the purposes of OpenInPortal
-                    // filter.subscription.subscriptionId is just the guid and is used in all other cases when creating clients for managing Azure resources
-                    return new SubscriptionNode(this, this._ui, this._resourceProvider, filter.subscription.id, filter.session, filter.subscription.displayName, filter.subscription.subscriptionId, this._onNodeCreateEmitter);
+                    const existingNode: IAzureNode | undefined = existingSubscriptionNodes.find((node: SubscriptionNode) => node.id === filter.subscription.id);
+                    if (existingNode) {
+                        // Return existing node (which might have many 'cached' nodes underneath it) rather than creating a brand new node every time
+                        return existingNode;
+                    } else {
+                        // filter.subscription.id is the The fully qualified ID of the subscription (For example, /subscriptions/00000000-0000-0000-0000-000000000000) and should be used as the node's id for the purposes of OpenInPortal
+                        // filter.subscription.subscriptionId is just the guid and is used in all other cases when creating clients for managing Azure resources
+                        return new SubscriptionNode(this, this._ui, this._resourceProvider, filter.subscription.id, filter.session, filter.subscription.displayName, filter.subscription.subscriptionId, this._onNodeCreateEmitter);
+                    }
                 }
             });
             nodes = this._subscriptionNodes;
