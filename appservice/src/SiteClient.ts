@@ -60,7 +60,7 @@ export class SiteClient {
         this.serverFarmId = site.serverFarmId;
         this.kind = site.kind;
         this.initialState = site.state;
-        this.isFunctionApp = site.kind === 'functionapp';
+        this.isFunctionApp = site.kind && site.kind.includes('functionapp');
 
         this.planResourceGroup = matches[2];
         this.planName = matches[3];
