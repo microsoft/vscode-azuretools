@@ -16,6 +16,8 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
     private _creatingNodes: AzureNode[] = [];
     private _onNodeCreateEmitter: EventEmitter<IAzureNode>;
 
+    private _initChildrenTask: Promise<void> | undefined;
+
     public constructor(parent: IAzureParentNodeInternal | undefined, treeItem: T, onNodeCreateEmitter: EventEmitter<IAzureNode>) {
         super(parent, treeItem);
         this._onNodeCreateEmitter = onNodeCreateEmitter;
@@ -24,7 +26,11 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
 
     public async getCachedChildren(): Promise<AzureNode[]> {
         if (this._cachedChildren === undefined) {
-            await this.loadMoreChildren();
+            this._initChildrenTask = this.loadMoreChildren();
+        }
+
+        if (this._initChildrenTask) {
+            await this._initChildrenTask;
         }
 
         return this._cachedChildren ? this._cachedChildren : [];
