@@ -171,15 +171,24 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
     }
 
     public async findNode(id: string): Promise<IAzureNode | undefined> {
-        let children: IAzureNode[] = await this.getChildren();
+        let nodes: IAzureNode[] = await this.getChildren();
 
         // tslint:disable-next-line:no-constant-condition
         while (true) {
-            const node: IAzureNode | undefined = children.find((child: IAzureNode) => id.startsWith(child.id));
-            if (node && node.id === id) {
-                return node;
-            } else if (node instanceof AzureParentNode) {
-                children = await node.getCachedChildren();
+            let ancestorNode: AzureParentNode | undefined;
+            for (const node of nodes) {
+                if (node.id === id) {
+                    return node;
+                } else if (id.startsWith(`${node.id}/`) && node instanceof AzureParentNode) {
+                    // Append '/' to 'node.id' when checking 'startsWith' to ensure its actually an ancenstor, rather than a node at the same level that _happens_ to start with the same id
+                    // For example, two databases named 'test' and 'test1' as described in this issue: https://github.com/Microsoft/vscode-cosmosdb/issues/488
+                    ancestorNode = node;
+                    break;
+                }
+            }
+
+            if (ancestorNode) {
+                nodes = await ancestorNode.getCachedChildren();
             } else {
                 return undefined;
             }
