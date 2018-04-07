@@ -3,8 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// tslint:disable-next-line:no-require-imports
-import StorageManagementClient = require('azure-arm-storage');
 import { StorageAccountListKeysResult, StorageAccountListResult } from 'azure-arm-storage/lib/models';
 // tslint:disable-next-line:no-require-imports
 import WebSiteManagementClient = require('azure-arm-website');
@@ -79,10 +77,6 @@ export class SiteClient {
 
     private get _client(): WebSiteManagementClient {
         return new WebSiteManagementClient(this._node.credentials, this._node.subscriptionId);
-    }
-
-    private get _storageClient(): StorageManagementClient {
-        return new StorageManagementClient(this._node.credentials, this._node.subscription.subscriptionId);
     }
 
     public async stop(): Promise<void> {
@@ -175,13 +169,5 @@ export class SiteClient {
 
     public async listSourceControls(): Promise<SourceControlCollection> {
         return await this._client.listSourceControls();
-    }
-
-    public async listStorageAccounts(): Promise<StorageAccountListResult> {
-        return await this._storageClient.storageAccounts.list();
-    }
-
-    public async listStorageAccountKeys(resourceGroup: string, accountName: string): Promise<StorageAccountListKeysResult> {
-        return await this._storageClient.storageAccounts.listKeys(resourceGroup, accountName);
     }
 }

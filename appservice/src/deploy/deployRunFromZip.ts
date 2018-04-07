@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// import * as fs from 'fs';
 import { StorageAccount, StorageAccountListKeysResult } from 'azure-arm-storage/lib/models';
 import { StorageAccountListResult } from 'azure-arm-storage/lib/models';
 import { StringDictionary } from 'azure-arm-website/lib/models';

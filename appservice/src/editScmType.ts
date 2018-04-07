@@ -3,9 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+// tslint:disable-next-line:no-require-imports
+import StorageManagementClient = require('azure-arm-storage');
 import { SiteConfigResource } from 'azure-arm-website/lib/models';
 import * as vscode from 'vscode';
-import { IAzureNode, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, UserCancelledError } from 'vscode-azureextensionui';
+import { IAzureNode, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, IStorageAccountWizardContext, StorageAccountStep, UserCancelledError } from 'vscode-azureextensionui';
 import { connectToGitHub } from './connectToGitHub';
 import { localize } from './localize';
 import { ScmType } from './ScmType';
@@ -20,6 +22,13 @@ export async function editScmType(client: SiteClient, node: IAzureNode, outputCh
             throw new Error(localize('configurationError', 'Configuration type must be set to "None" to connect to a GitHub repository.'));
         }
         await connectToGitHub(node, client, outputChannel);
+    } else if (newScmType === ScmType.RunFromZip) {
+        const storageWizard: IStorageAccountWizardContext = {
+            credentials: node.credentials,
+            subscriptionId: node.subscriptionId,
+            subscriptionDisplayName: node.subscriptionDisplayName};
+        const storageStep: StorageAccountStep<IStorageAccountWizardContext> = new StorageAccountStep();
+        storageStep.prompt(storageWizard, node.ui);
     } else {
         config.scmType = newScmType;
         // to update one property, a complete config file must be sent
