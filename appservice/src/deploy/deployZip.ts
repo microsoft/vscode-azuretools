@@ -25,24 +25,7 @@ export async function deployZip(client: SiteClient, fsPath: string, outputChanne
 
     outputChannel.show();
     const kuduClient: KuduClient = await getKuduClient(client);
-
-    let zipFilePath: string;
-    let createdZip: boolean = false;
-    if (FileUtilities.getFileExtension(fsPath) === 'zip') {
-        zipFilePath = fsPath;
-    } else if (await FileUtilities.isDirectory(fsPath)) {
-        createdZip = true;
-        outputChannel.appendLine(formatDeployLog(client, localize('zipCreate', 'Creating zip package...')));
-        const zipDeployConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration(configurationSectionName, vscode.Uri.file(fsPath));
-        // tslint:disable-next-line:no-backbone-get-set-outside-model
-        const globPattern: string = zipDeployConfig.get<string>('zipGlobPattern');
-        // tslint:disable-next-line:no-backbone-get-set-outside-model
-        const ignorePattern: string | string[] = zipDeployConfig.get<string | string[]>('zipIgnorePattern');
-
-        zipFilePath = await FileUtilities.zipDirectory(fsPath, globPattern, ignorePattern);
-    } else {
-        throw new Error(localize('NotAZipError', 'Path specified is not a folder or a zip file'));
-    }
+    const zipDirectoryResults: (string | boolean)[] = zipDirectory(client, fsPath, outputChannel, configurationSectionName, true, true);
 
     try {
         outputChannel.appendLine(formatDeployLog(client, localize('deployStart', 'Starting deployment...')));

@@ -10,6 +10,7 @@ import { localize } from '../localize';
 import { ScmType } from '../ScmType';
 import { SiteClient } from '../SiteClient';
 import { randomUtils } from '../utils/randomUtils';
+import { deployRunFromZip } from './deployRunFromZip';
 import { deployZip } from './deployZip';
 import { localGitDeploy } from './localGitDeploy';
 

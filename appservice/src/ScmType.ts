@@ -7,5 +7,6 @@
 export enum ScmType {
     None = 'None', // default scmType
     LocalGit = 'LocalGit',
-    GitHub = 'GitHub'
+    GitHub = 'GitHub',
+    RunFromZip = 'Run-From-Zip'
 }
