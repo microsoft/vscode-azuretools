@@ -67,7 +67,7 @@ export class SiteClient {
 
         this.defaultHostName = site.defaultHostName;
         this.defaultHostUrl = `https://${this.defaultHostName}`;
-        this.kuduHostName = site.enabledHostNames[1];
+        this.kuduHostName = `${this.fullName}.scm.azurewebsites.net`;
         this.kuduUrl = `https://${this.kuduHostName}`;
         this.gitUrl = `${this.kuduHostName}:443/${site.repositorySiteName}.git`;
 
