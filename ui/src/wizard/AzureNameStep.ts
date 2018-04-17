@@ -5,9 +5,9 @@
 
 import { isArray } from "util";
 import { IAzureNamingRules, IRelatedNameWizardContext } from "../../index";
-import { AzureWizardStep } from "./AzureWizardStep";
+import { AzureWizardPromptStep } from "./AzureWizardPromptStep";
 
-export abstract class AzureNameStep<T extends IRelatedNameWizardContext> extends AzureWizardStep<T> {
+export abstract class AzureNameStep<T extends IRelatedNameWizardContext> extends AzureWizardPromptStep<T> {
     protected abstract isRelatedNameAvailable(wizardContext: T, name: string): Promise<boolean>;
 
     protected async generateRelatedName(wizardContext: T, name: string, namingRules: IAzureNamingRules | IAzureNamingRules[]): Promise<string | undefined> {
