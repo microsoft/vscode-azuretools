@@ -73,10 +73,10 @@ export class StorageAccountListStep<T extends IStorageAccountWizardContext> exte
     }
 
     public async prompt(wizardContext: T, ui: IAzureUserInput): Promise<T> {
-        if (!wizardContext.storageAccount) {
+        if (!wizardContext.storageAccount && !wizardContext.newStorageAccountName) {
             const client: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
 
-            const quickPickOptions: IAzureQuickPickOptions = { placeHolder: 'Select a storage account that supports blobs, queues and tables.', id: `StorageAccountListStep/${wizardContext.subscriptionId}` };
+            const quickPickOptions: IAzureQuickPickOptions = { placeHolder: 'Select a storage account.', id: `StorageAccountListStep/${wizardContext.subscriptionId}` };
             wizardContext.storageAccount = (await ui.showQuickPick(this.getQuickPicks(client.storageAccounts.list()), quickPickOptions)).data;
 
             if (wizardContext.storageAccount) {

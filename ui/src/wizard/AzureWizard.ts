@@ -9,7 +9,7 @@ import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 
 export class AzureWizard<T> {
-    private readonly _promptSteps: AzureWizardPromptStep<T>[];
+    protected readonly _promptSteps: AzureWizardPromptStep<T>[];
     private readonly _executeSteps: AzureWizardExecuteStep<T>[];
     private readonly _subWizards: AzureWizard<T>[] = [];
     private _wizardContext: T;
@@ -20,14 +20,18 @@ export class AzureWizard<T> {
         this._wizardContext = wizardContext;
     }
 
-    public async prompt(actionContext: IActionContext, ui: IAzureUserInput): Promise<T> {
+    public async prompt(actionContext: IActionContext, ui: IAzureUserInput, parentWizard?: AzureWizard<T>): Promise<T> {
         for (const step of this._promptSteps) {
+            if (parentWizard && parentWizard._promptSteps.some((parentStep: AzureWizardPromptStep<T>) => parentStep.constructor.name === step.constructor.name)) {
+                break;
+            }
+
             actionContext.properties.lastStepAttempted = `prompt-${step.constructor.name}`;
             this._wizardContext = await step.prompt(this._wizardContext, ui);
 
             if (step.subWizard) {
                 this._subWizards.push(step.subWizard);
-                await step.subWizard.prompt(actionContext, ui);
+                await step.subWizard.prompt(actionContext, ui, this);
             }
         }
 

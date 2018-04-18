@@ -36,7 +36,7 @@ export class ResourceGroupListStep<T extends IResourceGroupWizardContext> extend
     }
 
     public async prompt(wizardContext: T, ui: IAzureUserInput): Promise<T> {
-        if (!wizardContext.resourceGroup) {
+        if (!wizardContext.resourceGroup && !wizardContext.newResourceGroupName) {
             // Cache resource group separately per subscription
             const options: IAzureQuickPickOptions = { placeHolder: 'Select a resource group for new resources.', id: `ResourceGroupListStep/${wizardContext.subscriptionId}` };
             wizardContext.resourceGroup = (await ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
