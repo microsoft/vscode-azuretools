@@ -6,13 +6,14 @@
 import { Site } from 'azure-arm-website/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { OutputChannel } from 'vscode';
-import { AzureWizard, AzureWizardStep, IActionContext, IAzureUserInput, LocationStep, ResourceGroupStep, StorageAccountStep } from 'vscode-azureextensionui';
+import { AzureWizard, AzureWizardPromptStep, IActionContext, IAzureUserInput, LocationListStep, ResourceGroupListStep, StorageAccountKind, StorageAccountListStep, StorageAccountPerformance, StorageAccountReplication } from 'vscode-azureextensionui';
 import { AppKind, WebsiteOS } from './AppKind';
-import { AppServicePlanStep } from './AppServicePlanStep';
+import { AppServicePlanListStep } from './AppServicePlanListStep';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
-import { OSStep } from './OSStep';
+import { SiteCreateStep } from './SiteCreateStep';
 import { SiteNameStep } from './SiteNameStep';
-import { SiteStep } from './SiteStep';
+import { SiteOSStep } from './SiteOSStep';
+import { SiteRuntimeStep } from './SiteRuntimeStep';
 
 export async function createAppService(
     appKind: AppKind,
@@ -25,38 +26,36 @@ export async function createAppService(
     subscriptionDisplayName: string,
     showCreatingNode?: (label: string) => void): Promise<Site> {
 
-    const steps: AzureWizardStep<IAppServiceWizardContext>[] = [];
-    steps.push(new SiteNameStep());
-    steps.push(new ResourceGroupStep());
-    if (websiteOS === undefined) {
-        steps.push(new OSStep());
-    }
+    const promptSteps: AzureWizardPromptStep<IAppServiceWizardContext>[] = [];
+    promptSteps.push(new SiteNameStep());
+    promptSteps.push(new ResourceGroupListStep());
+    promptSteps.push(new SiteOSStep());
+    promptSteps.push(new SiteRuntimeStep());
     switch (appKind) {
         case AppKind.functionapp:
-            steps.push(new StorageAccountStep());
+            promptSteps.push(new StorageAccountListStep(StorageAccountKind.Storage, StorageAccountPerformance.Standard, StorageAccountReplication.LRS));
             break;
         case AppKind.app:
         default:
-            steps.push(new AppServicePlanStep());
+            promptSteps.push(new AppServicePlanListStep());
     }
-    steps.push(new LocationStep());
-    steps.push(new SiteStep());
+    promptSteps.push(new LocationListStep());
 
     let wizardContext: IAppServiceWizardContext = {
-        appKind: appKind,
-        websiteOS: websiteOS,
+        newSiteKind: appKind,
+        newSiteOS: websiteOS,
         subscriptionId: subscriptionId,
         subscriptionDisplayName: subscriptionDisplayName,
         credentials: credentials
     };
-    const wizard: AzureWizard<IAppServiceWizardContext> = new AzureWizard(steps, wizardContext);
+    const wizard: AzureWizard<IAppServiceWizardContext> = new AzureWizard(promptSteps, [new SiteCreateStep()], wizardContext);
 
     // Ideally actionContext should always be defined, but there's a bug with the NodePicker. Create a 'fake' actionContext until that bug is fixed
     // https://github.com/Microsoft/vscode-azuretools/issues/120
     actionContext = actionContext || <IActionContext>{ properties: {}, measurements: {} };
     wizardContext = await wizard.prompt(actionContext, ui);
     if (showCreatingNode) {
-        showCreatingNode(wizardContext.siteName);
+        showCreatingNode(wizardContext.newSiteName);
     }
     wizardContext = await wizard.execute(actionContext, outputChannel);
 
