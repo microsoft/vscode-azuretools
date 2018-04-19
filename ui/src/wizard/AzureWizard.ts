@@ -9,7 +9,8 @@ import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 
 export class AzureWizard<T> {
-    protected readonly _promptSteps: AzureWizardPromptStep<T>[];
+    protected _parentWizard?: AzureWizard<T>;
+    private readonly _promptSteps: AzureWizardPromptStep<T>[];
     private readonly _executeSteps: AzureWizardExecuteStep<T>[];
     private readonly _subWizards: AzureWizard<T>[] = [];
     private _wizardContext: T;
@@ -20,9 +21,10 @@ export class AzureWizard<T> {
         this._wizardContext = wizardContext;
     }
 
-    public async prompt(actionContext: IActionContext, ui: IAzureUserInput, parentWizard?: AzureWizard<T>): Promise<T> {
+    public async prompt(actionContext: IActionContext, ui: IAzureUserInput): Promise<T> {
         for (const step of this._promptSteps) {
-            if (parentWizard && parentWizard._promptSteps.some((parentStep: AzureWizardPromptStep<T>) => parentStep.constructor.name === step.constructor.name)) {
+            // We want to encourage the least number of prompts possible, so only prompt for a step that doesn't already exist in the parent
+            if (this._parentWizard && this._parentWizard.containsStep(step)) {
                 break;
             }
 
@@ -30,8 +32,9 @@ export class AzureWizard<T> {
             this._wizardContext = await step.prompt(this._wizardContext, ui);
 
             if (step.subWizard) {
+                step.subWizard._parentWizard = this;
                 this._subWizards.push(step.subWizard);
-                await step.subWizard.prompt(actionContext, ui, this);
+                await step.subWizard.prompt(actionContext, ui);
             }
         }
 
@@ -51,5 +54,9 @@ export class AzureWizard<T> {
         }
 
         return this._wizardContext;
+    }
+
+    protected containsStep(step: AzureWizardPromptStep<T>): boolean {
+        return this._promptSteps.some((s: AzureWizardPromptStep<T>) => s.constructor.name === step.constructor.name) || (!!this._parentWizard && this._parentWizard.containsStep(step));
     }
 }
