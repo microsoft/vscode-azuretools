@@ -3,22 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AppServicePlan, Site } from 'azure-arm-website/lib/models';
+import { AppServicePlan, Site, SkuDescription } from 'azure-arm-website/lib/models';
 import { IResourceGroupWizardContext, IStorageAccountWizardContext } from 'vscode-azureextensionui';
 import { AppKind, WebsiteOS } from './AppKind';
 
 export interface IAppServiceWizardContext extends IResourceGroupWizardContext, IStorageAccountWizardContext {
-    appKind: AppKind;
+    newSiteKind: AppKind;
 
     /**
      * The OS for the new site
-     * This will be defined after `OSStep.prompt` occurs.
+     * This will be defined after `SiteOSStep.prompt` occurs.
      */
-    websiteOS?: WebsiteOS;
+    newSiteOS?: WebsiteOS;
+
+    /**
+     * The runtime for a new Linux site
+     * This will be defined after `SiteRuntimeStep.prompt` occurs.
+     */
+    newSiteRuntime?: string;
 
     /**
      * The newly created site
-     * This will be defined after `SiteStep.execute` occurs.
+     * This will be defined after `SiteCreateStep.execute` occurs.
      */
     site?: Site;
 
@@ -26,14 +32,26 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
      * The name of the new site
      * This will be defined after `SiteNameStep.prompt` occurs.
      */
-    siteName?: string;
+    newSiteName?: string;
 
     /**
      * The App Service plan to use.
-     * If an existing plan is picked, this value will be defined after `AppServicePlanStep.prompt` occurs
-     * If a new plan is picked, this value will be defined after `AppServicePlanStep.execute` occurs
+     * If an existing plan is picked, this value will be defined after `AppServicePlanListStep.prompt` occurs
+     * If a new plan is picked, this value will be defined after the `execute` phase of the 'create' subwizard
      */
     plan?: AppServicePlan;
+
+    /**
+     * The name of the new plan
+     * This will be defined after `AppServicePlanNameStep.prompt` occurs.
+     */
+    newPlanName?: string;
+
+    /**
+     * The sku of the new plan
+     * This will be defined after `AppServicePlanSkuStep.prompt` occurs.
+     */
+    newPlanSku?: SkuDescription;
 
     /**
      * The task used to get existing plans.
