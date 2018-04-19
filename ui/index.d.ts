@@ -372,15 +372,19 @@ export declare class AzureWizard<T> {
      * @param steps The steps to perform, in order
      * @param wizardContext A context object that should be used to pass information between steps
      */
-    public constructor(steps: AzureWizardStep<T>[], wizardContext: T);
+    public constructor(promptSteps: AzureWizardPromptStep<T>[], executeSteps: AzureWizardExecuteStep<T>[], wizardContext: T);
 
     public prompt(actionContext: IActionContext, ui: IAzureUserInput): Promise<T>;
     public execute(actionContext: IActionContext, outputChannel: OutputChannel): Promise<T>;
 }
 
-export declare abstract class AzureWizardStep<T> {
-    public abstract prompt(wizardContext: T, ui: IAzureUserInput): Promise<T>;
+export declare abstract class AzureWizardExecuteStep<T> {
     public abstract execute(wizardContext: T, outputChannel: OutputChannel): Promise<T>;
+}
+
+export declare abstract class AzureWizardPromptStep<T> {
+    public subWizard?: AzureWizard<T>;
+    public abstract prompt(wizardContext: T, ui: IAzureUserInput): Promise<T>;
 }
 
 export interface ISubscriptionWizardContext {
@@ -392,7 +396,7 @@ export interface ISubscriptionWizardContext {
 export interface ILocationWizardContext extends ISubscriptionWizardContext {
     /**
      * The location to use for new resources
-     * This value will be defined after `LocationStep.prompt` occurs or after you call `LocationStep.setLocation`
+     * This value will be defined after `LocationListStep.prompt` occurs or after you call `LocationListStep.setLocation`
      */
     location?: Location;
 
@@ -403,7 +407,7 @@ export interface ILocationWizardContext extends ISubscriptionWizardContext {
     locationsTask?: Promise<Location[]>;
 }
 
-export declare class LocationStep<T extends ILocationWizardContext> extends AzureWizardStep<T> {
+export declare class LocationListStep<T extends ILocationWizardContext> extends AzureWizardPromptStep<T> {
     /**
      * This will set the wizard context's location (in which case the user will _not_ be prompted for location)
      * For example, if the user selects an existing resource, you might want to use that location as the default for the wizard's other resources
@@ -419,7 +423,6 @@ export declare class LocationStep<T extends ILocationWizardContext> extends Azur
     public static getLocations<T extends ILocationWizardContext>(wizardContext: T): Promise<Location[]>;
 
     public prompt(wizardContext: T, ui: IAzureUserInput): Promise<T>;
-    public execute(wizardContext: T, outputChannel: OutputChannel): Promise<T>;
 }
 
 export interface IAzureNamingRules {
@@ -452,7 +455,7 @@ export interface IRelatedNameWizardContext {
  * A generic class for a step that specifies the name of a new resource, used to generate a related name for other new resources.
  * You must implement `isRelatedNameAvailable` and assign `wizardContext.relatedNameTask` to the result of `generateRelatedName`
  */
-export declare abstract class AzureNameStep<T extends IRelatedNameWizardContext> extends AzureWizardStep<T> {
+export declare abstract class AzureNameStep<T extends IRelatedNameWizardContext> extends AzureWizardPromptStep<T> {
     /**
      * This method will by called by `generateRelatedName` when trying to find a unique suffix for the related name
      * @param wizardContext The context of the wizard.
@@ -473,8 +476,8 @@ export declare abstract class AzureNameStep<T extends IRelatedNameWizardContext>
 export interface IResourceGroupWizardContext extends ILocationWizardContext, IRelatedNameWizardContext {
     /**
      * The resource group to use for new resources.
-     * If an existing resource group is picked, this value will be defined after `ResourceGroupStep.prompt` occurs
-     * If a new resource group is picked, this value will be defined after `ResourceGroupStep.execute` occurs
+     * If an existing resource group is picked, this value will be defined after `ResourceGroupListStep.prompt` occurs
+     * If a new resource group is picked, this value will be defined after the `execute` phase of the 'create' subwizard
      */
     resourceGroup?: ResourceGroup;
 
@@ -483,15 +486,18 @@ export interface IResourceGroupWizardContext extends ILocationWizardContext, IRe
      * By specifying this in the context, we can ensure that Azure is only queried once for the entire wizard
      */
     resourceGroupsTask?: Promise<ResourceGroup[]>;
+
+    newResourceGroupName?: string;
 }
 
 export declare const resourceGroupNamingRules: IAzureNamingRules;
-export declare class ResourceGroupStep<T extends IResourceGroupWizardContext> extends AzureWizardStep<T> {
+
+export declare class ResourceGroupListStep<T extends IResourceGroupWizardContext> extends AzureWizardPromptStep<T> {
     /**
      * Used to get existing resource groups. By passing in the context, we can ensure that Azure is only queried once for the entire wizard
      * @param wizardContext The context of the wizard.
      */
-    public static getResouceGroups<T extends IResourceGroupWizardContext>(wizardContext: T): Promise<ResourceGroup[]>;
+    public static getResourceGroups<T extends IResourceGroupWizardContext>(wizardContext: T): Promise<ResourceGroup[]>;
 
     /**
      * Checks existing resource groups in the wizard's subscription to see if the name is available.
@@ -500,24 +506,59 @@ export declare class ResourceGroupStep<T extends IResourceGroupWizardContext> ex
     public static isNameAvailable<T extends IResourceGroupWizardContext>(wizardContext: T, name: string): Promise<boolean>;
 
     public prompt(wizardContext: T, ui: IAzureUserInput): Promise<T>;
-    public execute(wizardContext: T, outputChannel: OutputChannel): Promise<T>;
 }
 
 export interface IStorageAccountWizardContext extends IResourceGroupWizardContext {
     /**
      * The storage account to use.
-     * If an existing storage account is picked, this value will be defined after `StorageAccountStep.prompt` occurs
-     * If a new storage account is picked, this value will be defined after `StorageAccountStep.execute` occurs
+     * If an existing storage account is picked, this value will be defined after `StorageAccountListStep.prompt` occurs
+     * If a new storage account is picked, this value will be defined after the `execute` phase of the 'create' subwizard
      */
     storageAccount?: StorageAccount;
+
+    newStorageAccountName?: string;
+}
+
+export declare enum StorageAccountKind {
+    Storage,
+    StorageV2,
+    BlobStorage,
+}
+
+export declare enum StorageAccountPerformance {
+    Standard,
+    Premium,
+}
+
+export declare enum StorageAccountReplication {
+    /**
+     * Locally redundant storage
+     */
+    LRS,
+    /**
+     * Zone-redundant storage
+     */
+    ZRS,
+    /**
+     * Geo-redundant storage
+     */
+    GRS,
+    /**
+     * Read-access geo-redundant storage
+     */
+    RAGRS,
 }
 
 export declare const storageAccountNamingRules: IAzureNamingRules;
-export declare class StorageAccountStep<T extends IStorageAccountWizardContext> extends AzureWizardStep<T> {
+export declare class StorageAccountListStep<T extends IStorageAccountWizardContext> extends AzureWizardPromptStep<T> {
+    /**
+     * Specify the kind, performance, and replication to use when creating a new storage account
+     */
+    public constructor(kind: StorageAccountKind, performance: StorageAccountPerformance, replication: StorageAccountReplication);
+
     public static isNameAvailable<T extends IStorageAccountWizardContext>(wizardContext: T, name: string): Promise<boolean>;
 
     public prompt(wizardContext: T, ui: IAzureUserInput): Promise<T>;
-    public execute(wizardContext: T, outputChannel: OutputChannel): Promise<T>;
 }
 
 /**

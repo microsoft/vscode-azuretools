@@ -8,11 +8,11 @@ import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { QuickPickOptions } from 'vscode';
 import { IAzureQuickPickItem, IAzureUserInput, ILocationWizardContext } from '../../index';
 import { localize } from '../localize';
-import { AzureWizardStep } from './AzureWizardStep';
+import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 
-export class LocationStep<T extends ILocationWizardContext> extends AzureWizardStep<T> {
+export class LocationListStep<T extends ILocationWizardContext> extends AzureWizardPromptStep<T> {
     public static async setLocation<T extends ILocationWizardContext>(wizardContext: T, name: string): Promise<void> {
-        const locations: Location[] = await LocationStep.getLocations(wizardContext);
+        const locations: Location[] = await LocationListStep.getLocations(wizardContext);
         wizardContext.location = locations.find((l: Location) => name === l.name || name === l.displayName);
     }
 
@@ -34,12 +34,8 @@ export class LocationStep<T extends ILocationWizardContext> extends AzureWizardS
         return wizardContext;
     }
 
-    public async execute(wizardContext: T): Promise<T> {
-        return wizardContext;
-    }
-
     private async getQuickPicks(wizardContext: T): Promise<IAzureQuickPickItem<Location>[]> {
-        const locations: Location[] = await LocationStep.getLocations(wizardContext);
+        const locations: Location[] = await LocationListStep.getLocations(wizardContext);
         return locations.map((l: Location) => {
             return {
                 // tslint:disable-next-line:no-non-null-assertion
