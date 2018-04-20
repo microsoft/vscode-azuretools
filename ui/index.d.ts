@@ -6,7 +6,7 @@
 import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment } from 'ms-rest-azure';
-import { Uri, TreeDataProvider, Disposable, TreeItem, Event, OutputChannel, Memento, InputBoxOptions, QuickPickItem, QuickPickOptions, TextDocument, ExtensionContext, MessageItem, OpenDialogOptions } from 'vscode';
+import { Uri, TreeDataProvider, Disposable, TreeItem, Event, OutputChannel, Memento, InputBoxOptions, QuickPickItem, QuickPickOptions, TextDocument, ExtensionContext, MessageItem, OpenDialogOptions, MessageOptions } from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
 import { ResourceGroup } from 'azure-arm-resource/lib/resource/models';
 import { StorageAccount, CheckNameAvailabilityResult } from 'azure-arm-storage/lib/models';
@@ -286,7 +286,18 @@ export interface IAzureUserInput {
      * @throws `UserCancelledError` if the user cancels.
      * @return A thenable that resolves to the selected item when being dismissed.
      */
-    showWarningMessage(message: string, ...items: MessageItem[]): Promise<MessageItem>;
+    showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
+
+    /**
+     * Show a warning message.
+     *
+     * @param message The message to show.
+     * @param options Configures the behaviour of the message.
+     * @param items A set of items that will be rendered as actions in the message.
+     * @throws `UserCancelledError` if the user cancels.
+     * @return A thenable that resolves to the selected item when being dismissed.
+     */
+    showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Promise<T>;
 
     /**
      * Shows a file open dialog to the user which allows to select a file
@@ -310,7 +321,8 @@ export declare class AzureUserInput implements IAzureUserInput {
 
     public showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T>;
     public showInputBox(options: InputBoxOptions): Promise<string>;
-    public showWarningMessage(message: string, ...items: MessageItem[]): Promise<MessageItem>;
+    public showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
+    public showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Promise<MessageItem>;
     public showOpenDialog(options: OpenDialogOptions): Promise<Uri[]>;
 }
 
@@ -326,7 +338,8 @@ export declare class TestUserInput implements IAzureUserInput {
 
     public showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T>;
     public showInputBox(options: InputBoxOptions): Promise<string>;
-    public showWarningMessage(message: string, ...items: MessageItem[]): Promise<MessageItem>;
+    public showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
+    public showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Promise<MessageItem>;
     public showOpenDialog(options: OpenDialogOptions): Promise<Uri[]>;
 }
 
