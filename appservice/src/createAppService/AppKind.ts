@@ -54,3 +54,14 @@ export function getAppKindDisplayName(kind: AppKind): string {
             throw new RangeError();
     }
 }
+
+export function getWebsiteOSDisplayName(kind: WebsiteOS): string {
+    switch (kind) {
+        case WebsiteOS.windows:
+            return 'Windows';
+        case WebsiteOS.linux:
+            return 'Linux';
+        default:
+            throw new RangeError();
+    }
+}
