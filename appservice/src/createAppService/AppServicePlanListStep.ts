@@ -10,7 +10,7 @@ import { AzureWizard, AzureWizardPromptStep, IAzureQuickPickOptions, IAzureUserI
 import { IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { localize } from '../localize';
 import { uiUtils } from '../utils/uiUtils';
-import { WebsiteOS } from './AppKind';
+import { getWebsiteOSDisplayName, WebsiteOS } from './AppKind';
 import { AppServicePlanCreateStep } from './AppServicePlanCreateStep';
 import { AppServicePlanNameStep } from './AppServicePlanNameStep';
 import { AppServicePlanSkuStep } from './AppServicePlanSkuStep';
@@ -37,7 +37,7 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
     public async prompt(wizardContext: IAppServiceWizardContext, ui: IAzureUserInput): Promise<IAppServiceWizardContext> {
         if (!wizardContext.plan && !wizardContext.newPlanName) {
             // Cache hosting plan separately per subscription
-            const options: IAzureQuickPickOptions = { placeHolder: `Select a ${wizardContext.newSiteOS} App Service plan.`, id: `AppServicePlanListStep/${wizardContext.subscriptionId}` };
+            const options: IAzureQuickPickOptions = { placeHolder: localize('selectPlan', 'Select a {0} App Service plan.', getWebsiteOSDisplayName(wizardContext.newSiteOS)), id: `AppServicePlanListStep/${wizardContext.subscriptionId}` };
             wizardContext.plan = (await ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
 
             if (wizardContext.plan) {
