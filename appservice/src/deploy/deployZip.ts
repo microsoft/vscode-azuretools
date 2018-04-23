@@ -19,7 +19,7 @@ export async function deployZip(client: SiteClient, fsPath: string, outputChanne
         const warning: string = localize('zipWarning', 'Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', client.fullName);
         telemetryProperties.cancelStep = 'confirmDestructiveDeployment';
         const deploy: vscode.MessageItem = { title: localize('deploy', 'Deploy') };
-        await ui.showWarningMessage(warning, deploy, DialogResponses.cancel);
+        await ui.showWarningMessage(warning, { modal: true }, deploy, DialogResponses.cancel);
         telemetryProperties.cancelStep = '';
     }
 

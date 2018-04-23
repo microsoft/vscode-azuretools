@@ -11,7 +11,7 @@ import { SiteClient } from './SiteClient';
 
 export async function deleteSite(client: SiteClient, ui: IAzureUserInput, outputChannel: vscode.OutputChannel): Promise<void> {
     const confirmMessage: string = localize('deleteConfirmation', 'Are you sure you want to delete "{0}"?', client.fullName);
-    await ui.showWarningMessage(confirmMessage, DialogResponses.deleteResponse, DialogResponses.cancel);
+    await ui.showWarningMessage(confirmMessage, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
 
     let plan: AppServicePlan | undefined;
     let deletePlan: boolean = false;
@@ -23,7 +23,7 @@ export async function deleteSite(client: SiteClient, ui: IAzureUserInput, output
 
     if (!client.isSlot && plan.numberOfSites < 2) {
         const message: string = localize('deleteLastServicePlan', 'This is the last app in the App Service plan "{0}". Do you want to delete this App Service plan to prevent unexpected charges?', plan.name);
-        const input: vscode.MessageItem = await ui.showWarningMessage(message, DialogResponses.yes, DialogResponses.no, DialogResponses.cancel);
+        const input: vscode.MessageItem = await ui.showWarningMessage(message, { modal: true }, DialogResponses.yes, DialogResponses.no, DialogResponses.cancel);
         deletePlan = input === DialogResponses.yes;
     }
 

@@ -29,7 +29,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string, outputC
         if (status.files.length > 0) {
             const message: string = localize('localGitUncommit', '{0} uncommitted change(s) in local repo "{1}"', status.files.length, fsPath);
             const deployAnyway: vscode.MessageItem = { title: localize('deployAnyway', 'Deploy Anyway') };
-            await ui.showWarningMessage(message, deployAnyway, DialogResponses.cancel);
+            await ui.showWarningMessage(message, { modal: true }, deployAnyway, DialogResponses.cancel);
         }
         await localGit.push(remote, 'HEAD:master');
     } catch (err) {
