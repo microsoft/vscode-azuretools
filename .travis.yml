@@ -9,11 +9,19 @@ addons:
       - libunwind8
 
 env:
-  - PACKAGE_DIR=appservice
-  - PACKAGE_DIR=kudu
-  - PACKAGE_DIR=ui
+  global:
+    - CHANGES=$(git remote set-branches --add origin master && git fetch && git --no-pager diff --name-only origin/master...HEAD)
+  matrix:
+    - PACKAGE_DIR=appservice
+    - PACKAGE_DIR=kudu
+    - PACKAGE_DIR=ui
 
 script:
+  - |
+    if [ -z "$(grep "$PACKAGE_DIR/" <<< "$CHANGES")" ]; then
+      echo "Ignoring this directory because it was not changed..."
+      travis_terminate
+    fi
   - cd $PACKAGE_DIR
   - npm install
   - npm run build
