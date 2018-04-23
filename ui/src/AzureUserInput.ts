@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Memento, QuickPickItem, QuickPickOptions } from 'vscode';
+import { Memento, MessageItem, MessageOptions, QuickPickItem, QuickPickOptions } from 'vscode';
 import * as vscode from 'vscode';
 import { IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput } from '../index';
 import { DialogResponses } from './DialogResponses';
@@ -55,8 +55,13 @@ export class AzureUserInput implements IAzureUserInput {
         }
     }
 
-    public async showWarningMessage(message: string, ...items: vscode.MessageItem[]): Promise<vscode.MessageItem> {
-        const result: vscode.MessageItem | undefined = await vscode.window.showWarningMessage(message, ...items);
+    public showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
+    public showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Promise<MessageItem>;
+    // tslint:disable-next-line:no-any
+    public async showWarningMessage<T extends MessageItem>(message: string, ...args: any[]): Promise<T> {
+        // tslint:disable-next-line:no-unsafe-any
+        const result: T | undefined = await vscode.window.showWarningMessage(message, ...args);
+
         if (result === undefined || result === DialogResponses.cancel) {
             throw new UserCancelledError();
         } else {

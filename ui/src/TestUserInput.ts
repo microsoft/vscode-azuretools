@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { InputBoxOptions, MessageItem, QuickPickItem, QuickPickOptions } from 'vscode';
+import { InputBoxOptions, MessageItem, MessageOptions, QuickPickItem, QuickPickOptions } from 'vscode';
 import * as vscode from 'vscode';
 import { IAzureUserInput } from '../index';
 
@@ -60,10 +60,14 @@ export class TestUserInput implements IAzureUserInput {
         throw new Error(`Unexpected call to showInputBox. Placeholder: '${options.placeHolder}'. Prompt: '${options.prompt}'`);
     }
 
-    public async showWarningMessage(message: string, ...items: MessageItem[]): Promise<MessageItem> {
+    public showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
+    public showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Promise<MessageItem>;
+    // tslint:disable-next-line:no-any
+    public async showWarningMessage<T extends MessageItem>(message: string, ...args: any[]): Promise<T> {
         if (this._inputs.length > 0) {
             const result: string | undefined = this._inputs.shift();
-            const matchingItem: MessageItem | undefined = items.find((item: MessageItem) => item.title === result);
+            // tslint:disable-next-line:no-unsafe-any
+            const matchingItem: T | undefined = args.find((item: T) => item.title === result);
             if (matchingItem) {
                 return matchingItem;
             }
