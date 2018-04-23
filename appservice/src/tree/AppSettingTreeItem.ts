@@ -59,7 +59,7 @@ export class AppSettingTreeItem implements IAzureTreeItem {
     }
 
     public async deleteTreeItem(node: IAzureNode): Promise<void> {
-        await node.ui.showWarningMessage(`Are you sure you want to delete setting "${this.key}"?`, DialogResponses.deleteResponse, DialogResponses.cancel);
+        await node.ui.showWarningMessage(`Are you sure you want to delete setting "${this.key}"?`, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         await (<AppSettingsTreeItem>node.parent.treeItem).deleteSettingItem(this.key);
     }
 }
