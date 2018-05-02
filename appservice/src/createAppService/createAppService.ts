@@ -33,7 +33,28 @@ export async function createAppService(
     promptSteps.push(new SiteRuntimeStep());
     switch (appKind) {
         case AppKind.functionapp:
-            promptSteps.push(new StorageAccountListStep(StorageAccountKind.Storage, StorageAccountPerformance.Standard, StorageAccountReplication.LRS));
+            promptSteps.push(new StorageAccountListStep(
+                {
+                    kind: StorageAccountKind.Storage,
+                    performance: StorageAccountPerformance.Standard,
+                    replication: StorageAccountReplication.LRS
+                },
+                {
+                    kind: [
+                        StorageAccountKind.Storage,
+                        StorageAccountKind.StorageV2
+                    ],
+                    performance: [
+                        StorageAccountPerformance.Standard
+                    ],
+                    replication: [
+                        StorageAccountReplication.LRS,
+                        StorageAccountReplication.GRS,
+                        StorageAccountReplication.RAGRS
+                    ],
+                    learnMoreLink: 'https://aka.ms/Cfqnrc'
+                }
+            ));
             break;
         case AppKind.app:
         default:
