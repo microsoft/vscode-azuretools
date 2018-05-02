@@ -16,6 +16,7 @@ import { SiteClient } from './SiteClient';
 
 type gitHubOrgData = { repos_url?: string };
 type gitHubReposData = { repos_url?: string, url?: string, html_url?: string };
+type gitHubLink = { prev?: string, next?: string, last?: string, first?: string };
 // tslint:disable-next-line:no-reserved-keywords
 type gitHubWebResource = WebResource & { resolveWithFullResponse?: boolean, nextLink?: string, lastLink?: string, type?: string };
 
@@ -42,7 +43,7 @@ export async function connectToGitHub(node: IAzureNode, client: SiteClient, outp
     let repoQuickPick: gitHubReposData;
     requestOptions.url = orgQuickPick.repos_url;
     const gitHubRepos: Object[] = await getJsonRequest(requestOptions, node);
-    const repoQuickPicks: IAzureQuickPickItem<{}>[] = createQuickPickFromJsons(gitHubRepos, 'name', undefined, ['url', 'html_url']);
+    let repoQuickPicks: IAzureQuickPickItem<{}>[] = createQuickPickFromJsons(gitHubRepos, 'name', undefined, ['url', 'html_url']);
     while (!repoSelected) {
         if (requestOptions.nextLink && requestOptions.url !== requestOptions.lastLink) {
             // this makes sure that a nextLink exists and that the last requested url wasn't the last page
@@ -62,7 +63,7 @@ export async function connectToGitHub(node: IAzureNode, client: SiteClient, outp
             // remove the stale Load More quick pick
             repoQuickPicks.pop();
             const moreGitHubRepos: Object[] = await getJsonRequest(requestOptions, node);
-            createQuickPickFromJsons(moreGitHubRepos, 'name', undefined, ['url', 'html_url'], repoQuickPicks);
+            repoQuickPicks = repoQuickPicks.concat(createQuickPickFromJsons(moreGitHubRepos, 'name', undefined, ['url', 'html_url']));
         } else {
             repoSelected = true;
         }
@@ -119,11 +120,14 @@ async function getJsonRequest(requestOptions: gitHubWebResource, node: IAzureNod
         // tslint:disable-next-line:no-unsafe-any
         const gitHubResponse: Response = await request(requestOptions).promise();
         if (gitHubResponse.headers.link) {
-            const link: string = <string>gitHubResponse.headers.link;
-            // regex to find the next and last links in the string
-            const linkUrls: string[] = link.match(/https\:\/\/[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(\/\S*)?[0-9]/g);
-            requestOptions.nextLink = linkUrls[0];
-            requestOptions.lastLink = linkUrls[1];
+            const headerLink: string = <string>gitHubResponse.headers.link;
+            const linkObject: gitHubLink = parseLinkHeaderToGitHubLinkObject(headerLink);
+            if (linkObject.next) {
+                requestOptions.nextLink = linkObject.next;
+            }
+            if (linkObject.last) {
+                requestOptions.lastLink = linkObject.last;
+            }
         }
         // tslint:disable-next-line:no-unsafe-any
         return <Object[]>JSON.parse(gitHubResponse.body);
@@ -153,8 +157,8 @@ async function getJsonRequest(requestOptions: gitHubWebResource, node: IAzureNod
  * @param data Optional property of JSON that will be used as QuickPicks data saved as a NameValue pair
  * @param quickPicks Optional property of QuickPickItems array that will be added to rather than returning a new one (side-effect)
  */
-function createQuickPickFromJsons(jsons: Object[], label: string, description?: string, data?: string[], quickPicks?: IAzureQuickPickItem<{}>[]): IAzureQuickPickItem<{}>[] {
-    const returnQuickPicks: IAzureQuickPickItem<{}>[] = quickPicks ? quickPicks : [];
+function createQuickPickFromJsons(jsons: Object[], label: string, description?: string, data?: string[]): IAzureQuickPickItem<{}>[] {
+    const quickPicks: IAzureQuickPickItem<{}>[] = [];
     for (const json of jsons) {
         const dataValuePair: NameValuePair = {};
 
@@ -176,12 +180,24 @@ function createQuickPickFromJsons(jsons: Object[], label: string, description?: 
             }
         }
 
-        returnQuickPicks.push({
+        quickPicks.push({
             label: <string>json[label],
             description: `${description ? json[description] : ''}`,
             data: dataValuePair
         });
     }
 
-    return returnQuickPicks;
+    return quickPicks;
+}
+
+function parseLinkHeaderToGitHubLinkObject(linkHeader: string): gitHubLink {
+    const linkUrls: string[] = linkHeader.split(', ');
+    const linkMap: gitHubLink = {};
+
+    // link header response is "<https://api.github.com/organizations/6154722/repos?page=2>; rel="prev", <https://api.github.com/organizations/6154722/repos?page=4>; rel="next""
+    const relative: string = 'rel=';
+    for (const url of linkUrls) {
+        linkMap[url.substring(url.indexOf(relative) + relative.length + 1, url.length - 1)] = url.substring(url.indexOf('<') + 1, url.indexOf('>'));
+    }
+    return linkMap;
 }
