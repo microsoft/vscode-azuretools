@@ -140,14 +140,14 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
                         rootNode.clearCache();
                     }
                 });
-            }
+            } else {
+                if (node.treeItem.refreshLabel) {
+                    await node.treeItem.refreshLabel(node);
+                }
 
-            if (node && node.treeItem.refreshLabel) {
-                await node.treeItem.refreshLabel(node);
-            }
-
-            if (node instanceof AzureParentNode) {
-                node.clearCache();
+                if (node instanceof AzureParentNode) {
+                    node.clearCache();
+                }
             }
         }
 
