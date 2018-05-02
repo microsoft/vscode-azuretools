@@ -155,7 +155,6 @@ async function getJsonRequest(requestOptions: gitHubWebResource, node: IAzureNod
  * @param label Property of JSON that will be used as the QuickPicks label
  * @param description Optional property of JSON that will be used as QuickPicks description
  * @param data Optional property of JSON that will be used as QuickPicks data saved as a NameValue pair
- * @param quickPicks Optional property of QuickPickItems array that will be added to rather than returning a new one (side-effect)
  */
 function createQuickPickFromJsons(jsons: Object[], label: string, description?: string, data?: string[]): IAzureQuickPickItem<{}>[] {
     const quickPicks: IAzureQuickPickItem<{}>[] = [];
