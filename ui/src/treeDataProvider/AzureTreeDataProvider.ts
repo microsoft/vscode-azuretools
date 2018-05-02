@@ -55,12 +55,12 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
             this._azureAccount = azureAccountExtension.exports;
         }
 
-        this._disposables.push(this._azureAccount.onFiltersChanged(async () => await this.refresh()));
+        this._disposables.push(this._azureAccount.onFiltersChanged(async () => await this.refresh(undefined, false)));
         this._disposables.push(this._azureAccount.onStatusChanged(async (status: AzureLoginStatus) => {
             // Ignore status change to 'LoggedIn' and wait for the 'onFiltersChanged' event to fire instead
             // (so that the tree stays in 'Loading...' state until the filters are actually ready)
             if (status !== 'LoggedIn') {
-                await this.refresh();
+                await this.refresh(undefined, false);
             }
         }));
     }
@@ -133,12 +133,21 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
 
     public async refresh(node?: IAzureNode, clearCache: boolean = true): Promise<void> {
         if (clearCache) {
-            if (node && node.treeItem.refreshLabel) {
-                await node.treeItem.refreshLabel(node);
-            }
+            if (!node) {
+                this._subscriptionNodes = [];
+                this._customRootNodes.forEach((rootNode: AzureNode) => {
+                    if (rootNode instanceof AzureParentNode) {
+                        rootNode.clearCache();
+                    }
+                });
+            } else {
+                if (node.treeItem.refreshLabel) {
+                    await node.treeItem.refreshLabel(node);
+                }
 
-            if (node instanceof AzureParentNode) {
-                node.clearCache();
+                if (node instanceof AzureParentNode) {
+                    node.clearCache();
+                }
             }
         }
 
