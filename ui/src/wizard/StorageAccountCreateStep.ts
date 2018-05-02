@@ -6,21 +6,16 @@
 // tslint:disable-next-line:no-require-imports
 import StorageManagementClient = require('azure-arm-storage');
 import { OutputChannel } from 'vscode';
-import { IStorageAccountWizardContext } from '../../index';
+import { IStorageAccountCreateOptions, IStorageAccountWizardContext } from '../../index';
 import { localize } from '../localize';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
-import { StorageAccountKind, StorageAccountPerformance, StorageAccountReplication } from './StorageAccountListStep';
 
 export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> extends AzureWizardExecuteStep<T> {
-    private _kind: StorageAccountKind;
-    private _performance: StorageAccountPerformance;
-    private _replication: StorageAccountReplication;
+    private readonly _createOptions: IStorageAccountCreateOptions;
 
-    public constructor(kind: StorageAccountKind, performance: StorageAccountPerformance, replication: StorageAccountReplication) {
+    public constructor(createOptions: IStorageAccountCreateOptions) {
         super();
-        this._kind = kind;
-        this._performance = performance;
-        this._replication = replication;
+        this._createOptions = createOptions;
     }
 
     public async execute(wizardContext: T, outputChannel: OutputChannel): Promise<T> {
@@ -29,7 +24,7 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
             const newLocation: string = wizardContext.location!.name!;
             // tslint:disable-next-line:no-non-null-assertion
             const newName: string = wizardContext.newStorageAccountName!;
-            const newSkuName: string = `${this._performance}_${this._replication}`;
+            const newSkuName: string = `${this._createOptions.performance}_${this._createOptions.replication}`;
             outputChannel.appendLine(localize('CreatingStorageAccount', 'Creating storage account "{0}" in location "{1}" with sku "{2}"...', newName, newLocation, newSkuName));
 
             const storageClient: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
@@ -39,7 +34,7 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
                 newName,
                 {
                     sku: { name: newSkuName },
-                    kind: this._kind,
+                    kind: this._createOptions.kind,
                     location: newLocation
                 }
             );

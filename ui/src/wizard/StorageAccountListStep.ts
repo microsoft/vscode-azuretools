@@ -6,7 +6,10 @@
 // tslint:disable-next-line:no-require-imports
 import StorageManagementClient = require('azure-arm-storage');
 import { StorageAccount } from 'azure-arm-storage/lib/models';
-import { IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, IStorageAccountWizardContext } from '../../index';
+import * as opn from 'opn';
+import { isString } from 'util';
+import { IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, IStorageAccountCreateOptions, IStorageAccountFilterOptions, IStorageAccountWizardContext } from '../../index';
+import { UserCancelledError } from '../errors';
 import { localize } from '../localize';
 import { AzureWizard } from './AzureWizard';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
@@ -56,15 +59,14 @@ export enum StorageAccountReplication {
 }
 
 export class StorageAccountListStep<T extends IStorageAccountWizardContext> extends AzureWizardPromptStep<T> {
-    private _kind: StorageAccountKind;
-    private _performance: StorageAccountPerformance;
-    private _replication: StorageAccountReplication;
+    private readonly _createOptions: IStorageAccountCreateOptions;
+    private readonly _filterOptions: IStorageAccountFilterOptions;
 
-    public constructor(kind: StorageAccountKind, performance: StorageAccountPerformance, replication: StorageAccountReplication) {
+    public constructor(createOptions: IStorageAccountCreateOptions, filterOptions?: IStorageAccountFilterOptions) {
         super();
-        this._kind = kind;
-        this._performance = performance;
-        this._replication = replication;
+        this._createOptions = createOptions;
+        // tslint:disable-next-line:strict-boolean-expressions
+        this._filterOptions = filterOptions || {};
     }
 
     public static async isNameAvailable<T extends IStorageAccountWizardContext>(wizardContext: T, name: string): Promise<boolean> {
@@ -77,15 +79,21 @@ export class StorageAccountListStep<T extends IStorageAccountWizardContext> exte
             const client: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
 
             const quickPickOptions: IAzureQuickPickOptions = { placeHolder: 'Select a storage account.', id: `StorageAccountListStep/${wizardContext.subscriptionId}` };
-            wizardContext.storageAccount = (await ui.showQuickPick(this.getQuickPicks(client.storageAccounts.list()), quickPickOptions)).data;
+            const result: StorageAccount | undefined | string = (await ui.showQuickPick(this.getQuickPicks(client.storageAccounts.list()), quickPickOptions)).data;
+            if (isString(result)) {
+                // tslint:disable:no-unsafe-any
+                opn(result);
+                throw new UserCancelledError();
+            }
 
+            wizardContext.storageAccount = result;
             if (wizardContext.storageAccount) {
                 // tslint:disable-next-line:no-non-null-assertion
                 await LocationListStep.setLocation(wizardContext, wizardContext.storageAccount.location!);
             } else {
                 this.subWizard = new AzureWizard(
                     [new StorageAccountNameStep(), new ResourceGroupListStep(), new LocationListStep()],
-                    [new StorageAccountCreateStep(this._kind, this._performance, this._replication)],
+                    [new StorageAccountCreateStep(this._createOptions)],
                     wizardContext
                 );
             }
@@ -94,22 +102,48 @@ export class StorageAccountListStep<T extends IStorageAccountWizardContext> exte
         return wizardContext;
     }
 
-    private async getQuickPicks(storageAccountsTask: Promise<StorageAccount[]>): Promise<IAzureQuickPickItem<StorageAccount | undefined>[]> {
-        const picks: IAzureQuickPickItem<StorageAccount | undefined>[] = [{
+    private async getQuickPicks(storageAccountsTask: Promise<StorageAccount[]>): Promise<IAzureQuickPickItem<StorageAccount | undefined | string>[]> {
+        const picks: IAzureQuickPickItem<StorageAccount | undefined | string>[] = [{
             label: localize('NewStorageAccount', '$(plus) Create new storage account'),
             description: '',
             data: undefined
         }];
 
+        const kindRegExp: RegExp = new RegExp(convertFilterToPattern(this._filterOptions.kind), 'i');
+        const skuRegExp: RegExp = new RegExp(`${convertFilterToPattern(this._filterOptions.performance)}_${convertFilterToPattern(this._filterOptions.replication)}`, 'i');
+
+        let hasFilteredAccounts: boolean = false;
         const storageAccounts: StorageAccount[] = await storageAccountsTask;
-        return picks.concat(storageAccounts.map((sa: StorageAccount) => {
-            return {
+        for (const sa of storageAccounts) {
+            // tslint:disable:strict-boolean-expressions
+            if (!sa.kind || !sa.kind.match(kindRegExp) || !sa.sku || !sa.sku.name.match(skuRegExp)) {
+                // tslint:enable:strict-boolean-expressions
+                hasFilteredAccounts = true;
+                continue;
+            }
+
+            picks.push({
                 id: sa.id,
                 // tslint:disable-next-line:no-non-null-assertion
                 label: sa.name!,
                 description: '',
                 data: sa
-            };
-        }));
+            });
+        }
+
+        if (hasFilteredAccounts && this._filterOptions.learnMoreLink) {
+            picks.push({
+                label: localize('filtered', '$(info) Some storage accounts were filtered. Learn more...'),
+                description: '',
+                suppressPersistence: true,
+                data: this._filterOptions.learnMoreLink
+            });
+        }
+
+        return picks;
     }
+}
+
+function convertFilterToPattern(values?: string[]): string {
+    return values ? `(${values.join('|')})` : '.*';
 }
