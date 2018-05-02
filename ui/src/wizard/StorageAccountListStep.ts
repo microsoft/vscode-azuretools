@@ -109,8 +109,8 @@ export class StorageAccountListStep<T extends IStorageAccountWizardContext> exte
             data: undefined
         }];
 
-        const kindRegExp: RegExp = new RegExp(convertFilterToPattern(this._filterOptions.kind), 'i');
-        const skuRegExp: RegExp = new RegExp(`${convertFilterToPattern(this._filterOptions.performance)}_${convertFilterToPattern(this._filterOptions.replication)}`, 'i');
+        const kindRegExp: RegExp = new RegExp(`^${convertFilterToPattern(this._filterOptions.kind)}$`, 'i');
+        const skuRegExp: RegExp = new RegExp(`^${convertFilterToPattern(this._filterOptions.performance)}_${convertFilterToPattern(this._filterOptions.replication)}$`, 'i');
 
         let hasFilteredAccounts: boolean = false;
         const storageAccounts: StorageAccount[] = await storageAccountsTask;
