@@ -17,7 +17,9 @@ export abstract class AzureNameStep<T extends IRelatedNameWizardContext> extends
 
         let preferredName: string = namingRules.some((n: IAzureNamingRules) => !!n.lowercaseOnly) ? name.toLowerCase() : name;
 
-        for (const invalidCharsRegExp of namingRules.map((n: IAzureNamingRules) => n.invalidCharsRegExp)) {
+        for (let invalidCharsRegExp of namingRules.map((n: IAzureNamingRules) => n.invalidCharsRegExp)) {
+            // Ensure the regExp uses the 'g' flag to replace _all_ invalid characters
+            invalidCharsRegExp = new RegExp(invalidCharsRegExp, 'g');
             preferredName = preferredName.replace(invalidCharsRegExp, '');
         }
 
