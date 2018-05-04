@@ -41,16 +41,13 @@ export async function createAppService(
                 },
                 {
                     kind: [
-                        StorageAccountKind.Storage,
-                        StorageAccountKind.StorageV2
+                        StorageAccountKind.BlobStorage
                     ],
                     performance: [
-                        StorageAccountPerformance.Standard
+                        StorageAccountPerformance.Premium
                     ],
                     replication: [
-                        StorageAccountReplication.LRS,
-                        StorageAccountReplication.GRS,
-                        StorageAccountReplication.RAGRS
+                        StorageAccountReplication.ZRS
                     ],
                     learnMoreLink: 'https://aka.ms/Cfqnrc'
                 }
