@@ -562,13 +562,13 @@ export declare enum StorageAccountReplication {
     RAGRS = "RAGRS",
 }
 
-export interface IStorageAccountCreateOptions {
+export interface INewStorageAccountDefaults {
     kind: StorageAccountKind;
     performance: StorageAccountPerformance;
     replication: StorageAccountReplication;
 }
 
-export interface IStorageAccountFilterOptions {
+export interface IStorageAccountFilters {
     kind?: StorageAccountKind[];
     performance?: StorageAccountPerformance[];
     replication?: StorageAccountReplication[];
@@ -585,7 +585,7 @@ export declare class StorageAccountListStep<T extends IStorageAccountWizardConte
      * @param createOptions Default options to use when creating a Storage Account
      * @param filterOptions Optional filters used when listing Storage Accounts
      */
-    public constructor(createOptions: IStorageAccountCreateOptions, filterOptions?: IStorageAccountFilterOptions);
+    public constructor(createOptions: INewStorageAccountDefaults, filterOptions?: IStorageAccountFilters);
 
     public static isNameAvailable<T extends IStorageAccountWizardContext>(wizardContext: T, name: string): Promise<boolean>;
 

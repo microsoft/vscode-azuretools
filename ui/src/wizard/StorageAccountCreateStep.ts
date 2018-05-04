@@ -6,16 +6,16 @@
 // tslint:disable-next-line:no-require-imports
 import StorageManagementClient = require('azure-arm-storage');
 import { OutputChannel } from 'vscode';
-import { IStorageAccountCreateOptions, IStorageAccountWizardContext } from '../../index';
+import { INewStorageAccountDefaults, IStorageAccountWizardContext } from '../../index';
 import { localize } from '../localize';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 
 export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> extends AzureWizardExecuteStep<T> {
-    private readonly _createOptions: IStorageAccountCreateOptions;
+    private readonly _defaults: INewStorageAccountDefaults;
 
-    public constructor(createOptions: IStorageAccountCreateOptions) {
+    public constructor(defaults: INewStorageAccountDefaults) {
         super();
-        this._createOptions = createOptions;
+        this._defaults = defaults;
     }
 
     public async execute(wizardContext: T, outputChannel: OutputChannel): Promise<T> {
@@ -24,7 +24,7 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
             const newLocation: string = wizardContext.location!.name!;
             // tslint:disable-next-line:no-non-null-assertion
             const newName: string = wizardContext.newStorageAccountName!;
-            const newSkuName: string = `${this._createOptions.performance}_${this._createOptions.replication}`;
+            const newSkuName: string = `${this._defaults.performance}_${this._defaults.replication}`;
             outputChannel.appendLine(localize('CreatingStorageAccount', 'Creating storage account "{0}" in location "{1}" with sku "{2}"...', newName, newLocation, newSkuName));
 
             const storageClient: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
@@ -34,7 +34,7 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
                 newName,
                 {
                     sku: { name: newSkuName },
-                    kind: this._createOptions.kind,
+                    kind: this._defaults.kind,
                     location: newLocation
                 }
             );
