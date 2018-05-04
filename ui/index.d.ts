@@ -533,41 +533,59 @@ export interface IStorageAccountWizardContext extends IResourceGroupWizardContex
 }
 
 export declare enum StorageAccountKind {
-    Storage,
-    StorageV2,
-    BlobStorage,
+    Storage = "Storage",
+    StorageV2 = "StorageV2",
+    BlobStorage = "BlobStorage",
 }
 
 export declare enum StorageAccountPerformance {
-    Standard,
-    Premium,
+    Standard = "Standard",
+    Premium = "Premium",
 }
 
 export declare enum StorageAccountReplication {
     /**
      * Locally redundant storage
      */
-    LRS,
+    LRS = "LRS",
     /**
      * Zone-redundant storage
      */
-    ZRS,
+    ZRS = "ZRS",
     /**
      * Geo-redundant storage
      */
-    GRS,
+    GRS = "GRS",
     /**
      * Read-access geo-redundant storage
      */
-    RAGRS,
+    RAGRS = "RAGRS",
+}
+
+export interface INewStorageAccountDefaults {
+    kind: StorageAccountKind;
+    performance: StorageAccountPerformance;
+    replication: StorageAccountReplication;
+}
+
+export interface IStorageAccountFilters {
+    kind?: StorageAccountKind[];
+    performance?: StorageAccountPerformance[];
+    replication?: StorageAccountReplication[];
+
+    /**
+     * If specified, a 'learn more' option will be displayed to explain why some storage accounts were filtered
+     */
+    learnMoreLink?: string;
 }
 
 export declare const storageAccountNamingRules: IAzureNamingRules;
 export declare class StorageAccountListStep<T extends IStorageAccountWizardContext> extends AzureWizardPromptStep<T> {
     /**
-     * Specify the kind, performance, and replication to use when creating a new storage account
+     * @param createOptions Default options to use when creating a Storage Account
+     * @param filterOptions Optional filters used when listing Storage Accounts
      */
-    public constructor(kind: StorageAccountKind, performance: StorageAccountPerformance, replication: StorageAccountReplication);
+    public constructor(createOptions: INewStorageAccountDefaults, filterOptions?: IStorageAccountFilters);
 
     public static isNameAvailable<T extends IStorageAccountWizardContext>(wizardContext: T, name: string): Promise<boolean>;
 

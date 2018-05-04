@@ -6,7 +6,10 @@
 // tslint:disable-next-line:no-require-imports
 import StorageManagementClient = require('azure-arm-storage');
 import { StorageAccount } from 'azure-arm-storage/lib/models';
-import { IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, IStorageAccountWizardContext } from '../../index';
+import * as opn from 'opn';
+import { isString } from 'util';
+import { IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, INewStorageAccountDefaults, IStorageAccountFilters, IStorageAccountWizardContext } from '../../index';
+import { UserCancelledError } from '../errors';
 import { localize } from '../localize';
 import { AzureWizard } from './AzureWizard';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
@@ -56,15 +59,14 @@ export enum StorageAccountReplication {
 }
 
 export class StorageAccountListStep<T extends IStorageAccountWizardContext> extends AzureWizardPromptStep<T> {
-    private _kind: StorageAccountKind;
-    private _performance: StorageAccountPerformance;
-    private _replication: StorageAccountReplication;
+    private readonly _newAccountDefaults: INewStorageAccountDefaults;
+    private readonly _filters: IStorageAccountFilters;
 
-    public constructor(kind: StorageAccountKind, performance: StorageAccountPerformance, replication: StorageAccountReplication) {
+    public constructor(newAccountDefaults: INewStorageAccountDefaults, filters?: IStorageAccountFilters) {
         super();
-        this._kind = kind;
-        this._performance = performance;
-        this._replication = replication;
+        this._newAccountDefaults = newAccountDefaults;
+        // tslint:disable-next-line:strict-boolean-expressions
+        this._filters = filters || {};
     }
 
     public static async isNameAvailable<T extends IStorageAccountWizardContext>(wizardContext: T, name: string): Promise<boolean> {
@@ -77,15 +79,22 @@ export class StorageAccountListStep<T extends IStorageAccountWizardContext> exte
             const client: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
 
             const quickPickOptions: IAzureQuickPickOptions = { placeHolder: 'Select a storage account.', id: `StorageAccountListStep/${wizardContext.subscriptionId}` };
-            wizardContext.storageAccount = (await ui.showQuickPick(this.getQuickPicks(client.storageAccounts.list()), quickPickOptions)).data;
+            const result: StorageAccount | string | undefined = (await ui.showQuickPick(this.getQuickPicks(client.storageAccounts.list()), quickPickOptions)).data;
+            // If result is a string, that means the user selected the 'Learn more...' pick
+            if (isString(result)) {
+                // tslint:disable:no-unsafe-any
+                opn(result);
+                throw new UserCancelledError();
+            }
 
+            wizardContext.storageAccount = result;
             if (wizardContext.storageAccount) {
                 // tslint:disable-next-line:no-non-null-assertion
                 await LocationListStep.setLocation(wizardContext, wizardContext.storageAccount.location!);
             } else {
                 this.subWizard = new AzureWizard(
                     [new StorageAccountNameStep(), new ResourceGroupListStep(), new LocationListStep()],
-                    [new StorageAccountCreateStep(this._kind, this._performance, this._replication)],
+                    [new StorageAccountCreateStep(this._newAccountDefaults)],
                     wizardContext
                 );
             }
@@ -94,22 +103,51 @@ export class StorageAccountListStep<T extends IStorageAccountWizardContext> exte
         return wizardContext;
     }
 
-    private async getQuickPicks(storageAccountsTask: Promise<StorageAccount[]>): Promise<IAzureQuickPickItem<StorageAccount | undefined>[]> {
-        const picks: IAzureQuickPickItem<StorageAccount | undefined>[] = [{
+    private async getQuickPicks(storageAccountsTask: Promise<StorageAccount[]>): Promise<IAzureQuickPickItem<StorageAccount | string | undefined>[]> {
+        const picks: IAzureQuickPickItem<StorageAccount | string | undefined>[] = [{
             label: localize('NewStorageAccount', '$(plus) Create new storage account'),
             description: '',
             data: undefined
         }];
 
+        const kindRegExp: RegExp = new RegExp(`^${convertFilterToPattern(this._filters.kind)}$`, 'i');
+        const performanceRegExp: RegExp = new RegExp(`^${convertFilterToPattern(this._filters.performance)}_.*$`, 'i');
+        const replicationRegExp: RegExp = new RegExp(`^.*_${convertFilterToPattern(this._filters.replication)}$`, 'i');
+
+        let hasFilteredAccounts: boolean = false;
         const storageAccounts: StorageAccount[] = await storageAccountsTask;
-        return picks.concat(storageAccounts.map((sa: StorageAccount) => {
-            return {
+        for (const sa of storageAccounts) {
+            // tslint:disable:strict-boolean-expressions
+            if (!sa.kind || sa.kind.match(kindRegExp) || !sa.sku || sa.sku.name.match(performanceRegExp) || sa.sku.name.match(replicationRegExp)) {
+                // tslint:enable:strict-boolean-expressions
+                hasFilteredAccounts = true;
+                continue;
+            }
+
+            picks.push({
                 id: sa.id,
                 // tslint:disable-next-line:no-non-null-assertion
                 label: sa.name!,
                 description: '',
                 data: sa
-            };
-        }));
+            });
+        }
+
+        if (hasFilteredAccounts && this._filters.learnMoreLink) {
+            picks.push({
+                label: localize('filtered', '$(info) Some storage accounts were filtered. Learn more...'),
+                description: '',
+                suppressPersistence: true,
+                data: this._filters.learnMoreLink
+            });
+        }
+
+        return picks;
     }
+}
+
+function convertFilterToPattern(values?: string[]): string {
+    // tslint:disable-next-line:strict-boolean-expressions
+    values = values || [];
+    return `(${values.join('|')})`;
 }
