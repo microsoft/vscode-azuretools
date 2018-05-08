@@ -30,7 +30,8 @@ export async function connectToGitHub(node: IAzureNode, client: SiteClient, outp
     const oAuth2Token: string = (await client.listSourceControls())[0].token;
     if (!oAuth2Token) {
         await showGitHubAuthPrompt();
-        return;
+        // to prevent the GitHub appearing that it succeeded
+        throw new UserCancelledError();
     }
 
     await signRequest(requestOptions, new TokenCredentials(oAuth2Token));
