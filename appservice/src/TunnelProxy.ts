@@ -6,6 +6,8 @@
 import { User } from 'azure-arm-website/lib/models';
 import * as EventEmitter from 'events';
 import { createServer, Server, Socket } from 'net';
+import * as request from 'request';
+import { isString } from 'util';
 import { OutputChannel } from 'vscode';
 import * as websocket from 'websocket';
 import { SiteClient } from './SiteClient';
@@ -138,6 +140,80 @@ export class TunnelProxy {
     }
 
     public async startProxy(): Promise<void> {
+        await this.checkTunnelStatusWithRetry();
+        await this.setupTunnelServer();
+    }
+
+    public dispose(): void {
+        this._openSockets.forEach((tunnelSocket: TunnelSocket) => {
+            tunnelSocket.dispose();
+        });
+        this._server.close();
+        this._server.unref();
+    }
+
+    private async checkTunnelStatus(): Promise<void> {
+        return new Promise<void>((resolve: () => void, reject: () => void): void => {
+            const statusOptions: request.Options = {
+                uri: `https://${this._client.kuduHostName}/AppServiceTunnel/Tunnel.ashx?GetStatus`,
+                auth: {
+                    user: this._publishCredential.publishingUserName,
+                    pass: this._publishCredential.publishingPassword
+                }
+            };
+
+            const statusCallback: request.RequestCallback = (error: string, response: request.Response, body: string): void => {
+                this._outputChannel.appendLine(`[WebApp Tunnel] Status returned with code: ${response.statusCode}`);
+                if (error) {
+                    this._outputChannel.appendLine(`[WebApp Tunnel] Status error: ${error}`);
+                    reject();
+                } else if (response.statusCode === 200) {
+                    this._outputChannel.appendLine(`[WebApp Tunnel] Status body: ${body}`);
+
+                    // SUCCESS:2222 means that the default ssh tunnel has not been replaced yet
+                    if (isString(body) && body.startsWith('SUCCESS') && body !== 'SUCCESS:2222') {
+                        resolve();
+                    } else {
+                        reject();
+                    }
+                } else {
+                    this._outputChannel.appendLine(`[WebApp Tunnel] Unexpected status: ${response.statusCode} - ${response.statusMessage}`);
+                    reject();
+                }
+            };
+
+            request.get(statusOptions, statusCallback);
+        });
+    }
+
+    private async checkTunnelStatusWithRetry(): Promise<void> {
+        const pollingIntervalMs: number = 1000;
+        const timeoutMs: number = 30000;
+
+        const delay: (delayMs: number) => Promise<void> = async (delayMs: number): Promise<void> => {
+            await new Promise<void>((resolve: () => void): void => { setTimeout(resolve, delayMs); });
+        };
+
+        return new Promise<void>(async (resolve: () => void, reject: (error: Error) => void): Promise<void> => {
+            const start: number = Date.now();
+            while (Date.now() < start + timeoutMs) {
+                try {
+                    await this.checkTunnelStatus();
+                    this._outputChannel.appendLine('[WebApp Tunnel] Status check succeeded');
+                    resolve();
+                    return;
+                } catch {
+                    // Suppress error and try again
+                }
+
+                this._outputChannel.appendLine(`[WebApp Tunnel] Status check failed, retrying in ${pollingIntervalMs} milliseconds`);
+                await delay(pollingIntervalMs);
+            }
+            reject(new Error(`Unable to establish connection to application after ${timeoutMs} milliseconds`));
+        });
+    }
+
+    private async setupTunnelServer(): Promise<void> {
         return new Promise<void>((resolve: () => void, reject: (err: Error) => void): void => {
             this._server.on('connection', (socket: Socket) => {
                 const tunnelSocket: TunnelSocket = new TunnelSocket(socket, this._client, this._publishCredential, this._outputChannel);
@@ -172,13 +248,5 @@ export class TunnelProxy {
                 backlog: 1
             });
         });
-    }
-
-    public dispose(): void {
-        this._openSockets.forEach((tunnelSocket: TunnelSocket) => {
-            tunnelSocket.dispose();
-        });
-        this._server.close();
-        this._server.unref();
     }
 }
