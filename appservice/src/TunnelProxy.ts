@@ -40,7 +40,6 @@ class TunnelSocket extends EventEmitter {
         this._socket.pause();
 
         this._socket.on('data', (data: Buffer) => {
-            this._outputChannel.appendLine('[Proxy Server] socket data');
             if (this._wsConnection) {
                 this._wsConnection.send(data);
             }
@@ -78,7 +77,6 @@ class TunnelSocket extends EventEmitter {
             });
 
             connection.on('message', (data: websocket.IMessage) => {
-                this._outputChannel.appendLine('[WebSocket] data');
                 this._socket.write(data.binaryData);
             });
 
@@ -163,12 +161,11 @@ export class TunnelProxy {
             };
 
             const statusCallback: request.RequestCallback = (error: string, response: request.Response, body: string): void => {
-                this._outputChannel.appendLine(`[WebApp Tunnel] Status returned with code: ${response.statusCode}`);
                 if (error) {
-                    this._outputChannel.appendLine(`[WebApp Tunnel] Status error: ${error}`);
+                    this._outputChannel.appendLine(`[WebApp Tunnel] Checking status, error: ${error}`);
                     reject();
                 } else if (response.statusCode === 200) {
-                    this._outputChannel.appendLine(`[WebApp Tunnel] Status body: ${body}`);
+                    this._outputChannel.appendLine(`[WebApp Tunnel] Checking status, body: ${body}`);
 
                     // SUCCESS:2222 means that the default ssh tunnel has not been replaced yet
                     if (isString(body) && body.startsWith('SUCCESS') && body !== 'SUCCESS:2222') {
@@ -177,7 +174,7 @@ export class TunnelProxy {
                         reject();
                     }
                 } else {
-                    this._outputChannel.appendLine(`[WebApp Tunnel] Unexpected status: ${response.statusCode} - ${response.statusMessage}`);
+                    this._outputChannel.appendLine(`[WebApp Tunnel] Checking status, unexpected response: ${response.statusCode} - ${response.statusMessage}`);
                     reject();
                 }
             };
@@ -199,14 +196,12 @@ export class TunnelProxy {
             while (Date.now() < start + timeoutMs) {
                 try {
                     await this.checkTunnelStatus();
-                    this._outputChannel.appendLine('[WebApp Tunnel] Status check succeeded');
                     resolve();
                     return;
                 } catch {
                     // Suppress error and try again
                 }
 
-                this._outputChannel.appendLine(`[WebApp Tunnel] Status check failed, retrying in ${pollingIntervalMs} milliseconds`);
                 await delay(pollingIntervalMs);
             }
             reject(new Error(`Unable to establish connection to application after ${timeoutMs} milliseconds`));
