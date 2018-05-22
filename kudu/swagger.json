@@ -4176,7 +4176,7 @@
                         "name": "request",
                         "in": "query",
                         "required": true,
-                        "type": "object"
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -4205,7 +4205,7 @@
                         "name": "request",
                         "in": "query",
                         "required": true,
-                        "type": "object"
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -4338,7 +4338,7 @@
                 ],
                 "operationId": "LiveScmEditor_PutItem",
                 "consumes": [
-                    "multipart/form-data"
+                    "application/octet-stream"
                 ],
                 "produces": [
                     "application/json",
@@ -4350,7 +4350,8 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "file"
+                            "format": "file",
+                            "type": "object"
                         }
                     },
                     {
@@ -4458,7 +4459,7 @@
                 ],
                 "operationId": "LiveScmEditor_PutItem",
                 "consumes": [
-                    "multipart/form-data"
+                    "application/octet-stream"
                 ],
                 "produces": [
                     "application/json",
@@ -4470,7 +4471,8 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "file"
+                            "format": "file",
+                            "type": "object"
                         }
                     },
                     {
@@ -5526,7 +5528,7 @@
                 ],
                 "operationId": "PushDeployment_ZipPushDeploy",
                 "consumes": [
-                    "multipart/form-data"
+                    "application/octet-stream"
                 ],
                 "produces": [],
                 "parameters": [
@@ -5535,7 +5537,8 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "file"
+                            "format": "file",
+                            "type": "object"
                         }
                     },
                     {
@@ -5543,6 +5546,91 @@
                         "in": "query",
                         "required": false,
                         "type": "boolean"
+                    },
+                    {
+                        "name": "author",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "authorEmail",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "deployer",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "message",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "No Content"
+                    },
+                    "202": {
+                        "description": "No Content"
+                    }
+                }
+            }
+        },
+        "/api/wardeploy": {
+            "post": {
+                "tags": [
+                    "PushDeployment"
+                ],
+                "operationId": "PushDeployment_WarPushDeploy",
+                "consumes": [
+                    "application/octet-stream"
+                ],
+                "produces": [],
+                "parameters": [
+                    {
+                        "name": "file",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "format": "file",
+                            "type": "object"
+                        }
+                    },
+                    {
+                        "name": "isAsync",
+                        "in": "query",
+                        "required": false,
+                        "type": "boolean"
+                    },
+                    {
+                        "name": "author",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "authorEmail",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "deployer",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "message",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -6186,7 +6274,7 @@
                 ],
                 "operationId": "Vfs_PutItem",
                 "consumes": [
-                    "multipart/form-data"
+                    "application/octet-stream"
                 ],
                 "produces": [
                     "application/json",
@@ -6198,7 +6286,8 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "file"
+                            "format": "file",
+                            "type": "object"
                         }
                     },
                     {
@@ -6306,7 +6395,7 @@
                 ],
                 "operationId": "Vfs_PutItem",
                 "consumes": [
-                    "multipart/form-data"
+                    "application/octet-stream"
                 ],
                 "produces": [
                     "application/json",
@@ -6318,7 +6407,8 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "file"
+                            "format": "file",
+                            "type": "object"
                         }
                     },
                     {
@@ -6724,7 +6814,7 @@
                 ],
                 "operationId": "Zip_PutItem",
                 "consumes": [
-                    "multipart/form-data"
+                    "application/octet-stream"
                 ],
                 "produces": [
                     "application/json",
@@ -6736,7 +6826,8 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "file"
+                            "format": "file",
+                            "type": "object"
                         }
                     },
                     {
@@ -6811,7 +6902,7 @@
                 ],
                 "operationId": "Zip_PutItem",
                 "consumes": [
-                    "multipart/form-data"
+                    "application/octet-stream"
                 ],
                 "produces": [
                     "application/json",
@@ -6823,7 +6914,8 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "file"
+                            "format": "file",
+                            "type": "object"
                         }
                     },
                     {
@@ -7146,6 +7238,9 @@
                             "type": "string"
                         }
                     }
+                },
+                "System": {
+                    "type": "object"
                 }
             }
         },
