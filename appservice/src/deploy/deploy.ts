@@ -10,6 +10,7 @@ import { localize } from '../localize';
 import { ScmType } from '../ScmType';
 import { SiteClient } from '../SiteClient';
 import { randomUtils } from '../utils/randomUtils';
+import { deployWar } from './deployWar';
 import { deployZip } from './deployZip';
 import { localGitDeploy } from './localGitDeploy';
 
@@ -58,6 +59,10 @@ export async function deploy(client: SiteClient, fsPath: string, outputChannel: 
         case ScmType.GitHub:
             throw new Error(localize('gitHubConnected', '"{0}" is connected to a GitHub repository. Push to GitHub repository to deploy.', client.fullName));
         default: //'None' or any other non-supported scmType
+            if (config.linuxFxVersion && config.linuxFxVersion.toLowerCase().startsWith('tomcat')) {
+                await deployWar(client, fsPath, outputChannel, ui, confirmDeployment, telemetryProperties);
+                break;
+            }
             await deployZip(client, fsPath, outputChannel, ui, configurationSectionName, confirmDeployment, telemetryProperties);
             break;
     }
