@@ -29,7 +29,14 @@ export function parseError(error: any): IParsedError {
         }
 
         // Azure errors have a JSON object in the message
-        const parsedMessage: any = parseIfJson(error.message);
+        let parsedMessage: any = parseIfJson(error.message);
+        // For some reason, the message is sometimes serialized twice and we need to parse it again
+        parsedMessage = parseIfJson(parsedMessage);
+        // Extract out the "internal" error if it exists
+        if (parsedMessage && parsedMessage.error) {
+            parsedMessage = parsedMessage.error;
+        }
+
         errorType = getCode(parsedMessage, errorType);
         message = getMessage(parsedMessage, message);
 
