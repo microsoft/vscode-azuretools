@@ -237,4 +237,22 @@ suite('Error Parsing Tests', () => {
         assert.equal(pe.message, '111The client with object id does not have authorization to perform action Microsoft.Web/serverfarms/read over scope.');
         assert.equal(pe.isUserCancelledError, false);
     });
+
+    test('Error with internal "error" property inside message', () => {
+        const err: Error = new Error('{"error":{"code":"NoRegisteredProviderFound","message":"No registered resource provider found for location..."}}');
+        const pe: IParsedError = parseError(err);
+
+        assert.equal(pe.errorType, 'NoRegisteredProviderFound');
+        assert.equal(pe.message, 'No registered resource provider found for location...');
+        assert.equal(pe.isUserCancelledError, false);
+    });
+
+    test('Error with internal "error" property inside message that has been serialized twice', () => {
+        const err: Error = new Error('"{\\"error\\":{\\"code\\":\\"NoRegisteredProviderFound\\",\\"message\\":\\"No registered resource provider found for location...\\"}}"');
+        const pe: IParsedError = parseError(err);
+
+        assert.equal(pe.errorType, 'NoRegisteredProviderFound');
+        assert.equal(pe.message, 'No registered resource provider found for location...');
+        assert.equal(pe.isUserCancelledError, false);
+    });
 });
