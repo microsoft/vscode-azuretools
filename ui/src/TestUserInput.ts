@@ -86,4 +86,13 @@ export class TestUserInput implements IAzureUserInput {
 
         throw new Error(`Unexpected call to showOpenDialog. Message: ${options.openLabel}`);
     }
+
+    /**
+     * As the Subscription node and UserInput are attached to the TestDataTreeProvider, it is easier to overwrite the inputs
+     * rather than recreating the TreeDataProvider with a new TestUserInput
+     * @param inputs An array of strings to overwrite the current inputs in the TestUserInput
+     */
+    public reassignInputs(inputs: (string | undefined)[]): void {
+        this._inputs = inputs;
+    }
 }

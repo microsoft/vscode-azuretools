@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as path from 'path';
-import { Disposable, Event, EventEmitter, Extension, extensions, QuickPickOptions, TreeDataProvider, TreeItem, TreeItemCollapsibleState } from 'vscode';
 import * as vscode from 'vscode';
+import { Disposable, Event, EventEmitter, Extension, extensions, QuickPickOptions, TreeItem, TreeItemCollapsibleState } from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
-import { IActionContext, IAzureNode, IAzureParentTreeItem, IAzureQuickPickItem, IAzureUserInput, IChildProvider } from '../../index';
+import { IActionContext, IAzureNode, IAzureParentTreeItem, IAzureQuickPickItem, IAzureTreeDataProvider, IAzureUserInput, IChildProvider } from '../../index';
 import { AzureAccount, AzureLoginStatus, AzureResourceFilter } from '../azure-account.api';
 import { callWithTelemetryAndErrorHandling } from '../callWithTelemetryAndErrorHandling';
 import { ArgumentError, UserCancelledError } from '../errors';
@@ -24,7 +24,7 @@ const createAccountLabel: string = localize('createAccountLabel', 'Create a Free
 const signInCommandId: string = 'azure-account.login';
 const createAccountCommandId: string = 'azure-account.createAccount';
 
-export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disposable {
+export class AzureTreeDataProvider implements IAzureTreeDataProvider<IAzureNode> {
     public static readonly subscriptionContextValue: string = SubscriptionNode.contextValue;
 
     private _onDidChangeTreeDataEmitter: EventEmitter<IAzureNode> = new EventEmitter<IAzureNode>();
@@ -276,6 +276,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
                     const existingNode: IAzureNode | undefined = existingSubscriptionNodes.find((node: SubscriptionNode) => node.id === filter.subscription.id);
                     if (existingNode) {
                         // Return existing node (which might have many 'cached' nodes underneath it) rather than creating a brand new node every time
+
                         return existingNode;
                     } else {
                         // filter.subscription.id is the The fully qualified ID of the subscription (For example, /subscriptions/00000000-0000-0000-0000-000000000000) and should be used as the node's id for the purposes of OpenInPortal

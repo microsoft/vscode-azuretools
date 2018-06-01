@@ -11,6 +11,7 @@ export * from './parseError';
 export * from './callWithTelemetryAndErrorHandling';
 export * from './AzureUserInput';
 export * from './TestUserInput';
+export * from './TestAzureTreeDataProvider';
 export * from './DialogResponses';
 export * from './wizard/AzureWizard';
 export * from './wizard/AzureWizardPromptStep';
