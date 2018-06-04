@@ -12,12 +12,33 @@ import { localize } from './localize';
 import { parseError } from './parseError';
 import { reportAnIssue } from './reportAnIssue';
 
-// tslint:disable-next-line:no-any
+export async function callWithUnxpectedErrorTelemetry(errorContext: string, telemetryReporter: TelemetryReporter | undefined, outputChannel: OutputChannel | undefined, callback: () => any, extensionContext: ExtensionContext): Promise<any> {
+    let suppressTelemetryIfNotFailure = true;
+    callWithTelemetryAndErrorHandlingCore(
+        "UnxpectedError",
+        telemetryReporter,
+        outputChannel,
+        async function (this: IActionContext) {
+            this.suppressErrorDisplay = !outputChannel;
+            this.properties.errorContext = errorContext;
+
+            return await Promise.resolve(callback());
+        },
+        extensionContext,
+        suppressTelemetryIfNotFailure);
+}
+
 export async function callWithTelemetryAndErrorHandling(callbackId: string, telemetryReporter: TelemetryReporter | undefined, outputChannel: OutputChannel | undefined, callback: (this: IActionContext) => any, extensionContext?: ExtensionContext): Promise<any> {
+    return callWithTelemetryAndErrorHandlingCore(callbackId, telemetryReporter, outputChannel, callback, extensionContext);
+}
+
+// tslint:disable-next-line:no-any
+async function callWithTelemetryAndErrorHandlingCore(callbackId: string, telemetryReporter: TelemetryReporter | undefined, outputChannel: OutputChannel | undefined, callback: (this: IActionContext) => any, extensionContext?: ExtensionContext, suppressTelemetryIfNotFailure = false): Promise<any> {
     const start: number = Date.now();
     const context: IActionContext = {
         properties: {
             isActivationEvent: 'false',
+            cancelStep: '',
             result: 'Succeeded',
             error: '',
             errorMessage: ''
@@ -66,9 +87,13 @@ export async function callWithTelemetryAndErrorHandling(callbackId: string, tele
         }
     } finally {
         if (telemetryReporter && !context.suppressTelemetry) {
-            const end: number = Date.now();
-            context.measurements.duration = (end - start) / 1000;
-            telemetryReporter.sendTelemetryEvent(callbackId, context.properties, context.measurements);
+            if (!suppressTelemetryIfNotFailure || context.properties.result === 'Failed') {
+                const end: number = Date.now();
+                context.measurements.duration = (end - start) / 1000;
+
+                // Note: The id of the extension is automatically prepended to the given callbackId (e.g. "vscode-cosmosdb/")
+                telemetryReporter.sendTelemetryEvent(callbackId, context.properties, context.measurements);
+            }
         }
     }
 }
