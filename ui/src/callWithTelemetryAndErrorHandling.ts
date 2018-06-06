@@ -12,28 +12,8 @@ import { localize } from './localize';
 import { parseError } from './parseError';
 import { reportAnIssue } from './reportAnIssue';
 
-export async function callWithUnxpectedErrorTelemetry(errorContext: string, telemetryReporter: TelemetryReporter | undefined, outputChannel: OutputChannel | undefined, callback: () => any, extensionContext: ExtensionContext): Promise<any> {
-    let suppressTelemetryIfNotFailure = true;
-    callWithTelemetryAndErrorHandlingCore(
-        "UnxpectedError",
-        telemetryReporter,
-        outputChannel,
-        async function (this: IActionContext) {
-            this.suppressErrorDisplay = !outputChannel;
-            this.properties.errorContext = errorContext;
-
-            return await Promise.resolve(callback());
-        },
-        extensionContext,
-        suppressTelemetryIfNotFailure);
-}
-
-export async function callWithTelemetryAndErrorHandling(callbackId: string, telemetryReporter: TelemetryReporter | undefined, outputChannel: OutputChannel | undefined, callback: (this: IActionContext) => any, extensionContext?: ExtensionContext): Promise<any> {
-    return callWithTelemetryAndErrorHandlingCore(callbackId, telemetryReporter, outputChannel, callback, extensionContext);
-}
-
 // tslint:disable-next-line:no-any
-async function callWithTelemetryAndErrorHandlingCore(callbackId: string, telemetryReporter: TelemetryReporter | undefined, outputChannel: OutputChannel | undefined, callback: (this: IActionContext) => any, extensionContext?: ExtensionContext, suppressTelemetryIfNotFailure = false): Promise<any> {
+export async function callWithTelemetryAndErrorHandling(callbackId: string, telemetryReporter: TelemetryReporter | undefined, outputChannel: OutputChannel | undefined, callback: (this: IActionContext) => any, extensionContext?: ExtensionContext): Promise<any> {
     const start: number = Date.now();
     const context: IActionContext = {
         properties: {
@@ -86,8 +66,9 @@ async function callWithTelemetryAndErrorHandlingCore(callbackId: string, telemet
             throw error;
         }
     } finally {
-        if (telemetryReporter && !context.suppressTelemetry) {
-            if (!suppressTelemetryIfNotFailure || context.properties.result === 'Failed') {
+        if (telemetryReporter) {
+            // For suppressTelemetry=true, ignore successful results
+            if (!(context.suppressTelemetry && context.properties.result === 'Succeeded')) {
                 const end: number = Date.now();
                 context.measurements.duration = (end - start) / 1000;
 

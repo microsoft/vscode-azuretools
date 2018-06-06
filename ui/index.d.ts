@@ -203,13 +203,6 @@ export declare class AzureActionHandler {
     registerEvent<T>(eventId: string, event: Event<T>, callback: (this: IActionContext, ...args: any[]) => any): void;
 }
 
-/**
- * Runs the given code. If it succeeds or is canceled, nothing else happens. If it fails, telemetry is sent (with id "UnexpectedError"),
- * and the error is also sent to the outputChannel if defined.
- * @param errorContext A string describing the context of the code in case of an error.
- */
-export declare function callWithUnxpectedErrorTelemetry(errorContext: string, telemetryReporter: TelemetryReporter | undefined, outputChannel: OutputChannel | undefined, callback: (this: IActionContext) => any, extensionContext: ExtensionContext): Promise<any>;
-
 export declare function callWithTelemetryAndErrorHandling(callbackId: string, telemetryReporter: TelemetryReporter | undefined, outputChannel: OutputChannel | undefined, callback: (this: IActionContext) => any): Promise<any>;
 
 export interface IActionContext {
@@ -217,7 +210,7 @@ export interface IActionContext {
     measurements: TelemetryMeasurements;
 
     /**
-     * Defaults to `false`
+     * Defaults to `false`. If true, successful events are suppressed from telemetry, but cancel and error events are still sent.
      */
     suppressTelemetry: boolean;
 
