@@ -210,7 +210,7 @@ export interface IActionContext {
     measurements: TelemetryMeasurements;
 
     /**
-     * Defaults to `false`
+     * Defaults to `false`. If true, successful events are suppressed from telemetry, but cancel and error events are still sent.
      */
     suppressTelemetry: boolean;
 
@@ -234,6 +234,7 @@ export interface TelemetryProperties {
     result: 'Succeeded' | 'Failed' | 'Canceled';
     error: string;
     errorMessage: string;
+    cancelStep: string;
     [key: string]: string;
 }
 
