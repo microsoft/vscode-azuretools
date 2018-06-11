@@ -6,6 +6,7 @@
 // tslint:disable-next-line:no-require-imports
 import StorageManagementClient = require('azure-arm-storage');
 import { StorageAccount } from 'azure-arm-storage/lib/models';
+// tslint:disable-next-line:no-require-imports
 import opn = require("opn");
 import { isString } from 'util';
 import { IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, INewStorageAccountDefaults, IStorageAccountFilters, IStorageAccountWizardContext } from '../../index';
@@ -82,6 +83,7 @@ export class StorageAccountListStep<T extends IStorageAccountWizardContext> exte
             const result: StorageAccount | string | undefined = (await ui.showQuickPick(this.getQuickPicks(client.storageAccounts.list()), quickPickOptions)).data;
             // If result is a string, that means the user selected the 'Learn more...' pick
             if (isString(result)) {
+                // tslint:disable-next-line:no-floating-promises
                 opn(result);
                 throw new UserCancelledError();
             }
