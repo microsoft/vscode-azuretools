@@ -10,6 +10,7 @@ import { Uri, TreeDataProvider, Disposable, TreeItem, Event, OutputChannel, Meme
 import TelemetryReporter from 'vscode-extension-telemetry';
 import { ResourceGroup } from 'azure-arm-resource/lib/resource/models';
 import { StorageAccount, CheckNameAvailabilityResult } from 'azure-arm-storage/lib/models';
+import { OpenInPortalOptions } from './src/treeDataProvider/AzureNode';
 
 export declare class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disposable {
     public static readonly subscriptionContextValue: string;
@@ -66,7 +67,7 @@ export interface IAzureNode<T extends IAzureTreeItem = IAzureTreeItem> {
     /**
      * This method combines the environment.portalLink and IAzureTreeItem.id to open the resource in the portal. Optionally, an id can be passed to manually open nodes that may not be in the explorer.
      */
-    openInPortal(id?: string): void;
+    openInPortal(id?: string, options?: OpenInPortalOptions): void;
 
     /**
      * Displays a 'Loading...' icon and temporarily changes the node's description while `callback` is being run
