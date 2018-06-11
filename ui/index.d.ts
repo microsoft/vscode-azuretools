@@ -10,7 +10,13 @@ import { Uri, TreeDataProvider, Disposable, TreeItem, Event, OutputChannel, Meme
 import TelemetryReporter from 'vscode-extension-telemetry';
 import { ResourceGroup } from 'azure-arm-resource/lib/resource/models';
 import { StorageAccount, CheckNameAvailabilityResult } from 'azure-arm-storage/lib/models';
-import { OpenInPortalOptions } from './src/treeDataProvider/AzureNode';
+
+export type OpenInPortalOptions = {
+    /**
+     * A query string applied directly to the host URL, e.g. "feature.staticwebsites=true" (turns on a preview feature)
+     */
+    queryPrefix?: string;
+};
 
 export declare class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disposable {
     public static readonly subscriptionContextValue: string;
