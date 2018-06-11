@@ -5,12 +5,20 @@
 
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment } from 'ms-rest-azure';
-import * as opn from 'opn';
+// tslint:disable-next-line:no-require-imports
+import opn = require("opn");
 import { Uri } from 'vscode';
 import { AzureTreeDataProvider, IAzureNode, IAzureParentNode, IAzureTreeItem, IAzureUserInput } from '../../index';
 import { ArgumentError, NotImplementedError } from '../errors';
 import { localize } from '../localize';
 import { loadingIconPath } from './CreatingTreeItem';
+
+export type OpenInPortalOptions = {
+    /**
+     * A query string applied directly to the host URL, e.g. "feature.staticwebsites=true" (turns on a preview feature)
+     */
+    queryPrefix?: string;
+};
 
 export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAzureNode<T> {
     public readonly treeItem: T;
@@ -121,9 +129,13 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
         await this.treeDataProvider.refresh(this);
     }
 
-    public openInPortal(id?: string): void {
+    public openInPortal(id?: string, options?: OpenInPortalOptions): void {
         id = id === undefined ? this.id : id;
-        (<(s: string) => void>opn)(`${this.environment.portalUrl}/${this.tenantId}/#resource${id}`);
+        const queryPrefix: string = (options && options.queryPrefix) ? `?${options.queryPrefix}` : '';
+        const url: string = `${this.environment.portalUrl}/${queryPrefix}#@${this.tenantId}/resource${id}`;
+
+        // tslint:disable-next-line:no-floating-promises
+        opn(url);
     }
 
     public includeInNodePicker(expectedContextValues: string[]): boolean {
