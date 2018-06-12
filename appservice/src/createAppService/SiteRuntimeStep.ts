@@ -112,14 +112,6 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
             {
                 name: 'ruby|2.3',
                 displayName: 'Ruby 2.3'
-            },
-            {
-                name: 'tomcat|8.5-jre8',
-                displayName: '[Preview] Tomcat 8.5 (JRE 8)'
-            },
-            {
-                name: 'tomcat|9.0-jre8',
-                displayName: '[Preview] Tomcat 9.0 (JRE 8)'
             }
         ];
     }
