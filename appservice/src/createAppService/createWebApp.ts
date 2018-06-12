@@ -17,6 +17,8 @@ export async function createWebApp(
     credentials: ServiceClientCredentials,
     subscriptionId: string,
     subscriptionDisplayName: string,
-    showCreatingNode?: (label: string) => void): Promise<Site> {
-    return await createAppService(AppKind.app, undefined, outputChannel, ui, actionContext, credentials, subscriptionId, subscriptionDisplayName, showCreatingNode);
+    showCreatingNode?: (label: string) => void,
+    fsPath?: string,
+    improvedCreation?: boolean): Promise<Site> {
+    return await createAppService(AppKind.app, undefined, outputChannel, ui, actionContext, credentials, subscriptionId, subscriptionDisplayName, showCreatingNode, fsPath, improvedCreation);
 }

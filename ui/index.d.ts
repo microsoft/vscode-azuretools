@@ -39,6 +39,32 @@ export declare class AzureTreeDataProvider implements TreeDataProvider<IAzureNod
     public findNode(id: string): Promise<IAzureNode | undefined>;
     public dispose(): void;
 }
+/**
+ * The TestAzureTreeDataProvider is an implementation of the IAzureTreeDataProvider that automatically signs into
+ * an Azure account via service principals with credentials stored on Travis.  Because signing in is an interactive
+ * experience, this circumvents that to do automated testing with Azure resources.
+ */
+export declare class TestAzureTreeDataProvider implements IAzureTreeDataProvider<IAzureNode>, Disposable {
+    public static readonly subscriptionContextValue: string;
+    public onDidChangeTreeData: Event<IAzureNode>;
+    public onNodeCreate: Event<IAzureNode>;
+    /**
+     * Test Azure Tree Data Provider
+     * @param resourceProvider Describes the resources to be displayed under subscription nodes
+     * @param loadMoreCommandId The command your extension will register for the 'Load More...' node
+     * @param ui Used to get input from the user
+     * @param telemetryReporter Optionally used to track telemetry for the tree
+     * @param rootTreeItems Any nodes other than the subscriptions that should be shown at the root of the explorer
+     */
+    constructor(resourceProvider: IChildProvider, loadMoreCommandId: string, ui: IAzureUserInput, telemetryReporter: TelemetryReporter | undefined, rootTreeItems?: IAzureParentTreeItem[]);
+    public getTreeItem(node: IAzureNode): TreeItem;
+    public getChildren(node?: IAzureParentNode): Promise<IAzureNode[]>;
+    public refresh(node?: IAzureNode, clearCache?: boolean): Promise<void>;
+    public loadMore(node: IAzureNode): Promise<void>;
+    public showNodePicker(expectedContextValues: string | string[], startingNode?: IAzureNode): Promise<IAzureNode>;
+    public findNode(id: string): Promise<IAzureNode | undefined>;
+    public dispose(): void;
+}
 
 /**
  * The AzureTreeDataProvider returns instances of IAzureNode, which are wrappers for IAzureTreeItem with relevant context and functions from the tree
@@ -259,6 +285,22 @@ export interface IParsedError {
 }
 
 /**
+ * Wrapper interface of several `TreeDataProvider<T>` class that handles the trees in the explorer. The main reason for this interface
+ * is to facilitate unit testing in non-interactive mode with the `TestAzureTreeDataProvider` class.  The interface was built
+ * to handle Azure extension's IAzureNodes and IAzureTreeItems.
+ */
+
+export interface IAzureTreeDataProvider<IAzureNode> extends TreeDataProvider<IAzureNode>, Disposable {
+    onNodeCreate: Event<IAzureNode>;
+    dispose(): void;
+    getTreeItem(node: IAzureNode): TreeItem;
+    refresh(node?: IAzureNode, clearCache?): Promise<void>;
+    loadMore(node: IAzureNode): Promise<void>;
+    showNodePicker(expectedContextValues: string | string[], startingNode?: IAzureNode): Promise<IAzureNode>;
+    findNode(id: string): Promise<IAzureNode | undefined>;
+}
+
+/**
  * Wrapper interface of several `vscode.window` methods that handle user input. The main reason for this interface
  * is to facilitate unit testing in non-interactive mode with the `TestUserInput` class.
  * However, the `AzureUserInput` class does have a few minor differences from default vscode behavior:
@@ -349,6 +391,7 @@ export declare class TestUserInput implements IAzureUserInput {
     public showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
     public showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Promise<MessageItem>;
     public showOpenDialog(options: OpenDialogOptions): Promise<Uri[]>;
+    public reassignInputs(inputs: (string | undefined)[]): void;
 }
 
 /**
