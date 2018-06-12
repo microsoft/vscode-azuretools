@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Site, SkuDescription } from 'azure-arm-website/lib/models';
+import * as find from 'find';
 import { ServiceClientCredentials } from 'ms-rest';
 import { OutputChannel } from 'vscode';
 import { AzureWizard, AzureWizardPromptStep, IActionContext, IAzureUserInput, LocationListStep, ResourceGroupListStep, StorageAccountKind, StorageAccountListStep, StorageAccountPerformance, StorageAccountReplication } from 'vscode-azureextensionui';
@@ -15,7 +16,6 @@ import { SiteCreateStep } from './SiteCreateStep';
 import { SiteNameStep } from './SiteNameStep';
 import { SiteOSStep } from './SiteOSStep';
 import { SiteRuntimeStep } from './SiteRuntimeStep';
-import * as find from 'find';
 
 export async function createAppService(
     appKind: AppKind,
@@ -44,6 +44,7 @@ export async function createAppService(
     promptSteps.push(new SiteOSStep());
     promptSteps.push(new SiteRuntimeStep());
     if (improvedCreation) {
+        // function used to set name property after location and OS has been selected
         const setResourceGroupProperty: Function = (): string => {
             if (wizardContext.location && wizardContext.newSiteOS) {
                 return `appsvc_rg_${wizardContext.newSiteOS}_${wizardContext.location.name}`;
@@ -60,17 +61,31 @@ export async function createAppService(
             }
         };
 
+        const setPlanSkuProperty: Function = (): SkuDescription => {
+            // Free tier is only available for Windows
+            if (wizardContext.newSiteOS === WebsiteOS.windows) {
+                return {
+                    name: 'F1',
+                    tier: 'Free',
+                    size: 'F1',
+                    family: 'F',
+                    capacity: 1
+                };
+            } else {
+                return {
+                    name: 'B1',
+                    tier: 'Basic',
+                    size: 'B1',
+                    family: 'B',
+                    capacity: 1
+                };
+            }
+        };
+
         setDefaultsForImprovedConfiguration(wizardContext, fsPath);
         promptSteps.push(new SetWizardContextPropertyStep('newResourceGroupName', setResourceGroupProperty));
         promptSteps.push(new SetWizardContextPropertyStep('newPlanName', setAppServicePlanProperty));
-        const basicSku: SkuDescription = {
-            name: 'B1',
-            tier: 'Basic',
-            size: 'B1',
-            family: 'B',
-            capacity: 1
-        };
-        promptSteps.push(new SetWizardContextPropertyStep('newPlanSku', basicSku));
+        promptSteps.push(new SetWizardContextPropertyStep('newPlanSku', setPlanSkuProperty));
     }
     switch (appKind) {
         case AppKind.functionapp:
@@ -124,6 +139,7 @@ function setDefaultsForImprovedConfiguration(wizardContext: IAppServiceWizardCon
         }
 
         if (file.split('.').pop() === 'csproj') {
+            // check the file extension for csproj
             wizardContext.newSiteOS = WebsiteOS.windows;
             break;
         }

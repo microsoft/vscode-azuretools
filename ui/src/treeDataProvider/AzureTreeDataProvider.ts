@@ -223,7 +223,7 @@ export class AzureTreeDataProvider implements IAzureTreeDataProvider<IAzureNode>
             .filter((n: AzureNode) => n.includeInNodePicker(<string[]>expectedContextValues))
             .map((n: AzureNode) => { return { data: n, description: '', label: n.treeItem.label }; }));
 
-        const options: QuickPickOptions = { placeHolder: localize('selectSubscription', 'Select a Subscription') };)
+        const options: QuickPickOptions = { placeHolder: localize('selectSubscription', 'Select a Subscription') };
         const result: AzureNode | string = picks.length === 1 ? picks[0].data : (await this._ui.showQuickPick(picks, options)).data;
         if (typeof result === 'string') {
             await vscode.commands.executeCommand(result);
