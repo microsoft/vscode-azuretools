@@ -1,7 +1,3 @@
-// CTI testing key: du44tQEltLOBZ91c5zAeL1isGNNRFfEX4mAJdh4ViVM=
-// hCgJr2NdSCFiBYt+NytBnFn4rydn/xt9ZQtYgCJPufk=
-// tenant id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
@@ -200,7 +196,7 @@ export class TestAzureTreeDataProvider implements IAzureTreeDataProvider<IAzureN
         const credentials: servicePrincipalCredentials = <servicePrincipalCredentials>(await loginWithServicePrincipalSecret(clientId, secret, domain));
         const subscriptionClient: SubscriptionClient = new SubscriptionClient(credentials);
         const subscriptions: SubscriptionListResult = await subscriptionClient.subscriptions.list();
-        // returns an array withy subscriptionId, displayName
+        // returns an array with subscriptionId, displayName
         const tenants: TenantListResult = await subscriptionClient.tenants.list();
         // contains tenantId (if I need that)
         let tenantId: string;
