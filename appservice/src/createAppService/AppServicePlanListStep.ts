@@ -49,6 +49,14 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
                     wizardContext
                 );
             }
+        } else if (!wizardContext.plan && wizardContext.newPlanName) {
+            if (await AppServicePlanListStep.isNameAvailable(wizardContext, wizardContext.newPlanName, wizardContext.newResourceGroupName)) {
+                this.subWizard = new AzureWizard([], [new AppServicePlanCreateStep()], wizardContext);
+            } else {
+                wizardContext.plan = (await AppServicePlanListStep.getPlans(wizardContext)).find((asp: AppServicePlan) => {
+                    return (asp.name === wizardContext.newPlanName);
+                });
+            }
         }
 
         return wizardContext;
