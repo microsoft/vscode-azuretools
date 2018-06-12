@@ -184,8 +184,9 @@ export class TunnelProxy {
     }
 
     private async checkTunnelStatusWithRetry(): Promise<void> {
-        const pollingIntervalMs: number = 1000;
-        const timeoutMs: number = 30000;
+        const timeoutSeconds: number = 240; // 4 minutes, matches App Service internal timeout for starting up an app
+        const timeoutMs: number = timeoutSeconds * 1000;
+        const pollingIntervalMs: number = 5000;
 
         const delay: (delayMs: number) => Promise<void> = async (delayMs: number): Promise<void> => {
             await new Promise<void>((resolve: () => void): void => { setTimeout(resolve, delayMs); });
@@ -204,7 +205,7 @@ export class TunnelProxy {
 
                 await delay(pollingIntervalMs);
             }
-            reject(new Error(`Unable to establish connection to application after ${timeoutMs} milliseconds`));
+            reject(new Error(`Unable to establish connection to application after ${timeoutSeconds} seconds`));
         });
     }
 
