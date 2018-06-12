@@ -5,7 +5,7 @@
 
 // tslint:disable-next-line:no-require-imports
 import WebSiteManagementClient = require('azure-arm-website');
-import { AppServicePlan, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SourceControlCollection, StringDictionary, User, WebAppInstanceCollection } from 'azure-arm-website/lib/models';
+import { AppServicePlan, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SourceControlCollection, StringDictionary, User, WebAppInstanceCollection } from 'azure-arm-website/lib/models';
 import { IAzureNode } from 'vscode-azureextensionui';
 import { ArgumentError } from './errors';
 
@@ -67,7 +67,7 @@ export class SiteClient {
 
         this.defaultHostName = site.defaultHostName;
         this.defaultHostUrl = `https://${this.defaultHostName}`;
-        this.kuduHostName = `${this.fullName}.scm.azurewebsites.net`;
+        this.kuduHostName = site.hostNameSslStates.find((h: HostNameSslState) => h.hostType && h.hostType.toLowerCase() === 'repository').name;
         this.kuduUrl = `https://${this.kuduHostName}`;
         this.gitUrl = `${this.kuduHostName}:443/${site.repositorySiteName}.git`;
 

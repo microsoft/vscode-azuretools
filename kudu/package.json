@@ -1,7 +1,7 @@
 {
     "name": "vscode-azurekudu",
     "author": "Microsoft Corporation",
-    "version": "0.1.7",
+    "version": "0.1.8",
     "description": "Client used to interact with Kudu.",
     "tags": [
         "azure",
@@ -11,8 +11,8 @@
         "azure",
         "kudu"
     ],
-    "main": "lib/index.js",
-    "types": "lib/index.d.ts",
+    "main": "lib/kuduClient.js",
+    "types": "lib/kuduClient.d.ts",
     "license": "MIT",
     "repository": {
         "type": "git",
@@ -23,7 +23,7 @@
     },
     "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/master/kudu/README.md",
     "scripts": {
-        "build": "autorest --version=2.0.4147 --input-file=swagger.json --package-name=vscode-azurekudu --title=KuduClient --output-folder=lib --nodejs --add-credentials --license-header=MICROSOFT_MIT_NO_VERSION;tsc -p ./",
+        "build": "gulp build",
         "lint": "echo 'Lint is not enabled for this package'",
         "test": "echo 'Test is not enabled for this package'"
     },
@@ -32,7 +32,12 @@
         "moment": "^2.18.1"
     },
     "devDependencies": {
-        "autorest": "2.0.4147",
+        "@microsoft.azure/autorest.modeler": "2.3.47",
+        "@microsoft.azure/autorest.nodejs": "2.1.59",
+        "@microsoft.azure/autorest-core": "2.0.4275",
+        "fs-extra": "^6.0.1",
+        "autorest": "2.0.4275",
+        "gulp": "^3.9.1",
         "typescript": "^2.5.3"
     }
 }

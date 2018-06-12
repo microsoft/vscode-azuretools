@@ -11,7 +11,14 @@ import TelemetryReporter from 'vscode-extension-telemetry';
 import { ResourceGroup } from 'azure-arm-resource/lib/resource/models';
 import { StorageAccount, CheckNameAvailabilityResult } from 'azure-arm-storage/lib/models';
 
-export declare class AzureTreeDataProvider implements IAzureTreeDataProvider<IAzureNode>, Disposable {
+export type OpenInPortalOptions = {
+    /**
+     * A query string applied directly to the host URL, e.g. "feature.staticwebsites=true" (turns on a preview feature)
+     */
+    queryPrefix?: string;
+};
+
+export declare class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disposable {
     public static readonly subscriptionContextValue: string;
     public onDidChangeTreeData: Event<IAzureNode>;
     public onNodeCreate: Event<IAzureNode>;
@@ -92,7 +99,7 @@ export interface IAzureNode<T extends IAzureTreeItem = IAzureTreeItem> {
     /**
      * This method combines the environment.portalLink and IAzureTreeItem.id to open the resource in the portal. Optionally, an id can be passed to manually open nodes that may not be in the explorer.
      */
-    openInPortal(id?: string): void;
+    openInPortal(id?: string, options?: OpenInPortalOptions): void;
 
     /**
      * Displays a 'Loading...' icon and temporarily changes the node's description while `callback` is being run
@@ -236,7 +243,7 @@ export interface IActionContext {
     measurements: TelemetryMeasurements;
 
     /**
-     * Defaults to `false`
+     * Defaults to `false`. If true, successful events are suppressed from telemetry, but cancel and error events are still sent.
      */
     suppressTelemetry: boolean;
 
@@ -260,6 +267,7 @@ export interface TelemetryProperties {
     result: 'Succeeded' | 'Failed' | 'Canceled';
     error: string;
     errorMessage: string;
+    cancelStep: string;
     [key: string]: string;
 }
 

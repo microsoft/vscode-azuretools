@@ -18,6 +18,7 @@ export async function callWithTelemetryAndErrorHandling(callbackId: string, tele
     const context: IActionContext = {
         properties: {
             isActivationEvent: 'false',
+            cancelStep: '',
             result: 'Succeeded',
             error: '',
             errorMessage: ''
@@ -65,10 +66,15 @@ export async function callWithTelemetryAndErrorHandling(callbackId: string, tele
             throw error;
         }
     } finally {
-        if (telemetryReporter && !context.suppressTelemetry) {
-            const end: number = Date.now();
-            context.measurements.duration = (end - start) / 1000;
-            telemetryReporter.sendTelemetryEvent(callbackId, context.properties, context.measurements);
+        if (telemetryReporter) {
+            // For suppressTelemetry=true, ignore successful results
+            if (!(context.suppressTelemetry && context.properties.result === 'Succeeded')) {
+                const end: number = Date.now();
+                context.measurements.duration = (end - start) / 1000;
+
+                // Note: The id of the extension is automatically prepended to the given callbackId (e.g. "vscode-cosmosdb/")
+                telemetryReporter.sendTelemetryEvent(callbackId, context.properties, context.measurements);
+            }
         }
     }
 }
