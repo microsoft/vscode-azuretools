@@ -280,7 +280,9 @@ export declare function createTreeItemsWithErrorHandling<TSource, TTreeItem>(
     createTreeItem: (source: TSource) => AzureTreeItem<TTreeItem> | undefined | Promise<AzureTreeItem<TTreeItem> | undefined>,
     getLabelOnError: (source: TSource) => string | undefined | Promise<string | undefined>): Promise<AzureTreeItem<TTreeItem>[]>;
 
-export declare class UserCancelledError extends Error { }
+export declare class UserCancelledError extends Error {
+    public telemetryProperties?: TelemetryProperties;
+}
 
 export declare abstract class BaseEditor<ContextT> implements Disposable {
     /**
@@ -394,6 +396,7 @@ export interface IParsedError {
     errorType: string;
     message: string;
     isUserCancelledError: boolean;
+    telemetryProperties: Partial<TelemetryProperties>;
 }
 
 /**
@@ -491,7 +494,7 @@ export declare class TestUserInput implements IAzureUserInput {
     /**
      * @param inputs An ordered array of inputs that will be used instead of interactively prompting in VS Code. RegExp is only applicable for QuickPicks and will pick the first input that matches the RegExp.
      */
-    public constructor(inputs: (string | RegExp|  undefined)[]);
+    public constructor(inputs: (string | RegExp | undefined)[]);
 
     public showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T>;
     public showInputBox(options: InputBoxOptions): Promise<string>;

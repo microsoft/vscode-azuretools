@@ -466,4 +466,28 @@ background-color:#555555;}
 You do not have permission to view this directory or page using the credentials that you supplied.`);
         assert.strictEqual(pe2.isUserCancelledError, false);
     });
+
+    suite('Copy telemetry properties from error', () => {
+        test('cancelStep', () => {
+            const err: Error = new UserCancelledError('myCancelStep');
+            const pe: IParsedError = parseError(err);
+            assert.equal(pe.telemetryProperties && pe.telemetryProperties.cancelStep, 'myCancelStep');
+        });
+
+        test('none in UserCancelledError', () => {
+            const err: Error = new UserCancelledError();
+            const pe: IParsedError = parseError(err);
+            assert.deepEqual(pe.telemetryProperties, {});
+        });
+
+        test('cancelStep: custom properties', () => {
+            const err: UserCancelledError = new UserCancelledError();
+            err.telemetryProperties.cancelStep = 'canceled';
+            err.telemetryProperties.custom = 'custom';
+
+            const pe: IParsedError = parseError(err);
+            assert.equal(pe.telemetryProperties && pe.telemetryProperties.cancelStep, 'canceled');
+            assert.equal(pe.telemetryProperties && pe.telemetryProperties.custom, 'custom');
+        });
+    });
 });

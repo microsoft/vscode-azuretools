@@ -3,11 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { TelemetryProperties } from "..";
 import { localize } from "./localize";
 
 export class UserCancelledError extends Error {
-    constructor() {
+    public telemetryProperties: Partial<TelemetryProperties> = {};
+
+    constructor(cancelStep?: string) {
         super(localize('userCancelledError', 'Operation cancelled.'));
+        if (cancelStep) {
+            this.telemetryProperties.cancelStep = cancelStep;
+        }
     }
 }
 

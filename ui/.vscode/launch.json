@@ -1,27 +1,34 @@
 {
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch Tests",
-            "type": "extensionHost",
+            "type": "node",
             "request": "launch",
-            "runtimeExecutable": "${execPath}",
+            "name": "Launch Tests",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
             "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}/test/extension",
-                "--extensionTestsPath=${workspaceFolder}/out/test"
-            ],
-            "stopOnEntry": false,
-            "sourceMaps": true,
-            "outFiles": [
+                "-u",
+                "tdd",
+                "--timeout",
+                "999999",
+                "--colors",
                 "${workspaceFolder}/out/test/**/*.js"
             ],
-            "preLaunchTask": "npm: compile",
-            "env": {
-                "MOCHA_grep": "", // RegExp of tests to run (empty for all)
-                "MOCHA_enableTimeouts": "0", // Disable time-outs,
-                "DEBUGTELEMETRY": "1",
-                "NODE_DEBUG": ""
-            }
+            "internalConsoleOptions": "openOnSessionStart",
+            "preLaunchTask": "tsc: build - tsconfig.json"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Program",
+            "program": "${workspaceFolder}/out/src/index.js",
+            "preLaunchTask": "tsc: build - tsconfig.json",
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js"
+            ]
         }
     ]
 }

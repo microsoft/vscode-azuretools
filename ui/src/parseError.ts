@@ -68,7 +68,8 @@ export function parseError(error: any): IParsedError {
         message: message,
         // NOTE: Intentionally not using 'error instanceof UserCancelledError' because that doesn't work if multiple versions of the UI package are used in one extension
         // See https://github.com/Microsoft/vscode-azuretools/issues/51 for more info
-        isUserCancelledError: errorType === 'UserCancelledError'
+        isUserCancelledError: errorType === 'UserCancelledError',
+        telemetryProperties: error && error.telemetryProperties
     };
 }
 
