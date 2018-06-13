@@ -92,8 +92,14 @@ class TunnelSocket extends EventEmitter {
             `wss://${this._client.kuduHostName}/AppServiceTunnel/Tunnel.ashx`,
             undefined,
             undefined,
-            { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
-            { auth: `${this._publishCredential.publishingUserName}:${this._publishCredential.publishingPassword}` }
+            {
+                'User-Agent': 'VSCode',
+                'Cache-Control': 'no-cache',
+                Pragma: 'no-cache'
+            },
+            {
+                auth: `${this._publishCredential.publishingUserName}:${this._publishCredential.publishingPassword}`
+            }
         );
     }
 
@@ -154,6 +160,9 @@ export class TunnelProxy {
         return new Promise<void>((resolve: () => void, reject: () => void): void => {
             const statusOptions: request.Options = {
                 uri: `https://${this._client.kuduHostName}/AppServiceTunnel/Tunnel.ashx?GetStatus`,
+                headers: {
+                    'User-Agent': 'VSCode'
+                },
                 auth: {
                     user: this._publishCredential.publishingUserName,
                     pass: this._publishCredential.publishingPassword
