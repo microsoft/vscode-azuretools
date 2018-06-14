@@ -31,7 +31,6 @@
         "test": "echo 'Test is not enabled for this package'"
     },
     "dependencies": {
-        "@types/find": "^0.2.0",
         "archiver": "^2.0.3",
         "azure-arm-resource": "^3.0.0-preview",
         "azure-arm-storage": "^3.1.0",
@@ -51,6 +50,7 @@
     },
     "devDependencies": {
         "@types/archiver": "^2.0.0",
+        "@types/find": "^0.2.0",
         "@types/websocket": "^0.0.38",
         "typescript": "^2.5.3",
         "tslint": "^5.7.0",
