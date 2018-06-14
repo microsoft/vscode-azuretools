@@ -189,8 +189,8 @@ export declare abstract class BaseEditor<ContextT> implements Disposable {
     /**
      * Implement this to edit what is displayed to the user when uploading the file to the remote
      */
-    abstract getSaveConfirmationText(context: ContextT): Promise<string>;
 
+    abstract getSaveConfirmationText(context: ContextT): Promise<string>;
     onDidSaveTextDocument(actionContext: IActionContext, globalState: Memento, doc: TextDocument): Promise<void>;
     showEditor(context: ContextT, sizeLimit?: number): Promise<void>;
     dispose(): Promise<void>;

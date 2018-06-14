@@ -48,6 +48,14 @@ export class ResourceGroupListStep<T extends IResourceGroupWizardContext> extend
                     wizardContext
                 );
             }
+        } else if (!wizardContext.resourceGroup && wizardContext.newResourceGroupName) {
+            // if there is a rg name without a rg then a name was assigned by default
+            // check to see if that rg exists otherwise create it
+            if (await ResourceGroupListStep.isNameAvailable(wizardContext, wizardContext.newResourceGroupName)) {
+                this.subWizard = new AzureWizard([], [new ResourceGroupCreateStep()], wizardContext);
+            } else {
+                wizardContext.resourceGroup = (await ResourceGroupListStep.getResourceGroups(wizardContext)).find((rg: ResourceGroup) => rg.name === wizardContext.newResourceGroupName);
+            }
         }
 
         return wizardContext;

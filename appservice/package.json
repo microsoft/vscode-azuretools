@@ -35,6 +35,7 @@
         "azure-arm-resource": "^3.0.0-preview",
         "azure-arm-storage": "^3.1.0",
         "azure-arm-website": "^1.0.0-preview",
+        "find": "^0.2.9",
         "ms-rest": "^2.2.2",
         "ms-rest-azure": "^2.4.4",
         "opn": "^5.1.0",
@@ -49,6 +50,7 @@
     },
     "devDependencies": {
         "@types/archiver": "^2.0.0",
+        "@types/find": "^0.2.0",
         "@types/websocket": "^0.0.38",
         "typescript": "^2.5.3",
         "tslint": "^5.7.0",
