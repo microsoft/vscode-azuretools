@@ -5,6 +5,7 @@
 
 import { Site, SkuDescription } from 'azure-arm-website/lib/models';
 import * as find from 'find';
+import * as path from 'path';
 import { ServiceClientCredentials } from 'ms-rest';
 import { OutputChannel } from 'vscode';
 import { AzureWizard, AzureWizardPromptStep, IActionContext, IAzureUserInput, LocationListStep, ResourceGroupListStep, StorageAccountKind, StorageAccountListStep, StorageAccountPerformance, StorageAccountReplication } from 'vscode-azureextensionui';
@@ -28,7 +29,7 @@ export async function createAppService(
     subscriptionDisplayName: string,
     showCreatingNode?: (label: string) => void,
     fsPath?: string,
-    improvedCreation: boolean = false): Promise<Site> {
+    streamlinedSteps: boolean = false /* enables streamlined app creation that emulates az webapp up's behavior */): Promise<Site> {
 
     let wizardContext: IAppServiceWizardContext = {
         newSiteKind: appKind,
@@ -43,8 +44,8 @@ export async function createAppService(
     promptSteps.push(new LocationListStep());
     promptSteps.push(new SiteOSStep());
     promptSteps.push(new SiteRuntimeStep());
-    if (improvedCreation) {
-        // function used to set name property after location and OS has been selected
+    if (streamlinedSteps) {
+        // function used to set rg and asp names properties after location and OS have been selected through wizard prompt
         const setResourceGroupProperty: Function = (): string => {
             if (wizardContext.location && wizardContext.newSiteOS) {
                 return `appsvc_rg_${wizardContext.newSiteOS}_${wizardContext.location.name}`;
@@ -82,7 +83,7 @@ export async function createAppService(
             }
         };
 
-        setDefaultsForImprovedConfiguration(wizardContext, fsPath);
+        setDefaultsForStreamlinedConfiguration(wizardContext, fsPath);
         promptSteps.push(new SetWizardContextPropertyStep('newResourceGroupName', setResourceGroupProperty));
         promptSteps.push(new SetWizardContextPropertyStep('newPlanName', setAppServicePlanProperty));
         promptSteps.push(new SetWizardContextPropertyStep('newPlanSku', setPlanSkuProperty));
@@ -129,16 +130,16 @@ export async function createAppService(
     return wizardContext.site;
 }
 
-function setDefaultsForImprovedConfiguration(wizardContext: IAppServiceWizardContext, fsPath: string): void {
+function setDefaultsForStreamlinedConfiguration(wizardContext: IAppServiceWizardContext, fsPath: string): void {
     const files: string[] = find.fileSync(fsPath);
     for (const file of files) {
-        if (file.indexOf('package.json') >= 0) {
+        if (path.basename(file) === 'package.json') {
             wizardContext.newSiteOS = WebsiteOS.linux;
             wizardContext.newSiteRuntime = 'node|8.9';
             break;
         }
 
-        if (file.split('.').pop() === 'csproj') {
+        if (path.extname(file) === 'csproj') {
             // check the file extension for csproj
             wizardContext.newSiteOS = WebsiteOS.windows;
             break;
