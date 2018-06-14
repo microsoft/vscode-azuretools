@@ -93,7 +93,7 @@ class TunnelSocket extends EventEmitter {
             undefined,
             undefined,
             {
-                'User-Agent': 'VSCode',
+                'User-Agent': 'vscode-azuretools',
                 'Cache-Control': 'no-cache',
                 Pragma: 'no-cache'
             },
@@ -161,7 +161,7 @@ export class TunnelProxy {
             const statusOptions: request.Options = {
                 uri: `https://${this._client.kuduHostName}/AppServiceTunnel/Tunnel.ashx?GetStatus`,
                 headers: {
-                    'User-Agent': 'VSCode'
+                    'User-Agent': 'vscode-azuretools'
                 },
                 auth: {
                     user: this._publishCredential.publishingUserName,
