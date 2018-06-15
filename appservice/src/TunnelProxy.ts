@@ -92,8 +92,14 @@ class TunnelSocket extends EventEmitter {
             `wss://${this._client.kuduHostName}/AppServiceTunnel/Tunnel.ashx`,
             undefined,
             undefined,
-            { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
-            { auth: `${this._publishCredential.publishingUserName}:${this._publishCredential.publishingPassword}` }
+            {
+                'User-Agent': 'vscode-azuretools',
+                'Cache-Control': 'no-cache',
+                Pragma: 'no-cache'
+            },
+            {
+                auth: `${this._publishCredential.publishingUserName}:${this._publishCredential.publishingPassword}`
+            }
         );
     }
 
@@ -154,6 +160,9 @@ export class TunnelProxy {
         return new Promise<void>((resolve: () => void, reject: () => void): void => {
             const statusOptions: request.Options = {
                 uri: `https://${this._client.kuduHostName}/AppServiceTunnel/Tunnel.ashx?GetStatus`,
+                headers: {
+                    'User-Agent': 'vscode-azuretools'
+                },
                 auth: {
                     user: this._publishCredential.publishingUserName,
                     pass: this._publishCredential.publishingPassword
@@ -184,8 +193,9 @@ export class TunnelProxy {
     }
 
     private async checkTunnelStatusWithRetry(): Promise<void> {
-        const pollingIntervalMs: number = 1000;
-        const timeoutMs: number = 30000;
+        const timeoutSeconds: number = 240; // 4 minutes, matches App Service internal timeout for starting up an app
+        const timeoutMs: number = timeoutSeconds * 1000;
+        const pollingIntervalMs: number = 5000;
 
         const delay: (delayMs: number) => Promise<void> = async (delayMs: number): Promise<void> => {
             await new Promise<void>((resolve: () => void): void => { setTimeout(resolve, delayMs); });
@@ -204,7 +214,7 @@ export class TunnelProxy {
 
                 await delay(pollingIntervalMs);
             }
-            reject(new Error(`Unable to establish connection to application after ${timeoutMs} milliseconds`));
+            reject(new Error(`Unable to establish connection to application after ${timeoutSeconds} seconds`));
         });
     }
 
