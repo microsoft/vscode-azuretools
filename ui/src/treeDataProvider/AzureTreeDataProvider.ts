@@ -268,7 +268,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
 
         let nodes: IAzureNode[];
 
-        const existingSubscriptionNodes: IAzureNode[] = this._subscriptionNodes || [];
+        const existingSubscriptionNodes: IAzureNode[] = this._subscriptionNodes ? this._subscriptionNodes : [];
         this._subscriptionNodes = [];
 
         let commandLabel: string | undefined;
