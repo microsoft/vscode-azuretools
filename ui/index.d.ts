@@ -616,3 +616,8 @@ export declare namespace DialogResponses {
     export const dontUpload: MessageItem;
     export const reportAnIssue: MessageItem;
 }
+
+/**
+ * Represents any that can be caught in a try/catch
+ */
+export type Catchable = any;
