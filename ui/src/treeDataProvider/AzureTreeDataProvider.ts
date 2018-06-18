@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as path from 'path';
-import { Disposable, Event, EventEmitter, Extension, extensions, QuickPickOptions, TreeDataProvider, TreeItem, TreeItemCollapsibleState } from 'vscode';
 import * as vscode from 'vscode';
+import { Disposable, Event, EventEmitter, Extension, extensions, QuickPickOptions, TreeDataProvider, TreeItem, TreeItemCollapsibleState } from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
-import { IActionContext, IAzureNode, IAzureParentTreeItem, IAzureQuickPickItem, IAzureUserInput, IChildProvider } from '../../index';
+import { IActionContext, IAzureNode, IAzureParentTreeItem, IAzureQuickPickItem, IAzureTreeItem, IAzureUserInput, IChildProvider } from '../../index';
 import { AzureAccount, AzureLoginStatus, AzureResourceFilter } from '../azure-account.api';
 import { callWithTelemetryAndErrorHandling } from '../callWithTelemetryAndErrorHandling';
 import { ArgumentError, UserCancelledError } from '../errors';
@@ -37,7 +37,8 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
     private _customRootNodes: AzureNode[];
     private _telemetryReporter: TelemetryReporter | undefined;
 
-    private _subscriptionNodes: IAzureNode[] = [];
+    private _subscriptionNodes: IAzureNode[] | undefined;
+
     private _disposables: Disposable[] = [];
 
     constructor(resourceProvider: IChildProvider, loadMoreCommandId: string, ui: IAzureUserInput, telemetryReporter: TelemetryReporter | undefined, rootTreeItems?: IAzureParentTreeItem[]) {
@@ -117,7 +118,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
                         result = result.concat(new AzureNode(node, new LoadMoreTreeItem(thisTree._loadMoreCommandId)));
                     }
                 } else { // Root of tree
-                    result = await thisTree.getRootNodes(actionContext);
+                    result = await thisTree.populateRootNodes(actionContext);
                 }
 
                 this.measurements.childCount = result.length;
@@ -204,14 +205,25 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
 
     private async promptForRootNode(expectedContextValues: string | string[]): Promise<IAzureNode> {
         let picks: IAzureQuickPickItem<AzureNode | string>[];
-        if (this._azureAccount.status === 'LoggedIn') {
-            picks = this._subscriptionNodes.map((n: SubscriptionNode) => {
+        const initialStatus: AzureLoginStatus = this._azureAccount.status;
+        if (initialStatus === 'LoggedIn') {
+            picks = (await this.ensureRootNodes()).map((n: SubscriptionNode) => {
                 return {
                     data: n,
                     label: n.treeItem.label,
                     description: n.subscriptionId
                 };
             });
+        } else if (initialStatus === 'LoggingIn' || initialStatus === 'Initializing') {
+            await vscode.window.withProgress(
+                {
+                    location: vscode.ProgressLocation.Notification,
+                    title: localize('waitingForAzureSignin', 'Waiting for Azure sign-in')
+                },
+                async (_progress: vscode.Progress<{ message?: string }>): Promise<void> => {
+                    await this._azureAccount.waitForSubscriptions();
+                });
+            return await this.promptForRootNode(expectedContextValues);
         } else {
             picks = [
                 { label: signInLabel, description: '', data: signInCommandId },
@@ -227,8 +239,10 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
         const result: AzureNode | string = (await this._ui.showQuickPick(picks, options)).data;
         if (typeof result === 'string') {
             await vscode.commands.executeCommand(result);
+            await this._azureAccount.waitForFilters();
 
             if (this._azureAccount.status === 'LoggedIn') {
+                await this.ensureRootNodes();
                 return await this.promptForRootNode(expectedContextValues);
             } else {
                 throw new UserCancelledError();
@@ -238,20 +252,29 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
         }
     }
 
-    private async getRootNodes(actionContext: IActionContext): Promise<IAzureNode[]> {
+    private async ensureRootNodes(): Promise<IAzureNode<IAzureTreeItem>[]> {
+        if (!this._subscriptionNodes) {
+            await this.getChildren();
+        }
+
+        // tslint:disable-next-line:no-non-null-assertion
+        return this._subscriptionNodes!;
+    }
+
+    private async populateRootNodes(actionContext: IActionContext): Promise<IAzureNode[]> {
         actionContext.properties.isActivationEvent = 'true';
         actionContext.properties.contextValue = 'root';
         actionContext.properties.accountStatus = this._azureAccount.status;
 
         let nodes: IAzureNode[];
 
-        const existingSubscriptionNodes: IAzureNode[] = this._subscriptionNodes;
+        const existingSubscriptionNodes: IAzureNode[] = this._subscriptionNodes ? this._subscriptionNodes : [];
         this._subscriptionNodes = [];
 
         let commandLabel: string | undefined;
         if (this._azureAccount.status === 'Initializing' || this._azureAccount.status === 'LoggingIn') {
             nodes = [new AzureNode(undefined, {
-                label: localize('loadingNode', 'Loading...'),
+                label: this._azureAccount.status === 'Initializing' ? localize('loadingNode', 'Loading...') : localize('signingIn', 'Waiting for Azure sign-in...'),
                 commandId: signInCommandId,
                 contextValue: 'azureCommandNode',
                 id: signInCommandId,
@@ -266,7 +289,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
                 new AzureNode(undefined, { label: createAccountLabel, commandId: createAccountCommandId, contextValue: 'azureCommandNode', id: createAccountCommandId })
             ];
         } else if (this._azureAccount.filters.length === 0) {
-            commandLabel = localize('noSubscriptionsNode', 'No subscriptions found. Edit filters...');
+            commandLabel = localize('noSubscriptionsNode', 'Select subscriptions...');
             nodes = [new AzureNode(undefined, { label: commandLabel, commandId: 'azure-account.selectSubscriptions', contextValue: 'azureCommandNode', id: 'azure-account.selectSubscriptions' })];
         } else {
             this._subscriptionNodes = this._azureAccount.filters.map((filter: AzureResourceFilter) => {
