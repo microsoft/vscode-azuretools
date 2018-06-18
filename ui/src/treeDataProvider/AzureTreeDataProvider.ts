@@ -274,7 +274,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
         let commandLabel: string | undefined;
         if (this._azureAccount.status === 'Initializing' || this._azureAccount.status === 'LoggingIn') {
             nodes = [new AzureNode(undefined, {
-                label: this._azureAccount.status === 'Initializing' ? localize('loadingNode', 'Loading...') : localize('signingIn', 'Signing In...'),
+                label: this._azureAccount.status === 'Initializing' ? localize('loadingNode', 'Loading...') : localize('signingIn', 'Waiting for Azure sign-in...'),
                 commandId: signInCommandId,
                 contextValue: 'azureCommandNode',
                 id: signInCommandId,
