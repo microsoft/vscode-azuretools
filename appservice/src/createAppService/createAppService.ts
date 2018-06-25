@@ -5,11 +5,12 @@
 
 import { Site, SkuDescription } from 'azure-arm-website/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
-import { OutputChannel, Uri, workspace } from 'vscode';
+import { OutputChannel, workspace } from 'vscode';
 import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureUserInput, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountListStep, StorageAccountPerformance, StorageAccountReplication } from 'vscode-azureextensionui';
 import { AppKind, WebsiteOS } from './AppKind';
 import { AppServicePlanCreateStep } from './AppServicePlanCreateStep';
 import { AppServicePlanListStep } from './AppServicePlanListStep';
+import { setWizardContextDefaults } from './createWebApp';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 import { SiteCreateStep } from './SiteCreateStep';
 import { SiteNameStep } from './SiteNameStep';
@@ -64,7 +65,6 @@ export async function createAppService(
                     learnMoreLink: 'https://aka.ms/Cfqnrc'
                 }
             ));
-            promptSteps.push(new AppServicePlanListStep());
             promptSteps.push(new LocationListStep());
             break;
         case AppKind.app:
@@ -75,13 +75,13 @@ export async function createAppService(
                 promptSteps.push(new AppServicePlanListStep());
                 promptSteps.push(new LocationListStep());
             } else {
-                if (workspace.workspaceFolders.length === 1) {
+                if (workspace.workspaceFolders && workspace.workspaceFolders.length === 1) {
                     // can make smart defaults if only one workspace is opened
                     await setWizardContextDefaults(wizardContext);
                 }
                 promptSteps.push(new LocationListStep());
-                promptSteps.push(new SiteOSStep()); // will be skipped with a smart default
-                promptSteps.push(new SiteRuntimeStep()); // will be skipped with a smart default
+                promptSteps.push(new SiteOSStep()); // will be skipped with if there is a smart default
+                promptSteps.push(new SiteRuntimeStep()); // will be skipped if there is a smart default
                 executeSteps.push(new ResourceGroupCreateStep());
                 executeSteps.push(new AppServicePlanCreateStep());
             }
@@ -108,19 +108,4 @@ export async function createAppService(
     wizardContext = await wizard.execute(actionContext, outputChannel);
 
     return wizardContext.site;
-}
-
-async function setWizardContextDefaults(wizardContext: IAppServiceWizardContext): Promise<void> {
-    await workspace.findFiles('package.json').then((files: Uri[]) => {
-        if (files.length > 0) {
-            wizardContext.newSiteOS = WebsiteOS.linux;
-            wizardContext.newSiteRuntime = 'node|8.9';
-        }
-    });
-
-    await workspace.findFiles('*.csproj').then((files: Uri[]) => {
-        if (files.length > 0) {
-            wizardContext.newSiteOS = WebsiteOS.windows;
-        }
-    });
 }
