@@ -529,10 +529,6 @@ export declare class ResourceGroupListStep<T extends IResourceGroupWizardContext
     public prompt(wizardContext: T, ui: IAzureUserInput): Promise<T>;
 }
 
-export declare class ResourceGroupCreateStep<T extends IResourceGroupWizardContext> extends AzureWizardExecuteStep<T> {
-    public execute(wizardContext: T, outputChannel: OutputChannel): Promise<T>;
-}
-
 export interface IStorageAccountWizardContext extends IResourceGroupWizardContext {
     /**
      * The storage account to use.
