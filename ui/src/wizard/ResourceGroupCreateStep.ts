@@ -16,7 +16,7 @@ export class ResourceGroupCreateStep<T extends IResourceGroupWizardContext> exte
             const newName: string = wizardContext.newResourceGroupName!;
             // tslint:disable-next-line:no-non-null-assertion
             const newLocation: string = wizardContext.location!.name!;
-            outputChannel.appendLine(localize('CreatingResourceGroup', 'Creating resource group "{0}" in location "{1} exists"...', newName, newLocation));
+            outputChannel.appendLine(localize('CreatingResourceGroup', 'Creating resource group "{0}" in location "{1}"...', newName, newLocation));
             const resourceClient: ResourceManagementClient = new ResourceManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
             wizardContext.resourceGroup = await resourceClient.resourceGroups.createOrUpdate(newName, { location: newLocation });
             outputChannel.appendLine(localize('CreatedResourceGroup', 'Successfully created resource group "{0}".', newName));
