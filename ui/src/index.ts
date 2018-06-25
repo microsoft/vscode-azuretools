@@ -17,5 +17,6 @@ export * from './wizard/AzureWizardPromptStep';
 export * from './wizard/AzureWizardExecuteStep';
 export * from './wizard/AzureNameStep';
 export * from './wizard/LocationListStep';
+export * from './wizard/ResourceGroupCreateStep';
 export * from './wizard/ResourceGroupListStep';
 export * from './wizard/StorageAccountListStep';
