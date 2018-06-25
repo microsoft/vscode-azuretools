@@ -66,7 +66,7 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
             const showSaveWarning: boolean | undefined = vscode.workspace.getConfiguration().get(this.showSavePromptKey);
 
             if (showSaveWarning) {
-                const message: string  = await this.getSaveConfirmationText(context);
+                const message: string = await this.getSaveConfirmationText(context);
                 const result: vscode.MessageItem | undefined = await vscode.window.showWarningMessage(message, DialogResponses.upload, DialogResponses.alwaysUpload, DialogResponses.dontUpload);
                 if (result === DialogResponses.alwaysUpload) {
                     await vscode.workspace.getConfiguration().update(this.showSavePromptKey, false, vscode.ConfigurationTarget.Global);
