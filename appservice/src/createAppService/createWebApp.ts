@@ -5,10 +5,11 @@
 
 import { Site } from 'azure-arm-website/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
-import { OutputChannel } from 'vscode';
+import { OutputChannel, Uri, workspace } from 'vscode';
 import { IActionContext, IAzureUserInput } from 'vscode-azureextensionui';
-import { AppKind } from './AppKind';
+import { AppKind, WebsiteOS } from './AppKind';
 import { createAppService } from './createAppService';
+import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export async function createWebApp(
     outputChannel: OutputChannel,
@@ -19,4 +20,19 @@ export async function createWebApp(
     subscriptionDisplayName: string,
     showCreatingNode?: (label: string) => void): Promise<Site> {
     return await createAppService(AppKind.app, undefined, outputChannel, ui, actionContext, credentials, subscriptionId, subscriptionDisplayName, showCreatingNode);
+}
+
+export async function setWizardContextDefaults(wizardContext: IAppServiceWizardContext): Promise<void> {
+    await workspace.findFiles('package.json').then((files: Uri[]) => {
+        if (files.length > 0) {
+            wizardContext.newSiteOS = WebsiteOS.linux;
+            wizardContext.newSiteRuntime = 'node|8.9';
+        }
+    });
+
+    await workspace.findFiles('*.csproj').then((files: Uri[]) => {
+        if (files.length > 0) {
+            wizardContext.newSiteOS = WebsiteOS.windows;
+        }
+    });
 }

@@ -19,7 +19,7 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
             const newPlanName: string = wizardContext.newPlanName!;
             // tslint:disable-next-line:no-non-null-assertion
             const newSku: SkuDescription = wizardContext.newPlanSku!;
-            outputChannel.appendLine(localize('CreatingAppServicePlan', 'Creating App Service plan "{0}" with pricing tier "{1}"...', newPlanName, newSku.name));
+            outputChannel.appendLine(localize('CreatingAppServicePlan', 'Ensuring App Service plan "{0}" with pricing tier "{1}" exists...', newPlanName, newSku.name));
             const websiteClient: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
             wizardContext.plan = await websiteClient.appServicePlans.createOrUpdate(wizardContext.resourceGroup.name, newPlanName, {
                 appServicePlanName: newPlanName,
@@ -28,7 +28,7 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
                 location: wizardContext.location.name,
                 reserved: wizardContext.newSiteOS === WebsiteOS.linux  // The secret property - must be set to true to make it a Linux plan. Confirmed by the team who owns this API.
             });
-            outputChannel.appendLine(localize('CreatedAppServicePlan', 'Successfully created App Service plan "{0}".', newPlanName));
+            outputChannel.appendLine(localize('CreatedAppServicePlan', 'Successfully found App Service plan "{0}".', newPlanName));
         }
 
         return wizardContext;
