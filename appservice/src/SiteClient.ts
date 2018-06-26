@@ -32,7 +32,6 @@ export class SiteClient {
     public readonly kind: string;
     public readonly initialState: string;
     public readonly isFunctionApp: boolean;
-  
 
     public readonly planResourceGroup: string;
     public readonly planName: string;
@@ -62,7 +61,7 @@ export class SiteClient {
         this.kind = site.kind;
         this.initialState = site.state;
         this.isFunctionApp = site.kind && site.kind.includes('functionapp');
-       
+
         this.planResourceGroup = matches[2];
         this.planName = matches[3];
 
