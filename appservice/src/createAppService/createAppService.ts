@@ -80,7 +80,7 @@ export async function createAppService(
                     await setWizardContextDefaults(wizardContext);
                 }
                 promptSteps.push(new LocationListStep());
-                promptSteps.push(new SiteOSStep()); // will be skipped with if there is a smart default
+                promptSteps.push(new SiteOSStep()); // will be skipped if there is a smart default
                 promptSteps.push(new SiteRuntimeStep()); // will be skipped if there is a smart default
                 executeSteps.push(new ResourceGroupCreateStep());
                 executeSteps.push(new AppServicePlanCreateStep());
