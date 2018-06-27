@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SkuDescription } from 'azure-arm-website/lib/models';
+import { Capability, SkuDescription } from 'azure-arm-website/lib/models';
 import { AzureWizardPromptStep, IAzureUserInput } from 'vscode-azureextensionui';
 import { IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { localize } from '../localize';
@@ -12,7 +12,7 @@ import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext, ui: IAzureUserInput): Promise<IAppServiceWizardContext> {
         if (!wizardContext.newPlanSku) {
-            const pricingTiers: IAzureQuickPickItem<SkuDescription>[] = this.getPlanSkus().map((s: SkuDescription) => {
+            const pricingTiers: IAzureQuickPickItem<SkuDescription>[] = this.getPlanSkus(wizardContext.newSiteOS).map((s: SkuDescription) => {
                 return {
                     label: s.name,
                     description: s.tier,
@@ -26,50 +26,71 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
         return wizardContext;
     }
 
-    private getPlanSkus(): SkuDescription[] {
-        return [
+    private getPlanSkus(os: string): SkuDescription[] {
+        const skus: SkuDescription[] = [
             {
-                name: 'S1',
-                tier: 'Standard',
-                size: 'S1',
-                family: 'S',
-                capacity: 1
-            },
-            {
-                name: 'S2',
-                tier: 'Standard',
-                size: 'S2',
-                family: 'S',
-                capacity: 1
-            },
-            {
-                name: 'S3',
-                tier: 'Standard',
-                size: 'S3',
-                family: 'S',
-                capacity: 1
+                name: 'F1',
+                tier: 'Free',
+                size: 'F1',
+                family: 'F',
+                capacity: 1,
+                capabilities: [{ name: 'supportedOn', value: 'windows' }]
             },
             {
                 name: 'B1',
                 tier: 'Basic',
                 size: 'B1',
                 family: 'B',
-                capacity: 1
+                capacity: 1,
+                capabilities: [{ name: 'supportedOn', value: 'windows,linux' }]
             },
             {
                 name: 'B2',
                 tier: 'Basic',
                 size: 'B2',
                 family: 'B',
-                capacity: 1
+                capacity: 1,
+                capabilities: [{ name: 'supportedOn', value: 'windows,linux' }]
             },
             {
                 name: 'B3',
                 tier: 'Basic',
                 size: 'B3',
                 family: 'B',
-                capacity: 1
+                capacity: 1,
+                capabilities: [{ name: 'supportedOn', value: 'windows,linux' }]
+            },
+            {
+                name: 'S1',
+                tier: 'Standard',
+                size: 'S1',
+                family: 'S',
+                capacity: 1,
+                capabilities: [{ name: 'supportedOn', value: 'windows,linux' }]
+            },
+            {
+                name: 'S2',
+                tier: 'Standard',
+                size: 'S2',
+                family: 'S',
+                capacity: 1,
+                capabilities: [{ name: 'supportedOn', value: 'windows,linux' }]
+            },
+            {
+                name: 'S3',
+                tier: 'Standard',
+                size: 'S3',
+                family: 'S',
+                capacity: 1,
+                capabilities: [{ name: 'supportedOn', value: 'windows,linux' }]
             }
         ];
+
+        // filters the list of SKUs to make sure they suppport the chosen operating system
+        return skus.filter((sku: SkuDescription) => {
+            return sku.capabilities.find((capability: Capability) => {
+                return capability.name === 'supportedOn' && capability.value.indexOf(os) > -1;
+            });
+        });
     }
 }
