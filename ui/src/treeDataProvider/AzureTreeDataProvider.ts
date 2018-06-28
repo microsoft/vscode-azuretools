@@ -289,7 +289,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
                 new AzureNode(undefined, { label: createAccountLabel, commandId: createAccountCommandId, contextValue: 'azureCommandNode', id: createAccountCommandId })
             ];
         } else if (this._azureAccount.filters.length === 0) {
-            commandLabel = localize('noSubscriptionsNode', 'Select subscriptions...');
+            commandLabel = localize('noSubscriptionsNode', 'Select Subscriptions...');
             nodes = [new AzureNode(undefined, { label: commandLabel, commandId: 'azure-account.selectSubscriptions', contextValue: 'azureCommandNode', id: 'azure-account.selectSubscriptions' })];
         } else {
             this._subscriptionNodes = this._azureAccount.filters.map((filter: AzureResourceFilter) => {
