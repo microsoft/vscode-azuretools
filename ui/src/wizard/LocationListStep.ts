@@ -7,7 +7,7 @@ import { SubscriptionClient } from 'azure-arm-resource';
 import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { QuickPickOptions } from 'vscode';
 import { IAzureQuickPickItem, ILocationWizardContext } from '../../index';
-import { addExtensionUserAgentInfo } from '../addExtensionUserAgentInfo';
+import { addExtensionUserAgent } from '../addExtensionUserAgent';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
@@ -21,7 +21,7 @@ export class LocationListStep<T extends ILocationWizardContext> extends AzureWiz
     public static async getLocations<T extends ILocationWizardContext>(wizardContext: T): Promise<Location[]> {
         if (wizardContext.locationsTask === undefined) {
             const client: SubscriptionClient = new SubscriptionClient(wizardContext.credentials);
-            addExtensionUserAgentInfo(client);
+            addExtensionUserAgent(client);
             wizardContext.locationsTask = client.subscriptions.listLocations(wizardContext.subscriptionId);
         }
 

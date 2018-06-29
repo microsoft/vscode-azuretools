@@ -10,7 +10,7 @@ import { StorageAccount } from 'azure-arm-storage/lib/models';
 import opn = require("opn");
 import { isString } from 'util';
 import { IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, INewStorageAccountDefaults, IStorageAccountFilters, IStorageAccountWizardContext } from '../../index';
-import { addExtensionUserAgentInfo } from '../addExtensionUserAgentInfo';
+import { addExtensionUserAgent } from '../addExtensionUserAgent';
 import { UserCancelledError } from '../errors';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -80,7 +80,7 @@ export class StorageAccountListStep<T extends IStorageAccountWizardContext> exte
     public async prompt(wizardContext: T): Promise<T> {
         if (!wizardContext.storageAccount && !wizardContext.newStorageAccountName) {
             const client: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
-            addExtensionUserAgentInfo(client);
+            addExtensionUserAgent(client);
 
             const quickPickOptions: IAzureQuickPickOptions = { placeHolder: 'Select a storage account.', id: `StorageAccountListStep/${wizardContext.subscriptionId}` };
             const result: StorageAccount | string | undefined = (await ext.ui.showQuickPick(this.getQuickPicks(client.storageAccounts.list()), quickPickOptions)).data;

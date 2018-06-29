@@ -6,7 +6,7 @@
 import { ResourceManagementClient } from 'azure-arm-resource';
 import { ResourceGroup } from 'azure-arm-resource/lib/resource/models';
 import { IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IResourceGroupWizardContext } from '../../index';
-import { addExtensionUserAgentInfo } from '../addExtensionUserAgentInfo';
+import { addExtensionUserAgent } from '../addExtensionUserAgent';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { uiUtils } from '../utils/uiUtils';
@@ -26,7 +26,7 @@ export class ResourceGroupListStep<T extends IResourceGroupWizardContext> extend
     public static async getResourceGroups<T extends IResourceGroupWizardContext>(wizardContext: T): Promise<ResourceGroup[]> {
         if (wizardContext.resourceGroupsTask === undefined) {
             const client: ResourceManagementClient = new ResourceManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
-            addExtensionUserAgentInfo(client);
+            addExtensionUserAgent(client);
             wizardContext.resourceGroupsTask = uiUtils.listAll(client.resourceGroups, client.resourceGroups.list());
         }
 

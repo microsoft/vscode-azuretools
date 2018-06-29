@@ -3,16 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { IActionContext } from "../index";
+import { callWithTelemetryAndErrorHandling } from "./callWithTelemetryAndErrorHandling";
 import { ext } from "./extensionVariables";
 
 export function getPackageInfo(): [string, string] {
     let packageJson: IPackageJson | undefined;
-    try {
+    callWithTelemetryAndErrorHandling('azureTools.getPackageInfo', function (this: IActionContext): void {
+        this.suppressErrorDisplay = true;
+        this.suppressTelemetry = true; // only report errors
+
         // tslint:disable-next-line:non-literal-require
         packageJson = <IPackageJson>require(ext.context.asAbsolutePath('package.json'));
-    } catch (error) {
-        // ignore errors
-    }
+    });
 
     // tslint:disable-next-line:strict-boolean-expressions
     const extensionName: string = (packageJson && packageJson.name) || 'vscode-azuretools';

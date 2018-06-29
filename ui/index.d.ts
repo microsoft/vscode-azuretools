@@ -634,4 +634,4 @@ export interface UIExtensionVariables {
 /**
  * Adds a user agent specific to the VS Code extension, of the form `${extensionName}/${extensionVersion}`
  */
-export declare function addExtensionUserAgentInfo(client: ServiceClient): void;
+export declare function addExtensionUserAgent(client: ServiceClient): void;
