@@ -5,21 +5,19 @@
 
 // tslint:disable-next-line:no-require-imports
 import opn = require("opn");
-import { ExtensionContext } from 'vscode';
 import { IParsedError } from '../index';
+import { ext } from "./extensionVariables";
 
 /**
  * Used to open the browser to the "New Issue" page on GitHub with relevant context pre-filled in the issue body
  */
-export function reportAnIssue(actionId: string, parsedError: IParsedError, extensionContext?: ExtensionContext): void {
+export function reportAnIssue(actionId: string, parsedError: IParsedError): void {
     let packageJson: IPackageJson | undefined;
-    if (extensionContext) {
-        try {
-            // tslint:disable-next-line:non-literal-require
-            packageJson = <IPackageJson>require(extensionContext.asAbsolutePath('package.json'));
-        } catch (error) {
-            // ignore errors
-        }
+    try {
+        // tslint:disable-next-line:non-literal-require
+        packageJson = <IPackageJson>require(ext.context.asAbsolutePath('package.json'));
+    } catch (error) {
+        // ignore errors
     }
 
     // tslint:disable-next-line:strict-boolean-expressions

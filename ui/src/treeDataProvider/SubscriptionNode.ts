@@ -7,7 +7,7 @@ import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment } from 'ms-rest-azure';
 import * as path from 'path';
 import { EventEmitter } from 'vscode';
-import { AzureTreeDataProvider, IAzureNode, IAzureUserInput, IChildProvider } from '../../index';
+import { AzureTreeDataProvider, IAzureNode, IChildProvider } from '../../index';
 import { AzureSession } from '../azure-account.api';
 import { AzureParentNode } from './AzureParentNode';
 
@@ -19,9 +19,8 @@ export class SubscriptionNode extends AzureParentNode {
 
     private readonly _treeDataProvider: AzureTreeDataProvider;
     private readonly _session: AzureSession;
-    private readonly _ui: IAzureUserInput;
 
-    public constructor(treeDataProvider: AzureTreeDataProvider, ui: IAzureUserInput, childProvider: IChildProvider, nodeId: string, session: AzureSession, subscriptionDisplayName: string, subscriptionId: string, onNodeCreateEmitter: EventEmitter<IAzureNode>) {
+    public constructor(treeDataProvider: AzureTreeDataProvider, childProvider: IChildProvider, nodeId: string, session: AzureSession, subscriptionDisplayName: string, subscriptionId: string, onNodeCreateEmitter: EventEmitter<IAzureNode>) {
         super(undefined, {
             id: nodeId,
             label: subscriptionDisplayName,
@@ -34,7 +33,6 @@ export class SubscriptionNode extends AzureParentNode {
             loadMoreChildren: <typeof childProvider.loadMoreChildren>childProvider.loadMoreChildren.bind(childProvider)
         },    onNodeCreateEmitter);
         this._treeDataProvider = treeDataProvider;
-        this._ui = ui;
         this._session = session;
 
         this._subscriptionId = subscriptionId;
@@ -67,9 +65,5 @@ export class SubscriptionNode extends AzureParentNode {
 
     public get treeDataProvider(): AzureTreeDataProvider {
         return this._treeDataProvider;
-    }
-
-    public get ui(): IAzureUserInput {
-        return this._ui;
     }
 }

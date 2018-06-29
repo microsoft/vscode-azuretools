@@ -8,7 +8,7 @@ import { AzureEnvironment } from 'ms-rest-azure';
 // tslint:disable-next-line:no-require-imports
 import opn = require("opn");
 import { Uri } from 'vscode';
-import { AzureTreeDataProvider, IAzureNode, IAzureParentNode, IAzureTreeItem, IAzureUserInput, OpenInPortalOptions } from '../../index';
+import { AzureTreeDataProvider, IAzureNode, IAzureParentNode, IAzureTreeItem, OpenInPortalOptions } from '../../index';
 import { ArgumentError, NotImplementedError } from '../errors';
 import { localize } from '../localize';
 import { loadingIconPath } from './CreatingTreeItem';
@@ -101,14 +101,6 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
     public get treeDataProvider(): AzureTreeDataProvider {
         if (this.parent) {
             return this.parent.treeDataProvider;
-        } else {
-            throw new ArgumentError(this);
-        }
-    }
-
-    public get ui(): IAzureUserInput {
-        if (this.parent) {
-            return this.parent.ui;
         } else {
             throw new ArgumentError(this);
         }

@@ -9,6 +9,7 @@ import * as vscode from 'vscode';
 import { IActionContext } from '..';
 import { DialogResponses } from './DialogResponses';
 import { UserCancelledError } from './errors';
+import { ext } from './extensionVariables';
 import { localize } from "./localize";
 import { createTemporaryFile } from './utils/createTemporaryFile';
 
@@ -17,7 +18,7 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
     private fileMap: { [key: string]: [vscode.TextDocument, ContextT] } = {};
     private ignoreSave: boolean = false;
 
-    constructor(private readonly showSavePromptKey: string, private readonly outputChannel?: vscode.OutputChannel) {
+    constructor(private readonly showSavePromptKey: string) {
     }
 
     public abstract getData(context: ContextT): Promise<string>;
@@ -79,10 +80,8 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
     }
 
     protected appendLineToOutput(value: string): void {
-        if (!!this.outputChannel) {
-            this.outputChannel.appendLine(value);
-            this.outputChannel.show(true);
-        }
+        ext.outputChannel.appendLine(value);
+        ext.outputChannel.show(true);
     }
 
     private async updateRemote(context: ContextT, doc: vscode.TextDocument): Promise<void> {

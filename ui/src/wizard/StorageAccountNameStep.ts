@@ -6,19 +6,20 @@
 // tslint:disable-next-line:no-require-imports
 import StorageManagementClient = require('azure-arm-storage');
 import { CheckNameAvailabilityResult } from 'azure-arm-storage/lib/models';
-import { IAzureUserInput, IStorageAccountWizardContext } from '../../index';
+import { IStorageAccountWizardContext } from '../../index';
+import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { AzureNameStep } from './AzureNameStep';
 import { ResourceGroupListStep, resourceGroupNamingRules } from './ResourceGroupListStep';
 import { storageAccountNamingRules } from './StorageAccountListStep';
 
 export class StorageAccountNameStep<T extends IStorageAccountWizardContext> extends AzureNameStep<T> {
-    public async prompt(wizardContext: T, ui: IAzureUserInput): Promise<T> {
+    public async prompt(wizardContext: T): Promise<T> {
         if (!wizardContext.newStorageAccountName) {
             const client: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
 
             const suggestedName: string | undefined = wizardContext.relatedNameTask ? await wizardContext.relatedNameTask : undefined;
-            wizardContext.newStorageAccountName = (await ui.showInputBox({
+            wizardContext.newStorageAccountName = (await ext.ui.showInputBox({
                 value: suggestedName,
                 prompt: 'Enter the name of the new storage account.',
                 validateInput: async (value: string): Promise<string | undefined> => await this.validateStorageAccountName(client, value)

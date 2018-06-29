@@ -4,24 +4,18 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { EventEmitter } from 'vscode';
-import { AzureTreeDataProvider, IAzureNode, IAzureParentTreeItem, IAzureUserInput } from "../../index";
+import { AzureTreeDataProvider, IAzureNode, IAzureParentTreeItem } from "../../index";
 import { AzureParentNode } from "./AzureParentNode";
 
 export class RootNode extends AzureParentNode {
     private readonly _treeDataProvider: AzureTreeDataProvider;
-    private readonly _ui: IAzureUserInput;
 
-    public constructor(treeDataProvider: AzureTreeDataProvider, ui: IAzureUserInput, treeItem: IAzureParentTreeItem, onNodeCreateEmitter: EventEmitter<IAzureNode>) {
+    public constructor(treeDataProvider: AzureTreeDataProvider, treeItem: IAzureParentTreeItem, onNodeCreateEmitter: EventEmitter<IAzureNode>) {
         super(undefined, treeItem, onNodeCreateEmitter);
         this._treeDataProvider = treeDataProvider;
-        this._ui = ui;
     }
 
     public get treeDataProvider(): AzureTreeDataProvider {
         return this._treeDataProvider;
-    }
-
-    public get ui(): IAzureUserInput {
-        return this._ui;
     }
 }

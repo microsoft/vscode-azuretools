@@ -5,8 +5,8 @@
 
 // tslint:disable-next-line:no-require-imports
 import StorageManagementClient = require('azure-arm-storage');
-import { OutputChannel } from 'vscode';
 import { INewStorageAccountDefaults, IStorageAccountWizardContext } from '../../index';
+import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 
@@ -18,14 +18,14 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
         this._defaults = defaults;
     }
 
-    public async execute(wizardContext: T, outputChannel: OutputChannel): Promise<T> {
+    public async execute(wizardContext: T): Promise<T> {
         if (!wizardContext.storageAccount) {
             // tslint:disable-next-line:no-non-null-assertion
             const newLocation: string = wizardContext.location!.name!;
             // tslint:disable-next-line:no-non-null-assertion
             const newName: string = wizardContext.newStorageAccountName!;
             const newSkuName: string = `${this._defaults.performance}_${this._defaults.replication}`;
-            outputChannel.appendLine(localize('CreatingStorageAccount', 'Creating storage account "{0}" in location "{1}" with sku "{2}"...', newName, newLocation, newSkuName));
+            ext.outputChannel.appendLine(localize('CreatingStorageAccount', 'Creating storage account "{0}" in location "{1}" with sku "{2}"...', newName, newLocation, newSkuName));
 
             const storageClient: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
             wizardContext.storageAccount = await storageClient.storageAccounts.create(
@@ -38,7 +38,7 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
                     location: newLocation
                 }
             );
-            outputChannel.appendLine(localize('CreatedStorageAccount', 'Successfully created storage account "{0}".', newName));
+            ext.outputChannel.appendLine(localize('CreatedStorageAccount', 'Successfully created storage account "{0}".', newName));
         }
 
         return wizardContext;

@@ -4,13 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as path from 'path';
-import * as vscode from 'vscode';
 import { Disposable, Event, EventEmitter, Extension, extensions, QuickPickOptions, TreeDataProvider, TreeItem, TreeItemCollapsibleState } from 'vscode';
-import TelemetryReporter from 'vscode-extension-telemetry';
-import { IActionContext, IAzureNode, IAzureParentTreeItem, IAzureQuickPickItem, IAzureTreeItem, IAzureUserInput, IChildProvider } from '../../index';
+import * as vscode from 'vscode';
+import { IActionContext, IAzureNode, IAzureParentTreeItem, IAzureQuickPickItem, IAzureTreeItem, IChildProvider } from '../../index';
 import { AzureAccount, AzureLoginStatus, AzureResourceFilter } from '../azure-account.api';
 import { callWithTelemetryAndErrorHandling } from '../callWithTelemetryAndErrorHandling';
 import { ArgumentError, UserCancelledError } from '../errors';
+import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { parseError } from '../parseError';
 import { AzureNode } from './AzureNode';
@@ -32,21 +32,17 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
 
     private readonly _loadMoreCommandId: string;
     private _resourceProvider: IChildProvider;
-    private _ui: IAzureUserInput;
     private _azureAccount: AzureAccount;
     private _customRootNodes: AzureNode[];
-    private _telemetryReporter: TelemetryReporter | undefined;
 
     private _subscriptionNodes: IAzureNode[] | undefined;
 
     private _disposables: Disposable[] = [];
 
-    constructor(resourceProvider: IChildProvider, loadMoreCommandId: string, ui: IAzureUserInput, telemetryReporter: TelemetryReporter | undefined, rootTreeItems?: IAzureParentTreeItem[]) {
+    constructor(resourceProvider: IChildProvider, loadMoreCommandId: string, rootTreeItems?: IAzureParentTreeItem[]) {
         this._resourceProvider = resourceProvider;
         this._loadMoreCommandId = loadMoreCommandId;
-        this._ui = ui;
-        this._telemetryReporter = telemetryReporter;
-        this._customRootNodes = rootTreeItems ? rootTreeItems.map((treeItem: IAzureParentTreeItem) => new RootNode(this, ui, treeItem, this._onNodeCreateEmitter)) : [];
+        this._customRootNodes = rootTreeItems ? rootTreeItems.map((treeItem: IAzureParentTreeItem) => new RootNode(this, treeItem, this._onNodeCreateEmitter)) : [];
 
         // Rather than expose 'AzureAccount' types in the index.ts contract, simply get it inside of this npm package
         const azureAccountExtension: Extension<AzureAccount> | undefined = extensions.getExtension<AzureAccount>('ms-vscode.azure-account');
@@ -99,7 +95,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
         try {
             // tslint:disable:no-var-self
             const thisTree: AzureTreeDataProvider = this;
-            return <IAzureNode[]>await callWithTelemetryAndErrorHandling('AzureTreeDataProvider.getChildren', this._telemetryReporter, undefined, async function (this: IActionContext): Promise<IAzureNode[]> {
+            return <IAzureNode[]>await callWithTelemetryAndErrorHandling('AzureTreeDataProvider.getChildren', async function (this: IActionContext): Promise<IAzureNode[]> {
                 const actionContext: IActionContext = this;
                 // tslint:enable:no-var-self
                 actionContext.suppressErrorDisplay = true;
@@ -236,7 +232,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
             .map((n: AzureNode) => { return { data: n, description: '', label: n.treeItem.label }; }));
 
         const options: QuickPickOptions = { placeHolder: localize('selectSubscription', 'Select a Subscription') };
-        const result: AzureNode | string = picks.length === 1 ? picks[0].data : (await this._ui.showQuickPick(picks, options)).data;
+        const result: AzureNode | string = picks.length === 1 ? picks[0].data : (await ext.ui.showQuickPick(picks, options)).data;
         if (typeof result === 'string') {
             await vscode.commands.executeCommand(result);
             await this._azureAccount.waitForFilters();
@@ -303,7 +299,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
                     } else {
                         // filter.subscription.id is the The fully qualified ID of the subscription (For example, /subscriptions/00000000-0000-0000-0000-000000000000) and should be used as the node's id for the purposes of OpenInPortal
                         // filter.subscription.subscriptionId is just the guid and is used in all other cases when creating clients for managing Azure resources
-                        return new SubscriptionNode(this, this._ui, this._resourceProvider, filter.subscription.id, filter.session, filter.subscription.displayName, filter.subscription.subscriptionId, this._onNodeCreateEmitter);
+                        return new SubscriptionNode(this, this._resourceProvider, filter.subscription.id, filter.session, filter.subscription.displayName, filter.subscription.subscriptionId, this._onNodeCreateEmitter);
                     }
                 }
             });

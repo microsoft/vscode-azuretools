@@ -9,8 +9,9 @@ import { StorageAccount } from 'azure-arm-storage/lib/models';
 // tslint:disable-next-line:no-require-imports
 import opn = require("opn");
 import { isString } from 'util';
-import { IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, INewStorageAccountDefaults, IStorageAccountFilters, IStorageAccountWizardContext } from '../../index';
+import { IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, INewStorageAccountDefaults, IStorageAccountFilters, IStorageAccountWizardContext } from '../../index';
 import { UserCancelledError } from '../errors';
+import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { AzureWizard } from './AzureWizard';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
@@ -75,12 +76,12 @@ export class StorageAccountListStep<T extends IStorageAccountWizardContext> exte
         return !!(await storageClient.storageAccounts.checkNameAvailability(name)).nameAvailable;
     }
 
-    public async prompt(wizardContext: T, ui: IAzureUserInput): Promise<T> {
+    public async prompt(wizardContext: T): Promise<T> {
         if (!wizardContext.storageAccount && !wizardContext.newStorageAccountName) {
             const client: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
 
             const quickPickOptions: IAzureQuickPickOptions = { placeHolder: 'Select a storage account.', id: `StorageAccountListStep/${wizardContext.subscriptionId}` };
-            const result: StorageAccount | string | undefined = (await ui.showQuickPick(this.getQuickPicks(client.storageAccounts.list()), quickPickOptions)).data;
+            const result: StorageAccount | string | undefined = (await ext.ui.showQuickPick(this.getQuickPicks(client.storageAccounts.list()), quickPickOptions)).data;
             // If result is a string, that means the user selected the 'Learn more...' pick
             if (isString(result)) {
                 // tslint:disable-next-line:no-floating-promises
