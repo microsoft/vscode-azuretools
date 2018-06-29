@@ -3,16 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IAzureUserInput, IResourceGroupWizardContext } from '../../index';
+import { IResourceGroupWizardContext } from '../../index';
+import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 import { ResourceGroupListStep, resourceGroupNamingRules } from './ResourceGroupListStep';
 
 export class ResourceGroupNameStep<T extends IResourceGroupWizardContext> extends AzureWizardPromptStep<T> {
-    public async prompt(wizardContext: T, ui: IAzureUserInput): Promise<T> {
+    public async prompt(wizardContext: T): Promise<T> {
         if (!wizardContext.newResourceGroupName) {
             const suggestedName: string | undefined = wizardContext.relatedNameTask ? await wizardContext.relatedNameTask : undefined;
-            wizardContext.newResourceGroupName = (await ui.showInputBox({
+            wizardContext.newResourceGroupName = (await ext.ui.showInputBox({
                 value: suggestedName,
                 prompt: 'Enter the name of the new resource group.',
                 validateInput: async (value: string | undefined): Promise<string | undefined> => await this.validateResourceGroupName(wizardContext, value)

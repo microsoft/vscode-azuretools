@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { OutputChannel } from 'vscode';
-import { IActionContext, IAzureUserInput } from '../../index';
+import { IActionContext } from '../../index';
+import { ext } from '../extensionVariables';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 
@@ -21,7 +21,7 @@ export class AzureWizard<T> {
         this._wizardContext = wizardContext;
     }
 
-    public async prompt(actionContext: IActionContext, ui: IAzureUserInput): Promise<T> {
+    public async prompt(actionContext: IActionContext): Promise<T> {
         for (const step of this._promptSteps) {
             // We want to encourage the least number of prompts possible, so only prompt for a step that doesn't already exist in the parent
             if (this._parentWizard && this._parentWizard.containsStep(step)) {
@@ -29,28 +29,28 @@ export class AzureWizard<T> {
             }
 
             actionContext.properties.lastStepAttempted = `prompt-${step.constructor.name}`;
-            this._wizardContext = await step.prompt(this._wizardContext, ui);
+            this._wizardContext = await step.prompt(this._wizardContext);
 
             if (step.subWizard) {
                 step.subWizard._parentWizard = this;
                 this._subWizards.push(step.subWizard);
-                await step.subWizard.prompt(actionContext, ui);
+                await step.subWizard.prompt(actionContext);
             }
         }
 
         return this._wizardContext;
     }
 
-    public async execute(actionContext: IActionContext, outputChannel: OutputChannel): Promise<T> {
-        outputChannel.show(true);
+    public async execute(actionContext: IActionContext): Promise<T> {
+        ext.outputChannel.show(true);
 
         for (const subWizard of this._subWizards) {
-            await subWizard.execute(actionContext, outputChannel);
+            await subWizard.execute(actionContext);
         }
 
         for (const step of this._executeSteps) {
             actionContext.properties.lastStepAttempted = `execute-${step.constructor.name}`;
-            this._wizardContext = await step.execute(this._wizardContext, outputChannel);
+            this._wizardContext = await step.execute(this._wizardContext);
         }
 
         return this._wizardContext;

@@ -30,7 +30,7 @@ export declare class AzureTreeDataProvider implements TreeDataProvider<IAzureNod
      * @param telemetryReporter Optionally used to track telemetry for the tree
      * @param rootTreeItems Any nodes other than the subscriptions that should be shown at the root of the explorer
      */
-    constructor(resourceProvider: IChildProvider, loadMoreCommandId: string, ui: IAzureUserInput, telemetryReporter: TelemetryReporter | undefined, rootTreeItems?: IAzureParentTreeItem[]);
+    constructor(resourceProvider: IChildProvider, loadMoreCommandId: string, rootTreeItems?: IAzureParentTreeItem[]);
     public getTreeItem(node: IAzureNode): TreeItem;
     public getChildren(node?: IAzureParentNode): Promise<IAzureNode[]>;
     public refresh(node?: IAzureNode, clearCache?: boolean): Promise<void>;
@@ -58,7 +58,6 @@ export interface IAzureNode<T extends IAzureTreeItem = IAzureTreeItem> {
     readonly tenantId: string;
     readonly userId: string;
     readonly environment: AzureEnvironment;
-    readonly ui: IAzureUserInput;
 
     /**
      * Refresh this node in the tree
@@ -162,9 +161,8 @@ export declare abstract class BaseEditor<ContextT> implements Disposable {
     /**
     * Implement this interface if you need to download and upload remote files
     * @param showSavePromptKey Key used globally by VS Code to determine whether or not to show the savePrompt
-    * @param outputChannel OutputChannel where output will be displayed when editor performs actions
     */
-    constructor(showSavePromptKey: string, outputChannel?: OutputChannel | undefined);
+    constructor(showSavePromptKey: string);
 
     /**
      * Implement this to retrieve data from your remote server, returns the file as a string
@@ -197,20 +195,17 @@ export declare abstract class BaseEditor<ContextT> implements Disposable {
 }
 
 /**
- * Used to register VSCode commands and events. It wraps your callback with consistent error and telemetry handling
+ * Used to register VSCode commands. It wraps your callback with consistent error and telemetry handling
  */
-export declare class AzureActionHandler {
-    constructor(extensionContext: ExtensionContext, outputChannel: OutputChannel, telemetryReporter?: TelemetryReporter);
+export declare function registerCommand(commandId: string, callback: (this: IActionContext, ...args: any[]) => any): void;
 
-    registerCommand(commandId: string, callback: (this: IActionContext, ...args: any[]) => any): void;
+/**
+ * Used to register VSCode events. It wraps your callback with consistent error and telemetry handling
+ * NOTE: By default, this sends a telemetry event every single time the event fires. It it recommended to use 'this.suppressTelemetry' to only send events if they apply to your extension
+ */
+export declare function registerEvent<T>(eventId: string, event: Event<T>, callback: (this: IActionContext, ...args: any[]) => any): void;
 
-    /**
-     * NOTE: By default, this sends a telemetry event every single time the event fires. It it recommended to use 'this.suppressTelemetry' to only send events if they apply to your extension
-     */
-    registerEvent<T>(eventId: string, event: Event<T>, callback: (this: IActionContext, ...args: any[]) => any): void;
-}
-
-export declare function callWithTelemetryAndErrorHandling(callbackId: string, telemetryReporter: TelemetryReporter | undefined, outputChannel: OutputChannel | undefined, callback: (this: IActionContext) => any): Promise<any>;
+export declare function callWithTelemetryAndErrorHandling(callbackId: string, callback: (this: IActionContext) => any): Promise<any>;
 
 export interface IActionContext {
     properties: TelemetryProperties;
@@ -395,17 +390,17 @@ export declare class AzureWizard<T> {
      */
     public constructor(promptSteps: AzureWizardPromptStep<T>[], executeSteps: AzureWizardExecuteStep<T>[], wizardContext: T);
 
-    public prompt(actionContext: IActionContext, ui: IAzureUserInput): Promise<T>;
-    public execute(actionContext: IActionContext, outputChannel: OutputChannel): Promise<T>;
+    public prompt(actionContext: IActionContext): Promise<T>;
+    public execute(actionContext: IActionContext): Promise<T>;
 }
 
 export declare abstract class AzureWizardExecuteStep<T> {
-    public abstract execute(wizardContext: T, outputChannel: OutputChannel): Promise<T>;
+    public abstract execute(wizardContext: T): Promise<T>;
 }
 
 export declare abstract class AzureWizardPromptStep<T> {
     public subWizard?: AzureWizard<T>;
-    public abstract prompt(wizardContext: T, ui: IAzureUserInput): Promise<T>;
+    public abstract prompt(wizardContext: T): Promise<T>;
 }
 
 export interface ISubscriptionWizardContext {
@@ -443,7 +438,7 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
      */
     public static getLocations<T extends ILocationWizardContext>(wizardContext: T): Promise<Location[]>;
 
-    public prompt(wizardContext: T, ui: IAzureUserInput): Promise<T>;
+    public prompt(wizardContext: T): Promise<T>;
 }
 
 export interface IAzureNamingRules {
@@ -526,11 +521,11 @@ export declare class ResourceGroupListStep<T extends IResourceGroupWizardContext
      */
     public static isNameAvailable<T extends IResourceGroupWizardContext>(wizardContext: T, name: string): Promise<boolean>;
 
-    public prompt(wizardContext: T, ui: IAzureUserInput): Promise<T>;
+    public prompt(wizardContext: T): Promise<T>;
 }
 
 export declare class ResourceGroupCreateStep<T extends IResourceGroupWizardContext> extends AzureWizardExecuteStep<T> {
-    public execute(wizardContext: T, outputChannel: OutputChannel): Promise<T>;
+    public execute(wizardContext: T): Promise<T>;
 }
 
 export interface IStorageAccountWizardContext extends IResourceGroupWizardContext {
@@ -601,7 +596,7 @@ export declare class StorageAccountListStep<T extends IStorageAccountWizardConte
 
     public static isNameAvailable<T extends IStorageAccountWizardContext>(wizardContext: T, name: string): Promise<boolean>;
 
-    public prompt(wizardContext: T, ui: IAzureUserInput): Promise<T>;
+    public prompt(wizardContext: T): Promise<T>;
 }
 
 /**
@@ -619,4 +614,19 @@ export declare namespace DialogResponses {
     export const alwaysUpload: MessageItem;
     export const dontUpload: MessageItem;
     export const reportAnIssue: MessageItem;
+}
+
+/**
+ * Call this to register common variables used throughout the UI package.
+ */
+export declare function registerUIExtensionVariables(extVars: UIExtensionVariables): void;
+
+/**
+ * Interface for common extension variables used throughout the UI package.
+ */
+export interface UIExtensionVariables {
+    context: ExtensionContext;
+    outputChannel: OutputChannel;
+    ui: IAzureUserInput;
+    reporter: TelemetryReporter | undefined;
 }

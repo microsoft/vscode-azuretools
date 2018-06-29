@@ -6,6 +6,7 @@
 import { EventEmitter } from 'vscode';
 import { IAzureNode, IAzureParentTreeItem, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureTreeItem } from '../../index';
 import { NotImplementedError } from '../errors';
+import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { AzureNode, IAzureParentNodeInternal } from './AzureNode';
 import { CreatingTreeItem } from './CreatingTreeItem';
@@ -110,7 +111,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
         const options: IAzureQuickPickOptions = {
             placeHolder: localize('selectNode', 'Select a {0}', this.treeItem.childTypeLabel)
         };
-        const getNode: GetNodeFunction = (await this.ui.showQuickPick(this.getQuickPicks(expectedContextValues), options)).data;
+        const getNode: GetNodeFunction = (await ext.ui.showQuickPick(this.getQuickPicks(expectedContextValues), options)).data;
         return await getNode();
     }
 

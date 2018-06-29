@@ -5,7 +5,8 @@
 
 import { ResourceManagementClient } from 'azure-arm-resource';
 import { ResourceGroup } from 'azure-arm-resource/lib/resource/models';
-import { IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, IResourceGroupWizardContext } from '../../index';
+import { IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IResourceGroupWizardContext } from '../../index';
+import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { uiUtils } from '../utils/uiUtils';
 import { AzureWizard } from './AzureWizard';
@@ -35,11 +36,11 @@ export class ResourceGroupListStep<T extends IResourceGroupWizardContext> extend
         return !(await resourceGroupsTask).some((rg: ResourceGroup) => rg.name !== undefined && rg.name.toLowerCase() === name.toLowerCase());
     }
 
-    public async prompt(wizardContext: T, ui: IAzureUserInput): Promise<T> {
+    public async prompt(wizardContext: T): Promise<T> {
         if (!wizardContext.resourceGroup && !wizardContext.newResourceGroupName) {
             // Cache resource group separately per subscription
             const options: IAzureQuickPickOptions = { placeHolder: 'Select a resource group for new resources.', id: `ResourceGroupListStep/${wizardContext.subscriptionId}` };
-            wizardContext.resourceGroup = (await ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
+            wizardContext.resourceGroup = (await ext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
 
             if (!wizardContext.resourceGroup) {
                 this.subWizard = new AzureWizard(
