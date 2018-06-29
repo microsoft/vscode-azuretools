@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzureWizardPromptStep, IAzureQuickPickItem } from 'vscode-azureextensionui';
-import { IAzureUserInput } from 'vscode-azureextensionui';
+import { ext } from '../extensionVariables';
 import { WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
@@ -14,7 +14,7 @@ interface ILinuxRuntimeStack {
 }
 
 export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
-    public async prompt(wizardContext: IAppServiceWizardContext, ui: IAzureUserInput): Promise<IAppServiceWizardContext> {
+    public async prompt(wizardContext: IAppServiceWizardContext): Promise<IAppServiceWizardContext> {
         if (!wizardContext.newSiteRuntime && wizardContext.newSiteOS === WebsiteOS.linux) {
             const runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[] = this.getLinuxRuntimeStack().map((rt: ILinuxRuntimeStack) => {
                 return {
@@ -25,7 +25,7 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                 };
             });
 
-            wizardContext.newSiteRuntime = (await ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new Linux app.' })).data.name;
+            wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new Linux app.' })).data.name;
         }
 
         return wizardContext;

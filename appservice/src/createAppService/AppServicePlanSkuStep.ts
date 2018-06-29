@@ -4,13 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { SkuDescription } from 'azure-arm-website/lib/models';
-import { AzureWizardPromptStep, IAzureUserInput } from 'vscode-azureextensionui';
+import { AzureWizardPromptStep } from 'vscode-azureextensionui';
 import { IAzureQuickPickItem } from 'vscode-azureextensionui';
+import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
-    public async prompt(wizardContext: IAppServiceWizardContext, ui: IAzureUserInput): Promise<IAppServiceWizardContext> {
+    public async prompt(wizardContext: IAppServiceWizardContext): Promise<IAppServiceWizardContext> {
         if (!wizardContext.newPlanSku) {
             const pricingTiers: IAzureQuickPickItem<SkuDescription>[] = this.getPlanSkus().map((s: SkuDescription) => {
                 return {
@@ -20,7 +21,7 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
                 };
             });
 
-            wizardContext.newPlanSku = (await ui.showQuickPick(pricingTiers, { placeHolder: localize('PricingTierPlaceholder', 'Select a pricing tier for the new App Service plan.') })).data;
+            wizardContext.newPlanSku = (await ext.ui.showQuickPick(pricingTiers, { placeHolder: localize('PricingTierPlaceholder', 'Select a pricing tier for the new App Service plan.') })).data;
         }
 
         return wizardContext;

@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as vscode from 'vscode';
 import KuduClient from 'vscode-azurekudu';
 import { DeployResult, LogEntry } from 'vscode-azurekudu/lib/models';
+import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { formatDeployLog } from './formatDeployLog';
 
-export async function waitForDeploymentToComplete(client: SiteClient, kuduClient: KuduClient, outputChannel: vscode.OutputChannel, pollingInterval: number = 5000): Promise<void> {
+export async function waitForDeploymentToComplete(client: SiteClient, kuduClient: KuduClient, pollingInterval: number = 5000): Promise<void> {
     const alreadyDisplayedLogs: string[] = [];
     let nextTimeToDisplayWaitingLog: number = Date.now();
     let permanentId: string | undefined;
@@ -40,7 +40,7 @@ export async function waitForDeploymentToComplete(client: SiteClient, kuduClient
         const newLogEntries: LogEntry[] = logEntries.filter((newEntry: LogEntry) => !alreadyDisplayedLogs.some((oldId: string) => newEntry.id === oldId));
         if (newLogEntries.length === 0) {
             if (Date.now() > nextTimeToDisplayWaitingLog) {
-                outputChannel.appendLine(formatDeployLog(client, localize('waitingForComand', 'Waiting for long running command to finish...')));
+                ext.outputChannel.appendLine(formatDeployLog(client, localize('waitingForComand', 'Waiting for long running command to finish...')));
                 nextTimeToDisplayWaitingLog = Date.now() + 60 * 1000;
             }
         } else {
@@ -48,14 +48,14 @@ export async function waitForDeploymentToComplete(client: SiteClient, kuduClient
                 if (newEntry.id) {
                     alreadyDisplayedLogs.push(newEntry.id);
                     if (newEntry.message) {
-                        outputChannel.appendLine(formatDeployLog(client, newEntry.message, newEntry.logTime));
+                        ext.outputChannel.appendLine(formatDeployLog(client, newEntry.message, newEntry.logTime));
                     }
 
                     if (newEntry.detailsUrl) {
                         const entryDetails: LogEntry[] = await kuduClient.deployment.getLogEntryDetails(deployment.id, newEntry.id);
                         for (const entryDetail of entryDetails) {
                             if (entryDetail.message) {
-                                outputChannel.appendLine(formatDeployLog(client, entryDetail.message, entryDetail.logTime));
+                                ext.outputChannel.appendLine(formatDeployLog(client, entryDetail.message, entryDetail.logTime));
                             }
                         }
                     }

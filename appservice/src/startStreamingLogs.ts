@@ -9,7 +9,6 @@ import { setInterval } from 'timers';
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling, IActionContext, parseError } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
-import TelemetryReporter from 'vscode-extension-telemetry';
 import { getKuduClient } from './getKuduClient';
 import { localize } from './localize';
 import { pingFunctionApp } from './pingFunctionApp';
@@ -23,7 +22,7 @@ export interface ILogStream extends vscode.Disposable {
 /**
  * Starts the log-streaming service. Call 'dispose()' on the returned object when you want to stop the service.
  */
-export async function startStreamingLogs(client: SiteClient, reporter: TelemetryReporter | undefined, outputChannel: vscode.OutputChannel, path: string = ''): Promise<ILogStream> {
+export async function startStreamingLogs(client: SiteClient, outputChannel: vscode.OutputChannel, path: string = ''): Promise<ILogStream> {
     const kuduClient: KuduClient = await getKuduClient(client);
 
     outputChannel.show();
@@ -35,7 +34,7 @@ export async function startStreamingLogs(client: SiteClient, reporter: Telemetry
     return await new Promise((onLogStreamCreated: (logStream: ILogStream) => void): void => {
         // Intentionally setting up a separate telemetry event and not awaiting the result here since log stream is a long-running action
         // tslint:disable-next-line:no-floating-promises
-        callWithTelemetryAndErrorHandling('appService.streamingLogs', reporter, undefined, async function (this: IActionContext): Promise<void> {
+        callWithTelemetryAndErrorHandling('appService.streamingLogs', async function (this: IActionContext): Promise<void> {
             this.suppressErrorDisplay = true;
             let timerId: NodeJS.Timer | undefined;
             if (client.isFunctionApp) {

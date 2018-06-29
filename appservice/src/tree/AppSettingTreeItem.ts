@@ -5,6 +5,7 @@
 
 import * as path from 'path';
 import { DialogResponses, IAzureNode, IAzureTreeItem } from 'vscode-azureextensionui';
+import { ext } from '../extensionVariables';
 import { AppSettingsTreeItem } from './AppSettingsTreeItem';
 
 export class AppSettingTreeItem implements IAzureTreeItem {
@@ -35,7 +36,7 @@ export class AppSettingTreeItem implements IAzureTreeItem {
     }
 
     public async edit(node: IAzureNode): Promise<void> {
-        const newValue: string = await node.ui.showInputBox({
+        const newValue: string = await ext.ui.showInputBox({
             prompt: `Enter setting value for "${this.key}"`,
             value: this.value
         });
@@ -47,7 +48,7 @@ export class AppSettingTreeItem implements IAzureTreeItem {
 
     public async rename(node: IAzureNode): Promise<void> {
         const oldKey: string = this.key;
-        const newKey: string = await node.ui.showInputBox({
+        const newKey: string = await ext.ui.showInputBox({
             prompt: `Enter a new name for "${oldKey}"`,
             value: this.key,
             validateInput: (v?: string): string | undefined => (<AppSettingsTreeItem>node.parent.treeItem).validateNewKeyInput(v, oldKey)
@@ -59,7 +60,7 @@ export class AppSettingTreeItem implements IAzureTreeItem {
     }
 
     public async deleteTreeItem(node: IAzureNode): Promise<void> {
-        await node.ui.showWarningMessage(`Are you sure you want to delete setting "${this.key}"?`, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
+        await ext.ui.showWarningMessage(`Are you sure you want to delete setting "${this.key}"?`, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         await (<AppSettingsTreeItem>node.parent.treeItem).deleteSettingItem(this.key);
     }
 }

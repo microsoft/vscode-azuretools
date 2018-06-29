@@ -10,6 +10,7 @@ import { Response } from 'request';
 import * as request from 'request-promise';
 import * as vscode from 'vscode';
 import { IAzureNode, IAzureQuickPickItem, IParsedError, parseError, UserCancelledError } from 'vscode-azureextensionui';
+import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { signRequest } from './signRequest';
 import { SiteClient } from './SiteClient';
@@ -20,7 +21,7 @@ type gitHubLink = { prev?: string, next?: string, last?: string, first?: string 
 // tslint:disable-next-line:no-reserved-keywords
 type gitHubWebResource = WebResource & { resolveWithFullResponse?: boolean, nextLink?: string, lastLink?: string, type?: string };
 
-export async function connectToGitHub(node: IAzureNode, client: SiteClient, outputChannel: vscode.OutputChannel): Promise<void> {
+export async function connectToGitHub(node: IAzureNode, client: SiteClient): Promise<void> {
     const requestOptions: gitHubWebResource = new WebResource();
     let repoSelected: boolean = false;
     requestOptions.resolveWithFullResponse = true;
@@ -40,7 +41,7 @@ export async function connectToGitHub(node: IAzureNode, client: SiteClient, outp
     requestOptions.url = 'https://api.github.com/user/orgs';
     const gitHubOrgs: Object[] = await getJsonRequest(requestOptions, node);
     const orgQuickPicks: IAzureQuickPickItem<{}>[] = createQuickPickFromJsons([gitHubUser], 'login', undefined, ['repos_url']).concat(createQuickPickFromJsons(gitHubOrgs, 'login', undefined, ['repos_url']));
-    const orgQuickPick: gitHubOrgData = (await node.ui.showQuickPick(orgQuickPicks, { placeHolder: 'Choose your organization.' })).data;
+    const orgQuickPick: gitHubOrgData = (await ext.ui.showQuickPick(orgQuickPicks, { placeHolder: 'Choose your organization.' })).data;
     let repoQuickPick: gitHubReposData;
     requestOptions.url = orgQuickPick.repos_url;
     const gitHubRepos: Object[] = await getJsonRequest(requestOptions, node);
@@ -57,7 +58,7 @@ export async function connectToGitHub(node: IAzureNode, client: SiteClient, outp
                 suppressPersistence: true
             });
         }
-        repoQuickPick = (await node.ui.showQuickPick(repoQuickPicks, { placeHolder: 'Choose project.' })).data;
+        repoQuickPick = (await ext.ui.showQuickPick(repoQuickPicks, { placeHolder: 'Choose project.' })).data;
 
         if (repoQuickPick.url === requestOptions.nextLink) {
             requestOptions.url = requestOptions.nextLink;
@@ -73,7 +74,7 @@ export async function connectToGitHub(node: IAzureNode, client: SiteClient, outp
     requestOptions.url = `${repoQuickPick.url}/branches`;
     const gitHubBranches: Object[] = await getJsonRequest(requestOptions, node);
     const branchQuickPicks: IAzureQuickPickItem<{}>[] = createQuickPickFromJsons(gitHubBranches, 'name');
-    const branchQuickPick: IAzureQuickPickItem<{}> = await node.ui.showQuickPick(branchQuickPicks, { placeHolder: 'Choose branch.' });
+    const branchQuickPick: IAzureQuickPickItem<{}> = await ext.ui.showQuickPick(branchQuickPicks, { placeHolder: 'Choose branch.' });
 
     const siteSourceControl: SiteSourceControl = {
         location: client.location,
@@ -84,8 +85,8 @@ export async function connectToGitHub(node: IAzureNode, client: SiteClient, outp
         isMercurial: false
     };
 
-    outputChannel.show(true);
-    outputChannel.appendLine(`"${client.fullName}" is being connected to the GitHub repo. This may take several minutes...`);
+    ext.outputChannel.show(true);
+    ext.outputChannel.appendLine(`"${client.fullName}" is being connected to the GitHub repo. This may take several minutes...`);
     try {
         await client.updateSourceControl(siteSourceControl);
     } catch (err) {

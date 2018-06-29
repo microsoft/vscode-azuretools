@@ -4,33 +4,33 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { SiteConfigResource } from 'azure-arm-website/lib/models';
-import * as vscode from 'vscode';
-import { IAzureNode, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, UserCancelledError } from 'vscode-azureextensionui';
+import { IAzureNode, IAzureQuickPickItem, IAzureQuickPickOptions, UserCancelledError } from 'vscode-azureextensionui';
 import { connectToGitHub } from './connectToGitHub';
+import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { ScmType } from './ScmType';
 import { SiteClient } from './SiteClient';
 
-export async function editScmType(client: SiteClient, node: IAzureNode, outputChannel: vscode.OutputChannel): Promise<string | undefined> {
+export async function editScmType(client: SiteClient, node: IAzureNode): Promise<string | undefined> {
     const config: SiteConfigResource = await client.getSiteConfig();
-    const newScmType: string = await showScmPrompt(node.ui, config.scmType);
+    const newScmType: string = await showScmPrompt(config.scmType);
     if (newScmType === ScmType.GitHub) {
         if (config.scmType !== ScmType.None) {
             // GitHub cannot be configured if there is an existing configuration source-- a limitation of Azure
             throw new Error(localize('configurationError', 'Configuration type must be set to "None" to connect to a GitHub repository.'));
         }
-        await connectToGitHub(node, client, outputChannel);
+        await connectToGitHub(node, client);
     } else {
         config.scmType = newScmType;
         // to update one property, a complete config file must be sent
         await client.updateConfiguration(config);
     }
-    outputChannel.appendLine(localize('deploymentSourceUpdated,', 'Deployment source has been updated to "{0}".', newScmType));
+    ext.outputChannel.appendLine(localize('deploymentSourceUpdated,', 'Deployment source has been updated to "{0}".', newScmType));
     // returns the updated scmType
     return newScmType;
 }
 
-async function showScmPrompt(ui: IAzureUserInput, currentScmType: string): Promise<string> {
+async function showScmPrompt(currentScmType: string): Promise<string> {
     const currentSource: string = localize('currentSource', '(Current source)');
     const scmQuickPicks: IAzureQuickPickItem<string | undefined>[] = [];
     // generate quickPicks to not include current type
@@ -47,7 +47,7 @@ async function showScmPrompt(ui: IAzureUserInput, currentScmType: string): Promi
         placeHolder: localize('scmPrompt', 'Select a new source.'),
         suppressPersistence: true
     };
-    const newScmType: string | undefined = (await ui.showQuickPick(scmQuickPicks, options)).data;
+    const newScmType: string | undefined = (await ext.ui.showQuickPick(scmQuickPicks, options)).data;
     if (newScmType === undefined) {
         // if the user clicks the current source, treat it as a cancel
         throw new UserCancelledError();
