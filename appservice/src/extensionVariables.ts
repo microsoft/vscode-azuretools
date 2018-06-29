@@ -32,6 +32,9 @@ class UninitializedExtensionVariables implements IAppServiceExtensionVariables {
  */
 export let ext: IAppServiceExtensionVariables = new UninitializedExtensionVariables();
 
+/**
+ * Call this to register common variables used throughout the AppService package.
+ */
 export function registerAppServiceExtensionVariables(extVars: IAppServiceExtensionVariables): void {
     ext = extVars;
 }
