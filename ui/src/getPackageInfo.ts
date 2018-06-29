@@ -9,6 +9,7 @@ import { ext } from "./extensionVariables";
 
 export function getPackageInfo(): [string, string] {
     let packageJson: IPackageJson | undefined;
+    // tslint:disable-next-line:no-floating-promises
     callWithTelemetryAndErrorHandling('azureTools.getPackageInfo', function (this: IActionContext): void {
         this.suppressErrorDisplay = true;
         this.suppressTelemetry = true; // only report errors
