@@ -169,6 +169,4 @@ export class SiteClient {
     public async listSourceControls(): Promise<SourceControlCollection> {
         return await this._client.listSourceControls();
     }
-
-
 }
