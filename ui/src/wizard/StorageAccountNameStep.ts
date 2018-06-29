@@ -7,6 +7,7 @@
 import StorageManagementClient = require('azure-arm-storage');
 import { CheckNameAvailabilityResult } from 'azure-arm-storage/lib/models';
 import { IStorageAccountWizardContext } from '../../index';
+import { addExtensionUserAgentInfo } from '../addExtensionUserAgentInfo';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { AzureNameStep } from './AzureNameStep';
@@ -17,6 +18,7 @@ export class StorageAccountNameStep<T extends IStorageAccountWizardContext> exte
     public async prompt(wizardContext: T): Promise<T> {
         if (!wizardContext.newStorageAccountName) {
             const client: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
+            addExtensionUserAgentInfo(client);
 
             const suggestedName: string | undefined = wizardContext.relatedNameTask ? await wizardContext.relatedNameTask : undefined;
             wizardContext.newStorageAccountName = (await ext.ui.showInputBox({

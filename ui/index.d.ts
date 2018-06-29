@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Location } from 'azure-arm-resource/lib/subscription/models';
-import { ServiceClientCredentials } from 'ms-rest';
+import { ServiceClientCredentials, ServiceClient } from 'ms-rest';
 import { AzureEnvironment } from 'ms-rest-azure';
 import { Uri, TreeDataProvider, Disposable, TreeItem, Event, OutputChannel, Memento, InputBoxOptions, QuickPickItem, QuickPickOptions, TextDocument, ExtensionContext, MessageItem, OpenDialogOptions, MessageOptions } from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
@@ -630,3 +630,8 @@ export interface UIExtensionVariables {
     ui: IAzureUserInput;
     reporter: TelemetryReporter | undefined;
 }
+
+/**
+ * Adds a user agent specific to the VS Code extension, of the form `${extensionName}/${extensionVersion}`
+ */
+export declare function addExtensionUserAgentInfo(client: ServiceClient): void;
