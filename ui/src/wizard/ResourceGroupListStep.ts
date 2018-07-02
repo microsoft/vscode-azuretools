@@ -6,7 +6,7 @@
 import { ResourceManagementClient } from 'azure-arm-resource';
 import { ResourceGroup } from 'azure-arm-resource/lib/resource/models';
 import { IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IResourceGroupWizardContext } from '../../index';
-import { addExtensionUserAgent } from '../addExtensionUserAgent';
+import { addExtensionUserAgent } from '../extensionUserAgent';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { uiUtils } from '../utils/uiUtils';

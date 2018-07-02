@@ -7,7 +7,7 @@ import { SubscriptionClient } from 'azure-arm-resource';
 import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { QuickPickOptions } from 'vscode';
 import { IAzureQuickPickItem, ILocationWizardContext } from '../../index';
-import { addExtensionUserAgent } from '../addExtensionUserAgent';
+import { addExtensionUserAgent } from '../extensionUserAgent';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';

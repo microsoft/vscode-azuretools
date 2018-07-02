@@ -21,4 +21,4 @@ export * from './wizard/ResourceGroupCreateStep';
 export * from './wizard/ResourceGroupListStep';
 export * from './wizard/StorageAccountListStep';
 export { registerUIExtensionVariables } from './extensionVariables';
-export * from './addExtensionUserAgent';
+export * from './extensionUserAgent';

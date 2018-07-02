@@ -7,7 +7,7 @@
 import StorageManagementClient = require('azure-arm-storage');
 import { CheckNameAvailabilityResult } from 'azure-arm-storage/lib/models';
 import { IStorageAccountWizardContext } from '../../index';
-import { addExtensionUserAgent } from '../addExtensionUserAgent';
+import { addExtensionUserAgent } from '../extensionUserAgent';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { AzureNameStep } from './AzureNameStep';
