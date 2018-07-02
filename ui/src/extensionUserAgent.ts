@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ServiceClient } from "ms-rest";
+import { IAddUserAgent } from "../index";
 import { getPackageInfo } from "./getPackageInfo";
 
 /**
  * Adds a user agent specific to the VS Code extension, of the form `${extensionName}/${extensionVersion}`
  */
-export function addExtensionUserAgent(client: ServiceClient): void {
+export function addExtensionUserAgent(client: IAddUserAgent): void {
     client.addUserAgentInfo(getExtensionUserAgent());
 }
 
