@@ -84,9 +84,6 @@ export async function connectToGitHub(node: IAzureNode, client: SiteClient): Pro
         deploymentRollbackEnabled: true,
         isMercurial: false
     };
-
-    ext.outputChannel.show(true);
-    ext.outputChannel.appendLine(`"${client.fullName}" is being connected to the GitHub repo. This may take several minutes...`);
     try {
         const connectingToGithub: string = localize('ConnectingToGithub', '"{0}" is being connected to the GitHub repo. This may take several minutes...', client.fullName);
         const connectedToGithub: string = localize('ConnectedToGithub', '"{0}" has been connected to the GitHub repo.', client.fullName);
