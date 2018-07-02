@@ -14,7 +14,8 @@
                 "--colors",
                 "${workspaceFolder}/out/test/**/*.js"
             ],
-            "internalConsoleOptions": "openOnSessionStart"
+            "internalConsoleOptions": "openOnSessionStart",
+            "preLaunchTask": "npm"
         }
     ]
 }
