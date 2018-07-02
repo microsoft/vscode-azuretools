@@ -17,7 +17,7 @@ export async function waitForDeploymentToComplete(client: SiteClient, kuduClient
     let initialReceivedTime: Date | undefined;
     let deployment: DeployResult | undefined;
 
-        // tslint:disable-next-line:no-constant-condition
+    // tslint:disable-next-line:no-constant-condition
     while (true) {
         [deployment, permanentId, initialReceivedTime] = await getLatestDeployment(kuduClient, permanentId, initialReceivedTime);
 
