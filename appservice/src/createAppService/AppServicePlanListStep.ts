@@ -6,8 +6,9 @@
 // tslint:disable-next-line:no-require-imports
 import WebSiteManagementClient = require('azure-arm-website');
 import { AppServicePlan } from 'azure-arm-website/lib/models';
-import { AzureWizard, AzureWizardPromptStep, IAzureQuickPickOptions, IAzureUserInput, LocationListStep } from 'vscode-azureextensionui';
+import { AzureWizard, AzureWizardPromptStep, IAzureQuickPickOptions, LocationListStep } from 'vscode-azureextensionui';
 import { IAzureQuickPickItem } from 'vscode-azureextensionui';
+import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { uiUtils } from '../utils/uiUtils';
 import { getWebsiteOSDisplayName, WebsiteOS } from './AppKind';
@@ -34,11 +35,11 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
         );
     }
 
-    public async prompt(wizardContext: IAppServiceWizardContext, ui: IAzureUserInput): Promise<IAppServiceWizardContext> {
+    public async prompt(wizardContext: IAppServiceWizardContext): Promise<IAppServiceWizardContext> {
         if (!wizardContext.plan && !wizardContext.newPlanName) {
             // Cache hosting plan separately per subscription
             const options: IAzureQuickPickOptions = { placeHolder: localize('selectPlan', 'Select a {0} App Service plan.', getWebsiteOSDisplayName(wizardContext.newSiteOS)), id: `AppServicePlanListStep/${wizardContext.subscriptionId}` };
-            wizardContext.plan = (await ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
+            wizardContext.plan = (await ext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
 
             if (wizardContext.plan) {
                 await LocationListStep.setLocation(wizardContext, wizardContext.plan.location);

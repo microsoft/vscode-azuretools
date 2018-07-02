@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AppServicePlan, SiteConfigResource } from 'azure-arm-website/lib/models';
-import * as vscode from 'vscode';
-import { IAzureUserInput, TelemetryProperties } from 'vscode-azureextensionui';
+import { ProgressLocation, window } from 'vscode'
+import { TelemetryProperties } from 'vscode-azureextensionui';
+import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { ScmType } from '../ScmType';
 import { SiteClient } from '../SiteClient';
@@ -14,7 +15,7 @@ import { deployWar } from './deployWar';
 import { deployZip } from './deployZip';
 import { localGitDeploy } from './localGitDeploy';
 
-export async function deploy(client: SiteClient, fsPath: string, outputChannel: vscode.OutputChannel, ui: IAzureUserInput, configurationSectionName: string, confirmDeployment: boolean = true, telemetryProperties?: TelemetryProperties): Promise<void> {
+export async function deploy(client: SiteClient, fsPath: string, configurationSectionName: string, confirmDeployment: boolean = true, telemetryProperties?: TelemetryProperties): Promise<void> {
     const config: SiteConfigResource = await client.getSiteConfig();
     if (telemetryProperties) {
         try {
@@ -51,19 +52,19 @@ export async function deploy(client: SiteClient, fsPath: string, outputChannel: 
             // Ignore
         }
     }
-    await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: localize('deploying', 'Deploying to "{0}"... Check output window for status.', client.fullName)}, async (): Promise<void> => {
+    await window.withProgress({ location: ProgressLocation.Notification, title: localize('deploying', 'Deploying to "{0}"... Check output window for status.', client.fullName)}, async (): Promise<void> => {
         switch (config.scmType) {
             case ScmType.LocalGit:
-                await localGitDeploy(client, fsPath, outputChannel, ui);
+                await localGitDeploy(client, fsPath);
                 break;
             case ScmType.GitHub:
                 throw new Error(localize('gitHubConnected', '"{0}" is connected to a GitHub repository. Push to GitHub repository to deploy.', client.fullName));
             default: //'None' or any other non-supported scmType
                 if (config.linuxFxVersion && config.linuxFxVersion.toLowerCase().startsWith('tomcat')) {
-                    await deployWar(client, fsPath, outputChannel, ui, confirmDeployment, telemetryProperties);
+                    await deployWar(client, fsPath, confirmDeployment, telemetryProperties);
                     break;
                 }
-                await deployZip(client, fsPath, outputChannel, ui, configurationSectionName, confirmDeployment, telemetryProperties);
+                await deployZip(client, fsPath, configurationSectionName, confirmDeployment, telemetryProperties);
                 break;
         }
 
@@ -71,8 +72,8 @@ export async function deploy(client: SiteClient, fsPath: string, outputChannel: 
         const deployComplete : string = displayUrl ?
             localize('deployCompleteWithUrl', 'Deployment to "{0}" completed: {1}', client.fullName, `https://${displayUrl}`) :
             localize('deployComplete', 'Deployment to "{0}" completed.', client.fullName);
-        vscode.window.showInformationMessage(deployComplete);
-        outputChannel.appendLine(deployComplete);
-        outputChannel.appendLine('');
+        window.showInformationMessage(deployComplete);
+        ext.outputChannel.appendLine(deployComplete);
+        ext.outputChannel.appendLine('');
     });
 }

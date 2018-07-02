@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzureWizardPromptStep, IAzureQuickPickItem } from 'vscode-azureextensionui';
-import { IAzureUserInput } from 'vscode-azureextensionui';
+import { ext } from '../extensionVariables';
 import { WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
@@ -14,7 +14,7 @@ interface ILinuxRuntimeStack {
 }
 
 export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
-    public async prompt(wizardContext: IAppServiceWizardContext, ui: IAzureUserInput): Promise<IAppServiceWizardContext> {
+    public async prompt(wizardContext: IAppServiceWizardContext): Promise<IAppServiceWizardContext> {
         if (!wizardContext.newSiteRuntime && wizardContext.newSiteOS === WebsiteOS.linux) {
             const runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[] = this.getLinuxRuntimeStack().map((rt: ILinuxRuntimeStack) => {
                 return {
@@ -25,7 +25,7 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                 };
             });
 
-            wizardContext.newSiteRuntime = (await ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new Linux app.' })).data.name;
+            wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new Linux app.' })).data.name;
         }
 
         return wizardContext;
@@ -33,6 +33,10 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
 
     private getLinuxRuntimeStack(): ILinuxRuntimeStack[] {
         return [
+            {
+                name: 'node|8.9',
+                displayName: 'Node.js 8.9 (LTS - Recommended for new apps)'
+            },
             {
                 name: 'node|4.4',
                 displayName: 'Node.js 4.4'
@@ -76,10 +80,6 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
             {
                 name: 'node|8.8',
                 displayName: 'Node.js 8.8'
-            },
-            {
-                name: 'node|8.9',
-                displayName: 'Node.js 8.9 (LTS - Recommended for new apps)'
             },
             {
                 name: 'node|9.4',

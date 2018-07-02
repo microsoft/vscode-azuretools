@@ -17,3 +17,4 @@ export * from './startStreamingLogs';
 export * from './tree/AppSettingsTreeItem';
 export * from './tree/AppSettingTreeItem';
 export * from './TunnelProxy';
+export { registerAppServiceExtensionVariables } from './extensionVariables';

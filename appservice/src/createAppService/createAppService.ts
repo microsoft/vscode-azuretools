@@ -5,8 +5,8 @@
 
 import { Site, SkuDescription } from 'azure-arm-website/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
-import { OutputChannel, workspace } from 'vscode';
-import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureUserInput, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountListStep, StorageAccountPerformance, StorageAccountReplication } from 'vscode-azureextensionui';
+import { workspace } from 'vscode';
+import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountListStep, StorageAccountPerformance, StorageAccountReplication } from 'vscode-azureextensionui';
 import { AppKind, WebsiteOS } from './AppKind';
 import { AppServicePlanCreateStep } from './AppServicePlanCreateStep';
 import { AppServicePlanListStep } from './AppServicePlanListStep';
@@ -20,8 +20,6 @@ import { SiteRuntimeStep } from './SiteRuntimeStep';
 export async function createAppService(
     appKind: AppKind,
     websiteOS: WebsiteOS | undefined,
-    outputChannel: OutputChannel,
-    ui: IAzureUserInput,
     actionContext: IActionContext,
     credentials: ServiceClientCredentials,
     subscriptionId: string,
@@ -81,7 +79,7 @@ export async function createAppService(
                 }
                 promptSteps.push(new LocationListStep());
                 promptSteps.push(new SiteOSStep()); // will be skipped if there is a smart default
-                promptSteps.push(new SiteRuntimeStep()); // will be skipped if there is a smart default
+                promptSteps.push(new SiteRuntimeStep());
                 executeSteps.push(new ResourceGroupCreateStep());
                 executeSteps.push(new AppServicePlanCreateStep());
             }
@@ -93,7 +91,7 @@ export async function createAppService(
     // Ideally actionContext should always be defined, but there's a bug with the NodePicker. Create a 'fake' actionContext until that bug is fixed
     // https://github.com/Microsoft/vscode-azuretools/issues/120
     actionContext = actionContext || <IActionContext>{ properties: {}, measurements: {} };
-    wizardContext = await wizard.prompt(actionContext, ui);
+    wizardContext = await wizard.prompt(actionContext);
     if (showCreatingNode) {
         showCreatingNode(wizardContext.newSiteName);
     }
@@ -105,7 +103,7 @@ export async function createAppService(
         // Free tier is only available for Windows
         wizardContext.newPlanSku = wizardContext.newSiteOS === WebsiteOS.windows ? freePlanSku : basicPlanSku;
     }
-    wizardContext = await wizard.execute(actionContext, outputChannel);
+    wizardContext = await wizard.execute(actionContext);
 
     return wizardContext.site;
 }

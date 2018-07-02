@@ -3,7 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureWizardPromptStep, IAzureNamingRules, IAzureUserInput } from 'vscode-azureextensionui';
+import { AzureWizardPromptStep, IAzureNamingRules } from 'vscode-azureextensionui';
+import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { AppServicePlanListStep } from './AppServicePlanListStep';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
@@ -15,9 +16,9 @@ export const appServicePlanNamingRules: IAzureNamingRules = {
 };
 
 export class AppServicePlanNameStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
-    public async prompt(wizardContext: IAppServiceWizardContext, ui: IAzureUserInput): Promise<IAppServiceWizardContext> {
+    public async prompt(wizardContext: IAppServiceWizardContext): Promise<IAppServiceWizardContext> {
         if (!wizardContext.newPlanName) {
-            wizardContext.newPlanName = (await ui.showInputBox({
+            wizardContext.newPlanName = (await ext.ui.showInputBox({
                 value: await wizardContext.relatedNameTask,
                 prompt: localize('AppServicePlanPrompt', 'Enter the name of the new App Service plan.'),
                 validateInput: async (value: string): Promise<string | undefined> => await this.validatePlanName(wizardContext, value)

@@ -6,15 +6,15 @@
 // tslint:disable-next-line:no-require-imports
 import WebSiteManagementClient = require('azure-arm-website');
 import { SkuDescription } from 'azure-arm-website/lib/models';
-import { OutputChannel } from 'vscode';
 import { ProgressLocation, window } from 'vscode';
 import { AzureWizardExecuteStep } from 'vscode-azureextensionui';
+import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { getAppServicePlanModelKind, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
-    public async execute(wizardContext: IAppServiceWizardContext, outputChannel: OutputChannel): Promise<IAppServiceWizardContext> {
+    public async execute(wizardContext: IAppServiceWizardContext): Promise<IAppServiceWizardContext> {
         if (!wizardContext.plan) {
             // tslint:disable-next-line:no-non-null-assertion
             const newPlanName: string = wizardContext.newPlanName!;
@@ -23,7 +23,7 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
             const findingAppServicePlan: string = localize('FindingAppServicePlan', 'Ensuring App Service plan "{0}" with pricing tier "{1}" exists...', newPlanName, newSku.name);
             const foundAppServicePlan: string = localize('FoundAppServicePlan', 'Successfully found App Service plan "{0}".', newPlanName);
             await window.withProgress({ location: ProgressLocation.Notification, title: findingAppServicePlan}, async (): Promise<void> => {
-                outputChannel.appendLine(findingAppServicePlan);
+                ext.outputChannel.appendLine(findingAppServicePlan);
                 const websiteClient: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
                 wizardContext.plan = await websiteClient.appServicePlans.createOrUpdate(wizardContext.resourceGroup.name, newPlanName, {
                     appServicePlanName: newPlanName,
@@ -33,7 +33,7 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
                     reserved: wizardContext.newSiteOS === WebsiteOS.linux  // The secret property - must be set to true to make it a Linux plan. Confirmed by the team who owns this API.
                 });
                 window.showInformationMessage(foundAppServicePlan);
-                outputChannel.appendLine(foundAppServicePlan);
+                ext.outputChannel.appendLine(foundAppServicePlan);
             });
         }
 
