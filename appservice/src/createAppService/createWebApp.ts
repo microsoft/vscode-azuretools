@@ -25,7 +25,6 @@ export async function setWizardContextDefaults(wizardContext: IAppServiceWizardC
     await workspace.findFiles('package.json').then((files: Uri[]) => {
         if (files.length > 0) {
             wizardContext.newSiteOS = WebsiteOS.linux;
-            wizardContext.newSiteRuntime = 'node|8.9';
         }
     });
 

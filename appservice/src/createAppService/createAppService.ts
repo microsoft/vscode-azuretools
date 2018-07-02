@@ -79,7 +79,7 @@ export async function createAppService(
                 }
                 promptSteps.push(new LocationListStep());
                 promptSteps.push(new SiteOSStep()); // will be skipped if there is a smart default
-                promptSteps.push(new SiteRuntimeStep()); // will be skipped if there is a smart default
+                promptSteps.push(new SiteRuntimeStep());
                 executeSteps.push(new ResourceGroupCreateStep());
                 executeSteps.push(new AppServicePlanCreateStep());
             }
