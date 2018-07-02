@@ -7,15 +7,16 @@ import { User } from 'azure-arm-website/lib/models';
 import * as opn from 'opn';
 import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
-import { DialogResponses, IAzureUserInput } from 'vscode-azureextensionui';
+import { DialogResponses } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
+import { ext } from '../extensionVariables';
 import { getKuduClient } from '../getKuduClient';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { formatDeployLog } from './formatDeployLog';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
-export async function localGitDeploy(client: SiteClient, fsPath: string, outputChannel: vscode.OutputChannel, ui: IAzureUserInput): Promise<void> {
+export async function localGitDeploy(client: SiteClient, fsPath: string): Promise<void> {
     const kuduClient: KuduClient = await getKuduClient(client);
     const publishCredentials: User = await client.getWebAppPublishCredential();
 
@@ -29,7 +30,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string, outputC
         if (status.files.length > 0) {
             const message: string = localize('localGitUncommit', '{0} uncommitted change(s) in local repo "{1}"', status.files.length, fsPath);
             const deployAnyway: vscode.MessageItem = { title: localize('deployAnyway', 'Deploy Anyway') };
-            await ui.showWarningMessage(message, { modal: true }, deployAnyway, DialogResponses.cancel);
+            await ext.ui.showWarningMessage(message, { modal: true }, deployAnyway, DialogResponses.cancel);
         }
         await localGit.push(remote, 'HEAD:master');
     } catch (err) {
@@ -53,7 +54,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string, outputC
         }
     }
 
-    outputChannel.show();
-    outputChannel.appendLine(formatDeployLog(client, (localize('localGitDeploy', `Deploying Local Git repository to "${client.fullName}"...`))));
-    await waitForDeploymentToComplete(client, kuduClient, outputChannel);
+    ext.outputChannel.show();
+    ext.outputChannel.appendLine(formatDeployLog(client, (localize('localGitDeploy', `Deploying Local Git repository to "${client.fullName}"...`))));
+    await waitForDeploymentToComplete(client, kuduClient);
 }

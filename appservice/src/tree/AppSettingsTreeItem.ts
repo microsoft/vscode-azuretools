@@ -6,6 +6,7 @@
 import { StringDictionary } from 'azure-arm-website/lib/models';
 import * as path from 'path';
 import { IAzureNode, IAzureParentTreeItem, IAzureTreeItem } from 'vscode-azureextensionui';
+import { ext } from '../extensionVariables';
 import { SiteClient } from '../SiteClient';
 import { AppSettingTreeItem } from './AppSettingTreeItem';
 
@@ -63,17 +64,17 @@ export class AppSettingsTreeItem implements IAzureParentTreeItem {
         await this._client.updateApplicationSettings(this._settings);
     }
 
-    public async createChild(node: IAzureNode<AppSettingsTreeItem>, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
+    public async createChild(_node: IAzureNode<AppSettingsTreeItem>, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
         if (!this._settings) {
             await this.loadMoreChildren();
         }
 
-        const newKey: string = await node.ui.showInputBox({
+        const newKey: string = await ext.ui.showInputBox({
             prompt: 'Enter new setting key',
             validateInput: (v?: string): string | undefined => this.validateNewKeyInput(v)
         });
 
-        const newValue: string = await node.ui.showInputBox({
+        const newValue: string = await ext.ui.showInputBox({
             prompt: `Enter setting value for "${newKey}"`
         });
 

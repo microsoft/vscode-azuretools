@@ -8,8 +8,8 @@ import * as EventEmitter from 'events';
 import { createServer, Server, Socket } from 'net';
 import * as request from 'request';
 import { isString } from 'util';
-import { OutputChannel } from 'vscode';
 import * as websocket from 'websocket';
+import { ext } from './extensionVariables';
 import { SiteClient } from './SiteClient';
 
 /**
@@ -20,21 +20,19 @@ class TunnelSocket extends EventEmitter {
     private _socket: Socket;
     private _client: SiteClient;
     private _publishCredential: User;
-    private _outputChannel: OutputChannel;
     private _wsConnection: websocket.connection;
     private _wsClient: websocket.client;
 
-    constructor(socket: Socket, client: SiteClient, publishCredential: User, outputChannel: OutputChannel) {
+    constructor(socket: Socket, client: SiteClient, publishCredential: User) {
         super();
         this._socket = socket;
         this._client = client;
         this._publishCredential = publishCredential;
-        this._outputChannel = outputChannel;
         this._wsClient = new websocket.client();
     }
 
     public connect(): void {
-        this._outputChannel.appendLine('[Proxy Server] socket init');
+        ext.outputChannel.appendLine('[Proxy Server] socket init');
 
         // Pause socket until tunnel connection has been established to make sure we don't lose data
         this._socket.pause();
@@ -46,32 +44,32 @@ class TunnelSocket extends EventEmitter {
         });
 
         this._socket.on('close', () => {
-            this._outputChannel.appendLine(`[Proxy Server] client disconnected ${this._socket.remoteAddress}:${this._socket.remotePort}`);
+            ext.outputChannel.appendLine(`[Proxy Server] client disconnected ${this._socket.remoteAddress}:${this._socket.remotePort}`);
             this.dispose();
             this.emit('close');
         });
 
         this._socket.on('error', (err: Error) => {
-            this._outputChannel.appendLine(`[Proxy Server] socket error: ${err}`);
+            ext.outputChannel.appendLine(`[Proxy Server] socket error: ${err}`);
             this.dispose();
             this.emit('error', err);
         });
 
         this._wsClient.on('connect', (connection: websocket.connection) => {
-            this._outputChannel.appendLine('[WebSocket] client connected');
+            ext.outputChannel.appendLine('[WebSocket] client connected');
             this._wsConnection = connection;
 
             // Resume socket after connection
             this._socket.resume();
 
             connection.on('close', () => {
-                this._outputChannel.appendLine('[WebSocket] client closed');
+                ext.outputChannel.appendLine('[WebSocket] client closed');
                 this.dispose();
                 this.emit('close');
             });
 
             connection.on('error', (err: Error) => {
-                this._outputChannel.appendLine(`[WebSocket] error: ${err}`);
+                ext.outputChannel.appendLine(`[WebSocket] error: ${err}`);
                 this.dispose();
                 this.emit('error', err);
             });
@@ -83,7 +81,7 @@ class TunnelSocket extends EventEmitter {
         });
 
         this._wsClient.on('connectFailed', (err: Error) => {
-            this._outputChannel.appendLine(`[WebSocket] connectFailed: ${err}`);
+            ext.outputChannel.appendLine(`[WebSocket] connectFailed: ${err}`);
             this.dispose();
             this.emit('error', err);
         });
@@ -104,7 +102,7 @@ class TunnelSocket extends EventEmitter {
     }
 
     public dispose(): void {
-        this._outputChannel.appendLine('[Proxy Server] socket dispose');
+        ext.outputChannel.appendLine('[Proxy Server] socket dispose');
 
         if (this._wsConnection) {
             this._wsConnection.close();
@@ -130,15 +128,13 @@ export class TunnelProxy {
     private _port: number;
     private _client: SiteClient;
     private _publishCredential: User;
-    private _outputChannel: OutputChannel;
     private _server: Server;
     private _openSockets: TunnelSocket[];
 
-    constructor(port: number, client: SiteClient, publishCredential: User, outputChannel: OutputChannel) {
+    constructor(port: number, client: SiteClient, publishCredential: User) {
         this._port = port;
         this._client = client;
         this._publishCredential = publishCredential;
-        this._outputChannel = outputChannel;
         this._server = createServer();
         this._openSockets = [];
     }
@@ -171,10 +167,10 @@ export class TunnelProxy {
 
             const statusCallback: request.RequestCallback = (error: string, response: request.Response, body: string): void => {
                 if (error) {
-                    this._outputChannel.appendLine(`[WebApp Tunnel] Checking status, error: ${error}`);
+                    ext.outputChannel.appendLine(`[WebApp Tunnel] Checking status, error: ${error}`);
                     reject();
                 } else if (response.statusCode === 200) {
-                    this._outputChannel.appendLine(`[WebApp Tunnel] Checking status, body: ${body}`);
+                    ext.outputChannel.appendLine(`[WebApp Tunnel] Checking status, body: ${body}`);
 
                     // SUCCESS:2222 means that the default ssh tunnel has not been replaced yet
                     if (isString(body) && body.startsWith('SUCCESS') && body !== 'SUCCESS:2222') {
@@ -183,7 +179,7 @@ export class TunnelProxy {
                         reject();
                     }
                 } else {
-                    this._outputChannel.appendLine(`[WebApp Tunnel] Checking status, unexpected response: ${response.statusCode} - ${response.statusMessage}`);
+                    ext.outputChannel.appendLine(`[WebApp Tunnel] Checking status, unexpected response: ${response.statusCode} - ${response.statusMessage}`);
                     reject();
                 }
             };
@@ -221,28 +217,28 @@ export class TunnelProxy {
     private async setupTunnelServer(): Promise<void> {
         return new Promise<void>((resolve: () => void, reject: (err: Error) => void): void => {
             this._server.on('connection', (socket: Socket) => {
-                const tunnelSocket: TunnelSocket = new TunnelSocket(socket, this._client, this._publishCredential, this._outputChannel);
+                const tunnelSocket: TunnelSocket = new TunnelSocket(socket, this._client, this._publishCredential);
 
                 this._openSockets.push(tunnelSocket);
                 tunnelSocket.on('close', () => {
                     const index: number = this._openSockets.indexOf(tunnelSocket);
                     if (index >= 0) {
                         this._openSockets.splice(index, 1);
-                        this._outputChannel.appendLine(`[Proxy Server] client closed, connection count: ${this._openSockets.length}`);
+                        ext.outputChannel.appendLine(`[Proxy Server] client closed, connection count: ${this._openSockets.length}`);
                     }
                 });
 
                 tunnelSocket.connect();
-                this._outputChannel.appendLine(`[Proxy Server] client connected ${socket.remoteAddress}:${socket.remotePort}, connection count: ${this._openSockets.length}`);
+                ext.outputChannel.appendLine(`[Proxy Server] client connected ${socket.remoteAddress}:${socket.remotePort}, connection count: ${this._openSockets.length}`);
             });
 
             this._server.on('listening', () => {
-                this._outputChannel.appendLine('[Proxy Server] start listening');
+                ext.outputChannel.appendLine('[Proxy Server] start listening');
                 resolve();
             });
 
             this._server.on('error', (err: Error) => {
-                this._outputChannel.appendLine(`[Proxy Server] server error: ${err}`);
+                ext.outputChannel.appendLine(`[Proxy Server] server error: ${err}`);
                 this.dispose();
                 reject(err);
             });

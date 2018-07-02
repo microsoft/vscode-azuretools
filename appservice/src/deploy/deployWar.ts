@@ -5,8 +5,9 @@
 
 import * as fs from 'fs';
 import * as vscode from 'vscode';
-import { DialogResponses, IAzureUserInput, TelemetryProperties } from 'vscode-azureextensionui';
+import { DialogResponses, TelemetryProperties } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
+import { ext } from '../extensionVariables';
 import * as FileUtilities from '../FileUtilities';
 import { getKuduClient } from '../getKuduClient';
 import { localize } from '../localize';
@@ -14,16 +15,16 @@ import { SiteClient } from '../SiteClient';
 import { formatDeployLog } from './formatDeployLog';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
-export async function deployWar(client: SiteClient, fsPath: string, outputChannel: vscode.OutputChannel, ui: IAzureUserInput, confirmDeployment: boolean, telemetryProperties?: TelemetryProperties): Promise<void> {
+export async function deployWar(client: SiteClient, fsPath: string, confirmDeployment: boolean, telemetryProperties?: TelemetryProperties): Promise<void> {
     if (confirmDeployment) {
         const warning: string = localize('warWarning', 'Are you sure you want to deploy to "{0}"? This will overwrite the ROOT application and cannot be undone.', client.fullName);
         telemetryProperties.cancelStep = 'confirmDestructiveDeployment';
         const deploy: vscode.MessageItem = { title: localize('deploy', 'Deploy') };
-        await ui.showWarningMessage(warning, { modal: true }, deploy, DialogResponses.cancel);
+        await ext.ui.showWarningMessage(warning, { modal: true }, deploy, DialogResponses.cancel);
         telemetryProperties.cancelStep = '';
     }
 
-    outputChannel.show();
+    ext.outputChannel.show();
     const kuduClient: KuduClient = await getKuduClient(client);
 
     if (FileUtilities.getFileExtension(fsPath) !== 'war') {
@@ -31,9 +32,9 @@ export async function deployWar(client: SiteClient, fsPath: string, outputChanne
     }
 
     try {
-        outputChannel.appendLine(formatDeployLog(client, localize('deployStart', 'Starting deployment...')));
+        ext.outputChannel.appendLine(formatDeployLog(client, localize('deployStart', 'Starting deployment...')));
         await kuduClient.pushDeployment.warPushDeploy(fs.createReadStream(fsPath), { isAsync: true });
-        await waitForDeploymentToComplete(client, kuduClient, outputChannel);
+        await waitForDeploymentToComplete(client, kuduClient);
     } catch (error) {
         // tslint:disable-next-line:no-unsafe-any
         if (error && error.response && error.response.body) {

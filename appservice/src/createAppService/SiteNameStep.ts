@@ -6,16 +6,17 @@
 // tslint:disable-next-line:no-require-imports
 import WebSiteManagementClient = require('azure-arm-website');
 import { ResourceNameAvailability } from 'azure-arm-website/lib/models';
-import { AzureNameStep, IAzureNamingRules, IAzureUserInput, ResourceGroupListStep, resourceGroupNamingRules, StorageAccountListStep, storageAccountNamingRules } from 'vscode-azureextensionui';
+import { AzureNameStep, IAzureNamingRules, ResourceGroupListStep, resourceGroupNamingRules, StorageAccountListStep, storageAccountNamingRules } from 'vscode-azureextensionui';
+import { ext } from '../extensionVariables';
 import { AppKind, getAppKindDisplayName } from './AppKind';
 import { AppServicePlanListStep } from './AppServicePlanListStep';
 import { appServicePlanNamingRules } from './AppServicePlanNameStep';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class SiteNameStep extends AzureNameStep<IAppServiceWizardContext> {
-    public async prompt(wizardContext: IAppServiceWizardContext, ui: IAzureUserInput): Promise<IAppServiceWizardContext> {
+    public async prompt(wizardContext: IAppServiceWizardContext): Promise<IAppServiceWizardContext> {
         const client: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
-        wizardContext.newSiteName = (await ui.showInputBox({
+        wizardContext.newSiteName = (await ext.ui.showInputBox({
             prompt: `Enter a globally unique name for the new ${getAppKindDisplayName(wizardContext.newSiteKind)}.`,
             validateInput: async (value: string): Promise<string | undefined> => {
                 value = value ? value.trim() : '';
