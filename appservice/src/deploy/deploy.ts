@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AppServicePlan, SiteConfigResource } from 'azure-arm-website/lib/models';
-import { ProgressLocation, window } from 'vscode'
+import { ProgressLocation, window } from 'vscode';
 import { TelemetryProperties } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
