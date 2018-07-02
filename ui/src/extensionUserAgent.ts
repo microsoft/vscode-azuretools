@@ -22,7 +22,7 @@ export function appendExtensionUserAgent(userAgent: string | undefined): string 
     const extensionUserAgent: string = getExtensionUserAgent();
 
     userAgent = userAgent || extensionUserAgent;
-    if (userAgent.includes(userAgent)) {
+    if (userAgent.includes(extensionUserAgent)) {
         return userAgent;
     } else {
         return `${userAgent} ${extensionUserAgent}`;
