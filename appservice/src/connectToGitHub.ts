@@ -95,7 +95,7 @@ export async function connectToGitHub(node: IAzureNode, client: SiteClient, outp
     } catch (err) {
         try {
             // a resync will fix the first broken build
-            // https://github.com/projectkudu/kudu/issues/2277s
+            // https://github.com/projectkudu/kudu/issues/2277
             await client.syncRepository();
         } catch (error) {
             const parsedError: IParsedError = parseError(error);
