@@ -6,7 +6,12 @@
 // tslint:disable:no-any
 
 import * as assert from 'assert';
+import { window } from 'vscode';
 import { appendExtensionUserAgent } from '../src/extensionUserAgent';
+
+(<any>window).getPackageInfo = (): [string, string] => {
+    return ['a', 'b'];
+};
 
 // tslint:disable-next-line:max-func-body-length
 suite('Extension user agent', () => {
