@@ -18,13 +18,13 @@ function getExtensionUserAgent(): string {
     return `${extensionName}/${extensionVersion}`;
 }
 
-export function appendExtensionUserAgent(userAgent: string | undefined): string {
+export function appendExtensionUserAgent(existingUserAgent?: string): string {
     const extensionUserAgent: string = getExtensionUserAgent();
 
-    userAgent = userAgent || extensionUserAgent;
-    if (userAgent.includes(extensionUserAgent)) {
-        return userAgent;
+    existingUserAgent = existingUserAgent || extensionUserAgent;
+    if (existingUserAgent.includes(extensionUserAgent)) {
+        return existingUserAgent;
     } else {
-        return `${userAgent} ${extensionUserAgent}`;
+        return `${existingUserAgent} ${extensionUserAgent}`;
     }
 }
