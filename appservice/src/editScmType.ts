@@ -25,7 +25,7 @@ export async function editScmType(client: SiteClient, node: IAzureNode, outputCh
         // to update one property, a complete config file must be sent
         await client.updateConfiguration(config);
     }
-    outputChannel.appendLine(localize('deploymentSourceUpdated,', 'Deployment source has been updated to "{0}".', newScmType));
+    outputChannel.appendLine(localize('deploymentSourceUpdated,', 'Deployment source for "{0}" has been updated to "{1}".', client.fullName, newScmType));
     // returns the updated scmType
     return newScmType;
 }

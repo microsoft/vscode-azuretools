@@ -23,7 +23,6 @@ export async function deployWar(client: SiteClient, fsPath: string, outputChanne
         telemetryProperties.cancelStep = '';
     }
 
-    outputChannel.show();
     const kuduClient: KuduClient = await getKuduClient(client);
 
     if (FileUtilities.getFileExtension(fsPath) !== 'war') {

@@ -51,28 +51,28 @@ export async function deploy(client: SiteClient, fsPath: string, outputChannel: 
             // Ignore
         }
     }
-
-    switch (config.scmType) {
-        case ScmType.LocalGit:
-            await localGitDeploy(client, fsPath, outputChannel, ui);
-            break;
-        case ScmType.GitHub:
-            throw new Error(localize('gitHubConnected', '"{0}" is connected to a GitHub repository. Push to GitHub repository to deploy.', client.fullName));
-        default: //'None' or any other non-supported scmType
-            if (config.linuxFxVersion && config.linuxFxVersion.toLowerCase().startsWith('tomcat')) {
-                await deployWar(client, fsPath, outputChannel, ui, confirmDeployment, telemetryProperties);
+    await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: localize('deploying', 'Deploying to "{0}"... Check output window for status.', client.fullName)}, async (): Promise<void> => {
+        switch (config.scmType) {
+            case ScmType.LocalGit:
+                await localGitDeploy(client, fsPath, outputChannel, ui);
                 break;
-            }
-            await deployZip(client, fsPath, outputChannel, ui, configurationSectionName, confirmDeployment, telemetryProperties);
-            break;
-    }
+            case ScmType.GitHub:
+                throw new Error(localize('gitHubConnected', '"{0}" is connected to a GitHub repository. Push to GitHub repository to deploy.', client.fullName));
+            default: //'None' or any other non-supported scmType
+                if (config.linuxFxVersion && config.linuxFxVersion.toLowerCase().startsWith('tomcat')) {
+                    await deployWar(client, fsPath, outputChannel, ui, confirmDeployment, telemetryProperties);
+                    break;
+                }
+                await deployZip(client, fsPath, outputChannel, ui, configurationSectionName, confirmDeployment, telemetryProperties);
+                break;
+        }
 
-    const displayUrl: string = client.isFunctionApp ? '' : client.defaultHostName;
-    outputChannel.appendLine(
-        displayUrl ?
-            localize('deployCompleteWithUrl', '>>>>>> Deployment to "{0}" completed: {1} <<<<<<', client.fullName, `https://${displayUrl}`) :
-            localize('deployComplete', '>>>>>> Deployment to "{0}" completed. <<<<<<', client.fullName)
-    );
-
-    outputChannel.appendLine('');
+        const displayUrl: string = client.isFunctionApp ? '' : client.defaultHostName;
+        const deployComplete : string = displayUrl ?
+            localize('deployCompleteWithUrl', 'Deployment to "{0}" completed: {1}', client.fullName, `https://${displayUrl}`) :
+            localize('deployComplete', 'Deployment to "{0}" completed.', client.fullName);
+        vscode.window.showInformationMessage(deployComplete);
+        outputChannel.appendLine(deployComplete);
+        outputChannel.appendLine('');
+    });
 }

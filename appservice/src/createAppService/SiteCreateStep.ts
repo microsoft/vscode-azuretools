@@ -9,7 +9,7 @@ import { StorageAccountListKeysResult } from 'azure-arm-storage/lib/models';
 // tslint:disable-next-line:no-require-imports
 import WebSiteManagementClient = require('azure-arm-website');
 import { SiteConfig } from 'azure-arm-website/lib/models';
-import { OutputChannel } from 'vscode';
+import { OutputChannel, ProgressLocation, window } from 'vscode';
 import { AzureWizardExecuteStep } from 'vscode-azureextensionui';
 import { localize } from '../localize';
 import { randomUtils } from '../utils/randomUtils';
@@ -19,20 +19,23 @@ import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
     public async execute(wizardContext: IAppServiceWizardContext, outputChannel: OutputChannel): Promise<IAppServiceWizardContext> {
         if (!wizardContext.site) {
-            outputChannel.appendLine(localize('CreatingNewApp', 'Creating {0} "{1}"...', getAppKindDisplayName(wizardContext.newSiteKind), wizardContext.newSiteName));
-
-            const websiteClient: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
-            wizardContext.site = await websiteClient.webApps.createOrUpdate(wizardContext.resourceGroup.name, wizardContext.newSiteName, {
-                name: wizardContext.newSiteName,
-                kind: getSiteModelKind(wizardContext.newSiteKind, wizardContext.newSiteOS),
-                location: wizardContext.location.name,
-                serverFarmId: wizardContext.plan ? wizardContext.plan.id : undefined,
-                clientAffinityEnabled: wizardContext.newSiteKind === AppKind.app,
-                siteConfig: await this.getNewSiteConfig(wizardContext)
+            const creatingNewApp: string = localize('CreatingNewApp', 'Creating {0} "{1}"...', getAppKindDisplayName(wizardContext.newSiteKind), wizardContext.newSiteName);
+            await window.withProgress({ location: ProgressLocation.Notification, title: creatingNewApp}, async (): Promise<void> => {
+                outputChannel.appendLine(creatingNewApp);
+                const websiteClient: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
+                wizardContext.site = await websiteClient.webApps.createOrUpdate(wizardContext.resourceGroup.name, wizardContext.newSiteName, {
+                    name: wizardContext.newSiteName,
+                    kind: getSiteModelKind(wizardContext.newSiteKind, wizardContext.newSiteOS),
+                    location: wizardContext.location.name,
+                    serverFarmId: wizardContext.plan ? wizardContext.plan.id : undefined,
+                    clientAffinityEnabled: wizardContext.newSiteKind === AppKind.app,
+                    siteConfig: await this.getNewSiteConfig(wizardContext)
+                });
+                const createdNewApp : string = localize('CreatedNewApp', 'Created new {0} "{1}": {2}', getAppKindDisplayName(wizardContext.newSiteKind), wizardContext.site.name, `https://${wizardContext.site.defaultHostName}`);
+                outputChannel.appendLine(createdNewApp);
+                outputChannel.appendLine('');
+                window.showInformationMessage(createdNewApp);
             });
-
-            outputChannel.appendLine(localize('CreatedNewApp', '>>>>>> Created new {0} "{1}": {2}', getAppKindDisplayName(wizardContext.newSiteKind), wizardContext.site.name, `https://${wizardContext.site.defaultHostName} <<<<<<`));
-            outputChannel.appendLine('');
         }
 
         return wizardContext;

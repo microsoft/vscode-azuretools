@@ -27,8 +27,12 @@ export async function deleteSite(client: SiteClient, ui: IAzureUserInput, output
         deletePlan = input === DialogResponses.yes;
     }
 
-    outputChannel.show();
-    outputChannel.appendLine(localize('Deleting', 'Deleting "{0}"...', client.fullName));
-    await client.deleteMethod({ deleteEmptyServerFarm: deletePlan });
-    outputChannel.appendLine(localize('DeleteSucceeded', 'Successfully deleted "{0}".', client.fullName));
+    const deleting: string = localize('Deleting', 'Deleting "{0}"...', client.fullName);
+    const deleteSucceeded: string = localize('DeleteSucceeded', 'Successfully deleted "{0}".', client.fullName);
+    await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: deleting}, async (): Promise<void> => {
+        outputChannel.appendLine(deleting);
+        await client.deleteMethod({ deleteEmptyServerFarm: deletePlan });
+        vscode.window.showInformationMessage(deleteSucceeded);
+        outputChannel.appendLine(deleteSucceeded);
+    });
 }

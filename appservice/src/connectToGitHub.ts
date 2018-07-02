@@ -83,15 +83,19 @@ export async function connectToGitHub(node: IAzureNode, client: SiteClient, outp
         deploymentRollbackEnabled: true,
         isMercurial: false
     };
-
-    outputChannel.show(true);
-    outputChannel.appendLine(`"${client.fullName}" is being connected to the GitHub repo. This may take several minutes...`);
     try {
-        await client.updateSourceControl(siteSourceControl);
+        const connectingToGithub: string = localize('ConnectingToGithub', '"{0}" is being connected to the GitHub repo. This may take several minutes...', client.fullName);
+        const connectedToGithub: string = localize('ConnectedToGithub', '"{0}" has been connected to the GitHub repo.', client.fullName);
+        await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: connectingToGithub}, async (): Promise<void> => {
+            outputChannel.appendLine(connectingToGithub);
+            await client.updateSourceControl(siteSourceControl);
+            vscode.window.showInformationMessage(connectedToGithub);
+            outputChannel.appendLine(connectedToGithub);
+        });
     } catch (err) {
         try {
             // a resync will fix the first broken build
-            // https://github.com/projectkudu/kudu/issues/2277
+            // https://github.com/projectkudu/kudu/issues/2277s
             await client.syncRepository();
         } catch (error) {
             const parsedError: IParsedError = parseError(error);

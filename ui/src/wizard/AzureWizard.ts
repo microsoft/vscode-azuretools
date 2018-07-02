@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IActionContext } from '../../index';
-import { ext } from '../extensionVariables';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 
@@ -42,8 +41,6 @@ export class AzureWizard<T> {
     }
 
     public async execute(actionContext: IActionContext): Promise<T> {
-        ext.outputChannel.show(true);
-
         for (const subWizard of this._subWizards) {
             await subWizard.execute(actionContext);
         }

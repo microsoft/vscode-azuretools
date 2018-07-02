@@ -53,7 +53,6 @@ export async function localGitDeploy(client: SiteClient, fsPath: string, outputC
         }
     }
 
-    outputChannel.show();
     outputChannel.appendLine(formatDeployLog(client, (localize('localGitDeploy', `Deploying Local Git repository to "${client.fullName}"...`))));
     await waitForDeploymentToComplete(client, kuduClient, outputChannel);
 }

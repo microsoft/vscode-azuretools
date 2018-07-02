@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ResourceManagementClient } from 'azure-arm-resource';
+import { ProgressLocation, window } from 'vscode';
 import { IResourceGroupWizardContext } from '../../index';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -16,10 +17,15 @@ export class ResourceGroupCreateStep<T extends IResourceGroupWizardContext> exte
             const newName: string = wizardContext.newResourceGroupName!;
             // tslint:disable-next-line:no-non-null-assertion
             const newLocation: string = wizardContext.location!.name!;
-            ext.outputChannel.appendLine(localize('CreatingResourceGroup', 'Ensuring resource group "{0}" in location "{1} exists"...', newName, newLocation));
-            const resourceClient: ResourceManagementClient = new ResourceManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
-            wizardContext.resourceGroup = await resourceClient.resourceGroups.createOrUpdate(newName, { location: newLocation });
-            ext.outputChannel.appendLine(localize('CreatedResourceGroup', 'Successfully found resource group "{0}".', newName));
+            const findingResourceGroup: string = localize('creatingResourceGroup', 'Ensuring resource group "{0}" in location "{1} exists"...', newName, newLocation);
+            await window.withProgress({ location: ProgressLocation.Notification, title: findingResourceGroup}, async (): Promise<void> => {
+                ext.outputChannel.appendLine(findingResourceGroup);
+                const resourceClient: ResourceManagementClient = new ResourceManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
+                wizardContext.resourceGroup = await resourceClient.resourceGroups.createOrUpdate(newName, { location: newLocation });
+                const foundResourceGroup: string = localize('createdResourceGroup', 'Successfully found resource group "{0}".', newName);
+                window.showInformationMessage(foundResourceGroup);
+                ext.outputChannel.appendLine(foundResourceGroup);
+            });
         }
 
         return wizardContext;
