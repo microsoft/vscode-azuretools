@@ -24,9 +24,7 @@ export async function deployZip(client: SiteClient, fsPath: string, configuratio
         telemetryProperties.cancelStep = '';
     }
 
-    ext.outputChannel.show();
     const kuduClient: KuduClient = await getKuduClient(client);
-
     let zipFilePath: string;
     let createdZip: boolean = false;
     if (FileUtilities.getFileExtension(fsPath) === 'zip') {

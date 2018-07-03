@@ -47,14 +47,13 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
         } else if (err.message.indexOf('error: failed to push') >= 0) {
             const forcePush: vscode.MessageItem = { title: localize('forcePush', 'Force Push') };
             const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging.');
-            await vscode.window.showErrorMessage(pushReject, forcePush, DialogResponses.cancel);
+            await ext.ui.showWarningMessage(pushReject, forcePush, DialogResponses.cancel);
             await localGit.push(remote, 'HEAD:master', { '-f': true });
         } else {
             throw err;
         }
     }
 
-    ext.outputChannel.show();
     ext.outputChannel.appendLine(formatDeployLog(client, (localize('localGitDeploy', `Deploying Local Git repository to "${client.fullName}"...`))));
     await waitForDeploymentToComplete(client, kuduClient);
 }

@@ -24,9 +24,7 @@ export async function deployWar(client: SiteClient, fsPath: string, confirmDeplo
         telemetryProperties.cancelStep = '';
     }
 
-    ext.outputChannel.show();
     const kuduClient: KuduClient = await getKuduClient(client);
-
     if (FileUtilities.getFileExtension(fsPath) !== 'war') {
         throw new Error(localize('NotAWarError', 'Path specified is not a war file'));
     }
