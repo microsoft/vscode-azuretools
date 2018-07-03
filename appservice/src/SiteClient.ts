@@ -6,7 +6,7 @@
 // tslint:disable-next-line:no-require-imports
 import WebSiteManagementClient = require('azure-arm-website');
 import { AppServicePlan, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SourceControlCollection, StringDictionary, User, WebAppInstanceCollection } from 'azure-arm-website/lib/models';
-import { IAzureNode } from 'vscode-azureextensionui';
+import { addExtensionUserAgent, IAzureNode } from 'vscode-azureextensionui';
 import { ArgumentError } from './errors';
 
 /**
@@ -75,7 +75,9 @@ export class SiteClient {
     }
 
     private get _client(): WebSiteManagementClient {
-        return new WebSiteManagementClient(this._node.credentials, this._node.subscriptionId);
+        const client: WebSiteManagementClient = new WebSiteManagementClient(this._node.credentials, this._node.subscriptionId);
+        addExtensionUserAgent(client);
+        return client;
     }
 
     public async stop(): Promise<void> {
