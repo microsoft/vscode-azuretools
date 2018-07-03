@@ -9,7 +9,7 @@ import { StorageAccountListKeysResult } from 'azure-arm-storage/lib/models';
 // tslint:disable-next-line:no-require-imports
 import WebSiteManagementClient = require('azure-arm-website');
 import { SiteConfig } from 'azure-arm-website/lib/models';
-import { AzureWizardExecuteStep } from 'vscode-azureextensionui';
+import { addExtensionUserAgent, AzureWizardExecuteStep } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { randomUtils } from '../utils/randomUtils';
@@ -21,8 +21,9 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
         if (!wizardContext.site) {
             ext.outputChannel.appendLine(localize('CreatingNewApp', 'Creating {0} "{1}"...', getAppKindDisplayName(wizardContext.newSiteKind), wizardContext.newSiteName));
 
-            const websiteClient: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
-            wizardContext.site = await websiteClient.webApps.createOrUpdate(wizardContext.resourceGroup.name, wizardContext.newSiteName, {
+            const client: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
+            addExtensionUserAgent(client);
+            wizardContext.site = await client.webApps.createOrUpdate(wizardContext.resourceGroup.name, wizardContext.newSiteName, {
                 name: wizardContext.newSiteName,
                 kind: getSiteModelKind(wizardContext.newSiteKind, wizardContext.newSiteOS),
                 location: wizardContext.location.name,
@@ -46,6 +47,7 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
         if (wizardContext.newSiteKind === AppKind.functionapp) {
             const maxFileShareNameLength: number = 63;
             const storageClient: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
+            addExtensionUserAgent(storageClient);
 
             const [, storageResourceGroup] = wizardContext.storageAccount.id.match(/\/resourceGroups\/([^/]+)\//);
             const keysResult: StorageAccountListKeysResult = await storageClient.storageAccounts.listKeys(storageResourceGroup, wizardContext.storageAccount.name);

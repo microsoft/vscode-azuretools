@@ -6,7 +6,7 @@
 // tslint:disable-next-line:no-require-imports
 import WebSiteManagementClient = require('azure-arm-website');
 import { AppServicePlan } from 'azure-arm-website/lib/models';
-import { AzureWizard, AzureWizardPromptStep, IAzureQuickPickOptions, LocationListStep } from 'vscode-azureextensionui';
+import { addExtensionUserAgent, AzureWizard, AzureWizardPromptStep, IAzureQuickPickOptions, LocationListStep } from 'vscode-azureextensionui';
 import { IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -21,6 +21,7 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
     public static async getPlans(wizardContext: IAppServiceWizardContext): Promise<AppServicePlan[]> {
         if (wizardContext.plansTask === undefined) {
             const client: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
+            addExtensionUserAgent(client);
             wizardContext.plansTask = uiUtils.listAll(client.appServicePlans, client.appServicePlans.list());
         }
 

@@ -6,7 +6,7 @@
 // tslint:disable-next-line:no-require-imports
 import WebSiteManagementClient = require('azure-arm-website');
 import { SkuDescription } from 'azure-arm-website/lib/models';
-import { AzureWizardExecuteStep } from 'vscode-azureextensionui';
+import { addExtensionUserAgent, AzureWizardExecuteStep } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { getAppServicePlanModelKind, WebsiteOS } from './AppKind';
@@ -20,8 +20,9 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
             // tslint:disable-next-line:no-non-null-assertion
             const newSku: SkuDescription = wizardContext.newPlanSku!;
             ext.outputChannel.appendLine(localize('CreatingAppServicePlan', 'Ensuring App Service plan "{0}" with pricing tier "{1}" exists...', newPlanName, newSku.name));
-            const websiteClient: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
-            wizardContext.plan = await websiteClient.appServicePlans.createOrUpdate(wizardContext.resourceGroup.name, newPlanName, {
+            const client: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
+            addExtensionUserAgent(client);
+            wizardContext.plan = await client.appServicePlans.createOrUpdate(wizardContext.resourceGroup.name, newPlanName, {
                 appServicePlanName: newPlanName,
                 kind: getAppServicePlanModelKind(wizardContext.newSiteKind, wizardContext.newSiteOS),
                 sku: newSku,
