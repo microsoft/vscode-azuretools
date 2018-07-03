@@ -77,7 +77,6 @@ export async function connectToGitHub(node: IAzureNode, client: SiteClient): Pro
     const branchQuickPick: IAzureQuickPickItem<{}> = await ext.ui.showQuickPick(branchQuickPicks, { placeHolder: 'Choose branch.' });
 
     const siteSourceControl: SiteSourceControl = {
-        location: client.location,
         repoUrl: repoQuickPick.html_url,
         branch: branchQuickPick.label,
         isManualIntegration: false,

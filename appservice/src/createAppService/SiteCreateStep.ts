@@ -10,7 +10,7 @@ import { StorageAccountListKeysResult } from 'azure-arm-storage/lib/models';
 import WebSiteManagementClient = require('azure-arm-website');
 import { SiteConfig } from 'azure-arm-website/lib/models';
 import { ProgressLocation, window } from 'vscode';
-import { AzureWizardExecuteStep } from 'vscode-azureextensionui';
+import { addExtensionUserAgent, AzureWizardExecuteStep } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { randomUtils } from '../utils/randomUtils';
@@ -23,15 +23,16 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
             const creatingNewApp: string = localize('CreatingNewApp', 'Creating {0} "{1}"...', getAppKindDisplayName(wizardContext.newSiteKind), wizardContext.newSiteName);
             await window.withProgress({ location: ProgressLocation.Notification, title: creatingNewApp}, async (): Promise<void> => {
                 ext.outputChannel.appendLine(creatingNewApp);
-                const websiteClient: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
-                wizardContext.site = await websiteClient.webApps.createOrUpdate(wizardContext.resourceGroup.name, wizardContext.newSiteName, {
+                const client: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
+                addExtensionUserAgent(client);
+                wizardContext.site = await client.webApps.createOrUpdate(wizardContext.resourceGroup.name, wizardContext.newSiteName, {
                     name: wizardContext.newSiteName,
                     kind: getSiteModelKind(wizardContext.newSiteKind, wizardContext.newSiteOS),
                     location: wizardContext.location.name,
                     serverFarmId: wizardContext.plan ? wizardContext.plan.id : undefined,
                     clientAffinityEnabled: wizardContext.newSiteKind === AppKind.app,
                     siteConfig: await this.getNewSiteConfig(wizardContext)
-                });
+                    });
                 const createdNewApp : string = localize('CreatedNewApp', 'Created new {0} "{1}": {2}', getAppKindDisplayName(wizardContext.newSiteKind), wizardContext.site.name, `https://${wizardContext.site.defaultHostName}`);
                 ext.outputChannel.appendLine(createdNewApp);
                 ext.outputChannel.appendLine('');
@@ -50,6 +51,7 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
         if (wizardContext.newSiteKind === AppKind.functionapp) {
             const maxFileShareNameLength: number = 63;
             const storageClient: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
+            addExtensionUserAgent(storageClient);
 
             const [, storageResourceGroup] = wizardContext.storageAccount.id.match(/\/resourceGroups\/([^/]+)\//);
             const keysResult: StorageAccountListKeysResult = await storageClient.storageAccounts.listKeys(storageResourceGroup, wizardContext.storageAccount.name);

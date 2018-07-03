@@ -631,7 +631,18 @@ export interface UIExtensionVariables {
     reporter: TelemetryReporter | undefined;
 }
 
+export interface IAddUserAgent {
+    addUserAgentInfo(additionalUserAgentInfo: any): void;
+}
+
 /**
- * Adds a user agent specific to the VS Code extension, of the form `${extensionName}/${extensionVersion}`
+ * Retrieves a user agent string specific to the VS Code extension, of the form `${extensionName}/${extensionVersion}`,
+ * and appends it to the given user agent string, if it isn't already in the string. Passing in no existingUserAgent
+ * will return just the extension portion to use in a user agent.
  */
-export declare function addExtensionUserAgent(client: ServiceClient): void;
+export declare function appendExtensionUserAgent(existingUserAgent?: string): string;
+
+/**
+ * Adds the extension user agent to the given ServiceClient or other object support AddUserAgentInfo
+ */
+export declare function addExtensionUserAgent(client: IAddUserAgent): void;
