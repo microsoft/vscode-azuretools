@@ -13,20 +13,20 @@ import { CreatingTreeItem } from './CreatingTreeItem';
 import { LoadMoreTreeItem } from './LoadMoreTreeItem';
 
 export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeItem> extends AzureNode<T> implements IAzureParentNodeInternal {
-    private _cachedChildren: AzureNode[] | undefined;
+    private _cachedChildren: AzureNode[] = [];
     private _creatingNodes: AzureNode[] = [];
     private _onNodeCreateEmitter: EventEmitter<IAzureNode>;
-
+    private _clearCache: boolean = true;
+    private _loadMoreChildrenTask: Promise<void> | undefined;
     private _initChildrenTask: Promise<void> | undefined;
 
     public constructor(parent: IAzureParentNodeInternal | undefined, treeItem: T, onNodeCreateEmitter: EventEmitter<IAzureNode>) {
         super(parent, treeItem);
         this._onNodeCreateEmitter = onNodeCreateEmitter;
-
     }
 
     public async getCachedChildren(): Promise<AzureNode[]> {
-        if (this._cachedChildren === undefined) {
+        if (this._clearCache) {
             this._initChildrenTask = this.loadMoreChildren();
         }
 
@@ -34,7 +34,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
             await this._initChildrenTask;
         }
 
-        return this._cachedChildren ? this._cachedChildren : [];
+        return this._cachedChildren;
     }
 
     public get creatingNodes(): AzureNode[] {
@@ -42,7 +42,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
     }
 
     public clearCache(): void {
-        this._cachedChildren = undefined;
+        this._clearCache = true;
     }
 
     public async createChild(userOptions?: {}): Promise<AzureNode> {
@@ -74,24 +74,6 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
         }
     }
 
-    public async loadMoreChildren(): Promise<void> {
-        let clearCache: boolean = false;
-        if (this._cachedChildren === undefined) {
-            this._cachedChildren = [];
-            clearCache = true;
-        }
-
-        const sortCallback: (n1: IAzureNode, n2: IAzureNode) => number =
-            this.treeItem.compareChildren
-                ? this.treeItem.compareChildren
-                : (n1: AzureNode, n2: AzureNode): number => n1.treeItem.label.localeCompare(n2.treeItem.label);
-
-        const newTreeItems: IAzureTreeItem[] = await this.treeItem.loadMoreChildren(this, clearCache);
-        this._cachedChildren = this._cachedChildren
-            .concat(newTreeItems.map((t: IAzureTreeItem) => this.createNewNode(t)))
-            .sort(sortCallback);
-    }
-
     public async pickChildNode(expectedContextValues: string[]): Promise<AzureNode> {
         if (this.treeItem.pickTreeItem) {
             const children: AzureNode[] = await this.getCachedChildren();
@@ -116,29 +98,55 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
     }
 
     public async addNodeToCache(node: AzureNode): Promise<void> {
-        if (this._cachedChildren) {
-            // set index to the last element by default
-            let index: number = this._cachedChildren.length;
-            // tslint:disable-next-line:no-increment-decrement
-            for (let i: number = 0; i < this._cachedChildren.length; i++) {
-                if (node.treeItem.label.localeCompare(this._cachedChildren[i].treeItem.label) < 1) {
-                    index = i;
-                    break;
-                }
+        // set index to the last element by default
+        let index: number = this._cachedChildren.length;
+        // tslint:disable-next-line:no-increment-decrement
+        for (let i: number = 0; i < this._cachedChildren.length; i++) {
+            if (node.treeItem.label.localeCompare(this._cachedChildren[i].treeItem.label) < 1) {
+                index = i;
+                break;
             }
-            this._cachedChildren.splice(index, 0, node);
+        }
+        this._cachedChildren.splice(index, 0, node);
+        await this.treeDataProvider.refresh(this, false);
+    }
+
+    public async removeNodeFromCache(node: AzureNode): Promise<void> {
+        const index: number = this._cachedChildren.indexOf(node);
+        if (index !== -1) {
+            this._cachedChildren.splice(index, 1);
             await this.treeDataProvider.refresh(this, false);
         }
     }
 
-    public async removeNodeFromCache(node: AzureNode): Promise<void> {
-        if (this._cachedChildren) {
-            const index: number = this._cachedChildren.indexOf(node);
-            if (index !== -1) {
-                this._cachedChildren.splice(index, 1);
-                await this.treeDataProvider.refresh(this, false);
+    public async loadMoreChildren(): Promise<void> {
+        if (this._loadMoreChildrenTask) {
+            await this._loadMoreChildrenTask;
+        } else {
+            this._loadMoreChildrenTask = this.loadMoreChildrenInternal();
+            try {
+                await this._loadMoreChildrenTask;
+            } finally {
+                this._loadMoreChildrenTask = undefined;
             }
         }
+    }
+
+    private async loadMoreChildrenInternal(): Promise<void> {
+        if (this._clearCache) {
+            this._cachedChildren = [];
+        }
+
+        const sortCallback: (n1: IAzureNode, n2: IAzureNode) => number =
+            this.treeItem.compareChildren
+                ? this.treeItem.compareChildren
+                : (n1: AzureNode, n2: AzureNode): number => n1.treeItem.label.localeCompare(n2.treeItem.label);
+
+        const newTreeItems: IAzureTreeItem[] = await this.treeItem.loadMoreChildren(this, this._clearCache);
+        this._cachedChildren = this._cachedChildren
+            .concat(newTreeItems.map((t: IAzureTreeItem) => this.createNewNode(t)))
+            .sort(sortCallback);
+        this._clearCache = false;
     }
 
     private async getQuickPicks(expectedContextValues: string[]): Promise<IAzureQuickPickItem<GetNodeFunction>[]> {
