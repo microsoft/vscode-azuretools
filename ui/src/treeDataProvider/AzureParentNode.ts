@@ -74,36 +74,6 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
         }
     }
 
-    public async loadMoreChildren(): Promise<void> {
-        if (this._loadMoreChildrenTask) {
-            await this._loadMoreChildrenTask;
-        } else {
-            this._loadMoreChildrenTask = this.loadMoreChildrenInternal();
-            try {
-                await this._loadMoreChildrenTask;
-            } finally {
-                this._loadMoreChildrenTask = undefined;
-            }
-        }
-    }
-
-    private async loadMoreChildrenInternal(): Promise<void> {
-        if (this._clearCache) {
-            this._cachedChildren = [];
-        }
-
-        const sortCallback: (n1: IAzureNode, n2: IAzureNode) => number =
-            this.treeItem.compareChildren
-                ? this.treeItem.compareChildren
-                : (n1: AzureNode, n2: AzureNode): number => n1.treeItem.label.localeCompare(n2.treeItem.label);
-
-        const newTreeItems: IAzureTreeItem[] = await this.treeItem.loadMoreChildren(this, this._clearCache);
-        this._cachedChildren = this._cachedChildren
-            .concat(newTreeItems.map((t: IAzureTreeItem) => this.createNewNode(t)))
-            .sort(sortCallback);
-        this._clearCache = false;
-    }
-
     public async pickChildNode(expectedContextValues: string[]): Promise<AzureNode> {
         if (this.treeItem.pickTreeItem) {
             const children: AzureNode[] = await this.getCachedChildren();
@@ -147,6 +117,36 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
             this._cachedChildren.splice(index, 1);
             await this.treeDataProvider.refresh(this, false);
         }
+    }
+
+    public async loadMoreChildren(): Promise<void> {
+        if (this._loadMoreChildrenTask) {
+            await this._loadMoreChildrenTask;
+        } else {
+            this._loadMoreChildrenTask = this.loadMoreChildrenInternal();
+            try {
+                await this._loadMoreChildrenTask;
+            } finally {
+                this._loadMoreChildrenTask = undefined;
+            }
+        }
+    }
+
+    private async loadMoreChildrenInternal(): Promise<void> {
+        if (this._clearCache) {
+            this._cachedChildren = [];
+        }
+
+        const sortCallback: (n1: IAzureNode, n2: IAzureNode) => number =
+            this.treeItem.compareChildren
+                ? this.treeItem.compareChildren
+                : (n1: AzureNode, n2: AzureNode): number => n1.treeItem.label.localeCompare(n2.treeItem.label);
+
+        const newTreeItems: IAzureTreeItem[] = await this.treeItem.loadMoreChildren(this, this._clearCache);
+        this._cachedChildren = this._cachedChildren
+            .concat(newTreeItems.map((t: IAzureTreeItem) => this.createNewNode(t)))
+            .sort(sortCallback);
+        this._clearCache = false;
     }
 
     private async getQuickPicks(expectedContextValues: string[]): Promise<IAzureQuickPickItem<GetNodeFunction>[]> {
