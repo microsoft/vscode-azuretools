@@ -18,11 +18,11 @@ import { AppKind, getAppKindDisplayName, getSiteModelKind } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
-    private _appSettings: { [key: string]: string };
+    private _functionAppSettings: { [key: string]: string };
 
-    public constructor(appSettings: { [key: string]: string } | undefined) {
+    public constructor(functionAppSettings: { [key: string]: string } | undefined) {
         super();
-        this._appSettings = appSettings || {};
+        this._functionAppSettings = functionAppSettings || {};
     }
 
     public async execute(wizardContext: IAppServiceWizardContext): Promise<IAppServiceWizardContext> {
@@ -102,10 +102,10 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
                 }
             ];
 
-            for (const key of Object.keys(this._appSettings)) {
+            for (const key of Object.keys(this._functionAppSettings)) {
                 newSiteConfig.appSettings.push({
                     name: key,
-                    value: this._appSettings[key]
+                    value: this._functionAppSettings[key]
                 });
             }
         }

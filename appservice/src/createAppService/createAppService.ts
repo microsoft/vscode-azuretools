@@ -26,7 +26,7 @@ export async function createAppService(
     subscriptionDisplayName: string,
     showCreatingNode?: (label: string) => void,
     advancedCreation: boolean = false,
-    appSettings?: { [key: string]: string }): Promise<Site> {
+    functionAppSettings?: { [key: string]: string }): Promise<Site> {
 
     const promptSteps: AzureWizardPromptStep<IAppServiceWizardContext>[] = [];
     const executeSteps: AzureWizardExecuteStep<IAppServiceWizardContext>[] = [];
@@ -86,7 +86,7 @@ export async function createAppService(
             }
         default:
     }
-    executeSteps.push(new SiteCreateStep(appSettings));
+    executeSteps.push(new SiteCreateStep(functionAppSettings));
     const wizard: AzureWizard<IAppServiceWizardContext> = new AzureWizard(promptSteps, executeSteps, wizardContext);
 
     // Ideally actionContext should always be defined, but there's a bug with the NodePicker. Create a 'fake' actionContext until that bug is fixed
