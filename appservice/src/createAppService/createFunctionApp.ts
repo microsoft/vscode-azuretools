@@ -14,6 +14,7 @@ export async function createFunctionApp(
     credentials: ServiceClientCredentials,
     subscriptionId: string,
     subscriptionDisplayName: string,
-    showCreatingNode?: (label: string) => void): Promise<Site> {
-    return await createAppService(AppKind.functionapp, WebsiteOS.windows, actionContext, credentials, subscriptionId, subscriptionDisplayName, showCreatingNode);
+    showCreatingNode: (label: string) => void,
+    appSettings: { [key: string]: string }): Promise<Site> {
+    return await createAppService(AppKind.functionapp, WebsiteOS.windows, actionContext, credentials, subscriptionId, subscriptionDisplayName, showCreatingNode, true, appSettings);
 }
