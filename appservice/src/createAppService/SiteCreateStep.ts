@@ -9,7 +9,7 @@ import { StorageAccountListKeysResult } from 'azure-arm-storage/lib/models';
 // tslint:disable-next-line:no-require-imports
 import WebSiteManagementClient = require('azure-arm-website');
 import { SiteConfig } from 'azure-arm-website/lib/models';
-import { ProgressLocation, window } from 'vscode';
+import { MessageItem, ProgressLocation, window } from 'vscode';
 import { addExtensionUserAgent, AzureWizardExecuteStep } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -18,10 +18,17 @@ import { AppKind, getAppKindDisplayName, getSiteModelKind } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
+    private _functionAppSettings: { [key: string]: string };
+
+    public constructor(functionAppSettings: { [key: string]: string } | undefined) {
+        super();
+        this._functionAppSettings = functionAppSettings || {};
+    }
+
     public async execute(wizardContext: IAppServiceWizardContext): Promise<IAppServiceWizardContext> {
         if (!wizardContext.site) {
             const creatingNewApp: string = localize('CreatingNewApp', 'Creating {0} "{1}"...', getAppKindDisplayName(wizardContext.newSiteKind), wizardContext.newSiteName);
-            await window.withProgress({ location: ProgressLocation.Notification, title: creatingNewApp}, async (): Promise<void> => {
+            await window.withProgress({ location: ProgressLocation.Notification, title: creatingNewApp }, async (): Promise<void> => {
                 ext.outputChannel.appendLine(creatingNewApp);
                 const client: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
                 addExtensionUserAgent(client);
@@ -32,11 +39,20 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
                     serverFarmId: wizardContext.plan ? wizardContext.plan.id : undefined,
                     clientAffinityEnabled: wizardContext.newSiteKind === AppKind.app,
                     siteConfig: await this.getNewSiteConfig(wizardContext)
-                    });
-                const createdNewApp : string = localize('CreatedNewApp', 'Created new {0} "{1}": {2}', getAppKindDisplayName(wizardContext.newSiteKind), wizardContext.site.name, `https://${wizardContext.site.defaultHostName}`);
+                });
+                const createdNewApp: string = localize('CreatedNewApp', 'Created new {0} "{1}": {2}', getAppKindDisplayName(wizardContext.newSiteKind), wizardContext.site.name, `https://${wizardContext.site.defaultHostName}`);
                 ext.outputChannel.appendLine(createdNewApp);
                 ext.outputChannel.appendLine('');
-                window.showInformationMessage(createdNewApp);
+                const viewLogs: MessageItem = {
+                    title: localize('viewLogs', 'View Logs')
+                };
+
+                // Note: intentionally not waiting for the result of this before returning
+                window.showInformationMessage(createdNewApp, viewLogs).then((result: MessageItem | undefined) => {
+                    if (result === viewLogs) {
+                        ext.outputChannel.show();
+                    }
+                });
             });
         }
 
@@ -77,22 +93,21 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
                     value: storageConnectionString
                 },
                 {
-                    name: 'FUNCTIONS_EXTENSION_VERSION',
-                    value: 'latest'
-                },
-                {
                     name: 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING',
                     value: storageConnectionString
                 },
                 {
                     name: 'WEBSITE_CONTENTSHARE',
                     value: fileShareName
-                },
-                {
-                    name: 'WEBSITE_NODE_DEFAULT_VERSION',
-                    value: '6.5.0'
                 }
             ];
+
+            for (const key of Object.keys(this._functionAppSettings)) {
+                newSiteConfig.appSettings.push({
+                    name: key,
+                    value: this._functionAppSettings[key]
+                });
+            }
         }
 
         return newSiteConfig;

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AppServicePlan, SiteConfigResource } from 'azure-arm-website/lib/models';
-import { ProgressLocation, window } from 'vscode';
+import { MessageItem, ProgressLocation, window } from 'vscode';
 import { TelemetryProperties } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -52,7 +52,7 @@ export async function deploy(client: SiteClient, fsPath: string, configurationSe
             // Ignore
         }
     }
-    await window.withProgress({ location: ProgressLocation.Notification, title: localize('deploying', 'Deploying to "{0}"... Check output window for status.', client.fullName)}, async (): Promise<void> => {
+    await window.withProgress({ location: ProgressLocation.Notification, title: localize('deploying', 'Deploying to "{0}"... Check output window for status.', client.fullName) }, async (): Promise<void> => {
         switch (config.scmType) {
             case ScmType.LocalGit:
                 await localGitDeploy(client, fsPath);
@@ -69,11 +69,20 @@ export async function deploy(client: SiteClient, fsPath: string, configurationSe
         }
 
         const displayUrl: string = client.isFunctionApp ? '' : client.defaultHostName;
-        const deployComplete : string = displayUrl ?
+        const deployComplete: string = displayUrl ?
             localize('deployCompleteWithUrl', 'Deployment to "{0}" completed: {1}', client.fullName, `https://${displayUrl}`) :
             localize('deployComplete', 'Deployment to "{0}" completed.', client.fullName);
-        window.showInformationMessage(deployComplete);
         ext.outputChannel.appendLine(deployComplete);
         ext.outputChannel.appendLine('');
+        const viewLogs: MessageItem = {
+            title: localize('viewLogs', 'View Logs')
+        };
+
+        // Note: intentionally not waiting for the result of this before returning
+        window.showInformationMessage(deployComplete, viewLogs).then((result: MessageItem | undefined) => {
+            if (result === viewLogs) {
+                ext.outputChannel.show();
+            }
+        });
     });
 }
