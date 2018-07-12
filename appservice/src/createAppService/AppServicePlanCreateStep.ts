@@ -28,9 +28,9 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
                 ext.outputChannel.appendLine(findingAppServicePlan);
                 const client: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
                 addExtensionUserAgent(client);
-                const getPlan: AppServicePlan = await client.appServicePlans.get(wizardContext.resourceGroup.name, newPlanName); // if it does't exist, evaluates as null
-                if (getPlan) {
-                    wizardContext.plan = getPlan;
+                const existingPlan: AppServicePlan | null = await client.appServicePlans.get(wizardContext.resourceGroup.name, newPlanName);
+                if (existingPlan) {
+                    wizardContext.plan = existingPlan;
                     window.showInformationMessage(foundAppServicePlan);
                     ext.outputChannel.appendLine(foundAppServicePlan);
                 } else {
