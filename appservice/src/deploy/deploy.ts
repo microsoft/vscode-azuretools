@@ -16,7 +16,7 @@ import { deployWar } from './deployWar';
 import { deployZip } from './deployZip';
 import { localGitDeploy } from './localGitDeploy';
 
-export async function deploy(client: SiteClient, fsPath: string, configurationSectionName: string, confirmDeployment: boolean = true, telemetryProperties?: TelemetryProperties): Promise<void> {
+export async function deploy(client: SiteClient, fsPath: string, configurationSectionName: string, telemetryProperties?: TelemetryProperties): Promise<void> {
     const config: SiteConfigResource = await client.getSiteConfig();
     if (telemetryProperties) {
         try {
@@ -62,10 +62,10 @@ export async function deploy(client: SiteClient, fsPath: string, configurationSe
                 throw new Error(localize('gitHubConnected', '"{0}" is connected to a GitHub repository. Push to GitHub repository to deploy.', client.fullName));
             default: //'None' or any other non-supported scmType
                 if (config.linuxFxVersion && config.linuxFxVersion.toLowerCase().startsWith('tomcat')) {
-                    await deployWar(client, fsPath, confirmDeployment, telemetryProperties);
+                    await deployWar(client, fsPath);
                     break;
                 }
-                await deployZip(client, fsPath, configurationSectionName, confirmDeployment, telemetryProperties);
+                await deployZip(client, fsPath, configurationSectionName);
                 break;
         }
 

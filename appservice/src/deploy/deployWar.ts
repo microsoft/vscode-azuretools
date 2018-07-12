@@ -4,8 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as fs from 'fs';
-import * as vscode from 'vscode';
-import { DialogResponses, TelemetryProperties } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { ext } from '../extensionVariables';
 import * as FileUtilities from '../FileUtilities';
@@ -15,15 +13,7 @@ import { SiteClient } from '../SiteClient';
 import { formatDeployLog } from './formatDeployLog';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
-export async function deployWar(client: SiteClient, fsPath: string, confirmDeployment: boolean, telemetryProperties?: TelemetryProperties): Promise<void> {
-    if (confirmDeployment) {
-        const warning: string = localize('warWarning', 'Are you sure you want to deploy to "{0}"? This will overwrite the ROOT application and cannot be undone.', client.fullName);
-        telemetryProperties.cancelStep = 'confirmDestructiveDeployment';
-        const deploy: vscode.MessageItem = { title: localize('deploy', 'Deploy') };
-        await ext.ui.showWarningMessage(warning, { modal: true }, deploy, DialogResponses.cancel);
-        telemetryProperties.cancelStep = '';
-    }
-
+export async function deployWar(client: SiteClient, fsPath: string): Promise<void> {
     const kuduClient: KuduClient = await getKuduClient(client);
     if (FileUtilities.getFileExtension(fsPath) !== 'war') {
         throw new Error(localize('NotAWarError', 'Path specified is not a war file'));
