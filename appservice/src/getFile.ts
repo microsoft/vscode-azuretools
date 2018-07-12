@@ -18,7 +18,7 @@ export async function getFile(client: SiteClient, filePath: string): Promise<IFi
     // tslint:disable:no-unsafe-any
     // tslint:disable-next-line:no-any
     const response: any = (<any>await kuduClient.vfs.getItemWithHttpOperationResponse(filePath)).response;
-    if (response && response.body && response.headers && response.headers.etag) {
+    if (response && response.headers && response.headers.etag) {
         return { data: response.body, etag: response.headers.etag };
         // tslint:enable:no-unsafe-any
     } else {
