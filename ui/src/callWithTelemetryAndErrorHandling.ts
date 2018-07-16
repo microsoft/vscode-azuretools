@@ -47,7 +47,9 @@ export async function callWithTelemetryAndErrorHandling(callbackId: string, call
 
         if (!context.suppressErrorDisplay) {
             // Always append the error to the output channel, but only 'show' the output channel for multiline errors
-            ext.outputChannel.appendLine(localize('outputError', 'Error: {0}', errorData.message));
+            if (errorData.errorType !== 'MavenExecutionError') {
+                ext.outputChannel.appendLine(localize('outputError', 'Error: {0}', errorData.message));
+            }
 
             let result: MessageItem | undefined;
             if (errorData.message.includes('\n')) {
