@@ -46,12 +46,13 @@ export async function callWithTelemetryAndErrorHandling(callbackId: string, call
         }
 
         if (!context.suppressErrorDisplay) {
-            // Always append the error to the output channel, but only 'show' the output channel for multiline errors
+            // Dismiss the 'MavenExecutionError', this is to avoid errors being printed twice.
             if (errorData.errorType !== 'MavenExecutionError') {
                 ext.outputChannel.appendLine(localize('outputError', 'Error: {0}', errorData.message));
             }
 
             let result: MessageItem | undefined;
+            // Only 'show' the output channel for multiline errors
             if (errorData.message.includes('\n')) {
                 ext.outputChannel.show();
                 result = await window.showErrorMessage(localize('multilineError', 'An error has occured. Check output window for more details.'), DialogResponses.reportAnIssue);
