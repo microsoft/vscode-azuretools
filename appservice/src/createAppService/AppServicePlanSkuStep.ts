@@ -14,7 +14,7 @@ import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<IAppServiceWizardContext> {
         if (!wizardContext.newPlanSku) {
-            const pricingTiers: IAzureQuickPickItem<SkuDescription>[] = this.getPlanSkus().map((s: SkuDescription) => {
+            let pricingTiers: IAzureQuickPickItem<SkuDescription>[] = this.getPlanSkus().map((s: SkuDescription) => {
                 return {
                     label: s.name,
                     description: s.tier,
@@ -24,7 +24,9 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
 
             if (wizardContext.newSiteOS === WebsiteOS.linux) {
                 // Free tier is not supported for Linux asp's
-                pricingTiers.shift();
+                pricingTiers = pricingTiers.filter((plan: IAzureQuickPickItem<SkuDescription>) => {
+                    return plan.description !== 'Free';
+                });
             }
 
             wizardContext.newPlanSku = (await ext.ui.showQuickPick(pricingTiers, { placeHolder: localize('PricingTierPlaceholder', 'Select a pricing tier for the new App Service plan.') })).data;
