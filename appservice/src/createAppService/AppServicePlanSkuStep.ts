@@ -8,18 +8,26 @@ import { AzureWizardPromptStep } from 'vscode-azureextensionui';
 import { IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
+import { WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<IAppServiceWizardContext> {
         if (!wizardContext.newPlanSku) {
-            const pricingTiers: IAzureQuickPickItem<SkuDescription>[] = this.getPlanSkus().map((s: SkuDescription) => {
+            let pricingTiers: IAzureQuickPickItem<SkuDescription>[] = this.getPlanSkus().map((s: SkuDescription) => {
                 return {
                     label: s.name,
                     description: s.tier,
                     data: s
                 };
             });
+
+            if (wizardContext.newSiteOS === WebsiteOS.linux) {
+                // Free tier is not supported for Linux asp's
+                pricingTiers = pricingTiers.filter((plan: IAzureQuickPickItem<SkuDescription>) => {
+                    return plan.description !== 'Free';
+                });
+            }
 
             wizardContext.newPlanSku = (await ext.ui.showQuickPick(pricingTiers, { placeHolder: localize('PricingTierPlaceholder', 'Select a pricing tier for the new App Service plan.') })).data;
         }
@@ -30,24 +38,10 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
     private getPlanSkus(): SkuDescription[] {
         return [
             {
-                name: 'S1',
-                tier: 'Standard',
-                size: 'S1',
-                family: 'S',
-                capacity: 1
-            },
-            {
-                name: 'S2',
-                tier: 'Standard',
-                size: 'S2',
-                family: 'S',
-                capacity: 1
-            },
-            {
-                name: 'S3',
-                tier: 'Standard',
-                size: 'S3',
-                family: 'S',
+                name: 'F1',
+                tier: 'Free',
+                size: 'F1',
+                family: 'F',
                 capacity: 1
             },
             {
@@ -69,6 +63,27 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
                 tier: 'Basic',
                 size: 'B3',
                 family: 'B',
+                capacity: 1
+            },
+            {
+                name: 'S1',
+                tier: 'Standard',
+                size: 'S1',
+                family: 'S',
+                capacity: 1
+            },
+            {
+                name: 'S2',
+                tier: 'Standard',
+                size: 'S2',
+                family: 'S',
+                capacity: 1
+            },
+            {
+                name: 'S3',
+                tier: 'Standard',
+                size: 'S3',
+                family: 'S',
                 capacity: 1
             }
         ];
