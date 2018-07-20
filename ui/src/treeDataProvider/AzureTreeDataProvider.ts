@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as path from 'path';
-import { Disposable, Event, EventEmitter, Extension, extensions, QuickPickOptions, TreeDataProvider, TreeItem, TreeItemCollapsibleState } from 'vscode';
 import * as vscode from 'vscode';
+import { Disposable, Event, EventEmitter, Extension, extensions, QuickPickOptions, TreeDataProvider, TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { IActionContext, IAzureNode, IAzureParentTreeItem, IAzureQuickPickItem, IAzureTreeItem, IChildProvider } from '../../index';
 import { AzureAccount, AzureLoginStatus, AzureResourceFilter } from '../azure-account.api';
 import { callWithTelemetryAndErrorHandling } from '../callWithTelemetryAndErrorHandling';
@@ -13,6 +13,7 @@ import { ArgumentError, UserCancelledError } from '../errors';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { parseError } from '../parseError';
+import { TestAzureAccount } from '../TestAzureAccount';
 import { AzureNode } from './AzureNode';
 import { AzureParentNode } from './AzureParentNode';
 import { LoadMoreTreeItem } from './LoadMoreTreeItem';
@@ -49,7 +50,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
         if (!azureAccountExtension) {
             throw new Error(localize('NoAccountExtensionError', 'The Azure Account Extension is required for the App Service tools.'));
         } else {
-            this._azureAccount = azureAccountExtension.exports;
+            this._azureAccount = new TestAzureAccount();
         }
 
         this._disposables.push(this._azureAccount.onFiltersChanged(async () => await this.refresh(undefined, false)));
