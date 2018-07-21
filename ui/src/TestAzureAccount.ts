@@ -17,10 +17,10 @@ export class TestAzureAccount implements AzureAccount {
     public onSessionsChanged: Event<void>;
     public subscriptions: AzureSubscription[];
     public onSubscriptionsChanged: Event<void>;
-    public waitForSubscriptions: () => Promise<boolean>; // IMPLEMENT
+    public waitForSubscriptions: () => Promise<boolean>;
     public filters: AzureResourceFilter[];
     public onFiltersChanged: Event<void>;
-    public waitForFilters: () => Promise<boolean>; // IMPLEMENT
+    public waitForFilters: () => Promise<boolean>;
     private onStatusChangedEmitter: EventEmitter<AzureLoginStatus>;
     private onFiltersChangedEmitter: EventEmitter<void>;
 
@@ -31,16 +31,16 @@ export class TestAzureAccount implements AzureAccount {
         this.onStatusChanged = this.onStatusChangedEmitter.event;
         this.onFiltersChangedEmitter = new EventEmitter<void>();
         this.onFiltersChanged = this.onFiltersChangedEmitter.event;
-        console.log('TestAzureAccountCreated');
+        this.filters = [];
         this.getTestSubscription();
     }
 
     private async getTestSubscription(): Promise<void> {
         type servicePrincipalCredentials = ApplicationTokenCredentials & { environment: AzureEnvironment };
-        const clientId: string | undefined = 'du44tQEltLOBZ91c5zAeL1isGNNRFfEX4mAJdh4ViVM=';
-        const secret: string | undefined = 'hCgJr2NdSCFiBYt+NytBnFn4rydn/xt9ZQtYgCJPufk=';
+        // REMOVE ALL OF THIS
+        const clientId: string | undefined = '0f533bd7-85c2-4c2e-994a-84631f177a73';
+        const secret: string | undefined = 'du44tQEltLOBZ91c5zAeL1isGNNRFfEX4mAJdh4ViVM=';
         const domain: string | undefined = '72f988bf-86f1-41af-91ab-2d7cd011db47';
-        console.log('GetTestSubscription');
         if (!clientId || !secret || !domain) {
             throw new Error('Tests can only be run on Travis.');
         }
@@ -66,10 +66,12 @@ export class TestAzureAccount implements AzureAccount {
         };
 
         if (subscriptions[0].id && subscriptions[0].displayName && subscriptions[0].subscriptionId) {
-            console.log('I got the subscription');
-            this.subscriptions.push({session: session, subscription: subscriptions[0]});
-            this.onStatusChangedEmitter.fire(this.status);
+            const testAzureSubscription: AzureSubscription = { session: session, subscription: subscriptions[0] };
+            this.filters.push(testAzureSubscription);
+            this.subscriptions.push(testAzureSubscription);
             this.status = 'LoggedIn';
+            this.onStatusChangedEmitter.fire(this.status);
+            this.onFiltersChangedEmitter.fire();
         } else {
             throw new ArgumentError(subscriptions[0]);
         }
