@@ -40,17 +40,19 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
 
     private _disposables: Disposable[] = [];
 
-    constructor(resourceProvider: IChildProvider, loadMoreCommandId: string, rootTreeItems?: IAzureParentTreeItem[]) {
+    constructor(resourceProvider: IChildProvider, loadMoreCommandId: string, rootTreeItems?: IAzureParentTreeItem[], testAccount: boolean = false) {
         this._resourceProvider = resourceProvider;
         this._loadMoreCommandId = loadMoreCommandId;
         this._customRootNodes = rootTreeItems ? rootTreeItems.map((treeItem: IAzureParentTreeItem) => new RootNode(this, treeItem, this._onNodeCreateEmitter)) : [];
 
         // Rather than expose 'AzureAccount' types in the index.ts contract, simply get it inside of this npm package
         const azureAccountExtension: Extension<AzureAccount> | undefined = extensions.getExtension<AzureAccount>('ms-vscode.azure-account');
-        if (!azureAccountExtension) {
+        if (testAccount) {
+            this._azureAccount = new TestAzureAccount();
+        } else if (!azureAccountExtension) {
             throw new Error(localize('NoAccountExtensionError', 'The Azure Account Extension is required for the App Service tools.'));
         } else {
-            this._azureAccount = new TestAzureAccount();
+            this._azureAccount = azureAccountExtension.exports;
         }
 
         this._disposables.push(this._azureAccount.onFiltersChanged(async () => await this.refresh(undefined, false)));
