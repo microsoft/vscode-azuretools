@@ -29,8 +29,9 @@ export declare class AzureTreeDataProvider implements TreeDataProvider<IAzureNod
      * @param ui Used to get input from the user
      * @param telemetryReporter Optionally used to track telemetry for the tree
      * @param rootTreeItems Any nodes other than the subscriptions that should be shown at the root of the explorer
+     * @param testAccount Enable to replace Azure Accounts extension with test Azure Account (for automated testing)
      */
-    constructor(resourceProvider: IChildProvider, loadMoreCommandId: string, rootTreeItems?: IAzureParentTreeItem[]);
+    constructor(resourceProvider: IChildProvider, loadMoreCommandId: string, rootTreeItems?: IAzureParentTreeItem[], testAccount?: boolean);
     public getTreeItem(node: IAzureNode): TreeItem;
     public getChildren(node?: IAzureParentNode): Promise<IAzureNode[]>;
     public refresh(node?: IAzureNode, clearCache?: boolean): Promise<void>;
