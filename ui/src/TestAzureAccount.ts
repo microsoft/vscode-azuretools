@@ -45,6 +45,10 @@ export class TestAzureAccount implements AzureAccount {
             throw new Error('Tests can only be run on Travis.');
         }
         this.status = 'LoggingIn';
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        await sleep(5000);
         const credentials: servicePrincipalCredentials = <servicePrincipalCredentials>(await loginWithServicePrincipalSecret(clientId, secret, domain));
         const subscriptionClient: SubscriptionClient = new SubscriptionClient(credentials);
         const subscriptions: SubscriptionListResult = await subscriptionClient.subscriptions.list();
