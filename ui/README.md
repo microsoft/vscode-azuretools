@@ -120,6 +120,23 @@ public async createChild(node: IAzureNode, showCreatingNode: (label: string) => 
 }
 ```
 
+## Telemetry
+
+To create a telemetry reporter for your extension's use, use the following code:
+
+```typescript
+import { createTelemetryReporter } from 'vscode-azureextensionui';
+
+export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
+    let reporter = createTelemetryReporter(ctx);
+    reporter.sendTelemetryEvent(<args>);
+}
+```
+
+### Debug telemetry
+
+If the environment variable `DEBUG` contains `vscode-azureextensionui:telemetry` or `vscode-azureextensionui:*` (see [debug package documentation](https://www.npmjs.com/package/debug)), then the telemetry reporter created by `createTelemetryReporter()` will display to the console window only, and will not attempt to send any data.
+
 ## Azure Base Editor
 
 Documentation coming soon...

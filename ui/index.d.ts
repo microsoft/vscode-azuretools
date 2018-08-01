@@ -227,6 +227,20 @@ export interface IActionContext {
     rethrowError: boolean;
 }
 
+export interface ITelemetryReporter {
+    sendTelemetryEvent(eventName: string, properties?: { [key: string]: string }, measures?: { [key: string]: number }): void;
+}
+
+/**
+ * Creates a telemetry reporter.
+ * If the environment variable DEBUG contains "vscode-azureextensionui:telemetry" or "vscode-azureextensionui:*"
+ * (see https://www.npmjs.com/package/debug for more information), then the telemetry reporter returned will display
+ * to the console window only, and will not send any data.
+ * @param ctx The extension context
+ * @returns An object implementing ITelemetryReporter
+ */
+export declare function createTelemetryReporter(ctx: ExtensionContext): ITelemetryReporter;
+
 export interface TelemetryProperties {
     /**
      * Defaults to `false`
@@ -628,7 +642,7 @@ export interface UIExtensionVariables {
     context: ExtensionContext;
     outputChannel: OutputChannel;
     ui: IAzureUserInput;
-    reporter: TelemetryReporter | undefined;
+    reporter: ITelemetryReporter | undefined;
 }
 
 export interface IAddUserAgent {

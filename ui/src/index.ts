@@ -22,3 +22,4 @@ export * from './wizard/ResourceGroupListStep';
 export * from './wizard/StorageAccountListStep';
 export { registerUIExtensionVariables } from './extensionVariables';
 export * from './extensionUserAgent';
+export * from './createTelemetryReporter';
