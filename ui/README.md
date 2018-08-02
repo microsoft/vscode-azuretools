@@ -135,7 +135,7 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
 
 ### Debug telemetry
 
-If the environment variable `DEBUG` contains `vscode-azureextensionui:telemetry` or `vscode-azureextensionui:*` (see [debug package documentation](https://www.npmjs.com/package/debug)), then the telemetry reporter created by `createTelemetryReporter()` will display to the console window only, and will not attempt to send any data.
+If the environment variable `DEBUGTELEMETRY` is set to a non-empty, non-zero value, then the telemetry reporter created by `createTelemetryReporter()` will display to the console window only, and will not attempt to send any data.
 
 ## Azure Base Editor
 

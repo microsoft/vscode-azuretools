@@ -4,18 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import * as debug from 'debug';
+import * as console from 'console';
+import * as process from 'process';
 import * as vscode from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
 import { ITelemetryReporter } from '../index';
 import { extInitialized } from './extensionVariables';
 import { getPackageInfo } from './getPackageInfo';
 
-// To enable: set DEBUG=vscode-azureextensionui:telemetry
-// See https://www.npmjs.com/package/debug for more info
-const log: debug.IDebugger = debug('vscode-azureextensionui:telemetry');
-// tslint:disable-next-line:no-unsafe-any no-console
-log.log = console.log.bind(console);
+const debugTelemetryEnabled: boolean = !!process.env.DEBUGTELEMETRY;
 
 class DebugReporter implements ITelemetryReporter {
     constructor(private _extensionName: string, private _extensionVersion: string) {
@@ -27,7 +24,8 @@ class DebugReporter implements ITelemetryReporter {
             const propertiesString: string = JSON.stringify(properties || {});
             // tslint:disable-next-line:strict-boolean-expressions
             const measuresString: string = JSON.stringify(measures || {});
-            log(`** TELEMETRY("${this._extensionName}/${eventName}", ${this._extensionVersion}) properties=${propertiesString}, measures=${measuresString}`);
+            // tslint:disable-next-line:no-console
+            console.log(`** TELEMETRY("${this._extensionName}/${eventName}", ${this._extensionVersion}) properties=${propertiesString}, measures=${measuresString}`);
         } catch (error) {
             console.error(error);
         }
@@ -39,7 +37,8 @@ export function createTelemetryReporter(ctx: vscode.ExtensionContext): ITelemetr
 
     const { extensionName, extensionVersion, aiKey } = getPackageInfo(ctx);
 
-    if (log.enabled || !aiKey) {
+    if (debugTelemetryEnabled || !aiKey) {
+        console.warn(aiKey ? `${extensionName}: DEBUGTELEMETRY mode enabled - not sending telemetry` : 'Unable to obtain package info, cannot send telemetry');
         return new DebugReporter(extensionName, extensionVersion);
     } else {
         const reporter: TelemetryReporter = new TelemetryReporter(extensionName, extensionVersion, aiKey);
