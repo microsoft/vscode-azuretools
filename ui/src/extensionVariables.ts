@@ -32,7 +32,9 @@ class UninitializedExtensionVariables implements UIExtensionVariables {
  * Container for common extension variables used throughout the UI package. They must be initialized with registerUIExtensionVariables
  */
 export let ext: UIExtensionVariables = new UninitializedExtensionVariables();
+export let extInitialized: boolean = false;
 
 export function registerUIExtensionVariables(extVars: UIExtensionVariables): void {
     ext = extVars;
+    extInitialized = true;
 }
