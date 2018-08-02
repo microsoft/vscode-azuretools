@@ -11,7 +11,7 @@ import { ITelemetryReporter } from '../index';
 // To enable: set DEBUG=vscode-azureextensionui:telemetry
 // See https://www.npmjs.com/package/debug for more info
 const log: debug.IDebugger = debug('vscode-azureextensionui:telemetry');
-// tslint:disable-next-line:no-unsafe-any
+// tslint:disable-next-line:no-unsafe-any no-console
 log.log = console.log.bind(console);
 
 class DebugReporter extends vscode.Disposable implements ITelemetryReporter {
