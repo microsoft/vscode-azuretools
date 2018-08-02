@@ -1,7 +1,7 @@
 {
     "name": "vscode-azureextensionui",
     "author": "Microsoft Corporation",
-    "version": "0.16.5",
+    "version": "0.16.6",
     "description": "Common UI tools for developing Azure extensions for VS Code",
     "tags": [
         "azure",
@@ -45,9 +45,9 @@
         "@types/mocha": "^2.2.32",
         "@types/opn": "^5.1.0",
         "mocha": "^2.3.3",
-        "typescript": "^2.5.3",
         "tslint": "^5.7.0",
         "tslint-microsoft-contrib": "5.0.1",
+        "typescript": "^2.5.3",
         "vscode": "^1.1.5"
     },
     "engines": {

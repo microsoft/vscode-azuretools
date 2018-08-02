@@ -3,17 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import * as assert from 'assert';
 import { MessageItem, window } from 'vscode';
 import { IActionContext } from '../index';
 import { IParsedError } from '../index';
 import { DialogResponses } from './DialogResponses';
-import { ext } from './extensionVariables';
+import { ext, extInitialized } from './extensionVariables';
 import { localize } from './localize';
 import { parseError } from './parseError';
 import { reportAnIssue } from './reportAnIssue';
 
 // tslint:disable-next-line:no-any
 export async function callWithTelemetryAndErrorHandling(callbackId: string, callback: (this: IActionContext) => any): Promise<any> {
+    assert(extInitialized, 'registerUIExtensionVariables must be called first');
+
     const start: number = Date.now();
     const context: IActionContext = {
         properties: {
