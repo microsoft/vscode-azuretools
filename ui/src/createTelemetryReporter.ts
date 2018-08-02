@@ -33,7 +33,7 @@ class DebugReporter implements ITelemetryReporter {
 }
 
 export function createTelemetryReporter(ctx: vscode.ExtensionContext): ITelemetryReporter {
-    assert(extInitialized, 'Must call registerUIExtensionVariables before calling createTelemetryReporter');
+    assert(extInitialized, 'registerUIExtensionVariables must be called first');
 
     const { extensionName, extensionVersion, aiKey } = getPackageInfo(ctx);
 

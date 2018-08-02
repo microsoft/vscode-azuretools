@@ -11,7 +11,7 @@ import { ext, extInitialized } from "./extensionVariables";
 import { parseError } from "./parseError";
 
 export function getPackageInfo(ctx?: ExtensionContext): { extensionName: string, extensionVersion: string, aiKey?: string } {
-    assert(extInitialized, 'registerUIExtensionVariables has not been called');
+    assert(extInitialized, 'registerUIExtensionVariables must be called first');
 
     if (!ctx) {
         ctx = ext.context;
