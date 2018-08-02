@@ -8,6 +8,7 @@ import { ApplicationTokenCredentials, AzureEnvironment, loginWithServicePrincipa
 import { Event, EventEmitter } from 'vscode';
 import { AzureAccount, AzureLoginStatus, AzureResourceFilter, AzureSession, AzureSubscription } from './azure-account.api';
 import { ArgumentError } from './errors';
+import { localize } from './localize';
 
 export class TestAzureAccount implements AzureAccount {
     public status: AzureLoginStatus;
@@ -36,12 +37,11 @@ export class TestAzureAccount implements AzureAccount {
 
     public async getTestSubscription(): Promise<void> {
         type servicePrincipalCredentials = ApplicationTokenCredentials & { environment: AzureEnvironment };
-        // REMOVE ALL OF THIS
-        const clientId: string | undefined = '0f533bd7-85c2-4c2e-994a-84631f177a73';
-        const secret: string | undefined = 'du44tQEltLOBZ91c5zAeL1isGNNRFfEX4mAJdh4ViVM=';
-        const domain: string | undefined = '72f988bf-86f1-41af-91ab-2d7cd011db47';
+        const clientId: string | undefined = process.env.SERVICE_PRINCIPAL_CLIENT_ID ;
+        const secret: string | undefined = process.env.SERVICE_PRINCIPAL_SECRET;
+        const domain: string | undefined = process.env.SERVICE_PRINCIPAL_DOMAIN;
         if (!clientId || !secret || !domain) {
-            throw new Error('Tests can only be run on Travis.');
+            throw new Error(localize('travisOnly', 'Azure Resources unit tests can only be run on Travis CI.'));
         }
         this.status = 'LoggingIn';
         const credentials: servicePrincipalCredentials = <servicePrincipalCredentials>(await loginWithServicePrincipalSecret(clientId, secret, domain));
@@ -49,30 +49,28 @@ export class TestAzureAccount implements AzureAccount {
         const subscriptions: SubscriptionListResult = await subscriptionClient.subscriptions.list();
         // returns an array withy subscriptionId, displayName
         const tenants: TenantListResult = await subscriptionClient.tenants.list();
-        // contains tenantId (if I need that)
-        let tenantId: string;
+
         if (tenants[0].id) {
-            tenantId = <string>tenants[0].id;
+            const tenantId: string = <string>tenants[0].id;
+            const session: AzureSession = {
+                environment: credentials.environment,
+                userId: '',
+                tenantId: tenantId,
+                credentials: credentials
+            };
+
+            if (subscriptions && subscriptions[0].id && subscriptions[0].displayName && subscriptions[0].subscriptionId) {
+                const testAzureSubscription: AzureSubscription = { session: session, subscription: subscriptions[0] };
+                this.filters.push(testAzureSubscription);
+                this.subscriptions.push(testAzureSubscription);
+                this.status = 'LoggedIn';
+                this.onStatusChangedEmitter.fire(this.status);
+                this.onFiltersChangedEmitter.fire();
+            } else {
+                throw new ArgumentError(subscriptions[0]);
+            }
         } else {
             throw new ArgumentError(tenants[0]);
-        }
-
-        const session: AzureSession = {
-            environment: credentials.environment,
-            userId: '',
-            tenantId: tenantId,
-            credentials: credentials
-        };
-
-        if (subscriptions[0].id && subscriptions[0].displayName && subscriptions[0].subscriptionId) {
-            const testAzureSubscription: AzureSubscription = { session: session, subscription: subscriptions[0] };
-            this.filters.push(testAzureSubscription);
-            this.subscriptions.push(testAzureSubscription);
-            this.status = 'LoggedIn';
-            this.onStatusChangedEmitter.fire(this.status);
-            this.onFiltersChangedEmitter.fire();
-        } else {
-            throw new ArgumentError(subscriptions[0]);
         }
     }
 }
