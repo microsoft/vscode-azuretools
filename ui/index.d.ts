@@ -233,9 +233,12 @@ export interface ITelemetryReporter {
 
 /**
  * Creates a telemetry reporter.
+ *
  * If the environment variable DEBUG contains "vscode-azureextensionui:telemetry" or "vscode-azureextensionui:*"
  * (see https://www.npmjs.com/package/debug for more information), then the telemetry reporter returned will display
  * to the console window only, and will not send any data.
+ *
+ * The returned reporter does not need to be disposed by the caller, it will be disposed automatically.
  * @param ctx The extension context
  * @returns An object implementing ITelemetryReporter
  */

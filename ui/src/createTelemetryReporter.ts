@@ -42,6 +42,7 @@ export function createTelemetryReporter(ctx: vscode.ExtensionContext): ITelemetr
         reporter = new DebugReporter(ctx);
     } else {
         reporter = new TelemetryReporter(packageInfo.name, packageInfo.version, packageInfo.aiKey);
+        ctx.subscriptions.push(reporter);
     }
 
     return reporter;
