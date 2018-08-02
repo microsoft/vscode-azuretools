@@ -32,10 +32,9 @@ export class TestAzureAccount implements AzureAccount {
         this.onFiltersChangedEmitter = new EventEmitter<void>();
         this.onFiltersChanged = this.onFiltersChangedEmitter.event;
         this.filters = [];
-        this.getTestSubscription();
     }
 
-    private async getTestSubscription(): Promise<void> {
+    public async getTestSubscription(): Promise<void> {
         type servicePrincipalCredentials = ApplicationTokenCredentials & { environment: AzureEnvironment };
         // REMOVE ALL OF THIS
         const clientId: string | undefined = '0f533bd7-85c2-4c2e-994a-84631f177a73';
@@ -45,10 +44,6 @@ export class TestAzureAccount implements AzureAccount {
             throw new Error('Tests can only be run on Travis.');
         }
         this.status = 'LoggingIn';
-        function sleep(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
-        await sleep(5000);
         const credentials: servicePrincipalCredentials = <servicePrincipalCredentials>(await loginWithServicePrincipalSecret(clientId, secret, domain));
         const subscriptionClient: SubscriptionClient = new SubscriptionClient(credentials);
         const subscriptions: SubscriptionListResult = await subscriptionClient.subscriptions.list();
