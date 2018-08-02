@@ -59,6 +59,7 @@ export class TestAzureAccount implements AzureAccount {
                 credentials: credentials
             };
 
+            // tslint:disable-next-line:strict-boolean-expressions
             if (subscriptions && subscriptions[0].id && subscriptions[0].displayName && subscriptions[0].subscriptionId) {
                 const testAzureSubscription: AzureSubscription = { session: session, subscription: subscriptions[0] };
                 this.filters.push(testAzureSubscription);
