@@ -14,15 +14,18 @@ const log: debug.IDebugger = debug('vscode-azureextensionui:telemetry');
 // tslint:disable-next-line:no-unsafe-any no-console
 log.log = console.log.bind(console);
 
-class DebugReporter extends vscode.Disposable implements ITelemetryReporter {
-    private _packageInfo: IPackageInfo;
+class DebugReporter implements ITelemetryReporter {
+    private _extensionName: string;
+    private _extensionVersion: string;
 
-    constructor(ctx: vscode.ExtensionContext) {
-        super(() => {
-            // Nothing to dispose
-        });
-
-        this._packageInfo = getPackageInfo(ctx);
+    constructor(extensionPackage: IPackageInfo | undefined) {
+        if (extensionPackage) {
+            this._extensionName = extensionPackage.name;
+            this._extensionVersion = extensionPackage.version;
+        } else {
+            this._extensionName = 'UNKNOWN-PACKAGE';
+            this._extensionVersion = 'UNKNOWN-VERSION';
+        }
     }
 
     public sendTelemetryEvent(eventName: string, properties?: { [key: string]: string; }, measures?: { [key: string]: number; }): void {
@@ -30,22 +33,26 @@ class DebugReporter extends vscode.Disposable implements ITelemetryReporter {
         const propertiesString: string = JSON.stringify(properties || {});
         // tslint:disable-next-line:strict-boolean-expressions
         const measuresString: string = JSON.stringify(measures || {});
-        log(`** TELEMETRY("${this._packageInfo.name}/${eventName}", ${this._packageInfo.version}) properties=${propertiesString}, measures=${measuresString}`);
+        log(`** TELEMETRY("${this._extensionName}/${eventName}", ${this._extensionVersion}) properties=${propertiesString}, measures=${measuresString}`);
     }
 }
 
 export function createTelemetryReporter(ctx: vscode.ExtensionContext): ITelemetryReporter {
-    const packageInfo: IPackageInfo = getPackageInfo(ctx);
-    let reporter: ITelemetryReporter & vscode.Disposable;
+    let packageInfo: IPackageInfo | undefined;
 
-    if (log.enabled) {
-        reporter = new DebugReporter(ctx);
-    } else {
-        reporter = new TelemetryReporter(packageInfo.name, packageInfo.version, packageInfo.aiKey);
-        ctx.subscriptions.push(reporter);
+    try {
+        packageInfo = getPackageInfo(ctx);
+    } catch (error) {
+        console.error('Could not obtain extension package info');
     }
 
-    return reporter;
+    if (log.enabled || !packageInfo) {
+        return new DebugReporter(packageInfo);
+    } else {
+        const reporter: TelemetryReporter = new TelemetryReporter(packageInfo.name, packageInfo.version, packageInfo.aiKey);
+        ctx.subscriptions.push(reporter);
+        return reporter;
+    }
 }
 
 interface IPackageInfo {
