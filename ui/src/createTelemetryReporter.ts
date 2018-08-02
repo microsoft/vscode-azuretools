@@ -30,7 +30,7 @@ class DebugReporter extends vscode.Disposable implements ITelemetryReporter {
         const propertiesString: string = JSON.stringify(properties || {});
         // tslint:disable-next-line:strict-boolean-expressions
         const measuresString: string = JSON.stringify(measures || {});
-        log(`** TELEMETRY("${this._packageInfo.name}/${eventName}", v${this._packageInfo.version}) properties=${propertiesString}, measures=${measuresString}`);
+        log(`** TELEMETRY("${this._packageInfo.name}/${eventName}", ${this._packageInfo.version}) properties=${propertiesString}, measures=${measuresString}`);
     }
 }
 
