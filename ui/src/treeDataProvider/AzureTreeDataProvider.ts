@@ -24,7 +24,6 @@ const signInLabel: string = localize('signInLabel', 'Sign in to Azure...');
 const createAccountLabel: string = localize('createAccountLabel', 'Create a Free Azure Account...');
 const signInCommandId: string = 'azure-account.login';
 const createAccountCommandId: string = 'azure-account.createAccount';
-const testingEnvironmentEnabled: boolean = !!process.env.TESTINGENVIRONMENT;
 
 export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disposable {
     public static readonly subscriptionContextValue: string = SubscriptionNode.contextValue;
@@ -48,7 +47,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
 
         // Rather than expose 'AzureAccount' types in the index.ts contract, simply get it inside of this npm package
         const azureAccountExtension: Extension<AzureAccount> | undefined = extensions.getExtension<AzureAccount>('ms-vscode.azure-account');
-        if (testingEnvironmentEnabled) {
+        if (testAccount) {
             this._azureAccount = testAccount;
         } else if (!azureAccountExtension) {
             throw new Error(localize('NoAccountExtensionError', 'The Azure Account Extension is required for the App Service tools.'));
