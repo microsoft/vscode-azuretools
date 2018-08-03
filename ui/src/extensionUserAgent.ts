@@ -14,7 +14,7 @@ export function addExtensionUserAgent(client: IAddUserAgent): void {
 }
 
 function getExtensionUserAgent(): string {
-    const [extensionName, extensionVersion]: [string, string] = getPackageInfo();
+    const { extensionName, extensionVersion } = getPackageInfo();
     return `${extensionName}/${extensionVersion}`;
 }
 

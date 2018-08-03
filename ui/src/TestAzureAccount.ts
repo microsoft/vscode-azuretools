@@ -41,7 +41,7 @@ export class TestAzureAccount implements AzureAccount {
         const secret: string | undefined = process.env.SERVICE_PRINCIPAL_SECRET;
         const domain: string | undefined = process.env.SERVICE_PRINCIPAL_DOMAIN;
         if (!clientId || !secret || !domain) {
-            throw new Error(localize('travisOnly', 'Azure Resources unit tests can only be run on Travis CI.'));
+            throw new Error(localize('travisOnly', 'TestAzureAccount cannot be used without the following environment variables: SERVICE_PRINCIPAL_CLIENT_ID, SERVICE_PRINCIPAL_SECRET, SERVICE_PRINCIPAL_DOMAIN'));
         }
         this.status = 'LoggingIn';
         const credentials: servicePrincipalCredentials = <servicePrincipalCredentials>(await loginWithServicePrincipalSecret(clientId, secret, domain));

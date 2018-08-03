@@ -229,6 +229,22 @@ export interface IActionContext {
     rethrowError: boolean;
 }
 
+export interface ITelemetryReporter {
+    sendTelemetryEvent(eventName: string, properties?: { [key: string]: string }, measures?: { [key: string]: number }): void;
+}
+
+/**
+ * Creates a telemetry reporter.
+ *
+ * If the environment variable DEBUGTELEMETRY is set to non-empty and non-zero, then the telemetry reporter returned will display
+ * to the console window only, and will not send any data.
+ *
+ * The returned reporter does not need to be disposed by the caller, it will be disposed automatically.
+ * @param ctx The extension context
+ * @returns An object implementing ITelemetryReporter
+ */
+export declare function createTelemetryReporter(ctx: ExtensionContext): ITelemetryReporter;
+
 export interface TelemetryProperties {
     /**
      * Defaults to `false`
@@ -630,7 +646,7 @@ export interface UIExtensionVariables {
     context: ExtensionContext;
     outputChannel: OutputChannel;
     ui: IAzureUserInput;
-    reporter: TelemetryReporter | undefined;
+    reporter: ITelemetryReporter | undefined;
 }
 
 export interface IAddUserAgent {
