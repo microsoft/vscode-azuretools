@@ -5,6 +5,7 @@
 
 import { User } from 'azure-arm-website/lib/models';
 import { BasicAuthenticationCredentials } from 'ms-rest';
+import { addExtensionUserAgent } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { ArgumentError } from './errors';
 import { SiteClient } from './SiteClient';
@@ -17,5 +18,7 @@ export async function getKuduClient(client: SiteClient): Promise<KuduClient> {
 
     const cred: BasicAuthenticationCredentials = new BasicAuthenticationCredentials(user.publishingUserName, user.publishingPassword);
 
-    return new KuduClient(cred, client.kuduUrl);
+    const kuduClient: KuduClient = new KuduClient(cred, client.kuduUrl);
+    addExtensionUserAgent(kuduClient);
+    return kuduClient;
 }
