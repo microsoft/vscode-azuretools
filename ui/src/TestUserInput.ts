@@ -76,6 +76,26 @@ export class TestUserInput implements IAzureUserInput {
         throw new Error(`Unexpected call to showWarningMessage. Message: ${message}`);
     }
 
+    public showInformationMessage<T extends MessageItem>(message: string, ...items: T[]): Thenable<T | undefined>;
+    public showInformationMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Thenable<T | undefined>;
+    // tslint:disable-next-line:no-any
+    public showInformationMessage<T extends MessageItem>(message: string, ...args: any[]): Thenable<T | undefined> {
+        if (args.length > 0) {
+            if (this._inputs.length > 0 && args.length > 0) {
+                const result: string | undefined = this._inputs.shift();
+                // tslint:disable-next-line:no-unsafe-any
+                const matchingItem: T | undefined = args.find((item: T) => item.title === result);
+                if (matchingItem) {
+                    return Promise.resolve(matchingItem);
+                }
+            }
+        } else {
+            return Promise.resolve(undefined);
+        }
+
+        throw new Error(`Unexpected call to showInformationMessage. Message: ${message}`);
+    }
+
     public async showOpenDialog(options: vscode.OpenDialogOptions): Promise<vscode.Uri[]> {
         if (this._inputs.length > 0) {
             const result: string | undefined = this._inputs.shift();

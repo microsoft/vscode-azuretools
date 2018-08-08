@@ -327,6 +327,29 @@ export interface IAzureUserInput {
      * @returns A promise that resolves to the selected resources.
      */
     showOpenDialog(options: OpenDialogOptions): Promise<Uri[]>;
+
+    /**
+     * Show an information message.
+     *
+     * @see [showInformationMessage](#window.showInformationMessage)
+     *
+     * @param message The message to show.
+     * @param items A set of items that will be rendered as actions in the message.
+     * @return A thenable that resolves to the selected item or `undefined` when being dismissed.
+     */
+    showInformationMessage<T extends MessageItem>(message: string, ...items: T[]): Thenable<T | undefined>;
+
+    /**
+     * Show an information message.
+     *
+     * @see [showInformationMessage](#window.showInformationMessage)
+     *
+     * @param message The message to show.
+     * @param options Configures the behaviour of the message.
+     * @param items A set of items that will be rendered as actions in the message.
+     * @return A thenable that resolves to the selected item or `undefined` when being dismissed.
+     */
+    showInformationMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Thenable<T | undefined>;
 }
 
 /**
@@ -343,6 +366,8 @@ export declare class AzureUserInput implements IAzureUserInput {
     public showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
     public showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Promise<MessageItem>;
     public showOpenDialog(options: OpenDialogOptions): Promise<Uri[]>;
+    public showInformationMessage<T extends MessageItem>(message: string, ...items: T[]): Thenable<T | undefined>;
+    public showInformationMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Thenable<T | undefined>;
 }
 
 /**
@@ -360,6 +385,8 @@ export declare class TestUserInput implements IAzureUserInput {
     public showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
     public showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Promise<MessageItem>;
     public showOpenDialog(options: OpenDialogOptions): Promise<Uri[]>;
+    public showInformationMessage<T extends MessageItem>(message: string, ...items: T[]): Thenable<T | undefined>;
+    public showInformationMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Thenable<T | undefined>;
 }
 
 /**

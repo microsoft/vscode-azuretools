@@ -69,6 +69,14 @@ export class AzureUserInput implements IAzureUserInput {
         }
     }
 
+    public showInformationMessage<T extends MessageItem>(message: string, ...items: T[]): Thenable<T | undefined>;
+    public showInformationMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Thenable<T | undefined>;
+    // tslint:disable-next-line:no-any
+    public async showInformationMessage<T extends MessageItem>(message: string, ...args: any[]): Promise<T> {
+        // tslint:disable-next-line:no-unsafe-any
+        return await vscode.window.showInformationMessage(message, ...args);
+    }
+
     public async showOpenDialog(options: vscode.OpenDialogOptions): Promise<vscode.Uri[]> {
         const result: vscode.Uri[] | undefined = await vscode.window.showOpenDialog(options);
 
