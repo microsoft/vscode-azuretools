@@ -6,11 +6,14 @@
 import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { ServiceClientCredentials, ServiceClient } from 'ms-rest';
 import { AzureEnvironment } from 'ms-rest-azure';
-import { Uri, TreeDataProvider, Disposable, TreeItem, Event, OutputChannel, Memento, InputBoxOptions, QuickPickItem, QuickPickOptions, TextDocument, ExtensionContext, MessageItem, OpenDialogOptions, MessageOptions } from 'vscode';
+import { Uri, TreeDataProvider, Disposable, TreeItem, Event, OutputChannel, Memento, InputBoxOptions, QuickPickItem, QuickPickOptions, TextDocument, ExtensionContext, MessageItem, OpenDialogOptions, MessageOptions, EventEmitter } from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
 import { ResourceGroup } from 'azure-arm-resource/lib/resource/models';
 import { StorageAccount, CheckNameAvailabilityResult } from 'azure-arm-storage/lib/models';
-import { TestAzureAccount } from './src';
+import { AzureAccount, AzureLoginStatus, AzureSession, AzureSubscription, AzureResourceFilter } from './src/azure-account.api';
+import { ResourceManagementClient } from 'azure-arm-resource';
+// tslint:disable-next-line:no-require-imports
+import WebSiteManagementClient = require('../appservice/node_modules/azure-arm-website');
 
 export type OpenInPortalOptions = {
     /**
@@ -30,7 +33,7 @@ export declare class AzureTreeDataProvider implements TreeDataProvider<IAzureNod
      * @param ui Used to get input from the user
      * @param telemetryReporter Optionally used to track telemetry for the tree
      * @param rootTreeItems Any nodes other than the subscriptions that should be shown at the root of the explorer
-     * @param testAccount A test Azure Account validated with a service principal that is leveraged for CI testing.
+     * @param testAccount A test Azure Account that leverages a service principal instead of interactive login
      */
     constructor(resourceProvider: IChildProvider, loadMoreCommandId: string, rootTreeItems?: IAzureParentTreeItem[], testAccount?: TestAzureAccount);
     public getTreeItem(node: IAzureNode): TreeItem;
@@ -362,6 +365,29 @@ export declare class TestUserInput implements IAzureUserInput {
     public showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
     public showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Promise<MessageItem>;
     public showOpenDialog(options: OpenDialogOptions): Promise<Uri[]>;
+}
+
+export declare class TestAzureAccount implements AzureAccount {
+    status: AzureLoginStatus;
+    onStatusChanged: Event<AzureLoginStatus>;
+    waitForLogin: () => Promise<boolean>;
+    sessions: AzureSession[];
+    onSessionsChanged: Event<void>;
+    subscriptions: AzureSubscription[];
+    onSubscriptionsChanged: Event<void>;
+    waitForSubscriptions: () => Promise<boolean>;
+    filters: AzureResourceFilter[];
+    onFiltersChanged: Event<void>;
+    waitForFilters: () => Promise<boolean>;
+    onStatusChangedEmitter: EventEmitter<AzureLoginStatus>;
+    onFiltersChangedEmitter: EventEmitter<void>;
+
+    public constructor();
+
+    public signIn(): Promise<void>;
+    public signOut(): void;
+    public getSubscriptionId(): string | undefined;
+    public getSubscriptionCredentials(): ServiceClientCredentials;
 }
 
 /**

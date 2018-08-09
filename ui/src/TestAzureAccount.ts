@@ -2,8 +2,11 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { SubscriptionClient } from 'azure-arm-resource';
+import { ResourceManagementClient, SubscriptionClient } from 'azure-arm-resource';
 import { SubscriptionListResult, TenantListResult } from 'azure-arm-resource/lib/subscription/models';
+// tslint:disable-next-line:no-require-imports
+import WebSiteManagementClient = require('azure-arm-website');
+import { ServiceClientCredentials } from 'ms-rest';
 import { ApplicationTokenCredentials, AzureEnvironment, loginWithServicePrincipalSecret } from 'ms-rest-azure';
 import { Event, EventEmitter } from 'vscode';
 import { AzureAccount, AzureLoginStatus, AzureResourceFilter, AzureSession, AzureSubscription } from './azure-account.api';
@@ -27,7 +30,7 @@ export class TestAzureAccount implements AzureAccount {
 
     public constructor() {
         this.subscriptions = [];
-        this.status = 'Initializing';
+        this.status = 'LoggedOut';
         this.onStatusChangedEmitter = new EventEmitter<AzureLoginStatus>();
         this.onStatusChanged = this.onStatusChangedEmitter.event;
         this.onFiltersChangedEmitter = new EventEmitter<void>();
@@ -35,15 +38,15 @@ export class TestAzureAccount implements AzureAccount {
         this.filters = [];
     }
 
-    public async getTestSubscription(): Promise<void> {
+    public async signIn(): Promise<void> {
         type servicePrincipalCredentials = ApplicationTokenCredentials & { environment: AzureEnvironment };
-        const clientId: string | undefined = process.env.SERVICE_PRINCIPAL_CLIENT_ID ;
+        const clientId: string | undefined = process.env.SERVICE_PRINCIPAL_CLIENT_ID;
         const secret: string | undefined = process.env.SERVICE_PRINCIPAL_SECRET;
         const domain: string | undefined = process.env.SERVICE_PRINCIPAL_DOMAIN;
         if (!clientId || !secret || !domain) {
             throw new Error(localize('travisOnly', 'TestAzureAccount cannot be used without the following environment variables: SERVICE_PRINCIPAL_CLIENT_ID, SERVICE_PRINCIPAL_SECRET, SERVICE_PRINCIPAL_DOMAIN'));
         }
-        this.status = 'LoggingIn';
+        this.changeStatus('LoggingIn');
         const credentials: servicePrincipalCredentials = <servicePrincipalCredentials>(await loginWithServicePrincipalSecret(clientId, secret, domain));
         const subscriptionClient: SubscriptionClient = new SubscriptionClient(credentials);
         const subscriptions: SubscriptionListResult = await subscriptionClient.subscriptions.list();
@@ -59,19 +62,45 @@ export class TestAzureAccount implements AzureAccount {
                 credentials: credentials
             };
 
-            // tslint:disable-next-line:strict-boolean-expressions
-            if (subscriptions && subscriptions[0].id && subscriptions[0].displayName && subscriptions[0].subscriptionId) {
+            if (subscriptions[0].id && subscriptions[0].displayName && subscriptions[0].subscriptionId) {
                 const testAzureSubscription: AzureSubscription = { session: session, subscription: subscriptions[0] };
-                this.filters.push(testAzureSubscription);
                 this.subscriptions.push(testAzureSubscription);
-                this.status = 'LoggedIn';
-                this.onStatusChangedEmitter.fire(this.status);
-                this.onFiltersChangedEmitter.fire();
+                this.changeStatus('LoggedIn');
+                this.changeFilter(testAzureSubscription);
             } else {
                 throw new ArgumentError(subscriptions[0]);
             }
         } else {
             throw new ArgumentError(tenants[0]);
         }
+    }
+
+    public signOut(): void {
+        this.changeStatus('LoggedOut');
+        this.changeFilter();
+        this.subscriptions = [];
+    }
+
+    public getSubscriptionCredentials(): ServiceClientCredentials {
+        return this.subscriptions[0].session.credentials;
+    }
+
+    public getSubscriptionId(): string | undefined {
+        return this.subscriptions[0].subscription.id;
+    }
+
+    private changeStatus(newStatus: AzureLoginStatus): void {
+        this.status = newStatus;
+        this.onStatusChangedEmitter.fire(this.status);
+    }
+
+    private changeFilter(newFilter?: AzureResourceFilter): void {
+        if (newFilter) {
+            this.filters.push(newFilter);
+        } else {
+            this.filters = [];
+        }
+
+        this.onFiltersChangedEmitter.fire();
     }
 }
