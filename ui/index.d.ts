@@ -367,23 +367,17 @@ export declare class TestUserInput implements IAzureUserInput {
     public showOpenDialog(options: OpenDialogOptions): Promise<Uri[]>;
 }
 
-export declare class TestAzureAccount implements AzureAccount {
-    status: AzureLoginStatus;
-    onStatusChanged: Event<AzureLoginStatus>;
-    waitForLogin: () => Promise<boolean>;
-    sessions: AzureSession[];
-    onSessionsChanged: Event<void>;
-    subscriptions: AzureSubscription[];
-    onSubscriptionsChanged: Event<void>;
-    waitForSubscriptions: () => Promise<boolean>;
-    filters: AzureResourceFilter[];
-    onFiltersChanged: Event<void>;
-    waitForFilters: () => Promise<boolean>;
-    onStatusChangedEmitter: EventEmitter<AzureLoginStatus>;
-    onFiltersChangedEmitter: EventEmitter<void>;
-
+/**
+ * Implements the AzureAccount interface to log in with a service principal rather than the normal interactive experience.
+ * This class should be passed into the AzureTreeDataProvider to replace the dependencies on the Azure Account extension.
+ * This class is meant to be used for testing in non-interactive mode in Travis CI.
+ */
+export declare class TestAzureAccount {
     public constructor();
 
+    /**
+     * Simulates a sign in to the Azure Account extension and populates the account with a subscription.
+     */
     public signIn(): Promise<void>;
     public signOut(): void;
     public getSubscriptionId(): string | undefined;

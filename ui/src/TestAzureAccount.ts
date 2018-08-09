@@ -2,10 +2,9 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { ResourceManagementClient, SubscriptionClient } from 'azure-arm-resource';
+import { SubscriptionClient } from 'azure-arm-resource';
 import { SubscriptionListResult, TenantListResult } from 'azure-arm-resource/lib/subscription/models';
 // tslint:disable-next-line:no-require-imports
-import WebSiteManagementClient = require('azure-arm-website');
 import { ServiceClientCredentials } from 'ms-rest';
 import { ApplicationTokenCredentials, AzureEnvironment, loginWithServicePrincipalSecret } from 'ms-rest-azure';
 import { Event, EventEmitter } from 'vscode';
