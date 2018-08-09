@@ -75,7 +75,7 @@ export class SiteClient {
     }
 
     private get _client(): WebSiteManagementClient {
-        const client: WebSiteManagementClient = new WebSiteManagementClient(this._node.credentials, this._node.subscriptionId);
+        const client: WebSiteManagementClient = new WebSiteManagementClient(this._node.credentials, this._node.subscriptionId, this._node.environment.resourceManagerEndpointUrl);
         addExtensionUserAgent(client);
         return client;
     }
