@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 import { SubscriptionClient } from 'azure-arm-resource';
 import { SubscriptionListResult, TenantListResult } from 'azure-arm-resource/lib/subscription/models';
-// tslint:disable-next-line:no-require-imports
 import { ServiceClientCredentials } from 'ms-rest';
 import { ApplicationTokenCredentials, AzureEnvironment, loginWithServicePrincipalSecret } from 'ms-rest-azure';
 import { Event, EventEmitter } from 'vscode';
@@ -81,11 +80,19 @@ export class TestAzureAccount implements AzureAccount {
     }
 
     public getSubscriptionCredentials(): ServiceClientCredentials {
+        this.verifySubscription();
         return this.subscriptions[0].session.credentials;
     }
 
-    public getSubscriptionId(): string | undefined {
-        return this.subscriptions[0].subscription.id;
+    public getSubscriptionId(): string {
+        this.verifySubscription();
+        if (this.subscriptions[0].subscription.id) {
+            // tslint:disable-next-line:no-non-null-assertion
+            return this.subscriptions[0].subscription.id!;
+        } else {
+            throw new ArgumentError(this.subscriptions[0].subscription);
+
+        }
     }
 
     private changeStatus(newStatus: AzureLoginStatus): void {
@@ -101,5 +108,12 @@ export class TestAzureAccount implements AzureAccount {
         }
 
         this.onFiltersChangedEmitter.fire();
+    }
+
+    private verifySubscription(): void {
+        if (this.subscriptions.length === 0) {
+            const noSubscription: string = localize('noSubscription', 'No subscription found.  Invoke TestAzureAccount.signIn().');
+            throw new Error(noSubscription);
+        }
     }
 }

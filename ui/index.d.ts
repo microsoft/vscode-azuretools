@@ -373,10 +373,11 @@ export declare class TestAzureAccount {
 
     /**
      * Simulates a sign in to the Azure Account extension and populates the account with a subscription.
+     * Requires the following environment variables to be set: SERVICE_PRINCIPAL_CLIENT_ID, SERVICE_PRINCIPAL_SECRET, SERVICE_PRINCIPAL_DOMAIN
      */
     public signIn(): Promise<void>;
     public signOut(): void;
-    public getSubscriptionId(): string | undefined;
+    public getSubscriptionId(): string;
     public getSubscriptionCredentials(): ServiceClientCredentials;
 }
 
