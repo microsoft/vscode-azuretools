@@ -6,12 +6,10 @@
 import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { ServiceClientCredentials, ServiceClient } from 'ms-rest';
 import { AzureEnvironment } from 'ms-rest-azure';
-import { Uri, TreeDataProvider, Disposable, TreeItem, Event, OutputChannel, Memento, InputBoxOptions, QuickPickItem, QuickPickOptions, TextDocument, ExtensionContext, MessageItem, OpenDialogOptions, MessageOptions, EventEmitter } from 'vscode';
+import { Uri, TreeDataProvider, Disposable, TreeItem, Event, OutputChannel, Memento, InputBoxOptions, QuickPickItem, QuickPickOptions, TextDocument, ExtensionContext, MessageItem, OpenDialogOptions, MessageOptions } from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
 import { ResourceGroup } from 'azure-arm-resource/lib/resource/models';
 import { StorageAccount, CheckNameAvailabilityResult } from 'azure-arm-storage/lib/models';
-import { AzureAccount, AzureLoginStatus, AzureSession, AzureSubscription, AzureResourceFilter } from './src/azure-account.api';
-import { ResourceManagementClient } from 'azure-arm-resource';
 
 export type OpenInPortalOptions = {
     /**
