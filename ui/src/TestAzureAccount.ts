@@ -48,7 +48,7 @@ export class TestAzureAccount implements AzureAccount {
         const credentials: servicePrincipalCredentials = <servicePrincipalCredentials>(await loginWithServicePrincipalSecret(clientId, secret, domain));
         const subscriptionClient: SubscriptionClient = new SubscriptionClient(credentials);
         const subscriptions: SubscriptionListResult = await subscriptionClient.subscriptions.list();
-        // returns an array withy subscriptionId, displayName
+        // returns an array with id, subscriptionId, displayName
         const tenants: TenantListResult = await subscriptionClient.tenants.list();
 
         if (tenants[0].id) {
@@ -86,9 +86,9 @@ export class TestAzureAccount implements AzureAccount {
 
     public getSubscriptionId(): string {
         this.verifySubscription();
-        if (this.subscriptions[0].subscription.id) {
+        if (this.subscriptions[0].subscription.subscriptionId) {
             // tslint:disable-next-line:no-non-null-assertion
-            return this.subscriptions[0].subscription.id!;
+            return this.subscriptions[0].subscription.subscriptionId!;
         } else {
             throw new ArgumentError(this.subscriptions[0].subscription);
 
