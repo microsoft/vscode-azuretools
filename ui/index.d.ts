@@ -12,8 +12,6 @@ import { ResourceGroup } from 'azure-arm-resource/lib/resource/models';
 import { StorageAccount, CheckNameAvailabilityResult } from 'azure-arm-storage/lib/models';
 import { AzureAccount, AzureLoginStatus, AzureSession, AzureSubscription, AzureResourceFilter } from './src/azure-account.api';
 import { ResourceManagementClient } from 'azure-arm-resource';
-// tslint:disable-next-line:no-require-imports
-import WebSiteManagementClient = require('../appservice/node_modules/azure-arm-website');
 
 export type OpenInPortalOptions = {
     /**
