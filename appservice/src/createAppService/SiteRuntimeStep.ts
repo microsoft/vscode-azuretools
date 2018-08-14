@@ -31,6 +31,7 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
         return wizardContext;
     }
 
+    // tslint:disable-next-line:max-func-body-length
     private getLinuxRuntimeStack(): ILinuxRuntimeStack[] {
         return [
             {
@@ -86,6 +87,10 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                 displayName: 'Node.js 9.4'
             },
             {
+                name: 'node|10.1',
+                displayName: 'Node.js 10.1'
+            },
+            {
                 name: 'php|5.6',
                 displayName: 'PHP 5.6'
             },
@@ -110,6 +115,10 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                 displayName: '.NET Core 2.0'
             },
             {
+                name: 'dotnetcore|2.1',
+                displayName: '.NET Core 2.1'
+            },
+            {
                 name: 'ruby|2.3',
                 displayName: 'Ruby 2.3'
             },
@@ -120,6 +129,10 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
             {
                 name: 'tomcat|9.0-jre8',
                 displayName: '[Preview] Tomcat 9.0 (JRE 8)'
+            },
+            {
+                name: 'python|3.7',
+                displayName: '[Preview] Python 3.7'
             }
         ];
     }
