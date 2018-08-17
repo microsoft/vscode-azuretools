@@ -22,7 +22,7 @@ export async function createWebApp(
 }
 
 export async function setWizardContextDefaults(wizardContext: IAppServiceWizardContext): Promise<void> {
-    LocationListStep.setLocation(wizardContext, 'centralus');
+    await LocationListStep.setLocation(wizardContext, 'centralus');
     // defaults that for if one workspace is opened
     if (workspace.workspaceFolders && workspace.workspaceFolders.length === 1) {
         await workspace.findFiles('package.json').then((files: Uri[]) => {
