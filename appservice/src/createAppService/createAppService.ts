@@ -3,10 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { Site, SkuDescription } from 'azure-arm-website/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
-import { workspace } from 'vscode';
 import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountListStep, StorageAccountPerformance, StorageAccountReplication } from 'vscode-azureextensionui';
 import { AppKind, WebsiteOS } from './AppKind';
 import { AppServicePlanCreateStep } from './AppServicePlanCreateStep';
@@ -75,8 +73,8 @@ export async function createAppService(
                 promptSteps.push(new AppServicePlanListStep());
                 promptSteps.push(new LocationListStep());
             } else {
-                if (workspace.workspaceFolders && workspace.workspaceFolders.length === 1) {
-                    // can make smart defaults if only one workspace is opened
+                if (wizardContext.newSiteKind === AppKind.app && !advancedCreation) {
+                    // set defaults for only web apps when the advancedCreation scenario is false
                     await setWizardContextDefaults(wizardContext);
                 }
                 promptSteps.push(new LocationListStep());
@@ -93,15 +91,6 @@ export async function createAppService(
     // Ideally actionContext should always be defined, but there's a bug with the NodePicker. Create a 'fake' actionContext until that bug is fixed
     // https://github.com/Microsoft/vscode-azuretools/issues/120
     actionContext = actionContext || <IActionContext>{ properties: {}, measurements: {} };
-
-    // az webapp up defaults to centralus so for we are defaulting to that location as well
-    if (wizardContext.newSiteKind === AppKind.app && !advancedCreation) {
-        const locations: Location[] = await LocationListStep.getLocations(wizardContext);
-        wizardContext.location = locations.find((location: Location) => {
-            return location.name === 'centralus';
-        });
-    }
-
     wizardContext = await wizard.prompt(actionContext);
     if (showCreatingNode) {
         showCreatingNode(wizardContext.newSiteName);
