@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IParsedError } from '../index';
+import { IParsedError, TelemetryProperties } from '../index';
 import { localize } from './localize';
 
 // tslint:disable:no-unsafe-any
 // tslint:disable:no-any
-export function parseError(error: any): IParsedError {
+export function parseError(error: any | { telemetryProperties?: TelemetryProperties }): IParsedError {
     let errorType: string = '';
     let message: string = '';
 
@@ -57,7 +57,8 @@ export function parseError(error: any): IParsedError {
         message: message,
         // NOTE: Intentionally not using 'error instanceof UserCancelledError' because that doesn't work if multiple versions of the UI package are used in one extension
         // See https://github.com/Microsoft/vscode-azuretools/issues/51 for more info
-        isUserCancelledError: errorType === 'UserCancelledError'
+        isUserCancelledError: errorType === 'UserCancelledError',
+        telemetryProperties: error && typeof error.telemetryProperties === 'object' ? error.telemetryProperties : {}
     };
 }
 
@@ -113,4 +114,8 @@ function unpackErrorFromField(error: any, prop: string): any {
     }
 
     return error;
+}
+
+export function getErrorMessage(error: any): string {
+    return parseError(error).message;
 }

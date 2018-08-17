@@ -10,6 +10,7 @@ import { Uri, TreeDataProvider, Disposable, TreeItem, Event, OutputChannel, Meme
 import TelemetryReporter from 'vscode-extension-telemetry';
 import { ResourceGroup } from 'azure-arm-resource/lib/resource/models';
 import { StorageAccount, CheckNameAvailabilityResult } from 'azure-arm-storage/lib/models';
+import { IHasTelemetryProperties } from './src';
 
 export type OpenInPortalOptions = {
     /**
@@ -155,7 +156,12 @@ export interface IAzureParentTreeItem extends IAzureTreeItem, IChildProvider {
     pickTreeItem?(expectedContextValue: string): IAzureTreeItem | undefined;
 }
 
-export declare class UserCancelledError extends Error { }
+export declare class UserCancelledError extends Error {
+    public telemetryProperties?: TelemetryProperties;
+    constructor(telemetryProperties?: TelemetryProperties);
+}
+
+export declare function addTelemetryToError(error: Error | {}, telemetryProperties: TelemetryProperties): IHasTelemetryProperties;
 
 export declare abstract class BaseEditor<ContextT> implements Disposable {
     /**
@@ -261,12 +267,14 @@ export interface TelemetryMeasurements {
     [key: string]: number;
 }
 
+export declare function getErrorMessage(error: any): string;
 export declare function parseError(error: any): IParsedError;
 
 export interface IParsedError {
     errorType: string;
     message: string;
     isUserCancelledError: boolean;
+    telemetryProperties: TelemetryProperties;
 }
 
 /**
@@ -286,7 +294,7 @@ export interface IAzureUserInput {
      * @throws `UserCancelledError` if the user cancels.
      * @return A promise that resolves to the item the user picked.
      */
-    showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T>;
+    showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions & { cancelStep?: string }): Promise<T>;
 
     /**
      * Opens an input box to ask the user for input.
@@ -295,7 +303,7 @@ export interface IAzureUserInput {
      * @throws `UserCancelledError` if the user cancels.
      * @return A promise that resolves to a string the user provided.
      */
-    showInputBox(options: InputBoxOptions): Promise<string>;
+    showInputBox(options: InputBoxOptions & { cancelStep?: string }): Promise<string>;
 
     /**
      * Show a warning message.
@@ -316,7 +324,7 @@ export interface IAzureUserInput {
      * @throws `UserCancelledError` if the user cancels.
      * @return A thenable that resolves to the selected item when being dismissed.
      */
-    showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Promise<T>;
+    showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions & { cancelStep?: string }, ...items: T[]): Promise<T>;
 
     /**
      * Shows a file open dialog to the user which allows to select a file
@@ -326,7 +334,7 @@ export interface IAzureUserInput {
      * @throws `UserCancelledError` if the user cancels.
      * @returns A promise that resolves to the selected resources.
      */
-    showOpenDialog(options: OpenDialogOptions): Promise<Uri[]>;
+    showOpenDialog(options: OpenDialogOptions & { cancelStep?: string }): Promise<Uri[]>;
 }
 
 /**

@@ -16,6 +16,7 @@ import { reportAnIssue } from './reportAnIssue';
 // tslint:disable-next-line:no-any
 export async function callWithTelemetryAndErrorHandling(callbackId: string, callback: (this: IActionContext) => any): Promise<any> {
     assert(extInitialized, 'registerUIExtensionVariables must be called first');
+    assert(ext.outputChannel, 'outputChannel required');
 
     const start: number = Date.now();
     const context: IActionContext = {
@@ -47,6 +48,9 @@ export async function callWithTelemetryAndErrorHandling(callbackId: string, call
             context.properties.error = errorData.errorType;
             context.properties.errorMessage = errorData.message;
         }
+
+        // Merge telemetry properties from error into context's telemetry properties, with error properties winning
+        Object.assign(context.properties, errorData.telemetryProperties);
 
         if (!context.suppressErrorDisplay) {
             // Always append the error to the output channel, but only 'show' the output channel for multiline errors

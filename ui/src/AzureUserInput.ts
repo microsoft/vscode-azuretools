@@ -5,7 +5,7 @@
 
 import { Memento, MessageItem, MessageOptions, QuickPickItem, QuickPickOptions } from 'vscode';
 import * as vscode from 'vscode';
-import { IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput } from '../index';
+import { IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, TelemetryProperties } from '../index';
 import { DialogResponses } from './DialogResponses';
 import { UserCancelledError } from './errors';
 import { localize } from './localize';
@@ -18,7 +18,7 @@ export class AzureUserInput implements IAzureUserInput {
         this._persistence = persistence;
     }
 
-    public async showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T> {
+    public async showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions & { cancelStep?: string }): Promise<T> {
         if (options.ignoreFocusOut === undefined) {
             options.ignoreFocusOut = true;
         }
@@ -31,7 +31,7 @@ export class AzureUserInput implements IAzureUserInput {
 
         const result: T | undefined = await vscode.window.showQuickPick(this.getOrderedItems(items, persistenceKey, (<IAzureQuickPickOptions>options).suppressPersistence), options);
         if (result === undefined) {
-            throw new UserCancelledError();
+            throw new UserCancelledError(this.tryGetTelemetryPropertiesFromOptions(options));
         }
 
         if (persistenceKey && !(<IAzureQuickPickItem><{}>result).suppressPersistence) {
@@ -41,7 +41,7 @@ export class AzureUserInput implements IAzureUserInput {
         return result;
     }
 
-    public async showInputBox(options: vscode.InputBoxOptions): Promise<string> {
+    public async showInputBox(options: vscode.InputBoxOptions & { cancelStep?: string }): Promise<string> {
         if (options.ignoreFocusOut === undefined) {
             options.ignoreFocusOut = true;
         }
@@ -49,7 +49,7 @@ export class AzureUserInput implements IAzureUserInput {
         const result: string | undefined = await vscode.window.showInputBox(options);
 
         if (result === undefined) {
-            throw new UserCancelledError();
+            throw new UserCancelledError(this.tryGetTelemetryPropertiesFromOptions(options));
         } else {
             return result;
         }
@@ -63,17 +63,17 @@ export class AzureUserInput implements IAzureUserInput {
         const result: T | undefined = await vscode.window.showWarningMessage(message, ...args);
 
         if (result === undefined || result === DialogResponses.cancel) {
-            throw new UserCancelledError();
+            throw new UserCancelledError(this.tryGetTelemetryPropertiesFromOptions(args[0]));
         } else {
             return result;
         }
     }
 
-    public async showOpenDialog(options: vscode.OpenDialogOptions): Promise<vscode.Uri[]> {
+    public async showOpenDialog(options: vscode.OpenDialogOptions & { cancelStep?: string }): Promise<vscode.Uri[]> {
         const result: vscode.Uri[] | undefined = await vscode.window.showOpenDialog(options);
 
         if (result === undefined) {
-            throw new UserCancelledError();
+            throw new UserCancelledError(this.tryGetTelemetryPropertiesFromOptions(options));
         } else {
             return result;
         }
@@ -107,6 +107,17 @@ export class AzureUserInput implements IAzureUserInput {
         }
 
         return items;
+    }
+
+    // tslint:disable-next-line:no-any
+    private tryGetTelemetryPropertiesFromOptions(options?: any): Partial<TelemetryProperties> | undefined {
+        if (options && options.cancelStep) {
+            return <Partial<TelemetryProperties>>{
+                cancelStep: options.cancelStep
+            };
+        }
+
+        return undefined;
     }
 }
 
