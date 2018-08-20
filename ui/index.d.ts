@@ -29,8 +29,9 @@ export declare class AzureTreeDataProvider implements TreeDataProvider<IAzureNod
      * @param ui Used to get input from the user
      * @param telemetryReporter Optionally used to track telemetry for the tree
      * @param rootTreeItems Any nodes other than the subscriptions that should be shown at the root of the explorer
+     * @param testAccount A test Azure Account that leverages a service principal instead of interactive login
      */
-    constructor(resourceProvider: IChildProvider, loadMoreCommandId: string, rootTreeItems?: IAzureParentTreeItem[]);
+    constructor(resourceProvider: IChildProvider, loadMoreCommandId: string, rootTreeItems?: IAzureParentTreeItem[], testAccount?: TestAzureAccount);
     public getTreeItem(node: IAzureNode): TreeItem;
     public getChildren(node?: IAzureParentNode): Promise<IAzureNode[]>;
     public refresh(node?: IAzureNode, clearCache?: boolean): Promise<void>;
@@ -360,6 +361,24 @@ export declare class TestUserInput implements IAzureUserInput {
     public showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
     public showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Promise<MessageItem>;
     public showOpenDialog(options: OpenDialogOptions): Promise<Uri[]>;
+}
+
+/**
+ * Implements the AzureAccount interface to log in with a service principal rather than the normal interactive experience.
+ * This class should be passed into the AzureTreeDataProvider to replace the dependencies on the Azure Account extension.
+ * This class is meant to be used for testing in non-interactive mode in Travis CI.
+ */
+export declare class TestAzureAccount {
+    public constructor();
+
+    /**
+     * Simulates a sign in to the Azure Account extension and populates the account with a subscription.
+     * Requires the following environment variables to be set: SERVICE_PRINCIPAL_CLIENT_ID, SERVICE_PRINCIPAL_SECRET, SERVICE_PRINCIPAL_DOMAIN
+     */
+    public signIn(): Promise<void>;
+    public signOut(): void;
+    public getSubscriptionId(): string;
+    public getSubscriptionCredentials(): ServiceClientCredentials;
 }
 
 /**

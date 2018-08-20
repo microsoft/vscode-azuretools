@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as path from 'path';
-import { Disposable, Event, EventEmitter, Extension, extensions, QuickPickOptions, TreeDataProvider, TreeItem, TreeItemCollapsibleState } from 'vscode';
 import * as vscode from 'vscode';
+import { Disposable, Event, EventEmitter, Extension, extensions, QuickPickOptions, TreeDataProvider, TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { IActionContext, IAzureNode, IAzureParentTreeItem, IAzureQuickPickItem, IAzureTreeItem, IChildProvider } from '../../index';
 import { AzureAccount, AzureLoginStatus, AzureResourceFilter } from '../azure-account.api';
 import { callWithTelemetryAndErrorHandling } from '../callWithTelemetryAndErrorHandling';
@@ -13,6 +13,7 @@ import { ArgumentError, UserCancelledError } from '../errors';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { parseError } from '../parseError';
+import { TestAzureAccount } from '../TestAzureAccount';
 import { AzureNode } from './AzureNode';
 import { AzureParentNode } from './AzureParentNode';
 import { LoadMoreTreeItem } from './LoadMoreTreeItem';
@@ -39,14 +40,16 @@ export class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disp
 
     private _disposables: Disposable[] = [];
 
-    constructor(resourceProvider: IChildProvider, loadMoreCommandId: string, rootTreeItems?: IAzureParentTreeItem[]) {
+    constructor(resourceProvider: IChildProvider, loadMoreCommandId: string, rootTreeItems?: IAzureParentTreeItem[], testAccount?: TestAzureAccount) {
         this._resourceProvider = resourceProvider;
         this._loadMoreCommandId = loadMoreCommandId;
         this._customRootNodes = rootTreeItems ? rootTreeItems.map((treeItem: IAzureParentTreeItem) => new RootNode(this, treeItem, this._onNodeCreateEmitter)) : [];
 
         // Rather than expose 'AzureAccount' types in the index.ts contract, simply get it inside of this npm package
         const azureAccountExtension: Extension<AzureAccount> | undefined = extensions.getExtension<AzureAccount>('ms-vscode.azure-account');
-        if (!azureAccountExtension) {
+        if (testAccount) {
+            this._azureAccount = testAccount;
+        } else if (!azureAccountExtension) {
             throw new Error(localize('NoAccountExtensionError', 'The Azure Account Extension is required for the App Service tools.'));
         } else {
             this._azureAccount = azureAccountExtension.exports;

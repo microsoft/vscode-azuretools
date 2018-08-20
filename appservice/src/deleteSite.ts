@@ -22,7 +22,7 @@ export async function deleteSite(client: SiteClient): Promise<void> {
         plan = await client.getAppServicePlan();
     }
 
-    if (!client.isSlot && plan.numberOfSites < 2) {
+    if (!client.isSlot && plan && plan.numberOfSites < 2) {
         const message: string = localize('deleteLastServicePlan', 'This is the last app in the App Service plan "{0}". Do you want to delete this App Service plan to prevent unexpected charges?', plan.name);
         const input: vscode.MessageItem = await ext.ui.showWarningMessage(message, { modal: true }, DialogResponses.yes, DialogResponses.no, DialogResponses.cancel);
         deletePlan = input === DialogResponses.yes;
@@ -30,7 +30,7 @@ export async function deleteSite(client: SiteClient): Promise<void> {
 
     const deleting: string = localize('Deleting', 'Deleting "{0}"...', client.fullName);
     const deleteSucceeded: string = localize('DeleteSucceeded', 'Successfully deleted "{0}".', client.fullName);
-    await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: deleting}, async (): Promise<void> => {
+    await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: deleting }, async (): Promise<void> => {
         ext.outputChannel.appendLine(deleting);
         await client.deleteMethod({ deleteEmptyServerFarm: deletePlan });
         vscode.window.showInformationMessage(deleteSucceeded);
