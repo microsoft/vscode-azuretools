@@ -40,12 +40,12 @@ export class TestUserInput implements IAzureUserInput {
     public async showInputBox(options: InputBoxOptions): Promise<string> {
         if (this._inputs.length > 0) {
             let result: string | undefined = this._inputs.shift();
-            if (!result) {
+            if (result === undefined) {
                 // Use default value if input is undefined
                 result = options.value;
             }
 
-            if (result) {
+            if (result !== undefined) { // Allow "" as a valid input
                 if (options.validateInput) {
                     const msg: string | null | undefined = await Promise.resolve(options.validateInput(result));
                     if (msg !== null && msg !== undefined) {
