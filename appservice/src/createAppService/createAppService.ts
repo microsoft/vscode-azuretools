@@ -5,7 +5,6 @@
 
 import { Site, SkuDescription } from 'azure-arm-website/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
-import { workspace } from 'vscode';
 import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountListStep, StorageAccountPerformance, StorageAccountReplication } from 'vscode-azureextensionui';
 import { AppKind, WebsiteOS } from './AppKind';
 import { AppServicePlanCreateStep } from './AppServicePlanCreateStep';
@@ -74,10 +73,7 @@ export async function createAppService(
                 promptSteps.push(new AppServicePlanListStep());
                 promptSteps.push(new LocationListStep());
             } else {
-                if (workspace.workspaceFolders && workspace.workspaceFolders.length === 1) {
-                    // can make smart defaults if only one workspace is opened
-                    await setWizardContextDefaults(wizardContext);
-                }
+                await setWizardContextDefaults(wizardContext);
                 promptSteps.push(new LocationListStep());
                 promptSteps.push(new SiteOSStep()); // will be skipped if there is a smart default
                 promptSteps.push(new SiteRuntimeStep());
