@@ -73,10 +73,7 @@ export async function createAppService(
                 promptSteps.push(new AppServicePlanListStep());
                 promptSteps.push(new LocationListStep());
             } else {
-                if (wizardContext.newSiteKind === AppKind.app && !advancedCreation) {
-                    // set defaults for only web apps when the advancedCreation scenario is false
-                    await setWizardContextDefaults(wizardContext);
-                }
+                await setWizardContextDefaults(wizardContext);
                 promptSteps.push(new LocationListStep());
                 promptSteps.push(new SiteOSStep()); // will be skipped if there is a smart default
                 promptSteps.push(new SiteRuntimeStep());
