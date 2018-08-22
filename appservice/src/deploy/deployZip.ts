@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as fs from 'fs';
+import * as fse from 'fs-extra';
 import * as vscode from 'vscode';
 import KuduClient from 'vscode-azurekudu';
 import { ext } from '../extensionVariables';
@@ -48,7 +49,7 @@ export async function deployZip(client: SiteClient, fsPath: string, configuratio
 }
 
 async function getZipFileToDeploy(fsPath: string, configurationSectionName?: string): Promise<string> {
-    if (!(await FileUtilities.isfilePathExist(fsPath))) {
+    if (!(await fse.pathExists(fsPath))) {
         throw new Error('Could not zip a non-exist file path.');
     }
     if (await FileUtilities.isDirectory(fsPath)) {

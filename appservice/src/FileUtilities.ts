@@ -12,14 +12,6 @@ export function getFileExtension(fsPath: string): string | undefined {
     return fsPath.split('.').pop();
 }
 
-export async function isfilePathExist(fsPath: string): Promise<boolean> {
-    return new Promise((resolve: (result: boolean) => void): void => {
-        fs.access(fsPath, (err: Error) => {
-            resolve(!err);
-        });
-    });
-}
-
 export async function isDirectory(fsPath: string): Promise<boolean> {
     const fsStats: fs.Stats = await new Promise((resolve: (s?: fs.Stats) => void, reject: (e: Error) => void): void => {
         fs.lstat(fsPath, (err?: Error, stats?: fs.Stats) => {
