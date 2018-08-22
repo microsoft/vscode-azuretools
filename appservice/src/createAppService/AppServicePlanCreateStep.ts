@@ -3,8 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// tslint:disable-next-line:no-require-imports
-import WebSiteManagementClient = require('azure-arm-website');
+import { WebSiteManagementClient } from 'azure-arm-website';
 import { AppServicePlan, SkuDescription } from 'azure-arm-website/lib/models';
 import { ProgressLocation, window } from 'vscode';
 import { addExtensionUserAgent, AzureWizardExecuteStep } from 'vscode-azureextensionui';
@@ -37,7 +36,6 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
                     ext.outputChannel.appendLine(creatingAppServicePlan);
                     window.showInformationMessage(creatingAppServicePlan);
                     wizardContext.plan = await client.appServicePlans.createOrUpdate(wizardContext.resourceGroup.name, newPlanName, {
-                        appServicePlanName: newPlanName,
                         kind: getAppServicePlanModelKind(wizardContext.newSiteKind, wizardContext.newSiteOS),
                         sku: newSku,
                         location: wizardContext.location.name,
