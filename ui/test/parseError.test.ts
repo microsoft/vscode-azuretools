@@ -255,4 +255,27 @@ suite('Error Parsing Tests', () => {
         assert.equal(pe.message, 'No registered resource provider found for location...');
         assert.equal(pe.isUserCancelledError, false);
     });
+
+    test('Error with nested value', () => {
+        // This nested value structure is likely from an ErrorPromise in winjs
+        // Per the docs, ErrorPromise "Wraps a non-promise error value in a promise. You can use this function if you need to pass an error to a function that requires a promise."
+        // https://github.com/Microsoft/vscode/blob/master/src/vs/base/common/winjs.base.js
+        const err: {} = {
+            key: 1,
+            value: {
+                _value: {
+                    response: {
+                        statusCode: 404,
+                        body: JSON.stringify({ Code: 'NotFound', Message: 'Cannot find Subscription with name test.', Target: null, Details: [{ Message: 'Cannot find Subscription with name test.' }, { Code: 'NotFound' }, { ErrorEntity: { ExtendedCode: '51004', MessageTemplate: 'Cannot find {0} with name {1}.', Parameters: ['Subscription', 'test'], Code: 'NotFound', Message: 'Cannot find Subscription with name test.' } }], Innererror: null })
+                    },
+                    statusCode: 404
+                }
+            }
+        };
+        const pe: IParsedError = parseError(err);
+
+        assert.equal(pe.errorType, 'NotFound');
+        assert.equal(pe.message, 'Cannot find Subscription with name test.');
+        assert.equal(pe.isUserCancelledError, false);
+    });
 });
