@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as fs from 'fs';
+import * as fse from 'fs-extra';
 import * as vscode from 'vscode';
 import KuduClient from 'vscode-azurekudu';
 import { ext } from '../extensionVariables';
@@ -20,18 +21,10 @@ export async function deployZip(client: SiteClient, fsPath: string, configuratio
     let createdZip: boolean = false;
     if (FileUtilities.getFileExtension(fsPath) === 'zip') {
         zipFilePath = fsPath;
-    } else if (await FileUtilities.isDirectory(fsPath)) {
+    } else {
         createdZip = true;
         ext.outputChannel.appendLine(formatDeployLog(client, localize('zipCreate', 'Creating zip package...')));
-        const zipDeployConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration(configurationSectionName, vscode.Uri.file(fsPath));
-        // tslint:disable-next-line:no-backbone-get-set-outside-model
-        const globPattern: string = zipDeployConfig.get<string>('zipGlobPattern');
-        // tslint:disable-next-line:no-backbone-get-set-outside-model
-        const ignorePattern: string | string[] = zipDeployConfig.get<string | string[]>('zipIgnorePattern');
-
-        zipFilePath = await FileUtilities.zipDirectory(fsPath, globPattern, ignorePattern);
-    } else {
-        throw new Error(localize('NotAZipError', 'Path specified is not a folder or a zip file'));
+        zipFilePath = await getZipFileToDeploy(fsPath, configurationSectionName);
     }
 
     try {
@@ -52,5 +45,21 @@ export async function deployZip(client: SiteClient, fsPath: string, configuratio
         if (createdZip) {
             await FileUtilities.deleteFile(zipFilePath);
         }
+    }
+}
+
+async function getZipFileToDeploy(fsPath: string, configurationSectionName?: string): Promise<string> {
+    if (!(await fse.pathExists(fsPath))) {
+        throw new Error('Could not zip a non-exist file path.');
+    }
+    if (await FileUtilities.isDirectory(fsPath)) {
+        const zipDeployConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration(configurationSectionName, vscode.Uri.file(fsPath));
+        // tslint:disable-next-line:no-backbone-get-set-outside-model
+        const globPattern: string = zipDeployConfig.get<string>('zipGlobPattern');
+        // tslint:disable-next-line:no-backbone-get-set-outside-model
+        const ignorePattern: string | string[] = zipDeployConfig.get<string | string[]>('zipIgnorePattern');
+        return FileUtilities.zipDirectory(fsPath, globPattern, ignorePattern);
+    } else {
+        return FileUtilities.zipFile(fsPath);
     }
 }

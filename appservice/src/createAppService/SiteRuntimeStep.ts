@@ -131,6 +131,10 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                 displayName: '[Preview] Tomcat 9.0 (JRE 8)'
             },
             {
+                name: 'java|8-jre8',
+                displayName: '[Preview] Java SE (JRE 8)'
+            },
+            {
                 name: 'python|3.7',
                 displayName: '[Preview] Python 3.7'
             }

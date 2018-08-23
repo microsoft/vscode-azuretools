@@ -38,6 +38,20 @@ export async function deleteFile(fsPath: string): Promise<void> {
     });
 }
 
+export async function zipFile(filePath: string): Promise<string> {
+    const zipFilePath: string = path.join(os.tmpdir(), `${randomFileName()}.zip`);
+    await new Promise((resolve: () => void, reject: (err: Error) => void): void => {
+        const zipOutput: fs.WriteStream = fs.createWriteStream(zipFilePath);
+        const zipper: archiver.Archiver = archiver('zip');
+        zipOutput.on('close', resolve);
+        zipper.on('error', reject);
+        zipper.pipe(zipOutput);
+        zipper.file(filePath, { name: path.basename(filePath) });
+        zipper.finalize();
+    });
+    return zipFilePath;
+}
+
 export async function zipDirectory(folderPath: string, globPattern: string = '**/*', ignorePattern?: string | string[]): Promise<string> {
     if (!folderPath.endsWith(path.sep)) {
         folderPath += path.sep;
