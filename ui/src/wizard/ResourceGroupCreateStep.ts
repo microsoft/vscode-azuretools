@@ -6,6 +6,7 @@
 import { ResourceManagementClient } from 'azure-arm-resource';
 import { ProgressLocation, window } from 'vscode';
 import { IResourceGroupWizardContext } from '../../index';
+import { addExtensionUserAgent } from '../extensionUserAgent';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
@@ -18,9 +19,10 @@ export class ResourceGroupCreateStep<T extends IResourceGroupWizardContext> exte
             // tslint:disable-next-line:no-non-null-assertion
             const newLocation: string = wizardContext.location!.name!;
             const findingResourceGroup: string = localize('creatingResourceGroup', 'Ensuring resource group "{0}" in location "{1} exists"...', newName, newLocation);
-            await window.withProgress({ location: ProgressLocation.Notification, title: findingResourceGroup}, async (): Promise<void> => {
+            await window.withProgress({ location: ProgressLocation.Notification, title: findingResourceGroup }, async (): Promise<void> => {
                 ext.outputChannel.appendLine(findingResourceGroup);
-                const resourceClient: ResourceManagementClient = new ResourceManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
+                const resourceClient: ResourceManagementClient = new ResourceManagementClient(wizardContext.credentials, wizardContext.subscriptionId, wizardContext.environment.resourceManagerEndpointUrl);
+                addExtensionUserAgent(resourceClient);
                 wizardContext.resourceGroup = await resourceClient.resourceGroups.createOrUpdate(newName, { location: newLocation });
                 const foundResourceGroup: string = localize('createdResourceGroup', 'Successfully found resource group "{0}".', newName);
                 window.showInformationMessage(foundResourceGroup);

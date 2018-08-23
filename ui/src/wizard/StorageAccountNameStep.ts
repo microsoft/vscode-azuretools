@@ -17,7 +17,7 @@ import { storageAccountNamingRules } from './StorageAccountListStep';
 export class StorageAccountNameStep<T extends IStorageAccountWizardContext> extends AzureNameStep<T> {
     public async prompt(wizardContext: T): Promise<T> {
         if (!wizardContext.newStorageAccountName) {
-            const client: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
+            const client: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscriptionId, wizardContext.environment.resourceManagerEndpointUrl);
             addExtensionUserAgent(client);
 
             const suggestedName: string | undefined = wizardContext.relatedNameTask ? await wizardContext.relatedNameTask : undefined;

@@ -20,7 +20,7 @@ export class LocationListStep<T extends ILocationWizardContext> extends AzureWiz
 
     public static async getLocations<T extends ILocationWizardContext>(wizardContext: T): Promise<Location[]> {
         if (wizardContext.locationsTask === undefined) {
-            const client: SubscriptionClient = new SubscriptionClient(wizardContext.credentials);
+            const client: SubscriptionClient = new SubscriptionClient(wizardContext.credentials, wizardContext.environment.resourceManagerEndpointUrl);
             addExtensionUserAgent(client);
             wizardContext.locationsTask = client.subscriptions.listLocations(wizardContext.subscriptionId);
         }

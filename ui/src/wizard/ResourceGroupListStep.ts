@@ -25,7 +25,7 @@ export const resourceGroupNamingRules: IAzureNamingRules = {
 export class ResourceGroupListStep<T extends IResourceGroupWizardContext> extends AzureWizardPromptStep<T> {
     public static async getResourceGroups<T extends IResourceGroupWizardContext>(wizardContext: T): Promise<ResourceGroup[]> {
         if (wizardContext.resourceGroupsTask === undefined) {
-            const client: ResourceManagementClient = new ResourceManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
+            const client: ResourceManagementClient = new ResourceManagementClient(wizardContext.credentials, wizardContext.subscriptionId, wizardContext.environment.resourceManagerEndpointUrl);
             addExtensionUserAgent(client);
             wizardContext.resourceGroupsTask = uiUtils.listAll(client.resourceGroups, client.resourceGroups.list());
         }
