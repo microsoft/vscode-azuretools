@@ -441,6 +441,7 @@ export declare abstract class AzureWizardPromptStep<T> {
 export interface ISubscriptionWizardContext {
     credentials: ServiceClientCredentials;
     subscriptionId: string;
+    environment: AzureEnvironment;
     subscriptionDisplayName: string;
 }
 
