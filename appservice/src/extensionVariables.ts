@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { OutputChannel } from "vscode";
-import { IAzureUserInput } from 'vscode-azureextensionui';
+import { ExtensionContext, OutputChannel } from "vscode";
+import { IAzureUserInput, registerUIExtensionVariables, UIExtensionVariables } from 'vscode-azureextensionui';
 import { localize } from "./localize";
 
 /**
@@ -13,6 +13,7 @@ import { localize } from "./localize";
 export interface IAppServiceExtensionVariables {
     outputChannel: OutputChannel;
     ui: IAzureUserInput;
+    context: ExtensionContext;
 }
 
 class UninitializedExtensionVariables implements IAppServiceExtensionVariables {
@@ -25,6 +26,10 @@ class UninitializedExtensionVariables implements IAppServiceExtensionVariables {
     public get ui(): IAzureUserInput {
         throw this._error;
     }
+
+    public get context(): ExtensionContext {
+        throw this._error;
+    }
 }
 
 /**
@@ -35,6 +40,7 @@ export let ext: IAppServiceExtensionVariables = new UninitializedExtensionVariab
 /**
  * Call this to register common variables used throughout the AppService package.
  */
-export function registerAppServiceExtensionVariables(extVars: IAppServiceExtensionVariables): void {
+export function registerAppServiceExtensionVariables(extVars: IAppServiceExtensionVariables & UIExtensionVariables): void {
     ext = extVars;
+    registerUIExtensionVariables(extVars);
 }
