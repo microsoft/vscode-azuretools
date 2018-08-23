@@ -29,7 +29,7 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
             const creatingNewApp: string = localize('CreatingNewApp', 'Creating {0} "{1}"...', getAppKindDisplayName(wizardContext.newSiteKind), wizardContext.newSiteName);
             await window.withProgress({ location: ProgressLocation.Notification, title: creatingNewApp }, async (): Promise<void> => {
                 ext.outputChannel.appendLine(creatingNewApp);
-                const client: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
+                const client: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId, wizardContext.environment.resourceManagerEndpointUrl);
                 addExtensionUserAgent(client);
                 wizardContext.site = await client.webApps.createOrUpdate(wizardContext.resourceGroup.name, wizardContext.newSiteName, {
                     name: wizardContext.newSiteName,
@@ -65,7 +65,7 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
 
         if (wizardContext.newSiteKind === AppKind.functionapp) {
             const maxFileShareNameLength: number = 63;
-            const storageClient: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
+            const storageClient: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscriptionId, wizardContext.environment.resourceManagerEndpointUrl);
             addExtensionUserAgent(storageClient);
 
             const [, storageResourceGroup] = wizardContext.storageAccount.id.match(/\/resourceGroups\/([^/]+)\//);

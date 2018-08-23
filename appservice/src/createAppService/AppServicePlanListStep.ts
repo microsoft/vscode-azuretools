@@ -19,7 +19,7 @@ import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public static async getPlans(wizardContext: IAppServiceWizardContext): Promise<AppServicePlan[]> {
         if (wizardContext.plansTask === undefined) {
-            const client: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
+            const client: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId, wizardContext.environment.resourceManagerEndpointUrl);
             addExtensionUserAgent(client);
             wizardContext.plansTask = uiUtils.listAll(client.appServicePlans, client.appServicePlans.list());
         }
