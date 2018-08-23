@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { OutputChannel } from "vscode";
-import { IAzureUserInput } from 'vscode-azureextensionui';
+import { IAzureUserInput, registerUIExtensionVariables, UIExtensionVariables } from 'vscode-azureextensionui';
 import { localize } from "./localize";
 
 /**
@@ -35,6 +35,7 @@ export let ext: IAppServiceExtensionVariables = new UninitializedExtensionVariab
 /**
  * Call this to register common variables used throughout the AppService package.
  */
-export function registerAppServiceExtensionVariables(extVars: IAppServiceExtensionVariables): void {
+export function registerAppServiceExtensionVariables(extVars: UIExtensionVariables): void {
     ext = extVars;
+    registerUIExtensionVariables(extVars);
 }
