@@ -4368,6 +4368,12 @@
                             "type": "object"
                         }
                     },
+                    "201": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
                     "204": {
                         "description": "OK",
                         "schema": {
@@ -4484,6 +4490,12 @@
                 ],
                 "responses": {
                     "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "201": {
                         "description": "OK",
                         "schema": {
                             "type": "object"
@@ -6304,6 +6316,12 @@
                             "type": "object"
                         }
                     },
+                    "201": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
                     "204": {
                         "description": "OK",
                         "schema": {
@@ -6420,6 +6438,12 @@
                 ],
                 "responses": {
                     "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "201": {
                         "description": "OK",
                         "schema": {
                             "type": "object"
@@ -6844,6 +6868,12 @@
                             "type": "object"
                         }
                     },
+                    "201": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
                     "204": {
                         "description": "OK",
                         "schema": {
@@ -6927,6 +6957,12 @@
                 ],
                 "responses": {
                     "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "201": {
                         "description": "OK",
                         "schema": {
                             "type": "object"
