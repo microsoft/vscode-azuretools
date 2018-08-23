@@ -6,8 +6,7 @@
 // tslint:disable-next-line:no-require-imports
 import StorageManagementClient = require('azure-arm-storage');
 import { StorageAccountListKeysResult } from 'azure-arm-storage/lib/models';
-// tslint:disable-next-line:no-require-imports
-import WebSiteManagementClient = require('azure-arm-website');
+import { WebSiteManagementClient } from 'azure-arm-website';
 import { SiteConfig } from 'azure-arm-website/lib/models';
 import { MessageItem, ProgressLocation, window } from 'vscode';
 import { addExtensionUserAgent, AzureWizardExecuteStep } from 'vscode-azureextensionui';

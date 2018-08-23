@@ -3,8 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// tslint:disable-next-line:no-require-imports
-import WebSiteManagementClient = require('azure-arm-website');
+import { WebSiteManagementClient } from 'azure-arm-website';
 import { AppServicePlan } from 'azure-arm-website/lib/models';
 import { addExtensionUserAgent, AzureWizard, AzureWizardPromptStep, IAzureQuickPickOptions, LocationListStep } from 'vscode-azureextensionui';
 import { IAzureQuickPickItem } from 'vscode-azureextensionui';
@@ -71,7 +70,7 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
             if (isNewSiteLinux === isPlanLinux) {
                 picks.push({
                     id: plan.id,
-                    label: plan.appServicePlanName,
+                    label: plan.name,
                     description: `${plan.sku.name} (${plan.geoRegion})`,
                     detail: plan.resourceGroup,
                     data: plan
