@@ -14,7 +14,7 @@ import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class SiteNameStep extends AzureNameStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<IAppServiceWizardContext> {
-        const client: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
+        const client: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId, wizardContext.environment.resourceManagerEndpointUrl);
         addExtensionUserAgent(client);
         wizardContext.newSiteName = (await ext.ui.showInputBox({
             prompt: `Enter a globally unique name for the new ${getAppKindDisplayName(wizardContext.newSiteKind)}.`,

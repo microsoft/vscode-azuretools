@@ -4,17 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Site } from 'azure-arm-website/lib/models';
-import { ServiceClientCredentials } from 'ms-rest';
-import { IActionContext } from 'vscode-azureextensionui';
+import { IActionContext, IAzureNode } from 'vscode-azureextensionui';
 import { AppKind, WebsiteOS } from './AppKind';
 import { createAppService } from './createAppService';
 
 export async function createFunctionApp(
     actionContext: IActionContext,
-    credentials: ServiceClientCredentials,
-    subscriptionId: string,
-    subscriptionDisplayName: string,
+    node: IAzureNode,
     showCreatingNode: (label: string) => void,
     appSettings: { [key: string]: string }): Promise<Site> {
-    return await createAppService(AppKind.functionapp, WebsiteOS.windows, actionContext, credentials, subscriptionId, subscriptionDisplayName, showCreatingNode, true, appSettings);
+    return await createAppService(AppKind.functionapp, WebsiteOS.windows, actionContext, node, showCreatingNode, true, appSettings);
 }

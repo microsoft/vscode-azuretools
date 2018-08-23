@@ -4,8 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Site, SkuDescription } from 'azure-arm-website/lib/models';
-import { ServiceClientCredentials } from 'ms-rest';
-import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountListStep, StorageAccountPerformance, StorageAccountReplication } from 'vscode-azureextensionui';
+import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureNode, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountListStep, StorageAccountPerformance, StorageAccountReplication } from 'vscode-azureextensionui';
 import { AppKind, WebsiteOS } from './AppKind';
 import { AppServicePlanCreateStep } from './AppServicePlanCreateStep';
 import { AppServicePlanListStep } from './AppServicePlanListStep';
@@ -20,9 +19,7 @@ export async function createAppService(
     appKind: AppKind,
     websiteOS: WebsiteOS | undefined,
     actionContext: IActionContext,
-    credentials: ServiceClientCredentials,
-    subscriptionId: string,
-    subscriptionDisplayName: string,
+    node: IAzureNode,
     showCreatingNode?: (label: string) => void,
     advancedCreation: boolean = false,
     functionAppSettings?: { [key: string]: string }): Promise<Site> {
@@ -32,9 +29,10 @@ export async function createAppService(
     let wizardContext: IAppServiceWizardContext = {
         newSiteKind: appKind,
         newSiteOS: websiteOS,
-        subscriptionId: subscriptionId,
-        subscriptionDisplayName: subscriptionDisplayName,
-        credentials: credentials
+        subscriptionId: node.subscriptionId,
+        subscriptionDisplayName: node.subscriptionDisplayName,
+        credentials: node.credentials,
+        environment: node.environment
     };
 
     promptSteps.push(new SiteNameStep());

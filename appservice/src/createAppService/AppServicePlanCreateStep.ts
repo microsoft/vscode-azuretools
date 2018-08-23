@@ -25,7 +25,7 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
             const createdAppServicePlan: string = localize('CreatedAppServicePlan', 'Successfully created App Service plan "{0}".', newPlanName);
             await window.withProgress({ location: ProgressLocation.Notification, title: findingAppServicePlan }, async (): Promise<void> => {
                 ext.outputChannel.appendLine(findingAppServicePlan);
-                const client: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId);
+                const client: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId, wizardContext.environment.resourceManagerEndpointUrl);
                 addExtensionUserAgent(client);
                 const existingPlan: AppServicePlan | null = await client.appServicePlans.get(wizardContext.resourceGroup.name, newPlanName);
                 if (existingPlan) {
