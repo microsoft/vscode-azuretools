@@ -152,7 +152,7 @@
                         }
                     },
                     "202": {
-                        "description": "OK",
+                        "description": "Accepted",
                         "schema": {
                             "$ref": "#/definitions/DeployResult"
                         }
@@ -235,7 +235,7 @@
                         }
                     },
                     "202": {
-                        "description": "OK",
+                        "description": "Accepted",
                         "schema": {
                             "$ref": "#/definitions/DeployResult"
                         }
@@ -1084,7 +1084,7 @@
                         }
                     },
                     "204": {
-                        "description": "OK",
+                        "description": "NoContent",
                         "schema": {
                             "type": "object"
                         }
@@ -4328,7 +4328,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "No Content"
+                        "description": "OK"
                     }
                 }
             },
@@ -4369,13 +4369,13 @@
                         }
                     },
                     "201": {
-                        "description": "OK",
+                        "description": "Created",
                         "schema": {
                             "type": "object"
                         }
                     },
                     "204": {
-                        "description": "OK",
+                        "description": "NoContent",
                         "schema": {
                             "type": "object"
                         }
@@ -4432,7 +4432,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "No Content"
+                        "description": "OK"
                     }
                 }
             }
@@ -4455,7 +4455,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "No Content"
+                        "description": "OK"
                     }
                 }
             },
@@ -4496,13 +4496,13 @@
                         }
                     },
                     "201": {
-                        "description": "OK",
+                        "description": "Created",
                         "schema": {
                             "type": "object"
                         }
                     },
                     "204": {
-                        "description": "OK",
+                        "description": "NoContent",
                         "schema": {
                             "type": "object"
                         }
@@ -4559,7 +4559,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "No Content"
+                        "description": "OK"
                     }
                 }
             }
@@ -5586,10 +5586,10 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "No Content"
+                        "description": "OK"
                     },
                     "202": {
-                        "description": "No Content"
+                        "description": "Accepted"
                     }
                 }
             }
@@ -5647,10 +5647,10 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "No Content"
+                        "description": "OK"
                     },
                     "202": {
-                        "description": "No Content"
+                        "description": "Accepted"
                     }
                 }
             }
@@ -6276,7 +6276,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "No Content"
+                        "description": "OK"
                     }
                 }
             },
@@ -6317,13 +6317,13 @@
                         }
                     },
                     "201": {
-                        "description": "OK",
+                        "description": "Created",
                         "schema": {
                             "type": "object"
                         }
                     },
                     "204": {
-                        "description": "OK",
+                        "description": "NoContent",
                         "schema": {
                             "type": "object"
                         }
@@ -6380,7 +6380,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "No Content"
+                        "description": "OK"
                     }
                 }
             }
@@ -6403,7 +6403,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "No Content"
+                        "description": "OK"
                     }
                 }
             },
@@ -6444,13 +6444,13 @@
                         }
                     },
                     "201": {
-                        "description": "OK",
+                        "description": "Created",
                         "schema": {
                             "type": "object"
                         }
                     },
                     "204": {
-                        "description": "OK",
+                        "description": "NoContent",
                         "schema": {
                             "type": "object"
                         }
@@ -6507,7 +6507,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "No Content"
+                        "description": "OK"
                     }
                 }
             }
@@ -6828,7 +6828,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "No Content"
+                        "description": "OK"
                     }
                 }
             },
@@ -6869,13 +6869,13 @@
                         }
                     },
                     "201": {
-                        "description": "OK",
+                        "description": "Created",
                         "schema": {
                             "type": "object"
                         }
                     },
                     "204": {
-                        "description": "OK",
+                        "description": "NoContent",
                         "schema": {
                             "type": "object"
                         }
@@ -6899,7 +6899,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "No Content"
+                        "description": "OK"
                     }
                 }
             }
@@ -6922,7 +6922,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "No Content"
+                        "description": "OK"
                     }
                 }
             },
@@ -6963,13 +6963,13 @@
                         }
                     },
                     "201": {
-                        "description": "OK",
+                        "description": "Created",
                         "schema": {
                             "type": "object"
                         }
                     },
                     "204": {
-                        "description": "OK",
+                        "description": "NoContent",
                         "schema": {
                             "type": "object"
                         }
@@ -6993,7 +6993,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "No Content"
+                        "description": "OK"
                     }
                 }
             }
