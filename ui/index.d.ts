@@ -5,7 +5,7 @@
 
 import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { ServiceClientCredentials, ServiceClient } from 'ms-rest';
-import { AzureEnvironment } from 'ms-rest-azure';
+import { AzureEnvironment, AzureServiceClientOptions } from 'ms-rest-azure';
 import { Uri, TreeDataProvider, Disposable, TreeItem, Event, OutputChannel, Memento, InputBoxOptions, QuickPickItem, QuickPickOptions, TextDocument, ExtensionContext, MessageItem, OpenDialogOptions, MessageOptions } from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
 import { ResourceGroup } from 'azure-arm-resource/lib/resource/models';
@@ -682,3 +682,21 @@ export declare function appendExtensionUserAgent(existingUserAgent?: string): st
  * Adds the extension user agent to the given ServiceClient or other object support AddUserAgentInfo
  */
 export declare function addExtensionUserAgent(client: IAddUserAgent): void;
+
+/**
+ * Creates an Azure client, ensuring best practices are followed. For example:
+ * 1. Adds extension-specific user agent
+ * 2. Uses resourceManagerEndpointUrl to support sovereigns
+ */
+export function createAzureClient<T extends IAddUserAgent>(
+    clientInfo: { credentials: ServiceClientCredentials; subscriptionId: string; environment: AzureEnvironment; },
+    clientType: { new(credentials: ServiceClientCredentials, subscriptionId: string, baseUri?: string, options?: AzureServiceClientOptions): T }): T;
+
+/**
+ * Creates an Azure subscription client, ensuring best practices are followed. For example:
+ * 1. Adds extension-specific user agent
+ * 2. Uses resourceManagerEndpointUrl to support sovereigns
+ */
+export function createAzureSubscriptionClient<T extends IAddUserAgent>(
+    clientInfo: { credentials: ServiceClientCredentials; environment: AzureEnvironment; },
+    clientType: { new(credentials: ServiceClientCredentials, baseUri?: string, options?: AzureServiceClientOptions): T }): T;

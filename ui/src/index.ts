@@ -7,6 +7,7 @@ export * from './AzureActionHandler';
 export * from './AzureUserInput';
 export * from './BaseEditor';
 export * from './callWithTelemetryAndErrorHandling';
+export * from './createAzureClient';
 export * from './createTelemetryReporter';
 export * from './DialogResponses';
 export * from './errors';
