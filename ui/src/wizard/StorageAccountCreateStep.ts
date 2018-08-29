@@ -7,7 +7,7 @@
 import StorageManagementClient = require('azure-arm-storage');
 import { ProgressLocation, window } from 'vscode';
 import { INewStorageAccountDefaults, IStorageAccountWizardContext } from '../../index';
-import { addExtensionUserAgent } from '../extensionUserAgent';
+import { createAzureClient } from '../createAzureClient';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
@@ -30,8 +30,7 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
             const creatingStorageAccount: string = localize('CreatingStorageAccount', 'Creating storage account "{0}" in location "{1}" with sku "{2}"...', newName, newLocation, newSkuName);
             await window.withProgress({ location: ProgressLocation.Notification, title: creatingStorageAccount }, async (): Promise<void> => {
                 ext.outputChannel.appendLine(creatingStorageAccount);
-                const storageClient: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscriptionId, wizardContext.environment.resourceManagerEndpointUrl);
-                addExtensionUserAgent(storageClient);
+                const storageClient: StorageManagementClient = createAzureClient(wizardContext, StorageManagementClient);
                 wizardContext.storageAccount = await storageClient.storageAccounts.create(
                     // tslint:disable-next-line:no-non-null-assertion
                     wizardContext.resourceGroup!.name!,

@@ -10,8 +10,8 @@ import { StorageAccount } from 'azure-arm-storage/lib/models';
 import opn = require("opn");
 import { isString } from 'util';
 import { IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, INewStorageAccountDefaults, IStorageAccountFilters, IStorageAccountWizardContext } from '../../index';
+import { createAzureClient } from '../createAzureClient';
 import { UserCancelledError } from '../errors';
-import { addExtensionUserAgent } from '../extensionUserAgent';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { AzureWizard } from './AzureWizard';
@@ -73,15 +73,13 @@ export class StorageAccountListStep<T extends IStorageAccountWizardContext> exte
     }
 
     public static async isNameAvailable<T extends IStorageAccountWizardContext>(wizardContext: T, name: string): Promise<boolean> {
-        const storageClient: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscriptionId, wizardContext.environment.resourceManagerEndpointUrl);
-        addExtensionUserAgent(storageClient);
+        const storageClient: StorageManagementClient = createAzureClient(wizardContext, StorageManagementClient);
         return !!(await storageClient.storageAccounts.checkNameAvailability(name)).nameAvailable;
     }
 
     public async prompt(wizardContext: T): Promise<T> {
         if (!wizardContext.storageAccount && !wizardContext.newStorageAccountName) {
-            const client: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscriptionId, wizardContext.environment.resourceManagerEndpointUrl);
-            addExtensionUserAgent(client);
+            const client: StorageManagementClient = createAzureClient(wizardContext, StorageManagementClient);
 
             const quickPickOptions: IAzureQuickPickOptions = { placeHolder: 'Select a storage account.', id: `StorageAccountListStep/${wizardContext.subscriptionId}` };
             const result: StorageAccount | string | undefined = (await ext.ui.showQuickPick(this.getQuickPicks(client.storageAccounts.list()), quickPickOptions)).data;
