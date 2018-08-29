@@ -15,6 +15,8 @@ export function reportAnIssue(actionId: string, parsedError: IParsedError): void
     const { extensionName, extensionVersion } = getPackageInfo();
 
     const body: string = `
+<Please be sure to remove any private information before submitting.>
+
 Repro steps:
 <Enter steps to reproduce issue>
 
