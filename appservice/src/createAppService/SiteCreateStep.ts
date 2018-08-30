@@ -42,13 +42,13 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
                 const createdNewApp: string = localize('CreatedNewApp', 'Created new {0} "{1}": {2}', getAppKindDisplayName(wizardContext.newSiteKind), wizardContext.site.name, `https://${wizardContext.site.defaultHostName}`);
                 ext.outputChannel.appendLine(createdNewApp);
                 ext.outputChannel.appendLine('');
-                const viewLogs: MessageItem = {
-                    title: localize('viewLogs', 'View Logs')
+                const viewOutput: MessageItem = {
+                    title: localize('viewOutput', 'View Output')
                 };
 
                 // Note: intentionally not waiting for the result of this before returning
-                window.showInformationMessage(createdNewApp, viewLogs).then((result: MessageItem | undefined) => {
-                    if (result === viewLogs) {
+                window.showInformationMessage(createdNewApp, viewOutput).then((result: MessageItem | undefined) => {
+                    if (result === viewOutput) {
                         ext.outputChannel.show();
                     }
                 });
