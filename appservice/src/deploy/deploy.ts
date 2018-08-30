@@ -4,10 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AppServicePlan, SiteConfigResource } from 'azure-arm-website/lib/models';
-import * as opn from 'opn';
-import { MessageItem, ProgressLocation, window } from 'vscode';
+import { ProgressLocation, window } from 'vscode';
 import { TelemetryProperties } from 'vscode-azureextensionui';
-import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { ScmType } from '../ScmType';
 import { SiteClient } from '../SiteClient';
@@ -68,32 +66,5 @@ export async function deploy(client: SiteClient, fsPath: string, configurationSe
                 await deployZip(client, fsPath, configurationSectionName);
                 break;
         }
-
-        const deployComplete: string = !client.isFunctionApp ?
-            localize('deployCompleteWithUrl', 'Deployment to "{0}" completed: {1}', client.fullName, client.defaultHostUrl) :
-            localize('deployComplete', 'Deployment to "{0}" completed.', client.fullName);
-        ext.outputChannel.appendLine(deployComplete);
-        ext.outputChannel.appendLine('');
-        const viewLogs: MessageItem = {
-            title: localize('viewLogs', 'View Logs')
-        };
-        const browseWebsite: MessageItem = {
-            title: localize('browseWebsite', 'Browse Website')
-        };
-
-        const buttons: MessageItem[] = [viewLogs];
-        if (!client.isFunctionApp) {
-            buttons.push(browseWebsite);
-        }
-
-        // Note: intentionally not waiting for the result of this before returning
-        window.showInformationMessage(deployComplete, ...buttons).then(async (result: MessageItem | undefined) => {
-            if (result === viewLogs) {
-                ext.outputChannel.show();
-            } else if (result === browseWebsite) {
-                // tslint:disable-next-line:no-unsafe-any
-                opn(client.defaultHostUrl);
-            }
-        });
     });
 }
