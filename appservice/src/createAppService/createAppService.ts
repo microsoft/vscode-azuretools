@@ -38,9 +38,9 @@ export async function createAppService(
 
     if (actionContext.properties.resourceGroup) {
         // if a rg was passed in, use that as the default
-        const progamaticResourceGroup: ResourceGroup = (await ResourceGroupListStep.getResourceGroups(wizardContext))
+        const programmaticResourceGroup: ResourceGroup = (await ResourceGroupListStep.getResourceGroups(wizardContext))
             .find((rg: ResourceGroup) => rg.name === actionContext.properties.resourceGroup);
-        wizardContext.resourceGroup = progamaticResourceGroup;
+        wizardContext.resourceGroup = programmaticResourceGroup;
     }
 
     promptSteps.push(new SiteNameStep());
