@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { ResourceGroup } from 'azure-arm-resource/lib/resource/models';
 import { Site, SkuDescription } from 'azure-arm-website/lib/models';
 import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureNode, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountListStep, StorageAccountPerformance, StorageAccountReplication } from 'vscode-azureextensionui';
 import { AppKind, WebsiteOS } from './AppKind';
@@ -34,6 +35,13 @@ export async function createAppService(
         credentials: node.credentials,
         environment: node.environment
     };
+
+    if (actionContext.properties.resourceGroup) {
+        // if a rg was passed in, use that as the default
+        const progamaticResourceGroup: ResourceGroup = (await ResourceGroupListStep.getResourceGroups(wizardContext))
+            .find((rg: ResourceGroup) => rg.name === actionContext.properties.resourceGroup);
+        wizardContext.resourceGroup = progamaticResourceGroup;
+    }
 
     promptSteps.push(new SiteNameStep());
     switch (appKind) {
