@@ -15,9 +15,11 @@ export namespace javaUtils {
     export function isJavaTomcatRuntime(runtime: string | undefined): boolean {
         return runtime && runtime.toLowerCase().startsWith('tomcat');
     }
+
     export function isJavaSERuntime(runtime: string | undefined): boolean {
         return runtime && runtime.toLowerCase() === 'java|8-jre8';
     }
+
     export function isJavaSERequiredPortConfigured(appSettings: StringDictionary | undefined): boolean {
         if (appSettings && appSettings.properties) {
             for (const key of Object.keys(appSettings.properties)) {
@@ -28,20 +30,20 @@ export namespace javaUtils {
         }
         return false;
     }
+
     export async function configureJavaSEAppSettings(siteClient: SiteClient): Promise<StringDictionary> {
         const appSettings: StringDictionary = await siteClient.listApplicationSettings();
         if (isJavaSERequiredPortConfigured(appSettings)) {
             return null;
         }
-        if (!appSettings.properties) {
-            appSettings.properties = {};
-        }
+
+        appSettings.properties = appSettings.properties || {};
         const port: string = await ext.ui.showInputBox({
             value: DEFAULT_PORT,
-            prompt: 'Configure the PORT(Application Settings) which your Java SE Web App exposes',
+            prompt: 'Configure the PORT (Application Settings) which your Java SE Web App exposes',
             placeHolder: 'PORT',
             validateInput: (input: string): string => {
-                return /^[0-9]+$/.test(input) ? null : 'please input a valid port number';
+                return /^[0-9]+$/.test(input) ? null : 'please specify a valid port number';
             }
         });
         if (!port) {
