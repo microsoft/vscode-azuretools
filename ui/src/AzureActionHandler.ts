@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { commands, Event } from 'vscode';
+import { commands, Event, Uri } from 'vscode';
 import { IActionContext } from '../index';
 import { callWithTelemetryAndErrorHandling } from './callWithTelemetryAndErrorHandling';
 import { ext } from './extensionVariables';
@@ -16,9 +16,14 @@ export function registerCommand(commandId: string, callback: (this: IActionConte
         return await callWithTelemetryAndErrorHandling(
             commandId,
             function (this: IActionContext): any {
-                if (args.length > 0 && args[0] instanceof AzureNode) {
-                    const node: AzureNode = <AzureNode>args[0];
-                    this.properties.contextValue = node.treeItem.contextValue;
+                if (args.length > 0) {
+                    const contextArg: any = args[0];
+
+                    if (contextArg instanceof AzureNode) {
+                        this.properties.contextValue = contextArg.treeItem.contextValue;
+                    } else if (contextArg instanceof Uri) {
+                        this.properties.contextValue = 'Uri';
+                    }
                 }
 
                 return callback.call(this, ...args);
