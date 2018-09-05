@@ -14,6 +14,7 @@ import { SiteCreateStep } from './SiteCreateStep';
 import { SiteNameStep } from './SiteNameStep';
 import { SiteOSStep } from './SiteOSStep';
 import { SiteRuntimeStep } from './SiteRuntimeStep';
+import { ResourceGroup } from 'azure-arm-resource/lib/resource/models';
 
 export async function createAppService(
     appKind: AppKind,
@@ -36,8 +37,12 @@ export async function createAppService(
         environment: node.environment
     };
 
-    // if a rg was passed in, use that as the default
-    wizardContext.newResourceGroupName = resourceGroup;
+    if (resourceGroup) {
+        // if a rg was passed in, use that as the default
+        const resourceGroupMatch: ResourceGroup = (await ResourceGroupListStep.getResourceGroups(wizardContext))
+            .find((rg: ResourceGroup) => rg.name === resourceGroup);
+        wizardContext.resourceGroup = resourceGroupMatch;
+    }
 
     promptSteps.push(new SiteNameStep());
     switch (appKind) {
