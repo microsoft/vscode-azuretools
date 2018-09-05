@@ -45,7 +45,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
         this._clearCache = true;
     }
 
-    public async createChild(userOptions?: {}, resourceGroup?: string): Promise<AzureNode> {
+    public async createChild(userOptions?: {}): Promise<AzureNode> {
         if (this.treeItem.createChild) {
             let creatingNode: AzureNode | undefined;
             try {
@@ -57,8 +57,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
                         //tslint:disable-next-line:no-floating-promises
                         this.treeDataProvider.refresh(this, false);
                     },
-                    userOptions,
-                    resourceGroup);
+                    userOptions);
 
                 const newNode: AzureNode = this.createNewNode(newTreeItem);
                 await this.addNodeToCache(newNode);
