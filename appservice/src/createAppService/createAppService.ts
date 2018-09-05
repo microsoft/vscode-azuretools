@@ -37,10 +37,8 @@ export async function createAppService(
         environment: node.environment
     };
 
-    if (resourceGroup) {
-        // if a rg was passed in, use that as the default
-        wizardContext.newResourceGroupName = resourceGroupMatch;
-    }
+    // if a rg was passed in, use that as the default
+    wizardContext.newResourceGroupName = resourceGroup;
 
     promptSteps.push(new SiteNameStep());
     switch (appKind) {
