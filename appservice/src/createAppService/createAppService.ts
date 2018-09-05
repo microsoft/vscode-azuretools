@@ -23,7 +23,8 @@ export async function createAppService(
     node: IAzureNode,
     showCreatingNode?: (label: string) => void,
     advancedCreation: boolean = false,
-    functionAppSettings?: { [key: string]: string }): Promise<Site> {
+    functionAppSettings?: { [key: string]: string },
+    resourceGroup?: string): Promise<Site> {
 
     const promptSteps: AzureWizardPromptStep<IAppServiceWizardContext>[] = [];
     const executeSteps: AzureWizardExecuteStep<IAppServiceWizardContext>[] = [];
@@ -36,11 +37,14 @@ export async function createAppService(
         environment: node.environment
     };
 
-    if (actionContext.properties.resourceGroup) {
+    if (resourceGroup) {
         // if a rg was passed in, use that as the default
-        const programmaticResourceGroup: ResourceGroup = (await ResourceGroupListStep.getResourceGroups(wizardContext))
-            .find((rg: ResourceGroup) => rg.name === actionContext.properties.resourceGroup);
-        wizardContext.resourceGroup = programmaticResourceGroup;
+        const resourceGroupMatch: ResourceGroup = (await ResourceGroupListStep.getResourceGroups(wizardContext))
+            .find((rg: ResourceGroup) => rg.name === resourceGroup);
+        if (resourceGroupMatch) {
+            wizardContext.resourceGroup = resourceGroupMatch;
+        }
+
     }
 
     promptSteps.push(new SiteNameStep());
