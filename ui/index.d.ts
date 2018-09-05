@@ -133,9 +133,8 @@ export interface IChildProvider {
     /**
      * Implement this if you want the 'create' option to show up in the node picker
      * @param options User-defined options that are passed to the IAzureParentTreeItem.createChild call
-     * @param resourceGroup The name of the resource group the app will be created under programmatically
      */
-    createChild?(node: IAzureNode, showCreatingNode: (label: string) => void, userOptions?: any, resourceGroup?: string): Promise<IAzureTreeItem>;
+    createChild?(node: IAzureNode, showCreatingNode: (label: string) => void, userOptions?: any): Promise<IAzureTreeItem>;
 
     /**
      * Implement this if you want non-default (i.e. non-alphabetical) sorting of child nodes.
