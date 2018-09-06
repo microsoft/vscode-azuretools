@@ -12,6 +12,7 @@ export async function createFunctionApp(
     actionContext: IActionContext,
     node: IAzureNode,
     showCreatingNode: (label: string) => void,
-    appSettings: { [key: string]: string }): Promise<Site> {
-    return await createAppService(AppKind.functionapp, WebsiteOS.windows, actionContext, node, showCreatingNode, true, appSettings);
+    appSettings: { [key: string]: string },
+    resourceGroup?: string): Promise<Site> {
+    return await createAppService(AppKind.functionapp, WebsiteOS.windows, actionContext, node, showCreatingNode, true, appSettings, resourceGroup);
 }
