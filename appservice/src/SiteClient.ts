@@ -31,6 +31,7 @@ export class SiteClient {
     public readonly kind: string;
     public readonly initialState: string;
     public readonly isFunctionApp: boolean;
+    public readonly isLinuxConsumptionPlan: boolean;
 
     public readonly planResourceGroup: string;
     public readonly planName: string;
@@ -60,15 +61,19 @@ export class SiteClient {
         this.kind = site.kind;
         this.initialState = site.state;
         this.isFunctionApp = site.kind && site.kind.includes('functionapp');
+        this.isLinuxConsumptionPlan = site.kind && site.kind.includes('functionapp,linux,container');
 
         this.planResourceGroup = matches[2];
         this.planName = matches[3];
 
         this.defaultHostName = site.defaultHostName;
         this.defaultHostUrl = `https://${this.defaultHostName}`;
-        this.kuduHostName = site.hostNameSslStates.find((h: HostNameSslState) => h.hostType && h.hostType.toLowerCase() === 'repository').name;
-        this.kuduUrl = `https://${this.kuduHostName}`;
-        this.gitUrl = `${this.kuduHostName}:443/${site.repositorySiteName}.git`;
+        const kuduRepositoryUrl: HostNameSslState = site.hostNameSslStates.find((h: HostNameSslState) => h.hostType && h.hostType.toLowerCase() === 'repository');
+        if (kuduRepositoryUrl) {
+            this.kuduHostName = kuduRepositoryUrl.name;
+            this.kuduUrl = `https://${this.kuduHostName}`;
+            this.gitUrl = `${this.kuduHostName}:443/${site.repositorySiteName}.git`;
+        }
 
         this._node = node;
     }

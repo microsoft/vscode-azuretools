@@ -28,6 +28,7 @@ function getLogStreamId(client: SiteClient, logsPath: string): string {
 }
 
 export async function startStreamingLogs(client: SiteClient, verifyLoggingEnabled: () => Promise<void>, logStreamLabel: string, logsPath: string = ''): Promise<ILogStream> {
+    const kuduClient: KuduClient = await getKuduClient(client);
     const logStreamId: string = getLogStreamId(client, logsPath);
     const logStream: ILogStream | undefined = logStreams.get(logStreamId);
 
@@ -40,9 +41,6 @@ export async function startStreamingLogs(client: SiteClient, verifyLoggingEnable
 
         const outputChannel: vscode.OutputChannel = logStream ? logStream.outputChannel : vscode.window.createOutputChannel(localize('logStreamLabel', '{0} - Log Stream', logStreamLabel));
         ext.context.subscriptions.push(outputChannel);
-
-        const kuduClient: KuduClient = await getKuduClient(client);
-
         outputChannel.show();
         outputChannel.appendLine(localize('connectingToLogStream', 'Connecting to log stream...'));
         const httpRequest: WebResource = new WebResource();

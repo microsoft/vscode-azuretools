@@ -8,10 +8,15 @@ import { BasicAuthenticationCredentials } from 'ms-rest';
 import { addExtensionUserAgent } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { ArgumentError } from './errors';
+import { localize } from './localize';
 import { SiteClient } from './SiteClient';
 
 export async function getKuduClient(client: SiteClient): Promise<KuduClient> {
     const user: User = await client.getWebAppPublishCredential();
+    if (client.isLinuxConsumptionPlan) {
+        const notSupportedLinux: string = localize('notSupportedLinux', 'This action is not supported with Linux Consumption Plans.');
+        throw new Error (notSupportedLinux);
+    }
     if (!user.publishingUserName || !user.publishingPassword) {
         throw new ArgumentError(user);
     }
