@@ -38,9 +38,9 @@ export class SiteClient {
 
     public readonly defaultHostName: string;
     public readonly defaultHostUrl: string;
-    public readonly kuduHostName: string;
-    public readonly kuduUrl: string;
-    public readonly gitUrl: string;
+    public readonly kuduHostName: string | undefined;
+    public readonly kuduUrl: string | undefined;
+    public readonly gitUrl: string | undefined;
 
     private readonly _node: IAzureNode;
 
@@ -61,7 +61,6 @@ export class SiteClient {
         this.kind = site.kind;
         this.initialState = site.state;
         this.isFunctionApp = site.kind && site.kind.includes('functionapp');
-        this.isLinuxConsumptionPlan = site.kind && site.kind.includes('functionapp,linux,container');
 
         this.planResourceGroup = matches[2];
         this.planName = matches[3];
