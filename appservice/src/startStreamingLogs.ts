@@ -110,6 +110,6 @@ export async function stopStreamingLogs(client: SiteClient, logsPath: string = '
     if (logStream && logStream.isConnected) {
         logStream.dispose();
     } else {
-        await vscode.window.showWarningMessage(localize('alreadyActive', 'The log-streaming service for "{0}" is already disconnected.', logStream.outputChannel.name));
+        await vscode.window.showWarningMessage(localize('alreadyDisconnected', 'The log-streaming service is already disconnected.'));
     }
 }
