@@ -52,17 +52,20 @@ export async function callWithTelemetryAndErrorHandling(callbackId: string, call
             // Always append the error to the output channel, but only 'show' the output channel for multiline errors
             ext.outputChannel.appendLine(localize('outputError', 'Error: {0}', errorData.message));
 
-            let result: MessageItem | undefined;
+            let message: string;
             if (errorData.message.includes('\n')) {
                 ext.outputChannel.show();
-                result = await window.showErrorMessage(localize('multilineError', 'An error has occured. Check output window for more details.'), DialogResponses.reportAnIssue);
+                message = localize('multilineError', 'An error has occured. Check output window for more details.');
             } else {
-                result = await window.showErrorMessage(errorData.message, DialogResponses.reportAnIssue);
+                message = errorData.message;
             }
 
-            if (result === DialogResponses.reportAnIssue) {
-                reportAnIssue(callbackId, errorData);
-            }
+            // don't wait
+            window.showErrorMessage(message, DialogResponses.reportAnIssue).then((result: MessageItem | undefined) => {
+                if (result === DialogResponses.reportAnIssue) {
+                    reportAnIssue(callbackId, errorData);
+                }
+            });
         }
 
         if (context.rethrowError) {
