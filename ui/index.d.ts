@@ -348,7 +348,7 @@ export declare class AzureUserInput implements IAzureUserInput {
      */
     public constructor(persistence: Memento);
 
-    public showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions & { canPickMany: true }): Promise<T[]>
+    public showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions & { canPickMany: true }): Promise<T[]>;
     public showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T>;
     public showInputBox(options: InputBoxOptions): Promise<string>;
     public showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;

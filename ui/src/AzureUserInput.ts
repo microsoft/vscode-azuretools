@@ -18,8 +18,7 @@ export class AzureUserInput implements IAzureUserInput {
         this._persistence = persistence;
     }
 
-    public async showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T>;
-    public async showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions & { canPickMany: true }): Promise<T[]> {
+    public async showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions & { canPickMany: boolean }): Promise<T | T[]> {
         if (options.ignoreFocusOut === undefined) {
             options.ignoreFocusOut = true;
         }
@@ -30,19 +29,20 @@ export class AzureUserInput implements IAzureUserInput {
             persistenceKey = `showQuickPick.${randomUtils.getPseudononymousStringHash(unhashedKey)}`;
         }
 
-        const result: T[] | undefined = await vscode.window.showQuickPick(this.getOrderedItems(items, persistenceKey, (<IAzureQuickPickOptions>options).suppressPersistence), options);
-        if (result === undefined || result.length === 0) {
+        const result: T | T[] | undefined = await vscode.window.showQuickPick(this.getOrderedItems(items, persistenceKey, (<IAzureQuickPickOptions>options).suppressPersistence), options);
+        // tslint:disable-next-line:no-any
+        if (result === undefined) {
             throw new UserCancelledError();
         }
         if (Array.isArray(result)) {
-            return result;
+            return <T[]>result;
         }
 
-        if (persistenceKey && !(<IAzureQuickPickItem><{}>result).suppressPersistence && !Array.isArray(result)) {
+        if (persistenceKey && !(<IAzureQuickPickItem><{}>result).suppressPersistence) {
             this._persistence.update(persistenceKey, getPersistenceValue(result));
         }
 
-        return result;
+        return <T>result;
     }
 
     public async showInputBox(options: vscode.InputBoxOptions): Promise<string> {
