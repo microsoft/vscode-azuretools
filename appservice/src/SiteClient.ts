@@ -37,9 +37,9 @@ export class SiteClient {
 
     public readonly defaultHostName: string;
     public readonly defaultHostUrl: string;
-    public readonly kuduHostName: string;
-    public readonly kuduUrl: string;
-    public readonly gitUrl: string;
+    public readonly kuduHostName: string | undefined;
+    public readonly kuduUrl: string | undefined;
+    public readonly gitUrl: string | undefined;
 
     private readonly _node: IAzureNode;
 
@@ -66,9 +66,12 @@ export class SiteClient {
 
         this.defaultHostName = site.defaultHostName;
         this.defaultHostUrl = `https://${this.defaultHostName}`;
-        this.kuduHostName = site.hostNameSslStates.find((h: HostNameSslState) => h.hostType && h.hostType.toLowerCase() === 'repository').name;
-        this.kuduUrl = `https://${this.kuduHostName}`;
-        this.gitUrl = `${this.kuduHostName}:443/${site.repositorySiteName}.git`;
+        const kuduRepositoryUrl: HostNameSslState = site.hostNameSslStates.find((h: HostNameSslState) => h.hostType && h.hostType.toLowerCase() === 'repository');
+        if (kuduRepositoryUrl) {
+            this.kuduHostName = kuduRepositoryUrl.name;
+            this.kuduUrl = `https://${this.kuduHostName}`;
+            this.gitUrl = `${this.kuduHostName}:443/${site.repositorySiteName}.git`;
+        }
 
         this._node = node;
     }
