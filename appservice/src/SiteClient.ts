@@ -31,7 +31,6 @@ export class SiteClient {
     public readonly kind: string;
     public readonly initialState: string;
     public readonly isFunctionApp: boolean;
-    public readonly isLinuxConsumptionPlan: boolean;
 
     public readonly planResourceGroup: string;
     public readonly planName: string;
