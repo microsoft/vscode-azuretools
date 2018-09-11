@@ -35,14 +35,14 @@ export class AzureUserInput implements IAzureUserInput {
             throw new UserCancelledError();
         }
         if (Array.isArray(result)) {
-            return <T[]>result;
+            return result;
         }
 
         if (persistenceKey && !(<IAzureQuickPickItem><{}>result).suppressPersistence) {
             this._persistence.update(persistenceKey, getPersistenceValue(result));
         }
 
-        return <T>result;
+        return result;
     }
 
     public async showInputBox(options: vscode.InputBoxOptions): Promise<string> {
