@@ -17,6 +17,8 @@ import { localGitDeploy } from './localGitDeploy';
 
 export async function deploy(client: SiteClient, fsPath: string, configurationSectionName: string, telemetryProperties?: TelemetryProperties): Promise<void> {
     const config: SiteConfigResource = await client.getSiteConfig();
+    // We use the AppServicePlan in a few places, but we don't want to delay deployment, so start the promise now and save as a const
+    const aspPromise: Promise<AppServicePlan> = client.getAppServicePlan();
     if (telemetryProperties) {
         try {
             telemetryProperties.sourceHash = randomUtils.getPseudononymousStringHash(fsPath);
@@ -37,7 +39,7 @@ export async function deploy(client: SiteClient, fsPath: string, configurationSe
                 () => {
                     // ignore
                 });
-            client.getAppServicePlan().then(
+            aspPromise.then(
                 (plan: AppServicePlan) => {
                     telemetryProperties.planStatus = plan.status;
                     telemetryProperties.planKind = plan.kind;
@@ -69,7 +71,7 @@ export async function deploy(client: SiteClient, fsPath: string, configurationSe
                     await deployWar(client, fsPath);
                     break;
                 }
-                await deployZip(client, fsPath, configurationSectionName);
+                await deployZip(client, fsPath, configurationSectionName, aspPromise);
                 break;
         }
     });

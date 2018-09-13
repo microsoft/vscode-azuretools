@@ -26,18 +26,6 @@ export async function isDirectory(fsPath: string): Promise<boolean> {
     return fsStats.isDirectory();
 }
 
-export async function deleteFile(fsPath: string): Promise<void> {
-    await new Promise((resolve: () => void, reject: (err: Error) => void): void => {
-        fs.unlink(fsPath, (err?: Error) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve();
-            }
-        });
-    });
-}
-
 export async function zipFile(filePath: string): Promise<string> {
     const zipFilePath: string = path.join(os.tmpdir(), `${randomFileName()}.zip`);
     await new Promise((resolve: () => void, reject: (err: Error) => void): void => {
