@@ -5,7 +5,7 @@
 
 import { AzureWizardPromptStep, IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
-import { WebsiteOS } from './AppKind';
+import { AppKind, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 interface ILinuxRuntimeStack {
@@ -16,16 +16,25 @@ interface ILinuxRuntimeStack {
 export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<IAppServiceWizardContext> {
         if (!wizardContext.newSiteRuntime && wizardContext.newSiteOS === WebsiteOS.linux) {
-            const runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[] = this.getLinuxRuntimeStack().map((rt: ILinuxRuntimeStack) => {
-                return {
-                    id: rt.name,
-                    label: rt.displayName,
-                    description: '',
-                    data: rt
-                };
-            });
+            if (wizardContext.newSiteKind === AppKind.functionapp) {
+                const runtimeItems: IAzureQuickPickItem<string>[] = [
+                    { label: 'JavaScript', data: 'node' },
+                    { label: '.NET', data: 'dotnet' },
+                    { label: 'Python', description: '(Preview)', data: 'python' }
+                ];
+                wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new Linux app.' })).data;
+            } else {
+                const runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[] = this.getLinuxRuntimeStack().map((rt: ILinuxRuntimeStack) => {
+                    return {
+                        id: rt.name,
+                        label: rt.displayName,
+                        description: '',
+                        data: rt
+                    };
+                });
 
-            wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new Linux app.' })).data.name;
+                wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new Linux app.' })).data.name;
+            }
         }
 
         return wizardContext;

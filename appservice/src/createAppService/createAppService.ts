@@ -4,11 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Site, SkuDescription } from 'azure-arm-website/lib/models';
-import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureNode, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountListStep, StorageAccountPerformance, StorageAccountReplication } from 'vscode-azureextensionui';
+import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, ISubscriptionWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountListStep, StorageAccountPerformance, StorageAccountReplication } from 'vscode-azureextensionui';
 import { AppKind, WebsiteOS } from './AppKind';
 import { AppServicePlanCreateStep } from './AppServicePlanCreateStep';
 import { AppServicePlanListStep } from './AppServicePlanListStep';
 import { setWizardContextDefaults } from './createWebApp';
+import { IAppCreateOptions } from './IAppCreateOptions';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 import { SiteCreateStep } from './SiteCreateStep';
 import { SiteNameStep } from './SiteNameStep';
@@ -17,29 +18,27 @@ import { SiteRuntimeStep } from './SiteRuntimeStep';
 
 export async function createAppService(
     appKind: AppKind,
-    websiteOS: WebsiteOS | undefined,
     actionContext: IActionContext,
-    node: IAzureNode,
-    showCreatingNode?: (label: string) => void,
-    advancedCreation: boolean = false,
-    functionAppSettings?: { [key: string]: string },
-    resourceGroup?: string): Promise<Site> {
+    subscriptionContext: ISubscriptionWizardContext,
+    createOptions: IAppCreateOptions | undefined,
+    showCreatingNode?: (label: string) => void): Promise<Site> {
+    createOptions = createOptions || {};
 
     const promptSteps: AzureWizardPromptStep<IAppServiceWizardContext>[] = [];
     const executeSteps: AzureWizardExecuteStep<IAppServiceWizardContext>[] = [];
     let wizardContext: IAppServiceWizardContext = {
         newSiteKind: appKind,
-        newSiteOS: websiteOS,
-        subscriptionId: node.subscriptionId,
-        subscriptionDisplayName: node.subscriptionDisplayName,
-        credentials: node.credentials,
-        environment: node.environment
+        newSiteOS: WebsiteOS[createOptions.os],
+        subscriptionId: subscriptionContext.subscriptionId,
+        subscriptionDisplayName: subscriptionContext.subscriptionDisplayName,
+        credentials: subscriptionContext.credentials,
+        environment: subscriptionContext.environment
     };
 
-    if (resourceGroup) {
+    if (createOptions.resourceGroup) {
         // if a rg was passed in, use that as the default
-       wizardContext.newResourceGroupName = resourceGroup;
-       executeSteps.push(new ResourceGroupCreateStep());
+        wizardContext.newResourceGroupName = createOptions.resourceGroup;
+        executeSteps.push(new ResourceGroupCreateStep());
     }
 
     promptSteps.push(new SiteNameStep());
@@ -71,7 +70,7 @@ export async function createAppService(
             promptSteps.push(new LocationListStep());
             break;
         case AppKind.app:
-            if (advancedCreation) {
+            if (createOptions.advancedCreation) {
                 promptSteps.push(new ResourceGroupListStep());
                 promptSteps.push(new SiteOSStep());
                 promptSteps.push(new SiteRuntimeStep());
@@ -87,7 +86,7 @@ export async function createAppService(
             }
         default:
     }
-    executeSteps.push(new SiteCreateStep(functionAppSettings));
+    executeSteps.push(new SiteCreateStep(createOptions.functionAppSettings));
     const wizard: AzureWizard<IAppServiceWizardContext> = new AzureWizard(promptSteps, executeSteps, wizardContext);
 
     // Ideally actionContext should always be defined, but there's a bug with the NodePicker. Create a 'fake' actionContext until that bug is fixed
@@ -97,7 +96,7 @@ export async function createAppService(
     if (showCreatingNode) {
         showCreatingNode(wizardContext.newSiteName);
     }
-    if (wizardContext.newSiteKind === AppKind.app && !advancedCreation) {
+    if (wizardContext.newSiteKind === AppKind.app && !createOptions.advancedCreation) {
         const basicPlanSku: SkuDescription = { name: 'B1', tier: 'Basic', size: 'B1', family: 'B', capacity: 1 };
         const freePlanSku: SkuDescription = { name: 'F1', tier: 'Free', size: 'F1', family: 'F', capacity: 1 };
         wizardContext.newResourceGroupName = `appsvc_rg_${wizardContext.newSiteOS}_${wizardContext.location.name}`;

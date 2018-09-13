@@ -5,6 +5,7 @@
 
 export * from './createAppService/createFunctionApp';
 export * from './createAppService/createWebApp';
+export * from './createAppService/IAppCreateOptions';
 export * from './deploy/deploy';
 export * from './deleteSite';
 export * from './editScmType';
