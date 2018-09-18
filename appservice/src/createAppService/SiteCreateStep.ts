@@ -13,7 +13,7 @@ import { addExtensionUserAgent, AzureWizardExecuteStep } from 'vscode-azureexten
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { randomUtils } from '../utils/randomUtils';
-import { AppKind, getAppKindDisplayName, getSiteModelKind } from './AppKind';
+import { AppKind, getAppKindDisplayName, getSiteModelKind, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
@@ -37,7 +37,8 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
                     location: wizardContext.location.name,
                     serverFarmId: wizardContext.plan ? wizardContext.plan.id : undefined,
                     clientAffinityEnabled: wizardContext.newSiteKind === AppKind.app,
-                    siteConfig: await this.getNewSiteConfig(wizardContext)
+                    siteConfig: await this.getNewSiteConfig(wizardContext),
+                    reserved: wizardContext.newSiteOS === WebsiteOS.linux  // The secret property - must be set to true to make it a Linux plan. Confirmed by the team who owns this API.
                 });
                 const createdNewApp: string = localize('CreatedNewApp', 'Created new {0} "{1}": {2}', getAppKindDisplayName(wizardContext.newSiteKind), wizardContext.site.name, `https://${wizardContext.site.defaultHostName}`);
                 ext.outputChannel.appendLine(createdNewApp);
@@ -59,11 +60,10 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
     }
 
     private async getNewSiteConfig(wizardContext: IAppServiceWizardContext): Promise<SiteConfig> {
-        const newSiteConfig: SiteConfig = {
-            linuxFxVersion: wizardContext.newSiteRuntime
-        };
-
-        if (wizardContext.newSiteKind === AppKind.functionapp) {
+        const newSiteConfig: SiteConfig = {};
+        if (wizardContext.newSiteKind === AppKind.app) {
+            newSiteConfig.linuxFxVersion = wizardContext.newSiteRuntime;
+        } else {
             const maxFileShareNameLength: number = 63;
             const storageClient: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscriptionId, wizardContext.environment.resourceManagerEndpointUrl);
             addExtensionUserAgent(storageClient);
@@ -100,6 +100,13 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
                     value: fileShareName
                 }
             ];
+
+            if (wizardContext.newSiteRuntime) {
+                newSiteConfig.appSettings.push({
+                    name: 'FUNCTIONS_WORKER_RUNTIME',
+                    value: wizardContext.newSiteRuntime
+                });
+            }
 
             for (const key of Object.keys(this._functionAppSettings)) {
                 newSiteConfig.appSettings.push({
