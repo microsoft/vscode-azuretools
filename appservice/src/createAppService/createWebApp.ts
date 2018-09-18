@@ -5,17 +5,18 @@
 
 import { Site } from 'azure-arm-website/lib/models';
 import { Uri, workspace } from 'vscode';
-import { IActionContext, IAzureNode, LocationListStep } from 'vscode-azureextensionui';
+import { IActionContext, ISubscriptionWizardContext, LocationListStep } from 'vscode-azureextensionui';
 import { AppKind, WebsiteOS } from './AppKind';
 import { createAppService } from './createAppService';
+import { IAppCreateOptions } from './IAppCreateOptions';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export async function createWebApp(
     actionContext: IActionContext,
-    node: IAzureNode,
-    showCreatingNode: (label: string) => void,
-    advancedCreation: boolean = false): Promise<Site> {
-    return await createAppService(AppKind.app, undefined, actionContext, node, showCreatingNode, advancedCreation);
+    subscriptionContext: ISubscriptionWizardContext,
+    createOptions?: IAppCreateOptions,
+    showCreatingNode?: (label: string) => void): Promise<Site> {
+    return await createAppService(AppKind.app, actionContext, subscriptionContext, createOptions, showCreatingNode);
 }
 
 export async function setWizardContextDefaults(wizardContext: IAppServiceWizardContext): Promise<void> {

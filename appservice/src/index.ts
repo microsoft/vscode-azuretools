@@ -5,11 +5,13 @@
 
 export * from './createAppService/createFunctionApp';
 export * from './createAppService/createWebApp';
+export * from './createAppService/IAppCreateOptions';
 export * from './deploy/deploy';
 export * from './deleteSite';
 export * from './editScmType';
 export * from './getFile';
 export * from './getKuduClient';
+export * from './functionsAdminRequest';
 export * from './pingFunctionApp';
 export * from './putFile';
 export * from './SiteClient';

@@ -20,7 +20,7 @@ script:
   - |
     if [ -z "$(grep "$PACKAGE_DIR/" <<< "$CHANGES")" ]; then
       echo "Ignoring this directory because it was not changed..."
-      travis_terminate
+      travis_terminate 0
     fi
   - cd $PACKAGE_DIR
   - npm install

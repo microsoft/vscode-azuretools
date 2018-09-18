@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { WebSiteManagementClient } from 'azure-arm-website';
-import { AppServicePlan, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SourceControlCollection, StringDictionary, User, WebAppInstanceCollection } from 'azure-arm-website/lib/models';
+import { AppServicePlan, FunctionEnvelopeCollection, FunctionSecrets, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SourceControlCollection, StringDictionary, User, WebAppInstanceCollection } from 'azure-arm-website/lib/models';
 import { addExtensionUserAgent, IAzureNode } from 'vscode-azureextensionui';
+import { FunctionEnvelope } from 'vscode-azurekudu/lib/models';
 import { ArgumentError } from './errors';
 
 /**
@@ -172,5 +173,59 @@ export class SiteClient {
 
     public async listSourceControls(): Promise<SourceControlCollection> {
         return await this._client.listSourceControls();
+    }
+
+    public async listFunctions(): Promise<FunctionEnvelopeCollection> {
+        if (this.isSlot) {
+            // Functions support for slots is still in preview and doesn't support this yet
+            throw new Error('Method not implemented.');
+        } else {
+            return await this._client.webApps.listFunctions(this.resourceGroup, this.siteName);
+        }
+    }
+
+    public async listFunctionsNext(nextPageLink: string): Promise<FunctionEnvelopeCollection> {
+        if (this.isSlot) {
+            // Functions support for slots is still in preview and doesn't support this yet
+            throw new Error('Method not implemented.');
+        } else {
+            return await this._client.webApps.listFunctionsNext(nextPageLink);
+        }
+    }
+
+    public async getFunction(functionName: string): Promise<FunctionEnvelope> {
+        if (this.isSlot) {
+            // Functions support for slots is still in preview and doesn't support this yet
+            throw new Error('Method not implemented.');
+        } else {
+            return await this._client.webApps.getFunction(this.resourceGroup, this.siteName, functionName);
+        }
+    }
+
+    public async deleteFunction(functionName: string): Promise<void> {
+        if (this.isSlot) {
+            // Functions support for slots is still in preview and doesn't support this yet
+            throw new Error('Method not implemented.');
+        } else {
+            return await this._client.webApps.deleteFunction(this.resourceGroup, this.siteName, functionName);
+        }
+    }
+
+    public async listFunctionSecrets(functionName: string): Promise<FunctionSecrets> {
+        return this.isSlot ?
+            await this._client.webApps.listFunctionSecretsSlot(this.resourceGroup, this.siteName, functionName, this.slotName) :
+            await this._client.webApps.listFunctionSecrets(this.resourceGroup, this.siteName, functionName);
+    }
+
+    public async getFunctionsAdminToken(): Promise<string> {
+        return this.isSlot ?
+            await this._client.webApps.getFunctionsAdminTokenSlot(this.resourceGroup, this.siteName, this.slotName) :
+            await this._client.webApps.getFunctionsAdminToken(this.resourceGroup, this.siteName);
+    }
+
+    public async syncFunctionTriggers(): Promise<void> {
+        this.isSlot ?
+            await this._client.webApps.syncFunctionTriggersSlot(this.resourceGroup, this.siteName, this.slotName) :
+            await this._client.webApps.syncFunctionTriggers(this.resourceGroup, this.siteName);
     }
 }

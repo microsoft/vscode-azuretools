@@ -22,8 +22,7 @@ export function getSiteModelKind(kind: AppKind, os: WebsiteOS): string {
     let planKind: string;
 
     if (os === WebsiteOS.linux) {
-        // Linux does not appear to be supported for function apps at the moment
-        return WebsiteOS.linux;
+        return `${kind},${WebsiteOS.linux}`;
     } else {
         // "app" or "functionapp"
         planKind = kind;
