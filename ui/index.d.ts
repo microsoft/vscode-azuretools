@@ -278,7 +278,7 @@ export interface IParsedError {
  */
 export interface IAzureUserInput {
     /**
-    * Shows a selection list.
+    * Shows a multi-selection list.
     *
     * @param items An array of items, or a promise that resolves to an array of items.
     * @param options Configures the behavior of the selection list.
