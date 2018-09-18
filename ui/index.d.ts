@@ -3,13 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Location } from 'azure-arm-resource/lib/subscription/models';
-import { ServiceClientCredentials, ServiceClient } from 'ms-rest';
-import { AzureEnvironment, AzureServiceClientOptions } from 'ms-rest-azure';
-import { Uri, TreeDataProvider, Disposable, TreeItem, Event, OutputChannel, Memento, InputBoxOptions, QuickPickItem, QuickPickOptions, TextDocument, ExtensionContext, MessageItem, OpenDialogOptions, MessageOptions } from 'vscode';
-import TelemetryReporter from 'vscode-extension-telemetry';
 import { ResourceGroup } from 'azure-arm-resource/lib/resource/models';
-import { StorageAccount, CheckNameAvailabilityResult } from 'azure-arm-storage/lib/models';
+import { Location } from 'azure-arm-resource/lib/subscription/models';
+import { StorageAccount } from 'azure-arm-storage/lib/models';
+import { ServiceClientCredentials } from 'ms-rest';
+import { AzureEnvironment, AzureServiceClientOptions } from 'ms-rest-azure';
+import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri } from 'vscode';
 
 export type OpenInPortalOptions = {
     /**
@@ -279,14 +278,24 @@ export interface IParsedError {
  */
 export interface IAzureUserInput {
     /**
-     * Shows a selection list.
-     * Automatically persists the 'recently used' item and displays that at the top of the list
-     *
-     * @param items An array of items, or a promise that resolves to an array of items.
-     * @param options Configures the behavior of the selection list.
-     * @throws `UserCancelledError` if the user cancels.
-     * @return A promise that resolves to the item the user picked.
-     */
+    * Shows a multi-selection list.
+    *
+    * @param items An array of items, or a promise that resolves to an array of items.
+    * @param options Configures the behavior of the selection list.
+    * @throws `UserCancelledError` if the user cancels.
+    * @return A promise that resolves to an array of items the user picked.
+    */
+    showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions & { canPickMany: true }): Promise<T[]>;
+
+    /**
+      * Shows a selection list.
+      * Automatically persists the 'recently used' item and displays that at the top of the list
+      *
+      * @param items An array of items, or a promise that resolves to an array of items.
+      * @param options Configures the behavior of the selection list.
+      * @throws `UserCancelledError` if the user cancels.
+      * @return A promise that resolves to the item the user picked.
+      */
     showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T>;
 
     /**
@@ -339,6 +348,7 @@ export declare class AzureUserInput implements IAzureUserInput {
      */
     public constructor(persistence: Memento);
 
+    public showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions & { canPickMany: true }): Promise<T[]>;
     public showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T>;
     public showInputBox(options: InputBoxOptions): Promise<string>;
     public showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;

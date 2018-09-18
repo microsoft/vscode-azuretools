@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Memento, MessageItem, MessageOptions, QuickPickItem, QuickPickOptions } from 'vscode';
 import * as vscode from 'vscode';
+import { Memento, MessageItem, MessageOptions, QuickPickItem, QuickPickOptions } from 'vscode';
 import { IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput } from '../index';
 import { DialogResponses } from './DialogResponses';
 import { UserCancelledError } from './errors';
@@ -18,23 +18,23 @@ export class AzureUserInput implements IAzureUserInput {
         this._persistence = persistence;
     }
 
-    public async showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T> {
+    public async showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T | T[]> {
         if (options.ignoreFocusOut === undefined) {
             options.ignoreFocusOut = true;
         }
 
         let persistenceKey: string | undefined;
         const unhashedKey: string | undefined = (<IAzureQuickPickOptions>options).id || options.placeHolder;
-        if (unhashedKey) {
+        if (unhashedKey && !options.canPickMany) {
             persistenceKey = `showQuickPick.${randomUtils.getPseudononymousStringHash(unhashedKey)}`;
         }
 
-        const result: T | undefined = await vscode.window.showQuickPick(this.getOrderedItems(items, persistenceKey, (<IAzureQuickPickOptions>options).suppressPersistence), options);
+        const result: T | T[] | undefined = await vscode.window.showQuickPick(this.getOrderedItems(items, persistenceKey, (<IAzureQuickPickOptions>options).suppressPersistence), options);
         if (result === undefined) {
             throw new UserCancelledError();
         }
 
-        if (persistenceKey && !(<IAzureQuickPickItem><{}>result).suppressPersistence) {
+        if (!Array.isArray(result) && persistenceKey && !(<IAzureQuickPickItem><{}>result).suppressPersistence) {
             this._persistence.update(persistenceKey, getPersistenceValue(result));
         }
 
