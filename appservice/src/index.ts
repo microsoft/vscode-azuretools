@@ -10,6 +10,7 @@ export * from './deleteSite';
 export * from './editScmType';
 export * from './getFile';
 export * from './getKuduClient';
+export * from './functionsAdminRequest';
 export * from './pingFunctionApp';
 export * from './putFile';
 export * from './SiteClient';
