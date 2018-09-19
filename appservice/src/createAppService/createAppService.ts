@@ -29,6 +29,7 @@ export async function createAppService(
     let wizardContext: IAppServiceWizardContext = {
         newSiteKind: appKind,
         newSiteOS: WebsiteOS[createOptions.os],
+        newSiteRuntime: createOptions.runtime,
         subscriptionId: subscriptionContext.subscriptionId,
         subscriptionDisplayName: subscriptionContext.subscriptionDisplayName,
         credentials: subscriptionContext.credentials,
