@@ -70,7 +70,7 @@ export async function createTreeItemsWithErrorHandling<T>(
     if (unknownError) {
         // Display a generic error node if there are any unknown items. Only the first error will be displayed
         const message: string = localize('cantShowItems', 'Some items could not be displayed');
-        treeItems.push(new InvalidTreeItem(message, unknownError, `${invalidContextValue}Unknown`, ''));
+        treeItems.push(new InvalidTreeItem(message, unknownError, invalidContextValue, ''));
     }
 
     return treeItems;

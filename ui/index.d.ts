@@ -160,7 +160,7 @@ export interface IAzureParentTreeItem extends IAzureTreeItem, IChildProvider {
  * Invalid objects will be shown with the error and the object's name. If the name cannot be determined for any invalid objects, a TreeItem will be added to the end with a generic label like "Some items cannot be displayed"
  * @param sourceArray The collection of source objects before converting to TreeItems
  * @param invalidContextValue The context value to use for invalid source objects
- * @param createTreeItem A function that converts a source object to a TreeItem
+ * @param createTreeItem A function that converts a source object to a TreeItem. Return undefined if you want this object to be skipped.
  * @param getLabelOnError A minimal function that gets the label to display for an invalid source object
  */
 export declare function createTreeItemsWithErrorHandling<T>(
