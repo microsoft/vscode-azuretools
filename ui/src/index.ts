@@ -16,6 +16,7 @@ export * from './parseError';
 export * from './TestAzureAccount';
 export * from './TestUserInput';
 export * from './treeDataProvider/AzureTreeDataProvider';
+export * from './treeDataProvider/createTreeItemsWithErrorHandling';
 export * from './wizard/AzureWizard';
 export * from './wizard/AzureWizardPromptStep';
 export * from './wizard/AzureWizardExecuteStep';
