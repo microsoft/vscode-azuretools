@@ -156,7 +156,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
         const picks: IAzureQuickPickItem<GetNodeFunction>[] = nodes.map((n: AzureNode) => {
             return {
                 label: n.treeItem.label,
-                description: '',
+                description: n.treeItem.description,
                 id: n.id,
                 data: async (): Promise<AzureNode> => await Promise.resolve(n)
             };
