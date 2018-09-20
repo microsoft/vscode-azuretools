@@ -34,6 +34,11 @@ class InvalidTreeItem implements IAzureParentTreeItem {
     public hasMoreChildren(): boolean {
         return false;
     }
+
+    public isAncestorOf(): boolean {
+        // never display invalid nodes in node picker
+        return false;
+    }
 }
 
 export async function createTreeItemsWithErrorHandling<T>(
