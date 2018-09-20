@@ -91,7 +91,7 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
         }
 
         const options: IAzureQuickPickOptions = {
-            placeHolder: localize('selectNode', 'Select a {0}', this.treeItem.childTypeLabel)
+            placeHolder: localize('selectNode', 'Select {0}', this.treeItem.childTypeLabel)
         };
         const getNode: GetNodeFunction = (await ext.ui.showQuickPick(this.getQuickPicks(expectedContextValues), options)).data;
         return await getNode();
