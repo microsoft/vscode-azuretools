@@ -90,16 +90,19 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
                 {
                     name: 'AzureWebJobsStorage',
                     value: storageConnectionString
-                },
-                {
-                    name: 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING',
-                    value: storageConnectionString
-                },
-                {
-                    name: 'WEBSITE_CONTENTSHARE',
-                    value: fileShareName
                 }
             ];
+
+            if (wizardContext.newSiteOS === 'windows') {
+                newSiteConfig.appSettings.push({
+                    name: 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING',
+                    value: storageConnectionString
+                });
+                newSiteConfig.appSettings.push({
+                    name: 'WEBSITE_CONTENTSHARE',
+                    value: fileShareName
+                });
+            }
 
             if (wizardContext.newSiteRuntime) {
                 newSiteConfig.appSettings.push({
