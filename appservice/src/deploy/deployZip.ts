@@ -31,7 +31,9 @@ export async function deployZip(client: SiteClient, fsPath: string, configuratio
     try {
         ext.outputChannel.appendLine(formatDeployLog(client, localize('deployStart', 'Starting deployment...')));
         const asp: AppServicePlan = await aspPromise;
-        if (client.kind.toLowerCase().includes('linux') && asp && asp.sku && asp.sku.tier && asp.sku.tier.toLowerCase() === 'dynamic') {
+        // Assume it's consumption if we can't get the plan (sometimes happens with brand new plans). Consumption is recommended and more popular for functions
+        const isConsumption: boolean = !asp || (asp.sku && asp.sku.tier && asp.sku.tier.toLowerCase() === 'dynamic');
+        if (client.kind.toLowerCase().includes('linux') && isConsumption) {
             // Linux consumption doesn't support kudu zipPushDeploy
             await deployToStorageAccount(client, zipFilePath);
         } else {
