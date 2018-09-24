@@ -31,6 +31,8 @@ export async function deployToStorageAccount(client: SiteClient, zipFilePath: st
         throw new ArgumentError(appSettings);
     }
     await client.updateApplicationSettings(appSettings);
+    ext.outputChannel.appendLine(formatDeployLog(client, localize('syncingTriggers', 'Syncing triggers...')));
+    await client.syncFunctionTriggers();
 }
 
 async function createBlobService(client: SiteClient): Promise<azureStorage.BlobService> {
