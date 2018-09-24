@@ -5,7 +5,7 @@
 
 import { WebSiteManagementClient } from 'azure-arm-website';
 import { AppServicePlan, FunctionEnvelopeCollection, FunctionSecrets, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SourceControlCollection, StringDictionary, User, WebAppInstanceCollection } from 'azure-arm-website/lib/models';
-import { addExtensionUserAgent, IAzureNode } from 'vscode-azureextensionui';
+import { addExtensionUserAgent, IAzureNode, parseError } from 'vscode-azureextensionui';
 import { FunctionEnvelope } from 'vscode-azurekudu/lib/models';
 import { ArgumentError } from './errors';
 
@@ -224,8 +224,15 @@ export class SiteClient {
     }
 
     public async syncFunctionTriggers(): Promise<void> {
-        this.isSlot ?
-            await this._client.webApps.syncFunctionTriggersSlot(this.resourceGroup, this.siteName, this.slotName) :
-            await this._client.webApps.syncFunctionTriggers(this.resourceGroup, this.siteName);
+        try {
+            this.isSlot ?
+                await this._client.webApps.syncFunctionTriggersSlot(this.resourceGroup, this.siteName, this.slotName) :
+                await this._client.webApps.syncFunctionTriggers(this.resourceGroup, this.siteName);
+        } catch (error) {
+            // For some reason this call incorrectly throws an error when the status code is 200
+            if (parseError(error).errorType !== '200') {
+                throw error;
+            }
+        }
     }
 }

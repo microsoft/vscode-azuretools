@@ -19,19 +19,7 @@ export async function deployWar(client: SiteClient, fsPath: string): Promise<voi
         throw new Error(localize('NotAWarError', 'Path specified is not a war file'));
     }
 
-    try {
-        ext.outputChannel.appendLine(formatDeployLog(client, localize('deployStart', 'Starting deployment...')));
-        await kuduClient.pushDeployment.warPushDeploy(fs.createReadStream(fsPath), { isAsync: true });
-        await waitForDeploymentToComplete(client, kuduClient);
-    } catch (error) {
-        // tslint:disable-next-line:no-unsafe-any
-        if (error && error.response && error.response.body) {
-            // Autorest doesn't support plain/text as a MIME type, so we have to get the error message from the response body ourselves
-            // https://github.com/Azure/autorest/issues/1527
-            // tslint:disable-next-line:no-unsafe-any
-            throw new Error(error.response.body);
-        } else {
-            throw error;
-        }
-    }
+    ext.outputChannel.appendLine(formatDeployLog(client, localize('deployStart', 'Starting deployment...')));
+    await kuduClient.pushDeployment.warPushDeploy(fs.createReadStream(fsPath), { isAsync: true });
+    await waitForDeploymentToComplete(client, kuduClient);
 }
