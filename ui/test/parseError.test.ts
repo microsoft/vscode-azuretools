@@ -12,65 +12,65 @@ import { parseError } from '../src/parseError';
 suite('Error Parsing Tests', () => {
     test('Generic Error', () => {
         const pe: IParsedError = parseError(new Error('test'));
-        assert.equal(pe.errorType, 'Error');
-        assert.equal(pe.message, 'test');
-        assert.equal(pe.isUserCancelledError, false);
+        assert.strictEqual(pe.errorType, 'Error');
+        assert.strictEqual(pe.message, 'test');
+        assert.strictEqual(pe.isUserCancelledError, false);
     });
 
     test('Specific Error', () => {
         const pe: IParsedError = parseError(new ReferenceError('test'));
-        assert.equal(pe.errorType, 'ReferenceError');
-        assert.equal(pe.message, 'test');
-        assert.equal(pe.isUserCancelledError, false);
+        assert.strictEqual(pe.errorType, 'ReferenceError');
+        assert.strictEqual(pe.message, 'test');
+        assert.strictEqual(pe.isUserCancelledError, false);
     });
 
     test('UserCancelledError', () => {
         const pe: IParsedError = parseError(new UserCancelledError());
-        assert.equal(pe.errorType, 'UserCancelledError');
-        assert.equal(pe.message, 'Operation cancelled.');
-        assert.equal(pe.isUserCancelledError, true);
+        assert.strictEqual(pe.errorType, 'UserCancelledError');
+        assert.strictEqual(pe.message, 'Operation cancelled.');
+        assert.strictEqual(pe.isUserCancelledError, true);
     });
 
     test('Azure Error', () => {
         const pe: IParsedError = parseError(new Error('{ "Code": "Conflict", "Message": "test" }'));
-        assert.equal(pe.errorType, 'Conflict');
-        assert.equal(pe.message, 'test');
-        assert.equal(pe.isUserCancelledError, false);
+        assert.strictEqual(pe.errorType, 'Conflict');
+        assert.strictEqual(pe.message, 'test');
+        assert.strictEqual(pe.isUserCancelledError, false);
     });
 
     test('String', () => {
         const pe: IParsedError = parseError('test');
-        assert.equal(pe.errorType, 'string');
-        assert.equal(pe.message, 'test');
-        assert.equal(pe.isUserCancelledError, false);
+        assert.strictEqual(pe.errorType, 'string');
+        assert.strictEqual(pe.message, 'test');
+        assert.strictEqual(pe.isUserCancelledError, false);
     });
 
     test('Empty String', () => {
         const pe: IParsedError = parseError('   ');
-        assert.equal(pe.errorType, 'string');
-        assert.equal(pe.message, 'Unknown Error');
-        assert.equal(pe.isUserCancelledError, false);
+        assert.strictEqual(pe.errorType, 'string');
+        assert.strictEqual(pe.message, 'Unknown Error');
+        assert.strictEqual(pe.isUserCancelledError, false);
     });
 
     test('Object', () => {
         const pe: IParsedError = parseError({ myfield: 1 });
-        assert.equal(pe.errorType, 'object');
-        assert.equal(pe.message, '{"myfield":1}');
-        assert.equal(pe.isUserCancelledError, false);
+        assert.strictEqual(pe.errorType, 'object');
+        assert.strictEqual(pe.message, '{"myfield":1}');
+        assert.strictEqual(pe.isUserCancelledError, false);
     });
 
     test('Object with errorCode', () => {
         const pe: IParsedError = parseError({ errorCode: 1 });
-        assert.equal(pe.errorType, '1');
-        assert.equal(pe.message, '{"errorCode":1}');
-        assert.equal(pe.isUserCancelledError, false);
+        assert.strictEqual(pe.errorType, '1');
+        assert.strictEqual(pe.message, 'Failed with code "1".');
+        assert.strictEqual(pe.isUserCancelledError, false);
     });
 
     test('Object with errorCode and message', () => {
         const pe: IParsedError = parseError({ message: JSON.stringify({ message: 'hi', Code: 432 }) });
-        assert.equal(pe.errorType, '432');
-        assert.equal(pe.message, 'hi');
-        assert.equal(pe.isUserCancelledError, false);
+        assert.strictEqual(pe.errorType, '432');
+        assert.strictEqual(pe.message, 'hi');
+        assert.strictEqual(pe.isUserCancelledError, false);
     });
 
     test('Custom Object', () => {
@@ -80,58 +80,58 @@ suite('Error Parsing Tests', () => {
         }
 
         const pe: IParsedError = parseError(new MyObject('test'));
-        assert.equal(pe.errorType, 'MyObject');
-        assert.equal(pe.message, '{"msg":"test"}');
-        assert.equal(pe.isUserCancelledError, false);
+        assert.strictEqual(pe.errorType, 'MyObject');
+        assert.strictEqual(pe.message, '{"msg":"test"}');
+        assert.strictEqual(pe.isUserCancelledError, false);
     });
 
     test('Null', () => {
         const pe: IParsedError = parseError(null);
-        assert.equal(pe.errorType, 'object');
-        assert.equal(pe.message, 'Unknown Error');
-        assert.equal(pe.isUserCancelledError, false);
+        assert.strictEqual(pe.errorType, 'object');
+        assert.strictEqual(pe.message, 'Unknown Error');
+        assert.strictEqual(pe.isUserCancelledError, false);
     });
 
     test('Array', () => {
         const pe: IParsedError = parseError([1, 2]);
-        assert.equal(pe.errorType, 'Array');
-        assert.equal(pe.message, '[1,2]');
-        assert.equal(pe.isUserCancelledError, false);
+        assert.strictEqual(pe.errorType, 'Array');
+        assert.strictEqual(pe.message, '[1,2]');
+        assert.strictEqual(pe.isUserCancelledError, false);
     });
 
     test('Number', () => {
         const pe: IParsedError = parseError(3);
-        assert.equal(pe.errorType, 'number');
-        assert.equal(pe.message, '3');
-        assert.equal(pe.isUserCancelledError, false);
+        assert.strictEqual(pe.errorType, 'number');
+        assert.strictEqual(pe.message, '3');
+        assert.strictEqual(pe.isUserCancelledError, false);
     });
 
     test('Boolean', () => {
         const pe: IParsedError = parseError(false);
-        assert.equal(pe.errorType, 'boolean');
-        assert.equal(pe.message, 'false');
-        assert.equal(pe.isUserCancelledError, false);
+        assert.strictEqual(pe.errorType, 'boolean');
+        assert.strictEqual(pe.message, 'false');
+        assert.strictEqual(pe.isUserCancelledError, false);
     });
 
     test('Undefined', () => {
         const pe: IParsedError = parseError(undefined);
-        assert.equal(pe.errorType, 'undefined');
-        assert.equal(pe.message, 'Unknown Error');
-        assert.equal(pe.isUserCancelledError, false);
+        assert.strictEqual(pe.errorType, 'undefined');
+        assert.strictEqual(pe.message, 'Unknown Error');
+        assert.strictEqual(pe.isUserCancelledError, false);
     });
 
     test('Zero', () => {
         const pe: IParsedError = parseError(0);
-        assert.equal(pe.errorType, 'number');
-        assert.equal(pe.message, '0');
-        assert.equal(pe.isUserCancelledError, false);
+        assert.strictEqual(pe.errorType, 'number');
+        assert.strictEqual(pe.message, '0');
+        assert.strictEqual(pe.isUserCancelledError, false);
     });
 
     test('Empty', () => {
         const pe: IParsedError = parseError('');
-        assert.equal(pe.errorType, 'string');
-        assert.equal(pe.message, 'Unknown Error');
-        assert.equal(pe.isUserCancelledError, false);
+        assert.strictEqual(pe.errorType, 'string');
+        assert.strictEqual(pe.message, 'Unknown Error');
+        assert.strictEqual(pe.isUserCancelledError, false);
     });
 
     test('Error in object body', () => {
@@ -145,9 +145,9 @@ suite('Error Parsing Tests', () => {
         };
         const pe: IParsedError = parseError(err);
 
-        assert.equal(pe.errorType, 'BadRequest');
-        assert.equal(pe.message, 'The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100.');
-        assert.equal(pe.isUserCancelledError, false);
+        assert.strictEqual(pe.errorType, 'BadRequest');
+        assert.strictEqual(pe.message, 'The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100.');
+        assert.strictEqual(pe.isUserCancelledError, false);
     });
 
     test('Multiple errors in object body', () => {
@@ -161,9 +161,9 @@ suite('Error Parsing Tests', () => {
         };
         const pe: IParsedError = parseError(err);
 
-        assert.equal(pe.errorType, '300');
-        assert.equal(pe.message, 'The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100.');
-        assert.equal(pe.isUserCancelledError, false);
+        assert.strictEqual(pe.errorType, '300');
+        assert.strictEqual(pe.message, 'The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100.');
+        assert.strictEqual(pe.isUserCancelledError, false);
     });
 
     test('Multiple errors in stringified body', () => {
@@ -177,9 +177,9 @@ suite('Error Parsing Tests', () => {
         };
         const pe: IParsedError = parseError(err);
 
-        assert.equal(pe.errorType, 'BadRequest2');
-        assert.equal(pe.message, 'The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100.');
-        assert.equal(pe.isUserCancelledError, false);
+        assert.strictEqual(pe.errorType, 'BadRequest2');
+        assert.strictEqual(pe.message, 'The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100.');
+        assert.strictEqual(pe.isUserCancelledError, false);
     });
 
     test('Error in object response', () => {
@@ -193,9 +193,9 @@ suite('Error Parsing Tests', () => {
         };
         const pe: IParsedError = parseError(err);
 
-        assert.equal(pe.errorType, 'BadRequest4');
-        assert.equal(pe.message, 'The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100.');
-        assert.equal(pe.isUserCancelledError, false);
+        assert.strictEqual(pe.errorType, 'BadRequest4');
+        assert.strictEqual(pe.message, 'The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100.');
+        assert.strictEqual(pe.isUserCancelledError, false);
     });
 
     test('Error in object response in string body', () => {
@@ -211,9 +211,9 @@ suite('Error Parsing Tests', () => {
         };
         const pe: IParsedError = parseError(err);
 
-        assert.equal(pe.errorType, 'BadRequest5');
-        assert.equal(pe.message, 'The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100.');
-        assert.equal(pe.isUserCancelledError, false);
+        assert.strictEqual(pe.errorType, 'BadRequest5');
+        assert.strictEqual(pe.message, 'The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100.');
+        assert.strictEqual(pe.isUserCancelledError, false);
     });
 
     test('Error with multiple nested messages, including a "response.body" that fails to JSON parse', () => {
@@ -233,27 +233,27 @@ suite('Error Parsing Tests', () => {
 
         const pe: IParsedError = parseError(err);
 
-        assert.equal(pe.errorType, '111AuthorizationFailed');
-        assert.equal(pe.message, '111The client with object id does not have authorization to perform action Microsoft.Web/serverfarms/read over scope.');
-        assert.equal(pe.isUserCancelledError, false);
+        assert.strictEqual(pe.errorType, '111AuthorizationFailed');
+        assert.strictEqual(pe.message, '111The client with object id does not have authorization to perform action Microsoft.Web/serverfarms/read over scope.');
+        assert.strictEqual(pe.isUserCancelledError, false);
     });
 
     test('Error with internal "error" property inside message', () => {
         const err: Error = new Error('{"error":{"code":"NoRegisteredProviderFound","message":"No registered resource provider found for location..."}}');
         const pe: IParsedError = parseError(err);
 
-        assert.equal(pe.errorType, 'NoRegisteredProviderFound');
-        assert.equal(pe.message, 'No registered resource provider found for location...');
-        assert.equal(pe.isUserCancelledError, false);
+        assert.strictEqual(pe.errorType, 'NoRegisteredProviderFound');
+        assert.strictEqual(pe.message, 'No registered resource provider found for location...');
+        assert.strictEqual(pe.isUserCancelledError, false);
     });
 
     test('Error with internal "error" property inside message that has been serialized twice', () => {
         const err: Error = new Error('"{\\"error\\":{\\"code\\":\\"NoRegisteredProviderFound\\",\\"message\\":\\"No registered resource provider found for location...\\"}}"');
         const pe: IParsedError = parseError(err);
 
-        assert.equal(pe.errorType, 'NoRegisteredProviderFound');
-        assert.equal(pe.message, 'No registered resource provider found for location...');
-        assert.equal(pe.isUserCancelledError, false);
+        assert.strictEqual(pe.errorType, 'NoRegisteredProviderFound');
+        assert.strictEqual(pe.message, 'No registered resource provider found for location...');
+        assert.strictEqual(pe.isUserCancelledError, false);
     });
 
     test('Error with nested value', () => {
@@ -274,8 +274,35 @@ suite('Error Parsing Tests', () => {
         };
         const pe: IParsedError = parseError(err);
 
-        assert.equal(pe.errorType, 'NotFound');
-        assert.equal(pe.message, 'Cannot find Subscription with name test.');
-        assert.equal(pe.isUserCancelledError, false);
+        assert.strictEqual(pe.errorType, 'NotFound');
+        assert.strictEqual(pe.message, 'Cannot find Subscription with name test.');
+        assert.strictEqual(pe.isUserCancelledError, false);
+    });
+
+    test('Error when deserializing responseBody', () => {
+        const err: {} = {
+            message: 'Error "Unexpected token T in JSON at position 0" occurred in deserializing the responseBody - "The service is unavailable." for the default response.',
+            response: {
+                body: 'The service is unavailable.',
+                statusCode: 503
+            }
+        };
+        const pe: IParsedError = parseError(err);
+
+        assert.strictEqual(pe.errorType, '503');
+        assert.strictEqual(pe.message, 'The service is unavailable.');
+        assert.strictEqual(pe.isUserCancelledError, false);
+    });
+
+    test('Error with only a statusCode', () => {
+        const err: {} = {
+            body: '',
+            statusCode: 401
+        };
+        const pe: IParsedError = parseError(err);
+
+        assert.strictEqual(pe.errorType, '401');
+        assert.strictEqual(pe.message, 'Failed with code "401".');
+        assert.strictEqual(pe.isUserCancelledError, false);
     });
 });
