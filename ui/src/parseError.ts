@@ -67,7 +67,7 @@ export function parseError(error: any): IParsedError {
 
 function convertCodeToError(errorType: string | undefined): string | undefined {
     if (errorType) {
-        const code: number = Number(errorType);
+        const code: number = parseInt(errorType, 10);
         if (!isNaN(code)) {
             return localize('failedWithCode', 'Failed with code "{0}".', code);
         }
