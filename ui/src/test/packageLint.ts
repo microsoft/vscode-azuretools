@@ -47,17 +47,19 @@ interface IPackage {
 }
 
 function emptyIfUndefined<T extends {}>(value: T | undefined): T {
+    //tslint:disable-next-line:strict-boolean-expressions
     return value || <T>{};
 }
 
 // tslint:disable-next-line:max-func-body-length
 export function packageLint(packageJson: IPackage, options: IPackageLintOptions = {}): void {
+    //tslint:disable-next-line:strict-boolean-expressions
     const commandsRegisteredButNotInPackage = options.commandsRegisteredButNotInPackage || [];
 
     let _registeredCommands: string[] | undefined;
     async function getRegisteredCommands(): Promise<string[]> {
         if (!_registeredCommands) {
-            assert(!!ext.context, 'The extension must be activated before running packageLint, otherwise its commands won\'t have been registered yet');
+            assert(!!<vscode.ExtensionContext | undefined>ext.context, 'The extension must be activated before running packageLint, otherwise its commands won\'t have been registered yet');
             const registeredCommands = await vscode.commands.getCommands();
 
             // Remove predefined IDs
