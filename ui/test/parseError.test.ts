@@ -305,4 +305,27 @@ suite('Error Parsing Tests', () => {
         assert.strictEqual(pe.message, 'Failed with code "401".');
         assert.strictEqual(pe.isUserCancelledError, false);
     });
+
+    test('Errors array in error property', () => {
+        const err: {} = {
+            name: 'StatusCodeError',
+            statusCode: 403,
+            message: '403 - {\'errors\':[{\'code\':\'DENIED\',\'message\':\'access forbidden\'}],\'http_status\':403}',
+            error: {
+                errors: [
+                    {
+                        code: 'DENIED',
+                        message: 'access forbidden'
+                    }
+                ],
+                http_status: 403
+            }
+        };
+
+        const pe: IParsedError = parseError(err);
+
+        assert.strictEqual(pe.errorType, 'DENIED');
+        assert.strictEqual(pe.message, 'access forbidden');
+        assert.strictEqual(pe.isUserCancelledError, false);
+    });
 });
