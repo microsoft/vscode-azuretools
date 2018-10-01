@@ -48,9 +48,9 @@ export class SiteClient {
         let matches: RegExpMatchArray | null = nonNullProp(site, 'serverFarmId').match(/\/subscriptions\/(.*)\/resourceGroups\/(.*)\/providers\/Microsoft.Web\/serverfarms\/(.*)/);
         matches = nonNullValue(matches, 'Invalid serverFarmId.');
 
-        this.isSlot = nonNullProp(site, 'type').toLowerCase() === 'microsoft.web/sites/slots';
         this.id = nonNullProp(site, 'id');
         [this.siteName, this.slotName] = nonNullProp(site, 'name').split('/');
+        this.isSlot = !!this.slotName;
         this.fullName = this.siteName + (this.slotName ? `-${this.slotName}` : '');
 
         this.resourceGroup = nonNullProp(site, 'resourceGroup');
