@@ -10,10 +10,11 @@ import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { ScmType } from './ScmType';
 import { SiteClient } from './SiteClient';
+import { nonNullProp } from './utils/nonNull';
 
 export async function editScmType(client: SiteClient, node: IAzureNode): Promise<string | undefined> {
     const config: SiteConfigResource = await client.getSiteConfig();
-    const newScmType: string = await showScmPrompt(config.scmType);
+    const newScmType: string = await showScmPrompt(nonNullProp(config, 'scmType'));
     if (newScmType === ScmType.GitHub) {
         if (config.scmType !== ScmType.None) {
             // GitHub cannot be configured if there is an existing configuration source-- a limitation of Azure

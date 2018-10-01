@@ -17,7 +17,7 @@ import { deployToStorageAccount } from './deployToStorageAccount';
 import { formatDeployLog } from './formatDeployLog';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
-export async function deployZip(client: SiteClient, fsPath: string, configurationSectionName: string, aspPromise: Promise<AppServicePlan>): Promise<void> {
+export async function deployZip(client: SiteClient, fsPath: string, configurationSectionName: string, aspPromise: Promise<AppServicePlan | undefined>): Promise<void> {
     let zipFilePath: string;
     let createdZip: boolean = false;
     if (FileUtilities.getFileExtension(fsPath) === 'zip') {
@@ -30,9 +30,9 @@ export async function deployZip(client: SiteClient, fsPath: string, configuratio
 
     try {
         ext.outputChannel.appendLine(formatDeployLog(client, localize('deployStart', 'Starting deployment...')));
-        const asp: AppServicePlan = await aspPromise;
+        const asp: AppServicePlan | undefined = await aspPromise;
         // Assume it's consumption if we can't get the plan (sometimes happens with brand new plans). Consumption is recommended and more popular for functions
-        const isConsumption: boolean = !asp || (asp.sku && asp.sku.tier && asp.sku.tier.toLowerCase() === 'dynamic');
+        const isConsumption: boolean = !asp || (!!asp.sku && !!asp.sku.tier && asp.sku.tier.toLowerCase() === 'dynamic');
         if (client.kind.toLowerCase().includes('linux') && isConsumption) {
             // Linux consumption doesn't support kudu zipPushDeploy
             await deployToStorageAccount(client, zipFilePath);
@@ -54,10 +54,8 @@ async function getZipFileToDeploy(fsPath: string, configurationSectionName?: str
     }
     if (await FileUtilities.isDirectory(fsPath)) {
         const zipDeployConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration(configurationSectionName, vscode.Uri.file(fsPath));
-        // tslint:disable-next-line:no-backbone-get-set-outside-model
-        const globPattern: string = zipDeployConfig.get<string>('zipGlobPattern');
-        // tslint:disable-next-line:no-backbone-get-set-outside-model
-        const ignorePattern: string | string[] = zipDeployConfig.get<string | string[]>('zipIgnorePattern');
+        const globPattern: string | undefined = zipDeployConfig.get<string>('zipGlobPattern');
+        const ignorePattern: string | string[] | undefined = zipDeployConfig.get<string | string[]>('zipIgnorePattern');
         return FileUtilities.zipDirectory(fsPath, globPattern, ignorePattern);
     } else {
         return FileUtilities.zipFile(fsPath);

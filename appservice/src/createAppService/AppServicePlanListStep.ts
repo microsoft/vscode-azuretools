@@ -9,6 +9,7 @@ import { addExtensionUserAgent, AzureWizard, AzureWizardPromptStep, IAzureQuickP
 import { IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
+import { nonNullProp } from '../utils/nonNull';
 import { uiUtils } from '../utils/uiUtils';
 import { getWebsiteOSDisplayName, WebsiteOS } from './AppKind';
 import { AppServicePlanCreateStep } from './AppServicePlanCreateStep';
@@ -30,15 +31,15 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
     public static async isNameAvailable(wizardContext: IAppServiceWizardContext, name: string, resourceGroupName: string): Promise<boolean> {
         const plans: AppServicePlan[] = await AppServicePlanListStep.getPlans(wizardContext);
         return !plans.some((plan: AppServicePlan) =>
-            plan.resourceGroup.toLowerCase() === resourceGroupName.toLowerCase() &&
-            plan.name.toLowerCase() === name.toLowerCase()
+            nonNullProp(plan, 'resourceGroup').toLowerCase() === resourceGroupName.toLowerCase() &&
+            nonNullProp(plan, 'name').toLowerCase() === name.toLowerCase()
         );
     }
 
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<IAppServiceWizardContext> {
         if (!wizardContext.plan && !wizardContext.newPlanName) {
             // Cache hosting plan separately per subscription
-            const options: IAzureQuickPickOptions = { placeHolder: localize('selectPlan', 'Select a {0} App Service plan.', getWebsiteOSDisplayName(wizardContext.newSiteOS)), id: `AppServicePlanListStep/${wizardContext.subscriptionId}` };
+            const options: IAzureQuickPickOptions = { placeHolder: localize('selectPlan', 'Select a {0} App Service plan.', getWebsiteOSDisplayName(nonNullProp(wizardContext, 'newSiteOS'))), id: `AppServicePlanListStep/${wizardContext.subscriptionId}` };
             wizardContext.plan = (await ext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
 
             if (wizardContext.plan) {
@@ -65,13 +66,13 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
         const plans: AppServicePlan[] = await AppServicePlanListStep.getPlans(wizardContext);
         for (const plan of plans) {
             const isNewSiteLinux: boolean = wizardContext.newSiteOS === WebsiteOS.linux;
-            const isPlanLinux: boolean = plan.kind.toLowerCase().includes(WebsiteOS.linux);
+            const isPlanLinux: boolean = nonNullProp(plan, 'kind').toLowerCase().includes(WebsiteOS.linux);
             // plan.kind will contain "linux" for Linux plans, but will _not_ contain "windows" for Windows plans. Thus we check "isLinux" for both cases
             if (isNewSiteLinux === isPlanLinux) {
                 picks.push({
                     id: plan.id,
-                    label: plan.name,
-                    description: `${plan.sku.name} (${plan.geoRegion})`,
+                    label: nonNullProp(plan, 'name'),
+                    description: `${nonNullProp(plan, 'sku').name} (${plan.geoRegion})`,
                     detail: plan.resourceGroup,
                     data: plan
                 });

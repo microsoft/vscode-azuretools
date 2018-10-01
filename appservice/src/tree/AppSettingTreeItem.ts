@@ -3,9 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { StringDictionary } from 'azure-arm-website/lib/models';
 import * as path from 'path';
 import { DialogResponses, IAzureNode, IAzureTreeItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
+import { nonNullProp } from '../utils/nonNull';
 import { AppSettingsTreeItem } from './AppSettingsTreeItem';
 
 export class AppSettingTreeItem implements IAzureTreeItem {
@@ -42,25 +44,30 @@ export class AppSettingTreeItem implements IAzureTreeItem {
         });
 
         this.value = newValue;
-        await (<AppSettingsTreeItem>node.parent.treeItem).editSettingItem(this.key, this.key, newValue);
+        const parentTreeItem: AppSettingsTreeItem = (<AppSettingsTreeItem>nonNullProp(node, 'parent').treeItem);
+        await parentTreeItem.editSettingItem(this.key, this.key, newValue);
         await node.refresh();
     }
 
     public async rename(node: IAzureNode): Promise<void> {
+        const parentTreeItem: AppSettingsTreeItem = (<AppSettingsTreeItem>nonNullProp(node, 'parent').treeItem);
+        const settings: StringDictionary = await parentTreeItem.ensureSettings();
+
         const oldKey: string = this.key;
         const newKey: string = await ext.ui.showInputBox({
             prompt: `Enter a new name for "${oldKey}"`,
             value: this.key,
-            validateInput: (v?: string): string | undefined => (<AppSettingsTreeItem>node.parent.treeItem).validateNewKeyInput(v, oldKey)
+            validateInput: (v?: string): string | undefined => parentTreeItem.validateNewKeyInput(settings, v, oldKey)
         });
 
         this.key = newKey;
-        await (<AppSettingsTreeItem>node.parent.treeItem).editSettingItem(oldKey, newKey, this.value);
+        await parentTreeItem.editSettingItem(oldKey, newKey, this.value);
         await node.refresh();
     }
 
     public async deleteTreeItem(node: IAzureNode): Promise<void> {
         await ext.ui.showWarningMessage(`Are you sure you want to delete setting "${this.key}"?`, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
-        await (<AppSettingsTreeItem>node.parent.treeItem).deleteSettingItem(this.key);
+        const parentTreeItem: AppSettingsTreeItem = (<AppSettingsTreeItem>nonNullProp(node, 'parent').treeItem);
+        await parentTreeItem.deleteSettingItem(this.key);
     }
 }

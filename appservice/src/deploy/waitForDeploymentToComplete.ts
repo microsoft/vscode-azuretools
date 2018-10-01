@@ -8,6 +8,7 @@ import { DeployResult, LogEntry } from 'vscode-azurekudu/lib/models';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
+import { nonNullProp } from '../utils/nonNull';
 import { formatDeployLog } from './formatDeployLog';
 
 export async function waitForDeploymentToComplete(client: SiteClient, kuduClient: KuduClient, pollingInterval: number = 5000): Promise<void> {
@@ -84,8 +85,9 @@ async function getLatestDeployment(kuduClient: KuduClient, permanentId: string |
     } else if (initialReceivedTime) {
         // Use "initialReceivedTime" to find the deployment during its "temp" phase
         deployment = (await kuduClient.deployment.getDeployResults())
-            .filter((deployResult: DeployResult) => deployResult.receivedTime && deployResult.receivedTime >= initialReceivedTime)
-            .sort((a: DeployResult, b: DeployResult) => b.receivedTime.valueOf() - a.receivedTime.valueOf())
+            // tslint:disable-next-line:no-non-null-assertion
+            .filter((deployResult: DeployResult) => deployResult.receivedTime && deployResult.receivedTime >= initialReceivedTime!)
+            .sort((a: DeployResult, b: DeployResult) => nonNullProp(b, 'receivedTime').valueOf() - nonNullProp(a, 'receivedTime').valueOf())
             .shift();
         if (deployment && !deployment.isTemp) {
             // Make note of the id once the deplyoment has shifted to the "permanent" phase, so that we can use that to find the deployment going forward
@@ -93,7 +95,7 @@ async function getLatestDeployment(kuduClient: KuduClient, permanentId: string |
         }
     } else {
         // Use "latest" to get the deployment before we know the "initialReceivedTime" or "permanentId"
-        deployment = await kuduClient.deployment.getResult('latest');
+        deployment = <DeployResult | undefined>await kuduClient.deployment.getResult('latest');
         if (deployment && deployment.receivedTime) {
             // Make note of the initialReceivedTime, so that we can use that to find the deployment going forward
             initialReceivedTime = deployment.receivedTime;

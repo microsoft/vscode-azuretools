@@ -7,7 +7,7 @@ import { WebSiteManagementClient } from 'azure-arm-website';
 import { AppServicePlan, FunctionEnvelopeCollection, FunctionSecrets, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SourceControlCollection, StringDictionary, User, WebAppInstanceCollection } from 'azure-arm-website/lib/models';
 import { addExtensionUserAgent, IAzureNode, parseError } from 'vscode-azureextensionui';
 import { FunctionEnvelope } from 'vscode-azurekudu/lib/models';
-import { ArgumentError } from './errors';
+import { nonNullProp, nonNullValue } from './utils/nonNull';
 
 /**
  * Wrapper of a WebSiteManagementClient for use with a specific Site
@@ -45,29 +45,27 @@ export class SiteClient {
     private readonly _node: IAzureNode;
 
     constructor(site: Site, node: IAzureNode) {
-        const matches: RegExpMatchArray | null = site.serverFarmId.match(/\/subscriptions\/(.*)\/resourceGroups\/(.*)\/providers\/Microsoft.Web\/serverfarms\/(.*)/);
-        if (!site.id || !site.name || !site.resourceGroup || !site.type || !site.defaultHostName || matches === null || matches.length < 4) {
-            throw new ArgumentError(site);
-        }
+        let matches: RegExpMatchArray | null = nonNullProp(site, 'serverFarmId').match(/\/subscriptions\/(.*)\/resourceGroups\/(.*)\/providers\/Microsoft.Web\/serverfarms\/(.*)/);
+        matches = nonNullValue(matches, 'Invalid serverFarmId.');
 
-        this.isSlot = site.type.toLowerCase() === 'microsoft.web/sites/slots';
-        this.id = site.id;
-        [this.siteName, this.slotName] = this.isSlot ? site.name.split('/') : [site.name, undefined];
-        this.fullName = this.siteName + (this.isSlot ? `-${this.slotName}` : '');
+        this.isSlot = nonNullProp(site, 'type').toLowerCase() === 'microsoft.web/sites/slots';
+        this.id = nonNullProp(site, 'id');
+        [this.siteName, this.slotName] = nonNullProp(site, 'name').split('/');
+        this.fullName = this.siteName + (this.slotName ? `-${this.slotName}` : '');
 
-        this.resourceGroup = site.resourceGroup;
+        this.resourceGroup = nonNullProp(site, 'resourceGroup');
         this.location = site.location;
-        this.serverFarmId = site.serverFarmId;
-        this.kind = site.kind;
-        this.initialState = site.state;
-        this.isFunctionApp = site.kind && site.kind.includes('functionapp');
+        this.serverFarmId = nonNullProp(site, 'serverFarmId');
+        this.kind = nonNullProp(site, 'kind');
+        this.initialState = nonNullProp(site, 'state');
+        this.isFunctionApp = !!site.kind && site.kind.includes('functionapp');
 
         this.planResourceGroup = matches[2];
         this.planName = matches[3];
 
-        this.defaultHostName = site.defaultHostName;
+        this.defaultHostName = nonNullProp(site, 'defaultHostName');
         this.defaultHostUrl = `https://${this.defaultHostName}`;
-        const kuduRepositoryUrl: HostNameSslState = site.hostNameSslStates.find((h: HostNameSslState) => h.hostType && h.hostType.toLowerCase() === 'repository');
+        const kuduRepositoryUrl: HostNameSslState | undefined = nonNullProp(site, 'hostNameSslStates').find((h: HostNameSslState) => !!h.hostType && h.hostType.toLowerCase() === 'repository');
         if (kuduRepositoryUrl) {
             this.kuduHostName = kuduRepositoryUrl.name;
             this.kuduUrl = `https://${this.kuduHostName}`;
@@ -84,89 +82,89 @@ export class SiteClient {
     }
 
     public async stop(): Promise<void> {
-        this.isSlot ?
+        this.slotName ?
             await this._client.webApps.stopSlot(this.resourceGroup, this.siteName, this.slotName) :
             await this._client.webApps.stop(this.resourceGroup, this.siteName);
     }
 
     public async start(): Promise<void> {
-        this.isSlot ?
+        this.slotName ?
             await this._client.webApps.startSlot(this.resourceGroup, this.siteName, this.slotName) :
             await this._client.webApps.start(this.resourceGroup, this.siteName);
     }
 
     public async getState(): Promise<string | undefined> {
-        return (this.isSlot ?
+        return (this.slotName ?
             await this._client.webApps.getSlot(this.resourceGroup, this.siteName, this.slotName) :
             await this._client.webApps.get(this.resourceGroup, this.siteName)).state;
     }
 
     public async getWebAppPublishCredential(): Promise<User> {
-        return this.isSlot ?
+        return this.slotName ?
             await this._client.webApps.listPublishingCredentialsSlot(this.resourceGroup, this.siteName, this.slotName) :
             await this._client.webApps.listPublishingCredentials(this.resourceGroup, this.siteName);
     }
 
     public async getSiteConfig(): Promise<SiteConfigResource> {
-        return this.isSlot ?
+        return this.slotName ?
             await this._client.webApps.getConfigurationSlot(this.resourceGroup, this.siteName, this.slotName) :
             await this._client.webApps.getConfiguration(this.resourceGroup, this.siteName);
     }
 
     public async updateConfiguration(config: SiteConfigResource): Promise<SiteConfigResource> {
-        return this.isSlot ?
+        return this.slotName ?
             await this._client.webApps.updateConfigurationSlot(this.resourceGroup, this.siteName, config, this.slotName) :
             await this._client.webApps.updateConfiguration(this.resourceGroup, this.siteName, config);
     }
 
     public async getLogsConfig(): Promise<SiteLogsConfig> {
-        return this.isSlot ?
+        return this.slotName ?
             await this._client.webApps.getDiagnosticLogsConfigurationSlot(this.resourceGroup, this.siteName, this.slotName) :
             await this._client.webApps.getDiagnosticLogsConfiguration(this.resourceGroup, this.siteName);
     }
 
     public async updateLogsConfig(config: SiteLogsConfig): Promise<SiteLogsConfig> {
-        return this.isSlot ?
+        return this.slotName ?
             await this._client.webApps.updateDiagnosticLogsConfigSlot(this.resourceGroup, this.siteName, config, this.slotName) :
             await this._client.webApps.updateDiagnosticLogsConfig(this.resourceGroup, this.siteName, config);
     }
 
-    public async getAppServicePlan(): Promise<AppServicePlan> {
+    public async getAppServicePlan(): Promise<AppServicePlan | undefined> {
         return await this._client.appServicePlans.get(this.planResourceGroup, this.planName);
     }
 
     public async updateSourceControl(siteSourceControl: SiteSourceControl): Promise<SiteSourceControl> {
-        return this.isSlot ?
+        return this.slotName ?
             await this._client.webApps.createOrUpdateSourceControlSlot(this.resourceGroup, this.siteName, siteSourceControl, this.slotName) :
             await this._client.webApps.createOrUpdateSourceControl(this.resourceGroup, this.siteName, siteSourceControl);
     }
 
     public async syncRepository(): Promise<void> {
-        return this.isSlot ?
+        return this.slotName ?
             await this._client.webApps.syncRepositorySlot(this.resourceGroup, this.siteName, this.slotName) :
             await this._client.webApps.syncRepository(this.resourceGroup, this.siteName);
     }
 
     public async listApplicationSettings(): Promise<StringDictionary> {
-        return this.isSlot ?
+        return this.slotName ?
             await this._client.webApps.listApplicationSettingsSlot(this.resourceGroup, this.siteName, this.slotName) :
             await this._client.webApps.listApplicationSettings(this.resourceGroup, this.siteName);
     }
 
     public async updateApplicationSettings(appSettings: StringDictionary): Promise<StringDictionary> {
-        return this.isSlot ?
+        return this.slotName ?
             await this._client.webApps.updateApplicationSettingsSlot(this.resourceGroup, this.siteName, appSettings, this.slotName) :
             await this._client.webApps.updateApplicationSettings(this.resourceGroup, this.siteName, appSettings);
     }
 
     public async deleteMethod(options?: { deleteMetrics?: boolean, deleteEmptyServerFarm?: boolean, skipDnsRegistration?: boolean, customHeaders?: { [headerName: string]: string; } }): Promise<void> {
-        return this.isSlot ?
+        return this.slotName ?
             await this._client.webApps.deleteSlot(this.resourceGroup, this.siteName, this.slotName, options) :
             await this._client.webApps.deleteMethod(this.resourceGroup, this.siteName, options);
     }
 
     public async listInstanceIdentifiers(): Promise<WebAppInstanceCollection> {
-        return this.isSlot ?
+        return this.slotName ?
             await this._client.webApps.listInstanceIdentifiersSlot(this.resourceGroup, this.siteName, this.slotName) :
             await this._client.webApps.listInstanceIdentifiers(this.resourceGroup, this.siteName);
     }
@@ -176,7 +174,7 @@ export class SiteClient {
     }
 
     public async listFunctions(): Promise<FunctionEnvelopeCollection> {
-        if (this.isSlot) {
+        if (this.slotName) {
             // Functions support for slots is still in preview and doesn't support this yet
             throw new Error('Method not implemented.');
         } else {
@@ -185,7 +183,7 @@ export class SiteClient {
     }
 
     public async listFunctionsNext(nextPageLink: string): Promise<FunctionEnvelopeCollection> {
-        if (this.isSlot) {
+        if (this.slotName) {
             // Functions support for slots is still in preview and doesn't support this yet
             throw new Error('Method not implemented.');
         } else {
@@ -194,7 +192,7 @@ export class SiteClient {
     }
 
     public async getFunction(functionName: string): Promise<FunctionEnvelope> {
-        if (this.isSlot) {
+        if (this.slotName) {
             // Functions support for slots is still in preview and doesn't support this yet
             throw new Error('Method not implemented.');
         } else {
@@ -203,7 +201,7 @@ export class SiteClient {
     }
 
     public async deleteFunction(functionName: string): Promise<void> {
-        if (this.isSlot) {
+        if (this.slotName) {
             // Functions support for slots is still in preview and doesn't support this yet
             throw new Error('Method not implemented.');
         } else {
@@ -212,20 +210,20 @@ export class SiteClient {
     }
 
     public async listFunctionSecrets(functionName: string): Promise<FunctionSecrets> {
-        return this.isSlot ?
+        return this.slotName ?
             await this._client.webApps.listFunctionSecretsSlot(this.resourceGroup, this.siteName, functionName, this.slotName) :
             await this._client.webApps.listFunctionSecrets(this.resourceGroup, this.siteName, functionName);
     }
 
     public async getFunctionsAdminToken(): Promise<string> {
-        return this.isSlot ?
+        return this.slotName ?
             await this._client.webApps.getFunctionsAdminTokenSlot(this.resourceGroup, this.siteName, this.slotName) :
             await this._client.webApps.getFunctionsAdminToken(this.resourceGroup, this.siteName);
     }
 
     public async syncFunctionTriggers(): Promise<void> {
         try {
-            this.isSlot ?
+            this.slotName ?
                 await this._client.webApps.syncFunctionTriggersSlot(this.resourceGroup, this.siteName, this.slotName) :
                 await this._client.webApps.syncFunctionTriggers(this.resourceGroup, this.siteName);
         } catch (error) {
