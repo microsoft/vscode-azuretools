@@ -7,7 +7,7 @@ import { commands, Event, Uri } from 'vscode';
 import { IActionContext } from '../index';
 import { callWithTelemetryAndErrorHandling } from './callWithTelemetryAndErrorHandling';
 import { ext } from './extensionVariables';
-import { AzureTreeItem } from './treeDataProvider/AzureNode';
+import { AzureTreeItem } from './treeDataProvider/AzureTreeItem';
 
 // tslint:disable:no-any no-unsafe-any
 

@@ -5,7 +5,7 @@
 
 import { IGenericTreeItem, ISubscriptionRoot } from '../../index';
 import * as types from '../../index';
-import { AzureTreeItem } from './AzureNode';
+import { AzureTreeItem } from './AzureTreeItem';
 import { IAzureParentTreeItemInternal } from "./InternalInterfaces";
 
 export class GenericTreeItem<T = ISubscriptionRoot> extends AzureTreeItem<T> implements types.GenericTreeItem<T> {
