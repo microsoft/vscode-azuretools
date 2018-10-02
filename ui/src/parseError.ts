@@ -20,6 +20,10 @@ export function parseError(error: any): IParsedError {
         // See https://github.com/Microsoft/vscode-azureappservice/issues/419 for an example error that requires these 'unpack's
         error = unpackErrorFromField(error, 'value');
         error = unpackErrorFromField(error, '_value');
+        error = unpackErrorFromField(error, 'error');
+        if (Array.isArray(error.errors) && error.errors.length) {
+            error = error.errors[0];
+        }
 
         errorType = getCode(error, errorType);
         message = getMessage(error, message);
