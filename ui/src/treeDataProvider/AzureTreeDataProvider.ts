@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as path from 'path';
-import { Disposable, Event, EventEmitter, Extension, extensions, QuickPickOptions, TreeItem, TreeItemCollapsibleState } from 'vscode';
 import * as vscode from 'vscode';
+import { Disposable, Event, EventEmitter, Extension, extensions, QuickPickOptions, TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { IActionContext, IAzureQuickPickItem, ISubscriptionRoot } from '../../index';
 import * as types from '../../index';
 import { AzureAccount, AzureLoginStatus, AzureResourceFilter } from '../azure-account.api';
@@ -15,12 +15,12 @@ import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { parseError } from '../parseError';
 import { TestAzureAccount } from '../TestAzureAccount';
-import { AzureTreeItem } from './AzureNode';
-import { AzureParentTreeItem } from './AzureParentNode';
+import { AzureParentTreeItem } from './AzureParentTreeItem';
+import { AzureTreeItem } from './AzureTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';
 import { IAzureTreeDataProviderInternal } from './InternalInterfaces';
-import { RootTreeItem } from './RootNode';
-import { SubscriptionTreeItem } from './SubscriptionNode';
+import { RootTreeItem } from './RootTreeItem';
+import { SubscriptionTreeItem } from './SubscriptionTreeItem';
 import { loadMoreLabel } from './treeConstants';
 
 const signInLabel: string = localize('signInLabel', 'Sign in to Azure...');

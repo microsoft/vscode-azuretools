@@ -5,7 +5,7 @@
 
 import { EventEmitter } from 'vscode';
 import { AzureParentTreeItem, AzureTreeDataProvider, ISubscriptionRoot } from '../../index';
-import { AzureTreeItem } from './AzureNode';
+import { AzureTreeItem } from './AzureTreeItem';
 
 // Interfaces for methods on the tree that aren't exposed outside of this package
 // We can't reference the classes directly because it would result in circular dependencies

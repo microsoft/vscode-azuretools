@@ -3,11 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as types from '../../index';
-import { AzureParentTreeItem } from './AzureParentNode';
+import * as types from '../..';
+import { AzureParentTreeItem } from './AzureParentTreeItem';
 import { IAzureTreeDataProviderInternal } from './InternalInterfaces';
 
-// tslint:disable-next-line:export-name todo rename file after review
 export abstract class RootTreeItem<T> extends AzureParentTreeItem<T> implements types.RootTreeItem<T> {
     private readonly _root: T;
     private _treeDataProvider: IAzureTreeDataProviderInternal<T>;

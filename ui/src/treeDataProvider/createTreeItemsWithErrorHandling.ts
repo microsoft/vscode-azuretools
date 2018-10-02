@@ -5,8 +5,8 @@
 
 import * as path from 'path';
 import { localize } from '../localize';
-import { AzureTreeItem } from './AzureNode';
-import { AzureParentTreeItem } from './AzureParentNode';
+import { AzureParentTreeItem } from './AzureParentTreeItem';
+import { AzureTreeItem } from './AzureTreeItem';
 
 class InvalidTreeItem extends AzureParentTreeItem {
     public readonly contextValue: string;

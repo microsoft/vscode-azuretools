@@ -3,17 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IAzureQuickPickItem, IAzureQuickPickOptions, ISubscriptionRoot } from '../../index';
-import * as types from '../../index';
+import { IAzureQuickPickItem, IAzureQuickPickOptions, ISubscriptionRoot } from '../..';
+import * as types from '../..';
 import { NotImplementedError } from '../errors';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { AzureTreeItem } from './AzureNode';
+import { AzureTreeItem } from './AzureTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';
 import { IAzureParentTreeItemInternal } from './InternalInterfaces';
 import { loadingIconPath, loadMoreLabel } from './treeConstants';
 
-// tslint:disable-next-line:export-name todo rename file after review
 export abstract class AzureParentTreeItem<T = ISubscriptionRoot> extends AzureTreeItem<T> implements types.AzureParentTreeItem<T>, IAzureParentTreeItemInternal<T> {
     //#region Properties implemented by base class
     public childTypeLabel?: string;

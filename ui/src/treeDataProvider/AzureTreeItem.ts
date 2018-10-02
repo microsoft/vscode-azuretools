@@ -6,14 +6,13 @@
 // tslint:disable-next-line:no-require-imports
 import opn = require("opn");
 import { Uri } from 'vscode';
-import { ISubscriptionRoot, OpenInPortalOptions } from '../../index';
-import * as types from '../../index';
+import { ISubscriptionRoot, OpenInPortalOptions } from '../..';
+import * as types from '../..';
 import { ArgumentError, NotImplementedError } from '../errors';
 import { localize } from '../localize';
 import { IAzureParentTreeItemInternal, IAzureTreeDataProviderInternal } from "./InternalInterfaces";
 import { loadingIconPath } from "./treeConstants";
 
-// tslint:disable-next-line:export-name todo rename file after review
 export abstract class AzureTreeItem<T = ISubscriptionRoot> implements types.AzureTreeItem<T> {
     //#region Properties implemented by base class
     public abstract label: string;

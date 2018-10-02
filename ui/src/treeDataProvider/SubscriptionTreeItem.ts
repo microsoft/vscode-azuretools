@@ -4,11 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as path from 'path';
-import { ISubscriptionRoot } from '../../index';
-import * as types from '../../index';
-import { RootTreeItem } from './RootNode';
+import { ISubscriptionRoot } from '../..';
+import * as types from '../..';
+import { RootTreeItem } from './RootTreeItem';
 
-// tslint:disable-next-line:export-name todo rename file after review
 export abstract class SubscriptionTreeItem extends RootTreeItem<ISubscriptionRoot> implements types.SubscriptionTreeItem {
     public static readonly contextValue: string = 'azureextensionui.azureSubscription';
     public readonly contextValue: string = SubscriptionTreeItem.contextValue;
