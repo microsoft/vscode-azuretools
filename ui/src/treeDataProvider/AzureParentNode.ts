@@ -3,29 +3,29 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { EventEmitter } from 'vscode';
-import { IAzureNode, IAzureParentTreeItem, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureTreeItem } from '../../index';
+import { IAzureQuickPickItem, IAzureQuickPickOptions, ISubscriptionRoot } from '../../index';
+import * as types from '../../index';
 import { NotImplementedError } from '../errors';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { AzureNode, IAzureParentNodeInternal } from './AzureNode';
-import { CreatingTreeItem } from './CreatingTreeItem';
-import { LoadMoreTreeItem } from './LoadMoreTreeItem';
+import { AzureTreeItem } from './AzureNode';
+import { GenericTreeItem } from './GenericTreeItem';
+import { IAzureParentTreeItemInternal } from './InternalInterfaces';
+import { loadingIconPath, loadMoreLabel } from './treeConstants';
 
-export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeItem> extends AzureNode<T> implements IAzureParentNodeInternal {
-    private _cachedChildren: AzureNode[] = [];
-    private _creatingNodes: AzureNode[] = [];
-    private _onNodeCreateEmitter: EventEmitter<IAzureNode>;
+// tslint:disable-next-line:export-name todo rename file after review
+export abstract class AzureParentTreeItem<T = ISubscriptionRoot> extends AzureTreeItem<T> implements types.AzureParentTreeItem<T>, IAzureParentTreeItemInternal<T> {
+    //#region Properties implemented by base class
+    public childTypeLabel?: string;
+    //#endregion
+
+    private _cachedChildren: AzureTreeItem<T>[] = [];
+    private _creatingTreeItems: AzureTreeItem<T>[] = [];
     private _clearCache: boolean = true;
     private _loadMoreChildrenTask: Promise<void> | undefined;
     private _initChildrenTask: Promise<void> | undefined;
 
-    public constructor(parent: IAzureParentNodeInternal | undefined, treeItem: T, onNodeCreateEmitter: EventEmitter<IAzureNode>) {
-        super(parent, treeItem);
-        this._onNodeCreateEmitter = onNodeCreateEmitter;
-    }
-
-    public async getCachedChildren(): Promise<AzureNode[]> {
+    public async getCachedChildren(): Promise<AzureTreeItem<T>[]> {
         if (this._clearCache) {
             this._initChildrenTask = this.loadMoreChildren();
         }
@@ -37,82 +37,91 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
         return this._cachedChildren;
     }
 
-    public get creatingNodes(): AzureNode[] {
-        return this._creatingNodes;
+    public get creatingTreeItems(): AzureTreeItem<T>[] {
+        return this._creatingTreeItems;
     }
+
+    //#region Methods implemented by base class
+    public abstract loadMoreChildrenImpl(clearCache: boolean): Promise<AzureTreeItem<T>[]>;
+    public abstract hasMoreChildrenImpl(): boolean;
+    // tslint:disable-next-line:no-any
+    public createChildImpl?(showCreatingTreeItem: (label: string) => void, userOptions?: any): Promise<AzureTreeItem<T>>;
+    public pickTreeItemImpl?(expectedContextValue: string): AzureTreeItem<T> | undefined;
+    public compareChildrenImpl?(item1: AzureTreeItem<T>, item2: AzureTreeItem<T>): number;
+    //#endregion
 
     public clearCache(): void {
         this._clearCache = true;
     }
 
-    public async createChild(userOptions?: {}): Promise<AzureNode> {
-        if (this.treeItem.createChild) {
-            let creatingNode: AzureNode | undefined;
+    public async createChild(userOptions?: {}): Promise<AzureTreeItem<T>> {
+        if (this.createChildImpl) {
+            let creatingTreeItem: AzureTreeItem<T> | undefined;
             try {
-                const newTreeItem: IAzureTreeItem = await this.treeItem.createChild(
-                    this,
+                const newTreeItem: AzureTreeItem<T> = await this.createChildImpl(
                     (label: string): void => {
-                        creatingNode = new AzureNode(this, new CreatingTreeItem(label));
-                        this._creatingNodes.push(creatingNode);
+                        creatingTreeItem = new GenericTreeItem(this, {
+                            label: localize('creatingLabel', 'Creating {0}...', label),
+                            contextValue: `azureCreating${label}`,
+                            iconPath: loadingIconPath
+                        });
+                        this._creatingTreeItems.push(creatingTreeItem);
                         //tslint:disable-next-line:no-floating-promises
                         this.treeDataProvider.refresh(this, false);
                     },
                     userOptions);
 
-                const newNode: AzureNode = this.createNewNode(newTreeItem);
-                await this.addNodeToCache(newNode);
-                this._onNodeCreateEmitter.fire(newNode);
-                return newNode;
+                await this.addChildToCache(newTreeItem);
+                this.treeDataProvider._onTreeItemCreateEmitter.fire(newTreeItem);
+                return newTreeItem;
             } finally {
-                if (creatingNode) {
-                    this._creatingNodes.splice(this._creatingNodes.indexOf(creatingNode), 1);
+                if (creatingTreeItem) {
+                    this._creatingTreeItems.splice(this._creatingTreeItems.indexOf(creatingTreeItem), 1);
                     await this.treeDataProvider.refresh(this, false);
                 }
             }
         } else {
-            throw new NotImplementedError('createChild', this.treeItem);
+            throw new NotImplementedError('createChildImpl', this);
         }
     }
 
-    public async pickChildNode(expectedContextValues: string[]): Promise<AzureNode> {
-        if (this.treeItem.pickTreeItem) {
-            const children: AzureNode[] = await this.getCachedChildren();
+    public async pickChildTreeItem(expectedContextValues: string[]): Promise<AzureTreeItem<T>> {
+        if (this.pickTreeItemImpl) {
+            const children: AzureTreeItem<T>[] = await this.getCachedChildren();
             for (const val of expectedContextValues) {
-                const pickedItem: IAzureTreeItem | undefined = this.treeItem.pickTreeItem(val);
+                const pickedItem: AzureTreeItem<T> | undefined = this.pickTreeItemImpl(val);
                 if (pickedItem) {
-                    const node: AzureNode | undefined = children.find((n: AzureNode) => {
-                        return (!!pickedItem.id && n.treeItem.id === pickedItem.id) || (n.treeItem.label === pickedItem.label);
-                    });
-                    if (node) {
-                        return node;
+                    const child: AzureTreeItem<T> | undefined = children.find((ti: AzureTreeItem<T>) => ti.fullId === pickedItem.fullId);
+                    if (child) {
+                        return child;
                     }
                 }
             }
         }
 
         const options: IAzureQuickPickOptions = {
-            placeHolder: localize('selectNode', 'Select {0}', this.treeItem.childTypeLabel)
+            placeHolder: localize('selectTreeItem', 'Select {0}', this.childTypeLabel)
         };
-        const getNode: GetNodeFunction = (await ext.ui.showQuickPick(this.getQuickPicks(expectedContextValues), options)).data;
-        return await getNode();
+        const getTreeItem: GetTreeItemFunction<T> = (await ext.ui.showQuickPick(this.getQuickPicks(expectedContextValues), options)).data;
+        return await getTreeItem();
     }
 
-    public async addNodeToCache(node: AzureNode): Promise<void> {
+    public async addChildToCache(childToAdd: AzureTreeItem<T>): Promise<void> {
         // set index to the last element by default
         let index: number = this._cachedChildren.length;
         // tslint:disable-next-line:no-increment-decrement
         for (let i: number = 0; i < this._cachedChildren.length; i++) {
-            if (node.treeItem.label.localeCompare(this._cachedChildren[i].treeItem.label) < 1) {
+            if (childToAdd.label.localeCompare(this._cachedChildren[i].label) < 1) {
                 index = i;
                 break;
             }
         }
-        this._cachedChildren.splice(index, 0, node);
+        this._cachedChildren.splice(index, 0, childToAdd);
         await this.treeDataProvider.refresh(this, false);
     }
 
-    public async removeNodeFromCache(node: AzureNode): Promise<void> {
-        const index: number = this._cachedChildren.indexOf(node);
+    public async removeChildFromCache(childToRemove: AzureTreeItem<T>): Promise<void> {
+        const index: number = this._cachedChildren.indexOf(childToRemove);
         if (index !== -1) {
             this._cachedChildren.splice(index, 1);
             await this.treeDataProvider.refresh(this, false);
@@ -137,44 +146,42 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
             this._cachedChildren = [];
         }
 
-        const sortCallback: (n1: IAzureNode, n2: IAzureNode) => number =
-            this.treeItem.compareChildren
-                ? this.treeItem.compareChildren
-                : (n1: AzureNode, n2: AzureNode): number => n1.treeItem.label.localeCompare(n2.treeItem.label);
+        const sortCallback: (ti1: AzureTreeItem<T>, ti2: AzureTreeItem<T>) => number =
+            this.compareChildrenImpl
+                ? this.compareChildrenImpl
+                : (ti1: AzureTreeItem<T>, ti2: AzureTreeItem<T>): number => ti1.label.localeCompare(ti2.label);
 
-        const newTreeItems: IAzureTreeItem[] = await this.treeItem.loadMoreChildren(this, this._clearCache);
-        this._cachedChildren = this._cachedChildren
-            .concat(newTreeItems.map((t: IAzureTreeItem) => this.createNewNode(t)))
-            .sort(sortCallback);
+        const newTreeItems: AzureTreeItem<T>[] = await this.loadMoreChildrenImpl(this._clearCache);
+        this._cachedChildren = this._cachedChildren.concat(newTreeItems).sort(sortCallback);
         this._clearCache = false;
     }
 
-    private async getQuickPicks(expectedContextValues: string[]): Promise<IAzureQuickPickItem<GetNodeFunction>[]> {
-        let nodes: AzureNode[] = await this.getCachedChildren();
-        nodes = nodes.filter((node: AzureNode) => node.includeInNodePicker(expectedContextValues));
+    private async getQuickPicks(expectedContextValues: string[]): Promise<IAzureQuickPickItem<GetTreeItemFunction<T>>[]> {
+        let children: AzureTreeItem<T>[] = await this.getCachedChildren();
+        children = children.filter((ti: AzureTreeItem<T>) => ti.includeInTreePicker(expectedContextValues));
 
-        const picks: IAzureQuickPickItem<GetNodeFunction>[] = nodes.map((n: AzureNode) => {
+        const picks: IAzureQuickPickItem<GetTreeItemFunction<T>>[] = children.map((ti: AzureTreeItem<T>) => {
             return {
-                label: n.treeItem.label,
-                description: n.treeItem.description,
-                id: n.id,
-                data: async (): Promise<AzureNode> => await Promise.resolve(n)
+                label: ti.label,
+                description: ti.description,
+                id: ti.fullId,
+                data: async (): Promise<AzureTreeItem<T>> => await Promise.resolve(ti)
             };
         });
 
-        if (this.treeItem.createChild && this.treeItem.childTypeLabel) {
+        if (this.createChildImpl && this.childTypeLabel) {
             picks.unshift({
-                label: localize('nodePickerCreateNew', '$(plus) Create New {0}', this.treeItem.childTypeLabel),
+                label: localize('treePickerCreateNew', '$(plus) Create New {0}', this.childTypeLabel),
                 description: '',
-                data: async (): Promise<AzureNode> => await this.createChild()
+                data: async (): Promise<AzureTreeItem<T>> => await this.createChild()
             });
         }
 
-        if (this.treeItem.hasMoreChildren()) {
+        if (this.hasMoreChildrenImpl()) {
             picks.push({
-                label: LoadMoreTreeItem.label,
+                label: loadMoreLabel,
                 description: '',
-                data: async (): Promise<AzureNode> => {
+                data: async (): Promise<AzureTreeItem<T>> => {
                     await this.loadMoreChildren();
                     await this.treeDataProvider.refresh(this, false);
                     return this;
@@ -184,16 +191,6 @@ export class AzureParentNode<T extends IAzureParentTreeItem = IAzureParentTreeIt
 
         return picks;
     }
-
-    private createNewNode(treeItem: IAzureTreeItem): AzureNode {
-        const parentTreeItem: IAzureParentTreeItem = <IAzureParentTreeItem>treeItem;
-        // tslint:disable-next-line:strict-boolean-expressions
-        if (parentTreeItem.loadMoreChildren) {
-            return new AzureParentNode(this, parentTreeItem, this._onNodeCreateEmitter);
-        } else {
-            return new AzureNode(this, treeItem);
-        }
-    }
 }
 
-type GetNodeFunction<T extends IAzureTreeItem = IAzureTreeItem> = () => Promise<AzureNode<T>>;
+type GetTreeItemFunction<T> = () => Promise<AzureTreeItem<T>>;
