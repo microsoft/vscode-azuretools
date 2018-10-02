@@ -13,11 +13,11 @@ export namespace javaUtils {
     const PORT_KEY: string = 'PORT';
 
     export function isJavaTomcatRuntime(runtime: string | undefined): boolean {
-        return runtime && runtime.toLowerCase().startsWith('tomcat');
+        return !!runtime && runtime.toLowerCase().startsWith('tomcat');
     }
 
     export function isJavaSERuntime(runtime: string | undefined): boolean {
-        return runtime && runtime.toLowerCase() === 'java|8-jre8';
+        return !!runtime && runtime.toLowerCase() === 'java|8-jre8';
     }
 
     export function isJavaSERequiredPortConfigured(appSettings: StringDictionary | undefined): boolean {
@@ -31,19 +31,20 @@ export namespace javaUtils {
         return false;
     }
 
-    export async function configureJavaSEAppSettings(siteClient: SiteClient): Promise<StringDictionary> {
+    export async function configureJavaSEAppSettings(siteClient: SiteClient): Promise<StringDictionary | undefined> {
         const appSettings: StringDictionary = await siteClient.listApplicationSettings();
         if (isJavaSERequiredPortConfigured(appSettings)) {
-            return null;
+            return undefined;
         }
 
+        // tslint:disable-next-line:strict-boolean-expressions
         appSettings.properties = appSettings.properties || {};
         const port: string = await ext.ui.showInputBox({
             value: DEFAULT_PORT,
             prompt: 'Configure the PORT (Application Settings) which your Java SE Web App exposes',
             placeHolder: 'PORT',
-            validateInput: (input: string): string => {
-                return /^[0-9]+$/.test(input) ? null : 'please specify a valid port number';
+            validateInput: (input: string): string | undefined => {
+                return /^[0-9]+$/.test(input) ? undefined : 'please specify a valid port number';
             }
         });
         if (!port) {

@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AppServicePlan } from 'azure-arm-website/lib/models';
+import { isNullOrUndefined } from 'util';
 import * as vscode from 'vscode';
 import { DialogResponses } from 'vscode-azureextensionui';
 import { ext } from './extensionVariables';
@@ -22,7 +23,7 @@ export async function deleteSite(client: SiteClient): Promise<void> {
         plan = await client.getAppServicePlan();
     }
 
-    if (!client.isSlot && plan && plan.numberOfSites < 2) {
+    if (!client.isSlot && plan && !isNullOrUndefined(plan.numberOfSites) && plan.numberOfSites < 2) {
         const message: string = localize('deleteLastServicePlan', 'This is the last app in the App Service plan "{0}". Do you want to delete this App Service plan to prevent unexpected charges?', plan.name);
         const input: vscode.MessageItem = await ext.ui.showWarningMessage(message, { modal: true }, DialogResponses.yes, DialogResponses.no, DialogResponses.cancel);
         deletePlan = input === DialogResponses.yes;

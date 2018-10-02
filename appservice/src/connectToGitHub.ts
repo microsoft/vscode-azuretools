@@ -14,6 +14,7 @@ import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { signRequest } from './signRequest';
 import { SiteClient } from './SiteClient';
+import { nonNullProp } from './utils/nonNull';
 
 type gitHubOrgData = { repos_url?: string };
 type gitHubReposData = { repos_url?: string, url?: string, html_url?: string };
@@ -28,7 +29,7 @@ export async function connectToGitHub(node: IAzureNode, client: SiteClient): Pro
     requestOptions.headers = {
         ['User-Agent']: 'vscode-azureappservice-extension'
     };
-    const oAuth2Token: string = (await client.listSourceControls())[0].token;
+    const oAuth2Token: string | undefined = (await client.listSourceControls())[0].token;
     if (!oAuth2Token) {
         await showGitHubAuthPrompt();
         // to prevent the GitHub appearing that it succeeded
@@ -43,10 +44,10 @@ export async function connectToGitHub(node: IAzureNode, client: SiteClient): Pro
     const orgQuickPicks: IAzureQuickPickItem<{}>[] = createQuickPickFromJsons([gitHubUser], 'login', undefined, ['repos_url']).concat(createQuickPickFromJsons(gitHubOrgs, 'login', undefined, ['repos_url']));
     const orgQuickPick: gitHubOrgData = (await ext.ui.showQuickPick(orgQuickPicks, { placeHolder: 'Choose your organization.' })).data;
     let repoQuickPick: gitHubReposData;
-    requestOptions.url = orgQuickPick.repos_url;
+    requestOptions.url = nonNullProp(orgQuickPick, 'repos_url');
     const gitHubRepos: Object[] = await getJsonRequest(requestOptions, node);
     let repoQuickPicks: IAzureQuickPickItem<{}>[] = createQuickPickFromJsons(gitHubRepos, 'name', undefined, ['url', 'html_url']);
-    while (!repoSelected) {
+    do {
         if (requestOptions.nextLink && requestOptions.url !== requestOptions.lastLink) {
             // this makes sure that a nextLink exists and that the last requested url wasn't the last page
             repoQuickPicks.push({
@@ -61,7 +62,7 @@ export async function connectToGitHub(node: IAzureNode, client: SiteClient): Pro
         repoQuickPick = (await ext.ui.showQuickPick(repoQuickPicks, { placeHolder: 'Choose project.' })).data;
 
         if (repoQuickPick.url === requestOptions.nextLink) {
-            requestOptions.url = requestOptions.nextLink;
+            requestOptions.url = nonNullProp(requestOptions, 'nextLink');
             // remove the stale Load More quick pick
             repoQuickPicks.pop();
             const moreGitHubRepos: Object[] = await getJsonRequest(requestOptions, node);
@@ -69,7 +70,7 @@ export async function connectToGitHub(node: IAzureNode, client: SiteClient): Pro
         } else {
             repoSelected = true;
         }
-    }
+    } while (!repoSelected);
 
     requestOptions.url = `${repoQuickPick.url}/branches`;
     const gitHubBranches: Object[] = await getJsonRequest(requestOptions, node);
@@ -86,7 +87,7 @@ export async function connectToGitHub(node: IAzureNode, client: SiteClient): Pro
     try {
         const connectingToGithub: string = localize('ConnectingToGithub', '"{0}" is being connected to the GitHub repo. This may take several minutes...', client.fullName);
         const connectedToGithub: string = localize('ConnectedToGithub', '"{0}" has been connected to the GitHub repo.', client.fullName);
-        await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: connectingToGithub}, async (): Promise<void> => {
+        await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: connectingToGithub }, async (): Promise<void> => {
             ext.outputChannel.appendLine(connectingToGithub);
             await client.updateSourceControl(siteSourceControl);
             vscode.window.showInformationMessage(connectedToGithub);

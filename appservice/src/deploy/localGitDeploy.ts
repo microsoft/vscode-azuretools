@@ -13,6 +13,7 @@ import { ext } from '../extensionVariables';
 import { getKuduClient } from '../getKuduClient';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
+import { nonNullProp } from '../utils/nonNull';
 import { formatDeployLog } from './formatDeployLog';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
@@ -22,7 +23,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
 
     // credentials for accessing Azure Remote Repo
     const username: string = publishCredentials.publishingUserName;
-    const password: string = publishCredentials.publishingPassword;
+    const password: string = nonNullProp(publishCredentials, 'publishingPassword');
     const remote: string = `https://${username}:${password}@${client.gitUrl}`;
     const localGit: git.SimpleGit = git(fsPath);
     try {
