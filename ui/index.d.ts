@@ -8,7 +8,7 @@ import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { StorageAccount } from 'azure-arm-storage/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment, AzureServiceClientOptions } from 'ms-rest-azure';
-import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri } from 'vscode';
+import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri, EventEmitter } from 'vscode';
 
 export type OpenInPortalOptions = {
     /**
@@ -17,157 +17,257 @@ export type OpenInPortalOptions = {
     queryPrefix?: string;
 };
 
-export declare class AzureTreeDataProvider implements TreeDataProvider<IAzureNode>, Disposable {
-    public static readonly subscriptionContextValue: string;
-    public onDidChangeTreeData: Event<IAzureNode>;
-    public onNodeCreate: Event<IAzureNode>;
+export declare class AzureTreeDataProvider<T = ISubscriptionRoot> implements TreeDataProvider<AzureTreeItem<T | ISubscriptionRoot>>, Disposable {
+    public onDidChangeTreeData: Event<AzureTreeItem<T | ISubscriptionRoot>>;
+    public onTreeItemCreate: Event<AzureTreeItem<T | ISubscriptionRoot>>;
     /**
      * Azure Tree Data Provider
-     * @param resourceProvider Describes the resources to be displayed under subscription nodes
-     * @param loadMoreCommandId The command your extension will register for the 'Load More...' node
-     * @param ui Used to get input from the user
-     * @param telemetryReporter Optionally used to track telemetry for the tree
-     * @param rootTreeItems Any nodes other than the subscriptions that should be shown at the root of the explorer
+     * @param subscriptionTreeItemType The type used to create SubscriptionTreeItem's that will display your resources
+     * @param loadMoreCommandId The command your extension will register for the 'Load More...' tree item
+     * @param rootTreeItems Any tree items other than the subscriptions that should be shown at the root of the explorer
      * @param testAccount A test Azure Account that leverages a service principal instead of interactive login
      */
-    constructor(resourceProvider: IChildProvider, loadMoreCommandId: string, rootTreeItems?: IAzureParentTreeItem[], testAccount?: TestAzureAccount);
-    public getTreeItem(node: IAzureNode): TreeItem;
-    public getChildren(node?: IAzureParentNode): Promise<IAzureNode[]>;
-    public refresh(node?: IAzureNode, clearCache?: boolean): Promise<void>;
-    public loadMore(node: IAzureNode): Promise<void>;
-    public showNodePicker(expectedContextValues: string | string[], startingNode?: IAzureNode): Promise<IAzureNode>;
-    public findNode(id: string): Promise<IAzureNode | undefined>;
+    public constructor(subscriptionTreeItemType: { new(root: ISubscriptionRoot): SubscriptionTreeItem }, loadMoreCommandId: string, rootTreeItems?: RootTreeItem<T>[], testAccount?: TestAzureAccount);
+
+    /**
+     * Should not be called directly
+     */
+    public getTreeItem(treeItem: AzureTreeItem<T | ISubscriptionRoot>): TreeItem;
+
+    /**
+     * Should not be called directly
+     */
+    public getChildren(treeItem?: AzureParentTreeItem<T | ISubscriptionRoot>): Promise<AzureTreeItem<T | ISubscriptionRoot>[]>;
+
+    /**
+     *  Refreshes the tree
+     * @param treeItem The treeItem to refresh or 'undefined' to refresh the whole tree
+     * @param clearCache If true, the current state of 'Load more...' is cleared and new tree items will be retrieved. Defaults to true.
+     */
+    public refresh(treeItem?: AzureTreeItem<T | ISubscriptionRoot>, clearCache?: boolean): Promise<void>;
+
+    /**
+     * Loads more children for a specific tree item
+     * @param treeItem the load more tree item
+     */
+    public loadMore(treeItem: AzureTreeItem<T | ISubscriptionRoot>): Promise<void>;
+
+    /**
+     * Used to traverse the tree with a quick pick at each level. Primarily for command palette support
+     * @param expectedContextValues a single context value or multiple matching context values matching the desired tree items
+     * @param startingTreeItem
+     */
+    public showTreeItemPicker(expectedContextValues: string | string[], startingTreeItem?: AzureTreeItem<T | ISubscriptionRoot>): Promise<AzureTreeItem<T | ISubscriptionRoot>>;
+
+    /**
+     * Traverses a tree to find a node matching the given fullId of a tree item. This will not "Load more..."
+     */
+    public findTreeItem(fullId: string): Promise<AzureTreeItem<T | ISubscriptionRoot> | undefined>;
+
+    /**
+     * Should not be called directly
+     */
     public dispose(): void;
 }
 
 /**
- * The AzureTreeDataProvider returns instances of IAzureNode, which are wrappers for IAzureTreeItem with relevant context and functions from the tree
+ * Implement this class to display resources under a standard Subscription tree item
  */
-export interface IAzureNode<T extends IAzureTreeItem = IAzureTreeItem> {
+export abstract class SubscriptionTreeItem extends AzureParentTreeItem {
+    public static readonly contextValue: string;
+    public readonly contextValue: string;
+    public readonly label: string;
+    constructor(root: ISubscriptionRoot);
+}
+
+/**
+ * Information specific to the Subscription for this branch of the tree
+ */
+export interface ISubscriptionRoot {
+    credentials: ServiceClientCredentials;
+    subscriptionDisplayName: string;
+    subscriptionId: string;
+    subscriptionPath: string;
+    tenantId: string;
+    userId: string;
+    environment: AzureEnvironment;
+}
+
+/**
+ * Implement this class if your tree item does not have children. Otherwise use AzureParentTreeItem
+ * NOTE: *Impl methods are not meant to be called directly - just implemented.
+ */
+export declare abstract class AzureTreeItem<T = ISubscriptionRoot> {
+    //#region Properties implemented by base class
     /**
-     * This id represents the effective/serializable id of the node in the tree. It always starts with the parent's id and ends with either the IAzureTreeItem.id property (if implemented) or IAzureTreeItem.label property
-     * This is used for AzureTreeDataProvider.findNode and IAzureNode.openInPortal
+     * This is is used for the openInPortal action. It is also used per the following documentation copied from VS Code:
+     * Optional id for the treeItem that has to be unique across tree. The id is used to preserve the selection and expansion state of the treeItem.
+     *
+     * If not provided, an id is generated using the treeItem's label. **Note** that when labels change, ids will change and that selection and expansion state cannot be kept stable anymore.
      */
-    readonly id: string;
-    readonly treeItem: T;
-    readonly parent?: IAzureParentNode;
-    readonly treeDataProvider: AzureTreeDataProvider;
-    readonly credentials: ServiceClientCredentials;
-    readonly subscriptionDisplayName: string;
-    readonly subscriptionId: string;
-    readonly tenantId: string;
-    readonly userId: string;
-    readonly environment: AzureEnvironment;
+    public id?: string;
+    public abstract label: string;
+
+    /**
+     * Additional information about a tree item that is appended to the label with the format `label (description)`
+     */
+    public description?: string;
+    public iconPath?: string | Uri | { light: string | Uri; dark: string | Uri };
+    public commandId?: string;
+    public abstract contextValue: string;
+    //#endregion
+
+    /**
+     * This id represents the effective/serializable full id of the item in the tree. It always starts with the parent's fullId and ends with either the AzureTreeItem.id property (if implemented) or AzureTreeItem.label property
+     * This is used for AzureTreeDataProvider.findTreeItem and AzureTreeItem.openInPortal
+     */
+    public readonly fullId: string;
+    public readonly parent?: AzureParentTreeItem<T>;
+    public readonly treeDataProvider: AzureTreeDataProvider<T>;
+
+    /**
+     * Contains information specific to the root of this branch of the tree. Usually, this will be subscription information
+     */
+    public readonly root: T;
+
+    /**
+     * @param parent The parent of the new tree item or 'undefined' if it is a root item
+     */
+    public constructor(parent: AzureParentTreeItem | undefined);
+
+    //#region Methods implemented by base class
+    /**
+     * Implement this to support the 'delete' action in the tree. Should not be called directly
+     */
+    public deleteTreeItemImpl?(): Promise<void>;
+
+    /**
+     * Implement this if the item's label may change during a refresh. Should not be called directly
+     */
+    public refreshLabelImpl?(): Promise<void>;
+
+    /**
+     * Optional function to filter items displayed in the tree picker. Should not be called directly
+     * If not implemented, it's assumed that 'isAncestorOf' evaluates to true
+     */
+    public isAncestorOfImpl?(contextValue: string): boolean;
+    //#endregion
 
     /**
      * Refresh this node in the tree
      */
-    refresh(): Promise<void>;
+    public refresh(): Promise<void>;
 
     /**
-     * This class wraps IAzureTreeItem.deleteTreeItem and ensures the tree is updated correctly when an item is deleted
+     * This class wraps deleteTreeItemImpl and ensures the tree is updated correctly when an item is deleted
      */
-    deleteNode(): Promise<void>;
+    public deleteTreeItem(): Promise<void>;
 
     /**
-     * This method combines the environment.portalLink and IAzureTreeItem.id to open the resource in the portal. Optionally, an id can be passed to manually open nodes that may not be in the explorer.
+     * This method combines the environment.portalLink and AzureTreeItem.id to open the resource in the portal. Optionally, an id can be passed to manually open items that may not be in the explorer.
      */
-    openInPortal(id?: string, options?: OpenInPortalOptions): void;
+    public openInPortal(id?: string, options?: OpenInPortalOptions): void;
 
     /**
-     * Displays a 'Loading...' icon and temporarily changes the node's description while `callback` is being run
+     * Displays a 'Loading...' icon and temporarily changes the item's description while `callback` is being run
      */
-    runWithTemporaryDescription(description: string, callback: () => Promise<void>): Promise<void>;
+    public runWithTemporaryDescription(description: string, callback: () => Promise<void>): Promise<void>;
 }
 
-export interface IAzureParentNode<T extends IAzureTreeItem = IAzureTreeItem> extends IAzureNode<T> {
-    /**
-     * This class wraps IChildProvider.createChild and ensures the tree is updated correctly when an item is created
-     */
-    createChild(userOptions?: any): Promise<IAzureNode>;
-
-    getCachedChildren(): Promise<IAzureNode[]>
-}
-
-/**
- * Implement this interface if your treeItem does not have children, otherwise implement IAzureParentTreeItem
- */
-export interface IAzureTreeItem {
-    /**
-     * This is is used for the openInPortal action. It is also used per the following documentation copied from VS Code:
-     * Optional id for the tree item that has to be unique across tree. The id is used to preserve the selection and expansion state of the tree item.
-     *
-     * If not provided, an id is generated using the tree item's label. **Note** that when labels change, ids will change and that selection and expansion state cannot be kept stable anymore.
-     */
+export interface IGenericTreeItem {
     id?: string;
     label: string;
-
-    /**
-     * Additional information about a node that is appended to the label with the format `label (description)`
-     */
     description?: string;
     iconPath?: string | Uri | { light: string | Uri; dark: string | Uri };
     commandId?: string;
     contextValue: string;
-    deleteTreeItem?(node: IAzureNode): Promise<void>;
-    refreshLabel?(node: IAzureNode): Promise<void>;
-
-    /**
-     * Optional function to filter nodes displayed in the node picker
-     * If not implemented, it's assumed that 'isAncestorOf' evaluates to true
-     */
-    isAncestorOf?(contextValue: string): boolean;
-}
-
-export interface IChildProvider {
-    /**
-     * This will be used in the node picker prompt when selecting children
-     */
-    readonly childTypeLabel?: string;
-
-    loadMoreChildren(node: IAzureNode, clearCache: boolean): Promise<IAzureTreeItem[]>;
-
-    hasMoreChildren(): boolean;
-
-    /**
-     * Implement this if you want the 'create' option to show up in the node picker
-     * @param options User-defined options that are passed to the IAzureParentTreeItem.createChild call
-     */
-    createChild?(node: IAzureNode, showCreatingNode: (label: string) => void, userOptions?: any): Promise<IAzureTreeItem>;
-
-    /**
-     * Implement this if you want non-default (i.e. non-alphabetical) sorting of child nodes.
-     * @param node1 The first node to compare
-     * @param node2 The second node to compare
-     * @returns A negative number if the node1 occurs before node2; positive if node1 occurs after node2; 0 if they are equivalent
-     */
-    compareChildren?(node1: IAzureNode, node2: IAzureNode): number
 }
 
 /**
- * Implement this interface if your treeItem has children, otherwise implement IAzureTreeItem
+ * A convenience class used for very basic tree items
  */
-export interface IAzureParentTreeItem extends IAzureTreeItem, IChildProvider {
+export declare class GenericTreeItem<T = ISubscriptionRoot> extends AzureTreeItem<T> {
+    public label: string;
+    public contextValue: string;
+    constructor(parent: AzureParentTreeItem<T> | undefined, treeItem: IGenericTreeItem);
+}
+
+/**
+ * Implement this if you are displaying custom root nodes in the tree other than SubscriptionTreeItems
+ */
+export declare abstract class RootTreeItem<T> extends AzureParentTreeItem<T> {
+    public constructor(treeDataProvider: AzureTreeDataProvider<T>, root: T);
+}
+
+/**
+ * Implement this class if your tree item does have children. Otherwise use AzureTreeItem
+ * NOTE: *Impl methods are not meant to be called directly - just implemented.
+ */
+export declare abstract class AzureParentTreeItem<T = ISubscriptionRoot> extends AzureTreeItem<T> {
+    //#region Properties implemented by base class
     /**
-     * If this treeItem should not show up in the node picker, implement this to provide a child that corresponds to the expectedContextValue
-     * Otherwise, all children will be shown in the node picker
+     * This will be used in the tree picker prompt when selecting children
      */
-    pickTreeItem?(expectedContextValue: string): IAzureTreeItem | undefined;
+    readonly childTypeLabel?: string;
+    //#endregion
+
+    //#region Methods implemented by base class
+    /**
+     * Implement this to display child resources. Should not be called directly
+     * @param clearCache If true, you should start the "Load more..." process over
+     */
+    public abstract loadMoreChildrenImpl(clearCache: boolean): Promise<AzureTreeItem<T>[]>;
+
+    /**
+     * Implement this as a part of the "Load more..." action. Should not be called directly
+     * @returns 'true' if there are more children and a "Load more..." node should be displayed
+     */
+    public abstract hasMoreChildrenImpl(): boolean;
+
+    /**
+     * Implement this if you want the 'create' option to show up in the tree picker. Should not be called directly
+     * @param options User-defined options that are passed to the AzureParentTreeItem.createChild call
+     */
+    createChildImpl?(showCreatingTreeItem: (label: string) => void, userOptions?: any): Promise<AzureTreeItem<T>>;
+
+    /**
+     * Implement this if you want non-default (i.e. non-alphabetical) sorting of children. Should not be called directly
+     * @param item1 The first item to compare
+     * @param item2 The second item to compare
+     * @returns A negative number if the item1 occurs before item2; positive if item1 occurs after item2; 0 if they are equivalent
+     */
+    compareChildrenImpl?(item1: AzureTreeItem<T>, item2: AzureTreeItem<T>): number;
+
+    /**
+     * If this treeItem should not show up in the tree picker, implement this to provide a child that corresponds to the expectedContextValue. Should not be called directly
+     * Otherwise, all children will be shown in the tree picker
+     */
+    pickTreeItemImpl?(expectedContextValue: string): AzureTreeItem<T> | undefined;
+    //#endregion
+
+    /**
+     * This class wraps createChildImpl and ensures the tree is updated correctly when an item is created
+     */
+    createChild(userOptions?: any): Promise<AzureTreeItem<T>>;
+
+    getCachedChildren(): Promise<AzureTreeItem<T>[]>;
 }
 
 /**
  * Used to ensure a single invalid object does not prevent display of other valid objects
  * Invalid objects will be shown with the error and the object's name. If the name cannot be determined for any invalid objects, a TreeItem will be added to the end with a generic label like "Some items cannot be displayed"
+ * @param treeItem The parent tree item
  * @param sourceArray The collection of source objects before converting to TreeItems
  * @param invalidContextValue The context value to use for invalid source objects
  * @param createTreeItem A function that converts a source object to a TreeItem. Return undefined if you want this object to be skipped.
  * @param getLabelOnError A minimal function that gets the label to display for an invalid source object
  */
 export declare function createTreeItemsWithErrorHandling<T>(
+    treeItem: AzureParentTreeItem,
     sourceArray: T[],
     invalidContextValue: string,
-    createTreeItem: (source: T) => IAzureTreeItem | undefined | Promise<IAzureTreeItem | undefined>,
-    getLabelOnError: (source: T) => string | undefined | Promise<string | undefined>): Promise<IAzureTreeItem[]>;
+    createTreeItem: (source: T) => AzureTreeItem | undefined | Promise<AzureTreeItem | undefined>,
+    getLabelOnError: (source: T) => string | undefined | Promise<string | undefined>): Promise<AzureTreeItem[]>;
 
 export declare class UserCancelledError extends Error { }
 

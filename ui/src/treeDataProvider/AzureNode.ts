@@ -3,102 +3,70 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ServiceClientCredentials } from 'ms-rest';
-import { AzureEnvironment } from 'ms-rest-azure';
 // tslint:disable-next-line:no-require-imports
 import opn = require("opn");
 import { Uri } from 'vscode';
-import { AzureTreeDataProvider, IAzureNode, IAzureParentNode, IAzureTreeItem, OpenInPortalOptions } from '../../index';
+import { ISubscriptionRoot, OpenInPortalOptions } from '../../index';
+import * as types from '../../index';
 import { ArgumentError, NotImplementedError } from '../errors';
 import { localize } from '../localize';
-import { loadingIconPath } from './CreatingTreeItem';
+import { IAzureParentTreeItemInternal, IAzureTreeDataProviderInternal } from "./InternalInterfaces";
+import { loadingIconPath } from "./treeConstants";
 
-export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAzureNode<T> {
-    public readonly treeItem: T;
-    public readonly parent: IAzureParentNodeInternal | undefined;
+// tslint:disable-next-line:export-name todo rename file after review
+export abstract class AzureTreeItem<T = ISubscriptionRoot> implements types.AzureTreeItem<T> {
+    //#region Properties implemented by base class
+    public abstract label: string;
+    public abstract contextValue: string;
+    public description?: string;
+    public id?: string;
+    public commandId?: string;
+    public iconPath?: string | Uri | { light: string | Uri; dark: string | Uri };
+    //#endregion
 
+    public readonly parent: IAzureParentTreeItemInternal<T> | undefined;
     private _temporaryDescription?: string;
 
-    public constructor(parent: IAzureParentNodeInternal | undefined, treeItem: T) {
+    public constructor(parent: IAzureParentTreeItemInternal<T> | undefined) {
         this.parent = parent;
-        this.treeItem = treeItem;
     }
 
     private get _effectiveDescription(): string | undefined {
-        return this._temporaryDescription || this.treeItem.description;
+        return this._temporaryDescription || this.description;
     }
 
-    public get id(): string {
-        let id: string = this.treeItem.id || this.treeItem.label;
+    public get fullId(): string {
+        let id: string = this.id || this.label;
         if (!id.startsWith('/')) {
             id = `/${id}`;
         }
 
         // For the sake of backwards compat, only add the parent's id if it's not already there
-        if (this.parent && !id.startsWith(this.parent.id)) {
-            id = `${this.parent.id}${id}`;
+        if (this.parent && !id.startsWith(this.parent.fullId)) {
+            id = `${this.parent.fullId}${id}`;
         }
 
         return id;
     }
 
-    public get iconPath(): string | Uri | { light: string | Uri; dark: string | Uri } | undefined {
-        return this._temporaryDescription ? loadingIconPath : this.treeItem.iconPath;
+    public get effectiveIconPath(): string | Uri | { light: string | Uri; dark: string | Uri } | undefined {
+        return this._temporaryDescription ? loadingIconPath : this.iconPath;
     }
 
-    public get label(): string {
-        return this._effectiveDescription ? `${this.treeItem.label} (${this._effectiveDescription})` : this.treeItem.label;
+    public get effectiveLabel(): string {
+        return this._effectiveDescription ? `${this.label} (${this._effectiveDescription})` : this.label;
+
     }
 
-    public get tenantId(): string {
+    public get root(): T {
         if (this.parent) {
-            return this.parent.tenantId;
+            return this.parent.root;
         } else {
             throw new ArgumentError(this);
         }
     }
 
-    public get userId(): string {
-        if (this.parent) {
-            return this.parent.userId;
-        } else {
-            throw new ArgumentError(this);
-        }
-    }
-
-    public get subscriptionId(): string {
-        if (this.parent) {
-            return this.parent.subscriptionId;
-        } else {
-            throw new ArgumentError(this);
-        }
-    }
-
-    public get subscriptionDisplayName(): string {
-        if (this.parent) {
-            return this.parent.subscriptionDisplayName;
-        } else {
-            throw new ArgumentError(this);
-        }
-    }
-
-    public get credentials(): ServiceClientCredentials {
-        if (this.parent) {
-            return this.parent.credentials;
-        } else {
-            throw new ArgumentError(this);
-        }
-    }
-
-    public get environment(): AzureEnvironment {
-        if (this.parent) {
-            return this.parent.environment;
-        } else {
-            throw new ArgumentError(this);
-        }
-    }
-
-    public get treeDataProvider(): AzureTreeDataProvider {
+    public get treeDataProvider(): IAzureTreeDataProviderInternal<T> {
         if (this.parent) {
             return this.parent.treeDataProvider;
         } else {
@@ -106,40 +74,46 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
         }
     }
 
+    //#region Methods implemented by base class
+    public refreshLabelImpl?(): Promise<void>;
+    public isAncestorOfImpl?(contextValue: string): boolean;
+    public deleteTreeItemImpl?(): Promise<void>;
+    //#endregion
+
     public async refresh(): Promise<void> {
-        if (this.treeItem.refreshLabel) {
-            await this.treeItem.refreshLabel(this);
+        if (this.refreshLabelImpl) {
+            await this.refreshLabelImpl();
         }
 
         await this.treeDataProvider.refresh(this);
     }
 
-    public openInPortal(id?: string, options?: OpenInPortalOptions): void {
-        id = id === undefined ? this.id : id;
+    public openInPortal(this: AzureTreeItem<ISubscriptionRoot>, id?: string, options?: OpenInPortalOptions): void {
+        id = id === undefined ? this.fullId : id;
         const queryPrefix: string = (options && options.queryPrefix) ? `?${options.queryPrefix}` : '';
-        const url: string = `${this.environment.portalUrl}/${queryPrefix}#@${this.tenantId}/resource${id}`;
+        const url: string = `${this.root.environment.portalUrl}/${queryPrefix}#@${this.root.tenantId}/resource${id}`;
 
         // tslint:disable-next-line:no-floating-promises
         opn(url);
     }
 
-    public includeInNodePicker(expectedContextValues: string[]): boolean {
+    public includeInTreePicker(expectedContextValues: string[]): boolean {
         return expectedContextValues.some((val: string) => {
-            return this.treeItem.contextValue === val ||
-                !this.treeItem.isAncestorOf ||
-                this.treeItem.isAncestorOf(val);
+            return this.contextValue === val ||
+                !this.isAncestorOfImpl ||
+                this.isAncestorOfImpl(val);
         });
     }
 
-    public async deleteNode(): Promise<void> {
+    public async deleteTreeItem(): Promise<void> {
         await this.runWithTemporaryDescription(localize('deleting', 'Deleting...'), async () => {
-            if (this.treeItem.deleteTreeItem) {
-                await this.treeItem.deleteTreeItem(this);
+            if (this.deleteTreeItemImpl) {
+                await this.deleteTreeItemImpl();
                 if (this.parent) {
-                    await this.parent.removeNodeFromCache(this);
+                    await this.parent.removeChildFromCache(this);
                 }
             } else {
-                throw new NotImplementedError('deleteTreeItem', this.treeItem);
+                throw new NotImplementedError('deleteTreeItemImpl', this);
             }
         });
     }
@@ -154,8 +128,4 @@ export class AzureNode<T extends IAzureTreeItem = IAzureTreeItem> implements IAz
             await this.refresh();
         }
     }
-}
-
-export interface IAzureParentNodeInternal extends IAzureParentNode {
-    removeNodeFromCache(node: AzureNode): Promise<void>;
 }

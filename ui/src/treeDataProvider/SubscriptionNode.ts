@@ -3,67 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ServiceClientCredentials } from 'ms-rest';
-import { AzureEnvironment } from 'ms-rest-azure';
 import * as path from 'path';
-import { EventEmitter } from 'vscode';
-import { AzureTreeDataProvider, IAzureNode, IChildProvider } from '../../index';
-import { AzureSession } from '../azure-account.api';
-import { AzureParentNode } from './AzureParentNode';
+import { ISubscriptionRoot } from '../../index';
+import * as types from '../../index';
+import { RootTreeItem } from './RootNode';
 
-export class SubscriptionNode extends AzureParentNode {
+// tslint:disable-next-line:export-name todo rename file after review
+export abstract class SubscriptionTreeItem extends RootTreeItem<ISubscriptionRoot> implements types.SubscriptionTreeItem {
     public static readonly contextValue: string = 'azureextensionui.azureSubscription';
+    public readonly contextValue: string = SubscriptionTreeItem.contextValue;
+    public readonly label: string;
 
-    private readonly _subscriptionId: string;
-    private readonly _subscriptionDisplayName: string;
-
-    private readonly _treeDataProvider: AzureTreeDataProvider;
-    private readonly _session: AzureSession;
-
-    public constructor(treeDataProvider: AzureTreeDataProvider, childProvider: IChildProvider, nodeId: string, session: AzureSession, subscriptionDisplayName: string, subscriptionId: string, onNodeCreateEmitter: EventEmitter<IAzureNode>) {
-        super(undefined, {
-            id: nodeId,
-            label: subscriptionDisplayName,
-            contextValue: SubscriptionNode.contextValue,
-            iconPath: path.join(__filename, '..', '..', '..', '..', 'resources', 'azureSubscription.svg'),
-            childTypeLabel: childProvider.childTypeLabel,
-            compareChildren: childProvider.compareChildren,
-            createChild: childProvider.createChild ? <typeof childProvider.createChild>childProvider.createChild.bind(childProvider) : undefined,
-            hasMoreChildren: <typeof childProvider.hasMoreChildren>childProvider.hasMoreChildren.bind(childProvider),
-            loadMoreChildren: <typeof childProvider.loadMoreChildren>childProvider.loadMoreChildren.bind(childProvider)
-        },    onNodeCreateEmitter);
-        this._treeDataProvider = treeDataProvider;
-        this._session = session;
-
-        this._subscriptionId = subscriptionId;
-        this._subscriptionDisplayName = subscriptionDisplayName;
-    }
-
-    public get subscriptionId(): string {
-        return this._subscriptionId;
-    }
-
-    public get subscriptionDisplayName(): string {
-        return this._subscriptionDisplayName;
-    }
-
-    public get tenantId(): string {
-        return this._session.tenantId;
-    }
-
-    public get userId(): string {
-        return this._session.userId;
-    }
-
-    public get credentials(): ServiceClientCredentials {
-        return this._session.credentials;
-    }
-
-    public get environment(): AzureEnvironment {
-        return this._session.environment;
-    }
-
-    public get treeDataProvider(): AzureTreeDataProvider {
-        return this._treeDataProvider;
+    public constructor(root: ISubscriptionRoot) {
+        super(root);
+        this.label = root.subscriptionDisplayName;
+        this.id = root.subscriptionPath;
+        this.iconPath = path.join(__filename, '..', '..', '..', '..', 'resources', 'azureSubscription.svg');
     }
 }

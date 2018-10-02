@@ -7,7 +7,7 @@ import { commands, Event, Uri } from 'vscode';
 import { IActionContext } from '../index';
 import { callWithTelemetryAndErrorHandling } from './callWithTelemetryAndErrorHandling';
 import { ext } from './extensionVariables';
-import { AzureNode } from './treeDataProvider/AzureNode';
+import { AzureTreeItem } from './treeDataProvider/AzureNode';
 
 // tslint:disable:no-any no-unsafe-any
 
@@ -19,8 +19,8 @@ export function registerCommand(commandId: string, callback: (this: IActionConte
                 if (args.length > 0) {
                     const contextArg: any = args[0];
 
-                    if (contextArg instanceof AzureNode) {
-                        this.properties.contextValue = contextArg.treeItem.contextValue;
+                    if (contextArg instanceof AzureTreeItem) {
+                        this.properties.contextValue = contextArg.contextValue;
                     } else if (contextArg instanceof Uri) {
                         this.properties.contextValue = 'Uri';
                     }

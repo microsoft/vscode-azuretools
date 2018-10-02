@@ -3,19 +3,29 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { EventEmitter } from 'vscode';
-import { AzureTreeDataProvider, IAzureNode, IAzureParentTreeItem } from "../../index";
-import { AzureParentNode } from "./AzureParentNode";
+import * as types from '../../index';
+import { AzureParentTreeItem } from './AzureParentNode';
+import { IAzureTreeDataProviderInternal } from './InternalInterfaces';
 
-export class RootNode extends AzureParentNode {
-    private readonly _treeDataProvider: AzureTreeDataProvider;
+// tslint:disable-next-line:export-name todo rename file after review
+export abstract class RootTreeItem<T> extends AzureParentTreeItem<T> implements types.RootTreeItem<T> {
+    private readonly _root: T;
+    private _treeDataProvider: IAzureTreeDataProviderInternal<T>;
 
-    public constructor(treeDataProvider: AzureTreeDataProvider, treeItem: IAzureParentTreeItem, onNodeCreateEmitter: EventEmitter<IAzureNode>) {
-        super(undefined, treeItem, onNodeCreateEmitter);
+    public constructor(root: T) {
+        super(undefined);
+        this._root = root;
+    }
+
+    public get treeDataProvider(): IAzureTreeDataProviderInternal<T> {
+        return this._treeDataProvider;
+    }
+
+    public set treeDataProvider(treeDataProvider: IAzureTreeDataProviderInternal<T>) {
         this._treeDataProvider = treeDataProvider;
     }
 
-    public get treeDataProvider(): AzureTreeDataProvider {
-        return this._treeDataProvider;
+    public get root(): T {
+        return this._root;
     }
 }
