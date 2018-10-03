@@ -174,7 +174,7 @@ export declare abstract class AzureTreeItem<T = ISubscriptionRoot> {
     public runWithTemporaryDescription(description: string, callback: () => Promise<void>): Promise<void>;
 }
 
-export interface IGenericTreeItem {
+export interface IGenericTreeItemOptions {
     id?: string;
     label: string;
     description?: string;
@@ -189,7 +189,7 @@ export interface IGenericTreeItem {
 export declare class GenericTreeItem<T = ISubscriptionRoot> extends AzureTreeItem<T> {
     public label: string;
     public contextValue: string;
-    constructor(parent: AzureParentTreeItem<T> | undefined, treeItem: IGenericTreeItem);
+    constructor(parent: AzureParentTreeItem<T> | undefined, options: IGenericTreeItemOptions);
 }
 
 /**
