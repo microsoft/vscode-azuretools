@@ -43,19 +43,19 @@ class InvalidTreeItem<T> extends AzureParentTreeItem<T> {
     }
 }
 
-export async function createTreeItemsWithErrorHandling<sourceT, treeItemT>(
-    treeItem: AzureParentTreeItem<treeItemT>,
-    sourceArray: sourceT[],
+export async function createTreeItemsWithErrorHandling<TSource, TTreeItem>(
+    treeItem: AzureParentTreeItem<TTreeItem>,
+    sourceArray: TSource[],
     invalidContextValue: string,
-    createTreeItem: (source: sourceT) => AzureTreeItem<treeItemT> | undefined | Promise<AzureTreeItem<treeItemT> | undefined>,
-    getLabelOnError: (source: sourceT) => string | undefined | Promise<string | undefined>): Promise<AzureTreeItem<treeItemT>[]> {
+    createTreeItem: (source: TSource) => AzureTreeItem<TTreeItem> | undefined | Promise<AzureTreeItem<TTreeItem> | undefined>,
+    getLabelOnError: (source: TSource) => string | undefined | Promise<string | undefined>): Promise<AzureTreeItem<TTreeItem>[]> {
 
-    const treeItems: AzureTreeItem<treeItemT>[] = [];
+    const treeItems: AzureTreeItem<TTreeItem>[] = [];
     // tslint:disable-next-line:no-any
     let unknownError: any;
-    await Promise.all(sourceArray.map(async (source: sourceT) => {
+    await Promise.all(sourceArray.map(async (source: TSource) => {
         try {
-            const item: AzureTreeItem<treeItemT> | undefined = await createTreeItem(source);
+            const item: AzureTreeItem<TTreeItem> | undefined = await createTreeItem(source);
             if (item) {
                 treeItems.push(item);
             }
@@ -68,7 +68,7 @@ export async function createTreeItemsWithErrorHandling<sourceT, treeItemT>(
             }
 
             if (name) {
-                treeItems.push(new InvalidTreeItem<treeItemT>(treeItem, name, error, invalidContextValue));
+                treeItems.push(new InvalidTreeItem<TTreeItem>(treeItem, name, error, invalidContextValue));
             } else if (error && !unknownError) {
                 unknownError = error;
             }
@@ -78,7 +78,7 @@ export async function createTreeItemsWithErrorHandling<sourceT, treeItemT>(
     if (unknownError) {
         // Display a generic error if there are any unknown items. Only the first error will be displayed
         const message: string = localize('cantShowItems', 'Some items could not be displayed');
-        treeItems.push(new InvalidTreeItem<treeItemT>(treeItem, message, unknownError, invalidContextValue, ''));
+        treeItems.push(new InvalidTreeItem<TTreeItem>(treeItem, message, unknownError, invalidContextValue, ''));
     }
 
     return treeItems;
