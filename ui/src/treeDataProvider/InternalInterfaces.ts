@@ -10,13 +10,13 @@ import { AzureTreeItem } from './AzureTreeItem';
 // Interfaces for methods on the tree that aren't exposed outside of this package
 // We can't reference the classes directly because it would result in circular dependencies
 
-export interface IAzureParentTreeItemInternal<T = ISubscriptionRoot> extends AzureParentTreeItem<T>, AzureTreeItem<T> {
-    parent: IAzureParentTreeItemInternal<T> | undefined;
-    treeDataProvider: IAzureTreeDataProviderInternal<T>;
-    removeChildFromCache(node: AzureTreeItem<T>): Promise<void>;
+export interface IAzureParentTreeItemInternal<TRoot = ISubscriptionRoot> extends AzureParentTreeItem<TRoot>, AzureTreeItem<TRoot> {
+    parent: IAzureParentTreeItemInternal<TRoot> | undefined;
+    treeDataProvider: IAzureTreeDataProviderInternal<TRoot>;
+    removeChildFromCache(node: AzureTreeItem<TRoot>): Promise<void>;
     loadMoreChildren(): Promise<void>;
 }
 
-export interface IAzureTreeDataProviderInternal<T = ISubscriptionRoot> extends AzureTreeDataProvider<T> {
-    _onTreeItemCreateEmitter: EventEmitter<AzureTreeItem<T>>;
+export interface IAzureTreeDataProviderInternal<TRoot = ISubscriptionRoot> extends AzureTreeDataProvider<TRoot> {
+    _onTreeItemCreateEmitter: EventEmitter<AzureTreeItem<TRoot>>;
 }

@@ -8,7 +8,7 @@ import { localize } from '../localize';
 import { AzureParentTreeItem } from './AzureParentTreeItem';
 import { AzureTreeItem } from './AzureTreeItem';
 
-class InvalidTreeItem<T> extends AzureParentTreeItem<T> {
+class InvalidTreeItem<TRoot> extends AzureParentTreeItem<TRoot> {
     public readonly contextValue: string;
     public readonly label: string;
     public readonly description: string;
@@ -17,7 +17,7 @@ class InvalidTreeItem<T> extends AzureParentTreeItem<T> {
     private _error: any;
 
     // tslint:disable-next-line:no-any
-    constructor(parent: AzureParentTreeItem<T>, label: string, error: any, contextValue: string, description: string = localize('invalid', 'Invalid')) {
+    constructor(parent: AzureParentTreeItem<TRoot>, label: string, error: any, contextValue: string, description: string = localize('invalid', 'Invalid')) {
         super(parent);
         this.label = label;
         this._error = error;
@@ -29,7 +29,7 @@ class InvalidTreeItem<T> extends AzureParentTreeItem<T> {
         return path.join(__filename, '..', '..', '..', '..', 'resources', 'warning.svg');
     }
 
-    public async loadMoreChildrenImpl(): Promise<AzureTreeItem<T>[]> {
+    public async loadMoreChildrenImpl(): Promise<AzureTreeItem<TRoot>[]> {
         throw this._error;
     }
 

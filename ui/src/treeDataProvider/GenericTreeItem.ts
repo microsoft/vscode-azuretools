@@ -8,10 +8,10 @@ import * as types from '../../index';
 import { AzureTreeItem } from './AzureTreeItem';
 import { IAzureParentTreeItemInternal } from "./InternalInterfaces";
 
-export class GenericTreeItem<T = ISubscriptionRoot> extends AzureTreeItem<T> implements types.GenericTreeItem<T> {
+export class GenericTreeItem<TRoot = ISubscriptionRoot> extends AzureTreeItem<TRoot> implements types.GenericTreeItem<TRoot> {
     public label: string;
     public contextValue: string;
-    constructor(parent: IAzureParentTreeItemInternal<T> | undefined, options: IGenericTreeItemOptions) {
+    constructor(parent: IAzureParentTreeItemInternal<TRoot> | undefined, options: IGenericTreeItemOptions) {
         super(parent);
         this.label = options.label;
         this.contextValue = options.contextValue;

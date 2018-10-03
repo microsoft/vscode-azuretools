@@ -17,9 +17,9 @@ export type OpenInPortalOptions = {
     queryPrefix?: string;
 };
 
-export declare class AzureTreeDataProvider<T = ISubscriptionRoot> implements TreeDataProvider<AzureTreeItem<T | ISubscriptionRoot>>, Disposable {
-    public onDidChangeTreeData: Event<AzureTreeItem<T | ISubscriptionRoot>>;
-    public onTreeItemCreate: Event<AzureTreeItem<T | ISubscriptionRoot>>;
+export declare class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements TreeDataProvider<AzureTreeItem<TRoot | ISubscriptionRoot>>, Disposable {
+    public onDidChangeTreeData: Event<AzureTreeItem<TRoot | ISubscriptionRoot>>;
+    public onTreeItemCreate: Event<AzureTreeItem<TRoot | ISubscriptionRoot>>;
     /**
      * Azure Tree Data Provider
      * @param subscriptionTreeItemType The type used to create SubscriptionTreeItem's that will display your resources
@@ -27,42 +27,42 @@ export declare class AzureTreeDataProvider<T = ISubscriptionRoot> implements Tre
      * @param rootTreeItems Any tree items other than the subscriptions that should be shown at the root of the explorer
      * @param testAccount A test Azure Account that leverages a service principal instead of interactive login
      */
-    public constructor(subscriptionTreeItemType: { new(root: ISubscriptionRoot): SubscriptionTreeItem }, loadMoreCommandId: string, rootTreeItems?: RootTreeItem<T>[], testAccount?: TestAzureAccount);
+    public constructor(subscriptionTreeItemType: { new(root: ISubscriptionRoot): SubscriptionTreeItem }, loadMoreCommandId: string, rootTreeItems?: RootTreeItem<TRoot>[], testAccount?: TestAzureAccount);
 
     /**
      * Should not be called directly
      */
-    public getTreeItem(treeItem: AzureTreeItem<T | ISubscriptionRoot>): TreeItem;
+    public getTreeItem(treeItem: AzureTreeItem<TRoot | ISubscriptionRoot>): TreeItem;
 
     /**
      * Should not be called directly
      */
-    public getChildren(treeItem?: AzureParentTreeItem<T | ISubscriptionRoot>): Promise<AzureTreeItem<T | ISubscriptionRoot>[]>;
+    public getChildren(treeItem?: AzureParentTreeItem<TRoot | ISubscriptionRoot>): Promise<AzureTreeItem<TRoot | ISubscriptionRoot>[]>;
 
     /**
      *  Refreshes the tree
      * @param treeItem The treeItem to refresh or 'undefined' to refresh the whole tree
      * @param clearCache If true, the current state of 'Load more...' is cleared and new tree items will be retrieved. Defaults to true.
      */
-    public refresh(treeItem?: AzureTreeItem<T | ISubscriptionRoot>, clearCache?: boolean): Promise<void>;
+    public refresh(treeItem?: AzureTreeItem<TRoot | ISubscriptionRoot>, clearCache?: boolean): Promise<void>;
 
     /**
      * Loads more children for a specific tree item
      * @param treeItem the load more tree item
      */
-    public loadMore(treeItem: AzureTreeItem<T | ISubscriptionRoot>): Promise<void>;
+    public loadMore(treeItem: AzureTreeItem<TRoot | ISubscriptionRoot>): Promise<void>;
 
     /**
      * Used to traverse the tree with a quick pick at each level. Primarily for command palette support
      * @param expectedContextValues a single context value or multiple matching context values matching the desired tree items
      * @param startingTreeItem
      */
-    public showTreeItemPicker(expectedContextValues: string | string[], startingTreeItem?: AzureTreeItem<T | ISubscriptionRoot>): Promise<AzureTreeItem<T | ISubscriptionRoot>>;
+    public showTreeItemPicker(expectedContextValues: string | string[], startingTreeItem?: AzureTreeItem<TRoot | ISubscriptionRoot>): Promise<AzureTreeItem<TRoot | ISubscriptionRoot>>;
 
     /**
      * Traverses a tree to find a node matching the given fullId of a tree item. This will not "Load more..."
      */
-    public findTreeItem(fullId: string): Promise<AzureTreeItem<T | ISubscriptionRoot> | undefined>;
+    public findTreeItem(fullId: string): Promise<AzureTreeItem<TRoot | ISubscriptionRoot> | undefined>;
 
     /**
      * Should not be called directly
@@ -97,7 +97,7 @@ export interface ISubscriptionRoot {
  * Implement this class if your tree item does not have children. Otherwise use AzureParentTreeItem
  * NOTE: *Impl methods are not meant to be called directly - just implemented.
  */
-export declare abstract class AzureTreeItem<T = ISubscriptionRoot> {
+export declare abstract class AzureTreeItem<TRoot = ISubscriptionRoot> {
     //#region Properties implemented by base class
     /**
      * This is is used for the openInPortal action. It is also used per the following documentation copied from VS Code:
@@ -122,13 +122,13 @@ export declare abstract class AzureTreeItem<T = ISubscriptionRoot> {
      * This is used for AzureTreeDataProvider.findTreeItem and AzureTreeItem.openInPortal
      */
     public readonly fullId: string;
-    public readonly parent?: AzureParentTreeItem<T>;
-    public readonly treeDataProvider: AzureTreeDataProvider<T>;
+    public readonly parent?: AzureParentTreeItem<TRoot>;
+    public readonly treeDataProvider: AzureTreeDataProvider<TRoot>;
 
     /**
      * Contains information specific to the root of this branch of the tree. Usually, this will be subscription information
      */
-    public readonly root: T;
+    public readonly root: TRoot;
 
     /**
      * @param parent The parent of the new tree item or 'undefined' if it is a root item
@@ -186,10 +186,10 @@ export interface IGenericTreeItemOptions {
 /**
  * A convenience class used for very basic tree items
  */
-export declare class GenericTreeItem<T = ISubscriptionRoot> extends AzureTreeItem<T> {
+export declare class GenericTreeItem<TRoot = ISubscriptionRoot> extends AzureTreeItem<TRoot> {
     public label: string;
     public contextValue: string;
-    constructor(parent: AzureParentTreeItem<T> | undefined, options: IGenericTreeItemOptions);
+    constructor(parent: AzureParentTreeItem<TRoot> | undefined, options: IGenericTreeItemOptions);
 }
 
 /**
@@ -203,7 +203,7 @@ export declare abstract class RootTreeItem<T> extends AzureParentTreeItem<T> {
  * Implement this class if your tree item does have children. Otherwise use AzureTreeItem
  * NOTE: *Impl methods are not meant to be called directly - just implemented.
  */
-export declare abstract class AzureParentTreeItem<T = ISubscriptionRoot> extends AzureTreeItem<T> {
+export declare abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> extends AzureTreeItem<TRoot> {
     //#region Properties implemented by base class
     /**
      * This will be used in the tree picker prompt when selecting children
@@ -216,7 +216,7 @@ export declare abstract class AzureParentTreeItem<T = ISubscriptionRoot> extends
      * Implement this to display child resources. Should not be called directly
      * @param clearCache If true, you should start the "Load more..." process over
      */
-    public abstract loadMoreChildrenImpl(clearCache: boolean): Promise<AzureTreeItem<T>[]>;
+    public abstract loadMoreChildrenImpl(clearCache: boolean): Promise<AzureTreeItem<TRoot>[]>;
 
     /**
      * Implement this as a part of the "Load more..." action. Should not be called directly
@@ -228,7 +228,7 @@ export declare abstract class AzureParentTreeItem<T = ISubscriptionRoot> extends
      * Implement this if you want the 'create' option to show up in the tree picker. Should not be called directly
      * @param options User-defined options that are passed to the AzureParentTreeItem.createChild call
      */
-    createChildImpl?(showCreatingTreeItem: (label: string) => void, userOptions?: any): Promise<AzureTreeItem<T>>;
+    createChildImpl?(showCreatingTreeItem: (label: string) => void, userOptions?: any): Promise<AzureTreeItem<TRoot>>;
 
     /**
      * Implement this if you want non-default (i.e. non-alphabetical) sorting of children. Should not be called directly
@@ -236,21 +236,21 @@ export declare abstract class AzureParentTreeItem<T = ISubscriptionRoot> extends
      * @param item2 The second item to compare
      * @returns A negative number if the item1 occurs before item2; positive if item1 occurs after item2; 0 if they are equivalent
      */
-    compareChildrenImpl?(item1: AzureTreeItem<T>, item2: AzureTreeItem<T>): number;
+    compareChildrenImpl?(item1: AzureTreeItem<TRoot>, item2: AzureTreeItem<TRoot>): number;
 
     /**
      * If this treeItem should not show up in the tree picker, implement this to provide a child that corresponds to the expectedContextValue. Should not be called directly
      * Otherwise, all children will be shown in the tree picker
      */
-    pickTreeItemImpl?(expectedContextValue: string): AzureTreeItem<T> | undefined;
+    pickTreeItemImpl?(expectedContextValue: string): AzureTreeItem<TRoot> | undefined;
     //#endregion
 
     /**
      * This class wraps createChildImpl and ensures the tree is updated correctly when an item is created
      */
-    createChild(userOptions?: any): Promise<AzureTreeItem<T>>;
+    createChild(userOptions?: any): Promise<AzureTreeItem<TRoot>>;
 
-    getCachedChildren(): Promise<AzureTreeItem<T>[]>;
+    getCachedChildren(): Promise<AzureTreeItem<TRoot>[]>;
 }
 
 /**
