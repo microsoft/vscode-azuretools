@@ -5,22 +5,17 @@
 
 import { StringDictionary } from 'azure-arm-website/lib/models';
 import * as path from 'path';
-import { IAzureNode, IAzureParentTreeItem, IAzureTreeItem } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, AzureTreeItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
-import { SiteClient } from '../SiteClient';
 import { AppSettingTreeItem } from './AppSettingTreeItem';
+import { ISiteTreeRoot } from './ISiteTreeRoot';
 
-export class AppSettingsTreeItem implements IAzureParentTreeItem {
+export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     public static contextValue: string = 'applicationSettings';
     public readonly label: string = 'Application Settings';
     public readonly childTypeLabel: string = 'App Setting';
     public readonly contextValue: string = AppSettingsTreeItem.contextValue;
-    private readonly _client: SiteClient;
     private _settings: StringDictionary | undefined;
-
-    constructor(client: SiteClient) {
-        this._client = client;
-    }
 
     public get id(): string {
         return 'application';
@@ -33,17 +28,17 @@ export class AppSettingsTreeItem implements IAzureParentTreeItem {
         };
     }
 
-    public hasMoreChildren(): boolean {
+    public hasMoreChildrenImpl(): boolean {
         return false;
     }
 
-    public async loadMoreChildren(): Promise<IAzureTreeItem[]> {
-        this._settings = await this._client.listApplicationSettings();
-        const treeItems: IAzureTreeItem[] = [];
+    public async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzureTreeItem<ISiteTreeRoot>[]> {
+        this._settings = await this.root.client.listApplicationSettings();
+        const treeItems: AppSettingTreeItem[] = [];
         // tslint:disable-next-line:strict-boolean-expressions
         const properties: { [name: string]: string } = this._settings.properties || {};
         Object.keys(properties).forEach((key: string) => {
-            treeItems.push(new AppSettingTreeItem(key, properties[key]));
+            treeItems.push(new AppSettingTreeItem(this, key, properties[key]));
         });
 
         return treeItems;
@@ -59,7 +54,7 @@ export class AppSettingsTreeItem implements IAzureParentTreeItem {
             settings.properties[newKey] = value;
         }
 
-        await this._client.updateApplicationSettings(settings);
+        await this.root.client.updateApplicationSettings(settings);
     }
 
     public async deleteSettingItem(key: string): Promise<void> {
@@ -69,10 +64,10 @@ export class AppSettingsTreeItem implements IAzureParentTreeItem {
             delete settings.properties[key];
         }
 
-        await this._client.updateApplicationSettings(settings);
+        await this.root.client.updateApplicationSettings(settings);
     }
 
-    public async createChild(_node: IAzureNode<AppSettingsTreeItem>, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
+    public async createChildImpl(showCreatingTreeItem: (label: string) => void): Promise<AzureTreeItem<ISiteTreeRoot>> {
         const settings: StringDictionary = await this.ensureSettings();
 
         const newKey: string = await ext.ui.showInputBox({
@@ -88,10 +83,10 @@ export class AppSettingsTreeItem implements IAzureParentTreeItem {
             settings.properties = {};
         }
 
-        showCreatingNode(newKey);
+        showCreatingTreeItem(newKey);
         settings.properties[newKey] = newValue;
-        await this._client.updateApplicationSettings(settings);
-        return new AppSettingTreeItem(newKey, newValue);
+        await this.root.client.updateApplicationSettings(settings);
+        return new AppSettingTreeItem(this, newKey, newValue);
     }
 
     public validateNewKeyInput(settings: StringDictionary, newKey?: string, oldKey?: string): string | undefined {
@@ -113,7 +108,7 @@ export class AppSettingsTreeItem implements IAzureParentTreeItem {
 
     public async ensureSettings(): Promise<StringDictionary> {
         if (!this._settings) {
-            await this.loadMoreChildren();
+            await this.getCachedChildren();
         }
 
         return <StringDictionary>this._settings;

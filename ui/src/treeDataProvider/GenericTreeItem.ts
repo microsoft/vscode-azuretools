@@ -17,5 +17,7 @@ export class GenericTreeItem<T = ISubscriptionRoot> extends AzureTreeItem<T> imp
         this.contextValue = treeItem.contextValue;
         this.id = treeItem.id;
         this.commandId = treeItem.commandId;
+        this.iconPath = treeItem.iconPath;
+        this.description = treeItem.description;
     }
 }

@@ -15,8 +15,8 @@ export async function createWebApp(
     actionContext: IActionContext,
     subscriptionContext: ISubscriptionWizardContext,
     createOptions?: IAppCreateOptions,
-    showCreatingNode?: (label: string) => void): Promise<Site> {
-    return await createAppService(AppKind.app, actionContext, subscriptionContext, createOptions, showCreatingNode);
+    showCreatingTreeItem?: (label: string) => void): Promise<Site> {
+    return await createAppService(AppKind.app, actionContext, subscriptionContext, createOptions, showCreatingTreeItem);
 }
 
 export async function setWizardContextDefaults(wizardContext: IAppServiceWizardContext): Promise<void> {

@@ -8,7 +8,7 @@ import { localize } from '../localize';
 import { AzureParentTreeItem } from './AzureParentTreeItem';
 import { AzureTreeItem } from './AzureTreeItem';
 
-class InvalidTreeItem extends AzureParentTreeItem {
+class InvalidTreeItem<T> extends AzureParentTreeItem<T> {
     public readonly contextValue: string;
     public readonly label: string;
     public readonly description: string;
@@ -17,7 +17,7 @@ class InvalidTreeItem extends AzureParentTreeItem {
     private _error: any;
 
     // tslint:disable-next-line:no-any
-    constructor(parent: AzureParentTreeItem, label: string, error: any, contextValue: string, description: string = localize('invalid', 'Invalid')) {
+    constructor(parent: AzureParentTreeItem<T>, label: string, error: any, contextValue: string, description: string = localize('invalid', 'Invalid')) {
         super(parent);
         this.label = label;
         this._error = error;
@@ -29,7 +29,7 @@ class InvalidTreeItem extends AzureParentTreeItem {
         return path.join(__filename, '..', '..', '..', '..', 'resources', 'warning.svg');
     }
 
-    public async loadMoreChildrenImpl(): Promise<AzureTreeItem[]> {
+    public async loadMoreChildrenImpl(): Promise<AzureTreeItem<T>[]> {
         throw this._error;
     }
 
@@ -43,19 +43,19 @@ class InvalidTreeItem extends AzureParentTreeItem {
     }
 }
 
-export async function createTreeItemsWithErrorHandling<T>(
-    treeItem: AzureParentTreeItem,
-    sourceArray: T[],
+export async function createTreeItemsWithErrorHandling<sourceT, treeItemT>(
+    treeItem: AzureParentTreeItem<treeItemT>,
+    sourceArray: sourceT[],
     invalidContextValue: string,
-    createTreeItem: (source: T) => AzureTreeItem | undefined | Promise<AzureTreeItem | undefined>,
-    getLabelOnError: (source: T) => string | undefined | Promise<string | undefined>): Promise<AzureTreeItem[]> {
+    createTreeItem: (source: sourceT) => AzureTreeItem<treeItemT> | undefined | Promise<AzureTreeItem<treeItemT> | undefined>,
+    getLabelOnError: (source: sourceT) => string | undefined | Promise<string | undefined>): Promise<AzureTreeItem<treeItemT>[]> {
 
-    const treeItems: AzureTreeItem[] = [];
+    const treeItems: AzureTreeItem<treeItemT>[] = [];
     // tslint:disable-next-line:no-any
     let unknownError: any;
-    await Promise.all(sourceArray.map(async (source: T) => {
+    await Promise.all(sourceArray.map(async (source: sourceT) => {
         try {
-            const item: AzureTreeItem | undefined = await createTreeItem(source);
+            const item: AzureTreeItem<treeItemT> | undefined = await createTreeItem(source);
             if (item) {
                 treeItems.push(item);
             }
@@ -68,7 +68,7 @@ export async function createTreeItemsWithErrorHandling<T>(
             }
 
             if (name) {
-                treeItems.push(new InvalidTreeItem(treeItem, name, error, invalidContextValue));
+                treeItems.push(new InvalidTreeItem<treeItemT>(treeItem, name, error, invalidContextValue));
             } else if (error && !unknownError) {
                 unknownError = error;
             }
@@ -78,7 +78,7 @@ export async function createTreeItemsWithErrorHandling<T>(
     if (unknownError) {
         // Display a generic error if there are any unknown items. Only the first error will be displayed
         const message: string = localize('cantShowItems', 'Some items could not be displayed');
-        treeItems.push(new InvalidTreeItem(treeItem, message, unknownError, invalidContextValue, ''));
+        treeItems.push(new InvalidTreeItem<treeItemT>(treeItem, message, unknownError, invalidContextValue, ''));
     }
 
     return treeItems;

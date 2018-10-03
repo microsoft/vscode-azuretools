@@ -262,12 +262,12 @@ export declare abstract class AzureParentTreeItem<T = ISubscriptionRoot> extends
  * @param createTreeItem A function that converts a source object to a TreeItem. Return undefined if you want this object to be skipped.
  * @param getLabelOnError A minimal function that gets the label to display for an invalid source object
  */
-export declare function createTreeItemsWithErrorHandling<T>(
-    treeItem: AzureParentTreeItem,
-    sourceArray: T[],
+export declare function createTreeItemsWithErrorHandling<sourceT, treeItemT>(
+    treeItem: AzureParentTreeItem<treeItemT>,
+    sourceArray: sourceT[],
     invalidContextValue: string,
-    createTreeItem: (source: T) => AzureTreeItem | undefined | Promise<AzureTreeItem | undefined>,
-    getLabelOnError: (source: T) => string | undefined | Promise<string | undefined>): Promise<AzureTreeItem[]>;
+    createTreeItem: (source: sourceT) => AzureTreeItem<treeItemT> | undefined | Promise<AzureTreeItem<treeItemT> | undefined>,
+    getLabelOnError: (source: sourceT) => string | undefined | Promise<string | undefined>): Promise<AzureTreeItem<treeItemT>[]>;
 
 export declare class UserCancelledError extends Error { }
 

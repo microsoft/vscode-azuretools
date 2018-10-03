@@ -23,7 +23,7 @@ export async function createAppService(
     actionContext: IActionContext,
     subscriptionContext: ISubscriptionWizardContext,
     createOptions: IAppCreateOptions | undefined,
-    showCreatingNode?: (label: string) => void): Promise<Site> {
+    showCreatingTreeItem?: (label: string) => void): Promise<Site> {
     // tslint:disable-next-line:strict-boolean-expressions
     createOptions = createOptions || {};
 
@@ -93,13 +93,13 @@ export async function createAppService(
     executeSteps.push(new SiteCreateStep(createOptions.functionAppSettings));
     const wizard: AzureWizard<IAppServiceWizardContext> = new AzureWizard(promptSteps, executeSteps, wizardContext);
 
-    // Ideally actionContext should always be defined, but there's a bug with the NodePicker. Create a 'fake' actionContext until that bug is fixed
+    // Ideally actionContext should always be defined, but there's a bug with the TreeItemPicker. Create a 'fake' actionContext until that bug is fixed
     // https://github.com/Microsoft/vscode-azuretools/issues/120
     // tslint:disable-next-line:strict-boolean-expressions
     actionContext = actionContext || <IActionContext>{ properties: {}, measurements: {} };
     wizardContext = await wizard.prompt(actionContext);
-    if (showCreatingNode) {
-        showCreatingNode(nonNullProp(wizardContext, 'newSiteName'));
+    if (showCreatingTreeItem) {
+        showCreatingTreeItem(nonNullProp(wizardContext, 'newSiteName'));
     }
     if (wizardContext.newSiteKind === AppKind.app && !createOptions.advancedCreation) {
         const location: Location = nonNullProp(wizardContext, 'location');

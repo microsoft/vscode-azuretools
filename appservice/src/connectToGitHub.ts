@@ -9,7 +9,7 @@ import * as opn from 'opn';
 import { Response } from 'request';
 import * as request from 'request-promise';
 import * as vscode from 'vscode';
-import { IAzureNode, IAzureQuickPickItem, IParsedError, parseError, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureTreeItem, IAzureQuickPickItem, IParsedError, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { signRequest } from './signRequest';
@@ -22,7 +22,7 @@ type gitHubLink = { prev?: string, next?: string, last?: string, first?: string 
 // tslint:disable-next-line:no-reserved-keywords
 type gitHubWebResource = WebResource & { resolveWithFullResponse?: boolean, nextLink?: string, lastLink?: string, type?: string };
 
-export async function connectToGitHub(node: IAzureNode, client: SiteClient): Promise<void> {
+export async function connectToGitHub(node: AzureTreeItem, client: SiteClient): Promise<void> {
     const requestOptions: gitHubWebResource = new WebResource();
     let repoSelected: boolean = false;
     requestOptions.resolveWithFullResponse = true;
@@ -118,7 +118,7 @@ async function showGitHubAuthPrompt(): Promise<void> {
     }
 }
 
-async function getJsonRequest(requestOptions: gitHubWebResource, node: IAzureNode): Promise<Object[]> {
+async function getJsonRequest(requestOptions: gitHubWebResource, node: AzureTreeItem): Promise<Object[]> {
     // Reference for GitHub REST routes
     // https://developer.github.com/v3/
     // Note: blank after user implies look up authorized user

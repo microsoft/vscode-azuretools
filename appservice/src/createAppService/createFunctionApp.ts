@@ -13,6 +13,6 @@ export async function createFunctionApp(
     actionContext: IActionContext,
     subscriptionContext: ISubscriptionWizardContext,
     createOptions?: IAppCreateOptions,
-    showCreatingNode?: (label: string) => void): Promise<Site> {
-    return await createAppService(AppKind.functionapp, actionContext, subscriptionContext, createOptions, showCreatingNode);
+    showCreatingTreeItem?: (label: string) => void): Promise<Site> {
+    return await createAppService(AppKind.functionapp, actionContext, subscriptionContext, createOptions, showCreatingTreeItem);
 }

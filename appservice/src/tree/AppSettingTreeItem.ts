@@ -5,19 +5,21 @@
 
 import { StringDictionary } from 'azure-arm-website/lib/models';
 import * as path from 'path';
-import { DialogResponses, IAzureNode, IAzureTreeItem } from 'vscode-azureextensionui';
+import { AzureTreeItem, DialogResponses } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
-import { nonNullProp } from '../utils/nonNull';
 import { AppSettingsTreeItem } from './AppSettingsTreeItem';
+import { ISiteTreeRoot } from './ISiteTreeRoot';
 
-export class AppSettingTreeItem implements IAzureTreeItem {
+export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     public static contextValue: string = 'applicationSettingItem';
     public readonly contextValue: string = AppSettingTreeItem.contextValue;
+    public readonly parent: AppSettingsTreeItem;
 
     private key: string;
     private value: string;
 
-    constructor(key: string, value: string) {
+    constructor(parent: AppSettingsTreeItem, key: string, value: string) {
+        super(parent);
         this.key = key;
         this.value = value;
     }
@@ -37,37 +39,34 @@ export class AppSettingTreeItem implements IAzureTreeItem {
         };
     }
 
-    public async edit(node: IAzureNode): Promise<void> {
+    public async edit(): Promise<void> {
         const newValue: string = await ext.ui.showInputBox({
             prompt: `Enter setting value for "${this.key}"`,
             value: this.value
         });
 
         this.value = newValue;
-        const parentTreeItem: AppSettingsTreeItem = (<AppSettingsTreeItem>nonNullProp(node, 'parent').treeItem);
-        await parentTreeItem.editSettingItem(this.key, this.key, newValue);
-        await node.refresh();
+        await this.parent.editSettingItem(this.key, this.key, newValue);
+        await this.refresh();
     }
 
-    public async rename(node: IAzureNode): Promise<void> {
-        const parentTreeItem: AppSettingsTreeItem = (<AppSettingsTreeItem>nonNullProp(node, 'parent').treeItem);
-        const settings: StringDictionary = await parentTreeItem.ensureSettings();
+    public async rename(): Promise<void> {
+        const settings: StringDictionary = await this.parent.ensureSettings();
 
         const oldKey: string = this.key;
         const newKey: string = await ext.ui.showInputBox({
             prompt: `Enter a new name for "${oldKey}"`,
             value: this.key,
-            validateInput: (v?: string): string | undefined => parentTreeItem.validateNewKeyInput(settings, v, oldKey)
+            validateInput: (v?: string): string | undefined => this.parent.validateNewKeyInput(settings, v, oldKey)
         });
 
         this.key = newKey;
-        await parentTreeItem.editSettingItem(oldKey, newKey, this.value);
-        await node.refresh();
+        await this.parent.editSettingItem(oldKey, newKey, this.value);
+        await this.refresh();
     }
 
-    public async deleteTreeItem(node: IAzureNode): Promise<void> {
+    public async deleteTreeItemImpl(): Promise<void> {
         await ext.ui.showWarningMessage(`Are you sure you want to delete setting "${this.key}"?`, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
-        const parentTreeItem: AppSettingsTreeItem = (<AppSettingsTreeItem>nonNullProp(node, 'parent').treeItem);
-        await parentTreeItem.deleteSettingItem(this.key);
+        await this.parent.deleteSettingItem(this.key);
     }
 }
