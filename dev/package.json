@@ -1,0 +1,46 @@
+{
+    "name": "vscode-azureextensiondev",
+    "author": "Microsoft Corporation",
+    "version": "0.1.0",
+    "description": "Common dev dependency tools for developing Azure extensions for VS Code",
+    "tags": [
+        "azure",
+        "vscode"
+    ],
+    "keywords": [
+        "azure",
+        "vscode"
+    ],
+    "main": "out/src/index.js",
+    "types": "index.d.ts",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Microsoft/vscode-azuretools"
+    },
+    "bugs": {
+        "url": "https://github.com/Microsoft/vscode-azuretools/issues"
+    },
+    "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/master/dev/README.md",
+    "scripts": {
+        "build": "tsc -p ./",
+        "prepack": "tsc -p ./",
+        "compile": "tsc -watch -p ./",
+        "lint": "tslint --project tsconfig.json -e src/*.d.ts -t verbose",
+        "test": "mocha out/test/**/*.js --ui tdd",
+        "prepare": "node ./node_modules/vscode/bin/install"
+    },
+    "dependencies": {},
+    "devDependencies": {
+        "@types/mocha": "^2.2.32",
+        "@types/node": "^10.11.3",
+        "mocha": "^2.3.3",
+        "tslint": "^5.7.0",
+        "tslint-microsoft-contrib": "5.0.1",
+        "typescript": "^2.5.3",
+        "vscode": "^1.1.21"
+    },
+    "engines": {
+        "vscode": "^1.23.0"
+    }
+}

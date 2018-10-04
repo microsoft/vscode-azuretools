@@ -15,6 +15,7 @@ env:
     - PACKAGE_DIR=appservice
     - PACKAGE_DIR=kudu
     - PACKAGE_DIR=ui
+    - PACKAGE_DIR=dev
 
 script:
   - |

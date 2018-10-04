@@ -1,0 +1,9 @@
+node_modules/
+.vscode/
+src/
+tsconfig.json
+tslint.json
+*.tgz
+test/
+out/test/
+**/*.js.map
