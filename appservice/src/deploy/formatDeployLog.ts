@@ -6,6 +6,7 @@
 import { SiteClient } from '../SiteClient';
 
 export function formatDeployLog(client: SiteClient, message: string, date?: Date): string {
+    // tslint:disable-next-line:strict-boolean-expressions
     date = date || new Date();
     return `${date.toLocaleTimeString()} ${client.fullName}: ${message}`;
 }

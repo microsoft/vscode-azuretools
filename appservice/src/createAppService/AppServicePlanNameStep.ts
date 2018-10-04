@@ -6,6 +6,7 @@
 import { AzureWizardPromptStep, IAzureNamingRules } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
+import { nonNullProp } from '../utils/nonNull';
 import { AppServicePlanListStep } from './AppServicePlanListStep';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
@@ -35,7 +36,7 @@ export class AppServicePlanNameStep extends AzureWizardPromptStep<IAppServiceWiz
             return localize('invalidLength', 'The name must be between {0} and {1} characters.', appServicePlanNamingRules.minLength, appServicePlanNamingRules.maxLength);
         } else if (name.match(appServicePlanNamingRules.invalidCharsRegExp)) {
             return localize('invalidChars', "The name can only contain alphanumeric characters and hyphens.");
-        } else if (wizardContext.resourceGroup && !await AppServicePlanListStep.isNameAvailable(wizardContext, name, wizardContext.resourceGroup.name)) {
+        } else if (wizardContext.resourceGroup && !await AppServicePlanListStep.isNameAvailable(wizardContext, name, nonNullProp(wizardContext.resourceGroup, 'name'))) {
             return localize('nameAlreadyExists', 'App Service plan "{0}" already exists in resource group "{1}".', name, wizardContext.resourceGroup.name);
         } else {
             return undefined;

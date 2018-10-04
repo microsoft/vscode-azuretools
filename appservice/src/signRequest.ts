@@ -7,7 +7,7 @@ import { ServiceClientCredentials, WebResource } from "ms-rest";
 
 export async function signRequest(req: WebResource, cred: ServiceClientCredentials): Promise<void> {
     await new Promise((resolve: () => void, reject: (err: Error) => void): void => {
-        cred.signRequest(req, (err: Error) => {
+        cred.signRequest(req, (err: Error | undefined) => {
             if (err) {
                 reject(err);
             } else {

@@ -3,8 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { Site, SkuDescription } from 'azure-arm-website/lib/models';
 import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, ISubscriptionWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountListStep, StorageAccountPerformance, StorageAccountReplication } from 'vscode-azureextensionui';
+import { nonNullProp } from '../utils/nonNull';
 import { AppKind, WebsiteOS } from './AppKind';
 import { AppServicePlanCreateStep } from './AppServicePlanCreateStep';
 import { AppServicePlanListStep } from './AppServicePlanListStep';
@@ -22,13 +24,14 @@ export async function createAppService(
     subscriptionContext: ISubscriptionWizardContext,
     createOptions: IAppCreateOptions | undefined,
     showCreatingNode?: (label: string) => void): Promise<Site> {
+    // tslint:disable-next-line:strict-boolean-expressions
     createOptions = createOptions || {};
 
     const promptSteps: AzureWizardPromptStep<IAppServiceWizardContext>[] = [];
     const executeSteps: AzureWizardExecuteStep<IAppServiceWizardContext>[] = [];
     let wizardContext: IAppServiceWizardContext = {
         newSiteKind: appKind,
-        newSiteOS: WebsiteOS[createOptions.os],
+        newSiteOS: createOptions.os ? WebsiteOS[createOptions.os] : undefined,
         newSiteRuntime: createOptions.runtime,
         subscriptionId: subscriptionContext.subscriptionId,
         subscriptionDisplayName: subscriptionContext.subscriptionDisplayName,
@@ -92,20 +95,22 @@ export async function createAppService(
 
     // Ideally actionContext should always be defined, but there's a bug with the NodePicker. Create a 'fake' actionContext until that bug is fixed
     // https://github.com/Microsoft/vscode-azuretools/issues/120
+    // tslint:disable-next-line:strict-boolean-expressions
     actionContext = actionContext || <IActionContext>{ properties: {}, measurements: {} };
     wizardContext = await wizard.prompt(actionContext);
     if (showCreatingNode) {
-        showCreatingNode(wizardContext.newSiteName);
+        showCreatingNode(nonNullProp(wizardContext, 'newSiteName'));
     }
     if (wizardContext.newSiteKind === AppKind.app && !createOptions.advancedCreation) {
+        const location: Location = nonNullProp(wizardContext, 'location');
         const basicPlanSku: SkuDescription = { name: 'B1', tier: 'Basic', size: 'B1', family: 'B', capacity: 1 };
         const freePlanSku: SkuDescription = { name: 'F1', tier: 'Free', size: 'F1', family: 'F', capacity: 1 };
-        wizardContext.newResourceGroupName = `appsvc_rg_${wizardContext.newSiteOS}_${wizardContext.location.name}`;
-        wizardContext.newPlanName = `appsvc_asp_${wizardContext.newSiteOS}_${wizardContext.location.name}`;
+        wizardContext.newResourceGroupName = `appsvc_rg_${wizardContext.newSiteOS}_${location.name}`;
+        wizardContext.newPlanName = `appsvc_asp_${wizardContext.newSiteOS}_${location.name}`;
         // Free tier is only available for Windows
         wizardContext.newPlanSku = wizardContext.newSiteOS === WebsiteOS.windows ? freePlanSku : basicPlanSku;
     }
     wizardContext = await wizard.execute(actionContext);
 
-    return wizardContext.site;
+    return nonNullProp(wizardContext, 'site');
 }

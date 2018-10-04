@@ -20,7 +20,7 @@ class TunnelSocket extends EventEmitter {
     private _socket: Socket;
     private _client: SiteClient;
     private _publishCredential: User;
-    private _wsConnection: websocket.connection;
+    private _wsConnection: websocket.connection | undefined;
     private _wsClient: websocket.client;
 
     constructor(socket: Socket, client: SiteClient, publishCredential: User) {
@@ -109,15 +109,9 @@ class TunnelSocket extends EventEmitter {
             this._wsConnection = undefined;
         }
 
-        if (this._wsClient) {
-            this._wsClient.abort();
-            this._wsClient = undefined;
-        }
+        this._wsClient.abort();
 
-        if (this._socket) {
-            this._socket.destroy();
-            this._socket = undefined;
-        }
+        this._socket.destroy();
     }
 }
 

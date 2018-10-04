@@ -16,7 +16,7 @@ export class AppSettingsTreeItem implements IAzureParentTreeItem {
     public readonly childTypeLabel: string = 'App Setting';
     public readonly contextValue: string = AppSettingsTreeItem.contextValue;
     private readonly _client: SiteClient;
-    private _settings: StringDictionary;
+    private _settings: StringDictionary | undefined;
 
     constructor(client: SiteClient) {
         this._client = client;
@@ -40,62 +40,68 @@ export class AppSettingsTreeItem implements IAzureParentTreeItem {
     public async loadMoreChildren(): Promise<IAzureTreeItem[]> {
         this._settings = await this._client.listApplicationSettings();
         const treeItems: IAzureTreeItem[] = [];
-        Object.keys(this._settings.properties).forEach((key: string) => {
-            treeItems.push(new AppSettingTreeItem(key, this._settings.properties[key]));
+        // tslint:disable-next-line:strict-boolean-expressions
+        const properties: { [name: string]: string } = this._settings.properties || {};
+        Object.keys(properties).forEach((key: string) => {
+            treeItems.push(new AppSettingTreeItem(key, properties[key]));
         });
 
         return treeItems;
     }
 
     public async editSettingItem(oldKey: string, newKey: string, value: string): Promise<void> {
-        if (this._settings.properties) {
+        const settings: StringDictionary = await this.ensureSettings();
+
+        if (settings.properties) {
             if (oldKey !== newKey) {
-                delete this._settings.properties[oldKey];
+                delete settings.properties[oldKey];
             }
-            this._settings.properties[newKey] = value;
+            settings.properties[newKey] = value;
         }
-        await this._client.updateApplicationSettings(this._settings);
+
+        await this._client.updateApplicationSettings(settings);
     }
 
     public async deleteSettingItem(key: string): Promise<void> {
-        if (this._settings.properties) {
-            delete this._settings.properties[key];
+        const settings: StringDictionary = await this.ensureSettings();
+
+        if (settings.properties) {
+            delete settings.properties[key];
         }
-        await this._client.updateApplicationSettings(this._settings);
+
+        await this._client.updateApplicationSettings(settings);
     }
 
     public async createChild(_node: IAzureNode<AppSettingsTreeItem>, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
-        if (!this._settings) {
-            await this.loadMoreChildren();
-        }
+        const settings: StringDictionary = await this.ensureSettings();
 
         const newKey: string = await ext.ui.showInputBox({
             prompt: 'Enter new setting key',
-            validateInput: (v?: string): string | undefined => this.validateNewKeyInput(v)
+            validateInput: (v?: string): string | undefined => this.validateNewKeyInput(settings, v)
         });
 
         const newValue: string = await ext.ui.showInputBox({
             prompt: `Enter setting value for "${newKey}"`
         });
 
-        if (!this._settings.properties) {
-            this._settings.properties = {};
+        if (!settings.properties) {
+            settings.properties = {};
         }
 
         showCreatingNode(newKey);
-        this._settings.properties[newKey] = newValue;
-        await this._client.updateApplicationSettings(this._settings);
+        settings.properties[newKey] = newValue;
+        await this._client.updateApplicationSettings(settings);
         return new AppSettingTreeItem(newKey, newValue);
     }
 
-    public validateNewKeyInput(newKey?: string, oldKey?: string): string | undefined {
+    public validateNewKeyInput(settings: StringDictionary, newKey?: string, oldKey?: string): string | undefined {
         newKey = newKey ? newKey.trim() : '';
         oldKey = oldKey ? oldKey.trim().toLowerCase() : oldKey;
         if (newKey.length === 0) {
             return 'Key must have at least one non-whitespace character.';
         }
-        if (this._settings.properties && newKey.toLowerCase() !== oldKey) {
-            for (const key of Object.keys(this._settings.properties)) {
+        if (settings.properties && newKey.toLowerCase() !== oldKey) {
+            for (const key of Object.keys(settings.properties)) {
                 if (key.toLowerCase() === newKey.toLowerCase()) {
                     return `Setting "${newKey}" already exists.`;
                 }
@@ -103,5 +109,13 @@ export class AppSettingsTreeItem implements IAzureParentTreeItem {
         }
 
         return undefined;
+    }
+
+    public async ensureSettings(): Promise<StringDictionary> {
+        if (!this._settings) {
+            await this.loadMoreChildren();
+        }
+
+        return <StringDictionary>this._settings;
     }
 }

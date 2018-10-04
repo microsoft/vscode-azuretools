@@ -5,13 +5,14 @@
 
 // tslint:disable-next-line:no-require-imports
 import StorageManagementClient = require('azure-arm-storage');
-import { StorageAccountListKeysResult } from 'azure-arm-storage/lib/models';
+import { StorageAccount, StorageAccountListKeysResult } from 'azure-arm-storage/lib/models';
 import { WebSiteManagementClient } from 'azure-arm-website';
 import { SiteConfig } from 'azure-arm-website/lib/models';
 import { MessageItem, ProgressLocation, window } from 'vscode';
 import { addExtensionUserAgent, AzureWizardExecuteStep } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
+import { nonNullProp, nonNullValue, nonNullValueAndProp } from '../utils/nonNull';
 import { randomUtils } from '../utils/randomUtils';
 import { AppKind, getAppKindDisplayName, getSiteModelKind, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
@@ -21,6 +22,7 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
 
     public constructor(functionAppSettings: { [key: string]: string } | undefined) {
         super();
+        // tslint:disable-next-line:strict-boolean-expressions
         this._functionAppSettings = functionAppSettings || {};
     }
 
@@ -31,10 +33,10 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
                 ext.outputChannel.appendLine(creatingNewApp);
                 const client: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId, wizardContext.environment.resourceManagerEndpointUrl);
                 addExtensionUserAgent(client);
-                wizardContext.site = await client.webApps.createOrUpdate(wizardContext.resourceGroup.name, wizardContext.newSiteName, {
+                wizardContext.site = await client.webApps.createOrUpdate(nonNullValueAndProp(wizardContext.resourceGroup, 'name'), nonNullProp(wizardContext, 'newSiteName'), {
                     name: wizardContext.newSiteName,
-                    kind: getSiteModelKind(wizardContext.newSiteKind, wizardContext.newSiteOS),
-                    location: wizardContext.location.name,
+                    kind: getSiteModelKind(wizardContext.newSiteKind, nonNullProp(wizardContext, 'newSiteOS')),
+                    location: nonNullValueAndProp(wizardContext.location, 'name'),
                     serverFarmId: wizardContext.plan ? wizardContext.plan.id : undefined,
                     clientAffinityEnabled: wizardContext.newSiteKind === AppKind.app,
                     siteConfig: await this.getNewSiteConfig(wizardContext),
@@ -68,10 +70,11 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
             const storageClient: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscriptionId, wizardContext.environment.resourceManagerEndpointUrl);
             addExtensionUserAgent(storageClient);
 
-            const [, storageResourceGroup] = wizardContext.storageAccount.id.match(/\/resourceGroups\/([^/]+)\//);
-            const keysResult: StorageAccountListKeysResult = await storageClient.storageAccounts.listKeys(storageResourceGroup, wizardContext.storageAccount.name);
+            const storageAccount: StorageAccount = nonNullProp(wizardContext, 'storageAccount');
+            const [, storageResourceGroup] = nonNullValue(nonNullProp(storageAccount, 'id').match(/\/resourceGroups\/([^/]+)\//), 'Invalid storage account id');
+            const keysResult: StorageAccountListKeysResult = await storageClient.storageAccounts.listKeys(storageResourceGroup, nonNullProp(storageAccount, 'name'));
 
-            let fileShareName: string = wizardContext.newSiteName.toLocaleLowerCase() + '-content'.slice(0, maxFileShareNameLength);
+            let fileShareName: string = nonNullProp(wizardContext, 'newSiteName').toLocaleLowerCase() + '-content'.slice(0, maxFileShareNameLength);
             if (!wizardContext.newStorageAccountName) {
                 const randomLetters: number = 4;
                 fileShareName = `${fileShareName.slice(0, maxFileShareNameLength - randomLetters - 1)}-${randomUtils.getRandomHexString(randomLetters)}`;
@@ -79,7 +82,7 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
 
             let storageConnectionString: string = '';
             if (keysResult.keys && keysResult.keys[0].value) {
-                storageConnectionString = `DefaultEndpointsProtocol=https;AccountName=${wizardContext.storageAccount.name};AccountKey=${keysResult.keys[0].value}`;
+                storageConnectionString = `DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${keysResult.keys[0].value}`;
             }
 
             newSiteConfig.appSettings = [

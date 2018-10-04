@@ -5,7 +5,6 @@
 
 import { StringDictionary } from 'azure-arm-website/lib/models';
 import * as azureStorage from "azure-storage";
-import { ArgumentError } from '../errors';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
@@ -23,13 +22,11 @@ export async function deployToStorageAccount(client: SiteClient, zipFilePath: st
     ext.outputChannel.appendLine(formatDeployLog(client, localize('creatingBlob', 'Uploading zip package to storage container...')));
     const blobUrl: string = await createBlobFromZip(blobService, zipFilePath, blobName);
     const appSettings: StringDictionary = await client.listApplicationSettings();
-    if (appSettings.properties) {
-        // They recently renamed 'ZIP' to 'PACKAGE'. However, they said 'ZIP' would be supported indefinitely, so we will use that until we're confident the 'PACKAGE' change has fully rolled out
-        const WEBSITE_RUN_FROM_PACKAGE: string = 'WEBSITE_RUN_FROM_ZIP';
-        appSettings.properties[WEBSITE_RUN_FROM_PACKAGE] = blobUrl;
-    } else {
-        throw new ArgumentError(appSettings);
-    }
+    // tslint:disable-next-line:strict-boolean-expressions
+    appSettings.properties = appSettings.properties || {};
+    // They recently renamed 'ZIP' to 'PACKAGE'. However, they said 'ZIP' would be supported indefinitely, so we will use that until we're confident the 'PACKAGE' change has fully rolled out
+    const WEBSITE_RUN_FROM_PACKAGE: string = 'WEBSITE_RUN_FROM_ZIP';
+    appSettings.properties[WEBSITE_RUN_FROM_PACKAGE] = blobUrl;
     await client.updateApplicationSettings(appSettings);
     ext.outputChannel.appendLine(formatDeployLog(client, localize('syncingTriggers', 'Syncing triggers...')));
     await client.syncFunctionTriggers();

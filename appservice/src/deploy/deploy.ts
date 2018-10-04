@@ -18,20 +18,20 @@ import { localGitDeploy } from './localGitDeploy';
 export async function deploy(client: SiteClient, fsPath: string, configurationSectionName: string, telemetryProperties?: TelemetryProperties): Promise<void> {
     const config: SiteConfigResource = await client.getSiteConfig();
     // We use the AppServicePlan in a few places, but we don't want to delay deployment, so start the promise now and save as a const
-    const aspPromise: Promise<AppServicePlan> = client.getAppServicePlan();
+    const aspPromise: Promise<AppServicePlan | undefined> = client.getAppServicePlan();
     if (telemetryProperties) {
         try {
             telemetryProperties.sourceHash = randomUtils.getPseudononymousStringHash(fsPath);
             telemetryProperties.destHash = randomUtils.getPseudononymousStringHash(client.fullName);
-            telemetryProperties.scmType = config.scmType;
+            telemetryProperties.scmType = String(config.scmType);
             telemetryProperties.isSlot = client.isSlot ? 'true' : 'false';
             telemetryProperties.alwaysOn = config.alwaysOn ? 'true' : 'false';
-            telemetryProperties.linuxFxVersion = config.linuxFxVersion;
-            telemetryProperties.nodeVersion = config.nodeVersion;
-            telemetryProperties.pythonVersion = config.pythonVersion;
+            telemetryProperties.linuxFxVersion = String(config.linuxFxVersion);
+            telemetryProperties.nodeVersion = String(config.nodeVersion);
+            telemetryProperties.pythonVersion = String(config.pythonVersion);
             telemetryProperties.hasCors = config.cors ? 'true' : 'false';
             telemetryProperties.hasIpSecurityRestrictions = config.ipSecurityRestrictions && config.ipSecurityRestrictions.length > 0 ? 'true' : 'false';
-            telemetryProperties.javaVersion = config.javaVersion;
+            telemetryProperties.javaVersion = String(config.javaVersion);
             client.getState().then(
                 (state: string) => {
                     telemetryProperties.state = state;
@@ -40,11 +40,13 @@ export async function deploy(client: SiteClient, fsPath: string, configurationSe
                     // ignore
                 });
             aspPromise.then(
-                (plan: AppServicePlan) => {
-                    telemetryProperties.planStatus = plan.status;
-                    telemetryProperties.planKind = plan.kind;
-                    if (plan.sku) {
-                        telemetryProperties.planSize = plan.sku.size;
+                (plan: AppServicePlan | undefined) => {
+                    if (plan) {
+                        telemetryProperties.planStatus = String(plan.status);
+                        telemetryProperties.planKind = String(plan.kind);
+                        if (plan.sku) {
+                            telemetryProperties.planSize = String(plan.sku.size);
+                        }
                     }
                 },
                 () => {
