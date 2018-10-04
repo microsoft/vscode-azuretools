@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// tslint:disable:typedef
-// tslint:disable:max-func-body-length
-
-/**
- * Sanity tests for an extension's package.json manifest file
- */
+export interface IPackageLintOptions {
+    /**
+     * Commands which are registered by the extension but should not appear in package.json
+     */
+    commandsRegisteredButNotInPackage?: string[];
+}
 
 import * as assert from 'assert';
 import { IPackageLintOptions } from '../..';
@@ -19,6 +19,7 @@ interface IMenu {
     group?: string;
 }
 
+// tslint:disable:typedef
 interface IPackage {
     name?: string;
     activationEvents?: string[];
@@ -44,41 +45,51 @@ interface IPackage {
         };
     };
 }
+// tslint:enable:typedef
 
 function emptyIfUndefined<T extends {}>(value: T | undefined): T {
     // tslint:disable-next-line:strict-boolean-expressions
     return value || <T>{};
 }
 
+/**
+ * Sets up test suites against an extension package.json file (run this at global level or inside a suite, not inside a test)
+ *
+ * @param packageJson The extension's package.json contents as an object
+ */
+// tslint:disable:max-func-body-length
 export function addPackageLintSuites(
     getExtensionContext: () => {},
     getCommands: () => Promise<string[]>,
     packageJsonAsObject: {},
-    options: IPackageLintOptions = {}
+    options: IPackageLintOptions
 ): void {
     const packageJson: IPackage = <IPackage>packageJsonAsObject;
 
     //tslint:disable-next-line:strict-boolean-expressions
-    const commandsRegisteredButNotInPackage = options.commandsRegisteredButNotInPackage || [];
+    const commandsRegisteredButNotInPackage: string[] = options.commandsRegisteredButNotInPackage || [];
 
     let _registeredCommands: string[] | undefined;
     async function getRegisteredCommands(): Promise<string[]> {
         if (!_registeredCommands) {
             // We must wait to call these until the tests are actually run, because suite() runs too early for extension activation
             assert(!!<{} | undefined>getExtensionContext(), 'The extension must be activated before any tests are run, otherwise its commands won\'t have been registered yet');
-            const registeredCommands = await getCommands();
+            const registeredCommands: string[] = await getCommands();
 
             // Remove predefined IDs
-            const predefinedCommandIds = getPredefinedCommandIdsForExtension();
-            _registeredCommands = registeredCommands.filter(cmdId => !predefinedCommandIds.some(c => c === cmdId));
+            const predefinedCommandIds: string[] = getPredefinedCommandIdsForExtension();
+            _registeredCommands = registeredCommands.filter((cmdId: string) => !predefinedCommandIds.some((c: string) => c === cmdId));
         }
 
         return _registeredCommands;
     }
 
     const activationEvents: string[] = emptyIfUndefined(packageJson.activationEvents);
+    // tslint:disable-next-line:typedef
     const contributes = emptyIfUndefined(packageJson.contributes);
+    // tslint:disable-next-line:typedef
     const views = emptyIfUndefined(contributes.views);
+    // tslint:disable-next-line:typedef
     const commands = emptyIfUndefined(contributes.commands);
 
     // All commands should start with the same prefix - get prefix from first command
@@ -92,6 +103,7 @@ export function addPackageLintSuites(
         const predefinedIds: string[] = [];
 
         for (const viewContainerName of Object.keys(views)) {
+            // tslint:disable-next-line:typedef
             const viewContainer = views[viewContainerName];
             for (const view of viewContainer) {
                 // vscode automatic creates focus commands for each view
@@ -104,11 +116,12 @@ export function addPackageLintSuites(
 
     suite('Activation events for views', async () => {
         for (const viewContainerName of Object.keys(views)) {
+            // tslint:disable-next-line:typedef
             const viewContainer = views[viewContainerName];
             for (const view of viewContainer) {
-                const activationEvent = `onView:${view.id}`;
+                const activationEvent: string = `onView:${view.id}`;
                 test(view.id, () => {
-                    assert(activationEvents.some(evt => evt === activationEvent), `Couldn't find activation event ${activationEvent}`);
+                    assert(activationEvents.some((evt: string) => evt === activationEvent), `Couldn't find activation event ${activationEvent}`);
                 });
             }
         }
@@ -116,26 +129,27 @@ export function addPackageLintSuites(
 
     suite('Activation events for commands in package.json', async () => {
         for (const cmd of commands) {
-            const cmdId = cmd.command;
-            const activationEvent = `onCommand:${cmdId}`;
+            const cmdId: string = cmd.command;
+            const activationEvent: string = `onCommand:${cmdId}`;
 
             test(cmdId, async () => {
                 verifyStartsWithExtensionPrefix(cmdId);
 
-                const registeredCommands = await getRegisteredCommands();
-                assert(registeredCommands.some(c => c === cmdId), `${cmdId} is in package.json but wasn't registered with vscode`);
-                assert(activationEvents.some(evt => evt === activationEvent), `Couldn't find activation event for command ${cmdId}`);
+                const registeredCommands: string[] = await getRegisteredCommands();
+                assert(registeredCommands.some((c: string) => c === cmdId), `${cmdId} is in package.json but wasn't registered with vscode`);
+                assert(activationEvents.some((evt: string) => evt === activationEvent), `Couldn't find activation event for command ${cmdId}`);
             });
         }
 
         for (const event of activationEvents) {
-            const onCommand = 'onCommand:';
+            const onCommand: string = 'onCommand:';
             if (event.startsWith('onCommand')) {
-                const cmdId = event.substr(onCommand.length);
+                const cmdId: string = event.substr(onCommand.length);
 
                 test(event, async () => {
-                    const registeredCommands = await getRegisteredCommands();
-                    assert(registeredCommands.some(c => c === cmdId), `${event} is in package.json but ${cmdId} wasn't registered with vscode`);
+                    const registeredCommands: string[] = await getRegisteredCommands();
+                    assert(registeredCommands.some((c: string) => c === cmdId), `${event} is in package.json but ${cmdId} wasn't registered with vscode`);
+                    // tslint:disable-next-line:typedef
                     assert(commands.some(cmd => cmd.command === cmdId), `${event} is in package.json but ${cmdId} wasn't a command in package.json`);
                 });
             }
@@ -143,19 +157,20 @@ export function addPackageLintSuites(
     });
 
     test('Activation events for commands registered with vscode', async () => {
-        const registeredCommands = await getRegisteredCommands();
+        const registeredCommands: string[] = await getRegisteredCommands();
         for (const cmd of registeredCommands) {
-            const cmdId = cmd;
-            const activationEvent = `onCommand:${cmdId}`;
+            const cmdId: string = cmd;
+            const activationEvent: string = `onCommand:${cmdId}`;
 
             if (cmdId.startsWith(extensionPrefixWithPeriod)) {
-                const isInPackage = commands.some(c => c.command === cmdId);
-                if (commandsRegisteredButNotInPackage.some(c => c === cmdId)) {
+                // tslint:disable-next-line:typedef
+                const isInPackage: boolean = commands.some(c => c.command === cmdId);
+                if (commandsRegisteredButNotInPackage.some((c: string) => c === cmdId)) {
                     assert(!isInPackage, `${cmdId} is in commandsRegisteredButNotInPackage but was found in package.json`);
-                    assert(!activationEvents.some(evt => evt === activationEvent), `${cmdId} is in commandsRegisteredButNotInPackage but has an activation event`);
+                    assert(!activationEvents.some((evt: string) => evt === activationEvent), `${cmdId} is in commandsRegisteredButNotInPackage but has an activation event`);
                 } else {
                     assert(isInPackage, `${cmdId} was registered as a command during extension activation but is not in package.json`);
-                    assert(activationEvents.some(evt => evt === activationEvent), `Couldn't find activation event for registered command ${cmdId}`);
+                    assert(activationEvents.some((evt: string) => evt === activationEvent), `Couldn't find activation event for registered command ${cmdId}`);
                 }
             }
         }
