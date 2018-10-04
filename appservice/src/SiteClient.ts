@@ -5,7 +5,7 @@
 
 import { WebSiteManagementClient } from 'azure-arm-website';
 import { AppServicePlan, FunctionEnvelopeCollection, FunctionSecrets, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SourceControlCollection, StringDictionary, User, WebAppInstanceCollection } from 'azure-arm-website/lib/models';
-import { addExtensionUserAgent, IAzureNode, parseError } from 'vscode-azureextensionui';
+import { createAzureClient, ISubscriptionRoot, parseError } from 'vscode-azureextensionui';
 import { FunctionEnvelope } from 'vscode-azurekudu/lib/models';
 import { nonNullProp, nonNullValue } from './utils/nonNull';
 
@@ -42,9 +42,9 @@ export class SiteClient {
     public readonly kuduUrl: string | undefined;
     public readonly gitUrl: string | undefined;
 
-    private readonly _node: IAzureNode;
+    private readonly _subscription: ISubscriptionRoot;
 
-    constructor(site: Site, node: IAzureNode) {
+    constructor(site: Site, subscription: ISubscriptionRoot) {
         let matches: RegExpMatchArray | null = nonNullProp(site, 'serverFarmId').match(/\/subscriptions\/(.*)\/resourceGroups\/(.*)\/providers\/Microsoft.Web\/serverfarms\/(.*)/);
         matches = nonNullValue(matches, 'Invalid serverFarmId.');
 
@@ -72,13 +72,11 @@ export class SiteClient {
             this.gitUrl = `${this.kuduHostName}:443/${site.repositorySiteName}.git`;
         }
 
-        this._node = node;
+        this._subscription = subscription;
     }
 
     private get _client(): WebSiteManagementClient {
-        const client: WebSiteManagementClient = new WebSiteManagementClient(this._node.credentials, this._node.subscriptionId, this._node.environment.resourceManagerEndpointUrl);
-        addExtensionUserAgent(client);
-        return client;
+        return createAzureClient(this._subscription, WebSiteManagementClient);
     }
 
     public async stop(): Promise<void> {

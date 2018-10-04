@@ -13,7 +13,7 @@ import { localize } from '../localize';
 import { IAzureParentTreeItemInternal, IAzureTreeDataProviderInternal } from "./InternalInterfaces";
 import { loadingIconPath } from "./treeConstants";
 
-export abstract class AzureTreeItem<T = ISubscriptionRoot> implements types.AzureTreeItem<T> {
+export abstract class AzureTreeItem<TRoot = ISubscriptionRoot> implements types.AzureTreeItem<TRoot> {
     //#region Properties implemented by base class
     public abstract label: string;
     public abstract contextValue: string;
@@ -23,10 +23,10 @@ export abstract class AzureTreeItem<T = ISubscriptionRoot> implements types.Azur
     public iconPath?: string | Uri | { light: string | Uri; dark: string | Uri };
     //#endregion
 
-    public readonly parent: IAzureParentTreeItemInternal<T> | undefined;
+    public readonly parent: IAzureParentTreeItemInternal<TRoot> | undefined;
     private _temporaryDescription?: string;
 
-    public constructor(parent: IAzureParentTreeItemInternal<T> | undefined) {
+    public constructor(parent: IAzureParentTreeItemInternal<TRoot> | undefined) {
         this.parent = parent;
     }
 
@@ -57,7 +57,7 @@ export abstract class AzureTreeItem<T = ISubscriptionRoot> implements types.Azur
 
     }
 
-    public get root(): T {
+    public get root(): TRoot {
         if (this.parent) {
             return this.parent.root;
         } else {
@@ -65,7 +65,7 @@ export abstract class AzureTreeItem<T = ISubscriptionRoot> implements types.Azur
         }
     }
 
-    public get treeDataProvider(): IAzureTreeDataProviderInternal<T> {
+    public get treeDataProvider(): IAzureTreeDataProviderInternal<TRoot> {
         if (this.parent) {
             return this.parent.treeDataProvider;
         } else {

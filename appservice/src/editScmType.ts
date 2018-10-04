@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { SiteConfigResource } from 'azure-arm-website/lib/models';
-import { IAzureNode, IAzureQuickPickItem, IAzureQuickPickOptions, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureTreeItem, IAzureQuickPickItem, IAzureQuickPickOptions, UserCancelledError } from 'vscode-azureextensionui';
 import { connectToGitHub } from './connectToGitHub';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
@@ -12,7 +12,7 @@ import { ScmType } from './ScmType';
 import { SiteClient } from './SiteClient';
 import { nonNullProp } from './utils/nonNull';
 
-export async function editScmType(client: SiteClient, node: IAzureNode): Promise<string | undefined> {
+export async function editScmType(client: SiteClient, node: AzureTreeItem): Promise<string | undefined> {
     const config: SiteConfigResource = await client.getSiteConfig();
     const newScmType: string = await showScmPrompt(nonNullProp(config, 'scmType'));
     if (newScmType === ScmType.GitHub) {

@@ -3,19 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IGenericTreeItem, ISubscriptionRoot } from '../../index';
+import { IGenericTreeItemOptions, ISubscriptionRoot } from '../../index';
 import * as types from '../../index';
 import { AzureTreeItem } from './AzureTreeItem';
 import { IAzureParentTreeItemInternal } from "./InternalInterfaces";
 
-export class GenericTreeItem<T = ISubscriptionRoot> extends AzureTreeItem<T> implements types.GenericTreeItem<T> {
+export class GenericTreeItem<TRoot = ISubscriptionRoot> extends AzureTreeItem<TRoot> implements types.GenericTreeItem<TRoot> {
     public label: string;
     public contextValue: string;
-    constructor(parent: IAzureParentTreeItemInternal<T> | undefined, treeItem: IGenericTreeItem) {
+    constructor(parent: IAzureParentTreeItemInternal<TRoot> | undefined, options: IGenericTreeItemOptions) {
         super(parent);
-        this.label = treeItem.label;
-        this.contextValue = treeItem.contextValue;
-        this.id = treeItem.id;
-        this.commandId = treeItem.commandId;
+        this.label = options.label;
+        this.contextValue = options.contextValue;
+        this.id = options.id;
+        this.commandId = options.commandId;
+        this.iconPath = options.iconPath;
+        this.description = options.description;
     }
 }
