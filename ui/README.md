@@ -1,30 +1,30 @@
 # VSCode Azure SDK for Node.js - UI Tools (Preview)
 
 This package provides common Azure UI elements for VS Code extensions:
-* [AzureActionHandler](#azure-action-handler): Displays error messages and optionally adds telemetry to commands/events.
+* [Telemetry and Error Handling](#telemetry-and-error-handling): Displays error messages and adds telemetry to commands/events.
 * [AzureTreeDataProvider](#azure-tree-data-provider): Displays an Azure Explorer with Azure Subscriptions and child nodes of your implementation.
 * [AzureBaseEditor](#azure-base-editor): Displays a text editor with upload support to Azure.
 
-> NOTE: This package throws a `UserCancelledError` if the user cancels an operation. If you do not use the AzureActionHandler, you must handle this exception in your extension.
+> NOTE: This package throws a `UserCancelledError` if the user cancels an operation. If you do not use `registerCommand`, you must handle this exception in your extension.
 
-## Azure Action Handler
+## Telemetry and Error Handling
 
-Use the Azure Action Handler to consistently display error messages and track commands with telemetry. You should construct the handler and register commands/events in your extension's `activate()` method. The simplest example is to register a command (in this case, refreshing a node):
+Use `registerCommand`, `registerEvent`, or ` callWithTelemetryAndErrorHandling` to consistently display error messages and track commands with telemetry. You must call `registerUIExtensionVariables` first in your extension's `activate()` method. The simplest example is to register a command (in this case, refreshing a node):
 ```typescript
-const actionHandler: AzureActionHandler = new AzureActionHandler(context, outputChannel, reporter);
-actionHandler.registerCommand('yourExtension.Refresh', (node: IAzureNode) => { node.refresh(); });
+registerUIExtensionVariables(...);
+registerCommand('yourExtension.Refresh', (node: AzureTreeItem) => { node.refresh(); });
 ```
 Here are a few of the benefits this provides:
 * Parses Azure errors of the form `{ "Code": "Conflict", "Message": "This is the actual message" }` and only displays the 'Message' property
 * Displays single line errors normally and multi-line errors in the output window
-* If you pass a TelemetryReporter, tracks multiple properties in addition to the [common extension properties](https://github.com/Microsoft/vscode-extension-telemetry#common-properties):
+* Tracks multiple properties in addition to the [common extension properties](https://github.com/Microsoft/vscode-extension-telemetry#common-properties):
   * result (Succeeded, Failed, or Canceled)
   * duration
   * error
 
 If you want to add custom telemetry proprties, use the action's context and add your own properties or measurements:
 ```typescript
-actionHandler.registerCommand('yourExtension.Refresh', function (this: IActionContext): void {
+registerCommand('yourExtension.Refresh', function (this: IActionContext): void {
     this.properties.customProp = "example prop";
     this.measurements.customMeas = 49;
 });
@@ -32,7 +32,7 @@ actionHandler.registerCommand('yourExtension.Refresh', function (this: IActionCo
 
 Finally, you can also register events. By default, every event is tracked in telemetry. It is *highly recommended* to leverage the IActionContext.suppressTelemetry parameter to filter only the events that apply to your extension. For example, if your extension only handles `json` files in the `onDidSaveTextDocument`, it might look like this:
 ```typescript
-actionHandler.registerEvent('yourExtension.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, async function (this: IActionContext, doc: vscode.TextDocument): Promise<void> {
+registerEvent('yourExtension.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, async function (this: IActionContext, doc: vscode.TextDocument): Promise<void> {
     this.suppressTelemetry = true;
     if (doc.fileExtension === 'json') {
         this.suppressTelemetry = false;
