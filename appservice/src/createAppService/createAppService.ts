@@ -5,8 +5,11 @@
 
 import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { Site, SkuDescription } from 'azure-arm-website/lib/models';
+import { Progress, ProgressLocation, window } from 'vscode';
 import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, ISubscriptionWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountListStep, StorageAccountPerformance, StorageAccountReplication } from 'vscode-azureextensionui';
+import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
+import { getAppKindDisplayName } from './AppKind';
 import { AppKind, WebsiteOS } from './AppKind';
 import { AppServicePlanCreateStep } from './AppServicePlanCreateStep';
 import { AppServicePlanListStep } from './AppServicePlanListStep';
@@ -110,7 +113,11 @@ export async function createAppService(
         // Free tier is only available for Windows
         wizardContext.newPlanSku = wizardContext.newSiteOS === WebsiteOS.windows ? freePlanSku : basicPlanSku;
     }
-    wizardContext = await wizard.execute(actionContext);
+    const creatingNewApp: string = localize('CreatingNewApp', 'Creating {0} "{1}"...', getAppKindDisplayName(wizardContext.newSiteKind), wizardContext.newSiteName);
+    await window.withProgress({location: ProgressLocation.Notification, title: creatingNewApp},  async (progress: Progress<{message: string}>) => {
+        wizardContext.progress = progress;
+        wizardContext = await wizard.execute(actionContext);
+    });
 
     return nonNullProp(wizardContext, 'site');
 }

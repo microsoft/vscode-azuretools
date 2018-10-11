@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ResourceManagementClient } from 'azure-arm-resource';
-import { ProgressLocation, window } from 'vscode';
 import { IResourceGroupWizardContext } from '../../index';
 import { createAzureClient } from '../createAzureClient';
 import { ext } from '../extensionVariables';
@@ -19,14 +18,13 @@ export class ResourceGroupCreateStep<T extends IResourceGroupWizardContext> exte
             // tslint:disable-next-line:no-non-null-assertion
             const newLocation: string = wizardContext.location!.name!;
             const findingResourceGroup: string = localize('creatingResourceGroup', 'Ensuring resource group "{0}" in location "{1} exists"...', newName, newLocation);
-            await window.withProgress({ location: ProgressLocation.Notification, title: findingResourceGroup }, async (): Promise<void> => {
-                ext.outputChannel.appendLine(findingResourceGroup);
-                const resourceClient: ResourceManagementClient = createAzureClient(wizardContext, ResourceManagementClient);
-                wizardContext.resourceGroup = await resourceClient.resourceGroups.createOrUpdate(newName, { location: newLocation });
-                const foundResourceGroup: string = localize('createdResourceGroup', 'Successfully found resource group "{0}".', newName);
-                window.showInformationMessage(foundResourceGroup);
-                ext.outputChannel.appendLine(foundResourceGroup);
-            });
+            if (wizardContext.progress) {  wizardContext.progress.report({message: findingResourceGroup}); }
+            ext.outputChannel.appendLine(findingResourceGroup);
+            const resourceClient: ResourceManagementClient = createAzureClient(wizardContext, ResourceManagementClient);
+            wizardContext.resourceGroup = await resourceClient.resourceGroups.createOrUpdate(newName, { location: newLocation });
+            const foundResourceGroup: string = localize('createdResourceGroup', 'Successfully found resource group "{0}".', newName);
+            if (wizardContext.progress) {  wizardContext.progress.report({message: foundResourceGroup}); }
+            ext.outputChannel.appendLine(foundResourceGroup);
         }
 
         return wizardContext;

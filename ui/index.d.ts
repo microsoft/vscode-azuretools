@@ -8,7 +8,7 @@ import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { StorageAccount } from 'azure-arm-storage/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment, AzureServiceClientOptions } from 'ms-rest-azure';
-import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri, EventEmitter } from 'vscode';
+import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri, EventEmitter, Progress } from 'vscode';
 
 export type OpenInPortalOptions = {
     /**
@@ -664,6 +664,7 @@ export interface IResourceGroupWizardContext extends ILocationWizardContext, IRe
     resourceGroupsTask?: Promise<ResourceGroup[]>;
 
     newResourceGroupName?: string;
+    progress?: Progress<{message: string}>;
 }
 
 export declare const resourceGroupNamingRules: IAzureNamingRules;

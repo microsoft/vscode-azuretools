@@ -8,7 +8,7 @@ import StorageManagementClient = require('azure-arm-storage');
 import { StorageAccount, StorageAccountListKeysResult } from 'azure-arm-storage/lib/models';
 import { WebSiteManagementClient } from 'azure-arm-website';
 import { SiteConfig } from 'azure-arm-website/lib/models';
-import { MessageItem, ProgressLocation, window } from 'vscode';
+import { MessageItem, window } from 'vscode';
 import { addExtensionUserAgent, AzureWizardExecuteStep } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -29,11 +29,11 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
     public async execute(wizardContext: IAppServiceWizardContext): Promise<IAppServiceWizardContext> {
         if (!wizardContext.site) {
             const creatingNewApp: string = localize('CreatingNewApp', 'Creating {0} "{1}"...', getAppKindDisplayName(wizardContext.newSiteKind), wizardContext.newSiteName);
-            await window.withProgress({ location: ProgressLocation.Notification, title: creatingNewApp }, async (): Promise<void> => {
-                ext.outputChannel.appendLine(creatingNewApp);
-                const client: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId, wizardContext.environment.resourceManagerEndpointUrl);
-                addExtensionUserAgent(client);
-                wizardContext.site = await client.webApps.createOrUpdate(nonNullValueAndProp(wizardContext.resourceGroup, 'name'), nonNullProp(wizardContext, 'newSiteName'), {
+            if (wizardContext.progress) { wizardContext.progress.report({message: creatingNewApp}); }
+            ext.outputChannel.appendLine(creatingNewApp);
+            const client: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId, wizardContext.environment.resourceManagerEndpointUrl);
+            addExtensionUserAgent(client);
+            wizardContext.site = await client.webApps.createOrUpdate(nonNullValueAndProp(wizardContext.resourceGroup, 'name'), nonNullProp(wizardContext, 'newSiteName'), {
                     name: wizardContext.newSiteName,
                     kind: getSiteModelKind(wizardContext.newSiteKind, nonNullProp(wizardContext, 'newSiteOS')),
                     location: nonNullValueAndProp(wizardContext.location, 'name'),
@@ -42,20 +42,19 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
                     siteConfig: await this.getNewSiteConfig(wizardContext),
                     reserved: wizardContext.newSiteOS === WebsiteOS.linux  // The secret property - must be set to true to make it a Linux plan. Confirmed by the team who owns this API.
                 });
-                const createdNewApp: string = localize('CreatedNewApp', 'Created new {0} "{1}": {2}', getAppKindDisplayName(wizardContext.newSiteKind), wizardContext.site.name, `https://${wizardContext.site.defaultHostName}`);
-                ext.outputChannel.appendLine(createdNewApp);
-                ext.outputChannel.appendLine('');
-                const viewOutput: MessageItem = {
+            const createdNewApp: string = localize('CreatedNewApp', 'Created new {0} "{1}": {2}', getAppKindDisplayName(wizardContext.newSiteKind), wizardContext.site.name, `https://${wizardContext.site.defaultHostName}`);
+            ext.outputChannel.appendLine(createdNewApp);
+            ext.outputChannel.appendLine('');
+            const viewOutput: MessageItem = {
                     title: localize('viewOutput', 'View Output')
                 };
 
                 // Note: intentionally not waiting for the result of this before returning
-                window.showInformationMessage(createdNewApp, viewOutput).then((result: MessageItem | undefined) => {
+            window.showInformationMessage(createdNewApp, viewOutput).then((result: MessageItem | undefined) => {
                     if (result === viewOutput) {
                         ext.outputChannel.show();
                     }
                 });
-            });
         }
 
         return wizardContext;

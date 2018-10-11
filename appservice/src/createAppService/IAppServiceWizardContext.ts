@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AppServicePlan, Site, SkuDescription } from 'azure-arm-website/lib/models';
+import { Progress } from 'vscode';
 import { IResourceGroupWizardContext, IStorageAccountWizardContext } from 'vscode-azureextensionui';
 import { AppKind, WebsiteOS } from './AppKind';
 
@@ -58,4 +59,9 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
      * By specifying this in the context, we can ensure that Azure is only queried once for the entire wizard
      */
     plansTask?: Promise<AppServicePlan[]>;
+    /**
+     * Progress to report the status of the wizard. By leveraging progress.report,
+     * the information window can be reused rather than creating a new prompt per message.
+     */
+    progress?: Progress<{message: string}>;
 }
