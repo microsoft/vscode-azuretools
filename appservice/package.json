@@ -34,7 +34,7 @@
         "archiver": "^2.0.3",
         "azure-arm-resource": "^3.0.0-preview",
         "azure-arm-storage": "^3.1.0",
-        "azure-arm-website": "^4.0.0",
+        "azure-arm-website": "^5.3.0",
         "azure-storage": "^2.10.1",
         "fs-extra": "^4.0.2",
         "ms-rest": "^2.2.2",

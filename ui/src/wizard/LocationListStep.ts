@@ -37,7 +37,9 @@ export class LocationListStep<T extends ILocationWizardContext> extends AzureWiz
     }
 
     private async getQuickPicks(wizardContext: T): Promise<IAzureQuickPickItem<Location>[]> {
-        const locations: Location[] = await LocationListStep.getLocations(wizardContext);
+        let locations: Location[] = await LocationListStep.getLocations(wizardContext);
+        // tslint:disable-next-line:no-non-null-assertion
+        locations = locations.sort((l1: Location, l2: Location) => l1.displayName!.localeCompare(l2.displayName!));
         return locations.map((l: Location) => {
             return {
                 // tslint:disable-next-line:no-non-null-assertion
