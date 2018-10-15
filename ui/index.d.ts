@@ -70,14 +70,14 @@ export declare class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements
     public dispose(): void;
 
     /**
-	* Optional method to return the parent of `element`.
-    * Return `null` or `undefined` if `element` is a child of root.
-    *
-    * **NOTE:** This method should be implemented in order to access [reveal](#TreeView.reveal) API.
-    *
-	* @param element The element for which the parent has to be returned.
-	* @return Parent of `element`.
-	*/
+     * Optional method to return the parent of `element`.
+     * Return `null` or `undefined` if `element` is a child of root.
+     * 
+     * **NOTE:** This method should be implemented in order to access [reveal](#TreeView.reveal) API.
+     * 
+     * @param element The element for which the parent has to be returned.
+     * @return Parent of `element`.
+     */
     public getParent(treeItem: AzureTreeItem): Promise<AzureTreeItem | undefined>;
 }
 
