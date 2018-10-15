@@ -215,6 +215,10 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
         return undefined;
     }
 
+    public async getParent(element: AzureTreeItem): Promise<AzureTreeItem | undefined> {
+        return element.parent;
+    }
+
     private async promptForRootTreeItem(expectedContextValues: string | string[]): Promise<AzureTreeItem<TRoot | ISubscriptionRoot>> {
         let picks: IAzureQuickPickItem<AzureTreeItem<TRoot | ISubscriptionRoot> | string>[];
         const initialStatus: AzureLoginStatus = this._azureAccount.status;
