@@ -195,7 +195,7 @@ export interface IGenericTreeItemOptions {
 }
 
 /**
- * A convenience class used for very basic tree items
+ * A convenience class used for very basic tree items that are never displayed in the treeItemPicker
  */
 export declare class GenericTreeItem<TRoot = ISubscriptionRoot> extends AzureTreeItem<TRoot> {
     public label: string;
@@ -207,7 +207,7 @@ export declare class GenericTreeItem<TRoot = ISubscriptionRoot> extends AzureTre
  * Implement this if you are displaying custom root nodes in the tree other than SubscriptionTreeItems
  */
 export declare abstract class RootTreeItem<T> extends AzureParentTreeItem<T> {
-    public constructor(treeDataProvider: AzureTreeDataProvider<T>, root: T);
+    public constructor(root: T);
 }
 
 /**

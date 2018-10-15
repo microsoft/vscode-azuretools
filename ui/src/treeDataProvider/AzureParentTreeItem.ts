@@ -178,7 +178,7 @@ export abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> extends Azu
 
         if (this.hasMoreChildrenImpl()) {
             picks.push({
-                label: loadMoreLabel,
+                label: `$(sync) ${loadMoreLabel}`,
                 description: '',
                 data: async (): Promise<AzureTreeItem<TRoot>> => {
                     await this.loadMoreChildren();
