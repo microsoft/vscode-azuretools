@@ -20,4 +20,9 @@ export class GenericTreeItem<TRoot = ISubscriptionRoot> extends AzureTreeItem<TR
         this.iconPath = options.iconPath;
         this.description = options.description;
     }
+
+    public isAncestorOfImpl(): boolean {
+        // never display generic items in tree picker
+        return false;
+    }
 }
