@@ -121,6 +121,10 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
                     if (hasMoreChildren) {
                         result = result.concat(new GenericTreeItem(treeItem, {
                             label: loadMoreLabel,
+                            iconPath: {
+                                light: path.join(__filename, '..', '..', '..', '..', 'resources', 'light', 'refresh.svg'),
+                                dark: path.join(__filename, '..', '..', '..', '..', 'resources', 'dark', 'refresh.svg')
+                            },
                             contextValue: 'azureLoadMore',
                             commandId: thisTree._loadMoreCommandId
                         }));
