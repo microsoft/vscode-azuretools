@@ -37,14 +37,9 @@ export async function createAppService(
         subscriptionId: subscriptionContext.subscriptionId,
         subscriptionDisplayName: subscriptionContext.subscriptionDisplayName,
         credentials: subscriptionContext.credentials,
-        environment: subscriptionContext.environment
+        environment: subscriptionContext.environment,
+        newResourceGroupName: createOptions.resourceGroup
     };
-
-    if (createOptions.resourceGroup) {
-        // if a rg was passed in, use that as the default
-        wizardContext.newResourceGroupName = createOptions.resourceGroup;
-        executeSteps.push(new ResourceGroupCreateStep());
-    }
 
     promptSteps.push(new SiteNameStep());
     switch (appKind) {
