@@ -12,7 +12,8 @@ import { ITelemetryReporter } from '../index';
 import { extInitialized } from './extensionVariables';
 import { getPackageInfo } from './getPackageInfo';
 
-const debugTelemetryEnabled: boolean = (process.env.DEBUGTELEMETRY || '') === 'true' || parseInt(process.env.DEBUGTELEMETRY || '', 10) > 0;
+// tslint:disable-next-line:strict-boolean-expressions
+const debugTelemetryEnabled: boolean = !/^(false|0)?$/i.test(process.env.DEBUGTELEMETRY || '');
 
 class DebugReporter implements ITelemetryReporter {
     constructor(private _extensionName: string, private _extensionVersion: string) {
