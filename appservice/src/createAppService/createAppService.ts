@@ -86,7 +86,7 @@ export async function createAppService(
             }
         default:
     }
-    executeSteps.push(new SiteCreateStep(createOptions.functionAppSettings));
+    executeSteps.push(new SiteCreateStep(createOptions.createFunctionAppSettings));
     const wizard: AzureWizard<IAppServiceWizardContext> = new AzureWizard(promptSteps, executeSteps, wizardContext);
 
     // Overwrite the generic 'locationsTask' with a list of locations specific to provider "Microsoft.Web"
