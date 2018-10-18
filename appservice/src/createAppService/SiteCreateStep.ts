@@ -7,23 +7,23 @@
 import StorageManagementClient = require('azure-arm-storage');
 import { StorageAccount, StorageAccountListKeysResult } from 'azure-arm-storage/lib/models';
 import { WebSiteManagementClient } from 'azure-arm-website';
-import { SiteConfig } from 'azure-arm-website/lib/models';
+import { NameValuePair, SiteConfig } from 'azure-arm-website/lib/models';
 import { MessageItem, ProgressLocation, window } from 'vscode';
-import { addExtensionUserAgent, AzureWizardExecuteStep } from 'vscode-azureextensionui';
+import { addExtensionUserAgent, AzureWizardExecuteStep, createAzureClient } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { nonNullProp, nonNullValue, nonNullValueAndProp } from '../utils/nonNull';
 import { randomUtils } from '../utils/randomUtils';
 import { AppKind, getAppKindDisplayName, getSiteModelKind, WebsiteOS } from './AppKind';
+import { IAppSettingsContext } from './IAppCreateOptions';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
-    private _functionAppSettings: { [key: string]: string };
+    private createFunctionAppSettings: ((context: IAppSettingsContext) => Promise<NameValuePair[]>) | undefined;
 
-    public constructor(functionAppSettings: { [key: string]: string } | undefined) {
+    public constructor(createFunctionAppSettings: ((context: IAppSettingsContext) => Promise<NameValuePair[]>) | undefined) {
         super();
-        // tslint:disable-next-line:strict-boolean-expressions
-        this._functionAppSettings = functionAppSettings || {};
+        this.createFunctionAppSettings = createFunctionAppSettings;
     }
 
     public async execute(wizardContext: IAppServiceWizardContext): Promise<IAppServiceWizardContext> {
@@ -67,8 +67,7 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
             newSiteConfig.linuxFxVersion = wizardContext.newSiteRuntime;
         } else {
             const maxFileShareNameLength: number = 63;
-            const storageClient: StorageManagementClient = new StorageManagementClient(wizardContext.credentials, wizardContext.subscriptionId, wizardContext.environment.resourceManagerEndpointUrl);
-            addExtensionUserAgent(storageClient);
+            const storageClient: StorageManagementClient = createAzureClient(wizardContext, StorageManagementClient);
 
             const storageAccount: StorageAccount = nonNullProp(wizardContext, 'storageAccount');
             const [, storageResourceGroup] = nonNullValue(nonNullProp(storageAccount, 'id').match(/\/resourceGroups\/([^/]+)\//), 'Invalid storage account id');
@@ -85,39 +84,14 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
                 storageConnectionString = `DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${keysResult.keys[0].value}`;
             }
 
-            newSiteConfig.appSettings = [
-                {
-                    name: 'AzureWebJobsDashboard',
-                    value: storageConnectionString
-                },
-                {
-                    name: 'AzureWebJobsStorage',
-                    value: storageConnectionString
-                }
-            ];
-
-            if (wizardContext.newSiteOS === 'windows') {
-                newSiteConfig.appSettings.push({
-                    name: 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING',
-                    value: storageConnectionString
-                });
-                newSiteConfig.appSettings.push({
-                    name: 'WEBSITE_CONTENTSHARE',
-                    value: fileShareName
-                });
-            }
-
-            if (wizardContext.newSiteRuntime) {
-                newSiteConfig.appSettings.push({
-                    name: 'FUNCTIONS_WORKER_RUNTIME',
-                    value: wizardContext.newSiteRuntime
-                });
-            }
-
-            for (const key of Object.keys(this._functionAppSettings)) {
-                newSiteConfig.appSettings.push({
-                    name: key,
-                    value: this._functionAppSettings[key]
+            if (this.createFunctionAppSettings) {
+                newSiteConfig.appSettings = await this.createFunctionAppSettings({
+                    storageConnectionString,
+                    fileShareName,
+                    // tslint:disable-next-line:no-non-null-assertion
+                    os: wizardContext.newSiteOS!,
+                    // tslint:disable-next-line:no-non-null-assertion
+                    runtime: wizardContext.newSiteRuntime!
                 });
             }
         }
