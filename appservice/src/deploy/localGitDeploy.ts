@@ -62,13 +62,12 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
 
 async function verifyNoRunFromPackageSetting(client: SiteClient): Promise<void> {
     let updateSettings: boolean = false;
-    const runFromPackageAliases: string[] = ['WEBSITE_RUN_FROM_PACKAGE', 'WEBSITE_RUN_FROM_ZIP'];
+    const runFromPackageSettings: string[] = ['WEBSITE_RUN_FROM_PACKAGE', 'WEBSITE_RUN_FROM_ZIP'];
     const applicationSettings: StringDictionary = await client.listApplicationSettings();
-    for (const key of Object.keys(runFromPackageAliases)) {
-        const runFromPackageSettingName: string = <string>runFromPackageAliases[key];
-        if (applicationSettings.properties && applicationSettings.properties[runFromPackageSettingName]) {
-            delete applicationSettings.properties[runFromPackageSettingName];
-            ext.outputChannel.appendLine(formatDeployLog(client, localize('deletingSetting', 'Deleting setting "{0}"...', runFromPackageSettingName)));
+    for (const settingName of runFromPackageSettings) {
+        if (applicationSettings.properties && applicationSettings.properties[settingName]) {
+            delete applicationSettings.properties[settingName];
+            ext.outputChannel.appendLine(formatDeployLog(client, localize('deletingSetting', 'Deleting setting "{0}"...', settingName)));
             updateSettings = true;
         }
     }
