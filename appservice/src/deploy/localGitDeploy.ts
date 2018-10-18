@@ -65,7 +65,7 @@ async function verifyNoRunFromPackageSetting(client: SiteClient): Promise<void> 
     const runFromPackageAliases: string[] = ['WEBSITE_RUN_FROM_PACKAGE', 'WEBSITE_RUN_FROM_ZIP'];
     const applicationSettings: StringDictionary = await client.listApplicationSettings();
     for (const key of Object.keys(runFromPackageAliases)) {
-        const runFromPackageSettingName: string = runFromPackageAliases[key];
+        const runFromPackageSettingName: string = <string>runFromPackageAliases[key];
         if (applicationSettings.properties && applicationSettings.properties[runFromPackageSettingName]) {
             delete applicationSettings.properties[runFromPackageSettingName];
             ext.outputChannel.appendLine(formatDeployLog(client, localize('deletingSetting', 'Deleting setting "{0}"...', runFromPackageSettingName)));
