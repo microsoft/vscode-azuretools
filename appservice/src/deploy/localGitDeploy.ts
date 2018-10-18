@@ -26,7 +26,6 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
     const password: string = nonNullProp(publishCredentials, 'publishingPassword');
     const remote: string = `https://${username}:${password}@${client.gitUrl}`;
     const localGit: git.SimpleGit = git(fsPath);
-    await verifyNoRunFromPackageSetting(client);
     try {
         const status: git.StatusResult = await localGit.status();
         if (status.files.length > 0) {
@@ -34,6 +33,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
             const deployAnyway: vscode.MessageItem = { title: localize('deployAnyway', 'Deploy Anyway') };
             await ext.ui.showWarningMessage(message, { modal: true }, deployAnyway, DialogResponses.cancel);
         }
+        await verifyNoRunFromPackageSetting(client);
         await localGit.push(remote, 'HEAD:master');
     } catch (err) {
         // tslint:disable-next-line:no-unsafe-any
@@ -60,18 +60,15 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
     await waitForDeploymentToComplete(client, kuduClient);
 }
 
-enum RunFromPackageAliases {
-    fromPackage = 'WEBSITE_RUN_FROM_PACKAGE',
-    fromZip = 'WEBSITE_RUN_FROM_ZIP'
-}
-
 async function verifyNoRunFromPackageSetting(client: SiteClient): Promise<void> {
     let updateSettings: boolean = false;
+    const runFromPackageAliases: string[] = ['WEBSITE_RUN_FROM_PACKAGE', 'WEBSITE_RUN_FROM_ZIP'];
     const applicationSettings: StringDictionary = await client.listApplicationSettings();
-    for (const key of Object.keys(RunFromPackageAliases)) {
-        const runFromPackageSettingName: RunFromPackageAliases = <RunFromPackageAliases>RunFromPackageAliases[key];
+    for (const key of Object.keys(runFromPackageAliases)) {
+        const runFromPackageSettingName: string = runFromPackageAliases[key];
         if (applicationSettings.properties && applicationSettings.properties[runFromPackageSettingName]) {
             delete applicationSettings.properties[runFromPackageSettingName];
+            ext.outputChannel.appendLine(formatDeployLog(client, localize('deletingSetting', 'Deleting setting "{0}"...', runFromPackageSettingName)));
             updateSettings = true;
         }
     }
