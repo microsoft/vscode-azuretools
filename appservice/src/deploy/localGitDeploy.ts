@@ -60,7 +60,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
     await waitForDeploymentToComplete(client, kuduClient);
 }
 
-enum runFromPackageAliases {
+enum RunFromPackageAliases {
     fromPackage = 'WEBSITE_RUN_FROM_PACKAGE',
     fromZip = 'WEBSITE_RUN_FROM_ZIP'
 }
@@ -68,8 +68,8 @@ enum runFromPackageAliases {
 async function verifyNoRunFromPackageSetting(client: SiteClient): Promise<void> {
     let updateSettings: boolean = false;
     const applicationSettings: StringDictionary = await client.listApplicationSettings();
-    for (const key of Object.keys(runFromPackageAliases)) {
-        const runFromPackageSettingName: string = runFromPackageAliases[key];
+    for (const key of Object.keys(RunFromPackageAliases)) {
+        const runFromPackageSettingName: RunFromPackageAliases = <RunFromPackageAliases>RunFromPackageAliases[key];
         if (applicationSettings.properties && applicationSettings.properties[runFromPackageSettingName]) {
             delete applicationSettings.properties[runFromPackageSettingName];
             updateSettings = true;
