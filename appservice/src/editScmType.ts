@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SiteConfigResource, StringDictionary } from 'azure-arm-website/lib/models';
+import { SiteConfigResource } from 'azure-arm-website/lib/models';
 import { AzureTreeItem, IAzureQuickPickItem, IAzureQuickPickOptions, UserCancelledError } from 'vscode-azureextensionui';
 import { connectToGitHub } from './connectToGitHub';
 import { ext } from './extensionVariables';
@@ -11,11 +11,6 @@ import { localize } from './localize';
 import { ScmType } from './ScmType';
 import { SiteClient } from './SiteClient';
 import { nonNullProp } from './utils/nonNull';
-
-enum runFromPackageAliases {
-    fromPackage = 'WEBSITE_RUN_FROM_PACKAGE',
-    fromZip = 'WEBSITE_RUN_FROM_ZIP'
-}
 
 export async function editScmType(client: SiteClient, node: AzureTreeItem): Promise<string | undefined> {
     const config: SiteConfigResource = await client.getSiteConfig();
@@ -28,20 +23,6 @@ export async function editScmType(client: SiteClient, node: AzureTreeItem): Prom
         await connectToGitHub(node, client);
     } else {
         config.scmType = newScmType;
-        if (newScmType === ScmType.LocalGit) {
-            let updateSettings: boolean = false;
-            const applicationSettings: StringDictionary = await client.listApplicationSettings();
-            for (const key of Object.keys(runFromPackageAliases)) {
-                const runFromPackageSettingName: string = runFromPackageAliases[key];
-                if (applicationSettings.properties && applicationSettings.properties[runFromPackageSettingName]) {
-                    delete applicationSettings.properties[runFromPackageSettingName];
-                    updateSettings = true;
-                }
-            }
-            if (updateSettings) {
-                await client.updateApplicationSettings(applicationSettings);
-            }
-        }
         // to update one property, a complete config file must be sent
         await client.updateConfiguration(config);
     }

@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { User } from 'azure-arm-website/lib/models';
+import { StringDictionary, User } from 'azure-arm-website/lib/models';
 import * as opn from 'opn';
 import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
@@ -26,6 +26,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
     const password: string = nonNullProp(publishCredentials, 'publishingPassword');
     const remote: string = `https://${username}:${password}@${client.gitUrl}`;
     const localGit: git.SimpleGit = git(fsPath);
+    await verifyNoRunFromPackageSetting(client);
     try {
         const status: git.StatusResult = await localGit.status();
         if (status.files.length > 0) {
@@ -57,4 +58,24 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
 
     ext.outputChannel.appendLine(formatDeployLog(client, (localize('localGitDeploy', `Deploying Local Git repository to "${client.fullName}"...`))));
     await waitForDeploymentToComplete(client, kuduClient);
+}
+
+enum runFromPackageAliases {
+    fromPackage = 'WEBSITE_RUN_FROM_PACKAGE',
+    fromZip = 'WEBSITE_RUN_FROM_ZIP'
+}
+
+async function verifyNoRunFromPackageSetting(client: SiteClient): Promise<void> {
+    let updateSettings: boolean = false;
+    const applicationSettings: StringDictionary = await client.listApplicationSettings();
+    for (const key of Object.keys(runFromPackageAliases)) {
+        const runFromPackageSettingName: string = runFromPackageAliases[key];
+        if (applicationSettings.properties && applicationSettings.properties[runFromPackageSettingName]) {
+            delete applicationSettings.properties[runFromPackageSettingName];
+            updateSettings = true;
+        }
+    }
+    if (updateSettings) {
+        await client.updateApplicationSettings(applicationSettings);
+    }
 }
