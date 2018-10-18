@@ -12,10 +12,18 @@ import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 
+function generalizeLocationName(name: string | undefined): string {
+    // tslint:disable-next-line:strict-boolean-expressions
+    return (name || '').toLowerCase().replace(/\s/g, '');
+}
+
 export class LocationListStep<T extends ILocationWizardContext> extends AzureWizardPromptStep<T> {
     public static async setLocation<T extends ILocationWizardContext>(wizardContext: T, name: string): Promise<void> {
         const locations: Location[] = await LocationListStep.getLocations(wizardContext);
-        wizardContext.location = locations.find((l: Location) => name === l.name || name === l.displayName);
+        name = generalizeLocationName(name);
+        wizardContext.location = locations.find((l: Location) => {
+            return name === generalizeLocationName(l.name) || name === generalizeLocationName(l.displayName);
+        });
     }
 
     public static async getLocations<T extends ILocationWizardContext>(wizardContext: T): Promise<Location[]> {
