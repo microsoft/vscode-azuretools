@@ -19,7 +19,7 @@ class DebugReporter implements ITelemetryReporter {
     constructor(private _extensionName: string, private _extensionVersion: string) {
     }
 
-    public sendTelemetryEvent(eventName: string, properties?: { [key: string]: string; }, measures?: { [key: string]: number; }): void {
+    public sendTelemetryEvent(eventName: string, properties?: { [key: string]: string | undefined; }, measures?: { [key: string]: number | undefined; }): void {
         try {
             // tslint:disable-next-line:strict-boolean-expressions
             const propertiesString: string = JSON.stringify(properties || {});
