@@ -7,7 +7,6 @@ import { User } from 'azure-arm-website/lib/models';
 import * as EventEmitter from 'events';
 import { createServer, Server, Socket } from 'net';
 import * as request from 'request';
-import { isString } from 'util';
 import * as websocket from 'websocket';
 import { ext } from './extensionVariables';
 import { SiteClient } from './SiteClient';
@@ -116,6 +115,30 @@ class TunnelSocket extends EventEmitter {
 }
 
 /**
+ * Interface for tunnel GetStatus API
+ */
+enum WebAppState {
+    STARTED = 'STARTED',
+    STARTING = 'STARTING',
+    STOPPED = 'STOPPED'
+}
+
+interface ITunnelStatus {
+    port: number;
+    canReachPort: boolean;
+    state: WebAppState;
+    msg: string;
+}
+
+/**
+ * Internal interface to communicate tunnel status checking failures
+ */
+interface ICheckTunnelStatusFailure {
+    shouldRetry: boolean;
+    message: string;
+}
+
+/**
  * A local TCP server that forwards all connections to the Kudu tunnel websocket endpoint.
  */
 export class TunnelProxy {
@@ -147,9 +170,9 @@ export class TunnelProxy {
     }
 
     private async checkTunnelStatus(): Promise<void> {
-        return new Promise<void>((resolve: () => void, reject: () => void): void => {
+        return new Promise<void>((resolve: () => void, reject: (failure: ICheckTunnelStatusFailure) => void): void => {
             const statusOptions: request.Options = {
-                uri: `https://${this._client.kuduHostName}/AppServiceTunnel/Tunnel.ashx?GetStatus`,
+                uri: `https://${this._client.kuduHostName}/AppServiceTunnel/Tunnel.ashx?GetStatus&GetStatusAPIVer=2`,
                 headers: {
                     'User-Agent': 'vscode-azuretools'
                 },
@@ -161,20 +184,30 @@ export class TunnelProxy {
 
             const statusCallback: request.RequestCallback = (error: string, response: request.Response, body: string): void => {
                 if (error) {
-                    ext.outputChannel.appendLine(`[WebApp Tunnel] Checking status, error: ${error}`);
-                    reject();
+                    reject({ shouldRetry: false, message: `Error getting tunnel status: ${error}` });
                 } else if (response.statusCode === 200) {
                     ext.outputChannel.appendLine(`[WebApp Tunnel] Checking status, body: ${body}`);
 
-                    // SUCCESS:2222 means that the default ssh tunnel has not been replaced yet
-                    if (isString(body) && body.startsWith('SUCCESS') && body !== 'SUCCESS:2222') {
-                        resolve();
+                    const tunnelStatus: ITunnelStatus = JSON.parse(body);
+
+                    if (tunnelStatus.state === WebAppState.STARTED) {
+                        if (tunnelStatus.port === 2222) {
+                            // Tunnel is pointed to default SSH port and still needs time to restart
+                            reject({ shouldRetry: true, message: 'WebApp is waiting for restart' });
+                        } else if (tunnelStatus.canReachPort) {
+                            resolve();
+                        } else {
+                            reject({ shouldRetry: false, message: 'WebApp is started, but port is unreachable' });
+                        }
+                    } else if (tunnelStatus.state === WebAppState.STARTING) {
+                        reject({ shouldRetry: true, message: 'WebApp is starting' });
+                    } else if (tunnelStatus.state === WebAppState.STOPPED) {
+                        reject({ shouldRetry: false, message: 'WebApp is stopped, try sending a request to start it up' });
                     } else {
-                        reject();
+                        reject({ shouldRetry: false, message: `Unexpected WebApp state: ${tunnelStatus.state}` });
                     }
                 } else {
-                    ext.outputChannel.appendLine(`[WebApp Tunnel] Checking status, unexpected response: ${response.statusCode} - ${response.statusMessage}`);
-                    reject();
+                    reject({ shouldRetry: false, message: `Unexpected response getting tunnel status: ${response.statusCode} - ${response.statusMessage}` });
                 }
             };
 
@@ -198,13 +231,17 @@ export class TunnelProxy {
                     await this.checkTunnelStatus();
                     resolve();
                     return;
-                } catch {
-                    // Suppress error and try again
+                } catch (error) {
+                    const checkFailure: ICheckTunnelStatusFailure = error;
+                    if (!checkFailure.shouldRetry) {
+                        reject(new Error(`Unable to establish connection to application: ${checkFailure.message}`));
+                        return;
+                    } // else allow retry
                 }
 
                 await delay(pollingIntervalMs);
             }
-            reject(new Error(`Unable to establish connection to application after ${timeoutSeconds} seconds`));
+            reject(new Error(`Unable to establish connection to application: Timed out after ${timeoutSeconds} seconds`));
         });
     }
 
