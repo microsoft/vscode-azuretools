@@ -9,7 +9,7 @@ import { StorageAccount, StorageAccountListKeysResult } from 'azure-arm-storage/
 import { WebSiteManagementClient } from 'azure-arm-website';
 import { NameValuePair, SiteConfig } from 'azure-arm-website/lib/models';
 import { MessageItem, ProgressLocation, window } from 'vscode';
-import { addExtensionUserAgent, AzureWizardExecuteStep, createAzureClient } from 'vscode-azureextensionui';
+import { AzureWizardExecuteStep, createAzureClient } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { nonNullProp, nonNullValue, nonNullValueAndProp } from '../utils/nonNull';
@@ -31,8 +31,7 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
             const creatingNewApp: string = localize('CreatingNewApp', 'Creating {0} "{1}"...', getAppKindDisplayName(wizardContext.newSiteKind), wizardContext.newSiteName);
             await window.withProgress({ location: ProgressLocation.Notification, title: creatingNewApp }, async (): Promise<void> => {
                 ext.outputChannel.appendLine(creatingNewApp);
-                const client: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId, wizardContext.environment.resourceManagerEndpointUrl);
-                addExtensionUserAgent(client);
+                const client: WebSiteManagementClient = createAzureClient(wizardContext, WebSiteManagementClient);
                 wizardContext.site = await client.webApps.createOrUpdate(nonNullValueAndProp(wizardContext.resourceGroup, 'name'), nonNullProp(wizardContext, 'newSiteName'), {
                     name: wizardContext.newSiteName,
                     kind: getSiteModelKind(wizardContext.newSiteKind, nonNullProp(wizardContext, 'newSiteOS')),

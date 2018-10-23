@@ -6,7 +6,7 @@
 import { WebSiteManagementClient } from 'azure-arm-website';
 import { AppServicePlan } from 'azure-arm-website/lib/models';
 import { ProgressLocation, window } from 'vscode';
-import { addExtensionUserAgent, AzureWizardExecuteStep } from 'vscode-azureextensionui';
+import { AzureWizardExecuteStep, createAzureClient } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { nonNullProp, nonNullValueAndProp } from '../utils/nonNull';
@@ -23,8 +23,7 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
             const createdAppServicePlan: string = localize('CreatedAppServicePlan', 'Successfully created App Service plan "{0}".', newPlanName);
             await window.withProgress({ location: ProgressLocation.Notification, title: findingAppServicePlan }, async (): Promise<void> => {
                 ext.outputChannel.appendLine(findingAppServicePlan);
-                const client: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId, wizardContext.environment.resourceManagerEndpointUrl);
-                addExtensionUserAgent(client);
+                const client: WebSiteManagementClient = createAzureClient(wizardContext, WebSiteManagementClient);
                 const rgName: string = nonNullValueAndProp(wizardContext.resourceGroup, 'name');
                 const existingPlan: AppServicePlan | undefined = <AppServicePlan | undefined>await client.appServicePlans.get(rgName, newPlanName);
                 if (existingPlan) {
