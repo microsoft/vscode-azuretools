@@ -20,11 +20,7 @@ import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 export async function localGitDeploy(client: SiteClient, fsPath: string): Promise<void> {
     const kuduClient: KuduClient = await getKuduClient(client);
     const publishCredentials: User = await client.getWebAppPublishCredential();
-
-    // credentials for accessing Azure Remote Repo
-    const username: string = publishCredentials.publishingUserName;
-    const password: string = nonNullProp(publishCredentials, 'publishingPassword');
-    const remote: string = `https://${username}:${password}@${client.gitUrl}`;
+    const remote: string = nonNullProp(publishCredentials, 'scmUri');
     const localGit: git.SimpleGit = git(fsPath);
     try {
         const status: git.StatusResult = await localGit.status();
