@@ -9,6 +9,7 @@ import { StorageAccount } from 'azure-arm-storage/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment, AzureServiceClientOptions } from 'ms-rest-azure';
 import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri, EventEmitter } from 'vscode';
+import { AzureExtensionProvider, AzureExtension } from './api';
 
 export type OpenInPortalOptions = {
     /**
@@ -835,3 +836,9 @@ export function createAzureClient<T extends IAddUserAgent>(
 export function createAzureSubscriptionClient<T extends IAddUserAgent>(
     clientInfo: { credentials: ServiceClientCredentials; environment: AzureEnvironment; },
     clientType: { new(credentials: ServiceClientCredentials, baseUri?: string, options?: AzureServiceClientOptions): T }): T;
+
+/**
+ * Wraps an Azure Extension's API in a very basic provider that adds versioning.
+ * Multiple APIs with different versions can be supplied, but ideally a single backwards-compatible API is all that's necessary.
+ */
+export function wrapApiWithVersioning(azExts: AzureExtension[]): AzureExtensionProvider;
