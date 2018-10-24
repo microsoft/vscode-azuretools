@@ -231,4 +231,8 @@ export class SiteClient {
             }
         }
     }
+
+    public async getPublishingUser(): Promise<User> {
+        return await this._client.getPublishingUser({});
+    }
 }
