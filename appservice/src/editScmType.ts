@@ -23,7 +23,7 @@ export async function editScmType(client: SiteClient, node: AzureTreeItem): Prom
         await connectToGitHub(node, client);
     } else {
         config.scmType = newScmType;
-        // to update one property, a complete config file must be sentnpm
+        // to update one property, a complete config file must be sent
         await client.updateConfiguration(config);
     }
     ext.outputChannel.appendLine(localize('deploymentSourceUpdated,', 'Deployment source for "{0}" has been updated to "{1}".', client.fullName, newScmType));
