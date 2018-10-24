@@ -5,7 +5,7 @@
 
 import { WebSiteManagementClient } from 'azure-arm-website';
 import { AppServicePlan } from 'azure-arm-website/lib/models';
-import { addExtensionUserAgent, AzureWizard, AzureWizardPromptStep, IAzureQuickPickOptions, LocationListStep } from 'vscode-azureextensionui';
+import { AzureWizard, AzureWizardPromptStep, createAzureClient, IAzureQuickPickOptions, LocationListStep } from 'vscode-azureextensionui';
 import { IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -20,8 +20,7 @@ import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public static async getPlans(wizardContext: IAppServiceWizardContext): Promise<AppServicePlan[]> {
         if (wizardContext.plansTask === undefined) {
-            const client: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId, wizardContext.environment.resourceManagerEndpointUrl);
-            addExtensionUserAgent(client);
+            const client: WebSiteManagementClient = createAzureClient(wizardContext, WebSiteManagementClient);
             wizardContext.plansTask = uiUtils.listAll(client.appServicePlans, client.appServicePlans.list());
         }
 
