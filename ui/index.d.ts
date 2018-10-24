@@ -72,9 +72,9 @@ export declare class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements
     /**
      * Optional method to return the parent of `element`.
      * Return `null` or `undefined` if `element` is a child of root.
-     * 
+     *
      * **NOTE:** This method should be implemented in order to access [reveal](#TreeView.reveal) API.
-     * 
+     *
      * @param element The element for which the parent has to be returned.
      * @return Parent of `element`.
      */
@@ -339,21 +339,21 @@ export interface IActionContext {
     /**
      * Defaults to `false`. If true, successful events are suppressed from telemetry, but cancel and error events are still sent.
      */
-    suppressTelemetry: boolean;
+    suppressTelemetry?: boolean;
 
     /**
      * Defaults to `false`
      */
-    suppressErrorDisplay: boolean;
+    suppressErrorDisplay?: boolean;
 
     /**
      * Defaults to `false`
      */
-    rethrowError: boolean;
+    rethrowError?: boolean;
 }
 
 export interface ITelemetryReporter {
-    sendTelemetryEvent(eventName: string, properties?: { [key: string]: string }, measures?: { [key: string]: number }): void;
+    sendTelemetryEvent(eventName: string, properties?: { [key: string]: string | undefined }, measures?: { [key: string]: number | undefined }): void;
 }
 
 /**
@@ -373,17 +373,17 @@ export interface TelemetryProperties {
      * Defaults to `false`
      * This is used to more accurately track usage, since activation events generally shouldn't 'count' as usage
      */
-    isActivationEvent: 'true' | 'false';
-    result: 'Succeeded' | 'Failed' | 'Canceled';
-    error: string;
-    errorMessage: string;
-    cancelStep: string;
-    [key: string]: string;
+    isActivationEvent?: 'true' | 'false';
+    result?: 'Succeeded' | 'Failed' | 'Canceled';
+    error?: string;
+    errorMessage?: string;
+    cancelStep?: string;
+    [key: string]: string | undefined;
 }
 
 export interface TelemetryMeasurements {
-    duration: number;
-    [key: string]: number;
+    duration?: number;
+    [key: string]: number | undefined;
 }
 
 export declare function parseError(error: any): IParsedError;
