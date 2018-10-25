@@ -23,8 +23,12 @@ export interface ILogStream extends vscode.Disposable {
 
 const logStreams: Map<string, ILogStream> = new Map();
 
-function getLogStreamId(client: SiteClient, logsPath: string): string {
+export function getLogStreamId(client: SiteClient, logsPath: string): string {
     return `${client.id}${logsPath}`;
+}
+
+export function getLogStreams(): Map<string, ILogStream> {
+    return logStreams;
 }
 
 export async function startStreamingLogs(client: SiteClient, verifyLoggingEnabled: () => Promise<void>, logStreamLabel: string, logsPath: string = ''): Promise<ILogStream> {
