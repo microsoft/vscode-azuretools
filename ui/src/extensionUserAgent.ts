@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IAddUserAgent } from "../index";
-import { getPackageInfo } from "./getPackageInfo";
+import { ext } from "./extensionVariables";
 
 /**
  * Adds a user agent specific to the VS Code extension, of the form `${extensionName}/${extensionVersion}`
@@ -14,7 +14,7 @@ export function addExtensionUserAgent(client: IAddUserAgent): void {
 }
 
 function getExtensionUserAgent(): string {
-    const { extensionName, extensionVersion } = getPackageInfo();
+    const { name: extensionName, version: extensionVersion } = ext.packageInfo;
     return `${extensionName}/${extensionVersion}`;
 }
 

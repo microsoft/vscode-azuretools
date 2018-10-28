@@ -6,13 +6,13 @@
 // tslint:disable-next-line:no-require-imports
 import opn = require("opn");
 import { IParsedError } from '../index';
-import { getPackageInfo } from "./getPackageInfo";
+import { ext } from "./extensionVariables";
 
 /**
  * Used to open the browser to the "New Issue" page on GitHub with relevant context pre-filled in the issue body
  */
 export function reportAnIssue(actionId: string, parsedError: IParsedError): void {
-    const { extensionName, extensionVersion } = getPackageInfo();
+    const { name: extensionName, version: extensionVersion } = ext.packageInfo;
 
     const body: string = `
 &lt;Please be sure to remove any private information before submitting.&gt;

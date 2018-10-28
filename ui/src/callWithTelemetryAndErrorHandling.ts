@@ -3,19 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as assert from 'assert';
 import { MessageItem, window } from 'vscode';
 import { IActionContext } from '../index';
 import { IParsedError } from '../index';
 import { DialogResponses } from './DialogResponses';
-import { ext, extInitialized } from './extensionVariables';
+import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { parseError } from './parseError';
 import { reportAnIssue } from './reportAnIssue';
 
 function initContext(): [number, IActionContext] {
-    assert(extInitialized, 'registerUIExtensionVariables must be called first');
-
     const start: number = Date.now();
     const context: IActionContext = {
         properties: {
@@ -100,14 +97,12 @@ function handleError(context: IActionContext, callbackId: string, error: any): v
 }
 
 function handleTelemetry(context: IActionContext, callbackId: string, start: number): void {
-    if (ext.reporter) {
-        // For suppressTelemetry=true, ignore successful results
-        if (!(context.suppressTelemetry && context.properties.result === 'Succeeded')) {
-            const end: number = Date.now();
-            context.measurements.duration = (end - start) / 1000;
+    // For suppressTelemetry=true, ignore successful results
+    if (!(context.suppressTelemetry && context.properties.result === 'Succeeded')) {
+        const end: number = Date.now();
+        context.measurements.duration = (end - start) / 1000;
 
-            // Note: The id of the extension is automatically prepended to the given callbackId (e.g. "vscode-cosmosdb/")
-            ext.reporter.sendTelemetryEvent(callbackId, context.properties, context.measurements);
-        }
+        // Note: The id of the extension is automatically prepended to the given callbackId (e.g. "vscode-cosmosdb/")
+        ext.reporter.sendTelemetryEvent(callbackId, context.properties, context.measurements);
     }
 }

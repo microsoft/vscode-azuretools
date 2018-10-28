@@ -7,7 +7,7 @@ import * as semver from 'semver';
 import { IActionContext } from '..';
 import { AzureExtensionApi, AzureExtensionApiProvider } from '../api';
 import { callWithTelemetryAndErrorHandlingSync } from './callWithTelemetryAndErrorHandling';
-import { getPackageInfo } from './getPackageInfo';
+import { getExtensionId } from './extensionVariables';
 import { localize } from './localize';
 
 export function wrapApiWithVersioning(azExts: AzureExtensionApi[]): AzureExtensionApiProvider {
@@ -17,7 +17,7 @@ export function wrapApiWithVersioning(azExts: AzureExtensionApi[]): AzureExtensi
         }
     }
 
-    const extensionId: string = getPackageInfo().extensionId;
+    const extensionId: string = getExtensionId();
     return {
         getApi: <T extends AzureExtensionApi>(apiVersionRange: string): T => getApiInternal<T>(azExts, extensionId, apiVersionRange)
     };
