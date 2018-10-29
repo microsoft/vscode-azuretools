@@ -31,10 +31,10 @@ export async function startStreamingLogs(client: SiteClient, verifyLoggingEnable
     const kuduClient: KuduClient = await getKuduClient(client);
     const logStreamId: string = getLogStreamId(client, logsPath);
     const logStream: ILogStream | undefined = logStreams.get(logStreamId);
-
     if (logStream && logStream.isConnected) {
         logStream.outputChannel.show();
-        await ext.ui.showWarningMessage(localize('logStreamAlreadyActive', 'The log-streaming service for "{0}" is already active.', logStreamLabel));
+         // tslint:disable-next-line:no-floating-promises
+        ext.ui.showWarningMessage(localize('logStreamAlreadyActive', 'The log-streaming service for "{0}" is already active.', logStreamLabel));
         return logStream;
     } else {
         await verifyLoggingEnabled();
