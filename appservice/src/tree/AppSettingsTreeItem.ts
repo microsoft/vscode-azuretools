@@ -67,7 +67,7 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         await this.root.client.updateApplicationSettings(settings);
     }
 
-    public async createChildImpl(showCreatingTreeItem: (label: string) => void): Promise<AzureTreeItem<ISiteTreeRoot>> {
+    public async createChildImpl(showCreatingTreeItem: (label: string) => void, newValue?: string): Promise<AzureTreeItem<ISiteTreeRoot>> {
         const settings: StringDictionary = await this.ensureSettings();
 
         const newKey: string = await ext.ui.showInputBox({
@@ -75,9 +75,11 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
             validateInput: (v?: string): string | undefined => this.validateNewKeyInput(settings, v)
         });
 
-        const newValue: string = await ext.ui.showInputBox({
-            prompt: `Enter setting value for "${newKey}"`
-        });
+        if(!newValue){
+            newValue = await ext.ui.showInputBox({
+                prompt: `Enter setting value for "${newKey}"`
+            });
+        }
 
         if (!settings.properties) {
             settings.properties = {};
