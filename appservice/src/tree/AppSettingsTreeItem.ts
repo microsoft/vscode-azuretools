@@ -10,6 +10,23 @@ import { ext } from '../extensionVariables';
 import { AppSettingTreeItem } from './AppSettingTreeItem';
 import { ISiteTreeRoot } from './ISiteTreeRoot';
 
+export function validateNewKeyInput(settings: StringDictionary, newKey?: string, oldKey?: string): string | undefined {
+    newKey = newKey ? newKey.trim() : '';
+    oldKey = oldKey ? oldKey.trim().toLowerCase() : oldKey;
+    if (newKey.length === 0) {
+        return 'Key must have at least one non-whitespace character.';
+    }
+    if (settings.properties && newKey.toLowerCase() !== oldKey) {
+        for (const key of Object.keys(settings.properties)) {
+            if (key.toLowerCase() === newKey.toLowerCase()) {
+                return `Setting "${newKey}" already exists.`;
+            }
+        }
+    }
+
+    return undefined;
+}
+
 export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     public static contextValue: string = 'applicationSettings';
     public readonly label: string = 'Application Settings';
@@ -67,19 +84,17 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         await this.root.client.updateApplicationSettings(settings);
     }
 
-    public async createChildImpl(showCreatingTreeItem: (label: string) => void, newValue?: string): Promise<AzureTreeItem<ISiteTreeRoot>> {
+    public async createChildImpl(showCreatingTreeItem: (label: string) => void): Promise<AzureTreeItem<ISiteTreeRoot>> {
         const settings: StringDictionary = await this.ensureSettings();
 
         const newKey: string = await ext.ui.showInputBox({
             prompt: 'Enter new setting key',
-            validateInput: (v?: string): string | undefined => this.validateNewKeyInput(settings, v)
+            validateInput: (v?: string): string | undefined => validateNewKeyInput(settings, v)
         });
 
-        if (!newValue) {
-            newValue = await ext.ui.showInputBox({
-                prompt: `Enter setting value for "${newKey}"`
-            });
-        }
+        const newValue: string = await ext.ui.showInputBox({
+            prompt: `Enter setting value for "${newKey}"`
+        });
 
         if (!settings.properties) {
             settings.properties = {};
@@ -89,23 +104,6 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         settings.properties[newKey] = newValue;
         await this.root.client.updateApplicationSettings(settings);
         return new AppSettingTreeItem(this, newKey, newValue);
-    }
-
-    public validateNewKeyInput(settings: StringDictionary, newKey?: string, oldKey?: string): string | undefined {
-        newKey = newKey ? newKey.trim() : '';
-        oldKey = oldKey ? oldKey.trim().toLowerCase() : oldKey;
-        if (newKey.length === 0) {
-            return 'Key must have at least one non-whitespace character.';
-        }
-        if (settings.properties && newKey.toLowerCase() !== oldKey) {
-            for (const key of Object.keys(settings.properties)) {
-                if (key.toLowerCase() === newKey.toLowerCase()) {
-                    return `Setting "${newKey}" already exists.`;
-                }
-            }
-        }
-
-        return undefined;
     }
 
     public async ensureSettings(): Promise<StringDictionary> {

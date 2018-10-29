@@ -7,7 +7,7 @@ import { StringDictionary } from 'azure-arm-website/lib/models';
 import * as path from 'path';
 import { AzureTreeItem, DialogResponses } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
-import { AppSettingsTreeItem } from './AppSettingsTreeItem';
+import { AppSettingsTreeItem, validateNewKeyInput } from './AppSettingsTreeItem';
 import { ISiteTreeRoot } from './ISiteTreeRoot';
 
 export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
@@ -57,7 +57,7 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         const newKey: string = await ext.ui.showInputBox({
             prompt: `Enter a new name for "${oldKey}"`,
             value: this.key,
-            validateInput: (v?: string): string | undefined => this.parent.validateNewKeyInput(settings, v, oldKey)
+            validateInput: (v?: string): string | undefined => validateNewKeyInput(settings, v, oldKey)
         });
 
         this.key = newKey;
