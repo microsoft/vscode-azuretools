@@ -75,7 +75,7 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
             validateInput: (v?: string): string | undefined => this.validateNewKeyInput(settings, v)
         });
 
-        if(!newValue){
+        if (!newValue) {
             newValue = await ext.ui.showInputBox({
                 prompt: `Enter setting value for "${newKey}"`
             });
