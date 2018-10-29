@@ -10,7 +10,7 @@ import { ext } from '../extensionVariables';
 import { AppSettingTreeItem } from './AppSettingTreeItem';
 import { ISiteTreeRoot } from './ISiteTreeRoot';
 
-export function validateNewKeyInput(settings: StringDictionary, newKey?: string, oldKey?: string): string | undefined {
+export function validateAppSettingKey(settings: StringDictionary, newKey?: string, oldKey?: string): string | undefined {
     newKey = newKey ? newKey.trim() : '';
     oldKey = oldKey ? oldKey.trim().toLowerCase() : oldKey;
     if (newKey.length === 0) {
@@ -89,7 +89,7 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
 
         const newKey: string = await ext.ui.showInputBox({
             prompt: 'Enter new setting key',
-            validateInput: (v?: string): string | undefined => validateNewKeyInput(settings, v)
+            validateInput: (v?: string): string | undefined => validateAppSettingKey(settings, v)
         });
 
         const newValue: string = await ext.ui.showInputBox({
