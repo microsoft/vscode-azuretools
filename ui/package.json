@@ -27,7 +27,7 @@
         "prepack": "tsc -p ./",
         "compile": "tsc -watch -p ./",
         "lint": "tslint --project tsconfig.json -e src/*.d.ts -t verbose",
-        "test": "mocha out/test/**/*.js --ui tdd",
+        "test": "gulp test",
         "prepare": "node ./node_modules/vscode/bin/install"
     },
     "dependencies": {
@@ -46,6 +46,7 @@
         "@types/mocha": "^2.2.32",
         "@types/opn": "^5.1.0",
         "@types/semver": "^5.5.0",
+        "gulp": "^3.9.1",
         "mocha": "^2.3.3",
         "tslint": "^5.7.0",
         "tslint-microsoft-contrib": "5.0.1",

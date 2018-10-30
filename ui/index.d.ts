@@ -9,7 +9,7 @@ import { StorageAccount } from 'azure-arm-storage/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment, AzureServiceClientOptions } from 'ms-rest-azure';
 import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri, EventEmitter } from 'vscode';
-import { AzureExtensionProvider, AzureExtension } from './api';
+import { AzureExtensionApiProvider, AzureExtensionApi } from './api';
 
 export type OpenInPortalOptions = {
     /**
@@ -331,7 +331,8 @@ export declare function registerCommand(commandId: string, callback: (this: IAct
  */
 export declare function registerEvent<T>(eventId: string, event: Event<T>, callback: (this: IActionContext, ...args: any[]) => any): void;
 
-export declare function callWithTelemetryAndErrorHandling(callbackId: string, callback: (this: IActionContext) => any): Promise<any>;
+export declare function callWithTelemetryAndErrorHandling<T>(callbackId: string, callback: (this: IActionContext) => T | PromiseLike<T>): Promise<T | undefined>;
+export declare function callWithTelemetryAndErrorHandlingSync<T>(callbackId: string, callback: (this: IActionContext) => T): T | undefined;
 
 export interface IActionContext {
     properties: TelemetryProperties;
@@ -841,4 +842,4 @@ export function createAzureSubscriptionClient<T extends IAddUserAgent>(
  * Wraps an Azure Extension's API in a very basic provider that adds versioning.
  * Multiple APIs with different versions can be supplied, but ideally a single backwards-compatible API is all that's necessary.
  */
-export function wrapApiWithVersioning(azExts: AzureExtension[]): AzureExtensionProvider;
+export function wrapApiWithVersioning(azExts: AzureExtensionApi[]): AzureExtensionApiProvider;

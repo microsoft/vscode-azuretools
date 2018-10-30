@@ -292,3 +292,4 @@ lib
 package-lock.json
 *.tgz
 out
+**/.vscode-test/
