@@ -24,7 +24,7 @@ export function wrapApiWithVersioning(azExts: AzureExtensionApi[]): AzureExtensi
 }
 
 function getApiInternal<T extends AzureExtensionApi>(azExts: AzureExtensionApi[], extensionId: string, apiVersionRange: string): T {
-    return <T>callWithTelemetryAndErrorHandlingSync('getExtension', function (this: IActionContext): T {
+    return <T>callWithTelemetryAndErrorHandlingSync('getApi', function (this: IActionContext): T {
         this.rethrowError = true;
         this.suppressErrorDisplay = true;
         this.properties.isActivationEvent = 'true';
