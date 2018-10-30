@@ -15,7 +15,7 @@
                 "${workspaceFolder}/out/test/**/*.js"
             ],
             "internalConsoleOptions": "openOnSessionStart",
-            "preLaunchTask": "npm"
+            "preLaunchTask": "npm: compile"
         }
     ]
 }
