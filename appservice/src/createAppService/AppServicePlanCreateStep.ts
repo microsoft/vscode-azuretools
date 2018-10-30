@@ -5,7 +5,6 @@
 
 import { WebSiteManagementClient } from 'azure-arm-website';
 import { AppServicePlan } from 'azure-arm-website/lib/models';
-import { ProgressLocation, window } from 'vscode';
 import { addExtensionUserAgent, AzureWizardExecuteStep } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -21,29 +20,24 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
             const creatingAppServicePlan: string = localize('CreatingAppServicePlan', 'Creating App Service plan "{0}"...', newPlanName);
             const foundAppServicePlan: string = localize('FoundAppServicePlan', 'Successfully found App Service plan "{0}".', newPlanName);
             const createdAppServicePlan: string = localize('CreatedAppServicePlan', 'Successfully created App Service plan "{0}".', newPlanName);
-            await window.withProgress({ location: ProgressLocation.Notification, title: findingAppServicePlan }, async (): Promise<void> => {
-                ext.outputChannel.appendLine(findingAppServicePlan);
-                const client: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId, wizardContext.environment.resourceManagerEndpointUrl);
-                addExtensionUserAgent(client);
-                const rgName: string = nonNullValueAndProp(wizardContext.resourceGroup, 'name');
-                const existingPlan: AppServicePlan | undefined = <AppServicePlan | undefined>await client.appServicePlans.get(rgName, newPlanName);
-                if (existingPlan) {
+            ext.outputChannel.appendLine(findingAppServicePlan);
+            const client: WebSiteManagementClient = new WebSiteManagementClient(wizardContext.credentials, wizardContext.subscriptionId, wizardContext.environment.resourceManagerEndpointUrl);
+            addExtensionUserAgent(client);
+            const rgName: string = nonNullValueAndProp(wizardContext.resourceGroup, 'name');
+            const existingPlan: AppServicePlan | undefined = <AppServicePlan | undefined>await client.appServicePlans.get(rgName, newPlanName);
+            if (existingPlan) {
                     wizardContext.plan = existingPlan;
-                    window.showInformationMessage(foundAppServicePlan);
                     ext.outputChannel.appendLine(foundAppServicePlan);
                 } else {
                     ext.outputChannel.appendLine(creatingAppServicePlan);
-                    window.showInformationMessage(creatingAppServicePlan);
                     wizardContext.plan = await client.appServicePlans.createOrUpdate(rgName, newPlanName, {
                         kind: getAppServicePlanModelKind(wizardContext.newSiteKind, nonNullProp(wizardContext, 'newSiteOS')),
                         sku: nonNullProp(wizardContext, 'newPlanSku'),
                         location: nonNullValueAndProp(wizardContext.location, 'name'),
                         reserved: wizardContext.newSiteOS === WebsiteOS.linux  // The secret property - must be set to true to make it a Linux plan. Confirmed by the team who owns this API.
                     });
-                    window.showInformationMessage(createdAppServicePlan);
                     ext.outputChannel.appendLine(createdAppServicePlan);
                 }
-            });
         }
 
         return wizardContext;
