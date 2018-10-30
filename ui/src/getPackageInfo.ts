@@ -10,14 +10,14 @@ import { callWithTelemetryAndErrorHandling } from "./callWithTelemetryAndErrorHa
 import { ext, extInitialized } from "./extensionVariables";
 import { parseError } from "./parseError";
 
-export function getPackageInfo(ctx?: ExtensionContext): { extensionName: string, extensionVersion: string, aiKey?: string } {
+export function getPackageInfo(ctx?: ExtensionContext): { extensionName: string, extensionVersion: string, aiKey?: string, extensionId: string } {
     assert(extInitialized, 'registerUIExtensionVariables must be called first');
 
     if (!ctx) {
         ctx = ext.context;
     }
 
-    let packageJson: IPackageJson | undefined;
+    let packageJson: IPackageJson = {};
     // tslint:disable-next-line:no-floating-promises
     callWithTelemetryAndErrorHandling('azureTools.getPackageInfo', function (this: IActionContext): void {
         this.suppressErrorDisplay = true;
@@ -37,15 +37,17 @@ export function getPackageInfo(ctx?: ExtensionContext): { extensionName: string,
     });
 
     // tslint:disable-next-line:strict-boolean-expressions
-    const extensionName: string = (packageJson && packageJson.name) || 'vscode-azuretools';
+    const extensionName: string = packageJson.name || 'vscode-azuretools';
     // tslint:disable-next-line:strict-boolean-expressions
-    const extensionVersion: string = (packageJson && packageJson.version) || 'Unknown';
-    const aiKey: string | undefined = packageJson && packageJson.aiKey;
-    return { extensionName, extensionVersion, aiKey };
+    const extensionVersion: string = packageJson.version || 'Unknown';
+    const aiKey: string | undefined = packageJson.aiKey;
+    const extensionId: string = `${packageJson.publisher}.${packageJson.name}`;
+    return { extensionName, extensionVersion, aiKey, extensionId };
 }
 
 interface IPackageJson {
     version?: string;
     name?: string;
+    publisher?: string;
     aiKey?: string;
 }

@@ -9,6 +9,7 @@ import { StorageAccount } from 'azure-arm-storage/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment, AzureServiceClientOptions } from 'ms-rest-azure';
 import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri, EventEmitter } from 'vscode';
+import { AzureExtensionApiProvider, AzureExtensionApi } from './api';
 
 export type OpenInPortalOptions = {
     /**
@@ -72,9 +73,9 @@ export declare class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements
     /**
      * Optional method to return the parent of `element`.
      * Return `null` or `undefined` if `element` is a child of root.
-     * 
+     *
      * **NOTE:** This method should be implemented in order to access [reveal](#TreeView.reveal) API.
-     * 
+     *
      * @param element The element for which the parent has to be returned.
      * @return Parent of `element`.
      */
@@ -330,7 +331,8 @@ export declare function registerCommand(commandId: string, callback: (this: IAct
  */
 export declare function registerEvent<T>(eventId: string, event: Event<T>, callback: (this: IActionContext, ...args: any[]) => any): void;
 
-export declare function callWithTelemetryAndErrorHandling(callbackId: string, callback: (this: IActionContext) => any): Promise<any>;
+export declare function callWithTelemetryAndErrorHandling<T>(callbackId: string, callback: (this: IActionContext) => T | PromiseLike<T>): Promise<T | undefined>;
+export declare function callWithTelemetryAndErrorHandlingSync<T>(callbackId: string, callback: (this: IActionContext) => T): T | undefined;
 
 export interface IActionContext {
     properties: TelemetryProperties;
@@ -339,21 +341,21 @@ export interface IActionContext {
     /**
      * Defaults to `false`. If true, successful events are suppressed from telemetry, but cancel and error events are still sent.
      */
-    suppressTelemetry: boolean;
+    suppressTelemetry?: boolean;
 
     /**
      * Defaults to `false`
      */
-    suppressErrorDisplay: boolean;
+    suppressErrorDisplay?: boolean;
 
     /**
      * Defaults to `false`
      */
-    rethrowError: boolean;
+    rethrowError?: boolean;
 }
 
 export interface ITelemetryReporter {
-    sendTelemetryEvent(eventName: string, properties?: { [key: string]: string }, measures?: { [key: string]: number }): void;
+    sendTelemetryEvent(eventName: string, properties?: { [key: string]: string | undefined }, measures?: { [key: string]: number | undefined }): void;
 }
 
 /**
@@ -373,17 +375,17 @@ export interface TelemetryProperties {
      * Defaults to `false`
      * This is used to more accurately track usage, since activation events generally shouldn't 'count' as usage
      */
-    isActivationEvent: 'true' | 'false';
-    result: 'Succeeded' | 'Failed' | 'Canceled';
-    error: string;
-    errorMessage: string;
-    cancelStep: string;
-    [key: string]: string;
+    isActivationEvent?: 'true' | 'false';
+    result?: 'Succeeded' | 'Failed' | 'Canceled';
+    error?: string;
+    errorMessage?: string;
+    cancelStep?: string;
+    [key: string]: string | undefined;
 }
 
 export interface TelemetryMeasurements {
-    duration: number;
-    [key: string]: number;
+    duration?: number;
+    [key: string]: number | undefined;
 }
 
 export declare function parseError(error: any): IParsedError;
@@ -835,3 +837,9 @@ export function createAzureClient<T extends IAddUserAgent>(
 export function createAzureSubscriptionClient<T extends IAddUserAgent>(
     clientInfo: { credentials: ServiceClientCredentials; environment: AzureEnvironment; },
     clientType: { new(credentials: ServiceClientCredentials, baseUri?: string, options?: AzureServiceClientOptions): T }): T;
+
+/**
+ * Wraps an Azure Extension's API in a very basic provider that adds versioning.
+ * Multiple APIs with different versions can be supplied, but ideally a single backwards-compatible API is all that's necessary.
+ */
+export function wrapApiWithVersioning(azExts: AzureExtensionApi[]): AzureExtensionApiProvider;
