@@ -2,19 +2,12 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "npm",
-            "type": "shell",
-            "command": "npm",
+            "type": "npm",
+            "script": "compile",
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "args": [
-                "run",
-                "compile",
-                "--loglevel",
-                "silent"
-            ],
             "isBackground": true,
             "presentation": {
                 "reveal": "silent"
@@ -24,10 +17,7 @@
         {
             "type": "npm",
             "script": "lint",
-            "problemMatcher": {
-                "base": "$tslint5",
-                "fileLocation": "absolute"
-            }
+            "problemMatcher": "$tslint5"
         }
     ]
 }
