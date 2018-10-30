@@ -2,20 +2,26 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "node",
-            "request": "launch",
             "name": "Launch Tests",
-            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
             "args": [
-                "-u",
-                "tdd",
-                "--timeout",
-                "999999",
-                "--colors",
+                "--extensionDevelopmentPath=${workspaceFolder}/test/extension",
+                "--extensionTestsPath=${workspaceFolder}/out/test"
+            ],
+            "stopOnEntry": false,
+            "sourceMaps": true,
+            "outFiles": [
                 "${workspaceFolder}/out/test/**/*.js"
             ],
-            "internalConsoleOptions": "openOnSessionStart",
-            "preLaunchTask": "npm"
+            "preLaunchTask": "npm: compile",
+            "env": {
+                "MOCHA_grep": "", // RegExp of tests to run (empty for all)
+                "MOCHA_enableTimeouts": "0", // Disable time-outs,
+                "DEBUGTELEMETRY": "1",
+                "NODE_DEBUG": ""
+            }
         }
     ]
 }

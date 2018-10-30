@@ -30,4 +30,5 @@ export * from './wizard/LocationListStep';
 export * from './wizard/ResourceGroupCreateStep';
 export * from './wizard/ResourceGroupListStep';
 export * from './wizard/StorageAccountListStep';
+export * from './wrapApiWithVersioning';
 export { registerUIExtensionVariables } from './extensionVariables';

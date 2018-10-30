@@ -84,7 +84,7 @@
         "no-with-statement": true,
         "promise-function-async": true,
         "promise-must-complete": true,
-        "radix": true,
+        "radix": false, // changed
         "react-this-binding-issue": true,
         "react-unused-props-and-state": true,
         "restrict-plus-operands": true,
@@ -92,6 +92,7 @@
             true,
             "allow-string", // changed
             "allow-undefined-union", // changed
+            "allow-null-union", // changed
             "allow-mix" // changed
         ],
         "switch-default": true,
