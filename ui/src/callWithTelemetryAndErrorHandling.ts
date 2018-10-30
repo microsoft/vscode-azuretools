@@ -44,7 +44,7 @@ export function callWithTelemetryAndErrorHandlingSync<T>(callbackId: string, cal
         handleError(context, callbackId, error);
         return undefined;
     } finally {
-        handleFinally(context, callbackId, start);
+        handleTelemetry(context, callbackId, start);
     }
 }
 
@@ -57,7 +57,7 @@ export async function callWithTelemetryAndErrorHandling<T>(callbackId: string, c
         handleError(context, callbackId, error);
         return undefined;
     } finally {
-        handleFinally(context, callbackId, start);
+        handleTelemetry(context, callbackId, start);
     }
 }
 
@@ -99,7 +99,7 @@ function handleError(context: IActionContext, callbackId: string, error: any): v
     }
 }
 
-function handleFinally(context: IActionContext, callbackId: string, start: number): void {
+function handleTelemetry(context: IActionContext, callbackId: string, start: number): void {
     if (ext.reporter) {
         // For suppressTelemetry=true, ignore successful results
         if (!(context.suppressTelemetry && context.properties.result === 'Succeeded')) {
