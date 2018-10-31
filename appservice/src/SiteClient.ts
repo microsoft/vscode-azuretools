@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { WebSiteManagementClient } from 'azure-arm-website';
-import { AppServicePlan, FunctionEnvelopeCollection, FunctionSecrets, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SourceControlCollection, StringDictionary, User, WebAppInstanceCollection } from 'azure-arm-website/lib/models';
+import { AppServicePlan, Deployment, DeploymentCollection, FunctionEnvelopeCollection, FunctionSecrets, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SourceControlCollection, StringDictionary, User, WebAppInstanceCollection } from 'azure-arm-website/lib/models';
 import { createAzureClient, ISubscriptionRoot, parseError } from 'vscode-azureextensionui';
 import { FunctionEnvelope } from 'vscode-azurekudu/lib/models';
 import { nonNullProp, nonNullValue } from './utils/nonNull';
@@ -234,5 +234,17 @@ export class SiteClient {
 
     public async getPublishingUser(): Promise<User> {
         return await this._client.getPublishingUser({});
+    }
+
+    public async listDeployments(): Promise<DeploymentCollection> {
+        return this.slotName ?
+            await this._client.webApps.listDeploymentsSlot(this.resourceGroup, this.siteName, this.slotName) :
+            await this._client.webApps.listDeployments(this.resourceGroup, this.siteName);
+    }
+
+    public async listDeploymentLogs(id: string): Promise<Deployment> {
+        return this.slotName ?
+             await this._client.webApps.listDeploymentLogSlot(this.resourceGroup, this.siteName, id, this.slotName) :
+             await this._client.webApps.listDeploymentLog(this.resourceGroup, this.siteName, id);
     }
 }
