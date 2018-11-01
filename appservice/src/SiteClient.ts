@@ -235,16 +235,4 @@ export class SiteClient {
     public async getPublishingUser(): Promise<User> {
         return await this._client.getPublishingUser({});
     }
-
-    public async listDeployments(): Promise<DeploymentCollection> {
-        return this.slotName ?
-            await this._client.webApps.listDeploymentsSlot(this.resourceGroup, this.siteName, this.slotName) :
-            await this._client.webApps.listDeployments(this.resourceGroup, this.siteName);
-    }
-
-    public async listDeploymentLogs(id: string): Promise<Deployment> {
-        return this.slotName ?
-             await this._client.webApps.listDeploymentLogSlot(this.resourceGroup, this.siteName, id, this.slotName) :
-             await this._client.webApps.listDeploymentLog(this.resourceGroup, this.siteName, id);
-    }
 }
