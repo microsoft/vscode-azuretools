@@ -5,7 +5,6 @@
 
 // tslint:disable-next-line:no-require-imports
 import StorageManagementClient = require('azure-arm-storage');
-import { ProgressLocation, window } from 'vscode';
 import { INewStorageAccountDefaults, IStorageAccountWizardContext } from '../../index';
 import { createAzureClient } from '../createAzureClient';
 import { ext } from '../extensionVariables';
