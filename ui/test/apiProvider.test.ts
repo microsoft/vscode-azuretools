@@ -56,6 +56,12 @@ suite('AzureExtensionApiProvider tests', () => {
 
         const latestApi11: TestApi = apiProvider.getApi<TestApi>('1.1');
         assert.equal(latestApi11.apiVersion, '1.1.1');
+
+        const latestApi11Carot: TestApi = apiProvider.getApi<TestApi>('^1.1.0');
+        assert.equal(latestApi11Carot.apiVersion, '1.2.0');
+
+        const latestApi11Tilde: TestApi = apiProvider.getApi<TestApi>('~1.1.0');
+        assert.equal(latestApi11Tilde.apiVersion, '1.1.1');
     });
 
     test('Wrapped api is same as original api', async () => {
