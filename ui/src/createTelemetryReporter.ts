@@ -17,8 +17,7 @@ const debugTelemetryEnabled: boolean = !/^(false|0)?$/i.test(process.env.DEBUGTE
 export function createTelemetryReporter(ctx: vscode.ExtensionContext): ITelemetryReporter {
     const { name: extensionName, version: extensionVersion, aiKey } = ext.packageInfo;
 
-    if (debugTelemetryEnabled || !aiKey) {
-        console.warn(aiKey ? `${extensionName}: DEBUGTELEMETRY mode enabled - not sending telemetry` : 'Unable to obtain package info, cannot send telemetry');
+    if (debugTelemetryEnabled) {
         return new DebugReporter(extensionName, extensionVersion);
     } else {
         const reporter: TelemetryReporter = new TelemetryReporter(extensionName, extensionVersion, aiKey);
