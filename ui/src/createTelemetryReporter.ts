@@ -6,15 +6,14 @@
 import * as process from 'process';
 import * as vscode from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
-import { ITelemetryReporter } from '../index';
+import { IPackageInfo, ITelemetryReporter } from '../index';
 import { DebugReporter } from './DebugReporter';
-import { ext } from './extensionVariables';
 
 // tslint:disable-next-line:strict-boolean-expressions
 const debugTelemetryEnabled: boolean = !/^(false|0)?$/i.test(process.env.DEBUGTELEMETRY || '');
 
-export function createTelemetryReporter(ctx: vscode.ExtensionContext): ITelemetryReporter {
-    const { name: extensionName, version: extensionVersion, aiKey } = ext.packageInfo;
+export function createTelemetryReporter(ctx: vscode.ExtensionContext, packageInfo: IPackageInfo): ITelemetryReporter {
+    const { name: extensionName, version: extensionVersion, aiKey } = packageInfo;
 
     if (debugTelemetryEnabled) {
         return new DebugReporter(extensionName, extensionVersion);

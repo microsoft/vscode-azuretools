@@ -127,7 +127,7 @@ To create a telemetry reporter for your extension's use, use the following code:
 import { createTelemetryReporter } from 'vscode-azureextensionui';
 
 export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
-    let reporter = createTelemetryReporter(ctx);
+    let reporter = createTelemetryReporter(ctx, require('./package.json'));
     reporter.sendTelemetryEvent(<args>);
 }
 ```

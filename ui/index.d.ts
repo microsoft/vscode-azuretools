@@ -367,9 +367,10 @@ export interface ITelemetryReporter {
  *
  * The returned reporter does not need to be disposed by the caller, it will be disposed automatically.
  * @param ctx The extension context
+ * @param packageInfo The contents of the extension's package.json file, can be obtained by calling `require('./package.json')`
  * @returns An object implementing ITelemetryReporter
  */
-export declare function createTelemetryReporter(ctx: ExtensionContext): ITelemetryReporter;
+export declare function createTelemetryReporter(ctx: ExtensionContext, packageInfo: IPackageInfo): ITelemetryReporter;
 
 export interface TelemetryProperties {
     /**
@@ -800,6 +801,9 @@ export declare function registerUIExtensionVariables(extVars: UIExtensionVariabl
  */
 export interface UIExtensionVariables {
     context: ExtensionContext;
+    /**
+     * The contents of the extension's package.json file, can be obtained by calling `require('./package.json')`
+     */
     packageInfo: IPackageInfo;
     outputChannel: OutputChannel;
     ui: IAzureUserInput;
