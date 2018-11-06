@@ -23,6 +23,14 @@ export function wrapApiWithVersioning(azExts: AzureExtensionApi[]): AzureExtensi
     };
 }
 
+type ApiVersionCode = 'NoLongerSupported' | 'NotYetSupported';
+
+class ApiVersionError extends Error {
+    constructor(message: string, readonly code: ApiVersionCode) {
+        super(message);
+    }
+}
+
 function getApiInternal<T extends AzureExtensionApi>(azExts: AzureExtensionApi[], extensionId: string, apiVersionRange: string): T {
     return <T>callWithTelemetryAndErrorHandlingSync('getApi', function (this: IActionContext): T {
         this.rethrowError = true;
@@ -39,11 +47,19 @@ function getApiInternal<T extends AzureExtensionApi>(azExts: AzureExtensionApi[]
             return <T>(azExts.find((a: AzureExtensionApi) => a.apiVersion === matchedApiVersion));
         } else {
             const minApiVersion: string = semver.minSatisfying(apiVersions, '');
-            const message: string = semver.gtr(minApiVersion, apiVersionRange) ?
-                localize('notSupported', 'API version "{0}" for extension id "{1}" is no longer supported. Minimum version is "{2}".', apiVersionRange, extensionId, minApiVersion) : // This case will hopefully never happen if we maintain backwards compat
-                localize('updateExtension', 'Extension dependency with id "{0}" must be updated.', extensionId); // This case is somewhat likely - so keep the error message simple and just tell user to update their extenion
+            let message: string;
+            let code: ApiVersionCode;
+            if (semver.gtr(minApiVersion, apiVersionRange)) {
+                // This case will hopefully never happen if we maintain backwards compat
+                message = localize('notSupported', 'API version "{0}" for extension id "{1}" is no longer supported. Minimum version is "{2}".', apiVersionRange, extensionId, minApiVersion);
+                code = 'NoLongerSupported'
+            } else {
+                // This case is somewhat likely - so keep the error message simple and just tell user to update their extenion
+                message = localize('updateExtension', 'Extension dependency with id "{0}" must be updated.', extensionId);
+                code = 'NotYetSupported';
+            }
 
-            throw new Error(message);
+            throw new ApiVersionError(message, code);
         }
     });
 }

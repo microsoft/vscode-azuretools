@@ -5,6 +5,8 @@
 
 import * as assert from 'assert';
 import { AzureExtensionApi, AzureExtensionApiProvider } from '../api';
+import { IParsedError } from '../index';
+import { parseError } from '../src/parseError';
 import { wrapApiWithVersioning } from '../src/wrapApiWithVersioning';
 import { assertThrowsAsync } from './assertThrowsAsync';
 
@@ -47,9 +49,9 @@ suite('AzureExtensionApiProvider tests', () => {
         const api12: TestApi = new TestApi('1.2.0');
         const apiProvider: AzureExtensionApiProvider = wrapApiWithVersioning([api1, api111, api11, api12]);
 
-        assert.throws(() => apiProvider.getApi('0.1'), /no longer supported/);
-        assert.throws(() => apiProvider.getApi('1.1.2'), /must be updated/);
-        assert.throws(() => apiProvider.getApi('2'), /must be updated/);
+        assert.throws(() => apiProvider.getApi('0.1'), (error) => validateApiError(error, /no longer supported/, 'NoLongerSupported'));
+        assert.throws(() => apiProvider.getApi('1.1.2'), (error) => validateApiError(error, /must be updated/, 'NotYetSupported'));
+        assert.throws(() => apiProvider.getApi('2'), (error) => validateApiError(error, /must be updated/, 'NotYetSupported'));
 
         const latestApi12: TestApi = apiProvider.getApi<TestApi>('1');
         assert.equal(latestApi12.apiVersion, '1.2.0');
@@ -78,3 +80,9 @@ suite('AzureExtensionApiProvider tests', () => {
         await assertThrowsAsync(wrappedApi.testFuncErrorAsync, /testFuncErrorAsync/);
     });
 });
+
+// tslint:disable-next-line:no-any
+function validateApiError(error: any, regexp: RegExp, expectedCode: string): boolean {
+    const errorInfo: IParsedError = parseError(error);
+    return regexp.test(errorInfo.message) && errorInfo.errorType === expectedCode;
+}
