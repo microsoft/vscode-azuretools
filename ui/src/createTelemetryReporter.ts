@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as console from 'console';
 import * as process from 'process';
 import * as vscode from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
