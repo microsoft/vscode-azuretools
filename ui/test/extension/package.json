@@ -2,6 +2,7 @@
     "name": "azureextensionui",
     "description": "Used for unit tests in this package.",
     "version": "0.0.1",
+    "aiKey": "test-ai-key",
     "publisher": "ms-azuretools",
     "main": "./extension",
     "engines": {

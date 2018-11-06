@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import * as assert from 'assert';
 import { ExtensionContext, OutputChannel } from "vscode";
 import TelemetryReporter from "vscode-extension-telemetry";
 import { IAzureUserInput, UIExtensionVariables } from "../index";
@@ -32,9 +33,12 @@ class UninitializedExtensionVariables implements UIExtensionVariables {
  * Container for common extension variables used throughout the UI package. They must be initialized with registerUIExtensionVariables
  */
 export let ext: UIExtensionVariables = new UninitializedExtensionVariables();
-export let extInitialized: boolean = false;
 
 export function registerUIExtensionVariables(extVars: UIExtensionVariables): void {
+    assert(extVars.context, 'registerUIExtensionVariables: Missing context');
+    assert(extVars.outputChannel, 'registerUIExtensionVariables: Missing outputChannel');
+    assert(extVars.reporter, 'registerUIExtensionVariables: Missing reporter');
+    assert(extVars.ui, 'registerUIExtensionVariables: Missing ui');
+
     ext = extVars;
-    extInitialized = true;
 }

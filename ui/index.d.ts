@@ -801,7 +801,7 @@ export interface UIExtensionVariables {
     context: ExtensionContext;
     outputChannel: OutputChannel;
     ui: IAzureUserInput;
-    reporter: ITelemetryReporter | undefined;
+    reporter: ITelemetryReporter;
 }
 
 export interface IAddUserAgent {
