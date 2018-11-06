@@ -64,6 +64,9 @@ suite('AzureExtensionApiProvider tests', () => {
 
         const latestApi11Tilde: TestApi = apiProvider.getApi<TestApi>('~1.1.0');
         assert.equal(latestApi11Tilde.apiVersion, '1.1.1');
+
+        const emptyApiProvider: AzureExtensionApiProvider = wrapApiWithVersioning([]);
+        assert.throws(() => emptyApiProvider.getApi('^1.0.0'), (error) => validateApiError(error, /must be updated/, 'NotYetSupported'));
     });
 
     test('Wrapped api is same as original api', async () => {

@@ -49,10 +49,10 @@ function getApiInternal<T extends AzureExtensionApi>(azExts: AzureExtensionApi[]
             const minApiVersion: string = semver.minSatisfying(apiVersions, '');
             let message: string;
             let code: ApiVersionCode;
-            if (semver.gtr(minApiVersion, apiVersionRange)) {
+            if (minApiVersion && semver.gtr(minApiVersion, apiVersionRange)) {
                 // This case will hopefully never happen if we maintain backwards compat
                 message = localize('notSupported', 'API version "{0}" for extension id "{1}" is no longer supported. Minimum version is "{2}".', apiVersionRange, extensionId, minApiVersion);
-                code = 'NoLongerSupported'
+                code = 'NoLongerSupported';
             } else {
                 // This case is somewhat likely - so keep the error message simple and just tell user to update their extenion
                 message = localize('updateExtension', 'Extension dependency with id "{0}" must be updated.', extensionId);
