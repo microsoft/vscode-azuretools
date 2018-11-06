@@ -6,8 +6,8 @@
 import * as assert from 'assert';
 import { AzureExtensionApi, AzureExtensionApiProvider } from '../api';
 import { IParsedError } from '../index';
+import { createApiProvider } from '../src/createApiProvider';
 import { parseError } from '../src/parseError';
-import { wrapApiWithVersioning } from '../src/wrapApiWithVersioning';
 import { assertThrowsAsync } from './assertThrowsAsync';
 
 class TestApi implements AzureExtensionApi {
@@ -41,13 +41,13 @@ class TestApi implements AzureExtensionApi {
 
 suite('AzureExtensionApiProvider tests', () => {
     test('Versioning', async () => {
-        assert.throws(() => wrapApiWithVersioning([new TestApi('invalidVersion')]), /Invalid semver/);
+        assert.throws(() => createApiProvider([new TestApi('invalidVersion')]), /Invalid semver/);
 
         const api1: TestApi = new TestApi('1.0.0');
         const api11: TestApi = new TestApi('1.1.0');
         const api111: TestApi = new TestApi('1.1.1');
         const api12: TestApi = new TestApi('1.2.0');
-        const apiProvider: AzureExtensionApiProvider = wrapApiWithVersioning([api1, api111, api11, api12]);
+        const apiProvider: AzureExtensionApiProvider = createApiProvider([api1, api111, api11, api12]);
 
         assert.throws(() => apiProvider.getApi('0.1'), (error) => validateApiError(error, /no longer supported/, 'NoLongerSupported'));
         assert.throws(() => apiProvider.getApi('1.1.2'), (error) => validateApiError(error, /must be updated/, 'NotYetSupported'));
@@ -65,13 +65,13 @@ suite('AzureExtensionApiProvider tests', () => {
         const latestApi11Tilde: TestApi = apiProvider.getApi<TestApi>('~1.1.0');
         assert.equal(latestApi11Tilde.apiVersion, '1.1.1');
 
-        const emptyApiProvider: AzureExtensionApiProvider = wrapApiWithVersioning([]);
+        const emptyApiProvider: AzureExtensionApiProvider = createApiProvider([]);
         assert.throws(() => emptyApiProvider.getApi('^1.0.0'), (error) => validateApiError(error, /must be updated/, 'NotYetSupported'));
     });
 
     test('Wrapped api is same as original api', async () => {
         const api: TestApi = new TestApi('1.0.0');
-        const apiProvider: AzureExtensionApiProvider = wrapApiWithVersioning([api]);
+        const apiProvider: AzureExtensionApiProvider = createApiProvider([api]);
 
         const wrappedApi: TestApi = apiProvider.getApi<TestApi>('1');
 

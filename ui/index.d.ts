@@ -842,4 +842,4 @@ export function createAzureSubscriptionClient<T extends IAddUserAgent>(
  * Wraps an Azure Extension's API in a very basic provider that adds versioning.
  * Multiple APIs with different versions can be supplied, but ideally a single backwards-compatible API is all that's necessary.
  */
-export function wrapApiWithVersioning(azExts: AzureExtensionApi[]): AzureExtensionApiProvider;
+export function createApiProvider(azExts: AzureExtensionApi[]): AzureExtensionApiProvider;

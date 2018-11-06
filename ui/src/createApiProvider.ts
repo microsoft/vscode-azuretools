@@ -10,7 +10,7 @@ import { callWithTelemetryAndErrorHandlingSync } from './callWithTelemetryAndErr
 import { getPackageInfo } from './getPackageInfo';
 import { localize } from './localize';
 
-export function wrapApiWithVersioning(azExts: AzureExtensionApi[]): AzureExtensionApiProvider {
+export function createApiProvider(azExts: AzureExtensionApi[]): AzureExtensionApiProvider {
     for (const azExt of azExts) {
         if (!semver.valid(azExt.apiVersion)) {
             throw new Error(localize('invalidVersion', 'Invalid semver "{0}".', azExt.apiVersion));
