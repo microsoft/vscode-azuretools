@@ -50,11 +50,15 @@ export async function connectToGitHub(ti: AzureTreeItem<ISiteTreeRoot>): Promise
         requestOptions.url = nonNullProp(orgQuickPick, 'repos_url');
         const gitHubRepos: Object[] = await getJsonRequest(requestOptions);
         let repoQuickPicks: IAzureQuickPickItem<{}>[] = createQuickPickFromJsons(gitHubRepos, 'name', undefined, ['url', 'html_url']);
-        while (requestOptions.nextLink !== requestOptions.lastLink) {
+        while (requestOptions.nextLink) {
             // load all the next repos at once
             requestOptions.url = nonNullProp(requestOptions, 'nextLink');
             const moreGitHubRepos: Object[] = await getJsonRequest(requestOptions);
             repoQuickPicks = repoQuickPicks.concat(createQuickPickFromJsons(moreGitHubRepos, 'name', undefined, ['url', 'html_url']));
+            if (requestOptions.nextLink === requestOptions.lastLink) {
+                // this is the last page of repos
+                break;
+            }
         }
 
         repoQuickPick = (await ext.ui.showQuickPick(repoQuickPicks, { placeHolder: 'Choose project.' })).data;
