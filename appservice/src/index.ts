@@ -8,7 +8,6 @@ export * from './createAppService/createWebApp';
 export * from './createAppService/IAppCreateOptions';
 export * from './deploy/deploy';
 export * from './deleteSite';
-export * from './detectProjectScmType';
 export * from './editScmType';
 export * from './getFile';
 export * from './getKuduClient';

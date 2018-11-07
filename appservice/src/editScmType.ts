@@ -4,6 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { WebSiteManagementModels } from 'azure-arm-website';
+import * as git from 'simple-git/promise';
+import { RemoteWithRefs } from 'simple-git/typings/response';
 import { AzureTreeItem, IAzureQuickPickItem, IAzureQuickPickOptions, UserCancelledError } from 'vscode-azureextensionui';
 import { connectToGitHub } from './connectToGitHub';
 import { ext } from './extensionVariables';
@@ -65,4 +67,18 @@ async function showScmPrompt(currentScmType: string): Promise<ScmType> {
     } else {
         return newScmType;
     }
+}
+
+export async function detectProjectScmType(fsPath: string): Promise<ScmType> {
+    const localGit: git.SimpleGit = git(fsPath);
+    const isRepo: boolean = await localGit.checkIsRepo();
+    if (isRepo) {
+        const remotes: RemoteWithRefs[] = await localGit.getRemotes(true);
+        for (const remote of remotes) {
+            remote.refs.push.startsWith('https://github.com/');
+            return ScmType.GitHub;
+        }
+        return ScmType.LocalGit;
+    }
+    return ScmType.None;
 }
