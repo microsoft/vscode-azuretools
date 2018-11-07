@@ -18,6 +18,7 @@ import { nonNullProp } from './utils/nonNull';
 export async function editScmType(ti: AzureTreeItem<ISiteTreeRoot>, newScmType?: ScmType): Promise<string | undefined> {
     const client: SiteClient = ti.root.client;
     const config: WebSiteManagementModels.SiteConfigResource = await client.getSiteConfig();
+    // tslint:disable-next-line:strict-boolean-expressions
     newScmType = newScmType ? newScmType : await showScmPrompt(nonNullProp(config, 'scmType'));
     if (newScmType === ScmType.GitHub) {
         if (config.scmType !== ScmType.None) {

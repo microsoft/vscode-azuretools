@@ -77,6 +77,7 @@ export async function connectToGitHub(ti: AzureTreeItem<ISiteTreeRoot>): Promise
         };
     } catch (error) {
         // pass the error to validate if it's a "Bad Credentials" error
+        // tslint:disable-next-line:no-unsafe-any
         await showGitHubAuthPrompt(ti, error);
         throw new UserCancelledError();
     }
