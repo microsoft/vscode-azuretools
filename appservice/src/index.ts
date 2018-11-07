@@ -12,6 +12,7 @@ export * from './editScmType';
 export * from './getFile';
 export * from './getKuduClient';
 export * from './functionsAdminRequest';
+export * from './localGitUri';
 export * from './pingFunctionApp';
 export * from './putFile';
 export * from './SiteClient';

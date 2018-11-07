@@ -51,8 +51,8 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
             throw err;
         }
     }
-
-    ext.outputChannel.appendLine(formatDeployLog(client, (localize('localGitDeploy', `Deploying Local Git repository to "${client.fullName}"...`))));
+    const localBranch: string = (await localGit.branchLocal()).current;
+    ext.outputChannel.appendLine(formatDeployLog(client, (localize('localGitDeploy', 'Deploying local branch "{0}" to "{1}"...', localBranch, client.fullName))));
     await waitForDeploymentToComplete(client, kuduClient);
 }
 
