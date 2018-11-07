@@ -5,7 +5,6 @@
 
 import { NameValuePair, SiteSourceControl } from 'azure-arm-website/lib/models';
 import { TokenCredentials, WebResource } from 'ms-rest';
-import * as opn from 'opn';
 import { Response } from 'request';
 import * as request from 'request-promise';
 import * as vscode from 'vscode';
@@ -14,6 +13,7 @@ import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { signRequest } from './signRequest';
 import { SiteClient } from './SiteClient';
+import { ISiteTreeRoot } from './tree/ISiteTreeRoot';
 import { nonNullProp } from './utils/nonNull';
 
 type gitHubOrgData = { repos_url?: string };
@@ -21,69 +21,62 @@ type gitHubReposData = { repos_url?: string, url?: string, html_url?: string };
 type gitHubLink = { prev?: string, next?: string, last?: string, first?: string };
 // tslint:disable-next-line:no-reserved-keywords
 type gitHubWebResource = WebResource & { resolveWithFullResponse?: boolean, nextLink?: string, lastLink?: string, type?: string };
+const badCredentials: string = 'Bad Credentials';
 
-export async function connectToGitHub(node: AzureTreeItem, client: SiteClient): Promise<void> {
+export async function connectToGitHub(ti: AzureTreeItem<ISiteTreeRoot>): Promise<void> {
+    const client: SiteClient = ti.root.client;
+    let siteSourceControl: SiteSourceControl;
     const requestOptions: gitHubWebResource = new WebResource();
-    let repoSelected: boolean = false;
     requestOptions.resolveWithFullResponse = true;
     requestOptions.headers = {
         ['User-Agent']: 'vscode-azureappservice-extension'
     };
     const oAuth2Token: string | undefined = (await client.listSourceControls())[0].token;
     if (!oAuth2Token) {
-        await showGitHubAuthPrompt();
+        // we pass this error to validate the error was due to be bad cred and give the user an actionable error
+        await showGitHubAuthPrompt(ti, new Error(badCredentials));
         // to prevent the GitHub appearing that it succeeded
         throw new UserCancelledError();
     }
-
-    await signRequest(requestOptions, new TokenCredentials(oAuth2Token));
-    requestOptions.url = 'https://api.github.com/user';
-    const gitHubUser: Object[] = await getJsonRequest(requestOptions, node);
-    requestOptions.url = 'https://api.github.com/user/orgs';
-    const gitHubOrgs: Object[] = await getJsonRequest(requestOptions, node);
-    const orgQuickPicks: IAzureQuickPickItem<{}>[] = createQuickPickFromJsons([gitHubUser], 'login', undefined, ['repos_url']).concat(createQuickPickFromJsons(gitHubOrgs, 'login', undefined, ['repos_url']));
-    const orgQuickPick: gitHubOrgData = (await ext.ui.showQuickPick(orgQuickPicks, { placeHolder: 'Choose your organization.' })).data;
-    let repoQuickPick: gitHubReposData;
-    requestOptions.url = nonNullProp(orgQuickPick, 'repos_url');
-    const gitHubRepos: Object[] = await getJsonRequest(requestOptions, node);
-    let repoQuickPicks: IAzureQuickPickItem<{}>[] = createQuickPickFromJsons(gitHubRepos, 'name', undefined, ['url', 'html_url']);
-    do {
-        if (requestOptions.nextLink && requestOptions.url !== requestOptions.lastLink) {
-            // this makes sure that a nextLink exists and that the last requested url wasn't the last page
-            repoQuickPicks.push({
-                label: '$(sync) Load More',
-                description: '',
-                data: {
-                    url: requestOptions.nextLink
-                },
-                suppressPersistence: true
-            });
+    try {
+        await signRequest(requestOptions, new TokenCredentials(oAuth2Token));
+        requestOptions.url = 'https://api.github.com/user';
+        const gitHubUser: Object[] = await getJsonRequest(requestOptions);
+        requestOptions.url = 'https://api.github.com/user/orgs';
+        const gitHubOrgs: Object[] = await getJsonRequest(requestOptions);
+        const orgQuickPicks: IAzureQuickPickItem<{}>[] = createQuickPickFromJsons([gitHubUser], 'login', undefined, ['repos_url']).concat(createQuickPickFromJsons(gitHubOrgs, 'login', undefined, ['repos_url']));
+        const orgQuickPick: gitHubOrgData = (await ext.ui.showQuickPick(orgQuickPicks, { placeHolder: 'Choose your organization.' })).data;
+        let repoQuickPick: gitHubReposData;
+        requestOptions.url = nonNullProp(orgQuickPick, 'repos_url');
+        const gitHubRepos: Object[] = await getJsonRequest(requestOptions);
+        let repoQuickPicks: IAzureQuickPickItem<{}>[] = createQuickPickFromJsons(gitHubRepos, 'name', undefined, ['url', 'html_url']);
+        while (requestOptions.nextLink !== requestOptions.lastLink) {
+            // load all the next repos at once
+            requestOptions.url = nonNullProp(requestOptions, 'nextLink');
+            const moreGitHubRepos: Object[] = await getJsonRequest(requestOptions);
+            repoQuickPicks = repoQuickPicks.concat(createQuickPickFromJsons(moreGitHubRepos, 'name', undefined, ['url', 'html_url']));
         }
+
         repoQuickPick = (await ext.ui.showQuickPick(repoQuickPicks, { placeHolder: 'Choose project.' })).data;
 
-        if (repoQuickPick.url === requestOptions.nextLink) {
-            requestOptions.url = nonNullProp(requestOptions, 'nextLink');
-            // remove the stale Load More quick pick
-            repoQuickPicks.pop();
-            const moreGitHubRepos: Object[] = await getJsonRequest(requestOptions, node);
-            repoQuickPicks = repoQuickPicks.concat(createQuickPickFromJsons(moreGitHubRepos, 'name', undefined, ['url', 'html_url']));
-        } else {
-            repoSelected = true;
-        }
-    } while (!repoSelected);
+        requestOptions.url = `${repoQuickPick.url}/branches`;
+        const gitHubBranches: Object[] = await getJsonRequest(requestOptions);
+        const branchQuickPicks: IAzureQuickPickItem<{}>[] = createQuickPickFromJsons(gitHubBranches, 'name');
+        const branchQuickPick: IAzureQuickPickItem<{}> = await ext.ui.showQuickPick(branchQuickPicks, { placeHolder: 'Choose branch.' });
 
-    requestOptions.url = `${repoQuickPick.url}/branches`;
-    const gitHubBranches: Object[] = await getJsonRequest(requestOptions, node);
-    const branchQuickPicks: IAzureQuickPickItem<{}>[] = createQuickPickFromJsons(gitHubBranches, 'name');
-    const branchQuickPick: IAzureQuickPickItem<{}> = await ext.ui.showQuickPick(branchQuickPicks, { placeHolder: 'Choose branch.' });
+        siteSourceControl = {
+            repoUrl: repoQuickPick.html_url,
+            branch: branchQuickPick.label,
+            isManualIntegration: false,
+            deploymentRollbackEnabled: true,
+            isMercurial: false
+        };
+    } catch (error) {
+        // pass the error to validate if it's a "Bad Credentials" error
+        await showGitHubAuthPrompt(ti, error);
+        throw new UserCancelledError();
+    }
 
-    const siteSourceControl: SiteSourceControl = {
-        repoUrl: repoQuickPick.html_url,
-        branch: branchQuickPick.label,
-        isManualIntegration: false,
-        deploymentRollbackEnabled: true,
-        isMercurial: false
-    };
     try {
         const connectingToGithub: string = localize('ConnectingToGithub', '"{0}" is being connected to the GitHub repo. This may take several minutes...', client.fullName);
         const connectedToGithub: string = localize('ConnectedToGithub', '"{0}" has been connected to the GitHub repo.', client.fullName);
@@ -108,53 +101,40 @@ export async function connectToGitHub(node: AzureTreeItem, client: SiteClient): 
     }
 }
 
-async function showGitHubAuthPrompt(): Promise<void> {
-    const learnMore: string = localize('learnMore', 'Learn More');
-    const setupGithub: string = localize('setupGithub', 'You must give Azure access to your GitHub account.');
-    const input: string | undefined = await vscode.window.showErrorMessage(setupGithub, learnMore);
-    if (input === learnMore) {
-        // tslint:disable-next-line:no-unsafe-any
-        opn('https://aka.ms/B7g6sw');
+async function showGitHubAuthPrompt(ti: AzureTreeItem<ISiteTreeRoot>, error: Error): Promise<void> {
+    const invalidToken: string = localize('tokenExpired', 'Azure\'s GitHub token in invalid.  Authorize in the "Deployment Center"');
+    const goToPortal: string = localize('goToPortal', 'Go to Portal "Deployment Center"');
+    const parsedError: IParsedError = parseError(error);
+    if (parsedError.message.indexOf(badCredentials) > -1) {
+        // the default error is just "Bad Credentials," which is an unhelpful error message
+        const input: string | undefined = await vscode.window.showErrorMessage(invalidToken, goToPortal);
+        if (input === goToPortal) {
+            ti.openInPortal(`${ti.root.client.id}/vstscd`);
+            throw new UserCancelledError();
+        }
+    } else {
+        throw error;
     }
 }
 
-async function getJsonRequest(requestOptions: gitHubWebResource, node: AzureTreeItem): Promise<Object[]> {
+async function getJsonRequest(requestOptions: gitHubWebResource): Promise<Object[]> {
     // Reference for GitHub REST routes
     // https://developer.github.com/v3/
     // Note: blank after user implies look up authorized user
-    try {
-        // tslint:disable-next-line:no-unsafe-any
-        const gitHubResponse: Response = await request(requestOptions).promise();
-        if (gitHubResponse.headers.link) {
-            const headerLink: string = <string>gitHubResponse.headers.link;
-            const linkObject: gitHubLink = parseLinkHeaderToGitHubLinkObject(headerLink);
-            if (linkObject.next) {
-                requestOptions.nextLink = linkObject.next;
-            }
-            if (linkObject.last) {
-                requestOptions.lastLink = linkObject.last;
-            }
+    // tslint:disable-next-line:no-unsafe-any
+    const gitHubResponse: Response = await request(requestOptions).promise();
+    if (gitHubResponse.headers.link) {
+        const headerLink: string = <string>gitHubResponse.headers.link;
+        const linkObject: gitHubLink = parseLinkHeaderToGitHubLinkObject(headerLink);
+        if (linkObject.next) {
+            requestOptions.nextLink = linkObject.next;
         }
-        // tslint:disable-next-line:no-unsafe-any
-        return <Object[]>JSON.parse(gitHubResponse.body);
-    } catch (error) {
-        const parsedError: IParsedError = parseError(error);
-        if (parsedError.message.indexOf('Bad credentials') > -1) {
-            // the default error is just "Bad Credentials," which is an unhelpful error message
-            const tokenExpired: string = localize('tokenExpired', 'Azure\'s GitHub token has expired.  Reauthorize in the Portal under "Deployment options."');
-            const goToPortal: string = localize('goToPortal', 'Go to Portal');
-            const input: string | undefined = await vscode.window.showErrorMessage(tokenExpired, goToPortal);
-            if (input === goToPortal) {
-                node.openInPortal();
-                // https://github.com/Microsoft/vscode-azuretools/issues/78
-                throw new UserCancelledError();
-            } else {
-                throw new UserCancelledError();
-            }
-        } else {
-            throw error;
+        if (linkObject.last) {
+            requestOptions.lastLink = linkObject.last;
         }
     }
+    // tslint:disable-next-line:no-unsafe-any
+    return <Object[]>JSON.parse(gitHubResponse.body);
 }
 
 /**

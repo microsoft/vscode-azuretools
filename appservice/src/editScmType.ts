@@ -10,17 +10,19 @@ import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { ScmType } from './ScmType';
 import { SiteClient } from './SiteClient';
+import { ISiteTreeRoot } from './tree/ISiteTreeRoot';
 import { nonNullProp } from './utils/nonNull';
 
-export async function editScmType(client: SiteClient, node: AzureTreeItem): Promise<string | undefined> {
+export async function editScmType(ti: AzureTreeItem<ISiteTreeRoot>, newScmType?: ScmType): Promise<string | undefined> {
+    const client: SiteClient = ti.root.client;
     const config: WebSiteManagementModels.SiteConfigResource = await client.getSiteConfig();
-    const newScmType: string = await showScmPrompt(nonNullProp(config, 'scmType'));
+    newScmType = newScmType ? newScmType : await showScmPrompt(nonNullProp(config, 'scmType'));
     if (newScmType === ScmType.GitHub) {
         if (config.scmType !== ScmType.None) {
             // GitHub cannot be configured if there is an existing configuration source-- a limitation of Azure
             throw new Error(localize('configurationError', 'Configuration type must be set to "None" to connect to a GitHub repository.'));
         }
-        await connectToGitHub(node, client);
+        await connectToGitHub(ti);
     } else {
         config.scmType = newScmType;
         // to update one property, a complete config file must be sent
@@ -39,7 +41,7 @@ export async function editScmType(client: SiteClient, node: AzureTreeItem): Prom
     return newScmType;
 }
 
-async function showScmPrompt(currentScmType: string): Promise<string> {
+async function showScmPrompt(currentScmType: string): Promise<ScmType> {
     const currentSource: string = localize('currentSource', '(Current source)');
     const scmQuickPicks: IAzureQuickPickItem<string | undefined>[] = [];
     // generate quickPicks to not include current type
@@ -56,7 +58,7 @@ async function showScmPrompt(currentScmType: string): Promise<string> {
         placeHolder: localize('scmPrompt', 'Select a new source.'),
         suppressPersistence: true
     };
-    const newScmType: string | undefined = (await ext.ui.showQuickPick(scmQuickPicks, options)).data;
+    const newScmType: ScmType | undefined = <ScmType>(await ext.ui.showQuickPick(scmQuickPicks, options)).data;
     if (newScmType === undefined) {
         // if the user clicks the current source, treat it as a cancel
         throw new UserCancelledError();

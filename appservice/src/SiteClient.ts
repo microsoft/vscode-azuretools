@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { WebSiteManagementClient } from 'azure-arm-website';
-import { AppServicePlan, Deployment, DeploymentCollection, FunctionEnvelopeCollection, FunctionSecrets, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SourceControlCollection, StringDictionary, User, WebAppInstanceCollection } from 'azure-arm-website/lib/models';
+import { AppServicePlan, FunctionEnvelopeCollection, FunctionSecrets, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SourceControlCollection, StringDictionary, User, WebAppInstanceCollection } from 'azure-arm-website/lib/models';
 import { createAzureClient, ISubscriptionRoot, parseError } from 'vscode-azureextensionui';
 import { FunctionEnvelope } from 'vscode-azurekudu/lib/models';
 import { nonNullProp, nonNullValue } from './utils/nonNull';
