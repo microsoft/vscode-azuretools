@@ -4,6 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { WebSiteManagementModels } from 'azure-arm-website';
+import * as git from 'simple-git/promise';
+import { RemoteWithRefs } from 'simple-git/typings/response';
 import { AzureTreeItem, IAzureQuickPickItem, IAzureQuickPickOptions, UserCancelledError } from 'vscode-azureextensionui';
 import { connectToGitHub } from './connectToGitHub';
 import { ext } from './extensionVariables';
@@ -12,9 +14,10 @@ import { ScmType } from './ScmType';
 import { SiteClient } from './SiteClient';
 import { nonNullProp } from './utils/nonNull';
 
-export async function editScmType(client: SiteClient, node: AzureTreeItem): Promise<string | undefined> {
+export async function editScmType(client: SiteClient, node: AzureTreeItem, newScmType?: ScmType): Promise<string | undefined> {
     const config: WebSiteManagementModels.SiteConfigResource = await client.getSiteConfig();
-    const newScmType: string = await showScmPrompt(nonNullProp(config, 'scmType'));
+    // tslint:disable-next-line:strict-boolean-expressions
+    newScmType = newScmType ? newScmType : await showScmPrompt(nonNullProp(config, 'scmType'));
     if (newScmType === ScmType.GitHub) {
         if (config.scmType !== ScmType.None) {
             // GitHub cannot be configured if there is an existing configuration source-- a limitation of Azure
@@ -39,7 +42,7 @@ export async function editScmType(client: SiteClient, node: AzureTreeItem): Prom
     return newScmType;
 }
 
-async function showScmPrompt(currentScmType: string): Promise<string> {
+async function showScmPrompt(currentScmType: string): Promise<ScmType> {
     const currentSource: string = localize('currentSource', '(Current source)');
     const scmQuickPicks: IAzureQuickPickItem<string | undefined>[] = [];
     // generate quickPicks to not include current type
@@ -56,11 +59,25 @@ async function showScmPrompt(currentScmType: string): Promise<string> {
         placeHolder: localize('scmPrompt', 'Select a new source.'),
         suppressPersistence: true
     };
-    const newScmType: string | undefined = (await ext.ui.showQuickPick(scmQuickPicks, options)).data;
+    const newScmType: ScmType | undefined = <ScmType>(await ext.ui.showQuickPick(scmQuickPicks, options)).data;
     if (newScmType === undefined) {
         // if the user clicks the current source, treat it as a cancel
         throw new UserCancelledError();
     } else {
         return newScmType;
     }
+}
+
+export async function detectProjectScmType(fsPath: string): Promise<ScmType> {
+    const localGit: git.SimpleGit = git(fsPath);
+    const isRepo: boolean = await localGit.checkIsRepo();
+    if (isRepo) {
+        const remotes: RemoteWithRefs[] = await localGit.getRemotes(true);
+        for (const remote of remotes) {
+            remote.refs.push.startsWith('https://github.com/');
+            return ScmType.GitHub;
+        }
+        return ScmType.LocalGit;
+    }
+    return ScmType.None;
 }
