@@ -21,7 +21,7 @@ type gitHubReposData = { repos_url?: string, url?: string, html_url?: string };
 type gitHubLink = { prev?: string, next?: string, last?: string, first?: string };
 // tslint:disable-next-line:no-reserved-keywords
 type gitHubWebResource = WebResource & { resolveWithFullResponse?: boolean, nextLink?: string, lastLink?: string, type?: string };
-const badCredentials: string = 'Bad Credentials';
+const badCredentials: string = 'Bad credentials';
 
 export async function connectToGitHub(ti: AzureTreeItem<ISiteTreeRoot>): Promise<void> {
     const client: SiteClient = ti.root.client;
@@ -48,20 +48,17 @@ export async function connectToGitHub(ti: AzureTreeItem<ISiteTreeRoot>): Promise
         const orgQuickPick: gitHubOrgData = (await ext.ui.showQuickPick(orgQuickPicks, { placeHolder: 'Choose your organization.' })).data;
         let repoQuickPick: gitHubReposData;
         requestOptions.url = nonNullProp(orgQuickPick, 'repos_url');
-        const gitHubRepos: Object[] = await getJsonRequest(requestOptions);
-        let repoQuickPicks: IAzureQuickPickItem<{}>[] = createQuickPickFromJsons(gitHubRepos, 'name', undefined, ['url', 'html_url']);
-        while (requestOptions.nextLink) {
-            // load all the next repos at once
-            requestOptions.url = nonNullProp(requestOptions, 'nextLink');
-            const moreGitHubRepos: Object[] = await getJsonRequest(requestOptions);
-            repoQuickPicks = repoQuickPicks.concat(createQuickPickFromJsons(moreGitHubRepos, 'name', undefined, ['url', 'html_url']));
-            if (requestOptions.nextLink === requestOptions.lastLink) {
-                // this is the last page of repos
-                break;
+        let repoQuickPicks: IAzureQuickPickItem<{}>[] = await getGitHubReposQuickPicks(requestOptions, 1);
+        let repoSelected: boolean = false; /* flag to determine if user clicked "Load More" */
+        do {
+            repoQuickPick = (await ext.ui.showQuickPick(repoQuickPicks, { placeHolder: 'Choose project.' })).data;
+            if (repoQuickPick.url === requestOptions.nextLink) {
+                repoQuickPicks.pop(); /* remove the stale Load more QuickPickItem */
+                repoQuickPicks = repoQuickPicks.concat(await getGitHubReposQuickPicks(requestOptions, 1));
+            } else {
+                repoSelected = true;
             }
-        }
-
-        repoQuickPick = (await ext.ui.showQuickPick(repoQuickPicks, { placeHolder: 'Choose project.' })).data;
+        } while (!repoSelected);
 
         requestOptions.url = `${repoQuickPick.url}/branches`;
         const gitHubBranches: Object[] = await getJsonRequest(requestOptions);
@@ -108,10 +105,10 @@ export async function connectToGitHub(ti: AzureTreeItem<ISiteTreeRoot>): Promise
 
 async function showGitHubAuthPrompt(ti: AzureTreeItem<ISiteTreeRoot>, error: Error): Promise<void> {
     const invalidToken: string = localize('tokenExpired', 'Azure\'s GitHub token in invalid.  Authorize in the "Deployment Center"');
-    const goToPortal: string = localize('goToPortal', 'Go to Portal "Deployment Center"');
+    const goToPortal: string = localize('goToPortal', 'Go to Portal');
     const parsedError: IParsedError = parseError(error);
     if (parsedError.message.indexOf(badCredentials) > -1) {
-        // the default error is just "Bad Credentials," which is an unhelpful error message
+        // the default error is just "Bad credentials," which is an unhelpful error message
         const input: string | undefined = await vscode.window.showErrorMessage(invalidToken, goToPortal);
         if (input === goToPortal) {
             ti.openInPortal(`${ti.root.client.id}/vstscd`);
@@ -190,4 +187,33 @@ function parseLinkHeaderToGitHubLinkObject(linkHeader: string): gitHubLink {
         linkMap[url.substring(url.indexOf(relative) + relative.length + 1, url.length - 1)] = url.substring(url.indexOf('<') + 1, url.indexOf('>'));
     }
     return linkMap;
+}
+
+async function getGitHubReposQuickPicks(requestOptions: gitHubWebResource, timeoutSeconds: number = 10): Promise<IAzureQuickPickItem<{}>[]> {
+    const timeoutMs: number = timeoutSeconds * 1000;
+    const startTime: number = Date.now();
+    let gitHubRepos: Object[] = [];
+    do {
+        gitHubRepos = gitHubRepos.concat(await getJsonRequest(requestOptions));
+        requestOptions.url = nonNullProp(requestOptions, 'nextLink');
+        if (requestOptions.nextLink === requestOptions.lastLink) {
+            // the next page is the lastLink so load that as well
+            gitHubRepos = gitHubRepos.concat(await getJsonRequest(requestOptions));
+            return createQuickPickFromJsons(gitHubRepos, 'name', undefined, ['url', 'html_url']);
+        }
+    } while (requestOptions.nextLink && startTime + timeoutMs > Date.now());
+
+    const partialRepoQuickPicks: IAzureQuickPickItem<{}>[] = createQuickPickFromJsons(gitHubRepos, 'name', undefined, ['url', 'html_url']);
+
+    // this adds a "Load More" QuickPick with the nextLink as the data which will be used in the next getJsonRequest
+    partialRepoQuickPicks.push({
+        label: '$(sync) Load More',
+        description: '',
+        data: {
+            url: requestOptions.nextLink
+        },
+        suppressPersistence: true
+    });
+
+    return partialRepoQuickPicks;
 }

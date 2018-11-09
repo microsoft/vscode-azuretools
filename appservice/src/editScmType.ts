@@ -6,7 +6,7 @@
 import { WebSiteManagementModels } from 'azure-arm-website';
 import * as git from 'simple-git/promise';
 import { RemoteWithRefs } from 'simple-git/typings/response';
-import { AzureTreeItem, IAzureQuickPickItem, IAzureQuickPickOptions, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, IAzureQuickPickItem, IAzureQuickPickOptions, UserCancelledError } from 'vscode-azureextensionui';
 import { connectToGitHub } from './connectToGitHub';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
@@ -15,7 +15,7 @@ import { SiteClient } from './SiteClient';
 import { ISiteTreeRoot } from './tree/ISiteTreeRoot';
 import { nonNullProp } from './utils/nonNull';
 
-export async function editScmType(ti: AzureTreeItem<ISiteTreeRoot>, newScmType?: ScmType): Promise<string | undefined> {
+export async function editScmType(ti: AzureParentTreeItem<ISiteTreeRoot>, newScmType?: ScmType): Promise<string | undefined> {
     const client: SiteClient = ti.root.client;
     const config: WebSiteManagementModels.SiteConfigResource = await client.getSiteConfig();
     // tslint:disable-next-line:strict-boolean-expressions
