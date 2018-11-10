@@ -12,7 +12,7 @@ import { ScmType } from './ScmType';
 import { SiteClient } from './SiteClient';
 import { nonNullProp } from './utils/nonNull';
 
-export async function editScmType(client: SiteClient, node: AzureTreeItem, newScmType?: ScmType): Promise<string | undefined> {
+export async function editScmType(client: SiteClient, node: AzureTreeItem, newScmType?: ScmType): Promise<ScmType | undefined> {
     const config: WebSiteManagementModels.SiteConfigResource = await client.getSiteConfig();
     // tslint:disable-next-line:strict-boolean-expressions
     newScmType = newScmType ? newScmType : await showScmPrompt(nonNullProp(config, 'scmType'));
@@ -42,14 +42,14 @@ export async function editScmType(client: SiteClient, node: AzureTreeItem, newSc
 
 async function showScmPrompt(currentScmType: string): Promise<ScmType> {
     const currentSource: string = localize('currentSource', '(Current source)');
-    const scmQuickPicks: IAzureQuickPickItem<string | undefined>[] = [];
+    const scmQuickPicks: IAzureQuickPickItem<ScmType | undefined>[] = [];
     // generate quickPicks to not include current type
     for (const scmType of Object.keys(ScmType)) {
         if (scmType === currentScmType) {
             // put the current source at the top of the list
             scmQuickPicks.unshift({ label: scmType, description: currentSource, data: undefined });
         } else {
-            scmQuickPicks.push({ label: scmType, description: '', data: scmType });
+            scmQuickPicks.push({ label: scmType, description: '', data: <ScmType>scmType });
         }
     }
 
@@ -57,7 +57,7 @@ async function showScmPrompt(currentScmType: string): Promise<ScmType> {
         placeHolder: localize('scmPrompt', 'Select a new source.'),
         suppressPersistence: true
     };
-    const newScmType: ScmType | undefined = <ScmType>(await ext.ui.showQuickPick(scmQuickPicks, options)).data;
+    const newScmType: ScmType | undefined = (await ext.ui.showQuickPick(scmQuickPicks, options)).data;
     if (newScmType === undefined) {
         // if the user clicks the current source, treat it as a cancel
         throw new UserCancelledError();
