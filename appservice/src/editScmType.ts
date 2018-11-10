@@ -4,17 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { WebSiteManagementModels } from 'azure-arm-website';
-import { AzureParentTreeItem, IAzureQuickPickItem, IAzureQuickPickOptions, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureTreeItem, IAzureQuickPickItem, IAzureQuickPickOptions, UserCancelledError } from 'vscode-azureextensionui';
 import { connectToGitHub } from './connectToGitHub';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { ScmType } from './ScmType';
 import { SiteClient } from './SiteClient';
-import { ISiteTreeRoot } from './tree/ISiteTreeRoot';
 import { nonNullProp } from './utils/nonNull';
 
-export async function editScmType(ti: AzureParentTreeItem<ISiteTreeRoot>): Promise<string | undefined> {
-    const client: SiteClient = ti.root.client;
+export async function editScmType(client: SiteClient, node: AzureTreeItem): Promise<string | undefined> {
     const config: WebSiteManagementModels.SiteConfigResource = await client.getSiteConfig();
     const newScmType: string = await showScmPrompt(nonNullProp(config, 'scmType'));
     if (newScmType === ScmType.GitHub) {
@@ -22,7 +20,7 @@ export async function editScmType(ti: AzureParentTreeItem<ISiteTreeRoot>): Promi
             // GitHub cannot be configured if there is an existing configuration source-- a limitation of Azure
             throw new Error(localize('configurationError', 'Configuration type must be set to "None" to connect to a GitHub repository.'));
         }
-        await connectToGitHub(ti);
+        await connectToGitHub(node, client);
     } else {
         config.scmType = newScmType;
         // to update one property, a complete config file must be sent
