@@ -44,12 +44,13 @@ async function showScmPrompt(currentScmType: string): Promise<ScmType> {
     const currentSource: string = localize('currentSource', '(Current source)');
     const scmQuickPicks: IAzureQuickPickItem<ScmType | undefined>[] = [];
     // generate quickPicks to not include current type
-    for (const scmType of Object.keys(ScmType)) {
+    for (const key of Object.keys(ScmType)) {
+        const scmType: ScmType = ScmType[key];
         if (scmType === currentScmType) {
             // put the current source at the top of the list
             scmQuickPicks.unshift({ label: scmType, description: currentSource, data: undefined });
         } else {
-            scmQuickPicks.push({ label: scmType, description: '', data: <ScmType>scmType });
+            scmQuickPicks.push({ label: scmType, description: '', data: scmType });
         }
     }
 
