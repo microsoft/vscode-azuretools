@@ -32,7 +32,7 @@ export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, c
     if (!oAuth2Token) {
         await showGitHubAuthPrompt(node, client, context);
         context.suppressErrorDisplay = true;
-        const noToken: string = localize('noToken', 'No OAuth2 Token under source controls.');
+        const noToken: string = localize('noToken', 'No oAuth2 Token.');
         throw new Error(noToken);
     }
     await signRequest(requestOptions, new TokenCredentials(oAuth2Token));
