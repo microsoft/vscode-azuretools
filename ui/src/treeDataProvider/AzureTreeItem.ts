@@ -26,8 +26,16 @@ export abstract class AzureTreeItem<TRoot = ISubscriptionRoot> implements types.
     public readonly parent: IAzureParentTreeItemInternal<TRoot> | undefined;
     private _temporaryDescription?: string;
 
+    private readonly _isAzureTreeItem: boolean = true;
+
     public constructor(parent: IAzureParentTreeItemInternal<TRoot> | undefined) {
         this.parent = parent;
+    }
+
+    // Workaround to fix "instanceof AzureTreeItem" when testing package with "npm link"
+    // tslint:disable-next-line:function-name no-any
+    public static [Symbol.hasInstance](instance: any): boolean {
+        return instance !== null && typeof instance === 'object' && !!(<AzureTreeItem>instance)._isAzureTreeItem;
     }
 
     private get _effectiveDescription(): string | undefined {
