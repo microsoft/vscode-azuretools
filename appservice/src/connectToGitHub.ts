@@ -20,10 +20,8 @@ type gitHubReposData = { repos_url?: string, url?: string, html_url?: string };
 type gitHubLink = { prev?: string, next?: string, last?: string, first?: string };
 // tslint:disable-next-line:no-reserved-keywords
 type gitHubWebResource = WebResource & { resolveWithFullResponse?: boolean, nextLink?: string, type?: string };
-const badCredentials: string = 'Bad credentials';
 
 export async function connectToGitHub(node: AzureTreeItem, client: SiteClient): Promise<void> {
-    let siteSourceControl: SiteSourceControl;
     const requestOptions: gitHubWebResource = new WebResource();
     requestOptions.resolveWithFullResponse = true;
     requestOptions.headers = {
@@ -60,7 +58,7 @@ export async function connectToGitHub(node: AzureTreeItem, client: SiteClient): 
     const branchQuickPicks: IAzureQuickPickItem<{}>[] = createQuickPickFromJsons(gitHubBranches, 'name');
     const branchQuickPick: IAzureQuickPickItem<{}> = await ext.ui.showQuickPick(branchQuickPicks, { placeHolder: 'Choose branch.' });
 
-    siteSourceControl = {
+    const siteSourceControl = {
         repoUrl: repoQuickPick.html_url,
         branch: branchQuickPick.label,
         isManualIntegration: false,
@@ -117,7 +115,7 @@ async function getJsonRequest(requestOptions: gitHubWebResource, node: AzureTree
         return <Object[]>JSON.parse(gitHubResponse.body);
     } catch (error) {
         const parsedError: IParsedError = parseError(error);
-        if (parsedError.message.indexOf(badCredentials) > -1) {
+        if (parsedError.message.indexOf('Bad credentials') > -1) {
             // the default error is just "Bad credentials," which is an unhelpful error message
             await showGitHubAuthPrompt(node);
             throw new UserCancelledError();
