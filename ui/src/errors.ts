@@ -6,8 +6,16 @@
 import { localize } from "./localize";
 
 export class UserCancelledError extends Error {
+    private readonly _isUserCancelledError: boolean = true;
+
     constructor() {
         super(localize('userCancelledError', 'Operation cancelled.'));
+    }
+
+    // Workaround to fix "instanceof UserCancelledError" when testing package with "npm link"
+    // tslint:disable-next-line:function-name no-any
+    public static [Symbol.hasInstance](instance: any): boolean {
+        return instance !== null && typeof instance === 'object' && !!(<UserCancelledError>instance)._isUserCancelledError;
     }
 }
 
