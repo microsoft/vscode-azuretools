@@ -7,6 +7,7 @@ import { WebSiteManagementClient } from 'azure-arm-website';
 import { AppServicePlan, FunctionEnvelopeCollection, FunctionSecrets, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SourceControlCollection, StringDictionary, User, WebAppInstanceCollection } from 'azure-arm-website/lib/models';
 import { createAzureClient, ISubscriptionRoot, parseError } from 'vscode-azureextensionui';
 import { FunctionEnvelope } from 'vscode-azurekudu/lib/models';
+import { localize } from './localize';
 import { nonNullProp, nonNullValue } from './utils/nonNull';
 
 /**
@@ -43,6 +44,7 @@ export class SiteClient {
     public readonly gitUrl: string | undefined;
 
     private readonly _subscription: ISubscriptionRoot;
+    private _funcPreviewSlotError: Error = new Error(localize('functionsSlotPreview', 'This operation is not supported for slots, which are still in preview.'));
 
     constructor(site: Site, subscription: ISubscriptionRoot) {
         let matches: RegExpMatchArray | null = nonNullProp(site, 'serverFarmId').match(/\/subscriptions\/(.*)\/resourceGroups\/(.*)\/providers\/Microsoft.Web\/serverfarms\/(.*)/);
@@ -173,8 +175,7 @@ export class SiteClient {
 
     public async listFunctions(): Promise<FunctionEnvelopeCollection> {
         if (this.slotName) {
-            // Functions support for slots is still in preview and doesn't support this yet
-            throw new Error('Method not implemented.');
+            throw this._funcPreviewSlotError;
         } else {
             return await this._client.webApps.listFunctions(this.resourceGroup, this.siteName);
         }
@@ -182,8 +183,7 @@ export class SiteClient {
 
     public async listFunctionsNext(nextPageLink: string): Promise<FunctionEnvelopeCollection> {
         if (this.slotName) {
-            // Functions support for slots is still in preview and doesn't support this yet
-            throw new Error('Method not implemented.');
+            throw this._funcPreviewSlotError;
         } else {
             return await this._client.webApps.listFunctionsNext(nextPageLink);
         }
@@ -191,8 +191,7 @@ export class SiteClient {
 
     public async getFunction(functionName: string): Promise<FunctionEnvelope> {
         if (this.slotName) {
-            // Functions support for slots is still in preview and doesn't support this yet
-            throw new Error('Method not implemented.');
+            throw this._funcPreviewSlotError;
         } else {
             return await this._client.webApps.getFunction(this.resourceGroup, this.siteName, functionName);
         }
@@ -200,8 +199,7 @@ export class SiteClient {
 
     public async deleteFunction(functionName: string): Promise<void> {
         if (this.slotName) {
-            // Functions support for slots is still in preview and doesn't support this yet
-            throw new Error('Method not implemented.');
+            throw this._funcPreviewSlotError;
         } else {
             return await this._client.webApps.deleteFunction(this.resourceGroup, this.siteName, functionName);
         }
