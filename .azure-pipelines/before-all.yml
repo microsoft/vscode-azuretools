@@ -1,0 +1,13 @@
+steps:
+- task: NodeTool@0
+  displayName: 'Use Node 8.x'
+  inputs:
+    versionSpec: 8.x
+
+- script: |
+    sudo cp .azure-pipelines/xvfb.init /etc/init.d/xvfb
+    sudo chmod +x /etc/init.d/xvfb
+    sudo update-rc.d xvfb defaults
+    sudo service xvfb start
+  displayName: 'Linux: Start X Virtual Frame Buffer'
+  condition: eq(variables['Agent.OS'], 'Linux')
