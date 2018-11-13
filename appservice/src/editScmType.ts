@@ -10,9 +10,10 @@ import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { ScmType } from './ScmType';
 import { SiteClient } from './SiteClient';
+import { ISiteTreeRoot } from './tree/ISiteTreeRoot';
 import { nonNullProp } from './utils/nonNull';
 
-export async function editScmType(client: SiteClient, node: AzureTreeItem, context: IActionContext, newScmType?: ScmType): Promise<ScmType | undefined> {
+export async function editScmType(client: SiteClient, node: AzureTreeItem<ISiteTreeRoot>, context: IActionContext, newScmType?: ScmType): Promise<ScmType | undefined> {
     const config: WebSiteManagementModels.SiteConfigResource = await client.getSiteConfig();
     // tslint:disable-next-line:strict-boolean-expressions
     newScmType = newScmType ? newScmType : await showScmPrompt(nonNullProp(config, 'scmType'));
