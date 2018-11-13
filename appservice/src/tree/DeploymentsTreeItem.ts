@@ -70,6 +70,7 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
 
     public async refreshLabelImpl(): Promise<void> {
         const siteConfig: SiteConfig = await this.root.client.getSiteConfig();
+        // while this doesn't directly refresh the label, but the contextValue determines the children/context menu
         if (siteConfig.scmType === ScmType.GitHub || siteConfig.scmType === ScmType.LocalGit) {
             this.contextValue = DeploymentsTreeItem.contextValueConnected;
         } else {
