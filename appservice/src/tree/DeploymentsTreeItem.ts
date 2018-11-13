@@ -5,14 +5,14 @@
 
 import { SiteConfig } from 'azure-arm-website/lib/models';
 import * as path from 'path';
-import { AzureParentTreeItem, DialogResponses, IActionContext } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, DialogResponses, GenericTreeItem, IActionContext } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { DeployResult } from 'vscode-azurekudu/lib/models';
 import { editScmType } from '../editScmType';
 import { ext } from '../extensionVariables';
 import { getKuduClient } from '../getKuduClient';
 import { ScmType } from '../ScmType';
-import { ConnectToGitHubTreeItem, DeploymentTreeItem } from './DeploymentTreeItem';
+import { DeploymentTreeItem } from './DeploymentTreeItem';
 import { ISiteTreeRoot } from './ISiteTreeRoot';
 
 export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
@@ -39,7 +39,7 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         return false;
     }
 
-    public async loadMoreChildrenImpl(_clearCache: boolean): Promise<DeploymentTreeItem[] | ConnectToGitHubTreeItem[]> {
+    public async loadMoreChildrenImpl(_clearCache: boolean): Promise<DeploymentTreeItem[] | GenericTreeItem<ISiteTreeRoot>[]> {
         const siteConfig: SiteConfig = await this.root.client.getSiteConfig();
         if (siteConfig.scmType === ScmType.GitHub || siteConfig.scmType === ScmType.LocalGit) {
             const kuduClient: KuduClient = await getKuduClient(this.root.client);
@@ -48,7 +48,11 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
                 return new DeploymentTreeItem(this, deployResult, kuduClient);
             });
         } else {
-            return [new ConnectToGitHubTreeItem(this)];
+            return [new GenericTreeItem(this, {
+                commandId: 'appService.ConnectToGitHub',
+                contextValue: 'ConnectToGithub',
+                label: 'Connect to a GitHub repository...'
+            })];
         }
     }
 

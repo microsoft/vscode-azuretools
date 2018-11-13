@@ -5,7 +5,7 @@
 
 import * as os from 'os';
 import * as path from 'path';
-import { ProgressLocation, window } from 'vscode';
+import { ProgressLocation, TextDocument, window, workspace } from 'vscode';
 import { AzureTreeItem } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { DeployResult, LogEntry } from 'vscode-azurekudu/lib/models';
@@ -33,14 +33,15 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         this.receivedTime = this._deployResult.receivedTime;
         this.active = this._deployResult.active;
         this.label = `${this.id.substring(0, 7)} - ${this._deployResult.message.substring(0, 50)}`;
+        if (this._deployResult.message.length > 50) { /* if the message was truncated, add "..." */
+            this.label += '...';
+        }
+
         if (this.active) {
             this.description = 'Active';
         }
         if (!this._deployResult.lastSuccessEndTime) {
             this.description = 'Failed';
-        }
-        if (this._deployResult.message.length > 50) {
-            this.label += '...';
         }
     }
 
@@ -66,6 +67,7 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
             // tslint:disable-next-line:no-non-null-assertion
             await this._kuduClient.deployment.deploy(this.id!);
             await this.parent.refresh();
+            window.showInformationMessage(deployed);
             ext.outputChannel.appendLine(deployed);
         });
     }
@@ -85,22 +87,17 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         return data;
     }
 
+    public async showDeploymentLogs(): Promise<void> {
+        const logData: string = await this.getDeploymentLogs();
+        const logDocument: TextDocument = await workspace.openTextDocument({ content: logData, language: 'log' });
+        await window.showTextDocument(logDocument);
+    }
+
     private parseLogEntry(logEntry: LogEntry): string {
         if (logEntry.logTime && logEntry.message) {
             return `${logEntry.logTime.toISOString()} - ${logEntry.message} ${os.EOL}`;
         } else {
             return '';
         }
-    }
-}
-
-export class ConnectToGitHubTreeItem extends AzureTreeItem<ISiteTreeRoot> {
-    public readonly label: string = 'Connect to a GitHub repository...';
-    public readonly contextValue: string = 'ConnectToGithub';
-    public readonly commandId: string = 'appService.ConnectToGitHub';
-    public parent: DeploymentsTreeItem;
-
-    public constructor(parent: DeploymentsTreeItem) {
-        super(parent);
     }
 }
