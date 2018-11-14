@@ -188,6 +188,7 @@ export class TunnelProxy {
                 } else if (response.statusCode === 200) {
                     ext.outputChannel.appendLine(`[WebApp Tunnel] Checking status, body: ${body}`);
 
+                    // tslint:disable-next-line:no-unsafe-any
                     const tunnelStatus: ITunnelStatus = JSON.parse(body);
 
                     if (tunnelStatus.state === WebAppState.STARTED) {
@@ -232,6 +233,7 @@ export class TunnelProxy {
                     resolve();
                     return;
                 } catch (error) {
+                    // tslint:disable-next-line:no-unsafe-any
                     const checkFailure: ICheckTunnelStatusFailure = error;
                     if (!checkFailure.shouldRetry) {
                         reject(new Error(`Unable to establish connection to application: ${checkFailure.message}`));
