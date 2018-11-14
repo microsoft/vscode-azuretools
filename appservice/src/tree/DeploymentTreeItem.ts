@@ -21,28 +21,24 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     public label: string;
     public receivedTime: Date;
     public parent: DeploymentsTreeItem;
-    private message: string;
-    private active: boolean;
     private _deployResult: DeployResult;
 
     constructor(parent: DeploymentsTreeItem, deployResult: DeployResult) {
         super(parent);
         this._deployResult = deployResult;
         this.receivedTime = nonNullProp(deployResult, 'receivedTime');
-        this.active = nonNullProp(deployResult, 'active');
-        this.message = nonNullProp(deployResult, 'message');
-        this.label = `${this.id.substring(0, 7)} - ${this.message.substring(0, 50)}`;
-        if (this.message.length > 50) { /* if the message was truncated, add "..." */
-            this.label += '...';
+        const active: boolean = nonNullProp(deployResult, 'active');
+        let message: string = nonNullProp(deployResult, 'message');
+        if (message.length > 50) { /* truncate long messages and add "..." */
+            message = `${message.substring(0, 50)}...`;
         }
+        this.label = `${this.id.substring(0, 7)} - ${message}`;
 
-        if (this.active) {
+        if (active) {
             this.description = 'Active';
-        }
-        if (!this._deployResult.lastSuccessEndTime && this._deployResult.complete) {
+        } else if (!this._deployResult.lastSuccessEndTime && this._deployResult.complete) {
             this.description = 'Failed';
-        }
-        if (!this._deployResult.complete) {
+        } else if (!this._deployResult.complete) {
             this.description = 'Deploying...';
         }
     }
@@ -55,9 +51,7 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     }
 
     public get id(): string {
-        if (!this._deployResult.id) {
-            throw new Error('Invalid Deployment Result.');
-        }
+        this._deployResult.id = nonNullProp(this._deployResult, 'id');
         return this._deployResult.id;
     }
 
