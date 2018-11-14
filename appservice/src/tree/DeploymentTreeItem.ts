@@ -36,10 +36,10 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
 
         if (active) {
             this.description = 'Active';
-        } else if (!this._deployResult.lastSuccessEndTime && this._deployResult.complete) {
-            this.description = 'Failed';
         } else if (!this._deployResult.complete) {
             this.description = 'Deploying...';
+        } else if (!this._deployResult.lastSuccessEndTime) {
+            this.description = 'Failed';
         }
     }
 
