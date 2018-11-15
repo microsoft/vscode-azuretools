@@ -11,9 +11,19 @@ import KuduClient from 'vscode-azurekudu';
 import { DeployResult, LogEntry } from 'vscode-azurekudu/lib/models';
 import { ext } from '../extensionVariables';
 import { getKuduClient } from '../getKuduClient';
+import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
 import { DeploymentsTreeItem } from './DeploymentsTreeItem';
 import { ISiteTreeRoot } from './ISiteTreeRoot';
+
+// Kudu DeployStatus: https://github.com/projectkudu/kudu/blob/a13592e6654585d5c2ee5c6a05fa39fa812ebb84/Kudu.Contracts/Deployment/DeployStatus.cs
+enum DeployStatus {
+    Building = 0,
+    Deploying = 1,
+    Pending = 2,
+    Failed = 3,
+    Success = 4
+}
 
 export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     public static contextValue: string = 'deployment';
@@ -29,17 +39,15 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         this.receivedTime = nonNullProp(deployResult, 'receivedTime');
         const active: boolean = nonNullProp(deployResult, 'active');
         let message: string = nonNullProp(deployResult, 'message');
+        const status: number = nonNullProp(deployResult, 'status');
         if (message.length > 50) { /* truncate long messages and add "..." */
             message = `${message.substring(0, 50)}...`;
         }
         this.label = `${this.id.substring(0, 7)} - ${message}`;
+        this.description = this.getDeployStatus(status);
 
         if (active) {
-            this.description = 'Active';
-        } else if (!this._deployResult.complete) {
-            this.description = 'Deploying...';
-        } else if (!this._deployResult.lastSuccessEndTime) {
-            this.description = 'Failed';
+            this.description = 'Active'; /* this should overwrite the description */
         }
     }
 
@@ -61,8 +69,10 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         window.withProgress({ location: ProgressLocation.Notification, title: redeploying }, async (): Promise<void> => {
             const kuduClient: KuduClient = await getKuduClient(this.root.client);
             ext.outputChannel.appendLine(redeploying);
+            const refreshingInteveral: NodeJS.Timer = setInterval(async () => { await this.refresh(); }, 1000); /* the status of the label changes during deployment so poll for that*/
             await kuduClient.deployment.deploy(this.id);
-            await this.parent.refresh();
+            await this.parent.refresh(); /* refresh entire node because active statuses has changed */
+            clearInterval(refreshingInteveral);
             window.showInformationMessage(deployed);
             ext.outputChannel.appendLine(deployed);
         });
@@ -90,11 +100,34 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         await window.showTextDocument(logDocument);
     }
 
+    public async refreshLabelImpl(): Promise<void> {
+        const kuduClient: KuduClient = await getKuduClient(this.root.client);
+        const result: DeployResult = await kuduClient.deployment.getResult(this.id);
+        const status: number = nonNullProp(result, 'status');
+        this.description = this.getDeployStatus(status);
+    }
+
     private formatLogEntry(logEntry: LogEntry): string {
         if (logEntry.logTime && logEntry.message) {
             return `${logEntry.logTime.toISOString()} - ${logEntry.message}${os.EOL}`;
         } else {
             return '';
+        }
+    }
+
+    private getDeployStatus(status: number): string | undefined {
+        switch (status) {
+            case DeployStatus.Building:
+                return localize('building', 'Building...');
+            case DeployStatus.Deploying:
+                return localize('deploying', 'Deploying...');
+            case DeployStatus.Pending:
+                return localize('pending', 'Pending...');
+            case DeployStatus.Failed:
+                return localize('failed', 'Failed');
+            case DeployStatus.Success:
+            default:
+                return;
         }
     }
 }
