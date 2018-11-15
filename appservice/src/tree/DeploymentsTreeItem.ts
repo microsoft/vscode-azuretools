@@ -71,7 +71,7 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     }
 
     public async disconnectRepo(context: IActionContext): Promise<void> {
-        const disconnect: string = 'Disconnect from current repository?  You can reconnect at anytime.';
+        const disconnect: string = localize('disconnectFromRepo', 'Disconnect from repository? The most recent commit will remain active as your active deployment. To overwrite it, use the App Service deploy action. You may reconnect a repository at any time.');
         await ext.ui.showWarningMessage(disconnect, DialogResponses.yes, DialogResponses.cancel);
         await editScmType(this.root.client, this.parent, context, ScmType.None);
         await this.refresh();
