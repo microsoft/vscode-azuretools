@@ -9,6 +9,7 @@ export class TestOutputChannel implements OutputChannel {
     public name: string = 'Extension Test Output';
 
     public append(value: string): void {
+        // Technically this is wrong (because of the new line), but good enough for now
         console.log(value);
     }
 
