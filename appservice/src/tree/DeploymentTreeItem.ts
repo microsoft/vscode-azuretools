@@ -11,6 +11,7 @@ import KuduClient from 'vscode-azurekudu';
 import { DeployResult, LogEntry } from 'vscode-azurekudu/lib/models';
 import { ext } from '../extensionVariables';
 import { getKuduClient } from '../getKuduClient';
+import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
 import { DeploymentsTreeItem } from './DeploymentsTreeItem';
 import { ISiteTreeRoot } from './ISiteTreeRoot';
@@ -85,9 +86,11 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     }
 
     public async viewDeploymentLogs(): Promise<void> {
-        const logData: string = await this.getDeploymentLogs();
-        const logDocument: TextDocument = await workspace.openTextDocument({ content: logData, language: 'log' });
-        await window.showTextDocument(logDocument);
+        await this.runWithTemporaryDescription(localize('retrievingLogs', 'Retrieving logs...'), async () => {
+            const logData: string = await this.getDeploymentLogs();
+            const logDocument: TextDocument = await workspace.openTextDocument({ content: logData, language: 'log' });
+            await window.showTextDocument(logDocument);
+        });
     }
 
     private formatLogEntry(logEntry: LogEntry): string {
