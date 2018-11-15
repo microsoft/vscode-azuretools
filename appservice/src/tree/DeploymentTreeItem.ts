@@ -16,6 +16,15 @@ import { nonNullProp } from '../utils/nonNull';
 import { DeploymentsTreeItem } from './DeploymentsTreeItem';
 import { ISiteTreeRoot } from './ISiteTreeRoot';
 
+// Kudu DeployStatus: https://github.com/projectkudu/kudu/blob/a13592e6654585d5c2ee5c6a05fa39fa812ebb84/Kudu.Contracts/Deployment/DeployStatus.cs
+enum DeployStatus {
+    Building = 0,
+    Deploying = 1,
+    Pending = 2,
+    Failed = 3,
+    Success = 4
+}
+
 export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     public static contextValue: string = 'deployment';
     public readonly contextValue: string = DeploymentTreeItem.contextValue;
@@ -28,20 +37,11 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         super(parent);
         this._deployResult = deployResult;
         this.receivedTime = nonNullProp(deployResult, 'receivedTime');
-        const active: boolean = nonNullProp(deployResult, 'active');
         let message: string = nonNullProp(deployResult, 'message');
         if (message.length > 50) { /* truncate long messages and add "..." */
             message = `${message.substring(0, 50)}...`;
         }
         this.label = `${this.id.substring(0, 7)} - ${message}`;
-
-        if (active) {
-            this.description = 'Active';
-        } else if (!this._deployResult.complete) {
-            this.description = 'Deploying...';
-        } else if (!this._deployResult.lastSuccessEndTime) {
-            this.description = 'Failed';
-        }
     }
 
     public get iconPath(): { light: string, dark: string } {
@@ -56,16 +56,42 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         return this._deployResult.id;
     }
 
+    public get description(): string | undefined {
+        if (this._deployResult.active) {
+            return localize('active', 'Active');
+        }
+
+        switch (this._deployResult.status) {
+            case DeployStatus.Building:
+                return localize('building', 'Building...');
+            case DeployStatus.Deploying:
+                return localize('deploying', 'Deploying...');
+            case DeployStatus.Pending:
+                return localize('pending', 'Pending...');
+            case DeployStatus.Failed:
+                return localize('failed', 'Failed');
+            case DeployStatus.Success:
+            default:
+                return;
+        }
+    }
+
     public async redeployDeployment(): Promise<void> {
         const redeploying: string = `Redeploying commit "${this.id}" to "${this.root.client.fullName}"`;
         const deployed: string = `Commit "${this.id}" has been redeployed to "${this.root.client.fullName}".`;
         window.withProgress({ location: ProgressLocation.Notification, title: redeploying }, async (): Promise<void> => {
             const kuduClient: KuduClient = await getKuduClient(this.root.client);
             ext.outputChannel.appendLine(redeploying);
-            await kuduClient.deployment.deploy(this.id);
-            await this.parent.refresh();
-            window.showInformationMessage(deployed);
-            ext.outputChannel.appendLine(deployed);
+            const refreshingInteveral: NodeJS.Timer = setInterval(async () => { await this.refresh(); }, 1000); /* the status of the label changes during deployment so poll for that*/
+            try {
+                await kuduClient.deployment.deploy(this.id);
+                await this.parent.refresh(); /* refresh entire node because active statuses has changed */
+                window.showInformationMessage(deployed);
+                ext.outputChannel.appendLine(deployed);
+            } finally {
+                clearInterval(refreshingInteveral);
+            }
+
         });
     }
 
@@ -91,6 +117,12 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
             const logDocument: TextDocument = await workspace.openTextDocument({ content: logData, language: 'log' });
             await window.showTextDocument(logDocument);
         });
+    }
+
+    public async refreshLabelImpl(): Promise<void> {
+        const kuduClient: KuduClient = await getKuduClient(this.root.client);
+        // while this doesn't directly refresh the label, it's currently the only place to run async code on refresh
+        this._deployResult = await kuduClient.deployment.getResult(this.id);
     }
 
     private formatLogEntry(logEntry: LogEntry): string {
