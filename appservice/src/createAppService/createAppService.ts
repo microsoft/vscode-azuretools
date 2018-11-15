@@ -71,6 +71,8 @@ export async function createAppService(
             break;
         case AppKind.app:
             if (createOptions.advancedCreation) {
+                actionContext.properties.advancedCreation = 'true';
+
                 promptSteps.push(new ResourceGroupListStep());
                 promptSteps.push(new SiteOSStep());
                 promptSteps.push(new SiteRuntimeStep());
@@ -114,5 +116,7 @@ export async function createAppService(
     }
     wizardContext = await wizard.execute(actionContext);
 
+    actionContext.properties.os = wizardContext.newSiteOS;
+    actionContext.properties.runtime = wizardContext.newSiteRuntime;
     return nonNullProp(wizardContext, 'site');
 }
