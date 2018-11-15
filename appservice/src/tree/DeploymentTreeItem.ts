@@ -37,18 +37,11 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         super(parent);
         this._deployResult = deployResult;
         this.receivedTime = nonNullProp(deployResult, 'receivedTime');
-        const active: boolean = nonNullProp(deployResult, 'active');
         let message: string = nonNullProp(deployResult, 'message');
-        const status: number = nonNullProp(deployResult, 'status');
         if (message.length > 50) { /* truncate long messages and add "..." */
             message = `${message.substring(0, 50)}...`;
         }
         this.label = `${this.id.substring(0, 7)} - ${message}`;
-        this.description = this.getDeployStatus(status);
-
-        if (active) {
-            this.description = 'Active'; /* this should overwrite the description */
-        }
     }
 
     public get iconPath(): { light: string, dark: string } {
@@ -61,6 +54,26 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     public get id(): string {
         this._deployResult.id = nonNullProp(this._deployResult, 'id');
         return this._deployResult.id;
+    }
+
+    public get description(): string | undefined {
+        if (this._deployResult.active) {
+            return localize('active', 'Active');
+        }
+
+        switch (this._deployResult.status) {
+            case DeployStatus.Building:
+                return localize('building', 'Building...');
+            case DeployStatus.Deploying:
+                return localize('deploying', 'Deploying...');
+            case DeployStatus.Pending:
+                return localize('pending', 'Pending...');
+            case DeployStatus.Failed:
+                return localize('failed', 'Failed');
+            case DeployStatus.Success:
+            default:
+                return;
+        }
     }
 
     public async redeployDeployment(): Promise<void> {
@@ -102,9 +115,8 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
 
     public async refreshLabelImpl(): Promise<void> {
         const kuduClient: KuduClient = await getKuduClient(this.root.client);
-        const result: DeployResult = await kuduClient.deployment.getResult(this.id);
-        const status: number = nonNullProp(result, 'status');
-        this.description = this.getDeployStatus(status);
+        // while this doesn't directly refresh the label, it's currently the only place to run async code on refresh
+        this._deployResult = await kuduClient.deployment.getResult(this.id);
     }
 
     private formatLogEntry(logEntry: LogEntry): string {
@@ -112,22 +124,6 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
             return `${logEntry.logTime.toISOString()} - ${logEntry.message}${os.EOL}`;
         } else {
             return '';
-        }
-    }
-
-    private getDeployStatus(status: number): string | undefined {
-        switch (status) {
-            case DeployStatus.Building:
-                return localize('building', 'Building...');
-            case DeployStatus.Deploying:
-                return localize('deploying', 'Deploying...');
-            case DeployStatus.Pending:
-                return localize('pending', 'Pending...');
-            case DeployStatus.Failed:
-                return localize('failed', 'Failed');
-            case DeployStatus.Success:
-            default:
-                return;
         }
     }
 }
