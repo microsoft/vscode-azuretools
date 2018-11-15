@@ -134,11 +134,7 @@ interface ITunnelStatus {
 /**
  * Internal error indicating that we should continue to retry getting the tunnel status
  */
-class RetryableTunnelStatusError extends Error {
-    constructor(message: string) {
-        super(message);
-    }
-}
+class RetryableTunnelStatusError extends Error { }
 
 /**
  * A local TCP server that forwards all connections to the Kudu tunnel websocket endpoint.
@@ -172,7 +168,6 @@ export class TunnelProxy {
     }
 
     private async checkTunnelStatus(): Promise<void> {
-        // return new Promise<void>((resolve: () => void, reject: (failure: ICheckTunnelStatusFailure) => void): void => {
         const statusOptions: requestP.Options = {
             uri: `https://${this._client.kuduHostName}/AppServiceTunnel/Tunnel.ashx?GetStatus&GetStatusAPIVer=2`,
             headers: {
