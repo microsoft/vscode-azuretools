@@ -1,6 +1,7 @@
 {
     "extends": "tslint-microsoft-contrib",
     "rules": {
+        "no-console": false,
         "await-promise": [
             true,
             "Thenable"
