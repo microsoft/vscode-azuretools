@@ -83,11 +83,15 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
             const kuduClient: KuduClient = await getKuduClient(this.root.client);
             ext.outputChannel.appendLine(redeploying);
             const refreshingInteveral: NodeJS.Timer = setInterval(async () => { await this.refresh(); }, 1000); /* the status of the label changes during deployment so poll for that*/
-            await kuduClient.deployment.deploy(this.id);
-            await this.parent.refresh(); /* refresh entire node because active statuses has changed */
-            clearInterval(refreshingInteveral);
-            window.showInformationMessage(deployed);
-            ext.outputChannel.appendLine(deployed);
+            try {
+                await kuduClient.deployment.deploy(this.id);
+                await this.parent.refresh(); /* refresh entire node because active statuses has changed */
+                window.showInformationMessage(deployed);
+                ext.outputChannel.appendLine(deployed);
+            } finally {
+                clearInterval(refreshingInteveral);
+            }
+
         });
     }
 
