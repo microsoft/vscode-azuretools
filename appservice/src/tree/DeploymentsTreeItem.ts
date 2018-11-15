@@ -5,6 +5,7 @@
 
 import { SiteConfig } from 'azure-arm-website/lib/models';
 import * as path from 'path';
+import { MessageItem } from 'vscode';
 import { AzureParentTreeItem, createTreeItemsWithErrorHandling, DialogResponses, GenericTreeItem, IActionContext } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { DeployResult } from 'vscode-azurekudu/lib/models';
@@ -71,8 +72,9 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     }
 
     public async disconnectRepo(context: IActionContext): Promise<void> {
-        const disconnect: string = localize('disconnectFromRepo', 'Disconnect from repository? The most recent commit will remain as your active deployment. To overwrite it, use the App Service deploy action. You may reconnect a repository at any time.');
-        await ext.ui.showWarningMessage(disconnect, DialogResponses.yes, DialogResponses.cancel);
+        const disconnectButton: MessageItem = { title: localize('disconnect', 'Disconnect') };
+        const disconnect: string = localize('disconnectFromRepo', 'Disconnect from repository? This will not affect your app\'s active deployment. You may reconnect a repository at any time.');
+        await ext.ui.showWarningMessage(disconnect, disconnectButton, DialogResponses.cancel);
         await editScmType(this.root.client, this.parent, context, ScmType.None);
         await this.refresh();
     }
