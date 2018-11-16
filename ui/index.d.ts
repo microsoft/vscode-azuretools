@@ -154,7 +154,12 @@ export declare abstract class AzureTreeItem<TRoot = ISubscriptionRoot> {
     public deleteTreeItemImpl?(): Promise<void>;
 
     /**
-     * Implement this if the item's label may change during a refresh. Should not be called directly
+     * Implement this to execute any async code when this node is refreshed. Should not be called directly
+     */
+    public refreshImpl?(): Promise<void>;
+
+    /**
+     * @deprecated Use refreshImpl instead
      */
     public refreshLabelImpl?(): Promise<void>;
 
