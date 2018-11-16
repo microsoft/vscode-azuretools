@@ -10,8 +10,8 @@ import { ext } from './extensionVariables';
 import { AzureTreeItem } from './treeDataProvider/AzureTreeItem';
 
 // tslint:disable:no-any no-unsafe-any
-
-export function registerCommand(commandId: string, callback: (this: IActionContext, ...args: any[]) => any): void {
+const commandLastClickMap: { commandId?: string, lastClick?: number } = {};
+export function registerCommand(commandId: string, callback: (this: IActionContext, ...args: any[]) => any, debounce?: number): void {
     ext.context.subscriptions.push(commands.registerCommand(commandId, async (...args: any[]): Promise<any> => {
         return await callWithTelemetryAndErrorHandling(
             commandId,
@@ -26,6 +26,12 @@ export function registerCommand(commandId: string, callback: (this: IActionConte
                     }
                 }
 
+                // tslint:disable-next-line:strict-boolean-expressions
+                if (debounce) { /* Only check for debounce if registered command specifies */
+                    if (debounceCommand(commandId, debounce)) {
+                        return;
+                    }
+                }
                 return callback.call(this, ...args);
             }
         );
@@ -41,4 +47,14 @@ export function registerEvent<T>(eventId: string, event: Event<T>, callback: (th
             }
         );
     }));
+}
+
+function debounceCommand(commandId: string, debounce: number): boolean {
+    const lastClickDate: number | undefined = commandLastClickMap[commandId];
+    // tslint:disable-next-line:strict-boolean-expressions
+    if (lastClickDate && lastClickDate + debounce > Date.now()) {
+        return true;
+    }
+    commandLastClickMap[commandId] = Date.now();
+    return false;
 }
