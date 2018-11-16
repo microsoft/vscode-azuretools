@@ -82,12 +82,17 @@ export abstract class AzureTreeItem<TRoot = ISubscriptionRoot> implements types.
     }
 
     //#region Methods implemented by base class
+    public refreshImpl?(): Promise<void>;
     public refreshLabelImpl?(): Promise<void>;
     public isAncestorOfImpl?(contextValue: string): boolean;
     public deleteTreeItemImpl?(): Promise<void>;
     //#endregion
 
     public async refresh(): Promise<void> {
+        if (this.refreshImpl) {
+            await this.refreshImpl();
+        }
+
         if (this.refreshLabelImpl) {
             await this.refreshLabelImpl();
         }

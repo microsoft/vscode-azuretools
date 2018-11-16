@@ -154,6 +154,10 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
                     }
                 });
             } else {
+                if (treeItem.refreshImpl) {
+                    await treeItem.refreshImpl();
+                }
+
                 if (treeItem.refreshLabelImpl) {
                     await treeItem.refreshLabelImpl();
                 }
