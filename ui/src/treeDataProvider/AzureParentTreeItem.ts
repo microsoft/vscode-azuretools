@@ -24,14 +24,6 @@ export abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> extends Azu
     private _loadMoreChildrenTask: Promise<void> | undefined;
     private _initChildrenTask: Promise<void> | undefined;
 
-    private readonly _isAzureParentTreeItem: boolean = true;
-
-    // Workaround to fix "instanceof AzureParentTreeItem" when testing package with "npm link"
-    // tslint:disable-next-line:function-name no-any
-    public static [Symbol.hasInstance](instance: any): boolean {
-        return instance !== null && typeof instance === 'object' && !!(<AzureParentTreeItem>instance)._isAzureParentTreeItem;
-    }
-
     public async getCachedChildren(): Promise<AzureTreeItem<TRoot>[]> {
         if (this._clearCache) {
             this._initChildrenTask = this.loadMoreChildren();
