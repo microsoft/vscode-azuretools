@@ -10,8 +10,8 @@ import { ext } from './extensionVariables';
 import { AzureTreeItem } from './treeDataProvider/AzureTreeItem';
 
 // tslint:disable:no-any no-unsafe-any
-
-export function registerCommand(commandId: string, callback: (this: IActionContext, ...args: any[]) => any): void {
+export function registerCommand(commandId: string, callback: (this: IActionContext, ...args: any[]) => any, debounce?: number): void {
+    let lastClickTime: number; /* Used for debounce */
     ext.context.subscriptions.push(commands.registerCommand(commandId, async (...args: any[]): Promise<any> => {
         return await callWithTelemetryAndErrorHandling(
             commandId,
@@ -26,6 +26,13 @@ export function registerCommand(commandId: string, callback: (this: IActionConte
                     }
                 }
 
+                // tslint:disable-next-line:strict-boolean-expressions
+                if (debounce) { /* Only check for debounce if registered command specifies */
+                    if (debounceCommand(debounce, lastClickTime)) {
+                        return;
+                    }
+                    lastClickTime = Date.now();
+                }
                 return callback.call(this, ...args);
             }
         );
@@ -41,4 +48,12 @@ export function registerEvent<T>(eventId: string, event: Event<T>, callback: (th
             }
         );
     }));
+}
+
+function debounceCommand(debounce: number, lastClickTime?: number): boolean {
+    // tslint:disable-next-line:strict-boolean-expressions
+    if (lastClickTime && lastClickTime + debounce > Date.now()) {
+        return true;
+    }
+    return false;
 }
