@@ -135,7 +135,7 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     }
 
     private removeLineBreaks(message: string): string {
-        const allLineBreaks: RegExp = /[^\x20-\x7E]/;
+        const allLineBreaks: RegExp = /\r?\n|\r/;
         const index: number = message.search(allLineBreaks);
         if (index >= 0) {
             message = message.substring(0, index);
