@@ -38,7 +38,7 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         this._deployResult = deployResult;
         this.receivedTime = nonNullProp(deployResult, 'receivedTime');
         let message: string = nonNullProp(deployResult, 'message');
-        message = this.removeLineBreaks(message);
+        message = this.getFirstLine(message);
         if (message.length > 50) { /* truncate long messages and add "..." */
             message = `${message.substring(0, 50)}...`;
         }
@@ -134,7 +134,7 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         }
     }
 
-    private removeLineBreaks(message: string): string {
+    private getFirstLine(message: string): string {
         const allLineBreaks: RegExp = /\r?\n|\r/;
         const index: number = message.search(allLineBreaks);
         if (index >= 0) {
