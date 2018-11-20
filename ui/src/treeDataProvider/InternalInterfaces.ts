@@ -19,4 +19,5 @@ export interface IAzureParentTreeItemInternal<TRoot = ISubscriptionRoot> extends
 
 export interface IAzureTreeDataProviderInternal<TRoot = ISubscriptionRoot> extends AzureTreeDataProvider<TRoot> {
     _onTreeItemCreateEmitter: EventEmitter<AzureTreeItem<TRoot>>;
+    _onDidChangeTreeDataEmitter: EventEmitter<AzureTreeItem<TRoot>>;
 }
