@@ -74,12 +74,17 @@ export abstract class AzureTreeItem<TRoot = ISubscriptionRoot> implements types.
     }
 
     //#region Methods implemented by base class
+    public refreshImpl?(): Promise<void>;
     public refreshLabelImpl?(): Promise<void>;
     public isAncestorOfImpl?(contextValue: string): boolean;
     public deleteTreeItemImpl?(): Promise<void>;
     //#endregion
 
     public async refresh(): Promise<void> {
+        if (this.refreshImpl) {
+            await this.refreshImpl();
+        }
+
         if (this.refreshLabelImpl) {
             await this.refreshLabelImpl();
         }
@@ -120,7 +125,8 @@ export abstract class AzureTreeItem<TRoot = ISubscriptionRoot> implements types.
     public async runWithTemporaryDescription(description: string, callback: () => Promise<void>): Promise<void> {
         this._temporaryDescription = description;
         try {
-            await this.refresh();
+            // bypass refreshing the whole node and just refresh the ui for the temp description
+            this.treeDataProvider._onDidChangeTreeDataEmitter.fire(this);
             await callback();
         } finally {
             this._temporaryDescription = undefined;

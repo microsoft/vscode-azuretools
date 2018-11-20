@@ -32,7 +32,7 @@ type SubscriptionTreeItemType = { new(root: ISubscriptionRoot): SubscriptionTree
 
 export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureTreeDataProviderInternal<TRoot | ISubscriptionRoot>, types.AzureTreeDataProvider<TRoot> {
     public _onTreeItemCreateEmitter: EventEmitter<AzureTreeItem<TRoot | ISubscriptionRoot>> = new EventEmitter<AzureTreeItem<TRoot | ISubscriptionRoot>>();
-    private _onDidChangeTreeDataEmitter: EventEmitter<AzureTreeItem<TRoot | ISubscriptionRoot>> = new EventEmitter<AzureTreeItem<TRoot | ISubscriptionRoot>>();
+    public _onDidChangeTreeDataEmitter: EventEmitter<AzureTreeItem<TRoot | ISubscriptionRoot>> = new EventEmitter<AzureTreeItem<TRoot | ISubscriptionRoot>>();
 
     private readonly _loadMoreCommandId: string;
     private _subscriptionTreeItemType: SubscriptionTreeItemType;
@@ -154,6 +154,10 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
                     }
                 });
             } else {
+                if (treeItem.refreshImpl) {
+                    await treeItem.refreshImpl();
+                }
+
                 if (treeItem.refreshLabelImpl) {
                     await treeItem.refreshLabelImpl();
                 }

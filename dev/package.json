@@ -1,7 +1,7 @@
 {
     "name": "vscode-azureextensiondev",
     "author": "Microsoft Corporation",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "Common dev dependency tools for developing Azure extensions for VS Code",
     "tags": [
         "azure",
@@ -27,7 +27,7 @@
         "prepack": "tsc -p ./",
         "compile": "tsc -watch -p ./",
         "lint": "tslint --project tsconfig.json -e src/*.d.ts -t verbose",
-        "test": "mocha out/test/**/*.js --ui tdd",
+        "test": "mocha out/test/**/*.js --ui tdd --reporter mocha-junit-reporter",
         "prepare": "node ./node_modules/vscode/bin/install"
     },
     "dependencies": {},
@@ -35,6 +35,7 @@
         "@types/mocha": "^2.2.32",
         "@types/node": "^10.11.3",
         "mocha": "^2.3.3",
+        "mocha-junit-reporter": "^1.18.0",
         "tslint": "^5.7.0",
         "tslint-microsoft-contrib": "5.0.1",
         "typescript": "^2.5.3",

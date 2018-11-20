@@ -293,3 +293,4 @@ package-lock.json
 *.tgz
 out
 **/.vscode-test/
+**/test-results.xml

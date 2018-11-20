@@ -3,16 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as assert from 'assert';
+import * as fse from 'fs-extra';
 import { ExtensionContext } from "vscode";
 import { IActionContext } from "../index";
 import { callWithTelemetryAndErrorHandling } from "./callWithTelemetryAndErrorHandling";
-import { ext, extInitialized } from "./extensionVariables";
+import { ext } from "./extensionVariables";
 import { parseError } from "./parseError";
 
-export function getPackageInfo(ctx?: ExtensionContext): { extensionName: string, extensionVersion: string, aiKey?: string, extensionId: string } {
-    assert(extInitialized, 'registerUIExtensionVariables must be called first');
-
+export function getPackageInfo(ctx?: ExtensionContext): { extensionName: string, extensionVersion: string, aiKey: string, extensionId: string } {
     if (!ctx) {
         ctx = ext.context;
     }
@@ -26,7 +24,7 @@ export function getPackageInfo(ctx?: ExtensionContext): { extensionName: string,
         try {
             if (ctx) {
                 // tslint:disable-next-line:non-literal-require
-                packageJson = <IPackageJson>require(ctx.asAbsolutePath('package.json'));
+                packageJson = <IPackageJson>fse.readJsonSync(ctx.asAbsolutePath('package.json'));
             } else {
                 throw new Error('No extension context');
             }
@@ -37,11 +35,26 @@ export function getPackageInfo(ctx?: ExtensionContext): { extensionName: string,
     });
 
     // tslint:disable-next-line:strict-boolean-expressions
-    const extensionName: string = packageJson.name || 'vscode-azuretools';
-    // tslint:disable-next-line:strict-boolean-expressions
-    const extensionVersion: string = packageJson.version || 'Unknown';
+    const extensionName: string | undefined = packageJson.name;
+    const extensionVersion: string | undefined = packageJson.version;
     const aiKey: string | undefined = packageJson.aiKey;
+    const publisher: string | undefined = packageJson.publisher;
+
+    if (!aiKey) {
+        throw new Error('Extension\'s package.json is missing aiKey');
+    }
+    if (!extensionName) {
+        throw new Error('Extension\'s package.json is missing name');
+    }
+    if (!publisher) {
+        throw new Error('Extension\'s package.json is missing publisher');
+    }
+    if (!extensionVersion) {
+        throw new Error('Extension\'s package.json is missing version');
+    }
+
     const extensionId: string = `${packageJson.publisher}.${packageJson.name}`;
+
     return { extensionName, extensionVersion, aiKey, extensionId };
 }
 

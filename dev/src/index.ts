@@ -4,3 +4,4 @@
  *--------------------------------------------------------------------------------------------*/
 
 export * from './testing/addPackageLintSuites';
+export * from './TestOutputChannel';

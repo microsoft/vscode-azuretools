@@ -9,3 +9,4 @@ out/test/
 **/*.js.map
 .vscode-test/
 gulpfile.js
+test-results.xml

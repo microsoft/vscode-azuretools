@@ -154,7 +154,12 @@ export declare abstract class AzureTreeItem<TRoot = ISubscriptionRoot> {
     public deleteTreeItemImpl?(): Promise<void>;
 
     /**
-     * Implement this if the item's label may change during a refresh. Should not be called directly
+     * Implement this to execute any async code when this node is refreshed. Should not be called directly
+     */
+    public refreshImpl?(): Promise<void>;
+
+    /**
+     * @deprecated Use refreshImpl instead
      */
     public refreshLabelImpl?(): Promise<void>;
 
@@ -322,8 +327,9 @@ export declare abstract class BaseEditor<ContextT> implements Disposable {
 
 /**
  * Used to register VSCode commands. It wraps your callback with consistent error and telemetry handling
+ * Use debounce property if you need a delay between clicks for this particular command
  */
-export declare function registerCommand(commandId: string, callback: (this: IActionContext, ...args: any[]) => any): void;
+export declare function registerCommand(commandId: string, callback: (this: IActionContext, ...args: any[]) => any, debounce?: number): void;
 
 /**
  * Used to register VSCode events. It wraps your callback with consistent error and telemetry handling
@@ -801,7 +807,7 @@ export interface UIExtensionVariables {
     context: ExtensionContext;
     outputChannel: OutputChannel;
     ui: IAzureUserInput;
-    reporter: ITelemetryReporter | undefined;
+    reporter: ITelemetryReporter;
 }
 
 export interface IAddUserAgent {
