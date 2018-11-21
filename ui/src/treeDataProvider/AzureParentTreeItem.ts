@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { TreeItemCollapsibleState } from 'vscode';
 import { IAzureQuickPickItem, IAzureQuickPickOptions, ISubscriptionRoot } from '../..';
 import * as types from '../..';
 import { NotImplementedError } from '../errors';
@@ -17,6 +18,8 @@ export abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> extends Azu
     //#region Properties implemented by base class
     public childTypeLabel?: string;
     //#endregion
+
+    public readonly collapsibleState: TreeItemCollapsibleState | undefined = TreeItemCollapsibleState.Collapsed;
 
     private _cachedChildren: AzureTreeItem<TRoot>[] = [];
     private _creatingTreeItems: AzureTreeItem<TRoot>[] = [];
