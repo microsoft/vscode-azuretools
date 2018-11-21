@@ -95,9 +95,7 @@ export class AzureUserInput implements IAzureUserInput {
                     const recentlyUsed: string = localize('recentlyUsed', '(recently used)');
                     if (!previousItem.description) {
                         previousItem.description = recentlyUsed;
-                    } else if (!previousItem.detail) {
-                        previousItem.detail = recentlyUsed;
-                    } else {
+                    } else if (!previousItem.description.includes(recentlyUsed)) {
                         previousItem.description = `${previousItem.description} ${recentlyUsed}`;
                     }
 
