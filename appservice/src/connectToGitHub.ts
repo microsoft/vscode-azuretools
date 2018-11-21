@@ -21,6 +21,7 @@ type gitHubReposData = { repos_url?: string, url?: string, html_url?: string };
 type gitHubLink = { prev?: string, next?: string, last?: string, first?: string };
 // tslint:disable-next-line:no-reserved-keywords
 type gitHubWebResource = WebResource & { resolveWithFullResponse?: boolean, nextLink?: string, type?: string };
+const loadMore: string = localize('loadMore', '$(sync) Load More');
 
 export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, context: IActionContext): Promise<void> {
     const requestOptions: gitHubWebResource = new WebResource();
@@ -45,12 +46,15 @@ export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, c
     let repoQuickPick: gitHubReposData;
     requestOptions.url = nonNullProp(orgQuickPick, 'repos_url');
     let repoQuickPicks: IAzureQuickPickItem<{}>[] = await getGitHubReposQuickPicks(requestOptions, node, client, context);
+    repoQuickPicks = sortRepositoryQuickPicks(repoQuickPicks);
     let repoSelected: boolean = false; /* flag to determine if user clicked "Load More" */
     do {
         repoQuickPick = (await ext.ui.showQuickPick(repoQuickPicks, { placeHolder: 'Choose project.' })).data;
         if (repoQuickPick.url === requestOptions.nextLink) {
-            repoQuickPicks.pop(); /* remove the stale Load more QuickPickItem */
+            /* remove the stale Load more QuickPickItem */
+            repoQuickPicks.splice(repoQuickPicks.findIndex((quickPick: IAzureQuickPickItem<{}>) => { return quickPick.label === loadMore; }), 1);
             repoQuickPicks = repoQuickPicks.concat(await getGitHubReposQuickPicks(requestOptions, node, client, context));
+            repoQuickPicks = sortRepositoryQuickPicks(repoQuickPicks);
         } else {
             repoSelected = true;
         }
@@ -202,11 +206,10 @@ async function getGitHubReposQuickPicks(requestOptions: gitHubWebResource, node:
     } while (requestOptions.nextLink && startTime + timeoutMs > Date.now());
 
     const result: IAzureQuickPickItem<{}>[] = createQuickPickFromJsons(gitHubRepos, 'name', undefined, ['url', 'html_url']);
-
     // this adds a "Load More" QuickPick with the nextLink as the data which will be used in the next getJsonRequest
     if (requestOptions.nextLink) {
-        result.push({
-            label: '$(sync) Load More',
+        result.unshift({
+            label: loadMore,
             description: '',
             data: {
                 url: requestOptions.nextLink
@@ -214,6 +217,17 @@ async function getGitHubReposQuickPicks(requestOptions: gitHubWebResource, node:
             suppressPersistence: true
         });
     }
-
     return result;
+}
+
+function sortRepositoryQuickPicks(unsortedArray: IAzureQuickPickItem<{}>[]): IAzureQuickPickItem<{}>[] {
+    return unsortedArray.sort((a: IAzureQuickPickItem<{}>, b: IAzureQuickPickItem<{}>) => {
+        if (a.label === loadMore) {
+            return -1;
+        } else if (b.label === loadMore) {
+            return 1;
+        } else {
+            return a.label.localeCompare(b.label);
+        }
+    });
 }
