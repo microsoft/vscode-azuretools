@@ -5,7 +5,7 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { Disposable, Event, EventEmitter, Extension, extensions, QuickPickOptions, TreeItem, TreeItemCollapsibleState } from 'vscode';
+import { Disposable, Event, EventEmitter, Extension, extensions, QuickPickOptions, TreeItem } from 'vscode';
 import { IActionContext, IAzureQuickPickItem, ISubscriptionRoot } from '../../index';
 import * as types from '../../index';
 import { AzureAccount, AzureLoginStatus, AzureResourceFilter } from '../azure-account.api';
@@ -88,7 +88,7 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
         return {
             label: treeItem.effectiveLabel,
             id: treeItem.fullId,
-            collapsibleState: treeItem instanceof AzureParentTreeItem ? TreeItemCollapsibleState.Collapsed : undefined,
+            collapsibleState: treeItem.collapsibleState,
             contextValue: treeItem.contextValue,
             iconPath: treeItem.effectiveIconPath,
             command: treeItem.commandId ? {

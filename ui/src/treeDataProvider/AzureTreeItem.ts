@@ -5,7 +5,7 @@
 
 // tslint:disable-next-line:no-require-imports
 import opn = require("opn");
-import { Uri } from 'vscode';
+import { TreeItemCollapsibleState, Uri } from 'vscode';
 import { ISubscriptionRoot, OpenInPortalOptions } from '../..';
 import * as types from '../..';
 import { ArgumentError, NotImplementedError } from '../errors';
@@ -23,6 +23,7 @@ export abstract class AzureTreeItem<TRoot = ISubscriptionRoot> implements types.
     public iconPath?: string | Uri | { light: string | Uri; dark: string | Uri };
     //#endregion
 
+    public readonly collapsibleState: TreeItemCollapsibleState | undefined;
     public readonly parent: IAzureParentTreeItemInternal<TRoot> | undefined;
     private _temporaryDescription?: string;
 
