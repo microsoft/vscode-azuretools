@@ -47,7 +47,7 @@ export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, c
     const picksCache: ICachedQuickPicks<gitHubReposData> = { picks: [] };
     let repoQuickPick: gitHubReposData | undefined;
     do {
-        repoQuickPick = (await ext.ui.showQuickPick(getGitHubReposQuickPicks(picksCache, requestOptions, node, client, context), { placeHolder: 'Choose project.' })).data;
+        repoQuickPick = (await ext.ui.showQuickPick(getGitHubReposQuickPicks(picksCache, requestOptions, node, client, context), { placeHolder: 'Choose repository.' })).data;
     } while (!repoQuickPick);
 
     requestOptions.url = `${repoQuickPick.url}/branches`;
