@@ -66,12 +66,9 @@ export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, c
         isMercurial: false
     };
 
-    // tslint:disable-next-line:no-non-null-assertion
-    const repoName: string = siteSourceControl.repoUrl!.substring('https://github.com/'.length);
-
     try {
-        const connectingToGithub: string = localize('ConnectingToGithub', '"{0}" is being connected to repo "{1}". This may take several minutes...', client.fullName, repoName);
-        const connectedToGithub: string = localize('ConnectedToGithub', '"{0}" has been connected to repo "{1}".', client.fullName, repoName);
+        const connectingToGithub: string = localize('ConnectingToGithub', '"{0}" is being connected to the GitHub repo. This may take several minutes...', client.fullName);
+        const connectedToGithub: string = localize('ConnectedToGithub', '"{0}" has been connected to the GitHub repo.', client.fullName);
         const kuduClient: KuduClient = await getKuduClient(client);
         await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: connectingToGithub }, async (): Promise<void> => {
             ext.outputChannel.appendLine(connectingToGithub);
