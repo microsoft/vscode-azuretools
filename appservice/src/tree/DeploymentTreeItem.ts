@@ -9,6 +9,7 @@ import { ProgressLocation, TextDocument, window, workspace } from 'vscode';
 import { AzureTreeItem } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { DeployResult, LogEntry } from 'vscode-azurekudu/lib/models';
+import { waitForDeploymentToComplete } from '../deploy/waitForDeploymentToComplete';
 import { ext } from '../extensionVariables';
 import { getKuduClient } from '../getKuduClient';
 import { localize } from '../localize';
@@ -85,10 +86,12 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
             ext.outputChannel.appendLine(redeploying);
             const refreshingInteveral: NodeJS.Timer = setInterval(async () => { await this.refresh(); }, 1000); /* the status of the label changes during deployment so poll for that*/
             try {
-                await kuduClient.deployment.deploy(this.id);
-                await this.parent.refresh(); /* refresh entire node because active statuses has changed */
-                window.showInformationMessage(deployed);
-                ext.outputChannel.appendLine(deployed);
+                kuduClient.deployment.deploy(this.id).then(async () => {
+                    await this.parent.refresh(); /* refresh entire node because active statuses has changed */
+                    window.showInformationMessage(deployed);
+                    ext.outputChannel.appendLine(deployed);
+                });
+                await waitForDeploymentToComplete(this.root.client, kuduClient);
             } finally {
                 clearInterval(refreshingInteveral);
             }

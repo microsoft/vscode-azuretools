@@ -10,7 +10,10 @@ import { Response } from 'request';
 import * as request from 'request-promise';
 import * as vscode from 'vscode';
 import { AzureTreeItem, DialogResponses, IActionContext, IAzureQuickPickItem, IParsedError, parseError } from 'vscode-azureextensionui';
+import KuduClient from 'vscode-azurekudu';
+import { waitForDeploymentToComplete } from './deploy/waitForDeploymentToComplete';
 import { ext } from './extensionVariables';
+import { getKuduClient } from './getKuduClient';
 import { localize } from './localize';
 import { signRequest } from './signRequest';
 import { SiteClient } from './SiteClient';
@@ -69,11 +72,15 @@ export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, c
     try {
         const connectingToGithub: string = localize('ConnectingToGithub', '"{0}" is being connected to repo "{1}". This may take several minutes...', client.fullName, repoName);
         const connectedToGithub: string = localize('ConnectedToGithub', '"{0}" has been connected to repo "{1}".', client.fullName, repoName);
+        const kuduClient: KuduClient = await getKuduClient(client);
         await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: connectingToGithub }, async (): Promise<void> => {
             ext.outputChannel.appendLine(connectingToGithub);
-            await client.updateSourceControl(siteSourceControl);
-            vscode.window.showInformationMessage(connectedToGithub);
-            ext.outputChannel.appendLine(connectedToGithub);
+            client.updateSourceControl(siteSourceControl).then(() => {
+                vscode.window.showInformationMessage(connectedToGithub);
+                ext.outputChannel.appendLine(connectedToGithub);
+            });
+            await waitForDeploymentToComplete(client, kuduClient);
+
         });
     } catch (err) {
         try {
