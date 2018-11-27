@@ -67,14 +67,15 @@ export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, c
     };
 
     try {
-        const connectingToGithub: string = localize('ConnectingToGithub', '"{0}" is being connected to the GitHub repo. This may take several minutes...', client.fullName);
-        const connectedToGithub: string = localize('ConnectedToGithub', '"{0}" has been connected to the GitHub repo.', client.fullName);
+        const deploying: string = localize('deploying', 'Deploying to "{0}"... Check output window for status.', client.fullName);
+        const deploymentComplete: string = localize('deploymentComplete', 'Deployment to "{0}" completed.', client.fullName);
         const kuduClient: KuduClient = await getKuduClient(client);
-        await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: connectingToGithub }, async (): Promise<void> => {
-            ext.outputChannel.appendLine(connectingToGithub);
+        await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: deploying }, async (): Promise<void> => {
+            ext.outputChannel.appendLine(deploying);
+            // tslint:disable-next-line:no-floating-promises
             client.updateSourceControl(siteSourceControl).then(() => {
-                vscode.window.showInformationMessage(connectedToGithub);
-                ext.outputChannel.appendLine(connectedToGithub);
+                vscode.window.showInformationMessage(deploymentComplete);
+                ext.outputChannel.appendLine(deploymentComplete);
             });
             await waitForDeploymentToComplete(client, kuduClient);
 
