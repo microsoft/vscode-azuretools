@@ -76,7 +76,7 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         const disconnect: string = localize('disconnectFromRepo', 'Disconnect from repository? This will not affect your app\'s active deployment. You may reconnect a repository at any time.');
         await ext.ui.showWarningMessage(disconnect, { modal: true }, disconnectButton, DialogResponses.cancel);
         await editScmType(this.root.client, this.parent, context, ScmType.None);
-        await ext.tree.refresh(this);
+        await this.refresh();
     }
 
     public async refreshLabelImpl(): Promise<void> {
