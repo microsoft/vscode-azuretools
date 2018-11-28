@@ -48,8 +48,10 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
 
     public get iconPath(): { light: string, dark: string } {
         return {
-            light: path.join(__filename, '..', '..', '..', 'resources', 'light', 'Git_Commit_16x.svg'),
-            dark: path.join(__filename, '..', '..', '..', 'resources', 'dark', 'Git_Commit_16x.svg')
+            // tslint:disable-next-line:no-require-imports
+            light: path.join(__dirname, require('../../resources/light/Git_Commit_16x.svg')),
+            // tslint:disable-next-line:no-require-imports
+            dark: path.join(__dirname, require('../../resources/dark/Git_Commit_16x.svg'))
         };
     }
 

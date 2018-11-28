@@ -17,6 +17,7 @@ export abstract class SubscriptionTreeItem extends RootTreeItem<ISubscriptionRoo
         super(root);
         this.label = root.subscriptionDisplayName;
         this.id = root.subscriptionPath;
-        this.iconPath = path.join(__filename, '..', '..', '..', '..', 'resources', 'azureSubscription.svg');
+        // tslint:disable-next-line:no-require-imports
+        this.iconPath = path.join(__dirname, require('../../../resources/azureSubscription.svg'));
     }
 }

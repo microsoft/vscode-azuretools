@@ -26,7 +26,7 @@ class InvalidTreeItem<TRoot> extends AzureParentTreeItem<TRoot> {
     }
 
     public get iconPath(): string {
-        return path.join(__filename, '..', '..', '..', '..', 'resources', 'warning.svg');
+        return path.join(__dirname, '..', '..', '..', '..', 'resources', 'warning.svg');
     }
 
     public async loadMoreChildrenImpl(): Promise<AzureTreeItem<TRoot>[]> {

@@ -122,8 +122,10 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
                         result = result.concat(new GenericTreeItem(treeItem, {
                             label: loadMoreLabel,
                             iconPath: {
-                                light: path.join(__filename, '..', '..', '..', '..', 'resources', 'light', 'refresh.svg'),
-                                dark: path.join(__filename, '..', '..', '..', '..', 'resources', 'dark', 'refresh.svg')
+                                // tslint:disable-next-line:no-require-imports
+                                light: path.join(__dirname, require('../../../resources/light/refresh.svg')),
+                                // tslint:disable-next-line:no-require-imports
+                                dark: path.join(__dirname, require('../../../resources/dark/refresh.svg'))
                             },
                             contextValue: 'azureLoadMore',
                             commandId: thisTree._loadMoreCommandId
@@ -299,8 +301,8 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
                 contextValue: 'azureCommand',
                 id: signInCommandId,
                 iconPath: {
-                    light: path.join(__filename, '..', '..', '..', '..', 'resources', 'light', 'Loading.svg'),
-                    dark: path.join(__filename, '..', '..', '..', '..', 'resources', 'dark', 'Loading.svg')
+                    light: path.join(__dirname, '..', '..', '..', '..', 'resources', 'light', 'Loading.svg'),
+                    dark: path.join(__dirname, '..', '..', '..', '..', 'resources', 'dark', 'Loading.svg')
                 }
             })];
         } else if (this._azureAccount.status === 'LoggedOut') {

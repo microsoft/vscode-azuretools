@@ -40,8 +40,10 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
 
     public get iconPath(): { light: string, dark: string } {
         return {
-            light: path.join(__filename, '..', '..', '..', 'resources', 'light', 'AppSettings_color.svg'),
-            dark: path.join(__filename, '..', '..', '..', 'resources', 'dark', 'AppSettings_color.svg')
+            // tslint:disable-next-line:no-require-imports
+            light: path.join(__dirname, require('../../resources/light/AppSettings_color.svg')),
+            // tslint:disable-next-line:no-require-imports
+            dark: path.join(__dirname, require('../../resources/dark/AppSettings_color.svg'))
         };
     }
 
