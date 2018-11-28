@@ -50,8 +50,9 @@ export async function deployZip(client: SiteClient, fsPath: string, configuratio
 
 async function getZipFileToDeploy(fsPath: string, configurationSectionName?: string): Promise<string> {
     if (!(await fse.pathExists(fsPath))) {
-        throw new Error('Could not zip a non-exist file path.');
+        throw new Error(localize('pathNotExist', 'Failed to zip path that does not exist: {0}', fsPath));
     }
+
     if (await FileUtilities.isDirectory(fsPath)) {
         const zipDeployConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration(configurationSectionName, vscode.Uri.file(fsPath));
         const globPattern: string | undefined = zipDeployConfig.get<string>('zipGlobPattern');
