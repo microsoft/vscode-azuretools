@@ -41,10 +41,6 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         return false;
     }
 
-    public async refresh(): Promise<void> {
-        await ext.tree.refresh(this);
-    }
-
     public async loadMoreChildrenImpl(_clearCache: boolean): Promise<DeploymentTreeItem[] | GenericTreeItem<ISiteTreeRoot>[]> {
         const siteConfig: SiteConfig = await this.root.client.getSiteConfig();
         if (siteConfig.scmType === ScmType.GitHub || siteConfig.scmType === ScmType.LocalGit) {
