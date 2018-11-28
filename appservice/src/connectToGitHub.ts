@@ -10,7 +10,10 @@ import { Response } from 'request';
 import * as request from 'request-promise';
 import * as vscode from 'vscode';
 import { AzureTreeItem, DialogResponses, IActionContext, IAzureQuickPickItem, IParsedError, parseError } from 'vscode-azureextensionui';
+import KuduClient from 'vscode-azurekudu';
+import { waitForDeploymentToComplete } from './deploy/waitForDeploymentToComplete';
 import { ext } from './extensionVariables';
+import { getKuduClient } from './getKuduClient';
 import { localize } from './localize';
 import { signRequest } from './signRequest';
 import { SiteClient } from './SiteClient';
@@ -64,11 +67,13 @@ export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, c
     };
 
     try {
-        const connectingToGithub: string = localize('ConnectingToGithub', '"{0}" is being connected to the GitHub repo. This may take several minutes...', client.fullName);
-        const connectedToGithub: string = localize('ConnectedToGithub', '"{0}" has been connected to the GitHub repo.', client.fullName);
+        const connectingToGithub: string = localize('ConnectingToGithub', '"{0}" is being connected to the GitHub repo. Check output channel for status', client.fullName);
+        const connectedToGithub: string = localize('ConnectedToGithub', 'The GitHub repo is now connected and deployed to "{0}" .', client.fullName);
+        const kuduClient: KuduClient = await getKuduClient(client);
         await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: connectingToGithub }, async (): Promise<void> => {
-            ext.outputChannel.appendLine(connectingToGithub);
-            await client.updateSourceControl(siteSourceControl);
+            // tslint:disable-next-line:no-floating-promises
+            client.updateSourceControl(siteSourceControl);
+            await waitForDeploymentToComplete(client, kuduClient);
             vscode.window.showInformationMessage(connectedToGithub);
             ext.outputChannel.appendLine(connectedToGithub);
         });
