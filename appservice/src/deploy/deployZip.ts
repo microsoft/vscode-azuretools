@@ -18,6 +18,10 @@ import { formatDeployLog } from './formatDeployLog';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
 export async function deployZip(client: SiteClient, fsPath: string, configurationSectionName: string, aspPromise: Promise<AppServicePlan | undefined>): Promise<void> {
+    if (!(await fse.pathExists(fsPath))) {
+        throw new Error(localize('pathNotExist', 'Failed to deploy path that does not exist: {0}', fsPath));
+    }
+
     let zipFilePath: string;
     let createdZip: boolean = false;
     if (FileUtilities.getFileExtension(fsPath) === 'zip') {
@@ -49,9 +53,6 @@ export async function deployZip(client: SiteClient, fsPath: string, configuratio
 }
 
 async function getZipFileToDeploy(fsPath: string, configurationSectionName?: string): Promise<string> {
-    if (!(await fse.pathExists(fsPath))) {
-        throw new Error('Could not zip a non-exist file path.');
-    }
     if (await FileUtilities.isDirectory(fsPath)) {
         const zipDeployConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration(configurationSectionName, vscode.Uri.file(fsPath));
         const globPattern: string | undefined = zipDeployConfig.get<string>('zipGlobPattern');

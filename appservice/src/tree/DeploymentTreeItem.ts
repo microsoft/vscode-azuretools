@@ -9,6 +9,7 @@ import { ProgressLocation, TextDocument, window, workspace } from 'vscode';
 import { AzureTreeItem } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { DeployResult, LogEntry } from 'vscode-azurekudu/lib/models';
+import { waitForDeploymentToComplete } from '../deploy/waitForDeploymentToComplete';
 import { ext } from '../extensionVariables';
 import { getKuduClient } from '../getKuduClient';
 import { localize } from '../localize';
@@ -78,17 +79,18 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     }
 
     public async redeployDeployment(): Promise<void> {
-        const redeploying: string = `Redeploying commit "${this.id}" to "${this.root.client.fullName}"`;
-        const deployed: string = `Commit "${this.id}" has been redeployed to "${this.root.client.fullName}".`;
+        const redeploying: string = localize('redeploying', 'Redeploying commit "{0}" to "{1}". Check output window for status.', this.id, this.root.client.fullName);
+        const redeployed: string = localize('redeployed', 'Commit "{0}" has been redeployed to "{1}".', this.id, this.root.client.fullName);
         window.withProgress({ location: ProgressLocation.Notification, title: redeploying }, async (): Promise<void> => {
             const kuduClient: KuduClient = await getKuduClient(this.root.client);
-            ext.outputChannel.appendLine(redeploying);
             const refreshingInteveral: NodeJS.Timer = setInterval(async () => { await this.refresh(); }, 1000); /* the status of the label changes during deployment so poll for that*/
             try {
-                await kuduClient.deployment.deploy(this.id);
+                // tslint:disable-next-line:no-floating-promises
+                kuduClient.deployment.deploy(this.id);
+                await waitForDeploymentToComplete(this.root.client, kuduClient);
                 await this.parent.refresh(); /* refresh entire node because active statuses has changed */
-                window.showInformationMessage(deployed);
-                ext.outputChannel.appendLine(deployed);
+                window.showInformationMessage(redeployed);
+                ext.outputChannel.appendLine(redeployed);
             } finally {
                 clearInterval(refreshingInteveral);
             }
