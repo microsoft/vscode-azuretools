@@ -71,7 +71,7 @@ export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, c
 
     try {
         const connectingToGithub: string = localize('ConnectingToGithub', '"{0}" is being connected to repo "{1}". Check output channel for status.', client.fullName, repoName);
-        const connectedToGithub: string = localize('ConnectedToGithub', '"{0}" is connected and deployed to "{1}".', repoName, client.fullName);
+        const connectedToGithub: string = localize('ConnectedToGithub', 'Repo "{0}" is connected and deployed to "{1}".', repoName, client.fullName);
         const kuduClient: KuduClient = await getKuduClient(client);
         await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: connectingToGithub }, async (): Promise<void> => {
             // tslint:disable-next-line:no-floating-promises
