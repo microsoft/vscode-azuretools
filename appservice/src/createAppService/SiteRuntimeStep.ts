@@ -44,8 +44,8 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
     private getLinuxRuntimeStack(): ILinuxRuntimeStack[] {
         return [
             {
-                name: 'node|8.9',
-                displayName: 'Node.js 8.9 (LTS - Recommended for new apps)'
+                name: 'node|10.10',
+                displayName: 'Node.js 10.10 (LTS - Recommended for new apps)'
             },
             {
                 name: 'node|4.4',
@@ -90,6 +90,10 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
             {
                 name: 'node|8.8',
                 displayName: 'Node.js 8.8'
+            },
+            {
+                name: 'node|8.9',
+                displayName: 'Node.js 8.9'
             },
             {
                 name: 'node|9.4',
