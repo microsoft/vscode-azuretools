@@ -16,8 +16,8 @@ import { signRequest } from './signRequest';
 import { SiteClient } from './SiteClient';
 import { nonNullProp } from './utils/nonNull';
 
-type gitHubOrgData = { repos_url?: string };
-type gitHubReposData = { repos_url?: string, url?: string, html_url?: string };
+type gitHubOrgData = { login?: string, repos_url?: string };
+type gitHubReposData = { name?: string, repos_url?: string, url?: string, html_url?: string };
 type gitHubLink = { prev?: string, next?: string, last?: string, first?: string };
 // tslint:disable-next-line:no-reserved-keywords
 type gitHubWebResource = WebResource & { resolveWithFullResponse?: boolean, nextLink?: string, type?: string };
@@ -40,7 +40,7 @@ export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, c
     const gitHubUser: Object[] = await getJsonRequest(requestOptions, node, client, context);
     requestOptions.url = 'https://api.github.com/user/orgs';
     const gitHubOrgs: Object[] = await getJsonRequest(requestOptions, node, client, context);
-    const orgQuickPicks: IAzureQuickPickItem<{}>[] = createQuickPickFromJsons([gitHubUser], 'login', undefined, ['repos_url']).concat(createQuickPickFromJsons(gitHubOrgs, 'login', undefined, ['repos_url']));
+    const orgQuickPicks: IAzureQuickPickItem<{}>[] = createQuickPickFromJsons([gitHubUser], 'login', undefined, ['repos_url', 'login']).concat(createQuickPickFromJsons(gitHubOrgs, 'login', undefined, ['repos_url', 'login']));
     const orgQuickPick: gitHubOrgData = (await ext.ui.showQuickPick(orgQuickPicks, { placeHolder: 'Choose your organization.' })).data;
     requestOptions.url = nonNullProp(orgQuickPick, 'repos_url');
 
@@ -63,12 +63,11 @@ export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, c
         isMercurial: false
     };
 
-    // tslint:disable-next-line:no-non-null-assertion
-    const repoName: string = siteSourceControl.repoUrl!.substring('https://github.com/'.length);
+    const repoName: string | undefined = orgQuickPick.login && repoQuickPick.name ? `${orgQuickPick.login}/${repoQuickPick.name}` : undefined;
 
     try {
-        const connectingToGithub: string = localize('ConnectingToGithub', '"{0}" is being connected to repo "{1}". This may take several minutes...', client.fullName, repoName);
-        const connectedToGithub: string = localize('ConnectedToGithub', '"{0}" has been connected to repo "{1}".', client.fullName, repoName);
+        const connectingToGithub: string = repoName ? localize('ConnectingToGithub', '"{0}" is being connected to repo "{1}". This may take several minutes...', client.fullName, repoName) : localize('ConnectingToGithub', '"{0}" is being connected to the GitHub repo. This may take several minutes...', client.fullName);
+        const connectedToGithub: string = repoName ? localize('ConnectedToGithub', '"{0}" has been connected to repo "{1}".', client.fullName, repoName) : localize('ConnectedToGithub', '"{0}" has been connected to the GitHub repo.', client.fullName);
         await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: connectingToGithub }, async (): Promise<void> => {
             ext.outputChannel.appendLine(connectingToGithub);
             await client.updateSourceControl(siteSourceControl);
@@ -202,7 +201,7 @@ async function getGitHubReposQuickPicks(cache: ICachedQuickPicks<gitHubReposData
         }
     } while (requestOptions.nextLink && startTime + timeoutMs > Date.now());
 
-    cache.picks = cache.picks.concat(createQuickPickFromJsons(gitHubRepos, 'name', undefined, ['url', 'html_url']));
+    cache.picks = cache.picks.concat(createQuickPickFromJsons(gitHubRepos, 'name', undefined, ['url', 'html_url', 'name']));
     cache.picks.sort((a: vscode.QuickPickItem, b: vscode.QuickPickItem) => a.label.localeCompare(b.label));
 
     if (requestOptions.nextLink) {
