@@ -41,6 +41,10 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         return false;
     }
 
+    public async refresh(): Promise<void> {
+        await ext.tree.refresh(this);
+    }
+
     public async loadMoreChildrenImpl(_clearCache: boolean): Promise<DeploymentTreeItem[] | GenericTreeItem<ISiteTreeRoot>[]> {
         const siteConfig: SiteConfig = await this.root.client.getSiteConfig();
         if (siteConfig.scmType === ScmType.GitHub || siteConfig.scmType === ScmType.LocalGit) {
@@ -76,7 +80,7 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         const disconnect: string = localize('disconnectFromRepo', 'Disconnect from repository? This will not affect your app\'s active deployment. You may reconnect a repository at any time.');
         await ext.ui.showWarningMessage(disconnect, { modal: true }, disconnectButton, DialogResponses.cancel);
         await editScmType(this.root.client, this.parent, context, ScmType.None);
-        await this.refresh();
+        await ext.tree.refresh(this);
     }
 
     public async refreshLabelImpl(): Promise<void> {

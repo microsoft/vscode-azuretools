@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ExtensionContext, OutputChannel } from "vscode";
-import { IAzureUserInput, registerUIExtensionVariables, UIExtensionVariables } from 'vscode-azureextensionui';
+import { AzureTreeDataProvider, IAzureUserInput, registerUIExtensionVariables, UIExtensionVariables } from 'vscode-azureextensionui';
 import { localize } from "./localize";
 
 /**
@@ -14,6 +14,7 @@ export interface IAppServiceExtensionVariables {
     outputChannel: OutputChannel;
     ui: IAzureUserInput;
     context: ExtensionContext;
+    tree: AzureTreeDataProvider;
 }
 
 class UninitializedExtensionVariables implements IAppServiceExtensionVariables {
@@ -28,6 +29,10 @@ class UninitializedExtensionVariables implements IAppServiceExtensionVariables {
     }
 
     public get context(): ExtensionContext {
+        throw this._error;
+    }
+
+    public get tree(): AzureTreeDataProvider {
         throw this._error;
     }
 }

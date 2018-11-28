@@ -83,16 +83,14 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         const redeployed: string = localize('redeployed', 'Commit "{0}" has been redeployed to "{1}".', this.id, this.root.client.fullName);
         window.withProgress({ location: ProgressLocation.Notification, title: redeploying }, async (): Promise<void> => {
             const kuduClient: KuduClient = await getKuduClient(this.root.client);
-            ext.outputChannel.appendLine(redeploying);
             const refreshingInteveral: NodeJS.Timer = setInterval(async () => { await this.refresh(); }, 1000); /* the status of the label changes during deployment so poll for that*/
             try {
                 // tslint:disable-next-line:no-floating-promises
-                kuduClient.deployment.deploy(this.id).then(async () => {
-                    await this.parent.refresh(); /* refresh entire node because active statuses has changed */
-                    window.showInformationMessage(redeployed);
-                    ext.outputChannel.appendLine(redeployed);
-                });
+                kuduClient.deployment.deploy(this.id);
                 await waitForDeploymentToComplete(this.root.client, kuduClient);
+                await this.parent.refresh(); /* refresh entire node because active statuses has changed */
+                window.showInformationMessage(redeployed);
+                ext.outputChannel.appendLine(redeployed);
             } finally {
                 clearInterval(refreshingInteveral);
             }
