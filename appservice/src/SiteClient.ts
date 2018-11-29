@@ -133,6 +133,12 @@ export class SiteClient {
         return await this._client.appServicePlans.get(this.planResourceGroup, this.planName);
     }
 
+    public async getSourceControl(): Promise<SiteSourceControl> {
+        return this.slotName ?
+            await this._client.webApps.getSourceControlSlot(this.resourceGroup, this.siteName, this.slotName) :
+            await this._client.webApps.getSourceControl(this.resourceGroup, this.siteName);
+    }
+
     public async updateSourceControl(siteSourceControl: SiteSourceControl): Promise<SiteSourceControl> {
         return this.slotName ?
             await this._client.webApps.createOrUpdateSourceControlSlot(this.resourceGroup, this.siteName, siteSourceControl, this.slotName) :

@@ -81,18 +81,33 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     public async redeployDeployment(): Promise<void> {
         const redeploying: string = localize('redeploying', 'Redeploying commit "{0}" to "{1}". Check output window for status.', this.id, this.root.client.fullName);
         const redeployed: string = localize('redeployed', 'Commit "{0}" has been redeployed to "{1}".', this.id, this.root.client.fullName);
-        window.withProgress({ location: ProgressLocation.Notification, title: redeploying }, async (): Promise<void> => {
+        await window.withProgress({ location: ProgressLocation.Notification, title: redeploying }, async (): Promise<void> => {
             const kuduClient: KuduClient = await getKuduClient(this.root.client);
             const refreshingInteveral: NodeJS.Timer = setInterval(async () => { await this.refresh(); }, 1000); /* the status of the label changes during deployment so poll for that*/
+            let getResultInterval: NodeJS.Timer | undefined;
             try {
-                // tslint:disable-next-line:no-floating-promises
-                kuduClient.deployment.deploy(this.id);
+                await new Promise((resolve: () => void, reject: (error: Error) => void): void => {
+                    kuduClient.deployment.deploy(this.id).catch(reject);
+                    getResultInterval = setInterval(
+                        async () => {
+                            const deployResult: DeployResult | undefined = <DeployResult | undefined>await kuduClient.deployment.getResult('latest');
+                            if (deployResult && deployResult.id === this.id) {
+                                resolve();
+                            }
+                        },
+                        1000
+                    );
+                    setTimeout(() => reject(new Error('timed out')), 5000);
+                });
                 await waitForDeploymentToComplete(this.root.client, kuduClient);
                 await this.parent.refresh(); /* refresh entire node because active statuses has changed */
                 window.showInformationMessage(redeployed);
                 ext.outputChannel.appendLine(redeployed);
             } finally {
                 clearInterval(refreshingInteveral);
+                if (getResultInterval) {
+                    clearInterval(getResultInterval);
+                }
             }
 
         });
