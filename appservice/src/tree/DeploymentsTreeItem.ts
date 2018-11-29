@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SiteConfig } from 'azure-arm-website/lib/models';
+import { SiteConfig, SiteSourceControl } from 'azure-arm-website/lib/models';
 import * as path from 'path';
 import { MessageItem } from 'vscode';
 import { AzureParentTreeItem, createTreeItemsWithErrorHandling, DialogResponses, GenericTreeItem, IActionContext } from 'vscode-azureextensionui';
@@ -72,8 +72,9 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     }
 
     public async disconnectRepo(context: IActionContext): Promise<void> {
+        const sourceControl: SiteSourceControl = await this.root.client.getSourceControl();
         const disconnectButton: MessageItem = { title: localize('disconnect', 'Disconnect') };
-        const disconnect: string = localize('disconnectFromRepo', 'Disconnect from repository? This will not affect your app\'s active deployment. You may reconnect a repository at any time.');
+        const disconnect: string = localize('disconnectFromRepo', 'Disconnect from "{0}"? This will not affect your app\'s active deployment. You may reconnect a repository at any time.', sourceControl.repoUrl);
         await ext.ui.showWarningMessage(disconnect, { modal: true }, disconnectButton, DialogResponses.cancel);
         await editScmType(this.root.client, this.parent, context, ScmType.None);
         await this.refresh();

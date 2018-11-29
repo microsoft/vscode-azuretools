@@ -15,12 +15,12 @@ export async function waitForDeploymentToComplete(client: SiteClient, kuduClient
     const alreadyDisplayedLogs: string[] = [];
     let nextTimeToDisplayWaitingLog: number = Date.now();
     let permanentId: string | undefined;
-    let initialReceivedTime: Date | undefined;
+    let initialStartTime: Date | undefined;
     let deployment: DeployResult | undefined;
 
     // tslint:disable-next-line:no-constant-condition
     while (true) {
-        [deployment, permanentId, initialReceivedTime] = await getLatestDeployment(kuduClient, permanentId, initialReceivedTime);
+        [deployment, permanentId, initialStartTime] = await getLatestDeployment(kuduClient, permanentId, initialStartTime);
 
         if (deployment === undefined || !deployment.id) {
             throw new Error(localize('failedToFindDeployment', 'Failed to get status of deployment.'));
@@ -77,17 +77,17 @@ export async function waitForDeploymentToComplete(client: SiteClient, kuduClient
     }
 }
 
-async function getLatestDeployment(kuduClient: KuduClient, permanentId: string | undefined, initialReceivedTime: Date | undefined): Promise<[DeployResult | undefined, string | undefined, Date | undefined]> {
+async function getLatestDeployment(kuduClient: KuduClient, permanentId: string | undefined, initialStartTime: Date | undefined): Promise<[DeployResult | undefined, string | undefined, Date | undefined]> {
     let deployment: DeployResult | undefined;
     if (permanentId) {
         // Use "permanentId" to find the deployment during its "permanent" phase
         deployment = await kuduClient.deployment.getResult(permanentId);
-    } else if (initialReceivedTime) {
+    } else if (initialStartTime) {
         // Use "initialReceivedTime" to find the deployment during its "temp" phase
         deployment = (await kuduClient.deployment.getDeployResults())
             // tslint:disable-next-line:no-non-null-assertion
-            .filter((deployResult: DeployResult) => deployResult.receivedTime && deployResult.receivedTime >= initialReceivedTime!)
-            .sort((a: DeployResult, b: DeployResult) => nonNullProp(b, 'receivedTime').valueOf() - nonNullProp(a, 'receivedTime').valueOf())
+            .filter((deployResult: DeployResult) => deployResult.startTime && deployResult.startTime >= initialStartTime!)
+            .sort((a: DeployResult, b: DeployResult) => nonNullProp(b, 'startTime').valueOf() - nonNullProp(a, 'startTime').valueOf())
             .shift();
         if (deployment && !deployment.isTemp) {
             // Make note of the id once the deplyoment has shifted to the "permanent" phase, so that we can use that to find the deployment going forward
@@ -96,11 +96,12 @@ async function getLatestDeployment(kuduClient: KuduClient, permanentId: string |
     } else {
         // Use "latest" to get the deployment before we know the "initialReceivedTime" or "permanentId"
         deployment = <DeployResult | undefined>await kuduClient.deployment.getResult('latest');
-        if (deployment && deployment.receivedTime) {
-            // Make note of the initialReceivedTime, so that we can use that to find the deployment going forward
-            initialReceivedTime = deployment.receivedTime;
+        if (deployment && deployment.startTime) {
+            // Make note of the startTime because that is when kudu has began the deployment process,
+            // so that we can use that to find the deployment going forward
+            initialStartTime = deployment.startTime;
         }
     }
 
-    return [deployment, permanentId, initialReceivedTime];
+    return [deployment, permanentId, initialStartTime];
 }
