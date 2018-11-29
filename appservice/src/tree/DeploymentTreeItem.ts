@@ -81,7 +81,7 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     public async redeployDeployment(): Promise<void> {
         const redeploying: string = localize('redeploying', 'Redeploying commit "{0}" to "{1}". Check output window for status.', this.id, this.root.client.fullName);
         const redeployed: string = localize('redeployed', 'Commit "{0}" has been redeployed to "{1}".', this.id, this.root.client.fullName);
-        const timeout: string = localize('redeployTimeout', 'Redeploy "{0}" was unable to resolve and has timed out.', this.id);
+        const timeout: string = localize('redeployTimeout', 'Redeploying commit "{0}" was unable to resolve and has timed out.', this.id);
         await window.withProgress({ location: ProgressLocation.Notification, title: redeploying }, async (): Promise<void> => {
             const kuduClient: KuduClient = await getKuduClient(this.root.client);
             const refreshingInteveral: NodeJS.Timer = setInterval(async () => { await this.refresh(); }, 1000); /* the status of the label changes during deployment so poll for that*/
