@@ -6,6 +6,7 @@
 export * from './createAppService/createFunctionApp';
 export * from './createAppService/createWebApp';
 export * from './createAppService/IAppCreateOptions';
+export * from './createSlot';
 export * from './deploy/deploy';
 export * from './deleteSite';
 export * from './editScmType';
@@ -16,6 +17,7 @@ export * from './pingFunctionApp';
 export * from './putFile';
 export * from './SiteClient';
 export * from './startStreamingLogs';
+export * from './swapSlot';
 export * from './tree/AppSettingsTreeItem';
 export * from './tree/AppSettingTreeItem';
 export * from './tree/DeploymentsTreeItem';
