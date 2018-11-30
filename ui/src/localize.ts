@@ -5,4 +5,5 @@
 
 import * as nls from 'vscode-nls';
 
-export const localize: nls.LocalizeFunc = nls.config({ locale: process.env.VSCODE_NLS_CONFIG })();
+export const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+
