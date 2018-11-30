@@ -61,7 +61,7 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
             return [new GenericTreeItem(this, {
                 commandId: 'appService.ConnectToGitHub',
                 contextValue: 'ConnectToGithub',
-                label: 'Connect to a GitHub repository...'
+                label: 'Connect to a GitHub Repository...'
             })];
         }
     }
