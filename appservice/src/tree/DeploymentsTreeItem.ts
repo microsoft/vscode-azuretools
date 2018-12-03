@@ -25,9 +25,12 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     public readonly label: string = localize('Deployments', 'Deployments');
     public readonly childTypeLabel: string = localize('Deployment', 'Deployment');
 
-    public constructor(parent: AzureParentTreeItem<ISiteTreeRoot>, siteConfig: SiteConfig) {
+    private readonly _connectToGitHubCommandId: string;
+
+    public constructor(parent: AzureParentTreeItem<ISiteTreeRoot>, siteConfig: SiteConfig, connectToGitHubCommandId: string) {
         super(parent);
         this.contextValue = siteConfig.scmType === ScmType.None ? DeploymentsTreeItem.contextValueUnconnected : DeploymentsTreeItem.contextValueConnected;
+        this._connectToGitHubCommandId = connectToGitHubCommandId;
     }
 
     public get iconPath(): { light: string, dark: string } {
@@ -59,7 +62,7 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
             );
         } else {
             return [new GenericTreeItem(this, {
-                commandId: 'appService.ConnectToGitHub',
+                commandId: this._connectToGitHubCommandId,
                 contextValue: 'ConnectToGithub',
                 label: 'Connect to a GitHub Repository...'
             })];
