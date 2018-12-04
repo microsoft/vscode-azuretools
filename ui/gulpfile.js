@@ -7,15 +7,12 @@ const gulp = require('gulp');
 const path = require('path');
 const cp = require('child_process');
 
-gulp.task('test', (cb) => {
+gulp.task('test', () => {
     const env = process.env;
     env.DEBUGTELEMETRY = 1;
     env.MOCHA_reporter = 'mocha-junit-reporter';
     env.MOCHA_FILE = path.join(__dirname, 'test-results.xml');
     env.CODE_EXTENSIONS_PATH = path.join(__dirname, 'test', 'extension');
-    const cmd = cp.spawn('node', ['./node_modules/vscode/bin/test'], { stdio: 'inherit', env });
-    cmd.on('close', (code) => {
-        cb(code);
-    });
+    return cp.spawn('node', ['./node_modules/vscode/bin/test'], { stdio: 'inherit', env });
 });
 
