@@ -8,7 +8,7 @@ const autorest = require('autorest');
 const path = require('path');
 const fse = require('fs-extra');
 
-gulp.task('build', async () => {
+gulp.task('build', async (callback) => {
     // use local version of autorest extensions instead of global machine versions
     await autorest.initialize("./node_modules/@microsoft.azure/autorest-core");
 
@@ -34,11 +34,15 @@ gulp.task('build', async () => {
             fse.writeFileSync(uri, file.content);
         }
     });
-    if (await autorestInstance.Process().finish) {
-        // process succeeded
-        process.exit();
-    } else {
-        // process failed
-        process.exit(1);
+
+    const result = await autorestInstance.Process().finish; // boolean | Error
+    let error = undefined;
+    if (typeof result !== 'boolean') {
+        error = result;
+    } else if (result !== true) {
+        error = new Error('Autorest failed for unknown reason.');
     }
+
+    callback(error); // exit gulp
+    process.exit(); // exit autorest
 });
