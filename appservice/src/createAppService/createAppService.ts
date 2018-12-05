@@ -123,5 +123,6 @@ export async function createAppService(
     actionContext.properties.os = wizardContext.newSiteOS;
     actionContext.properties.runtime = wizardContext.newSiteRuntime;
     actionContext.properties.advancedCreation = createOptions.advancedCreation ? 'true' : 'false';
+    actionContext.properties.detectedSiteRuntime = wizardContext.detectedSiteRuntime;
     return nonNullProp(wizardContext, 'site');
 }

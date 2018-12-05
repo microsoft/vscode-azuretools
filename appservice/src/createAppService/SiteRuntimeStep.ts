@@ -6,6 +6,7 @@
 import { AzureWizardPromptStep, IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { AppKind, WebsiteOS } from './AppKind';
+import { pythonRuntime } from './createWebApp';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 interface ILinuxRuntimeStack {
@@ -24,7 +25,7 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                 ];
                 wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new Linux app.' })).data;
             } else {
-                const runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[] = this.getLinuxRuntimeStack().map((rt: ILinuxRuntimeStack) => {
+                let runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[] = this.getLinuxRuntimeStack().map((rt: ILinuxRuntimeStack) => {
                     return {
                         id: rt.name,
                         label: rt.displayName,
@@ -32,7 +33,14 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                         data: rt
                     };
                 });
-
+                if (wizardContext.detectedSiteRuntime) {
+                    switch (wizardContext.detectedSiteRuntime) {
+                        case pythonRuntime:
+                            runtimeItems = this.unshiftRuntimeQuickPickItem(pythonRuntime, runtimeItems);
+                        default:
+                        // do nothing if we do not handle that detectedSiteRuntime
+                    }
+                }
                 wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new Linux app.' })).data.name;
             }
         }
@@ -152,5 +160,17 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                 displayName: '[Preview] Python 3.7'
             }
         ];
+    }
+
+    private unshiftRuntimeQuickPickItem(runtime: string, runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[]): IAzureQuickPickItem<ILinuxRuntimeStack>[] {
+        const runtimeQuickPickItemIndex: number = runtimeItems.findIndex((qpItem: IAzureQuickPickItem<ILinuxRuntimeStack>) => {
+            return qpItem.data.name === runtime;
+        });
+        if (runtimeQuickPickItemIndex >= 0) {
+            const runtimeQuickPickItem: IAzureQuickPickItem<ILinuxRuntimeStack> = runtimeItems.splice(runtimeQuickPickItemIndex)[0];
+            runtimeItems.unshift(runtimeQuickPickItem);
+        }
+
+        return runtimeItems;
     }
 }
