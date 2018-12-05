@@ -34,6 +34,14 @@ export async function setWizardContextDefaults(wizardContext: IAppServiceWizardC
                 wizardContext.newSiteOS = WebsiteOS.windows;
             }
         });
+
+        // requirements.txt are used to pip install so a good way to determine it's a Python app
+        await workspace.findFiles('requirements.txt').then((files: Uri[]) => {
+            if (files.length > 0) {
+                wizardContext.newSiteOS = WebsiteOS.linux;
+                wizardContext.newSiteRuntime = 'python|3.7';
+            }
+        });
     }
 
 }
