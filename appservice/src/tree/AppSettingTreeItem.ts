@@ -5,6 +5,7 @@
 
 import { StringDictionary } from 'azure-arm-website/lib/models';
 import * as path from 'path';
+import { workspace } from 'vscode';
 import { AzureTreeItem, DialogResponses } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { AppSettingsTreeItem, validateAppSettingKey } from './AppSettingsTreeItem';
@@ -15,21 +16,25 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     public readonly contextValue: string = AppSettingTreeItem.contextValue;
     public readonly parent: AppSettingsTreeItem;
 
-    private key: string;
-    private value: string;
+    private _key: string;
+    private _value: string;
+    private _obfuscateValueSetting: string | undefined;
 
-    constructor(parent: AppSettingsTreeItem, key: string, value: string) {
+    constructor(parent: AppSettingsTreeItem, key: string, value: string, obfuscateValueSetting?: string) {
         super(parent);
-        this.key = key;
-        this.value = value;
+        this._key = key;
+        this._value = value;
+        this._obfuscateValueSetting = obfuscateValueSetting;
     }
 
     public get id(): string {
-        return this.key;
+        return this._key;
     }
 
     public get label(): string {
-        return `${this.key}=${this.value}`;
+        // this prevents obfuscateValueSetting from being a breaking change.  If it is not implemented, the behavior doesn't change
+        const obfuscateValue: boolean | undefined = this._obfuscateValueSetting ? workspace.getConfiguration().get(this._obfuscateValueSetting) : false;
+        return (obfuscateValue === undefined || obfuscateValue) ? `${this._key}=**********` : `${this._key}=${this._value}`;
     }
 
     public get iconPath(): { light: string, dark: string } {
@@ -41,32 +46,32 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
 
     public async edit(): Promise<void> {
         const newValue: string = await ext.ui.showInputBox({
-            prompt: `Enter setting value for "${this.key}"`,
-            value: this.value
+            prompt: `Enter setting value for "${this._key}"`,
+            value: this._value
         });
 
-        this.value = newValue;
-        await this.parent.editSettingItem(this.key, this.key, newValue);
+        this._value = newValue;
+        await this.parent.editSettingItem(this._key, this._key, newValue);
         await this.refresh();
     }
 
     public async rename(): Promise<void> {
         const settings: StringDictionary = await this.parent.ensureSettings();
 
-        const oldKey: string = this.key;
+        const oldKey: string = this._key;
         const newKey: string = await ext.ui.showInputBox({
             prompt: `Enter a new name for "${oldKey}"`,
-            value: this.key,
+            value: this._key,
             validateInput: (v?: string): string | undefined => validateAppSettingKey(settings, v, oldKey)
         });
 
-        this.key = newKey;
-        await this.parent.editSettingItem(oldKey, newKey, this.value);
+        this._key = newKey;
+        await this.parent.editSettingItem(oldKey, newKey, this._value);
         await this.refresh();
     }
 
     public async deleteTreeItemImpl(): Promise<void> {
-        await ext.ui.showWarningMessage(`Are you sure you want to delete setting "${this.key}"?`, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
-        await this.parent.deleteSettingItem(this.key);
+        await ext.ui.showWarningMessage(`Are you sure you want to delete setting "${this._key}"?`, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
+        await this.parent.deleteSettingItem(this._key);
     }
 }
