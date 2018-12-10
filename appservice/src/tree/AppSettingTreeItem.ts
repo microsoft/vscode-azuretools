@@ -5,7 +5,6 @@
 
 import { StringDictionary } from 'azure-arm-website/lib/models';
 import * as path from 'path';
-import { workspace } from 'vscode';
 import { AzureTreeItem, DialogResponses } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { AppSettingsTreeItem, validateAppSettingKey } from './AppSettingsTreeItem';
@@ -15,16 +14,18 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     public static contextValue: string = 'applicationSettingItem';
     public readonly contextValue: string = AppSettingTreeItem.contextValue;
     public readonly parent: AppSettingsTreeItem;
+    public readonly commandLabel: string | undefined;
 
     private _key: string;
     private _value: string;
-    private _obfuscateValueSetting: string | undefined;
+    private _hideValue: boolean;
 
-    constructor(parent: AppSettingsTreeItem, key: string, value: string, obfuscateValueSetting?: string) {
+    constructor(parent: AppSettingsTreeItem, key: string, value: string) {
         super(parent);
         this._key = key;
         this._value = value;
-        this._obfuscateValueSetting = obfuscateValueSetting;
+        this.commandId = 'appService.toggleValueVisability';
+        this._hideValue = true;
     }
 
     public get id(): string {
@@ -32,9 +33,7 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     }
 
     public get label(): string {
-        // this prevents obfuscateValueSetting from being a breaking change.  If it is not implemented, the behavior doesn't change
-        const obfuscateValue: boolean | undefined = this._obfuscateValueSetting ? workspace.getConfiguration().get(this._obfuscateValueSetting) : false;
-        return (obfuscateValue === undefined || obfuscateValue) ? `${this._key}=**********` : `${this._key}=${this._value}`;
+        return this._hideValue ? `${this._key}=Hidden value. Click to view.` : `${this._key}=${this._value}`;
     }
 
     public get iconPath(): { light: string, dark: string } {
@@ -73,5 +72,9 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     public async deleteTreeItemImpl(): Promise<void> {
         await ext.ui.showWarningMessage(`Are you sure you want to delete setting "${this._key}"?`, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         await this.parent.deleteSettingItem(this._key);
+    }
+
+    public toggleValueVisability(): void {
+            this._hideValue = !this._hideValue;
     }
 }
