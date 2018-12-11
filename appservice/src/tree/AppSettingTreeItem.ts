@@ -72,6 +72,7 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         await ext.ui.showWarningMessage(`Are you sure you want to delete setting "${this._key}"?`, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         await this.parent.deleteSettingItem(this._key);
     }
+
     public async toggleValueVisibility(): Promise<void> {
         this._hideValue = !this._hideValue;
         await this.refresh();
