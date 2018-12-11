@@ -33,9 +33,11 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     public readonly childTypeLabel: string = 'App Setting';
     public readonly contextValue: string = AppSettingsTreeItem.contextValue;
     private _settings: StringDictionary | undefined;
+    private _commandId: string;
 
-    constructor(parent: AzureParentTreeItem) {
+    constructor(parent: AzureParentTreeItem, commandId: string) {
         super(parent);
+        this._commandId = commandId;
     }
 
     public get id(): string {
@@ -59,7 +61,7 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         // tslint:disable-next-line:strict-boolean-expressions
         const properties: { [name: string]: string } = this._settings.properties || {};
         Object.keys(properties).forEach((key: string) => {
-            treeItems.push(new AppSettingTreeItem(this, key, properties[key]));
+            treeItems.push(new AppSettingTreeItem(this, key, properties[key], this._commandId));
         });
 
         return treeItems;
@@ -107,7 +109,7 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         showCreatingTreeItem(newKey);
         settings.properties[newKey] = newValue;
         await this.root.client.updateApplicationSettings(settings);
-        return new AppSettingTreeItem(this, newKey, newValue);
+        return new AppSettingTreeItem(this, newKey, newValue, this._commandId);
     }
 
     public async ensureSettings(): Promise<StringDictionary> {

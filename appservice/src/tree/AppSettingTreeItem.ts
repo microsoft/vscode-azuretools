@@ -14,20 +14,19 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     public static contextValue: string = 'applicationSettingItem';
     public readonly contextValue: string = AppSettingTreeItem.contextValue;
     public readonly parent: AppSettingsTreeItem;
-    public readonly commandLabel: string | undefined;
+    public readonly commandId: string;
 
     private _key: string;
     private _value: string;
     private _hideValue: boolean;
 
-    constructor(parent: AppSettingsTreeItem, key: string, value: string) {
+    constructor(parent: AppSettingsTreeItem, key: string, value: string, commandId: string) {
         super(parent);
         this._key = key;
         this._value = value;
-        this.commandId = 'appService.toggleValueVisability';
+        this.commandId = commandId;
         this._hideValue = true;
     }
-
     public get id(): string {
         return this._key;
     }
@@ -73,8 +72,8 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         await ext.ui.showWarningMessage(`Are you sure you want to delete setting "${this._key}"?`, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         await this.parent.deleteSettingItem(this._key);
     }
-
-    public toggleValueVisability(): void {
-            this._hideValue = !this._hideValue;
+    public async toggleValueVisibility(): Promise<void> {
+        this._hideValue = !this._hideValue;
+        await this.refresh();
     }
 }
