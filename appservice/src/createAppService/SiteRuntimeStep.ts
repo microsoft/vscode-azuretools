@@ -36,7 +36,7 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                 if (wizardContext.detectedSiteRuntime) {
                     switch (wizardContext.detectedSiteRuntime) {
                         case pythonRuntime:
-                            runtimeItems = this.unshiftRuntimeQuickPickItem(pythonRuntime, runtimeItems);
+                            runtimeItems = this.sortQuickPicksByRuntime(runtimeItems, pythonRuntime);
                         default:
                         // do nothing if we do not handle that detectedSiteRuntime
                     }
@@ -162,15 +162,15 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
         ];
     }
 
-    private unshiftRuntimeQuickPickItem(runtime: string, runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[]): IAzureQuickPickItem<ILinuxRuntimeStack>[] {
-        const runtimeQuickPickItemIndex: number = runtimeItems.findIndex((qpItem: IAzureQuickPickItem<ILinuxRuntimeStack>) => {
-            return qpItem.data.name === runtime;
+    private sortQuickPicksByRuntime(runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[], runtime: string): IAzureQuickPickItem<ILinuxRuntimeStack>[] {
+        return runtimeItems.sort((a: IAzureQuickPickItem<ILinuxRuntimeStack>, b: IAzureQuickPickItem<ILinuxRuntimeStack>) => {
+            if (a.data.name.includes(runtime)) {
+                return -1;
+            } else if (b.data.name.includes(runtime)) {
+                return 1;
+            } else {
+                return 0;
+            }
         });
-        if (runtimeQuickPickItemIndex >= 0) {
-            const runtimeQuickPickItem: IAzureQuickPickItem<ILinuxRuntimeStack> = runtimeItems.splice(runtimeQuickPickItemIndex)[0];
-            runtimeItems.unshift(runtimeQuickPickItem);
-        }
-
-        return runtimeItems;
     }
 }
