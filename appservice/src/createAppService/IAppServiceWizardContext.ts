@@ -61,15 +61,8 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
 
     /**
      * The runtime to put to the top of the QuickPick list to recommend to the user.
-     * This should be set in `getWizardRecommendations`
+     * This should be set in `setWizardContextDefaults`
      */
 
     recommendedSiteRuntime?: LinuxRuntimes;
-
-    /**
-     * The OS that we detect that the user should use.  Will be set automatically for Basic Creation.
-     * This should be set in `getWizardRecommendations`
-     */
-
-    recommendedWebsiteOS?: WebsiteOS;
 }

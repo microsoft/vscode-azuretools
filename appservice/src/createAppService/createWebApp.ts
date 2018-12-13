@@ -13,8 +13,6 @@ import { createAppService } from './createAppService';
 import { IAppCreateOptions } from './IAppCreateOptions';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
-const falseStr: string = 'false';
-
 export async function createWebApp(
     actionContext: IActionContext,
     subscriptionContext: ISubscriptionWizardContext,
@@ -23,9 +21,7 @@ export async function createWebApp(
     return await createAppService(AppKind.app, actionContext, subscriptionContext, createOptions, showCreatingTreeItem);
 }
 
-export async function getWizardRecommendations(wizardContext: IAppServiceWizardContext, actionContext: IActionContext): Promise<void> {
-    actionContext.properties.recommendedSiteRuntime = falseStr;
-    actionContext.properties.recommendedWebsiteOS = falseStr;
+export async function setWizardContextDefaults(wizardContext: IAppServiceWizardContext, actionContext: IActionContext, advancedCreation?: boolean): Promise<void> {
     // only detect if one workspace is opened
     if (workspace.workspaceFolders && workspace.workspaceFolders.length === 1) {
         const fsPath: string = workspace.workspaceFolders[0].uri.fsPath;
@@ -34,29 +30,21 @@ export async function getWizardRecommendations(wizardContext: IAppServiceWizardC
         } else if (await fse.pathExists(path.join(fsPath, 'requirements.txt'))) {
             // requirements.txt are used to pip install so a good way to determine it's a Python app
             wizardContext.recommendedSiteRuntime = LinuxRuntimes.python;
-        } else {
+        }
+        actionContext.properties.recommendedSiteRuntime = wizardContext.recommendedSiteRuntime;
+
+        if (!advancedCreation) {
+            await LocationListStep.setLocation(wizardContext, 'centralus');
+            // we only set the OS for the non-advanced creation scenario
+            // tslint:disable-next-line:strict-boolean-expressions
+            if (wizardContext.recommendedSiteRuntime) {
+                wizardContext.newSiteOS = WebsiteOS.linux;
+            }
             await workspace.findFiles('*.csproj').then((files: Uri[]) => {
                 if (files.length > 0) {
-                    wizardContext.recommendedWebsiteOS = WebsiteOS.windows;
-                    actionContext.properties.recommendedWebsiteOS = WebsiteOS.windows;
+                    wizardContext.newSiteOS = WebsiteOS.windows;
                 }
             });
         }
-        if (wizardContext.recommendedSiteRuntime !== falseStr) {
-            // this will only be set if we recommend a runtime which means it's a Linux app
-            wizardContext.recommendedWebsiteOS = WebsiteOS.linux;
-            actionContext.properties.recommendedSiteRuntime = wizardContext.recommendedSiteRuntime;
-            actionContext.properties.recommendedWebsiteOS = WebsiteOS.linux;
-        }
-    }
-}
-
-export async function setWizardContextDefaults(wizardContext: IAppServiceWizardContext): Promise<void> {
-    await LocationListStep.setLocation(wizardContext, 'centralus');
-    // defaults that for if one workspace is opened
-    // tslint:disable-next-line:strict-boolean-expressions
-    if (wizardContext.recommendedWebsiteOS && wizardContext.recommendedWebsiteOS !== falseStr) {
-        // this should be set by `getWizardRecommendations`
-        wizardContext.newSiteOS = wizardContext.recommendedWebsiteOS;
     }
 }

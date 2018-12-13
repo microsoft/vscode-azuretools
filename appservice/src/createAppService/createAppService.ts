@@ -13,7 +13,7 @@ import { nonNullProp } from '../utils/nonNull';
 import { AppKind, getAppKindDisplayName, WebsiteOS } from './AppKind';
 import { AppServicePlanCreateStep } from './AppServicePlanCreateStep';
 import { AppServicePlanListStep } from './AppServicePlanListStep';
-import { getWizardRecommendations, setWizardContextDefaults } from './createWebApp';
+import { setWizardContextDefaults } from './createWebApp';
 import { IAppCreateOptions } from './IAppCreateOptions';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 import { SiteCreateStep } from './SiteCreateStep';
@@ -72,7 +72,7 @@ export async function createAppService(
             promptSteps.push(new LocationListStep());
             break;
         case AppKind.app:
-            await getWizardRecommendations(wizardContext, actionContext);
+            await setWizardContextDefaults(wizardContext, actionContext, createOptions.advancedCreation);
             if (createOptions.advancedCreation) {
                 promptSteps.push(new ResourceGroupListStep());
                 promptSteps.push(new SiteOSStep());
@@ -80,7 +80,6 @@ export async function createAppService(
                 promptSteps.push(new AppServicePlanListStep());
                 promptSteps.push(new LocationListStep());
             } else {
-                await setWizardContextDefaults(wizardContext);
                 promptSteps.push(new LocationListStep());
                 promptSteps.push(new SiteOSStep()); // will be skipped if there is a smart default
                 promptSteps.push(new SiteRuntimeStep());
