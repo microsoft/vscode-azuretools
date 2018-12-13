@@ -5,7 +5,7 @@
 
 import { AppServicePlan, Site, SkuDescription } from 'azure-arm-website/lib/models';
 import { IResourceGroupWizardContext, IStorageAccountWizardContext } from 'vscode-azureextensionui';
-import { AppKind, WebsiteOS } from './AppKind';
+import { AppKind, LinuxRuntimes, WebsiteOS } from './AppKind';
 
 export interface IAppServiceWizardContext extends IResourceGroupWizardContext, IStorageAccountWizardContext {
     newSiteKind: AppKind;
@@ -61,8 +61,15 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
 
     /**
      * The runtime to put to the top of the QuickPick list to recommend to the user.
-     * This should be set in `setWizardContextDefaults`
+     * This should be set in `getWizardRecommendations`
      */
 
-     detectedSiteRuntime?: string;
+    recommendedSiteRuntime?: LinuxRuntimes;
+
+    /**
+     * The OS that we detect that the user should use.  Will be set automatically for Basic Creation.
+     * This should be set in `getWizardRecommendations`
+     */
+
+    recommendedWebsiteOS?: WebsiteOS;
 }

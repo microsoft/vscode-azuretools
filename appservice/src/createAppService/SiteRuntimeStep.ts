@@ -6,7 +6,6 @@
 import { AzureWizardPromptStep, IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { AppKind, WebsiteOS } from './AppKind';
-import { pythonRuntime } from './createWebApp';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 interface ILinuxRuntimeStack {
@@ -33,13 +32,9 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                         data: rt
                     };
                 });
-                if (wizardContext.detectedSiteRuntime) {
-                    switch (wizardContext.detectedSiteRuntime) {
-                        case pythonRuntime:
-                            runtimeItems = this.sortQuickPicksByRuntime(runtimeItems, pythonRuntime);
-                        default:
-                        // do nothing if we do not handle that detectedSiteRuntime
-                    }
+                // tslint:disable-next-line:strict-boolean-expressions
+                if (wizardContext.recommendedSiteRuntime) {
+                    runtimeItems = this.sortQuickPicksByRuntime(runtimeItems, wizardContext.recommendedSiteRuntime);
                 }
                 wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new Linux app.' })).data.name;
             }
