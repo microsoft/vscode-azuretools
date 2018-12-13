@@ -72,6 +72,7 @@ export async function createAppService(
             promptSteps.push(new LocationListStep());
             break;
         case AppKind.app:
+            await setWizardContextDefaults(wizardContext, actionContext, createOptions.advancedCreation);
             if (createOptions.advancedCreation) {
                 promptSteps.push(new ResourceGroupListStep());
                 promptSteps.push(new SiteOSStep());
@@ -79,7 +80,6 @@ export async function createAppService(
                 promptSteps.push(new AppServicePlanListStep());
                 promptSteps.push(new LocationListStep());
             } else {
-                await setWizardContextDefaults(wizardContext);
                 promptSteps.push(new LocationListStep());
                 promptSteps.push(new SiteOSStep()); // will be skipped if there is a smart default
                 promptSteps.push(new SiteRuntimeStep());

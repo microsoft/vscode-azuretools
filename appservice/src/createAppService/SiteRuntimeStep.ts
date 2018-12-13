@@ -24,7 +24,7 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                 ];
                 wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new Linux app.' })).data;
             } else {
-                const runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[] = this.getLinuxRuntimeStack().map((rt: ILinuxRuntimeStack) => {
+                let runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[] = this.getLinuxRuntimeStack().map((rt: ILinuxRuntimeStack) => {
                     return {
                         id: rt.name,
                         label: rt.displayName,
@@ -32,7 +32,10 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                         data: rt
                     };
                 });
-
+                // tslint:disable-next-line:strict-boolean-expressions
+                if (wizardContext.recommendedSiteRuntime) {
+                    runtimeItems = this.sortQuickPicksByRuntime(runtimeItems, wizardContext.recommendedSiteRuntime);
+                }
                 wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new Linux app.' })).data.name;
             }
         }
@@ -152,5 +155,17 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                 displayName: '[Preview] Python 3.7'
             }
         ];
+    }
+
+    private sortQuickPicksByRuntime(runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[], runtime: string): IAzureQuickPickItem<ILinuxRuntimeStack>[] {
+        return runtimeItems.sort((a: IAzureQuickPickItem<ILinuxRuntimeStack>, b: IAzureQuickPickItem<ILinuxRuntimeStack>) => {
+            if (a.data.name.includes(runtime)) {
+                return -1;
+            } else if (b.data.name.includes(runtime)) {
+                return 1;
+            } else {
+                return 0;
+            }
+        });
     }
 }

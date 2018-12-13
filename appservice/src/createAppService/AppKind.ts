@@ -15,6 +15,11 @@ export enum AppKind {
     functionapp = 'functionapp'
 }
 
+export enum LinuxRuntimes {
+    node = 'node',
+    python = 'python'
+}
+
 /**
  * Retrieves a valid "kind" for Site
  */
