@@ -3,12 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-const gulp = require('gulp');
 const autorest = require('autorest');
 const path = require('path');
 const fse = require('fs-extra');
 
-gulp.task('build', async () => {
+async function build() {
     // use local version of autorest extensions instead of global machine versions
     await autorest.initialize("./node_modules/@microsoft.azure/autorest-core");
 
@@ -34,11 +33,14 @@ gulp.task('build', async () => {
             fse.writeFileSync(uri, file.content);
         }
     });
-    if (await autorestInstance.Process().finish) {
-        // process succeeded
-        process.exit();
-    } else {
-        // process failed
-        process.exit(1);
+
+    const result = await autorestInstance.Process().finish; // boolean | Error
+    setTimeout(process.exit, 200); // autorest doesn't quit for some reasons, so manually exit after task has completed
+    if (result instanceof Error) {
+        throw result;
+    } else if (result === false) {
+        throw new Error('Autorest failed for unknown reason.');
     }
-});
+};
+
+exports.build = build;

@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+export * from './confirmOverwriteSettings';
 export * from './createAppService/createFunctionApp';
 export * from './createAppService/createWebApp';
 export * from './createAppService/IAppCreateOptions';
