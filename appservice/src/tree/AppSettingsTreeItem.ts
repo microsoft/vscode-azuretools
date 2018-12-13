@@ -8,6 +8,7 @@ import * as path from 'path';
 import { MessageItem } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, DialogResponses } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
+import { localize } from '../localize';
 import { AppSettingTreeItem } from './AppSettingTreeItem';
 import { ISiteTreeRoot } from './ISiteTreeRoot';
 
@@ -125,6 +126,7 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         function logKey(key: string): void {
             ext.outputChannel.appendLine(`- ${key}`);
         }
+
         let suppressPrompt: boolean = false;
         let overwriteSetting: boolean = false;
 
@@ -139,9 +141,9 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
                 destinationSettings[key] = sourceSettings[key];
             } else if (destinationSettings[key] !== sourceSettings[key]) {
                 if (!suppressPrompt) {
-                    const yesToAll: MessageItem = { title: 'Yes to all' };
-                    const noToAll: MessageItem = { title: 'No to all' };
-                    const message: string = `Setting "${key}" already exists in "${destinationName}". Overwrite?`;
+                    const yesToAll: MessageItem = { title: localize('yesToAll', 'Yes to all') };
+                    const noToAll: MessageItem = { title: localize('noToAll', 'No to all') };
+                    const message: string = localize('overwriteSetting', 'Setting "{0}" already exists in "{1}". Overwrite?', key, destinationName);
                     const result: MessageItem = await ext.ui.showWarningMessage(message, { modal: true }, DialogResponses.yes, yesToAll, DialogResponses.no, noToAll);
                     if (result === DialogResponses.yes) {
                         overwriteSetting = true;
@@ -168,27 +170,27 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         }
 
         if (addedKeys.length > 0) {
-            ext.outputChannel.appendLine('Added the following settings:');
+            ext.outputChannel.appendLine(localize('addedKeys', 'Added the following settings:'));
             addedKeys.forEach(logKey);
         }
 
         if (updatedKeys.length > 0) {
-            ext.outputChannel.appendLine('Updated the following settings:');
+            ext.outputChannel.appendLine(localize('updatedKeys', 'Updated the following settings:'));
             updatedKeys.forEach(logKey);
         }
 
         if (matchingKeys.length > 0) {
-            ext.outputChannel.appendLine('Ignored the following settings that were already the same:');
+            ext.outputChannel.appendLine(localize('matchingKeys', 'Ignored the following settings that were already the same:'));
             matchingKeys.forEach(logKey);
         }
 
         if (userIgnoredKeys.length > 0) {
-            ext.outputChannel.appendLine('Ignored the following settings based on user input:');
+            ext.outputChannel.appendLine(localize('userIgnoredKeys', 'Ignored the following settings based on user input:'));
             userIgnoredKeys.forEach(logKey);
         }
 
         if (Object.keys(destinationSettings).length > Object.keys(sourceSettings).length) {
-            ext.outputChannel.appendLine(`WARNING: This operation will not delete any settings in "${destinationName}". You must manually delete settings if desired.`);
+            ext.outputChannel.appendLine(localize('noDeleteKey', 'WARNING: This operation will not delete any settings in "{0}". You must manually delete settings if desired.', destinationName));
         }
     }
 }
