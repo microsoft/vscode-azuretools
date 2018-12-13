@@ -39,12 +39,13 @@ export async function setWizardContextDefaults(wizardContext: IAppServiceWizardC
             // tslint:disable-next-line:strict-boolean-expressions
             if (wizardContext.recommendedSiteRuntime) {
                 wizardContext.newSiteOS = WebsiteOS.linux;
+            } else {
+                await workspace.findFiles('*.csproj').then((files: Uri[]) => {
+                    if (files.length > 0) {
+                        wizardContext.newSiteOS = WebsiteOS.windows;
+                    }
+                });
             }
-            await workspace.findFiles('*.csproj').then((files: Uri[]) => {
-                if (files.length > 0) {
-                    wizardContext.newSiteOS = WebsiteOS.windows;
-                }
-            });
         }
     }
 }
