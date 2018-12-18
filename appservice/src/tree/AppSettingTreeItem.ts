@@ -14,17 +14,15 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     public static contextValue: string = 'applicationSettingItem';
     public readonly contextValue: string = AppSettingTreeItem.contextValue;
     public readonly parent: AppSettingsTreeItem;
-    public readonly commandId: string;
 
     private _key: string;
     private _value: string;
     private _hideValue: boolean;
 
-    constructor(parent: AppSettingsTreeItem, key: string, value: string, commandId: string) {
+    constructor(parent: AppSettingsTreeItem, key: string, value: string) {
         super(parent);
         this._key = key;
         this._value = value;
-        this.commandId = commandId;
         this._hideValue = true;
     }
     public get id(): string {
@@ -32,7 +30,7 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     }
 
     public get label(): string {
-        return this._hideValue ? `${this._key}=Hidden value. Click to view.` : `${this._key}=${this._value}`;
+        return this._hideValue ? `${this._key}=Hidden value` : `${this._key}=${this._value}`;
     }
 
     public get iconPath(): { light: string, dark: string } {
