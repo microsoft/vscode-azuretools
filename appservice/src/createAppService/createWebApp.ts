@@ -21,7 +21,7 @@ export async function createWebApp(
     return await createAppService(AppKind.app, actionContext, subscriptionContext, createOptions, showCreatingTreeItem);
 }
 
-export async function setWizardContextDefaults(wizardContext: IAppServiceWizardContext, actionContext: IActionContext, advancedCreation: boolean = false): Promise<void> {
+export async function setWizardContextDefaults(wizardContext: IAppServiceWizardContext, actionContext: IActionContext, advancedCreation?: boolean): Promise<void> {
     // only detect if one workspace is opened
     if (workspace.workspaceFolders && workspace.workspaceFolders.length === 1) {
         const fsPath: string = workspace.workspaceFolders[0].uri.fsPath;
@@ -34,7 +34,6 @@ export async function setWizardContextDefaults(wizardContext: IAppServiceWizardC
         actionContext.properties.recommendedSiteRuntime = wizardContext.recommendedSiteRuntime;
 
         if (!advancedCreation) {
-            await LocationListStep.setLocation(wizardContext, 'centralus');
             // we only set the OS for the non-advanced creation scenario
             // tslint:disable-next-line:strict-boolean-expressions
             if (wizardContext.recommendedSiteRuntime) {
@@ -47,5 +46,9 @@ export async function setWizardContextDefaults(wizardContext: IAppServiceWizardC
                 });
             }
         }
+    }
+
+    if (!advancedCreation) {
+        await LocationListStep.setLocation(wizardContext, 'centralus');
     }
 }
