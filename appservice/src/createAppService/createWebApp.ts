@@ -21,7 +21,7 @@ export async function createWebApp(
     return await createAppService(AppKind.app, actionContext, subscriptionContext, createOptions, showCreatingTreeItem);
 }
 
-export async function setWizardContextDefaults(wizardContext: IAppServiceWizardContext, actionContext: IActionContext, advancedCreation?: boolean): Promise<void> {
+export async function setWizardContextDefaults(wizardContext: IAppServiceWizardContext, actionContext: IActionContext, advancedCreation: boolean = false): Promise<void> {
     // only detect if one workspace is opened
     if (workspace.workspaceFolders && workspace.workspaceFolders.length === 1) {
         const fsPath: string = workspace.workspaceFolders[0].uri.fsPath;
