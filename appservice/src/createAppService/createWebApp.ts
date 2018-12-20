@@ -32,23 +32,20 @@ export async function setWizardContextDefaults(wizardContext: IAppServiceWizardC
             wizardContext.recommendedSiteRuntime = LinuxRuntimes.python;
         }
         actionContext.properties.recommendedSiteRuntime = wizardContext.recommendedSiteRuntime;
-
-        if (!advancedCreation) {
-            // we only set the OS for the non-advanced creation scenario
-            // tslint:disable-next-line:strict-boolean-expressions
-            if (wizardContext.recommendedSiteRuntime) {
-                wizardContext.newSiteOS = WebsiteOS.linux;
-            } else {
-                await workspace.findFiles('*.csproj').then((files: Uri[]) => {
-                    if (files.length > 0) {
-                        wizardContext.newSiteOS = WebsiteOS.windows;
-                    }
-                });
-            }
-        }
     }
 
     if (!advancedCreation) {
         await LocationListStep.setLocation(wizardContext, 'centralus');
+        // we only set the OS for the non-advanced creation scenario
+        // tslint:disable-next-line:strict-boolean-expressions
+        if (wizardContext.recommendedSiteRuntime) {
+            wizardContext.newSiteOS = WebsiteOS.linux;
+        } else {
+            await workspace.findFiles('*.csproj').then((files: Uri[]) => {
+                if (files.length > 0) {
+                    wizardContext.newSiteOS = WebsiteOS.windows;
+                }
+            });
+        }
     }
 }
