@@ -329,6 +329,7 @@ suite('Error Parsing Tests', () => {
         assert.strictEqual(pe.isUserCancelledError, false);
     });
 
+    // tslint:disable-next-line:max-func-body-length
     test('HTML errors', () => {
         const err: string = `<!DOCTYPE html>
 <html>
