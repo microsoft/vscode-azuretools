@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import * as htmlToText from 'html-to-text';
 import { IParsedError } from '../index';
 import { localize } from './localize';
 
@@ -60,6 +61,8 @@ export function parseError(error: any): IParsedError {
     errorType = errorType || typeof (error);
     message = message || localize('unknownError', 'Unknown Error');
 
+    message = parseIfHtml(message);
+
     return {
         errorType: errorType,
         message: message,
@@ -90,6 +93,18 @@ function parseIfJson(o: any): any {
     }
 
     return o;
+}
+
+function parseIfHtml(message: string): string {
+    if (/<html/i.test(message)) {
+        try {
+            return htmlToText.fromString(message, { wordwrap: false, uppercaseHeadings: false });
+        } catch (err) {
+            // ignore
+        }
+    }
+
+    return message;
 }
 
 function getMessage(o: any, defaultMessage: string): string {
