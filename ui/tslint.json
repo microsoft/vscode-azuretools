@@ -58,6 +58,7 @@
                 "keyIndex": 0,
                 "messageIndex": 1
             }
-        ]
+        ],
+        "no-multiline-string": false
     }
 }

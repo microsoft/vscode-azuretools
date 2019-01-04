@@ -34,6 +34,7 @@
         "azure-arm-resource": "^3.0.0-preview",
         "azure-arm-storage": "^3.1.0",
         "fs-extra": "^4.0.3",
+        "html-to-text": "^4.0.0",
         "ms-rest": "^2.2.2",
         "ms-rest-azure": "^2.4.4",
         "opn": "^5.1.0",
@@ -43,6 +44,7 @@
     },
     "devDependencies": {
         "@types/fs-extra": "^4.0.6",
+        "@types/html-to-text": "^1.4.31",
         "@types/mocha": "^5.2.5",
         "@types/opn": "^5.1.0",
         "@types/semver": "^5.5.0",
