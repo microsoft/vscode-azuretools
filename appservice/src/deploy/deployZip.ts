@@ -44,6 +44,16 @@ export async function deployZip(client: SiteClient, fsPath: string, configuratio
             const kuduClient: KuduClient = await getKuduClient(client);
             await kuduClient.pushDeployment.zipPushDeploy(fs.createReadStream(zipFilePath), { isAsync: true });
             await waitForDeploymentToComplete(client, kuduClient);
+            if (asp && asp.sku && asp.sku.tier && asp.sku.tier.toLowerCase() === 'basic') {
+                const deployments: number = (await kuduClient.deployment.getDeployResults()).length;
+                // if this is the first deployment, implement a 10 second delay for apps in a basic plan due to long start times
+                if (deployments === 1) {
+                    const delay: (delayMs: number) => Promise<void> = async (delayMs: number): Promise<void> => {
+                        await new Promise<void>((resolve: () => void): void => { setTimeout(resolve, delayMs); });
+                    };
+                    await delay(10000);
+                }
+            }
         }
     } finally {
         if (createdZip) {
