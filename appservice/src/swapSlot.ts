@@ -17,7 +17,6 @@ export async function swapSlot(sourceSlotNode: AzureTreeItem<ISiteTreeRoot>, exi
     const productionSlotLabel: string = 'production';
     const otherSlots: IAzureQuickPickItem<AzureTreeItem<ISiteTreeRoot> | undefined>[] = [{
         label: productionSlotLabel,
-        description: localize('swapWithProduction', 'Swap slot with production'),
         data: undefined
     }];
 
