@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AppServicePlan } from 'azure-arm-website/lib/models';
+import { AppServicePlan, SiteConfigResource } from 'azure-arm-website/lib/models';
 import * as fs from 'fs';
 import * as fse from 'fs-extra';
 import * as vscode from 'vscode';
@@ -44,16 +44,9 @@ export async function deployZip(client: SiteClient, fsPath: string, configuratio
             const kuduClient: KuduClient = await getKuduClient(client);
             await kuduClient.pushDeployment.zipPushDeploy(fs.createReadStream(zipFilePath), { isAsync: true });
             await waitForDeploymentToComplete(client, kuduClient);
-            if (asp && asp.sku && asp.sku.tier && asp.sku.tier.toLowerCase() === 'basic') {
-                const deployments: number = (await kuduClient.deployment.getDeployResults()).length;
-                // if this is the first deployment, implement a 10 second delay for apps in a basic plan due to long start times
-                if (deployments === 1) {
-                    const delay: (delayMs: number) => Promise<void> = async (delayMs: number): Promise<void> => {
-                        await new Promise<void>((resolve: () => void): void => { setTimeout(resolve, delayMs); });
-                    };
-                    await delay(10000);
-                }
-            }
+            // https://github.com/Microsoft/vscode-azureappservice/issues/644
+            // This is delay is a temporary stopgap that should be resolved with the new
+            await delayFirstWebAppDeploy(client, asp, kuduClient);
         }
     } finally {
         if (createdZip) {
@@ -70,5 +63,27 @@ async function getZipFileToDeploy(fsPath: string, configurationSectionName?: str
         return FileUtilities.zipDirectory(fsPath, globPattern, ignorePattern);
     } else {
         return FileUtilities.zipFile(fsPath);
+    }
+}
+
+async function delayFirstWebAppDeploy(client: SiteClient, asp: AppServicePlan | undefined, kuduClient: KuduClient): Promise<void> {
+    // this delay is only valid for Linux web apps, so return for anything else
+    if (client.isFunctionApp) {
+        return;
+    }
+    const siteConfigResource: SiteConfigResource = await client.getSiteConfig();
+    if (!siteConfigResource.linuxFxVersion) {
+        return;
+    }
+
+    if (asp && asp.sku && asp.sku.tier && asp.sku.tier.toLowerCase() === 'basic') {
+        const deployments: number = (await kuduClient.deployment.getDeployResults()).length;
+        // if this is the first deployment, implement a 10 second delay for apps in a basic plan due to long start times
+        if (deployments === 1) {
+            await delay(10000);
+        }
+    }
+    async function delay(delayMs: number): Promise<void> {
+        await new Promise<void>((resolve: () => void): void => { setTimeout(resolve, delayMs); });
     }
 }
