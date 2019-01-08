@@ -17,12 +17,17 @@ export class ResourceGroupCreateStep<T extends IResourceGroupWizardContext> exte
             const newName: string = wizardContext.newResourceGroupName!;
             // tslint:disable-next-line:no-non-null-assertion
             const newLocation: string = wizardContext.location!.name!;
-            const findingResourceGroup: string = localize('creatingResourceGroup', 'Ensuring resource group "{0}" in location "{1}" exists...', newName, newLocation);
-            const foundResourceGroup: string = localize('createdResourceGroup', 'Successfully found resource group "{0}".', newName);
-            ext.outputChannel.appendLine(findingResourceGroup);
             const resourceClient: ResourceManagementClient = createAzureClient(wizardContext, ResourceManagementClient);
-            wizardContext.resourceGroup = await resourceClient.resourceGroups.createOrUpdate(newName, { location: newLocation });
-            ext.outputChannel.appendLine(foundResourceGroup);
+            const rgExists: boolean = await resourceClient.resourceGroups.checkExistence(newName);
+            if (rgExists) {
+                ext.outputChannel.appendLine(localize('existingResourceGroup', 'Using existing resource group "{0}".', newName));
+                wizardContext.resourceGroup = await resourceClient.resourceGroups.get(newName);
+            } else {
+                ext.outputChannel.appendLine(localize('creatingResourceGroup', 'Creating resource group "{0}" in location "{1}"...', newName, newLocation));
+                wizardContext.resourceGroup = await resourceClient.resourceGroups.createOrUpdate(newName, { location: newLocation });
+                ext.outputChannel.appendLine(localize('createdResourceGroup', 'Successfully created resource group "{0}".', newName));
+            }
+
         }
 
         return wizardContext;
