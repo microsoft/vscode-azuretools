@@ -45,7 +45,7 @@ export async function deployZip(client: SiteClient, fsPath: string, configuratio
             await kuduClient.pushDeployment.zipPushDeploy(fs.createReadStream(zipFilePath), { isAsync: true });
             await waitForDeploymentToComplete(client, kuduClient);
             // https://github.com/Microsoft/vscode-azureappservice/issues/644
-            // This delay is a temporary stopgap that should be resolved with the new
+            // This delay is a temporary stopgap that should be resolved with the new pipelines
             await delayFirstWebAppDeploy(client, asp, kuduClient);
         }
     } finally {
@@ -82,7 +82,7 @@ async function delayFirstWebAppDeploy(client: SiteClient, asp: AppServicePlan | 
     const deployments: number = (await kuduClient.deployment.getDeployResults()).length;
     // if this is the first deployment, implement a 10 second delay for apps in a basic plan due to long start times
     if (deployments === 1) {
-            await delay(10000);
+        await delay(10000);
     }
 
     async function delay(delayMs: number): Promise<void> {
