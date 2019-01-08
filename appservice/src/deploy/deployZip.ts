@@ -67,8 +67,11 @@ async function getZipFileToDeploy(fsPath: string, configurationSectionName?: str
 }
 
 async function delayFirstWebAppDeploy(client: SiteClient, asp: AppServicePlan | undefined, kuduClient: KuduClient): Promise<void> {
-    // this delay is only valid for Linux web apps, so return for anything else
+    // this delay is only valid for Linux web apps on a basic asp, so return for anything else
     if (client.isFunctionApp) {
+        return;
+    }
+    if (!asp || !asp.sku || !asp.sku.tier || asp.sku.tier.toLowerCase() !== 'basic') {
         return;
     }
     const siteConfigResource: SiteConfigResource = await client.getSiteConfig();
@@ -76,13 +79,12 @@ async function delayFirstWebAppDeploy(client: SiteClient, asp: AppServicePlan | 
         return;
     }
 
-    if (asp && asp.sku && asp.sku.tier && asp.sku.tier.toLowerCase() === 'basic') {
-        const deployments: number = (await kuduClient.deployment.getDeployResults()).length;
-        // if this is the first deployment, implement a 10 second delay for apps in a basic plan due to long start times
-        if (deployments === 1) {
+    const deployments: number = (await kuduClient.deployment.getDeployResults()).length;
+    // if this is the first deployment, implement a 10 second delay for apps in a basic plan due to long start times
+    if (deployments === 1) {
             await delay(10000);
-        }
     }
+
     async function delay(delayMs: number): Promise<void> {
         await new Promise<void>((resolve: () => void): void => { setTimeout(resolve, delayMs); });
     }
