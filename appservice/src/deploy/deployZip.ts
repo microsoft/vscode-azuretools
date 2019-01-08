@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AppServicePlan, SiteConfigResource } from 'azure-arm-website/lib/models';
+import { AppServicePlan } from 'azure-arm-website/lib/models';
 import * as fs from 'fs';
 import * as fse from 'fs-extra';
 import * as vscode from 'vscode';
@@ -37,7 +37,7 @@ export async function deployZip(client: SiteClient, fsPath: string, configuratio
         const asp: AppServicePlan | undefined = await aspPromise;
         // Assume it's consumption if we can't get the plan (sometimes happens with brand new plans). Consumption is recommended and more popular for functions
         const isConsumption: boolean = !asp || (!!asp.sku && !!asp.sku.tier && asp.sku.tier.toLowerCase() === 'dynamic');
-        if (client.kind.toLowerCase().includes('linux') && isConsumption) {
+        if (client.isLinux && isConsumption) {
             // Linux consumption doesn't support kudu zipPushDeploy
             await deployToStorageAccount(client, zipFilePath);
         } else {
@@ -47,6 +47,7 @@ export async function deployZip(client: SiteClient, fsPath: string, configuratio
             // https://github.com/Microsoft/vscode-azureappservice/issues/644
             // This delay is a temporary stopgap that should be resolved with the new pipelines
             await delayFirstWebAppDeploy(client, asp, kuduClient);
+
         }
     } finally {
         if (createdZip) {
@@ -67,25 +68,28 @@ async function getZipFileToDeploy(fsPath: string, configurationSectionName?: str
 }
 
 async function delayFirstWebAppDeploy(client: SiteClient, asp: AppServicePlan | undefined, kuduClient: KuduClient): Promise<void> {
-    // this delay is only valid for Linux web apps on a basic asp, so return for anything else
-    if (client.isFunctionApp) {
-        return;
-    }
-    if (!asp || !asp.sku || !asp.sku.tier || asp.sku.tier.toLowerCase() !== 'basic') {
-        return;
-    }
-    const siteConfigResource: SiteConfigResource = await client.getSiteConfig();
-    if (!siteConfigResource.linuxFxVersion) {
-        return;
-    }
+        await new Promise<void>(async (resolve: () => void): Promise<void> => {
+            setTimeout(resolve, 10000);
 
-    const deployments: number = (await kuduClient.deployment.getDeployResults()).length;
-    // if this is the first deployment, implement a 10 second delay for apps in a basic plan due to long start times
-    if (deployments === 1) {
-        await delay(10000);
-    }
+            try {
+                // this delay is only valid for the first deployment to a Linux web app on a basic asp, so resolve for anything else
+                if (client.isFunctionApp) {
+                    resolve();
+                }
+                if (!asp || !asp.sku || !asp.sku.tier || asp.sku.tier.toLowerCase() !== 'basic') {
+                    resolve();
+                }
+                if (!client.isLinux) {
+                    resolve();
+                }
 
-    async function delay(delayMs: number): Promise<void> {
-        await new Promise<void>((resolve: () => void): void => { setTimeout(resolve, delayMs); });
-    }
+                const deployments: number = (await kuduClient.deployment.getDeployResults()).length;
+                if (deployments > 1) {
+                    resolve();
+            }
+        } catch (error) {
+            // ignore the error, an error here isn't a deployment failure
+            resolve();
+        }
+    });
 }

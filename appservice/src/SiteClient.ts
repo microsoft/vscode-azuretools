@@ -33,6 +33,7 @@ export class SiteClient {
     public readonly kind: string;
     public readonly initialState: string;
     public readonly isFunctionApp: boolean;
+    public readonly isLinux: boolean;
 
     public readonly planResourceGroup: string;
     public readonly planName: string;
@@ -61,6 +62,7 @@ export class SiteClient {
         this.kind = nonNullProp(site, 'kind');
         this.initialState = nonNullProp(site, 'state');
         this.isFunctionApp = !!site.kind && site.kind.includes('functionapp');
+        this.isLinux = !!site.kind && site.kind.toLowerCase().includes('linux');
 
         this.planResourceGroup = matches[2];
         this.planName = matches[3];
