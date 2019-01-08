@@ -45,7 +45,7 @@ export async function deployZip(client: SiteClient, fsPath: string, configuratio
             await kuduClient.pushDeployment.zipPushDeploy(fs.createReadStream(zipFilePath), { isAsync: true });
             await waitForDeploymentToComplete(client, kuduClient);
             // https://github.com/Microsoft/vscode-azureappservice/issues/644
-            // This is delay is a temporary stopgap that should be resolved with the new
+            // This delay is a temporary stopgap that should be resolved with the new
             await delayFirstWebAppDeploy(client, asp, kuduClient);
         }
     } finally {
