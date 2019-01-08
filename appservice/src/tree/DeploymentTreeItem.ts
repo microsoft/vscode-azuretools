@@ -6,7 +6,7 @@
 import * as os from 'os';
 import * as path from 'path';
 import { ProgressLocation, TextDocument, window, workspace } from 'vscode';
-import { AzureTreeItem } from 'vscode-azureextensionui';
+import { AzureTreeItem, IParsedError, parseError } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { DeployResult, LogEntry } from 'vscode-azurekudu/lib/models';
 import { waitForDeploymentToComplete } from '../deploy/waitForDeploymentToComplete';
@@ -105,6 +105,13 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
                 await this.parent.refresh(); /* refresh entire node because active statuses has changed */
                 window.showInformationMessage(redeployed);
                 ext.outputChannel.appendLine(redeployed);
+            } catch (error) {
+                const parsedError: IParsedError = parseError(error);
+                if (parsedError.message.includes('Repository could not be found')) {
+                    throw new Error('Redeploy is not supported for push deployments.');
+                } else {
+                    throw error;
+                }
             } finally {
                 clearInterval(refreshingInteveral);
                 if (getResultInterval) {
