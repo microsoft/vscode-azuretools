@@ -15,15 +15,21 @@ interface ILinuxRuntimeStack {
 
 export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<IAppServiceWizardContext> {
-        if (!wizardContext.newSiteRuntime && wizardContext.newSiteOS === WebsiteOS.linux) {
+        if (!wizardContext.newSiteRuntime) {
             if (wizardContext.newSiteKind === AppKind.functionapp) {
                 const runtimeItems: IAzureQuickPickItem<string>[] = [
                     { label: 'JavaScript', data: 'node' },
-                    { label: '.NET', data: 'dotnet' },
-                    { label: 'Python', description: '(Preview)', data: 'python' }
+                    { label: '.NET', data: 'dotnet' }
                 ];
-                wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new Linux app.' })).data;
-            } else {
+
+                if (wizardContext.newSiteOS === WebsiteOS.linux) {
+                    runtimeItems.push({ label: 'Python', description: '(Preview)', data: 'python' });
+                } else {
+                    runtimeItems.push({ label: 'Java', description: '(Preview)', data: 'java' });
+                }
+
+                wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new app.' })).data;
+            } else if (wizardContext.newSiteOS === WebsiteOS.linux) {
                 let runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[] = this.getLinuxRuntimeStack().map((rt: ILinuxRuntimeStack) => {
                     return {
                         id: rt.name,
