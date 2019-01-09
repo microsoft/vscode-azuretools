@@ -79,6 +79,9 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     }
 
     public async redeployDeployment(): Promise<void> {
+        if (this._deployResult.isReadonly) {
+            throw new Error(localize('redeployNotSupported', 'Redeploy does not support non-git deployments.'));
+        }
         const redeploying: string = localize('redeploying', 'Redeploying commit "{0}" to "{1}". Check output window for status.', this.id, this.root.client.fullName);
         const redeployed: string = localize('redeployed', 'Commit "{0}" has been redeployed to "{1}".', this.id, this.root.client.fullName);
         await window.withProgress({ location: ProgressLocation.Notification, title: redeploying }, async (): Promise<void> => {
@@ -105,13 +108,6 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
                 await this.parent.refresh(); /* refresh entire node because active statuses has changed */
                 window.showInformationMessage(redeployed);
                 ext.outputChannel.appendLine(redeployed);
-            } catch (error) {
-                const parsedError: IParsedError = parseError(error);
-                if (parsedError.message.includes('Repository could not be found')) {
-                    throw new Error('Redeploy is not supported for push deployments.');
-                } else {
-                    throw error;
-                }
             } finally {
                 clearInterval(refreshingInteveral);
                 if (getResultInterval) {
