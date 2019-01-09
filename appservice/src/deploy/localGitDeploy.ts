@@ -6,16 +6,19 @@
 import { StringDictionary, User } from 'azure-arm-website/lib/models';
 import * as opn from 'opn';
 import * as git from 'simple-git/promise';
+import { DefaultLogFields } from 'simple-git/response';
 import * as vscode from 'vscode';
 import { DialogResponses } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
+import { DeployResult } from 'vscode-azurekudu/lib/models';
 import { ext } from '../extensionVariables';
 import { getKuduClient } from '../getKuduClient';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
+import { cpUtils } from '../utils/cpUtils';
 import { nonNullProp } from '../utils/nonNull';
 import { formatDeployLog } from './formatDeployLog';
-import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
+import { getLatestDeployment, waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
 export async function localGitDeploy(client: SiteClient, fsPath: string): Promise<void> {
     const kuduClient: KuduClient = await getKuduClient(client);
@@ -30,7 +33,9 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
             await ext.ui.showWarningMessage(message, { modal: true }, deployAnyway, DialogResponses.cancel);
         }
         await verifyNoRunFromPackageSetting(client);
-        await localGit.push(remote, 'HEAD:master');
+        await checkForRepoDivergence();
+        // purposely not awaiting to trigger build for waitForDeploymentToComplete to display logs
+        localGit.push(remote, 'HEAD:master');
     } catch (err) {
         // tslint:disable-next-line:no-unsafe-any
         if (err.message.indexOf('spawn git ENOENT') >= 0) {
@@ -46,14 +51,25 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
             const forcePush: vscode.MessageItem = { title: localize('forcePush', 'Force Push') };
             const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging.');
             await ext.ui.showWarningMessage(pushReject, forcePush, DialogResponses.cancel);
-            await localGit.push(remote, 'HEAD:master', { '-f': true });
+            // purposely not awaiting to trigger build for waitForDeploymentToComplete to display logs
+            localGit.push(remote, 'HEAD:master', { '-f': true });
         } else {
             throw err;
         }
     }
 
     ext.outputChannel.appendLine(formatDeployLog(client, (localize('localGitDeploy', `Deploying Local Git repository to "${client.fullName}"...`))));
+    const latestCommit: DefaultLogFields = (await localGit.log()).latest;
+    await waitForPushToBeLatest(kuduClient, latestCommit.hash);
     await waitForDeploymentToComplete(client, kuduClient);
+
+    async function checkForRepoDivergence(): Promise<void> {
+        await localGit.fetch(remote, 'master');
+        localGit.addRemote('azure', remote);
+        const data = await cpUtils.executeCommand(undefined, undefined, `git rev-list -1 master --not azure/master`);
+        console.log(data);
+        await cpUtils.executeCommand(undefined, undefined, 'git remote remove azure');
+    }
 }
 
 async function verifyNoRunFromPackageSetting(client: SiteClient): Promise<void> {
@@ -70,4 +86,13 @@ async function verifyNoRunFromPackageSetting(client: SiteClient): Promise<void> 
     if (updateSettings) {
         await client.updateApplicationSettings(applicationSettings);
     }
+}
+
+async function waitForPushToBeLatest(kuduClient: KuduClient, commitId: string): Promise<void> {
+    let deployment: DeployResult | undefined;
+
+    do {
+        [deployment] = await getLatestDeployment(kuduClient, undefined, undefined);
+    } while (!deployment || deployment.id !== commitId);
+    return;
 }

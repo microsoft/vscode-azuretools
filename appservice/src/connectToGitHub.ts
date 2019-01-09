@@ -91,7 +91,7 @@ export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, c
 }
 
 async function showGitHubAuthPrompt(node: AzureTreeItem, client: SiteClient, context: IActionContext): Promise<void> {
-    const invalidToken: string = localize('tokenExpired', 'Azure\'s GitHub token in invalid.  Authorize in the "Deployment Center"');
+    const invalidToken: string = localize('tokenExpired', 'Azure\'s GitHub token is invalid.  Authorize in the "Deployment Center"');
     const goToPortal: vscode.MessageItem = { title: localize('goToPortal', 'Go to Portal') };
     let input: vscode.MessageItem | undefined = DialogResponses.learnMore;
     while (input === DialogResponses.learnMore) {
