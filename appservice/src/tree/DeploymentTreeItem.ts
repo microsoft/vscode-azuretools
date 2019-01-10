@@ -6,7 +6,7 @@
 import * as os from 'os';
 import * as path from 'path';
 import { ProgressLocation, TextDocument, window, workspace } from 'vscode';
-import { AzureTreeItem, IParsedError, parseError } from 'vscode-azureextensionui';
+import { AzureTreeItem } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { DeployResult, LogEntry } from 'vscode-azurekudu/lib/models';
 import { waitForDeploymentToComplete } from '../deploy/waitForDeploymentToComplete';
