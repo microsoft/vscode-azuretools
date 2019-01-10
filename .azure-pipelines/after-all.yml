@@ -1,4 +1,6 @@
 steps:
 - task: ComponentGovernanceComponentDetection@0
   displayName: 'Component Detection'
+  inputs:
+    ignoreDirectories: 'appservice/.vscode-test,dev/.vscode-test,kudu/.vscode-test,ui/.vscode-test'
   condition: ne(variables['System.PullRequest.IsFork'], 'True')
