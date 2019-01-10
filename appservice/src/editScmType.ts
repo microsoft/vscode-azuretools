@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { WebSiteManagementModels } from 'azure-arm-website';
+import { window } from 'vscode';
 import { AzureTreeItem, IActionContext, IAzureQuickPickItem, IAzureQuickPickOptions, UserCancelledError } from 'vscode-azureextensionui';
 import { connectToGitHub } from './connectToGitHub';
 import { ext } from './extensionVariables';
@@ -28,7 +29,10 @@ export async function editScmType(client: SiteClient, node: AzureTreeItem<ISiteT
         // to update one property, a complete config file must be sent
         await client.updateConfiguration(config);
     }
-    ext.outputChannel.appendLine(localize('deploymentSourceUpdated,', 'Deployment source for "{0}" has been updated to "{1}".', client.fullName, newScmType));
+    const scmTypeUpdated: string = localize('deploymentSourceUpdated,', 'Deployment source for "{0}" has been updated to "{1}".', client.fullName, newScmType);
+    ext.outputChannel.appendLine(scmTypeUpdated);
+    window.showInformationMessage(scmTypeUpdated);
+
     if (newScmType === ScmType.LocalGit) {
         const user: WebSiteManagementModels.User = await client.getPublishingUser();
         if (user.publishingUserName) {
