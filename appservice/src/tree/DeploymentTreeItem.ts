@@ -80,7 +80,7 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
 
     public async redeployDeployment(): Promise<void> {
         if (this._deployResult.isReadonly) {
-            throw new Error(localize('redeployNotSupported', 'Redeploy does not support non-git deployments.'));
+            throw new Error(localize('redeployNotSupported', 'Redeploy is not supported for non-git deployments.'));
         }
         const redeploying: string = localize('redeploying', 'Redeploying commit "{0}" to "{1}". Check output window for status.', this.id, this.root.client.fullName);
         const redeployed: string = localize('redeployed', 'Commit "{0}" has been redeployed to "{1}".', this.id, this.root.client.fullName);
