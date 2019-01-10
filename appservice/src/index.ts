@@ -9,6 +9,7 @@ export * from './createAppService/createWebApp';
 export * from './createAppService/IAppCreateOptions';
 export * from './createSlot';
 export * from './deploy/deploy';
+export * from './deploy/runPreDeployTask';
 export * from './deleteSite';
 export * from './editScmType';
 export * from './getFile';
