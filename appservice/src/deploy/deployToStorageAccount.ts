@@ -44,7 +44,9 @@ async function createBlobService(client: SiteClient): Promise<azureStorage.BlobS
         if (accountName && accountKey) {
             name = accountName[1];
             key = accountKey[1];
-            return azureStorage.createBlobService(name, key);
+            const blobService: azureStorage.BlobService = azureStorage.createBlobService(name, key);
+            // Add retry filter since deploying may be a large file which can fail if network is poor
+            return blobService.withFilter(new azureStorage.ExponentialRetryPolicyFilter());
         }
     }
     throw new Error(localize('"{0}" app setting is required for Run From Package deployment.', azureWebJobsStorageKey));
