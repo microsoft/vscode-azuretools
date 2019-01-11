@@ -25,10 +25,11 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
         const deployAnyway: vscode.MessageItem = { title: localize('deployAnyway', 'Deploy Anyway') };
         await ext.ui.showWarningMessage(message, { modal: true }, deployAnyway, DialogResponses.cancel);
     }
+
     await verifyNoRunFromPackageSetting(client);
     ext.outputChannel.appendLine(formatDeployLog(client, (localize('localGitDeploy', `Deploying Local Git repository to "${client.fullName}"...`))));
-    const commandOptions: cpUtils.CommandOptions = { obfuscateValue: publishCredentials.publishingPassword };
-    const result: cpUtils.ICommandResult = await cpUtils.tryExecuteCommand(ext.outputChannel, fsPath, `git push ${remote} HEAD:master`, commandOptions);
+    const commandOptions: cpUtils.ICommandOptions = { obfuscateValue: publishCredentials.publishingPassword, outputChannel: ext.outputChannel, workingDirectory: fsPath };
+    const result: cpUtils.ICommandResult = await cpUtils.tryExecuteCommand(`git push ${remote} HEAD:master`, commandOptions);
     // a non-0 code indicates that there was an error with the cmd
     if (result.code !== 0) {
         if (result.cmdOutputIncludingStderr.indexOf('spawn git ENOENT') >= 0) {
@@ -43,7 +44,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
             const forcePush: vscode.MessageItem = { title: localize('forcePush', 'Force Push') };
             const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging.');
             await ext.ui.showWarningMessage(pushReject, forcePush, DialogResponses.cancel);
-            await cpUtils.executeCommand(ext.outputChannel, fsPath, `git push -f ${remote} HEAD:master`, commandOptions);
+            await cpUtils.executeCommand(`git push -f ${remote} HEAD:master`, commandOptions);
         } else {
             throw result.cmdOutputIncludingStderr;
         }
@@ -61,6 +62,7 @@ async function verifyNoRunFromPackageSetting(client: SiteClient): Promise<void> 
             updateSettings = true;
         }
     }
+
     if (updateSettings) {
         await client.updateApplicationSettings(applicationSettings);
     }
