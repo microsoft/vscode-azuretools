@@ -77,7 +77,7 @@ export async function waitForDeploymentToComplete(client: SiteClient, kuduClient
     }
 }
 
-export async function getLatestDeployment(kuduClient: KuduClient, permanentId: string | undefined, initialStartTime: Date | undefined): Promise<[DeployResult | undefined, string | undefined, Date | undefined]> {
+async function getLatestDeployment(kuduClient: KuduClient, permanentId: string | undefined, initialStartTime: Date | undefined): Promise<[DeployResult | undefined, string | undefined, Date | undefined]> {
     let deployment: DeployResult | undefined;
     if (permanentId) {
         // Use "permanentId" to find the deployment during its "permanent" phase
