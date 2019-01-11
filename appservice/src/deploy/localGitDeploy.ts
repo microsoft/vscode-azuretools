@@ -19,7 +19,6 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
     const publishCredentials: User = await client.getWebAppPublishCredential();
     const remote: string = nonNullProp(publishCredentials, 'scmUri');
     const localGit: git.SimpleGit = git(fsPath);
-    ext.outputChannel.appendLine(formatDeployLog(client, (localize('localGitDeploy', `Deploying Local Git repository to "${client.fullName}"...`))));
     const status: git.StatusResult = await localGit.status();
     if (status.files.length > 0) {
         const message: string = localize('localGitUncommit', '{0} uncommitted change(s) in local repo "{1}"', status.files.length, fsPath);
@@ -27,6 +26,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
         await ext.ui.showWarningMessage(message, { modal: true }, deployAnyway, DialogResponses.cancel);
     }
     await verifyNoRunFromPackageSetting(client);
+    ext.outputChannel.appendLine(formatDeployLog(client, (localize('localGitDeploy', `Deploying Local Git repository to "${client.fullName}"...`))));
     const commandOptions: cpUtils.CommandOptions = { obfuscateValue: publishCredentials.publishingPassword };
     const result: cpUtils.ICommandResult = await cpUtils.tryExecuteCommand(ext.outputChannel, fsPath, `git push ${remote} HEAD:master`, commandOptions);
     // a non-0 code indicates that there was an error with the cmd
