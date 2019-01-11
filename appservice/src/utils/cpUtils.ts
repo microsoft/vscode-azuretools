@@ -9,8 +9,8 @@ import * as vscode from 'vscode';
 import { localize } from '../localize';
 
 export namespace cpUtils {
-    export async function executeCommand(outputChannel: vscode.OutputChannel | undefined, workingDirectory: string | undefined, command: string, ...args: string[]): Promise<string> {
-        const result: ICommandResult = await tryExecuteCommand(outputChannel, workingDirectory, command, ...args);
+    export async function executeCommand(outputChannel: vscode.OutputChannel | undefined, workingDirectory: string | undefined, command: string, commandOptions?: CommandOptions, ...args: string[]): Promise<string> {
+        const result: ICommandResult = await tryExecuteCommand(outputChannel, workingDirectory, command, commandOptions, ...args);
         if (result.code !== 0) {
             // We want to make sure the full error message is displayed to the user, not just the error code.
             // If outputChannel is defined, then we simply call 'outputChannel.show()' and throw a generic error telling the user to check the output window
@@ -29,7 +29,7 @@ export namespace cpUtils {
         return result.cmdOutput;
     }
 
-    export async function tryExecuteCommand(outputChannel: vscode.OutputChannel | undefined, workingDirectory: string | undefined, command: string, ...args: string[]): Promise<ICommandResult> {
+    export async function tryExecuteCommand(outputChannel: vscode.OutputChannel | undefined, workingDirectory: string | undefined, command: string, commandOptions?: CommandOptions, ...args: string[]): Promise<ICommandResult> {
         return await new Promise((resolve: (res: ICommandResult) => void, reject: (e: Error) => void): void => {
             let cmdOutput: string = '';
             let cmdOutputIncludingStderr: string = '';
@@ -40,14 +40,21 @@ export namespace cpUtils {
                 cwd: workingDirectory,
                 shell: true
             };
-            const childProc: cp.ChildProcess = cp.spawn(command, args, options);
 
+            const childProc: cp.ChildProcess = cp.spawn(command, args, options);
+            let runningCommand: string = localize('runningCommand', 'Running command: "{0} {1}"...', command, formattedArgs);
             if (outputChannel) {
-                outputChannel.appendLine(localize('runningCommand', 'Running command: "{0} {1}"...', command, formattedArgs));
+                if (commandOptions && commandOptions.obfuscateValue) {
+                    runningCommand = obfuscateValue(runningCommand, commandOptions.obfuscateValue);
+                }
+                outputChannel.appendLine(runningCommand);
             }
 
             childProc.stdout.on('data', (data: string | Buffer) => {
                 data = data.toString();
+                if (commandOptions && commandOptions.obfuscateValue) {
+                    data = obfuscateValue(data, commandOptions.obfuscateValue);
+                }
                 cmdOutput = cmdOutput.concat(data);
                 cmdOutputIncludingStderr = cmdOutputIncludingStderr.concat(data);
                 if (outputChannel) {
@@ -57,6 +64,9 @@ export namespace cpUtils {
 
             childProc.stderr.on('data', (data: string | Buffer) => {
                 data = data.toString();
+                if (commandOptions && commandOptions.obfuscateValue) {
+                    data = obfuscateValue(data, commandOptions.obfuscateValue);
+                }
                 cmdOutputIncludingStderr = cmdOutputIncludingStderr.concat(data);
                 if (outputChannel) {
                     outputChannel.append(data);
@@ -75,10 +85,22 @@ export namespace cpUtils {
         });
     }
 
+    function obfuscateValue(data: string, value: string): string {
+        let astericks: string = '';
+        for (const _i of value) {
+            astericks += '*';
+        }
+        return data.replace(value, astericks);
+    }
+
     export interface ICommandResult {
         code: number;
         cmdOutput: string;
         cmdOutputIncludingStderr: string;
         formattedArgs: string;
     }
+
+    export type CommandOptions = {
+        obfuscateValue?: string
+    };
 }
