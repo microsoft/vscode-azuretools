@@ -10,7 +10,7 @@ import { localize } from '../localize';
 
 export namespace cpUtils {
     export async function executeCommand(command: string, commandOptions?: ICommandOptions, ...args: string[]): Promise<string> {
-        const outputChannel: vscode.OutputChannel | undefined = commandOptions && commandOptions.outputChannel ? commandOptions.outputChannel : undefined;
+        const outputChannel: vscode.OutputChannel | undefined = commandOptions ? commandOptions.outputChannel : undefined;
         const result: ICommandResult = await tryExecuteCommand(command, commandOptions, ...args);
         // command is only being used to output at this point so we can alter it
         command = obfuscateValue(command, commandOptions);
@@ -22,7 +22,7 @@ export namespace cpUtils {
                 outputChannel.show();
                 throw new Error(localize('commandErrorWithOutput', 'Failed to run "{0}" command. Check output window for more details.', command));
             } else {
-                throw new Error(localize('ommandError', 'Command "{0} {1}" failed with exit code "{2}":{3}{4}', command, result.formattedArgs, result.code, os.EOL, result.cmdOutputIncludingStderr));
+                throw new Error(localize('commandError', 'Command "{0} {1}" failed with exit code "{2}":{3}{4}', command, result.formattedArgs, result.code, os.EOL, result.cmdOutputIncludingStderr));
             }
         } else {
             if (outputChannel) {
@@ -39,7 +39,7 @@ export namespace cpUtils {
             const formattedArgs: string = args.join(' ');
 
             const workingDirectory: string = commandOptions && commandOptions.workingDirectory ?  commandOptions.workingDirectory : os.tmpdir();
-            const outputChannel: vscode.OutputChannel | undefined = commandOptions && commandOptions.outputChannel ? commandOptions.outputChannel : undefined;
+            const outputChannel: vscode.OutputChannel | undefined = commandOptions ? commandOptions.outputChannel : undefined;
             const options: cp.SpawnOptions = {
                 cwd: workingDirectory,
                 shell: true
