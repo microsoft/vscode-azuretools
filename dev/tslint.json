@@ -57,6 +57,8 @@
                 "keyIndex": 0,
                 "messageIndex": 1
             }
-        ]
+        ],
+        "no-implicit-dependencies": false,
+        "no-backbone-get-set-outside-model": false
     }
 }

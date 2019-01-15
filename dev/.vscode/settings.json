@@ -10,5 +10,6 @@
     },
     "tslint.autoFixOnSave": true,
     "tslint.ignoreDefinitionFiles": true,
-    "typescript.tsdk": "node_modules\\typescript\\lib"
+    "typescript.tsdk": "node_modules\\typescript\\lib",
+    "workbench.settings.useSplitJSON": true
 }
