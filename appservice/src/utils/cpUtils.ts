@@ -6,14 +6,14 @@
 import * as cp from 'child_process';
 import * as os from 'os';
 import * as vscode from 'vscode';
+import { CommandOptions } from '../CommandOptions';
 import { localize } from '../localize';
 
 export namespace cpUtils {
-    export async function executeCommand(command: string, commandOptions?: ICommandOptions, ...args: string[]): Promise<string> {
+    export async function executeCommand(command: string, commandOptions?: CommandOptions, ...args: string[]): Promise<string> {
         const outputChannel: vscode.OutputChannel | undefined = commandOptions ? commandOptions.outputChannel : undefined;
         const result: ICommandResult = await tryExecuteCommand(command, commandOptions, ...args);
         // command is only being used to output at this point so we can alter it
-        command = obfuscateValue(command, commandOptions);
         if (result.code !== 0) {
             // We want to make sure the full error message is displayed to the user, not just the error code.
             // If outputChannel is defined, then we simply call 'outputChannel.show()' and throw a generic error telling the user to check the output window
@@ -32,7 +32,7 @@ export namespace cpUtils {
         return result.cmdOutput;
     }
 
-    export async function tryExecuteCommand(command: string, commandOptions?: ICommandOptions, ...args: string[]): Promise<ICommandResult> {
+    export async function tryExecuteCommand(command: string, commandOptions?: CommandOptions, ...args: string[]): Promise<ICommandResult> {
         return await new Promise((resolve: (res: ICommandResult) => void, reject: (e: Error) => void): void => {
             let cmdOutput: string = '';
             let cmdOutputIncludingStderr: string = '';
@@ -81,19 +81,6 @@ export namespace cpUtils {
                 });
             });
         });
-    }
-
-    function obfuscateValue(data: string, commandOptions?: ICommandOptions): string {
-        if (commandOptions && commandOptions.obfuscateValue) {
-            if (typeof commandOptions.obfuscateValue === 'string') {
-                    commandOptions.obfuscateValue = [commandOptions.obfuscateValue];
-            }
-
-            for (const value of commandOptions.obfuscateValue) {
-                data = data.replace(value, '**********');
-            }
-        }
-        return data;
     }
 
     export interface ICommandResult {
