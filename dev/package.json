@@ -38,6 +38,7 @@
         "@types/mocha": "^2.2.32",
         "@types/node": "^10.11.3",
         "@types/string-replace-webpack-plugin": "^0.1.0",
+        "@types/terser-webpack-plugin": "^1.2.0",
         "clean-webpack-plugin": "^0.1.19",
         "copy-webpack-plugin": "^4.6.0",
         "fs-extra": "^7.0.1",

@@ -8,6 +8,7 @@ import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as StringReplacePlugin from 'string-replace-webpack-plugin';
+import * as TerserPlugin from 'terser-webpack-plugin';
 import * as webpack from 'webpack';
 import { Verbosity } from '../..';
 import { DefaultWebpackOptions } from '../../index';
@@ -82,6 +83,19 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
 
             // Caller-provided externals
             ...options.externals
+        },
+        optimization: {
+            minimizer: [
+                new TerserPlugin({
+                    terserOptions: {
+                        // https://github.com/webpack-contrib/terser-webpack-plugin/
+
+                        // Don't mangle class names.  Otherwise parseError() will not recognize user cancelled errors (because their constructor name
+                        // will match the mangled name, not UserCancelledError).  Also makes debugging easier in minified code.
+                        keep_classnames: true
+                    }
+                })
+            ]
         },
         plugins: [
             // Copy files to dist folder where the runtime can find them
