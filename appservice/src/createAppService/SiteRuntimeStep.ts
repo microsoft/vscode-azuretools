@@ -15,16 +15,22 @@ interface ILinuxRuntimeStack {
 
 export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<IAppServiceWizardContext> {
-        if (!wizardContext.newSiteRuntime && wizardContext.newSiteOS === WebsiteOS.linux) {
+        if (!wizardContext.newSiteRuntime) {
             if (wizardContext.newSiteKind === AppKind.functionapp) {
                 const runtimeItems: IAzureQuickPickItem<string>[] = [
                     { label: 'JavaScript', data: 'node' },
-                    { label: '.NET', data: 'dotnet' },
-                    { label: 'Python', description: '(Preview)', data: 'python' }
+                    { label: '.NET', data: 'dotnet' }
                 ];
-                wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new Linux app.' })).data;
-            } else {
-                const runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[] = this.getLinuxRuntimeStack().map((rt: ILinuxRuntimeStack) => {
+
+                if (wizardContext.newSiteOS === WebsiteOS.linux) {
+                    runtimeItems.push({ label: 'Python', description: '(Preview)', data: 'python' });
+                } else {
+                    runtimeItems.push({ label: 'Java', description: '(Preview)', data: 'java' });
+                }
+
+                wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new app.' })).data;
+            } else if (wizardContext.newSiteOS === WebsiteOS.linux) {
+                let runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[] = this.getLinuxRuntimeStack().map((rt: ILinuxRuntimeStack) => {
                     return {
                         id: rt.name,
                         label: rt.displayName,
@@ -32,7 +38,10 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                         data: rt
                     };
                 });
-
+                // tslint:disable-next-line:strict-boolean-expressions
+                if (wizardContext.recommendedSiteRuntime) {
+                    runtimeItems = this.sortQuickPicksByRuntime(runtimeItems, wizardContext.recommendedSiteRuntime);
+                }
                 wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new Linux app.' })).data.name;
             }
         }
@@ -152,5 +161,17 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                 displayName: '[Preview] Python 3.7'
             }
         ];
+    }
+
+    private sortQuickPicksByRuntime(runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[], runtime: string): IAzureQuickPickItem<ILinuxRuntimeStack>[] {
+        return runtimeItems.sort((a: IAzureQuickPickItem<ILinuxRuntimeStack>, b: IAzureQuickPickItem<ILinuxRuntimeStack>) => {
+            if (a.data.name.includes(runtime)) {
+                return -1;
+            } else if (b.data.name.includes(runtime)) {
+                return 1;
+            } else {
+                return 0;
+            }
+        });
     }
 }

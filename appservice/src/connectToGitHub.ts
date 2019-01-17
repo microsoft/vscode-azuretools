@@ -10,10 +10,7 @@ import { Response } from 'request';
 import * as request from 'request-promise';
 import * as vscode from 'vscode';
 import { AzureTreeItem, DialogResponses, IActionContext, IAzureQuickPickItem, IParsedError, parseError } from 'vscode-azureextensionui';
-import KuduClient from 'vscode-azurekudu';
-import { waitForDeploymentToComplete } from './deploy/waitForDeploymentToComplete';
 import { ext } from './extensionVariables';
-import { getKuduClient } from './getKuduClient';
 import { localize } from './localize';
 import { signRequest } from './signRequest';
 import { SiteClient } from './SiteClient';
@@ -70,13 +67,11 @@ export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, c
     const repoName: string = `${orgQuickPick.login}/${repoQuickPick.name}`;
 
     try {
-        const connectingToGithub: string = localize('ConnectingToGithub', '"{0}" is being connected to repo "{1}". Check output channel for status.', client.fullName, repoName);
+        const connectingToGithub: string = localize('ConnectingToGithub', '"{0}" is being connected to repo "{1}". This may take several minutes...', client.fullName, repoName);
         const connectedToGithub: string = localize('ConnectedToGithub', 'Repo "{0}" is connected and deployed to "{1}".', repoName, client.fullName);
-        const kuduClient: KuduClient = await getKuduClient(client);
         await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: connectingToGithub }, async (): Promise<void> => {
-            // tslint:disable-next-line:no-floating-promises
-            client.updateSourceControl(siteSourceControl);
-            await waitForDeploymentToComplete(client, kuduClient);
+            ext.outputChannel.appendLine(connectingToGithub);
+            await client.updateSourceControl(siteSourceControl);
             vscode.window.showInformationMessage(connectedToGithub);
             ext.outputChannel.appendLine(connectedToGithub);
         });
@@ -96,7 +91,7 @@ export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, c
 }
 
 async function showGitHubAuthPrompt(node: AzureTreeItem, client: SiteClient, context: IActionContext): Promise<void> {
-    const invalidToken: string = localize('tokenExpired', 'Azure\'s GitHub token in invalid.  Authorize in the "Deployment Center"');
+    const invalidToken: string = localize('tokenExpired', 'Azure\'s GitHub token is invalid.  Authorize in the "Deployment Center"');
     const goToPortal: vscode.MessageItem = { title: localize('goToPortal', 'Go to Portal') };
     let input: vscode.MessageItem | undefined = DialogResponses.learnMore;
     while (input === DialogResponses.learnMore) {

@@ -29,6 +29,10 @@ export async function createAppService(
     showCreatingTreeItem?: (label: string) => void): Promise<Site> {
     // tslint:disable-next-line:strict-boolean-expressions
     createOptions = createOptions || {};
+    // Ideally actionContext should always be defined, but there's a bug with the TreeItemPicker. Create a 'fake' actionContext until that bug is fixed
+    // https://github.com/Microsoft/vscode-azuretools/issues/120
+    // tslint:disable-next-line:strict-boolean-expressions
+    actionContext = actionContext || <IActionContext>{ properties: {}, measurements: {} };
 
     const promptSteps: AzureWizardPromptStep<IAppServiceWizardContext>[] = [];
     const executeSteps: AzureWizardExecuteStep<IAppServiceWizardContext>[] = [];
@@ -72,6 +76,7 @@ export async function createAppService(
             promptSteps.push(new LocationListStep());
             break;
         case AppKind.app:
+            await setWizardContextDefaults(wizardContext, actionContext, createOptions.advancedCreation);
             if (createOptions.advancedCreation) {
                 promptSteps.push(new ResourceGroupListStep());
                 promptSteps.push(new SiteOSStep());
@@ -79,7 +84,6 @@ export async function createAppService(
                 promptSteps.push(new AppServicePlanListStep());
                 promptSteps.push(new LocationListStep());
             } else {
-                await setWizardContextDefaults(wizardContext);
                 promptSteps.push(new LocationListStep());
                 promptSteps.push(new SiteOSStep()); // will be skipped if there is a smart default
                 promptSteps.push(new SiteRuntimeStep());
@@ -97,10 +101,6 @@ export async function createAppService(
         linuxDynamicWorkersEnabled: wizardContext.newSiteKind === AppKind.functionapp && wizardContext.newSiteOS === 'linux' ? true : undefined
     });
 
-    // Ideally actionContext should always be defined, but there's a bug with the TreeItemPicker. Create a 'fake' actionContext until that bug is fixed
-    // https://github.com/Microsoft/vscode-azuretools/issues/120
-    // tslint:disable-next-line:strict-boolean-expressions
-    actionContext = actionContext || <IActionContext>{ properties: {}, measurements: {} };
     wizardContext = await wizard.prompt(actionContext);
     if (showCreatingTreeItem) {
         showCreatingTreeItem(nonNullProp(wizardContext, 'newSiteName'));

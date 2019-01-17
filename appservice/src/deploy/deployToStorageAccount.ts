@@ -5,6 +5,7 @@
 
 import { StringDictionary } from 'azure-arm-website/lib/models';
 import * as azureStorage from "azure-storage";
+import * as retry from 'p-retry';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
@@ -28,8 +29,20 @@ export async function deployToStorageAccount(client: SiteClient, zipFilePath: st
     const WEBSITE_RUN_FROM_PACKAGE: string = 'WEBSITE_RUN_FROM_ZIP';
     appSettings.properties[WEBSITE_RUN_FROM_PACKAGE] = blobUrl;
     await client.updateApplicationSettings(appSettings);
-    ext.outputChannel.appendLine(formatDeployLog(client, localize('syncingTriggers', 'Syncing triggers...')));
-    await client.syncFunctionTriggers();
+
+    // This can often fail with error "ServiceUnavailable", so we will retry with exponential backoff
+    // Retry at most 5 times, with initial spacing of 5 seconds and total max time of about 3 minutes
+    const retries: number = 5;
+    await retry(
+        async (currentAttempt: number) => {
+            const message: string = currentAttempt === 1 ?
+                localize('syncingTriggers', 'Syncing triggers...') :
+                localize('syncingTriggersAttempt', 'Syncing triggers (Attempt {0}/{1})...', currentAttempt, retries + 1);
+            ext.outputChannel.appendLine(formatDeployLog(client, message));
+            await client.syncFunctionTriggers();
+        },
+        { retries, minTimeout: 5 * 1000 }
+    );
 }
 
 async function createBlobService(client: SiteClient): Promise<azureStorage.BlobService> {
@@ -44,7 +57,9 @@ async function createBlobService(client: SiteClient): Promise<azureStorage.BlobS
         if (accountName && accountKey) {
             name = accountName[1];
             key = accountKey[1];
-            return azureStorage.createBlobService(name, key);
+            const blobService: azureStorage.BlobService = azureStorage.createBlobService(name, key);
+            // Add retry filter since deploying may be a large file which can fail if network is poor
+            return blobService.withFilter(new azureStorage.ExponentialRetryPolicyFilter());
         }
     }
     throw new Error(localize('"{0}" app setting is required for Run From Package deployment.', azureWebJobsStorageKey));

@@ -33,6 +33,7 @@ export class SiteClient {
     public readonly kind: string;
     public readonly initialState: string;
     public readonly isFunctionApp: boolean;
+    public readonly isLinux: boolean;
 
     public readonly planResourceGroup: string;
     public readonly planName: string;
@@ -61,6 +62,7 @@ export class SiteClient {
         this.kind = nonNullProp(site, 'kind');
         this.initialState = nonNullProp(site, 'state');
         this.isFunctionApp = !!site.kind && site.kind.includes('functionapp');
+        this.isLinux = !!site.kind && site.kind.toLowerCase().includes('linux');
 
         this.planResourceGroup = matches[2];
         this.planName = matches[3];
@@ -131,6 +133,12 @@ export class SiteClient {
 
     public async getAppServicePlan(): Promise<AppServicePlan | undefined> {
         return await this._client.appServicePlans.get(this.planResourceGroup, this.planName);
+    }
+
+    public async getSourceControl(): Promise<SiteSourceControl> {
+        return this.slotName ?
+            await this._client.webApps.getSourceControlSlot(this.resourceGroup, this.siteName, this.slotName) :
+            await this._client.webApps.getSourceControl(this.resourceGroup, this.siteName);
     }
 
     public async updateSourceControl(siteSourceControl: SiteSourceControl): Promise<SiteSourceControl> {

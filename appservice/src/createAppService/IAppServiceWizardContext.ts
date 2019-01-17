@@ -5,7 +5,7 @@
 
 import { AppServicePlan, Site, SkuDescription } from 'azure-arm-website/lib/models';
 import { IResourceGroupWizardContext, IStorageAccountWizardContext } from 'vscode-azureextensionui';
-import { AppKind, WebsiteOS } from './AppKind';
+import { AppKind, LinuxRuntimes, WebsiteOS } from './AppKind';
 
 export interface IAppServiceWizardContext extends IResourceGroupWizardContext, IStorageAccountWizardContext {
     newSiteKind: AppKind;
@@ -58,4 +58,11 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
      * By specifying this in the context, we can ensure that Azure is only queried once for the entire wizard
      */
     plansTask?: Promise<AppServicePlan[]>;
+
+    /**
+     * The runtime to put to the top of the QuickPick list to recommend to the user.
+     * This should be set in `setWizardContextDefaults`
+     */
+
+    recommendedSiteRuntime?: LinuxRuntimes;
 }
