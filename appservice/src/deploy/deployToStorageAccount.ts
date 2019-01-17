@@ -89,10 +89,10 @@ async function createBlobFromZip(blobService: azureStorage.BlobService, zipFileP
     });
     const sasToken: string = blobService.generateSharedAccessSignature(containerName, blobName, <azureStorage.common.SharedAccessPolicy>{
         AccessPolicy: {
-            Permissions: azureStorage.BlobUtilities.SharedAccessPermissions.READ + azureStorage.BlobUtilities.SharedAccessPermissions.LIST,
-            Start: azureStorage.date.secondsFromNow(-10),
+            Permissions: azureStorage.BlobUtilities.SharedAccessPermissions.READ,
+            Start: azureStorage.date.minutesFromNow(-5),
             // for clock desync
-            Expiry: azureStorage.date.daysFromNow(365),
+            Expiry: azureStorage.date.daysFromNow(10 * 365),
             ResourceTypes: azureStorage.BlobUtilities.BlobContainerPublicAccessType.BLOB
         }
     });
