@@ -104,13 +104,6 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                 { from: './out/test', to: 'test/' }
             ]),
 
-            // asdf
-            // // Replace vscode-languageserver/lib/files.js with a modified version that doesn't have webpack issues
-            // new webpack.NormalModuleReplacementPlugin(
-            //     /[/\\]vscode-languageserver[/\\]lib[/\\]files\.js/,
-            //     require.resolve('./build/vscode-languageserver-files-stub.js')
-            // ),
-
             // Fix error:
             //   > WARNING in ./node_modules/ms-rest/lib/serviceClient.js 441:19-43
             //   > Critical dependency: the request of a dependency is an expression
@@ -120,7 +113,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
             new webpack.ContextReplacementPlugin(
                 // Whenever there is a dynamic require that webpack can't analyze at all (i.e. resourceRegExp=/^\./), ...
                 /^\./,
-                // asdf: Is there a type for the context argument?  Can't seem to find one.
+                // CONSIDER: Is there a type for the context argument?  Can't seem to find one.
                 (context: any): void => {
                     // ... and the call was from within node_modules/ms-rest/lib...
                     if (/node_modules[/\\]ms-rest[/\\]lib/.test(context.context)) {
@@ -169,8 +162,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                     }]
                 },
 
-                //asdf
-                // Handle references to loose resource files in nested modules.  These are problematic because:
+                // Handle references to loose resource files in vscode-azureextensionui.  These are problematic because:
                 //   1) Webpack doesn't know about them because they don't appear in import() statements, therefore they don't get placed into dist
                 //   2) __dirname/__filename give the path to the extension.js file, so paths will be wrong even if we copy them.
                 //
@@ -233,51 +225,6 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                         }
                     ]
                 },
-
-                //asdf
-                // {
-                //     // Fix error:
-                //     //   > WARNING in ./node_modules/engine.io/lib/server.js 67:43-65
-                //     //   > Critical dependency: the request of a dependency is an expression
-                //     // in this code:
-                //     //   var WebSocketServer = (this.wsEngine ? require(this.wsEngine) : require('ws')).Server;
-                //     test: /engine\.io[/\\]lib[/\\]server.js$/,
-                //     loader: StringReplacePlugin.replace({
-                //         replacements: [
-                //             {
-                //                 pattern: /var WebSocketServer = \(this.wsEngine \? require\(this\.wsEngine\) : require\('ws'\)\)\.Server;/ig,
-                //                 replacement: (_match: any, _offset: any, _string: any): string => {
-                //                     // Since we're not using the wsEngine option, we'll just require it to not be set and use only the `require('ws')` call.
-                //                     return `if (!!this.wsEngine) {
-                //                                 throw new Error('wsEngine option not supported with current webpack settings');
-                //                             }
-                //                             var WebSocketServer = require('ws').Server;`;
-                //                 }
-                //             }
-                //         ]
-                //     })
-                // },
-
-                // {
-                //     // Fix warning:
-                //     //   > WARNING in ./node_modules/cross-spawn/index.js
-                //     //   > Module not found: Error: Can't resolve 'spawn-sync' in 'C:\Users\<user>\Repos\vscode-cosmosdb\node_modules\cross-spawn'
-                //     //   > @ ./node_modules/cross-spawn/index.js
-                //     // in this code:
-                //     //   cpSpawnSync = require('spawn-sync');  // eslint-disable-line global-require
-                //     test: /cross-spawn[/\\]index\.js$/,
-                //     loader: StringReplacePlugin.replace({
-                //         replacements: [
-                //             {
-                //                 pattern: /cpSpawnSync = require\('spawn-sync'\);/ig,
-                //                 replacement: (_match: any, _offset: any, _string: any): string {
-                //                     // The code in question only applies to Node 0.10 or less (see comments in code), so just throw an error
-                //                     return `throw new Error("This shouldn't happen"); // MODIFIED`;
-                //                 }
-                //             }
-                //         ]
-                //     })
-                // }
 
                 // Note: If you use`vscode-nls` to localize your extension than you likely also use`vscode-nls-dev` to create language bundles at build time.
                 // To support webpack, a loader has been added to vscode-nls-dev .Add the section below to the`modules/rules` configuration.

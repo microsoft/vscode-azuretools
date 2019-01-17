@@ -22,24 +22,32 @@ export type PackageLock = {
 type CopyEntry = { from: string; to?: string };
 
 /**
- * asdf
+ * Add instructions to the webpack configuration to exclude a given set of node_modules dependencies,
+ * along with their dependencies.
  */
-export function excludeNodeModulesAndDependencies(webpackConfig: webpack.Configuration, packageLockJson: PackageLock, moduleNames: string[]): void {
+export function excludeNodeModulesAndDependencies(
+    webpackConfig: webpack.Configuration,
+    packageLockJson: PackageLock,
+    moduleNames: string[]
+): void {
     const externalModulesClosure: string[] = getNodeModulesDependencyClosure(packageLockJson, moduleNames);
     const excludeEntries: { [moduleName: string]: string } = getExternalsEntries(externalModulesClosure);
     const copyEntries: CopyEntry[] = getNodeModuleCopyEntries(externalModulesClosure);
 
+    // Tell webpack to not place our modules into bundles
     // tslint:disable-next-line:strict-boolean-expressions
     webpackConfig.externals = webpackConfig.externals || {};
     Object.assign(webpackConfig.externals, excludeEntries);
 
+    // Tell webpack to copy the given modules' sources into dist\node_modules
+    //   so they can be found through normal require calls.
     // tslint:disable-next-line: strict-boolean-expressions
     webpackConfig.plugins = webpackConfig.plugins || [];
     Object.assign(webpackConfig.plugins, new CopyWebpackPlugin(copyEntries));
 }
 
 /**
- * asdf
+ * Get the full set of node_modules modules plus their dependencies
  */
 export function getNodeModulesDependencyClosure(packageLock: PackageLock, moduleNames: string[]): string[] {
     const closure: Set<string> = new Set<string>();
@@ -67,9 +75,6 @@ export function getNodeModulesDependencyClosure(packageLock: PackageLock, module
         .sort();
 }
 
-/**
- * asdf
- */
 function getExternalsEntries(moduleNames: string[]): { [moduleName: string]: string } {
     const externals: { [moduleName: string]: string } = {};
 
@@ -87,9 +92,6 @@ function getExternalsEntries(moduleNames: string[]): { [moduleName: string]: str
     return externals;
 }
 
-/**
- * asdf
- */
 function getNodeModuleCopyEntries(moduleNames: string[]): CopyEntry[] {
     // e.g.
     // new CopyWebpackPlugin([
