@@ -4,10 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Location } from 'azure-arm-resource/lib/subscription/models';
-import WebSiteManagementClient from 'azure-arm-website';
 import { Site, SkuDescription } from 'azure-arm-website/lib/models';
 import * as vscode from 'vscode';
-import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, createAzureClient, IActionContext, ISubscriptionWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountListStep, StorageAccountPerformance, StorageAccountReplication } from 'vscode-azureextensionui';
+import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, ISubscriptionWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountListStep, StorageAccountPerformance, StorageAccountReplication } from 'vscode-azureextensionui';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
 import { AppKind, getAppKindDisplayName, WebsiteOS } from './AppKind';
@@ -94,12 +93,6 @@ export async function createAppService(
     }
     executeSteps.push(new SiteCreateStep(createOptions.createFunctionAppSettings));
     const wizard: AzureWizard<IAppServiceWizardContext> = new AzureWizard(promptSteps, executeSteps, wizardContext);
-
-    // Overwrite the generic 'locationsTask' with a list of locations specific to provider "Microsoft.Web"
-    const client: WebSiteManagementClient = createAzureClient(wizardContext, WebSiteManagementClient);
-    wizardContext.locationsTask = client.listGeoRegions({
-        linuxDynamicWorkersEnabled: wizardContext.newSiteKind === AppKind.functionapp && wizardContext.newSiteOS === 'linux' ? true : undefined
-    });
 
     wizardContext = await wizard.prompt(actionContext);
     if (showCreatingTreeItem) {
