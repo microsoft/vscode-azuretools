@@ -5,8 +5,10 @@
 
 // tslint:disable: no-unsafe-any // Lots of plugin functions use any
 
-import * as CleanWebpackPlugin from 'clean-webpack-plugin';
-import * as CopyWebpackPlugin from 'copy-webpack-plugin';
+// tslint:disable-next-line:no-require-imports
+import CleanWebpackPlugin = require('clean-webpack-plugin');
+// tslint:disable-next-line:no-require-imports
+import CopyWebpackPlugin = require('copy-webpack-plugin');
 import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as StringReplacePlugin from 'string-replace-webpack-plugin';

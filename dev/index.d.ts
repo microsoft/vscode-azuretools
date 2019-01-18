@@ -5,6 +5,8 @@
 
 import { OutputChannel } from "vscode";
 import * as webpack from 'webpack';
+import { Stream } from "stream";
+import * as cp from "child_process";
 
 /**
  * Sets up test suites against an extension package.json file (run this at global level or inside a suite, not inside a test)
@@ -79,3 +81,19 @@ export interface DefaultWebpackOptions {
 }
 
 export declare function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack.Configuration;
+
+/**
+ * Installs the azure account extension before running tests (otherwise our extension would fail to activate)
+ * NOTE: The version isn't super important since we don't actually use the account extension in tests
+ */
+export declare function gulp_installAzureAccount(): Promise<void> | Stream;
+
+/**
+ * Spawns a child process
+ */
+export declare function gulp_spawn(command: string, args: string[], options: cp.SpawnOptions): cp.ChildProcess;
+
+/**
+ * Spawns a webpack process
+ */
+export declare function gulp_webpack(mode: string): cp.ChildProcess;
