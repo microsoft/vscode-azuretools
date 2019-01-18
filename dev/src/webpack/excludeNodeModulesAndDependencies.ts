@@ -59,7 +59,7 @@ export function getNodeModulesDependencyClosure(packageLock: PackageLock, module
 
         const depEntry: DependencyEntry | undefined = dependencies[moduleName];
         if (!depEntry) {
-            throw new Error(`Could not find package-lock entry for ${module}`);
+            throw new Error(`Could not find package-lock entry for ${module.filename}`);
         }
 
         if (depEntry.requires) {

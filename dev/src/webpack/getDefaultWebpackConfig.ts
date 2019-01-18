@@ -36,9 +36,14 @@ const defaultExternalNodeModules: string[] = [
 export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack.Configuration {
     // tslint:disable-next-line: strict-boolean-expressions
     const loggingVerbosity: Verbosity = options.verbosity || 'normal';
-    // tslint:disable-next-line: strict-boolean-expressions
-    const allExternalNodeModules: string[] = (options.externalNodeModules || []).concat(defaultExternalNodeModules);
+
+    // Only use defaultExternalNodeModules entries that are actually in package-lock.json
     const packageLockJson: PackageLock = fse.readJsonSync(path.resolve(options.projectRoot, 'package-lock.json'));
+    const existingDefaultExtNodeModules: string[] = defaultExternalNodeModules.filter(m => !!packageLockJson[m]);
+
+    // tslint:disable-next-line: strict-boolean-expressions
+    const externalNodeModules: string[] = (options.externalNodeModules || []).concat(existingDefaultExtNodeModules);
+    log('debug', 'externalNodeModules:', externalNodeModules);
 
     function log(messageVerbosity: MessageVerbosity, ...args: unknown[]): void {
         logCore(loggingVerbosity, messageVerbosity, ...args);
@@ -265,7 +270,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
     }
 
     // Exclude specified node modules and their dependencies from webpack bundling
-    excludeNodeModulesAndDependencies(config, packageLockJson, allExternalNodeModules);
+    excludeNodeModulesAndDependencies(config, packageLockJson, externalNodeModules);
 
     return config;
 }
