@@ -3,6 +3,8 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+// tslint:disable: no-unsafe-any // Lots of plugin functions use any
+
 import * as CleanWebpackPlugin from 'clean-webpack-plugin';
 import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 import * as fse from 'fs-extra';
@@ -32,7 +34,9 @@ const defaultExternalNodeModules: string[] = [
 
 // tslint:disable-next-line:max-func-body-length
 export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack.Configuration {
+    // tslint:disable-next-line: strict-boolean-expressions
     const loggingVerbosity: Verbosity = options.verbosity || 'normal';
+    // tslint:disable-next-line: strict-boolean-expressions
     const allExternalNodeModules: string[] = (options.externalNodeModules || []).concat(defaultExternalNodeModules);
     const packageLockJson: PackageLock = fse.readJsonSync(path.resolve(options.projectRoot, 'package-lock.json'));
 
@@ -129,7 +133,9 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                         // The consequences of ignoring this error are that
                         //   the Azure SDKs (e.g. azure-arm-resource) don't get their info stamped into the user agent info for their calls.
                         for (const d of context.dependencies) {
-                            if (d.critical) { d.critical = false; }
+                            if (d.critical) {
+                                d.critical = false;
+                            }
                         }
                     }
                 }),
@@ -142,6 +148,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
             new StringReplacePlugin(),
 
             // Caller-supplied plugins
+            // tslint:disable-next-line: strict-boolean-expressions
             ...(options.plugins || [])
         ],
 
@@ -237,6 +244,8 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                 //     }
                 // }
 
+                // Caller-supplied rules
+                // tslint:disable-next-line: strict-boolean-expressions
                 ...(options.loaderRules || [])
             ]
         }
@@ -265,7 +274,7 @@ function logCore(loggingVerbosity: Verbosity, messageVerbosity: MessageVerbosity
     // tslint:disable-next-line:no-non-null-assertion
     const loggingVerbosityValue: number = verbosityMap.get(loggingVerbosity)!;
     // tslint:disable-next-line:no-non-null-assertion
-    const messageVerbosityValue: number = <number>verbosityMap.get(messageVerbosity)!;
+    const messageVerbosityValue: number = verbosityMap.get(messageVerbosity)!;
 
     if (messageVerbosityValue >= loggingVerbosityValue) {
         console.log(...args);
