@@ -5,18 +5,22 @@
 
 import * as cp from 'child_process';
 import * as fse from 'fs-extra';
+import * as path from 'path';
 import * as process from 'process';
 
 export function gulp_spawn(command: string, args: string[], options: cp.SpawnOptions): cp.ChildProcess {
-    let actualCommand: string = command;
+    let actualCommand: string = path.resolve(command);
+
     if (process.platform === 'win32') {
-        const exePath: string = `${command}.exe`;
-        const cmdPath: string = `${command}.cmd`;
+        const exePath: string = `${actualCommand}.exe`;
+        const cmdPath: string = `${actualCommand}.cmd`;
+
         if (fse.pathExistsSync(exePath)) {
             actualCommand = exePath;
         } else if (fse.pathExistsSync(cmdPath)) {
             actualCommand = cmdPath;
         }
     }
+
     return cp.spawn(actualCommand, args, options);
 }
