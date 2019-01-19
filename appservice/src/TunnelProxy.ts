@@ -11,6 +11,7 @@ import { IParsedError, parseError } from 'vscode-azureextensionui';
 import * as websocket from 'websocket';
 import { ext } from './extensionVariables';
 import { SiteClient } from './SiteClient';
+import { delay } from './utils/delay';
 
 /**
  * Wrapper for net.Socket that forwards all traffic to the Kudu tunnel websocket endpoint.
@@ -215,10 +216,6 @@ export class TunnelProxy {
         const timeoutSeconds: number = 240; // 4 minutes, matches App Service internal timeout for starting up an app
         const timeoutMs: number = timeoutSeconds * 1000;
         const pollingIntervalMs: number = 5000;
-
-        const delay: (delayMs: number) => Promise<void> = async (delayMs: number): Promise<void> => {
-            await new Promise<void>((resolve: () => void): void => { setTimeout(resolve, delayMs); });
-        };
 
         return new Promise<void>(async (resolve: () => void, reject: (error: Error) => void): Promise<void> => {
             const start: number = Date.now();

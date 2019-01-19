@@ -9,6 +9,7 @@ import * as retry from 'p-retry';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
+import { delay } from '../utils/delay';
 import { formatDeployLog } from './formatDeployLog';
 
 /**
@@ -29,6 +30,10 @@ export async function deployToStorageAccount(client: SiteClient, zipFilePath: st
     const WEBSITE_RUN_FROM_PACKAGE: string = 'WEBSITE_RUN_FROM_ZIP';
     appSettings.properties[WEBSITE_RUN_FROM_PACKAGE] = blobUrl;
     await client.updateApplicationSettings(appSettings);
+
+    // Per functions team a short delay is necessary before syncing triggers for two reasons:
+    // (1) The call will definitely fail. (2) It will spin up a container unnecessarily in some cases.
+    await delay(5000);
 
     // This can often fail with error "ServiceUnavailable", so we will retry with exponential backoff
     // Retry at most 5 times, with initial spacing of 5 seconds and total max time of about 3 minutes
