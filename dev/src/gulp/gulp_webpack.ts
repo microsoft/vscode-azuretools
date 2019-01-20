@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as cp from 'child_process';
+import * as path from 'path';
 import * as process from 'process';
 import { gulp_spawn } from "./gulp_spawn";
 
@@ -16,7 +17,8 @@ export function gulp_webpack(mode: string): cp.ChildProcess {
     env.NODE_OPTIONS = '--max-old-space-size=8192';
 
     return gulp_spawn(
-        './node_modules/.bin/webpack', [
+        path.resolve('./node_modules/.bin/webpack'),
+        [
             '--mode', mode,
             '--display', 'minimal'
         ],
