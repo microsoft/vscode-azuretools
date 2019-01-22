@@ -26,9 +26,8 @@ export async function deployToStorageAccount(client: SiteClient, zipFilePath: st
     const appSettings: StringDictionary = await client.listApplicationSettings();
     // tslint:disable-next-line:strict-boolean-expressions
     appSettings.properties = appSettings.properties || {};
-    // They recently renamed 'ZIP' to 'PACKAGE'. However, they said 'ZIP' would be supported indefinitely, so we will use that until we're confident the 'PACKAGE' change has fully rolled out
-    const WEBSITE_RUN_FROM_PACKAGE: string = 'WEBSITE_RUN_FROM_ZIP';
-    appSettings.properties[WEBSITE_RUN_FROM_PACKAGE] = blobUrl;
+    delete appSettings.properties.WEBSITE_RUN_FROM_ZIP; // delete old app setting name if it exists
+    appSettings.properties.WEBSITE_RUN_FROM_PACKAGE = blobUrl;
     await client.updateApplicationSettings(appSettings);
 
     // Per functions team a short delay is necessary before syncing triggers for two reasons:
