@@ -5,7 +5,6 @@
 
 import * as cp from 'child_process';
 import * as process from 'process';
-import { gulp_spawn } from "./gulp_spawn";
 
 export function gulp_webpack(mode: string): cp.ChildProcess {
     const env: {
@@ -15,7 +14,7 @@ export function gulp_webpack(mode: string): cp.ChildProcess {
     // without this, webpack can run out of memory in some environments
     env.NODE_OPTIONS = '--max-old-space-size=8192';
 
-    return gulp_spawn(
+    return cp.spawn(
         './node_modules/.bin/webpack', [
             '--mode', mode,
             '--display', 'minimal'
