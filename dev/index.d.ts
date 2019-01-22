@@ -89,11 +89,6 @@ export declare function getDefaultWebpackConfig(options: DefaultWebpackOptions):
 export declare function gulp_installAzureAccount(): Promise<void> | Stream;
 
 /**
- * Spawns a child process
- */
-export declare function gulp_spawn(command: string, args: string[], options: cp.SpawnOptions): cp.ChildProcess;
-
-/**
  * Spawns a webpack process
  */
 export declare function gulp_webpack(mode: string): cp.ChildProcess;
