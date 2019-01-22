@@ -56,7 +56,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
         // vscode extensions run in a Node.js context, see https://webpack.js.org/configuration/node/
         target: 'node',
         node: {
-            // For __dirname and __filename, let Node.js use its default behavior (i.e., gives the path to the packed extension.js file, not the original source file)
+            // For __dirname and __filename, let Node.js use its default behavior (i.e., gives the path to the packed extension.bundle.js file, not the original source file)
             __filename: false,
             __dirname: false
         },
@@ -67,7 +67,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
             // dependencies will have a copy in each entry file, no sharing).
 
             // The entrypoint bundle for this extension, see https://webpack.js.org/configuration/entry-context/
-            extension: './extension.ts',
+            "extension.bundle": './extension.bundle.ts',
 
             ...options.entries
         },
@@ -160,7 +160,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
 
         resolve: {
             // Support reading TypeScript and JavaScript files, see https://github.com/TypeStrong/ts-loader
-            // These will be automatically transpiled while being placed into dist/extension.js
+            // These will be automatically transpiled while being placed into dist/extension.bundle.js
             extensions: ['.ts', '.js']
         },
 
@@ -177,7 +177,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
 
                 // Handle references to loose resource files in vscode-azureextensionui.  These are problematic because:
                 //   1) Webpack doesn't know about them because they don't appear in import() statements, therefore they don't get placed into dist
-                //   2) __dirname/__filename give the path to the extension.js file, so paths will be wrong even if we copy them.
+                //   2) __dirname/__filename give the path to the extension.bundle.js file, so paths will be wrong even if we copy them.
                 //
                 // Strategy to handle them:
                 //   1) Use the 'file-loader' webpack loader. In this pattern, the source code uses a require() statement to reference to the file. Since
