@@ -11,8 +11,15 @@ import { AzureTreeItem } from './treeDataProvider/AzureTreeItem';
 
 // tslint:disable:no-any no-unsafe-any
 export function registerCommand(commandId: string, callback: (this: IActionContext, ...args: any[]) => any, debounce?: number): void {
-    let lastClickTime: number; /* Used for debounce */
+    let lastClickTime: number | undefined; /* Used for debounce */
     ext.context.subscriptions.push(commands.registerCommand(commandId, async (...args: any[]): Promise<any> => {
+        // tslint:disable-next-line:strict-boolean-expressions
+        if (debounce) { /* Only check for debounce if registered command specifies */
+            if (debounceCommand(debounce, lastClickTime)) {
+                return;
+            }
+            lastClickTime = Date.now();
+        }
         return await callWithTelemetryAndErrorHandling(
             commandId,
             function (this: IActionContext): any {
@@ -26,13 +33,6 @@ export function registerCommand(commandId: string, callback: (this: IActionConte
                     }
                 }
 
-                // tslint:disable-next-line:strict-boolean-expressions
-                if (debounce) { /* Only check for debounce if registered command specifies */
-                    if (debounceCommand(debounce, lastClickTime)) {
-                        return;
-                    }
-                    lastClickTime = Date.now();
-                }
                 return callback.call(this, ...args);
             }
         );
