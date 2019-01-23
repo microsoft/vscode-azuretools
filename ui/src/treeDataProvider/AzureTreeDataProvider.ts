@@ -149,9 +149,6 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
             if (ti.refreshImpl) {
                 await ti.refreshImpl();
             }
-            if (ti.refreshLabelImpl) {
-                await ti.refreshLabelImpl();
-            }
             if (ti instanceof AzureParentTreeItem) {
                 ti.clearCache();
             }

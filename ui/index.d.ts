@@ -158,11 +158,6 @@ export declare abstract class AzureTreeItem<TRoot = ISubscriptionRoot> {
     public refreshImpl?(): Promise<void>;
 
     /**
-     * @deprecated Use refreshImpl instead
-     */
-    public refreshLabelImpl?(): Promise<void>;
-
-    /**
      * Optional function to filter items displayed in the tree picker. Should not be called directly
      * If not implemented, it's assumed that 'isAncestorOf' evaluates to true
      */
