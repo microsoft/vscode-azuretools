@@ -43,7 +43,7 @@ export function excludeNodeModulesAndDependencies(
     //   so they can be found through normal require calls.
     // tslint:disable-next-line: strict-boolean-expressions
     webpackConfig.plugins = webpackConfig.plugins || [];
-    Object.assign(webpackConfig.plugins, new CopyWebpackPlugin(copyEntries));
+    webpackConfig.plugins.push(new CopyWebpackPlugin(copyEntries));
 }
 
 /**
@@ -75,7 +75,7 @@ export function getNodeModulesDependencyClosure(packageLock: PackageLock, module
         .sort();
 }
 
-function getExternalsEntries(moduleNames: string[]): { [moduleName: string]: string } {
+export function getExternalsEntries(moduleNames: string[]): { [moduleName: string]: string } {
     const externals: { [moduleName: string]: string } = {};
 
     for (const moduleName of moduleNames) {
@@ -92,7 +92,7 @@ function getExternalsEntries(moduleNames: string[]): { [moduleName: string]: str
     return externals;
 }
 
-function getNodeModuleCopyEntries(moduleNames: string[]): CopyEntry[] {
+export function getNodeModuleCopyEntries(moduleNames: string[]): CopyEntry[] {
     // e.g.
     // new CopyWebpackPlugin([
     //     { from: './node_modules/clipboardy', to: 'node_modules/clipboardy' }

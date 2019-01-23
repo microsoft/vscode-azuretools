@@ -6,7 +6,10 @@
 // tslint:disable:max-func-body-length no-multiline-string indent object-literal-key-quotes typedef
 
 import * as assert from 'assert';
-import { getNodeModulesDependencyClosure, PackageLock } from "../src/webpack/excludeNodeModulesAndDependencies";
+// tslint:disable-next-line:no-require-imports
+import copyWebpackPlugin = require('copy-webpack-plugin');
+import { Configuration } from 'webpack';
+import { excludeNodeModulesAndDependencies, getExternalsEntries, getNodeModuleCopyEntries, getNodeModulesDependencyClosure, PackageLock } from "../src/webpack/excludeNodeModulesAndDependencies";
 
 const packageLockJson: PackageLock = {
     "name": "vscode-azureextensiondev",
@@ -2402,5 +2405,80 @@ suite('getNodeModulesDependencyClosure', () => {
                 "xtend",
                 'yauzl'
             ]);
+    });
+});
+
+suite('getExternalsEntries', () => {
+    test('test', () => {
+        const entries = getExternalsEntries(['abc', 'def-ghi']);
+        assert.deepStrictEqual(
+            entries,
+            {
+                'abc': 'commonjs abc',
+                'def-ghi': 'commonjs def-ghi'
+            }
+        );
+    });
+});
+
+suite('getNodeModuleCopyEntries', () => {
+    test('test', () => {
+        const entries = getNodeModuleCopyEntries(['abc', 'def-ghi']);
+        assert.deepStrictEqual(
+            entries,
+            [
+                {
+                    from: './node_modules/abc',
+                    to: 'node_modules/abc/'
+                },
+                {
+                    from: './node_modules/def-ghi',
+                    to: 'node_modules/def-ghi/'
+                }]
+        );
+    });
+});
+
+suite('excludeNodeModulesAndDependencies', () => {
+    test('config empty', () => {
+        const config: Configuration = {};
+        excludeNodeModulesAndDependencies(config, packageLockJson, ['yauzl']);
+
+        assert.deepStrictEqual(
+            config.externals,
+            {
+                "buffer-crc32": "commonjs buffer-crc32",
+                "fd-slicer": "commonjs fd-slicer",
+                "pend": "commonjs pend",
+                "yauzl": "commonjs yauzl"
+            }
+        );
+
+        assert.equal(config.plugins && config.plugins.length, 1);
+    });
+
+    test('config already has entries', () => {
+        const config: Configuration = {
+            externals: {
+                previous: 'commonjs previous'
+            },
+            plugins: [
+                new copyWebpackPlugin()
+            ]
+        };
+        excludeNodeModulesAndDependencies(config, packageLockJson, ['yauzl']);
+
+        assert.deepStrictEqual(
+            config.externals,
+            {
+                "buffer-crc32": "commonjs buffer-crc32",
+                "fd-slicer": "commonjs fd-slicer",
+                "pend": "commonjs pend",
+                "previous": "commonjs previous",
+                "yauzl": "commonjs yauzl"
+            }
+        );
+
+        assert.equal(config.plugins && config.plugins.length, 2);
     });
 });
