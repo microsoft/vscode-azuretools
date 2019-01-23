@@ -32,7 +32,7 @@ type SubscriptionTreeItemType = { new(root: ISubscriptionRoot): SubscriptionTree
 
 export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureTreeDataProviderInternal<TRoot | ISubscriptionRoot>, types.AzureTreeDataProvider<TRoot> {
     public _onTreeItemCreateEmitter: EventEmitter<AzureTreeItem<TRoot | ISubscriptionRoot>> = new EventEmitter<AzureTreeItem<TRoot | ISubscriptionRoot>>();
-    public _onDidChangeTreeDataEmitter: EventEmitter<AzureTreeItem<TRoot | ISubscriptionRoot>> = new EventEmitter<AzureTreeItem<TRoot | ISubscriptionRoot>>();
+    private _onDidChangeTreeDataEmitter: EventEmitter<AzureTreeItem<TRoot | ISubscriptionRoot>> = new EventEmitter<AzureTreeItem<TRoot | ISubscriptionRoot>>();
 
     private readonly _loadMoreCommandId: string;
     private _subscriptionTreeItemType: SubscriptionTreeItemType;
@@ -60,12 +60,12 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
             this._azureAccount = azureAccountExtension.exports;
         }
 
-        this._disposables.push(this._azureAccount.onFiltersChanged(async () => await this.refresh(undefined, false)));
-        this._disposables.push(this._azureAccount.onStatusChanged(async (status: AzureLoginStatus) => {
+        this._disposables.push(this._azureAccount.onFiltersChanged(() => this.refreshUIOnly(undefined)));
+        this._disposables.push(this._azureAccount.onStatusChanged((status: AzureLoginStatus) => {
             // Ignore status change to 'LoggedIn' and wait for the 'onFiltersChanged' event to fire instead
             // (so that the tree stays in 'Loading...' state until the filters are actually ready)
             if (status !== 'LoggedIn') {
-                await this.refresh(undefined, false);
+                this.refreshUIOnly(undefined);
             }
         }));
     }
@@ -144,30 +144,30 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
         }
     }
 
-    public async refresh(treeItem?: AzureTreeItem<TRoot | ISubscriptionRoot>, clearCache: boolean = true): Promise<void> {
-        if (clearCache) {
-            if (!treeItem) {
-                this._subscriptionTreeItems = [];
-                this._customRootTreeItems.forEach((root: AzureTreeItem<TRoot>) => {
-                    if (root instanceof AzureParentTreeItem) {
-                        root.clearCache();
-                    }
-                });
-            } else {
-                if (treeItem.refreshImpl) {
-                    await treeItem.refreshImpl();
-                }
-
-                if (treeItem.refreshLabelImpl) {
-                    await treeItem.refreshLabelImpl();
-                }
-
-                if (treeItem instanceof AzureParentTreeItem) {
-                    treeItem.clearCache();
-                }
+    public async refresh(treeItem?: AzureTreeItem<TRoot | ISubscriptionRoot>): Promise<void> {
+        async function refreshTreeItem(ti: AzureTreeItem<TRoot | ISubscriptionRoot>): Promise<void> {
+            if (ti.refreshImpl) {
+                await ti.refreshImpl();
+            }
+            if (ti.refreshLabelImpl) {
+                await ti.refreshLabelImpl();
+            }
+            if (ti instanceof AzureParentTreeItem) {
+                ti.clearCache();
             }
         }
 
+        if (!treeItem) {
+            this._subscriptionTreeItems = [];
+            await Promise.all(this._customRootTreeItems.map(async (root: AzureTreeItem<TRoot>) => await refreshTreeItem(root)));
+        } else {
+            await refreshTreeItem(treeItem);
+        }
+
+        this.refreshUIOnly(treeItem);
+    }
+
+    public refreshUIOnly(treeItem: AzureTreeItem<TRoot | ISubscriptionRoot> | undefined): void {
         this._onDidChangeTreeDataEmitter.fire(treeItem);
     }
 

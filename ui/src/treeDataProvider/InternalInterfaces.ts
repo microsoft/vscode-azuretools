@@ -13,11 +13,11 @@ import { AzureTreeItem } from './AzureTreeItem';
 export interface IAzureParentTreeItemInternal<TRoot = ISubscriptionRoot> extends AzureParentTreeItem<TRoot>, AzureTreeItem<TRoot> {
     parent: IAzureParentTreeItemInternal<TRoot> | undefined;
     treeDataProvider: IAzureTreeDataProviderInternal<TRoot>;
-    removeChildFromCache(node: AzureTreeItem<TRoot>): Promise<void>;
+    removeChildFromCache(node: AzureTreeItem<TRoot>): void;
     loadMoreChildren(): Promise<void>;
 }
 
 export interface IAzureTreeDataProviderInternal<TRoot = ISubscriptionRoot> extends AzureTreeDataProvider<TRoot> {
     _onTreeItemCreateEmitter: EventEmitter<AzureTreeItem<TRoot>>;
-    _onDidChangeTreeDataEmitter: EventEmitter<AzureTreeItem<TRoot>>;
+    refreshUIOnly(treeItem: AzureTreeItem<TRoot | ISubscriptionRoot> | undefined): void;
 }
