@@ -8,7 +8,7 @@ import { ext } from '../extensionVariables';
 import { AppKind, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
-interface ILinuxRuntimeStack {
+export interface ILinuxRuntimeStack {
     name: string;
     displayName: string;
 }
@@ -50,7 +50,7 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
     }
 
     // tslint:disable-next-line:max-func-body-length
-    private getLinuxRuntimeStack(): ILinuxRuntimeStack[] {
+    public getLinuxRuntimeStack(): ILinuxRuntimeStack[] {
         return [
             {
                 name: 'node|10.10',
