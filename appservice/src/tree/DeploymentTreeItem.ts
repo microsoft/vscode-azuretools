@@ -144,9 +144,8 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         });
     }
 
-    public async refreshLabelImpl(): Promise<void> {
+    public async refreshImpl(): Promise<void> {
         const kuduClient: KuduClient = await getKuduClient(this.root.client);
-        // while this doesn't directly refresh the label, it's currently the only place to run async code on refresh
         this._deployResult = await kuduClient.deployment.getResult(this.id);
     }
 
