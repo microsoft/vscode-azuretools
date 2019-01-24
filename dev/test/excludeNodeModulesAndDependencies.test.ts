@@ -2454,6 +2454,7 @@ suite('excludeNodeModulesAndDependencies', () => {
             }
         );
 
+        // tslint:disable-next-line:strict-boolean-expressions
         assert.equal(config.plugins && config.plugins.length, 1);
     });
 
@@ -2479,6 +2480,7 @@ suite('excludeNodeModulesAndDependencies', () => {
             }
         );
 
+        // tslint:disable-next-line:strict-boolean-expressions
         assert.equal(config.plugins && config.plugins.length, 2);
     });
 });
