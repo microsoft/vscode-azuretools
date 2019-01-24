@@ -58,7 +58,7 @@ export class TestUserInput implements IAzureUserInput {
                 result = options.value;
             }
             if (result instanceof RegExp) {
-                throw new Error("Unexpected RegExp input in showInputBox.");
+                throw new Error(`Unexpected RegExp input '${result}' in showInputBox.`);
             } else if (result !== undefined) { // Allow "" as a valid input
                 if (options.validateInput) {
                     const msg: string | null | undefined = await Promise.resolve(options.validateInput(result));
@@ -94,7 +94,7 @@ export class TestUserInput implements IAzureUserInput {
         if (this._inputs.length > 0) {
             const result: string | RegExp | undefined = this._inputs.shift();
             if (result instanceof RegExp) {
-                throw new Error("Unexpected RegExp input in showOpenDialog.");
+                throw new Error(`Unexpected RegExp input '${result}' in showOpenDialog.`);
             } else if (result) {
                 return [vscode.Uri.file(result)];
             }
