@@ -43,9 +43,8 @@ export declare class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements
     /**
      *  Refreshes the tree
      * @param treeItem The treeItem to refresh or 'undefined' to refresh the whole tree
-     * @param clearCache If true, the current state of 'Load more...' is cleared and new tree items will be retrieved. Defaults to true.
      */
-    public refresh(treeItem?: AzureTreeItem<TRoot | ISubscriptionRoot>, clearCache?: boolean): Promise<void>;
+    public refresh(treeItem?: AzureTreeItem<TRoot | ISubscriptionRoot>): Promise<void>;
 
     /**
      * Loads more children for a specific tree item
@@ -157,11 +156,6 @@ export declare abstract class AzureTreeItem<TRoot = ISubscriptionRoot> {
      * Implement this to execute any async code when this node is refreshed. Should not be called directly
      */
     public refreshImpl?(): Promise<void>;
-
-    /**
-     * @deprecated Use refreshImpl instead
-     */
-    public refreshLabelImpl?(): Promise<void>;
 
     /**
      * Optional function to filter items displayed in the tree picker. Should not be called directly
