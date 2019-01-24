@@ -186,7 +186,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                 //   2) Sources have to be modified to use a require() statement for any resource that needs to be handled this way.  Many of these can be found because
                 //      they are using __dirname/__filename to find the resource file at runtime.
                 {
-                    test: /vscode-azureextensionui/,
+                    test: /(vscode-azureextensionui)|(vscode-azureappservice)/,
                     loader: StringReplacePlugin.replace({
                         replacements: [
                             {
