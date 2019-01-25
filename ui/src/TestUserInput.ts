@@ -80,6 +80,9 @@ export class TestUserInput implements IAzureUserInput {
     public async showWarningMessage<T extends MessageItem>(message: string, ...args: any[]): Promise<T> {
         if (this._inputs.length > 0) {
             const result: string | RegExp | undefined = this._inputs.shift();
+            if (result instanceof RegExp) {
+                throw new Error(`Unexpected RegExp input '${result}' in showWarningMessage.`);
+            }
             // tslint:disable-next-line:no-unsafe-any
             const matchingItem: T | undefined = args.find((item: T) => item.title === result);
             if (matchingItem) {
