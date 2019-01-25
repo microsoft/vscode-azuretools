@@ -14,6 +14,7 @@ import { SiteClient } from '../SiteClient';
 import { cpUtils } from '../utils/cpUtils';
 import { nonNullProp } from '../utils/nonNull';
 import { formatDeployLog } from './formatDeployLog';
+import { CommandOptions } from '../CommandOptions';
 
 export async function localGitDeploy(client: SiteClient, fsPath: string): Promise<void> {
     const publishCredentials: User = await client.getWebAppPublishCredential();
@@ -28,8 +29,8 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
 
     await verifyNoRunFromPackageSetting(client);
     ext.outputChannel.appendLine(formatDeployLog(client, (localize('localGitDeploy', `Deploying Local Git repository to "${client.fullName}"...`))));
-    const commandOptions: cpUtils.ICommandOptions = { obfuscateValue: publishCredentials.publishingPassword, outputChannel: ext.outputChannel, workingDirectory: fsPath };
-    const result: cpUtils.ICommandResult = await cpUtils.tryExecuteCommand(`git push ${remote} HEAD:master`, commandOptions);
+    const commandOptions: CommandOptions = new CommandOptions(`git push ${remote} HEAD:master`, ext.outputChannel, fsPath, publishCredentials.publishingPassword);
+    const result: cpUtils.ICommandResult = await cpUtils.tryExecuteCommand(commandOptions);
     // a non-0 code indicates that there was an error with the cmd
     if (result.code !== 0) {
         if (result.cmdOutputIncludingStderr.indexOf('spawn git ENOENT') >= 0) {
@@ -44,7 +45,8 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
             const forcePush: vscode.MessageItem = { title: localize('forcePush', 'Force Push') };
             const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging.');
             await ext.ui.showWarningMessage(pushReject, forcePush, DialogResponses.cancel);
-            await cpUtils.executeCommand(`git push -f ${remote} HEAD:master`, commandOptions);
+            commandOptions.command = `git push -f ${remote} HEAD:master`;
+            await cpUtils.executeCommand(commandOptions);
         } else {
             throw result.cmdOutputIncludingStderr;
         }
