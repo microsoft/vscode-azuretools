@@ -9,6 +9,7 @@ import { ProgressLocation, TextDocument, window, workspace } from 'vscode';
 import { AzureTreeItem } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { DeployResult, LogEntry } from 'vscode-azurekudu/lib/models';
+import { formatDeployLog } from '../deploy/formatDeployLog';
 import { waitForDeploymentToComplete } from '../deploy/waitForDeploymentToComplete';
 import { ext } from '../extensionVariables';
 import { getKuduClient } from '../getKuduClient';
@@ -79,9 +80,13 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     }
 
     public async redeployDeployment(): Promise<void> {
+        if (this._deployResult.isReadonly) {
+            throw new Error(localize('redeployNotSupported', 'Redeploy is not supported for non-git deployments.'));
+        }
         const redeploying: string = localize('redeploying', 'Redeploying commit "{0}" to "{1}". Check output window for status.', this.id, this.root.client.fullName);
         const redeployed: string = localize('redeployed', 'Commit "{0}" has been redeployed to "{1}".', this.id, this.root.client.fullName);
         await window.withProgress({ location: ProgressLocation.Notification, title: redeploying }, async (): Promise<void> => {
+            ext.outputChannel.appendLine(formatDeployLog(this.root.client, localize('reployingOutput', 'Redeploying commit "{0}" to "{1}"...', this.id, this.root.client.fullName)));
             const kuduClient: KuduClient = await getKuduClient(this.root.client);
             const refreshingInteveral: NodeJS.Timer = setInterval(async () => { await this.refresh(); }, 1000); /* the status of the label changes during deployment so poll for that*/
             let getResultInterval: NodeJS.Timer | undefined;
@@ -139,9 +144,8 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         });
     }
 
-    public async refreshLabelImpl(): Promise<void> {
+    public async refreshImpl(): Promise<void> {
         const kuduClient: KuduClient = await getKuduClient(this.root.client);
-        // while this doesn't directly refresh the label, it's currently the only place to run async code on refresh
         this._deployResult = await kuduClient.deployment.getResult(this.id);
     }
 

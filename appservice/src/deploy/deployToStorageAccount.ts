@@ -5,9 +5,11 @@
 
 import { StringDictionary } from 'azure-arm-website/lib/models';
 import * as azureStorage from "azure-storage";
+import * as retry from 'p-retry';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
+import { delay } from '../utils/delay';
 import { formatDeployLog } from './formatDeployLog';
 
 /**
@@ -24,12 +26,27 @@ export async function deployToStorageAccount(client: SiteClient, zipFilePath: st
     const appSettings: StringDictionary = await client.listApplicationSettings();
     // tslint:disable-next-line:strict-boolean-expressions
     appSettings.properties = appSettings.properties || {};
-    // They recently renamed 'ZIP' to 'PACKAGE'. However, they said 'ZIP' would be supported indefinitely, so we will use that until we're confident the 'PACKAGE' change has fully rolled out
-    const WEBSITE_RUN_FROM_PACKAGE: string = 'WEBSITE_RUN_FROM_ZIP';
-    appSettings.properties[WEBSITE_RUN_FROM_PACKAGE] = blobUrl;
+    delete appSettings.properties.WEBSITE_RUN_FROM_ZIP; // delete old app setting name if it exists
+    appSettings.properties.WEBSITE_RUN_FROM_PACKAGE = blobUrl;
     await client.updateApplicationSettings(appSettings);
-    ext.outputChannel.appendLine(formatDeployLog(client, localize('syncingTriggers', 'Syncing triggers...')));
-    await client.syncFunctionTriggers();
+
+    // Per functions team a short delay is necessary before syncing triggers for two reasons:
+    // (1) The call will definitely fail. (2) It will spin up a container unnecessarily in some cases.
+    await delay(5000);
+
+    // This can often fail with error "ServiceUnavailable", so we will retry with exponential backoff
+    // Retry at most 5 times, with initial spacing of 5 seconds and total max time of about 3 minutes
+    const retries: number = 5;
+    await retry(
+        async (currentAttempt: number) => {
+            const message: string = currentAttempt === 1 ?
+                localize('syncingTriggers', 'Syncing triggers...') :
+                localize('syncingTriggersAttempt', 'Syncing triggers (Attempt {0}/{1})...', currentAttempt, retries + 1);
+            ext.outputChannel.appendLine(formatDeployLog(client, message));
+            await client.syncFunctionTriggers();
+        },
+        { retries, minTimeout: 5 * 1000 }
+    );
 }
 
 async function createBlobService(client: SiteClient): Promise<azureStorage.BlobService> {
@@ -44,7 +61,9 @@ async function createBlobService(client: SiteClient): Promise<azureStorage.BlobS
         if (accountName && accountKey) {
             name = accountName[1];
             key = accountKey[1];
-            return azureStorage.createBlobService(name, key);
+            const blobService: azureStorage.BlobService = azureStorage.createBlobService(name, key);
+            // Add retry filter since deploying may be a large file which can fail if network is poor
+            return blobService.withFilter(new azureStorage.ExponentialRetryPolicyFilter());
         }
     }
     throw new Error(localize('"{0}" app setting is required for Run From Package deployment.', azureWebJobsStorageKey));
@@ -74,10 +93,10 @@ async function createBlobFromZip(blobService: azureStorage.BlobService, zipFileP
     });
     const sasToken: string = blobService.generateSharedAccessSignature(containerName, blobName, <azureStorage.common.SharedAccessPolicy>{
         AccessPolicy: {
-            Permissions: azureStorage.BlobUtilities.SharedAccessPermissions.READ + azureStorage.BlobUtilities.SharedAccessPermissions.LIST,
-            Start: azureStorage.date.secondsFromNow(-10),
+            Permissions: azureStorage.BlobUtilities.SharedAccessPermissions.READ,
+            Start: azureStorage.date.minutesFromNow(-5),
             // for clock desync
-            Expiry: azureStorage.date.daysFromNow(365),
+            Expiry: azureStorage.date.daysFromNow(10 * 365),
             ResourceTypes: azureStorage.BlobUtilities.BlobContainerPublicAccessType.BLOB
         }
     });

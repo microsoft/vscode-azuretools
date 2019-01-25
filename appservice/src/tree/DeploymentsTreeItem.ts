@@ -46,30 +46,37 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
 
     public async loadMoreChildrenImpl(_clearCache: boolean): Promise<DeploymentTreeItem[] | GenericTreeItem<ISiteTreeRoot>[]> {
         const siteConfig: SiteConfig = await this.root.client.getSiteConfig();
-        if (siteConfig.scmType === ScmType.GitHub || siteConfig.scmType === ScmType.LocalGit) {
-            const kuduClient: KuduClient = await getKuduClient(this.root.client);
-            const deployments: DeployResult[] = await kuduClient.deployment.getDeployResults();
-            return await createTreeItemsWithErrorHandling(
-                this,
-                deployments,
-                'invalidDeployment',
-                (dr: DeployResult) => {
-                    return new DeploymentTreeItem(this, dr);
-                },
-                (dr: DeployResult) => {
-                    return dr.id ? dr.id.substring(0, 7) : undefined;
-                }
-            );
-        } else {
-            return [new GenericTreeItem(this, {
+        const kuduClient: KuduClient = await getKuduClient(this.root.client);
+        const deployments: DeployResult[] = await kuduClient.deployment.getDeployResults();
+        const children: DeploymentTreeItem[] | GenericTreeItem<ISiteTreeRoot>[] = await createTreeItemsWithErrorHandling(
+            this,
+            deployments,
+            'invalidDeployment',
+            (dr: DeployResult) => {
+                return new DeploymentTreeItem(this, dr);
+            },
+            (dr: DeployResult) => {
+                return dr.id ? dr.id.substring(0, 7) : undefined;
+            }
+        );
+
+        if (siteConfig.scmType === ScmType.None) {
+            // redeploy does not support Push deploys, so we still guide users to connect to a GitHub repo
+            children.push(new GenericTreeItem(this, {
                 commandId: this._connectToGitHubCommandId,
                 contextValue: 'ConnectToGithub',
                 label: 'Connect to a GitHub Repository...'
-            })];
+            }));
         }
+        return children;
     }
 
     public compareChildrenImpl(ti1: DeploymentTreeItem, ti2: DeploymentTreeItem): number {
+        if (ti1 instanceof GenericTreeItem) {
+            return 1;
+        } else if (ti2 instanceof GenericTreeItem) {
+            return -1;
+        }
         // sorts in accordance of the most recent deployment
         return ti2.receivedTime.valueOf() - ti1.receivedTime.valueOf();
     }
@@ -83,9 +90,8 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         await this.refresh();
     }
 
-    public async refreshLabelImpl(): Promise<void> {
+    public async refreshImpl(): Promise<void> {
         const siteConfig: SiteConfig = await this.root.client.getSiteConfig();
-        // while this doesn't directly refresh the label, it's currently the only place to run async code on refresh
         if (siteConfig.scmType === ScmType.GitHub || siteConfig.scmType === ScmType.LocalGit) {
             this.contextValue = DeploymentsTreeItem.contextValueConnected;
         } else {
