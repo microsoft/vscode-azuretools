@@ -8,19 +8,21 @@ import * as opn from 'opn';
 import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
 import { DialogResponses } from 'vscode-azureextensionui';
+import { CommandOptions } from '../CommandOptions';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { cpUtils } from '../utils/cpUtils';
 import { nonNullProp } from '../utils/nonNull';
 import { formatDeployLog } from './formatDeployLog';
-import { CommandOptions } from '../CommandOptions';
 
 export async function localGitDeploy(client: SiteClient, fsPath: string): Promise<void> {
     const publishCredentials: User = await client.getWebAppPublishCredential();
     const remote: string = nonNullProp(publishCredentials, 'scmUri');
     const localGit: git.SimpleGit = git(fsPath);
     const status: git.StatusResult = await localGit.status();
+    const command: string = 'git push';
+    const args: string = `${remote} HEAD:master`;
     if (status.files.length > 0) {
         const message: string = localize('localGitUncommit', '{0} uncommitted change(s) in local repo "{1}"', status.files.length, fsPath);
         const deployAnyway: vscode.MessageItem = { title: localize('deployAnyway', 'Deploy Anyway') };
@@ -29,7 +31,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
 
     await verifyNoRunFromPackageSetting(client);
     ext.outputChannel.appendLine(formatDeployLog(client, (localize('localGitDeploy', `Deploying Local Git repository to "${client.fullName}"...`))));
-    const commandOptions: CommandOptions = new CommandOptions(`git push ${remote} HEAD:master`, ext.outputChannel, fsPath, publishCredentials.publishingPassword);
+    const commandOptions: CommandOptions = new CommandOptions(command, ext.outputChannel, fsPath, publishCredentials.publishingPassword, args);
     const result: cpUtils.ICommandResult = await cpUtils.tryExecuteCommand(commandOptions);
     // a non-0 code indicates that there was an error with the cmd
     if (result.code !== 0) {
@@ -45,7 +47,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
             const forcePush: vscode.MessageItem = { title: localize('forcePush', 'Force Push') };
             const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging.');
             await ext.ui.showWarningMessage(pushReject, forcePush, DialogResponses.cancel);
-            commandOptions.command = `git push -f ${remote} HEAD:master`;
+            commandOptions.args.push('-f');
             await cpUtils.executeCommand(commandOptions);
         } else {
             throw result.cmdOutputIncludingStderr;
