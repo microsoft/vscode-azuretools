@@ -8,19 +8,32 @@ import * as vscode from 'vscode';
 import { IAzureUserInput } from '../index';
 
 export class TestUserInput implements IAzureUserInput {
-    private _inputs: (string | undefined)[];
+    private _inputs: (string | RegExp | undefined)[];
 
-    constructor(inputs: (string | undefined)[]) {
+    constructor(inputs: (string | RegExp | undefined)[]) {
         this._inputs = inputs;
     }
 
     public async showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T> {
         if (this._inputs.length > 0) {
-            const input: string | undefined = this._inputs.shift();
+            const input: string | RegExp | undefined = this._inputs.shift();
             const resolvedItems: T[] = await Promise.resolve(items);
 
             if (resolvedItems.length === 0) {
                 throw new Error(`No quick pick items found. Placeholder: '${options.placeHolder}'`);
+            } else if (input instanceof RegExp) {
+                const resolvedItem: T | undefined = resolvedItems.find((qpi: T): boolean => {
+                    if (qpi.label.match(input) || (qpi.description && qpi.description.match(input))) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                });
+                if (resolvedItem) {
+                    return resolvedItem;
+                } else {
+                    throw new Error(`Did not find quick pick item matching '${input}'. Placeholder: '${options.placeHolder}'`);
+                }
             } else if (input) {
                 const resolvedItem: T | undefined = resolvedItems.find((qpi: T) => qpi.label === input || qpi.description === input);
                 if (resolvedItem) {
@@ -39,13 +52,14 @@ export class TestUserInput implements IAzureUserInput {
 
     public async showInputBox(options: InputBoxOptions): Promise<string> {
         if (this._inputs.length > 0) {
-            let result: string | undefined = this._inputs.shift();
+            let result: string | RegExp | undefined = this._inputs.shift();
             if (result === undefined) {
                 // Use default value if input is undefined
                 result = options.value;
             }
-
-            if (result !== undefined) { // Allow "" as a valid input
+            if (result instanceof RegExp) {
+                throw new Error(`Unexpected RegExp input '${result}' in showInputBox.`);
+            } else if (result !== undefined) { // Allow "" as a valid input
                 if (options.validateInput) {
                     const msg: string | null | undefined = await Promise.resolve(options.validateInput(result));
                     if (msg !== null && msg !== undefined) {
@@ -65,7 +79,10 @@ export class TestUserInput implements IAzureUserInput {
     // tslint:disable-next-line:no-any
     public async showWarningMessage<T extends MessageItem>(message: string, ...args: any[]): Promise<T> {
         if (this._inputs.length > 0) {
-            const result: string | undefined = this._inputs.shift();
+            const result: string | RegExp | undefined = this._inputs.shift();
+            if (result instanceof RegExp) {
+                throw new Error(`Unexpected RegExp input '${result}' in showWarningMessage.`);
+            }
             // tslint:disable-next-line:no-unsafe-any
             const matchingItem: T | undefined = args.find((item: T) => item.title === result);
             if (matchingItem) {
@@ -78,8 +95,10 @@ export class TestUserInput implements IAzureUserInput {
 
     public async showOpenDialog(options: vscode.OpenDialogOptions): Promise<vscode.Uri[]> {
         if (this._inputs.length > 0) {
-            const result: string | undefined = this._inputs.shift();
-            if (result) {
+            const result: string | RegExp | undefined = this._inputs.shift();
+            if (result instanceof RegExp) {
+                throw new Error(`Unexpected RegExp input '${result}' in showOpenDialog.`);
+            } else if (result) {
                 return [vscode.Uri.file(result)];
             }
         }

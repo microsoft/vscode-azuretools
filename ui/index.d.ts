@@ -489,9 +489,9 @@ export declare class AzureUserInput implements IAzureUserInput {
  */
 export declare class TestUserInput implements IAzureUserInput {
     /**
-     * @param inputs An ordered array of inputs that will be used instead of interactively prompting in VS Code.
+     * @param inputs An ordered array of inputs that will be used instead of interactively prompting in VS Code. RegExp is only applicable for QuickPicks and will pick the first input that matches the RegExp.
      */
-    public constructor(inputs: (string | undefined)[]);
+    public constructor(inputs: (string | RegExp|  undefined)[]);
 
     public showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T>;
     public showInputBox(options: InputBoxOptions): Promise<string>;
