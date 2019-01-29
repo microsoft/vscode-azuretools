@@ -3,13 +3,6 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-export interface IPackageLintOptions {
-    /**
-     * Commands which are registered by the extension but should not appear in package.json
-     */
-    commandsRegisteredButNotInPackage?: string[];
-}
-
 import * as assert from 'assert';
 import { IPackageLintOptions } from '../..';
 
@@ -29,8 +22,8 @@ interface IPackage {
                 id: string;
                 name: string;
                 when?: string;
-            }[]
-        }
+            }[];
+        };
         commands?: {
             command: string;
         }[];
@@ -48,7 +41,7 @@ interface IPackage {
 // tslint:enable:typedef
 
 function emptyIfUndefined<T extends {}>(value: T | undefined): T {
-    // tslint:disable-next-line:strict-boolean-expressions
+    // tslint:disable-next-line:strict-boolean-expressions no-object-literal-type-assertion
     return value || <T>{};
 }
 

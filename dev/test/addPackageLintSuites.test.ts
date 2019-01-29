@@ -1,12 +1,9 @@
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// tslint:disable:max-func-body-length
-// tslint:disable:no-multiline-string
-// tslint:disable:indent
-// tslint:disable:object-literal-key-quotes
+// tslint:disable:max-func-body-length no-multiline-string indent object-literal-key-quotes
 
 import { addPackageLintSuites } from '../src';
 

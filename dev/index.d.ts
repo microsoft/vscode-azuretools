@@ -1,9 +1,12 @@
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
 import { OutputChannel } from "vscode";
+import * as webpack from 'webpack';
+import { Stream } from "stream";
+import * as cp from "child_process";
 
 /**
  * Sets up test suites against an extension package.json file (run this at global level or inside a suite, not inside a test)
@@ -37,3 +40,55 @@ export class TestOutputChannel implements OutputChannel {
     public hide(): void;
     public dispose(): void;
 }
+
+export type Verbosity = 'debug' | 'silent' | 'normal';
+
+export interface DefaultWebpackOptions {
+    projectRoot: string;
+
+    /**
+     * Additional entrypoints besides the main 'extension' entrypoint
+     */
+    entries?: { [key: string]: string };
+
+    /**
+     * Modules that we can't easily webpack for some reason. These node modules and all their dependencies will be excluded from bundling.
+     */
+    externalNodeModules?: string[];
+
+    /** Additional external entries (externalNodeModules are added automatically) */
+    externals?: webpack.ExternalsObjectElement,
+
+    /**
+     * Additional loader module rules
+     */
+    loaderRules?: webpack.RuleSetRule[],
+
+    /**
+     * Additional plug-ins
+     */
+    plugins?: webpack.Plugin[];
+
+    /**
+     * Suppress deleting the dist folder before webpack
+     */
+    suppressCleanDistFolder?: boolean;
+
+    /**
+     * Logging verbosity
+     */
+    verbosity?: Verbosity;
+}
+
+export declare function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack.Configuration;
+
+/**
+ * Installs the azure account extension before running tests (otherwise our extension would fail to activate)
+ * NOTE: The version isn't super important since we don't actually use the account extension in tests
+ */
+export declare function gulp_installAzureAccount(): Promise<void> | Stream;
+
+/**
+ * Spawns a webpack process
+ */
+export declare function gulp_webpack(mode: string): cp.ChildProcess;

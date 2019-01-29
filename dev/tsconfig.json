@@ -12,7 +12,9 @@
         "noImplicitThis": true,
         "noImplicitReturns": true,
         "strictNullChecks": true,
-        "noUnusedParameters": true
+        "noUnusedParameters": true,
+        "strict": true,
+        "alwaysStrict": true
     },
     "exclude": [
         "node_modules",
