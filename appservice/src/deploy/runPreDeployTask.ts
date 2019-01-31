@@ -45,7 +45,11 @@ export interface IPreDeployTaskResult {
 }
 
 function isTaskEqual(expectedName: string, expectedPath: string, actualTask: vscode.Task): boolean {
-    if (actualTask.name && actualTask.name.toLowerCase() === expectedName.toLowerCase() && actualTask.scope !== undefined) {
+    // This regexp matches the name and optionally allows the source as a prefix
+    // Example with no prefix: "build"
+    // Example with prefix: "func: extensions install"
+    const regexp: RegExp = new RegExp(`(${actualTask.source}: )?${actualTask.name}`, 'i');
+    if (regexp.test(expectedName) && actualTask.scope !== undefined) {
         const workspaceFolder: Partial<vscode.WorkspaceFolder> = <Partial<vscode.WorkspaceFolder>>actualTask.scope;
         return !!workspaceFolder.uri && (isPathEqual(workspaceFolder.uri.fsPath, expectedPath) || isSubpath(workspaceFolder.uri.fsPath, expectedPath));
     } else {
