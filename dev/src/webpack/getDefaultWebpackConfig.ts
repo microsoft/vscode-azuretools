@@ -44,7 +44,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
 
     // tslint:disable-next-line: strict-boolean-expressions
     const externalNodeModules: string[] = (options.externalNodeModules || []).concat(existingDefaultExtNodeModules);
-    log('debug', 'externalNodeModules:', externalNodeModules);
+    log('debug', 'External node modules:', externalNodeModules);
 
     function log(messageVerbosity: MessageVerbosity, ...args: unknown[]): void {
         logCore(loggingVerbosity, messageVerbosity, ...args);
@@ -171,7 +171,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                     exclude: /node_modules/,
                     use: [{
                         // Note: the TS loader will transpile the .ts file directly during webpack, it doesn't use the out folder.
-                        loader: 'ts-loader'
+                        loader: require.resolve('ts-loader')
                     }]
                 },
 
@@ -228,7 +228,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                     test: /\.(png|jpg|gif|svg)$/,
                     use: [
                         {
-                            loader: 'file-loader',
+                            loader: require.resolve('file-loader'),
                             options: {
                                 name: (name: string): string => {
                                     log('normal', `Extracting resource file ${name}`);
@@ -244,7 +244,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                 // {
                 //     // vscode-nls-dev loader:
                 //     // * rewrite nls-calls
-                //     loader: 'vscode-nls-dev/lib/webpack-loader',
+                //     loader: require.resolve('vscode-nls-dev/lib/webpack-loader'),
                 //     options: {
                 //         base: path.join(options.projectRoot, 'src')
                 //     }
@@ -271,7 +271,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
     }
 
     // Exclude specified node modules and their dependencies from webpack bundling
-    excludeNodeModulesAndDependencies(config, packageLockJson, externalNodeModules);
+    excludeNodeModulesAndDependencies(config, packageLockJson, externalNodeModules, (...args: unknown[]) => log('debug', ...args));
 
     return config;
 }
