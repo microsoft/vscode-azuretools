@@ -46,6 +46,7 @@
         "mocha-multi-reporters": "^1.1.7",
         "tslint": "^5.12.1",
         "tslint-microsoft-contrib": "^6.0.0",
+        "ts-loader": "^5.3.3",
         "ts-node": "^7.0.1",
         "typescript": "^3.2.2"
     },

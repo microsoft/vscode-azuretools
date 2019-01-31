@@ -170,7 +170,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                     test: /\.ts$/,
                     exclude: /node_modules/,
                     use: [{
-                        // Note: the TS loader will transpile the .ts file directly during webpack, it doesn't use the out folder.
+                        // Note: the TS loader will transpile the .ts file directly during webpack (i.e., webpack is directly pulling the .ts files, not .js files from out/)
                         loader: require.resolve('ts-loader')
                     }]
                 },
