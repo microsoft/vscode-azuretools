@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { StringDictionary } from 'azure-arm-website/lib/models';
+import { SlotConfigNamesResource, StringDictionary } from 'azure-arm-website/lib/models';
 import * as path from 'path';
 import { AzureParentTreeItem, AzureTreeItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
@@ -57,11 +57,18 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
 
     public async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzureTreeItem<ISiteTreeRoot>[]> {
         this._settings = await this.root.client.listApplicationSettings();
+        const slotConfigurationSettings: SlotConfigNamesResource = await this.root.client.listSlotConfigurationNames();
         const treeItems: AppSettingTreeItem[] = [];
         // tslint:disable-next-line:strict-boolean-expressions
         const properties: { [name: string]: string } = this._settings.properties || {};
         Object.keys(properties).forEach((key: string) => {
-            treeItems.push(new AppSettingTreeItem(this, key, properties[key], this._commandId));
+            const appSettingTreeItem: AppSettingTreeItem = new AppSettingTreeItem(this, key, properties[key], this._commandId);
+            if (slotConfigurationSettings.appSettingNames && slotConfigurationSettings.appSettingNames.find((value: string) => {
+                return key === value;
+            })) {
+                appSettingTreeItem.description = 'Slot Setting';
+            }
+            treeItems.push(appSettingTreeItem);
         });
 
         return treeItems;

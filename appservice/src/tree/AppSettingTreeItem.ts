@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { StringDictionary } from 'azure-arm-website/lib/models';
+import { SlotConfigNamesResource, StringDictionary } from 'azure-arm-website/lib/models';
 import * as path from 'path';
 import { AzureTreeItem, DialogResponses } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
@@ -76,5 +76,29 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     public async toggleValueVisibility(): Promise<void> {
         this._hideValue = !this._hideValue;
         await this.refresh();
+    }
+
+    public async toggleSlotSetting(): Promise<void> {
+        const slotSettings: SlotConfigNamesResource = await this.root.client.listSlotConfigurationNames();
+        if (slotSettings.appSettingNames) {
+            const slotSettingIndex: number = slotSettings.appSettingNames.findIndex((value: string) => { return value === this._key; });
+
+            if (slotSettingIndex > 0) {
+                slotSettings.appSettingNames.splice(slotSettingIndex, 1);
+            } else {
+                slotSettings.appSettingNames.push(this._key);
+            }
+            await this.root.client.updateSlotConfigurationNames(slotSettings);
+            await this.refresh();
+        }
+    }
+
+    public async refreshImpl(): Promise<void> {
+        const slotSettings: SlotConfigNamesResource = await this.root.client.listSlotConfigurationNames();
+        if (slotSettings.appSettingNames && slotSettings.appSettingNames.find((value: string) => { return value === this._key; })) {
+            this.description = 'Slot Setting';
+        } else {
+            this.description = undefined;
+        }
     }
 }
