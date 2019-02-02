@@ -3,8 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { SiteSourceControl } from 'azure-arm-website/lib/models';
+import * as opn from 'opn';
 import * as os from 'os';
 import * as path from 'path';
+import { Response } from 'request';
+import * as request from 'request-promise';
 import { ProgressLocation, TextDocument, window, workspace } from 'vscode';
 import { AzureTreeItem } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
@@ -142,6 +146,29 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
             const logDocument: TextDocument = await workspace.openTextDocument({ content: logData, language: 'log' });
             await window.showTextDocument(logDocument);
         });
+    }
+
+    public async viewCommitInGitHub(): Promise<void> {
+        if (this.parent.contextValue === DeploymentsTreeItem.contextValueConnected) {
+            const sourceControl: SiteSourceControl = await this.root.client.getSourceControl();
+            const githubUrl: string = 'https://github.com';
+
+            if (sourceControl.repoUrl && sourceControl.repoUrl.match(githubUrl)) {
+                try {
+                    const githubCommitUrl: string = `${sourceControl.repoUrl}/commit/${this._deployResult.id}`;
+                    // tslint:disable-next-line:no-unsafe-any
+                    const githubPage: Response = await request({url: githubCommitUrl, resolveWithFullResponse: true}).promise();
+                    if (githubPage.statusCode === 200) {
+                        // tslint:disable-next-line:no-unsafe-any
+                        opn(githubCommitUrl);
+                        return;
+                    }
+                } catch (error) {
+                    // ignore the error
+                }
+            }
+            throw new Error(localize('selectGithub', 'Only commits made on GitHub are supported.'));
+        }
     }
 
     public async refreshImpl(): Promise<void> {
