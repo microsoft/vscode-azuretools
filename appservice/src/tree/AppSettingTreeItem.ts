@@ -94,13 +94,13 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         const slotSettingIndex: number = slotSettings.appSettingNames.findIndex((value: string) => { return value === this._key; });
 
         if (slotSettingIndex >= 0) {
-                slotSettings.appSettingNames.splice(slotSettingIndex, 1);
-            } else {
-                slotSettings.appSettingNames.push(this._key);
-            }
+            slotSettings.appSettingNames.splice(slotSettingIndex, 1);
+        } else {
+            slotSettings.appSettingNames.push(this._key);
+        }
+
         await this.root.client.updateSlotConfigurationNames(slotSettings);
         await this.refresh();
-
     }
 
     public async refreshImpl(): Promise<void> {
