@@ -44,7 +44,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
 
     // tslint:disable-next-line: strict-boolean-expressions
     const externalNodeModules: string[] = (options.externalNodeModules || []).concat(existingDefaultExtNodeModules);
-    log('debug', 'externalNodeModules:', externalNodeModules);
+    log('debug', 'External node modules:', externalNodeModules);
 
     function log(messageVerbosity: MessageVerbosity, ...args: unknown[]): void {
         logCore(loggingVerbosity, messageVerbosity, ...args);
@@ -170,8 +170,8 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                     test: /\.ts$/,
                     exclude: /node_modules/,
                     use: [{
-                        // Note: the TS loader will transpile the .ts file directly during webpack, it doesn't use the out folder.
-                        loader: 'ts-loader'
+                        // Note: the TS loader will transpile the .ts file directly during webpack (i.e., webpack is directly pulling the .ts files, not .js files from out/)
+                        loader: require.resolve('ts-loader')
                     }]
                 },
 
@@ -186,7 +186,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                 //   2) Sources have to be modified to use a require() statement for any resource that needs to be handled this way.  Many of these can be found because
                 //      they are using __dirname/__filename to find the resource file at runtime.
                 {
-                    test: /vscode-azureextensionui/,
+                    test: /(vscode-azureextensionui)|(vscode-azureappservice)/,
                     loader: StringReplacePlugin.replace({
                         replacements: [
                             {
@@ -228,7 +228,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                     test: /\.(png|jpg|gif|svg)$/,
                     use: [
                         {
-                            loader: 'file-loader',
+                            loader: require.resolve('file-loader'),
                             options: {
                                 name: (name: string): string => {
                                     log('normal', `Extracting resource file ${name}`);
@@ -244,7 +244,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                 // {
                 //     // vscode-nls-dev loader:
                 //     // * rewrite nls-calls
-                //     loader: 'vscode-nls-dev/lib/webpack-loader',
+                //     loader: require.resolve('vscode-nls-dev/lib/webpack-loader'),
                 //     options: {
                 //         base: path.join(options.projectRoot, 'src')
                 //     }
@@ -271,7 +271,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
     }
 
     // Exclude specified node modules and their dependencies from webpack bundling
-    excludeNodeModulesAndDependencies(config, packageLockJson, externalNodeModules);
+    excludeNodeModulesAndDependencies(config, packageLockJson, externalNodeModules, (...args: unknown[]) => log('debug', ...args));
 
     return config;
 }

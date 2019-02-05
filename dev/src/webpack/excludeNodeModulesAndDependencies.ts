@@ -28,7 +28,8 @@ type CopyEntry = { from: string; to?: string };
 export function excludeNodeModulesAndDependencies(
     webpackConfig: webpack.Configuration,
     packageLockJson: PackageLock,
-    moduleNames: string[]
+    moduleNames: string[],
+    log: (...args: unknown[]) => void = (): void => { /* noop */ }
 ): void {
     const externalModulesClosure: string[] = getNodeModulesDependencyClosure(packageLockJson, moduleNames);
     const excludeEntries: { [moduleName: string]: string } = getExternalsEntries(externalModulesClosure);
@@ -37,13 +38,14 @@ export function excludeNodeModulesAndDependencies(
     // Tell webpack to not place our modules into bundles
     // tslint:disable-next-line:strict-boolean-expressions
     webpackConfig.externals = webpackConfig.externals || {};
+    log('Excluded node modules (external node modules plus dependencies)', externalModulesClosure);
     Object.assign(webpackConfig.externals, excludeEntries);
 
     // Tell webpack to copy the given modules' sources into dist\node_modules
     //   so they can be found through normal require calls.
     // tslint:disable-next-line: strict-boolean-expressions
     webpackConfig.plugins = webpackConfig.plugins || [];
-    Object.assign(webpackConfig.plugins, new CopyWebpackPlugin(copyEntries));
+    webpackConfig.plugins.push(new CopyWebpackPlugin(copyEntries));
 }
 
 /**
@@ -75,7 +77,7 @@ export function getNodeModulesDependencyClosure(packageLock: PackageLock, module
         .sort();
 }
 
-function getExternalsEntries(moduleNames: string[]): { [moduleName: string]: string } {
+export function getExternalsEntries(moduleNames: string[]): { [moduleName: string]: string } {
     const externals: { [moduleName: string]: string } = {};
 
     for (const moduleName of moduleNames) {
@@ -92,7 +94,7 @@ function getExternalsEntries(moduleNames: string[]): { [moduleName: string]: str
     return externals;
 }
 
-function getNodeModuleCopyEntries(moduleNames: string[]): CopyEntry[] {
+export function getNodeModuleCopyEntries(moduleNames: string[]): CopyEntry[] {
     // e.g.
     // new CopyWebpackPlugin([
     //     { from: './node_modules/clipboardy', to: 'node_modules/clipboardy' }

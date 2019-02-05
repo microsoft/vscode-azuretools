@@ -68,18 +68,17 @@ export abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> extends Azu
                             iconPath: loadingIconPath
                         });
                         this._creatingTreeItems.push(creatingTreeItem);
-                        //tslint:disable-next-line:no-floating-promises
-                        this.treeDataProvider.refresh(this, false);
+                        this.treeDataProvider.refreshUIOnly(this);
                     },
                     userOptions);
 
-                await this.addChildToCache(newTreeItem);
+                this.addChildToCache(newTreeItem);
                 this.treeDataProvider._onTreeItemCreateEmitter.fire(newTreeItem);
                 return newTreeItem;
             } finally {
                 if (creatingTreeItem) {
                     this._creatingTreeItems.splice(this._creatingTreeItems.indexOf(creatingTreeItem), 1);
-                    await this.treeDataProvider.refresh(this, false);
+                    this.treeDataProvider.refreshUIOnly(this);
                 }
             }
         } else {
@@ -108,7 +107,7 @@ export abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> extends Azu
         return await getTreeItem();
     }
 
-    public async addChildToCache(childToAdd: AzureTreeItem<TRoot>): Promise<void> {
+    public addChildToCache(childToAdd: AzureTreeItem<TRoot>): void {
         // set index to the last element by default
         let index: number = this._cachedChildren.length;
         // tslint:disable-next-line:no-increment-decrement
@@ -119,14 +118,14 @@ export abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> extends Azu
             }
         }
         this._cachedChildren.splice(index, 0, childToAdd);
-        await this.treeDataProvider.refresh(this, false);
+        this.treeDataProvider.refreshUIOnly(this);
     }
 
-    public async removeChildFromCache(childToRemove: AzureTreeItem<TRoot>): Promise<void> {
+    public removeChildFromCache(childToRemove: AzureTreeItem<TRoot>): void {
         const index: number = this._cachedChildren.indexOf(childToRemove);
         if (index !== -1) {
             this._cachedChildren.splice(index, 1);
-            await this.treeDataProvider.refresh(this, false);
+            this.treeDataProvider.refreshUIOnly(this);
         }
     }
 
@@ -145,6 +144,12 @@ export abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> extends Azu
 
     private async loadMoreChildrenInternal(): Promise<void> {
         if (this._clearCache) {
+            // Just in case implementers of `loadMoreChildrenImpl` re-use the same child node, we want to clear those caches as well
+            for (const child of this._cachedChildren) {
+                if (child instanceof AzureParentTreeItem) {
+                    child.clearCache();
+                }
+            }
             this._cachedChildren = [];
         }
 
@@ -185,7 +190,7 @@ export abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> extends Azu
                 description: '',
                 data: async (): Promise<AzureTreeItem<TRoot>> => {
                     await this.loadMoreChildren();
-                    await this.treeDataProvider.refresh(this, false);
+                    this.treeDataProvider.refreshUIOnly(this);
                     return this;
                 }
             });
