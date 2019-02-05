@@ -34,4 +34,3 @@ export * from './wizard/ResourceGroupListStep';
 export * from './wizard/StorageAccountCreateStep';
 export * from './wizard/StorageAccountListStep';
 export * from './wizard/StorageAccountNameStep';
-
