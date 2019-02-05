@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { WebSiteManagementClient } from 'azure-arm-website';
-import { AppServicePlan, FunctionEnvelopeCollection, FunctionSecrets, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SourceControlCollection, StringDictionary, User, WebAppInstanceCollection } from 'azure-arm-website/lib/models';
+import { AppServicePlan, FunctionEnvelopeCollection, FunctionSecrets, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SlotConfigNamesResource, SourceControlCollection, StringDictionary, User, WebAppInstanceCollection } from 'azure-arm-website/lib/models';
 import { createAzureClient, ISubscriptionRoot, parseError } from 'vscode-azureextensionui';
 import { FunctionEnvelope } from 'vscode-azurekudu/lib/models';
 import { localize } from './localize';
@@ -163,6 +163,14 @@ export class SiteClient {
         return this.slotName ?
             await this._client.webApps.updateApplicationSettingsSlot(this.resourceGroup, this.siteName, appSettings, this.slotName) :
             await this._client.webApps.updateApplicationSettings(this.resourceGroup, this.siteName, appSettings);
+    }
+
+    public async listSlotConfigurationNames(): Promise<SlotConfigNamesResource> {
+        return await this._client.webApps.listSlotConfigurationNames(this.resourceGroup, this.siteName);
+    }
+
+    public async updateSlotConfigurationNames(appSettings: SlotConfigNamesResource): Promise<SlotConfigNamesResource> {
+        return await this._client.webApps.updateSlotConfigurationNames(this.resourceGroup, this.siteName, appSettings);
     }
 
     public async deleteMethod(options?: { deleteMetrics?: boolean, deleteEmptyServerFarm?: boolean, skipDnsRegistration?: boolean, customHeaders?: { [headerName: string]: string; } }): Promise<void> {

@@ -3,10 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { StringDictionary } from 'azure-arm-website/lib/models';
+import { SlotConfigNamesResource, StringDictionary } from 'azure-arm-website/lib/models';
 import * as path from 'path';
 import { AzureTreeItem, DialogResponses } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
+import { localize } from '../localize';
 import { AppSettingsTreeItem, validateAppSettingKey } from './AppSettingsTreeItem';
 import { ISiteTreeRoot } from './ISiteTreeRoot';
 
@@ -20,12 +21,19 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     private _value: string;
     private _hideValue: boolean;
 
-    constructor(parent: AppSettingsTreeItem, key: string, value: string, commandId: string) {
+    private constructor(parent: AppSettingsTreeItem, key: string, value: string, commandId: string) {
         super(parent);
         this._key = key;
         this._value = value;
         this.commandId = commandId;
         this._hideValue = true;
+    }
+
+    public static async createAppSettingTreeItem(parent: AppSettingsTreeItem, key: string, value: string, commandId: string): Promise<AppSettingTreeItem> {
+        const ti: AppSettingTreeItem = new AppSettingTreeItem(parent, key, value, commandId);
+        // check if it's a slot setting
+        await ti.refreshImpl();
+        return ti;
     }
     public get id(): string {
         return this._key;
@@ -76,5 +84,31 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     public async toggleValueVisibility(): Promise<void> {
         this._hideValue = !this._hideValue;
         await this.refresh();
+    }
+
+    public async toggleSlotSetting(): Promise<void> {
+        const slotSettings: SlotConfigNamesResource = await this.root.client.listSlotConfigurationNames();
+        if (!slotSettings.appSettingNames) {
+            slotSettings.appSettingNames = [];
+        }
+        const slotSettingIndex: number = slotSettings.appSettingNames.findIndex((value: string) => { return value === this._key; });
+
+        if (slotSettingIndex >= 0) {
+            slotSettings.appSettingNames.splice(slotSettingIndex, 1);
+        } else {
+            slotSettings.appSettingNames.push(this._key);
+        }
+
+        await this.root.client.updateSlotConfigurationNames(slotSettings);
+        await this.refresh();
+    }
+
+    public async refreshImpl(): Promise<void> {
+        const slotSettings: SlotConfigNamesResource = await this.root.client.listSlotConfigurationNames();
+        if (slotSettings.appSettingNames && slotSettings.appSettingNames.find((value: string) => { return value === this._key; })) {
+            this.description = localize('slotSetting', 'Slot Setting');
+        } else {
+            this.description = undefined;
+        }
     }
 }
