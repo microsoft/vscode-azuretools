@@ -9,6 +9,9 @@ import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { ScmType } from '../ScmType';
 import { isPathEqual, isSubpath } from '../utils/pathUtils';
+import { SiteClient } from '../SiteClient';
+import { StringDictionary } from 'azure-arm-website/lib/models';
+import { formatDeployLog } from './formatDeployLog';
 
 export async function runPreDeployTask(actionContext: IActionContext, deployFsPath: string, scmType: string | undefined, extensionPrefix: string): Promise<IPreDeployTaskResult> {
     const preDeployTaskKey: string = 'preDeployTask';
@@ -83,5 +86,22 @@ async function waitForPreDeployTask(preDeployTask: vscode.Task, actionContext: I
             actionContext.properties.preDeployTaskResponse = 'cancel';
             throw new UserCancelledError();
         }
+    }
+}
+
+// prior to git deploying, these settings must be deleted or it will fail
+export async function verifyNoRunFromPackageSetting(client: SiteClient): Promise<void> {
+    let updateSettings: boolean = false;
+    const runFromPackageSettings: string[] = ['WEBSITE_RUN_FROM_PACKAGE', 'WEBSITE_RUN_FROM_ZIP'];
+    const applicationSettings: StringDictionary = await client.listApplicationSettings();
+    for (const settingName of runFromPackageSettings) {
+        if (applicationSettings.properties && applicationSettings.properties[settingName]) {
+            delete applicationSettings.properties[settingName];
+            ext.outputChannel.appendLine(formatDeployLog(client, localize('deletingSetting', 'Deleting setting "{0}"...', settingName)));
+            updateSettings = true;
+        }
+    }
+    if (updateSettings) {
+        await client.updateApplicationSettings(applicationSettings);
     }
 }

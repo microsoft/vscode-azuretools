@@ -15,6 +15,7 @@ import { localize } from './localize';
 import { signRequest } from './signRequest';
 import { SiteClient } from './SiteClient';
 import { nonNullProp } from './utils/nonNull';
+import { verifyNoRunFromPackageSetting } from './deploy/runPreDeployTask';
 
 type gitHubOrgData = { login: string, repos_url: string };
 type gitHubReposData = { name: string, repos_url: string, url: string, html_url: string };
@@ -36,6 +37,8 @@ export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, c
         const noToken: string = localize('noToken', 'No oAuth2 Token.');
         throw new Error(noToken);
     }
+    await verifyNoRunFromPackageSetting(client);
+
     await signRequest(requestOptions, new TokenCredentials(oAuth2Token));
     requestOptions.url = 'https://api.github.com/user';
     const gitHubUser: gitHubOrgData = await getJsonRequest<gitHubOrgData>(requestOptions, node, client, context);
