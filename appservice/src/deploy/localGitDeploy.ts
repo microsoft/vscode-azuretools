@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { StringDictionary, User } from 'azure-arm-website/lib/models';
+import { User } from 'azure-arm-website/lib/models';
 import * as opn from 'opn';
 import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
@@ -14,6 +14,7 @@ import { getKuduClient } from '../getKuduClient';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { nonNullProp } from '../utils/nonNull';
+import { verifyNoRunFromPackageSetting } from '../verifyNoRunFromPackageSetting';
 import { formatDeployLog } from './formatDeployLog';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
@@ -54,20 +55,4 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
 
     ext.outputChannel.appendLine(formatDeployLog(client, (localize('localGitDeploy', `Deploying Local Git repository to "${client.fullName}"...`))));
     await waitForDeploymentToComplete(client, kuduClient);
-}
-
-async function verifyNoRunFromPackageSetting(client: SiteClient): Promise<void> {
-    let updateSettings: boolean = false;
-    const runFromPackageSettings: string[] = ['WEBSITE_RUN_FROM_PACKAGE', 'WEBSITE_RUN_FROM_ZIP'];
-    const applicationSettings: StringDictionary = await client.listApplicationSettings();
-    for (const settingName of runFromPackageSettings) {
-        if (applicationSettings.properties && applicationSettings.properties[settingName]) {
-            delete applicationSettings.properties[settingName];
-            ext.outputChannel.appendLine(formatDeployLog(client, localize('deletingSetting', 'Deleting setting "{0}"...', settingName)));
-            updateSettings = true;
-        }
-    }
-    if (updateSettings) {
-        await client.updateApplicationSettings(applicationSettings);
-    }
 }
