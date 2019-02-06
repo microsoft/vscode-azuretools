@@ -7,6 +7,9 @@ import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 import * as webpack from 'webpack';
 
 type DependencyEntry = {
+    dependencies?: {
+        [moduleName: string]: DependencyEntry;
+    };
     requires?: {
         [moduleName: string]: string;
     };
@@ -57,20 +60,65 @@ export function getNodeModulesDependencyClosure(packageLock: PackageLock, module
     const dependencies: { [key: string]: DependencyEntry | undefined } = packageLock.dependencies || <{ [key: string]: DependencyEntry }>{};
 
     for (const moduleName of moduleNames) {
-        closure.add(moduleName);
-
-        const depEntry: DependencyEntry | undefined = dependencies[moduleName];
-        if (!depEntry) {
-            throw new Error(`Could not find package-lock entry for ${module.filename}`);
-        }
-
-        if (depEntry.requires) {
-            const requiredModules: string[] = Object.getOwnPropertyNames(depEntry.requires);
-            const subdeps: string[] = getNodeModulesDependencyClosure(packageLock, requiredModules);
+        if (dependencies[moduleName]) {
+            closure.add(moduleName);
+            // tslint:disable-next-line:no-non-null-assertion
+            const subdeps: string[] = getDependenciesFromEntry(dependencies[moduleName]!, packageLock);
             for (const subdep of subdeps) {
                 closure.add(subdep);
             }
+        } else {
+            throw new Error(`Could not find dependency entry for ${moduleName}`);
         }
+    }
+
+    return Array.from(closure)
+        .sort();
+}
+
+function getDependenciesFromEntry(depEntry: DependencyEntry, packageLock: PackageLock): string[] {
+    // Example entry:
+    //
+    // "braces": {
+    //     "version": "2.3.2",
+    //     "requires": {
+    //         "arr-flatten": "^1.1.0",
+    //         "array-unique": "^0.3.2",
+    //     },
+    //     "dependencies": {
+    //         "extend-shallow": {
+    //             "version": "2.0.1",
+    //             "requires": {
+    //                 "is-extendable": "^0.1.0"
+    //             }
+    //         }
+    //     }
+    // },
+
+    const closure: Set<string> = new Set<string>();
+
+    // tslint:disable-next-line:strict-boolean-expressions no-object-literal-type-assertion
+    const dependencies: { [key: string]: DependencyEntry | undefined } = depEntry.dependencies || <{ [key: string]: DependencyEntry }>{};
+    // tslint:disable-next-line:no-object-literal-type-assertion strict-boolean-expressions
+    const requires: { [key: string]: string } = depEntry.requires || <{ [key: string]: string }>{};
+
+    // Handle dependencies
+    for (const moduleName of Object.keys(dependencies)) {
+        closure.add(moduleName);
+
+        // tslint:disable-next-line:no-non-null-assertion
+        const dependenciesSubdeps: string[] = getDependenciesFromEntry(dependencies[moduleName]!, packageLock);
+        for (const subdep of dependenciesSubdeps) {
+            closure.add(subdep);
+        }
+    }
+
+    // Handle requires that aren't listed in dependencies by resolving them at the top level
+    const requiredModules: string[] = Object.getOwnPropertyNames(requires)
+        .filter((m: string) => !(m in dependencies));
+    const requiresSubdeps: string[] = getNodeModulesDependencyClosure(packageLock, requiredModules);
+    for (const subdep of requiresSubdeps) {
+        closure.add(subdep);
     }
 
     return Array.from(closure)

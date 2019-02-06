@@ -2406,6 +2406,52 @@ suite('getNodeModulesDependencyClosure', () => {
                 'yauzl'
             ]);
     });
+
+    test('Pick up nested dependencies', () => {
+        // ws v2.3.1 does not depend on options, but ws v1.1.5 does.
+        // engine.io depends on ws v1.1.5, so it should pick up the dependency on options but not safe-buffer
+        const deepPackageLock = {
+            "dependencies": {
+                "engine.io": {
+                    "version": "1.8.5",
+                    "requires": {
+                        "ws": "~1.1.5"
+                    },
+                    "dependencies": {
+                        "ws": {
+                            "version": "1.1.5",
+                            "requires": {
+                                "options": ">=0.0.5"
+                            }
+                        }
+                    }
+                },
+                "ws": {
+                    "version": "2.3.1",
+                    "requires": {
+                        "safe-buffer": "~5.0.1"
+                    },
+                    "dependencies": {
+                        "safe-buffer": {
+                            "version": "5.0.1"
+                        }
+                    }
+                },
+                "options": {
+                    "version": "0.0.6"
+                }
+            }
+        };
+
+        const closure = getNodeModulesDependencyClosure(deepPackageLock, ['engine.io']);
+        assert.deepStrictEqual(
+            closure,
+            [
+                'engine.io',
+                'options',
+                'ws'
+            ]);
+    });
 });
 
 suite('getExternalsEntries', () => {
