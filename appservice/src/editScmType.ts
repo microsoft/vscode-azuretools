@@ -14,14 +14,14 @@ import { SiteClient } from './SiteClient';
 import { ISiteTreeRoot } from './tree/ISiteTreeRoot';
 import { nonNullProp } from './utils/nonNull';
 
-export async function editScmType(client: SiteClient, node: AzureTreeItem<ISiteTreeRoot>, context: IActionContext, newScmType?: ScmType): Promise<ScmType | undefined> {
+export async function editScmType(client: SiteClient, node: AzureTreeItem<ISiteTreeRoot>, context: IActionContext, newScmType?: ScmType, showToast: boolean = true): Promise<ScmType | undefined> {
     const config: WebSiteManagementModels.SiteConfigResource = await client.getSiteConfig();
     // tslint:disable-next-line:strict-boolean-expressions
     newScmType = newScmType ? newScmType : await showScmPrompt(nonNullProp(config, 'scmType'));
     if (newScmType === ScmType.GitHub) {
         if (config.scmType !== ScmType.None) {
             // GitHub cannot be configured if there is an existing configuration source-- a limitation of Azure
-            throw new Error(localize('configurationError', 'Configuration type must be set to "None" to connect to a GitHub repository.'));
+            await editScmType(client, node, context, ScmType.None, false);
         }
         await connectToGitHub(node, client, context);
     } else {
@@ -29,9 +29,11 @@ export async function editScmType(client: SiteClient, node: AzureTreeItem<ISiteT
         // to update one property, a complete config file must be sent
         await client.updateConfiguration(config);
     }
-    const scmTypeUpdated: string = localize('deploymentSourceUpdated,', 'Deployment source for "{0}" has been updated to "{1}".', client.fullName, newScmType);
-    ext.outputChannel.appendLine(scmTypeUpdated);
-    window.showInformationMessage(scmTypeUpdated);
+    if (showToast) {
+        const scmTypeUpdated: string = localize('deploymentSourceUpdated,', 'Deployment source for "{0}" has been updated to "{1}".', client.fullName, newScmType);
+        ext.outputChannel.appendLine(scmTypeUpdated);
+        window.showInformationMessage(scmTypeUpdated);
+    }
 
     if (newScmType === ScmType.LocalGit) {
         const user: WebSiteManagementModels.User = await client.getPublishingUser();
