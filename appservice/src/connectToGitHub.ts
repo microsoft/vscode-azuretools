@@ -15,7 +15,7 @@ import { localize } from './localize';
 import { signRequest } from './signRequest';
 import { SiteClient } from './SiteClient';
 import { nonNullProp } from './utils/nonNull';
-import { verifyNoRunFromPackageSetting } from './deploy/runPreDeployTask';
+import { verifyNoRunFromPackageSetting } from './verifyNoRunFromPackageSetting';
 
 type gitHubOrgData = { login: string, repos_url: string };
 type gitHubReposData = { name: string, repos_url: string, url: string, html_url: string };
@@ -37,7 +37,6 @@ export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, c
         const noToken: string = localize('noToken', 'No oAuth2 Token.');
         throw new Error(noToken);
     }
-    await verifyNoRunFromPackageSetting(client);
 
     await signRequest(requestOptions, new TokenCredentials(oAuth2Token));
     requestOptions.url = 'https://api.github.com/user';
@@ -74,6 +73,7 @@ export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, c
         const connectedToGithub: string = localize('ConnectedToGithub', 'Repo "{0}" is connected and deployed to "{1}".', repoName, client.fullName);
         await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: connectingToGithub }, async (): Promise<void> => {
             ext.outputChannel.appendLine(connectingToGithub);
+            await verifyNoRunFromPackageSetting(client);
             await client.updateSourceControl(siteSourceControl);
             vscode.window.showInformationMessage(connectedToGithub);
             ext.outputChannel.appendLine(connectedToGithub);

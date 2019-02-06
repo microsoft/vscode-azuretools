@@ -14,9 +14,9 @@ import { getKuduClient } from '../getKuduClient';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { nonNullProp } from '../utils/nonNull';
+import { verifyNoRunFromPackageSetting } from '../verifyNoRunFromPackageSetting';
 import { formatDeployLog } from './formatDeployLog';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
-import { verifyNoRunFromPackageSetting } from './runPreDeployTask';
 
 export async function localGitDeploy(client: SiteClient, fsPath: string): Promise<void> {
     const kuduClient: KuduClient = await getKuduClient(client);
