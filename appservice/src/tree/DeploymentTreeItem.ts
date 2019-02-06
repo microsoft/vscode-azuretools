@@ -149,6 +149,7 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     }
 
     public async viewCommitInGitHub(): Promise<void> {
+        // if it's not connected to a .git repo, this won't work
         if (this.parent.contextValue === DeploymentsTreeItem.contextValueConnected) {
             const sourceControl: SiteSourceControl = await this.root.client.getSourceControl();
             const githubUrl: string = 'https://github.com';
@@ -164,10 +165,10 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
                         return;
                     }
                 } catch (error) {
-                    // ignore the error
+                    throw new Error(localize('sameRepo', 'Only commits made on the currently connected GitHub repo support this feature.'));
                 }
             }
-            throw new Error(localize('selectGithub', 'Only commits made on GitHub are supported.'));
+            throw new Error(localize('selectGithub', 'Only commits made on GitHub support this feature.'));
         }
     }
 
