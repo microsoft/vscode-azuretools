@@ -772,7 +772,7 @@ export declare class StorageAccountListStep<T extends IStorageAccountWizardConte
     public prompt(wizardContext: T): Promise<T>;
 }
 
-export class StorageAccountNameStep<T extends IStorageAccountWizardContext> extends AzureNameStep<T> {
+export declare class StorageAccountNameStep<T extends IStorageAccountWizardContext> extends AzureNameStep<T> {
     public constructor();
 
     public prompt(wizardContext: T): Promise<T>;
@@ -780,7 +780,7 @@ export class StorageAccountNameStep<T extends IStorageAccountWizardContext> exte
     protected isRelatedNameAvailable(wizardContext: T, name: string): Promise<boolean>;
 }
 
-export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> extends AzureWizardExecuteStep<T> {
+export declare class StorageAccountCreateStep<T extends IStorageAccountWizardContext> extends AzureWizardExecuteStep<T> {
     public constructor(defaults: INewStorageAccountDefaults);
 
     public execute(wizardContext: T): Promise<T>;
