@@ -7,7 +7,7 @@
 
 import * as assert from 'assert';
 // tslint:disable-next-line:no-require-imports
-import copyWebpackPlugin = require('copy-webpack-plugin');
+import FileManagerWebpackPlugin = require('filemanager-webpack-plugin');
 import { Configuration } from 'webpack';
 import { excludeNodeModulesAndDependencies, getExternalsEntries, getNodeModuleCopyEntries, getNodeModulesDependencyClosure, PackageLock } from "../src/webpack/excludeNodeModulesAndDependencies";
 
@@ -2469,17 +2469,17 @@ suite('getExternalsEntries', () => {
 
 suite('getNodeModuleCopyEntries', () => {
     test('test', () => {
-        const entries = getNodeModuleCopyEntries(['abc', 'def-ghi']);
+        const entries = getNodeModuleCopyEntries('/root', ['abc', 'def-ghi']);
         assert.deepStrictEqual(
             entries,
             [
                 {
-                    from: './node_modules/abc',
-                    to: 'node_modules/abc/'
+                    source: '/root/node_modules/abc',
+                    destination: '/root/dist/node_modules/abc'
                 },
                 {
-                    from: './node_modules/def-ghi',
-                    to: 'node_modules/def-ghi/'
+                    source: '/root/node_modules/def-ghi',
+                    destination: '/root/dist/node_modules/def-ghi'
                 }]
         );
     });
@@ -2488,7 +2488,7 @@ suite('getNodeModuleCopyEntries', () => {
 suite('excludeNodeModulesAndDependencies', () => {
     test('config empty', () => {
         const config: Configuration = {};
-        excludeNodeModulesAndDependencies(config, packageLockJson, ['yauzl']);
+        excludeNodeModulesAndDependencies('/root', config, packageLockJson, ['yauzl']);
 
         assert.deepStrictEqual(
             config.externals,
@@ -2510,10 +2510,10 @@ suite('excludeNodeModulesAndDependencies', () => {
                 previous: 'commonjs previous'
             },
             plugins: [
-                new copyWebpackPlugin()
+                new FileManagerWebpackPlugin({})
             ]
         };
-        excludeNodeModulesAndDependencies(config, packageLockJson, ['yauzl']);
+        excludeNodeModulesAndDependencies('/root', config, packageLockJson, ['yauzl']);
 
         assert.deepStrictEqual(
             config.externals,
