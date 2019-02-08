@@ -119,7 +119,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                     copy: [
                         // Test files -> dist/test (these files are ignored during packaging)
                         {
-                            source: path.join(options.projectRoot, 'out/test'),
+                            source: path.join(options.projectRoot, 'out', 'test'),
                             destination: path.join(options.projectRoot, 'dist', 'test')
                         }
                     ]
