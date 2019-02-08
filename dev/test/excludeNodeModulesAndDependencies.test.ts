@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// tslint:disable:max-func-body-length no-multiline-string indent object-literal-key-quotes typedef
+// tslint:disable:max-func-body-length no-multiline-string indent object-literal-key-quotes typedef no-require-imports
 
 import * as assert from 'assert';
-// tslint:disable-next-line:no-require-imports
 import FileManagerWebpackPlugin = require('filemanager-webpack-plugin');
+import * as os from 'os';
 import { Configuration } from 'webpack';
 import { excludeNodeModulesAndDependencies, getExternalsEntries, getNodeModuleCopyEntries, getNodeModulesDependencyClosure, PackageLock } from "../src/webpack/excludeNodeModulesAndDependencies";
 
@@ -2475,11 +2475,11 @@ suite('getNodeModuleCopyEntries', () => {
             [
                 {
                     source: '/root/node_modules/abc',
-                    destination: '/root/dist/node_modules/abc'
+                    destination: os.platform() === 'win32' ? '\\\\root\\\\dist\\\\node_modules\\\\abc' : '/root/dist/node_modules/abc'
                 },
                 {
                     source: '/root/node_modules/def-ghi',
-                    destination: '/root/dist/node_modules/def-ghi'
+                    destination: os.platform() === 'win32' ? '\\\\root\\\\dist\\\\node_modules\\\\def-ghi' : '/root/dist/node_modules/def-ghi'
                 }]
         );
     });
