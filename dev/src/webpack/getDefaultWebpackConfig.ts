@@ -6,7 +6,7 @@
 // tslint:disable: no-unsafe-any // Lots of plugin functions use any
 
 import * as CleanWebpackPlugin from 'clean-webpack-plugin';
-import * as CopyWebpackPlugin from 'copy-webpack-plugin';
+import * as FileManagerPlugin from 'filemanager-webpack-plugin';
 import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as StringReplacePlugin from 'string-replace-webpack-plugin';
@@ -29,7 +29,12 @@ verbosityMap.set('normal', 1);
 verbosityMap.set('debug', 2);
 
 const defaultExternalNodeModules: string[] = [
-    'vscode-languageclient'
+    // Electron fork depends on file at location of original source
+    'vscode-languageclient',
+
+    // contain dynamically-loaded binaries
+    'clipboardy',
+    'opn'
 ];
 
 // tslint:disable-next-line:max-func-body-length
@@ -109,10 +114,17 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
         },
         plugins: [
             // Copy files to dist folder where the runtime can find them
-            new CopyWebpackPlugin([
-                // Test files -> dist/test (these files are ignored during packaging)
-                { from: './out/test', to: 'test/' }
-            ]),
+            new FileManagerPlugin({
+                onEnd: {
+                    copy: [
+                        // Test files -> dist/test (these files are ignored during packaging)
+                        {
+                            source: path.join(options.projectRoot, 'out', 'test'),
+                            destination: path.join(options.projectRoot, 'dist', 'test')
+                        }
+                    ]
+                }
+            }),
 
             // Fix error:
             //   > WARNING in ./node_modules/ms-rest/lib/serviceClient.js 441:19-43
@@ -271,7 +283,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
     }
 
     // Exclude specified node modules and their dependencies from webpack bundling
-    excludeNodeModulesAndDependencies(config, packageLockJson, externalNodeModules, (...args: unknown[]) => log('debug', ...args));
+    excludeNodeModulesAndDependencies(options.projectRoot, config, packageLockJson, externalNodeModules, (...args: unknown[]) => log('debug', ...args));
 
     return config;
 }

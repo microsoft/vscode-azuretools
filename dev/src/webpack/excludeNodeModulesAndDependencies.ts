@@ -3,7 +3,8 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as CopyWebpackPlugin from 'copy-webpack-plugin';
+import * as FilemanagerWebpackPlugin from 'filemanager-webpack-plugin';
+import * as path from 'path';
 import * as webpack from 'webpack';
 
 type DependencyEntry = {
@@ -21,14 +22,14 @@ export type PackageLock = {
     [key: string]: unknown;
 };
 
-// tslint:disable-next-line:no-reserved-keywords
-type CopyEntry = { from: string; to?: string };
+type CopyEntry = { source: string; destination: string };
 
 /**
  * Add instructions to the webpack configuration to exclude a given set of node_modules dependencies,
  * along with their dependencies.
  */
 export function excludeNodeModulesAndDependencies(
+    projectRoot: string,
     webpackConfig: webpack.Configuration,
     packageLockJson: PackageLock,
     moduleNames: string[],
@@ -36,7 +37,7 @@ export function excludeNodeModulesAndDependencies(
 ): void {
     const externalModulesClosure: string[] = getNodeModulesDependencyClosure(packageLockJson, moduleNames);
     const excludeEntries: { [moduleName: string]: string } = getExternalsEntries(externalModulesClosure);
-    const copyEntries: CopyEntry[] = getNodeModuleCopyEntries(externalModulesClosure);
+    const copyEntries: CopyEntry[] = getNodeModuleCopyEntries(projectRoot, externalModulesClosure);
 
     // Tell webpack to not place our modules into bundles
     // tslint:disable-next-line:strict-boolean-expressions
@@ -48,7 +49,13 @@ export function excludeNodeModulesAndDependencies(
     //   so they can be found through normal require calls.
     // tslint:disable-next-line: strict-boolean-expressions
     webpackConfig.plugins = webpackConfig.plugins || [];
-    webpackConfig.plugins.push(new CopyWebpackPlugin(copyEntries));
+    webpackConfig.plugins.push(new FilemanagerWebpackPlugin(
+        {
+            onEnd: {
+                copy: copyEntries
+            }
+        }
+    ));
 }
 
 /**
@@ -142,17 +149,19 @@ export function getExternalsEntries(moduleNames: string[]): { [moduleName: strin
     return externals;
 }
 
-export function getNodeModuleCopyEntries(moduleNames: string[]): CopyEntry[] {
+export function getNodeModuleCopyEntries(projectRoot: string, moduleNames: string[]): CopyEntry[] {
     // e.g.
-    // new CopyWebpackPlugin([
-    //     { from: './node_modules/clipboardy', to: 'node_modules/clipboardy' }
+    // new FilemanagerWebpackPlugin([
+    //     {
+    //         onEnd: {
+    //             copy: [
+    //                 { source: '/root/node_modules/clipboardy', destination: '/root/dist/node_modules/clipboardy' }
     //     ...
-    // ])
     const copyEntries: CopyEntry[] = [];
     for (const moduleName of moduleNames) {
         copyEntries.push({
-            from: `./node_modules/${moduleName}`,
-            to: `node_modules/${moduleName}/`
+            source: path.join(projectRoot, 'node_modules', moduleName),
+            destination: path.join(projectRoot, 'dist', 'node_modules', moduleName)
         });
     }
 
