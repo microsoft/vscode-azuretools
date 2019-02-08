@@ -2475,11 +2475,11 @@ suite('getNodeModuleCopyEntries', () => {
             [
                 {
                     source: '/root/node_modules/abc',
-                    destination: os.platform() === 'win32' ? '\\\\root\\\\dist\\\\node_modules\\\\abc' : '/root/dist/node_modules/abc'
+                    destination: os.platform() === 'win32' ? '\\root\\dist\\node_modules\\abc' : '/root/dist/node_modules/abc'
                 },
                 {
                     source: '/root/node_modules/def-ghi',
-                    destination: os.platform() === 'win32' ? '\\\\root\\\\dist\\\\node_modules\\\\def-ghi' : '/root/dist/node_modules/def-ghi'
+                    destination: os.platform() === 'win32' ? '\\root\\dist\\node_modules\\def-ghi' : '/root/dist/node_modules/def-ghi'
                 }]
         );
     });
