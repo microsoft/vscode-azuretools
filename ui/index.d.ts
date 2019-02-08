@@ -8,8 +8,8 @@ import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { StorageAccount } from 'azure-arm-storage/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment, AzureServiceClientOptions } from 'ms-rest-azure';
-import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri, EventEmitter } from 'vscode';
-import { AzureExtensionApiProvider, AzureExtensionApi } from './api';
+import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri } from 'vscode';
+import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 
 export type OpenInPortalOptions = {
     /**
@@ -770,6 +770,20 @@ export declare class StorageAccountListStep<T extends IStorageAccountWizardConte
     public static isNameAvailable<T extends IStorageAccountWizardContext>(wizardContext: T, name: string): Promise<boolean>;
 
     public prompt(wizardContext: T): Promise<T>;
+}
+
+export declare class StorageAccountNameStep<T extends IStorageAccountWizardContext> extends AzureNameStep<T> {
+    public constructor();
+
+    public prompt(wizardContext: T): Promise<T>;
+
+    protected isRelatedNameAvailable(wizardContext: T, name: string): Promise<boolean>;
+}
+
+export declare class StorageAccountCreateStep<T extends IStorageAccountWizardContext> extends AzureWizardExecuteStep<T> {
+    public constructor(defaults: INewStorageAccountDefaults);
+
+    public execute(wizardContext: T): Promise<T>;
 }
 
 /**
