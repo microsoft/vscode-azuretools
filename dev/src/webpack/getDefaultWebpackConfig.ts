@@ -29,7 +29,11 @@ verbosityMap.set('normal', 1);
 verbosityMap.set('debug', 2);
 
 const defaultExternalNodeModules: string[] = [
-    'vscode-languageclient'
+    'vscode-languageclient',
+
+    // contain dynamically-loaded binaries
+    'clipboardy',
+    'opn'
 ];
 
 // tslint:disable-next-line:max-func-body-length
