@@ -17,7 +17,9 @@ export function gulp_webpack(mode: string): cp.ChildProcess {
 
     return cp.spawn(
         path.join(
-            './node_modules/.bin/',
+            '.',
+            'node_modules',
+            '.bin',
             // https://github.com/nodejs/node-v0.x-archive/issues/2318#issuecomment-249355505
             process.platform === 'win32' ? 'webpack.cmd' : 'webpack'),
         [
