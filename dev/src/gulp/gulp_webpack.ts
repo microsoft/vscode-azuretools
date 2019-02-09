@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as cp from 'child_process';
+import * as path from 'path';
 import * as process from 'process';
 
 export function gulp_webpack(mode: string): cp.ChildProcess {
@@ -15,14 +16,17 @@ export function gulp_webpack(mode: string): cp.ChildProcess {
     env.NODE_OPTIONS = '--max-old-space-size=8192';
 
     return cp.spawn(
-        // https://github.com/nodejs/node-v0.x-archive/issues/2318#issuecomment-249355505
-        process.platform === 'win32' ? 'webpack.cmd' : 'webpack',
+        path.join(
+            '.',
+            'node_modules',
+            '.bin',
+            // https://github.com/nodejs/node-v0.x-archive/issues/2318#issuecomment-249355505
+            process.platform === 'win32' ? 'webpack.cmd' : 'webpack'),
         [
             '--mode', mode,
             '--display', 'minimal'
         ],
         {
-            cwd: './node_modules/.bin/',
             stdio: 'inherit',
             env
         });
