@@ -45,7 +45,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
     // Only use defaultExternalNodeModules entries that are actually in package-lock.json
     const packageLockJson: PackageLock = fse.readJsonSync(path.resolve(options.projectRoot, 'package-lock.json'));
     // tslint:disable-next-line: strict-boolean-expressions
-    const existingDefaultExtNodeModules: string[] = defaultExternalNodeModules.filter((moduleName: string) => !!packageLockJson[moduleName]);
+    const existingDefaultExtNodeModules: string[] = defaultExternalNodeModules.filter((moduleName: string) => packageLockJson.dependencies && !!packageLockJson.dependencies[moduleName]);
 
     // tslint:disable-next-line: strict-boolean-expressions
     const externalNodeModules: string[] = (options.externalNodeModules || []).concat(existingDefaultExtNodeModules);
