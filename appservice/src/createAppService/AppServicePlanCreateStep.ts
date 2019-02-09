@@ -10,7 +10,9 @@ import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { nonNullProp, nonNullValueAndProp } from '../utils/nonNull';
 import { getAppServicePlanModelKind, WebsiteOS } from './AppKind';
+import { appServicePlanNamingRules } from './AppServicePlanNameStep';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
+import { SiteNameStep } from './SiteNameStep';
 
 export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
     public async execute(wizardContext: IAppServiceWizardContext): Promise<IAppServiceWizardContext> {
@@ -25,18 +27,31 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
             const rgName: string = nonNullValueAndProp(wizardContext.resourceGroup, 'name');
             const existingPlan: AppServicePlan | undefined = <AppServicePlan | undefined>await client.appServicePlans.get(rgName, newPlanName);
             if (existingPlan) {
+                if (!existingPlan.numberOfSites || existingPlan.numberOfSites < 4) {
                     wizardContext.plan = existingPlan;
                     ext.outputChannel.appendLine(foundAppServicePlan);
                 } else {
+                    wizardContext.newPlanName = await new SiteNameStep().getGeneratedRelatedName(wizardContext, newPlanName, appServicePlanNamingRules);
                     ext.outputChannel.appendLine(creatingAppServicePlan);
                     wizardContext.plan = await client.appServicePlans.createOrUpdate(rgName, newPlanName, {
-                        kind: getAppServicePlanModelKind(wizardContext.newSiteKind, nonNullProp(wizardContext, 'newSiteOS')),
-                        sku: nonNullProp(wizardContext, 'newPlanSku'),
-                        location: nonNullValueAndProp(wizardContext.location, 'name'),
-                        reserved: wizardContext.newSiteOS === WebsiteOS.linux  // The secret property - must be set to true to make it a Linux plan. Confirmed by the team who owns this API.
-                    });
+                    kind: getAppServicePlanModelKind(wizardContext.newSiteKind, nonNullProp(wizardContext, 'newSiteOS')),
+                    sku: nonNullProp(wizardContext, 'newPlanSku'),
+                    location: nonNullValueAndProp(wizardContext.location, 'name'),
+                    reserved: wizardContext.newSiteOS === WebsiteOS.linux  // The secret property - must be set to true to make it a Linux plan. Confirmed by the team who owns this API.
+                });
                     ext.outputChannel.appendLine(createdAppServicePlan);
                 }
+                return wizardContext;
+            } else {
+                ext.outputChannel.appendLine(creatingAppServicePlan);
+                wizardContext.plan = await client.appServicePlans.createOrUpdate(rgName, newPlanName, {
+                    kind: getAppServicePlanModelKind(wizardContext.newSiteKind, nonNullProp(wizardContext, 'newSiteOS')),
+                    sku: nonNullProp(wizardContext, 'newPlanSku'),
+                    location: nonNullValueAndProp(wizardContext.location, 'name'),
+                    reserved: wizardContext.newSiteOS === WebsiteOS.linux  // The secret property - must be set to true to make it a Linux plan. Confirmed by the team who owns this API.
+                });
+                ext.outputChannel.appendLine(createdAppServicePlan);
+            }
         }
 
         return wizardContext;

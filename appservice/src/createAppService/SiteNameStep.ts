@@ -39,6 +39,10 @@ export class SiteNameStep extends AzureNameStep<IAppServiceWizardContext> {
         return wizardContext;
     }
 
+    public async getGeneratedRelatedName(wizardContext: IAppServiceWizardContext, name: string, namingRules: IAzureNamingRules | IAzureNamingRules[]): Promise<string | undefined> {
+        return await this.generateRelatedName(wizardContext, name, namingRules);
+    }
+
     protected async isRelatedNameAvailable(wizardContext: IAppServiceWizardContext, name: string): Promise<boolean> {
         const tasks: Promise<boolean>[] = [ResourceGroupListStep.isNameAvailable(wizardContext, name)];
         if (wizardContext.newSiteKind === AppKind.functionapp) {
