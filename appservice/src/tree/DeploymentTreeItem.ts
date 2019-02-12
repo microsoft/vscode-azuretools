@@ -7,8 +7,6 @@ import { SiteSourceControl } from 'azure-arm-website/lib/models';
 import * as opn from 'opn';
 import * as os from 'os';
 import * as path from 'path';
-import { Response } from 'request';
-import * as request from 'request-promise';
 import { ProgressLocation, TextDocument, window, workspace } from 'vscode';
 import { AzureTreeItem } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
