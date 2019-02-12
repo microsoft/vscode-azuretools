@@ -8,6 +8,7 @@ import * as fse from 'fs-extra';
 import * as path from 'path';
 import { Uri, workspace } from 'vscode';
 import { IActionContext, ISubscriptionWizardContext, LocationListStep } from 'vscode-azureextensionui';
+import { javaUtils } from '../utils/javaUtils';
 import { AppKind, LinuxRuntimes, WebsiteOS } from './AppKind';
 import { createAppService } from './createAppService';
 import { IAppCreateOptions } from './IAppCreateOptions';
@@ -30,6 +31,9 @@ export async function setWizardContextDefaults(wizardContext: IAppServiceWizardC
         } else if (await fse.pathExists(path.join(fsPath, 'requirements.txt'))) {
             // requirements.txt are used to pip install so a good way to determine it's a Python app
             wizardContext.recommendedSiteRuntime = LinuxRuntimes.python;
+        } else if (await javaUtils.isJavaProject(fsPath)) {
+            wizardContext.newSiteOS = WebsiteOS.linux;
+            wizardContext.newPlanSku = { name: 'P1v2', tier: 'PremiumV2', size: 'P1v2', family: 'P', capacity: 1 };
         }
         actionContext.properties.recommendedSiteRuntime = wizardContext.recommendedSiteRuntime;
     }
