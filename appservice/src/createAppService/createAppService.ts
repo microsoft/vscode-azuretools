@@ -12,7 +12,7 @@ import { nonNullProp } from '../utils/nonNull';
 import { AppKind, getAppKindDisplayName, WebsiteOS } from './AppKind';
 import { AppServicePlanCreateStep } from './AppServicePlanCreateStep';
 import { AppServicePlanListStep } from './AppServicePlanListStep';
-import { setWizardContextDefaults } from './createWebApp';
+import { setDefaultAspName, setWizardContextDefaults } from './createWebApp';
 import { IAppCreateOptions } from './IAppCreateOptions';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 import { SiteCreateStep } from './SiteCreateStep';
@@ -103,7 +103,8 @@ export async function createAppService(
         const basicPlanSku: SkuDescription = { name: 'B1', tier: 'Basic', size: 'B1', family: 'B', capacity: 1 };
         const freePlanSku: SkuDescription = { name: 'F1', tier: 'Free', size: 'F1', family: 'F', capacity: 1 };
         wizardContext.newResourceGroupName = `appsvc_rg_${wizardContext.newSiteOS}_${location.name}`;
-        wizardContext.newPlanName = `appsvc_asp_${wizardContext.newSiteOS}_${location.name}`;
+        // tslint:disable-next-line:no-non-null-assertion
+        wizardContext.newPlanName =  await setDefaultAspName(wizardContext, location.name!);
         // Free tier is only available for Windows
         wizardContext.newPlanSku = wizardContext.newSiteOS === WebsiteOS.windows ? freePlanSku : basicPlanSku;
     }

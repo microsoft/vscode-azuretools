@@ -3,11 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Site } from 'azure-arm-website/lib/models';
+import WebSiteManagementClient from 'azure-arm-website';
+import { AppServicePlan, Site } from 'azure-arm-website/lib/models';
 import * as fse from 'fs-extra';
 import * as path from 'path';
 import { Uri, workspace } from 'vscode';
-import { IActionContext, ISubscriptionWizardContext, LocationListStep } from 'vscode-azureextensionui';
+import { createAzureClient, IActionContext, ISubscriptionWizardContext, LocationListStep } from 'vscode-azureextensionui';
+import { nonNullProp } from '../utils/nonNull';
 import { AppKind, LinuxRuntimes, WebsiteOS } from './AppKind';
 import { createAppService } from './createAppService';
 import { IAppCreateOptions } from './IAppCreateOptions';
@@ -48,4 +50,21 @@ export async function setWizardContextDefaults(wizardContext: IAppServiceWizardC
             });
         }
     }
+}
+
+export async function setDefaultAspName(wizardContext: IAppServiceWizardContext, locationName: string): Promise<string> {
+    const client: WebSiteManagementClient = createAzureClient(wizardContext, WebSiteManagementClient);
+    const newResourceGroupName: string = nonNullProp(wizardContext, 'newResourceGroupName');
+    const planNameTemplate: string = `appsvc_asp_${wizardContext.newSiteOS}_${locationName}`;
+    let newPlanName: string = planNameTemplate;
+    let existingPlan: AppServicePlan | undefined;
+    let count: number = 1;
+
+    do {
+        newPlanName = `${planNameTemplate}_${count}`;
+        existingPlan = <AppServicePlan | undefined>await client.appServicePlans.get(newResourceGroupName, newPlanName);
+        count += 1;
+    } while (existingPlan && typeof existingPlan.numberOfSites === 'number' && existingPlan.numberOfSites > 3);
+
+    return newPlanName;
 }
