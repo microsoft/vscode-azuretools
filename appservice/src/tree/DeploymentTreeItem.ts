@@ -155,6 +155,8 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
             // tslint:disable-next-line:no-unsafe-any
             opn(githubCommitUrl);
             return;
+        } else {
+            throw new Error (localize('noRepoUrl', 'There is no repo url associated with this deployment.'));
         }
     }
 
