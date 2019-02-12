@@ -149,26 +149,12 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     }
 
     public async viewCommitInGitHub(): Promise<void> {
-        // if it's not connected to a .git repo, this won't work
-        if (this.parent.contextValue === DeploymentsTreeItem.contextValueConnected) {
-            const sourceControl: SiteSourceControl = await this.root.client.getSourceControl();
-            const githubUrl: string = 'https://github.com';
-
-            if (sourceControl.repoUrl && sourceControl.repoUrl.match(githubUrl)) {
-                try {
-                    const githubCommitUrl: string = `${sourceControl.repoUrl}/commit/${this._deployResult.id}`;
-                    // tslint:disable-next-line:no-unsafe-any
-                    const githubPage: Response = await request({url: githubCommitUrl, resolveWithFullResponse: true}).promise();
-                    if (githubPage.statusCode === 200) {
-                        // tslint:disable-next-line:no-unsafe-any
-                        opn(githubCommitUrl);
-                        return;
-                    }
-                } catch (error) {
-                    throw new Error(localize('sameRepo', 'Only commits made on the currently connected GitHub repo support this feature.'));
-                }
-            }
-            throw new Error(localize('selectGithub', 'Only commits made on GitHub support this feature.'));
+        const sourceControl: SiteSourceControl = await this.root.client.getSourceControl();
+        if (sourceControl.repoUrl) {
+            const githubCommitUrl: string = `${sourceControl.repoUrl}/commit/${this._deployResult.id}`;
+            // tslint:disable-next-line:no-unsafe-any
+            opn(githubCommitUrl);
+            return;
         }
     }
 
