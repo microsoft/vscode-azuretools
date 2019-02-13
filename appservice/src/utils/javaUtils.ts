@@ -15,8 +15,8 @@ export namespace javaUtils {
     const DEFAULT_PORT: string = '8080';
     const PORT_KEY: string = 'PORT';
 
-    export function isJavaTomcatRuntime(runtime: string | undefined): boolean {
-        return !!runtime && runtime.toLowerCase().startsWith('tomcat');
+    export function needDeployWarFile(runtime: string | undefined): boolean {
+        return !!runtime && /^(tomcat|wildfly)/i.test(runtime);
     }
 
     export function isJavaSERuntime(runtime: string | undefined): boolean {

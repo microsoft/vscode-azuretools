@@ -69,7 +69,7 @@ export async function deploy(client: SiteClient, fsPath: string, configurationSe
             case ScmType.GitHub:
                 throw new Error(localize('gitHubConnected', '"{0}" is connected to a GitHub repository. Push to GitHub repository to deploy.', client.fullName));
             default: //'None' or any other non-supported scmType
-                if (javaUtils.isJavaTomcatRuntime(config.linuxFxVersion)) {
+                if (javaUtils.needDeployWarFile(config.linuxFxVersion)) {
                     await deployWar(client, fsPath);
                     break;
                 }

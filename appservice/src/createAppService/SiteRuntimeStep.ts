@@ -157,6 +157,10 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                 displayName: 'Java SE (JRE 8)'
             },
             {
+                name: 'wildfly|14-jre8',
+                displayName: '[Preview] WildFly 14 (JRE 8)'
+            },
+            {
                 name: 'python|3.7',
                 displayName: '[Preview] Python 3.7'
             }
