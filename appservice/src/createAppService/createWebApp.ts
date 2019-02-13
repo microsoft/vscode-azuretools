@@ -31,9 +31,6 @@ export async function setWizardContextDefaults(wizardContext: IAppServiceWizardC
         } else if (await fse.pathExists(path.join(fsPath, 'requirements.txt'))) {
             // requirements.txt are used to pip install so a good way to determine it's a Python app
             wizardContext.recommendedSiteRuntime = LinuxRuntimes.python;
-        } else if (await javaUtils.isJavaProject(fsPath)) {
-            wizardContext.newSiteOS = WebsiteOS.linux;
-            wizardContext.newPlanSku = { name: 'P1v2', tier: 'PremiumV2', size: 'P1v2', family: 'P', capacity: 1 };
         }
         actionContext.properties.recommendedSiteRuntime = wizardContext.recommendedSiteRuntime;
     }
@@ -41,9 +38,15 @@ export async function setWizardContextDefaults(wizardContext: IAppServiceWizardC
     if (!advancedCreation) {
         await LocationListStep.setLocation(wizardContext, 'centralus');
         // we only set the OS for the non-advanced creation scenario
+        // considering high resource requirement for Java applications, a higher plan sku is also set for Java project
         // tslint:disable-next-line:strict-boolean-expressions
         if (wizardContext.recommendedSiteRuntime) {
             wizardContext.newSiteOS = WebsiteOS.linux;
+        } else if (await javaUtils.isJavaProject()) {
+            wizardContext.newSiteOS = WebsiteOS.linux;
+            wizardContext.newPlanSku = { name: 'P1v2', tier: 'PremiumV2', size: 'P1v2', family: 'P', capacity: 1 };
+            // To avoid 'Requested features are not supported in region' error
+            await LocationListStep.setLocation(wizardContext, 'westeurope');
         } else {
             await workspace.findFiles('*.csproj').then((files: Uri[]) => {
                 if (files.length > 0) {

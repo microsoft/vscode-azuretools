@@ -6,6 +6,7 @@
 import { StringDictionary } from "azure-arm-website/lib/models";
 import * as fse from 'fs-extra';
 import * as path from 'path';
+import { workspace } from "vscode";
 import { UserCancelledError } from "vscode-azureextensionui";
 import { ext } from '../extensionVariables';
 import { SiteClient } from "../SiteClient";
@@ -34,21 +35,23 @@ export namespace javaUtils {
     }
 
     /**
-     * Return if the given workspace folder contains a Java project at the root path.
-     * For now we will only take Maven and Gradle into consideration.
-     *
-     * @param workspaceFolderPath The file system path of the workspace folder
+     * Return if all of the workspace folders contain Java projects in their base paths.
+     * Only Maven and Gradle are taken into consideration for now.
      */
-    export async function isJavaProject(workspaceFolderPath: string): Promise<boolean> {
-        if (await fse.pathExists(path.join(workspaceFolderPath, 'pom.xml'))) {
-            return true;
+    export async function isJavaProject(): Promise<boolean> {
+        if (!workspace.workspaceFolders) {
+            return false;
         }
 
-        if (await fse.pathExists(path.join(workspaceFolderPath, 'build.gradle'))) {
-            return true;
+        for (const workspaceFolder of workspace.workspaceFolders) {
+            if (await fse.pathExists(path.join(workspaceFolder.uri.fsPath, 'pom.xml')) ||
+                await fse.pathExists(path.join(workspaceFolder.uri.fsPath, 'build.gradle'))) {
+                continue;
+            }
+            return false;
         }
 
-        return false;
+        return true;
     }
 
     export async function configureJavaSEAppSettings(siteClient: SiteClient): Promise<StringDictionary | undefined> {
