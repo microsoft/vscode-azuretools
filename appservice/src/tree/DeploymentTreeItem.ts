@@ -3,6 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { SiteSourceControl } from 'azure-arm-website/lib/models';
+import * as opn from 'opn';
 import * as os from 'os';
 import * as path from 'path';
 import { ProgressLocation, TextDocument, window, workspace } from 'vscode';
@@ -142,6 +144,18 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
             const logDocument: TextDocument = await workspace.openTextDocument({ content: logData, language: 'log' });
             await window.showTextDocument(logDocument);
         });
+    }
+
+    public async viewCommitInGitHub(): Promise<void> {
+        const sourceControl: SiteSourceControl = await this.root.client.getSourceControl();
+        if (sourceControl.repoUrl) {
+            const githubCommitUrl: string = `${sourceControl.repoUrl}/commit/${this._deployResult.id}`;
+            // tslint:disable-next-line:no-unsafe-any
+            opn(githubCommitUrl);
+            return;
+        } else {
+            throw new Error (localize('noRepoUrl', 'There is no repo url associated with deployment "{0}".', this._deployResult.id));
+        }
     }
 
     public async refreshImpl(): Promise<void> {
