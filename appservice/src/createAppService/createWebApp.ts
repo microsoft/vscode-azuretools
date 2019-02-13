@@ -8,6 +8,7 @@ import * as fse from 'fs-extra';
 import * as path from 'path';
 import { Uri, workspace } from 'vscode';
 import { IActionContext, ISubscriptionWizardContext, LocationListStep } from 'vscode-azureextensionui';
+import { javaUtils } from '../utils/javaUtils';
 import { AppKind, LinuxRuntimes, WebsiteOS } from './AppKind';
 import { createAppService } from './createAppService';
 import { IAppCreateOptions } from './IAppCreateOptions';
@@ -37,9 +38,13 @@ export async function setWizardContextDefaults(wizardContext: IAppServiceWizardC
     if (!advancedCreation) {
         await LocationListStep.setLocation(wizardContext, 'centralus');
         // we only set the OS for the non-advanced creation scenario
+        // considering high resource requirement for Java applications, a higher plan sku is also set for Java project
         // tslint:disable-next-line:strict-boolean-expressions
         if (wizardContext.recommendedSiteRuntime) {
             wizardContext.newSiteOS = WebsiteOS.linux;
+        } else if (await javaUtils.isJavaProject()) {
+            wizardContext.newSiteOS = WebsiteOS.linux;
+            wizardContext.newPlanSku = { name: 'P1v2', tier: 'PremiumV2', size: 'P1v2', family: 'P', capacity: 1 };
         } else {
             await workspace.findFiles('*.csproj').then((files: Uri[]) => {
                 if (files.length > 0) {
