@@ -13,16 +13,7 @@ export namespace javaUtils {
     const PORT_KEY: string = 'PORT';
 
     export function needDeployWarFile(runtime: string | undefined): boolean {
-        if (!runtime) {
-            return false;
-        }
-
-        const lowerCaseRuntime: string = runtime.toLocaleLowerCase();
-        if (lowerCaseRuntime.startsWith('tomcat') || lowerCaseRuntime.startsWith('wildfly')) {
-            return true;
-        }
-
-        return false;
+        return !!runtime && /^(tomcat|wildfly)/i.test(runtime);
     }
 
     export function isJavaSERuntime(runtime: string | undefined): boolean {
