@@ -16,29 +16,22 @@ export async function waitForDeploymentToComplete(client: SiteClient, kuduClient
     let nextTimeToDisplayWaitingLog: number = Date.now();
     let initialStartTime: Date | undefined;
     let deployment: DeployResult | undefined;
-    let kuduTimeout: NodeJS.Timer | undefined;
+    // a 20 second timeout period to let Kudu initialize the deployment
+    const maxTimeToWaitForPermanentId: number = Date.now() + 20 * 1000;
 
     // tslint:disable-next-line:no-constant-condition
     while (true) {
         [deployment, permanentId, initialStartTime] = await getLatestDeployment(kuduClient, permanentId, initialStartTime);
         if ((deployment === undefined || !deployment.id)) {
-            if (permanentId) {
-                // if we passed an id keep polling so that the latest deployment matches that id
-                if (kuduTimeout === undefined) {
-                    const timeout: string = localize('redeployTimeout', 'Deployment "{0}" was unable to resolve and has timed out.', permanentId);
-                    // a 20 second timeout period to let Kudu initialize the deployment
-                    kuduTimeout = setTimeout(() => { throw new Error(timeout) }, pollingInterval * 2);
-                }
+            if (permanentId && Date.now() < maxTimeToWaitForPermanentId) {
                 await new Promise((resolve: () => void): void => { setTimeout(resolve, pollingInterval); });
                 continue;
             }
+
             throw new Error(localize('failedToFindDeployment', 'Failed to get status of deployment.'));
         }
 
         let logEntries: LogEntry[] = [];
-        if (kuduTimeout) {
-            clearTimeout(kuduTimeout);
-        }
         try {
             logEntries = <LogEntry[]>await kuduClient.deployment.getLogEntry(deployment.id);
         } catch (error) {
@@ -119,28 +112,3 @@ async function getLatestDeployment(kuduClient: KuduClient, permanentId: string |
 
     return [deployment, permanentId, initialStartTime];
 }
-
-// async function waitForDeploymentToStart(kuduClient: KuduClient, id: string): Promise<void> {
-//     let getResultInterval: NodeJS.Timer | undefined;
-//     try {
-//         await new Promise((resolve: () => void, reject: (error: Error) => void): void => {
-//             kuduClient.deployment.deploy(id).catch(reject);
-//             getResultInterval = setInterval(
-//                 async () => {
-//                     const deployResult: DeployResult | undefined = <DeployResult | undefined>await kuduClient.deployment.getResult('latest');
-//                     if (deployResult && deployResult.id === id) {
-//                         resolve();
-//                     }
-//                 },
-//                 3000
-//             );
-//             const timeout: string = localize('redeployTimeout', 'Deployment "{0}" was unable to resolve and has timed out.', id);
-//             // a 20 second timeout period to let Kudu initialize the deployment
-//             setTimeout(() => reject(new Error(timeout)), 20000);
-//         });
-//     } finally {
-//         if (getResultInterval) {
-//             clearInterval(getResultInterval);
-//         }
-//     }
-// }
