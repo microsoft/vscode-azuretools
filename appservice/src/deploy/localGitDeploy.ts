@@ -23,7 +23,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
     const publishCredentials: User = await client.getWebAppPublishCredential();
     const remote: string = nonNullProp(publishCredentials, 'scmUri');
     const localGit: git.SimpleGit = git(fsPath);
-    const branchId: string = (await localGit.log()).latest.hash;
+    const commitId: string = (await localGit.log()).latest.hash;
     try {
         const status: git.StatusResult = await localGit.status();
         if (status.files.length > 0) {
@@ -57,5 +57,5 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
     }
 
     ext.outputChannel.appendLine(formatDeployLog(client, (localize('localGitDeploy', `Deploying Local Git repository to "${client.fullName}"...`))));
-    await waitForDeploymentToComplete(client, kuduClient, branchId);
+    await waitForDeploymentToComplete(client, kuduClient, commitId);
 }
