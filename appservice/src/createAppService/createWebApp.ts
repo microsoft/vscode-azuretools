@@ -45,8 +45,6 @@ export async function setWizardContextDefaults(wizardContext: IAppServiceWizardC
         } else if (await javaUtils.isJavaProject()) {
             wizardContext.newSiteOS = WebsiteOS.linux;
             wizardContext.newPlanSku = { name: 'P1v2', tier: 'PremiumV2', size: 'P1v2', family: 'P', capacity: 1 };
-            // To avoid 'Requested features are not supported in region' error
-            await LocationListStep.setLocation(wizardContext, 'westeurope');
         } else {
             await workspace.findFiles('*.csproj').then((files: Uri[]) => {
                 if (files.length > 0) {
