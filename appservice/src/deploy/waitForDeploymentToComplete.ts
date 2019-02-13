@@ -18,7 +18,7 @@ export async function waitForDeploymentToComplete(client: SiteClient, kuduClient
     let initialStartTime: Date | undefined;
     let deployment: DeployResult | undefined;
     let permanentId: string | undefined;
-    // a 20 second timeout period to let Kudu initialize the deployment
+    // a 30 second timeout period to let Kudu initialize the deployment
     const maxTimeToWaitForPermanentId: number = Date.now() + 30 * 1000;
 
     // tslint:disable-next-line:no-constant-condition
