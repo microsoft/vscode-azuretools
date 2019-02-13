@@ -154,7 +154,7 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
             opn(githubCommitUrl);
             return;
         } else {
-            throw new Error (localize('noRepoUrl', 'There is no repo url associated with this deployment.'));
+            throw new Error (localize('noRepoUrl', 'There is no repo url associated with deployment "{0}".', this._deployResult.id));
         }
     }
 

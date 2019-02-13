@@ -66,15 +66,13 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
         for (const plan of plans) {
             const isNewSiteLinux: boolean = wizardContext.newSiteOS === WebsiteOS.linux;
             const isPlanLinux: boolean = nonNullProp(plan, 'kind').toLowerCase().includes(WebsiteOS.linux);
-            const client: WebSiteManagementClient = createAzureClient(wizardContext, WebSiteManagementClient);
-            const fullAspDetails: AppServicePlan = await client.appServicePlans.get(nonNullProp(plan, 'resourceGroup'), nonNullProp(plan, 'name'));
             // plan.kind will contain "linux" for Linux plans, but will _not_ contain "windows" for Windows plans. Thus we check "isLinux" for both cases
             if (isNewSiteLinux === isPlanLinux) {
                 picks.push({
                     id: plan.id,
                     label: nonNullProp(plan, 'name'),
                     description: `${nonNullProp(plan, 'sku').name} (${plan.geoRegion})`,
-                    detail: `${plan.resourceGroup} (${fullAspDetails.numberOfSites})`,
+                    detail: plan.resourceGroup,
                     data: plan
                 });
             }
