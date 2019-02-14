@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { IParsedError, parseError } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { DeployResult, LogEntry } from 'vscode-azurekudu/lib/models';
 import { ext } from '../extensionVariables';
@@ -37,11 +38,11 @@ export async function waitForDeploymentToComplete(client: SiteClient, kuduClient
         try {
             logEntries = <LogEntry[]>await kuduClient.deployment.getLogEntry(deployment.id);
         } catch (error) {
+            const parsedError: IParsedError = parseError(error);
             // Swallow 404 errors for a deployment while its still in the "temp" phase
             // (We can't reliably get logs until the deployment has shifted to the "permanent" phase)
-            // tslint:disable-next-line:no-unsafe-any
-            if (!deployment.isTemp || !error || error.statusCode !== 404) {
-                throw error;
+            if (!deployment.isTemp || parsedError.errorType !== '404') {
+                throw parsedError;
             }
         }
 
@@ -96,10 +97,10 @@ async function tryGetLatestDeployment(kuduClient: KuduClient, permanentId: strin
                 const latestDeployment: DeployResult = await kuduClient.deployment.getResult('latest');
                 [deployment, permanentId] = latestDeployment.id === expectedId ? [latestDeployment, latestDeployment.id] : [undefined, undefined];
             } catch (error) {
+                const parsedError: IParsedError = parseError(error);
                 // swallow 404 error since "latest" might not exist on the first deployment
-                if (error.statusCode !== 404) {
-                    // tslint:disable-next-line:no-unsafe-any
-                    throw error;
+                if (parsedError.errorType !== '404') {
+                    throw parsedError;
                 }
             }
         } else if (initialStartTime) {
@@ -118,10 +119,10 @@ async function tryGetLatestDeployment(kuduClient: KuduClient, permanentId: strin
             try {
                 deployment = <DeployResult | undefined>await kuduClient.deployment.getResult('latest');
             } catch (error) {
+                const parsedError: IParsedError = parseError(error);
                 // swallow 404 error since "latest" might not exist on the first deployment
-                if (error.statusCode !== 404) {
-                    // tslint:disable-next-line:no-unsafe-any
-                    throw error;
+                if (parsedError.errorType !== '404') {
+                    throw parsedError;
                 }
             }
             if (deployment && deployment.startTime) {
