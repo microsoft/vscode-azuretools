@@ -98,6 +98,7 @@ async function tryGetLatestDeployment(kuduClient: KuduClient, permanentId: strin
             } catch (error) {
                 // swallow 404 error since "latest" might not exist on the first deployment
                 if (error.statusCode !== 404) {
+                    // tslint:disable-next-line:no-unsafe-any
                     throw error;
                 }
             }
@@ -119,6 +120,7 @@ async function tryGetLatestDeployment(kuduClient: KuduClient, permanentId: strin
             } catch (error) {
                 // swallow 404 error since "latest" might not exist on the first deployment
                 if (error.statusCode !== 404) {
+                    // tslint:disable-next-line:no-unsafe-any
                     throw error;
                 }
             }
