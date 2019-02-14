@@ -23,6 +23,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
     const publishCredentials: User = await client.getWebAppPublishCredential();
     const remote: string = nonNullProp(publishCredentials, 'scmUri');
     const localGit: git.SimpleGit = git(fsPath);
+    const commitId: string = (await localGit.log()).latest.hash;
     try {
         const status: git.StatusResult = await localGit.status();
         if (status.files.length > 0) {
@@ -31,7 +32,8 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
             await ext.ui.showWarningMessage(message, { modal: true }, deployAnyway, DialogResponses.cancel);
         }
         await verifyNoRunFromPackageSetting(client);
-        await localGit.push(remote, 'HEAD:master');
+        // tslint:disable-next-line:no-floating-promises
+        localGit.push(remote, 'HEAD:master');
     } catch (err) {
         // tslint:disable-next-line:no-unsafe-any
         if (err.message.indexOf('spawn git ENOENT') >= 0) {
@@ -47,12 +49,13 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
             const forcePush: vscode.MessageItem = { title: localize('forcePush', 'Force Push') };
             const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging.');
             await ext.ui.showWarningMessage(pushReject, forcePush, DialogResponses.cancel);
-            await localGit.push(remote, 'HEAD:master', { '-f': true });
+            // tslint:disable-next-line:no-floating-promises
+            localGit.push(remote, 'HEAD:master', { '-f': true });
         } else {
             throw err;
         }
     }
 
     ext.outputChannel.appendLine(formatDeployLog(client, (localize('localGitDeploy', `Deploying Local Git repository to "${client.fullName}"...`))));
-    await waitForDeploymentToComplete(client, kuduClient);
+    await waitForDeploymentToComplete(client, kuduClient, commitId);
 }
