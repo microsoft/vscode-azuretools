@@ -19,13 +19,14 @@ export async function waitForDeploymentToComplete(client: SiteClient, kuduClient
     let deployment: DeployResult | undefined;
     let permanentId: string | undefined;
     // a 30 second timeout period to let Kudu initialize the deployment
-    const maxTimeToWaitForPermanentId: number = Date.now() + 30 * 1000;
+    const maxTimeToWaitForExpectedId: number = Date.now() + 30 * 1000;
 
     // tslint:disable-next-line:no-constant-condition
     while (true) {
         [deployment, permanentId, initialStartTime] = await tryGetLatestDeployment(kuduClient, permanentId, initialStartTime, expectedId);
         if ((deployment === undefined || !deployment.id)) {
-            if (expectedId && Date.now() < maxTimeToWaitForPermanentId) {
+            if (expectedId && Date.now() < maxTimeToWaitForExpectedId) {
+                ext.outputChannel.appendLine(formatDeployLog(client, localize('waitingForBuild', 'Waiting for build to trigger...')));
                 await delay(pollingInterval);
                 continue;
             }
@@ -85,14 +86,21 @@ export async function waitForDeploymentToComplete(client: SiteClient, kuduClient
 
 async function tryGetLatestDeployment(kuduClient: KuduClient, permanentId: string | undefined, initialStartTime: Date | undefined, expectedId?: string): Promise<[DeployResult | undefined, string | undefined, Date | undefined]> {
     let deployment: DeployResult | undefined;
-    try {
-        if (permanentId) {
+
+    if (permanentId) {
             // Use "permanentId" to find the deployment during its "permanent" phase
             deployment = await kuduClient.deployment.getResult(permanentId);
         } else if (expectedId) {
             // if we have a "expectedId" we know which deployment we are looking for, so wait until latest id reflects that
-            const latestDeployment: DeployResult = await kuduClient.deployment.getResult('latest');
-            permanentId = latestDeployment.id === expectedId ? latestDeployment.id : undefined;
+            try {
+                const latestDeployment: DeployResult = await kuduClient.deployment.getResult('latest');
+                [deployment, permanentId] = latestDeployment.id === expectedId ? [latestDeployment, latestDeployment.id] : [undefined, undefined];
+            } catch (error) {
+                // swallow 404 error since "latest" might not exist on the first deployment
+                if (error.statusCode !== 404) {
+                    throw error;
+                }
+            }
         } else if (initialStartTime) {
             // Use "initialReceivedTime" to find the deployment during its "temp" phase
             deployment = (await kuduClient.deployment.getDeployResults())
@@ -106,16 +114,20 @@ async function tryGetLatestDeployment(kuduClient: KuduClient, permanentId: strin
             }
         } else {
             // Use "latest" to get the deployment before we know the "initialReceivedTime" or "permanentId"
-            deployment = <DeployResult | undefined>await kuduClient.deployment.getResult('latest');
+            try {
+                deployment = <DeployResult | undefined>await kuduClient.deployment.getResult('latest');
+            } catch (error) {
+                // swallow 404 error since "latest" might not exist on the first deployment
+                if (error.statusCode !== 404) {
+                    throw error;
+                }
+            }
             if (deployment && deployment.startTime) {
                 // Make note of the startTime because that is when kudu has began the deployment process,
                 // so that we can use that to find the deployment going forward
                 initialStartTime = deployment.startTime;
             }
         }
-    } catch (error) {
-        // swallow error since "latest" might not exist yet
-    }
 
     return [deployment, permanentId, initialStartTime];
 }
