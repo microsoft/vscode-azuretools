@@ -60,7 +60,19 @@ async function getZipFileToDeploy(fsPath: string, configurationSectionName?: str
     if (await FileUtilities.isDirectory(fsPath)) {
         const zipDeployConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration(configurationSectionName, vscode.Uri.file(fsPath));
         const globPattern: string | undefined = zipDeployConfig.get<string>('zipGlobPattern');
-        const ignorePattern: string | string[] | undefined = zipDeployConfig.get<string | string[]>('zipIgnorePattern');
+        let ignorePattern: string | string[] | undefined = zipDeployConfig.get<string | string[]>('zipIgnorePattern');
+
+        // add .vscode to the ignorePattern since it will never be needed for deployment
+        const vscodeGlobPattern: string = '.vscode{,/**}';
+        if (!ignorePattern) {
+            ignorePattern = [vscodeGlobPattern];
+        } else {
+            if (typeof ignorePattern === 'string') {
+                ignorePattern = [ignorePattern];
+            }
+            ignorePattern.push(vscodeGlobPattern);
+        }
+
         return FileUtilities.zipDirectory(fsPath, globPattern, ignorePattern);
     } else {
         return FileUtilities.zipFile(fsPath);
