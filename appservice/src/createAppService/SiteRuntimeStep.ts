@@ -5,7 +5,7 @@
 
 import { AzureWizardPromptStep, IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
-import { AppKind, WebsiteOS } from './AppKind';
+import { AppKind, LinuxRuntimes, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 interface ILinuxRuntimeStack {
@@ -167,15 +167,19 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
         ];
     }
 
-    private sortQuickPicksByRuntime(runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[], runtime: string): IAzureQuickPickItem<ILinuxRuntimeStack>[] {
+    private sortQuickPicksByRuntime(runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[], recomendedRuntimes: Map<LinuxRuntimes, number>): IAzureQuickPickItem<ILinuxRuntimeStack>[] {
         return runtimeItems.sort((a: IAzureQuickPickItem<ILinuxRuntimeStack>, b: IAzureQuickPickItem<ILinuxRuntimeStack>) => {
-            if (a.data.name.includes(runtime)) {
-                return -1;
-            } else if (b.data.name.includes(runtime)) {
-                return 1;
-            } else {
-                return 0;
+            let priorityA: number = Number.MIN_SAFE_INTEGER;
+            let priorityB: number = Number.MIN_SAFE_INTEGER;
+            for (const runtime of recomendedRuntimes.keys()) {
+                if (a.data.name.includes(runtime)) {
+                    priorityA = recomendedRuntimes.get(runtime) || 0;
+                }
+                if (b.data.name.includes(runtime)) {
+                    priorityB = recomendedRuntimes.get(runtime) || 0;
+                }
             }
+            return priorityB - priorityA;
         });
     }
 }
