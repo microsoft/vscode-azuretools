@@ -27,7 +27,7 @@ export async function waitForDeploymentToComplete(client: SiteClient, kuduClient
         [deployment, permanentId, initialStartTime] = await tryGetLatestDeployment(kuduClient, permanentId, initialStartTime, expectedId);
         if ((deployment === undefined || !deployment.id)) {
             if (expectedId && Date.now() < maxTimeToWaitForExpectedId) {
-                ext.outputChannel.appendLine(formatDeployLog(client, localize('waitingForBuild', 'Waiting for build to trigger...')));
+                ext.outputChannel.appendLine(formatDeployLog(client, localize('waitingForBuild', 'Starting deployment...')));
                 await delay(pollingInterval);
                 continue;
             }
