@@ -108,17 +108,19 @@ export abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> extends Azu
     }
 
     public addChildToCache(childToAdd: AzureTreeItem<TRoot>): void {
-        // set index to the last element by default
-        let index: number = this._cachedChildren.length;
-        // tslint:disable-next-line:no-increment-decrement
-        for (let i: number = 0; i < this._cachedChildren.length; i++) {
-            if (childToAdd.label.localeCompare(this._cachedChildren[i].label) < 1) {
-                index = i;
-                break;
+        if (!this._cachedChildren.find((ti) => ti.fullId === childToAdd.fullId)) {
+            // set index to the last element by default
+            let index: number = this._cachedChildren.length;
+            // tslint:disable-next-line:no-increment-decrement
+            for (let i: number = 0; i < this._cachedChildren.length; i++) {
+                if (childToAdd.label.localeCompare(this._cachedChildren[i].label) < 1) {
+                    index = i;
+                    break;
+                }
             }
+            this._cachedChildren.splice(index, 0, childToAdd);
+            this.treeDataProvider.refreshUIOnly(this);
         }
-        this._cachedChildren.splice(index, 0, childToAdd);
-        this.treeDataProvider.refreshUIOnly(this);
     }
 
     public removeChildFromCache(childToRemove: AzureTreeItem<TRoot>): void {
