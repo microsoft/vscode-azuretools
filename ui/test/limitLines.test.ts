@@ -7,14 +7,13 @@ import * as assert from 'assert';
 import { limitLines } from '../src/utils/limitLines';
 
 suite('limitLines', () => {
-    function testLimitLines(testName: string, s: string | undefined, n: number, expected: string): void {
+    function testLimitLines(testName: string, s: string, n: number, expected: string): void {
         test(testName, () => {
             const result: string = limitLines(s, n);
             assert.strictEqual(result, expected);
         });
     }
 
-    testLimitLines('undefined 0', undefined, 10, '');
     testLimitLines('empty', '', 10, '');
     testLimitLines('one line 1', 'one line', 1, 'one line');
     testLimitLines('one line 2', 'one line', 2, 'one line');

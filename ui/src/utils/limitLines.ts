@@ -6,9 +6,7 @@
 /**
  * Limit string 's' to at most 'n' lines
  */
-export function limitLines(s: string | undefined, n: number): string {
-    // tslint:disable-next-line: strict-boolean-expressions
-    s = s || '';
+export function limitLines(s: string, n: number): string {
     const match: RegExpMatchArray | null = s.match(new RegExp(`((\\r\\n|\\n)?.*$){0,${n}}`, 'm'));
     return match ? match[0] : '';
 }

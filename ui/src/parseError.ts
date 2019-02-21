@@ -175,8 +175,8 @@ function getCallstack(error: { stack?: string }): string | undefined {
     //   (../extensions/msazurermtools.azurerm-vscode-tools-0.4.3-alpha/dist/extension.bundle.js:1:313309)
     result = result.replace(/([\( ])[^() ]+\/(extensions|[Rr]epos|[Ss]rc|[Ss]ources|[Ss]ource)\/[^/):\r\n]+\//g, '$1');
 
-    // Trim each line
-    result = result.replace(/^\s+/mg, '');
+    // Trim each line, including getting rid of 'at'
+    result = result.replace(/^\s*(at\s)?\s*/mg, '');
     result = result.replace(/\s+$/mg, '');
 
     return !!result ? result : undefined;
