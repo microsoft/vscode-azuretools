@@ -8,8 +8,82 @@ import { IParsedError } from '../index';
 import { UserCancelledError } from '../src/errors';
 import { parseError } from '../src/parseError';
 
+// tslint:disable:no-non-null-assertion
+
 // tslint:disable-next-line:max-func-body-length
 suite('Error Parsing Tests', () => {
+    suite('Call Stacks', () => {
+        test('Not an error', () => {
+            const pe: IParsedError = parseError('test');
+            assert.strictEqual(pe.stack, undefined);
+        });
+
+        test('User-defined error', () => {
+            let pe: IParsedError | undefined;
+            try {
+                throw new Error('hello');
+            } catch (err) {
+                pe = parseError(err);
+            }
+            // tslint:disable-next-line: strict-boolean-expressions
+            assert(!!pe && !!pe.stack);
+            assert(pe.stack!.startsWith('Error: hello\n'));
+            assert(pe.stack!.includes('/ui/test/parseError.test.ts:'));
+            assert(!pe.stack!.includes('extensions'), `Should have removed first path of path (extensions), stack is: ${pe.stack}`);
+            assert(!pe.stack!.includes('Users') && !pe.stack!.includes('users'), `Should have removed first path of path (Users), stack is: ${pe.stack}`);
+        });
+
+        test('Removes first part of paths: Windows', () => {
+            const err: Error = new Error('hello');
+            err.stack = `TypeError: Cannot read property 'findbyName' of undefined
+                at UnrecognizedFunctionVisitor.visitFunction (C:\\Users\\MeMyselfAndI\\.vscode\\extensions\\msazurermtools.azurerm-vscode-tools-0.4.3-alpha\\dist\\extension.bundle.js:1:313309)
+                at FunctionValue.accept (C:\\Users\\MeMyselfAndI\\.vscode\\extensions\\msazurermtools.azurerm-vscode-tools-0.4.3-alpha\\dist\\extension.bundle.js:1:308412)
+                at Function.visit (C:\\Users\\MeMyselfAndI\\.vscode\\extensions\\msazurermtools.azurerm-vscode-tools-0.4.3-alpha\\dist\\extension.bundle.js:1:313489)
+                at DeploymentTemplate.<anonymous> (C:\\Users\\MeMyselfAndI\\.vscode\\extensions\\msazurermtools.azurerm-vscode-tools-0.4.3-alpha\\dist\\extension.bundle.js:127:88385)
+                at Generator.next (<anonymous>)
+                at a (C:\\Users\\MeMyselfAndI\\.vscode\\extensions\\msazurermtools.azurerm-vscode-tools-0.4.3-alpha\\dist\\extension.bundle.js:127:86224)`;
+            const pe: IParsedError = parseError(err);
+            assert.strictEqual(pe.stack, `TypeError: Cannot read property 'findbyName' of undefined
+                at UnrecognizedFunctionVisitor.visitFunction (../msazurermtools.azurerm-vscode-tools-0.4.3-alpha/dist/extension.bundle.js:1:313309)
+                at FunctionValue.accept (../msazurermtools.azurerm-vscode-tools-0.4.3-alpha/dist/extension.bundle.js:1:308412)
+                at Function.visit (../msazurermtools.azurerm-vscode-tools-0.4.3-alpha/dist/extension.bundle.js:1:313489)
+                at DeploymentTemplate.<anonymous> (../msazurermtools.azurerm-vscode-tools-0.4.3-alpha/dist/extension.bundle.js:127:88385)
+                at Generator.next (<anonymous>)
+                at a (../msazurermtools.azurerm-vscode-tools-0.4.3-alpha/dist/extension.bundle.js:127:86224)`);
+        });
+
+        test('Removes first part of paths: Mac/Linux', () => {
+            const err: Error = new Error('hello');
+            err.stack = `StorageError: The specified share already exists.
+            RequestId:36445445-801a-002c-2385-c94b79000000
+            Time:2019-02-21T01:35:57.5335471Z
+                at Function.StorageServiceClient._normalizeError (/Users/MeMyselfAndI/.vscode-insiders/extensions/ms-azuretools.vscode-azurestorage-0.6.0/node_modules/azure-storage/lib/common/services/storageserviceclient.js:1205:23)
+                at FileService.StorageServiceClient._processResponse (/Users/MeMyselfAndI/.vscode-insiders/extensions/ms-azuretools.vscode-azurestorage-0.6.0/node_modules/azure-storage/lib/common/services/storageserviceclient.js:751:50)
+                at Request.processResponseCallback [as _callback] (/Users/MeMyselfAndI/.vscode-insiders/extensions/ms-azuretools.vscode-azurestorage-0.6.0/node_modules/azure-storage/lib/common/services/storageserviceclient.js:319:37)
+                at Request.init.self.callback (/Users/MeMyselfAndI/.vscode-insiders/extensions/ms-azuretools.vscode-azurestorage-0.6.0/node_modules/request/request.js:185:22)
+                at Request.emit (events.js:182:13)
+                at Request.<anonymous> (/Users/MeMyselfAndI/.vscode-insiders/extensions/ms-azuretools.vscode-azurestorage-0.6.0/node_modules/request/request.js:1161:10)
+                at Request.emit (events.js:182:13)
+                at IncomingMessage.<anonymous> (/Users/MeMyselfAndI/.vscode-insiders/extensions/ms-azuretools.vscode-azurestorage-0.6.0/node_modules/request/request.js:1083:12)
+                at Object.onceWrapper (events.js:273:13)
+                at IncomingMessage.emit (events.js:187:15)`;
+            const pe: IParsedError = parseError(err);
+            assert.strictEqual(pe.stack, `StorageError: The specified share already exists.
+            RequestId:36445445-801a-002c-2385-c94b79000000
+            Time:2019-02-21T01:35:57.5335471Z
+                at Function.StorageServiceClient._normalizeError (../ms-azuretools.vscode-azurestorage-0.6.0/node_modules/azure-storage/lib/common/services/storageserviceclient.js:1205:23)
+                at FileService.StorageServiceClient._processResponse (../ms-azuretools.vscode-azurestorage-0.6.0/node_modules/azure-storage/lib/common/services/storageserviceclient.js:751:50)
+                at Request.processResponseCallback [as _callback] (../ms-azuretools.vscode-azurestorage-0.6.0/node_modules/azure-storage/lib/common/services/storageserviceclient.js:319:37)
+                at Request.init.self.callback (../ms-azuretools.vscode-azurestorage-0.6.0/node_modules/request/request.js:185:22)
+                at Request.emit (events.js:182:13)
+                at Request.<anonymous> (../ms-azuretools.vscode-azurestorage-0.6.0/node_modules/request/request.js:1161:10)
+                at Request.emit (events.js:182:13)
+                at IncomingMessage.<anonymous> (../ms-azuretools.vscode-azurestorage-0.6.0/node_modules/request/request.js:1083:12)
+                at Object.onceWrapper (events.js:273:13)
+                at IncomingMessage.emit (events.js:187:15)`);
+        });
+    });
+
     test('Generic Error', () => {
         const pe: IParsedError = parseError(new Error('test'));
         assert.strictEqual(pe.errorType, 'Error');

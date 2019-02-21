@@ -19,7 +19,7 @@ export function parseError(error: any): IParsedError {
             errorType = error.constructor.name;
         }
 
-        stack = error.stack;
+        stack = getCallstack(error);
 
         // See https://github.com/Microsoft/vscode-azureappservice/issues/419 for an example error that requires these 'unpack's
         error = unpackErrorFromField(error, 'value');
@@ -152,4 +152,22 @@ function unpackErrorFromField(error: any, prop: string): any {
     }
 
     return error;
+}
+
+function getCallstack(error: { stack?: string }): string {
+    // tslint:disable-next-line: strict-boolean-expressions
+    const stack: string = error.stack || '';
+
+    // Standardize to using '/' for path separator for all platforms
+    const standardizedSeparator: string = stack.replace(/\\/g, '/');
+
+    // Standardize newlines
+    const standardizedNewlines: string = standardizedSeparator.replace(/\r\n/g, '\n');
+
+    // Remove the first part of the paths (up to "/extensions/"), which might container the username.
+    // e.g.:
+    //   (C:\Users\MeMyselfAndI\.vscode\extensions\msazurermtools.azurerm-vscode-tools-0.4.3-alpha\dist\extension.bundle.js:1:313309)
+    //   ->
+    //   (../extensions/msazurermtools.azurerm-vscode-tools-0.4.3-alpha/dist/extension.bundle.js:1:313309)
+    return standardizedNewlines.replace(/\([^()]+\/extensions\//g, '(../');
 }
