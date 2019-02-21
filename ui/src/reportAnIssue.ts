@@ -14,19 +14,35 @@ import { getPackageInfo } from "./getPackageInfo";
 export function reportAnIssue(actionId: string, parsedError: IParsedError): void {
     const { extensionName, extensionVersion } = getPackageInfo();
 
-    const body: string = `
-&lt;Please be sure to remove any private information before submitting.&gt;
+    let body: string = `
+<!-- IMPORTANT: Please be sure to remove any private information before submitting. -->
 
 Repro steps:
-&lt;Enter steps to reproduce issue&gt;
+<!-- TODO: Enter steps to reproduce issue -->
+
+1.
+2.
 
 Action: ${actionId}
 Error type: ${parsedError.errorType}
 Error Message: ${parsedError.message}
 
 Version: ${extensionVersion}
-OS: ${process.platform}
-`;
+OS: ${process.platform}`;
+
+    if (parsedError.stack) {
+        body = body.concat(`
+
+<details>
+<summary>Call Stack</summary>
+
+\`\`\`
+${parsedError.stack}
+\`\`\`
+
+</details>`);
+    }
+
     // tslint:disable-next-line:no-floating-promises
     opn(`https://github.com/Microsoft/${extensionName}/issues/new?body=${encodeURIComponent(body)}`);
 }
