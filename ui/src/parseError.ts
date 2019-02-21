@@ -168,12 +168,12 @@ function getCallstack(error: { stack?: string }): string | undefined {
     const atMatch: RegExpMatchArray | null = result.match(/^\s*at\s.*/ms);
     result = atMatch ? atMatch[0] : '';
 
-    // Remove the first part of the paths (up to "/{extensions,repos,src/sources}/xxx/"), which might container the username.
+    // Remove the first part of the paths (up to "/{extensions,repos,src/sources,users}/xxx/"), which might container the username.
     // e.g.:
     //   (C:\Users\MeMyselfAndI\.vscode\extensions\msazurermtools.azurerm-vscode-tools-0.4.3-alpha\dist\extension.bundle.js:1:313309)
     //   ->
     //   (../extensions/msazurermtools.azurerm-vscode-tools-0.4.3-alpha/dist/extension.bundle.js:1:313309)
-    result = result.replace(/([\( ])[^() ]+\/(extensions|[Rr]epos|[Ss]rc|[Ss]ources|[Ss]ource)\/[^/):\r\n]+\//g, '$1');
+    result = result.replace(/([\( ])[^() ]*\/(extensions|[Rr]epos|[Ss]rc|[Ss]ources|[Ss]ource|[Uu]sers)\/[^/):\r\n]+\//g, '$1');
 
     // Trim each line, including getting rid of 'at'
     result = result.replace(/^\s*(at\s)?\s*/mg, '');

@@ -101,6 +101,14 @@ next (ui/node_modules/vscode/node_modules/mocha/lib/runner.js:356:14)
 ui/node_modules/vscode/node_modules/mocha/lib/runner.js:366:7`);
         });
 
+        test('Remove Users if necessary', () => {
+            const err: Error = new Error('hello');
+            err.stack = `at Context.test (/Users/vsts/agent/2.147.1/work/1/s/ui/test/parseError.test.ts:25:23)
+                    at callFn (/Users/vsts/agent/2.147.1/work/1/s/ui/node_modules/vscode/node_modules/mocha/lib/runnable.js:354:21)`;
+            const pe: IParsedError = parseError(err);
+            assert.strictEqual(pe.stack, `Context.test (agent/2.147.1/work/1/s/ui/test/parseError.test.ts:25:23)
+callFn (agent/2.147.1/work/1/s/ui/node_modules/vscode/node_modules/mocha/lib/runnable.js:354:21)`);
+        });
     });
 
     test('Generic Error', () => {
