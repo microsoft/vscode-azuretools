@@ -9,6 +9,7 @@ import { IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput } from '..
 import { DialogResponses } from './DialogResponses';
 import { UserCancelledError } from './errors';
 import { localize } from './localize';
+import { validOnTimeoutOrException } from './utils/inputValidation';
 import { randomUtils } from './utils/randomUtils';
 
 export class AzureUserInput implements IAzureUserInput {
@@ -44,6 +45,12 @@ export class AzureUserInput implements IAzureUserInput {
     public async showInputBox(options: vscode.InputBoxOptions): Promise<string> {
         if (options.ignoreFocusOut === undefined) {
             options.ignoreFocusOut = true;
+        }
+
+        // tslint:disable-next-line:typedef
+        const validateInput = options.validateInput;
+        if (validateInput) {
+            options.validateInput = async (v): Promise<string | null | undefined> => validOnTimeoutOrException(async () => await validateInput(v));
         }
 
         const result: string | undefined = await vscode.window.showInputBox(options);
