@@ -39,7 +39,9 @@ export function getPackageInfo(ctx?: ExtensionContext): { extensionName: string,
     const extensionVersion: string | undefined = packageJson.version;
     const aiKey: string | undefined = packageJson.aiKey;
     const publisher: string | undefined = packageJson.publisher;
-    const bugsUrl: string | undefined = packageJson.bugs && packageJson.bugs.url;
+    const bugsUrl: string | undefined = !packageJson.bugs ? undefined :
+        typeof packageJson.bugs === 'string' ? packageJson.bugs :
+        packageJson.bugs.url;
 
     if (!aiKey) {
         throw new Error('Extension\'s package.json is missing aiKey');
@@ -64,7 +66,7 @@ interface IPackageJson {
     name?: string;
     publisher?: string;
     aiKey?: string;
-    bugs?: {
+    bugs?: string | {
         url?: string;
-    }
+    };
 }
