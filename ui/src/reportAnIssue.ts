@@ -12,7 +12,7 @@ import { getPackageInfo } from "./getPackageInfo";
  * Used to open the browser to the "New Issue" page on GitHub with relevant context pre-filled in the issue body
  */
 export function reportAnIssue(actionId: string, parsedError: IParsedError): void {
-    const { extensionName, extensionVersion } = getPackageInfo();
+    const { extensionName, extensionVersion, bugsUrl } = getPackageInfo();
 
     const body: string = `
 &lt;Please be sure to remove any private information before submitting.&gt;
@@ -27,6 +27,10 @@ Error Message: ${parsedError.message}
 Version: ${extensionVersion}
 OS: ${process.platform}
 `;
+
+    const baseUrl: string = bugsUrl || `https://github.com/Microsoft/${extensionName}/issues`;
+    const url: string = `${baseUrl}/new?body=${encodeURIComponent(body)}`;
+
     // tslint:disable-next-line:no-floating-promises
-    opn(`https://github.com/Microsoft/${extensionName}/issues/new?body=${encodeURIComponent(body)}`);
+    opn(url);
 }

@@ -10,7 +10,7 @@ import { callWithTelemetryAndErrorHandling } from "./callWithTelemetryAndErrorHa
 import { ext } from "./extensionVariables";
 import { parseError } from "./parseError";
 
-export function getPackageInfo(ctx?: ExtensionContext): { extensionName: string, extensionVersion: string, aiKey: string, extensionId: string } {
+export function getPackageInfo(ctx?: ExtensionContext): { extensionName: string, extensionVersion: string, aiKey: string, extensionId: string, bugsUrl: string | undefined } {
     if (!ctx) {
         ctx = ext.context;
     }
@@ -39,6 +39,7 @@ export function getPackageInfo(ctx?: ExtensionContext): { extensionName: string,
     const extensionVersion: string | undefined = packageJson.version;
     const aiKey: string | undefined = packageJson.aiKey;
     const publisher: string | undefined = packageJson.publisher;
+    const bugsUrl: string | undefined = packageJson.bugs && packageJson.bugs.url;
 
     if (!aiKey) {
         throw new Error('Extension\'s package.json is missing aiKey');
@@ -55,7 +56,7 @@ export function getPackageInfo(ctx?: ExtensionContext): { extensionName: string,
 
     const extensionId: string = `${packageJson.publisher}.${packageJson.name}`;
 
-    return { extensionName, extensionVersion, aiKey, extensionId };
+    return { extensionName, extensionVersion, aiKey, extensionId, bugsUrl };
 }
 
 interface IPackageJson {
@@ -63,4 +64,7 @@ interface IPackageJson {
     name?: string;
     publisher?: string;
     aiKey?: string;
+    bugs?: {
+        url?: string;
+    }
 }
