@@ -51,6 +51,7 @@
         "gulp": "^4.0.0",
         "mocha": "^5.2.0",
         "mocha-junit-reporter": "^1.18.0",
+        "mocha-multi-reporters": "^1.1.7",
         "tslint": "^5.7.0",
         "tslint-microsoft-contrib": "5.0.1",
         "typescript": "^2.5.3",
