@@ -11,6 +11,7 @@ import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { parseError } from './parseError';
 import { reportAnIssue } from './reportAnIssue';
+import { limitLines } from './utils/limitLines';
 
 function initContext(): [number, IActionContext] {
     const start: number = Date.now();
@@ -70,7 +71,7 @@ function handleError(context: IActionContext, callbackId: string, error: any): v
         context.properties.result = 'Failed';
         context.properties.error = errorData.errorType;
         context.properties.errorMessage = errorData.message;
-        context.properties.stack = errorData.stack;
+        context.properties.stack = limitLines(errorData.stack, 3);
     }
 
     if (!context.suppressErrorDisplay) {

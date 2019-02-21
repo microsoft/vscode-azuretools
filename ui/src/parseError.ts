@@ -154,20 +154,30 @@ function unpackErrorFromField(error: any, prop: string): any {
     return error;
 }
 
-function getCallstack(error: { stack?: string }): string {
+function getCallstack(error: { stack?: string }): string | undefined {
     // tslint:disable-next-line: strict-boolean-expressions
     const stack: string = error.stack || '';
 
     // Standardize to using '/' for path separator for all platforms
-    const standardizedSeparator: string = stack.replace(/\\/g, '/');
+    let result: string = stack.replace(/\\/g, '/');
 
     // Standardize newlines
-    const standardizedNewlines: string = standardizedSeparator.replace(/\r\n/g, '\n');
+    result = result.replace(/\r\n/g, '\n');
 
-    // Remove the first part of the paths (up to "/extensions/"), which might container the username.
+    // Get rid of the redundant first lines "<errortype>: <errormessage>", start with first line with "at"
+    const atMatch: RegExpMatchArray | null = result.match(/^\s*at\s.*/ms);
+    result = atMatch ? atMatch[0] : '';
+
+    // Remove the first part of the paths (up to "/{extensions,repos,src/sources}/xxx/"), which might container the username.
     // e.g.:
     //   (C:\Users\MeMyselfAndI\.vscode\extensions\msazurermtools.azurerm-vscode-tools-0.4.3-alpha\dist\extension.bundle.js:1:313309)
     //   ->
     //   (../extensions/msazurermtools.azurerm-vscode-tools-0.4.3-alpha/dist/extension.bundle.js:1:313309)
-    return standardizedNewlines.replace(/\([^()]+\/extensions\//g, '(../');
+    result = result.replace(/([\( ])[^() ]+\/(extensions|[Rr]epos|[Ss]rc|[Ss]ources|[Ss]ource)\/[^/):\r\n]+\//g, '$1');
+
+    // Trim each line
+    result = result.replace(/^\s+/mg, '');
+    result = result.replace(/\s+$/mg, '');
+
+    return !!result ? result : undefined;
 }
