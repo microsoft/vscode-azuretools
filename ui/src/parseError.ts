@@ -19,7 +19,7 @@ export function parseError(error: any): IParsedError {
             errorType = error.constructor.name;
         }
 
-        stack = error.stack;
+        stack = getCallstack(error);
 
         // See https://github.com/Microsoft/vscode-azureappservice/issues/419 for an example error that requires these 'unpack's
         error = unpackErrorFromField(error, 'value');
@@ -152,4 +152,32 @@ function unpackErrorFromField(error: any, prop: string): any {
     }
 
     return error;
+}
+
+function getCallstack(error: { stack?: string }): string | undefined {
+    // tslint:disable-next-line: strict-boolean-expressions
+    const stack: string = error.stack || '';
+
+    // Standardize to using '/' for path separator for all platforms
+    let result: string = stack.replace(/\\/g, '/');
+
+    // Standardize newlines
+    result = result.replace(/\r\n/g, '\n');
+
+    // Get rid of the redundant first lines "<errortype>: <errormessage>", start with first line with "at"
+    const atMatch: RegExpMatchArray | null = result.match(/^\s*at\s.*/ms);
+    result = atMatch ? atMatch[0] : '';
+
+    // Remove the first part of the paths (up to "/{extensions,repos,src/sources,users}/xxx/"), which might container the username.
+    // e.g.:
+    //   (C:\Users\MeMyselfAndI\.vscode\extensions\msazurermtools.azurerm-vscode-tools-0.4.3-alpha\dist\extension.bundle.js:1:313309)
+    //   ->
+    //   (../extensions/msazurermtools.azurerm-vscode-tools-0.4.3-alpha/dist/extension.bundle.js:1:313309)
+    result = result.replace(/([\( ])[^() ]*\/(extensions|[Rr]epos|[Ss]rc|[Ss]ources|[Ss]ource|[Uu]sers|[Hh]ome)\/[^/):\r\n]+\//g, '$1');
+
+    // Trim each line, including getting rid of 'at'
+    result = result.replace(/^\s*(at\s)?\s*/mg, '');
+    result = result.replace(/\s+$/mg, '');
+
+    return !!result ? result : undefined;
 }
