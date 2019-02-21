@@ -25,20 +25,20 @@ export async function createWebApp(
 export async function setWizardContextDefaults(wizardContext: IAppServiceWizardContext, actionContext: IActionContext, advancedCreation?: boolean): Promise<void> {
     const isJavaProject: boolean = await javaUtils.isJavaProject();
     if (isJavaProject) {
-        wizardContext.recommendedSiteRuntime = new Map([
-            [LinuxRuntimes.java, 1],
-            [LinuxRuntimes.tomcat, 1],
-            [LinuxRuntimes.wildfly, 1]
-        ]);
+        wizardContext.recommendedSiteRuntime = [
+            LinuxRuntimes.java,
+            LinuxRuntimes.tomcat,
+            LinuxRuntimes.wildfly
+        ];
     }
     // only detect if one workspace is opened
     if (workspace.workspaceFolders && workspace.workspaceFolders.length === 1) {
         const fsPath: string = workspace.workspaceFolders[0].uri.fsPath;
         if (await fse.pathExists(path.join(fsPath, 'package.json'))) {
-            wizardContext.recommendedSiteRuntime = new Map([[LinuxRuntimes.node, 1]]);
+            wizardContext.recommendedSiteRuntime = [ LinuxRuntimes.node ];
         } else if (await fse.pathExists(path.join(fsPath, 'requirements.txt'))) {
             // requirements.txt are used to pip install so a good way to determine it's a Python app
-            wizardContext.recommendedSiteRuntime = new Map([[LinuxRuntimes.python, 1]]);
+            wizardContext.recommendedSiteRuntime = [ LinuxRuntimes.python ];
         }
         actionContext.properties.recommendedSiteRuntime = wizardContext.recommendedSiteRuntime ? [...wizardContext.recommendedSiteRuntime.keys()].join(',') : undefined;
     }
