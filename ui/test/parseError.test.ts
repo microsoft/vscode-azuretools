@@ -30,7 +30,6 @@ suite('Error Parsing Tests', () => {
             assert(pe.stack!.startsWith('Error: hello\n'));
             assert(pe.stack!.includes('/ui/test/parseError.test.ts:'));
             assert(!pe.stack!.includes('extensions'), `Should have removed first path of path (extensions), stack is: ${pe.stack}`);
-            assert(!pe.stack!.includes('Users') && !pe.stack!.includes('users'), `Should have removed first path of path (Users), stack is: ${pe.stack}`);
         });
 
         test('Removes first part of paths: Windows', () => {
