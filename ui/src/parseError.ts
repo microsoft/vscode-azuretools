@@ -12,11 +12,14 @@ import { localize } from './localize';
 export function parseError(error: any): IParsedError {
     let errorType: string = '';
     let message: string = '';
+    let stack: string | undefined;
 
     if (typeof (error) === 'object' && error !== null) {
         if (error.constructor !== Object) {
             errorType = error.constructor.name;
         }
+
+        stack = error.stack;
 
         // See https://github.com/Microsoft/vscode-azureappservice/issues/419 for an example error that requires these 'unpack's
         error = unpackErrorFromField(error, 'value');
@@ -66,6 +69,7 @@ export function parseError(error: any): IParsedError {
     return {
         errorType: errorType,
         message: message,
+        stack: stack,
         // NOTE: Intentionally not using 'error instanceof UserCancelledError' because that doesn't work if multiple versions of the UI package are used in one extension
         // See https://github.com/Microsoft/vscode-azuretools/issues/51 for more info
         isUserCancelledError: errorType === 'UserCancelledError'
