@@ -30,8 +30,9 @@ suite('Error Parsing Tests', () => {
             assert(!!pe && !!pe.stack);
             assert(!pe.stack!.includes('Error: \n'));
             assert(!pe.stack!.startsWith('at '));
-            assert(pe.stack!.includes('(ui/test/parseError.test.ts:'));
+            assert(pe.stack!.includes('ui/test/parseError.test.ts:'));
             assert(!pe.stack!.includes('extensions'), `Should have removed first path of path (extensions), stack is: ${pe.stack}`);
+            assert(!pe.stack!.includes('repos'), `Should have removed first path of path (repos), stack is: ${pe.stack}`);
             assert(!pe.stack!.includes(os.userInfo().username), `Should have removed first path of path (username), stack is: ${pe.stack}`);
             assert(!pe.stack!.includes(os.userInfo().homedir), `Should have removed first path of path (homedir), stack is: ${pe.stack}`);
         });
