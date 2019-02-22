@@ -40,7 +40,7 @@ export async function setWizardContextDefaults(wizardContext: IAppServiceWizardC
             // requirements.txt are used to pip install so a good way to determine it's a Python app
             wizardContext.recommendedSiteRuntime = [ LinuxRuntimes.python ];
         }
-        actionContext.properties.recommendedSiteRuntime = wizardContext.recommendedSiteRuntime ? [...wizardContext.recommendedSiteRuntime.keys()].join(',') : undefined;
+        actionContext.properties.recommendedSiteRuntime = wizardContext.recommendedSiteRuntime ? wizardContext.recommendedSiteRuntime.join(',') : undefined;
     }
 
     if (!advancedCreation) {
