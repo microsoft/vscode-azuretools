@@ -141,6 +141,10 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                 displayName: '.NET Core 2.1'
             },
             {
+                name: 'dotnetcore|2.2',
+                displayName: '.NET Core 2.2'
+            },
+            {
                 name: 'ruby|2.3',
                 displayName: 'Ruby 2.3'
             },
