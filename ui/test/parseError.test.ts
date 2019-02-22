@@ -104,11 +104,40 @@ ui/node_modules/vscode/node_modules/mocha/lib/runner.js:366:7`);
         test('Remove Users if necessary', () => {
             const err: Error = new Error('hello');
             err.stack = `at Context.test (/Users/vsts/agent/2.147.1/work/1/s/ui/test/parseError.test.ts:25:23)
-                    at callFn (/Users/vsts/agent/2.147.1/work/1/s/ui/node_modules/vscode/node_modules/mocha/lib/runnable.js:354:21)`;
+                    at callFn (/Users/vsts/agent/2.147.1/work/1/s/ui/node_modules/vscode/node_modules/mocha/lib/runnable.js:354:21)
+                    at module.exports../src/AzureRMTools.ts.__awaiter (/Users/vsts/repos/vscode-azurearmtools/dist/extension.bundle.js:160227:71)`;
             const pe: IParsedError = parseError(err);
             assert.strictEqual(pe.stack, `Context.test (agent/2.147.1/work/1/s/ui/test/parseError.test.ts:25:23)
-callFn (agent/2.147.1/work/1/s/ui/node_modules/vscode/node_modules/mocha/lib/runnable.js:354:21)`);
+callFn (agent/2.147.1/work/1/s/ui/node_modules/vscode/node_modules/mocha/lib/runnable.js:354:21)
+module.exports../src/AzureRMTools.ts.__awaiter (dist/extension.bundle.js:160227:71)`);
         });
+
+        test('Weird stack', () => {
+            const err: Error = new Error('hello');
+            err.stack = `TypeError: Cannot read property 'errors' of null
+                at Object.<anonymous> (/Users/anyone/repos/vscode-azurearmtools/dist/extension.bundle.js:160396:60)
+                at Generator.next (<anonymous>)
+                at module.exports../src/AzureRMTools.ts.__awaiter (/Users/anyone/repos/vscode-azurearmtools/dist/extension.bundle.js:160227:71)
+                at new Promise (<anonymous>)
+                at module.exports../src/AzureRMTools.ts.__awaiter (/Users/anyone/repos/vscode-azurearmtools/dist/extension.bundle.js:160223:12)
+                at Object.<anonymous> (/Users/anyone/repos/vscode-azurearmtools/dist/extension.bundle.js:160394:20)
+                at Object.<anonymous> (/Users/anyone/repos/vscode-azurearmtools/dist/extension.bundle.js:148668:51)
+                at Generator.next (<anonymous>)
+                at module.exports../node_modules/vscode-azureextensionui/out/src/callWithTelemetryAndErrorHandling.js.__awaiter (/Users/anyone/repos/vscode-azurearmtools/dist/extension.bundle.js:148618:71)
+                at new Promise (<anonymous>)`;
+            const pe: IParsedError = parseError(err);
+            assert.strictEqual(pe.stack, `Object.<anonymous> (dist/extension.bundle.js:160396:60)
+Generator.next (<anonymous>)
+module.exports../src/AzureRMTools.ts.__awaiter (dist/extension.bundle.js:160227:71)
+new Promise (<anonymous>)
+module.exports../src/AzureRMTools.ts.__awaiter (dist/extension.bundle.js:160223:12)
+Object.<anonymous> (dist/extension.bundle.js:160394:20)
+Object.<anonymous> (dist/extension.bundle.js:148668:51)
+Generator.next (<anonymous>)
+module.exports../node_modules/vscode-azureextensionui/out/src/callWithTelemetryAndErrorHandling.js.__awaiter (dist/extension.bundle.js:148618:71)
+new Promise (<anonymous>)`);
+        });
+
     });
 
     test('Generic Error', () => {

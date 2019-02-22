@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as htmlToText from 'html-to-text';
+import * as os from 'os';
 import { IParsedError } from '../index';
 import { localize } from './localize';
 
@@ -173,11 +174,14 @@ function getCallstack(error: { stack?: string }): string | undefined {
     //   (C:\Users\MeMyselfAndI\.vscode\extensions\msazurermtools.azurerm-vscode-tools-0.4.3-alpha\dist\extension.bundle.js:1:313309)
     //   ->
     //   (../extensions/msazurermtools.azurerm-vscode-tools-0.4.3-alpha/dist/extension.bundle.js:1:313309)
-    result = result.replace(/([\( ])[^() ]*\/(extensions|[Rr]epos|[Ss]rc|[Ss]ources|[Ss]ource|[Uu]sers|[Hh]ome)\/[^/):\r\n]+\//g, '$1');
+    result = result.replace(/([\( ])[^() ]*\/(extensions|[Rr]epos|[Ss]rc|[Ss]ources|[Ss]ource|[Uu]sers|[Hh]ome)\/[^/):\r\n ]+\//g, '$1');
 
     // Trim each line, including getting rid of 'at'
     result = result.replace(/^\s*(at\s)?\s*/mg, '');
     result = result.replace(/\s+$/mg, '');
+
+    // Remove username if it still exists
+    result = result.replace(os.userInfo().username, '<user>');
 
     return !!result ? result : undefined;
 }

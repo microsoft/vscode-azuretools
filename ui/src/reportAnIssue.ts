@@ -5,6 +5,7 @@
 
 // tslint:disable-next-line:no-require-imports
 import opn = require("opn");
+import * as vscode from 'vscode';
 import { IParsedError } from '../index';
 import { getPackageInfo } from "./getPackageInfo";
 
@@ -28,7 +29,8 @@ Error type: ${parsedError.errorType}
 Error Message: ${parsedError.message}
 
 Version: ${extensionVersion}
-OS: ${process.platform}`;
+OS: ${process.platform}
+VS Code Version: ${vscode.version}`;
 
     if (parsedError.stack) {
         body = body.concat(`
