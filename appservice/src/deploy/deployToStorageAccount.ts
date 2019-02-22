@@ -50,21 +50,13 @@ export async function deployToStorageAccount(client: SiteClient, zipFilePath: st
 }
 
 async function createBlobService(client: SiteClient): Promise<azureStorage.BlobService> {
-    let name: string | undefined;
-    let key: string | undefined;
     // Use same storage account as AzureWebJobsStorage for deployments
     const azureWebJobsStorageKey: string = 'AzureWebJobsStorage';
     const settings: StringDictionary = await client.listApplicationSettings();
     if (settings.properties && settings.properties[azureWebJobsStorageKey]) {
-        const accountName: RegExpMatchArray | null = settings.properties[azureWebJobsStorageKey].match(/AccountName=([^;]*);?/);
-        const accountKey: RegExpMatchArray | null = settings.properties[azureWebJobsStorageKey].match(/AccountKey=([^;]*);?/);
-        if (accountName && accountKey) {
-            name = accountName[1];
-            key = accountKey[1];
-            const blobService: azureStorage.BlobService = azureStorage.createBlobService(name, key);
-            // Add retry filter since deploying may be a large file which can fail if network is poor
-            return blobService.withFilter(new azureStorage.ExponentialRetryPolicyFilter());
-        }
+        const blobService: azureStorage.BlobService = azureStorage.createBlobService(settings.properties[azureWebJobsStorageKey]);
+        // Add retry filter since deploying may be a large file which can fail if network is poor
+        return blobService.withFilter(new azureStorage.ExponentialRetryPolicyFilter());
     }
     throw new Error(localize('"{0}" app setting is required for Run From Package deployment.', azureWebJobsStorageKey));
 }

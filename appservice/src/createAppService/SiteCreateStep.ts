@@ -76,9 +76,15 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
                 fileShareName = `${fileShareName.slice(0, maxFileShareNameLength - randomLetters - 1)}-${randomUtils.getRandomHexString(randomLetters)}`;
             }
 
+            let endpointSuffix: string = wizardContext.environment.storageEndpointSuffix;
+            // https://github.com/Azure/azure-sdk-for-node/issues/4706
+            if (endpointSuffix.startsWith('.')) {
+                endpointSuffix = endpointSuffix.substr(1);
+            }
+
             let storageConnectionString: string = '';
             if (keysResult.keys && keysResult.keys[0].value) {
-                storageConnectionString = `DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${keysResult.keys[0].value}`;
+                storageConnectionString = `DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${keysResult.keys[0].value};EndpointSuffix=${endpointSuffix}`;
             }
 
             if (this.createFunctionAppSettings) {
