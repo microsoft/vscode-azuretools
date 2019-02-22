@@ -103,7 +103,7 @@ function parseIfJson(o: any): any {
 function parseIfHtml(message: string): string {
     if (/<html/i.test(message)) {
         try {
-            return htmlToText.fromString(message, { wordwrap: false, uppercaseHeadings: false });
+            return htmlToText.fromString(message, { wordwrap: false, uppercaseHeadings: false, ignoreImage: true });
         } catch (err) {
             // ignore
         }
