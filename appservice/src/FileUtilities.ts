@@ -33,15 +33,16 @@ async function zipDirectoryInternal(folderPath: string, addFiles: (zipper: archi
     }
 
     const zipFilePath: string = path.join(os.tmpdir(), `${randomFileName()}.zip`);
-    await new Promise(async (resolve: () => void, reject: (err: Error) => void): Promise<void> => {
-        const zipOutput: fse.WriteStream = fse.createWriteStream(zipFilePath);
-        zipOutput.on('close', resolve);
+    const zipOutput: fse.WriteStream = fse.createWriteStream(zipFilePath);
+    // level 9 indicates best compression at the cost of slower zipping. Since sending the zip over the internet is usually the bottleneck, we want best compression.
+    const zipper: archiver.Archiver = archiver('zip', { zlib: { level: 9 } });
+    await addFiles(zipper);
 
-        const zipper: archiver.Archiver = archiver('zip', { zlib: { level: 9 } });
+    await new Promise((resolve, reject): void => {
+        zipOutput.on('close', resolve);
         zipper.on('error', reject);
-        await addFiles(zipper);
         zipper.pipe(zipOutput);
-        void zipper.finalize();
+        zipper.finalize();
     });
 
     return zipFilePath;
