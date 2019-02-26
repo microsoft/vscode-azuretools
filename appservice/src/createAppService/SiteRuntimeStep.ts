@@ -25,7 +25,7 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                 if (wizardContext.newSiteOS === WebsiteOS.linux) {
                     runtimeItems.push({ label: 'Python', description: '(Preview)', data: 'python' });
                 } else {
-                    runtimeItems.push({ label: 'Java', description: '(Preview)', data: 'java' });
+                    runtimeItems.push({ label: 'Java', data: 'java' });
                 }
 
                 wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new app.' })).data;
@@ -176,6 +176,6 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
             const index: number = recommendedRuntimes.findIndex((runtime: string) => item.data.name.includes(runtime));
             return index === -1 ? recommendedRuntimes.length : index;
         }
-        return runtimeItems.sort((a: IAzureQuickPickItem<ILinuxRuntimeStack> , b: IAzureQuickPickItem<ILinuxRuntimeStack>) => getPriority(a) - getPriority(b));
+        return runtimeItems.sort((a: IAzureQuickPickItem<ILinuxRuntimeStack>, b: IAzureQuickPickItem<ILinuxRuntimeStack>) => getPriority(a) - getPriority(b));
     }
 }
