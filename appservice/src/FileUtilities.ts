@@ -83,9 +83,9 @@ async function addFilesByGitignore(zipper: archiver.Archiver, folderPath: string
     }
 
     // tslint:disable-next-line:no-unsafe-any
-    const paths: string[] = await globGitignore('**/*', { cwd: folderPath, dot: true, ignore, absolute: true });
+    const paths: string[] = await globGitignore('**/*', { cwd: folderPath, dot: true, ignore });
     for (const p of paths) {
-        zipper.file(p, { name: path.relative(folderPath, p) });
+        zipper.file(path.join(folderPath, p), { name: p });
     }
 }
 
