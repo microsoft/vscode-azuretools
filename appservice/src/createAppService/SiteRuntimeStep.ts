@@ -113,6 +113,10 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                 displayName: 'Node.js 10.1'
             },
             {
+                name: 'node|10.14',
+                displayName: 'Node.js 10.14'
+            },
+            {
                 name: 'php|5.6',
                 displayName: 'PHP 5.6'
             },
