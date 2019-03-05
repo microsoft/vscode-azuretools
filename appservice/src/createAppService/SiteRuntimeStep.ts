@@ -113,8 +113,6 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                 displayName: 'Node.js 10.1'
             },
             {
-<<<<<<< Updated upstream
-=======
                 name: 'node|10.10',
                 displayName: 'Node.js 10.10'
             },
@@ -123,7 +121,6 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                 displayName: 'Node.js 10.14'
             },
             {
->>>>>>> Stashed changes
                 name: 'php|5.6',
                 displayName: 'PHP 5.6'
             },
