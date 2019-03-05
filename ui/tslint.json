@@ -59,6 +59,16 @@
                 "messageIndex": 1
             }
         ],
-        "no-multiline-string": false
+        "no-multiline-string": false,
+        "typedef": [
+            true,
+            "call-signature",
+            "arrow-call-signature",
+            "parameter",
+            // "arrow-parameter",
+            "property-declaration",
+            "variable-declaration",
+            "member-variable-declaration"
+        ]
     }
 }

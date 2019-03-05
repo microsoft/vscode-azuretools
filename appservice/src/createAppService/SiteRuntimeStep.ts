@@ -25,7 +25,7 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                 if (wizardContext.newSiteOS === WebsiteOS.linux) {
                     runtimeItems.push({ label: 'Python', description: '(Preview)', data: 'python' });
                 } else {
-                    runtimeItems.push({ label: 'Java', description: '(Preview)', data: 'java' });
+                    runtimeItems.push({ label: 'Java', data: 'java' });
                 }
 
                 wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new app.' })).data;
@@ -145,6 +145,10 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                 displayName: '.NET Core 2.1'
             },
             {
+                name: 'dotnetcore|2.2',
+                displayName: '.NET Core 2.2'
+            },
+            {
                 name: 'ruby|2.3',
                 displayName: 'Ruby 2.3'
             },
@@ -161,21 +165,21 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                 displayName: 'Java SE (JRE 8)'
             },
             {
+                name: 'wildfly|14-jre8',
+                displayName: '[Preview] WildFly 14 (JRE 8)'
+            },
+            {
                 name: 'python|3.7',
                 displayName: '[Preview] Python 3.7'
             }
         ];
     }
 
-    private sortQuickPicksByRuntime(runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[], runtime: string): IAzureQuickPickItem<ILinuxRuntimeStack>[] {
-        return runtimeItems.sort((a: IAzureQuickPickItem<ILinuxRuntimeStack>, b: IAzureQuickPickItem<ILinuxRuntimeStack>) => {
-            if (a.data.name.includes(runtime)) {
-                return -1;
-            } else if (b.data.name.includes(runtime)) {
-                return 1;
-            } else {
-                return 0;
-            }
-        });
+    private sortQuickPicksByRuntime(runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[], recommendedRuntimes: string[]): IAzureQuickPickItem<ILinuxRuntimeStack>[] {
+        function getPriority(item: IAzureQuickPickItem<ILinuxRuntimeStack>): number {
+            const index: number = recommendedRuntimes.findIndex((runtime: string) => item.data.name.includes(runtime));
+            return index === -1 ? recommendedRuntimes.length : index;
+        }
+        return runtimeItems.sort((a: IAzureQuickPickItem<ILinuxRuntimeStack>, b: IAzureQuickPickItem<ILinuxRuntimeStack>) => getPriority(a) - getPriority(b));
     }
 }

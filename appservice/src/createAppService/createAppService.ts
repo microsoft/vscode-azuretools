@@ -104,8 +104,11 @@ export async function createAppService(
         const freePlanSku: SkuDescription = { name: 'F1', tier: 'Free', size: 'F1', family: 'F', capacity: 1 };
         wizardContext.newResourceGroupName = `appsvc_rg_${wizardContext.newSiteOS}_${location.name}`;
         wizardContext.newPlanName = `appsvc_asp_${wizardContext.newSiteOS}_${location.name}`;
-        // Free tier is only available for Windows
-        wizardContext.newPlanSku = wizardContext.newSiteOS === WebsiteOS.windows ? freePlanSku : basicPlanSku;
+        // Java Web Apps need P1v2 as default, which the newPlanSku for has been preset before.
+        if (!wizardContext.newPlanSku) {
+            // Free tier is only available for Windows
+            wizardContext.newPlanSku = wizardContext.newSiteOS === WebsiteOS.windows ? freePlanSku : basicPlanSku;
+        }
     }
 
     const creatingNewApp: string = localize('CreatingNewApp', 'Creating {0} "{1}"...', getAppKindDisplayName(wizardContext.newSiteKind), wizardContext.newSiteName);

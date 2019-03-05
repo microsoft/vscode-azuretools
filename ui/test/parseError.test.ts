@@ -4,12 +4,142 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
+import * as os from 'os';
 import { IParsedError } from '../index';
 import { UserCancelledError } from '../src/errors';
 import { parseError } from '../src/parseError';
 
+// tslint:disable:no-non-null-assertion max-func-body-length
+
 // tslint:disable-next-line:max-func-body-length
 suite('Error Parsing Tests', () => {
+    suite('Call Stacks', () => {
+        test('Not an error', () => {
+            const pe: IParsedError = parseError('test');
+            assert.strictEqual(pe.stack, undefined);
+        });
+
+        test('User-defined error', () => {
+            let pe: IParsedError | undefined;
+            try {
+                throw new Error('hello');
+            } catch (err) {
+                pe = parseError(err);
+            }
+            // tslint:disable-next-line: strict-boolean-expressions
+            assert(!!pe && !!pe.stack);
+            assert(!pe.stack!.includes('Error: \n'));
+            assert(!pe.stack!.startsWith('at '));
+            assert(pe.stack!.includes('ui/test/parseError.test.ts:'));
+            assert(!pe.stack!.includes('extensions'), `Should have removed first path of path (extensions), stack is: ${pe.stack}`);
+            assert(!pe.stack!.includes('repos'), `Should have removed first path of path (repos), stack is: ${pe.stack}`);
+            assert(!pe.stack!.includes(os.userInfo().username), `Should have removed first path of path (username), stack is: ${pe.stack}`);
+            assert(!pe.stack!.includes(os.userInfo().homedir), `Should have removed first path of path (homedir), stack is: ${pe.stack}`);
+        });
+
+        test('Removes first part of paths: Windows', () => {
+            const err: Error = new Error('hello');
+            err.stack = `TypeError: Cannot read property 'findbyName' of undefined
+                at UnrecognizedFunctionVisitor.visitFunction (C:\\Users\\MeMyselfAndI\\.vscode\\extensions\\msazurermtools.azurerm-vscode-tools-0.4.3-alpha\\dist\\extension.bundle.js:1:313309)
+                at FunctionValue.accept (C:\\Users\\MeMyselfAndI\\.vscode\\extensions\\msazurermtools.azurerm-vscode-tools-0.4.3-alpha\\dist\\extension.bundle.js:1:308412)
+                at Function.visit (C:\\Users\\MeMyselfAndI\\.vscode\\extensions\\msazurermtools.azurerm-vscode-tools-0.4.3-alpha\\dist\\extension.bundle.js:1:313489)
+                at DeploymentTemplate.<anonymous> (C:\\Users\\MeMyselfAndI\\.vscode\\extensions\\msazurermtools.azurerm-vscode-tools-0.4.3-alpha\\dist\\extension.bundle.js:127:88385)
+                at Generator.next (<anonymous>)
+                at a (C:\\Users\\MeMyselfAndI\\.vscode\\extensions\\msazurermtools.azurerm-vscode-tools-0.4.3-alpha\\dist\\extension.bundle.js:127:86224)`;
+            const pe: IParsedError = parseError(err);
+            assert.strictEqual(pe.stack, `UnrecognizedFunctionVisitor.visitFunction (dist/extension.bundle.js:1:313309)
+FunctionValue.accept (dist/extension.bundle.js:1:308412)
+Function.visit (dist/extension.bundle.js:1:313489)
+DeploymentTemplate.<anonymous> (dist/extension.bundle.js:127:88385)
+Generator.next (<anonymous>)
+a (dist/extension.bundle.js:127:86224)`);
+        });
+
+        test('Removes first part of paths: Mac/Linux', () => {
+            const err: Error = new Error('hello');
+            err.stack = `StorageError: The specified share already exists.
+            RequestId:36445445-801a-002c-2385-c94b79000000
+            Time:2019-02-21T01:35:57.5335471Z
+                at Function.StorageServiceClient._normalizeError (/Users/MeMyselfAndI/.vscode-insiders/extensions/ms-azuretools.vscode-azurestorage-0.6.0/node_modules/azure-storage/lib/common/services/storageserviceclient.js:1205:23)
+                at FileService.StorageServiceClient._processResponse (/Users/MeMyselfAndI/.vscode-insiders/extensions/ms-azuretools.vscode-azurestorage-0.6.0/node_modules/azure-storage/lib/common/services/storageserviceclient.js:751:50)
+                at Request.processResponseCallback [as _callback] (/Users/MeMyselfAndI/.vscode-insiders/extensions/ms-azuretools.vscode-azurestorage-0.6.0/node_modules/azure-storage/lib/common/services/storageserviceclient.js:319:37)
+                at Request.init.self.callback (/Users/MeMyselfAndI/.vscode-insiders/extensions/ms-azuretools.vscode-azurestorage-0.6.0/node_modules/request/request.js:185:22)
+                at Request.emit (events.js:182:13)
+                at Request.<anonymous> (/Users/MeMyselfAndI/.vscode-insiders/extensions/ms-azuretools.vscode-azurestorage-0.6.0/node_modules/request/request.js:1161:10)
+                at Request.emit (events.js:182:13)
+                at IncomingMessage.<anonymous> (/Users/MeMyselfAndI/.vscode-insiders/extensions/ms-azuretools.vscode-azurestorage-0.6.0/node_modules/request/request.js:1083:12)
+                at Object.onceWrapper (events.js:273:13)
+                at IncomingMessage.emit (events.js:187:15)`;
+            const pe: IParsedError = parseError(err);
+            assert.strictEqual(pe.stack, `Function.StorageServiceClient._normalizeError (node_modules/azure-storage/lib/common/services/storageserviceclient.js:1205:23)
+FileService.StorageServiceClient._processResponse (node_modules/azure-storage/lib/common/services/storageserviceclient.js:751:50)
+Request.processResponseCallback [as _callback] (node_modules/azure-storage/lib/common/services/storageserviceclient.js:319:37)
+Request.init.self.callback (node_modules/request/request.js:185:22)
+Request.emit (events.js:182:13)
+Request.<anonymous> (node_modules/request/request.js:1161:10)
+Request.emit (events.js:182:13)
+IncomingMessage.<anonymous> (node_modules/request/request.js:1083:12)
+Object.onceWrapper (events.js:273:13)
+IncomingMessage.emit (events.js:187:15)`);
+        });
+
+        test('Source lines without function name', () => {
+            const err: Error = new Error('hello');
+            err.stack = `Error: API version "0.1" for extension id "ms-azuretools.azureextensionui" is no longer supported. Minimum version is "1.0.0".
+            at Object.<anonymous> (/Users/YouYourselfAndYou/repos/vscode-azuretools/ui/src/createApiProvider.ts:62:19)
+            at Object.callWithTelemetryAndErrorHandlingSync (/Users/YouYourselfAndYou/repos/vscode-azuretools/ui/src/callWithTelemetryAndErrorHandling.ts:41:28)
+            at Generator.next (<anonymous>)
+            at /Users/YouYourselfAndYou/repos/vscode-azuretools/ui/node_modules/vscode/node_modules/mocha/lib/runner.js:560:12
+            at next (/Users/YouYourselfAndYou/repos/vscode-azuretools/ui/node_modules/vscode/node_modules/mocha/lib/runner.js:356:14)
+            at /Users/YouYourselfAndYou/repos/vscode-azuretools/ui/node_modules/vscode/node_modules/mocha/lib/runner.js:366:7`;
+            const pe: IParsedError = parseError(err);
+            assert.strictEqual(pe.stack, `Object.<anonymous> (ui/src/createApiProvider.ts:62:19)
+Object.callWithTelemetryAndErrorHandlingSync (ui/src/callWithTelemetryAndErrorHandling.ts:41:28)
+Generator.next (<anonymous>)
+ui/node_modules/vscode/node_modules/mocha/lib/runner.js:560:12
+next (ui/node_modules/vscode/node_modules/mocha/lib/runner.js:356:14)
+ui/node_modules/vscode/node_modules/mocha/lib/runner.js:366:7`);
+        });
+
+        test('Remove Users if necessary', () => {
+            const err: Error = new Error('hello');
+            err.stack = `at Context.test (/Users/vsts/agent/2.147.1/work/1/s/ui/test/parseError.test.ts:25:23)
+                    at callFn (/Users/vsts/agent/2.147.1/work/1/s/ui/node_modules/vscode/node_modules/mocha/lib/runnable.js:354:21)
+                    at module.exports../src/AzureRMTools.ts.__awaiter (/Users/vsts/repos/vscode-azurearmtools/dist/extension.bundle.js:160227:71)`;
+            const pe: IParsedError = parseError(err);
+            assert.strictEqual(pe.stack, `Context.test (agent/2.147.1/work/1/s/ui/test/parseError.test.ts:25:23)
+callFn (agent/2.147.1/work/1/s/ui/node_modules/vscode/node_modules/mocha/lib/runnable.js:354:21)
+module.exports../src/AzureRMTools.ts.__awaiter (dist/extension.bundle.js:160227:71)`);
+        });
+
+        test('Weird stack', () => {
+            const err: Error = new Error('hello');
+            err.stack = `TypeError: Cannot read property 'errors' of null
+                at Object.<anonymous> (/Users/anyone/repos/vscode-azurearmtools/dist/extension.bundle.js:160396:60)
+                at Generator.next (<anonymous>)
+                at module.exports../src/AzureRMTools.ts.__awaiter (/Users/anyone/repos/vscode-azurearmtools/dist/extension.bundle.js:160227:71)
+                at new Promise (<anonymous>)
+                at module.exports../src/AzureRMTools.ts.__awaiter (/Users/anyone/repos/vscode-azurearmtools/dist/extension.bundle.js:160223:12)
+                at Object.<anonymous> (/Users/anyone/repos/vscode-azurearmtools/dist/extension.bundle.js:160394:20)
+                at Object.<anonymous> (/Users/anyone/repos/vscode-azurearmtools/dist/extension.bundle.js:148668:51)
+                at Generator.next (<anonymous>)
+                at module.exports../node_modules/vscode-azureextensionui/out/src/callWithTelemetryAndErrorHandling.js.__awaiter (/Users/anyone/repos/vscode-azurearmtools/dist/extension.bundle.js:148618:71)
+                at new Promise (<anonymous>)`;
+            const pe: IParsedError = parseError(err);
+            assert.strictEqual(pe.stack, `Object.<anonymous> (dist/extension.bundle.js:160396:60)
+Generator.next (<anonymous>)
+module.exports../src/AzureRMTools.ts.__awaiter (dist/extension.bundle.js:160227:71)
+new Promise (<anonymous>)
+module.exports../src/AzureRMTools.ts.__awaiter (dist/extension.bundle.js:160223:12)
+Object.<anonymous> (dist/extension.bundle.js:160394:20)
+Object.<anonymous> (dist/extension.bundle.js:148668:51)
+Generator.next (<anonymous>)
+module.exports../node_modules/vscode-azureextensionui/out/src/callWithTelemetryAndErrorHandling.js.__awaiter (dist/extension.bundle.js:148618:71)
+new Promise (<anonymous>)`);
+        });
+
+    });
+
     test('Generic Error', () => {
         const pe: IParsedError = parseError(new Error('test'));
         assert.strictEqual(pe.errorType, 'Error');

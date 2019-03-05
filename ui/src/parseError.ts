@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as htmlToText from 'html-to-text';
+import * as os from 'os';
 import { IParsedError } from '../index';
 import { localize } from './localize';
 
@@ -12,11 +13,14 @@ import { localize } from './localize';
 export function parseError(error: any): IParsedError {
     let errorType: string = '';
     let message: string = '';
+    let stack: string | undefined;
 
     if (typeof (error) === 'object' && error !== null) {
         if (error.constructor !== Object) {
             errorType = error.constructor.name;
         }
+
+        stack = getCallstack(error);
 
         // See https://github.com/Microsoft/vscode-azureappservice/issues/419 for an example error that requires these 'unpack's
         error = unpackErrorFromField(error, 'value');
@@ -66,6 +70,7 @@ export function parseError(error: any): IParsedError {
     return {
         errorType: errorType,
         message: message,
+        stack: stack,
         // NOTE: Intentionally not using 'error instanceof UserCancelledError' because that doesn't work if multiple versions of the UI package are used in one extension
         // See https://github.com/Microsoft/vscode-azuretools/issues/51 for more info
         isUserCancelledError: errorType === 'UserCancelledError'
@@ -98,7 +103,7 @@ function parseIfJson(o: any): any {
 function parseIfHtml(message: string): string {
     if (/<html/i.test(message)) {
         try {
-            return htmlToText.fromString(message, { wordwrap: false, uppercaseHeadings: false });
+            return htmlToText.fromString(message, { wordwrap: false, uppercaseHeadings: false, ignoreImage: true });
         } catch (err) {
             // ignore
         }
@@ -148,4 +153,35 @@ function unpackErrorFromField(error: any, prop: string): any {
     }
 
     return error;
+}
+
+function getCallstack(error: { stack?: string }): string | undefined {
+    // tslint:disable-next-line: strict-boolean-expressions
+    const stack: string = error.stack || '';
+
+    // Standardize to using '/' for path separator for all platforms
+    let result: string = stack.replace(/\\/g, '/');
+
+    // Standardize newlines
+    result = result.replace(/\r\n/g, '\n');
+
+    // Get rid of the redundant first lines "<errortype>: <errormessage>", start with first line with "at"
+    const atMatch: RegExpMatchArray | null = result.match(/^\s*at\s.*/ms);
+    result = atMatch ? atMatch[0] : '';
+
+    // Remove the first part of the paths (up to "/{extensions,repos,src/sources,users}/xxx/"), which might container the username.
+    // e.g.:
+    //   (C:\Users\MeMyselfAndI\.vscode\extensions\msazurermtools.azurerm-vscode-tools-0.4.3-alpha\dist\extension.bundle.js:1:313309)
+    //   ->
+    //   (../extensions/msazurermtools.azurerm-vscode-tools-0.4.3-alpha/dist/extension.bundle.js:1:313309)
+    result = result.replace(/([\( ])[^() ]*\/(extensions|[Rr]epos|[Ss]rc|[Ss]ources|[Ss]ource|[Uu]sers|[Hh]ome)\/[^/):\r\n ]+\//g, '$1');
+
+    // Trim each line, including getting rid of 'at'
+    result = result.replace(/^\s*(at\s)?\s*/mg, '');
+    result = result.replace(/\s+$/mg, '');
+
+    // Remove username if it still exists
+    result = result.replace(os.userInfo().username, '<user>');
+
+    return !!result ? result : undefined;
 }

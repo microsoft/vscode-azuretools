@@ -3,14 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-const path = require('path');
-const cp = require('child_process');
-
-function test() {
-    const env = process.env;
-    env.DEBUGTELEMETRY = 1;
-    env.CODE_EXTENSIONS_PATH = path.join(__dirname, 'test', 'extension');
-    return cp.spawn('node', ['./node_modules/vscode/bin/test'], { stdio: 'inherit', env });
-};
-
-exports.test = test;
+/**
+ * Limit string 's' to at most 'n' lines
+ */
+export function limitLines(s: string, n: number): string {
+    const match: RegExpMatchArray | null = s.match(new RegExp(`((\\r\\n|\\n)?.*$){0,${n}}`, 'm'));
+    return match ? match[0] : '';
+}

@@ -4,6 +4,9 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { StringDictionary } from "azure-arm-website/lib/models";
+import * as fse from 'fs-extra';
+import * as path from 'path';
+import { workspace } from "vscode";
 import { UserCancelledError } from "vscode-azureextensionui";
 import { ext } from '../extensionVariables';
 import { SiteClient } from "../SiteClient";
@@ -12,8 +15,8 @@ export namespace javaUtils {
     const DEFAULT_PORT: string = '8080';
     const PORT_KEY: string = 'PORT';
 
-    export function isJavaTomcatRuntime(runtime: string | undefined): boolean {
-        return !!runtime && runtime.toLowerCase().startsWith('tomcat');
+    export function needDeployWarFile(runtime: string | undefined): boolean {
+        return !!runtime && /^(tomcat|wildfly)/i.test(runtime);
     }
 
     export function isJavaSERuntime(runtime: string | undefined): boolean {
@@ -29,6 +32,26 @@ export namespace javaUtils {
             }
         }
         return false;
+    }
+
+    /**
+     * Return if all of the workspace folders contain Java projects in their base paths.
+     * Only Maven and Gradle are taken into consideration for now.
+     */
+    export async function isJavaProject(): Promise<boolean> {
+        if (!workspace.workspaceFolders) {
+            return false;
+        }
+
+        for (const workspaceFolder of workspace.workspaceFolders) {
+            if (await fse.pathExists(path.join(workspaceFolder.uri.fsPath, 'pom.xml')) ||
+                await fse.pathExists(path.join(workspaceFolder.uri.fsPath, 'build.gradle'))) {
+                continue;
+            }
+            return false;
+        }
+
+        return true;
     }
 
     export async function configureJavaSEAppSettings(siteClient: SiteClient): Promise<StringDictionary | undefined> {

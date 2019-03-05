@@ -17,7 +17,10 @@ export enum AppKind {
 
 export enum LinuxRuntimes {
     node = 'node',
-    python = 'python'
+    python = 'python',
+    java = 'java',
+    tomcat = 'tomcat',
+    wildfly = 'wildfly'
 }
 
 /**
