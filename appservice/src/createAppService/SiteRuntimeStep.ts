@@ -57,10 +57,6 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                 displayName: 'Node.js 10.10 (LTS - Recommended for new apps)'
             },
             {
-                name: 'node|10.14',
-                displayName: 'Node.js 10.14 (LTS - Recommended for new apps)'
-            },
-            {
                 name: 'node|4.4',
                 displayName: 'Node.js 4.4'
             },
@@ -115,6 +111,10 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
             {
                 name: 'node|10.1',
                 displayName: 'Node.js 10.1'
+            },
+            {
+                name: 'node|10.14',
+                displayName: 'Node.js 10.14'
             },
             {
                 name: 'php|5.6',
