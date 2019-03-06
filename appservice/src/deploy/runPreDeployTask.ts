@@ -34,9 +34,12 @@ export async function tryRunPreDeployTask(actionContext: IActionContext, deployF
             const tasks: vscode.Task[] = await vscode.tasks.fetchTasks();
             const preDeployTask: vscode.Task | undefined = tasks.find((task: vscode.Task) => isTaskEqual(taskName, deployFsPath, task));
             if (preDeployTask) {
-                await vscode.tasks.executeTask(preDeployTask);
-                exitCode = await waitForPreDeployTask(preDeployTask);
-                actionContext.properties.preDeployTaskExitCode = String(exitCode);
+                const progressMessage: string = localize('runningTask', 'Running preDeployTask "{0}"...', taskName);
+                await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: progressMessage }, async () => {
+                    await vscode.tasks.executeTask(preDeployTask);
+                    exitCode = await waitForPreDeployTask(preDeployTask);
+                    actionContext.properties.preDeployTaskExitCode = String(exitCode);
+                });
             } else {
                 failedToFindTask = true;
             }
