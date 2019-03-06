@@ -15,12 +15,26 @@ export namespace javaUtils {
     const DEFAULT_PORT: string = '8080';
     const PORT_KEY: string = 'PORT';
 
-    export function needDeployWarFile(runtime: string | undefined): boolean {
+    export function isJavaWebContainerRuntime(runtime: string | undefined): boolean {
         return !!runtime && /^(tomcat|wildfly)/i.test(runtime);
     }
 
     export function isJavaSERuntime(runtime: string | undefined): boolean {
         return !!runtime && runtime.toLowerCase() === 'java|8-jre8';
+    }
+
+    export function isJavaRuntime(runtime: string | undefined): boolean {
+        return isJavaWebContainerRuntime(runtime) || isJavaSERuntime(runtime);
+    }
+
+    export function getArtifactTypeByJavaRuntime(runtime: string | undefined): string {
+        if (isJavaSERuntime(runtime)) {
+            return 'jar';
+        } else if (isJavaWebContainerRuntime(runtime)) {
+            return 'war';
+        } else {
+            throw new Error(`Invalid java runtime: ${runtime}`);
+        }
     }
 
     export function isJavaSERequiredPortConfigured(appSettings: StringDictionary | undefined): boolean {
