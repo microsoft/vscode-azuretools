@@ -27,3 +27,4 @@ export * from './tree/DeploymentTreeItem';
 export * from './tree/ISiteTreeRoot';
 export * from './TunnelProxy';
 export { registerAppServiceExtensionVariables } from './extensionVariables';
+export { javaUtils } from './utils/javaUtils';
