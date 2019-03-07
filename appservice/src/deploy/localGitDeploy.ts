@@ -21,7 +21,7 @@ import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 export async function localGitDeploy(client: SiteClient, fsPath: string): Promise<void> {
     const kuduClient: KuduClient = await getKuduClient(client);
     const publishCredentials: User = await client.getWebAppPublishCredential();
-    const remote: string = nonNullProp(publishCredentials, 'scmUri');
+    const remote: string = `https://${nonNullProp(publishCredentials, 'publishingUserName')}:${nonNullProp(publishCredentials, 'publishingPassword')}@${client.gitUrl}`;
     const localGit: git.SimpleGit = git(fsPath);
     const commitId: string = (await localGit.log()).latest.hash;
     try {
