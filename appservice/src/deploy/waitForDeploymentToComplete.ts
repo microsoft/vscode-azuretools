@@ -3,7 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IParsedError, parseError } from 'vscode-azureextensionui';
+import { CancellationToken } from 'vscode';
+import { IParsedError, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { DeployResult, LogEntry } from 'vscode-azurekudu/lib/models';
 import { ext } from '../extensionVariables';
@@ -13,17 +14,21 @@ import { delay } from '../utils/delay';
 import { nonNullProp } from '../utils/nonNull';
 import { formatDeployLog } from './formatDeployLog';
 
-export async function waitForDeploymentToComplete(client: SiteClient, kuduClient: KuduClient, expectedId?: string, pollingInterval: number = 5000): Promise<void> {
+export async function waitForDeploymentToComplete(client: SiteClient, kuduClient: KuduClient, expectedId?: string, token?: CancellationToken, pollingInterval: number = 5000): Promise<void> {
     const alreadyDisplayedLogs: string[] = [];
     let nextTimeToDisplayWaitingLog: number = Date.now();
     let initialStartTime: Date | undefined;
     let deployment: DeployResult | undefined;
     let permanentId: string | undefined;
-    // a 30 second timeout period to let Kudu initialize the deployment
-    const maxTimeToWaitForExpectedId: number = Date.now() + 30 * 1000;
+    // a 60 second timeout period to let Kudu initialize the deployment
+    const maxTimeToWaitForExpectedId: number = Date.now() + 60 * 1000;
 
-    // tslint:disable-next-line:no-constant-condition
+    // tslint:disable-next-line:no-constant-condition cyclomatic-complexity
     while (true) {
+        if (token && token.isCancellationRequested) {
+            throw new UserCancelledError();
+        }
+
         [deployment, permanentId, initialStartTime] = await tryGetLatestDeployment(kuduClient, permanentId, initialStartTime, expectedId);
         if ((deployment === undefined || !deployment.id)) {
             if (expectedId && Date.now() < maxTimeToWaitForExpectedId) {
