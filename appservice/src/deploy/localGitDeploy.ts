@@ -32,6 +32,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
             await ext.ui.showWarningMessage(message, { modal: true }, deployAnyway, DialogResponses.cancel);
         }
         await verifyNoRunFromPackageSetting(client);
+        ext.outputChannel.appendLine(formatDeployLog(client, localize('waitingForBuild', 'Starting deployment...')));
         // tslint:disable-next-line:no-floating-promises
         localGit.push(remote, 'HEAD:master');
     } catch (err) {
