@@ -36,7 +36,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
         localGit.push(remote, 'HEAD:master');
     } catch (err) {
         const parsedError: IParsedError = parseError(err);
-        parsedError.message.replace(new RegExp(nonNullProp(publishCredentials, 'publishingPassword'), 'g'), '***');
+        parsedError.message = parsedError.message.replace(new RegExp(nonNullProp(publishCredentials, 'publishingPassword'), 'g'), '***');
         // tslint:disable-next-line:no-unsafe-any
         if (err.message.indexOf('spawn git ENOENT') >= 0) {
             const installString: string = localize('Install', 'Install');
