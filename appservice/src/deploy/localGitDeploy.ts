@@ -39,6 +39,8 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
             ext.outputChannel.appendLine(formatDeployLog(client, (localize('localGitDeploy', `Deploying Local Git repository to "${client.fullName}"...`))));
             localGit.push(remote, 'HEAD:master').catch(async (error) => {
                 tokenSource.cancel();
+                // due to timing issues, output here when we know we need to cancel
+                ext.outputChannel.appendLine(formatDeployLog(client, localize('cancelledDeployment', 'Cancelled deployment.')));
                 // tslint:disable-next-line:no-unsafe-any
                 const parsedError: IParsedError = parseAndRemoveCredentialsFromError(error);
 

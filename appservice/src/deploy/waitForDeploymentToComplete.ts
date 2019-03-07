@@ -27,7 +27,6 @@ export async function waitForDeploymentToComplete(client: SiteClient, kuduClient
     // tslint:disable-next-line:no-constant-condition cyclomatic-complexity
     while (true) {
         if (token && token.isCancellationRequested) {
-            ext.outputChannel.appendLine(formatDeployLog(client, localize('cancelledDeployment', 'Cancelled deployment.')));
             throw new UserCancelledError();
         }
 
