@@ -7,7 +7,7 @@ import { User } from 'azure-arm-website/lib/models';
 import * as opn from 'opn';
 import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
-import { DialogResponses } from 'vscode-azureextensionui';
+import { DialogResponses, IParsedError, parseError } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { ext } from '../extensionVariables';
 import { getKuduClient } from '../getKuduClient';
@@ -35,6 +35,8 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
         // tslint:disable-next-line:no-floating-promises
         localGit.push(remote, 'HEAD:master');
     } catch (err) {
+        const parsedError: IParsedError = parseError(err);
+        parsedError.message.replace(new RegExp(nonNullProp(publishCredentials, 'publishingPassword'), 'g'), '***');
         // tslint:disable-next-line:no-unsafe-any
         if (err.message.indexOf('spawn git ENOENT') >= 0) {
             const installString: string = localize('Install', 'Install');
@@ -45,14 +47,14 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
             }
             return undefined;
             // tslint:disable-next-line:no-unsafe-any
-        } else if (err.message.indexOf('error: failed to push') >= 0) {
+        } else if (parsedError.message.indexOf('error: failed to push') >= 0) {
             const forcePush: vscode.MessageItem = { title: localize('forcePush', 'Force Push') };
             const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging.');
             await ext.ui.showWarningMessage(pushReject, forcePush, DialogResponses.cancel);
             // tslint:disable-next-line:no-floating-promises
             localGit.push(remote, 'HEAD:master', { '-f': true });
         } else {
-            throw err;
+            throw parsedError;
         }
     }
 
