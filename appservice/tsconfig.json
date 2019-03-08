@@ -8,7 +8,7 @@
         ],
         "sourceMap": true,
         "declaration": true,
-        "rootDir": "src",
+        "rootDir": ".",
         "noUnusedLocals": true,
         "noImplicitThis": true,
         "noImplicitReturns": true,
