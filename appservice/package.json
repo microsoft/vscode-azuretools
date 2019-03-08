@@ -11,8 +11,8 @@
         "azure",
         "vscode"
     ],
-    "main": "lib/src/index.js",
-    "types": "lib/src/index.d.ts",
+    "main": "out/src/index.js",
+    "types": "out/src/index.d.ts",
     "license": "MIT",
     "repository": {
         "type": "git",

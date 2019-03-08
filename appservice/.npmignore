@@ -5,7 +5,7 @@ tsconfig.json
 tslint.json
 *.tgz
 test/
-lib/test/
+out/test/
 **/*.js.map
 .vscode-test/
 gulpfile.js
