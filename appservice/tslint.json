@@ -6,6 +6,7 @@
             "Thenable"
         ],
         "no-backbone-get-set-outside-model": false,
+        "radix": false,
         "strict-boolean-expressions": [
             true,
             "allow-string",
