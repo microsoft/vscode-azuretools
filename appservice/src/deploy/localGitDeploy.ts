@@ -81,8 +81,6 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
                     }
                 }).catch(reject);
             });
-        } catch (error) {
-            throw error;
         } finally {
             tokenSource.dispose();
         }
