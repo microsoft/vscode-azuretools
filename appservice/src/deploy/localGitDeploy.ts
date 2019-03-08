@@ -77,8 +77,6 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
 
                 waitForDeploymentToComplete(client, kuduClient, commitId, token).then(resolve).catch(reject);
             });
-        } catch (error) {
-            throw error;
         } finally {
             tokenSource.dispose();
         }
