@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { CancellationToken } from 'vscode';
 import { IParsedError, parseError } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { DeployResult, LogEntry } from 'vscode-azurekudu/lib/models';
@@ -13,21 +14,19 @@ import { delay } from '../utils/delay';
 import { nonNullProp } from '../utils/nonNull';
 import { formatDeployLog } from './formatDeployLog';
 
-export async function waitForDeploymentToComplete(client: SiteClient, kuduClient: KuduClient, expectedId?: string, pollingInterval: number = 5000): Promise<void> {
+export async function waitForDeploymentToComplete(client: SiteClient, kuduClient: KuduClient, expectedId?: string, token?: CancellationToken, pollingInterval: number = 5000): Promise<void> {
     const alreadyDisplayedLogs: string[] = [];
     let nextTimeToDisplayWaitingLog: number = Date.now();
     let initialStartTime: Date | undefined;
     let deployment: DeployResult | undefined;
     let permanentId: string | undefined;
-    // a 30 second timeout period to let Kudu initialize the deployment
-    const maxTimeToWaitForExpectedId: number = Date.now() + 30 * 1000;
+    // a 60 second timeout period to let Kudu initialize the deployment
+    const maxTimeToWaitForExpectedId: number = Date.now() + 60 * 1000;
 
-    // tslint:disable-next-line:no-constant-condition
-    while (true) {
+    while (!token || !token.isCancellationRequested) {
         [deployment, permanentId, initialStartTime] = await tryGetLatestDeployment(kuduClient, permanentId, initialStartTime, expectedId);
         if ((deployment === undefined || !deployment.id)) {
             if (expectedId && Date.now() < maxTimeToWaitForExpectedId) {
-                ext.outputChannel.appendLine(formatDeployLog(client, localize('waitingForBuild', 'Starting deployment...')));
                 await delay(pollingInterval);
                 continue;
             }
@@ -89,8 +88,8 @@ async function tryGetLatestDeployment(kuduClient: KuduClient, permanentId: strin
     let deployment: DeployResult | undefined;
 
     if (permanentId) {
-            // Use "permanentId" to find the deployment during its "permanent" phase
-            deployment = await kuduClient.deployment.getResult(permanentId);
+        // Use "permanentId" to find the deployment during its "permanent" phase
+        deployment = await kuduClient.deployment.getResult(permanentId);
     } else if (expectedId) {
         // if we have a "expectedId" we know which deployment we are looking for, so wait until latest id reflects that
         try {
