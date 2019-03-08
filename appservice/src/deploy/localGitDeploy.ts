@@ -67,19 +67,15 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
         try {
             await new Promise((resolve: () => void, reject: (error: Error) => void): void => {
                 // for whatever reason, is '-f' exists, true or false, it still force pushes
-                const pushOptions: git.Options = forcePush ? {'-f': true} : {};
+                const pushOptions: git.Options = forcePush ? { '-f': true } : {};
 
                 localGit.push(remote, 'HEAD:master', pushOptions).catch(async (error) => {
-                    tokenSource.cancel();
                     // tslint:disable-next-line:no-unsafe-any
                     reject(error);
+                    tokenSource.cancel();
                 });
 
-                waitForDeploymentToComplete(client, kuduClient, commitId, token).then(() => {
-                    if (!token.isCancellationRequested) {
-                        resolve();
-                    }
-                }).catch(reject);
+                waitForDeploymentToComplete(client, kuduClient, commitId, token).then(resolve).catch(reject);
             });
         } catch (error) {
             throw error;
