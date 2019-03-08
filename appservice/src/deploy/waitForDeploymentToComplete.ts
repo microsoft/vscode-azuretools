@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { CancellationToken } from 'vscode';
-import { IParsedError, parseError, UserCancelledError } from 'vscode-azureextensionui';
+import { IParsedError, parseError } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { DeployResult, LogEntry } from 'vscode-azurekudu/lib/models';
 import { ext } from '../extensionVariables';
@@ -23,16 +23,10 @@ export async function waitForDeploymentToComplete(client: SiteClient, kuduClient
     // a 60 second timeout period to let Kudu initialize the deployment
     const maxTimeToWaitForExpectedId: number = Date.now() + 60 * 1000;
 
-    // tslint:disable-next-line:no-constant-condition cyclomatic-complexity
-    while (true) {
-        if (token && token.isCancellationRequested) {
-            throw new UserCancelledError();
-        }
-
+    while (!token || !token.isCancellationRequested) {
         [deployment, permanentId, initialStartTime] = await tryGetLatestDeployment(kuduClient, permanentId, initialStartTime, expectedId);
         if ((deployment === undefined || !deployment.id)) {
             if (expectedId && Date.now() < maxTimeToWaitForExpectedId) {
-                ext.outputChannel.appendLine(formatDeployLog(client, localize('waitingForBuild', 'Starting deployment...')));
                 await delay(pollingInterval);
                 continue;
             }
@@ -94,8 +88,8 @@ async function tryGetLatestDeployment(kuduClient: KuduClient, permanentId: strin
     let deployment: DeployResult | undefined;
 
     if (permanentId) {
-            // Use "permanentId" to find the deployment during its "permanent" phase
-            deployment = await kuduClient.deployment.getResult(permanentId);
+        // Use "permanentId" to find the deployment during its "permanent" phase
+        deployment = await kuduClient.deployment.getResult(permanentId);
     } else if (expectedId) {
         // if we have a "expectedId" we know which deployment we are looking for, so wait until latest id reflects that
         try {

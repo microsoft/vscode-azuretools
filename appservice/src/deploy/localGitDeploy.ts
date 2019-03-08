@@ -7,7 +7,7 @@ import { User } from 'azure-arm-website/lib/models';
 import * as opn from 'opn';
 import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
-import { DialogResponses, parseError, UserCancelledError } from 'vscode-azureextensionui';
+import { DialogResponses, UserCancelledError } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { ext } from '../extensionVariables';
 import { getKuduClient } from '../getKuduClient';
@@ -24,7 +24,6 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
     const remote: string = `https://${nonNullProp(publishCredentials, 'publishingUserName')}:${nonNullProp(publishCredentials, 'publishingPassword')}@${client.gitUrl}`;
     const localGit: git.SimpleGit = git(fsPath);
     const commitId: string = (await localGit.log()).latest.hash;
-    const tokenSource: vscode.CancellationTokenSource = new vscode.CancellationTokenSource();
 
     try {
         const status: git.StatusResult = await localGit.status();
@@ -35,24 +34,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
         }
         await verifyNoRunFromPackageSetting(client);
         ext.outputChannel.appendLine(formatDeployLog(client, (localize('localGitDeploy', `Deploying Local Git repository to "${client.fullName}"...`))));
-        try {
-            await pushAndWaitForDeploymentToComplete(tokenSource.token);
-        } catch (error) {
-            // tslint:disable-next-line:no-unsafe-any
-            if (error.message.indexOf('Updates were rejected because the remote contains work that you do') >= 0) {
-
-                const forcePushMessage: vscode.MessageItem = { title: localize('forcePush', 'Force Push') };
-                const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging.');
-
-                if (await ext.ui.showWarningMessage(pushReject, forcePushMessage, DialogResponses.cancel) === forcePushMessage) {
-                    await pushAndWaitForDeploymentToComplete(undefined, true);
-                } else {
-                    throw new UserCancelledError();
-                }
-            } else {
-                throw error;
-            }
-        }
+        await pushAndWaitForDeploymentToComplete();
 
     } catch (err) {
         // tslint:disable-next-line:no-unsafe-any
@@ -65,14 +47,25 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
             }
             return undefined;
             // tslint:disable-next-line:no-unsafe-any
+        } else if (err.message.indexOf('error: failed to push') >= 0) {
+            const forcePushMessage: vscode.MessageItem = { title: localize('forcePush', 'Force Push') };
+            const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging.');
+
+            if (await ext.ui.showWarningMessage(pushReject, forcePushMessage, DialogResponses.cancel) === forcePushMessage) {
+                await pushAndWaitForDeploymentToComplete(true);
+            } else {
+                throw new UserCancelledError();
+            }
         } else {
             throw err;
         }
     }
 
-    async function pushAndWaitForDeploymentToComplete(token?: vscode.CancellationToken, forcePush: boolean = false): Promise<void> {
-        await new Promise((resolve: () => void, reject: (error: Error) => void): void => {
+    async function pushAndWaitForDeploymentToComplete(forcePush: boolean = false): Promise<void> {
+        const tokenSource: vscode.CancellationTokenSource = new vscode.CancellationTokenSource();
+        const token: vscode.CancellationToken = tokenSource.token;
 
+        await new Promise((resolve: () => void, reject: (error: Error) => void): void => {
             // for whatever reason, is '-f' exists, true or false, it still force pushes
             const pushOptions: git.Options = forcePush ? {'-f': true} : {};
 
@@ -82,12 +75,13 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
                 reject(error);
             });
 
-            waitForDeploymentToComplete(client, kuduClient, commitId, token).then(resolve).catch((error: Error) => {
-                // waitForDeploymentToComplete throws a UserCancelledError when cancelled so that we don't mistake it as "completing"
-                if (!parseError(error).isUserCancelledError) {
-                    throw error;
+            waitForDeploymentToComplete(client, kuduClient, commitId, token).then(() => {
+                if (!token.isCancellationRequested) {
+                    resolve();
                 }
-            });
+            }).catch(reject);
         });
+
+        tokenSource.dispose();
     }
 }
