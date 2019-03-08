@@ -7,13 +7,13 @@ import { User } from 'azure-arm-website/lib/models';
 import * as opn from 'opn';
 import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
-import { DialogResponses, IParsedError, parseError } from 'vscode-azureextensionui';
+import { DialogResponses } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { ext } from '../extensionVariables';
 import { getKuduClient } from '../getKuduClient';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
-import { maskValue } from '../utils/maskValue';
+import { callWithMaskHandling } from '../utils/callWithMaskHandling';
 import { nonNullProp } from '../utils/nonNull';
 import { verifyNoRunFromPackageSetting } from '../verifyNoRunFromPackageSetting';
 import { formatDeployLog } from './formatDeployLog';
@@ -22,6 +22,7 @@ import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 export async function localGitDeploy(client: SiteClient, fsPath: string): Promise<void> {
     const kuduClient: KuduClient = await getKuduClient(client);
     const publishCredentials: User = await client.getWebAppPublishCredential();
+    publishCredentials.publishingPassword
     const remote: string = nonNullProp(publishCredentials, 'scmUri');
     const localGit: git.SimpleGit = git(fsPath);
     const commitId: string = (await localGit.log()).latest.hash;
@@ -34,10 +35,8 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
         }
         await verifyNoRunFromPackageSetting(client);
         // tslint:disable-next-line:no-floating-promises
-        localGit.push(remote, 'HEAD:master');
+        callWithMaskHandling(async () => { localGit.push(remote, 'HEAD:master') }, nonNullProp(publishCredentials, 'publishingPassword'));
     } catch (err) {
-        const parsedError: IParsedError = parseError(err);
-        parsedError.message = maskValue(parsedError.message, nonNullProp(publishCredentials, 'publishingPassword'));
         // tslint:disable-next-line:no-unsafe-any
         if (err.message.indexOf('spawn git ENOENT') >= 0) {
             const installString: string = localize('Install', 'Install');
@@ -48,14 +47,14 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
             }
             return undefined;
             // tslint:disable-next-line:no-unsafe-any
-        } else if (parsedError.message.indexOf('error: failed to push') >= 0) {
+        } else if (err.message.indexOf('error: failed to push') >= 0) {
             const forcePush: vscode.MessageItem = { title: localize('forcePush', 'Force Push') };
             const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging.');
             await ext.ui.showWarningMessage(pushReject, forcePush, DialogResponses.cancel);
             // tslint:disable-next-line:no-floating-promises
-            localGit.push(remote, 'HEAD:master', { '-f': true });
+            callWithMaskHandling(async () => { localGit.push(remote, 'HEAD:master', { '-f': true }) }, nonNullProp(publishCredentials, 'publishingPassword'));
         } else {
-            throw parsedError;
+            throw err;
         }
     }
 
