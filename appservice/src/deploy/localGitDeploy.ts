@@ -17,6 +17,7 @@ import { nonNullProp } from '../utils/nonNull';
 import { verifyNoRunFromPackageSetting } from '../verifyNoRunFromPackageSetting';
 import { formatDeployLog } from './formatDeployLog';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
+import { maskValue } from '../utils/maskValue';
 
 export async function localGitDeploy(client: SiteClient, fsPath: string): Promise<void> {
     const kuduClient: KuduClient = await getKuduClient(client);
@@ -36,7 +37,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
         localGit.push(remote, 'HEAD:master');
     } catch (err) {
         const parsedError: IParsedError = parseError(err);
-        parsedError.message = parsedError.message.replace(new RegExp(nonNullProp(publishCredentials, 'publishingPassword'), 'g'), '***');
+        parsedError.message = maskValue(parsedError.message, nonNullProp(publishCredentials, 'publishingPassword'));
         // tslint:disable-next-line:no-unsafe-any
         if (err.message.indexOf('spawn git ENOENT') >= 0) {
             const installString: string = localize('Install', 'Install');

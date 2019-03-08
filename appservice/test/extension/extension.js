@@ -9,7 +9,7 @@ const ui_1 = require('vscode-azureextensionui');
 function activate(context) {
     const extVars = {
         context,
-        reporter: ui_1.createTelemetryReporter(context),
+        reporter: {},
         outputChannel: vscode.window.createOutputChannel('azureappservice'),
         ui: new ui_1.AzureUserInput()
     };
