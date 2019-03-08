@@ -34,7 +34,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
         }
         await verifyNoRunFromPackageSetting(client);
         ext.outputChannel.appendLine(formatDeployLog(client, (localize('localGitDeploy', `Deploying Local Git repository to "${client.fullName}"...`))));
-        await pushAndWaitForDeploymentToComplete();
+        await tryPushAndWaitForDeploymentToComplete();
 
     } catch (err) {
         // tslint:disable-next-line:no-unsafe-any
@@ -52,7 +52,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
             const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging.');
 
             if (await ext.ui.showWarningMessage(pushReject, forcePushMessage, DialogResponses.cancel) === forcePushMessage) {
-                await pushAndWaitForDeploymentToComplete(true);
+                await tryPushAndWaitForDeploymentToComplete(true);
             } else {
                 throw new UserCancelledError();
             }
@@ -61,27 +61,30 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
         }
     }
 
-    async function pushAndWaitForDeploymentToComplete(forcePush: boolean = false): Promise<void> {
+    async function tryPushAndWaitForDeploymentToComplete(forcePush: boolean = false): Promise<void> {
         const tokenSource: vscode.CancellationTokenSource = new vscode.CancellationTokenSource();
         const token: vscode.CancellationToken = tokenSource.token;
+        try {
+            await new Promise((resolve: () => void, reject: (error: Error) => void): void => {
+                // for whatever reason, is '-f' exists, true or false, it still force pushes
+                const pushOptions: git.Options = forcePush ? {'-f': true} : {};
 
-        await new Promise((resolve: () => void, reject: (error: Error) => void): void => {
-            // for whatever reason, is '-f' exists, true or false, it still force pushes
-            const pushOptions: git.Options = forcePush ? {'-f': true} : {};
+                localGit.push(remote, 'HEAD:master', pushOptions).catch(async (error) => {
+                    tokenSource.cancel();
+                    // tslint:disable-next-line:no-unsafe-any
+                    reject(error);
+                });
 
-            localGit.push(remote, 'HEAD:master', pushOptions).catch(async (error) => {
-                tokenSource.cancel();
-                // tslint:disable-next-line:no-unsafe-any
-                reject(error);
+                waitForDeploymentToComplete(client, kuduClient, commitId, token).then(() => {
+                    if (!token.isCancellationRequested) {
+                        resolve();
+                    }
+                }).catch(reject);
             });
-
-            waitForDeploymentToComplete(client, kuduClient, commitId, token).then(() => {
-                if (!token.isCancellationRequested) {
-                    resolve();
-                }
-            }).catch(reject);
-        });
-
-        tokenSource.dispose();
+        } catch (error) {
+            throw error;
+        } finally {
+            tokenSource.dispose();
+        }
     }
 }
