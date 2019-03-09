@@ -46,8 +46,8 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
 
     public get iconPath(): { light: string, dark: string } {
         return {
-            light: path.join(__filename, '..', '..', '..', 'resources', 'light', 'AppSettings_color.svg'),
-            dark: path.join(__filename, '..', '..', '..', 'resources', 'dark', 'AppSettings_color.svg')
+            light: path.join(__filename, '..', '..', '..', '..', 'resources', 'light', 'AppSettings_color.svg'),
+            dark: path.join(__filename, '..', '..', '..', '..', 'resources', 'dark', 'AppSettings_color.svg')
         };
     }
 
@@ -61,9 +61,9 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         // tslint:disable-next-line:strict-boolean-expressions
         const properties: { [name: string]: string } = this._settings.properties || {};
         await Promise.all(Object.keys(properties).map(async (key: string) => {
-                const appSettingTreeItem: AppSettingTreeItem = await AppSettingTreeItem.createAppSettingTreeItem(this, key, properties[key], this._commandId);
-                treeItems.push(appSettingTreeItem);
-            })
+            const appSettingTreeItem: AppSettingTreeItem = await AppSettingTreeItem.createAppSettingTreeItem(this, key, properties[key], this._commandId);
+            treeItems.push(appSettingTreeItem);
+        })
         );
         return treeItems;
     }

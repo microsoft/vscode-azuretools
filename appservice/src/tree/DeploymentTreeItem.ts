@@ -51,8 +51,8 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
 
     public get iconPath(): { light: string, dark: string } {
         return {
-            light: path.join(__filename, '..', '..', '..', 'resources', 'light', 'Git_Commit_16x.svg'),
-            dark: path.join(__filename, '..', '..', '..', 'resources', 'dark', 'Git_Commit_16x.svg')
+            light: path.join(__filename, '..', '..', '..', '..', 'resources', 'light', 'Git_Commit_16x.svg'),
+            dark: path.join(__filename, '..', '..', '..', '..', 'resources', 'dark', 'Git_Commit_16x.svg')
         };
     }
 
@@ -138,7 +138,7 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
             opn(githubCommitUrl);
             return;
         } else {
-            throw new Error (localize('noRepoUrl', 'There is no repo url associated with deployment "{0}".', this._deployResult.id));
+            throw new Error(localize('noRepoUrl', 'There is no repo url associated with deployment "{0}".', this._deployResult.id));
         }
     }
 
