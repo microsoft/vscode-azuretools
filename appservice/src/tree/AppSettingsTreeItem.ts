@@ -63,8 +63,8 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         await Promise.all(Object.keys(properties).map(async (key: string) => {
             const appSettingTreeItem: AppSettingTreeItem = await AppSettingTreeItem.createAppSettingTreeItem(this, key, properties[key], this._commandId);
             treeItems.push(appSettingTreeItem);
-        })
-        );
+        }));
+
         return treeItems;
     }
 
