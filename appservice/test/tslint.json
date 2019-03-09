@@ -18,6 +18,8 @@
             // "object-destructuring",
             // "array-destructuring"
         ],
-        "no-unexternalized-strings": false
+        "no-unexternalized-strings": false,
+        "no-unsafe-any": false,
+        "align": false
     }
 }

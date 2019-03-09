@@ -22,6 +22,7 @@ import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 export async function localGitDeploy(client: SiteClient, fsPath: string): Promise<void> {
     const kuduClient: KuduClient = await getKuduClient(client);
     const publishCredentials: User = await client.getWebAppPublishCredential();
+    const publishingPassword: string = nonNullProp(publishCredentials, 'publishingPassword');
     const remote: string = `https://${nonNullProp(publishCredentials, 'publishingUserName')}:${nonNullProp(publishCredentials, 'publishingPassword')}@${client.gitUrl}`;
     const localGit: git.SimpleGit = git(fsPath);
     const commitId: string = (await localGit.log()).latest.hash;
@@ -35,7 +36,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
         }
         await verifyNoRunFromPackageSetting(client);
         ext.outputChannel.appendLine(formatDeployLog(client, (localize('localGitDeploy', `Deploying Local Git repository to "${client.fullName}"...`))));
-        await tryPushAndWaitForDeploymentToComplete();
+        await callWithMaskHandling(async (): Promise<void> => { await tryPushAndWaitForDeploymentToComplete(); }, publishingPassword);
 
     } catch (err) {
         // tslint:disable-next-line:no-unsafe-any
@@ -53,7 +54,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
             const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging.');
 
             if (await ext.ui.showWarningMessage(pushReject, forcePushMessage, DialogResponses.cancel) === forcePushMessage) {
-                await tryPushAndWaitForDeploymentToComplete(true);
+                await callWithMaskHandling(async (): Promise<void> => { await tryPushAndWaitForDeploymentToComplete(true); }, publishingPassword);
             } else {
                 throw new UserCancelledError();
             }

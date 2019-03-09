@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as assert from 'assert';
 import { callWithMaskHandling } from '../src/utils/callWithMaskHandling';
+import { assertThrowsAsync } from './assertThrowsAsync';
 
 suite("callWithMaskHandling Tests", () => {
     const credentials: string = 'scHQERrAlXSmlCeN1mrhDzsHWeDz2XZt5R343HgCNmxS0xlswcaA2Cowflda';
@@ -12,7 +12,7 @@ suite("callWithMaskHandling Tests", () => {
         test("Value masked (single occurance)", async () => {
 
             // tslint:disable-next-line: no-multiline-string
-            let errorMessage: string = `To https://naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git
+            const errorMessage: string = `To https://naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git
             ! [rejected]        HEAD -> master (fetch first)
            error: failed to push some refs to 'https://$naturins-22-error-03:scHQERrAlXSmlCeN1mrhDzsHWeDz2XZt5R343HgCNmxS0xlswcaA2Cowflda@naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git'
            hint: Updates were rejected because the remote contains work that you do
@@ -21,22 +21,23 @@ suite("callWithMaskHandling Tests", () => {
            hint: (e.g., 'git pull ...') before pushing again.
            hint: See the 'Note about fast-forwards' in 'git push --help' for details.`;
 
-            assert.throws(await callWithMaskHandling(async () => {
-                throw new Error(errorMessage);
-            }, credentials)),
-                (err) => {
-                    if (err.indexOf(credentials) === -1) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                }, 'Credentials were not properly masked from error string';
+            await assertThrowsAsync(async (): Promise<void> => {
+                await callWithMaskHandling(async () => {
+                    throw new Error(errorMessage);
+                }, credentials);
+            }, (err) => {
+                if (err.message.indexOf(credentials) === -1) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }, 'Credentials were not properly masked from error string');
         });
 
         test("Value masked (multiple occurance)", async () => {
 
             // tslint:disable-next-line: no-multiline-string
-            let errorMessage: string = `"To https://naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git
+            const errorMessage: string = `"To https://naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git
             ! [rejected]        HEAD -> master (fetch first)
            error: failed to push some refs to 'https://$naturins-22-error-03:scHQERrAlXSmlCeN1mrhDzsHWeDz2XZt5R343HgCNmxS0xlswcaA2Cowflda@naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git'
            hint: Updates were rejected because the remote contains work that you do
@@ -47,22 +48,23 @@ suite("callWithMaskHandling Tests", () => {
            https://$naturins-22-error-03:scHQERrAlXSmlCeN1mrhDzsHWeDz2XZt5R343HgCNmxS0xlswcaA2Cowflda@naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git
            scHQERrAlXSmlCeN1mrhDzsHWeDz2XZt5R343HgCNmxS0xlswcaA2Cowflda`;
 
-            assert.throws(await callWithMaskHandling(async () => {
-                throw new Error(errorMessage);
-            }, credentials)),
-                (err) => {
-                    if (err.indexOf(credentials) === -1) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                }, 'Credentials were not properly masked from error string';
+            await assertThrowsAsync(async (): Promise<void> => {
+                await callWithMaskHandling(async () => {
+                    throw new Error(errorMessage);
+                }, credentials);
+            }, (err) => {
+                if (err.message.indexOf(credentials) === -1) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }, 'Credentials were not properly masked from error string');
         });
 
-        test("Value isn't masked properly", async () => {
+        test("Value shouldn't be masked", async () => {
 
             // tslint:disable-next-line: no-multiline-string
-            let errorMessage: string = `"To https://naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git
+            const errorMessage: string = `"To https://naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git
             ! [rejected]        HEAD -> master (fetch first)
            error: failed to push some refs to 'https://$naturins-22-error-03:scHQERrAlXSmlCeN1mrhDzsHWeDz2XZt5R343HgCNmxS0xlswcaA2Cowflda@naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git'
            hint: Updates were rejected because the remote contains work that you do
@@ -73,16 +75,17 @@ suite("callWithMaskHandling Tests", () => {
            https://$naturins-22-error-03:scHQERrAlXSmlCeN1mrhDzsHWeDz2XZt5R343HgCNmxS0xlswcaA2Cowflda@naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git
            scHQERrAlXSmlCeN1mrhDzsHWeDz2XZt5R343HgCNmxS0xlswcaA2Cowflda`;
 
-            assert.throws(await callWithMaskHandling(async () => {
-                throw new Error(errorMessage);
-            }, 'foobar')),
-                (err) => {
-                    if (err.indexOf(credentials) === -1) {
-                        return false;
-                    } else {
-                        return true;
-                    }
-                }, 'Credentials were properly masked from error string';
+            await assertThrowsAsync(async () => {
+                await callWithMaskHandling(async (): Promise<void> => {
+                    throw new Error(errorMessage);
+                }, 'foobar');
+            }, (err) => {
+                if (err.message.indexOf(credentials) === -1) {
+                    return false;
+                } else {
+                    return true;
+                }
+            }, 'Credentials were properly masked from error string');
         });
     });
 });
