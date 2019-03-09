@@ -27,7 +27,7 @@ suite("callWithMaskHandling Tests", () => {
                     throw new Error(errorMessage);
                 }, credentials);
             }, (err) => {
-                validateError(err, credentials);
+                return validateError(err, credentials);
             }, 'Credentials were not properly masked from error string');
         });
 
@@ -50,7 +50,7 @@ suite("callWithMaskHandling Tests", () => {
                     throw new Error(errorMessage);
                 }, credentials);
             }, (err) => {
-                validateError(err, credentials);
+                return validateError(err, credentials);
             }, 'Credentials were not properly masked from error string');
         });
 
@@ -71,7 +71,7 @@ suite("callWithMaskHandling Tests", () => {
                     throw errorMessage;
                 }, credentials);
             }, (err) => {
-                validateError(err, credentials);
+                return validateError(err, credentials);
             }, 'Credentials were not properly masked from error string');
         });
     });
