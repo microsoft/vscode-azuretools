@@ -35,8 +35,8 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
 
     public get iconPath(): { light: string, dark: string } {
         return {
-            light: path.join(__filename, '..', '..', '..', 'resources', 'light', 'Deployments_x16.svg'),
-            dark: path.join(__filename, '..', '..', '..', 'resources', 'dark', 'Deployments_x16.svg')
+            light: path.join(__filename, '..', '..', '..', '..', 'resources', 'light', 'Deployments_x16.svg'),
+            dark: path.join(__filename, '..', '..', '..', '..', 'resources', 'dark', 'Deployments_x16.svg')
         };
     }
 

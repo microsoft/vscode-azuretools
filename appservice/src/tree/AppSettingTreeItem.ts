@@ -45,8 +45,8 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
 
     public get iconPath(): { light: string, dark: string } {
         return {
-            light: path.join(__filename, '..', '..', '..', 'resources', 'light', 'Item_16x_vscode.svg'),
-            dark: path.join(__filename, '..', '..', '..', 'resources', 'dark', 'Item_16x_vscode.svg')
+            light: path.join(__filename, '..', '..', '..', '..', 'resources', 'light', 'Item_16x_vscode.svg'),
+            dark: path.join(__filename, '..', '..', '..', '..', 'resources', 'dark', 'Item_16x_vscode.svg')
         };
     }
 
