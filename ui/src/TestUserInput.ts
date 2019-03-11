@@ -5,18 +5,28 @@
 
 import { InputBoxOptions, MessageItem, MessageOptions, QuickPickItem, QuickPickOptions } from 'vscode';
 import * as vscode from 'vscode';
-import { IAzureUserInput } from '../index';
+import * as types from '../index';
+import { GoBackError } from './errors';
 
-export class TestUserInput implements IAzureUserInput {
-    private _inputs: (string | RegExp | undefined)[];
+export enum TestInput {
+    UseDefaultValue,
+    BackButton
+}
 
-    constructor(inputs: (string | RegExp | undefined)[]) {
+export class TestUserInput implements types.IAzureUserInput, types.TestUserInput {
+    private _inputs: (string | RegExp | TestInput)[];
+
+    constructor(inputs: (string | RegExp | TestInput)[]) {
         this._inputs = inputs;
     }
 
     public async showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T> {
-        if (this._inputs.length > 0) {
-            const input: string | RegExp | undefined = this._inputs.shift();
+        const input: string | RegExp | TestInput | undefined = this._inputs.shift();
+        if (input === undefined) {
+            throw new Error(`No more inputs left for call to showQuickPick. Placeholder: '${options.placeHolder}'`);
+        } else if (input === TestInput.BackButton) {
+            throw new GoBackError();
+        } else {
             const resolvedItems: T[] = await Promise.resolve(items);
 
             if (resolvedItems.length === 0) {
@@ -34,75 +44,74 @@ export class TestUserInput implements IAzureUserInput {
                 } else {
                     throw new Error(`Did not find quick pick item matching '${input}'. Placeholder: '${options.placeHolder}'`);
                 }
-            } else if (input) {
+            } else if (typeof input === 'string') {
                 const resolvedItem: T | undefined = resolvedItems.find((qpi: T) => qpi.label === input || qpi.description === input);
                 if (resolvedItem) {
                     return resolvedItem;
                 } else {
                     throw new Error(`Did not find quick pick item matching '${input}'. Placeholder: '${options.placeHolder}'`);
                 }
-            } else {
-                // Use default value if input is undefined
+            } else if (input === TestInput.UseDefaultValue) {
                 return resolvedItems[0];
+            } else {
+                throw new Error(`Unexpected input '${input}' for showQuickPick.`);
             }
         }
-
-        throw new Error(`Unexpected call to showQuickPick. Placeholder: '${options.placeHolder}'`);
     }
 
     public async showInputBox(options: InputBoxOptions): Promise<string> {
-        if (this._inputs.length > 0) {
-            let result: string | RegExp | undefined = this._inputs.shift();
-            if (result === undefined) {
-                // Use default value if input is undefined
-                result = options.value;
+        const input: string | RegExp | TestInput | undefined = this._inputs.shift();
+        if (input === undefined) {
+            throw new Error(`No more inputs left for call to showInputBox. Placeholder: '${options.placeHolder}'. Prompt: '${options.prompt}'`);
+        } else if (input === TestInput.BackButton) {
+            throw new GoBackError();
+        } else if (input === TestInput.UseDefaultValue) {
+            if (!options.value) {
+                throw new Error('Can\'t use default value because none was specified');
+            } else {
+                return options.value;
             }
-            if (result instanceof RegExp) {
-                throw new Error(`Unexpected RegExp input '${result}' in showInputBox.`);
-            } else if (result !== undefined) { // Allow "" as a valid input
-                if (options.validateInput) {
-                    const msg: string | null | undefined = await Promise.resolve(options.validateInput(result));
-                    if (msg !== null && msg !== undefined) {
-                        throw new Error(msg);
-                    }
+        } else if (typeof input === 'string') {
+            if (options.validateInput) {
+                const msg: string | null | undefined = await Promise.resolve(options.validateInput(input));
+                if (msg !== null && msg !== undefined) {
+                    throw new Error(msg);
                 }
-
-                return result;
             }
+            return input;
+        } else {
+            throw new Error(`Unexpected input '${input}' for showInputBox.`);
         }
-
-        throw new Error(`Unexpected call to showInputBox. Placeholder: '${options.placeHolder}'. Prompt: '${options.prompt}'`);
     }
 
     public showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
     public showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Promise<MessageItem>;
     // tslint:disable-next-line:no-any
     public async showWarningMessage<T extends MessageItem>(message: string, ...args: any[]): Promise<T> {
-        if (this._inputs.length > 0) {
-            const result: string | RegExp | undefined = this._inputs.shift();
-            if (result instanceof RegExp) {
-                throw new Error(`Unexpected RegExp input '${result}' in showWarningMessage.`);
-            }
+        const input: string | RegExp | TestInput | undefined = this._inputs.shift();
+        if (input === undefined) {
+            throw new Error(`No more inputs left for call to showWarningMessage. Message: ${message}`);
+        } else if (typeof input === 'string') {
             // tslint:disable-next-line:no-unsafe-any
-            const matchingItem: T | undefined = args.find((item: T) => item.title === result);
+            const matchingItem: T | undefined = args.find((item: T) => item.title === input);
             if (matchingItem) {
                 return matchingItem;
+            } else {
+                throw new Error(`Did not find message item matching '${input}'. Message: '${message}'`);
             }
+        } else {
+            throw new Error(`Unexpected input '${input}' for showWarningMessage.`);
         }
-
-        throw new Error(`Unexpected call to showWarningMessage. Message: ${message}`);
     }
 
     public async showOpenDialog(options: vscode.OpenDialogOptions): Promise<vscode.Uri[]> {
-        if (this._inputs.length > 0) {
-            const result: string | RegExp | undefined = this._inputs.shift();
-            if (result instanceof RegExp) {
-                throw new Error(`Unexpected RegExp input '${result}' in showOpenDialog.`);
-            } else if (result) {
-                return [vscode.Uri.file(result)];
-            }
+        const input: string | RegExp | TestInput | undefined = this._inputs.shift();
+        if (input === undefined) {
+            throw new Error(`No more inputs left for call to showOpenDialog. Message: ${options.openLabel}`);
+        } else if (typeof input === 'string') {
+            return [vscode.Uri.file(input)];
+        } else {
+            throw new Error(`Unexpected input '${input}' for showOpenDialog.`);
         }
-
-        throw new Error(`Unexpected call to showOpenDialog. Message: ${options.openLabel}`);
     }
 }

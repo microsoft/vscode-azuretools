@@ -4,32 +4,31 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ResourceManagementClient } from 'azure-arm-resource';
-import { IResourceGroupWizardContext } from '../../index';
+import * as types from '../../index';
 import { createAzureClient } from '../createAzureClient';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 
-export class ResourceGroupCreateStep<T extends IResourceGroupWizardContext> extends AzureWizardExecuteStep<T> {
-    public async execute(wizardContext: T): Promise<T> {
-        if (!wizardContext.resourceGroup) {
-            // tslint:disable-next-line:no-non-null-assertion
-            const newName: string = wizardContext.newResourceGroupName!;
-            // tslint:disable-next-line:no-non-null-assertion
-            const newLocation: string = wizardContext.location!.name!;
-            const resourceClient: ResourceManagementClient = createAzureClient(wizardContext, ResourceManagementClient);
-            const rgExists: boolean = await resourceClient.resourceGroups.checkExistence(newName);
-            if (rgExists) {
-                ext.outputChannel.appendLine(localize('existingResourceGroup', 'Using existing resource group "{0}".', newName));
-                wizardContext.resourceGroup = await resourceClient.resourceGroups.get(newName);
-            } else {
-                ext.outputChannel.appendLine(localize('creatingResourceGroup', 'Creating resource group "{0}" in location "{1}"...', newName, newLocation));
-                wizardContext.resourceGroup = await resourceClient.resourceGroups.createOrUpdate(newName, { location: newLocation });
-                ext.outputChannel.appendLine(localize('createdResourceGroup', 'Successfully created resource group "{0}".', newName));
-            }
-
+export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext> extends AzureWizardExecuteStep<T> implements types.ResourceGroupCreateStep<T> {
+    public async execute(wizardContext: T): Promise<void> {
+        // tslint:disable-next-line:no-non-null-assertion
+        const newName: string = wizardContext.newResourceGroupName!;
+        // tslint:disable-next-line:no-non-null-assertion
+        const newLocation: string = wizardContext.location!.name!;
+        const resourceClient: ResourceManagementClient = createAzureClient(wizardContext, ResourceManagementClient);
+        const rgExists: boolean = await resourceClient.resourceGroups.checkExistence(newName);
+        if (rgExists) {
+            ext.outputChannel.appendLine(localize('existingResourceGroup', 'Using existing resource group "{0}".', newName));
+            wizardContext.resourceGroup = await resourceClient.resourceGroups.get(newName);
+        } else {
+            ext.outputChannel.appendLine(localize('creatingResourceGroup', 'Creating resource group "{0}" in location "{1}"...', newName, newLocation));
+            wizardContext.resourceGroup = await resourceClient.resourceGroups.createOrUpdate(newName, { location: newLocation });
+            ext.outputChannel.appendLine(localize('createdResourceGroup', 'Successfully created resource group "{0}".', newName));
         }
+    }
 
-        return wizardContext;
+    public shouldExecute(wizardContext: T): boolean {
+        return !wizardContext.resourceGroup;
     }
 }

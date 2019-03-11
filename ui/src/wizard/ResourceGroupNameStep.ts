@@ -3,24 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IResourceGroupWizardContext } from '../../index';
+import * as types from '../../index';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 import { ResourceGroupListStep, resourceGroupNamingRules } from './ResourceGroupListStep';
 
-export class ResourceGroupNameStep<T extends IResourceGroupWizardContext> extends AzureWizardPromptStep<T> {
-    public async prompt(wizardContext: T): Promise<T> {
-        if (!wizardContext.newResourceGroupName) {
-            const suggestedName: string | undefined = wizardContext.relatedNameTask ? await wizardContext.relatedNameTask : undefined;
-            wizardContext.newResourceGroupName = (await ext.ui.showInputBox({
-                value: suggestedName,
-                prompt: 'Enter the name of the new resource group.',
-                validateInput: async (value: string | undefined): Promise<string | undefined> => await this.validateResourceGroupName(wizardContext, value)
-            })).trim();
-        }
+export class ResourceGroupNameStep<T extends types.IResourceGroupWizardContext> extends AzureWizardPromptStep<T> {
+    public async prompt(wizardContext: T): Promise<void> {
+        const suggestedName: string | undefined = wizardContext.relatedNameTask ? await wizardContext.relatedNameTask : undefined;
+        wizardContext.newResourceGroupName = (await ext.ui.showInputBox({
+            value: suggestedName,
+            prompt: 'Enter the name of the new resource group.',
+            validateInput: async (value: string | undefined): Promise<string | undefined> => await this.validateResourceGroupName(wizardContext, value)
+        })).trim();
+    }
 
-        return wizardContext;
+    public shouldPrompt(wizardContext: T): boolean {
+        return !wizardContext.newResourceGroupName;
     }
 
     private async validateResourceGroupName(wizardContext: T, name: string | undefined): Promise<string | undefined> {

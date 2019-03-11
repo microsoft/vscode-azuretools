@@ -4,15 +4,21 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { Memento, MessageItem, MessageOptions, QuickPickItem, QuickPickOptions } from 'vscode';
-import { IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput } from '../index';
+import { InputBoxOptions, Memento, MessageItem, MessageOptions, QuickPickItem, QuickPickOptions } from 'vscode';
+import * as types from '../index';
 import { DialogResponses } from './DialogResponses';
 import { UserCancelledError } from './errors';
 import { localize } from './localize';
 import { validOnTimeoutOrException } from './utils/inputValidation';
 import { randomUtils } from './utils/randomUtils';
 
-export class AzureUserInput implements IAzureUserInput {
+export interface IRootUserInput {
+    showQuickPick<T extends QuickPickItem>(picks: T[] | Thenable<T[]>, options: QuickPickOptions): Thenable<T>;
+    showInputBox(options: InputBoxOptions): Thenable<string | undefined>;
+}
+
+export class AzureUserInput implements types.IAzureUserInput, types.AzureUserInput {
+    public rootUserInput: IRootUserInput = vscode.window;
     private readonly _persistence: Memento;
 
     public constructor(persistence: Memento) {
@@ -25,17 +31,17 @@ export class AzureUserInput implements IAzureUserInput {
         }
 
         let persistenceKey: string | undefined;
-        const unhashedKey: string | undefined = (<IAzureQuickPickOptions>options).id || options.placeHolder;
+        const unhashedKey: string | undefined = (<types.IAzureQuickPickOptions>options).id || options.placeHolder;
         if (unhashedKey && !options.canPickMany) {
             persistenceKey = `showQuickPick.${randomUtils.getPseudononymousStringHash(unhashedKey)}`;
         }
 
-        const result: T | T[] | undefined = await vscode.window.showQuickPick(this.getOrderedItems(items, persistenceKey, (<IAzureQuickPickOptions>options).suppressPersistence), options);
+        const result: T | T[] | undefined = await this.rootUserInput.showQuickPick(this.getOrderedItems(items, persistenceKey, (<types.IAzureQuickPickOptions>options).suppressPersistence), options);
         if (result === undefined) {
             throw new UserCancelledError();
         }
 
-        if (!Array.isArray(result) && persistenceKey && !(<IAzureQuickPickItem><{}>result).suppressPersistence) {
+        if (!Array.isArray(result) && persistenceKey && !(<types.IAzureQuickPickItem><{}>result).suppressPersistence) {
             this._persistence.update(persistenceKey, getPersistenceValue(result));
         }
 
@@ -53,8 +59,7 @@ export class AzureUserInput implements IAzureUserInput {
             options.validateInput = async (v): Promise<string | null | undefined> => validOnTimeoutOrException(async () => await validateInput(v));
         }
 
-        const result: string | undefined = await vscode.window.showInputBox(options);
-
+        const result: string | undefined = await this.rootUserInput.showInputBox(options);
         if (result === undefined) {
             throw new UserCancelledError();
         } else {
@@ -116,5 +121,5 @@ export class AzureUserInput implements IAzureUserInput {
 }
 
 function getPersistenceValue(item: QuickPickItem): string {
-    return randomUtils.getPseudononymousStringHash((<IAzureQuickPickItem>item).id || item.label);
+    return randomUtils.getPseudononymousStringHash((<types.IAzureQuickPickItem>item).id || item.label);
 }
