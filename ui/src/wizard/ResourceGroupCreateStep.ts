@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ResourceManagementClient } from 'azure-arm-resource';
+import { Progress } from 'vscode';
 import * as types from '../../index';
 import { createAzureClient } from '../createAzureClient';
 import { ext } from '../extensionVariables';
@@ -11,7 +12,7 @@ import { localize } from '../localize';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 
 export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext> extends AzureWizardExecuteStep<T> implements types.ResourceGroupCreateStep<T> {
-    public async execute(wizardContext: T): Promise<void> {
+    public async execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         // tslint:disable-next-line:no-non-null-assertion
         const newName: string = wizardContext.newResourceGroupName!;
         // tslint:disable-next-line:no-non-null-assertion
@@ -22,7 +23,9 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
             ext.outputChannel.appendLine(localize('existingResourceGroup', 'Using existing resource group "{0}".', newName));
             wizardContext.resourceGroup = await resourceClient.resourceGroups.get(newName);
         } else {
-            ext.outputChannel.appendLine(localize('creatingResourceGroup', 'Creating resource group "{0}" in location "{1}"...', newName, newLocation));
+            const creatingMessage: string = localize('creatingResourceGroup', 'Creating resource group "{0}" in location "{1}"...', newName, newLocation);
+            ext.outputChannel.appendLine(creatingMessage);
+            progress.report({ message: creatingMessage });
             wizardContext.resourceGroup = await resourceClient.resourceGroups.createOrUpdate(newName, { location: newLocation });
             ext.outputChannel.appendLine(localize('createdResourceGroup', 'Successfully created resource group "{0}".', newName));
         }

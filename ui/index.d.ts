@@ -8,7 +8,7 @@ import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { StorageAccount } from 'azure-arm-storage/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment, AzureServiceClientOptions } from 'ms-rest-azure';
-import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri, QuickPick, InputBox } from 'vscode';
+import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri, QuickPick, InputBox, Progress } from 'vscode';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 
 export type OpenInPortalOptions = {
@@ -579,9 +579,14 @@ export interface ISubWizardOptions<T> {
 
 export interface IWizardOptions<T> extends ISubWizardOptions<T> {
     /**
-     * A title for the wizard
+     * A title used when prompting
      */
     title: string;
+
+    /**
+     * If true, a progress notification will be shown when executing
+     */
+    showExecuteProgress?: boolean;
 }
 
 /**
@@ -602,7 +607,7 @@ export declare abstract class AzureWizardExecuteStep<T extends {}> {
     /**
      * Execute the step
      */
-    public abstract execute(wizardContext: T): Promise<void>;
+    public abstract execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
 
     /**
      * Return true if this step should execute based on the current state of the wizardContext
@@ -726,6 +731,12 @@ export interface IResourceGroupWizardContext extends ILocationWizardContext, IRe
      */
     resourceGroupsTask?: Promise<ResourceGroup[]>;
 
+    /**
+     * If true, this step will not add a LocationListStep for the "Create new resource group" sub wizard.
+     * This is meant for situations when the location can be inferred from other resources later in the wizard.
+     */
+    resourceGroupDeferLocationStep?: boolean;
+
     newResourceGroupName?: string;
 }
 
@@ -749,7 +760,7 @@ export declare class ResourceGroupListStep<T extends IResourceGroupWizardContext
 }
 
 export declare class ResourceGroupCreateStep<T extends IResourceGroupWizardContext> extends AzureWizardExecuteStep<T> {
-    public execute(wizardContext: T): Promise<void>;
+    public execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
     public shouldExecute(wizardContext: T): boolean;
 }
 
@@ -837,7 +848,7 @@ export declare class StorageAccountNameStep<T extends IStorageAccountWizardConte
 export declare class StorageAccountCreateStep<T extends IStorageAccountWizardContext> extends AzureWizardExecuteStep<T> {
     public constructor(defaults: INewStorageAccountDefaults);
 
-    public execute(wizardContext: T): Promise<void>;
+    public execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
     public shouldExecute(wizardContext: T): boolean;
 }
 

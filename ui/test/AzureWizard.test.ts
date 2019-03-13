@@ -305,6 +305,17 @@ suite("AzureWizard tests", () => {
         );
     });
 
+    test("SubWizard Execute in order", async () => {
+        await validateWizard(
+            {
+                promptSteps: [new QuickPickStepWithSubWizard(), new QuickPickStepWithMultiStepSubWizard()],
+                executeSteps: []
+            },
+            ['Create', 'testValue1', 'Create', 'testValue2', 'Pick 1'],
+            { subInputBox: 'testValue1', inputBox2: 'testValue2', quickPick2: 'Pick 1', execute1: 'executeValue1', execute2: 'executeValue2', subExecute: 'subExecuteValue' }
+        );
+    });
+
     test("SubWizard Multi Step", async () => {
         await validateWizard(
             {

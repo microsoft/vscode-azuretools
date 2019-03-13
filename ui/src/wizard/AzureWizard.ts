@@ -15,8 +15,10 @@ import { AzureWizardUserInput, IInternalAzureWizard } from './AzureWizardUserInp
 
 export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizard {
     public readonly title: string;
+    private readonly _showExecuteProgress?: boolean;
     private readonly _promptSteps: AzureWizardPromptStep<T>[];
     private readonly _executeSteps: AzureWizardExecuteStep<T>[];
+    private readonly _subExecuteSteps: AzureWizardExecuteStep<T>[] = [];
     private readonly _finishedPromptSteps: AzureWizardPromptStep<T>[] = [];
     private readonly _wizardContext: T;
 
@@ -26,6 +28,7 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
         this._executeSteps = options.executeSteps ? options.executeSteps.reverse() : [];
         this._wizardContext = wizardContext;
         this.title = options.title;
+        this._showExecuteProgress = options.showExecuteProgress;
     }
 
     public get currentStep(): number {
@@ -78,14 +81,39 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
     }
 
     public async execute(actionContext: types.IActionContext): Promise<void> {
-        let step: AzureWizardExecuteStep<T> | undefined = this._executeSteps.pop();
+        if (this._showExecuteProgress) {
+            await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async progress => {
+                await this.executeCore(actionContext, progress);
+            });
+        } else {
+            await this.executeCore(actionContext, { report: (): void => { /* ignore */ } });
+        }
+    }
+
+    private async executeCore(actionContext: types.IActionContext, progress: vscode.Progress<{ message?: string; increment?: number }>): Promise<void> {
+        let currentStep: number = 1;
+
+        const steps: AzureWizardExecuteStep<T>[] = this._executeSteps.concat(this._subExecuteSteps);
+
+        const internalProgress: vscode.Progress<{ message?: string; increment?: number }> = {
+            report: (value: { message?: string; increment?: number }): void => {
+                if (value.message) {
+                    const totalSteps: number = currentStep + steps.filter(s => s.shouldExecute(this._wizardContext)).length;
+                    value.message += ` (${currentStep}/${totalSteps})`;
+                }
+                progress.report(value);
+            }
+        };
+
+        let step: AzureWizardExecuteStep<T> | undefined = steps.pop();
         while (step) {
             if (step.shouldExecute(this._wizardContext)) {
                 actionContext.properties.lastStepAttempted = `execute-${step.constructor.name}`;
-                await step.execute(this._wizardContext);
+                await step.execute(this._wizardContext, internalProgress);
+                currentStep += 1;
             }
 
-            step = this._executeSteps.pop();
+            step = steps.pop();
         }
     }
 
@@ -96,7 +124,7 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
         }
 
         removeFromEnd(this._promptSteps, step.numSubPromptSteps);
-        removeFromEnd(this._executeSteps, step.numSubExecuteSteps);
+        removeFromEnd(this._subExecuteSteps, step.numSubExecuteSteps);
 
         step.numSubPromptSteps = 0;
         step.numSubExecuteSteps = 0;
@@ -119,9 +147,9 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
 
         if (subWizard.executeSteps) {
             subWizard.executeSteps = subWizard.executeSteps.filter(s1 => {
-                return !this._executeSteps.some(s2 => s1.constructor.name === s2.constructor.name);
+                return !this._subExecuteSteps.concat(this._executeSteps).some(s2 => s1.constructor.name === s2.constructor.name);
             });
-            this._executeSteps.push(...subWizard.executeSteps.reverse());
+            this._subExecuteSteps.unshift(...subWizard.executeSteps.reverse());
             step.numSubExecuteSteps = subWizard.executeSteps.length;
         }
     }

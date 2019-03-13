@@ -5,6 +5,7 @@
 
 // tslint:disable-next-line:no-require-imports
 import StorageManagementClient = require('azure-arm-storage');
+import { Progress } from 'vscode';
 import * as types from '../../index';
 import { createAzureClient } from '../createAzureClient';
 import { ext } from '../extensionVariables';
@@ -19,7 +20,7 @@ export class StorageAccountCreateStep<T extends types.IStorageAccountWizardConte
         this._defaults = defaults;
     }
 
-    public async execute(wizardContext: T): Promise<void> {
+    public async execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         // tslint:disable-next-line:no-non-null-assertion
         const newLocation: string = wizardContext.location!.name!;
         // tslint:disable-next-line:no-non-null-assertion
@@ -27,6 +28,7 @@ export class StorageAccountCreateStep<T extends types.IStorageAccountWizardConte
         const newSkuName: string = `${this._defaults.performance}_${this._defaults.replication}`;
         const creatingStorageAccount: string = localize('CreatingStorageAccount', 'Creating storage account "{0}" in location "{1}" with sku "{2}"...', newName, newLocation, newSkuName);
         ext.outputChannel.appendLine(creatingStorageAccount);
+        progress.report({ message: creatingStorageAccount });
         const storageClient: StorageManagementClient = createAzureClient(wizardContext, StorageManagementClient);
         wizardContext.storageAccount = await storageClient.storageAccounts.create(
             // tslint:disable-next-line:no-non-null-assertion

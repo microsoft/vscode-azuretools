@@ -42,8 +42,13 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
         wizardContext.resourceGroup = (await ext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
 
         if (!wizardContext.resourceGroup) {
+            const promptSteps: AzureWizardPromptStep<T>[] = [new ResourceGroupNameStep()];
+            if (!wizardContext.resourceGroupDeferLocationStep) {
+                promptSteps.push(new LocationListStep());
+            }
+
             return {
-                promptSteps: [new ResourceGroupNameStep(), new LocationListStep()],
+                promptSteps,
                 executeSteps: [new ResourceGroupCreateStep()]
             };
         }
