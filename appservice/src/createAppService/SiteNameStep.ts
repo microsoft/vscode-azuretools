@@ -13,7 +13,7 @@ import { appServicePlanNamingRules } from './AppServicePlanNameStep';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class SiteNameStep extends AzureNameStep<IAppServiceWizardContext> {
-    public async prompt(wizardContext: IAppServiceWizardContext): Promise<IAppServiceWizardContext> {
+    public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
         const client: WebSiteManagementClient = createAzureClient(wizardContext, WebSiteManagementClient);
         wizardContext.newSiteName = (await ext.ui.showInputBox({
             prompt: `Enter a globally unique name for the new ${getAppKindDisplayName(wizardContext.newSiteKind)}.`,
@@ -35,8 +35,10 @@ export class SiteNameStep extends AzureNameStep<IAppServiceWizardContext> {
             namingRules.push(appServicePlanNamingRules);
         }
         wizardContext.relatedNameTask = this.generateRelatedName(wizardContext, wizardContext.newSiteName, namingRules);
+    }
 
-        return wizardContext;
+    public shouldPrompt(wizardContext: IAppServiceWizardContext): boolean {
+        return !wizardContext.newSiteName;
     }
 
     protected async isRelatedNameAvailable(wizardContext: IAppServiceWizardContext, name: string): Promise<boolean> {

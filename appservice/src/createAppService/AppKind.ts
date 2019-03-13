@@ -54,9 +54,9 @@ export function getAppServicePlanModelKind(_kind: AppKind, os: WebsiteOS): strin
 export function getAppKindDisplayName(kind: AppKind): string {
     switch (kind) {
         case AppKind.app:
-            return localize('WebApp', "Web App");
+            return localize('WebApp', "web app");
         case AppKind.functionapp:
-            return localize('FunctionApp', "Function App");
+            return localize('FunctionApp', "function app");
         default:
             throw new RangeError();
     }

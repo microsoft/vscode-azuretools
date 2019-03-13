@@ -13,27 +13,27 @@ import { WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
-    public async prompt(wizardContext: IAppServiceWizardContext): Promise<IAppServiceWizardContext> {
-        if (!wizardContext.newPlanSku) {
-            let pricingTiers: IAzureQuickPickItem<SkuDescription>[] = this.getPlanSkus().map((s: SkuDescription) => {
-                return {
-                    label: nonNullProp(s, 'name'),
-                    description: s.tier,
-                    data: s
-                };
+    public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
+        let pricingTiers: IAzureQuickPickItem<SkuDescription>[] = this.getPlanSkus().map((s: SkuDescription) => {
+            return {
+                label: nonNullProp(s, 'name'),
+                description: s.tier,
+                data: s
+            };
+        });
+
+        if (wizardContext.newSiteOS === WebsiteOS.linux) {
+            // Free tier is not supported for Linux asp's
+            pricingTiers = pricingTiers.filter((plan: IAzureQuickPickItem<SkuDescription>) => {
+                return plan.description !== 'Free';
             });
-
-            if (wizardContext.newSiteOS === WebsiteOS.linux) {
-                // Free tier is not supported for Linux asp's
-                pricingTiers = pricingTiers.filter((plan: IAzureQuickPickItem<SkuDescription>) => {
-                    return plan.description !== 'Free';
-                });
-            }
-
-            wizardContext.newPlanSku = (await ext.ui.showQuickPick(pricingTiers, { placeHolder: localize('PricingTierPlaceholder', 'Select a pricing tier for the new App Service plan.') })).data;
         }
 
-        return wizardContext;
+        wizardContext.newPlanSku = (await ext.ui.showQuickPick(pricingTiers, { placeHolder: localize('PricingTierPlaceholder', 'Select a pricing tier for the new App Service plan.') })).data;
+    }
+
+    public shouldPrompt(wizardContext: IAppServiceWizardContext): boolean {
+        return !wizardContext.newPlanSku;
     }
 
     private getPlanSkus(): SkuDescription[] {

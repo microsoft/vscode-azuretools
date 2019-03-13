@@ -14,39 +14,39 @@ interface ILinuxRuntimeStack {
 }
 
 export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
-    public async prompt(wizardContext: IAppServiceWizardContext): Promise<IAppServiceWizardContext> {
-        if (!wizardContext.newSiteRuntime) {
-            if (wizardContext.newSiteKind === AppKind.functionapp) {
-                const runtimeItems: IAzureQuickPickItem<string>[] = [
-                    { label: 'JavaScript', data: 'node' },
-                    { label: '.NET', data: 'dotnet' }
-                ];
+    public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
+        if (wizardContext.newSiteKind === AppKind.functionapp) {
+            const runtimeItems: IAzureQuickPickItem<string>[] = [
+                { label: 'JavaScript', data: 'node' },
+                { label: '.NET', data: 'dotnet' }
+            ];
 
-                if (wizardContext.newSiteOS === WebsiteOS.linux) {
-                    runtimeItems.push({ label: 'Python', description: '(Preview)', data: 'python' });
-                } else {
-                    runtimeItems.push({ label: 'Java', data: 'java' });
-                }
-
-                wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new app.' })).data;
-            } else if (wizardContext.newSiteOS === WebsiteOS.linux) {
-                let runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[] = this.getLinuxRuntimeStack().map((rt: ILinuxRuntimeStack) => {
-                    return {
-                        id: rt.name,
-                        label: rt.displayName,
-                        description: '',
-                        data: rt
-                    };
-                });
-                // tslint:disable-next-line:strict-boolean-expressions
-                if (wizardContext.recommendedSiteRuntime) {
-                    runtimeItems = this.sortQuickPicksByRuntime(runtimeItems, wizardContext.recommendedSiteRuntime);
-                }
-                wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new Linux app.' })).data.name;
+            if (wizardContext.newSiteOS === WebsiteOS.linux) {
+                runtimeItems.push({ label: 'Python', description: '(Preview)', data: 'python' });
+            } else {
+                runtimeItems.push({ label: 'Java', data: 'java' });
             }
-        }
 
-        return wizardContext;
+            wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new app.' })).data;
+        } else if (wizardContext.newSiteOS === WebsiteOS.linux) {
+            let runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[] = this.getLinuxRuntimeStack().map((rt: ILinuxRuntimeStack) => {
+                return {
+                    id: rt.name,
+                    label: rt.displayName,
+                    description: '',
+                    data: rt
+                };
+            });
+            // tslint:disable-next-line:strict-boolean-expressions
+            if (wizardContext.recommendedSiteRuntime) {
+                runtimeItems = this.sortQuickPicksByRuntime(runtimeItems, wizardContext.recommendedSiteRuntime);
+            }
+            wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new Linux app.' })).data.name;
+        }
+    }
+
+    public shouldPrompt(wizardContext: IAppServiceWizardContext): boolean {
+        return !wizardContext.newSiteRuntime && !(wizardContext.newSiteKind === AppKind.app && wizardContext.newSiteOS === WebsiteOS.windows);
     }
 
     // tslint:disable-next-line:max-func-body-length

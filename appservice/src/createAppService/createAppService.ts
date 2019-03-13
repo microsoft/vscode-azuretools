@@ -5,8 +5,7 @@
 
 import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { Site, SkuDescription } from 'azure-arm-website/lib/models';
-import * as vscode from 'vscode';
-import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, ISubscriptionWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountListStep, StorageAccountPerformance, StorageAccountReplication } from 'vscode-azureextensionui';
+import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, ISubscriptionWizardContext, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountListStep, StorageAccountPerformance, StorageAccountReplication } from 'vscode-azureextensionui';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
 import { AppKind, getAppKindDisplayName, WebsiteOS } from './AppKind';
@@ -35,7 +34,7 @@ export async function createAppService(
 
     const promptSteps: AzureWizardPromptStep<IAppServiceWizardContext>[] = [];
     const executeSteps: AzureWizardExecuteStep<IAppServiceWizardContext>[] = [];
-    let wizardContext: IAppServiceWizardContext = {
+    const wizardContext: IAppServiceWizardContext = {
         newSiteKind: appKind,
         newSiteOS: createOptions.os ? WebsiteOS[createOptions.os] : undefined,
         newSiteRuntime: createOptions.runtime,
@@ -43,7 +42,8 @@ export async function createAppService(
         subscriptionDisplayName: subscriptionContext.subscriptionDisplayName,
         credentials: subscriptionContext.credentials,
         environment: subscriptionContext.environment,
-        newResourceGroupName: createOptions.resourceGroup
+        newResourceGroupName: createOptions.resourceGroup,
+        resourceGroupDeferLocationStep: true
     };
 
     promptSteps.push(new SiteNameStep());
@@ -72,7 +72,6 @@ export async function createAppService(
                     learnMoreLink: 'https://aka.ms/Cfqnrc'
                 }
             ));
-            promptSteps.push(new LocationListStep());
             break;
         case AppKind.app:
             await setWizardContextDefaults(wizardContext, actionContext, createOptions.advancedCreation);
@@ -81,9 +80,7 @@ export async function createAppService(
                 promptSteps.push(new SiteOSStep());
                 promptSteps.push(new SiteRuntimeStep());
                 promptSteps.push(new AppServicePlanListStep());
-                promptSteps.push(new LocationListStep());
             } else {
-                promptSteps.push(new LocationListStep());
                 promptSteps.push(new SiteOSStep()); // will be skipped if there is a smart default
                 promptSteps.push(new SiteRuntimeStep());
                 executeSteps.push(new ResourceGroupCreateStep());
@@ -92,9 +89,15 @@ export async function createAppService(
         default:
     }
     executeSteps.push(new SiteCreateStep(createOptions.createFunctionAppSettings));
-    const wizard: AzureWizard<IAppServiceWizardContext> = new AzureWizard(promptSteps, executeSteps, wizardContext);
 
-    wizardContext = await wizard.prompt(actionContext);
+    if (wizardContext.newSiteOS !== undefined) {
+        SiteOSStep.setLocationsTask(wizardContext);
+    }
+
+    const title: string = localize('creatingTitle', 'Create new {0}', getAppKindDisplayName(appKind));
+    const wizard: AzureWizard<IAppServiceWizardContext> = new AzureWizard(wizardContext, { promptSteps, executeSteps, title, showExecuteProgress: true });
+
+    await wizard.prompt(actionContext);
     if (showCreatingTreeItem) {
         showCreatingTreeItem(nonNullProp(wizardContext, 'newSiteName'));
     }
@@ -111,10 +114,7 @@ export async function createAppService(
         }
     }
 
-    const creatingNewApp: string = localize('CreatingNewApp', 'Creating {0} "{1}"...', getAppKindDisplayName(wizardContext.newSiteKind), wizardContext.newSiteName);
-    await vscode.window.withProgress({ title: creatingNewApp, location: vscode.ProgressLocation.Notification }, async () => {
-        wizardContext = await wizard.execute(actionContext);
-    });
+    await wizard.execute(actionContext);
 
     actionContext.properties.os = wizardContext.newSiteOS;
     actionContext.properties.runtime = wizardContext.newSiteRuntime;
