@@ -5,7 +5,7 @@
 
 import { WebSiteManagementClient } from 'azure-arm-website';
 import { AppServicePlan } from 'azure-arm-website/lib/models';
-import { AzureWizardPromptStep, createAzureClient, IAzureQuickPickOptions, ISubWizardOptions, LocationListStep } from 'vscode-azureextensionui';
+import { AzureWizardPromptStep, createAzureClient, IAzureQuickPickOptions, ISubWizardOptions, LocationListStep, ResourceGroupListStep } from 'vscode-azureextensionui';
 import { IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -44,7 +44,7 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
             await LocationListStep.setLocation(wizardContext, wizardContext.plan.location);
         } else {
             return {
-                promptSteps: [new AppServicePlanNameStep(), new AppServicePlanSkuStep()],
+                promptSteps: [new AppServicePlanNameStep(), new AppServicePlanSkuStep(), new ResourceGroupListStep(), new LocationListStep()],
                 executeSteps: [new AppServicePlanCreateStep()]
             };
         }
