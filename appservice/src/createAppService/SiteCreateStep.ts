@@ -14,7 +14,7 @@ import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { nonNullProp, nonNullValue, nonNullValueAndProp } from '../utils/nonNull';
 import { randomUtils } from '../utils/randomUtils';
-import { AppKind, getAppKindDisplayName, getSiteModelKind, WebsiteOS } from './AppKind';
+import { AppKind, getSiteModelKind, WebsiteOS } from './AppKind';
 import { IAppSettingsContext } from './IAppCreateOptions';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
@@ -27,7 +27,9 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
     }
 
     public async execute(wizardContext: IAppServiceWizardContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
-        const creatingNewApp: string = localize('CreatingNewApp', 'Creating {0} "{1}"...', getAppKindDisplayName(wizardContext.newSiteKind), wizardContext.newSiteName);
+        const creatingNewApp: string = wizardContext.newSiteKind === AppKind.functionapp ?
+            localize('creatingNewFunctionApp', 'Creating new function app "{0}"...', wizardContext.newSiteName) :
+            localize('creatingNewWebApp', 'Creating new web app "{0}"...', wizardContext.newSiteName);
         ext.outputChannel.appendLine(creatingNewApp);
         progress.report({ message: creatingNewApp });
         const client: WebSiteManagementClient = createAzureClient(wizardContext, WebSiteManagementClient);
@@ -40,7 +42,11 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
             siteConfig: await this.getNewSiteConfig(wizardContext),
             reserved: wizardContext.newSiteOS === WebsiteOS.linux  // The secret property - must be set to true to make it a Linux plan. Confirmed by the team who owns this API.
         });
-        const createdNewApp: string = localize('CreatedNewApp', 'Created new {0} "{1}": {2}', getAppKindDisplayName(wizardContext.newSiteKind), wizardContext.site.name, `https://${wizardContext.site.defaultHostName}`);
+
+        const siteUrl: string = `https://${wizardContext.site.defaultHostName}`;
+        const createdNewApp: string = wizardContext.newSiteKind === AppKind.functionapp ?
+            localize('createdNewFunctionApp', 'Created new function app "{0}": {1}', wizardContext.site.name, siteUrl) :
+            localize('createdNewWebApp', 'Created new web app "{0}": {1}', wizardContext.site.name, siteUrl);
         ext.outputChannel.appendLine(createdNewApp);
         ext.outputChannel.appendLine('');
         const viewOutput: MessageItem = {

@@ -3,8 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from "../localize";
-
 export enum WebsiteOS {
     linux = 'linux',
     windows = 'windows'
@@ -48,17 +46,6 @@ export function getAppServicePlanModelKind(_kind: AppKind, os: WebsiteOS): strin
         return WebsiteOS.linux;
     } else {
         return AppKind.app;
-    }
-}
-
-export function getAppKindDisplayName(kind: AppKind): string {
-    switch (kind) {
-        case AppKind.app:
-            return localize('WebApp', "web app");
-        case AppKind.functionapp:
-            return localize('FunctionApp', "function app");
-        default:
-            throw new RangeError();
     }
 }
 

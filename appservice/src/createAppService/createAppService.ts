@@ -8,7 +8,7 @@ import { Site, SkuDescription } from 'azure-arm-website/lib/models';
 import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, ISubscriptionWizardContext, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountListStep, StorageAccountPerformance, StorageAccountReplication } from 'vscode-azureextensionui';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
-import { AppKind, getAppKindDisplayName, WebsiteOS } from './AppKind';
+import { AppKind, WebsiteOS } from './AppKind';
 import { AppServicePlanCreateStep } from './AppServicePlanCreateStep';
 import { AppServicePlanListStep } from './AppServicePlanListStep';
 import { setWizardContextDefaults } from './createWebApp';
@@ -94,7 +94,9 @@ export async function createAppService(
         SiteOSStep.setLocationsTask(wizardContext);
     }
 
-    const title: string = localize('creatingTitle', 'Create new {0}', getAppKindDisplayName(appKind));
+    const title: string = wizardContext.newSiteKind === AppKind.functionapp ?
+        localize('functionAppCreatingTitle', 'Create new function app.') :
+        localize('webAppCreatingTitle', 'Create new web app.');
     const wizard: AzureWizard<IAppServiceWizardContext> = new AzureWizard(wizardContext, { promptSteps, executeSteps, title, showExecuteProgress: true });
 
     await wizard.prompt(actionContext);

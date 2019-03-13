@@ -7,7 +7,8 @@ import { WebSiteManagementClient } from 'azure-arm-website';
 import { ResourceNameAvailability } from 'azure-arm-website/lib/models';
 import { AzureNameStep, createAzureClient, IAzureNamingRules, ResourceGroupListStep, resourceGroupNamingRules, StorageAccountListStep, storageAccountNamingRules } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
-import { AppKind, getAppKindDisplayName } from './AppKind';
+import { localize } from '../localize';
+import { AppKind } from './AppKind';
 import { AppServicePlanListStep } from './AppServicePlanListStep';
 import { appServicePlanNamingRules } from './AppServicePlanNameStep';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
@@ -15,8 +16,11 @@ import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 export class SiteNameStep extends AzureNameStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
         const client: WebSiteManagementClient = createAzureClient(wizardContext, WebSiteManagementClient);
+        const prompt: string = wizardContext.newSiteKind === AppKind.functionapp ?
+            localize('functionAppNamePrompt', 'Enter a globally unique name for the new function app.') :
+            localize('webAppNamePrompt', 'Enter a globally unique name for the new web app.');
         wizardContext.newSiteName = (await ext.ui.showInputBox({
-            prompt: `Enter a globally unique name for the new ${getAppKindDisplayName(wizardContext.newSiteKind)}.`,
+            prompt,
             validateInput: async (value: string): Promise<string | undefined> => {
                 value = value ? value.trim() : '';
                 const nameAvailability: ResourceNameAvailability = await client.checkNameAvailability(value, 'site');
