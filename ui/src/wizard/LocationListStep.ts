@@ -6,7 +6,7 @@
 import { SubscriptionClient } from 'azure-arm-resource';
 import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { QuickPickOptions } from 'vscode';
-import { IAzureQuickPickItem, ILocationWizardContext } from '../../index';
+import * as types from '../../index';
 import { createAzureSubscriptionClient } from '../createAzureClient';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -17,8 +17,8 @@ function generalizeLocationName(name: string | undefined): string {
     return (name || '').toLowerCase().replace(/\s/g, '');
 }
 
-export class LocationListStep<T extends ILocationWizardContext> extends AzureWizardPromptStep<T> {
-    public static async setLocation<T extends ILocationWizardContext>(wizardContext: T, name: string): Promise<void> {
+export class LocationListStep<T extends types.ILocationWizardContext> extends AzureWizardPromptStep<T> implements types.LocationListStep<T> {
+    public static async setLocation<T extends types.ILocationWizardContext>(wizardContext: T, name: string): Promise<void> {
         const locations: Location[] = await LocationListStep.getLocations(wizardContext);
         name = generalizeLocationName(name);
         wizardContext.location = locations.find((l: Location) => {
@@ -26,7 +26,7 @@ export class LocationListStep<T extends ILocationWizardContext> extends AzureWiz
         });
     }
 
-    public static async getLocations<T extends ILocationWizardContext>(wizardContext: T): Promise<Location[]> {
+    public static async getLocations<T extends types.ILocationWizardContext>(wizardContext: T): Promise<Location[]> {
         if (wizardContext.locationsTask === undefined) {
             const client: SubscriptionClient = createAzureSubscriptionClient(wizardContext, SubscriptionClient);
             wizardContext.locationsTask = client.subscriptions.listLocations(wizardContext.subscriptionId);
@@ -35,16 +35,16 @@ export class LocationListStep<T extends ILocationWizardContext> extends AzureWiz
         return await wizardContext.locationsTask;
     }
 
-    public async prompt(wizardContext: T): Promise<T> {
-        if (!wizardContext.location) {
-            const options: QuickPickOptions = { placeHolder: localize('selectLocation', 'Select a location for new resources.') };
-            wizardContext.location = (await ext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
-        }
-
-        return wizardContext;
+    public async prompt(wizardContext: T): Promise<void> {
+        const options: QuickPickOptions = { placeHolder: localize('selectLocation', 'Select a location for new resources.') };
+        wizardContext.location = (await ext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
     }
 
-    private async getQuickPicks(wizardContext: T): Promise<IAzureQuickPickItem<Location>[]> {
+    public shouldPrompt(wizardContext: T): boolean {
+        return !wizardContext.location;
+    }
+
+    private async getQuickPicks(wizardContext: T): Promise<types.IAzureQuickPickItem<Location>[]> {
         let locations: Location[] = await LocationListStep.getLocations(wizardContext);
         // tslint:disable-next-line:no-non-null-assertion
         locations = locations.sort((l1: Location, l2: Location) => l1.displayName!.localeCompare(l2.displayName!));

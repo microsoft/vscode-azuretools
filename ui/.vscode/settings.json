@@ -1,6 +1,7 @@
 {
     "editor.formatOnSave": true,
     "editor.insertSpaces": true,
+    "editor.detectIndentation": false,
     "editor.tabSize": 4,
     "files.insertFinalNewline": true,
     "files.trimTrailingWhitespace": true,
@@ -8,6 +9,8 @@
         "out": true,
         "**/node_modules": true
     },
-    "tslint.autoFixOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll.tslint": true,
+    },
     "tslint.ignoreDefinitionFiles": true
 }

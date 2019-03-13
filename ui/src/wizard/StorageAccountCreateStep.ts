@@ -5,44 +5,46 @@
 
 // tslint:disable-next-line:no-require-imports
 import StorageManagementClient = require('azure-arm-storage');
-import { INewStorageAccountDefaults, IStorageAccountWizardContext } from '../../index';
+import { Progress } from 'vscode';
+import * as types from '../../index';
 import { createAzureClient } from '../createAzureClient';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 
-export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> extends AzureWizardExecuteStep<T> {
-    private readonly _defaults: INewStorageAccountDefaults;
+export class StorageAccountCreateStep<T extends types.IStorageAccountWizardContext> extends AzureWizardExecuteStep<T> implements types.StorageAccountCreateStep<T> {
+    private readonly _defaults: types.INewStorageAccountDefaults;
 
-    public constructor(defaults: INewStorageAccountDefaults) {
+    public constructor(defaults: types.INewStorageAccountDefaults) {
         super();
         this._defaults = defaults;
     }
 
-    public async execute(wizardContext: T): Promise<T> {
-        if (!wizardContext.storageAccount) {
+    public async execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
+        // tslint:disable-next-line:no-non-null-assertion
+        const newLocation: string = wizardContext.location!.name!;
+        // tslint:disable-next-line:no-non-null-assertion
+        const newName: string = wizardContext.newStorageAccountName!;
+        const newSkuName: string = `${this._defaults.performance}_${this._defaults.replication}`;
+        const creatingStorageAccount: string = localize('CreatingStorageAccount', 'Creating storage account "{0}" in location "{1}" with sku "{2}"...', newName, newLocation, newSkuName);
+        ext.outputChannel.appendLine(creatingStorageAccount);
+        progress.report({ message: creatingStorageAccount });
+        const storageClient: StorageManagementClient = createAzureClient(wizardContext, StorageManagementClient);
+        wizardContext.storageAccount = await storageClient.storageAccounts.create(
             // tslint:disable-next-line:no-non-null-assertion
-            const newLocation: string = wizardContext.location!.name!;
-            // tslint:disable-next-line:no-non-null-assertion
-            const newName: string = wizardContext.newStorageAccountName!;
-            const newSkuName: string = `${this._defaults.performance}_${this._defaults.replication}`;
-            const creatingStorageAccount: string = localize('CreatingStorageAccount', 'Creating storage account "{0}" in location "{1}" with sku "{2}"...', newName, newLocation, newSkuName);
-            ext.outputChannel.appendLine(creatingStorageAccount);
-            const storageClient: StorageManagementClient = createAzureClient(wizardContext, StorageManagementClient);
-            wizardContext.storageAccount = await storageClient.storageAccounts.create(
-                    // tslint:disable-next-line:no-non-null-assertion
-                    wizardContext.resourceGroup!.name!,
-                    newName,
-                    {
-                        sku: { name: newSkuName },
-                        kind: this._defaults.kind,
-                        location: newLocation
-                    }
-                );
-            const createdStorageAccount: string = localize('CreatedStorageAccount', 'Successfully created storage account "{0}".', newName);
-            ext.outputChannel.appendLine(createdStorageAccount);
-        }
+            wizardContext.resourceGroup!.name!,
+            newName,
+            {
+                sku: { name: newSkuName },
+                kind: this._defaults.kind,
+                location: newLocation
+            }
+        );
+        const createdStorageAccount: string = localize('CreatedStorageAccount', 'Successfully created storage account "{0}".', newName);
+        ext.outputChannel.appendLine(createdStorageAccount);
+    }
 
-        return wizardContext;
+    public shouldExecute(wizardContext: T): boolean {
+        return !wizardContext.storageAccount;
     }
 }
