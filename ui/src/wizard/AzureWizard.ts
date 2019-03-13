@@ -6,9 +6,8 @@
 import { isNullOrUndefined } from 'util';
 import * as vscode from 'vscode';
 import * as types from '../../index';
-import { AzureUserInput, IRootUserInput } from '../AzureUserInput';
 import { GoBackError } from '../errors';
-import { ext } from '../extensionVariables';
+import { ext, IRootUserInput } from '../extensionVariables';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 import { AzureWizardUserInput, IInternalAzureWizard } from './AzureWizardUserInput';
@@ -32,38 +31,37 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
     }
 
     public get currentStep(): number {
-        return this._finishedPromptSteps.length + 1;
+        return this._finishedPromptSteps.filter(s => s.prompted).length + 1;
     }
 
     public get totalSteps(): number {
-        return this._finishedPromptSteps.length + this._promptSteps.filter(s => s.shouldPrompt(this._wizardContext)).length + 1;
+        return this._finishedPromptSteps.filter(s => s.prompted).length + this._promptSteps.filter(s => s.shouldPrompt(this._wizardContext)).length + 1;
     }
 
     public async prompt(actionContext: types.IActionContext): Promise<void> {
         // Insert Wizard UI into ext.ui.rootUserInput - to be used instead of vscode.window UI
-        let oldRootUserInput: IRootUserInput = vscode.window;
-        if (ext.ui instanceof AzureUserInput) {
-            oldRootUserInput = ext.ui.rootUserInput;
-            ext.ui.rootUserInput = new AzureWizardUserInput(this);
-        }
+        // tslint:disable-next-line: strict-boolean-expressions
+        const oldRootUserInput: IRootUserInput = ext.ui.rootUserInput || vscode.window;
+        ext.ui.rootUserInput = new AzureWizardUserInput(this);
 
         try {
             let step: AzureWizardPromptStep<T> | undefined = this._promptSteps.pop();
             while (step) {
+                step.init();
+
                 if (step.shouldPrompt(this._wizardContext)) {
                     actionContext.properties.lastStepAttempted = `prompt-${step.constructor.name}`;
                     step.propertiesBeforePrompt = Object.keys(this._wizardContext).filter(k => !isNullOrUndefined(this._wizardContext[k]));
 
                     try {
                         const subWizard: types.ISubWizardOptions<T> | void = await step.prompt(this._wizardContext);
-                        this._finishedPromptSteps.push(step);
+                        step.prompted = true;
                         if (subWizard) {
                             this.addSubWizard(step, subWizard);
                         }
                     } catch (err) {
                         if (err instanceof GoBackError) {
-                            this._promptSteps.push(step);
-                            step = this.goBack();
+                            step = this.goBack(step);
                             continue;
                         } else {
                             throw err;
@@ -71,12 +69,11 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
                     }
                 }
 
+                this._finishedPromptSteps.push(step);
                 step = this._promptSteps.pop();
             }
         } finally {
-            if (ext.ui instanceof AzureUserInput) {
-                ext.ui.rootUserInput = oldRootUserInput;
-            }
+            ext.ui.rootUserInput = oldRootUserInput;
         }
     }
 
@@ -117,17 +114,18 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
         }
     }
 
-    private goBack(): AzureWizardPromptStep<T> {
-        const step: AzureWizardPromptStep<T> | undefined = this._finishedPromptSteps.pop();
-        if (!step) {
-            throw new GoBackError();
-        }
+    private goBack(currentStep: AzureWizardPromptStep<T>): AzureWizardPromptStep<T> {
+        let step: AzureWizardPromptStep<T> | undefined = currentStep;
+        do {
+            this._promptSteps.push(step);
+            step = this._finishedPromptSteps.pop();
+            if (!step) {
+                throw new GoBackError();
+            }
+        } while (!step.prompted);
 
         removeFromEnd(this._promptSteps, step.numSubPromptSteps);
         removeFromEnd(this._subExecuteSteps, step.numSubExecuteSteps);
-
-        step.numSubPromptSteps = 0;
-        step.numSubExecuteSteps = 0;
 
         for (const key of Object.keys(this._wizardContext)) {
             if (!step.propertiesBeforePrompt.find(p => p === key)) {

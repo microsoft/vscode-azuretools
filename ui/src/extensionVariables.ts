@@ -4,10 +4,19 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import { ExtensionContext, OutputChannel } from "vscode";
+import { ExtensionContext, InputBoxOptions, OutputChannel, QuickPickItem, QuickPickOptions } from "vscode";
 import TelemetryReporter from "vscode-extension-telemetry";
 import { IAzureUserInput, UIExtensionVariables } from "../index";
 import { localize } from "./localize";
+
+export interface IRootUserInput {
+    showQuickPick<T extends QuickPickItem>(picks: T[] | Thenable<T[]>, options: QuickPickOptions): Thenable<T>;
+    showInputBox(options: InputBoxOptions): Thenable<string | undefined>;
+}
+
+interface IInternalExtensionVariables extends UIExtensionVariables {
+    ui: IAzureUserInput & { rootUserInput?: IRootUserInput };
+}
 
 class UninitializedExtensionVariables implements UIExtensionVariables {
     private _error: Error = new Error(localize('uninitializedError', '"registerUIExtensionVariables" must be called before using the vscode-azureextensionui package.'));
@@ -32,7 +41,7 @@ class UninitializedExtensionVariables implements UIExtensionVariables {
 /**
  * Container for common extension variables used throughout the UI package. They must be initialized with registerUIExtensionVariables
  */
-export let ext: UIExtensionVariables = new UninitializedExtensionVariables();
+export let ext: IInternalExtensionVariables = new UninitializedExtensionVariables();
 
 export function registerUIExtensionVariables(extVars: UIExtensionVariables): void {
     assert(extVars.context, 'registerUIExtensionVariables: Missing context');

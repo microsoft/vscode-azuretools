@@ -4,18 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { InputBoxOptions, Memento, MessageItem, MessageOptions, QuickPickItem, QuickPickOptions } from 'vscode';
+import { Memento, MessageItem, MessageOptions, QuickPickItem, QuickPickOptions } from 'vscode';
 import * as types from '../index';
 import { DialogResponses } from './DialogResponses';
 import { UserCancelledError } from './errors';
+import { IRootUserInput } from './extensionVariables';
 import { localize } from './localize';
 import { validOnTimeoutOrException } from './utils/inputValidation';
 import { randomUtils } from './utils/randomUtils';
-
-export interface IRootUserInput {
-    showQuickPick<T extends QuickPickItem>(picks: T[] | Thenable<T[]>, options: QuickPickOptions): Thenable<T>;
-    showInputBox(options: InputBoxOptions): Thenable<string | undefined>;
-}
 
 export class AzureUserInput implements types.IAzureUserInput, types.AzureUserInput {
     public rootUserInput: IRootUserInput = vscode.window;
