@@ -31,6 +31,7 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         super(parent);
         this.contextValue = siteConfig.scmType === ScmType.None ? DeploymentsTreeItem.contextValueUnconnected : DeploymentsTreeItem.contextValueConnected;
         this._connectToGitHubCommandId = connectToGitHubCommandId;
+        this.description = this.getDescriptionFromScmType(siteConfig.scmType);
     }
 
     public get iconPath(): { light: string, dark: string } {
@@ -53,7 +54,7 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
             deployments,
             'invalidDeployment',
             (dr: DeployResult) => {
-                return new DeploymentTreeItem(this, dr);
+                return new DeploymentTreeItem(this, dr, siteConfig.scmType);
             },
             (dr: DeployResult) => {
                 return dr.id ? dr.id.substring(0, 7) : undefined;
@@ -96,6 +97,22 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
             this.contextValue = DeploymentsTreeItem.contextValueConnected;
         } else {
             this.contextValue = DeploymentsTreeItem.contextValueUnconnected;
+        }
+
+        this.description = this.getDescriptionFromScmType(siteConfig.scmType);
+    }
+
+    private getDescriptionFromScmType(scmType?: string): string {
+        switch (scmType) {
+            case ScmType.LocalGit:
+                return localize('localGit', 'Local Git');
+                break;
+            case ScmType.GitHub:
+                return localize('github', 'Github');
+                break;
+            case ScmType.None:
+            default:
+                return '';
         }
     }
 }

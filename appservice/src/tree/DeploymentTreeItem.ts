@@ -30,15 +30,16 @@ enum DeployStatus {
 }
 
 export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
-    public static contextValue: string = 'deployment';
+    public static contextValue: string;;
     public readonly contextValue: string = DeploymentTreeItem.contextValue;
     public label: string;
     public receivedTime: Date;
     public parent: DeploymentsTreeItem;
     private _deployResult: DeployResult;
 
-    constructor(parent: DeploymentsTreeItem, deployResult: DeployResult) {
+    constructor(parent: DeploymentsTreeItem, deployResult: DeployResult, scmType?: string) {
         super(parent);
+        this.contextValue = `deployment/${scmType}`;
         this._deployResult = deployResult;
         this.receivedTime = nonNullProp(deployResult, 'receivedTime');
         let message: string = nonNullProp(deployResult, 'message');
@@ -138,7 +139,7 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
             opn(githubCommitUrl);
             return;
         } else {
-            throw new Error(localize('noRepoUrl', 'There is no repo url associated with deployment "{0}".', this._deployResult.id));
+            throw new Error(localize('noRepoUrl', 'There is no Github repo url associated with deployment "{0}".', this._deployResult.id));
         }
     }
 
