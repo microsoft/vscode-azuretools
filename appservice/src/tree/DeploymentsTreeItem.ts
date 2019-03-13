@@ -27,11 +27,11 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
 
     private readonly _connectToGitHubCommandId: string;
 
-    public constructor(parent: AzureParentTreeItem<ISiteTreeRoot>, siteConfig: SiteConfig, connectToGitHubCommandId: string) {
+    public constructor(parent: AzureParentTreeItem<ISiteTreeRoot>, siteConfig: SiteConfig, sourceControl: SiteSourceControl, connectToGitHubCommandId: string) {
         super(parent);
         this.contextValue = siteConfig.scmType === ScmType.None ? DeploymentsTreeItem.contextValueUnconnected : DeploymentsTreeItem.contextValueConnected;
         this._connectToGitHubCommandId = connectToGitHubCommandId;
-        this.description = this.getDescriptionFromScmType(siteConfig.scmType);
+        this.description = this.getDescriptionFromScmType(siteConfig, sourceControl);
     }
 
     public get iconPath(): { light: string, dark: string } {
@@ -93,23 +93,24 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
 
     public async refreshImpl(): Promise<void> {
         const siteConfig: SiteConfig = await this.root.client.getSiteConfig();
+        const sourceControl: SiteSourceControl = await this.root.client.getSourceControl();
         if (siteConfig.scmType === ScmType.GitHub || siteConfig.scmType === ScmType.LocalGit) {
             this.contextValue = DeploymentsTreeItem.contextValueConnected;
         } else {
             this.contextValue = DeploymentsTreeItem.contextValueUnconnected;
         }
 
-        this.description = this.getDescriptionFromScmType(siteConfig.scmType);
+        this.description = this.getDescriptionFromScmType(siteConfig, sourceControl);
     }
 
-    private getDescriptionFromScmType(scmType?: string): string {
-        switch (scmType) {
+    private getDescriptionFromScmType(siteConfig: SiteConfig, sourceControl: SiteSourceControl): string {
+        switch (siteConfig.scmType) {
             case ScmType.LocalGit:
                 return localize('localGit', 'Local Git');
                 break;
             case ScmType.GitHub:
-                return localize('github', 'Github');
-                break;
+                // remove github from the repoUrl which leaves only the org/repo names
+                return sourceControl.repoUrl ? sourceControl.repoUrl.substring('https://github.com/'.length) : localize('github', 'Github');
             case ScmType.None:
             default:
                 return '';
