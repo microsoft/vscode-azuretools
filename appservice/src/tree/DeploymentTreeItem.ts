@@ -30,7 +30,7 @@ enum DeployStatus {
 }
 
 export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
-    public static contextValue: string;;
+    public static contextValue: string;
     public readonly contextValue: string = DeploymentTreeItem.contextValue;
     public label: string;
     public receivedTime: Date;
