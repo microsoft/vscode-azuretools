@@ -84,7 +84,9 @@ export async function startStreamingLogs(client: SiteClient, verifyLoggingEnable
 
                     logsRequest.on('data', (data: Buffer | string) => {
                         data = data.toString();
-                        // Check if this is duplicate output due to https://github.com/Microsoft/vscode-azurefunctions/issues/1089
+                        // Only display if it's not a duplicate of recent data
+                        // Duplicate data can happen because the log stream watches for all *.log and *.txt file changes under `logsPath`, and sometimes the same log is written to multiple files
+                        // Most common scenario is function trigger logs that get written to both an app-level log file and a trigger-level log file https://github.com/Microsoft/vscode-azurefunctions/issues/1089
                         if (!recentData.includes(data)) {
                             outputChannel.append(data);
                             recentData += data;
