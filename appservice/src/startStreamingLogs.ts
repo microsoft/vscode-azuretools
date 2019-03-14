@@ -33,7 +33,7 @@ export async function startStreamingLogs(client: SiteClient, verifyLoggingEnable
     const logStream: ILogStream | undefined = logStreams.get(logStreamId);
     if (logStream && logStream.isConnected) {
         logStream.outputChannel.show();
-         // tslint:disable-next-line:no-floating-promises
+        // tslint:disable-next-line:no-floating-promises
         ext.ui.showWarningMessage(localize('logStreamAlreadyActive', 'The log-streaming service for "{0}" is already active.', logStreamLabel));
         return logStream;
     } else {
@@ -61,8 +61,10 @@ export async function startStreamingLogs(client: SiteClient, verifyLoggingEnable
                 }
 
                 await new Promise((onLogStreamEnded: () => void, reject: (err: Error) => void): void => {
+                    let recentData: string = '';
                     let newLogStream: ILogStream;
                     const logsRequest: request.Request = requestApi(`${client.kuduUrl}/api/logstream/${logsPath}`);
+                    const recentDataTimer: NodeJS.Timer = setInterval(() => { recentData = ''; }, 2 * 1000);
                     newLogStream = {
                         dispose: (): void => {
                             logsRequest.removeAllListeners();
@@ -71,6 +73,7 @@ export async function startStreamingLogs(client: SiteClient, verifyLoggingEnable
                             if (timerId) {
                                 clearInterval(timerId);
                             }
+                            clearInterval(recentDataTimer);
                             outputChannel.appendLine(localize('logStreamDisconnected', 'Disconnected from log-streaming service.'));
                             newLogStream.isConnected = false;
                             onLogStreamEnded();
@@ -79,8 +82,13 @@ export async function startStreamingLogs(client: SiteClient, verifyLoggingEnable
                         outputChannel: outputChannel
                     };
 
-                    logsRequest.on('data', (chunk: Buffer | string) => {
-                        outputChannel.appendLine(chunk.toString());
+                    logsRequest.on('data', (data: Buffer | string) => {
+                        data = data.toString();
+                        // Check if this is duplicate output due to https://github.com/Microsoft/vscode-azurefunctions/issues/1089
+                        if (!recentData.includes(data)) {
+                            outputChannel.append(data);
+                            recentData += data;
+                        }
                     }).on('error', (err: Error) => {
                         if (timerId) {
                             clearInterval(timerId);
