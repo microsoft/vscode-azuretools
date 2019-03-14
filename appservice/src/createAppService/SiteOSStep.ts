@@ -11,16 +11,10 @@ import { AppKind, getWebsiteOSDisplayName, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class SiteOSStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
-    public async prompt(wizardContext: IAppServiceWizardContext): Promise<IAppServiceWizardContext> {
-        if (wizardContext.newSiteOS === undefined) {
-            const picks: IAzureQuickPickItem<WebsiteOS>[] = Object.keys(WebsiteOS).map((key: string) => {
-                const os: WebsiteOS = <WebsiteOS>WebsiteOS[key];
-                return { label: getWebsiteOSDisplayName(os), description: '', data: os };
-            });
-
-            wizardContext.newSiteOS = (await ext.ui.showQuickPick(picks, { placeHolder: localize('selectOS', 'Select an OS.') })).data;
-        }
-
+    /**
+     * Overwrite the generic 'locationsTask' with a list of locations specific to provider "Microsoft.Web" (based on OS)
+     */
+    public static setLocationsTask(wizardContext: IAppServiceWizardContext): void {
         let options: {} = {};
         if (wizardContext.newSiteOS === 'linux') {
             if (wizardContext.newSiteKind === AppKind.functionapp) {
@@ -29,10 +23,22 @@ export class SiteOSStep extends AzureWizardPromptStep<IAppServiceWizardContext> 
                 options = { linuxWorkersEnabled: true };
             }
         }
-        // Overwrite the generic 'locationsTask' with a list of locations specific to provider "Microsoft.Web"
+
         const client: WebSiteManagementClient = createAzureClient(wizardContext, WebSiteManagementClient);
         wizardContext.locationsTask = client.listGeoRegions(options);
+    }
 
-        return wizardContext;
+    public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
+        const picks: IAzureQuickPickItem<WebsiteOS>[] = Object.keys(WebsiteOS).map((key: string) => {
+            const os: WebsiteOS = <WebsiteOS>WebsiteOS[key];
+            return { label: getWebsiteOSDisplayName(os), description: '', data: os };
+        });
+
+        wizardContext.newSiteOS = (await ext.ui.showQuickPick(picks, { placeHolder: localize('selectOS', 'Select an OS.') })).data;
+        SiteOSStep.setLocationsTask(wizardContext);
+    }
+
+    public shouldPrompt(wizardContext: IAppServiceWizardContext): boolean {
+        return wizardContext.newSiteOS === undefined;
     }
 }

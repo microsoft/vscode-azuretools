@@ -5,7 +5,7 @@
 
 import { WebSiteManagementClient } from 'azure-arm-website';
 import { AppServicePlan } from 'azure-arm-website/lib/models';
-import { AzureWizard, AzureWizardPromptStep, createAzureClient, IAzureQuickPickOptions, LocationListStep } from 'vscode-azureextensionui';
+import { AzureWizardPromptStep, createAzureClient, IAzureQuickPickOptions, ISubWizardOptions, LocationListStep, ResourceGroupListStep } from 'vscode-azureextensionui';
 import { IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -35,24 +35,23 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
         );
     }
 
-    public async prompt(wizardContext: IAppServiceWizardContext): Promise<IAppServiceWizardContext> {
-        if (!wizardContext.plan && !wizardContext.newPlanName) {
-            // Cache hosting plan separately per subscription
-            const options: IAzureQuickPickOptions = { placeHolder: localize('selectPlan', 'Select a {0} App Service plan.', getWebsiteOSDisplayName(nonNullProp(wizardContext, 'newSiteOS'))), id: `AppServicePlanListStep/${wizardContext.subscriptionId}` };
-            wizardContext.plan = (await ext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
+    public async prompt(wizardContext: IAppServiceWizardContext): Promise<ISubWizardOptions<IAppServiceWizardContext> | void> {
+        // Cache hosting plan separately per subscription
+        const options: IAzureQuickPickOptions = { placeHolder: localize('selectPlan', 'Select a {0} App Service plan.', getWebsiteOSDisplayName(nonNullProp(wizardContext, 'newSiteOS'))), id: `AppServicePlanListStep/${wizardContext.subscriptionId}` };
+        wizardContext.plan = (await ext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
 
-            if (wizardContext.plan) {
-                await LocationListStep.setLocation(wizardContext, wizardContext.plan.location);
-            } else {
-                this.subWizard = new AzureWizard(
-                    [new AppServicePlanNameStep(), new AppServicePlanSkuStep()],
-                    [new AppServicePlanCreateStep()],
-                    wizardContext
-                );
-            }
+        if (wizardContext.plan) {
+            await LocationListStep.setLocation(wizardContext, wizardContext.plan.location);
+        } else {
+            return {
+                promptSteps: [new AppServicePlanNameStep(), new AppServicePlanSkuStep(), new ResourceGroupListStep(), new LocationListStep()],
+                executeSteps: [new AppServicePlanCreateStep()]
+            };
         }
+    }
 
-        return wizardContext;
+    public shouldPrompt(wizardContext: IAppServiceWizardContext): boolean {
+        return !wizardContext.plan && !wizardContext.newPlanName;
     }
 
     private async getQuickPicks(wizardContext: IAppServiceWizardContext): Promise<IAzureQuickPickItem<AppServicePlan | undefined>[]> {
