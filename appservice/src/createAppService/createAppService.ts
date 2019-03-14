@@ -95,8 +95,8 @@ export async function createAppService(
     }
 
     const title: string = wizardContext.newSiteKind === AppKind.functionapp ?
-        localize('functionAppCreatingTitle', 'Create new function app.') :
-        localize('webAppCreatingTitle', 'Create new web app.');
+        localize('functionAppCreatingTitle', 'Create new function app') :
+        localize('webAppCreatingTitle', 'Create new web app');
     const wizard: AzureWizard<IAppServiceWizardContext> = new AzureWizard(wizardContext, { promptSteps, executeSteps, title, showExecuteProgress: true });
 
     await wizard.prompt(actionContext);
