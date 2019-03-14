@@ -40,8 +40,7 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
 
     public async prompt(actionContext: types.IActionContext): Promise<void> {
         // Insert Wizard UI into ext.ui.rootUserInput - to be used instead of vscode.window UI
-        // tslint:disable-next-line: strict-boolean-expressions
-        const oldRootUserInput: IRootUserInput = ext.ui.rootUserInput || vscode.window;
+        const oldRootUserInput: IRootUserInput | undefined = ext.ui.rootUserInput;
         ext.ui.rootUserInput = new AzureWizardUserInput(this);
 
         try {
