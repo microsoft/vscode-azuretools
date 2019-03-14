@@ -32,12 +32,24 @@ abstract class QuickPickStepBase extends AzureWizardPromptStep<ITestWizardContex
     }
 }
 
+const quickPick1Key: string = 'quickPick1';
 class QuickPickStep1 extends QuickPickStepBase {
-    protected key: string = 'quickPick1';
+    protected key: string = quickPick1Key;
 }
 
 class QuickPickStep2 extends QuickPickStepBase {
     protected key: string = 'quickPick2';
+}
+
+class InputBoxStepIfNotPick1 extends AzureWizardPromptStep<ITestWizardContext> {
+    private _key: string = 'inputBoxNotPick1';
+    public async prompt(wizardContext: ITestWizardContext): Promise<void> {
+        wizardContext[this._key] = await ext.ui.showInputBox({});
+    }
+
+    public shouldPrompt(wizardContext: ITestWizardContext): boolean {
+        return !wizardContext[this._key] && wizardContext[quickPick1Key] !== 'Pick 1';
+    }
 }
 
 abstract class InputBoxStepBase extends AzureWizardPromptStep<ITestWizardContext> {
@@ -477,6 +489,17 @@ suite("AzureWizard tests", () => {
             },
             ['testValue', 'Pick 1', 'subTestValue', TestInput.BackButton, 'subTestValueChanged', 'Pick 2'],
             { inputBox1: 'testValue', subQuickPickNoExecute: 'Pick 1', subInputBox: 'subTestValueChanged', quickPick1: 'Pick 2', execute1: 'executeValue1' }
+        );
+    });
+
+    test("Back button through previous step that had been filtered", async () => {
+        await validateWizard(
+            {
+                promptSteps: [new QuickPickStep1(), new InputBoxStepIfNotPick1(), new QuickPickStep2()],
+                executeSteps: [new ExecuteStep1()]
+            },
+            ['Pick 1', TestInput.BackButton, 'Pick 2', 'testValue1', 'Pick 3'],
+            { quickPick1: 'Pick 2', inputBoxNotPick1: 'testValue1', quickPick2: 'Pick 3', execute1: 'executeValue1' }
         );
     });
 });

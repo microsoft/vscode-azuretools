@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Disposable, InputBox, InputBoxOptions, QuickInputButtons, QuickPick, QuickPickItem, QuickPickOptions, window } from 'vscode';
-import { IRootUserInput } from '../AzureUserInput';
 import { GoBackError, UserCancelledError } from '../errors';
+import { IRootUserInput } from '../extensionVariables';
 
 export interface IInternalAzureWizard {
     title: string;
