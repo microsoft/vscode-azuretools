@@ -62,10 +62,9 @@ export async function startStreamingLogs(client: SiteClient, verifyLoggingEnable
 
                 await new Promise((onLogStreamEnded: () => void, reject: (err: Error) => void): void => {
                     let recentData: string = '';
-                    let newLogStream: ILogStream;
                     const logsRequest: request.Request = requestApi(`${client.kuduUrl}/api/logstream/${logsPath}`);
                     const recentDataTimer: NodeJS.Timer = setInterval(() => { recentData = ''; }, 2 * 1000);
-                    newLogStream = {
+                    const newLogStream: ILogStream = {
                         dispose: (): void => {
                             logsRequest.removeAllListeners();
                             logsRequest.destroy();
