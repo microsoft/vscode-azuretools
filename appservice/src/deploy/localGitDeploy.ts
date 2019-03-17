@@ -8,9 +8,7 @@ import * as opn from 'opn';
 import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
 import { DialogResponses, UserCancelledError } from 'vscode-azureextensionui';
-import KuduClient from 'vscode-azurekudu';
 import { ext } from '../extensionVariables';
-import { getKuduClient } from '../getKuduClient';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { callWithMaskHandling } from '../utils/callWithMaskHandling';
@@ -25,7 +23,6 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
 
     await callWithMaskHandling(
         async (): Promise<void> => {
-            const kuduClient: KuduClient = await getKuduClient(client);
             const remote: string = `https://${nonNullProp(publishCredentials, 'publishingUserName')}:${nonNullProp(publishCredentials, 'publishingPassword')}@${client.gitUrl}`;
             const localGit: git.SimpleGit = git(fsPath);
             const commitId: string = (await localGit.log()).latest.hash;
@@ -80,7 +77,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
                             tokenSource.cancel();
                         });
 
-                        waitForDeploymentToComplete(client, kuduClient, commitId, token).then(resolve).catch(reject);
+                        waitForDeploymentToComplete(client, commitId, token).then(resolve).catch(reject);
                     });
                 } finally {
                     tokenSource.dispose();

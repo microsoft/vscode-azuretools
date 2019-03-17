@@ -7,10 +7,8 @@ import { AppServicePlan } from 'azure-arm-website/lib/models';
 import * as fs from 'fs';
 import * as fse from 'fs-extra';
 import * as vscode from 'vscode';
-import KuduClient from 'vscode-azurekudu';
 import { ext } from '../extensionVariables';
 import * as FileUtilities from '../FileUtilities';
-import { getKuduClient } from '../getKuduClient';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { deployToStorageAccount } from './deployToStorageAccount';
@@ -41,12 +39,11 @@ export async function deployZip(client: SiteClient, fsPath: string, aspPromise: 
             // Linux consumption doesn't support kudu zipPushDeploy
             await deployToStorageAccount(client, zipFilePath);
         } else {
-            const kuduClient: KuduClient = await getKuduClient(client);
-            await kuduClient.pushDeployment.zipPushDeploy(fs.createReadStream(zipFilePath), { isAsync: true });
-            await waitForDeploymentToComplete(client, kuduClient);
+            await client.kudu.pushDeployment.zipPushDeploy(fs.createReadStream(zipFilePath), { isAsync: true });
+            await waitForDeploymentToComplete(client);
             // https://github.com/Microsoft/vscode-azureappservice/issues/644
             // This delay is a temporary stopgap that should be resolved with the new pipelines
-            await delayFirstWebAppDeploy(client, asp, kuduClient);
+            await delayFirstWebAppDeploy(client, asp);
 
         }
     } finally {
@@ -71,7 +68,7 @@ async function getZipFileToDeploy(fsPath: string, isFunctionApp: boolean): Promi
     }
 }
 
-async function delayFirstWebAppDeploy(client: SiteClient, asp: AppServicePlan | undefined, kuduClient: KuduClient): Promise<void> {
+async function delayFirstWebAppDeploy(client: SiteClient, asp: AppServicePlan | undefined): Promise<void> {
     await new Promise<void>(async (resolve: () => void): Promise<void> => {
         setTimeout(resolve, 10000);
         try {
@@ -86,7 +83,7 @@ async function delayFirstWebAppDeploy(client: SiteClient, asp: AppServicePlan | 
                 resolve();
             }
 
-            const deployments: number = (await kuduClient.deployment.getDeployResults()).length;
+            const deployments: number = (await client.kudu.deployment.getDeployResults()).length;
             if (deployments > 1) {
                 resolve();
             }
