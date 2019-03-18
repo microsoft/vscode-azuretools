@@ -70,6 +70,12 @@ export declare class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements
     public dispose(): void;
 
     /**
+     * If user is logged in and only has one subscription selected, add that to the wizardContext and return undefined
+     * Else, return a prompt step for a subscription
+     */
+    public getSubscriptionPromptStep(wizardContext: Partial<ISubscriptionWizardContext>): Promise<AzureWizardPromptStep<ISubscriptionWizardContext> | undefined>;
+
+    /**
      * Optional method to return the parent of `element`.
      * Return `null` or `undefined` if `element` is a child of root.
      *

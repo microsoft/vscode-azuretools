@@ -15,6 +15,7 @@ import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { parseError } from '../parseError';
 import { TestAzureAccount } from '../TestAzureAccount';
+import { AzureWizardPromptStep } from '../wizard/AzureWizardPromptStep';
 import { AzureParentTreeItem } from './AzureParentTreeItem';
 import { AzureTreeItem } from './AzureTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';
@@ -220,6 +221,25 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
 
     public async getParent(element: AzureTreeItem): Promise<AzureTreeItem | undefined> {
         return element.parent;
+    }
+
+    public async getSubscriptionPromptStep(wizardContext: Partial<types.ISubscriptionWizardContext>): Promise<types.AzureWizardPromptStep<types.ISubscriptionWizardContext> | undefined> {
+        const subscriptions: AzureTreeItem<ISubscriptionRoot>[] = await this.ensureRootTreeItems();
+        if (subscriptions.length === 1) {
+            Object.assign(wizardContext, subscriptions[0].root);
+            return undefined;
+        } else {
+            // tslint:disable-next-line: no-var-self
+            const tree: AzureTreeDataProvider<TRoot> = this;
+            class SubscriptionPromptStep extends AzureWizardPromptStep<types.ISubscriptionWizardContext> {
+                public async prompt(): Promise<void> {
+                    const ti: AzureTreeItem<TRoot | ISubscriptionRoot> = await tree.promptForRootTreeItem(SubscriptionTreeItem.contextValue);
+                    Object.assign(wizardContext, ti.root);
+                }
+                public shouldPrompt(): boolean { return !(<types.ISubscriptionWizardContext>wizardContext).subscriptionId; }
+            }
+            return new SubscriptionPromptStep();
+        }
     }
 
     private async promptForRootTreeItem(expectedContextValues: string | (string | RegExp)[] | RegExp): Promise<AzureTreeItem<TRoot | ISubscriptionRoot>> {
