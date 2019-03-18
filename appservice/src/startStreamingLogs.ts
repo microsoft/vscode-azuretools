@@ -8,9 +8,7 @@ import * as request from 'request';
 import { setInterval } from 'timers';
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling, IActionContext, parseError } from 'vscode-azureextensionui';
-import KuduClient from 'vscode-azurekudu';
 import { ext } from './extensionVariables';
-import { getKuduClient } from './getKuduClient';
 import { localize } from './localize';
 import { pingFunctionApp } from './pingFunctionApp';
 import { signRequest } from './signRequest';
@@ -28,12 +26,11 @@ function getLogStreamId(client: SiteClient, logsPath: string): string {
 }
 
 export async function startStreamingLogs(client: SiteClient, verifyLoggingEnabled: () => Promise<void>, logStreamLabel: string, logsPath: string = ''): Promise<ILogStream> {
-    const kuduClient: KuduClient = await getKuduClient(client);
     const logStreamId: string = getLogStreamId(client, logsPath);
     const logStream: ILogStream | undefined = logStreams.get(logStreamId);
     if (logStream && logStream.isConnected) {
         logStream.outputChannel.show();
-         // tslint:disable-next-line:no-floating-promises
+        // tslint:disable-next-line:no-floating-promises
         ext.ui.showWarningMessage(localize('logStreamAlreadyActive', 'The log-streaming service for "{0}" is already active.', logStreamLabel));
         return logStream;
     } else {
@@ -44,7 +41,7 @@ export async function startStreamingLogs(client: SiteClient, verifyLoggingEnable
         outputChannel.show();
         outputChannel.appendLine(localize('connectingToLogStream', 'Connecting to log stream...'));
         const httpRequest: WebResource = new WebResource();
-        await signRequest(httpRequest, kuduClient.credentials);
+        await signRequest(httpRequest, client.kudu.credentials);
 
         const requestApi: request.RequestAPI<request.Request, request.CoreOptions, {}> = request.defaults(httpRequest);
         return await new Promise((onLogStreamCreated: (ls: ILogStream) => void): void => {

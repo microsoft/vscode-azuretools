@@ -5,7 +5,8 @@
 
 import { WebSiteManagementClient } from 'azure-arm-website';
 import { AppServicePlan, FunctionEnvelopeCollection, FunctionSecrets, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SlotConfigNamesResource, SourceControlCollection, StringDictionary, User, WebAppInstanceCollection } from 'azure-arm-website/lib/models';
-import { createAzureClient, ISubscriptionRoot, parseError } from 'vscode-azureextensionui';
+import { addExtensionUserAgent, createAzureClient, ISubscriptionRoot, parseError } from 'vscode-azureextensionui';
+import KuduClient from 'vscode-azurekudu';
 import { FunctionEnvelope } from 'vscode-azurekudu/lib/models';
 import { localize } from './localize';
 import { nonNullProp, nonNullValue } from './utils/nonNull';
@@ -81,6 +82,15 @@ export class SiteClient {
 
     private get _client(): WebSiteManagementClient {
         return createAzureClient(this._subscription, WebSiteManagementClient);
+    }
+
+    public get kudu(): KuduClient {
+        if (!this.kuduHostName) {
+            throw new Error(localize('notSupportedLinux', 'This operation is not supported by this app service plan.'));
+        }
+        const kuduClient: KuduClient = new KuduClient(this._subscription.credentials, this.kuduUrl);
+        addExtensionUserAgent(kuduClient);
+        return kuduClient;
     }
 
     public async stop(): Promise<void> {
