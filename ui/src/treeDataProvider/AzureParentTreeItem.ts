@@ -48,7 +48,7 @@ export abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> extends Azu
     public abstract hasMoreChildrenImpl(): boolean;
     // tslint:disable-next-line:no-any
     public createChildImpl?(showCreatingTreeItem: (label: string) => void, userOptions?: any): Promise<AzureTreeItem<TRoot>>;
-    public pickTreeItemImpl?(expectedContextValue: string): AzureTreeItem<TRoot> | undefined;
+    public pickTreeItemImpl?(expectedContextValue: string | RegExp): AzureTreeItem<TRoot> | undefined;
     public compareChildrenImpl?(item1: AzureTreeItem<TRoot>, item2: AzureTreeItem<TRoot>): number;
     //#endregion
 
@@ -86,7 +86,7 @@ export abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> extends Azu
         }
     }
 
-    public async pickChildTreeItem(expectedContextValues: string[]): Promise<AzureTreeItem<TRoot>> {
+    public async pickChildTreeItem(expectedContextValues: (string | RegExp)[]): Promise<AzureTreeItem<TRoot>> {
         if (this.pickTreeItemImpl) {
             const children: AzureTreeItem<TRoot>[] = await this.getCachedChildren();
             for (const val of expectedContextValues) {
@@ -165,7 +165,7 @@ export abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> extends Azu
         this._clearCache = false;
     }
 
-    private async getQuickPicks(expectedContextValues: string[]): Promise<IAzureQuickPickItem<GetTreeItemFunction<TRoot>>[]> {
+    private async getQuickPicks(expectedContextValues: (string | RegExp)[]): Promise<IAzureQuickPickItem<GetTreeItemFunction<TRoot>>[]> {
         let children: AzureTreeItem<TRoot>[] = await this.getCachedChildren();
         children = children.filter((ti: AzureTreeItem<TRoot>) => ti.includeInTreePicker(expectedContextValues));
 
