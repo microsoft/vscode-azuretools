@@ -23,7 +23,6 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     public contextValue: string;
     public parent: AzureParentTreeItem<ISiteTreeRoot>;
     public readonly label: string = localize('Deployments', 'Deployments');
-    public readonly childTypeLabel: string = localize('Deployment', 'Deployment');
 
     private readonly _connectToGitHubCommandId: string;
 
@@ -110,7 +109,7 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
                 break;
             case ScmType.GitHub:
                 // remove github from the repoUrl which leaves only the org/repo names
-                return sourceControl.repoUrl ? sourceControl.repoUrl.substring('https://github.com/'.length) : localize('github', 'Github');
+                return sourceControl.repoUrl ? sourceControl.repoUrl.substring('https://github.com/'.length) : localize('gitHub', 'GitHub');
             case ScmType.None:
             default:
                 return '';
