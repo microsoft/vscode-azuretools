@@ -226,7 +226,7 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
     public async getSubscriptionPromptStep(wizardContext: Partial<types.ISubscriptionWizardContext>): Promise<types.AzureWizardPromptStep<types.ISubscriptionWizardContext> | undefined> {
         const subscriptions: AzureTreeItem<ISubscriptionRoot>[] = await this.ensureRootTreeItems();
         if (subscriptions.length === 1) {
-            Object.assign(wizardContext, subscriptions[0].root);
+            assignRootToWizardContext(wizardContext, subscriptions[0].root);
             return undefined;
         } else {
             // tslint:disable-next-line: no-var-self
@@ -234,7 +234,7 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
             class SubscriptionPromptStep extends AzureWizardPromptStep<types.ISubscriptionWizardContext> {
                 public async prompt(): Promise<void> {
                     const ti: AzureTreeItem<TRoot | ISubscriptionRoot> = await tree.promptForRootTreeItem(SubscriptionTreeItem.contextValue);
-                    Object.assign(wizardContext, ti.root);
+                    assignRootToWizardContext(wizardContext, <types.ISubscriptionRoot>ti.root);
                 }
                 public shouldPrompt(): boolean { return !(<types.ISubscriptionWizardContext>wizardContext).subscriptionId; }
             }
@@ -361,4 +361,18 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
 
         return roots.concat(this._customRootTreeItems);
     }
+}
+
+/**
+ * Copies all necessary props and _only_ necessary props to wizardContext
+ */
+function assignRootToWizardContext(wizardContext: Partial<types.ISubscriptionWizardContext>, root: types.ISubscriptionRoot): void {
+    // Intentionally using a new const so that TypeScript will verify I'm specifying all props required by ISubscriptionWizardContext
+    const subscriptionContext: types.ISubscriptionWizardContext = {
+        credentials: root.credentials,
+        environment: root.environment,
+        subscriptionDisplayName: root.subscriptionDisplayName,
+        subscriptionId: root.subscriptionId
+    };
+    Object.assign(wizardContext, subscriptionContext);
 }
