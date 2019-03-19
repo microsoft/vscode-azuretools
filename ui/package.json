@@ -1,7 +1,7 @@
 {
     "name": "vscode-azureextensionui",
     "author": "Microsoft Corporation",
-    "version": "0.20.4",
+    "version": "0.21.2",
     "description": "Common UI tools for developing Azure extensions for VS Code",
     "tags": [
         "azure",
@@ -58,6 +58,6 @@
         "vscode": "^1.1.24"
     },
     "engines": {
-        "vscode": "^1.23.0"
+        "vscode": "^1.26.0"
     }
 }

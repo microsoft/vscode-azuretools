@@ -5,25 +5,24 @@
 
 import { ResourceManagementClient } from 'azure-arm-resource';
 import { ResourceGroup } from 'azure-arm-resource/lib/resource/models';
-import { IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IResourceGroupWizardContext } from '../../index';
+import * as types from '../../index';
 import { createAzureClient } from '../createAzureClient';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { uiUtils } from '../utils/uiUtils';
-import { AzureWizard } from './AzureWizard';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 import { LocationListStep } from './LocationListStep';
 import { ResourceGroupCreateStep } from './ResourceGroupCreateStep';
 import { ResourceGroupNameStep } from './ResourceGroupNameStep';
 
-export const resourceGroupNamingRules: IAzureNamingRules = {
+export const resourceGroupNamingRules: types.IAzureNamingRules = {
     minLength: 1,
     maxLength: 90,
     invalidCharsRegExp: /[^a-zA-Z0-9\.\_\-\(\)]/
 };
 
-export class ResourceGroupListStep<T extends IResourceGroupWizardContext> extends AzureWizardPromptStep<T> {
-    public static async getResourceGroups<T extends IResourceGroupWizardContext>(wizardContext: T): Promise<ResourceGroup[]> {
+export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> extends AzureWizardPromptStep<T> implements types.ResourceGroupListStep<T> {
+    public static async getResourceGroups<T extends types.IResourceGroupWizardContext>(wizardContext: T): Promise<ResourceGroup[]> {
         if (wizardContext.resourceGroupsTask === undefined) {
             const client: ResourceManagementClient = createAzureClient(wizardContext, ResourceManagementClient);
             wizardContext.resourceGroupsTask = uiUtils.listAll(client.resourceGroups, client.resourceGroups.list());
@@ -32,31 +31,35 @@ export class ResourceGroupListStep<T extends IResourceGroupWizardContext> extend
         return await wizardContext.resourceGroupsTask;
     }
 
-    public static async isNameAvailable<T extends IResourceGroupWizardContext>(wizardContext: T, name: string): Promise<boolean> {
+    public static async isNameAvailable<T extends types.IResourceGroupWizardContext>(wizardContext: T, name: string): Promise<boolean> {
         const resourceGroupsTask: Promise<ResourceGroup[]> = ResourceGroupListStep.getResourceGroups(wizardContext);
         return !(await resourceGroupsTask).some((rg: ResourceGroup) => rg.name !== undefined && rg.name.toLowerCase() === name.toLowerCase());
     }
 
-    public async prompt(wizardContext: T): Promise<T> {
-        if (!wizardContext.resourceGroup && !wizardContext.newResourceGroupName) {
-            // Cache resource group separately per subscription
-            const options: IAzureQuickPickOptions = { placeHolder: 'Select a resource group for new resources.', id: `ResourceGroupListStep/${wizardContext.subscriptionId}` };
-            wizardContext.resourceGroup = (await ext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
-        }
+    public async prompt(wizardContext: T): Promise<types.ISubWizardOptions<T> | void> {
+        // Cache resource group separately per subscription
+        const options: types.IAzureQuickPickOptions = { placeHolder: 'Select a resource group for new resources.', id: `ResourceGroupListStep/${wizardContext.subscriptionId}` };
+        wizardContext.resourceGroup = (await ext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
 
         if (!wizardContext.resourceGroup) {
-            this.subWizard = new AzureWizard(
-                [new ResourceGroupNameStep(), new LocationListStep()],
-                [new ResourceGroupCreateStep()],
-                wizardContext
-            );
-        }
+            const promptSteps: AzureWizardPromptStep<T>[] = [new ResourceGroupNameStep()];
+            if (!wizardContext.resourceGroupDeferLocationStep) {
+                promptSteps.push(new LocationListStep());
+            }
 
-        return wizardContext;
+            return {
+                promptSteps,
+                executeSteps: [new ResourceGroupCreateStep()]
+            };
+        }
     }
 
-    private async getQuickPicks(wizardContext: T): Promise<IAzureQuickPickItem<ResourceGroup | undefined>[]> {
-        const picks: IAzureQuickPickItem<ResourceGroup | undefined>[] = [{
+    public shouldPrompt(wizardContext: T): boolean {
+        return !wizardContext.resourceGroup && !wizardContext.newResourceGroupName;
+    }
+
+    private async getQuickPicks(wizardContext: T): Promise<types.IAzureQuickPickItem<ResourceGroup | undefined>[]> {
+        const picks: types.IAzureQuickPickItem<ResourceGroup | undefined>[] = [{
             label: localize('NewResourceGroup', '$(plus) Create new resource group'),
             description: '',
             data: undefined

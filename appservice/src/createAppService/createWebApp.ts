@@ -35,10 +35,10 @@ export async function setWizardContextDefaults(wizardContext: IAppServiceWizardC
     if (workspace.workspaceFolders && workspace.workspaceFolders.length === 1) {
         const fsPath: string = workspace.workspaceFolders[0].uri.fsPath;
         if (await fse.pathExists(path.join(fsPath, 'package.json'))) {
-            wizardContext.recommendedSiteRuntime = [ LinuxRuntimes.node ];
+            wizardContext.recommendedSiteRuntime = [LinuxRuntimes.node];
         } else if (await fse.pathExists(path.join(fsPath, 'requirements.txt'))) {
             // requirements.txt are used to pip install so a good way to determine it's a Python app
-            wizardContext.recommendedSiteRuntime = [ LinuxRuntimes.python ];
+            wizardContext.recommendedSiteRuntime = [LinuxRuntimes.python];
         }
         actionContext.properties.recommendedSiteRuntime = wizardContext.recommendedSiteRuntime ? wizardContext.recommendedSiteRuntime.join(',') : undefined;
     }

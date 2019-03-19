@@ -8,7 +8,7 @@ import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { StorageAccount } from 'azure-arm-storage/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment, AzureServiceClientOptions } from 'ms-rest-azure';
-import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri } from 'vscode';
+import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri, QuickPick, InputBox, Progress } from 'vscode';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 
 export type OpenInPortalOptions = {
@@ -57,7 +57,7 @@ export declare class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements
      * @param expectedContextValues a single context value or multiple matching context values matching the desired tree items
      * @param startingTreeItem
      */
-    public showTreeItemPicker(expectedContextValues: string | string[], startingTreeItem?: AzureTreeItem<TRoot | ISubscriptionRoot>): Promise<AzureTreeItem<TRoot | ISubscriptionRoot>>;
+    public showTreeItemPicker(expectedContextValues: string | string[] | RegExp, startingTreeItem?: AzureTreeItem<TRoot | ISubscriptionRoot>): Promise<AzureTreeItem<TRoot | ISubscriptionRoot>>;
 
     /**
      * Traverses a tree to find a node matching the given fullId of a tree item. This will not "Load more..."
@@ -68,6 +68,12 @@ export declare class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements
      * Should not be called directly
      */
     public dispose(): void;
+
+    /**
+     * If user is logged in and only has one subscription selected, add that to the wizardContext and return undefined
+     * Else, return a prompt step for a subscription
+     */
+    public getSubscriptionPromptStep(wizardContext: Partial<ISubscriptionWizardContext>): Promise<AzureWizardPromptStep<ISubscriptionWizardContext> | undefined>;
 
     /**
      * Optional method to return the parent of `element`.
@@ -161,7 +167,7 @@ export declare abstract class AzureTreeItem<TRoot = ISubscriptionRoot> {
      * Optional function to filter items displayed in the tree picker. Should not be called directly
      * If not implemented, it's assumed that 'isAncestorOf' evaluates to true
      */
-    public isAncestorOfImpl?(contextValue: string): boolean;
+    public isAncestorOfImpl?(contextValue: string | RegExp): boolean;
     //#endregion
 
     /**
@@ -253,7 +259,7 @@ export declare abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> ext
      * If this treeItem should not show up in the tree picker, implement this to provide a child that corresponds to the expectedContextValue. Should not be called directly
      * Otherwise, all children will be shown in the tree picker
      */
-    pickTreeItemImpl?(expectedContextValue: string): AzureTreeItem<TRoot> | undefined;
+    pickTreeItemImpl?(expectedContextValue: string | RegExp): AzureTreeItem<TRoot> | undefined;
     //#endregion
 
     /**
@@ -484,6 +490,18 @@ export declare class AzureUserInput implements IAzureUserInput {
     public showOpenDialog(options: OpenDialogOptions): Promise<Uri[]>;
 }
 
+export declare enum TestInput {
+    /**
+     * Use the first entry in a quick pick or the default value (if it's defined) for an input box. In all other cases, throw an error
+     */
+    UseDefaultValue,
+
+    /**
+     * Simulates the user hitting the back button in an AzureWizard.
+     */
+    BackButton
+}
+
 /**
  * Wrapper class of several `vscode.window` methods that handle user input.
  * This class is meant to be used for testing in non-interactive mode.
@@ -492,7 +510,7 @@ export declare class TestUserInput implements IAzureUserInput {
     /**
      * @param inputs An ordered array of inputs that will be used instead of interactively prompting in VS Code. RegExp is only applicable for QuickPicks and will pick the first input that matches the RegExp.
      */
-    public constructor(inputs: (string | RegExp | undefined)[]);
+    public constructor(inputs: (string | RegExp | TestInput)[]);
 
     public showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T>;
     public showInputBox(options: InputBoxOptions): Promise<string>;
@@ -553,27 +571,68 @@ export interface IAzureQuickPickOptions extends QuickPickOptions {
     suppressPersistence?: boolean;
 }
 
+export interface ISubWizardOptions<T> {
+    /**
+     * The steps to prompt for user input, in order
+     */
+    promptSteps: AzureWizardPromptStep<T>[];
+
+    /**
+     * The steps to execute, in order
+     */
+    executeSteps?: AzureWizardExecuteStep<T>[];
+}
+
+export interface IWizardOptions<T> extends ISubWizardOptions<T> {
+    /**
+     * A title used when prompting
+     */
+    title: string;
+
+    /**
+     * If true, a progress notification will be shown when executing
+     */
+    showExecuteProgress?: boolean;
+}
+
 /**
  * A wizard that links several user input steps together
  */
-export declare class AzureWizard<T> {
+export declare class AzureWizard<T extends {}> {
     /**
-     * @param steps The steps to perform, in order
-     * @param wizardContext A context object that should be used to pass information between steps
+     * @param wizardContext  A context object that should be used to pass information between steps
+     * @param options Options describing this wizard
      */
-    public constructor(promptSteps: AzureWizardPromptStep<T>[], executeSteps: AzureWizardExecuteStep<T>[], wizardContext: T);
+    public constructor(wizardContext: T, options: IWizardOptions<T>);
 
-    public prompt(actionContext: IActionContext): Promise<T>;
-    public execute(actionContext: IActionContext): Promise<T>;
+    public prompt(actionContext: IActionContext): Promise<void>;
+    public execute(actionContext: IActionContext): Promise<void>;
 }
 
-export declare abstract class AzureWizardExecuteStep<T> {
-    public abstract execute(wizardContext: T): Promise<T>;
+export declare abstract class AzureWizardExecuteStep<T extends {}> {
+    /**
+     * Execute the step
+     */
+    public abstract execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
+
+    /**
+     * Return true if this step should execute based on the current state of the wizardContext
+     * Used to prevent duplicate executions from sub wizards and unnecessary executions for values that had a default
+     */
+    public abstract shouldExecute(wizardContext: T): boolean;
 }
 
-export declare abstract class AzureWizardPromptStep<T> {
-    public subWizard?: AzureWizard<T>;
-    public abstract prompt(wizardContext: T): Promise<T>;
+export declare abstract class AzureWizardPromptStep<T extends {}> {
+    /**
+     * Prompt the user for input and optionally return the options for a sub wizard
+     */
+    public abstract prompt(wizardContext: T): Promise<ISubWizardOptions<T> | void>;
+
+    /**
+     * Return true if this step should prompt based on the current state of the wizardContext
+     * Used to prevent duplicate prompts from sub wizards, unnecessary prompts for values that had a default, and to accurately describe the number of steps
+     */
+    public abstract shouldPrompt(wizardContext: T): boolean;
 }
 
 export interface ISubscriptionWizardContext {
@@ -612,7 +671,8 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
      */
     public static getLocations<T extends ILocationWizardContext>(wizardContext: T): Promise<Location[]>;
 
-    public prompt(wizardContext: T): Promise<T>;
+    public prompt(wizardContext: T): Promise<void>;
+    public shouldPrompt(wizardContext: T): boolean;
 }
 
 export interface IAzureNamingRules {
@@ -677,6 +737,12 @@ export interface IResourceGroupWizardContext extends ILocationWizardContext, IRe
      */
     resourceGroupsTask?: Promise<ResourceGroup[]>;
 
+    /**
+     * If true, this step will not add a LocationListStep for the "Create new resource group" sub wizard.
+     * This is meant for situations when the location can be inferred from other resources later in the wizard.
+     */
+    resourceGroupDeferLocationStep?: boolean;
+
     newResourceGroupName?: string;
 }
 
@@ -695,11 +761,13 @@ export declare class ResourceGroupListStep<T extends IResourceGroupWizardContext
      */
     public static isNameAvailable<T extends IResourceGroupWizardContext>(wizardContext: T, name: string): Promise<boolean>;
 
-    public prompt(wizardContext: T): Promise<T>;
+    public prompt(wizardContext: T): Promise<ISubWizardOptions<T> | void>;
+    public shouldPrompt(wizardContext: T): boolean;
 }
 
 export declare class ResourceGroupCreateStep<T extends IResourceGroupWizardContext> extends AzureWizardExecuteStep<T> {
-    public execute(wizardContext: T): Promise<T>;
+    public execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
+    public shouldExecute(wizardContext: T): boolean;
 }
 
 export interface IStorageAccountWizardContext extends IResourceGroupWizardContext {
@@ -770,13 +838,15 @@ export declare class StorageAccountListStep<T extends IStorageAccountWizardConte
 
     public static isNameAvailable<T extends IStorageAccountWizardContext>(wizardContext: T, name: string): Promise<boolean>;
 
-    public prompt(wizardContext: T): Promise<T>;
+    public prompt(wizardContext: T): Promise<ISubWizardOptions<T> | void>;
+    public shouldPrompt(wizardContext: T): boolean;
 }
 
 export declare class StorageAccountNameStep<T extends IStorageAccountWizardContext> extends AzureNameStep<T> {
     public constructor();
 
-    public prompt(wizardContext: T): Promise<T>;
+    public prompt(wizardContext: T): Promise<void>;
+    public shouldPrompt(wizardContext: T): boolean;
 
     protected isRelatedNameAvailable(wizardContext: T, name: string): Promise<boolean>;
 }
@@ -784,7 +854,8 @@ export declare class StorageAccountNameStep<T extends IStorageAccountWizardConte
 export declare class StorageAccountCreateStep<T extends IStorageAccountWizardContext> extends AzureWizardExecuteStep<T> {
     public constructor(defaults: INewStorageAccountDefaults);
 
-    public execute(wizardContext: T): Promise<T>;
+    public execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
+    public shouldExecute(wizardContext: T): boolean;
 }
 
 /**

@@ -5,8 +5,6 @@
 
 import { HttpOperationResponse } from 'ms-rest';
 import { Readable } from 'stream';
-import KuduClient from 'vscode-azurekudu';
-import { getKuduClient } from './getKuduClient';
 import { SiteClient } from './SiteClient';
 
 /**
@@ -14,7 +12,6 @@ import { SiteClient } from './SiteClient';
  * Returns the latest etag of the updated file
  */
 export async function putFile(client: SiteClient, data: Readable | string, filePath: string, etag: string | undefined): Promise<string> {
-    const kuduClient: KuduClient = await getKuduClient(client);
     let stream: Readable;
     if (typeof data === 'string') {
         stream = new Readable();
@@ -26,6 +23,6 @@ export async function putFile(client: SiteClient, data: Readable | string, fileP
         stream = data;
     }
     const options: {} = etag ? { customHeaders: { ['If-Match']: etag } } : {};
-    const result: HttpOperationResponse<{}> = await kuduClient.vfs.putItemWithHttpOperationResponse(stream, filePath, options);
+    const result: HttpOperationResponse<{}> = await client.kudu.vfs.putItemWithHttpOperationResponse(stream, filePath, options);
     return <string>result.response.headers.etag;
 }
