@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { WebSiteManagementClient } from 'azure-arm-website';
-import { AppServicePlan, FunctionEnvelopeCollection, FunctionSecrets, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SlotConfigNamesResource, SourceControlCollection, StringDictionary, User, WebAppInstanceCollection } from 'azure-arm-website/lib/models';
+import { AppServicePlan, FunctionEnvelopeCollection, FunctionSecrets, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SlotConfigNamesResource, SourceControlCollection, StringDictionary, User, WebAppInstanceCollection, SiteConfig } from 'azure-arm-website/lib/models';
 import { addExtensionUserAgent, createAzureClient, ISubscriptionRoot, parseError } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { FunctionEnvelope } from 'vscode-azurekudu/lib/models';
@@ -44,6 +44,8 @@ export class SiteClient {
     public readonly kuduHostName: string | undefined;
     public readonly kuduUrl: string | undefined;
     public readonly gitUrl: string | undefined;
+
+    public readonly siteConfig: SiteConfig;
 
     private readonly _subscription: ISubscriptionRoot;
     private _funcPreviewSlotError: Error = new Error(localize('functionsSlotPreview', 'This operation is not supported for slots, which are still in preview.'));
