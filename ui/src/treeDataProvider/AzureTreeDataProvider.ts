@@ -15,6 +15,7 @@ import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { parseError } from '../parseError';
 import { TestAzureAccount } from '../TestAzureAccount';
+import { AzureWizardPromptStep } from '../wizard/AzureWizardPromptStep';
 import { AzureParentTreeItem } from './AzureParentTreeItem';
 import { AzureTreeItem } from './AzureTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';
@@ -222,6 +223,25 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
         return element.parent;
     }
 
+    public async getSubscriptionPromptStep(wizardContext: Partial<types.ISubscriptionWizardContext>): Promise<types.AzureWizardPromptStep<types.ISubscriptionWizardContext> | undefined> {
+        const subscriptions: AzureTreeItem<ISubscriptionRoot>[] = await this.ensureRootTreeItems();
+        if (subscriptions.length === 1) {
+            assignRootToWizardContext(wizardContext, subscriptions[0].root);
+            return undefined;
+        } else {
+            // tslint:disable-next-line: no-var-self
+            const tree: AzureTreeDataProvider<TRoot> = this;
+            class SubscriptionPromptStep extends AzureWizardPromptStep<types.ISubscriptionWizardContext> {
+                public async prompt(): Promise<void> {
+                    const ti: AzureTreeItem<TRoot | ISubscriptionRoot> = await tree.promptForRootTreeItem(SubscriptionTreeItem.contextValue);
+                    assignRootToWizardContext(wizardContext, <types.ISubscriptionRoot>ti.root);
+                }
+                public shouldPrompt(): boolean { return !(<types.ISubscriptionWizardContext>wizardContext).subscriptionId; }
+            }
+            return new SubscriptionPromptStep();
+        }
+    }
+
     private async promptForRootTreeItem(expectedContextValues: string | (string | RegExp)[] | RegExp): Promise<AzureTreeItem<TRoot | ISubscriptionRoot>> {
         let picks: IAzureQuickPickItem<AzureTreeItem<TRoot | ISubscriptionRoot> | string>[];
         const initialStatus: AzureLoginStatus = this._azureAccount.status;
@@ -341,4 +361,18 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
 
         return roots.concat(this._customRootTreeItems);
     }
+}
+
+/**
+ * Copies all necessary props and _only_ necessary props to wizardContext
+ */
+function assignRootToWizardContext(wizardContext: Partial<types.ISubscriptionWizardContext>, root: types.ISubscriptionRoot): void {
+    // Intentionally using a new const so that TypeScript will verify I'm specifying all props required by ISubscriptionWizardContext
+    const subscriptionContext: types.ISubscriptionWizardContext = {
+        credentials: root.credentials,
+        environment: root.environment,
+        subscriptionDisplayName: root.subscriptionDisplayName,
+        subscriptionId: root.subscriptionId
+    };
+    Object.assign(wizardContext, subscriptionContext);
 }
