@@ -95,8 +95,8 @@ export abstract class AzureTreeItem<TRoot = ISubscriptionRoot> implements types.
 
     public includeInTreePicker(expectedContextValues: (string | RegExp)[]): boolean {
         return expectedContextValues.some((val: string | RegExp) => {
-            return  this.contextValue === val ||
-                (val instanceof RegExp && this.contextValue.match(val) !== null) ||
+            return this.contextValue === val ||
+                (val instanceof RegExp && val.test(this.contextValue)) ||
                 !this.isAncestorOfImpl ||
                 this.isAncestorOfImpl(val);
         });

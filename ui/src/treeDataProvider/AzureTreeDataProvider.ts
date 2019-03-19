@@ -183,8 +183,9 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
         // tslint:disable-next-line:strict-boolean-expressions
         let treeItem: AzureTreeItem<TRoot | ISubscriptionRoot> = startingTreeItem || await this.promptForRootTreeItem(expectedContextValues);
 
-        while (!expectedContextValues.some((val: string | RegExp) => (val instanceof RegExp && treeItem.contextValue.match(val) !== null) || treeItem.contextValue === val)) {
-            if ((<AzureParentTreeItem>treeItem).hasMoreChildrenImpl) {
+        while (!expectedContextValues.some((val: string | RegExp) => (val instanceof RegExp && val.test(treeItem.contextValue)) || treeItem.contextValue === val)) {
+            // using instanceof AzureParentTreeItem causes issues whenever packages are linked for dev testing.  Any tree item that has loadMoreChildrenImpl should be an AzureParentTreeItem
+            if ((<AzureParentTreeItem>treeItem).loadMoreChildrenImpl) {
                 treeItem = await (<AzureParentTreeItem>treeItem).pickChildTreeItem(expectedContextValues);
             } else {
                 throw new Error(localize('noResourcesError', 'No matching resources found.'));
