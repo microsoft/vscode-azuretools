@@ -20,6 +20,7 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     public static contextValueUnconnected: string = 'deploymentsUnconnected';
     public parent: AzureParentTreeItem<ISiteTreeRoot>;
     public readonly label: string = localize('Deployments', 'Deployments');
+    public readonly childTypeLabel: string = localize('Deployment', 'Deployment');
 
     private readonly _connectToGitHubCommandId: string;
     private _scmType?: string;

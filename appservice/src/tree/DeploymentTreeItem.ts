@@ -80,6 +80,10 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         }
     }
 
+    public isAncestorOfImpl(contextValue: string): boolean {
+        return this.contextValue === contextValue;
+    }
+
     public async redeployDeployment(): Promise<void> {
         if (this._deployResult.isReadonly) {
             throw new Error(localize('redeployNotSupported', 'Redeploy is not supported for non-git deployments.'));
