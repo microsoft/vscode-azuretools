@@ -77,7 +77,7 @@ export async function startStreamingLogs(client: SiteClient, verifyLoggingEnable
                     };
 
                     logsRequest.on('data', (chunk: Buffer | string) => {
-                        outputChannel.appendLine(chunk.toString());
+                        outputChannel.append(chunk.toString());
                     }).on('error', (err: Error) => {
                         if (timerId) {
                             clearInterval(timerId);
