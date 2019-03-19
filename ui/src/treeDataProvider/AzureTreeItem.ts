@@ -76,7 +76,7 @@ export abstract class AzureTreeItem<TRoot = ISubscriptionRoot> implements types.
 
     //#region Methods implemented by base class
     public refreshImpl?(): Promise<void>;
-    public isAncestorOfImpl?(contextValue: string): boolean;
+    public isAncestorOfImpl?(contextValue: string | RegExp): boolean;
     public deleteTreeItemImpl?(): Promise<void>;
     //#endregion
 
@@ -93,9 +93,10 @@ export abstract class AzureTreeItem<TRoot = ISubscriptionRoot> implements types.
         opn(url);
     }
 
-    public includeInTreePicker(expectedContextValues: string[]): boolean {
-        return expectedContextValues.some((val: string) => {
+    public includeInTreePicker(expectedContextValues: (string | RegExp)[]): boolean {
+        return expectedContextValues.some((val: string | RegExp) => {
             return this.contextValue === val ||
+                (val instanceof RegExp && val.test(this.contextValue)) ||
                 !this.isAncestorOfImpl ||
                 this.isAncestorOfImpl(val);
         });

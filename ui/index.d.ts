@@ -57,7 +57,7 @@ export declare class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements
      * @param expectedContextValues a single context value or multiple matching context values matching the desired tree items
      * @param startingTreeItem
      */
-    public showTreeItemPicker(expectedContextValues: string | string[], startingTreeItem?: AzureTreeItem<TRoot | ISubscriptionRoot>): Promise<AzureTreeItem<TRoot | ISubscriptionRoot>>;
+    public showTreeItemPicker(expectedContextValues: string | string[] | RegExp, startingTreeItem?: AzureTreeItem<TRoot | ISubscriptionRoot>): Promise<AzureTreeItem<TRoot | ISubscriptionRoot>>;
 
     /**
      * Traverses a tree to find a node matching the given fullId of a tree item. This will not "Load more..."
@@ -161,7 +161,7 @@ export declare abstract class AzureTreeItem<TRoot = ISubscriptionRoot> {
      * Optional function to filter items displayed in the tree picker. Should not be called directly
      * If not implemented, it's assumed that 'isAncestorOf' evaluates to true
      */
-    public isAncestorOfImpl?(contextValue: string): boolean;
+    public isAncestorOfImpl?(contextValue: string | RegExp): boolean;
     //#endregion
 
     /**
@@ -253,7 +253,7 @@ export declare abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> ext
      * If this treeItem should not show up in the tree picker, implement this to provide a child that corresponds to the expectedContextValue. Should not be called directly
      * Otherwise, all children will be shown in the tree picker
      */
-    pickTreeItemImpl?(expectedContextValue: string): AzureTreeItem<TRoot> | undefined;
+    pickTreeItemImpl?(expectedContextValue: string | RegExp): AzureTreeItem<TRoot> | undefined;
     //#endregion
 
     /**
