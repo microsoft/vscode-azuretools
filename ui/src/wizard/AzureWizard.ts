@@ -11,20 +11,20 @@ import { ext, IRootUserInput } from '../extensionVariables';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 import { AzureWizardUserInput, IInternalAzureWizard } from './AzureWizardUserInput';
+import { getExecuteSteps, IWizardNode } from './IWizardNode';
 
 export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizard {
     public readonly title: string;
     private readonly _showExecuteProgress?: boolean;
     private readonly _promptSteps: AzureWizardPromptStep<T>[];
-    private readonly _executeSteps: AzureWizardExecuteStep<T>[];
-    private readonly _subExecuteSteps: AzureWizardExecuteStep<T>[] = [];
+    private readonly _wizardNode: IWizardNode<T>;
     private readonly _finishedPromptSteps: AzureWizardPromptStep<T>[] = [];
     private readonly _wizardContext: T;
 
     public constructor(wizardContext: T, options: types.IWizardOptions<T>) {
         // reverse steps to make it easier to use push/pop
         this._promptSteps = <AzureWizardPromptStep<T>[]>options.promptSteps.reverse();
-        this._executeSteps = options.executeSteps ? options.executeSteps.reverse() : [];
+        this._wizardNode = this.initWizardNode(options);
         this._wizardContext = wizardContext;
         this.title = options.title;
         this._showExecuteProgress = options.showExecuteProgress;
@@ -46,7 +46,7 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
         try {
             let step: AzureWizardPromptStep<T> | undefined = this._promptSteps.pop();
             while (step) {
-                step.init();
+                step.reset();
 
                 if (step.shouldPrompt(this._wizardContext)) {
                     actionContext.properties.lastStepAttempted = `prompt-${step.constructor.name}`;
@@ -89,27 +89,24 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
     private async executeCore(actionContext: types.IActionContext, progress: vscode.Progress<{ message?: string; increment?: number }>): Promise<void> {
         let currentStep: number = 1;
 
-        const steps: AzureWizardExecuteStep<T>[] = this._executeSteps.concat(this._subExecuteSteps);
+        const steps: AzureWizardExecuteStep<T>[] = getExecuteSteps(this._wizardNode);
 
         const internalProgress: vscode.Progress<{ message?: string; increment?: number }> = {
             report: (value: { message?: string; increment?: number }): void => {
                 if (value.message) {
-                    const totalSteps: number = currentStep + steps.filter(s => s.shouldExecute(this._wizardContext)).length;
+                    const totalSteps: number = steps.filter(s => s.shouldExecute(this._wizardContext)).length;
                     value.message += ` (${currentStep}/${totalSteps})`;
                 }
                 progress.report(value);
             }
         };
 
-        let step: AzureWizardExecuteStep<T> | undefined = steps.pop();
-        while (step) {
+        for (const step of steps) {
             if (step.shouldExecute(this._wizardContext)) {
                 actionContext.properties.lastStepAttempted = `execute-${step.constructor.name}`;
                 await step.execute(this._wizardContext, internalProgress);
                 currentStep += 1;
             }
-
-            step = steps.pop();
         }
     }
 
@@ -123,8 +120,10 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
             }
         } while (!step.prompted);
 
-        removeFromEnd(this._promptSteps, step.numSubPromptSteps);
-        removeFromEnd(this._subExecuteSteps, step.numSubExecuteSteps);
+        if (step.hasSubWizard) {
+            removeFromEnd(this._promptSteps, step.numSubPromptSteps);
+            step.wizardNode.children.pop();
+        }
 
         for (const key of Object.keys(this._wizardContext)) {
             if (!step.propertiesBeforePrompt.find(p => p === key)) {
@@ -136,19 +135,22 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
     }
 
     private addSubWizard(step: AzureWizardPromptStep<T>, subWizard: types.ISubWizardOptions<T>): void {
+        step.hasSubWizard = true;
+
         subWizard.promptSteps = subWizard.promptSteps.filter(s1 => {
             return !this._finishedPromptSteps.concat(this._promptSteps).some(s2 => s1.constructor.name === s2.constructor.name);
         });
         this._promptSteps.push(...<AzureWizardPromptStep<T>[]>subWizard.promptSteps.reverse());
         step.numSubPromptSteps = subWizard.promptSteps.length;
 
-        if (subWizard.executeSteps) {
-            subWizard.executeSteps = subWizard.executeSteps.filter(s1 => {
-                return !this._subExecuteSteps.concat(this._executeSteps).some(s2 => s1.constructor.name === s2.constructor.name);
-            });
-            this._subExecuteSteps.unshift(...subWizard.executeSteps.reverse());
-            step.numSubExecuteSteps = subWizard.executeSteps.length;
-        }
+        step.wizardNode.children.push(this.initWizardNode(subWizard));
+    }
+
+    private initWizardNode(options: types.ISubWizardOptions<T>): IWizardNode<T> {
+        // tslint:disable-next-line: strict-boolean-expressions
+        const wizardNode: IWizardNode<T> = { executeSteps: options.executeSteps || [], children: [] };
+        options.promptSteps.forEach(step => { (<AzureWizardPromptStep<T>>step).wizardNode = wizardNode; });
+        return wizardNode;
     }
 }
 

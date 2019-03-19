@@ -105,14 +105,30 @@ class ExecuteStep1 extends AzureWizardExecuteStep<ITestWizardContext> {
     }
 }
 
+const subExecuteKey: string = 'subExecute';
 class SubExecuteStep extends AzureWizardExecuteStep<ITestWizardContext> {
-    private _key: string = 'subExecute';
+    private _key: string = subExecuteKey;
     public async execute(wizardContext: ITestWizardContext): Promise<void> {
         if (wizardContext[executeKey1] || wizardContext[executeKey2]) {
             assert.fail('SubExecuteStep should be executed before ExecuteStep1 or ExecuteStep2');
         }
 
         wizardContext[this._key] = 'subExecuteValue';
+    }
+
+    public shouldExecute(wizardContext: ITestWizardContext): boolean {
+        return !wizardContext[this._key];
+    }
+}
+
+class SubSubExecuteStep extends AzureWizardExecuteStep<ITestWizardContext> {
+    private _key: string = 'subSubExecute';
+    public async execute(wizardContext: ITestWizardContext): Promise<void> {
+        if (wizardContext[executeKey1] || wizardContext[executeKey2] || wizardContext[subExecuteKey]) {
+            assert.fail('SubSubExecuteStep should be executed before ExecuteStep1, ExecuteStep2, and SubExecuteStep');
+        }
+
+        wizardContext[this._key] = 'subSubExecuteValue';
     }
 
     public shouldExecute(wizardContext: ITestWizardContext): boolean {
@@ -144,10 +160,16 @@ abstract class QuickPickStepWithSubWizardBase extends QuickPickStepBase {
 
 class QuickPickStepWithSubWizard extends QuickPickStepWithSubWizardBase {
     protected key: string = 'subQuickPick';
+    private _executeStep: AzureWizardExecuteStep<ITestWizardContext>;
+    constructor(executeStep?: AzureWizardExecuteStep<ITestWizardContext>) {
+        super();
+        // tslint:disable-next-line: strict-boolean-expressions
+        this._executeStep = executeStep || new SubExecuteStep();
+    }
     protected getSubWizard(): types.ISubWizardOptions<ITestWizardContext> {
         return {
             promptSteps: [new SubInputBoxStep()],
-            executeSteps: [new SubExecuteStep()]
+            executeSteps: [this._executeStep]
         };
     }
 }
@@ -167,6 +189,16 @@ class QuickPickStepWithSubSubWizard extends QuickPickStepWithSubWizardBase {
     protected getSubWizard(): types.ISubWizardOptions<ITestWizardContext> {
         return {
             promptSteps: [new QuickPickStepWithSubWizard()]
+        };
+    }
+}
+
+class QuickPickStepWithSubSubExecute extends QuickPickStepWithSubWizardBase {
+    protected key: string = 'subSubQuickPickExecute';
+    protected getSubWizard(): types.ISubWizardOptions<ITestWizardContext> {
+        return {
+            promptSteps: [new QuickPickStepWithSubWizard(new SubSubExecuteStep())],
+            executeSteps: [new SubExecuteStep()]
         };
     }
 }
@@ -379,6 +411,17 @@ suite("AzureWizard tests", () => {
             },
             ['testValue', 'Create', 'Create', TestInput.BackButton, TestInput.BackButton, 'Pick 1', 'testValue2'],
             { inputBox1: 'testValue', subSubQuickPick: 'Pick 1', inputBox2: 'testValue2', execute1: 'executeValue1' }
+        );
+    });
+
+    test("Sub sub wizard execute in order", async () => {
+        await validateWizard(
+            {
+                promptSteps: [new QuickPickStepWithSubSubExecute()],
+                executeSteps: [new ExecuteStep1()]
+            },
+            ['Create', 'Create', 'testValue1'],
+            { subInputBox: 'testValue1', execute1: 'executeValue1', subExecute: 'subExecuteValue', subSubExecute: 'subSubExecuteValue' }
         );
     });
 
