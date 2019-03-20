@@ -35,7 +35,7 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     public parent: DeploymentsTreeItem;
     private _deployResult: DeployResult;
 
-    constructor(parent: DeploymentsTreeItem, deployResult: DeployResult, scmType?: string) {
+    constructor(parent: DeploymentsTreeItem, deployResult: DeployResult, scmType: string | undefined) {
         super(parent);
         this.contextValue = `deployment/${scmType}`.toLocaleLowerCase();
         this._deployResult = deployResult;
@@ -80,7 +80,7 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         }
     }
 
-    public isAncestorOfImpl(contextValue: string): boolean {
+    public isAncestorOfImpl(contextValue: string | RegExp): boolean {
         return this.contextValue === contextValue;
     }
 

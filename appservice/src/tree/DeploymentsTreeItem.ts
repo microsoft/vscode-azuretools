@@ -43,7 +43,7 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     public get description(): string {
         switch (this._scmType) {
             case ScmType.LocalGit:
-                return localize('localGit', 'Local Git');
+                return localize('git', 'Git');
             case ScmType.GitHub:
                 // remove github from the repoUrl which leaves only the org/repo names
                 return this._repoUrl ? this._repoUrl.substring('https://github.com/'.length) : localize('gitHub', 'GitHub');
