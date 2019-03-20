@@ -28,15 +28,16 @@ enum DeployStatus {
 }
 
 export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
-    public static contextValue: string = 'deployment';
-    public readonly contextValue: string = DeploymentTreeItem.contextValue;
+    public static contextValue: RegExp = new RegExp('deployment\/.*');
+    public readonly contextValue: string;
     public label: string;
     public receivedTime: Date;
     public parent: DeploymentsTreeItem;
     private _deployResult: DeployResult;
 
-    constructor(parent: DeploymentsTreeItem, deployResult: DeployResult) {
+    constructor(parent: DeploymentsTreeItem, deployResult: DeployResult, scmType: string | undefined) {
         super(parent);
+        this.contextValue = `deployment/${scmType}`.toLocaleLowerCase();
         this._deployResult = deployResult;
         this.receivedTime = nonNullProp(deployResult, 'receivedTime');
         let message: string = nonNullProp(deployResult, 'message');
@@ -77,6 +78,10 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
             default:
                 return;
         }
+    }
+
+    public isAncestorOfImpl(contextValue: string | RegExp): boolean {
+        return this.contextValue === contextValue;
     }
 
     public async redeployDeployment(): Promise<void> {
@@ -129,12 +134,12 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     public async viewCommitInGitHub(): Promise<void> {
         const sourceControl: SiteSourceControl = await this.root.client.getSourceControl();
         if (sourceControl.repoUrl) {
-            const githubCommitUrl: string = `${sourceControl.repoUrl}/commit/${this._deployResult.id}`;
+            const gitHubCommitUrl: string = `${sourceControl.repoUrl}/commit/${this._deployResult.id}`;
             // tslint:disable-next-line:no-unsafe-any
-            opn(githubCommitUrl);
+            opn(gitHubCommitUrl);
             return;
         } else {
-            throw new Error(localize('noRepoUrl', 'There is no repo url associated with deployment "{0}".', this._deployResult.id));
+            throw new Error(localize('noRepoUrl', 'There is no GitHub repo url associated with deployment "{0}".', this._deployResult.id));
         }
     }
 
