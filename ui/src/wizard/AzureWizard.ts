@@ -15,7 +15,6 @@ import { getExecuteSteps, IWizardNode } from './IWizardNode';
 
 export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizard {
     private _title: string | undefined;
-    private readonly _showExecuteProgress?: boolean;
     private readonly _promptSteps: AzureWizardPromptStep<T>[];
     private readonly _wizardNode: IWizardNode<T>;
     private readonly _finishedPromptSteps: AzureWizardPromptStep<T>[] = [];
@@ -27,7 +26,6 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
         this._promptSteps = (<AzureWizardPromptStep<T>[]>options.promptSteps || []).reverse();
         this._wizardNode = this.initWizardNode(options);
         this._wizardContext = wizardContext;
-        this._showExecuteProgress = options.showExecuteProgress;
     }
 
     public get title(): string | undefined {
@@ -87,40 +85,32 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
     }
 
     public async execute(actionContext: types.IActionContext): Promise<void> {
-        if (this._showExecuteProgress) {
-            await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async progress => {
-                await this.executeCore(actionContext, progress);
-            });
-        } else {
-            await this.executeCore(actionContext, { report: (): void => { /* ignore */ } });
-        }
-    }
+        await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async progress => {
+            let currentStep: number = 1;
 
-    private async executeCore(actionContext: types.IActionContext, progress: vscode.Progress<{ message?: string; increment?: number }>): Promise<void> {
-        let currentStep: number = 1;
+            const steps: AzureWizardExecuteStep<T>[] = getExecuteSteps(this._wizardNode);
 
-        const steps: AzureWizardExecuteStep<T>[] = getExecuteSteps(this._wizardNode);
-
-        const internalProgress: vscode.Progress<{ message?: string; increment?: number }> = {
-            report: (value: { message?: string; increment?: number }): void => {
-                if (value.message) {
-                    const totalSteps: number = currentStep + steps.filter(s => s.shouldExecute(this._wizardContext)).length;
-                    value.message += ` (${currentStep}/${totalSteps})`;
+            const internalProgress: vscode.Progress<{ message?: string; increment?: number }> = {
+                report: (value: { message?: string; increment?: number }): void => {
+                    if (value.message) {
+                        const totalSteps: number = currentStep + steps.filter(s => s.shouldExecute(this._wizardContext)).length;
+                        value.message += ` (${currentStep}/${totalSteps})`;
+                    }
+                    progress.report(value);
                 }
-                progress.report(value);
-            }
-        };
+            };
 
-        let step: AzureWizardExecuteStep<T> | undefined = steps.shift();
-        while (step) {
-            if (step.shouldExecute(this._wizardContext)) {
-                actionContext.properties.lastStepAttempted = `execute-${step.constructor.name}`;
-                await step.execute(this._wizardContext, internalProgress);
-                currentStep += 1;
-            }
+            let step: AzureWizardExecuteStep<T> | undefined = steps.shift();
+            while (step) {
+                if (step.shouldExecute(this._wizardContext)) {
+                    actionContext.properties.lastStepAttempted = `execute-${step.constructor.name}`;
+                    await step.execute(this._wizardContext, internalProgress);
+                    currentStep += 1;
+                }
 
-            step = steps.shift();
-        }
+                step = steps.shift();
+            }
+        });
     }
 
     private goBack(currentStep: AzureWizardPromptStep<T>): AzureWizardPromptStep<T> {

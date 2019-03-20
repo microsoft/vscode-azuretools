@@ -586,11 +586,6 @@ export interface IWizardOptions<T> {
      * A title used when prompting
      */
     title?: string;
-
-    /**
-     * If true, a progress notification will be shown when executing
-     */
-    showExecuteProgress?: boolean;
 }
 
 /**
