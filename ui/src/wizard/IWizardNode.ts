@@ -10,6 +10,7 @@ import * as types from '../../index';
  */
 export interface IWizardNode<T> {
     executeSteps: types.AzureWizardExecuteStep<T>[];
+    effectiveTitle: string | undefined;
     children: IWizardNode<T>[];
 }
 

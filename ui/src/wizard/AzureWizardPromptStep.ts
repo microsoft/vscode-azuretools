@@ -13,7 +13,10 @@ export abstract class AzureWizardPromptStep<T> implements types.AzureWizardPromp
     public propertiesBeforePrompt: string[];
     public prompted: boolean;
 
-    public abstract prompt(wizardContext: T): Promise<types.ISubWizardOptions<T> | void>;
+    public abstract prompt(wizardContext: T): Promise<void>;
+
+    public getSubWizard?(wizardContext: T): Promise<types.IWizardOptions<T> | undefined>;
+
     public abstract shouldPrompt(wizardContext: T): boolean;
 
     public reset(): void {

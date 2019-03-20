@@ -8,7 +8,7 @@ import { GoBackError, UserCancelledError } from '../errors';
 import { IRootUserInput } from '../extensionVariables';
 
 export interface IInternalAzureWizard {
-    title: string;
+    title: string | undefined;
     currentStep: number;
     totalSteps: number;
 }
