@@ -36,11 +36,13 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
         return !(await resourceGroupsTask).some((rg: ResourceGroup) => rg.name !== undefined && rg.name.toLowerCase() === name.toLowerCase());
     }
 
-    public async prompt(wizardContext: T): Promise<types.ISubWizardOptions<T> | void> {
+    public async prompt(wizardContext: T): Promise<void> {
         // Cache resource group separately per subscription
         const options: types.IAzureQuickPickOptions = { placeHolder: 'Select a resource group for new resources.', id: `ResourceGroupListStep/${wizardContext.subscriptionId}` };
         wizardContext.resourceGroup = (await ext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
+    }
 
+    public async getSubWizard(wizardContext: T): Promise<types.IWizardOptions<T> | undefined> {
         if (!wizardContext.resourceGroup) {
             const promptSteps: AzureWizardPromptStep<T>[] = [new ResourceGroupNameStep()];
             if (!wizardContext.resourceGroupDeferLocationStep) {
@@ -51,6 +53,8 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
                 promptSteps,
                 executeSteps: [new ResourceGroupCreateStep()]
             };
+        } else {
+            return undefined;
         }
     }
 

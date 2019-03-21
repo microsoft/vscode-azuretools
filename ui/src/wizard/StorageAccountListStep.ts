@@ -76,7 +76,7 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
         return !!(await storageClient.storageAccounts.checkNameAvailability(name)).nameAvailable;
     }
 
-    public async prompt(wizardContext: T): Promise<types.ISubWizardOptions<T> | void> {
+    public async prompt(wizardContext: T): Promise<void> {
         const client: StorageManagementClient = createAzureClient(wizardContext, StorageManagementClient);
 
         const quickPickOptions: types.IAzureQuickPickOptions = { placeHolder: 'Select a storage account.', id: `StorageAccountListStep/${wizardContext.subscriptionId}` };
@@ -92,11 +92,17 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
         if (wizardContext.storageAccount) {
             // tslint:disable-next-line:no-non-null-assertion
             await LocationListStep.setLocation(wizardContext, wizardContext.storageAccount.location!);
-        } else {
+        }
+    }
+
+    public async getSubWizard(wizardContext: T): Promise<types.IWizardOptions<T> | undefined> {
+        if (!wizardContext.storageAccount) {
             return {
                 promptSteps: [new StorageAccountNameStep(), new ResourceGroupListStep(), new LocationListStep()],
                 executeSteps: [new StorageAccountCreateStep(this._newAccountDefaults)]
             };
+        } else {
+            return undefined;
         }
     }
 

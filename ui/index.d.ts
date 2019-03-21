@@ -571,28 +571,21 @@ export interface IAzureQuickPickOptions extends QuickPickOptions {
     suppressPersistence?: boolean;
 }
 
-export interface ISubWizardOptions<T> {
+export interface IWizardOptions<T> {
     /**
      * The steps to prompt for user input, in order
      */
-    promptSteps: AzureWizardPromptStep<T>[];
+    promptSteps?: AzureWizardPromptStep<T>[];
 
     /**
      * The steps to execute, in order
      */
     executeSteps?: AzureWizardExecuteStep<T>[];
-}
 
-export interface IWizardOptions<T> extends ISubWizardOptions<T> {
     /**
      * A title used when prompting
      */
-    title: string;
-
-    /**
-     * If true, a progress notification will be shown when executing
-     */
-    showExecuteProgress?: boolean;
+    title?: string;
 }
 
 /**
@@ -624,9 +617,14 @@ export declare abstract class AzureWizardExecuteStep<T extends {}> {
 
 export declare abstract class AzureWizardPromptStep<T extends {}> {
     /**
-     * Prompt the user for input and optionally return the options for a sub wizard
+     * Prompt the user for input
      */
-    public abstract prompt(wizardContext: T): Promise<ISubWizardOptions<T> | void>;
+    public abstract prompt(wizardContext: T): Promise<void>;
+
+    /**
+     * Optionally return a subwizard. This will be called after `prompt`
+     */
+    public getSubWizard?(wizardContext: T): Promise<IWizardOptions<T> | undefined>;
 
     /**
      * Return true if this step should prompt based on the current state of the wizardContext
@@ -761,7 +759,8 @@ export declare class ResourceGroupListStep<T extends IResourceGroupWizardContext
      */
     public static isNameAvailable<T extends IResourceGroupWizardContext>(wizardContext: T, name: string): Promise<boolean>;
 
-    public prompt(wizardContext: T): Promise<ISubWizardOptions<T> | void>;
+    public prompt(wizardContext: T): Promise<void>;
+    public getSubWizard(wizardContext: T): Promise<IWizardOptions<T> | undefined>;
     public shouldPrompt(wizardContext: T): boolean;
 }
 
@@ -838,7 +837,8 @@ export declare class StorageAccountListStep<T extends IStorageAccountWizardConte
 
     public static isNameAvailable<T extends IStorageAccountWizardContext>(wizardContext: T, name: string): Promise<boolean>;
 
-    public prompt(wizardContext: T): Promise<ISubWizardOptions<T> | void>;
+    public prompt(wizardContext: T): Promise<void>;
+    public getSubWizard(wizardContext: T): Promise<IWizardOptions<T> | undefined>;
     public shouldPrompt(wizardContext: T): boolean;
 }
 
