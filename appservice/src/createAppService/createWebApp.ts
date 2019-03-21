@@ -9,17 +9,18 @@ import * as path from 'path';
 import { Uri, workspace } from 'vscode';
 import { IActionContext, ISubscriptionWizardContext, LocationListStep } from 'vscode-azureextensionui';
 import { javaUtils } from '../utils/javaUtils';
-import { AppKind, LinuxRuntimes, WebsiteOS } from './AppKind';
+import { LinuxRuntimes, WebsiteOS } from './AppKind';
 import { createAppService } from './createAppService';
 import { IAppCreateOptions } from './IAppCreateOptions';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
+// Should be moved to appservice repo: https://github.com/Microsoft/vscode-azureappservice/issues/780
 export async function createWebApp(
     actionContext: IActionContext,
     subscriptionContext: ISubscriptionWizardContext,
     createOptions?: IAppCreateOptions,
     showCreatingTreeItem?: (label: string) => void): Promise<Site> {
-    return await createAppService(AppKind.app, actionContext, subscriptionContext, createOptions, showCreatingTreeItem);
+    return await createAppService(actionContext, subscriptionContext, createOptions, showCreatingTreeItem);
 }
 
 export async function setWizardContextDefaults(wizardContext: IAppServiceWizardContext, actionContext: IActionContext, advancedCreation?: boolean): Promise<void> {

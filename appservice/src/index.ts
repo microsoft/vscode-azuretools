@@ -4,7 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 export * from './confirmOverwriteSettings';
-export * from './createAppService/createFunctionApp';
+export { AppKind, WebsiteOS } from './createAppService/AppKind';
+export * from './createAppService/IAppServiceWizardContext';
+export * from './createAppService/SiteCreateStep';
+export * from './createAppService/SiteNameStep';
+export * from './createAppService/SiteOSStep';
+export * from './createAppService/SiteRuntimeStep';
 export * from './createAppService/createWebApp';
 export * from './createAppService/IAppCreateOptions';
 export * from './createSlot';
