@@ -11,6 +11,7 @@ export interface IInternalAzureWizard {
     title: string | undefined;
     currentStep: number;
     totalSteps: number;
+    hideStepCount: boolean | undefined;
 }
 
 /**
@@ -29,8 +30,10 @@ export class AzureWizardUserInput implements IRootUserInput {
             const quickPick: QuickPick<TPick> = window.createQuickPick<TPick>();
             disposables.push(quickPick);
             quickPick.title = this._wizard.title;
-            quickPick.step = this._wizard.currentStep;
-            quickPick.totalSteps = this._wizard.totalSteps;
+            if (!this._wizard.hideStepCount) {
+                quickPick.step = this._wizard.currentStep;
+                quickPick.totalSteps = this._wizard.totalSteps;
+            }
             quickPick.buttons = this._wizard.currentStep > 1 ? [QuickInputButtons.Back] : [];
 
             // Copy settings that are common between options and quickPick
@@ -77,8 +80,10 @@ export class AzureWizardUserInput implements IRootUserInput {
             const inputBox: InputBox = window.createInputBox();
             disposables.push(inputBox);
             inputBox.title = this._wizard.title;
-            inputBox.step = this._wizard.currentStep;
-            inputBox.totalSteps = this._wizard.totalSteps;
+            if (!this._wizard.hideStepCount) {
+                inputBox.step = this._wizard.currentStep;
+                inputBox.totalSteps = this._wizard.totalSteps;
+            }
             inputBox.buttons = this._wizard.currentStep > 1 ? [QuickInputButtons.Back] : [];
 
             // Copy settings that are common between options and inputBox

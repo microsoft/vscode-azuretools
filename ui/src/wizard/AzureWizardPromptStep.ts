@@ -7,6 +7,7 @@ import * as types from '../../index';
 import { IWizardNode } from './IWizardNode';
 
 export abstract class AzureWizardPromptStep<T> implements types.AzureWizardPromptStep<T> {
+    public hideStepCount: boolean = false;
     public hasSubWizard: boolean;
     public numSubPromptSteps: number;
     public wizardNode: IWizardNode<T>;
