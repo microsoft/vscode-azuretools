@@ -14,6 +14,7 @@ import { AzureWizardUserInput, IInternalAzureWizard } from './AzureWizardUserInp
 import { getExecuteSteps, IWizardNode } from './IWizardNode';
 
 export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizard {
+    public hideStepCount: boolean;
     private _title: string | undefined;
     private readonly _promptSteps: AzureWizardPromptStep<T>[];
     private readonly _wizardNode: IWizardNode<T>;
@@ -52,6 +53,7 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
 
                 actionContext.properties.lastStepAttempted = `prompt-${step.constructor.name}`;
                 this._title = step.wizardNode.effectiveTitle;
+                this.hideStepCount = step.hideStepCount;
 
                 if (step.shouldPrompt(this._wizardContext)) {
                     step.propertiesBeforePrompt = Object.keys(this._wizardContext).filter(k => !isNullOrUndefined(this._wizardContext[k]));
@@ -94,7 +96,9 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
                 report: (value: { message?: string; increment?: number }): void => {
                     if (value.message) {
                         const totalSteps: number = currentStep + steps.filter(s => s.shouldExecute(this._wizardContext)).length;
-                        value.message += ` (${currentStep}/${totalSteps})`;
+                        if (totalSteps > 1) {
+                            value.message += ` (${currentStep}/${totalSteps})`;
+                        }
                     }
                     progress.report(value);
                 }

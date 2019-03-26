@@ -617,6 +617,11 @@ export declare abstract class AzureWizardExecuteStep<T extends {}> {
 
 export declare abstract class AzureWizardPromptStep<T extends {}> {
     /**
+     * If true, step count will not be displayed when prompting. Defaults to false.
+     */
+    public hideStepCount: boolean;
+
+    /**
      * Prompt the user for input
      */
     public abstract prompt(wizardContext: T): Promise<void>;
