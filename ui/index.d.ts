@@ -183,7 +183,7 @@ export declare abstract class AzureTreeItem<TRoot = ISubscriptionRoot> {
     /**
      * This method combines the environment.portalLink and AzureTreeItem.id to open the resource in the portal. Optionally, an id can be passed to manually open items that may not be in the explorer.
      */
-    public openInPortal(id?: string, options?: OpenInPortalOptions): void;
+    public openInPortal(id?: string, options?: OpenInPortalOptions): Promise<void>;
 
     /**
      * Displays a 'Loading...' icon and temporarily changes the item's description while `callback` is being run
@@ -419,7 +419,7 @@ export interface IAzureUserInput {
     * @throws `UserCancelledError` if the user cancels.
     * @return A promise that resolves to an array of items the user picked.
     */
-    showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions & { canPickMany: true }): Promise<T[]>;
+    showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: IAzureQuickPickOptions & { canPickMany: true }): Promise<T[]>;
 
     /**
       * Shows a selection list.
@@ -430,7 +430,7 @@ export interface IAzureUserInput {
       * @throws `UserCancelledError` if the user cancels.
       * @return A promise that resolves to the item the user picked.
       */
-    showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T>;
+    showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: IAzureQuickPickOptions): Promise<T>;
 
     /**
      * Opens an input box to ask the user for input.
@@ -460,7 +460,7 @@ export interface IAzureUserInput {
      * @throws `UserCancelledError` if the user cancels.
      * @return A thenable that resolves to the selected item when being dismissed.
      */
-    showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Promise<T>;
+    showWarningMessage<T extends MessageItem>(message: string, options: IAzureMessageOptions, ...items: T[]): Promise<T>;
 
     /**
      * Shows a file open dialog to the user which allows to select a file
@@ -569,6 +569,16 @@ export interface IAzureQuickPickOptions extends QuickPickOptions {
      * Optionally used to suppress persistence for this quick pick, defaults to `false`
      */
     suppressPersistence?: boolean;
+}
+
+/**
+ * Provides additional options for dialogs used in Azure Extensions
+ */
+export interface IAzureMessageOptions extends MessageOptions {
+    /**
+     * If specified, a "Learn more" button will be added to the dialog and it will re-prompt every time the user clicks "Learn more"
+     */
+    learnMoreLink?: string;
 }
 
 export interface IWizardOptions<T> {

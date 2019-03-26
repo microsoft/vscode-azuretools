@@ -92,9 +92,9 @@ function handleError(context: IActionContext, callbackId: string, error: any): v
         }
 
         // don't wait
-        window.showErrorMessage(message, DialogResponses.reportAnIssue).then((result: MessageItem | undefined) => {
+        window.showErrorMessage(message, DialogResponses.reportAnIssue).then(async (result: MessageItem | undefined) => {
             if (result === DialogResponses.reportAnIssue) {
-                reportAnIssue(callbackId, errorData);
+                await reportAnIssue(callbackId, errorData);
             }
         });
     }

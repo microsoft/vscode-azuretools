@@ -3,16 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// tslint:disable-next-line:no-require-imports
-import opn = require("opn");
 import * as vscode from 'vscode';
 import { IParsedError } from '../index';
 import { getPackageInfo } from "./getPackageInfo";
+import { openUrl } from './utils/openUrl';
 
 /**
  * Used to open the browser to the "New Issue" page on GitHub with relevant context pre-filled in the issue body
  */
-export function reportAnIssue(actionId: string, parsedError: IParsedError): void {
+export async function reportAnIssue(actionId: string, parsedError: IParsedError): Promise<void> {
     const { extensionName, extensionVersion, bugsUrl } = getPackageInfo();
 
     let body: string = `
@@ -49,5 +48,5 @@ ${parsedError.stack}
     const url: string = `${baseUrl}/new?body=${encodeURIComponent(body)}`;
 
     // tslint:disable-next-line:no-floating-promises
-    opn(url);
+    await openUrl(url);
 }
