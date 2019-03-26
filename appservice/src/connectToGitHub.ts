@@ -5,7 +5,6 @@
 
 import { SiteSourceControl } from 'azure-arm-website/lib/models';
 import { TokenCredentials, WebResource } from 'ms-rest';
-import * as opn from 'opn';
 import { Response } from 'request';
 import * as request from 'request-promise';
 import * as vscode from 'vscode';
@@ -15,6 +14,7 @@ import { localize } from './localize';
 import { signRequest } from './signRequest';
 import { SiteClient } from './SiteClient';
 import { nonNullProp } from './utils/nonNull';
+import { openUrl } from './utils/openUrl';
 import { verifyNoRunFromPackageSetting } from './verifyNoRunFromPackageSetting';
 
 type gitHubOrgData = { login: string, repos_url: string };
@@ -103,14 +103,13 @@ async function showGitHubAuthPrompt(node: AzureTreeItem, client: SiteClient, con
 
             context.properties.githubLearnMore = 'true';
 
-            // tslint:disable-next-line:no-unsafe-any
-            opn('https://aka.ms/B7g6sw');
+            await openUrl('https://aka.ms/B7g6sw');
         }
     }
 
     if (input === goToPortal) {
         context.properties.githubGoToPortal = 'true';
-        node.openInPortal(`${client.id}/vstscd`);
+        await node.openInPortal(`${client.id}/vstscd`);
     }
 }
 

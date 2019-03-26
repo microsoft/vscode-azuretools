@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { SiteSourceControl } from 'azure-arm-website/lib/models';
-import * as opn from 'opn';
 import * as os from 'os';
 import * as path from 'path';
 import { ProgressLocation, TextDocument, window, workspace } from 'vscode';
@@ -15,6 +14,7 @@ import { waitForDeploymentToComplete } from '../deploy/waitForDeploymentToComple
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
+import { openUrl } from '../utils/openUrl';
 import { DeploymentsTreeItem } from './DeploymentsTreeItem';
 import { ISiteTreeRoot } from './ISiteTreeRoot';
 
@@ -135,8 +135,7 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         const sourceControl: SiteSourceControl = await this.root.client.getSourceControl();
         if (sourceControl.repoUrl) {
             const gitHubCommitUrl: string = `${sourceControl.repoUrl}/commit/${this._deployResult.id}`;
-            // tslint:disable-next-line:no-unsafe-any
-            opn(gitHubCommitUrl);
+            await openUrl(gitHubCommitUrl);
             return;
         } else {
             throw new Error(localize('noRepoUrl', 'There is no GitHub repo url associated with deployment "{0}".', this._deployResult.id));

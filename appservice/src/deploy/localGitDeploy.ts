@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { User } from 'azure-arm-website/lib/models';
-import * as opn from 'opn';
 import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
 import { DialogResponses, UserCancelledError } from 'vscode-azureextensionui';
@@ -13,6 +12,7 @@ import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { callWithMaskHandling } from '../utils/callWithMaskHandling';
 import { nonNullProp } from '../utils/nonNull';
+import { openUrl } from '../utils/openUrl';
 import { verifyNoRunFromPackageSetting } from '../verifyNoRunFromPackageSetting';
 import { formatDeployLog } from './formatDeployLog';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
@@ -44,8 +44,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
                     const installString: string = localize('Install', 'Install');
                     const input: string | undefined = await vscode.window.showErrorMessage(localize('GitRequired', 'Git must be installed to use Local Git Deploy.'), installString);
                     if (input === installString) {
-                        // tslint:disable-next-line:no-unsafe-any
-                        opn('https://git-scm.com/downloads');
+                        await openUrl('https://git-scm.com/downloads');
                     }
                     return undefined;
                     // tslint:disable-next-line:no-unsafe-any
