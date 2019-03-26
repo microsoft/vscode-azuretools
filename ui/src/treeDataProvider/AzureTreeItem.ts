@@ -3,13 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// tslint:disable-next-line:no-require-imports
-import opn = require("opn");
 import { TreeItemCollapsibleState, Uri } from 'vscode';
 import { ISubscriptionRoot, OpenInPortalOptions } from '../..';
 import * as types from '../..';
 import { ArgumentError, NotImplementedError } from '../errors';
 import { localize } from '../localize';
+import { openUrl } from '../utils/openUrl';
 import { IAzureParentTreeItemInternal, IAzureTreeDataProviderInternal } from "./InternalInterfaces";
 import { loadingIconPath } from "./treeConstants";
 
@@ -84,13 +83,12 @@ export abstract class AzureTreeItem<TRoot = ISubscriptionRoot> implements types.
         await this.treeDataProvider.refresh(this);
     }
 
-    public openInPortal(this: AzureTreeItem<ISubscriptionRoot>, id?: string, options?: OpenInPortalOptions): void {
+    public async openInPortal(this: AzureTreeItem<ISubscriptionRoot>, id?: string, options?: OpenInPortalOptions): Promise<void> {
         id = id === undefined ? this.fullId : id;
         const queryPrefix: string = (options && options.queryPrefix) ? `?${options.queryPrefix}` : '';
         const url: string = `${this.root.environment.portalUrl}/${queryPrefix}#@${this.root.tenantId}/resource${id}`;
 
-        // tslint:disable-next-line:no-floating-promises
-        opn(url);
+        await openUrl(url);
     }
 
     public includeInTreePicker(expectedContextValues: (string | RegExp)[]): boolean {
