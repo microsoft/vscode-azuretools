@@ -183,7 +183,7 @@ export declare abstract class AzureTreeItem<TRoot = ISubscriptionRoot> {
     /**
      * This method combines the environment.portalLink and AzureTreeItem.id to open the resource in the portal. Optionally, an id can be passed to manually open items that may not be in the explorer.
      */
-    public openInPortal(id?: string, options?: OpenInPortalOptions): void;
+    public openInPortal(id?: string, options?: OpenInPortalOptions): Promise<void>;
 
     /**
      * Displays a 'Loading...' icon and temporarily changes the item's description while `callback` is being run
