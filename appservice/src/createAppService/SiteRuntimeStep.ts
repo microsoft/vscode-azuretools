@@ -3,8 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { workspace } from 'vscode';
 import { AzureWizardPromptStep, IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
+import { localize } from '../localize';
 import { AppKind, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
@@ -21,10 +23,14 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                 { label: '.NET', data: 'dotnet' }
             ];
 
+            const previewDescription: string = localize('previewDescription', '(Preview)');
             if (wizardContext.newSiteOS === WebsiteOS.linux) {
-                runtimeItems.push({ label: 'Python', description: '(Preview)', data: 'python' });
+                runtimeItems.push({ label: 'Python', description: previewDescription, data: 'python' });
             } else {
                 runtimeItems.push({ label: 'Java', data: 'java' });
+                if (workspace.getConfiguration().get('azureFunctions.enablePowerShell')) {
+                    runtimeItems.push({ label: 'PowerShell', description: previewDescription, data: 'powershell' });
+                }
             }
 
             wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new app.' })).data;
