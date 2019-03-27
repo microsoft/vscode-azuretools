@@ -27,11 +27,10 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
             if (wizardContext.newSiteOS === WebsiteOS.linux) {
                 runtimeItems.push({ label: 'Python', description: previewDescription, data: 'python' });
             } else {
+                runtimeItems.push({ label: 'Java', data: 'java' });
                 if (workspace.getConfiguration().get('azureFunctions.enablePowerShell')) {
                     runtimeItems.push({ label: 'PowerShell', description: previewDescription, data: 'powershell' });
                 }
-
-                runtimeItems.push({ label: 'Java', data: 'java' });
             }
 
             wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new app.' })).data;
