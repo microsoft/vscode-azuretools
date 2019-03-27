@@ -18,13 +18,11 @@ export const appServicePlanNamingRules: IAzureNamingRules = {
 
 export class AppServicePlanNameStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
-        if (!wizardContext.newPlanName) {
-            wizardContext.newPlanName = (await ext.ui.showInputBox({
-                value: await wizardContext.relatedNameTask,
-                prompt: localize('AppServicePlanPrompt', 'Enter the name of the new App Service plan.'),
-                validateInput: async (value: string): Promise<string | undefined> => await this.validatePlanName(wizardContext, value)
-            })).trim();
-        }
+        wizardContext.newPlanName = (await ext.ui.showInputBox({
+            value: await wizardContext.relatedNameTask,
+            prompt: localize('AppServicePlanPrompt', 'Enter the name of the new App Service plan.'),
+            validateInput: async (value: string): Promise<string | undefined> => await this.validatePlanName(wizardContext, value)
+        })).trim();
     }
 
     public shouldPrompt(wizardContext: IAppServiceWizardContext): boolean {
