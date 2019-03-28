@@ -63,6 +63,7 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
                         step.prompted = true;
                     } catch (err) {
                         if (err instanceof GoBackError) {
+                            actionContext.properties.usedBackButton = 'true';
                             step = this.goBack(step);
                             continue;
                         } else {
