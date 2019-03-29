@@ -13,6 +13,8 @@ import { localize } from '../localize';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 
 export class StorageAccountCreateStep<T extends types.IStorageAccountWizardContext> extends AzureWizardExecuteStep<T> implements types.StorageAccountCreateStep<T> {
+    public priority: number = 130;
+
     private readonly _defaults: types.INewStorageAccountDefaults;
 
     public constructor(defaults: types.INewStorageAccountDefaults) {
