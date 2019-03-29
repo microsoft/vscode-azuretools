@@ -25,6 +25,8 @@ export interface IAppSettingsContext {
 }
 
 export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
+    public priority: number = 140;
+
     private createFunctionAppSettings: ((context: IAppSettingsContext) => Promise<NameValuePair[]>) | undefined;
 
     public constructor(createFunctionAppSettings?: ((context: IAppSettingsContext) => Promise<NameValuePair[]>)) {
