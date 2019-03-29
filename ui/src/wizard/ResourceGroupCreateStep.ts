@@ -12,6 +12,8 @@ import { localize } from '../localize';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 
 export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext> extends AzureWizardExecuteStep<T> implements types.ResourceGroupCreateStep<T> {
+    public priority: number = 100;
+
     public async execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         // tslint:disable-next-line:no-non-null-assertion
         const newName: string = wizardContext.newResourceGroupName!;
