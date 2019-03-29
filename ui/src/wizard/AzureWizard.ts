@@ -14,8 +14,8 @@ import { AzureWizardUserInput, IInternalAzureWizard } from './AzureWizardUserInp
 import { getExecuteSteps, IWizardNode } from './IWizardNode';
 
 export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizard {
-    public readonly title: string;
-    private readonly _showExecuteProgress?: boolean;
+    public hideStepCount: boolean;
+    private _title: string | undefined;
     private readonly _promptSteps: AzureWizardPromptStep<T>[];
     private readonly _wizardNode: IWizardNode<T>;
     private readonly _finishedPromptSteps: AzureWizardPromptStep<T>[] = [];
@@ -23,11 +23,14 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
 
     public constructor(wizardContext: T, options: types.IWizardOptions<T>) {
         // reverse steps to make it easier to use push/pop
-        this._promptSteps = <AzureWizardPromptStep<T>[]>options.promptSteps.reverse();
+        // tslint:disable-next-line: strict-boolean-expressions
+        this._promptSteps = (<AzureWizardPromptStep<T>[]>options.promptSteps || []).reverse();
         this._wizardNode = this.initWizardNode(options);
         this._wizardContext = wizardContext;
-        this.title = options.title;
-        this._showExecuteProgress = options.showExecuteProgress;
+    }
+
+    public get title(): string | undefined {
+        return this._title;
     }
 
     public get currentStep(): number {
@@ -48,23 +51,31 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
             while (step) {
                 step.reset();
 
+                actionContext.properties.lastStepAttempted = `prompt-${step.constructor.name}`;
+                this._title = step.wizardNode.effectiveTitle;
+                this.hideStepCount = step.hideStepCount;
+
                 if (step.shouldPrompt(this._wizardContext)) {
-                    actionContext.properties.lastStepAttempted = `prompt-${step.constructor.name}`;
                     step.propertiesBeforePrompt = Object.keys(this._wizardContext).filter(k => !isNullOrUndefined(this._wizardContext[k]));
 
                     try {
-                        const subWizard: types.ISubWizardOptions<T> | void = await step.prompt(this._wizardContext);
+                        await step.prompt(this._wizardContext);
                         step.prompted = true;
-                        if (subWizard) {
-                            this.addSubWizard(step, subWizard);
-                        }
                     } catch (err) {
                         if (err instanceof GoBackError) {
+                            actionContext.properties.usedBackButton = 'true';
                             step = this.goBack(step);
                             continue;
                         } else {
                             throw err;
                         }
+                    }
+                }
+
+                if (step.getSubWizard) {
+                    const subWizard: types.IWizardOptions<T> | void = await step.getSubWizard(this._wizardContext);
+                    if (subWizard) {
+                        this.addSubWizard(step, subWizard);
                     }
                 }
 
@@ -77,37 +88,34 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
     }
 
     public async execute(actionContext: types.IActionContext): Promise<void> {
-        if (this._showExecuteProgress) {
-            await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async progress => {
-                await this.executeCore(actionContext, progress);
-            });
-        } else {
-            await this.executeCore(actionContext, { report: (): void => { /* ignore */ } });
-        }
-    }
+        await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async progress => {
+            let currentStep: number = 1;
 
-    private async executeCore(actionContext: types.IActionContext, progress: vscode.Progress<{ message?: string; increment?: number }>): Promise<void> {
-        let currentStep: number = 1;
+            const steps: AzureWizardExecuteStep<T>[] = getExecuteSteps(this._wizardNode);
 
-        const steps: AzureWizardExecuteStep<T>[] = getExecuteSteps(this._wizardNode);
-
-        const internalProgress: vscode.Progress<{ message?: string; increment?: number }> = {
-            report: (value: { message?: string; increment?: number }): void => {
-                if (value.message) {
-                    const totalSteps: number = steps.filter(s => s.shouldExecute(this._wizardContext)).length;
-                    value.message += ` (${currentStep}/${totalSteps})`;
+            const internalProgress: vscode.Progress<{ message?: string; increment?: number }> = {
+                report: (value: { message?: string; increment?: number }): void => {
+                    if (value.message) {
+                        const totalSteps: number = currentStep + steps.filter(s => s.shouldExecute(this._wizardContext)).length;
+                        if (totalSteps > 1) {
+                            value.message += ` (${currentStep}/${totalSteps})`;
+                        }
+                    }
+                    progress.report(value);
                 }
-                progress.report(value);
-            }
-        };
+            };
 
-        for (const step of steps) {
-            if (step.shouldExecute(this._wizardContext)) {
-                actionContext.properties.lastStepAttempted = `execute-${step.constructor.name}`;
-                await step.execute(this._wizardContext, internalProgress);
-                currentStep += 1;
+            let step: AzureWizardExecuteStep<T> | undefined = steps.shift();
+            while (step) {
+                if (step.shouldExecute(this._wizardContext)) {
+                    actionContext.properties.lastStepAttempted = `execute-${step.constructor.name}`;
+                    await step.execute(this._wizardContext, internalProgress);
+                    currentStep += 1;
+                }
+
+                step = steps.shift();
             }
-        }
+        });
     }
 
     private goBack(currentStep: AzureWizardPromptStep<T>): AzureWizardPromptStep<T> {
@@ -134,22 +142,32 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
         return step;
     }
 
-    private addSubWizard(step: AzureWizardPromptStep<T>, subWizard: types.ISubWizardOptions<T>): void {
+    private addSubWizard(step: AzureWizardPromptStep<T>, subWizard: types.IWizardOptions<T>): void {
         step.hasSubWizard = true;
 
-        subWizard.promptSteps = subWizard.promptSteps.filter(s1 => {
-            return !this._finishedPromptSteps.concat(this._promptSteps).some(s2 => s1.constructor.name === s2.constructor.name);
-        });
-        this._promptSteps.push(...<AzureWizardPromptStep<T>[]>subWizard.promptSteps.reverse());
-        step.numSubPromptSteps = subWizard.promptSteps.length;
+        if (subWizard.promptSteps) {
+            subWizard.promptSteps = subWizard.promptSteps.filter(s1 => {
+                return !this._finishedPromptSteps.concat(this._promptSteps).some(s2 => s1.constructor.name === s2.constructor.name);
+            });
+            this._promptSteps.push(...<AzureWizardPromptStep<T>[]>subWizard.promptSteps.reverse());
+            step.numSubPromptSteps = subWizard.promptSteps.length;
+        }
 
         step.wizardNode.children.push(this.initWizardNode(subWizard));
     }
 
-    private initWizardNode(options: types.ISubWizardOptions<T>): IWizardNode<T> {
-        // tslint:disable-next-line: strict-boolean-expressions
-        const wizardNode: IWizardNode<T> = { executeSteps: options.executeSteps || [], children: [] };
-        options.promptSteps.forEach(step => { (<AzureWizardPromptStep<T>>step).wizardNode = wizardNode; });
+    private initWizardNode(options: types.IWizardOptions<T>): IWizardNode<T> {
+        const wizardNode: IWizardNode<T> = {
+            // tslint:disable-next-line: strict-boolean-expressions
+            executeSteps: options.executeSteps || [],
+            effectiveTitle: options.title || this._title,
+            children: []
+        };
+
+        if (options.promptSteps) {
+            options.promptSteps.forEach(step => { (<AzureWizardPromptStep<T>>step).wizardNode = wizardNode; });
+        }
+
         return wizardNode;
     }
 }

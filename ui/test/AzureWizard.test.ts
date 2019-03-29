@@ -11,12 +11,12 @@ import { ext } from '../src/extensionVariables';
 // tslint:disable: max-classes-per-file
 
 interface ITestWizardContext {
-    [key: string]: string;
+    [key: string]: string | undefined;
 }
 
 abstract class QuickPickStepBase extends AzureWizardPromptStep<ITestWizardContext> {
     protected abstract key: string;
-    public async prompt(wizardContext: ITestWizardContext): Promise<types.ISubWizardOptions<ITestWizardContext> | void> {
+    public async prompt(wizardContext: ITestWizardContext): Promise<void> {
         wizardContext[this.key] = (await ext.ui.showQuickPick(
             [
                 { label: 'Pick 1' },
@@ -137,7 +137,7 @@ class SubSubExecuteStep extends AzureWizardExecuteStep<ITestWizardContext> {
 }
 
 abstract class QuickPickStepWithSubWizardBase extends QuickPickStepBase {
-    public async prompt(wizardContext: ITestWizardContext): Promise<types.ISubWizardOptions<ITestWizardContext> | void> {
+    public async prompt(wizardContext: ITestWizardContext): Promise<void> {
         const result: string = (await ext.ui.showQuickPick(
             [
                 { label: 'Create' },
@@ -148,14 +148,20 @@ abstract class QuickPickStepWithSubWizardBase extends QuickPickStepBase {
             {}
         )).label;
 
-        if (result === 'Create') {
-            return this.getSubWizard();
-        } else {
+        if (result !== 'Create') {
             wizardContext[this.key] = result;
         }
     }
 
-    protected abstract getSubWizard(): types.ISubWizardOptions<ITestWizardContext>;
+    public async getSubWizard(wizardContext: ITestWizardContext): Promise<types.IWizardOptions<ITestWizardContext> | undefined> {
+        if (!wizardContext[this.key]) {
+            return this.getSubWizardInternal();
+        } else {
+            return undefined;
+        }
+    }
+
+    protected abstract getSubWizardInternal(): types.IWizardOptions<ITestWizardContext>;
 }
 
 class QuickPickStepWithSubWizard extends QuickPickStepWithSubWizardBase {
@@ -166,7 +172,7 @@ class QuickPickStepWithSubWizard extends QuickPickStepWithSubWizardBase {
         // tslint:disable-next-line: strict-boolean-expressions
         this._executeStep = executeStep || new SubExecuteStep();
     }
-    protected getSubWizard(): types.ISubWizardOptions<ITestWizardContext> {
+    protected getSubWizardInternal(): types.IWizardOptions<ITestWizardContext> {
         return {
             promptSteps: [new SubInputBoxStep()],
             executeSteps: [this._executeStep]
@@ -176,7 +182,7 @@ class QuickPickStepWithSubWizard extends QuickPickStepWithSubWizardBase {
 
 class QuickPickStepWithMultiStepSubWizard extends QuickPickStepWithSubWizardBase {
     protected key: string = 'subQuickPickMulti';
-    protected getSubWizard(): types.ISubWizardOptions<ITestWizardContext> {
+    protected getSubWizardInternal(): types.IWizardOptions<ITestWizardContext> {
         return {
             promptSteps: [new SubInputBoxStep(), new InputBoxStep2(), new QuickPickStep2()],
             executeSteps: [new ExecuteStep1(), new ExecuteStep2()]
@@ -186,7 +192,7 @@ class QuickPickStepWithMultiStepSubWizard extends QuickPickStepWithSubWizardBase
 
 class QuickPickStepWithSubSubWizard extends QuickPickStepWithSubWizardBase {
     protected key: string = 'subSubQuickPick';
-    protected getSubWizard(): types.ISubWizardOptions<ITestWizardContext> {
+    protected getSubWizardInternal(): types.IWizardOptions<ITestWizardContext> {
         return {
             promptSteps: [new QuickPickStepWithSubWizard()]
         };
@@ -195,7 +201,7 @@ class QuickPickStepWithSubSubWizard extends QuickPickStepWithSubWizardBase {
 
 class QuickPickStepWithSubSubExecute extends QuickPickStepWithSubWizardBase {
     protected key: string = 'subSubQuickPickExecute';
-    protected getSubWizard(): types.ISubWizardOptions<ITestWizardContext> {
+    protected getSubWizardInternal(): types.IWizardOptions<ITestWizardContext> {
         return {
             promptSteps: [new QuickPickStepWithSubWizard(new SubSubExecuteStep())],
             executeSteps: [new SubExecuteStep()]
@@ -205,7 +211,7 @@ class QuickPickStepWithSubSubExecute extends QuickPickStepWithSubWizardBase {
 
 class QuickPickStepSubWizardNoExecute extends AzureWizardPromptStep<ITestWizardContext> {
     private _key: string = 'subQuickPickNoExecute';
-    public async prompt(wizardContext: ITestWizardContext): Promise<types.ISubWizardOptions<ITestWizardContext>> {
+    public async prompt(wizardContext: ITestWizardContext): Promise<void> {
         const result: string = (await ext.ui.showQuickPick(
             [
                 { label: 'Pick 1' },
@@ -216,6 +222,10 @@ class QuickPickStepSubWizardNoExecute extends AzureWizardPromptStep<ITestWizardC
         )).label;
 
         wizardContext[this._key] = result;
+
+    }
+
+    public async getSubWizard(_wizardContext: ITestWizardContext): Promise<types.IWizardOptions<ITestWizardContext> | undefined> {
         return {
             promptSteps: [new SubInputBoxStep()]
         };
@@ -226,9 +236,25 @@ class QuickPickStepSubWizardNoExecute extends AzureWizardPromptStep<ITestWizardC
     }
 }
 
-async function validateWizard(options: types.ISubWizardOptions<ITestWizardContext>, inputs: (string | TestInput)[], expectedWizardContext: ITestWizardContext): Promise<void> {
+class StepWithSubWizardAndNoPrompt extends AzureWizardPromptStep<ITestWizardContext> {
+    public async prompt(): Promise<void> {
+        // ignore
+    }
+
+    public shouldPrompt(): boolean {
+        return false;
+    }
+
+    public async getSubWizard(): Promise<types.IWizardOptions<ITestWizardContext>> {
+        return {
+            executeSteps: [new SubExecuteStep()]
+        };
+    }
+}
+
+async function validateWizard(options: types.IWizardOptions<ITestWizardContext>, inputs: (string | TestInput)[], expectedWizardContext: ITestWizardContext): Promise<void> {
     const wizardContext: ITestWizardContext = {};
-    const wizard: AzureWizard<ITestWizardContext> = new AzureWizard(wizardContext, { ...options, title: 'Test Wizard' });
+    const wizard: AzureWizard<ITestWizardContext> = new AzureWizard(wizardContext, options);
     ext.ui = new TestUserInput(inputs);
     const actionContext: types.IActionContext = { properties: {}, measurements: {} };
     await wizard.prompt(actionContext);
@@ -543,6 +569,28 @@ suite("AzureWizard tests", () => {
             },
             ['Pick 1', TestInput.BackButton, 'Pick 2', 'testValue1', 'Pick 3'],
             { quickPick1: 'Pick 2', inputBoxNotPick1: 'testValue1', quickPick2: 'Pick 3', execute1: 'executeValue1' }
+        );
+    });
+
+    test("Step with sub wizard but no prompt", async () => {
+        await validateWizard(
+            {
+                promptSteps: [new QuickPickStep1(), new StepWithSubWizardAndNoPrompt()],
+                executeSteps: [new ExecuteStep1()]
+            },
+            ['Pick 1'],
+            { quickPick1: 'Pick 1', execute1: 'executeValue1', subExecute: 'subExecuteValue' }
+        );
+    });
+
+    test("Back button through step with sub wizard but no prompt", async () => {
+        await validateWizard(
+            {
+                promptSteps: [new QuickPickStep1(), new StepWithSubWizardAndNoPrompt(), new QuickPickStep2()],
+                executeSteps: [new ExecuteStep1()]
+            },
+            ['Pick 1', TestInput.BackButton, 'Pick 2', 'Pick 3'],
+            { quickPick1: 'Pick 2', quickPick2: 'Pick 3', execute1: 'executeValue1', subExecute: 'subExecuteValue' }
         );
     });
 });

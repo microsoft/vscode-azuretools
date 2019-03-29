@@ -5,7 +5,7 @@
 
 import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { Site, SkuDescription } from 'azure-arm-website/lib/models';
-import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, ISubscriptionWizardContext, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountListStep, StorageAccountPerformance, StorageAccountReplication } from 'vscode-azureextensionui';
+import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, ISubscriptionWizardContext, ResourceGroupCreateStep, ResourceGroupListStep } from 'vscode-azureextensionui';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
 import { AppKind, WebsiteOS } from './AppKind';
@@ -19,8 +19,8 @@ import { SiteNameStep } from './SiteNameStep';
 import { SiteOSStep } from './SiteOSStep';
 import { SiteRuntimeStep } from './SiteRuntimeStep';
 
+// Should be moved to appservice repo: https://github.com/Microsoft/vscode-azureappservice/issues/780
 export async function createAppService(
-    appKind: AppKind,
     actionContext: IActionContext,
     subscriptionContext: ISubscriptionWizardContext,
     createOptions: IAppCreateOptions | undefined,
@@ -35,7 +35,7 @@ export async function createAppService(
     const promptSteps: AzureWizardPromptStep<IAppServiceWizardContext>[] = [];
     const executeSteps: AzureWizardExecuteStep<IAppServiceWizardContext>[] = [];
     const wizardContext: IAppServiceWizardContext = {
-        newSiteKind: appKind,
+        newSiteKind: AppKind.app,
         newSiteOS: createOptions.os ? WebsiteOS[createOptions.os] : undefined,
         newSiteRuntime: createOptions.runtime,
         subscriptionId: subscriptionContext.subscriptionId,
@@ -47,63 +47,32 @@ export async function createAppService(
     };
 
     promptSteps.push(new SiteNameStep());
-    switch (appKind) {
-        // Functions app will not use streamlined experience
-        case AppKind.functionapp:
-            promptSteps.push(new ResourceGroupListStep());
-            promptSteps.push(new SiteOSStep());
-            promptSteps.push(new SiteRuntimeStep());
-            promptSteps.push(new StorageAccountListStep(
-                {
-                    kind: StorageAccountKind.Storage,
-                    performance: StorageAccountPerformance.Standard,
-                    replication: StorageAccountReplication.LRS
-                },
-                {
-                    kind: [
-                        StorageAccountKind.BlobStorage
-                    ],
-                    performance: [
-                        StorageAccountPerformance.Premium
-                    ],
-                    replication: [
-                        StorageAccountReplication.ZRS
-                    ],
-                    learnMoreLink: 'https://aka.ms/Cfqnrc'
-                }
-            ));
-            break;
-        case AppKind.app:
-            await setWizardContextDefaults(wizardContext, actionContext, createOptions.advancedCreation);
-            if (createOptions.advancedCreation) {
-                promptSteps.push(new ResourceGroupListStep());
-                promptSteps.push(new SiteOSStep());
-                promptSteps.push(new SiteRuntimeStep());
-                promptSteps.push(new AppServicePlanListStep());
-            } else {
-                promptSteps.push(new SiteOSStep()); // will be skipped if there is a smart default
-                promptSteps.push(new SiteRuntimeStep());
-                executeSteps.push(new ResourceGroupCreateStep());
-                executeSteps.push(new AppServicePlanCreateStep());
-            }
-        default:
+    await setWizardContextDefaults(wizardContext, actionContext, createOptions.advancedCreation);
+    if (createOptions.advancedCreation) {
+        promptSteps.push(new ResourceGroupListStep());
+        promptSteps.push(new SiteOSStep());
+        promptSteps.push(new SiteRuntimeStep());
+        promptSteps.push(new AppServicePlanListStep());
+    } else {
+        promptSteps.push(new SiteOSStep()); // will be skipped if there is a smart default
+        promptSteps.push(new SiteRuntimeStep());
+        executeSteps.push(new ResourceGroupCreateStep());
+        executeSteps.push(new AppServicePlanCreateStep());
     }
-    executeSteps.push(new SiteCreateStep(createOptions.createFunctionAppSettings));
+    executeSteps.push(new SiteCreateStep());
 
     if (wizardContext.newSiteOS !== undefined) {
         SiteOSStep.setLocationsTask(wizardContext);
     }
 
-    const title: string = wizardContext.newSiteKind === AppKind.functionapp ?
-        localize('functionAppCreatingTitle', 'Create new function app') :
-        localize('webAppCreatingTitle', 'Create new web app');
-    const wizard: AzureWizard<IAppServiceWizardContext> = new AzureWizard(wizardContext, { promptSteps, executeSteps, title, showExecuteProgress: true });
+    const title: string = localize('webAppCreatingTitle', 'Create new web app');
+    const wizard: AzureWizard<IAppServiceWizardContext> = new AzureWizard(wizardContext, { promptSteps, executeSteps, title });
 
     await wizard.prompt(actionContext);
     if (showCreatingTreeItem) {
         showCreatingTreeItem(nonNullProp(wizardContext, 'newSiteName'));
     }
-    if (wizardContext.newSiteKind === AppKind.app && !createOptions.advancedCreation) {
+    if (!createOptions.advancedCreation) {
         const location: Location = nonNullProp(wizardContext, 'location');
         const basicPlanSku: SkuDescription = { name: 'B1', tier: 'Basic', size: 'B1', family: 'B', capacity: 1 };
         const freePlanSku: SkuDescription = { name: 'F1', tier: 'Free', size: 'F1', family: 'F', capacity: 1 };

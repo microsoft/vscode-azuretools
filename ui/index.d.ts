@@ -183,7 +183,7 @@ export declare abstract class AzureTreeItem<TRoot = ISubscriptionRoot> {
     /**
      * This method combines the environment.portalLink and AzureTreeItem.id to open the resource in the portal. Optionally, an id can be passed to manually open items that may not be in the explorer.
      */
-    public openInPortal(id?: string, options?: OpenInPortalOptions): void;
+    public openInPortal(id?: string, options?: OpenInPortalOptions): Promise<void>;
 
     /**
      * Displays a 'Loading...' icon and temporarily changes the item's description while `callback` is being run
@@ -419,7 +419,7 @@ export interface IAzureUserInput {
     * @throws `UserCancelledError` if the user cancels.
     * @return A promise that resolves to an array of items the user picked.
     */
-    showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions & { canPickMany: true }): Promise<T[]>;
+    showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: IAzureQuickPickOptions & { canPickMany: true }): Promise<T[]>;
 
     /**
       * Shows a selection list.
@@ -430,7 +430,7 @@ export interface IAzureUserInput {
       * @throws `UserCancelledError` if the user cancels.
       * @return A promise that resolves to the item the user picked.
       */
-    showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T>;
+    showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: IAzureQuickPickOptions): Promise<T>;
 
     /**
      * Opens an input box to ask the user for input.
@@ -460,7 +460,7 @@ export interface IAzureUserInput {
      * @throws `UserCancelledError` if the user cancels.
      * @return A thenable that resolves to the selected item when being dismissed.
      */
-    showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Promise<T>;
+    showWarningMessage<T extends MessageItem>(message: string, options: IAzureMessageOptions, ...items: T[]): Promise<T>;
 
     /**
      * Shows a file open dialog to the user which allows to select a file
@@ -571,28 +571,31 @@ export interface IAzureQuickPickOptions extends QuickPickOptions {
     suppressPersistence?: boolean;
 }
 
-export interface ISubWizardOptions<T> {
+/**
+ * Provides additional options for dialogs used in Azure Extensions
+ */
+export interface IAzureMessageOptions extends MessageOptions {
+    /**
+     * If specified, a "Learn more" button will be added to the dialog and it will re-prompt every time the user clicks "Learn more"
+     */
+    learnMoreLink?: string;
+}
+
+export interface IWizardOptions<T> {
     /**
      * The steps to prompt for user input, in order
      */
-    promptSteps: AzureWizardPromptStep<T>[];
+    promptSteps?: AzureWizardPromptStep<T>[];
 
     /**
      * The steps to execute, in order
      */
     executeSteps?: AzureWizardExecuteStep<T>[];
-}
 
-export interface IWizardOptions<T> extends ISubWizardOptions<T> {
     /**
      * A title used when prompting
      */
-    title: string;
-
-    /**
-     * If true, a progress notification will be shown when executing
-     */
-    showExecuteProgress?: boolean;
+    title?: string;
 }
 
 /**
@@ -624,9 +627,19 @@ export declare abstract class AzureWizardExecuteStep<T extends {}> {
 
 export declare abstract class AzureWizardPromptStep<T extends {}> {
     /**
-     * Prompt the user for input and optionally return the options for a sub wizard
+     * If true, step count will not be displayed when prompting. Defaults to false.
      */
-    public abstract prompt(wizardContext: T): Promise<ISubWizardOptions<T> | void>;
+    public hideStepCount: boolean;
+
+    /**
+     * Prompt the user for input
+     */
+    public abstract prompt(wizardContext: T): Promise<void>;
+
+    /**
+     * Optionally return a subwizard. This will be called after `prompt`
+     */
+    public getSubWizard?(wizardContext: T): Promise<IWizardOptions<T> | undefined>;
 
     /**
      * Return true if this step should prompt based on the current state of the wizardContext
@@ -761,7 +774,8 @@ export declare class ResourceGroupListStep<T extends IResourceGroupWizardContext
      */
     public static isNameAvailable<T extends IResourceGroupWizardContext>(wizardContext: T, name: string): Promise<boolean>;
 
-    public prompt(wizardContext: T): Promise<ISubWizardOptions<T> | void>;
+    public prompt(wizardContext: T): Promise<void>;
+    public getSubWizard(wizardContext: T): Promise<IWizardOptions<T> | undefined>;
     public shouldPrompt(wizardContext: T): boolean;
 }
 
@@ -838,7 +852,8 @@ export declare class StorageAccountListStep<T extends IStorageAccountWizardConte
 
     public static isNameAvailable<T extends IStorageAccountWizardContext>(wizardContext: T, name: string): Promise<boolean>;
 
-    public prompt(wizardContext: T): Promise<ISubWizardOptions<T> | void>;
+    public prompt(wizardContext: T): Promise<void>;
+    public getSubWizard(wizardContext: T): Promise<IWizardOptions<T> | undefined>;
     public shouldPrompt(wizardContext: T): boolean;
 }
 

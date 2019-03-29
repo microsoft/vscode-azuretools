@@ -4,13 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { Memento, MessageItem, MessageOptions, QuickPickItem, QuickPickOptions } from 'vscode';
+import { Memento, MessageItem, MessageOptions, QuickPickItem } from 'vscode';
 import * as types from '../index';
 import { DialogResponses } from './DialogResponses';
 import { UserCancelledError } from './errors';
 import { IRootUserInput } from './extensionVariables';
 import { localize } from './localize';
 import { validOnTimeoutOrException } from './utils/inputValidation';
+import { openUrl } from './utils/openUrl';
 import { randomUtils } from './utils/randomUtils';
 
 export class AzureUserInput implements types.IAzureUserInput, types.AzureUserInput {
@@ -21,18 +22,18 @@ export class AzureUserInput implements types.IAzureUserInput, types.AzureUserInp
         this._persistence = persistence;
     }
 
-    public async showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T | T[]> {
+    public async showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: types.IAzureQuickPickOptions): Promise<T | T[]> {
         if (options.ignoreFocusOut === undefined) {
             options.ignoreFocusOut = true;
         }
 
         let persistenceKey: string | undefined;
-        const unhashedKey: string | undefined = (<types.IAzureQuickPickOptions>options).id || options.placeHolder;
+        const unhashedKey: string | undefined = options.id || options.placeHolder;
         if (unhashedKey && !options.canPickMany) {
             persistenceKey = `showQuickPick.${randomUtils.getPseudononymousStringHash(unhashedKey)}`;
         }
 
-        const result: T | T[] | undefined = await this.rootUserInput.showQuickPick(this.getOrderedItems(items, persistenceKey, (<types.IAzureQuickPickOptions>options).suppressPersistence), options);
+        const result: T | T[] | undefined = await this.rootUserInput.showQuickPick(this.getOrderedItems(items, persistenceKey, options.suppressPersistence), options);
         if (result === undefined) {
             throw new UserCancelledError();
         }
@@ -67,13 +68,22 @@ export class AzureUserInput implements types.IAzureUserInput, types.AzureUserInp
     public showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Promise<MessageItem>;
     // tslint:disable-next-line:no-any
     public async showWarningMessage<T extends MessageItem>(message: string, ...args: any[]): Promise<T> {
-        // tslint:disable-next-line:no-unsafe-any
-        const result: T | undefined = await vscode.window.showWarningMessage(message, ...args);
+        const learnMoreLink: string | undefined = args[0] && (<types.IAzureMessageOptions>args[0]).learnMoreLink;
+        if (learnMoreLink) {
+            args.push(DialogResponses.learnMore);
+        }
 
-        if (result === undefined || result === DialogResponses.cancel) {
-            throw new UserCancelledError();
-        } else {
-            return result;
+        // tslint:disable-next-line: no-constant-condition
+        while (true) {
+            // tslint:disable-next-line:no-unsafe-any
+            const result: T = await vscode.window.showWarningMessage(message, ...args);
+            if (learnMoreLink && result === DialogResponses.learnMore) {
+                await openUrl(learnMoreLink);
+            } else if (result === undefined || result === DialogResponses.cancel) {
+                throw new UserCancelledError();
+            } else {
+                return result;
+            }
         }
     }
 

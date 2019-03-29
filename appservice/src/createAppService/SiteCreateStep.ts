@@ -15,13 +15,19 @@ import { localize } from '../localize';
 import { nonNullProp, nonNullValue, nonNullValueAndProp } from '../utils/nonNull';
 import { randomUtils } from '../utils/randomUtils';
 import { AppKind, getSiteModelKind, WebsiteOS } from './AppKind';
-import { IAppSettingsContext } from './IAppCreateOptions';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
+
+export interface IAppSettingsContext {
+    storageConnectionString: string;
+    fileShareName: string;
+    os: string;
+    runtime: string;
+}
 
 export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
     private createFunctionAppSettings: ((context: IAppSettingsContext) => Promise<NameValuePair[]>) | undefined;
 
-    public constructor(createFunctionAppSettings: ((context: IAppSettingsContext) => Promise<NameValuePair[]>) | undefined) {
+    public constructor(createFunctionAppSettings?: ((context: IAppSettingsContext) => Promise<NameValuePair[]>)) {
         super();
         this.createFunctionAppSettings = createFunctionAppSettings;
     }
