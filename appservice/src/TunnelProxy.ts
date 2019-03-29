@@ -155,8 +155,8 @@ export class TunnelProxy {
         this._openSockets = [];
     }
 
-    public async startProxy(): Promise<void> {
-        await this.checkTunnelStatusWithRetry();
+    public async startProxy(portNumber: number = 2222): Promise<void> {
+        await this.checkTunnelStatusWithRetry(portNumber);
         await this.setupTunnelServer();
     }
 
@@ -168,7 +168,7 @@ export class TunnelProxy {
         this._server.unref();
     }
 
-    private async checkTunnelStatus(): Promise<void> {
+    private async checkTunnelStatus(portNumber: number): Promise<void> {
         const statusOptions: requestP.Options = {
             uri: `https://${this._client.kuduHostName}/AppServiceTunnel/Tunnel.ashx?GetStatus&GetStatusAPIVer=2`,
             headers: {
@@ -195,7 +195,7 @@ export class TunnelProxy {
         }
 
         if (tunnelStatus.state === WebAppState.STARTED) {
-            if (tunnelStatus.port === 2222) {
+            if (tunnelStatus.port !== portNumber) {
                 // Tunnel is pointed to default SSH port and still needs time to restart
                 throw new RetryableTunnelStatusError('WebApp is waiting for restart');
             } else if (tunnelStatus.canReachPort) {
@@ -212,7 +212,7 @@ export class TunnelProxy {
         }
     }
 
-    private async checkTunnelStatusWithRetry(): Promise<void> {
+    private async checkTunnelStatusWithRetry(portNumber: number): Promise<void> {
         const timeoutSeconds: number = 240; // 4 minutes, matches App Service internal timeout for starting up an app
         const timeoutMs: number = timeoutSeconds * 1000;
         const pollingIntervalMs: number = 5000;
@@ -221,7 +221,7 @@ export class TunnelProxy {
             const start: number = Date.now();
             while (Date.now() < start + timeoutMs) {
                 try {
-                    await this.checkTunnelStatus();
+                    await this.checkTunnelStatus(portNumber);
                     resolve();
                     return;
                 } catch (error) {
