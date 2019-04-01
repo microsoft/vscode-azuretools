@@ -20,7 +20,7 @@ export namespace javaUtils {
     }
 
     export function isJavaSERuntime(runtime: string | undefined): boolean {
-        return !!runtime && runtime.toLowerCase() === 'java|8-jre8';
+        return !!runtime && /^java/i.test(runtime);
     }
 
     export function isJavaRuntime(runtime: string | undefined): boolean {
