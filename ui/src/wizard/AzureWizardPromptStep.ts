@@ -4,13 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as types from '../../index';
-import { IWizardNode } from './IWizardNode';
 
 export abstract class AzureWizardPromptStep<T> implements types.AzureWizardPromptStep<T> {
     public hideStepCount: boolean = false;
+    public effectiveTitle: string | undefined;
     public hasSubWizard: boolean;
     public numSubPromptSteps: number;
-    public wizardNode: IWizardNode<T>;
+    public numSubExecuteSteps: number;
     public propertiesBeforePrompt: string[];
     public prompted: boolean;
 
@@ -23,6 +23,7 @@ export abstract class AzureWizardPromptStep<T> implements types.AzureWizardPromp
     public reset(): void {
         this.hasSubWizard = false;
         this.numSubPromptSteps = 0;
+        this.numSubExecuteSteps = 0;
         this.prompted = false;
     }
 }

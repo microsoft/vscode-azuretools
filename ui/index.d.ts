@@ -614,6 +614,11 @@ export declare class AzureWizard<T extends {}> {
 
 export declare abstract class AzureWizardExecuteStep<T extends {}> {
     /**
+     * The priority of this step. A smaller value will be executed first.
+     */
+    public abstract priority: number;
+
+    /**
      * Execute the step
      */
     public abstract execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
@@ -780,6 +785,10 @@ export declare class ResourceGroupListStep<T extends IResourceGroupWizardContext
 }
 
 export declare class ResourceGroupCreateStep<T extends IResourceGroupWizardContext> extends AzureWizardExecuteStep<T> {
+    /**
+     * 100
+     */
+    public priority: number;
     public execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
     public shouldExecute(wizardContext: T): boolean;
 }
@@ -867,6 +876,10 @@ export declare class StorageAccountNameStep<T extends IStorageAccountWizardConte
 }
 
 export declare class StorageAccountCreateStep<T extends IStorageAccountWizardContext> extends AzureWizardExecuteStep<T> {
+    /**
+     * 130
+     */
+    public priority: number;
     public constructor(defaults: INewStorageAccountDefaults);
 
     public execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;

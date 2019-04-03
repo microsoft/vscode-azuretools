@@ -11,13 +11,12 @@ import { ext, IRootUserInput } from '../extensionVariables';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 import { AzureWizardUserInput, IInternalAzureWizard } from './AzureWizardUserInput';
-import { getExecuteSteps, IWizardNode } from './IWizardNode';
 
 export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizard {
     public hideStepCount: boolean;
-    private _title: string | undefined;
+    public title: string | undefined;
     private readonly _promptSteps: AzureWizardPromptStep<T>[];
-    private readonly _wizardNode: IWizardNode<T>;
+    private readonly _executeSteps: AzureWizardExecuteStep<T>[];
     private readonly _finishedPromptSteps: AzureWizardPromptStep<T>[] = [];
     private readonly _wizardContext: T;
 
@@ -25,12 +24,10 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
         // reverse steps to make it easier to use push/pop
         // tslint:disable-next-line: strict-boolean-expressions
         this._promptSteps = (<AzureWizardPromptStep<T>[]>options.promptSteps || []).reverse();
-        this._wizardNode = this.initWizardNode(options);
+        this._promptSteps.forEach(s => { s.effectiveTitle = options.title; });
+        // tslint:disable-next-line: strict-boolean-expressions
+        this._executeSteps = options.executeSteps || [];
         this._wizardContext = wizardContext;
-    }
-
-    public get title(): string | undefined {
-        return this._title;
     }
 
     public get currentStep(): number {
@@ -52,7 +49,7 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
                 step.reset();
 
                 actionContext.properties.lastStepAttempted = `prompt-${step.constructor.name}`;
-                this._title = step.wizardNode.effectiveTitle;
+                this.title = step.effectiveTitle;
                 this.hideStepCount = step.hideStepCount;
 
                 if (step.shouldPrompt(this._wizardContext)) {
@@ -91,7 +88,7 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
         await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async progress => {
             let currentStep: number = 1;
 
-            const steps: AzureWizardExecuteStep<T>[] = getExecuteSteps(this._wizardNode);
+            const steps: AzureWizardExecuteStep<T>[] = this._executeSteps.sort((a, b) => b.priority - a.priority);
 
             const internalProgress: vscode.Progress<{ message?: string; increment?: number }> = {
                 report: (value: { message?: string; increment?: number }): void => {
@@ -105,7 +102,7 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
                 }
             };
 
-            let step: AzureWizardExecuteStep<T> | undefined = steps.shift();
+            let step: AzureWizardExecuteStep<T> | undefined = steps.pop();
             while (step) {
                 if (step.shouldExecute(this._wizardContext)) {
                     actionContext.properties.lastStepAttempted = `execute-${step.constructor.name}`;
@@ -113,7 +110,7 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
                     currentStep += 1;
                 }
 
-                step = steps.shift();
+                step = steps.pop();
             }
         });
     }
@@ -130,7 +127,7 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
 
         if (step.hasSubWizard) {
             removeFromEnd(this._promptSteps, step.numSubPromptSteps);
-            step.wizardNode.children.pop();
+            removeFromEnd(this._executeSteps, step.numSubExecuteSteps);
         }
 
         for (const key of Object.keys(this._wizardContext)) {
@@ -151,24 +148,14 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
             });
             this._promptSteps.push(...<AzureWizardPromptStep<T>[]>subWizard.promptSteps.reverse());
             step.numSubPromptSteps = subWizard.promptSteps.length;
+
+            subWizard.promptSteps.forEach(s => { (<AzureWizardPromptStep<T>>s).effectiveTitle = subWizard.title || step.effectiveTitle; });
         }
 
-        step.wizardNode.children.push(this.initWizardNode(subWizard));
-    }
-
-    private initWizardNode(options: types.IWizardOptions<T>): IWizardNode<T> {
-        const wizardNode: IWizardNode<T> = {
-            // tslint:disable-next-line: strict-boolean-expressions
-            executeSteps: options.executeSteps || [],
-            effectiveTitle: options.title || this._title,
-            children: []
-        };
-
-        if (options.promptSteps) {
-            options.promptSteps.forEach(step => { (<AzureWizardPromptStep<T>>step).wizardNode = wizardNode; });
+        if (subWizard.executeSteps) {
+            this._executeSteps.push(...subWizard.executeSteps);
+            step.numSubExecuteSteps = subWizard.executeSteps.length;
         }
-
-        return wizardNode;
     }
 }
 

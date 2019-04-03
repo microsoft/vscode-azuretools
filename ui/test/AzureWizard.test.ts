@@ -77,6 +77,8 @@ class SubInputBoxStep extends InputBoxStepBase {
 
 const executeKey2: string = 'execute2';
 class ExecuteStep2 extends AzureWizardExecuteStep<ITestWizardContext> {
+    public priority: number = 200;
+
     private _key: string = executeKey2;
     public async execute(wizardContext: ITestWizardContext): Promise<void> {
         wizardContext[this._key] = 'executeValue2';
@@ -89,6 +91,8 @@ class ExecuteStep2 extends AzureWizardExecuteStep<ITestWizardContext> {
 
 const executeKey1: string = 'execute1';
 class ExecuteStep1 extends AzureWizardExecuteStep<ITestWizardContext> {
+    public priority: number = 100;
+
     private _key: string = executeKey1;
     public async execute(wizardContext: ITestWizardContext): Promise<void> {
         if (wizardContext[executeKey2]) {
@@ -107,6 +111,8 @@ class ExecuteStep1 extends AzureWizardExecuteStep<ITestWizardContext> {
 
 const subExecuteKey: string = 'subExecute';
 class SubExecuteStep extends AzureWizardExecuteStep<ITestWizardContext> {
+    public priority: number = 50;
+
     private _key: string = subExecuteKey;
     public async execute(wizardContext: ITestWizardContext): Promise<void> {
         if (wizardContext[executeKey1] || wizardContext[executeKey2]) {
@@ -122,6 +128,8 @@ class SubExecuteStep extends AzureWizardExecuteStep<ITestWizardContext> {
 }
 
 class SubSubExecuteStep extends AzureWizardExecuteStep<ITestWizardContext> {
+    public priority: number = 25;
+
     private _key: string = 'subSubExecute';
     public async execute(wizardContext: ITestWizardContext): Promise<void> {
         if (wizardContext[executeKey1] || wizardContext[executeKey2] || wizardContext[subExecuteKey]) {
