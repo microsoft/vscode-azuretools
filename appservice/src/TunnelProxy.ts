@@ -155,7 +155,7 @@ export class TunnelProxy {
         this._openSockets = [];
     }
 
-    public async startProxy(portNumber: number = 2222): Promise<void> {
+    public async startProxy(portNumber: number): Promise<void> {
         await this.checkTunnelStatusWithRetry(portNumber);
         await this.setupTunnelServer();
     }
