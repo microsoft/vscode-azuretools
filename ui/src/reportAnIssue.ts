@@ -29,7 +29,9 @@ Error Message: ${parsedError.message}
 
 Version: ${extensionVersion}
 OS: ${process.platform}
-VS Code Version: ${vscode.version}`;
+Product: ${vscode.env.appName}
+Product Version: ${vscode.version}
+Language: ${vscode.env.language}`;
 
     if (parsedError.stack) {
         body = body.concat(`
