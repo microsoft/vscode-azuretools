@@ -141,22 +141,24 @@ class RetryableTunnelStatusError extends Error { }
  * A local TCP server that forwards all connections to the Kudu tunnel websocket endpoint.
  */
 export class TunnelProxy {
-    private _port: number;
+    private _localPort: number;
+    private _remotePort: number;
     private _client: SiteClient;
     private _publishCredential: User;
     private _server: Server;
     private _openSockets: TunnelSocket[];
 
-    constructor(port: number, client: SiteClient, publishCredential: User) {
-        this._port = port;
+    constructor(localPort: number, remotePort: number, client: SiteClient, publishCredential: User) {
+        this._localPort = localPort;
+        this._remotePort = remotePort;
         this._client = client;
         this._publishCredential = publishCredential;
         this._server = createServer();
         this._openSockets = [];
     }
 
-    public async startProxy(portNumber: number): Promise<void> {
-        await this.checkTunnelStatusWithRetry(portNumber);
+    public async startProxy(): Promise<void> {
+        await this.checkTunnelStatusWithRetry();
         await this.setupTunnelServer();
     }
 
@@ -168,7 +170,7 @@ export class TunnelProxy {
         this._server.unref();
     }
 
-    private async checkTunnelStatus(portNumber: number): Promise<void> {
+    private async checkTunnelStatus(): Promise<void> {
         const statusOptions: requestP.Options = {
             uri: `https://${this._client.kuduHostName}/AppServiceTunnel/Tunnel.ashx?GetStatus&GetStatusAPIVer=2`,
             headers: {
@@ -195,7 +197,7 @@ export class TunnelProxy {
         }
 
         if (tunnelStatus.state === WebAppState.STARTED) {
-            if (tunnelStatus.port !== portNumber) {
+            if (tunnelStatus.port !== this._remotePort) {
                 // Tunnel is pointed to default SSH port and still needs time to restart
                 throw new RetryableTunnelStatusError('WebApp is waiting for restart');
             } else if (tunnelStatus.canReachPort) {
@@ -212,7 +214,7 @@ export class TunnelProxy {
         }
     }
 
-    private async checkTunnelStatusWithRetry(portNumber: number): Promise<void> {
+    private async checkTunnelStatusWithRetry(): Promise<void> {
         const timeoutSeconds: number = 240; // 4 minutes, matches App Service internal timeout for starting up an app
         const timeoutMs: number = timeoutSeconds * 1000;
         const pollingIntervalMs: number = 5000;
@@ -221,7 +223,7 @@ export class TunnelProxy {
             const start: number = Date.now();
             while (Date.now() < start + timeoutMs) {
                 try {
-                    await this.checkTunnelStatus(portNumber);
+                    await this.checkTunnelStatus();
                     resolve();
                     return;
                 } catch (error) {
@@ -268,7 +270,7 @@ export class TunnelProxy {
 
             this._server.listen({
                 host: 'localhost',
-                port: this._port,
+                port: this._localPort,
                 backlog: 1
             });
         });
