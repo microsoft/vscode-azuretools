@@ -16,11 +16,22 @@ const debugTelemetryEnabled: boolean = !/^(false|0)?$/i.test(process.env.DEBUGTE
 export function createTelemetryReporter(ctx: vscode.ExtensionContext): ITelemetryReporter {
     const { extensionName, extensionVersion, aiKey } = getPackageInfo(ctx);
 
+    let newReporter: ITelemetryReporter;
+
     if (debugTelemetryEnabled) {
-        return new DebugReporter(extensionName, extensionVersion);
+        newReporter = new DebugReporter(extensionName, extensionVersion);
     } else {
         const reporter: TelemetryReporter = new TelemetryReporter(extensionName, extensionVersion, aiKey);
         ctx.subscriptions.push(reporter);
-        return reporter;
+        newReporter = reporter;
     }
+
+    // Send an event with some general info
+    newReporter.sendTelemetryEvent('info', {
+        isActivationEvent: 'true',
+        product: vscode.env.appName,
+        language: vscode.env.language
+    });
+
+    return newReporter;
 }
