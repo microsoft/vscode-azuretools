@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as path from 'path';
 import * as vscode from 'vscode';
 import { Disposable, Event, EventEmitter, Extension, extensions, QuickPickOptions, TreeItem } from 'vscode';
 import { IActionContext, IAzureQuickPickItem, ISubscriptionRoot } from '../../index';
@@ -15,6 +14,7 @@ import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { parseError } from '../parseError';
 import { TestAzureAccount } from '../TestAzureAccount';
+import { treeUtils } from '../utils/treeUtils';
 import { AzureWizardPromptStep } from '../wizard/AzureWizardPromptStep';
 import { AzureParentTreeItem } from './AzureParentTreeItem';
 import { AzureTreeItem } from './AzureTreeItem';
@@ -22,7 +22,6 @@ import { GenericTreeItem } from './GenericTreeItem';
 import { IAzureTreeDataProviderInternal } from './InternalInterfaces';
 import { RootTreeItem } from './RootTreeItem';
 import { SubscriptionTreeItem } from './SubscriptionTreeItem';
-import { loadMoreLabel } from './treeConstants';
 
 const signInLabel: string = localize('signInLabel', 'Sign in to Azure...');
 const createAccountLabel: string = localize('createAccountLabel', 'Create a Free Azure Account...');
@@ -121,11 +120,8 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
                     result = treeItem.creatingTreeItems.concat(cachedChildren);
                     if (hasMoreChildren) {
                         result = result.concat(new GenericTreeItem(treeItem, {
-                            label: loadMoreLabel,
-                            iconPath: {
-                                light: path.join(__filename, '..', '..', '..', '..', 'resources', 'light', 'refresh.svg'),
-                                dark: path.join(__filename, '..', '..', '..', '..', 'resources', 'dark', 'refresh.svg')
-                            },
+                            label: localize('LoadMore', 'Load more...'),
+                            iconPath: treeUtils.getThemedIconPath('refresh'),
                             contextValue: 'azureLoadMore',
                             commandId: thisTree._loadMoreCommandId
                         }));
@@ -317,10 +313,7 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
                 commandId: signInCommandId,
                 contextValue: 'azureCommand',
                 id: signInCommandId,
-                iconPath: {
-                    light: path.join(__filename, '..', '..', '..', '..', 'resources', 'light', 'Loading.svg'),
-                    dark: path.join(__filename, '..', '..', '..', '..', 'resources', 'dark', 'Loading.svg')
-                }
+                iconPath: treeUtils.getThemedIconPath('Loading')
             })];
         } else if (this._azureAccount.status === 'LoggedOut') {
             roots = [

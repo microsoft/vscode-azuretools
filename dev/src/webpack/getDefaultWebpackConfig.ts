@@ -9,7 +9,6 @@ import * as CleanWebpackPlugin from 'clean-webpack-plugin';
 import * as FileManagerPlugin from 'filemanager-webpack-plugin';
 import * as fse from 'fs-extra';
 import * as path from 'path';
-import * as StringReplacePlugin from 'string-replace-webpack-plugin';
 import * as TerserPlugin from 'terser-webpack-plugin';
 import * as webpack from 'webpack';
 import { Verbosity } from '../..';
@@ -158,13 +157,6 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                     }
                 }),
 
-            // An instance of the StringReplacePlugin plugin must be present for it to work (its use is configured in modules).
-            //
-            // StringReplacePlugin allows you to specific parts of a file by regexp replacement to get around webpack issues such as dynamic imports.
-            // This is different from ContextReplacementPlugin, which is simply meant to help webpack find files referred to by a dynamic import (i.e. it
-            //   assumes  they can be found by simply knowing the correct the path).
-            new StringReplacePlugin(),
-
             // Caller-supplied plugins
             // tslint:disable-next-line: strict-boolean-expressions
             ...(options.plugins || [])
@@ -185,70 +177,6 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                         // Note: the TS loader will transpile the .ts file directly during webpack (i.e., webpack is directly pulling the .ts files, not .js files from out/)
                         loader: require.resolve('ts-loader')
                     }]
-                },
-
-                // Handle references to loose resource files in vscode-azureextensionui.  These are problematic because:
-                //   1) Webpack doesn't know about them because they don't appear in import() statements, therefore they don't get placed into dist
-                //   2) __dirname/__filename give the path to the extension.bundle.js file, so paths will be wrong even if we copy them.
-                //
-                // Strategy to handle them:
-                //   1) Use the 'file-loader' webpack loader. In this pattern, the source code uses a require() statement to reference to the file. Since
-                //      webpack process require(), it will call the file-loader, which will return the resource path (not the contents) as the value of the require.
-                //      This loader also automatically copies the file into the dist folder where it can be found.
-                //   2) Sources have to be modified to use a require() statement for any resource that needs to be handled this way.  Many of these can be found because
-                //      they are using __dirname/__filename to find the resource file at runtime.
-                {
-                    test: /(vscode-azureextensionui)|(vscode-azureappservice)/,
-                    loader: StringReplacePlugin.replace({
-                        replacements: [
-                            {
-                                // Rewrite references to resources in vscode-azureextensionui so file-loader can process them.
-                                //
-                                // e.g. change this:
-                                //   path.join(__dirname, '..', '..', '..', '..', 'resources', 'dark', 'Loading.svg')
-                                //
-                                //     to this:
-                                //
-                                // require(__dirname + '/..' + '/..' + '/..' + '/..' + '/resources' + '/dark' + '/Loading.svg')
-                                //
-                                pattern: /path.join\((__dirname|__filename),.*'resources',.*'\)/ig,
-                                replacement: (match: any, _offset: any, _string: any): string => {
-                                    const pathExpression: string = match
-                                        .replace(/path\.join\((.*)\)/, '$1')
-                                        .replace(/\s*,\s*['"]/g, ` + '/`);
-                                    const requireExpression: string = `require(${pathExpression})`;
-                                    const resolvedExpression: string = `path.resolve(__dirname, ${requireExpression})`;
-                                    log('normal', `Rewrote resource reference: "${match}" => "${resolvedExpression}"`);
-                                    return resolvedExpression;
-                                }
-                            }
-                        ]
-                    })
-                },
-
-                {
-                    // This loader allows you to use a require() statement to get the path (not contents) to a loose file at runtime. Any file
-                    //   with the given extension referenced by a require() will be copied to the dist folder, and the require() at runtime will
-                    //   return a path to the copied file (not the contents).
-                    // For example:
-                    //   let myResourcePath = require(__dirname + '/resources/myresource.gif'); // (No, this will not work if not processed by webpack);
-                    //   (note that __dirname will not return the expected result at runtime because webpack flattens all source folders)
-                    // At pack time:
-                    //    <src>/<path>/<path>/resources/myresource.gif will be copied to dist/<path>/<path>/resources/myresource.gif
-                    // At runtime:
-                    //    require() will return the absolute path to dist/<path>/<path>/resources/myresource.gif
-                    test: /\.(png|jpg|gif|svg)$/,
-                    use: [
-                        {
-                            loader: require.resolve('file-loader'),
-                            options: {
-                                name: (name: string): string => {
-                                    log('normal', `Extracting resource file ${name}`);
-                                    return '[path][name].[ext]';
-                                }
-                            }
-                        }
-                    ]
                 },
 
                 // Note: If you use`vscode-nls` to localize your extension than you likely also use`vscode-nls-dev` to create language bundles at build time.

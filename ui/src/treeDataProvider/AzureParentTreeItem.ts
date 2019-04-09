@@ -4,17 +4,16 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { TreeItemCollapsibleState } from 'vscode';
-import { IAzureQuickPickItem, IAzureQuickPickOptions, ISubscriptionRoot } from '../..';
-import * as types from '../..';
+import * as types from '../../index';
 import { NotImplementedError } from '../errors';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
+import { treeUtils } from '../utils/treeUtils';
 import { AzureTreeItem } from './AzureTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';
 import { IAzureParentTreeItemInternal } from './InternalInterfaces';
-import { loadingIconPath, loadMoreLabel } from './treeConstants';
 
-export abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> extends AzureTreeItem<TRoot> implements types.AzureParentTreeItem<TRoot>, IAzureParentTreeItemInternal<TRoot> {
+export abstract class AzureParentTreeItem<TRoot = types.ISubscriptionRoot> extends AzureTreeItem<TRoot> implements types.AzureParentTreeItem<TRoot>, IAzureParentTreeItemInternal<TRoot> {
     //#region Properties implemented by base class
     public childTypeLabel?: string;
     //#endregion
@@ -65,7 +64,7 @@ export abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> extends Azu
                         creatingTreeItem = new GenericTreeItem(this, {
                             label: localize('creatingLabel', 'Creating {0}...', label),
                             contextValue: `azureCreating${label}`,
-                            iconPath: loadingIconPath
+                            iconPath: treeUtils.getThemedIconPath('Loading')
                         });
                         this._creatingTreeItems.push(creatingTreeItem);
                         this.treeDataProvider.refreshUIOnly(this);
@@ -100,7 +99,7 @@ export abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> extends Azu
             }
         }
 
-        const options: IAzureQuickPickOptions = {
+        const options: types.IAzureQuickPickOptions = {
             placeHolder: localize('selectTreeItem', 'Select {0}', this.childTypeLabel)
         };
         const getTreeItem: GetTreeItemFunction<TRoot> = (await ext.ui.showQuickPick(this.getQuickPicks(expectedContextValues), options)).data;
@@ -165,11 +164,11 @@ export abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> extends Azu
         this._clearCache = false;
     }
 
-    private async getQuickPicks(expectedContextValues: (string | RegExp)[]): Promise<IAzureQuickPickItem<GetTreeItemFunction<TRoot>>[]> {
+    private async getQuickPicks(expectedContextValues: (string | RegExp)[]): Promise<types.IAzureQuickPickItem<GetTreeItemFunction<TRoot>>[]> {
         let children: AzureTreeItem<TRoot>[] = await this.getCachedChildren();
         children = children.filter((ti: AzureTreeItem<TRoot>) => ti.includeInTreePicker(expectedContextValues));
 
-        const picks: IAzureQuickPickItem<GetTreeItemFunction<TRoot>>[] = children.map((ti: AzureTreeItem<TRoot>) => {
+        const picks: types.IAzureQuickPickItem<GetTreeItemFunction<TRoot>>[] = children.map((ti: AzureTreeItem<TRoot>) => {
             return {
                 label: ti.label,
                 description: ti.description,
@@ -188,7 +187,7 @@ export abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> extends Azu
 
         if (this.hasMoreChildrenImpl()) {
             picks.push({
-                label: `$(sync) ${loadMoreLabel}`,
+                label: localize('LoadMore', '$(sync) Load more...'),
                 description: '',
                 data: async (): Promise<AzureTreeItem<TRoot>> => {
                     await this.loadMoreChildren();

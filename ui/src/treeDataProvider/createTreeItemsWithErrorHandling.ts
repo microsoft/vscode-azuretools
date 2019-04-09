@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as path from 'path';
 import { localize } from '../localize';
+import { treeUtils } from '../utils/treeUtils';
 import { AzureParentTreeItem } from './AzureParentTreeItem';
 import { AzureTreeItem } from './AzureTreeItem';
 
@@ -26,7 +26,7 @@ class InvalidTreeItem<TRoot> extends AzureParentTreeItem<TRoot> {
     }
 
     public get iconPath(): string {
-        return path.join(__filename, '..', '..', '..', '..', 'resources', 'warning.svg');
+        return treeUtils.getIconPath('warning');
     }
 
     public async loadMoreChildrenImpl(): Promise<AzureTreeItem<TRoot>[]> {

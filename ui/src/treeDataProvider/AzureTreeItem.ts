@@ -9,8 +9,8 @@ import * as types from '../..';
 import { ArgumentError, NotImplementedError } from '../errors';
 import { localize } from '../localize';
 import { openUrl } from '../utils/openUrl';
+import { treeUtils } from '../utils/treeUtils';
 import { IAzureParentTreeItemInternal, IAzureTreeDataProviderInternal } from "./InternalInterfaces";
-import { loadingIconPath } from "./treeConstants";
 
 export abstract class AzureTreeItem<TRoot = ISubscriptionRoot> implements types.AzureTreeItem<TRoot> {
     //#region Properties implemented by base class
@@ -49,7 +49,7 @@ export abstract class AzureTreeItem<TRoot = ISubscriptionRoot> implements types.
     }
 
     public get effectiveIconPath(): string | Uri | { light: string | Uri; dark: string | Uri } | undefined {
-        return this._temporaryDescription ? loadingIconPath : this.iconPath;
+        return this._temporaryDescription ? treeUtils.getThemedIconPath('Loading') : this.iconPath;
     }
 
     public get effectiveLabel(): string {
