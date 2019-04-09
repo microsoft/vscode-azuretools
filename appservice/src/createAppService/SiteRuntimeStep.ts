@@ -160,19 +160,31 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
             },
             {
                 name: 'tomcat|8.5-jre8',
-                displayName: 'Tomcat 8.5 (JRE 8)'
+                displayName: 'Tomcat 8.5 (Java 8)'
             },
             {
                 name: 'tomcat|9.0-jre8',
-                displayName: 'Tomcat 9.0 (JRE 8)'
+                displayName: 'Tomcat 9.0 (Java 8)'
             },
             {
                 name: 'java|8-jre8',
-                displayName: 'Java SE (JRE 8)'
+                displayName: 'Java SE (Java 8)'
             },
             {
                 name: 'wildfly|14-jre8',
-                displayName: '[Preview] WildFly 14 (JRE 8)'
+                displayName: '[Preview] WildFly 14 (Java 8)'
+            },
+            {
+                name: 'tomcat|8.5-java11',
+                displayName: 'Tomcat 8.5 (Java 11)'
+            },
+            {
+                name: 'tomcat|9.0-java11',
+                displayName: 'Tomcat 9.0 (Java 11)'
+            },
+            {
+                name: 'java|11-java11',
+                displayName: 'Java SE (Java 11)'
             },
             {
                 name: 'python|3.7',
