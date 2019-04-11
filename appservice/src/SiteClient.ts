@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { WebSiteManagementClient } from 'azure-arm-website';
-import { AppServicePlan, FunctionEnvelopeCollection, FunctionSecrets, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SlotConfigNamesResource, SourceControlCollection, StringDictionary, User, WebAppInstanceCollection } from 'azure-arm-website/lib/models';
+import { AppServicePlan, FunctionEnvelopeCollection, FunctionSecrets, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SlotConfigNamesResource, SourceControlCollection, StringDictionary, User, WebAppInstanceCollection, WebJobCollection } from 'azure-arm-website/lib/models';
 import { addExtensionUserAgent, createAzureClient, ISubscriptionRoot, parseError } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { FunctionEnvelope } from 'vscode-azurekudu/lib/models';
@@ -258,5 +258,11 @@ export class SiteClient {
 
     public async getPublishingUser(): Promise<User> {
         return await this._client.getPublishingUser({});
+    }
+
+    public async listWebJobs(): Promise<WebJobCollection> {
+        return this.slotName ?
+            await this._client.webApps.listWebJobsSlot(this.resourceGroup, this.siteName, this.slotName) :
+            await this._client.webApps.listWebJobs(this.resourceGroup, this.siteName);
     }
 }
