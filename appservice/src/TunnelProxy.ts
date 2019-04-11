@@ -154,7 +154,7 @@ export class TunnelProxy {
         this._publishCredential = publishCredential;
         this._server = createServer();
         this._openSockets = [];
-        this._useDefaultPort = useDefaultPort
+        this._useDefaultPort = useDefaultPort;
     }
 
     public async startProxy(): Promise<void> {
