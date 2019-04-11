@@ -260,7 +260,7 @@ export class SiteClient {
         return await this._client.getPublishingUser({});
     }
 
-    public async getWebJobs(): Promise<WebJobCollection> {
+    public async listWebJobs(): Promise<WebJobCollection> {
         return this.slotName ?
             await this._client.webApps.listWebJobsSlot(this.resourceGroup, this.siteName, this.slotName) :
             await this._client.webApps.listWebJobs(this.resourceGroup, this.siteName);
