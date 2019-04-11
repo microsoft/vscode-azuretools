@@ -141,20 +141,20 @@ class RetryableTunnelStatusError extends Error { }
  * A local TCP server that forwards all connections to the Kudu tunnel websocket endpoint.
  */
 export class TunnelProxy {
-    private _localPort: number;
-    private _remotePort: number;
+    private _port: number;
     private _client: SiteClient;
     private _publishCredential: User;
     private _server: Server;
     private _openSockets: TunnelSocket[];
+    private _useDefaultPort: boolean;
 
-    constructor(localPort: number, remotePort: number, client: SiteClient, publishCredential: User) {
-        this._localPort = localPort;
-        this._remotePort = remotePort;
+    constructor(port: number, client: SiteClient, publishCredential: User, useDefaultPort: boolean = false) {
+        this._port = port;
         this._client = client;
         this._publishCredential = publishCredential;
         this._server = createServer();
         this._openSockets = [];
+        this._useDefaultPort = useDefaultPort
     }
 
     public async startProxy(): Promise<void> {
@@ -197,7 +197,7 @@ export class TunnelProxy {
         }
 
         if (tunnelStatus.state === WebAppState.STARTED) {
-            if (tunnelStatus.port !== this._remotePort) {
+            if ((tunnelStatus.port === 2222 && !this._useDefaultPort) || (tunnelStatus.port !== 2222 && this._useDefaultPort)) {
                 // Tunnel is pointed to default SSH port and still needs time to restart
                 throw new RetryableTunnelStatusError('WebApp is waiting for restart');
             } else if (tunnelStatus.canReachPort) {
@@ -270,7 +270,7 @@ export class TunnelProxy {
 
             this._server.listen({
                 host: 'localhost',
-                port: this._localPort,
+                port: this._port,
                 backlog: 1
             });
         });
