@@ -146,15 +146,15 @@ export class TunnelProxy {
     private _publishCredential: User;
     private _server: Server;
     private _openSockets: TunnelSocket[];
-    private _useDefaultPort: boolean;
+    private _isSsh: boolean;
 
-    constructor(port: number, client: SiteClient, publishCredential: User, useDefaultPort: boolean = false) {
+    constructor(port: number, client: SiteClient, publishCredential: User, isSsh: boolean = false) {
         this._port = port;
         this._client = client;
         this._publishCredential = publishCredential;
         this._server = createServer();
         this._openSockets = [];
-        this._useDefaultPort = useDefaultPort;
+        this._isSsh = isSsh;
     }
 
     public async startProxy(): Promise<void> {
@@ -197,7 +197,7 @@ export class TunnelProxy {
         }
 
         if (tunnelStatus.state === WebAppState.STARTED) {
-            if ((tunnelStatus.port === 2222 && !this._useDefaultPort) || (tunnelStatus.port !== 2222 && this._useDefaultPort)) {
+            if ((tunnelStatus.port === 2222 && !this._isSsh) || (tunnelStatus.port !== 2222 && this._isSsh)) {
                 // Tunnel is pointed to default SSH port and still needs time to restart
                 throw new RetryableTunnelStatusError('WebApp is waiting for restart');
             } else if (tunnelStatus.canReachPort) {
