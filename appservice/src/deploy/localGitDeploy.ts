@@ -6,7 +6,7 @@
 import { User } from 'azure-arm-website/lib/models';
 import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
-import { DialogResponses, UserCancelledError } from 'vscode-azureextensionui';
+import { DialogResponses, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
@@ -17,7 +17,7 @@ import { verifyNoRunFromPackageSetting } from '../verifyNoRunFromPackageSetting'
 import { formatDeployLog } from './formatDeployLog';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
-export async function localGitDeploy(client: SiteClient, fsPath: string): Promise<void> {
+export async function localGitDeploy(client: SiteClient, fsPath: string, telemetryProperties: TelemetryProperties): Promise<void> {
     const publishCredentials: User = await client.getWebAppPublishCredential();
     const publishingPassword: string = nonNullProp(publishCredentials, 'publishingPassword');
 
@@ -30,10 +30,13 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
             try {
                 const status: git.StatusResult = await localGit.status();
                 if (status.files.length > 0) {
+                    telemetryProperties.pushWithUncommitChanges = 'false';
                     const message: string = localize('localGitUncommit', '{0} uncommitted change(s) in local repo "{1}"', status.files.length, fsPath);
                     const deployAnyway: vscode.MessageItem = { title: localize('deployAnyway', 'Deploy Anyway') };
                     await ext.ui.showWarningMessage(message, { modal: true }, deployAnyway, DialogResponses.cancel);
+                    telemetryProperties.pushWithUncommitChanges = 'true';
                 }
+
                 await verifyNoRunFromPackageSetting(client);
                 ext.outputChannel.appendLine(formatDeployLog(client, (localize('localGitDeploy', `Deploying Local Git repository to "${client.fullName}"...`))));
                 await tryPushAndWaitForDeploymentToComplete();
@@ -46,15 +49,18 @@ export async function localGitDeploy(client: SiteClient, fsPath: string): Promis
                     if (input === installString) {
                         await openUrl('https://git-scm.com/downloads');
                     }
+                    telemetryProperties.gitNotInstalled = 'true';
                     return undefined;
                     // tslint:disable-next-line:no-unsafe-any
                 } else if (err.message.indexOf('error: failed to push') >= 0) {
                     const forcePushMessage: vscode.MessageItem = { title: localize('forcePush', 'Force Push') };
                     const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging.');
 
-                    if (await ext.ui.showWarningMessage(pushReject, forcePushMessage, DialogResponses.cancel) === forcePushMessage) {
+                    if (await ext.ui.showWarningMessage(pushReject, { modal: true }, forcePushMessage, DialogResponses.cancel) === forcePushMessage) {
+                        telemetryProperties.forcePush = 'true';
                         await tryPushAndWaitForDeploymentToComplete(true);
                     } else {
+                        telemetryProperties.forcePush = 'false';
                         throw new UserCancelledError();
                     }
                 } else {

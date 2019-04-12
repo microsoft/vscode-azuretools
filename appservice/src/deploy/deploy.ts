@@ -63,7 +63,7 @@ export async function deploy(client: SiteClient, fsPath: string, actionContext: 
     await window.withProgress({ location: ProgressLocation.Notification, title: localize('deploying', 'Deploying to "{0}"... Check output window for status.', client.fullName) }, async (): Promise<void> => {
         switch (config.scmType) {
             case ScmType.LocalGit:
-                await localGitDeploy(client, fsPath);
+                await localGitDeploy(client, fsPath, telemetryProperties);
                 break;
             case ScmType.GitHub:
                 throw new Error(localize('gitHubConnected', '"{0}" is connected to a GitHub repository. Push to GitHub repository to deploy.', client.fullName));
