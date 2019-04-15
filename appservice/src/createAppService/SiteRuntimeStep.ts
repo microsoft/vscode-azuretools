@@ -78,12 +78,13 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
             ['User-Agent']: 'vscode-azureappservice-extension'
         };
         requestOptions.url = 'https://management.azure.com/providers/Microsoft.Web/availableStacks?osTypeSelected=Linux&api-version=2018-02-01';
-
         await signRequest(requestOptions, wizardContext.credentials);
-        // returns a JSON-parseable string
-        // tslint:disable-next-line no-unsafe-any
-        const runtimes: string = await request(requestOptions).promise();
+
         try {
+            // returns a JSON-parseable string
+            // tslint:disable-next-line no-unsafe-any
+            const runtimes: string = await request(requestOptions).promise();
+
             // tslint:disable-next-line no-unsafe-any
             const runtimesParsed: availableStacksJson = JSON.parse(runtimes);
             return runtimesParsed.value.map((runtime) => {
