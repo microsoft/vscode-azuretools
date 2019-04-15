@@ -3,17 +3,34 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { WebResource } from 'ms-rest';
+import * as request from 'request-promise';
 import { workspace } from 'vscode';
 import { AzureWizardPromptStep, IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
+import { signRequest } from '../signRequest';
 import { AppKind, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 interface ILinuxRuntimeStack {
     name: string;
     displayName: string;
+    isDefault?: boolean;
 }
+
+type availableStacksJson = {
+    value: [{
+        properties: {
+            majorVersions: [{
+                runtimeVersion: string,
+                displayVersion: string,
+                isDefault?: boolean
+                }]
+            }
+        }
+    ]
+};
 
 export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
@@ -35,7 +52,7 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
 
             wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new app.' })).data;
         } else if (wizardContext.newSiteOS === WebsiteOS.linux) {
-            let runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[] = this.getLinuxRuntimeStack().map((rt: ILinuxRuntimeStack) => {
+            let runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[] = (await this.getLinuxRuntimeStack(wizardContext)).map((rt: ILinuxRuntimeStack) => {
                 return {
                     id: rt.name,
                     label: rt.displayName,
@@ -55,8 +72,40 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
         return !wizardContext.newSiteRuntime && !(wizardContext.newSiteKind === AppKind.app && wizardContext.newSiteOS === WebsiteOS.windows);
     }
 
+    private async getLinuxRuntimeStack(wizardContext: IAppServiceWizardContext): Promise<ILinuxRuntimeStack[]> {
+        const requestOptions: WebResource = new WebResource();
+        requestOptions.headers = {
+            ['User-Agent']: 'vscode-azureappservice-extension'
+        };
+        requestOptions.url = 'https://management.azure.com/providers/Microsoft.Web/availableStacks?osTypeSelected=Linux&api-version=2018-02-01';
+
+        await signRequest(requestOptions, wizardContext.credentials);
+        // returns a JSON-parseable string
+        // tslint:disable-next-line no-unsafe-any
+        const runtimes: string = await request(requestOptions).promise();
+        try {
+            // tslint:disable-next-line no-unsafe-any
+            const runtimesParsed: availableStacksJson = JSON.parse(runtimes);
+            return runtimesParsed.value.map((runtime) => {
+                return runtime.properties.majorVersions.map((majorVersion) => {
+                    return { name: majorVersion.runtimeVersion, displayName: majorVersion.displayVersion, isDefault: majorVersion.isDefault };
+                });
+            }).reduce((acc, val) => acc.concat(val));
+        } catch (err) {
+            return this.getLinuxRuntimeStackBackup();
+        }
+    }
+
+    private sortQuickPicksByRuntime(runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[], recommendedRuntimes: string[]): IAzureQuickPickItem<ILinuxRuntimeStack>[] {
+        function getPriority(item: IAzureQuickPickItem<ILinuxRuntimeStack>): number {
+            const index: number = recommendedRuntimes.findIndex((runtime: string) => item.data.name.includes(runtime));
+            return index === -1 ? recommendedRuntimes.length : index;
+        }
+        return runtimeItems.sort((a: IAzureQuickPickItem<ILinuxRuntimeStack>, b: IAzureQuickPickItem<ILinuxRuntimeStack>) => getPriority(a) - getPriority(b));
+    }
+
     // tslint:disable-next-line:max-func-body-length
-    private getLinuxRuntimeStack(): ILinuxRuntimeStack[] {
+    private getLinuxRuntimeStackBackup(): ILinuxRuntimeStack[] {
         return [
             {
                 name: 'node|10.10',
@@ -192,12 +241,4 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
             }
         ];
     }
-
-    private sortQuickPicksByRuntime(runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[], recommendedRuntimes: string[]): IAzureQuickPickItem<ILinuxRuntimeStack>[] {
-        function getPriority(item: IAzureQuickPickItem<ILinuxRuntimeStack>): number {
-            const index: number = recommendedRuntimes.findIndex((runtime: string) => item.data.name.includes(runtime));
-            return index === -1 ? recommendedRuntimes.length : index;
-        }
-        return runtimeItems.sort((a: IAzureQuickPickItem<ILinuxRuntimeStack>, b: IAzureQuickPickItem<ILinuxRuntimeStack>) => getPriority(a) - getPriority(b));
-    }
-}
+ }
