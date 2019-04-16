@@ -196,11 +196,20 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
         ];
     }
 
-    private sortQuickPicksByRuntime(runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[], recommendedRuntimes: string[]): IAzureQuickPickItem<ILinuxRuntimeStack>[] {
-        function getPriority(item: IAzureQuickPickItem<ILinuxRuntimeStack>): number {
-            const index: number = recommendedRuntimes.findIndex((runtime: string) => item.data.name.includes(runtime));
-            return index === -1 ? recommendedRuntimes.length : index;
+    private sortQuickPicksByRuntime(runtimeQuickPicks: IAzureQuickPickItem<ILinuxRuntimeStack>[], runtimeRecommendations: string[]): IAzureQuickPickItem<ILinuxRuntimeStack>[] {
+        function getPriority(ti1: IAzureQuickPickItem<ILinuxRuntimeStack>, ti2: IAzureQuickPickItem<ILinuxRuntimeStack>): number {
+            const index1: number = runtimeRecommendations.findIndex((runtime: string) => ti1.data.name.includes(runtime.toLocaleLowerCase()));
+            const index2: number = runtimeRecommendations.findIndex((runtime: string) => ti2.data.name.includes(runtime.toLocaleLowerCase()));
+
+            if (index1 > -1) {
+                return -1;
+            } else if (index2 > -1) {
+                return 1;
+            } else {
+                return ti1.data.name.localeCompare(ti2.data.name);
+            }
         }
-        return runtimeItems.sort((a: IAzureQuickPickItem<ILinuxRuntimeStack>, b: IAzureQuickPickItem<ILinuxRuntimeStack>) => getPriority(a) - getPriority(b));
+
+        return runtimeQuickPicks.sort((a: IAzureQuickPickItem<ILinuxRuntimeStack>, b: IAzureQuickPickItem<ILinuxRuntimeStack>) => getPriority(a, b));
     }
 }
