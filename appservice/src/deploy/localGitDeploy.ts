@@ -61,7 +61,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string, telemet
                         telemetryProperties.forcePush = 'true';
                         await tryPushAndWaitForDeploymentToComplete(true);
                     } else {
-                        telemetryProperties.cancelStep = 'forcePush'
+                        telemetryProperties.cancelStep = 'forcePush';
                         throw new UserCancelledError();
                     }
                 } else {
