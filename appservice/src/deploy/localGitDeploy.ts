@@ -30,10 +30,11 @@ export async function localGitDeploy(client: SiteClient, fsPath: string, telemet
             try {
                 const status: git.StatusResult = await localGit.status();
                 if (status.files.length > 0) {
-                    telemetryProperties.pushWithUncommitChanges = 'false';
+                    telemetryProperties.cancelStep = 'pushWithUncommitChanges';
                     const message: string = localize('localGitUncommit', '{0} uncommitted change(s) in local repo "{1}"', status.files.length, fsPath);
                     const deployAnyway: vscode.MessageItem = { title: localize('deployAnyway', 'Deploy Anyway') };
                     await ext.ui.showWarningMessage(message, { modal: true }, deployAnyway, DialogResponses.cancel);
+                    telemetryProperties.cancelStep = undefined;
                     telemetryProperties.pushWithUncommitChanges = 'true';
                 }
 
@@ -60,7 +61,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string, telemet
                         telemetryProperties.forcePush = 'true';
                         await tryPushAndWaitForDeploymentToComplete(true);
                     } else {
-                        telemetryProperties.forcePush = 'false';
+                        telemetryProperties.cancelStep = 'forcePush'
                         throw new UserCancelledError();
                     }
                 } else {
