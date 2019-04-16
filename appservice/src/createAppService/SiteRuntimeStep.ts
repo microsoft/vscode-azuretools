@@ -45,7 +45,7 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
             });
 
             // filters out Node 4.x and 6.x as they are EOL
-            runtimeItems = this.filterRuntimes(runtimeItems, /node\|(4|6)\./);
+            runtimeItems = runtimeItems.filter(qp => !/node\|(4|6)\./i.test(qp.data.name));
             // tslint:disable-next-line:strict-boolean-expressions
             if (wizardContext.recommendedSiteRuntime) {
                 runtimeItems = this.sortQuickPicksByRuntime(runtimeItems, wizardContext.recommendedSiteRuntime);
@@ -202,11 +202,5 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
             return index === -1 ? recommendedRuntimes.length : index;
         }
         return runtimeItems.sort((a: IAzureQuickPickItem<ILinuxRuntimeStack>, b: IAzureQuickPickItem<ILinuxRuntimeStack>) => getPriority(a) - getPriority(b));
-    }
-
-    private filterRuntimes(runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[], runtimeRegExp: RegExp): IAzureQuickPickItem<ILinuxRuntimeStack>[] {
-        return runtimeItems.filter((qp: IAzureQuickPickItem<ILinuxRuntimeStack>) => {
-            return !runtimeRegExp.test(qp.data.name);
-        });
     }
 }
