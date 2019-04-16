@@ -6,7 +6,7 @@
 import { WebResource } from 'ms-rest';
 import * as request from 'request-promise';
 import { workspace } from 'vscode';
-import { AzureWizardPromptStep, IAzureQuickPickItem } from 'vscode-azureextensionui';
+import { appendExtensionUserAgent, AzureWizardPromptStep, IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { signRequest } from '../signRequest';
@@ -26,9 +26,9 @@ type availableStacksJson = {
                 runtimeVersion: string,
                 displayVersion: string,
                 isDefault?: boolean
-                }]
-            }
+            }]
         }
+    }
     ]
 };
 
@@ -75,26 +75,23 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
     private async getLinuxRuntimeStack(wizardContext: IAppServiceWizardContext): Promise<ILinuxRuntimeStack[]> {
         const requestOptions: WebResource = new WebResource();
         requestOptions.headers = {
-            ['User-Agent']: 'vscode-azureappservice-extension'
+            ['User-Agent']: appendExtensionUserAgent()
         };
-        requestOptions.url = 'https://management.azure.com/providers/Microsoft.Web/availableStacks?osTypeSelected=Linux&api-version=2018-02-01';
+        const env = wizardContext.environment;
+        console.log(env);
+        requestOptions.url = `${wizardContext.environment.resourceManagerEndpointUrl}/providers/Microsoft.Web/availableStacks?osTypeSelected=Linux&api-version=2018-02-01'`;
         await signRequest(requestOptions, wizardContext.credentials);
 
-        try {
-            // returns a JSON-parseable string
-            // tslint:disable-next-line no-unsafe-any
-            const runtimes: string = await request(requestOptions).promise();
+        // tslint:disable-next-line no-unsafe-any
+        const runtimes: string = await request(requestOptions).promise();
 
-            // tslint:disable-next-line no-unsafe-any
-            const runtimesParsed: availableStacksJson = JSON.parse(runtimes);
-            return runtimesParsed.value.map((runtime) => {
-                return runtime.properties.majorVersions.map((majorVersion) => {
-                    return { name: majorVersion.runtimeVersion, displayName: majorVersion.displayVersion, isDefault: majorVersion.isDefault };
-                });
-            }).reduce((acc, val) => acc.concat(val));
-        } catch (err) {
-            return this.getLinuxRuntimeStackBackup();
-        }
+        // tslint:disable-next-line no-unsafe-any
+        const runtimesParsed: availableStacksJson = JSON.parse(runtimes);
+        return runtimesParsed.value.map((runtime) => {
+            return runtime.properties.majorVersions.map((majorVersion) => {
+                return { name: majorVersion.runtimeVersion, displayName: majorVersion.displayVersion, isDefault: majorVersion.isDefault };
+            });
+        }).reduce((acc, val) => acc.concat(val));
     }
 
     private sortQuickPicksByRuntime(runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[], recommendedRuntimes: string[]): IAzureQuickPickItem<ILinuxRuntimeStack>[] {
@@ -104,142 +101,4 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
         }
         return runtimeItems.sort((a: IAzureQuickPickItem<ILinuxRuntimeStack>, b: IAzureQuickPickItem<ILinuxRuntimeStack>) => getPriority(a) - getPriority(b));
     }
-
-    // tslint:disable-next-line:max-func-body-length
-    private getLinuxRuntimeStackBackup(): ILinuxRuntimeStack[] {
-        return [
-            {
-                name: 'node|10.10',
-                displayName: 'Node.js 10.10 (LTS - Recommended for new apps)'
-            },
-            {
-                name: 'node|4.4',
-                displayName: 'Node.js 4.4'
-            },
-            {
-                name: 'node|4.5',
-                displayName: 'Node.js 4.5'
-            },
-            {
-                name: 'node|6.2',
-                displayName: 'Node.js 6.2'
-            },
-            {
-                name: 'node|6.6',
-                displayName: 'Node.js 6.6'
-            },
-            {
-                name: 'node|6.9',
-                displayName: 'Node.js 6.9'
-            },
-            {
-                name: 'node|6.10',
-                displayName: 'Node.js 6.10'
-            },
-            {
-                name: 'node|6.11',
-                displayName: 'Node.js 6.11'
-            },
-            {
-                name: 'node|8.0',
-                displayName: 'Node.js 8.0'
-            },
-            {
-                name: 'node|8.1',
-                displayName: 'Node.js 8.1'
-            },
-            {
-                name: 'node|8.2',
-                displayName: 'Node.js 8.2'
-            },
-            {
-                name: 'node|8.8',
-                displayName: 'Node.js 8.8'
-            },
-            {
-                name: 'node|8.9',
-                displayName: 'Node.js 8.9'
-            },
-            {
-                name: 'node|9.4',
-                displayName: 'Node.js 9.4'
-            },
-            {
-                name: 'node|10.1',
-                displayName: 'Node.js 10.1'
-            },
-            {
-                name: 'node|10.14',
-                displayName: 'Node.js 10.14'
-            },
-            {
-                name: 'php|5.6',
-                displayName: 'PHP 5.6'
-            },
-            {
-                name: 'php|7.0',
-                displayName: 'PHP 7.0'
-            },
-            {
-                name: 'php|7.2',
-                displayName: 'PHP 7.2'
-            },
-            {
-                name: 'dotnetcore|1.0',
-                displayName: '.NET Core 1.0'
-            },
-            {
-                name: 'dotnetcore|1.1',
-                displayName: '.NET Core 1.1'
-            },
-            {
-                name: 'dotnetcore|2.0',
-                displayName: '.NET Core 2.0'
-            },
-            {
-                name: 'dotnetcore|2.1',
-                displayName: '.NET Core 2.1'
-            },
-            {
-                name: 'dotnetcore|2.2',
-                displayName: '.NET Core 2.2'
-            },
-            {
-                name: 'ruby|2.3',
-                displayName: 'Ruby 2.3'
-            },
-            {
-                name: 'tomcat|8.5-jre8',
-                displayName: 'Tomcat 8.5 (Java 8)'
-            },
-            {
-                name: 'tomcat|9.0-jre8',
-                displayName: 'Tomcat 9.0 (Java 8)'
-            },
-            {
-                name: 'java|8-jre8',
-                displayName: 'Java SE (Java 8)'
-            },
-            {
-                name: 'wildfly|14-jre8',
-                displayName: '[Preview] WildFly 14 (Java 8)'
-            },
-            {
-                name: 'tomcat|8.5-java11',
-                displayName: 'Tomcat 8.5 (Java 11)'
-            },
-            {
-                name: 'tomcat|9.0-java11',
-                displayName: 'Tomcat 9.0 (Java 11)'
-            },
-            {
-                name: 'java|11-java11',
-                displayName: 'Java SE (Java 11)'
-            },
-            {
-                name: 'python|3.7',
-                displayName: '[Preview] Python 3.7'
-            }
-        ];
-    }
- }
+}
