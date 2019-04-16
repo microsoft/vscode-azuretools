@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { ApplicationStack } from 'azure-arm-website/lib/models';
 import { WebResource } from 'ms-rest';
 import * as request from 'request-promise';
 import { workspace } from 'vscode';
@@ -13,23 +14,10 @@ import { signRequest } from '../signRequest';
 import { AppKind, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
-interface ILinuxRuntimeStack {
-    name: string;
-    displayName: string;
-    isDefault?: boolean;
-}
-
-type availableStacksJson = {
+type ApplicationStackJsonResponse = {
     value: [{
-        properties: {
-            majorVersions: [{
-                runtimeVersion: string,
-                displayVersion: string,
-                isDefault?: boolean
-            }]
-        }
-    }
-    ]
+        properties: ApplicationStack
+    }]
 };
 
 export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
@@ -52,17 +40,18 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
 
             wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new app.' })).data;
         } else if (wizardContext.newSiteOS === WebsiteOS.linux) {
-            let runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[] = (await this.getLinuxRuntimeStack(wizardContext)).map((rt: ILinuxRuntimeStack) => {
+            /* tslint:disable:no-non-null-assertion */
+            let runtimeItems: IAzureQuickPickItem<ApplicationStack>[] = (await this.getLinuxRuntimeStack(wizardContext)).map((rt: ApplicationStack) => {
                 return {
-                    id: rt.name,
-                    label: rt.displayName,
+                    id: rt.name!,
+                    label: rt.display!,
                     description: '',
                     data: rt
                 };
             });
 
             // filters out Node 4.x and 6.x as they are EOL
-            runtimeItems = runtimeItems.filter(qp => !/node\|(4|6)\./i.test(qp.data.name));
+            runtimeItems = runtimeItems.filter(qp => !/node\|(4|6)\./i.test(qp.data.name!));
             // tslint:disable-next-line:strict-boolean-expressions
             if (wizardContext.recommendedSiteRuntime) {
                 runtimeItems = this.sortQuickPicksByRuntime(runtimeItems, wizardContext.recommendedSiteRuntime);
@@ -75,33 +64,35 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
         return !wizardContext.newSiteRuntime && !(wizardContext.newSiteKind === AppKind.app && wizardContext.newSiteOS === WebsiteOS.windows);
     }
 
-    private async getLinuxRuntimeStack(wizardContext: IAppServiceWizardContext): Promise<ILinuxRuntimeStack[]> {
+    // the sdk has a bug that doesn't retrieve the full response for provider.getAvailableStacks(): https://github.com/Azure/azure-sdk-for-node/issues/5068
+    private async getLinuxRuntimeStack(wizardContext: IAppServiceWizardContext): Promise<ApplicationStack[]> {
         const requestOptions: WebResource = new WebResource();
         requestOptions.headers = {
             ['User-Agent']: appendExtensionUserAgent()
         };
-        const env = wizardContext.environment;
-        console.log(env);
-        requestOptions.url = `${wizardContext.environment.resourceManagerEndpointUrl}/providers/Microsoft.Web/availableStacks?osTypeSelected=Linux&api-version=2018-02-01'`;
+
+        requestOptions.url = `${wizardContext.environment.resourceManagerEndpointUrl}providers/Microsoft.Web/availableStacks?osTypeSelected=Linux&api-version=2018-02-01`;
         await signRequest(requestOptions, wizardContext.credentials);
-
         // tslint:disable-next-line no-unsafe-any
-        const runtimes: string = await request(requestOptions).promise();
+        const runtimes: string = <string>(await request(requestOptions).promise());
 
-        // tslint:disable-next-line no-unsafe-any
-        const runtimesParsed: availableStacksJson = JSON.parse(runtimes);
+        const runtimesParsed: ApplicationStackJsonResponse = <ApplicationStackJsonResponse>JSON.parse(runtimes);
+
         return runtimesParsed.value.map((runtime) => {
-            return runtime.properties.majorVersions.map((majorVersion) => {
-                return { name: majorVersion.runtimeVersion, displayName: majorVersion.displayVersion, isDefault: majorVersion.isDefault };
+            return runtime.properties.majorVersions!.map((majorVersion) => {
+                return { name: majorVersion.runtimeVersion, display: majorVersion.displayVersion, isDefault: majorVersion.isDefault };
             });
         }).reduce((acc, val) => acc.concat(val));
+        // this is to flatten the runtimes to one array
     }
 
-    private sortQuickPicksByRuntime(runtimeItems: IAzureQuickPickItem<ILinuxRuntimeStack>[], recommendedRuntimes: string[]): IAzureQuickPickItem<ILinuxRuntimeStack>[] {
-        function getPriority(item: IAzureQuickPickItem<ILinuxRuntimeStack>): number {
-            const index: number = recommendedRuntimes.findIndex((runtime: string) => item.data.name.includes(runtime));
+    private sortQuickPicksByRuntime(runtimeItems: IAzureQuickPickItem<ApplicationStack>[], recommendedRuntimes: string[]): IAzureQuickPickItem<ApplicationStack>[] {
+        function getPriority(item: IAzureQuickPickItem<ApplicationStack>): number {
+
+            const index: number = recommendedRuntimes.findIndex((runtime: string) => item.data.name!.includes(runtime));
+            /* tslint:enable:no-non-null-assertion */
             return index === -1 ? recommendedRuntimes.length : index;
         }
-        return runtimeItems.sort((a: IAzureQuickPickItem<ILinuxRuntimeStack>, b: IAzureQuickPickItem<ILinuxRuntimeStack>) => getPriority(a) - getPriority(b));
+        return runtimeItems.sort((a: IAzureQuickPickItem<ApplicationStack>, b: IAzureQuickPickItem<ApplicationStack>) => getPriority(a) - getPriority(b));
     }
 }
