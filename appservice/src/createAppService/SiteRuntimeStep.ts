@@ -60,6 +60,9 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                     data: rt
                 };
             });
+
+            // filters out Node 4.x and 6.x as they are EOL
+            runtimeItems = runtimeItems.filter(qp => !/node\|(4|6)\./i.test(qp.data.name));
             // tslint:disable-next-line:strict-boolean-expressions
             if (wizardContext.recommendedSiteRuntime) {
                 runtimeItems = this.sortQuickPicksByRuntime(runtimeItems, wizardContext.recommendedSiteRuntime);
