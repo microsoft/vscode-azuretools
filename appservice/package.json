@@ -53,17 +53,17 @@
         "@types/archiver": "^2.0.0",
         "@types/fs-extra": "^4.0.5",
         "@types/mocha": "^5.2.5",
-        "@types/request": "^2.47.0",
         "@types/p-retry": "^2.0.0",
+        "@types/request": "^2.47.0",
         "@types/websocket": "^0.0.38",
         "gulp": "^4.0.0",
         "mocha": "^5.2.0",
         "mocha-junit-reporter": "^1.18.0",
         "mocha-multi-reporters": "^1.1.7",
-        "typescript": "^2.5.3",
         "tslint": "^5.7.0",
         "tslint-microsoft-contrib": "5.0.1",
-        "vscode": "^1.1.24"
+        "typescript": "^2.5.3",
+        "vscode": "^1.1.33"
     },
     "engines": {
         "vscode": "^1.26.0"
