@@ -8,7 +8,7 @@ import { TokenCredentials, WebResource } from 'ms-rest';
 import { Response } from 'request';
 import * as request from 'request-promise';
 import * as vscode from 'vscode';
-import { AzureTreeItem, DialogResponses, IActionContext, IAzureQuickPickItem, IParsedError, parseError } from 'vscode-azureextensionui';
+import { appendExtensionUserAgent, AzureTreeItem, DialogResponses, IActionContext, IAzureQuickPickItem, IParsedError, parseError } from 'vscode-azureextensionui';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { signRequest } from './signRequest';
@@ -28,7 +28,7 @@ export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, c
     const requestOptions: gitHubWebResource = new WebResource();
     requestOptions.resolveWithFullResponse = true;
     requestOptions.headers = {
-        ['User-Agent']: 'vscode-azureappservice-extension'
+        ['User-Agent']: appendExtensionUserAgent()
     };
     const oAuth2Token: string | undefined = (await client.listSourceControls())[0].token;
     if (!oAuth2Token) {
