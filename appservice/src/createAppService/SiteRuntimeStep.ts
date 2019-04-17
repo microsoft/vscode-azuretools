@@ -11,6 +11,7 @@ import { appendExtensionUserAgent, AzureWizardPromptStep, IAzureQuickPickItem } 
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { signRequest } from '../signRequest';
+import { nonNullProp } from '../utils/nonNull';
 import { AppKind, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
@@ -40,18 +41,17 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
 
             wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new app.' })).data;
         } else if (wizardContext.newSiteOS === WebsiteOS.linux) {
-            /* tslint:disable:no-non-null-assertion */
             let runtimeItems: IAzureQuickPickItem<ApplicationStack>[] = (await this.getLinuxRuntimeStack(wizardContext)).map((rt: ApplicationStack) => {
                 return {
-                    id: rt.name!,
-                    label: rt.display!,
+                    id: nonNullProp(rt, 'name'),
+                    label: nonNullProp(rt, 'display'),
                     description: '',
                     data: rt
                 };
             });
 
             // filters out Node 4.x and 6.x as they are EOL
-            runtimeItems = runtimeItems.filter(qp => !/node\|(4|6)\./i.test(qp.data.name!));
+            runtimeItems = runtimeItems.filter(qp => !/node\|(4|6)\./i.test(nonNullProp(qp.data, 'name')));
             // tslint:disable-next-line:strict-boolean-expressions
             if (wizardContext.recommendedSiteRuntime) {
                 runtimeItems = this.sortQuickPicksByRuntime(runtimeItems, wizardContext.recommendedSiteRuntime);
@@ -79,7 +79,7 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
         const runtimesParsed: ApplicationStackJsonResponse = <ApplicationStackJsonResponse>JSON.parse(runtimes);
 
         return runtimesParsed.value.map((runtime) => {
-            return runtime.properties.majorVersions!.map((majorVersion) => {
+            return nonNullProp(runtime.properties, 'majorVersions').map((majorVersion) => {
                 return { name: majorVersion.runtimeVersion, display: majorVersion.displayVersion, isDefault: majorVersion.isDefault };
             });
         }).reduce((acc, val) => acc.concat(val));
@@ -89,8 +89,7 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
     private sortQuickPicksByRuntime(runtimeItems: IAzureQuickPickItem<ApplicationStack>[], recommendedRuntimes: string[]): IAzureQuickPickItem<ApplicationStack>[] {
         function getPriority(item: IAzureQuickPickItem<ApplicationStack>): number {
 
-            const index: number = recommendedRuntimes.findIndex((runtime: string) => item.data.name!.includes(runtime));
-            /* tslint:enable:no-non-null-assertion */
+            const index: number = recommendedRuntimes.findIndex((runtime: string) => nonNullProp(item.data, 'name').includes(runtime));
             return index === -1 ? recommendedRuntimes.length : index;
         }
         return runtimeItems.sort((a: IAzureQuickPickItem<ApplicationStack>, b: IAzureQuickPickItem<ApplicationStack>) => getPriority(a) - getPriority(b));
