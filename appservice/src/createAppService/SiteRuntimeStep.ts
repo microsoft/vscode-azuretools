@@ -197,7 +197,7 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
     }
 
     private sortQuickPicksByRuntime(runtimeQuickPicks: IAzureQuickPickItem<ILinuxRuntimeStack>[], runtimeRecommendations: string[]): IAzureQuickPickItem<ILinuxRuntimeStack>[] {
-        function getPriority(ti1: IAzureQuickPickItem<ILinuxRuntimeStack>, ti2: IAzureQuickPickItem<ILinuxRuntimeStack>): number {
+        return runtimeQuickPicks.sort((ti1: IAzureQuickPickItem<ILinuxRuntimeStack>, ti2: IAzureQuickPickItem<ILinuxRuntimeStack>) => {
             const index1: number = runtimeRecommendations.findIndex((runtime: string) => ti1.data.name.includes(runtime.toLocaleLowerCase()));
             const index2: number = runtimeRecommendations.findIndex((runtime: string) => ti2.data.name.includes(runtime.toLocaleLowerCase()));
 
@@ -208,8 +208,6 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
             } else {
                 return ti1.data.name.localeCompare(ti2.data.name);
             }
-        }
-
-        return runtimeQuickPicks.sort((a: IAzureQuickPickItem<ILinuxRuntimeStack>, b: IAzureQuickPickItem<ILinuxRuntimeStack>) => getPriority(a, b));
+        });
     }
 }
