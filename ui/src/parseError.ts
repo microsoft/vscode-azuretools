@@ -165,9 +165,9 @@ function getCallstack(error: { stack?: string }): string | undefined {
     // Standardize newlines
     result = result.replace(/\r\n/g, '\n');
 
-    // Get rid of the redundant first lines "<errortype>: <errormessage>", start with first line with "at"
-    const atMatch: RegExpMatchArray | null = result.match(/^\s*at\s.*/ms);
-    result = atMatch ? atMatch[0] : '';
+    // Get rid of the redundant first lines "<errortype>: <errormessage>", start at first line beginning with "at"
+    const atMatch: RegExpMatchArray | null = result.match(/^\s*at\s.+/m);
+    result = atMatch ? result.slice(atMatch.index) : '';
 
     // Remove the first part of the paths (up to "/{extensions,repos,src/sources,users}/xxx/"), which might container the username.
     // e.g.:
