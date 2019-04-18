@@ -79,7 +79,19 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
         const runtimesParsed: ApplicationStackJsonResponse = <ApplicationStackJsonResponse>JSON.parse(runtimes);
 
         return runtimesParsed.value.map((runtime) => {
-            return nonNullProp(runtime.properties, 'majorVersions').map((majorVersion) => {
+            return nonNullProp(runtime.properties, 'majorVersions').sort((rt1, rt2) => {
+                if (rt1.isDefault) {
+                    return -1;
+                } else if (rt2.isDefault) {
+                    return 1;
+                } else {
+                    // runtimVersion comes in the format RUNTIME|X.X
+                    const runtimeRegExp: RegExp = /.*(?=\|)+./g;
+                    const v1: number = parseFloat(nonNullProp(rt1, 'runtimeVersion').replace(runtimeRegExp, ''));
+                    const v2: number = parseFloat(nonNullProp(rt2, 'runtimeVersion').replace(runtimeRegExp, ''));
+                    return v2 - v1;
+                }
+            }).map((majorVersion) => {
                 return { name: majorVersion.runtimeVersion, display: majorVersion.displayVersion, isDefault: majorVersion.isDefault };
             });
         }).reduce((acc, val) => acc.concat(val));
