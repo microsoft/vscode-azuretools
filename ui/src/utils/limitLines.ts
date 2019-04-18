@@ -6,7 +6,9 @@
 /**
  * Limit string 's' to at most 'n' lines
  */
-export function limitLines(s: string, n: number): string {
-    const match: RegExpMatchArray | null = s.match(new RegExp(`((\\r\\n|\\n)?.*$){0,${n}}`, 'm'));
-    return match ? match[0] : '';
-}
+
+// temporarily disable for extension activation hotfix
+// export function limitLines(s: string, n: number): string {
+//     const match: RegExpMatchArray | null = s.match(new RegExp(`((\\r\\n|\\n)?.*$){0,${n}}`, 'm'));
+//     return match ? match[0] : '';
+// }
