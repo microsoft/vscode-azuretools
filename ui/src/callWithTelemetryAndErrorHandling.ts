@@ -11,9 +11,9 @@ import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { parseError } from './parseError';
 import { reportAnIssue } from './reportAnIssue';
-import { limitLines } from './utils/limitLines';
 
-const maxStackLines: number = 3;
+// disable temporarily for extension activation hotfix
+// const maxStackLines: number = 3;
 
 function initContext(): [number, IActionContext] {
     const start: number = Date.now();
@@ -73,7 +73,8 @@ function handleError(context: IActionContext, callbackId: string, error: any): v
         context.properties.result = 'Failed';
         context.properties.error = errorData.errorType;
         context.properties.errorMessage = errorData.message;
-        context.properties.stack = errorData.stack ? limitLines(errorData.stack, maxStackLines) : undefined;
+        // disable temporarily for extension activation hotfix
+        // context.properties.stack = errorData.stack ? limitLines(errorData.stack, maxStackLines) : undefined;
         context.properties.suppressTelemetry = context.suppressTelemetry ? 'true' : 'false';
     }
 

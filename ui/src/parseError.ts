@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as htmlToText from 'html-to-text';
-import * as os from 'os';
 import { IParsedError } from '../index';
 import { localize } from './localize';
 
@@ -13,14 +12,14 @@ import { localize } from './localize';
 export function parseError(error: any): IParsedError {
     let errorType: string = '';
     let message: string = '';
-    let stack: string | undefined;
+    const stack: string | undefined;
 
     if (typeof (error) === 'object' && error !== null) {
         if (error.constructor !== Object) {
             errorType = error.constructor.name;
         }
-
-        stack = getCallstack(error);
+        // disable temporarily for extension activation hotfix
+        // stack = getCallstack(error);
 
         // See https://github.com/Microsoft/vscode-azureappservice/issues/419 for an example error that requires these 'unpack's
         error = unpackErrorFromField(error, 'value');
@@ -154,34 +153,34 @@ function unpackErrorFromField(error: any, prop: string): any {
 
     return error;
 }
+// disable temporarily for extension activation hotfix
+// function getCallstack(error: { stack?: string }): string | undefined {
+//     // tslint:disable-next-line: strict-boolean-expressions
+//     const stack: string = error.stack || '';
 
-function getCallstack(error: { stack?: string }): string | undefined {
-    // tslint:disable-next-line: strict-boolean-expressions
-    const stack: string = error.stack || '';
+//     // Standardize to using '/' for path separator for all platforms
+//     let result: string = stack.replace(/\\/g, '/');
 
-    // Standardize to using '/' for path separator for all platforms
-    let result: string = stack.replace(/\\/g, '/');
+//     // Standardize newlines
+//     result = result.replace(/\r\n/g, '\n');
 
-    // Standardize newlines
-    result = result.replace(/\r\n/g, '\n');
+//     // Get rid of the redundant first lines "<errortype>: <errormessage>", start with first line with "at"
+//     const atMatch: RegExpMatchArray | null = result.match(/^\s*at\s./\*/ms);
+//     result = atMatch ? atMatch[0] : '';
 
-    // Get rid of the redundant first lines "<errortype>: <errormessage>", start with first line with "at"
-    const atMatch: RegExpMatchArray | null = result.match(/^\s*at\s.*/ms);
-    result = atMatch ? atMatch[0] : '';
+//     // Remove the first part of the paths (up to "/{extensions,repos,src/sources,users}/xxx/"), which might container the username.
+//     // e.g.:
+//     //   (C:\Users\MeMyselfAndI\.vscode\extensions\msazurermtools.azurerm-vscode-tools-0.4.3-alpha\dist\extension.bundle.js:1:313309)
+//     //   ->
+//     //   (../extensions/msazurermtools.azurerm-vscode-tools-0.4.3-alpha/dist/extension.bundle.js:1:313309)
+//     result = result.replace(/([\( ])[^() ]*\/(extensions|[Rr]epos|[Ss]rc|[Ss]ources|[Ss]ource|[Uu]sers|[Hh]ome)\/[^/):\r\n ]+\//g, '$1');
 
-    // Remove the first part of the paths (up to "/{extensions,repos,src/sources,users}/xxx/"), which might container the username.
-    // e.g.:
-    //   (C:\Users\MeMyselfAndI\.vscode\extensions\msazurermtools.azurerm-vscode-tools-0.4.3-alpha\dist\extension.bundle.js:1:313309)
-    //   ->
-    //   (../extensions/msazurermtools.azurerm-vscode-tools-0.4.3-alpha/dist/extension.bundle.js:1:313309)
-    result = result.replace(/([\( ])[^() ]*\/(extensions|[Rr]epos|[Ss]rc|[Ss]ources|[Ss]ource|[Uu]sers|[Hh]ome)\/[^/):\r\n ]+\//g, '$1');
+//     // Trim each line, including getting rid of 'at'
+//     result = result.replace(/^\s*(at\s)?\s*/mg, '');
+//     result = result.replace(/\s+$/mg, '');
 
-    // Trim each line, including getting rid of 'at'
-    result = result.replace(/^\s*(at\s)?\s*/mg, '');
-    result = result.replace(/\s+$/mg, '');
+//     // Remove username if it still exists
+//     result = result.replace(os.userInfo().username, '<user>');
 
-    // Remove username if it still exists
-    result = result.replace(os.userInfo().username, '<user>');
-
-    return !!result ? result : undefined;
-}
+//     return !!result ? result : undefined;
+// }
