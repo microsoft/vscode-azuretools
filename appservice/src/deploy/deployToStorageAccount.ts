@@ -58,7 +58,7 @@ async function createBlobService(client: SiteClient): Promise<azureStorage.BlobS
         // Add retry filter since deploying may be a large file which can fail if network is poor
         return blobService.withFilter(new azureStorage.ExponentialRetryPolicyFilter());
     }
-    throw new Error(localize('"{0}" app setting is required for Run From Package deployment.', azureWebJobsStorageKey));
+    throw new Error(localize('azureWebJobsStorageKey', '"{0}" app setting is required for Run From Package deployment.', azureWebJobsStorageKey));
 }
 
 async function createBlobFromZip(blobService: azureStorage.BlobService, zipFilePath: string, blobName: string): Promise<string> {

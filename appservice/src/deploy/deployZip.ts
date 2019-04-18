@@ -32,9 +32,17 @@ export async function deployZip(client: SiteClient, fsPath: string, aspPromise: 
 
     try {
         ext.outputChannel.appendLine(formatDeployLog(client, localize('deployStart', 'Starting deployment...')));
-        const asp: AppServicePlan | undefined = await aspPromise;
-        // Assume it's consumption if we can't get the plan (sometimes happens with brand new plans). Consumption is recommended and more popular for functions
-        const isConsumption: boolean = !asp || (!!asp.sku && !!asp.sku.tier && asp.sku.tier.toLowerCase() === 'dynamic');
+        let asp: AppServicePlan | undefined;
+
+        // if a user has access to the app but not the plan, this will cause an error.  We will make the same assumption as below in this case.
+        try {
+            asp = await aspPromise;
+        } catch {
+            asp = undefined;
+        }
+
+        // Assume it's consumption if we can't get the plan (sometimes happens with brand new plans) and its a Function App. Consumption is recommended and more popular for functions
+        const isConsumption: boolean = (!asp && client.isFunctionApp) || Boolean(asp && asp.sku && asp.sku.tier && asp.sku.tier.toLowerCase() === 'dynamic');
         if (client.isLinux && isConsumption) {
             // Linux consumption doesn't support kudu zipPushDeploy
             await deployToStorageAccount(client, zipFilePath);
