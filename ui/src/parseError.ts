@@ -19,7 +19,7 @@ export function parseError(error: any): IParsedError {
             errorType = error.constructor.name;
         }
         // disable temporarily for extension activation hotfix
-        stack = undefined //getCallstack(error);
+        stack = undefined; //getCallstack(error);
 
         // See https://github.com/Microsoft/vscode-azureappservice/issues/419 for an example error that requires these 'unpack's
         error = unpackErrorFromField(error, 'value');
