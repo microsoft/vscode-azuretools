@@ -87,19 +87,16 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
     }
 
     private sortQuickPicksByRuntime(runtimeQuickPicks: IAzureQuickPickItem<ApplicationStack>[], runtimeRecommendations: string[]): IAzureQuickPickItem<ApplicationStack>[] {
-        return runtimeQuickPicks.sort((ti1: IAzureQuickPickItem<ApplicationStack>, ti2: IAzureQuickPickItem<ApplicationStack>) => {
-            const name1: string = nonNullProp(ti1.data, 'name');
-            const name2: string = nonNullProp(ti2.data, 'name');
-            const index1: number = runtimeRecommendations.findIndex((runtime: string) => name1.includes(runtime.toLocaleLowerCase()));
-            const index2: number = runtimeRecommendations.findIndex((runtime: string) => name2.includes(runtime.toLocaleLowerCase()));
-
-            if (index1 > -1) {
-                return -1;
-            } else if (index2 > -1) {
-                return 1;
-            } else {
-                return name1.localeCompare(name2);
+        const recommendedQuickPicks: IAzureQuickPickItem<ApplicationStack>[] = [];
+        // go backwards so that when runtime is unshifted to front, the order is unaffected
+        for (let i = runtimeQuickPicks.length - 1; i >= 0; i--) {
+            for (const rt of runtimeRecommendations) {
+                if (nonNullProp(runtimeQuickPicks[i].data, 'name').toLocaleLowerCase().includes(rt.toLocaleLowerCase())) {
+                    recommendedQuickPicks.unshift(runtimeQuickPicks.splice(i, 1)[0]);
+                }
             }
-        });
+        }
+
+        return recommendedQuickPicks.concat(runtimeQuickPicks);
     }
 }
