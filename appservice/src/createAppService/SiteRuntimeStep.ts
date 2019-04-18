@@ -89,7 +89,7 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
     private sortQuickPicksByRuntime(runtimeQuickPicks: IAzureQuickPickItem<ApplicationStack>[], runtimeRecommendations: string[]): IAzureQuickPickItem<ApplicationStack>[] {
         const recommendedQuickPicks: IAzureQuickPickItem<ApplicationStack>[] = [];
         // go backwards so that when runtime is unshifted to front, the order is unaffected
-        for (let i = runtimeQuickPicks.length - 1; i >= 0; i--) {
+        for (let i: number = runtimeQuickPicks.length - 1; i >= 0; i = i - 1) {
             for (const rt of runtimeRecommendations) {
                 if (nonNullProp(runtimeQuickPicks[i].data, 'name').toLocaleLowerCase().includes(rt.toLocaleLowerCase())) {
                     recommendedQuickPicks.unshift(runtimeQuickPicks.splice(i, 1)[0]);
