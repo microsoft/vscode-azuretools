@@ -70,7 +70,8 @@ async function addFilesByGlob(zipper: archiver.Archiver, folderPath: string, glo
     zipper.glob(globPattern, {
         cwd: folderPath,
         dot: true,
-        ignore: ignorePattern
+        ignore: ignorePattern,
+        nodir: true // required for symlinks https://github.com/archiverjs/node-archiver/issues/311#issuecomment-445924055
     });
 }
 
@@ -83,7 +84,12 @@ async function addFilesByGitignore(zipper: archiver.Archiver, folderPath: string
     }
 
     // tslint:disable-next-line:no-unsafe-any
-    const paths: string[] = await globGitignore('**/*', { cwd: folderPath, dot: true, ignore });
+    const paths: string[] = await globGitignore('**/*', {
+        cwd: folderPath,
+        dot: true,
+        ignore,
+        nodir: true // required for symlinks https://github.com/archiverjs/node-archiver/issues/311#issuecomment-445924055
+    });
     for (const p of paths) {
         zipper.file(path.join(folderPath, p), { name: p });
     }
