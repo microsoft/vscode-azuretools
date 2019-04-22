@@ -80,7 +80,10 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
 
         return runtimesParsed.value.map((runtime) => {
             return nonNullProp(runtime.properties, 'majorVersions').map((majorVersion) => {
-                return { name: majorVersion.runtimeVersion, display: majorVersion.displayVersion, isDefault: majorVersion.isDefault };
+                // Different java runtime may have majorVersion with same displayVersion like TOMCAT 8.5
+                const displayVersion: string | undefined = (runtime.properties.name && runtime.properties.name.toLowerCase().includes('java')) ?
+                 `${majorVersion.displayVersion} (${runtime.properties.name})` : majorVersion.displayVersion;
+                return { name: majorVersion.runtimeVersion, display: displayVersion, isDefault: majorVersion.isDefault };
             });
         }).reduce((acc, val) => acc.concat(val));
         // this is to flatten the runtimes to one array
