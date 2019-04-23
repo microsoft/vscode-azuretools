@@ -279,6 +279,12 @@ const expectedJavaPicks: {}[] = [
 
 const expectedNodePicks: {}[] = [
     {
+        id: "NODE|lts",
+        label: "Node.js LTS",
+        data: "NODE|lts",
+        description: undefined
+    },
+    {
         id: "NODE|10.14",
         label: "Node.js 10.14",
         data: "NODE|10.14",
@@ -349,13 +355,8 @@ const expectedNodePicks: {}[] = [
         label: "Node.js 8.0",
         data: "NODE|8.0",
         description: undefined
-    },
-    {
-        id: "NODE|lts",
-        label: "Node.js LTS",
-        data: "NODE|lts",
-        description: undefined
-    }];
+    }
+];
 
 const expectedPhpPicks: {}[] = [
     {
@@ -381,7 +382,8 @@ const expectedPhpPicks: {}[] = [
         label: "PHP 5.6",
         data: "PHP|5.6",
         description: undefined
-    }];
+    }
+];
 
 const expectedPythonPicks: {}[] = [
     {
@@ -401,7 +403,8 @@ const expectedPythonPicks: {}[] = [
         label: "Python 2.7",
         data: "PYTHON|2.7",
         description: undefined
-    }];
+    }
+];
 
 const expectedRubyPicks: {}[] = [
     {
@@ -432,21 +435,15 @@ const expectedRubyPicks: {}[] = [
 
 const expectedTomcatPicks: {}[] = [
     {
-        id: "TOMCAT|9.0-jre8",
-        label: "Tomcat 9.0",
-        data: "TOMCAT|9.0-jre8",
-        description: "Java 8"
-    },
-    {
         id: "TOMCAT|9.0-java11",
         label: "Tomcat 9.0",
         data: "TOMCAT|9.0-java11",
         description: "Java 11"
     },
     {
-        id: "TOMCAT|8.5-jre8",
-        label: "Tomcat 8.5",
-        data: "TOMCAT|8.5-jre8",
+        id: "TOMCAT|9.0-jre8",
+        label: "Tomcat 9.0",
+        data: "TOMCAT|9.0-jre8",
         description: "Java 8"
     },
     {
@@ -454,7 +451,14 @@ const expectedTomcatPicks: {}[] = [
         label: "Tomcat 8.5",
         data: "TOMCAT|8.5-java11",
         description: "Java 11"
-    }];
+    },
+    {
+        id: "TOMCAT|8.5-jre8",
+        label: "Tomcat 8.5",
+        data: "TOMCAT|8.5-jre8",
+        description: "Java 8"
+    }
+];
 
 const expectedWildflyPicks: {}[] = [
     {

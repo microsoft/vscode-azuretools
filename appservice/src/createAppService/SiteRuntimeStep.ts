@@ -95,11 +95,19 @@ export function convertStacksToPicks(stacks: ApplicationStack[], recommendedRunt
             const bInfo: IParsedRuntimeVersion = getRuntimeInfo(b.runtimeVersion);
             if (aInfo.name !== bInfo.name) {
                 const result: number = getPriority(aInfo.name) - getPriority(bInfo.name);
-                return result === 0 ? a.displayVersion.localeCompare(b.displayVersion) : result;
+                if (result !== 0) {
+                    return result;
+                }
             } else if (aInfo.major !== bInfo.major) {
                 return bInfo.major - aInfo.major;
-            } else {
+            } else if (aInfo.minor !== bInfo.minor) {
                 return bInfo.minor - aInfo.minor;
+            }
+
+            if (a.displayVersion !== b.displayVersion) {
+                return a.displayVersion.localeCompare(b.displayVersion);
+            } else {
+                return a.stackDisplay.localeCompare(b.stackDisplay);
             }
         })
         // convert to quick pick
@@ -148,5 +156,5 @@ function convertToNumber(data: string | undefined): number {
             return result;
         }
     }
-    return 0;
+    return Number.MAX_SAFE_INTEGER;
 }
