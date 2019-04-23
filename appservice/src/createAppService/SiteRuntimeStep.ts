@@ -12,7 +12,7 @@ import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { signRequest } from '../signRequest';
 import { nonNullProp } from '../utils/nonNull';
-import { AppKind, WebsiteOS } from './AppKind';
+import { AppKind, LinuxRuntimes, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 type ApplicationStackJsonResponse = {
@@ -41,22 +41,10 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
 
             wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new app.' })).data;
         } else if (wizardContext.newSiteOS === WebsiteOS.linux) {
-            let runtimeItems: IAzureQuickPickItem<ApplicationStack>[] = (await this.getLinuxRuntimeStack(wizardContext)).map((rt: ApplicationStack) => {
-                return {
-                    id: nonNullProp(rt, 'name'),
-                    label: nonNullProp(rt, 'display'),
-                    description: '',
-                    data: rt
-                };
-            });
-
-            // filters out Node 4.x and 6.x as they are EOL
-            runtimeItems = runtimeItems.filter(qp => !/node\|(4|6)\./i.test(nonNullProp(qp.data, 'name')));
-            // tslint:disable-next-line:strict-boolean-expressions
-            if (wizardContext.recommendedSiteRuntime) {
-                runtimeItems = this.sortQuickPicksByRuntime(runtimeItems, wizardContext.recommendedSiteRuntime);
-            }
-            wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new Linux app.' })).data.name;
+            wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(
+                this.getLinuxRuntimeStack(wizardContext).then(stacks => convertStacksToPicks(stacks, wizardContext.recommendedSiteRuntime)),
+                { placeHolder: 'Select a runtime for your new Linux app.' })
+            ).data;
         }
     }
 
@@ -75,23 +63,98 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
         await signRequest(requestOptions, wizardContext.credentials);
         // tslint:disable-next-line no-unsafe-any
         const runtimes: string = <string>(await request(requestOptions).promise());
+        return (<ApplicationStackJsonResponse>JSON.parse(runtimes)).value.map(v => v.properties);
+    }
+}
 
-        const runtimesParsed: ApplicationStackJsonResponse = <ApplicationStackJsonResponse>JSON.parse(runtimes);
-
-        return runtimesParsed.value.map((runtime) => {
-            return nonNullProp(runtime.properties, 'majorVersions').map((majorVersion) => {
-                return { name: majorVersion.runtimeVersion, display: majorVersion.displayVersion, isDefault: majorVersion.isDefault };
-            });
-        }).reduce((acc, val) => acc.concat(val));
-        // this is to flatten the runtimes to one array
+export function convertStacksToPicks(stacks: ApplicationStack[], recommendedRuntimes: LinuxRuntimes[] | undefined): IAzureQuickPickItem<string>[] {
+    function getPriority(data: string): number {
+        // tslint:disable-next-line: strict-boolean-expressions
+        recommendedRuntimes = recommendedRuntimes || [];
+        const index: number = recommendedRuntimes.findIndex(r => r === data.toLowerCase());
+        return index === -1 ? recommendedRuntimes.length : index;
     }
 
-    private sortQuickPicksByRuntime(runtimeItems: IAzureQuickPickItem<ApplicationStack>[], recommendedRuntimes: string[]): IAzureQuickPickItem<ApplicationStack>[] {
-        function getPriority(item: IAzureQuickPickItem<ApplicationStack>): number {
+    return stacks
+        // convert each "majorVersion" to an object with all the info we need
+        // tslint:disable-next-line: strict-boolean-expressions
+        .map(stack => (stack.majorVersions || []).map(mv => {
+            return {
+                runtimeVersion: nonNullProp(mv, 'runtimeVersion'),
+                displayVersion: nonNullProp(mv, 'displayVersion'),
+                stackDisplay: nonNullProp(stack, 'display')
+            };
+        }))
+        // flatten array
+        .reduce((acc, val) => acc.concat(val))
+        // filter out Node 4.x and 6.x as they are EOL
+        .filter(mv => !/node\|(4|6)\./i.test(mv.runtimeVersion))
+        // sort
+        .sort((a, b) => {
+            const aInfo: IParsedRuntimeVersion = getRuntimeInfo(a.runtimeVersion);
+            const bInfo: IParsedRuntimeVersion = getRuntimeInfo(b.runtimeVersion);
+            if (aInfo.name !== bInfo.name) {
+                const result: number = getPriority(aInfo.name) - getPriority(bInfo.name);
+                if (result !== 0) {
+                    return result;
+                }
+            } else if (aInfo.major !== bInfo.major) {
+                return bInfo.major - aInfo.major;
+            } else if (aInfo.minor !== bInfo.minor) {
+                return bInfo.minor - aInfo.minor;
+            }
 
-            const index: number = recommendedRuntimes.findIndex((runtime: string) => nonNullProp(item.data, 'name').includes(runtime));
-            return index === -1 ? recommendedRuntimes.length : index;
+            if (a.displayVersion !== b.displayVersion) {
+                return a.displayVersion.localeCompare(b.displayVersion);
+            } else {
+                return a.stackDisplay.localeCompare(b.stackDisplay);
+            }
+        })
+        // convert to quick pick
+        .map(mv => {
+            return {
+                id: mv.runtimeVersion,
+                label: mv.displayVersion,
+                data: mv.runtimeVersion,
+                // include stack as description if it has a version
+                // tslint:disable-next-line: strict-boolean-expressions
+                description: /[0-9]/.test(mv.stackDisplay) ? mv.stackDisplay : undefined
+            };
+        });
+}
+
+interface IParsedRuntimeVersion {
+    name: string;
+    major: number;
+    minor: number;
+}
+
+function getRuntimeInfo(runtimeVersion: string): IParsedRuntimeVersion {
+    const parts: string[] = runtimeVersion.split('|');
+
+    let major: string | undefined;
+    let minor: string | undefined;
+    if (parts[1]) {
+        const match: RegExpMatchArray | null = parts[1].match(/([0-9]+)(?:\.([0-9]+))?/);
+        if (match) {
+            major = match[1];
+            minor = match[2];
         }
-        return runtimeItems.sort((a: IAzureQuickPickItem<ApplicationStack>, b: IAzureQuickPickItem<ApplicationStack>) => getPriority(a) - getPriority(b));
     }
+
+    return {
+        name: parts[0],
+        major: convertToNumber(major),
+        minor: convertToNumber(minor)
+    };
+}
+
+function convertToNumber(data: string | undefined): number {
+    if (data) {
+        const result: number = parseInt(data);
+        if (!isNaN(result)) {
+            return result;
+        }
+    }
+    return Number.MAX_SAFE_INTEGER;
 }
