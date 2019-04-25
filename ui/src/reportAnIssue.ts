@@ -7,7 +7,6 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { IParsedError } from '../index';
 import { getPackageInfo } from "./getPackageInfo";
-import { parseError } from './parseError';
 import { openUrl } from './utils/openUrl';
 import { countLines, limitLines } from './utils/textStrings';
 
