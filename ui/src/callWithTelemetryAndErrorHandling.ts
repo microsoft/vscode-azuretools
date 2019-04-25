@@ -11,7 +11,7 @@ import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { parseError } from './parseError';
 import { reportAnIssue } from './reportAnIssue';
-import { limitLines } from './utils/limitLines';
+import { limitLines } from './utils/textStrings';
 
 const maxStackLines: number = 3;
 
