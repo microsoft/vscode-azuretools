@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as htmlToText from 'html-to-text';
-import * as os from 'os';
 import { IParsedError } from '../index';
 import { localize } from './localize';
 
@@ -159,29 +158,31 @@ function getCallstack(error: { stack?: string }): string | undefined {
     // tslint:disable-next-line: strict-boolean-expressions
     const stack: string = error.stack || '';
 
-    // Standardize to using '/' for path separator for all platforms
-    let result: string = stack.replace(/\\/g, '/');
+    const minifiedLines: (string | undefined)[] = stack
+        .split(/(\r\n|\n)/g) // split by line ending
+        .map(l => {
+            // Get just the file name, line number and column number
+            const fileMatch: RegExpMatchArray | null = l.match(/[^\/\\\(\s]+\.(t|j)s:[0-9]+:[0-9]+/i);
+            if (fileMatch) {
+                const parts: string[] = [];
 
-    // Standardize newlines
-    result = result.replace(/\r\n/g, '\n');
+                // Get the name of the node module (and any sub modules) containing the file
+                const moduleRegExp: RegExp = /node_modules(?:\\|\/)([^\\\/]+)/ig;
+                let moduleMatch: RegExpExecArray | null;
+                do {
+                    moduleMatch = moduleRegExp.exec(l);
+                    if (moduleMatch) {
+                        parts.push(moduleMatch[1]);
+                    }
+                } while (moduleMatch);
 
-    // Get rid of the redundant first lines "<errortype>: <errormessage>", start at first line beginning with "at"
-    const atMatch: RegExpMatchArray | null = result.match(/^\s*at\s.+/m);
-    result = atMatch ? result.slice(atMatch.index) : '';
+                parts.push(fileMatch[0]);
+                return parts.join('/');
+            } else {
+                return '';
+            }
+        })
+        .filter(l => !!l);
 
-    // Remove the first part of the paths (up to "/{extensions,repos,src/sources,users}/xxx/"), which might container the username.
-    // e.g.:
-    //   (C:\Users\MeMyselfAndI\.vscode\extensions\msazurermtools.azurerm-vscode-tools-0.4.3-alpha\dist\extension.bundle.js:1:313309)
-    //   ->
-    //   (../extensions/msazurermtools.azurerm-vscode-tools-0.4.3-alpha/dist/extension.bundle.js:1:313309)
-    result = result.replace(/([\( ])[^() ]*\/(extensions|[Rr]epos|[Ss]rc|[Ss]ources|[Ss]ource|[Uu]sers|[Hh]ome)\/[^/):\r\n ]+\//g, '$1');
-
-    // Trim each line, including getting rid of 'at'
-    result = result.replace(/^\s*(at\s)?\s*/mg, '');
-    result = result.replace(/\s+$/mg, '');
-
-    // Remove username if it still exists
-    result = result.replace(os.userInfo().username, '<user>');
-
-    return !!result ? result : undefined;
+    return minifiedLines.length > 0 ? minifiedLines.join('\n') : undefined;
 }
