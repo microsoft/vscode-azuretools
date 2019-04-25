@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 export * from './confirmOverwriteSettings';
-export { AppKind, WebsiteOS } from './createAppService/AppKind';
+export { AppKind, LinuxRuntimes, WebsiteOS } from './createAppService/AppKind';
 export * from './createAppService/IAppServiceWizardContext';
 export * from './createAppService/SiteCreateStep';
 export * from './createAppService/SiteNameStep';

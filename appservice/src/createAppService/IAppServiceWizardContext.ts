@@ -62,7 +62,7 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
     /**
      * The runtimes to put to the top of the QuickPick list to recommend to the user.
      * In the array, Higher ranking means higher priority, thus will have higher position in the QuickPick list.
-     * This should be set in `setWizardContextDefaults`
+     * This should be set by `IAppCreateOptions` that are passed in by the extension
      */
 
     recommendedSiteRuntime?: LinuxRuntimes[];

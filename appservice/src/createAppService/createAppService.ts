@@ -5,13 +5,12 @@
 
 import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { Site, SkuDescription } from 'azure-arm-website/lib/models';
-import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, ISubscriptionWizardContext, ResourceGroupCreateStep, ResourceGroupListStep } from 'vscode-azureextensionui';
+import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, ISubscriptionWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep } from 'vscode-azureextensionui';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
 import { AppKind, WebsiteOS } from './AppKind';
 import { AppServicePlanCreateStep } from './AppServicePlanCreateStep';
 import { AppServicePlanListStep } from './AppServicePlanListStep';
-import { setWizardContextDefaults } from './createWebApp';
 import { IAppCreateOptions } from './IAppCreateOptions';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 import { SiteCreateStep } from './SiteCreateStep';
@@ -43,11 +42,16 @@ export async function createAppService(
         credentials: subscriptionContext.credentials,
         environment: subscriptionContext.environment,
         newResourceGroupName: createOptions.resourceGroup,
-        resourceGroupDeferLocationStep: true
+        resourceGroupDeferLocationStep: true,
+        recommendedSiteRuntime: createOptions.recommendedSiteRuntime,
+        newPlanSku: createOptions.planSku
     };
 
+    if (createOptions.location) {
+        await LocationListStep.setLocation(wizardContext, createOptions.location);
+    }
+
     promptSteps.push(new SiteNameStep());
-    await setWizardContextDefaults(wizardContext, actionContext, createOptions.advancedCreation);
     if (createOptions.advancedCreation) {
         promptSteps.push(new ResourceGroupListStep());
         promptSteps.push(new SiteOSStep());
