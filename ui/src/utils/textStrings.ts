@@ -11,7 +11,11 @@ export function limitLines(s: string, n: number): string {
     return match ? match[0] : '';
 }
 
-export function numberOfLines(s: string): number {
+export function countLines(s: string): number {
+    if (!s) {
+        return 0;
+    }
+
     const match: RegExpMatchArray | null = s.match(/(\r\n|\n)/g);
     return match ? match.length + 1 : 1;
 }
