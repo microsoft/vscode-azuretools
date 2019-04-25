@@ -14,13 +14,11 @@ import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
-        // tslint:disable: no-use-before-declare
-        const skus: SkuDescription[] = [...commonSkus]; // make a clone of the array
+        const skus: SkuDescription[] = this.getCommonSkus();
         if (wizardContext.newSiteOS === WebsiteOS.windows) {
-            skus.unshift(...freeSkus);
+            skus.unshift(...this.getFreeSkus());
             if (wizardContext.newSiteKind === AppKind.functionapp) {
-                skus.push(...elasticPremiumSkus);
-                // tslint:enable: no-use-before-declare
+                skus.push(...this.getElasticPremiumSkus());
             }
         }
 
@@ -38,83 +36,89 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
     public shouldPrompt(wizardContext: IAppServiceWizardContext): boolean {
         return !wizardContext.newPlanSku;
     }
+
+    private getFreeSkus(): SkuDescription[] {
+        return [
+            {
+                name: 'F1',
+                tier: 'Free',
+                size: 'F1',
+                family: 'F',
+                capacity: 1
+            }
+        ];
+    }
+
+    private getCommonSkus(): SkuDescription[] {
+        return [
+            {
+                name: 'B1',
+                tier: 'Basic',
+                size: 'B1',
+                family: 'B',
+                capacity: 1
+            },
+            {
+                name: 'B2',
+                tier: 'Basic',
+                size: 'B2',
+                family: 'B',
+                capacity: 1
+            },
+            {
+                name: 'B3',
+                tier: 'Basic',
+                size: 'B3',
+                family: 'B',
+                capacity: 1
+            },
+            {
+                name: 'S1',
+                tier: 'Standard',
+                size: 'S1',
+                family: 'S',
+                capacity: 1
+            },
+            {
+                name: 'S2',
+                tier: 'Standard',
+                size: 'S2',
+                family: 'S',
+                capacity: 1
+            },
+            {
+                name: 'S3',
+                tier: 'Standard',
+                size: 'S3',
+                family: 'S',
+                capacity: 1
+            }
+        ];
+    }
+
+    private getElasticPremiumSkus(): SkuDescription[] {
+        return [
+            {
+                name: 'EP1',
+                tier: 'Elastic Premium',
+                size: 'EP1',
+                family: 'EP',
+                capacity: 1
+            },
+            {
+                name: 'EP2',
+                tier: 'Elastic Premium',
+                size: 'EP2',
+                family: 'EP',
+                capacity: 1
+            },
+            {
+                name: 'EP3',
+                tier: 'Elastic Premium',
+                size: 'EP3',
+                family: 'EP',
+                capacity: 1
+            }
+        ];
+    }
 }
-
-const freeSkus: SkuDescription[] = [
-    {
-        name: 'F1',
-        tier: 'Free',
-        size: 'F1',
-        family: 'F',
-        capacity: 1
-    }
-];
-
-const commonSkus: SkuDescription[] = [
-    {
-        name: 'B1',
-        tier: 'Basic',
-        size: 'B1',
-        family: 'B',
-        capacity: 1
-    },
-    {
-        name: 'B2',
-        tier: 'Basic',
-        size: 'B2',
-        family: 'B',
-        capacity: 1
-    },
-    {
-        name: 'B3',
-        tier: 'Basic',
-        size: 'B3',
-        family: 'B',
-        capacity: 1
-    },
-    {
-        name: 'S1',
-        tier: 'Standard',
-        size: 'S1',
-        family: 'S',
-        capacity: 1
-    },
-    {
-        name: 'S2',
-        tier: 'Standard',
-        size: 'S2',
-        family: 'S',
-        capacity: 1
-    },
-    {
-        name: 'S3',
-        tier: 'Standard',
-        size: 'S3',
-        family: 'S',
-        capacity: 1
-    }
-];
-
-const elasticPremiumSkus: SkuDescription[] = [
-    {
-        name: 'EP1',
-        tier: 'Elastic Premium',
-        size: 'EP1',
-        family: 'EP',
-        capacity: 1
-    },
-    {
-        name: 'EP2',
-        tier: 'Elastic Premium',
-        size: 'EP2',
-        family: 'EP',
-        capacity: 1
-    },
-    {
-        name: 'EP3',
-        tier: 'Elastic Premium',
-        size: 'EP3',
-        family: 'EP',
-        capacity: 1
-    }
-];
