@@ -47,11 +47,11 @@ suite('Error Parsing Tests', () => {
                 at Generator.next (<anonymous>)
                 at a (C:\\Users\\MeMyselfAndI\\.vscode\\extensions\\msazurermtools.azurerm-vscode-tools-0.4.3-alpha\\dist\\extension.bundle.js:127:86224)`;
             const pe: IParsedError = parseError(err);
-            assert.strictEqual(pe.stack, `extension.bundle.js:1:313309
-extension.bundle.js:1:308412
-extension.bundle.js:1:313489
-extension.bundle.js:127:88385
-extension.bundle.js:127:86224`);
+            assert.strictEqual(pe.stack, `UnrecognizedFunctionVisitor.visitFunction extension.bundle.js:1:313309
+FunctionValue.accept extension.bundle.js:1:308412
+Function.visit extension.bundle.js:1:313489
+DeploymentTemplate.<anonymous> extension.bundle.js:127:88385
+a extension.bundle.js:127:86224`);
         });
 
         test('Removes first part of paths: Mac/Linux', () => {
@@ -70,16 +70,16 @@ extension.bundle.js:127:86224`);
                 at Object.onceWrapper (events.js:273:13)
                 at IncomingMessage.emit (events.js:187:15)`;
             const pe: IParsedError = parseError(err);
-            assert.strictEqual(pe.stack, `azure-storage/storageserviceclient.js:1205:23
-azure-storage/storageserviceclient.js:751:50
-azure-storage/storageserviceclient.js:319:37
-request/request.js:185:22
-events.js:182:13
-request/request.js:1161:10
-events.js:182:13
-request/request.js:1083:12
-events.js:273:13
-events.js:187:15`);
+            assert.strictEqual(pe.stack, `Function.StorageServiceClient._normalizeError azure-storage/storageserviceclient.js:1205:23
+FileService.StorageServiceClient._processResponse azure-storage/storageserviceclient.js:751:50
+Request.processResponseCallback [as _callback] azure-storage/storageserviceclient.js:319:37
+Request.init.self.callback request/request.js:185:22
+Request.emit events.js:182:13
+Request.<anonymous> request/request.js:1161:10
+Request.emit events.js:182:13
+IncomingMessage.<anonymous> request/request.js:1083:12
+Object.onceWrapper events.js:273:13
+IncomingMessage.emit events.js:187:15`);
         });
 
         test('Source lines without function name', () => {
@@ -92,10 +92,10 @@ events.js:187:15`);
             at next (/Users/YouYourselfAndYou/repos/vscode-azuretools/ui/node_modules/vscode/node_modules/mocha/lib/runner.js:356:14)
             at /Users/YouYourselfAndYou/repos/vscode-azuretools/ui/node_modules/vscode/node_modules/mocha/lib/runner.js:366:7`;
             const pe: IParsedError = parseError(err);
-            assert.strictEqual(pe.stack, `createApiProvider.ts:62:19
-callWithTelemetryAndErrorHandling.ts:41:28
+            assert.strictEqual(pe.stack, `Object.<anonymous> createApiProvider.ts:62:19
+Object.callWithTelemetryAndErrorHandlingSync callWithTelemetryAndErrorHandling.ts:41:28
 vscode/mocha/runner.js:560:12
-vscode/mocha/runner.js:356:14
+next vscode/mocha/runner.js:356:14
 vscode/mocha/runner.js:366:7`);
         });
 
@@ -105,9 +105,9 @@ vscode/mocha/runner.js:366:7`);
                     at callFn (/Users/vsts/agent/2.147.1/work/1/s/ui/node_modules/vscode/node_modules/mocha/lib/runnable.js:354:21)
                     at module.exports../src/AzureRMTools.ts.__awaiter (/Users/vsts/repos/vscode-azurearmtools/dist/extension.bundle.js:160227:71)`;
             const pe: IParsedError = parseError(err);
-            assert.strictEqual(pe.stack, `parseError.test.ts:25:23
-vscode/mocha/runnable.js:354:21
-extension.bundle.js:160227:71`);
+            assert.strictEqual(pe.stack, `Context.test parseError.test.ts:25:23
+callFn vscode/mocha/runnable.js:354:21
+AzureRMTools.ts.__awaiter extension.bundle.js:160227:71`);
         });
 
         test('Weird stack', () => {
@@ -124,12 +124,12 @@ extension.bundle.js:160227:71`);
                 at module.exports../node_modules/vscode-azureextensionui/out/src/callWithTelemetryAndErrorHandling.js.__awaiter (/Users/anyone/repos/vscode-azurearmtools/dist/extension.bundle.js:148618:71)
                 at new Promise (<anonymous>)`;
             const pe: IParsedError = parseError(err);
-            assert.strictEqual(pe.stack, `extension.bundle.js:160396:60
-extension.bundle.js:160227:71
-extension.bundle.js:160223:12
-extension.bundle.js:160394:20
-extension.bundle.js:148668:51
-vscode-azureextensionui/extension.bundle.js:148618:71`);
+            assert.strictEqual(pe.stack, `Object.<anonymous> extension.bundle.js:160396:60
+AzureRMTools.ts.__awaiter extension.bundle.js:160227:71
+AzureRMTools.ts.__awaiter extension.bundle.js:160223:12
+Object.<anonymous> extension.bundle.js:160394:20
+Object.<anonymous> extension.bundle.js:148668:51
+callWithTelemetryAndErrorHandling.js.__awaiter vscode-azureextensionui/extension.bundle.js:148618:71`);
         });
 
     });

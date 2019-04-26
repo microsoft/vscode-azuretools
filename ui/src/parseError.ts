@@ -161,9 +161,15 @@ function getCallstack(error: { stack?: string }): string | undefined {
     const minifiedLines: (string | undefined)[] = stack
         .split(/(\r\n|\n)/g) // split by line ending
         .map(l => {
+            let result: string = '';
             // Get just the file name, line number and column number
             const fileMatch: RegExpMatchArray | null = l.match(/[^\/\\\(\s]+\.(t|j)s:[0-9]+:[0-9]+/i);
             if (fileMatch) {
+                const functionMatch: RegExpMatchArray | null = l.match(/^[\s]*at ([^\(\\\/]+(?:\\|\/)?)+/i);
+                if (functionMatch) {
+                    result += functionMatch[1];
+                }
+
                 const parts: string[] = [];
 
                 // Get the name of the node module (and any sub modules) containing the file
@@ -177,10 +183,10 @@ function getCallstack(error: { stack?: string }): string | undefined {
                 } while (moduleMatch);
 
                 parts.push(fileMatch[0]);
-                return parts.join('/');
-            } else {
-                return '';
+                result += parts.join('/');
             }
+
+            return result;
         })
         .filter(l => !!l);
 
