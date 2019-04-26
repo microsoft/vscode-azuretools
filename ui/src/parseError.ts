@@ -164,7 +164,10 @@ function getCallstack(error: { stack?: string }): string | undefined {
             let result: string = '';
             // Get just the file name, line number and column number
             const fileMatch: RegExpMatchArray | null = l.match(/[^\/\\\(\s]+\.(t|j)s:[0-9]+:[0-9]+/i);
+
+            // Ignore any lines without a file match (e.g. "at Generator.next (<anonymous>)")
             if (fileMatch) {
+                // Get the function name
                 const functionMatch: RegExpMatchArray | null = l.match(/^[\s]*at ([^\(\\\/]+(?:\\|\/)?)+/i);
                 if (functionMatch) {
                     result += functionMatch[1];
