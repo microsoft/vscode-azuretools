@@ -154,6 +154,13 @@ function unpackErrorFromField(error: any, prop: string): any {
     return error;
 }
 
+/**
+ * Example line in the stack:
+ * at FileService.StorageServiceClient._processResponse (/path/ms-azuretools.vscode-azurestorage-0.6.0/node_modules/azure-storage/lib/common/services/storageserviceclient.js:751:50)
+ *
+ * Final minified line:
+ * FileService.StorageServiceClient._processResponse azure-storage/storageserviceclient.js:751:50
+ */
 function getCallstack(error: { stack?: string }): string | undefined {
     // tslint:disable-next-line: strict-boolean-expressions
     const stack: string = error.stack || '';
@@ -163,11 +170,13 @@ function getCallstack(error: { stack?: string }): string | undefined {
         .map(l => {
             let result: string = '';
             // Get just the file name, line number and column number
+            // From above example: storageserviceclient.js:751:50
             const fileMatch: RegExpMatchArray | null = l.match(/[^\/\\\(\s]+\.(t|j)s:[0-9]+:[0-9]+/i);
 
             // Ignore any lines without a file match (e.g. "at Generator.next (<anonymous>)")
             if (fileMatch) {
                 // Get the function name
+                // From above example: FileService.StorageServiceClient._processResponse
                 const functionMatch: RegExpMatchArray | null = l.match(/^[\s]*at ([^\(\\\/]+(?:\\|\/)?)+/i);
                 if (functionMatch) {
                     result += functionMatch[1];
@@ -176,6 +185,7 @@ function getCallstack(error: { stack?: string }): string | undefined {
                 const parts: string[] = [];
 
                 // Get the name of the node module (and any sub modules) containing the file
+                // From above example: azure-storage
                 const moduleRegExp: RegExp = /node_modules(?:\\|\/)([^\\\/]+)/ig;
                 let moduleMatch: RegExpExecArray | null;
                 do {
