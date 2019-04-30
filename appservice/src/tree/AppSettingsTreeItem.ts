@@ -109,7 +109,15 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
 
         showCreatingTreeItem(newKey);
         settings.properties[newKey] = newValue;
-        await this.root.client.updateApplicationSettings(settings);
+
+        try {
+            await this.root.client.updateApplicationSettings(settings);
+        } catch (err) {
+            // if this is rejected, we need to clear the property otherwise it will cause every subsequent add to fail
+            delete settings.properties[newKey];
+            throw err;
+        }
+
         return await AppSettingTreeItem.createAppSettingTreeItem(this, newKey, newValue, this._commandId);
     }
 
