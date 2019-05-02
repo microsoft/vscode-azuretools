@@ -71,14 +71,24 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     public async editSettingItem(oldKey: string, newKey: string, value: string): Promise<void> {
         const settings: StringDictionary = await this.ensureSettings();
 
-        if (settings.properties) {
-            if (oldKey !== newKey) {
-                delete settings.properties[oldKey];
-            }
-            settings.properties[newKey] = value;
+        renameHelper(oldKey, newKey);
+
+        try {
+            await this.root.client.updateApplicationSettings(settings);
+        } catch (err) {
+            // if this was a rename, delete the invalid key and readd the only key
+            renameHelper(newKey, oldKey);
+            throw err;
         }
 
-        await this.root.client.updateApplicationSettings(settings);
+        function renameHelper(key1: string, key2: string): void {
+            if (settings.properties) {
+                if (key1 !== key2) {
+                    delete settings.properties[key1];
+                }
+                settings.properties[key2] = value;
+            }
+        }
     }
 
     public async deleteSettingItem(key: string): Promise<void> {
@@ -113,7 +123,6 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         try {
             await this.root.client.updateApplicationSettings(settings);
         } catch (err) {
-            // if this is rejected, we need to clear the property otherwise it will cause every subsequent add to fail
             delete settings.properties[newKey];
             throw err;
         }
