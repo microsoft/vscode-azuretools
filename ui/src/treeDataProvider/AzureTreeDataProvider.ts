@@ -270,8 +270,9 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
             ];
         }
 
+        const contextValues: (string | RegExp)[] = Array.isArray(expectedContextValues) ? expectedContextValues : [expectedContextValues];
         picks = picks.concat(this._customRootTreeItems
-            .filter((ti: AzureTreeItem<TRoot>) => ti.includeInTreePicker(<string[]>expectedContextValues))
+            .filter((ti: AzureTreeItem<TRoot>) => ti.includeInTreePicker(contextValues))
             .map((ti: AzureTreeItem<TRoot>) => { return { data: ti, description: '', label: ti.label }; }));
 
         const options: QuickPickOptions = { placeHolder: localize('selectSubscription', 'Select a Subscription') };

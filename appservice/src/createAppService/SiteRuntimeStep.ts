@@ -6,7 +6,6 @@
 import { ApplicationStack } from 'azure-arm-website/lib/models';
 import { WebResource } from 'ms-rest';
 import * as request from 'request-promise';
-import { workspace } from 'vscode';
 import { appendExtensionUserAgent, AzureWizardPromptStep, IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -34,9 +33,7 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                 runtimeItems.push({ label: 'Python', description: previewDescription, data: 'python' });
             } else {
                 runtimeItems.push({ label: 'Java', data: 'java' });
-                if (workspace.getConfiguration().get('azureFunctions.enablePowerShell')) {
-                    runtimeItems.push({ label: 'PowerShell', description: previewDescription, data: 'powershell' });
-                }
+                runtimeItems.push({ label: 'PowerShell', description: previewDescription, data: 'powershell' });
             }
 
             wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new app.' })).data;

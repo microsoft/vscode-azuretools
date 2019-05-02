@@ -30,7 +30,7 @@ export class AzureWizardUserInput implements IRootUserInput {
             const quickPick: QuickPick<TPick> = window.createQuickPick<TPick>();
             disposables.push(quickPick);
             quickPick.title = this._wizard.title;
-            if (!this._wizard.hideStepCount) {
+            if (!this._wizard.hideStepCount && this._wizard.title) {
                 quickPick.step = this._wizard.currentStep;
                 quickPick.totalSteps = this._wizard.totalSteps;
             }
@@ -80,7 +80,7 @@ export class AzureWizardUserInput implements IRootUserInput {
             const inputBox: InputBox = window.createInputBox();
             disposables.push(inputBox);
             inputBox.title = this._wizard.title;
-            if (!this._wizard.hideStepCount) {
+            if (!this._wizard.hideStepCount && this._wizard.title) {
                 inputBox.step = this._wizard.currentStep;
                 inputBox.totalSteps = this._wizard.totalSteps;
             }
