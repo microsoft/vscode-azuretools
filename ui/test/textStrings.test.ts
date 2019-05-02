@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import { limitLines } from '../src/utils/limitLines';
+import { countLines as countLines, limitLines } from '../src/utils/textStrings';
 
 suite('limitLines', () => {
     function testLimitLines(testName: string, s: string, n: number, expected: string): void {
@@ -24,4 +24,23 @@ suite('limitLines', () => {
     testLimitLines('two lines 3 \\r\\n', 'line 1\r\nline 2', 3, 'line 1\r\nline 2');
     testLimitLines('three lines 2', 'line 1\nline 2\nline 3', 2, 'line 1\nline 2');
     testLimitLines('three lines 4', 'line 1\nline 2\nline 3', 4, 'line 1\nline 2\nline 3');
+});
+
+suite('numberOfLines', () => {
+    function testNumberOfLines(testName: string, s: string, expected: number): void {
+        test(testName, () => {
+            const result: number = countLines(s);
+            assert.strictEqual(result, expected);
+        });
+    }
+
+    testNumberOfLines('empty', '', 0);
+    testNumberOfLines('one char', 'a', 1);
+    testNumberOfLines('just NL', '\n', 2);
+    testNumberOfLines('CRLF', '\r\n', 2);
+    testNumberOfLines('one line', 'one line', 1);
+    testNumberOfLines('two lines \\n', 'line 1\nline 2', 2);
+    testNumberOfLines('two lines \\r\\n', 'line 1\r\nline 2', 2);
+    testNumberOfLines('two lines \\n', 'line 1\nline 2', 2);
+    testNumberOfLines('three lines \\r\\n\\n', 'line 1\r\n\nline 3', 3);
 });

@@ -9,6 +9,7 @@ export * from './createAppService/IAppServiceWizardContext';
 export * from './createAppService/AppServicePlanListStep';
 export * from './createAppService/AppServicePlanCreateStep';
 export * from './createAppService/SiteCreateStep';
+export * from './createAppService/SiteHostingPlanStep';
 export * from './createAppService/SiteNameStep';
 export * from './createAppService/SiteOSStep';
 export * from './createAppService/SiteRuntimeStep';

@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as htmlToText from 'html-to-text';
-import * as os from 'os';
 import { IParsedError } from '../index';
 import { localize } from './localize';
 
@@ -155,33 +154,54 @@ function unpackErrorFromField(error: any, prop: string): any {
     return error;
 }
 
+/**
+ * Example line in the stack:
+ * at FileService.StorageServiceClient._processResponse (/path/ms-azuretools.vscode-azurestorage-0.6.0/node_modules/azure-storage/lib/common/services/storageserviceclient.js:751:50)
+ *
+ * Final minified line:
+ * FileService.StorageServiceClient._processResponse azure-storage/storageserviceclient.js:751:50
+ */
 function getCallstack(error: { stack?: string }): string | undefined {
     // tslint:disable-next-line: strict-boolean-expressions
     const stack: string = error.stack || '';
 
-    // Standardize to using '/' for path separator for all platforms
-    let result: string = stack.replace(/\\/g, '/');
+    const minifiedLines: (string | undefined)[] = stack
+        .split(/(\r\n|\n)/g) // split by line ending
+        .map(l => {
+            let result: string = '';
+            // Get just the file name, line number and column number
+            // From above example: storageserviceclient.js:751:50
+            const fileMatch: RegExpMatchArray | null = l.match(/[^\/\\\(\s]+\.(t|j)s:[0-9]+:[0-9]+/i);
 
-    // Standardize newlines
-    result = result.replace(/\r\n/g, '\n');
+            // Ignore any lines without a file match (e.g. "at Generator.next (<anonymous>)")
+            if (fileMatch) {
+                // Get the function name
+                // From above example: FileService.StorageServiceClient._processResponse
+                const functionMatch: RegExpMatchArray | null = l.match(/^[\s]*at ([^\(\\\/]+(?:\\|\/)?)+/i);
+                if (functionMatch) {
+                    result += functionMatch[1];
+                }
 
-    // Get rid of the redundant first lines "<errortype>: <errormessage>", start at first line beginning with "at"
-    const atMatch: RegExpMatchArray | null = result.match(/^\s*at\s.+/m);
-    result = atMatch ? result.slice(atMatch.index) : '';
+                const parts: string[] = [];
 
-    // Remove the first part of the paths (up to "/{extensions,repos,src/sources,users}/xxx/"), which might container the username.
-    // e.g.:
-    //   (C:\Users\MeMyselfAndI\.vscode\extensions\msazurermtools.azurerm-vscode-tools-0.4.3-alpha\dist\extension.bundle.js:1:313309)
-    //   ->
-    //   (../extensions/msazurermtools.azurerm-vscode-tools-0.4.3-alpha/dist/extension.bundle.js:1:313309)
-    result = result.replace(/([\( ])[^() ]*\/(extensions|[Rr]epos|[Ss]rc|[Ss]ources|[Ss]ource|[Uu]sers|[Hh]ome)\/[^/):\r\n ]+\//g, '$1');
+                // Get the name of the node module (and any sub modules) containing the file
+                // From above example: azure-storage
+                const moduleRegExp: RegExp = /node_modules(?:\\|\/)([^\\\/]+)/ig;
+                let moduleMatch: RegExpExecArray | null;
+                do {
+                    moduleMatch = moduleRegExp.exec(l);
+                    if (moduleMatch) {
+                        parts.push(moduleMatch[1]);
+                    }
+                } while (moduleMatch);
 
-    // Trim each line, including getting rid of 'at'
-    result = result.replace(/^\s*(at\s)?\s*/mg, '');
-    result = result.replace(/\s+$/mg, '');
+                parts.push(fileMatch[0]);
+                result += parts.join('/');
+            }
 
-    // Remove username if it still exists
-    result = result.replace(os.userInfo().username, '<user>');
+            return result;
+        })
+        .filter(l => !!l);
 
-    return !!result ? result : undefined;
+    return minifiedLines.length > 0 ? minifiedLines.join('\n') : undefined;
 }
