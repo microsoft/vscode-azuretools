@@ -76,7 +76,7 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         try {
             await this.root.client.updateApplicationSettings(settings);
         } catch (err) {
-            // if this was a rename, delete the invalid key and readd the only key
+            // if this was a rename, delete the invalid key and readd the old key
             renameHelper(newKey, oldKey);
             throw err;
         }
