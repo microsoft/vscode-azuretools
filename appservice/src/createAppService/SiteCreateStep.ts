@@ -8,7 +8,7 @@ import StorageManagementClient = require('azure-arm-storage');
 import { StorageAccount, StorageAccountListKeysResult } from 'azure-arm-storage/lib/models';
 import { WebSiteManagementClient } from 'azure-arm-website';
 import { NameValuePair, SiteConfig } from 'azure-arm-website/lib/models';
-import { MessageItem, Progress, window } from 'vscode';
+import { Progress } from 'vscode';
 import { AzureWizardExecuteStep, createAzureClient } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -49,23 +49,6 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
             clientAffinityEnabled: wizardContext.newSiteKind === AppKind.app,
             siteConfig: await this.getNewSiteConfig(wizardContext),
             reserved: wizardContext.newSiteOS === WebsiteOS.linux  // The secret property - must be set to true to make it a Linux plan. Confirmed by the team who owns this API.
-        });
-
-        const siteUrl: string = `https://${wizardContext.site.defaultHostName}`;
-        const createdNewApp: string = wizardContext.newSiteKind === AppKind.functionapp ?
-            localize('createdNewFunctionApp', 'Created new function app "{0}": {1}', wizardContext.site.name, siteUrl) :
-            localize('createdNewWebApp', 'Created new web app "{0}": {1}', wizardContext.site.name, siteUrl);
-        ext.outputChannel.appendLine(createdNewApp);
-        ext.outputChannel.appendLine('');
-        const viewOutput: MessageItem = {
-            title: localize('viewOutput', 'View Output')
-        };
-
-        // Note: intentionally not waiting for the result of this before returning
-        window.showInformationMessage(createdNewApp, viewOutput).then((result: MessageItem | undefined) => {
-            if (result === viewOutput) {
-                ext.outputChannel.show();
-            }
         });
     }
 
