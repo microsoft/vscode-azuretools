@@ -32,7 +32,7 @@ export class SiteClient {
     public readonly location: string;
     public readonly serverFarmId: string;
     public readonly kind: string;
-    public readonly initialState: string;
+    public readonly initialState?: string;
     public readonly isFunctionApp: boolean;
     public readonly isLinux: boolean;
 
@@ -61,7 +61,7 @@ export class SiteClient {
         this.location = site.location;
         this.serverFarmId = nonNullProp(site, 'serverFarmId');
         this.kind = nonNullProp(site, 'kind');
-        this.initialState = nonNullProp(site, 'state');
+        this.initialState = site.state;
         this.isFunctionApp = !!site.kind && site.kind.includes('functionapp');
         this.isLinux = !!site.kind && site.kind.toLowerCase().includes('linux');
 
