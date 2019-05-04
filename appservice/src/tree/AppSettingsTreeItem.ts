@@ -69,26 +69,17 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     }
 
     public async editSettingItem(oldKey: string, newKey: string, value: string): Promise<void> {
-        const settings: StringDictionary = await this.ensureSettings();
-
-        renameHelper(oldKey, newKey);
-
-        try {
-            await this.root.client.updateApplicationSettings(settings);
-        } catch (err) {
-            // if this was a rename, delete the invalid key and readd the old key
-            renameHelper(newKey, oldKey);
-            throw err;
-        }
-
-        function renameHelper(key1: string, key2: string): void {
-            if (settings.properties) {
-                if (key1 !== key2) {
-                    delete settings.properties[key1];
-                }
-                settings.properties[key2] = value;
+        // make a deep copy so settings are not cached if there's a failure
+        // tslint:disable-next-line: no-unsafe-any
+        const settings: StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings()));
+        if (settings.properties) {
+            if (oldKey !== newKey) {
+                delete settings.properties[oldKey];
             }
+            settings.properties[newKey] = value;
         }
+
+        this._settings = await this.root.client.updateApplicationSettings(settings);
     }
 
     public async deleteSettingItem(key: string): Promise<void> {
@@ -102,8 +93,9 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     }
 
     public async createChildImpl(showCreatingTreeItem: (label: string) => void): Promise<AzureTreeItem<ISiteTreeRoot>> {
-        const settings: StringDictionary = await this.ensureSettings();
-
+        // make a deep copy so settings are not cached if there's a failure
+        // tslint:disable-next-line: no-unsafe-any
+        const settings: StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings()));
         const newKey: string = await ext.ui.showInputBox({
             prompt: 'Enter new setting key',
             validateInput: (v?: string): string | undefined => validateAppSettingKey(settings, v)
@@ -120,12 +112,7 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         showCreatingTreeItem(newKey);
         settings.properties[newKey] = newValue;
 
-        try {
-            await this.root.client.updateApplicationSettings(settings);
-        } catch (err) {
-            delete settings.properties[newKey];
-            throw err;
-        }
+        this._settings = await this.root.client.updateApplicationSettings(settings);
 
         return await AppSettingTreeItem.createAppSettingTreeItem(this, newKey, newValue, this._commandId);
     }
