@@ -83,13 +83,15 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     }
 
     public async deleteSettingItem(key: string): Promise<void> {
-        const settings: StringDictionary = await this.ensureSettings();
+        // make a deep copy so settings are not cached if there's a failure
+        // tslint:disable-next-line: no-unsafe-any
+        const settings: StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings()));
 
         if (settings.properties) {
             delete settings.properties[key];
         }
 
-        await this.root.client.updateApplicationSettings(settings);
+        this._settings = await this.root.client.updateApplicationSettings(settings);
     }
 
     public async createChildImpl(showCreatingTreeItem: (label: string) => void): Promise<AzureTreeItem<ISiteTreeRoot>> {
