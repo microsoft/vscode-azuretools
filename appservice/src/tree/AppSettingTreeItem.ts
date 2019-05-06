@@ -56,8 +56,8 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
             value: this._value
         });
 
-        this._value = newValue;
         await this.parent.editSettingItem(this._key, this._key, newValue);
+        this._value = newValue;
         await this.refresh();
     }
 
@@ -71,8 +71,8 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
             validateInput: (v?: string): string | undefined => validateAppSettingKey(settings, v, oldKey)
         });
 
-        this._key = newKey;
         await this.parent.editSettingItem(oldKey, newKey, this._value);
+        this._key = newKey;
         await this.refresh();
     }
 
