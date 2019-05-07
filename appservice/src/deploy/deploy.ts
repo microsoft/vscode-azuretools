@@ -9,7 +9,6 @@ import { IActionContext, TelemetryProperties } from 'vscode-azureextensionui';
 import { localize } from '../localize';
 import { ScmType } from '../ScmType';
 import { SiteClient } from '../SiteClient';
-import { javaUtils } from '../utils/javaUtils';
 import { randomUtils } from '../utils/randomUtils';
 import { deployWar } from './deployWar';
 import { deployZip } from './deployZip';
@@ -56,10 +55,6 @@ export async function deploy(client: SiteClient, fsPath: string, actionContext: 
         // Ignore
     }
 
-    if (javaUtils.isJavaSERuntime(config.linuxFxVersion)) {
-        await javaUtils.configureJavaSEAppSettings(client);
-    }
-
     await window.withProgress({ location: ProgressLocation.Notification, title: localize('deploying', 'Deploying to "{0}"... Check output window for status.', client.fullName) }, async (): Promise<void> => {
         switch (config.scmType) {
             case ScmType.LocalGit:
@@ -68,7 +63,7 @@ export async function deploy(client: SiteClient, fsPath: string, actionContext: 
             case ScmType.GitHub:
                 throw new Error(localize('gitHubConnected', '"{0}" is connected to a GitHub repository. Push to GitHub repository to deploy.', client.fullName));
             default: //'None' or any other non-supported scmType
-                if (javaUtils.isJavaWebContainerRuntime(config.linuxFxVersion)) {
+                if (config.linuxFxVersion && /^(tomcat|wildfly)/i.test(config.linuxFxVersion)) {
                     await deployWar(client, fsPath);
                     break;
                 }
