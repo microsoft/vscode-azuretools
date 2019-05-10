@@ -14,7 +14,7 @@ This package provides common Azure UI elements for VS Code extensions:
 Use `registerCommand`, `registerEvent`, or ` callWithTelemetryAndErrorHandling` to consistently display error messages and track commands with telemetry. You must call `registerUIExtensionVariables` first in your extension's `activate()` method. The simplest example is to register a command (in this case, refreshing a node):
 ```typescript
 registerUIExtensionVariables(...);
-registerCommand('yourExtension.Refresh', (node: AzureTreeItem) => { node.refresh(); });
+registerCommand('yourExtension.Refresh', (node: AzExtTreeItem) => { node.refresh(); });
 ```
 Here are a few of the benefits this provides:
 * Parses Azure errors of the form `{ "Code": "Conflict", "Message": "This is the actual message" }` and only displays the 'Message' property
@@ -48,13 +48,13 @@ registerEvent('yourExtension.onDidSaveTextDocument', vscode.workspace.onDidSaveT
 
 ### Display Azure Resources
 Follow these steps to create your basic Azure Tree:
-1. Implement an `AzureTreeItem` (or `AzureParentTreeItem`) describing the items to be displayed under your subscription:
+1. Implement an `AzExtTreeItem` (or `AzExtParentTreeItem`) describing the items to be displayed under your subscription:
     ```typescript
-    export class WebAppTreeItem extends AzureTreeItem {
+    export class WebAppTreeItem extends AzExtTreeItem {
         public static contextValue: string = 'azureWebApp';
         public readonly contextValue: string = WebAppTreeItem.contextValue;
         private readonly _site: Site;
-        constructor(parent: AzureParentTreeItem, site: Site) {
+        constructor(parent: AzExtParentTreeItem, site: Site) {
             super(parent);
             this._site = site;
         }
@@ -107,7 +107,7 @@ registerCommand('appService.Browse', async (treeItem?: WebAppTreeItem) => {
 }));
 ```
 
-For a more advanced scenario, you can also implement the `createChildImpl` method on your `AzureParentTreeItem`. This will ensure the 'Create' option is displayed in the node picker and will automatically display a 'Creating...' item in the tree:
+For a more advanced scenario, you can also implement the `createChildImpl` method on your `AzExtParentTreeItem`. This will ensure the 'Create' option is displayed in the node picker and will automatically display a 'Creating...' item in the tree:
 
 ![CreateNodePicker](resources/CreateNodePicker.png) ![CreatingNode](resources/CreatingNode.png)
 ```typescript

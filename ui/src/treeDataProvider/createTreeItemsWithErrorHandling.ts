@@ -5,10 +5,10 @@
 
 import * as path from 'path';
 import { localize } from '../localize';
-import { AzureParentTreeItem } from './AzureParentTreeItem';
-import { AzureTreeItem } from './AzureTreeItem';
+import { AzExtParentTreeItem } from './AzExtParentTreeItem';
+import { AzExtTreeItem } from './AzExtTreeItem';
 
-class InvalidTreeItem<TRoot> extends AzureParentTreeItem<TRoot> {
+class InvalidTreeItem<TRoot> extends AzExtParentTreeItem<TRoot> {
     public readonly contextValue: string;
     public readonly label: string;
     public readonly description: string;
@@ -17,7 +17,7 @@ class InvalidTreeItem<TRoot> extends AzureParentTreeItem<TRoot> {
     private _error: any;
 
     // tslint:disable-next-line:no-any
-    constructor(parent: AzureParentTreeItem<TRoot>, label: string, error: any, contextValue: string, description: string = localize('invalid', 'Invalid')) {
+    constructor(parent: AzExtParentTreeItem<TRoot>, label: string, error: any, contextValue: string, description: string = localize('invalid', 'Invalid')) {
         super(parent);
         this.label = label;
         this._error = error;
@@ -29,7 +29,7 @@ class InvalidTreeItem<TRoot> extends AzureParentTreeItem<TRoot> {
         return path.join(__filename, '..', '..', '..', '..', 'resources', 'warning.svg');
     }
 
-    public async loadMoreChildrenImpl(): Promise<AzureTreeItem<TRoot>[]> {
+    public async loadMoreChildrenImpl(): Promise<AzExtTreeItem<TRoot>[]> {
         throw this._error;
     }
 
@@ -44,18 +44,18 @@ class InvalidTreeItem<TRoot> extends AzureParentTreeItem<TRoot> {
 }
 
 export async function createTreeItemsWithErrorHandling<TSource, TTreeItem>(
-    treeItem: AzureParentTreeItem<TTreeItem>,
+    treeItem: AzExtParentTreeItem<TTreeItem>,
     sourceArray: TSource[],
     invalidContextValue: string,
-    createTreeItem: (source: TSource) => AzureTreeItem<TTreeItem> | undefined | Promise<AzureTreeItem<TTreeItem> | undefined>,
-    getLabelOnError: (source: TSource) => string | undefined | Promise<string | undefined>): Promise<AzureTreeItem<TTreeItem>[]> {
+    createTreeItem: (source: TSource) => AzExtTreeItem<TTreeItem> | undefined | Promise<AzExtTreeItem<TTreeItem> | undefined>,
+    getLabelOnError: (source: TSource) => string | undefined | Promise<string | undefined>): Promise<AzExtTreeItem<TTreeItem>[]> {
 
-    const treeItems: AzureTreeItem<TTreeItem>[] = [];
+    const treeItems: AzExtTreeItem<TTreeItem>[] = [];
     // tslint:disable-next-line:no-any
     let unknownError: any;
     await Promise.all(sourceArray.map(async (source: TSource) => {
         try {
-            const item: AzureTreeItem<TTreeItem> | undefined = await createTreeItem(source);
+            const item: AzExtTreeItem<TTreeItem> | undefined = await createTreeItem(source);
             if (item) {
                 treeItems.push(item);
             }

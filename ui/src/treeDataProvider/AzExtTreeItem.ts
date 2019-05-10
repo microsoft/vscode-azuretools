@@ -9,10 +9,10 @@ import * as types from '../..';
 import { ArgumentError, NotImplementedError } from '../errors';
 import { localize } from '../localize';
 import { openUrl } from '../utils/openUrl';
-import { IAzureParentTreeItemInternal, IAzureTreeDataProviderInternal } from "./InternalInterfaces";
+import { IAzExtParentTreeItemInternal, IAzExtTreeDataProviderInternal } from "./InternalInterfaces";
 import { loadingIconPath } from "./treeConstants";
 
-export abstract class AzureTreeItem<TRoot = ISubscriptionRoot> implements types.AzureTreeItem<TRoot> {
+export abstract class AzExtTreeItem<TRoot = ISubscriptionRoot> implements types.AzExtTreeItem<TRoot> {
     //#region Properties implemented by base class
     public abstract label: string;
     public abstract contextValue: string;
@@ -23,10 +23,10 @@ export abstract class AzureTreeItem<TRoot = ISubscriptionRoot> implements types.
     //#endregion
 
     public readonly collapsibleState: TreeItemCollapsibleState | undefined;
-    public readonly parent: IAzureParentTreeItemInternal<TRoot> | undefined;
+    public readonly parent: IAzExtParentTreeItemInternal<TRoot> | undefined;
     private _temporaryDescription?: string;
 
-    public constructor(parent: IAzureParentTreeItemInternal<TRoot> | undefined) {
+    public constructor(parent: IAzExtParentTreeItemInternal<TRoot> | undefined) {
         this.parent = parent;
     }
 
@@ -65,7 +65,7 @@ export abstract class AzureTreeItem<TRoot = ISubscriptionRoot> implements types.
         }
     }
 
-    public get treeDataProvider(): IAzureTreeDataProviderInternal<TRoot> {
+    public get treeDataProvider(): IAzExtTreeDataProviderInternal<TRoot> {
         if (this.parent) {
             return this.parent.treeDataProvider;
         } else {
@@ -83,7 +83,7 @@ export abstract class AzureTreeItem<TRoot = ISubscriptionRoot> implements types.
         await this.treeDataProvider.refresh(this);
     }
 
-    public async openInPortal(this: AzureTreeItem<ISubscriptionRoot>, id?: string, options?: OpenInPortalOptions): Promise<void> {
+    public async openInPortal(this: AzExtTreeItem<ISubscriptionRoot>, id?: string, options?: OpenInPortalOptions): Promise<void> {
         id = id === undefined ? this.fullId : id;
         const queryPrefix: string = (options && options.queryPrefix) ? `?${options.queryPrefix}` : '';
         const url: string = `${this.root.environment.portalUrl}/${queryPrefix}#@${this.root.tenantId}/resource${id}`;

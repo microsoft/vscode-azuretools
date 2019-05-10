@@ -9,25 +9,25 @@ import * as types from '../..';
 import { NotImplementedError } from '../errors';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { AzureTreeItem } from './AzureTreeItem';
+import { AzExtTreeItem } from './AzExtTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';
-import { IAzureParentTreeItemInternal } from './InternalInterfaces';
+import { IAzExtParentTreeItemInternal } from './InternalInterfaces';
 import { loadingIconPath, loadMoreLabel } from './treeConstants';
 
-export abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> extends AzureTreeItem<TRoot> implements types.AzureParentTreeItem<TRoot>, IAzureParentTreeItemInternal<TRoot> {
+export abstract class AzExtParentTreeItem<TRoot = ISubscriptionRoot> extends AzExtTreeItem<TRoot> implements types.AzExtParentTreeItem<TRoot>, IAzExtParentTreeItemInternal<TRoot> {
     //#region Properties implemented by base class
     public childTypeLabel?: string;
     //#endregion
 
     public readonly collapsibleState: TreeItemCollapsibleState | undefined = TreeItemCollapsibleState.Collapsed;
 
-    private _cachedChildren: AzureTreeItem<TRoot>[] = [];
-    private _creatingTreeItems: AzureTreeItem<TRoot>[] = [];
+    private _cachedChildren: AzExtTreeItem<TRoot>[] = [];
+    private _creatingTreeItems: AzExtTreeItem<TRoot>[] = [];
     private _clearCache: boolean = true;
     private _loadMoreChildrenTask: Promise<void> | undefined;
     private _initChildrenTask: Promise<void> | undefined;
 
-    public async getCachedChildren(): Promise<AzureTreeItem<TRoot>[]> {
+    public async getCachedChildren(): Promise<AzExtTreeItem<TRoot>[]> {
         if (this._clearCache) {
             this._initChildrenTask = this.loadMoreChildren();
         }
@@ -39,32 +39,32 @@ export abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> extends Azu
         return this._cachedChildren;
     }
 
-    public get creatingTreeItems(): AzureTreeItem<TRoot>[] {
+    public get creatingTreeItems(): AzExtTreeItem<TRoot>[] {
         return this._creatingTreeItems;
     }
 
     //#region Methods implemented by base class
-    public abstract loadMoreChildrenImpl(clearCache: boolean): Promise<AzureTreeItem<TRoot>[]>;
+    public abstract loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem<TRoot>[]>;
     public abstract hasMoreChildrenImpl(): boolean;
     // tslint:disable-next-line:no-any
-    public createChildImpl?(showCreatingTreeItem: (label: string) => void, userOptions?: any): Promise<AzureTreeItem<TRoot>>;
-    public pickTreeItemImpl?(expectedContextValue: string | RegExp): AzureTreeItem<TRoot> | undefined;
-    public compareChildrenImpl?(item1: AzureTreeItem<TRoot>, item2: AzureTreeItem<TRoot>): number;
+    public createChildImpl?(showCreatingTreeItem: (label: string) => void, userOptions?: any): Promise<AzExtTreeItem<TRoot>>;
+    public pickTreeItemImpl?(expectedContextValue: string | RegExp): AzExtTreeItem<TRoot> | undefined;
+    public compareChildrenImpl?(item1: AzExtTreeItem<TRoot>, item2: AzExtTreeItem<TRoot>): number;
     //#endregion
 
     public clearCache(): void {
         this._clearCache = true;
     }
 
-    public async createChild(userOptions?: {}): Promise<AzureTreeItem<TRoot>> {
+    public async createChild(userOptions?: {}): Promise<AzExtTreeItem<TRoot>> {
         if (this.createChildImpl) {
-            let creatingTreeItem: AzureTreeItem<TRoot> | undefined;
+            let creatingTreeItem: AzExtTreeItem<TRoot> | undefined;
             try {
-                const newTreeItem: AzureTreeItem<TRoot> = await this.createChildImpl(
+                const newTreeItem: AzExtTreeItem<TRoot> = await this.createChildImpl(
                     (label: string): void => {
                         creatingTreeItem = new GenericTreeItem(this, {
                             label: localize('creatingLabel', 'Creating {0}...', label),
-                            contextValue: `azureCreating${label}`,
+                            contextValue: `azureextensionui.creating${label}`,
                             iconPath: loadingIconPath
                         });
                         this._creatingTreeItems.push(creatingTreeItem);
@@ -86,13 +86,13 @@ export abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> extends Azu
         }
     }
 
-    public async pickChildTreeItem(expectedContextValues: (string | RegExp)[]): Promise<AzureTreeItem<TRoot>> {
+    public async pickChildTreeItem(expectedContextValues: (string | RegExp)[]): Promise<AzExtTreeItem<TRoot>> {
         if (this.pickTreeItemImpl) {
-            const children: AzureTreeItem<TRoot>[] = await this.getCachedChildren();
+            const children: AzExtTreeItem<TRoot>[] = await this.getCachedChildren();
             for (const val of expectedContextValues) {
-                const pickedItem: AzureTreeItem<TRoot> | undefined = this.pickTreeItemImpl(val);
+                const pickedItem: AzExtTreeItem<TRoot> | undefined = this.pickTreeItemImpl(val);
                 if (pickedItem) {
-                    const child: AzureTreeItem<TRoot> | undefined = children.find((ti: AzureTreeItem<TRoot>) => ti.fullId === pickedItem.fullId);
+                    const child: AzExtTreeItem<TRoot> | undefined = children.find((ti: AzExtTreeItem<TRoot>) => ti.fullId === pickedItem.fullId);
                     if (child) {
                         return child;
                     }
@@ -107,7 +107,7 @@ export abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> extends Azu
         return await getTreeItem();
     }
 
-    public addChildToCache(childToAdd: AzureTreeItem<TRoot>): void {
+    public addChildToCache(childToAdd: AzExtTreeItem<TRoot>): void {
         if (!this._cachedChildren.find((ti) => ti.fullId === childToAdd.fullId)) {
             // set index to the last element by default
             let index: number = this._cachedChildren.length;
@@ -123,7 +123,7 @@ export abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> extends Azu
         }
     }
 
-    public removeChildFromCache(childToRemove: AzureTreeItem<TRoot>): void {
+    public removeChildFromCache(childToRemove: AzExtTreeItem<TRoot>): void {
         const index: number = this._cachedChildren.indexOf(childToRemove);
         if (index !== -1) {
             this._cachedChildren.splice(index, 1);
@@ -148,33 +148,33 @@ export abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> extends Azu
         if (this._clearCache) {
             // Just in case implementers of `loadMoreChildrenImpl` re-use the same child node, we want to clear those caches as well
             for (const child of this._cachedChildren) {
-                if (child instanceof AzureParentTreeItem) {
+                if (child instanceof AzExtParentTreeItem) {
                     child.clearCache();
                 }
             }
             this._cachedChildren = [];
         }
 
-        const sortCallback: (ti1: AzureTreeItem<TRoot>, ti2: AzureTreeItem<TRoot>) => number =
+        const sortCallback: (ti1: AzExtTreeItem<TRoot>, ti2: AzExtTreeItem<TRoot>) => number =
             this.compareChildrenImpl
                 ? this.compareChildrenImpl
-                : (ti1: AzureTreeItem<TRoot>, ti2: AzureTreeItem<TRoot>): number => ti1.label.localeCompare(ti2.label);
+                : (ti1: AzExtTreeItem<TRoot>, ti2: AzExtTreeItem<TRoot>): number => ti1.label.localeCompare(ti2.label);
 
-        const newTreeItems: AzureTreeItem<TRoot>[] = await this.loadMoreChildrenImpl(this._clearCache);
+        const newTreeItems: AzExtTreeItem<TRoot>[] = await this.loadMoreChildrenImpl(this._clearCache);
         this._cachedChildren = this._cachedChildren.concat(newTreeItems).sort(sortCallback);
         this._clearCache = false;
     }
 
     private async getQuickPicks(expectedContextValues: (string | RegExp)[]): Promise<IAzureQuickPickItem<GetTreeItemFunction<TRoot>>[]> {
-        let children: AzureTreeItem<TRoot>[] = await this.getCachedChildren();
-        children = children.filter((ti: AzureTreeItem<TRoot>) => ti.includeInTreePicker(expectedContextValues));
+        let children: AzExtTreeItem<TRoot>[] = await this.getCachedChildren();
+        children = children.filter((ti: AzExtTreeItem<TRoot>) => ti.includeInTreePicker(expectedContextValues));
 
-        const picks: IAzureQuickPickItem<GetTreeItemFunction<TRoot>>[] = children.map((ti: AzureTreeItem<TRoot>) => {
+        const picks: IAzureQuickPickItem<GetTreeItemFunction<TRoot>>[] = children.map((ti: AzExtTreeItem<TRoot>) => {
             return {
                 label: ti.label,
                 description: ti.description,
                 id: ti.fullId,
-                data: async (): Promise<AzureTreeItem<TRoot>> => await Promise.resolve(ti)
+                data: async (): Promise<AzExtTreeItem<TRoot>> => await Promise.resolve(ti)
             };
         });
 
@@ -182,7 +182,7 @@ export abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> extends Azu
             picks.unshift({
                 label: localize('treePickerCreateNew', '$(plus) Create New {0}', this.childTypeLabel),
                 description: '',
-                data: async (): Promise<AzureTreeItem<TRoot>> => await this.createChild()
+                data: async (): Promise<AzExtTreeItem<TRoot>> => await this.createChild()
             });
         }
 
@@ -190,7 +190,7 @@ export abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> extends Azu
             picks.push({
                 label: `$(sync) ${loadMoreLabel}`,
                 description: '',
-                data: async (): Promise<AzureTreeItem<TRoot>> => {
+                data: async (): Promise<AzExtTreeItem<TRoot>> => {
                     await this.loadMoreChildren();
                     this.treeDataProvider.refreshUIOnly(this);
                     return this;
@@ -202,4 +202,4 @@ export abstract class AzureParentTreeItem<TRoot = ISubscriptionRoot> extends Azu
     }
 }
 
-type GetTreeItemFunction<TRoot> = () => Promise<AzureTreeItem<TRoot>>;
+type GetTreeItemFunction<TRoot> = () => Promise<AzExtTreeItem<TRoot>>;

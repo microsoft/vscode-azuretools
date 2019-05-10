@@ -4,20 +4,20 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { EventEmitter } from 'vscode';
-import { AzureParentTreeItem, AzureTreeDataProvider, ISubscriptionRoot } from '../../index';
-import { AzureTreeItem } from './AzureTreeItem';
+import { AzExtParentTreeItem, AzExtTreeDataProvider, ISubscriptionRoot } from '../../index';
+import { AzExtTreeItem } from './AzExtTreeItem';
 
 // Interfaces for methods on the tree that aren't exposed outside of this package
 // We can't reference the classes directly because it would result in circular dependencies
 
-export interface IAzureParentTreeItemInternal<TRoot = ISubscriptionRoot> extends AzureParentTreeItem<TRoot>, AzureTreeItem<TRoot> {
-    parent: IAzureParentTreeItemInternal<TRoot> | undefined;
-    treeDataProvider: IAzureTreeDataProviderInternal<TRoot>;
-    removeChildFromCache(node: AzureTreeItem<TRoot>): void;
+export interface IAzExtParentTreeItemInternal<TRoot = ISubscriptionRoot> extends AzExtParentTreeItem<TRoot>, AzExtTreeItem<TRoot> {
+    parent: IAzExtParentTreeItemInternal<TRoot> | undefined;
+    treeDataProvider: IAzExtTreeDataProviderInternal<TRoot>;
+    removeChildFromCache(node: AzExtTreeItem<TRoot>): void;
     loadMoreChildren(): Promise<void>;
 }
 
-export interface IAzureTreeDataProviderInternal<TRoot = ISubscriptionRoot> extends AzureTreeDataProvider<TRoot> {
-    _onTreeItemCreateEmitter: EventEmitter<AzureTreeItem<TRoot>>;
-    refreshUIOnly(treeItem: AzureTreeItem<TRoot | ISubscriptionRoot> | undefined): void;
+export interface IAzExtTreeDataProviderInternal<TRoot = ISubscriptionRoot> extends AzExtTreeDataProvider<TRoot> {
+    _onTreeItemCreateEmitter: EventEmitter<AzExtTreeItem<TRoot>>;
+    refreshUIOnly(treeItem: AzExtTreeItem<TRoot | ISubscriptionRoot> | undefined): void;
 }

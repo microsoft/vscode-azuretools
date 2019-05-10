@@ -4,23 +4,23 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as types from '../..';
-import { AzureParentTreeItem } from './AzureParentTreeItem';
-import { IAzureTreeDataProviderInternal } from './InternalInterfaces';
+import { AzExtParentTreeItem } from './AzExtParentTreeItem';
+import { IAzExtTreeDataProviderInternal } from './InternalInterfaces';
 
-export abstract class RootTreeItem<T> extends AzureParentTreeItem<T> implements types.RootTreeItem<T> {
+export abstract class RootTreeItem<T> extends AzExtParentTreeItem<T> implements types.RootTreeItem<T> {
     private readonly _root: T;
-    private _treeDataProvider: IAzureTreeDataProviderInternal<T>;
+    private _treeDataProvider: IAzExtTreeDataProviderInternal<T>;
 
     public constructor(root: T) {
         super(undefined);
         this._root = root;
     }
 
-    public get treeDataProvider(): IAzureTreeDataProviderInternal<T> {
+    public get treeDataProvider(): IAzExtTreeDataProviderInternal<T> {
         return this._treeDataProvider;
     }
 
-    public set treeDataProvider(treeDataProvider: IAzureTreeDataProviderInternal<T>) {
+    public set treeDataProvider(treeDataProvider: IAzExtTreeDataProviderInternal<T>) {
         this._treeDataProvider = treeDataProvider;
     }
 

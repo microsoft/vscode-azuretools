@@ -5,13 +5,13 @@
 
 import { IGenericTreeItemOptions, ISubscriptionRoot } from '../../index';
 import * as types from '../../index';
-import { AzureTreeItem } from './AzureTreeItem';
-import { IAzureParentTreeItemInternal } from "./InternalInterfaces";
+import { AzExtTreeItem } from './AzExtTreeItem';
+import { IAzExtParentTreeItemInternal } from "./InternalInterfaces";
 
-export class GenericTreeItem<TRoot = ISubscriptionRoot> extends AzureTreeItem<TRoot> implements types.GenericTreeItem<TRoot> {
+export class GenericTreeItem<TRoot = ISubscriptionRoot> extends AzExtTreeItem<TRoot> implements types.GenericTreeItem<TRoot> {
     public label: string;
     public contextValue: string;
-    constructor(parent: IAzureParentTreeItemInternal<TRoot> | undefined, options: IGenericTreeItemOptions) {
+    constructor(parent: IAzExtParentTreeItemInternal<TRoot> | undefined, options: IGenericTreeItemOptions) {
         super(parent);
         this.label = options.label;
         this.contextValue = options.contextValue;
