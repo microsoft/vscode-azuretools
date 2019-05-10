@@ -16,10 +16,10 @@ import { localize } from '../localize';
 import { parseError } from '../parseError';
 import { TestAzureAccount } from '../TestAzureAccount';
 import { AzureWizardPromptStep } from '../wizard/AzureWizardPromptStep';
-import { AzureParentTreeItem } from './AzureParentTreeItem';
-import { AzureTreeItem } from './AzureTreeItem';
+import { AzExtParentTreeItem } from './AzExtParentTreeItem';
+import { AzExtTreeItem } from './AzExtTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';
-import { IAzureTreeDataProviderInternal } from './InternalInterfaces';
+import { IAzExtTreeDataProviderInternal } from './InternalInterfaces';
 import { RootTreeItem } from './RootTreeItem';
 import { SubscriptionTreeItem } from './SubscriptionTreeItem';
 import { loadMoreLabel } from './treeConstants';
@@ -31,16 +31,16 @@ const createAccountCommandId: string = 'azure-account.createAccount';
 
 type SubscriptionTreeItemType = { new(root: ISubscriptionRoot): SubscriptionTreeItem };
 
-export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureTreeDataProviderInternal<TRoot | ISubscriptionRoot>, types.AzureTreeDataProvider<TRoot> {
-    public _onTreeItemCreateEmitter: EventEmitter<AzureTreeItem<TRoot | ISubscriptionRoot>> = new EventEmitter<AzureTreeItem<TRoot | ISubscriptionRoot>>();
-    private _onDidChangeTreeDataEmitter: EventEmitter<AzureTreeItem<TRoot | ISubscriptionRoot>> = new EventEmitter<AzureTreeItem<TRoot | ISubscriptionRoot>>();
+export class AzExtTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzExtTreeDataProviderInternal<TRoot | ISubscriptionRoot>, types.AzExtTreeDataProvider<TRoot> {
+    public _onTreeItemCreateEmitter: EventEmitter<AzExtTreeItem<TRoot | ISubscriptionRoot>> = new EventEmitter<AzExtTreeItem<TRoot | ISubscriptionRoot>>();
+    private _onDidChangeTreeDataEmitter: EventEmitter<AzExtTreeItem<TRoot | ISubscriptionRoot>> = new EventEmitter<AzExtTreeItem<TRoot | ISubscriptionRoot>>();
 
     private readonly _loadMoreCommandId: string;
     private _subscriptionTreeItemType: SubscriptionTreeItemType;
     private _azureAccount: AzureAccount;
-    private _customRootTreeItems: AzureTreeItem<TRoot>[];
+    private _customRootTreeItems: AzExtTreeItem<TRoot>[];
 
-    private _subscriptionTreeItems: AzureTreeItem<ISubscriptionRoot>[] | undefined;
+    private _subscriptionTreeItems: AzExtTreeItem<ISubscriptionRoot>[] | undefined;
 
     private _disposables: Disposable[] = [];
 
@@ -49,7 +49,7 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
         this._loadMoreCommandId = loadMoreCommandId;
         // tslint:disable:strict-boolean-expressions
         this._customRootTreeItems = rootTreeItems || [];
-        this._customRootTreeItems.forEach((ti: RootTreeItem<TRoot>) => ti.treeDataProvider = <IAzureTreeDataProviderInternal<TRoot>>this);
+        this._customRootTreeItems.forEach((ti: RootTreeItem<TRoot>) => ti.treeDataProvider = <IAzExtTreeDataProviderInternal<TRoot>>this);
 
         // Rather than expose 'AzureAccount' types in the index.ts contract, simply get it inside of this npm package
         const azureAccountExtension: Extension<AzureAccount> | undefined = extensions.getExtension<AzureAccount>('ms-vscode.azure-account');
@@ -77,15 +77,15 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
         }
     }
 
-    public get onDidChangeTreeData(): Event<AzureTreeItem<TRoot | ISubscriptionRoot>> {
+    public get onDidChangeTreeData(): Event<AzExtTreeItem<TRoot | ISubscriptionRoot>> {
         return this._onDidChangeTreeDataEmitter.event;
     }
 
-    public get onTreeItemCreate(): Event<AzureTreeItem<TRoot | ISubscriptionRoot>> {
+    public get onTreeItemCreate(): Event<AzExtTreeItem<TRoot | ISubscriptionRoot>> {
         return this._onTreeItemCreateEmitter.event;
     }
 
-    public getTreeItem(treeItem: AzureTreeItem<TRoot | ISubscriptionRoot>): TreeItem {
+    public getTreeItem(treeItem: AzExtTreeItem<TRoot | ISubscriptionRoot>): TreeItem {
         return {
             label: treeItem.effectiveLabel,
             id: treeItem.fullId,
@@ -100,21 +100,21 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
         };
     }
 
-    public async getChildren(treeItem?: AzureParentTreeItem<TRoot | ISubscriptionRoot>): Promise<AzureTreeItem<TRoot | ISubscriptionRoot>[]> {
+    public async getChildren(treeItem?: AzExtParentTreeItem<TRoot | ISubscriptionRoot>): Promise<AzExtTreeItem<TRoot | ISubscriptionRoot>[]> {
         try {
             // tslint:disable:no-var-self
-            const thisTree: AzureTreeDataProvider<TRoot> = this;
-            return <AzureTreeItem<TRoot | ISubscriptionRoot>[]>await callWithTelemetryAndErrorHandling('AzureTreeDataProvider.getChildren', async function (this: IActionContext): Promise<AzureTreeItem<TRoot | ISubscriptionRoot>[]> {
+            const thisTree: AzExtTreeDataProvider<TRoot> = this;
+            return <AzExtTreeItem<TRoot | ISubscriptionRoot>[]>await callWithTelemetryAndErrorHandling('AzureTreeDataProvider.getChildren', async function (this: IActionContext): Promise<AzExtTreeItem<TRoot | ISubscriptionRoot>[]> {
                 const actionContext: IActionContext = this;
                 // tslint:enable:no-var-self
                 actionContext.suppressErrorDisplay = true;
                 actionContext.rethrowError = true;
-                let result: AzureTreeItem<TRoot | ISubscriptionRoot>[];
+                let result: AzExtTreeItem<TRoot | ISubscriptionRoot>[];
 
                 if (treeItem !== undefined) {
                     actionContext.properties.contextValue = treeItem.contextValue;
 
-                    const cachedChildren: AzureTreeItem<TRoot | ISubscriptionRoot>[] = await treeItem.getCachedChildren();
+                    const cachedChildren: AzExtTreeItem<TRoot | ISubscriptionRoot>[] = await treeItem.getCachedChildren();
                     const hasMoreChildren: boolean = treeItem.hasMoreChildrenImpl();
                     actionContext.properties.hasMoreChildren = String(hasMoreChildren);
 
@@ -126,7 +126,7 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
                                 light: path.join(__filename, '..', '..', '..', '..', 'resources', 'light', 'refresh.svg'),
                                 dark: path.join(__filename, '..', '..', '..', '..', 'resources', 'dark', 'refresh.svg')
                             },
-                            contextValue: 'azureLoadMore',
+                            contextValue: 'azureextensionui.loadMore',
                             commandId: thisTree._loadMoreCommandId
                         }));
                     }
@@ -145,19 +145,19 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
         }
     }
 
-    public async refresh(treeItem?: AzureTreeItem<TRoot | ISubscriptionRoot>): Promise<void> {
-        async function refreshTreeItem(ti: AzureTreeItem<TRoot | ISubscriptionRoot>): Promise<void> {
+    public async refresh(treeItem?: AzExtTreeItem<TRoot | ISubscriptionRoot>): Promise<void> {
+        async function refreshTreeItem(ti: AzExtTreeItem<TRoot | ISubscriptionRoot>): Promise<void> {
             if (ti.refreshImpl) {
                 await ti.refreshImpl();
             }
-            if (ti instanceof AzureParentTreeItem) {
+            if (ti instanceof AzExtParentTreeItem) {
                 ti.clearCache();
             }
         }
 
         if (!treeItem) {
             this._subscriptionTreeItems = [];
-            await Promise.all(this._customRootTreeItems.map(async (root: AzureTreeItem<TRoot>) => await refreshTreeItem(root)));
+            await Promise.all(this._customRootTreeItems.map(async (root: AzExtTreeItem<TRoot>) => await refreshTreeItem(root)));
         } else {
             await refreshTreeItem(treeItem);
         }
@@ -165,29 +165,29 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
         this.refreshUIOnly(treeItem);
     }
 
-    public refreshUIOnly(treeItem: AzureTreeItem<TRoot | ISubscriptionRoot> | undefined): void {
+    public refreshUIOnly(treeItem: AzExtTreeItem<TRoot | ISubscriptionRoot> | undefined): void {
         this._onDidChangeTreeDataEmitter.fire(treeItem);
     }
 
-    public async loadMore(treeItem: AzureTreeItem<TRoot | ISubscriptionRoot>): Promise<void> {
+    public async loadMore(treeItem: AzExtTreeItem<TRoot | ISubscriptionRoot>): Promise<void> {
         if (treeItem.parent) {
             await treeItem.parent.loadMoreChildren();
             this._onDidChangeTreeDataEmitter.fire(treeItem.parent);
         }
     }
 
-    public async showTreeItemPicker(expectedContextValues: string | (string | RegExp)[] | RegExp, startingTreeItem?: AzureTreeItem<TRoot | ISubscriptionRoot>): Promise<AzureTreeItem<TRoot | ISubscriptionRoot>> {
+    public async showTreeItemPicker(expectedContextValues: string | (string | RegExp)[] | RegExp, startingTreeItem?: AzExtTreeItem<TRoot | ISubscriptionRoot>): Promise<AzExtTreeItem<TRoot | ISubscriptionRoot>> {
         if (!Array.isArray(expectedContextValues)) {
             expectedContextValues = [expectedContextValues];
         }
 
         // tslint:disable-next-line:strict-boolean-expressions
-        let treeItem: AzureTreeItem<TRoot | ISubscriptionRoot> = startingTreeItem || await this.promptForRootTreeItem(expectedContextValues);
+        let treeItem: AzExtTreeItem<TRoot | ISubscriptionRoot> = startingTreeItem || await this.promptForRootTreeItem(expectedContextValues);
 
         while (!expectedContextValues.some((val: string | RegExp) => (val instanceof RegExp && val.test(treeItem.contextValue)) || treeItem.contextValue === val)) {
-            // using instanceof AzureParentTreeItem causes issues whenever packages are linked for dev testing.  Any tree item that has loadMoreChildrenImpl should be an AzureParentTreeItem
-            if ((<AzureParentTreeItem>treeItem).loadMoreChildrenImpl) {
-                treeItem = await (<AzureParentTreeItem>treeItem).pickChildTreeItem(expectedContextValues);
+            // using instanceof AzExtParentTreeItem causes issues whenever packages are linked for dev testing.  Any tree item that has loadMoreChildrenImpl should be an AzExtParentTreeItem
+            if ((<AzExtParentTreeItem>treeItem).loadMoreChildrenImpl) {
+                treeItem = await (<AzExtParentTreeItem>treeItem).pickChildTreeItem(expectedContextValues);
             } else {
                 throw new Error(localize('noResourcesError', 'No matching resources found.'));
             }
@@ -196,8 +196,8 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
         return treeItem;
     }
 
-    public async findTreeItem(fullId: string): Promise<AzureTreeItem<TRoot | ISubscriptionRoot> | undefined> {
-        let treeItems: AzureTreeItem<TRoot | ISubscriptionRoot>[] = await this.getChildren();
+    public async findTreeItem(fullId: string): Promise<AzExtTreeItem<TRoot | ISubscriptionRoot> | undefined> {
+        let treeItems: AzExtTreeItem<TRoot | ISubscriptionRoot>[] = await this.getChildren();
         let foundAncestor: boolean;
 
         do {
@@ -206,7 +206,7 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
             for (const treeItem of treeItems) {
                 if (treeItem.fullId === fullId) {
                     return treeItem;
-                } else if (fullId.startsWith(`${treeItem.fullId}/`) && treeItem instanceof AzureParentTreeItem) {
+                } else if (fullId.startsWith(`${treeItem.fullId}/`) && treeItem instanceof AzExtParentTreeItem) {
                     // Append '/' to 'treeItem.fullId' when checking 'startsWith' to ensure its actually an ancestor, rather than a treeItem at the same level that _happens_ to start with the same id
                     // For example, two databases named 'test' and 'test1' as described in this issue: https://github.com/Microsoft/vscode-cosmosdb/issues/488
                     treeItems = await treeItem.getCachedChildren();
@@ -219,21 +219,21 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
         return undefined;
     }
 
-    public async getParent(element: AzureTreeItem): Promise<AzureTreeItem | undefined> {
+    public async getParent(element: AzExtTreeItem): Promise<AzExtTreeItem | undefined> {
         return element.parent;
     }
 
     public async getSubscriptionPromptStep(wizardContext: Partial<types.ISubscriptionWizardContext>): Promise<types.AzureWizardPromptStep<types.ISubscriptionWizardContext> | undefined> {
-        const subscriptions: AzureTreeItem<ISubscriptionRoot>[] = await this.ensureRootTreeItems();
+        const subscriptions: AzExtTreeItem<ISubscriptionRoot>[] = await this.ensureRootTreeItems();
         if (subscriptions.length === 1) {
             assignRootToWizardContext(wizardContext, subscriptions[0].root);
             return undefined;
         } else {
             // tslint:disable-next-line: no-var-self
-            const tree: AzureTreeDataProvider<TRoot> = this;
+            const tree: AzExtTreeDataProvider<TRoot> = this;
             class SubscriptionPromptStep extends AzureWizardPromptStep<types.ISubscriptionWizardContext> {
                 public async prompt(): Promise<void> {
-                    const ti: AzureTreeItem<TRoot | ISubscriptionRoot> = await tree.promptForRootTreeItem(SubscriptionTreeItem.contextValue);
+                    const ti: AzExtTreeItem<TRoot | ISubscriptionRoot> = await tree.promptForRootTreeItem(SubscriptionTreeItem.contextValue);
                     assignRootToWizardContext(wizardContext, <types.ISubscriptionRoot>ti.root);
                 }
                 public shouldPrompt(): boolean { return !(<types.ISubscriptionWizardContext>wizardContext).subscriptionId; }
@@ -242,11 +242,11 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
         }
     }
 
-    private async promptForRootTreeItem(expectedContextValues: string | (string | RegExp)[] | RegExp): Promise<AzureTreeItem<TRoot | ISubscriptionRoot>> {
-        let picks: IAzureQuickPickItem<AzureTreeItem<TRoot | ISubscriptionRoot> | string>[];
+    private async promptForRootTreeItem(expectedContextValues: string | (string | RegExp)[] | RegExp): Promise<AzExtTreeItem<TRoot | ISubscriptionRoot>> {
+        let picks: IAzureQuickPickItem<AzExtTreeItem<TRoot | ISubscriptionRoot> | string>[];
         const initialStatus: AzureLoginStatus = this._azureAccount.status;
         if (initialStatus === 'LoggedIn') {
-            picks = (await this.ensureRootTreeItems()).map((ti: AzureTreeItem<ISubscriptionRoot>) => {
+            picks = (await this.ensureRootTreeItems()).map((ti: AzExtTreeItem<ISubscriptionRoot>) => {
                 return {
                     data: ti,
                     label: ti.label,
@@ -272,11 +272,11 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
 
         const contextValues: (string | RegExp)[] = Array.isArray(expectedContextValues) ? expectedContextValues : [expectedContextValues];
         picks = picks.concat(this._customRootTreeItems
-            .filter((ti: AzureTreeItem<TRoot>) => ti.includeInTreePicker(contextValues))
-            .map((ti: AzureTreeItem<TRoot>) => { return { data: ti, description: '', label: ti.label }; }));
+            .filter((ti: AzExtTreeItem<TRoot>) => ti.includeInTreePicker(contextValues))
+            .map((ti: AzExtTreeItem<TRoot>) => { return { data: ti, description: '', label: ti.label }; }));
 
         const options: QuickPickOptions = { placeHolder: localize('selectSubscription', 'Select a Subscription') };
-        const result: AzureTreeItem<TRoot | ISubscriptionRoot> | string = picks.length === 1 ? picks[0].data : (await ext.ui.showQuickPick(picks, options)).data;
+        const result: AzExtTreeItem<TRoot | ISubscriptionRoot> | string = picks.length === 1 ? picks[0].data : (await ext.ui.showQuickPick(picks, options)).data;
         if (typeof result === 'string') {
             await vscode.commands.executeCommand(result);
             await this._azureAccount.waitForFilters();
@@ -292,7 +292,7 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
         }
     }
 
-    private async ensureRootTreeItems(): Promise<AzureTreeItem<ISubscriptionRoot>[]> {
+    private async ensureRootTreeItems(): Promise<AzExtTreeItem<ISubscriptionRoot>[]> {
         if (!this._subscriptionTreeItems) {
             await this.getChildren();
         }
@@ -301,14 +301,14 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
         return this._subscriptionTreeItems!;
     }
 
-    private async populateRoots(actionContext: IActionContext): Promise<AzureTreeItem<TRoot | ISubscriptionRoot>[]> {
+    private async populateRoots(actionContext: IActionContext): Promise<AzExtTreeItem<TRoot | ISubscriptionRoot>[]> {
         actionContext.properties.isActivationEvent = 'true';
         actionContext.properties.contextValue = 'root';
         actionContext.properties.accountStatus = this._azureAccount.status;
 
-        let roots: AzureTreeItem<TRoot | ISubscriptionRoot>[];
+        let roots: AzExtTreeItem<TRoot | ISubscriptionRoot>[];
 
-        const existingSubscriptions: AzureTreeItem<ISubscriptionRoot>[] = this._subscriptionTreeItems ? this._subscriptionTreeItems : [];
+        const existingSubscriptions: AzExtTreeItem<ISubscriptionRoot>[] = this._subscriptionTreeItems ? this._subscriptionTreeItems : [];
         this._subscriptionTreeItems = [];
 
         let commandLabel: string | undefined;
@@ -336,7 +336,7 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
                 if (filter.subscription.id === undefined || filter.subscription.displayName === undefined || filter.subscription.subscriptionId === undefined) {
                     throw new ArgumentError(filter);
                 } else {
-                    const existingTreeItem: AzureTreeItem<ISubscriptionRoot> | undefined = existingSubscriptions.find((ti: AzureTreeItem<ISubscriptionRoot>) => ti.id === filter.subscription.id);
+                    const existingTreeItem: AzExtTreeItem<ISubscriptionRoot> | undefined = existingSubscriptions.find((ti: AzExtTreeItem<ISubscriptionRoot>) => ti.id === filter.subscription.id);
                     if (existingTreeItem) {
                         // Return existing treeItem (which might have many 'cached' tree items underneath it) rather than creating a brand new tree item every time
                         return existingTreeItem;
@@ -352,7 +352,7 @@ export class AzureTreeDataProvider<TRoot = ISubscriptionRoot> implements IAzureT
                             userId: filter.session.userId,
                             environment: filter.session.environment
                         });
-                        newItem.treeDataProvider = <IAzureTreeDataProviderInternal<ISubscriptionRoot>>this;
+                        newItem.treeDataProvider = <IAzExtTreeDataProviderInternal<ISubscriptionRoot>>this;
                         return newItem;
                     }
                 }

@@ -7,7 +7,7 @@ import { commands, Event, Uri } from 'vscode';
 import { IActionContext } from '../index';
 import { callWithTelemetryAndErrorHandling } from './callWithTelemetryAndErrorHandling';
 import { ext } from './extensionVariables';
-import { AzureTreeItem } from './treeDataProvider/AzureTreeItem';
+import { AzExtTreeItem } from './treeDataProvider/AzExtTreeItem';
 
 // tslint:disable:no-any no-unsafe-any
 export function registerCommand(commandId: string, callback: (this: IActionContext, ...args: any[]) => any, debounce?: number): void {
@@ -26,7 +26,7 @@ export function registerCommand(commandId: string, callback: (this: IActionConte
                 if (args.length > 0) {
                     const contextArg: any = args[0];
 
-                    if (contextArg instanceof AzureTreeItem) {
+                    if (contextArg instanceof AzExtTreeItem) {
                         this.properties.contextValue = contextArg.contextValue;
                     } else if (contextArg instanceof Uri) {
                         this.properties.contextValue = 'Uri';
