@@ -20,7 +20,6 @@ export * from './TestUserInput';
 export * from './treeDataProvider/AzExtParentTreeItem';
 export * from './treeDataProvider/AzExtTreeDataProvider';
 export * from './treeDataProvider/AzExtTreeItem';
-export * from './treeDataProvider/createTreeItemsWithErrorHandling';
 export * from './treeDataProvider/GenericTreeItem';
 export * from './treeDataProvider/RootTreeItem';
 export * from './treeDataProvider/SubscriptionTreeItem';
