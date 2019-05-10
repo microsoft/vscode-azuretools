@@ -69,6 +69,7 @@
             "property-declaration",
             "variable-declaration",
             "member-variable-declaration"
-        ]
+        ],
+        "no-use-before-declare": false
     }
 }
