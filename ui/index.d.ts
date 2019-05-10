@@ -372,9 +372,11 @@ export interface ITelemetryReporter {
  *
  * The returned reporter does not need to be disposed by the caller, it will be disposed automatically.
  * @param ctx The extension context
+ * @param infoProperties Additional information to send in the start-up 'info' telemetry event that is automatically sent for the extension.
+ *   This should be used only for information that's not related to a specific event
  * @returns An object implementing ITelemetryReporter
  */
-export declare function createTelemetryReporter(ctx: ExtensionContext): ITelemetryReporter;
+export declare function createTelemetryReporter(ctx: ExtensionContext, infoProperties?: { [key: string]: string }): ITelemetryReporter;
 
 export interface TelemetryProperties {
     /**

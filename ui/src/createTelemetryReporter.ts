@@ -13,7 +13,7 @@ import { getPackageInfo } from './getPackageInfo';
 // tslint:disable-next-line:strict-boolean-expressions
 const debugTelemetryEnabled: boolean = !/^(false|0)?$/i.test(process.env.DEBUGTELEMETRY || '');
 
-export function createTelemetryReporter(ctx: vscode.ExtensionContext): ITelemetryReporter {
+export function createTelemetryReporter(ctx: vscode.ExtensionContext, infoProperties?: { [key: string]: string }): ITelemetryReporter {
     const { extensionName, extensionVersion, aiKey } = getPackageInfo(ctx);
 
     let newReporter: ITelemetryReporter;
@@ -27,11 +27,15 @@ export function createTelemetryReporter(ctx: vscode.ExtensionContext): ITelemetr
     }
 
     // Send an event with some general info
-    newReporter.sendTelemetryEvent('info', {
+    let info: { [key: string]: string } = {
         isActivationEvent: 'true',
         product: vscode.env.appName,
         language: vscode.env.language
-    });
+    };
+    if (infoProperties) {
+        Object.assign(info, infoProperties);
+    }
+    newReporter.sendTelemetryEvent('info', info);
 
     return newReporter;
 }
