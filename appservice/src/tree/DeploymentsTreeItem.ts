@@ -6,7 +6,7 @@
 import { SiteConfig, SiteSourceControl } from 'azure-arm-website/lib/models';
 import * as path from 'path';
 import { MessageItem } from 'vscode';
-import { AzureParentTreeItem, createTreeItemsWithErrorHandling, DialogResponses, GenericTreeItem, IActionContext } from 'vscode-azureextensionui';
+import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, GenericTreeItem, IActionContext } from 'vscode-azureextensionui';
 import { DeployResult } from 'vscode-azurekudu/lib/models';
 import { editScmType } from '../editScmType';
 import { ext } from '../extensionVariables';
@@ -61,11 +61,10 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         return false;
     }
 
-    public async loadMoreChildrenImpl(_clearCache: boolean): Promise<DeploymentTreeItem[] | GenericTreeItem<ISiteTreeRoot>[]> {
+    public async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzExtTreeItem[]> {
         const siteConfig: SiteConfig = await this.root.client.getSiteConfig();
         const deployments: DeployResult[] = await this.root.client.kudu.deployment.getDeployResults();
-        const children: DeploymentTreeItem[] | GenericTreeItem<ISiteTreeRoot>[] = await createTreeItemsWithErrorHandling(
-            this,
+        const children: DeploymentTreeItem[] | GenericTreeItem[] = await this.createTreeItemsWithErrorHandling(
             deployments,
             'invalidDeployment',
             (dr: DeployResult) => {

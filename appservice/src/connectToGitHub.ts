@@ -8,7 +8,7 @@ import { TokenCredentials, WebResource } from 'ms-rest';
 import { Response } from 'request';
 import * as request from 'request-promise';
 import * as vscode from 'vscode';
-import { appendExtensionUserAgent, AzureTreeItem, DialogResponses, IActionContext, IAzureQuickPickItem, IParsedError, parseError } from 'vscode-azureextensionui';
+import { appendExtensionUserAgent, AzureTreeItem, DialogResponses, IActionContext, IAzureQuickPickItem, IParsedError, openInPortal, parseError } from 'vscode-azureextensionui';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { signRequest } from './signRequest';
@@ -109,7 +109,7 @@ async function showGitHubAuthPrompt(node: AzureTreeItem, client: SiteClient, con
 
     if (input === goToPortal) {
         context.properties.githubGoToPortal = 'true';
-        await node.openInPortal(`${client.id}/vstscd`);
+        await openInPortal(node.root, `${client.id}/vstscd`);
     }
 }
 
