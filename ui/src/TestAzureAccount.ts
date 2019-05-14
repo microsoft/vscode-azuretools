@@ -8,8 +8,8 @@ import { ServiceClientCredentials } from 'ms-rest';
 import { ApplicationTokenCredentials, AzureEnvironment, loginWithServicePrincipalSecret } from 'ms-rest-azure';
 import { Event, EventEmitter } from 'vscode';
 import { AzureAccount, AzureLoginStatus, AzureResourceFilter, AzureSession, AzureSubscription } from './azure-account.api';
-import { ArgumentError } from './errors';
 import { localize } from './localize';
+import { nonNullProp, nonNullValue } from './utils/nonNull';
 
 export class TestAzureAccount implements AzureAccount {
     public status: AzureLoginStatus;
@@ -51,26 +51,18 @@ export class TestAzureAccount implements AzureAccount {
         // returns an array with id, subscriptionId, displayName
         const tenants: TenantListResult = await subscriptionClient.tenants.list();
 
-        if (tenants[0].id) {
-            const tenantId: string = <string>tenants[0].id;
-            const session: AzureSession = {
-                environment: credentials.environment,
-                userId: '',
-                tenantId: tenantId,
-                credentials: credentials
-            };
+        const tenantId: string = nonNullProp(nonNullValue(tenants[0]), 'id');
+        const session: AzureSession = {
+            environment: credentials.environment,
+            userId: '',
+            tenantId: tenantId,
+            credentials: credentials
+        };
 
-            if (subscriptions[0].id && subscriptions[0].displayName && subscriptions[0].subscriptionId) {
-                const testAzureSubscription: AzureSubscription = { session: session, subscription: subscriptions[0] };
-                this.subscriptions.push(testAzureSubscription);
-                this.changeStatus('LoggedIn');
-                this.changeFilter(testAzureSubscription);
-            } else {
-                throw new ArgumentError(subscriptions[0]);
-            }
-        } else {
-            throw new ArgumentError(tenants[0]);
-        }
+        const testAzureSubscription: AzureSubscription = { session: session, subscription: nonNullValue(subscriptions[0]) };
+        this.subscriptions.push(testAzureSubscription);
+        this.changeStatus('LoggedIn');
+        this.changeFilter(testAzureSubscription);
     }
 
     public signOut(): void {
@@ -86,13 +78,7 @@ export class TestAzureAccount implements AzureAccount {
 
     public getSubscriptionId(): string {
         this.verifySubscription();
-        if (this.subscriptions[0].subscription.subscriptionId) {
-            // tslint:disable-next-line:no-non-null-assertion
-            return this.subscriptions[0].subscription.subscriptionId!;
-        } else {
-            throw new ArgumentError(this.subscriptions[0].subscription);
-
-        }
+        return nonNullProp(this.subscriptions[0].subscription, 'subscriptionId');
     }
 
     private changeStatus(newStatus: AzureLoginStatus): void {

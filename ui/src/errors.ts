@@ -24,9 +24,3 @@ export class NotImplementedError extends Error {
         super(localize('notImplementedError', '"{0}" is not implemented on "{1}".', methodName, obj.constructor.name));
     }
 }
-
-export class ArgumentError extends Error {
-    constructor(obj: object) {
-        super(localize('argumentError', 'Invalid {0}.', obj.constructor.name));
-    }
-}

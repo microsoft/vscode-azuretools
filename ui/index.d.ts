@@ -18,62 +18,53 @@ export type OpenInPortalOptions = {
     queryPrefix?: string;
 };
 
-export declare class AzExtTreeDataProvider<TRoot = ISubscriptionRoot> implements TreeDataProvider<AzExtTreeItem<TRoot | ISubscriptionRoot>>, Disposable {
-    public onDidChangeTreeData: Event<AzExtTreeItem<TRoot | ISubscriptionRoot>>;
-    public onTreeItemCreate: Event<AzExtTreeItem<TRoot | ISubscriptionRoot>>;
+/**
+ * Tree Data Provider for an *Az*ure *Ext*ension
+ */
+export declare class AzExtTreeDataProvider implements TreeDataProvider<AzExtTreeItem> {
+    public onDidChangeTreeData: Event<AzExtTreeItem>;
+    public onTreeItemCreate: Event<AzExtTreeItem>;
+
     /**
      * Azure Tree Data Provider
-     * @param subscriptionTreeItemType The type used to create SubscriptionTreeItem's that will display your resources
+     * @param rootTreeItem The root tree item. This item will not actually be displayed - just used to provide children.
      * @param loadMoreCommandId The command your extension will register for the 'Load More...' tree item
-     * @param rootTreeItems Any tree items other than the subscriptions that should be shown at the root of the explorer
-     * @param testAccount A test Azure Account that leverages a service principal instead of interactive login
      */
-    public constructor(subscriptionTreeItemType: { new(root: ISubscriptionRoot): SubscriptionTreeItem }, loadMoreCommandId: string, rootTreeItems?: RootTreeItem<TRoot>[], testAccount?: TestAzureAccount);
+    public constructor(rootTreeItem: AzExtParentTreeItem, loadMoreCommandId: string);
 
     /**
      * Should not be called directly
      */
-    public getTreeItem(treeItem: AzExtTreeItem<TRoot | ISubscriptionRoot>): TreeItem;
+    public getTreeItem(treeItem: AzExtTreeItem): TreeItem;
 
     /**
      * Should not be called directly
      */
-    public getChildren(treeItem?: AzExtParentTreeItem<TRoot | ISubscriptionRoot>): Promise<AzExtTreeItem<TRoot | ISubscriptionRoot>[]>;
+    public getChildren(treeItem?: AzExtParentTreeItem): Promise<AzExtTreeItem[]>;
 
     /**
      *  Refreshes the tree
      * @param treeItem The treeItem to refresh or 'undefined' to refresh the whole tree
      */
-    public refresh(treeItem?: AzExtTreeItem<TRoot | ISubscriptionRoot>): Promise<void>;
+    public refresh(treeItem?: AzExtTreeItem): Promise<void>;
 
     /**
      * Loads more children for a specific tree item
      * @param treeItem the load more tree item
      */
-    public loadMore(treeItem: AzExtTreeItem<TRoot | ISubscriptionRoot>): Promise<void>;
+    public loadMore(treeItem: AzExtTreeItem): Promise<void>;
 
     /**
      * Used to traverse the tree with a quick pick at each level. Primarily for command palette support
      * @param expectedContextValues a single context value or multiple matching context values matching the desired tree items
      * @param startingTreeItem
      */
-    public showTreeItemPicker(expectedContextValues: string | string[] | RegExp, startingTreeItem?: AzExtTreeItem<TRoot | ISubscriptionRoot>): Promise<AzExtTreeItem<TRoot | ISubscriptionRoot>>;
+    public showTreeItemPicker<T extends AzExtTreeItem>(expectedContextValues: string | RegExp | (string | RegExp)[], startingTreeItem?: AzExtTreeItem): Promise<T>;
 
     /**
      * Traverses a tree to find a node matching the given fullId of a tree item. This will not "Load more..."
      */
-    public findTreeItem(fullId: string): Promise<AzExtTreeItem<TRoot | ISubscriptionRoot> | undefined>;
-
-    /**
-     * Should not be called directly
-     */
-    public dispose(): void;
-
-    /**
-     * If user is logged in and only has one subscription selected, add that to the wizardContext and return undefined
-     * Else, return a prompt step for a subscription
-     */
-    public getSubscriptionPromptStep(wizardContext: Partial<ISubscriptionWizardContext>): Promise<AzureWizardPromptStep<ISubscriptionWizardContext> | undefined>;
+    public findTreeItem<T extends AzExtTreeItem>(fullId: string): Promise<T | undefined>;
 
     /**
      * Optional method to return the parent of `element`.
@@ -88,13 +79,13 @@ export declare class AzExtTreeDataProvider<TRoot = ISubscriptionRoot> implements
 }
 
 /**
- * Implement this class to display resources under a standard Subscription tree item
+ * Implement this class to display resources under a standard subscription tree item
  */
-export abstract class SubscriptionTreeItem extends AzExtParentTreeItem {
+export abstract class SubscriptionTreeItemBase extends AzureParentTreeItem {
     public static readonly contextValue: string;
     public readonly contextValue: string;
     public readonly label: string;
-    constructor(root: ISubscriptionRoot);
+    constructor(parent: AzExtParentTreeItem, root: ISubscriptionRoot);
 }
 
 /**
@@ -111,13 +102,14 @@ export interface ISubscriptionRoot {
 }
 
 /**
- * Implement this class if your tree item does not have children. Otherwise use AzExtParentTreeItem
+ * Base class for all tree items in an *Az*ure *ext*ension, even if those resources aren't actually in Azure.
+ * This provides more value than `TreeItem` (provided by `vscode`), but is more generic than `AzureTreeItem` (which is specific to Azure resources)
  * NOTE: *Impl methods are not meant to be called directly - just implemented.
  */
-export declare abstract class AzExtTreeItem<TRoot = ISubscriptionRoot> {
+export declare abstract class AzExtTreeItem {
     //#region Properties implemented by base class
     /**
-     * This is is used for the openInPortal action. It is also used per the following documentation copied from VS Code:
+     * This is is used for the AzureTreeItem.openInPortal action. It is also used per the following documentation copied from VS Code:
      * Optional id for the treeItem that has to be unique across tree. The id is used to preserve the selection and expansion state of the treeItem.
      *
      * If not provided, an id is generated using the treeItem's label. **Note** that when labels change, ids will change and that selection and expansion state cannot be kept stable anymore.
@@ -136,16 +128,11 @@ export declare abstract class AzExtTreeItem<TRoot = ISubscriptionRoot> {
 
     /**
      * This id represents the effective/serializable full id of the item in the tree. It always starts with the parent's fullId and ends with either the AzExtTreeItem.id property (if implemented) or AzExtTreeItem.label property
-     * This is used for AzureTreeDataProvider.findTreeItem and AzExtTreeItem.openInPortal
+     * This is used for AzureTreeDataProvider.findTreeItem and AzureTreeItem.openInPortal
      */
     public readonly fullId: string;
-    public readonly parent?: AzExtParentTreeItem<TRoot>;
-    public readonly treeDataProvider: AzExtTreeDataProvider<TRoot>;
-
-    /**
-     * Contains information specific to the root of this branch of the tree. Usually, this will be subscription information
-     */
-    public readonly root: TRoot;
+    public readonly parent?: AzExtParentTreeItem;
+    public readonly treeDataProvider: AzExtTreeDataProvider;
 
     /**
      * @param parent The parent of the new tree item or 'undefined' if it is a root item
@@ -181,11 +168,6 @@ export declare abstract class AzExtTreeItem<TRoot = ISubscriptionRoot> {
     public deleteTreeItem(): Promise<void>;
 
     /**
-     * This method combines the environment.portalLink and AzExtTreeItem.id to open the resource in the portal. Optionally, an id can be passed to manually open items that may not be in the explorer.
-     */
-    public openInPortal(id?: string, options?: OpenInPortalOptions): Promise<void>;
-
-    /**
      * Displays a 'Loading...' icon and temporarily changes the item's description while `callback` is being run
      */
     public runWithTemporaryDescription(description: string, callback: () => Promise<void>): Promise<void>;
@@ -198,34 +180,42 @@ export interface IGenericTreeItemOptions {
     iconPath?: string | Uri | { light: string | Uri; dark: string | Uri };
     commandId?: string;
     contextValue: string;
+
+    /**
+     * If true, the tree item picker will execute `commandId`, refresh the tree, and re-prompt at the same level of the tree.
+     * For example, if the command is "Sign in to Azure...", this will execute a sign-in, refresh the tree, and prompt again for subscriptions.
+     * If `commandId` is not defined, it will throw an error.
+     */
+    includeInTreeItemPicker?: boolean;
 }
 
 /**
- * A convenience class used for very basic tree items that are never displayed in the treeItemPicker
+ * A convenience class used for very basic tree items
  */
-export declare class GenericTreeItem<TRoot = ISubscriptionRoot> extends AzExtTreeItem<TRoot> {
+export declare class GenericTreeItem extends AzExtTreeItem {
     public label: string;
     public contextValue: string;
-    constructor(parent: AzExtParentTreeItem<TRoot> | undefined, options: IGenericTreeItemOptions);
+    constructor(parent: AzExtParentTreeItem | undefined, options: IGenericTreeItemOptions);
 }
 
 /**
- * Implement this if you are displaying custom root nodes in the tree other than SubscriptionTreeItems
- */
-export declare abstract class RootTreeItem<T> extends AzExtParentTreeItem<T> {
-    public constructor(root: T);
-}
-
-/**
- * Implement this class if your tree item does have children. Otherwise use AzExtTreeItem
+ * Base class for all parent tree items in an *Az*ure *ext*ension, even if those resources aren't actually in Azure.
+ * This provides more value than `TreeItem` (provided by `vscode`), but is more generic than `AzureParentTreeItem` (which is specific to Azure resources)
  * NOTE: *Impl methods are not meant to be called directly - just implemented.
  */
-export declare abstract class AzExtParentTreeItem<TRoot = ISubscriptionRoot> extends AzExtTreeItem<TRoot> {
+export declare abstract class AzExtParentTreeItem extends AzExtTreeItem {
     //#region Properties implemented by base class
     /**
      * This will be used in the tree picker prompt when selecting children
      */
-    readonly childTypeLabel?: string;
+    childTypeLabel?: string;
+
+
+    /**
+     * If true and there is only one child node, that child will automatically be used in the tree item picker.
+     * Otherwise, it will prompt for a child like normal.
+     */
+    autoSelectInTreeItemPicker?: boolean;
     //#endregion
 
     //#region Methods implemented by base class
@@ -233,7 +223,7 @@ export declare abstract class AzExtParentTreeItem<TRoot = ISubscriptionRoot> ext
      * Implement this to display child resources. Should not be called directly
      * @param clearCache If true, you should start the "Load more..." process over
      */
-    public abstract loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem<TRoot>[]>;
+    public abstract loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]>;
 
     /**
      * Implement this as a part of the "Load more..." action. Should not be called directly
@@ -245,21 +235,21 @@ export declare abstract class AzExtParentTreeItem<TRoot = ISubscriptionRoot> ext
      * Implement this if you want the 'create' option to show up in the tree picker. Should not be called directly
      * @param options User-defined options that are passed to the AzExtParentTreeItem.createChild call
      */
-    createChildImpl?(showCreatingTreeItem: (label: string) => void, userOptions?: any): Promise<AzExtTreeItem<TRoot>>;
+    createChildImpl?(showCreatingTreeItem: (label: string) => void, userOptions?: any): Promise<AzExtTreeItem>;
 
     /**
-     * Implement this if you want non-default (i.e. non-alphabetical) sorting of children. Should not be called directly
+     * Override this if you want non-default (i.e. non-alphabetical) sorting of children. Should not be called directly
      * @param item1 The first item to compare
      * @param item2 The second item to compare
      * @returns A negative number if the item1 occurs before item2; positive if item1 occurs after item2; 0 if they are equivalent
      */
-    compareChildrenImpl?(item1: AzExtTreeItem<TRoot>, item2: AzExtTreeItem<TRoot>): number;
+    compareChildrenImpl(item1: AzExtTreeItem, item2: AzExtTreeItem): number;
 
     /**
-     * If this treeItem should not show up in the tree picker, implement this to provide a child that corresponds to the expectedContextValue. Should not be called directly
+     * If this treeItem should not show up in the tree picker or you want custom logic to show quick picks, implement this to provide a child that corresponds to the expectedContextValue. Should not be called directly
      * Otherwise, all children will be shown in the tree picker
      */
-    pickTreeItemImpl?(expectedContextValue: string | RegExp): AzExtTreeItem<TRoot> | undefined;
+    pickTreeItemImpl?(expectedContextValues: (string | RegExp)[]): AzExtTreeItem | undefined | Promise<AzExtTreeItem | undefined>;
     //#endregion
 
     /**
@@ -270,19 +260,96 @@ export declare abstract class AzExtParentTreeItem<TRoot = ISubscriptionRoot> ext
      * @param createTreeItem A function that converts a source object to a TreeItem. Return undefined if you want this object to be skipped.
      * @param getLabelOnError A minimal function that gets the label to display for an invalid source object
      */
-    createTreeItemsWithErrorHandling<TSource, TTreeItem>(
+    createTreeItemsWithErrorHandling<TSource>(
         sourceArray: TSource[],
         invalidContextValue: string,
-        createTreeItem: (source: TSource) => AzExtTreeItem<TTreeItem> | undefined | Promise<AzExtTreeItem<TTreeItem> | undefined>,
-        getLabelOnError: (source: TSource) => string | undefined | Promise<string | undefined>): Promise<AzExtTreeItem<TTreeItem>[]>;
+        createTreeItem: (source: TSource) => AzExtTreeItem | undefined | Promise<AzExtTreeItem | undefined>,
+        getLabelOnError: (source: TSource) => string | undefined | Promise<string | undefined>): Promise<AzExtTreeItem[]>;
 
     /**
      * This class wraps createChildImpl and ensures the tree is updated correctly when an item is created
      */
-    createChild(userOptions?: any): Promise<AzExtTreeItem<TRoot>>;
+    createChild<T extends AzExtTreeItem>(userOptions?: any): Promise<T>;
 
-    getCachedChildren(): Promise<AzExtTreeItem<TRoot>[]>;
+    /**
+     * Get the currently cached children for this tree item. This will load the first batch if they have not been loaded yet.
+     */
+    getCachedChildren(): Promise<AzExtTreeItem[]>;
 }
+
+/**
+ * A tree time for an Azure Account, which will display subscriptions. For Azure-centered extensions, this will be at the root of the tree.
+ */
+export declare abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem implements Disposable {
+    public static readonly contextValue: string;
+    public contextValue: string;
+    public label: string;
+    public disposables: Disposable[];
+    public childTypeLabel: string;
+    public autoSelectInTreeItemPicker: boolean;
+
+    //#region Methods implemented by base class
+    /**
+     * Implement this to create a subscription tree item under this Azure Account node
+     * @param root Contains basic information about the subscription - should be passed in to the constructor of `SubscriptionTreeItemBase`
+     */
+    public abstract createSubscriptionTreeItem(root: ISubscriptionRoot): SubscriptionTreeItemBase | Promise<SubscriptionTreeItemBase>;
+    //#endregion
+
+    /**
+     * Azure Account Tree Item
+     * @param parent The parent of this node or undefined if it's the root of the tree.
+     * @param testAccount A test Azure Account that leverages a service principal instead of interactive login
+     */
+    public constructor(parent?: AzExtParentTreeItem, testAccount?: TestAzureAccount);
+
+    public dispose(): void;
+
+    /**
+     * If user is logged in and only has one subscription selected, adds that to the wizardContext and returns undefined
+     * Else, returns a prompt step for a subscription
+     */
+    public getSubscriptionPromptStep(wizardContext: Partial<ISubscriptionWizardContext>): Promise<AzureWizardPromptStep<ISubscriptionWizardContext> | undefined>;
+
+    public hasMoreChildrenImpl(): boolean;
+    public loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]>;
+    public pickTreeItemImpl(expectedContextValues: (string | RegExp)[]): Promise<AzExtTreeItem | undefined>;
+}
+
+/**
+ * Base class for all tree items representing resources in Azure.
+ */
+export declare abstract class AzureTreeItem<TRoot extends ISubscriptionRoot = ISubscriptionRoot> extends AzExtTreeItem {
+    /**
+     * Contains subscription information specific to the root of this branch of the tree.
+     */
+    public readonly root: TRoot;
+
+    /**
+     * This method combines the environment.portalLink and AzureTreeItem.fullId to open the resource in the portal.
+     */
+    public openInPortal(options?: OpenInPortalOptions): Promise<void>;
+}
+
+/**
+ * Base class for all parent tree items representing resources in Azure.
+ */
+export declare abstract class AzureParentTreeItem<TRoot extends ISubscriptionRoot = ISubscriptionRoot> extends AzExtParentTreeItem {
+    /**
+     * Contains subscription information specific to the root of this branch of the tree.
+     */
+    public readonly root: TRoot;
+
+    /**
+    * This method combines the environment.portalLink and AzureTreeItem.fullId to open the resource in the portal.
+    */
+    public openInPortal(options?: OpenInPortalOptions): Promise<void>;
+}
+
+/**
+* Combines the root.environment.portalLink and id to open the resource in the portal.
+*/
+export declare function openInPortal(root: ISubscriptionRoot, id: string, options?: OpenInPortalOptions): Promise<void>;
 
 export declare class UserCancelledError extends Error { }
 
