@@ -4,15 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { TreeItemCollapsibleState, Uri } from 'vscode';
-import { ISubscriptionRoot, OpenInPortalOptions } from '../..';
-import * as types from '../..';
-import { ArgumentError, NotImplementedError } from '../errors';
+import * as types from '../../index';
+import { NotImplementedError } from '../errors';
 import { localize } from '../localize';
-import { openUrl } from '../utils/openUrl';
+import { nonNullProp } from '../utils/nonNull';
 import { IAzExtParentTreeItemInternal, IAzExtTreeDataProviderInternal } from "./InternalInterfaces";
 import { loadingIconPath } from "./treeConstants";
 
-export abstract class AzExtTreeItem<TRoot = ISubscriptionRoot> implements types.AzExtTreeItem<TRoot> {
+export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     //#region Properties implemented by base class
     public abstract label: string;
     public abstract contextValue: string;
@@ -23,10 +22,11 @@ export abstract class AzExtTreeItem<TRoot = ISubscriptionRoot> implements types.
     //#endregion
 
     public readonly collapsibleState: TreeItemCollapsibleState | undefined;
-    public readonly parent: IAzExtParentTreeItemInternal<TRoot> | undefined;
+    public readonly parent: IAzExtParentTreeItemInternal | undefined;
     private _temporaryDescription?: string;
+    private _treeDataProvider: IAzExtTreeDataProviderInternal | undefined;
 
-    public constructor(parent: IAzExtParentTreeItemInternal<TRoot> | undefined) {
+    public constructor(parent: IAzExtParentTreeItemInternal | undefined) {
         this.parent = parent;
     }
 
@@ -35,17 +35,21 @@ export abstract class AzExtTreeItem<TRoot = ISubscriptionRoot> implements types.
     }
 
     public get fullId(): string {
-        let id: string = this.id || this.label;
-        if (!id.startsWith('/')) {
-            id = `/${id}`;
-        }
+        if (this.parent === undefined) {
+            return ''; // root tree item should not have an id since it's not actually displayed
+        } else {
+            let id: string = this.id || this.label;
+            if (!id.startsWith('/')) {
+                id = `/${id}`;
+            }
 
-        // For the sake of backwards compat, only add the parent's id if it's not already there
-        if (this.parent && !id.startsWith(this.parent.fullId)) {
-            id = `${this.parent.fullId}${id}`;
-        }
+            // For the sake of backwards compat, only add the parent's id if it's not already there
+            if (!id.startsWith(this.parent.fullId)) {
+                id = `${this.parent.fullId}${id}`;
+            }
 
-        return id;
+            return id;
+        }
     }
 
     public get effectiveIconPath(): string | Uri | { light: string | Uri; dark: string | Uri } | undefined {
@@ -54,23 +58,15 @@ export abstract class AzExtTreeItem<TRoot = ISubscriptionRoot> implements types.
 
     public get effectiveLabel(): string {
         return this._effectiveDescription ? `${this.label} (${this._effectiveDescription})` : this.label;
-
     }
 
-    public get root(): TRoot {
-        if (this.parent) {
-            return this.parent.root;
-        } else {
-            throw new ArgumentError(this);
-        }
+    public get treeDataProvider(): IAzExtTreeDataProviderInternal {
+        // tslint:disable-next-line: strict-boolean-expressions
+        return this._treeDataProvider || nonNullProp(this, 'parent').treeDataProvider;
     }
 
-    public get treeDataProvider(): IAzExtTreeDataProviderInternal<TRoot> {
-        if (this.parent) {
-            return this.parent.treeDataProvider;
-        } else {
-            throw new ArgumentError(this);
-        }
+    public set treeDataProvider(val: IAzExtTreeDataProviderInternal) {
+        this._treeDataProvider = val;
     }
 
     //#region Methods implemented by base class
@@ -81,14 +77,6 @@ export abstract class AzExtTreeItem<TRoot = ISubscriptionRoot> implements types.
 
     public async refresh(): Promise<void> {
         await this.treeDataProvider.refresh(this);
-    }
-
-    public async openInPortal(this: AzExtTreeItem<ISubscriptionRoot>, id?: string, options?: OpenInPortalOptions): Promise<void> {
-        id = id === undefined ? this.fullId : id;
-        const queryPrefix: string = (options && options.queryPrefix) ? `?${options.queryPrefix}` : '';
-        const url: string = `${this.root.environment.portalUrl}/${queryPrefix}#@${this.root.tenantId}/resource${id}`;
-
-        await openUrl(url);
     }
 
     public includeInTreePicker(expectedContextValues: (string | RegExp)[]): boolean {

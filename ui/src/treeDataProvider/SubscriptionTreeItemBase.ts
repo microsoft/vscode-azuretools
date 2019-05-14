@@ -4,19 +4,25 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as path from 'path';
-import { ISubscriptionRoot } from '../..';
-import * as types from '../..';
-import { RootTreeItem } from './RootTreeItem';
+import * as types from '../../index';
+import { AzureParentTreeItem } from './AzureParentTreeItem';
 
-export abstract class SubscriptionTreeItem extends RootTreeItem<ISubscriptionRoot> implements types.SubscriptionTreeItem {
+export abstract class SubscriptionTreeItemBase extends AzureParentTreeItem implements types.SubscriptionTreeItemBase {
     public static readonly contextValue: string = 'azureextensionui.azureSubscription';
-    public readonly contextValue: string = SubscriptionTreeItem.contextValue;
+    public readonly contextValue: string = SubscriptionTreeItemBase.contextValue;
     public readonly label: string;
 
-    public constructor(root: ISubscriptionRoot) {
-        super(root);
+    private _root: types.ISubscriptionRoot;
+
+    public constructor(parent: AzureParentTreeItem | undefined, root: types.ISubscriptionRoot) {
+        super(parent);
+        this._root = root;
         this.label = root.subscriptionDisplayName;
         this.id = root.subscriptionPath;
         this.iconPath = path.join(__filename, '..', '..', '..', '..', 'resources', 'azureSubscription.svg');
+    }
+
+    public get root(): types.ISubscriptionRoot {
+        return this._root;
     }
 }

@@ -43,18 +43,18 @@ registerEvent('yourExtension.onDidSaveTextDocument', vscode.workspace.onDidSaveT
 });
 ```
 
-## Azure Tree Data Provider
+## Azure Extension Tree Data Provider
 ![ExampleTree](resources/ExampleTree.png)
 
 ### Display Azure Resources
 Follow these steps to create your basic Azure Tree:
-1. Implement an `AzExtTreeItem` (or `AzExtParentTreeItem`) describing the items to be displayed under your subscription:
+1. Create an `AzureTreeItem` (or `AzureParentTreeItem`) describing the items to be displayed under your subscription:
     ```typescript
-    export class WebAppTreeItem extends AzExtTreeItem {
+    export class WebAppTreeItem extends AzureTreeItem {
         public static contextValue: string = 'azureWebApp';
         public readonly contextValue: string = WebAppTreeItem.contextValue;
         private readonly _site: Site;
-        constructor(parent: AzExtParentTreeItem, site: Site) {
+        constructor(parent: AzureParentTreeItem, site: Site) {
             super(parent);
             this._site = site;
         }
@@ -68,10 +68,10 @@ Follow these steps to create your basic Azure Tree:
         }
     }
     ```
-1. Create a `SubscriptionTreeItem` that provides the tree items you just implemented. It must implement at least `hasMoreChildrenImpl` and `loadMoreChildrenImpl`:
+1. Create a `SubscriptionTreeItemBase` that provides the tree items you just implemented. It must implement at least `hasMoreChildrenImpl` and `loadMoreChildrenImpl`:
     > NOTE: Methods suffixed with `Impl` should not be called directly - just implemented.
     ```typescript
-    export class WebAppProvider extends SubscriptionTreeItem {
+    export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
         private _nextLink: string | undefined;
 
         public hasMoreChildrenImpl(): boolean {
@@ -88,25 +88,40 @@ Follow these steps to create your basic Azure Tree:
         }
     }
     ```
-1. Instantiate a new instance of `AzureTreeDataProvider` in your extension's `activate()` method, passing the `SubscriptionTreeItem` type and `loadMoreCommandId`. The `loadMoreCommandId` maps the 'Load More...' node to the command registered by your extension.
+1. Create an `AzureAccountTreeItemBase` that provides the subscriptions you just implemented. It must implement at least `createSubscriptionTreeItem`:
     ```typescript
-    const treeDataProvider = new AzureTreeDataProvider(WebAppProvider, 'appService.LoadMore');
-    context.subscriptions.push(treeDataProvider);
-    context.subscriptions.push(vscode.window.registerTreeDataProvider('azureAppService', treeDataProvider));
+    export class AzureAccountTreeItem extends AzureAccountTreeItemBase {
+        public createSubscriptionTreeItem(root: ISubscriptionRoot): SubscriptionTreeItemBase {
+            return new SubscriptionTreeItem(this, root);
+        }
+    }
+    ```
+1. Finally, set up the tree in your extension's `activate()` method. Instantiate an `AzureAccountTreeItem` and add it to `context.subsriptions` since it's a disposable. Then instantiate an `AzExtTreeDataProvider`, passing in your root tree item and the `loadMoreCommandId` (which maps the 'Load More...' node to the command registered by your extension).
+    ```typescript
+    const azureAccountTreeItem = new AzureAccountTreeItem();
+    context.subscriptions.push(azureAccountTreeItem);
+    const treeDataProvider = new AzExtTreeDataProvider(azureAccountTreeItem, 'appService.LoadMore');
+    context.subscriptions.push(vscode.window.createTreeView('azureAppService', { treeDataProvider }));
     ```
 
 ### Advanced Scenarios
+
+#### Non-Azure resources
+If your tree displays non-Azure resources you can either provide a different root tree item in the constructor of `AzExtTreeDataProvider`, or override `loadMoreChildrenImpl` in `AzureAccountTreeItemBase` to add items at the same level as subscriptions. The non-Azure tree items can extend `AzExtTreeItem` and `AzExtParentTreeItem` (a tree item for an **Az**ure **Ext**ension) which are more generic than `AzureTreeItem` and `AzureParentTreeItem`.
+
+#### Tree Item Picker
 The above steps will display your Azure Resources, but that's just the beginning. Let's say you implemented a `browse` function on your `WebAppTreeItem` that opened the Web App in the browser. In order to make that command work from the VS Code command palette, use the `showTreeItemPicker` method:
 ```typescript
 registerCommand('appService.Browse', async (treeItem?: WebAppTreeItem) => {
     if (!treeItem) {
-        treeItem = <WebAppTreeItem>await treeDataProvider.showTreeItemPicker(WebAppTreeItem.contextValue);
+        treeItem = await treeDataProvider.showTreeItemPicker(WebAppTreeItem.contextValue);
     }
 
     treeItem.browse();
 }));
 ```
 
+#### Create Child Item
 For a more advanced scenario, you can also implement the `createChildImpl` method on your `AzExtParentTreeItem`. This will ensure the 'Create' option is displayed in the node picker and will automatically display a 'Creating...' item in the tree:
 
 ![CreateNodePicker](resources/CreateNodePicker.png) ![CreatingNode](resources/CreatingNode.png)
