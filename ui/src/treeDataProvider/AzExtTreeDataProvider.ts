@@ -140,8 +140,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
             }
         }
 
-        // tslint:disable-next-line: no-any
-        return <T><any>treeItem;
+        return <T><unknown>treeItem;
     }
 
     public async findTreeItem<T extends types.AzExtTreeItem>(fullId: string): Promise<T | undefined> {
@@ -153,8 +152,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
 
             for (const treeItem of treeItems) {
                 if (treeItem.fullId === fullId) {
-                    // tslint:disable-next-line: no-any
-                    return <T><any>treeItem;
+                    return <T><unknown>treeItem;
                 } else if (fullId.startsWith(`${treeItem.fullId}/`) && isAzExtParentTreeItem(treeItem)) {
                     // Append '/' to 'treeItem.fullId' when checking 'startsWith' to ensure its actually an ancestor, rather than a treeItem at the same level that _happens_ to start with the same id
                     // For example, two databases named 'test' and 'test1' as described in this issue: https://github.com/Microsoft/vscode-cosmosdb/issues/488
