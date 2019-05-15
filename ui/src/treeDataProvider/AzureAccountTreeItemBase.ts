@@ -90,7 +90,11 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
                 new GenericTreeItem(this, { label: signInLabel, commandId: signInCommandId, contextValue, id: signInCommandId, includeInTreeItemPicker: true }),
                 new GenericTreeItem(this, { label: createAccountLabel, commandId: createAccountCommandId, contextValue, id: createAccountCommandId, includeInTreeItemPicker: true })
             ];
-        } else if (this._azureAccount.filters.length === 0) {
+        }
+
+        await this._azureAccount.waitForFilters();
+
+        if (this._azureAccount.filters.length === 0) {
             return [
                 new GenericTreeItem(this, { label: selectSubscriptionsLabel, commandId: selectSubscriptionsCommandId, contextValue, id: selectSubscriptionsCommandId, includeInTreeItemPicker: true })
             ];
