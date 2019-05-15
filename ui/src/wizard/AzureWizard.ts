@@ -12,22 +12,22 @@ import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 import { AzureWizardUserInput, IInternalAzureWizard } from './AzureWizardUserInput';
 
-export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizard {
+export class AzureWizard<T extends types.IActionContext> implements types.AzureWizard<T>, IInternalAzureWizard {
     public hideStepCount: boolean;
     public title: string | undefined;
     private readonly _promptSteps: AzureWizardPromptStep<T>[];
     private readonly _executeSteps: AzureWizardExecuteStep<T>[];
     private readonly _finishedPromptSteps: AzureWizardPromptStep<T>[] = [];
-    private readonly _wizardContext: T;
+    private readonly _context: T;
 
-    public constructor(wizardContext: T, options: types.IWizardOptions<T>) {
+    public constructor(context: T, options: types.IWizardOptions<T>) {
         // reverse steps to make it easier to use push/pop
         // tslint:disable-next-line: strict-boolean-expressions
         this._promptSteps = (<AzureWizardPromptStep<T>[]>options.promptSteps || []).reverse();
         this._promptSteps.forEach(s => { s.effectiveTitle = options.title; });
         // tslint:disable-next-line: strict-boolean-expressions
         this._executeSteps = options.executeSteps || [];
-        this._wizardContext = wizardContext;
+        this._context = context;
     }
 
     public get currentStep(): number {
@@ -35,10 +35,10 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
     }
 
     public get totalSteps(): number {
-        return this._finishedPromptSteps.filter(s => s.prompted).length + this._promptSteps.filter(s => s.shouldPrompt(this._wizardContext)).length + 1;
+        return this._finishedPromptSteps.filter(s => s.prompted).length + this._promptSteps.filter(s => s.shouldPrompt(this._context)).length + 1;
     }
 
-    public async prompt(actionContext: types.IActionContext): Promise<void> {
+    public async prompt(): Promise<void> {
         // Insert Wizard UI into ext.ui.rootUserInput - to be used instead of vscode.window UI
         const oldRootUserInput: IRootUserInput | undefined = ext.ui.rootUserInput;
         ext.ui.rootUserInput = new AzureWizardUserInput(this);
@@ -48,19 +48,19 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
             while (step) {
                 step.reset();
 
-                actionContext.properties.lastStepAttempted = `prompt-${step.constructor.name}`;
+                this._context.properties.lastStepAttempted = `prompt-${step.constructor.name}`;
                 this.title = step.effectiveTitle;
                 this.hideStepCount = step.hideStepCount;
 
-                if (step.shouldPrompt(this._wizardContext)) {
-                    step.propertiesBeforePrompt = Object.keys(this._wizardContext).filter(k => !isNullOrUndefined(this._wizardContext[k]));
+                if (step.shouldPrompt(this._context)) {
+                    step.propertiesBeforePrompt = Object.keys(this._context).filter(k => !isNullOrUndefined(this._context[k]));
 
                     try {
-                        await step.prompt(this._wizardContext);
+                        await step.prompt(this._context);
                         step.prompted = true;
                     } catch (err) {
                         if (err instanceof GoBackError) {
-                            actionContext.properties.usedBackButton = 'true';
+                            this._context.properties.usedBackButton = 'true';
                             step = this.goBack(step);
                             continue;
                         } else {
@@ -70,7 +70,7 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
                 }
 
                 if (step.getSubWizard) {
-                    const subWizard: types.IWizardOptions<T> | void = await step.getSubWizard(this._wizardContext);
+                    const subWizard: types.IWizardOptions<T> | void = await step.getSubWizard(this._context);
                     if (subWizard) {
                         this.addSubWizard(step, subWizard);
                     }
@@ -84,7 +84,7 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
         }
     }
 
-    public async execute(actionContext: types.IActionContext): Promise<void> {
+    public async execute(): Promise<void> {
         await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async progress => {
             let currentStep: number = 1;
 
@@ -93,7 +93,7 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
             const internalProgress: vscode.Progress<{ message?: string; increment?: number }> = {
                 report: (value: { message?: string; increment?: number }): void => {
                     if (value.message) {
-                        const totalSteps: number = currentStep + steps.filter(s => s.shouldExecute(this._wizardContext)).length;
+                        const totalSteps: number = currentStep + steps.filter(s => s.shouldExecute(this._context)).length;
                         if (totalSteps > 1) {
                             value.message += ` (${currentStep}/${totalSteps})`;
                         }
@@ -104,9 +104,9 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
 
             let step: AzureWizardExecuteStep<T> | undefined = steps.pop();
             while (step) {
-                if (step.shouldExecute(this._wizardContext)) {
-                    actionContext.properties.lastStepAttempted = `execute-${step.constructor.name}`;
-                    await step.execute(this._wizardContext, internalProgress);
+                if (step.shouldExecute(this._context)) {
+                    this._context.properties.lastStepAttempted = `execute-${step.constructor.name}`;
+                    await step.execute(this._context, internalProgress);
                     currentStep += 1;
                 }
 
@@ -130,9 +130,9 @@ export class AzureWizard<T> implements types.AzureWizard<T>, IInternalAzureWizar
             removeFromEnd(this._executeSteps, step.numSubExecuteSteps);
         }
 
-        for (const key of Object.keys(this._wizardContext)) {
+        for (const key of Object.keys(this._context)) {
             if (!step.propertiesBeforePrompt.find(p => p === key)) {
-                this._wizardContext[key] = undefined;
+                this._context[key] = undefined;
             }
         }
 

@@ -30,9 +30,9 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
     private _loadMoreChildrenTask: Promise<void> | undefined;
     private _initChildrenTask: Promise<void> | undefined;
 
-    public async getCachedChildren(): Promise<AzExtTreeItem[]> {
+    public async getCachedChildren(context: types.IActionContext): Promise<AzExtTreeItem[]> {
         if (this._clearCache) {
-            this._initChildrenTask = this.loadMoreChildren();
+            this._initChildrenTask = this.loadMoreChildren(context);
         }
 
         if (this._initChildrenTask) {
@@ -47,10 +47,10 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
     }
 
     //#region Methods implemented by base class
-    public abstract loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]>;
+    public abstract loadMoreChildrenImpl(clearCache: boolean, context: types.IActionContext): Promise<AzExtTreeItem[]>;
     public abstract hasMoreChildrenImpl(): boolean;
     // tslint:disable-next-line:no-any
-    public createChildImpl?(showCreatingTreeItem: (label: string) => void, userOptions?: any): Promise<AzExtTreeItem>;
+    public createChildImpl?(showCreatingTreeItem: (label: string) => void, context: types.IActionContext): Promise<AzExtTreeItem>;
     public pickTreeItemImpl?(expectedContextValues: (string | RegExp)[]): AzExtTreeItem | undefined | Promise<AzExtTreeItem | undefined>;
     //#endregion
 
@@ -58,7 +58,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         this._clearCache = true;
     }
 
-    public async createChild<T extends types.AzExtTreeItem>(userOptions?: {}): Promise<T> {
+    public async createChild<T extends types.AzExtTreeItem>(context: types.IActionContext): Promise<T> {
         if (this.createChildImpl) {
             let creatingTreeItem: AzExtTreeItem | undefined;
             try {
@@ -72,7 +72,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
                         this._creatingTreeItems.push(creatingTreeItem);
                         this.treeDataProvider.refreshUIOnly(this);
                     },
-                    userOptions);
+                    context);
 
                 this.addChildToCache(newTreeItem);
                 this.treeDataProvider._onTreeItemCreateEmitter.fire(newTreeItem);
@@ -92,9 +92,9 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         return item1.effectiveLabel.localeCompare(item2.effectiveLabel);
     }
 
-    public async pickChildTreeItem(expectedContextValues: (string | RegExp)[]): Promise<AzExtTreeItem> {
+    public async pickChildTreeItem(expectedContextValues: (string | RegExp)[], context: types.IActionContext): Promise<AzExtTreeItem> {
         if (this.pickTreeItemImpl) {
-            const children: AzExtTreeItem[] = await this.getCachedChildren();
+            const children: AzExtTreeItem[] = await this.getCachedChildren(context);
             const pickedItem: AzExtTreeItem | undefined = await this.pickTreeItemImpl(expectedContextValues);
             if (pickedItem) {
                 const child: AzExtTreeItem | undefined = children.find((ti: AzExtTreeItem) => ti.fullId === pickedItem.fullId);
@@ -111,7 +111,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         let getTreeItem: GetTreeItemFunction;
 
         try {
-            getTreeItem = (await ext.ui.showQuickPick(this.getQuickPicks(expectedContextValues), options)).data;
+            getTreeItem = (await ext.ui.showQuickPick(this.getQuickPicks(expectedContextValues, context), options)).data;
         } catch (error) {
             // We want the loading thing to show for `showQuickPick` but we also need to support auto-select if there's only one pick
             // hence throwing an error instead of just awaiting `getQuickPicks`
@@ -149,11 +149,11 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         }
     }
 
-    public async loadMoreChildren(): Promise<void> {
+    public async loadMoreChildren(context: types.IActionContext): Promise<void> {
         if (this._loadMoreChildrenTask) {
             await this._loadMoreChildrenTask;
         } else {
-            this._loadMoreChildrenTask = this.loadMoreChildrenInternal();
+            this._loadMoreChildrenTask = this.loadMoreChildrenInternal(context);
             try {
                 await this._loadMoreChildrenTask;
             } finally {
@@ -201,7 +201,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         return treeItems;
     }
 
-    private async loadMoreChildrenInternal(): Promise<void> {
+    private async loadMoreChildrenInternal(context: types.IActionContext): Promise<void> {
         if (this._clearCache) {
             // Just in case implementers of `loadMoreChildrenImpl` re-use the same child node, we want to clear those caches as well
             for (const child of this._cachedChildren) {
@@ -212,13 +212,13 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
             this._cachedChildren = [];
         }
 
-        const newTreeItems: AzExtTreeItem[] = await this.loadMoreChildrenImpl(this._clearCache);
+        const newTreeItems: AzExtTreeItem[] = await this.loadMoreChildrenImpl(this._clearCache, context);
         this._cachedChildren = this._cachedChildren.concat(newTreeItems).sort(this.compareChildrenImpl);
         this._clearCache = false;
     }
 
-    private async getQuickPicks(expectedContextValues: (string | RegExp)[]): Promise<types.IAzureQuickPickItem<GetTreeItemFunction>[]> {
-        let children: AzExtTreeItem[] = await this.getCachedChildren();
+    private async getQuickPicks(expectedContextValues: (string | RegExp)[], context: types.IActionContext): Promise<types.IAzureQuickPickItem<GetTreeItemFunction>[]> {
+        let children: AzExtTreeItem[] = await this.getCachedChildren(context);
         children = children.filter((ti: AzExtTreeItem) => ti.includeInTreePicker(expectedContextValues));
 
         const picks: types.IAzureQuickPickItem<GetTreeItemFunction>[] = children.map((ti: AzExtTreeItem) => {
@@ -251,7 +251,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
             picks.unshift({
                 label: localize('treePickerCreateNew', '$(plus) Create New {0}', this.childTypeLabel),
                 description: '',
-                data: async (): Promise<AzExtTreeItem> => await this.createChild<AzExtTreeItem>()
+                data: async (): Promise<AzExtTreeItem> => await this.createChild<AzExtTreeItem>(context)
             });
         }
 
@@ -260,7 +260,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
                 label: `$(sync) ${loadMoreLabel}`,
                 description: '',
                 data: async (): Promise<AzExtTreeItem> => {
-                    await this.loadMoreChildren();
+                    await this.loadMoreChildren(context);
                     this.treeDataProvider.refreshUIOnly(this);
                     return this;
                 }

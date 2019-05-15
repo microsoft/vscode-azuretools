@@ -36,11 +36,11 @@ function initContext(): [number, IActionContext] {
     return [start, context];
 }
 
-export function callWithTelemetryAndErrorHandlingSync<T>(callbackId: string, callback: (this: IActionContext) => T): T | undefined {
+export function callWithTelemetryAndErrorHandlingSync<T>(callbackId: string, callback: (context: IActionContext) => T): T | undefined {
     const [start, context] = initContext();
 
     try {
-        return <T>callback.call(context);
+        return callback(context);
     } catch (error) {
         handleError(context, callbackId, error);
         return undefined;
@@ -49,11 +49,11 @@ export function callWithTelemetryAndErrorHandlingSync<T>(callbackId: string, cal
     }
 }
 
-export async function callWithTelemetryAndErrorHandling<T>(callbackId: string, callback: (this: IActionContext) => T | PromiseLike<T>): Promise<T | undefined> {
+export async function callWithTelemetryAndErrorHandling<T>(callbackId: string, callback: (context: IActionContext) => T | PromiseLike<T>): Promise<T | undefined> {
     const [start, context] = initContext();
 
     try {
-        return await <Promise<T>>Promise.resolve(callback.call(context));
+        return await Promise.resolve(callback(context));
     } catch (error) {
         handleError(context, callbackId, error);
         return undefined;

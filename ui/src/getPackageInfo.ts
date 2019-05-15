@@ -17,9 +17,9 @@ export function getPackageInfo(ctx?: ExtensionContext): { extensionName: string,
 
     let packageJson: IPackageJson = {};
     // tslint:disable-next-line:no-floating-promises
-    callWithTelemetryAndErrorHandling('azureTools.getPackageInfo', function (this: IActionContext): void {
-        this.suppressErrorDisplay = true;
-        this.suppressTelemetry = true; // only report errors
+    callWithTelemetryAndErrorHandling('azureTools.getPackageInfo', (context: IActionContext) => {
+        context.suppressErrorDisplay = true;
+        context.suppressTelemetry = true; // only report errors
 
         try {
             if (ctx) {
@@ -41,7 +41,7 @@ export function getPackageInfo(ctx?: ExtensionContext): { extensionName: string,
     const publisher: string | undefined = packageJson.publisher;
     const bugsUrl: string | undefined = !packageJson.bugs ? undefined :
         typeof packageJson.bugs === 'string' ? packageJson.bugs :
-        packageJson.bugs.url;
+            packageJson.bugs.url;
 
     if (!aiKey) {
         throw new Error('Extension\'s package.json is missing aiKey');

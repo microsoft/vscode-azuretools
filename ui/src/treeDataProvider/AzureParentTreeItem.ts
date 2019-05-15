@@ -9,7 +9,7 @@ import { nonNullProp } from '../utils/nonNull';
 import { AzExtParentTreeItem } from './AzExtParentTreeItem';
 import { IAzExtParentTreeItemInternal } from './InternalInterfaces';
 
-export abstract class AzureParentTreeItem<TRoot extends types.ISubscriptionRoot = types.ISubscriptionRoot> extends AzExtParentTreeItem implements types.AzureParentTreeItem<TRoot> {
+export abstract class AzureParentTreeItem<TRoot extends types.ISubscriptionContext = types.ISubscriptionContext> extends AzExtParentTreeItem implements types.AzureParentTreeItem<TRoot> {
     public readonly parent: types.AzureParentTreeItem<TRoot> & IAzExtParentTreeItemInternal | undefined;
 
     public get root(): TRoot {
