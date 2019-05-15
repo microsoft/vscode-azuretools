@@ -21,14 +21,14 @@ export class TestUserInput implements types.IAzureUserInput, types.TestUserInput
     }
 
     public async showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T> {
+        const resolvedItems: T[] = await Promise.resolve(items);
+
         const input: string | RegExp | TestInput | undefined = this._inputs.shift();
         if (input === undefined) {
             throw new Error(`No more inputs left for call to showQuickPick. Placeholder: '${options.placeHolder}'`);
         } else if (input === TestInput.BackButton) {
             throw new GoBackError();
         } else {
-            const resolvedItems: T[] = await Promise.resolve(items);
-
             if (resolvedItems.length === 0) {
                 throw new Error(`No quick pick items found. Placeholder: '${options.placeHolder}'`);
             } else if (input instanceof RegExp) {
