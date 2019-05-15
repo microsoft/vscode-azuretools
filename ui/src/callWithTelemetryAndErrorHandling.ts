@@ -62,8 +62,7 @@ export async function callWithTelemetryAndErrorHandling<T>(callbackId: string, c
     }
 }
 
-// tslint:disable-next-line:no-any
-function handleError(context: IActionContext, callbackId: string, error: any): void {
+function handleError(context: IActionContext, callbackId: string, error: unknown): void {
     const errorData: IParsedError = parseError(error);
     if (errorData.isUserCancelledError) {
         context.properties.result = 'Canceled';

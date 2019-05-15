@@ -8,8 +8,7 @@ import * as vscode from 'vscode';
 // Runs before all tests
 suiteSetup(async () => {
     const id: string = 'ms-azuretools.azureextensionui';
-    // tslint:disable-next-line:no-any
-    const extension: vscode.Extension<any> | undefined = vscode.extensions.getExtension(id);
+    const extension: vscode.Extension<unknown> | undefined = vscode.extensions.getExtension(id);
     if (!extension) {
         throw new Error(`Failed to activate extension with id "${id}".`);
     } else {

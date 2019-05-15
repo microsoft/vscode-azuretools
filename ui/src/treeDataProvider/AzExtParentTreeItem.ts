@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as path from 'path';
+import { isNullOrUndefined } from 'util';
 import { commands, TreeItemCollapsibleState } from 'vscode';
 import * as types from '../../index';
 import { NotImplementedError } from '../errors';
@@ -75,8 +76,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
 
                 this.addChildToCache(newTreeItem);
                 this.treeDataProvider._onTreeItemCreateEmitter.fire(newTreeItem);
-                // tslint:disable-next-line: no-any
-                return <T><any>newTreeItem;
+                return <T><unknown>newTreeItem;
             } finally {
                 if (creatingTreeItem) {
                     this._creatingTreeItems.splice(this._creatingTreeItems.indexOf(creatingTreeItem), 1);
@@ -169,8 +169,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         getLabelOnError: (source: TSource) => string | undefined | Promise<string | undefined>): Promise<AzExtTreeItem[]> {
 
         const treeItems: AzExtTreeItem[] = [];
-        // tslint:disable-next-line:no-any
-        let unknownError: any;
+        let lastUnknownItemError: unknown;
         await Promise.all(sourceArray.map(async (source: TSource) => {
             try {
                 const item: AzExtTreeItem | undefined = await createTreeItem(source);
@@ -187,16 +186,16 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
 
                 if (name) {
                     treeItems.push(new InvalidTreeItem(this, name, error, invalidContextValue));
-                } else if (error && !unknownError) {
-                    unknownError = error;
+                } else if (!isNullOrUndefined(error)) {
+                    lastUnknownItemError = error;
                 }
             }
         }));
 
-        if (unknownError) {
-            // Display a generic error if there are any unknown items. Only the first error will be displayed
+        if (!isNullOrUndefined(lastUnknownItemError)) {
+            // Display a generic error if there are any unknown items. Only the last error will be displayed
             const message: string = localize('cantShowItems', 'Some items could not be displayed');
-            treeItems.push(new InvalidTreeItem(this, message, unknownError, invalidContextValue, ''));
+            treeItems.push(new InvalidTreeItem(this, message, lastUnknownItemError, invalidContextValue, ''));
         }
 
         return treeItems;
@@ -285,11 +284,9 @@ class InvalidTreeItem extends AzExtParentTreeItem {
     public readonly label: string;
     public readonly description: string;
 
-    // tslint:disable-next-line:no-any
-    private _error: any;
+    private _error: unknown;
 
-    // tslint:disable-next-line:no-any
-    constructor(parent: AzExtParentTreeItem, label: string, error: any, contextValue: string, description: string = localize('invalid', 'Invalid')) {
+    constructor(parent: AzExtParentTreeItem, label: string, error: unknown, contextValue: string, description: string = localize('invalid', 'Invalid')) {
         super(parent);
         this.label = label;
         this._error = error;

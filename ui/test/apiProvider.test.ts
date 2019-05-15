@@ -84,8 +84,7 @@ suite('AzureExtensionApiProvider tests', () => {
     });
 });
 
-// tslint:disable-next-line:no-any
-function validateApiError(error: any, regexp: RegExp, expectedCode: string): boolean {
+function validateApiError(error: unknown, regexp: RegExp, expectedCode: string): boolean {
     const errorInfo: IParsedError = parseError(error);
     return regexp.test(errorInfo.message) && errorInfo.errorType === expectedCode;
 }

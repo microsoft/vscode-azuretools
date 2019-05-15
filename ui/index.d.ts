@@ -1006,7 +1006,7 @@ export declare function addExtensionUserAgent(client: IAddUserAgent): void;
  */
 export function createAzureClient<T extends IAddUserAgent>(
     clientInfo: { credentials: ServiceClientCredentials; subscriptionId: string; environment: AzureEnvironment; },
-    clientType: { new(credentials: ServiceClientCredentials, subscriptionId: string, baseUri?: string, options?: AzureServiceClientOptions): T }): T;
+    clientType: new (credentials: ServiceClientCredentials, subscriptionId: string, baseUri?: string, options?: AzureServiceClientOptions) => T): T;
 
 /**
  * Creates an Azure subscription client, ensuring best practices are followed. For example:
@@ -1015,7 +1015,7 @@ export function createAzureClient<T extends IAddUserAgent>(
  */
 export function createAzureSubscriptionClient<T extends IAddUserAgent>(
     clientInfo: { credentials: ServiceClientCredentials; environment: AzureEnvironment; },
-    clientType: { new(credentials: ServiceClientCredentials, baseUri?: string, options?: AzureServiceClientOptions): T }): T;
+    clientType: new (credentials: ServiceClientCredentials, baseUri?: string, options?: AzureServiceClientOptions) => T): T;
 
 /**
  * Wraps an Azure Extension's API in a very basic provider that adds versioning.

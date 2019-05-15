@@ -77,7 +77,6 @@ suite("callWithMaskHandling Tests", () => {
     });
 });
 
-// tslint:disable-next-line: no-any
-function validateError(err: any, value: string): boolean {
+function validateError(err: unknown, value: string): boolean {
     return !JSON.stringify(parseError(err)).includes(value);
 }

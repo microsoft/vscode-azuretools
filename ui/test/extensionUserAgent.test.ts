@@ -10,8 +10,7 @@ suite('Extension user agent', () => {
     const extensionUserAgent: string = 'azureextensionui/0.0.1';
 
     test('null/undefined/empty existing user agent', () => {
-        // tslint:disable-next-line:no-any
-        assert.equal(appendExtensionUserAgent(<string><any>null), extensionUserAgent);
+        assert.equal(appendExtensionUserAgent(<string><unknown>null), extensionUserAgent);
         assert.equal(appendExtensionUserAgent(undefined), extensionUserAgent);
         assert.equal(appendExtensionUserAgent(''), extensionUserAgent);
     });

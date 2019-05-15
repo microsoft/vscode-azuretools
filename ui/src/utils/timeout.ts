@@ -35,8 +35,7 @@ export async function rejectOnTimeout<T>(timeoutMs: number, action: () => Promis
             timeoutMs);
 
         let value: T;
-        // tslint:disable-next-line:no-any
-        let error: any;
+        let error: unknown;
 
         try {
             value = await action();
