@@ -147,7 +147,7 @@ export declare abstract class AzExtTreeItem {
     /**
      * Implement this to support the 'delete' action in the tree. Should not be called directly
      */
-    public deleteTreeItemImpl?(): Promise<void>;
+    public deleteTreeItemImpl?(context: IActionContext): Promise<void>;
 
     /**
      * Implement this to execute any async code when this node is refreshed. Should not be called directly
@@ -169,7 +169,7 @@ export declare abstract class AzExtTreeItem {
     /**
      * This class wraps deleteTreeItemImpl and ensures the tree is updated correctly when an item is deleted
      */
-    public deleteTreeItem(): Promise<void>;
+    public deleteTreeItem(context: IActionContext): Promise<void>;
 
     /**
      * Displays a 'Loading...' icon and temporarily changes the item's description while `callback` is being run
