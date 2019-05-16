@@ -14,15 +14,12 @@ import { nonNullProp, nonNullValue } from './utils/nonNull';
 export class TestAzureAccount implements AzureAccount {
     public status: AzureLoginStatus;
     public onStatusChanged: Event<AzureLoginStatus>;
-    public waitForLogin: () => Promise<boolean>;
     public sessions: AzureSession[];
     public onSessionsChanged: Event<void>;
     public subscriptions: AzureSubscription[];
     public onSubscriptionsChanged: Event<void>;
-    public waitForSubscriptions: () => Promise<boolean>;
     public filters: AzureResourceFilter[];
     public onFiltersChanged: Event<void>;
-    public waitForFilters: () => Promise<boolean>;
     private onStatusChangedEmitter: EventEmitter<AzureLoginStatus>;
     private onFiltersChangedEmitter: EventEmitter<void>;
 
@@ -79,6 +76,18 @@ export class TestAzureAccount implements AzureAccount {
     public getSubscriptionId(): string {
         this.verifySubscription();
         return nonNullProp(this.subscriptions[0].subscription, 'subscriptionId');
+    }
+
+    public async waitForLogin(): Promise<boolean> {
+        return true;
+    }
+
+    public async waitForSubscriptions(): Promise<boolean> {
+        return true;
+    }
+
+    public async waitForFilters(): Promise<boolean> {
+        return true;
     }
 
     private changeStatus(newStatus: AzureLoginStatus): void {
