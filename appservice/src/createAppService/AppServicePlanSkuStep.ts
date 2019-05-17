@@ -15,11 +15,9 @@ import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
         const skus: SkuDescription[] = this.getCommonSkus();
-        if (wizardContext.newSiteOS === WebsiteOS.windows) {
-            skus.unshift(...this.getFreeSkus());
-            if (wizardContext.newSiteKind === AppKind.functionapp) {
-                skus.push(...this.getElasticPremiumSkus());
-            }
+        if (wizardContext.newSiteOS === WebsiteOS.windows && wizardContext.newSiteKind === AppKind.functionapp) {
+            skus.push(...this.getElasticPremiumSkus());
+
         }
 
         const pricingTiers: IAzureQuickPickItem<SkuDescription>[] = skus.map((s: SkuDescription) => {
@@ -37,7 +35,7 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
         return !wizardContext.newPlanSku;
     }
 
-    private getFreeSkus(): SkuDescription[] {
+    private getCommonSkus(): SkuDescription[] {
         return [
             {
                 name: 'F1',
@@ -45,12 +43,7 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
                 size: 'F1',
                 family: 'F',
                 capacity: 1
-            }
-        ];
-    }
-
-    private getCommonSkus(): SkuDescription[] {
-        return [
+            },
             {
                 name: 'B1',
                 tier: 'Basic',
