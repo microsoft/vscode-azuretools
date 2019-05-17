@@ -5,7 +5,7 @@
 
 import { WebSiteManagementClient } from 'azure-arm-website';
 import { AppServicePlan, FunctionEnvelopeCollection, FunctionSecrets, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SlotConfigNamesResource, SourceControlCollection, StringDictionary, User, WebAppInstanceCollection, WebJobCollection } from 'azure-arm-website/lib/models';
-import { addExtensionUserAgent, createAzureClient, ISubscriptionRoot, parseError } from 'vscode-azureextensionui';
+import { addExtensionUserAgent, createAzureClient, ISubscriptionContext, parseError } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { FunctionEnvelope } from 'vscode-azurekudu/lib/models';
 import { localize } from './localize';
@@ -45,10 +45,10 @@ export class SiteClient {
     public readonly kuduUrl: string | undefined;
     public readonly gitUrl: string | undefined;
 
-    private readonly _subscription: ISubscriptionRoot;
+    private readonly _subscription: ISubscriptionContext;
     private _funcPreviewSlotError: Error = new Error(localize('functionsSlotPreview', 'This operation is not supported for slots, which are still in preview.'));
 
-    constructor(site: Site, subscription: ISubscriptionRoot) {
+    constructor(site: Site, subscription: ISubscriptionContext) {
         let matches: RegExpMatchArray | null = nonNullProp(site, 'serverFarmId').match(/\/subscriptions\/(.*)\/resourceGroups\/(.*)\/providers\/Microsoft.Web\/serverfarms\/(.*)/);
         matches = nonNullValue(matches, 'Invalid serverFarmId.');
 

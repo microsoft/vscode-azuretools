@@ -5,7 +5,7 @@
 
 import { SlotConfigNamesResource, StringDictionary } from 'azure-arm-website/lib/models';
 import * as path from 'path';
-import { AzureTreeItem, DialogResponses } from 'vscode-azureextensionui';
+import { AzureTreeItem, DialogResponses, IActionContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { AppSettingsTreeItem, validateAppSettingKey } from './AppSettingsTreeItem';
@@ -50,19 +50,19 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         };
     }
 
-    public async edit(): Promise<void> {
+    public async edit(context: IActionContext): Promise<void> {
         const newValue: string = await ext.ui.showInputBox({
             prompt: `Enter setting value for "${this._key}"`,
             value: this._value
         });
 
-        await this.parent.editSettingItem(this._key, this._key, newValue);
+        await this.parent.editSettingItem(this._key, this._key, newValue, context);
         this._value = newValue;
         await this.refresh();
     }
 
-    public async rename(): Promise<void> {
-        const settings: StringDictionary = await this.parent.ensureSettings();
+    public async rename(context: IActionContext): Promise<void> {
+        const settings: StringDictionary = await this.parent.ensureSettings(context);
 
         const oldKey: string = this._key;
         const newKey: string = await ext.ui.showInputBox({
@@ -71,14 +71,14 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
             validateInput: (v?: string): string | undefined => validateAppSettingKey(settings, v, oldKey)
         });
 
-        await this.parent.editSettingItem(oldKey, newKey, this._value);
+        await this.parent.editSettingItem(oldKey, newKey, this._value, context);
         this._key = newKey;
         await this.refresh();
     }
 
-    public async deleteTreeItemImpl(): Promise<void> {
+    public async deleteTreeItemImpl(context: IActionContext): Promise<void> {
         await ext.ui.showWarningMessage(`Are you sure you want to delete setting "${this._key}"?`, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
-        await this.parent.deleteSettingItem(this._key);
+        await this.parent.deleteSettingItem(this._key, context);
     }
 
     public async toggleValueVisibility(): Promise<void> {
