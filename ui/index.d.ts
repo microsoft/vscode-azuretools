@@ -238,10 +238,9 @@ export declare abstract class AzExtParentTreeItem extends AzExtTreeItem {
 
     /**
      * Implement this if you want the 'create' option to show up in the tree picker. Should not be called directly
-     * @param showCreatingTreeItem Call this function to show a "Creating..." item in the tree while the create is in progress
      * @param context The action context and any additional user-defined options that are passed to the `AzExtParentTreeItem.createChild` or `AzExtTreeDataProvider.showTreeItemPicker`
      */
-    createChildImpl?(showCreatingTreeItem: (label: string) => void, context: IActionContext): Promise<AzExtTreeItem>;
+    createChildImpl?(context: ICreateTreeItemContext): Promise<AzExtTreeItem>;
 
     /**
      * Override this if you want non-default (i.e. non-alphabetical) sorting of children. Should not be called directly
@@ -283,6 +282,13 @@ export declare abstract class AzExtParentTreeItem extends AzExtTreeItem {
      * @param context The action context
      */
     getCachedChildren(context: IActionContext): Promise<AzExtTreeItem[]>;
+}
+
+export interface ICreateTreeItemContext extends IActionContext {
+    /**
+     * Call this function to show a "Creating..." item in the tree while the create is in progress
+     */
+    showCreatingTreeItem(label: string): void;
 }
 
 /**

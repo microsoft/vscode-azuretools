@@ -50,7 +50,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
     public abstract loadMoreChildrenImpl(clearCache: boolean, context: types.IActionContext): Promise<AzExtTreeItem[]>;
     public abstract hasMoreChildrenImpl(): boolean;
     // tslint:disable-next-line:no-any
-    public createChildImpl?(showCreatingTreeItem: (label: string) => void, context: types.IActionContext): Promise<AzExtTreeItem>;
+    public createChildImpl?(context: types.ICreateTreeItemContext): Promise<AzExtTreeItem>;
     public pickTreeItemImpl?(expectedContextValues: (string | RegExp)[]): AzExtTreeItem | undefined | Promise<AzExtTreeItem | undefined>;
     //#endregion
 
@@ -63,16 +63,17 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
             let creatingTreeItem: AzExtTreeItem | undefined;
             try {
                 const newTreeItem: AzExtTreeItem = await this.createChildImpl(
-                    (label: string): void => {
-                        creatingTreeItem = new GenericTreeItem(this, {
-                            label: localize('creatingLabel', 'Creating {0}...', label),
-                            contextValue: `azureextensionui.creating${label}`,
-                            iconPath: loadingIconPath
-                        });
-                        this._creatingTreeItems.push(creatingTreeItem);
-                        this.treeDataProvider.refreshUIOnly(this);
-                    },
-                    context);
+                    Object.assign(context, {
+                        showCreatingTreeItem: (label: string): void => {
+                            creatingTreeItem = new GenericTreeItem(this, {
+                                label: localize('creatingLabel', 'Creating {0}...', label),
+                                contextValue: `azureextensionui.creating${label}`,
+                                iconPath: loadingIconPath
+                            });
+                            this._creatingTreeItems.push(creatingTreeItem);
+                            this.treeDataProvider.refreshUIOnly(this);
+                        }
+                    }));
 
                 this.addChildToCache(newTreeItem);
                 this.treeDataProvider._onTreeItemCreateEmitter.fire(newTreeItem);
