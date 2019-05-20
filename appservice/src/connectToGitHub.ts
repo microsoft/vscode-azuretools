@@ -33,7 +33,7 @@ export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, c
     const oAuth2Token: string | undefined = (await client.listSourceControls())[0].token;
     if (!oAuth2Token) {
         await showGitHubAuthPrompt(node, client, context);
-        context.suppressErrorDisplay = true;
+        context.errorHandling.suppressDisplay = true;
         const noToken: string = localize('noToken', 'No oAuth2 Token.');
         throw new Error(noToken);
     }
@@ -101,14 +101,14 @@ async function showGitHubAuthPrompt(node: AzureTreeItem, client: SiteClient, con
         input = await vscode.window.showErrorMessage(invalidToken, goToPortal, DialogResponses.learnMore);
         if (input === DialogResponses.learnMore) {
 
-            context.properties.githubLearnMore = 'true';
+            context.telemetry.properties.githubLearnMore = 'true';
 
             await openUrl('https://aka.ms/B7g6sw');
         }
     }
 
     if (input === goToPortal) {
-        context.properties.githubGoToPortal = 'true';
+        context.telemetry.properties.githubGoToPortal = 'true';
         await openInPortal(node.root, `${client.id}/vstscd`);
     }
 }
@@ -132,7 +132,7 @@ async function getJsonRequest<T>(requestOptions: gitHubWebResource, node: AzureT
         if (parsedError.message.indexOf('Bad credentials') > -1) {
             // the default error is just "Bad credentials," which is an unhelpful error message
             await showGitHubAuthPrompt(node, client, context);
-            context.suppressErrorDisplay = true;
+            context.errorHandling.suppressDisplay = true;
         }
         throw error;
     }

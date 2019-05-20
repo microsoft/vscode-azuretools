@@ -22,7 +22,7 @@ export async function runPreDeployTask(actionContext: IActionContext, deployFsPa
 export async function tryRunPreDeployTask(actionContext: IActionContext, deployFsPath: string, scmType: string | undefined, extensionPrefix: string): Promise<IPreDeployTaskResult> {
     const preDeployTaskKey: string = 'preDeployTask';
     const taskName: string | undefined = vscode.workspace.getConfiguration(extensionPrefix, vscode.Uri.file(deployFsPath)).get(preDeployTaskKey);
-    actionContext.properties.hasPreDeployTask = String(!!taskName);
+    actionContext.telemetry.properties.hasPreDeployTask = String(!!taskName);
 
     let failedToFindTask: boolean = false;
     let exitCode: number | undefined;
@@ -38,7 +38,7 @@ export async function tryRunPreDeployTask(actionContext: IActionContext, deployF
                 await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: progressMessage }, async () => {
                     await vscode.tasks.executeTask(preDeployTask);
                     exitCode = await waitForPreDeployTask(preDeployTask);
-                    actionContext.properties.preDeployTaskExitCode = String(exitCode);
+                    actionContext.telemetry.properties.preDeployTaskExitCode = String(exitCode);
                 });
             } else {
                 failedToFindTask = true;
@@ -89,13 +89,13 @@ export async function handleFailedPreDeployTask(actionContext: IActionContext, p
     const openSettings: vscode.MessageItem = { title: localize('openSettings', 'Open Settings') };
     const result: vscode.MessageItem | undefined = await vscode.window.showErrorMessage(message, { modal: true }, deployAnyway, openSettings);
     if (result === deployAnyway) {
-        actionContext.properties.preDeployTaskResponse = 'deployAnyway';
+        actionContext.telemetry.properties.preDeployTaskResponse = 'deployAnyway';
     } else if (result === openSettings) {
-        actionContext.properties.preDeployTaskResponse = 'openSettings';
+        actionContext.telemetry.properties.preDeployTaskResponse = 'openSettings';
         await vscode.commands.executeCommand('workbench.action.openSettings');
         throw new UserCancelledError();
     } else {
-        actionContext.properties.preDeployTaskResponse = 'cancel';
+        actionContext.telemetry.properties.preDeployTaskResponse = 'cancel';
         throw new UserCancelledError();
     }
 }

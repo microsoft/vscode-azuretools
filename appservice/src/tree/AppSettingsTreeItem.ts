@@ -5,7 +5,7 @@
 
 import { StringDictionary } from 'azure-arm-website/lib/models';
 import * as path from 'path';
-import { AzureParentTreeItem, AzureTreeItem, IActionContext } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, AzureTreeItem, IActionContext, ICreateChildImplContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { AppSettingTreeItem } from './AppSettingTreeItem';
 import { ISiteTreeRoot } from './ISiteTreeRoot';
@@ -94,7 +94,7 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         this._settings = await this.root.client.updateApplicationSettings(settings);
     }
 
-    public async createChildImpl(showCreatingTreeItem: (label: string) => void, context: IActionContext): Promise<AzureTreeItem<ISiteTreeRoot>> {
+    public async createChildImpl(context: ICreateChildImplContext): Promise<AzureTreeItem<ISiteTreeRoot>> {
         // make a deep copy so settings are not cached if there's a failure
         // tslint:disable-next-line: no-unsafe-any
         const settings: StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings(context)));
@@ -111,7 +111,7 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
             settings.properties = {};
         }
 
-        showCreatingTreeItem(newKey);
+        context.showCreatingTreeItem(newKey);
         settings.properties[newKey] = newValue;
 
         this._settings = await this.root.client.updateApplicationSettings(settings);
