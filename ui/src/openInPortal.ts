@@ -6,7 +6,7 @@
 import * as types from '../index';
 import { openUrl } from "./utils/openUrl";
 
-export async function openInPortal(root: types.ISubscriptionRoot, id: string, options?: types.OpenInPortalOptions): Promise<void> {
+export async function openInPortal(root: types.ISubscriptionContext, id: string, options?: types.OpenInPortalOptions): Promise<void> {
     const queryPrefix: string = (options && options.queryPrefix) ? `?${options.queryPrefix}` : '';
     const url: string = `${root.environment.portalUrl}/${queryPrefix}#@${root.tenantId}/resource${id}`;
 

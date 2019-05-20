@@ -11,10 +11,14 @@ This package provides common Azure UI elements for VS Code extensions:
 
 ## Telemetry and Error Handling
 
-Use `registerCommand`, `registerEvent`, or ` callWithTelemetryAndErrorHandling` to consistently display error messages and track commands with telemetry. You must call `registerUIExtensionVariables` first in your extension's `activate()` method. The simplest example is to register a command (in this case, refreshing a node):
+Use `registerCommand`, `registerEvent`, or `callWithTelemetryAndErrorHandling` to consistently display error messages and track commands with telemetry. You must call `registerUIExtensionVariables` first in your extension's `activate()` method. The first parameter of the function passed in will always be an `IActionContext`, which allows you to specify custom telemetry and describes the behavior of this command. The simplest example is to register a command (in this case, refreshing a node):
 ```typescript
 registerUIExtensionVariables(...);
-registerCommand('yourExtension.Refresh', (node: AzExtTreeItem) => { node.refresh(); });
+registerCommand('yourExtension.Refresh', (context: IActionContext, node: AzExtTreeItem) => {
+    context.telemetry.properties.customProp = "example prop";
+    context.telemetry.measurements.customMeas = 49;
+    node.refresh();
+});
 ```
 Here are a few of the benefits this provides:
 * Parses Azure errors of the form `{ "Code": "Conflict", "Message": "This is the actual message" }` and only displays the 'Message' property
@@ -24,20 +28,12 @@ Here are a few of the benefits this provides:
   * duration
   * error
 
-If you want to add custom telemetry proprties, use the action's context and add your own properties or measurements:
+You can also register events. By default, every event is tracked in telemetry. It is *highly recommended* to leverage the IActionContext.telemetry.suppressIfSuccessful parameter to filter only the events that apply to your extension. For example, if your extension only handles `json` files in the `onDidSaveTextDocument`, it might look like this:
 ```typescript
-registerCommand('yourExtension.Refresh', function (this: IActionContext): void {
-    this.properties.customProp = "example prop";
-    this.measurements.customMeas = 49;
-});
-```
-
-Finally, you can also register events. By default, every event is tracked in telemetry. It is *highly recommended* to leverage the IActionContext.suppressTelemetry parameter to filter only the events that apply to your extension. For example, if your extension only handles `json` files in the `onDidSaveTextDocument`, it might look like this:
-```typescript
-registerEvent('yourExtension.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, async function (this: IActionContext, doc: vscode.TextDocument): Promise<void> {
-    this.suppressTelemetry = true;
+registerEvent('yourExtension.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, async (context: IActionContext, doc: vscode.TextDocument) => {
+    context.telemetry.suppressIfSuccessful = true;
     if (doc.fileExtension === 'json') {
-        this.suppressTelemetry = false;
+        context.telemetry.suppressIfSuccessful = false;
         // custom logic here
     }
 });
@@ -78,7 +74,11 @@ Follow these steps to create your basic Azure Tree:
             return this._nextLink !== undefined;
         }
 
-        public async loadMoreChildrenImpl(): Promise<WebAppTreeItem[]> {
+        public async loadMoreChildrenImpl(clearCache: boolean, _context: IActionContext): Promise<WebAppTreeItem[]> {
+            if (clearCache) {
+                this._nextLink = undefined;
+            }
+
             const client: WebSiteManagementClient = createAzureClient(this.root, WebSiteManagementClient);
             const webAppCollection: WebAppCollection = this._nextLink === undefined ?
                 await client.webApps.list() :
@@ -112,9 +112,9 @@ If your tree displays non-Azure resources you can either provide a different roo
 #### Tree Item Picker
 The above steps will display your Azure Resources, but that's just the beginning. Let's say you implemented a `browse` function on your `WebAppTreeItem` that opened the Web App in the browser. In order to make that command work from the VS Code command palette, use the `showTreeItemPicker` method:
 ```typescript
-registerCommand('appService.Browse', async (treeItem?: WebAppTreeItem) => {
+registerCommand('appService.Browse', async (context: IActionContext, treeItem?: WebAppTreeItem) => {
     if (!treeItem) {
-        treeItem = await treeDataProvider.showTreeItemPicker(WebAppTreeItem.contextValue);
+        treeItem = await treeDataProvider.showTreeItemPicker(WebAppTreeItem.contextValue, context);
     }
 
     treeItem.browse();
@@ -127,9 +127,9 @@ For a more advanced scenario, you can also implement the `createChildImpl` metho
 ![CreateNodePicker](resources/CreateNodePicker.png) ![CreatingNode](resources/CreatingNode.png)
 ```typescript
 export class WebAppProvider extends SubscriptionTreeItem {
-    public async createChildImpl(showCreatingTreeItem: (label: string) => void, _userOptions?: any): Promise<WebAppTreeItem> {
+    public async createChildImpl(context: ICreateChildImplContext): Promise<WebAppTreeItem> {
         const webAppName = await vscode.window.showInputBox({ prompt: 'Enter the name of your new Web App' });
-        showCreatingTreeItem(webAppName);
+        context.showCreatingTreeItem(webAppName);
         const newSite: Site | undefined = await createWebApp(webAppName, this.root);
         return new WebAppTreeItem(newSite);
     }

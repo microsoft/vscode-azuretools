@@ -12,9 +12,9 @@ export abstract class SubscriptionTreeItemBase extends AzureParentTreeItem imple
     public readonly contextValue: string = SubscriptionTreeItemBase.contextValue;
     public readonly label: string;
 
-    private _root: types.ISubscriptionRoot;
+    private _root: types.ISubscriptionContext;
 
-    public constructor(parent: AzureParentTreeItem | undefined, root: types.ISubscriptionRoot) {
+    public constructor(parent: AzureParentTreeItem | undefined, root: types.ISubscriptionContext) {
         super(parent);
         this._root = root;
         this.label = root.subscriptionDisplayName;
@@ -22,7 +22,7 @@ export abstract class SubscriptionTreeItemBase extends AzureParentTreeItem imple
         this.iconPath = path.join(__filename, '..', '..', '..', '..', 'resources', 'azureSubscription.svg');
     }
 
-    public get root(): types.ISubscriptionRoot {
+    public get root(): types.ISubscriptionContext {
         return this._root;
     }
 }

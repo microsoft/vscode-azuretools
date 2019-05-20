@@ -10,8 +10,8 @@ import { ext } from '../src/extensionVariables';
 
 // tslint:disable: max-classes-per-file
 
-interface ITestWizardContext {
-    [key: string]: string | undefined;
+interface ITestWizardContext extends types.IActionContext {
+    [key: string]: {} | boolean | string | undefined;
 }
 
 abstract class QuickPickStepBase extends AzureWizardPromptStep<ITestWizardContext> {
@@ -260,14 +260,16 @@ class StepWithSubWizardAndNoPrompt extends AzureWizardPromptStep<ITestWizardCont
     }
 }
 
-async function validateWizard(options: types.IWizardOptions<ITestWizardContext>, inputs: (string | TestInput)[], expectedWizardContext: ITestWizardContext): Promise<void> {
-    const wizardContext: ITestWizardContext = {};
-    const wizard: AzureWizard<ITestWizardContext> = new AzureWizard(wizardContext, options);
+async function validateWizard(options: types.IWizardOptions<ITestWizardContext>, inputs: (string | TestInput)[], expectedContext: Partial<ITestWizardContext>): Promise<void> {
+    const context: ITestWizardContext = { telemetry: { properties: {}, measurements: {} }, errorHandling: {} };
+    // copy over properties/measurements
+    Object.assign(expectedContext, context);
+
+    const wizard: AzureWizard<ITestWizardContext> = new AzureWizard(context, options);
     ext.ui = new TestUserInput(inputs);
-    const actionContext: types.IActionContext = { properties: {}, measurements: {} };
-    await wizard.prompt(actionContext);
-    await wizard.execute(actionContext);
-    assert.deepEqual(wizardContext, expectedWizardContext);
+    await wizard.prompt();
+    await wizard.execute();
+    assert.deepEqual(context, expectedContext);
     assert.equal(inputs.length, 0, 'Not all inputs were used.');
 }
 

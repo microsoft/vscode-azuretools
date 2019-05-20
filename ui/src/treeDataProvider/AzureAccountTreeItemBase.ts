@@ -58,7 +58,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
     }
 
     //#region Methods implemented by base class
-    public abstract createSubscriptionTreeItem(root: types.ISubscriptionRoot): SubscriptionTreeItemBase | Promise<SubscriptionTreeItemBase>;
+    public abstract createSubscriptionTreeItem(root: types.ISubscriptionContext): SubscriptionTreeItemBase | Promise<SubscriptionTreeItemBase>;
     //#endregion
 
     public dispose(): void {
@@ -122,20 +122,20 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
         }
     }
 
-    public async getSubscriptionPromptStep(wizardContext: Partial<types.ISubscriptionWizardContext>): Promise<types.AzureWizardPromptStep<types.ISubscriptionWizardContext> | undefined> {
-        const subscriptions: SubscriptionTreeItemBase[] = await this.ensureSubscriptionTreeItems();
+    public async getSubscriptionPromptStep(context: Partial<types.ISubscriptionWizardContext> & types.IActionContext): Promise<types.AzureWizardPromptStep<types.ISubscriptionWizardContext> | undefined> {
+        const subscriptions: SubscriptionTreeItemBase[] = await this.ensureSubscriptionTreeItems(context);
         if (subscriptions.length === 1) {
-            assignRootToWizardContext(wizardContext, subscriptions[0].root);
+            Object.assign(context, subscriptions[0].root);
             return undefined;
         } else {
             // tslint:disable-next-line: no-var-self
             const me: AzureAccountTreeItemBase = this;
             class SubscriptionPromptStep extends AzureWizardPromptStep<types.ISubscriptionWizardContext> {
                 public async prompt(): Promise<void> {
-                    const ti: SubscriptionTreeItemBase = <SubscriptionTreeItemBase>await me.treeDataProvider.showTreeItemPicker(SubscriptionTreeItemBase.contextValue);
-                    assignRootToWizardContext(wizardContext, ti.root);
+                    const ti: SubscriptionTreeItemBase = <SubscriptionTreeItemBase>await me.treeDataProvider.showTreeItemPicker(SubscriptionTreeItemBase.contextValue, context);
+                    Object.assign(context, ti.root);
                 }
-                public shouldPrompt(): boolean { return !(<types.ISubscriptionWizardContext>wizardContext).subscriptionId; }
+                public shouldPrompt(): boolean { return !(<types.ISubscriptionWizardContext>context).subscriptionId; }
             }
             return new SubscriptionPromptStep();
         }
@@ -150,25 +150,11 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
         return undefined;
     }
 
-    private async ensureSubscriptionTreeItems(): Promise<SubscriptionTreeItemBase[]> {
+    private async ensureSubscriptionTreeItems(context: types.IActionContext): Promise<SubscriptionTreeItemBase[]> {
         if (!this._subscriptionTreeItems) {
-            await this.getCachedChildren();
+            await this.getCachedChildren(context);
         }
 
         return nonNullValue(this._subscriptionTreeItems, 'subscriptionTreeItems');
     }
-}
-
-/**
- * Copies all necessary props and _only_ necessary props to wizardContext
- */
-function assignRootToWizardContext(wizardContext: Partial<types.ISubscriptionWizardContext>, root: types.ISubscriptionRoot): void {
-    // Intentionally using a new const so that TypeScript will verify I'm specifying all props required by ISubscriptionWizardContext
-    const subscriptionContext: types.ISubscriptionWizardContext = {
-        credentials: root.credentials,
-        environment: root.environment,
-        subscriptionDisplayName: root.subscriptionDisplayName,
-        subscriptionId: root.subscriptionId
-    };
-    Object.assign(wizardContext, subscriptionContext);
 }

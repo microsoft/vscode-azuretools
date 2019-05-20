@@ -54,25 +54,21 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
 
     public async getChildren(treeItem?: AzExtParentTreeItem): Promise<AzExtTreeItem[]> {
         try {
-            // tslint:disable:no-var-self
-            const me: AzExtTreeDataProvider = this;
-            return <AzExtTreeItem[]>await callWithTelemetryAndErrorHandling('AzureTreeDataProvider.getChildren', async function (this: IActionContext): Promise<AzExtTreeItem[]> {
-                const actionContext: IActionContext = this;
-                // tslint:enable:no-var-self
-                actionContext.suppressErrorDisplay = true;
-                actionContext.rethrowError = true;
+            return <AzExtTreeItem[]>await callWithTelemetryAndErrorHandling('AzureTreeDataProvider.getChildren', async (context: IActionContext) => {
+                context.errorHandling.suppressDisplay = true;
+                context.errorHandling.rethrow = true;
                 let result: AzExtTreeItem[];
 
                 if (!treeItem) {
-                    actionContext.properties.isActivationEvent = 'true';
-                    treeItem = me._rootTreeItem;
+                    context.telemetry.properties.isActivationEvent = 'true';
+                    treeItem = this._rootTreeItem;
                 }
 
-                actionContext.properties.contextValue = treeItem.contextValue;
+                context.telemetry.properties.contextValue = treeItem.contextValue;
 
-                const cachedChildren: AzExtTreeItem[] = await treeItem.getCachedChildren();
+                const cachedChildren: AzExtTreeItem[] = await treeItem.getCachedChildren(context);
                 const hasMoreChildren: boolean = treeItem.hasMoreChildrenImpl();
-                actionContext.properties.hasMoreChildren = String(hasMoreChildren);
+                context.telemetry.properties.hasMoreChildren = String(hasMoreChildren);
 
                 result = treeItem.creatingTreeItems.concat(cachedChildren);
                 if (hasMoreChildren) {
@@ -83,11 +79,11 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                             dark: path.join(__filename, '..', '..', '..', '..', 'resources', 'dark', 'refresh.svg')
                         },
                         contextValue: 'azureextensionui.loadMore',
-                        commandId: me._loadMoreCommandId
+                        commandId: this._loadMoreCommandId
                     }));
                 }
 
-                this.measurements.childCount = result.length;
+                context.telemetry.measurements.childCount = result.length;
                 return result;
             });
         } catch (error) {
@@ -117,14 +113,14 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         this._onDidChangeTreeDataEmitter.fire(treeItem === this._rootTreeItem ? undefined : treeItem);
     }
 
-    public async loadMore(treeItem: AzExtTreeItem): Promise<void> {
+    public async loadMore(treeItem: AzExtTreeItem, context: IActionContext): Promise<void> {
         if (treeItem.parent) {
-            await treeItem.parent.loadMoreChildren();
+            await treeItem.parent.loadMoreChildren(context);
             this.refreshUIOnly(treeItem.parent);
         }
     }
 
-    public async showTreeItemPicker<T extends types.AzExtTreeItem>(expectedContextValues: string | (string | RegExp)[] | RegExp, startingTreeItem?: AzExtTreeItem): Promise<T> {
+    public async showTreeItemPicker<T extends types.AzExtTreeItem>(expectedContextValues: string | (string | RegExp)[] | RegExp, context: IActionContext, startingTreeItem?: AzExtTreeItem): Promise<T> {
         if (!Array.isArray(expectedContextValues)) {
             expectedContextValues = [expectedContextValues];
         }
@@ -134,7 +130,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
 
         while (!expectedContextValues.some((val: string | RegExp) => (val instanceof RegExp && val.test(treeItem.contextValue)) || treeItem.contextValue === val)) {
             if (isAzExtParentTreeItem(treeItem)) {
-                treeItem = await (<AzExtParentTreeItem>treeItem).pickChildTreeItem(expectedContextValues);
+                treeItem = await (<AzExtParentTreeItem>treeItem).pickChildTreeItem(expectedContextValues, context);
             } else {
                 throw new Error(localize('noResourcesError', 'No matching resources found.'));
             }
@@ -143,7 +139,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         return <T><unknown>treeItem;
     }
 
-    public async findTreeItem<T extends types.AzExtTreeItem>(fullId: string): Promise<T | undefined> {
+    public async findTreeItem<T extends types.AzExtTreeItem>(fullId: string, context: types.IActionContext): Promise<T | undefined> {
         let treeItems: AzExtTreeItem[] = await this.getChildren();
         let foundAncestor: boolean;
 
@@ -156,7 +152,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                 } else if (fullId.startsWith(`${treeItem.fullId}/`) && isAzExtParentTreeItem(treeItem)) {
                     // Append '/' to 'treeItem.fullId' when checking 'startsWith' to ensure its actually an ancestor, rather than a treeItem at the same level that _happens_ to start with the same id
                     // For example, two databases named 'test' and 'test1' as described in this issue: https://github.com/Microsoft/vscode-cosmosdb/issues/488
-                    treeItems = await (<AzExtParentTreeItem>treeItem).getCachedChildren();
+                    treeItems = await (<AzExtParentTreeItem>treeItem).getCachedChildren(context);
                     foundAncestor = true;
                     break;
                 }
