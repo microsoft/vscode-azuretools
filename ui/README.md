@@ -127,7 +127,7 @@ For a more advanced scenario, you can also implement the `createChildImpl` metho
 ![CreateNodePicker](resources/CreateNodePicker.png) ![CreatingNode](resources/CreatingNode.png)
 ```typescript
 export class WebAppProvider extends SubscriptionTreeItem {
-    public async createChildImpl(context: ICreateTreeItemContext): Promise<WebAppTreeItem> {
+    public async createChildImpl(context: ICreateChildImplContext): Promise<WebAppTreeItem> {
         const webAppName = await vscode.window.showInputBox({ prompt: 'Enter the name of your new Web App' });
         context.showCreatingTreeItem(webAppName);
         const newSite: Site | undefined = await createWebApp(webAppName, this.root);

@@ -50,7 +50,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
     public abstract loadMoreChildrenImpl(clearCache: boolean, context: types.IActionContext): Promise<AzExtTreeItem[]>;
     public abstract hasMoreChildrenImpl(): boolean;
     // tslint:disable-next-line:no-any
-    public createChildImpl?(context: types.ICreateTreeItemContext): Promise<AzExtTreeItem>;
+    public createChildImpl?(context: types.ICreateChildImplContext): Promise<AzExtTreeItem>;
     public pickTreeItemImpl?(expectedContextValues: (string | RegExp)[]): AzExtTreeItem | undefined | Promise<AzExtTreeItem | undefined>;
     //#endregion
 
