@@ -10,19 +10,19 @@ import { localize } from '../localize';
 import { ScmType } from '../ScmType';
 import { isPathEqual, isSubpath } from '../utils/pathUtils';
 
-export async function runPreDeployTask(actionContext: IActionContext, deployFsPath: string, scmType: string | undefined, extensionPrefix: string): Promise<void> {
-    const preDeployResult: IPreDeployTaskResult = await tryRunPreDeployTask(actionContext, deployFsPath, scmType, extensionPrefix);
+export async function runPreDeployTask(context: IActionContext, deployFsPath: string, scmType: string | undefined, extensionPrefix: string): Promise<void> {
+    const preDeployResult: IPreDeployTaskResult = await tryRunPreDeployTask(context, deployFsPath, scmType, extensionPrefix);
     if (preDeployResult.failedToFindTask) {
         throw new Error(`Failed to find pre-deploy task "${preDeployResult.taskName}". Modify your tasks or the setting "${extensionPrefix}.preDeployTask".`);
     } else if (preDeployResult.exitCode !== undefined && preDeployResult.exitCode !== 0) {
-        await handleFailedPreDeployTask(actionContext, preDeployResult);
+        await handleFailedPreDeployTask(context, preDeployResult);
     }
 }
 
-export async function tryRunPreDeployTask(actionContext: IActionContext, deployFsPath: string, scmType: string | undefined, extensionPrefix: string): Promise<IPreDeployTaskResult> {
+export async function tryRunPreDeployTask(context: IActionContext, deployFsPath: string, scmType: string | undefined, extensionPrefix: string): Promise<IPreDeployTaskResult> {
     const preDeployTaskKey: string = 'preDeployTask';
     const taskName: string | undefined = vscode.workspace.getConfiguration(extensionPrefix, vscode.Uri.file(deployFsPath)).get(preDeployTaskKey);
-    actionContext.telemetry.properties.hasPreDeployTask = String(!!taskName);
+    context.telemetry.properties.hasPreDeployTask = String(!!taskName);
 
     let failedToFindTask: boolean = false;
     let exitCode: number | undefined;
@@ -38,7 +38,7 @@ export async function tryRunPreDeployTask(actionContext: IActionContext, deployF
                 await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: progressMessage }, async () => {
                     await vscode.tasks.executeTask(preDeployTask);
                     exitCode = await waitForPreDeployTask(preDeployTask);
-                    actionContext.telemetry.properties.preDeployTaskExitCode = String(exitCode);
+                    context.telemetry.properties.preDeployTaskExitCode = String(exitCode);
                 });
             } else {
                 failedToFindTask = true;
@@ -83,19 +83,19 @@ async function waitForPreDeployTask(preDeployTask: vscode.Task): Promise<number>
     });
 }
 
-export async function handleFailedPreDeployTask(actionContext: IActionContext, preDeployResult: IPreDeployTaskResult): Promise<void> {
+export async function handleFailedPreDeployTask(context: IActionContext, preDeployResult: IPreDeployTaskResult): Promise<void> {
     const message: string = localize('taskFailed', 'Pre-deploy task "{0}" failed with exit code "{1}".', preDeployResult.taskName, preDeployResult.exitCode);
     const deployAnyway: vscode.MessageItem = { title: localize('deployAnyway', 'Deploy Anyway') };
     const openSettings: vscode.MessageItem = { title: localize('openSettings', 'Open Settings') };
     const result: vscode.MessageItem | undefined = await vscode.window.showErrorMessage(message, { modal: true }, deployAnyway, openSettings);
     if (result === deployAnyway) {
-        actionContext.telemetry.properties.preDeployTaskResponse = 'deployAnyway';
+        context.telemetry.properties.preDeployTaskResponse = 'deployAnyway';
     } else if (result === openSettings) {
-        actionContext.telemetry.properties.preDeployTaskResponse = 'openSettings';
+        context.telemetry.properties.preDeployTaskResponse = 'openSettings';
         await vscode.commands.executeCommand('workbench.action.openSettings');
         throw new UserCancelledError();
     } else {
-        actionContext.telemetry.properties.preDeployTaskResponse = 'cancel';
+        context.telemetry.properties.preDeployTaskResponse = 'cancel';
         throw new UserCancelledError();
     }
 }
