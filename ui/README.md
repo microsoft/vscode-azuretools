@@ -15,8 +15,8 @@ Use `registerCommand`, `registerEvent`, or `callWithTelemetryAndErrorHandling` t
 ```typescript
 registerUIExtensionVariables(...);
 registerCommand('yourExtension.Refresh', (context: IActionContext, node: AzExtTreeItem) => {
-    context.properties.customProp = "example prop";
-    context.measurements.customMeas = 49;
+    context.telemetry.properties.customProp = "example prop";
+    context.telemetry.measurements.customMeas = 49;
     node.refresh();
 });
 ```
@@ -28,12 +28,12 @@ Here are a few of the benefits this provides:
   * duration
   * error
 
-You can also register events. By default, every event is tracked in telemetry. It is *highly recommended* to leverage the IActionContext.suppressTelemetry parameter to filter only the events that apply to your extension. For example, if your extension only handles `json` files in the `onDidSaveTextDocument`, it might look like this:
+You can also register events. By default, every event is tracked in telemetry. It is *highly recommended* to leverage the IActionContext.telemetry.suppressIfSuccessful parameter to filter only the events that apply to your extension. For example, if your extension only handles `json` files in the `onDidSaveTextDocument`, it might look like this:
 ```typescript
 registerEvent('yourExtension.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, async (context: IActionContext, doc: vscode.TextDocument) => {
-    context.suppressTelemetry = true;
+    context.telemetry.suppressIfSuccessful = true;
     if (doc.fileExtension === 'json') {
-        context.suppressTelemetry = false;
+        context.telemetry.suppressIfSuccessful = false;
         // custom logic here
     }
 });

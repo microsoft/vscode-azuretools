@@ -18,8 +18,8 @@ export function getPackageInfo(ctx?: ExtensionContext): { extensionName: string,
     let packageJson: IPackageJson = {};
     // tslint:disable-next-line:no-floating-promises
     callWithTelemetryAndErrorHandling('azureTools.getPackageInfo', (context: IActionContext) => {
-        context.suppressErrorDisplay = true;
-        context.suppressTelemetry = true; // only report errors
+        context.errorHandling.suppressDisplay = true;
+        context.telemetry.suppressIfSuccessful = true;
 
         try {
             if (ctx) {

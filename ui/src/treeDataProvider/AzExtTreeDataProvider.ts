@@ -55,20 +55,20 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
     public async getChildren(treeItem?: AzExtParentTreeItem): Promise<AzExtTreeItem[]> {
         try {
             return <AzExtTreeItem[]>await callWithTelemetryAndErrorHandling('AzureTreeDataProvider.getChildren', async (context: IActionContext) => {
-                context.suppressErrorDisplay = true;
-                context.rethrowError = true;
+                context.errorHandling.suppressDisplay = true;
+                context.errorHandling.rethrow = true;
                 let result: AzExtTreeItem[];
 
                 if (!treeItem) {
-                    context.properties.isActivationEvent = 'true';
+                    context.telemetry.properties.isActivationEvent = 'true';
                     treeItem = this._rootTreeItem;
                 }
 
-                context.properties.contextValue = treeItem.contextValue;
+                context.telemetry.properties.contextValue = treeItem.contextValue;
 
                 const cachedChildren: AzExtTreeItem[] = await treeItem.getCachedChildren(context);
                 const hasMoreChildren: boolean = treeItem.hasMoreChildrenImpl();
-                context.properties.hasMoreChildren = String(hasMoreChildren);
+                context.telemetry.properties.hasMoreChildren = String(hasMoreChildren);
 
                 result = treeItem.creatingTreeItems.concat(cachedChildren);
                 if (hasMoreChildren) {
@@ -83,7 +83,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                     }));
                 }
 
-                context.measurements.childCount = result.length;
+                context.telemetry.measurements.childCount = result.length;
                 return result;
             });
         } catch (error) {

@@ -11,7 +11,7 @@ import { ext } from '../src/extensionVariables';
 // tslint:disable: max-classes-per-file
 
 interface ITestWizardContext extends types.IActionContext {
-    [key: string]: types.TelemetryProperties | types.TelemetryMeasurements | boolean | string | undefined;
+    [key: string]: {} | boolean | string | undefined;
 }
 
 abstract class QuickPickStepBase extends AzureWizardPromptStep<ITestWizardContext> {
@@ -261,7 +261,7 @@ class StepWithSubWizardAndNoPrompt extends AzureWizardPromptStep<ITestWizardCont
 }
 
 async function validateWizard(options: types.IWizardOptions<ITestWizardContext>, inputs: (string | TestInput)[], expectedContext: Partial<ITestWizardContext>): Promise<void> {
-    const context: ITestWizardContext = { properties: {}, measurements: {} };
+    const context: ITestWizardContext = { telemetry: { properties: {}, measurements: {} }, errorHandling: {} };
     // copy over properties/measurements
     Object.assign(expectedContext, context);
 

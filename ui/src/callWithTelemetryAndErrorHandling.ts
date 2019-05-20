@@ -18,20 +18,24 @@ const maxStackLines: number = 3;
 function initContext(): [number, IActionContext] {
     const start: number = Date.now();
     const context: IActionContext = {
-        properties: {
-            isActivationEvent: 'false',
-            cancelStep: '',
-            result: 'Succeeded',
-            stack: '',
-            error: '',
-            errorMessage: ''
+        telemetry: {
+            properties: {
+                isActivationEvent: 'false',
+                cancelStep: '',
+                result: 'Succeeded',
+                stack: '',
+                error: '',
+                errorMessage: ''
+            },
+            measurements: {
+                duration: 0
+            },
+            suppressIfSuccessful: false
         },
-        measurements: {
-            duration: 0
-        },
-        suppressTelemetry: false,
-        suppressErrorDisplay: false,
-        rethrowError: false
+        errorHandling: {
+            suppressDisplay: false,
+            rethrow: false
+        }
     };
     return [start, context];
 }
@@ -65,20 +69,20 @@ export async function callWithTelemetryAndErrorHandling<T>(callbackId: string, c
 function handleError(context: IActionContext, callbackId: string, error: unknown): void {
     const errorData: IParsedError = parseError(error);
     if (errorData.isUserCancelledError) {
-        context.properties.result = 'Canceled';
-        context.suppressErrorDisplay = true;
-        context.rethrowError = false;
+        context.telemetry.properties.result = 'Canceled';
+        context.errorHandling.suppressDisplay = true;
+        context.errorHandling.rethrow = false;
     } else {
-        context.properties.result = 'Failed';
-        context.properties.error = errorData.errorType;
-        context.properties.errorMessage = errorData.message;
-        context.properties.stack = errorData.stack ? limitLines(errorData.stack, maxStackLines) : undefined;
-        if (context.suppressTelemetry) {
-            context.properties.suppressTelemetry = 'true';
+        context.telemetry.properties.result = 'Failed';
+        context.telemetry.properties.error = errorData.errorType;
+        context.telemetry.properties.errorMessage = errorData.message;
+        context.telemetry.properties.stack = errorData.stack ? limitLines(errorData.stack, maxStackLines) : undefined;
+        if (context.telemetry.suppressIfSuccessful) {
+            context.telemetry.properties.suppressTelemetry = 'true';
         }
     }
 
-    if (!context.suppressErrorDisplay) {
+    if (!context.errorHandling.suppressDisplay) {
         // Always append the error to the output channel, but only 'show' the output channel for multiline errors
         ext.outputChannel.appendLine(localize('outputError', 'Error: {0}', errorData.message));
 
@@ -98,18 +102,17 @@ function handleError(context: IActionContext, callbackId: string, error: unknown
         });
     }
 
-    if (context.rethrowError) {
+    if (context.errorHandling.rethrow) {
         throw error;
     }
 }
 
 function handleTelemetry(context: IActionContext, callbackId: string, start: number): void {
-    // For suppressTelemetry=true, ignore successful results
-    if (!(context.suppressTelemetry && context.properties.result === 'Succeeded')) {
+    if (!(context.telemetry.suppressIfSuccessful && context.telemetry.properties.result === 'Succeeded')) {
         const end: number = Date.now();
-        context.measurements.duration = (end - start) / 1000;
+        context.telemetry.measurements.duration = (end - start) / 1000;
 
         // Note: The id of the extension is automatically prepended to the given callbackId (e.g. "vscode-cosmosdb/")
-        ext.reporter.sendTelemetryEvent(callbackId, context.properties, context.measurements);
+        ext.reporter.sendTelemetryEvent(callbackId, context.telemetry.properties, context.telemetry.measurements);
     }
 }

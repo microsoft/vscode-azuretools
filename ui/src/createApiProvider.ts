@@ -33,14 +33,14 @@ class ApiVersionError extends Error {
 
 function getApiInternal<T extends AzureExtensionApi>(azExts: AzureExtensionApi[], extensionId: string, apiVersionRange: string): T {
     return <T>callWithTelemetryAndErrorHandlingSync('getApi', (context: IActionContext) => {
-        context.rethrowError = true;
-        context.suppressErrorDisplay = true;
-        context.properties.isActivationEvent = 'true';
+        context.errorHandling.rethrow = true;
+        context.errorHandling.suppressDisplay = true;
+        context.telemetry.properties.isActivationEvent = 'true';
 
-        context.properties.apiVersionRange = apiVersionRange;
+        context.telemetry.properties.apiVersionRange = apiVersionRange;
 
         const apiVersions: string[] = azExts.map((a: AzureExtensionApi) => a.apiVersion);
-        context.properties.apiVersions = apiVersions.join(', ');
+        context.telemetry.properties.apiVersions = apiVersions.join(', ');
 
         const matchedApiVersion: string = semver.maxSatisfying(apiVersions, apiVersionRange);
         if (matchedApiVersion) {

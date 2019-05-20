@@ -58,10 +58,10 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
     }
 
     public async onDidSaveTextDocument(actionContext: IActionContext, globalState: vscode.Memento, doc: vscode.TextDocument): Promise<void> {
-        actionContext.suppressTelemetry = true;
+        actionContext.telemetry.suppressIfSuccessful = true;
         const filePath: string | undefined = Object.keys(this.fileMap).find((fsPath: string) => path.relative(doc.uri.fsPath, fsPath) === '');
         if (!this.ignoreSave && filePath) {
-            actionContext.suppressTelemetry = false;
+            actionContext.telemetry.suppressIfSuccessful = false;
             const context: ContextT = this.fileMap[filePath][1];
             const showSaveWarning: boolean | undefined = vscode.workspace.getConfiguration().get(this.showSavePromptKey);
 

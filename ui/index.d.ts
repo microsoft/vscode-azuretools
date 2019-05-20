@@ -406,7 +406,7 @@ export declare function registerCommand(commandId: string, callback: (context: I
 
 /**
  * Used to register VSCode events. It wraps your callback with consistent error and telemetry handling
- * NOTE: By default, this sends a telemetry event every single time the event fires. It it recommended to use 'context.suppressTelemetry' to only send events if they apply to your extension
+ * NOTE: By default, this sends a telemetry event every single time the event fires. It it recommended to use 'context.telemetry.suppressIfSuccessful' to only send events if they apply to your extension
  */
 export declare function registerEvent<T>(eventId: string, event: Event<T>, callback: (context: IActionContext, ...args: any[]) => any): void;
 
@@ -419,33 +419,47 @@ export declare function callWithTelemetryAndErrorHandlingSync<T>(callbackId: str
  */
 export interface IActionContext {
     /**
-     * String properties that will be tracked in telemetry for this action
+     * Describes the behavior of telemetry for this action
+     */
+    telemetry: ITelemetryContext;
+
+    /**
+     * Describes the behavior of error handling for this action
+     */
+    errorHandling: IErrorHandlingContext;
+}
+
+export interface ITelemetryContext {
+    /**
+     * Custom properties that will be included in telemetry
      */
     properties: TelemetryProperties;
 
     /**
-     * Number properties that will be tracked in telemetry for this action
+     * Custom measurements that will be included in telemetry
      */
     measurements: TelemetryMeasurements;
 
     /**
      * Defaults to `false`. If true, successful events are suppressed from telemetry, but cancel and error events are still sent.
      */
-    suppressTelemetry?: boolean;
+    suppressIfSuccessful?: boolean;
+}
+
+export interface IErrorHandlingContext {
+    /**
+     * Defaults to `false`. If true, does not display this error to the user.
+     */
+    suppressDisplay?: boolean;
 
     /**
-     * Defaults to `false`
+     * Defaults to `false`. If true, re-throws error outside the context of this action.
      */
-    suppressErrorDisplay?: boolean;
-
-    /**
-     * Defaults to `false`
-     */
-    rethrowError?: boolean;
+    rethrow?: boolean;
 }
 
 export interface ITelemetryReporter {
-    sendTelemetryEvent(eventName: string, properties?: { [key: string]: string | undefined }, measures?: { [key: string]: number | undefined }): void;
+    sendTelemetryEvent(eventName: string, properties?: { [key: string]: string | undefined }, measurements?: { [key: string]: number | undefined }): void;
 }
 
 /**

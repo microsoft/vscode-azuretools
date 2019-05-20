@@ -48,7 +48,7 @@ export class AzureWizard<T extends types.IActionContext> implements types.AzureW
             while (step) {
                 step.reset();
 
-                this._context.properties.lastStepAttempted = `prompt-${step.constructor.name}`;
+                this._context.telemetry.properties.lastStepAttempted = `prompt-${step.constructor.name}`;
                 this.title = step.effectiveTitle;
                 this.hideStepCount = step.hideStepCount;
 
@@ -60,7 +60,7 @@ export class AzureWizard<T extends types.IActionContext> implements types.AzureW
                         step.prompted = true;
                     } catch (err) {
                         if (err instanceof GoBackError) {
-                            this._context.properties.usedBackButton = 'true';
+                            this._context.telemetry.properties.usedBackButton = 'true';
                             step = this.goBack(step);
                             continue;
                         } else {
@@ -105,7 +105,7 @@ export class AzureWizard<T extends types.IActionContext> implements types.AzureW
             let step: AzureWizardExecuteStep<T> | undefined = steps.pop();
             while (step) {
                 if (step.shouldExecute(this._context)) {
-                    this._context.properties.lastStepAttempted = `execute-${step.constructor.name}`;
+                    this._context.telemetry.properties.lastStepAttempted = `execute-${step.constructor.name}`;
                     await step.execute(this._context, internalProgress);
                     currentStep += 1;
                 }

@@ -31,14 +31,14 @@ suite('callWithTelemetryAndErrorHandling tests', () => {
 
         assert.throws(
             () => callWithTelemetryAndErrorHandlingSync('callbackId', (context: IActionContext) => {
-                context.rethrowError = true;
+                context.errorHandling.rethrow = true;
                 return testFuncError();
             }),
             /testFuncError/);
 
         assert.doesNotThrow(
             () => callWithTelemetryAndErrorHandlingSync('callbackId', async (context: IActionContext) => {
-                context.rethrowError = true;
+                context.errorHandling.rethrow = true;
                 return await testFuncErrorAsync();
             }));
     });
@@ -51,14 +51,14 @@ suite('callWithTelemetryAndErrorHandling tests', () => {
 
         await assertThrowsAsync(
             async () => await callWithTelemetryAndErrorHandling('callbackId', async (context: IActionContext) => {
-                context.rethrowError = true;
+                context.errorHandling.rethrow = true;
                 return testFuncError();
             }),
             /testFuncError/);
 
         await assertThrowsAsync(
             async () => await callWithTelemetryAndErrorHandling('callbackId', async (context: IActionContext) => {
-                context.rethrowError = true;
+                context.errorHandling.rethrow = true;
                 return testFuncErrorAsync();
             }),
             /testFuncErrorAsync/);
