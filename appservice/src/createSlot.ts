@@ -6,13 +6,13 @@
 import WebSiteManagementClient from "azure-arm-website";
 import { NameValuePair, ResourceNameAvailability, Site, StringDictionary } from "azure-arm-website/lib/models";
 import { ProgressLocation, window } from "vscode";
-import { AzureTreeItem, createAzureClient, IAzureQuickPickItem } from "vscode-azureextensionui";
+import { AzureTreeItem, createAzureClient, IAzureQuickPickItem, ICreateChildImplContext } from "vscode-azureextensionui";
 import { ext } from "./extensionVariables";
 import { localize } from "./localize";
 import { SiteClient } from './SiteClient';
 import { ISiteTreeRoot } from "./tree/ISiteTreeRoot";
 
-export async function createSlot(root: ISiteTreeRoot, existingSlots: AzureTreeItem<ISiteTreeRoot>[], showCreatingTreeItem: (label: string) => void): Promise<Site> {
+export async function createSlot(root: ISiteTreeRoot, existingSlots: AzureTreeItem<ISiteTreeRoot>[], context: ICreateChildImplContext): Promise<Site> {
     const client: WebSiteManagementClient = createAzureClient(root, WebSiteManagementClient);
     const slotName: string = (await ext.ui.showInputBox({
         prompt: localize('enterSlotName', 'Enter a unique name for the new deployment slot'),
@@ -36,7 +36,7 @@ export async function createSlot(root: ISiteTreeRoot, existingSlots: AzureTreeIt
         newDeploymentSlot.siteConfig!.appSettings = appSettings;
     }
 
-    showCreatingTreeItem(slotName);
+    context.showCreatingTreeItem(slotName);
 
     const creatingSlot: string = localize('creatingSlot', 'Creating slot "{0}"...', slotName);
     return await window.withProgress({ location: ProgressLocation.Notification, title: creatingSlot }, async () => {

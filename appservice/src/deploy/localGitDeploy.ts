@@ -6,7 +6,7 @@
 import { User } from 'azure-arm-website/lib/models';
 import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
-import { DialogResponses, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
+import { DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
@@ -17,7 +17,7 @@ import { verifyNoRunFromPackageSetting } from '../verifyNoRunFromPackageSetting'
 import { formatDeployLog } from './formatDeployLog';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
-export async function localGitDeploy(client: SiteClient, fsPath: string, telemetryProperties: TelemetryProperties): Promise<void> {
+export async function localGitDeploy(client: SiteClient, fsPath: string, context: IActionContext): Promise<void> {
     const publishCredentials: User = await client.getWebAppPublishCredential();
     const publishingPassword: string = nonNullProp(publishCredentials, 'publishingPassword');
 
@@ -30,12 +30,12 @@ export async function localGitDeploy(client: SiteClient, fsPath: string, telemet
             try {
                 const status: git.StatusResult = await localGit.status();
                 if (status.files.length > 0) {
-                    telemetryProperties.cancelStep = 'pushWithUncommitChanges';
+                    context.telemetry.properties.cancelStep = 'pushWithUncommitChanges';
                     const message: string = localize('localGitUncommit', '{0} uncommitted change(s) in local repo "{1}"', status.files.length, fsPath);
                     const deployAnyway: vscode.MessageItem = { title: localize('deployAnyway', 'Deploy Anyway') };
                     await ext.ui.showWarningMessage(message, { modal: true }, deployAnyway, DialogResponses.cancel);
-                    telemetryProperties.cancelStep = undefined;
-                    telemetryProperties.pushWithUncommitChanges = 'true';
+                    context.telemetry.properties.cancelStep = undefined;
+                    context.telemetry.properties.pushWithUncommitChanges = 'true';
                 }
 
                 await verifyNoRunFromPackageSetting(client);
@@ -50,7 +50,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string, telemet
                     if (input === installString) {
                         await openUrl('https://git-scm.com/downloads');
                     }
-                    telemetryProperties.gitNotInstalled = 'true';
+                    context.telemetry.properties.gitNotInstalled = 'true';
                     return undefined;
                     // tslint:disable-next-line:no-unsafe-any
                 } else if (err.message.indexOf('error: failed to push') >= 0) {
@@ -58,10 +58,10 @@ export async function localGitDeploy(client: SiteClient, fsPath: string, telemet
                     const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging.');
 
                     if (await ext.ui.showWarningMessage(pushReject, { modal: true }, forcePushMessage, DialogResponses.cancel) === forcePushMessage) {
-                        telemetryProperties.forcePush = 'true';
+                        context.telemetry.properties.forcePush = 'true';
                         await tryPushAndWaitForDeploymentToComplete(true);
                     } else {
-                        telemetryProperties.cancelStep = 'forcePush';
+                        context.telemetry.properties.cancelStep = 'forcePush';
                         throw new UserCancelledError();
                     }
                 } else {

@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ISubscriptionRoot } from "vscode-azureextensionui";
+import { ISubscriptionContext } from "vscode-azureextensionui";
 import { SiteClient } from "../SiteClient";
 
-export interface ISiteTreeRoot extends ISubscriptionRoot {
+export interface ISiteTreeRoot extends ISubscriptionContext {
     client: SiteClient;
 }

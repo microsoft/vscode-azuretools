@@ -5,7 +5,7 @@
 
 import { StringDictionary } from 'azure-arm-website/lib/models';
 import * as path from 'path';
-import { AzureParentTreeItem, AzureTreeItem } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, AzureTreeItem, IActionContext, ICreateChildImplContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { AppSettingTreeItem } from './AppSettingTreeItem';
 import { ISiteTreeRoot } from './ISiteTreeRoot';
@@ -68,10 +68,10 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         return treeItems;
     }
 
-    public async editSettingItem(oldKey: string, newKey: string, value: string): Promise<void> {
+    public async editSettingItem(oldKey: string, newKey: string, value: string, context: IActionContext): Promise<void> {
         // make a deep copy so settings are not cached if there's a failure
         // tslint:disable-next-line: no-unsafe-any
-        const settings: StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings()));
+        const settings: StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings(context)));
         if (settings.properties) {
             if (oldKey !== newKey) {
                 delete settings.properties[oldKey];
@@ -82,10 +82,10 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         this._settings = await this.root.client.updateApplicationSettings(settings);
     }
 
-    public async deleteSettingItem(key: string): Promise<void> {
+    public async deleteSettingItem(key: string, context: IActionContext): Promise<void> {
         // make a deep copy so settings are not cached if there's a failure
         // tslint:disable-next-line: no-unsafe-any
-        const settings: StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings()));
+        const settings: StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings(context)));
 
         if (settings.properties) {
             delete settings.properties[key];
@@ -94,10 +94,10 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         this._settings = await this.root.client.updateApplicationSettings(settings);
     }
 
-    public async createChildImpl(showCreatingTreeItem: (label: string) => void): Promise<AzureTreeItem<ISiteTreeRoot>> {
+    public async createChildImpl(context: ICreateChildImplContext): Promise<AzureTreeItem<ISiteTreeRoot>> {
         // make a deep copy so settings are not cached if there's a failure
         // tslint:disable-next-line: no-unsafe-any
-        const settings: StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings()));
+        const settings: StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings(context)));
         const newKey: string = await ext.ui.showInputBox({
             prompt: 'Enter new setting key',
             validateInput: (v?: string): string | undefined => validateAppSettingKey(settings, v)
@@ -111,7 +111,7 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
             settings.properties = {};
         }
 
-        showCreatingTreeItem(newKey);
+        context.showCreatingTreeItem(newKey);
         settings.properties[newKey] = newValue;
 
         this._settings = await this.root.client.updateApplicationSettings(settings);
@@ -119,9 +119,9 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         return await AppSettingTreeItem.createAppSettingTreeItem(this, newKey, newValue, this._commandId);
     }
 
-    public async ensureSettings(): Promise<StringDictionary> {
+    public async ensureSettings(context: IActionContext): Promise<StringDictionary> {
         if (!this._settings) {
-            await this.getCachedChildren();
+            await this.getCachedChildren(context);
         }
 
         return <StringDictionary>this._settings;
