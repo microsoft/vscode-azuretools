@@ -3,11 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ResourceGroup } from 'azure-arm-resource/lib/resource/models';
-import { Location } from 'azure-arm-resource/lib/subscription/models';
-import { StorageAccount } from 'azure-arm-storage/lib/models';
-import { ServiceClientCredentials } from 'ms-rest';
-import { AzureEnvironment, AzureServiceClientOptions } from 'ms-rest-azure';
+import { ResourceGroup } from '@azure/arm-resources/esm/models';
+import { Location } from '@azure/arm-subscriptions/esm/models';
+import { StorageAccount } from '@azure/arm-storage/esm/models';
+import { ServiceClientCredentials } from '@azure/ms-rest-js';
+import { Environment, EnvironmentParameters  } from "@azure/ms-rest-azure-env";
+import { AzureServiceClientOptions } from '@azure/ms-rest-azure-js/lib/azureServiceClient';
 import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri, QuickPick, InputBox, Progress } from 'vscode';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 
@@ -98,7 +99,7 @@ export interface ISubscriptionRoot {
     subscriptionPath: string;
     tenantId: string;
     userId: string;
-    environment: AzureEnvironment;
+    environment: Environment;
 }
 
 /**
@@ -721,7 +722,7 @@ export declare abstract class AzureWizardPromptStep<T extends {}> {
 export interface ISubscriptionWizardContext {
     credentials: ServiceClientCredentials;
     subscriptionId: string;
-    environment: AzureEnvironment;
+    environment: Environment;
     subscriptionDisplayName: string;
 }
 
@@ -983,10 +984,6 @@ export interface UIExtensionVariables {
     reporter: ITelemetryReporter;
 }
 
-export interface IAddUserAgent {
-    addUserAgentInfo(additionalUserAgentInfo: any): void;
-}
-
 /**
  * Retrieves a user agent string specific to the VS Code extension, of the form `${extensionName}/${extensionVersion}`,
  * and appends it to the given user agent string, if it isn't already in the string. Passing in no existingUserAgent
@@ -995,27 +992,22 @@ export interface IAddUserAgent {
 export declare function appendExtensionUserAgent(existingUserAgent?: string): string;
 
 /**
- * Adds the extension user agent to the given ServiceClient or other object support AddUserAgentInfo
- */
-export declare function addExtensionUserAgent(client: IAddUserAgent): void;
-
-/**
  * Creates an Azure client, ensuring best practices are followed. For example:
  * 1. Adds extension-specific user agent
  * 2. Uses resourceManagerEndpointUrl to support sovereigns
  */
-export function createAzureClient<T extends IAddUserAgent>(
-    clientInfo: { credentials: ServiceClientCredentials; subscriptionId: string; environment: AzureEnvironment; },
-    clientType: new (credentials: ServiceClientCredentials, subscriptionId: string, baseUri?: string, options?: AzureServiceClientOptions) => T): T;
+export function createAzureClient<T>(
+    clientInfo: { credentials: ServiceClientCredentials; subscriptionId: string; environment: EnvironmentParameters; },
+    clientType: new (credentials: ServiceClientCredentials, subscriptionId: string, options?: AzureServiceClientOptions & {baseUri: string}) => T): T
 
 /**
  * Creates an Azure subscription client, ensuring best practices are followed. For example:
  * 1. Adds extension-specific user agent
  * 2. Uses resourceManagerEndpointUrl to support sovereigns
  */
-export function createAzureSubscriptionClient<T extends IAddUserAgent>(
-    clientInfo: { credentials: ServiceClientCredentials; environment: AzureEnvironment; },
-    clientType: new (credentials: ServiceClientCredentials, baseUri?: string, options?: AzureServiceClientOptions) => T): T;
+export function createAzureSubscriptionClient<T>(
+    clientInfo: { credentials: ServiceClientCredentials; environment: EnvironmentParameters; },
+    clientType: new (credentials: ServiceClientCredentials, options?: AzureServiceClientOptions & {baseUri: string}) => T): T
 
 /**
  * Wraps an Azure Extension's API in a very basic provider that adds versioning.

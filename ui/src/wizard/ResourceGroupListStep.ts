@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ResourceManagementClient } from 'azure-arm-resource';
-import { ResourceGroup } from 'azure-arm-resource/lib/resource/models';
+import { ResourceManagementClient } from '@azure/arm-resources';
+import { ResourceGroup } from '@azure/arm-resources/lib/models';
 import * as types from '../../index';
 import { createAzureClient } from '../createAzureClient';
 import { ext } from '../extensionVariables';

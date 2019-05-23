@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import { appendExtensionUserAgent } from '../src/extensionUserAgent';
+import { appendExtensionUserAgent } from '../src/appendExtensionUserAgent';
 
 suite('Extension user agent', () => {
     const extensionUserAgent: string = 'azureextensionui/0.0.1';

@@ -3,15 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IAddUserAgent } from "../index";
 import { getPackageInfo } from "./getPackageInfo";
-
-/**
- * Adds a user agent specific to the VS Code extension, of the form `${extensionName}/${extensionVersion}`
- */
-export function addExtensionUserAgent(client: IAddUserAgent): void {
-    client.addUserAgentInfo(getExtensionUserAgent());
-}
 
 function getExtensionUserAgent(): string {
     const { extensionName, extensionVersion } = getPackageInfo();

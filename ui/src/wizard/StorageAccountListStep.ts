@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 // tslint:disable-next-line:no-require-imports
-import StorageManagementClient = require('azure-arm-storage');
-import { StorageAccount } from 'azure-arm-storage/lib/models';
+import { StorageManagementClient } from '@azure/arm-storage';
+import { StorageAccount} from '@azure/arm-storage/esm/models';
 import { isString } from 'util';
 import * as types from '../../index';
 import { createAzureClient } from '../createAzureClient';

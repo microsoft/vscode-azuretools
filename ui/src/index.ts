@@ -12,7 +12,7 @@ export * from './createAzureClient';
 export * from './createTelemetryReporter';
 export * from './DialogResponses';
 export * from './errors';
-export * from './extensionUserAgent';
+export * from './appendExtensionUserAgent';
 export { registerUIExtensionVariables } from './extensionVariables';
 export * from './openInPortal';
 export * from './parseError';

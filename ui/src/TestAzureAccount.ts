@@ -2,10 +2,12 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { SubscriptionClient } from 'azure-arm-resource';
-import { SubscriptionListResult, TenantListResult } from 'azure-arm-resource/lib/subscription/models';
-import { ServiceClientCredentials } from 'ms-rest';
-import { ApplicationTokenCredentials, AzureEnvironment, loginWithServicePrincipalSecret } from 'ms-rest-azure';
+import { SubscriptionClient } from '@azure/arm-subscriptions';
+import { SubscriptionListResult, TenantListResult } from '@azure/arm-subscriptions/lib/models';
+import { Environment } from '@azure/ms-rest-azure-env';
+import { ServiceClientCredentials } from '@azure/ms-rest-js';
+import { ApplicationTokenCredentials } from '@azure/ms-rest-nodeauth';
+import { loginWithServicePrincipalSecret } from '@azure/ms-rest-nodeauth';
 import { Event, EventEmitter } from 'vscode';
 import { AzureAccount, AzureLoginStatus, AzureResourceFilter, AzureSession, AzureSubscription } from './azure-account.api';
 import { localize } from './localize';
@@ -34,7 +36,7 @@ export class TestAzureAccount implements AzureAccount {
     }
 
     public async signIn(): Promise<void> {
-        type servicePrincipalCredentials = ApplicationTokenCredentials & { environment: AzureEnvironment };
+        type servicePrincipalCredentials = ApplicationTokenCredentials & { environment: Environment };
         const clientId: string | undefined = process.env.SERVICE_PRINCIPAL_CLIENT_ID;
         const secret: string | undefined = process.env.SERVICE_PRINCIPAL_SECRET;
         const domain: string | undefined = process.env.SERVICE_PRINCIPAL_DOMAIN;

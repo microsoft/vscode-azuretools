@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SubscriptionClient } from 'azure-arm-resource';
-import { Location } from 'azure-arm-resource/lib/subscription/models';
+import { SubscriptionClient } from '@azure/arm-subscriptions';
+import { Location } from '@azure/arm-subscriptions/lib/models';
 import { QuickPickOptions } from 'vscode';
 import * as types from '../../index';
 import { createAzureSubscriptionClient } from '../createAzureClient';
