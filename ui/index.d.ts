@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ResourceGroup } from '@azure/arm-resources/esm/models';
-import { Location } from '@azure/arm-subscriptions/esm/models';
-import { StorageAccount } from '@azure/arm-storage/esm/models';
+import { ResourceManagementModels } from '@azure/arm-resources';
+import { SubscriptionModels } from '@azure/arm-subscriptions'; 
+import { StorageManagementModels } from '@azure/arm-storage';
 import { ServiceClientCredentials } from '@azure/ms-rest-js';
 import { Environment, EnvironmentParameters  } from "@azure/ms-rest-azure-env";
-import { AzureServiceClientOptions } from '@azure/ms-rest-azure-js/lib/azureServiceClient';
+import { AzureServiceClientOptions } from '@azure/ms-rest-azure-js';
 import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri, QuickPick, InputBox, Progress } from 'vscode';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 
@@ -765,13 +765,13 @@ export interface ILocationWizardContext extends ISubscriptionWizardContext {
      * The location to use for new resources
      * This value will be defined after `LocationListStep.prompt` occurs or after you call `LocationListStep.setLocation`
      */
-    location?: Location;
+    location?: SubscriptionModels.Location;
 
     /**
      * The task used to get locations.
      * By specifying this in the context, we can ensure that Azure is only queried once for the entire wizard
      */
-    locationsTask?: Promise<Location[]>;
+    locationsTask?: Promise<SubscriptionModels.Location[]>;
 }
 
 export declare class LocationListStep<T extends ILocationWizardContext> extends AzureWizardPromptStep<T> {
@@ -787,7 +787,7 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
      * Used to get locations. By passing in the context, we can ensure that Azure is only queried once for the entire wizard
      * @param wizardContext The context of the wizard.
      */
-    public static getLocations<T extends ILocationWizardContext>(wizardContext: T): Promise<Location[]>;
+    public static getLocations<T extends ILocationWizardContext>(wizardContext: T): Promise<SubscriptionModels.Location[]>;
 
     public prompt(wizardContext: T): Promise<void>;
     public shouldPrompt(wizardContext: T): boolean;
@@ -847,13 +847,13 @@ export interface IResourceGroupWizardContext extends ILocationWizardContext, IRe
      * If an existing resource group is picked, this value will be defined after `ResourceGroupListStep.prompt` occurs
      * If a new resource group is picked, this value will be defined after the `execute` phase of the 'create' subwizard
      */
-    resourceGroup?: ResourceGroup;
+    resourceGroup?: ResourceManagementModels.ResourceGroup;
 
     /**
      * The task used to get existing resource groups.
      * By specifying this in the context, we can ensure that Azure is only queried once for the entire wizard
      */
-    resourceGroupsTask?: Promise<ResourceGroup[]>;
+    resourceGroupsTask?: Promise<ResourceManagementModels.ResourceGroup[]>;
 
     /**
      * If true, this step will not add a LocationListStep for the "Create new resource group" sub wizard.
@@ -871,7 +871,7 @@ export declare class ResourceGroupListStep<T extends IResourceGroupWizardContext
      * Used to get existing resource groups. By passing in the context, we can ensure that Azure is only queried once for the entire wizard
      * @param wizardContext The context of the wizard.
      */
-    public static getResourceGroups<T extends IResourceGroupWizardContext>(wizardContext: T): Promise<ResourceGroup[]>;
+    public static getResourceGroups<T extends IResourceGroupWizardContext>(wizardContext: T): Promise<ResourceManagementModels.ResourceGroup[]>;
 
     /**
      * Checks existing resource groups in the wizard's subscription to see if the name is available.
@@ -899,7 +899,7 @@ export interface IStorageAccountWizardContext extends IResourceGroupWizardContex
      * If an existing storage account is picked, this value will be defined after `StorageAccountListStep.prompt` occurs
      * If a new storage account is picked, this value will be defined after the `execute` phase of the 'create' subwizard
      */
-    storageAccount?: StorageAccount;
+    storageAccount?: StorageManagementModels.StorageAccount;
 
     newStorageAccountName?: string;
 }

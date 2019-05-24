@@ -4,8 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 // tslint:disable-next-line:no-require-imports
-import { StorageManagementClient } from '@azure/arm-storage';
-import { StorageAccount} from '@azure/arm-storage/esm/models';
+import { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
 import { isString } from 'util';
 import * as types from '../../index';
 import { createAzureClient } from '../createAzureClient';
@@ -79,7 +78,7 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
         const client: StorageManagementClient = createAzureClient(wizardContext, StorageManagementClient);
 
         const quickPickOptions: types.IAzureQuickPickOptions = { placeHolder: 'Select a storage account.', id: `StorageAccountListStep/${wizardContext.subscriptionId}` };
-        const result: StorageAccount | string | undefined = (await ext.ui.showQuickPick(this.getQuickPicks(client.storageAccounts.list()), quickPickOptions)).data;
+        const result: StorageManagementModels.StorageAccount | string | undefined = (await ext.ui.showQuickPick(this.getQuickPicks(client.storageAccounts.list()), quickPickOptions)).data;
         // If result is a string, that means the user selected the 'Learn more...' pick
         if (isString(result)) {
             await openUrl(result);
@@ -108,8 +107,8 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
         return !wizardContext.storageAccount && !wizardContext.newStorageAccountName;
     }
 
-    private async getQuickPicks(storageAccountsTask: Promise<StorageAccount[]>): Promise<types.IAzureQuickPickItem<StorageAccount | string | undefined>[]> {
-        const picks: types.IAzureQuickPickItem<StorageAccount | string | undefined>[] = [{
+    private async getQuickPicks(storageAccountsTask: Promise<StorageManagementModels.StorageAccount[]>): Promise<types.IAzureQuickPickItem<StorageManagementModels.StorageAccount | string | undefined>[]> {
+        const picks: types.IAzureQuickPickItem<StorageManagementModels.StorageAccount | string | undefined>[] = [{
             label: localize('NewStorageAccount', '$(plus) Create new storage account'),
             description: '',
             data: undefined
@@ -120,7 +119,7 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
         const replicationRegExp: RegExp = new RegExp(`^.*_${convertFilterToPattern(this._filters.replication)}$`, 'i');
 
         let hasFilteredAccounts: boolean = false;
-        const storageAccounts: StorageAccount[] = await storageAccountsTask;
+        const storageAccounts: StorageManagementModels.StorageAccount[] = await storageAccountsTask;
         for (const sa of storageAccounts) {
             // tslint:disable:strict-boolean-expressions
             if (!sa.kind || sa.kind.match(kindRegExp) || !sa.sku || sa.sku.name.match(performanceRegExp) || sa.sku.name.match(replicationRegExp)) {

@@ -2,8 +2,7 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { SubscriptionClient } from '@azure/arm-subscriptions';
-import { SubscriptionListResult, TenantListResult } from '@azure/arm-subscriptions/lib/models';
+import { SubscriptionClient, SubscriptionModels } from '@azure/arm-subscriptions';
 import { Environment } from '@azure/ms-rest-azure-env';
 import { ServiceClientCredentials } from '@azure/ms-rest-js';
 import { ApplicationTokenCredentials } from '@azure/ms-rest-nodeauth';
@@ -46,9 +45,9 @@ export class TestAzureAccount implements AzureAccount {
         this.changeStatus('LoggingIn');
         const credentials: servicePrincipalCredentials = <servicePrincipalCredentials>(await loginWithServicePrincipalSecret(clientId, secret, domain));
         const subscriptionClient: SubscriptionClient = new SubscriptionClient(credentials);
-        const subscriptions: SubscriptionListResult = await subscriptionClient.subscriptions.list();
+        const subscriptions: SubscriptionModels.SubscriptionListResult = await subscriptionClient.subscriptions.list();
         // returns an array with id, subscriptionId, displayName
-        const tenants: TenantListResult = await subscriptionClient.tenants.list();
+        const tenants: SubscriptionModels.TenantListResult = await subscriptionClient.tenants.list();
 
         const tenantId: string = nonNullProp(nonNullValue(tenants[0]), 'id');
         const session: AzureSession = {

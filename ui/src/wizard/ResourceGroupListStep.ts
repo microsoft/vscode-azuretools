@@ -3,8 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ResourceManagementClient } from '@azure/arm-resources';
-import { ResourceGroup } from '@azure/arm-resources/lib/models';
+import { ResourceManagementClient, ResourceManagementModels } from '@azure/arm-resources';
 import * as types from '../../index';
 import { createAzureClient } from '../createAzureClient';
 import { ext } from '../extensionVariables';
@@ -22,7 +21,7 @@ export const resourceGroupNamingRules: types.IAzureNamingRules = {
 };
 
 export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> extends AzureWizardPromptStep<T> implements types.ResourceGroupListStep<T> {
-    public static async getResourceGroups<T extends types.IResourceGroupWizardContext>(wizardContext: T): Promise<ResourceGroup[]> {
+    public static async getResourceGroups<T extends types.IResourceGroupWizardContext>(wizardContext: T): Promise<ResourceManagementModels.ResourceGroup[]> {
         if (wizardContext.resourceGroupsTask === undefined) {
             const client: ResourceManagementClient = createAzureClient(wizardContext, ResourceManagementClient);
             wizardContext.resourceGroupsTask = uiUtils.listAll(client.resourceGroups, client.resourceGroups.list());
@@ -32,8 +31,8 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
     }
 
     public static async isNameAvailable<T extends types.IResourceGroupWizardContext>(wizardContext: T, name: string): Promise<boolean> {
-        const resourceGroupsTask: Promise<ResourceGroup[]> = ResourceGroupListStep.getResourceGroups(wizardContext);
-        return !(await resourceGroupsTask).some((rg: ResourceGroup) => rg.name !== undefined && rg.name.toLowerCase() === name.toLowerCase());
+        const resourceGroupsTask: Promise<ResourceManagementModels.ResourceGroup[]> = ResourceGroupListStep.getResourceGroups(wizardContext);
+        return !(await resourceGroupsTask).some((rg: ResourceManagementModels.ResourceGroup) => rg.name !== undefined && rg.name.toLowerCase() === name.toLowerCase());
     }
 
     public async prompt(wizardContext: T): Promise<void> {
@@ -62,15 +61,15 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
         return !wizardContext.resourceGroup && !wizardContext.newResourceGroupName;
     }
 
-    private async getQuickPicks(wizardContext: T): Promise<types.IAzureQuickPickItem<ResourceGroup | undefined>[]> {
-        const picks: types.IAzureQuickPickItem<ResourceGroup | undefined>[] = [{
+    private async getQuickPicks(wizardContext: T): Promise<types.IAzureQuickPickItem<ResourceManagementModels.ResourceGroup | undefined>[]> {
+        const picks: types.IAzureQuickPickItem<ResourceManagementModels.ResourceGroup | undefined>[] = [{
             label: localize('NewResourceGroup', '$(plus) Create new resource group'),
             description: '',
             data: undefined
         }];
 
-        const resourceGroups: ResourceGroup[] = await ResourceGroupListStep.getResourceGroups(wizardContext);
-        return picks.concat(resourceGroups.map((rg: ResourceGroup) => {
+        const resourceGroups: ResourceManagementModels.ResourceGroup[] = await ResourceGroupListStep.getResourceGroups(wizardContext);
+        return picks.concat(resourceGroups.map((rg: ResourceManagementModels.ResourceGroup) => {
             return {
                 id: rg.id,
                 // tslint:disable-next-line:no-non-null-assertion

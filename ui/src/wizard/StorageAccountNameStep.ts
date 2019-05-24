@@ -4,8 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 // tslint:disable-next-line:no-require-imports
-import { StorageManagementClient } from '@azure/arm-storage';
-import { CheckNameAvailabilityResult } from '@azure/arm-storage/esm/models';
+import { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
 import * as types from '../../index';
 import { createAzureClient } from '../createAzureClient';
 import { ext } from '../extensionVariables';
@@ -46,7 +45,7 @@ export class StorageAccountNameStep<T extends types.IStorageAccountWizardContext
         } else if (name.match(storageAccountNamingRules.invalidCharsRegExp) !== null) {
             return localize('invalidChars', "The name can only contain lowercase letters and numbers.");
         } else {
-            const nameAvailabilityResult: CheckNameAvailabilityResult = await client.storageAccounts.checkNameAvailability(name);
+            const nameAvailabilityResult: StorageManagementModels.CheckNameAvailabilityResult = await client.storageAccounts.checkNameAvailability(name);
             if (!nameAvailabilityResult.nameAvailable) {
                 return nameAvailabilityResult.message;
             } else {
