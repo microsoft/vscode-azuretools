@@ -10,7 +10,7 @@ import { ext } from './extensionVariables';
 import { AzExtTreeItem } from './treeDataProvider/AzExtTreeItem';
 
 // tslint:disable:no-any no-unsafe-any
-export function registerCommand(commandId: string, callback: (this: IActionContext, ...args: any[]) => any, debounce?: number): void {
+export function registerCommand(commandId: string, callback: (context: IActionContext, ...args: any[]) => any, debounce?: number): void {
     let lastClickTime: number | undefined; /* Used for debounce */
     ext.context.subscriptions.push(commands.registerCommand(commandId, async (...args: any[]): Promise<any> => {
         // tslint:disable-next-line:strict-boolean-expressions
@@ -22,29 +22,29 @@ export function registerCommand(commandId: string, callback: (this: IActionConte
         }
         return await callWithTelemetryAndErrorHandling(
             commandId,
-            function (this: IActionContext): any {
+            (context: IActionContext) => {
                 if (args.length > 0) {
-                    const contextArg: any = args[0];
+                    const firstArg: any = args[0];
 
-                    if (contextArg instanceof AzExtTreeItem) {
-                        this.properties.contextValue = contextArg.contextValue;
-                    } else if (contextArg instanceof Uri) {
-                        this.properties.contextValue = 'Uri';
+                    if (firstArg instanceof AzExtTreeItem) {
+                        context.telemetry.properties.contextValue = firstArg.contextValue;
+                    } else if (firstArg instanceof Uri) {
+                        context.telemetry.properties.contextValue = 'Uri';
                     }
                 }
 
-                return callback.call(this, ...args);
+                return callback(context, ...args);
             }
         );
     }));
 }
 
-export function registerEvent<T>(eventId: string, event: Event<T>, callback: (this: IActionContext, ...args: any[]) => any): void {
+export function registerEvent<T>(eventId: string, event: Event<T>, callback: (context: IActionContext, ...args: any[]) => any): void {
     ext.context.subscriptions.push(event(async (...args: any[]): Promise<any> => {
         return await callWithTelemetryAndErrorHandling(
             eventId,
-            function (this: IActionContext): any {
-                return callback.call(this, ...args);
+            (context: IActionContext) => {
+                return callback(context, ...args);
             }
         );
     }));

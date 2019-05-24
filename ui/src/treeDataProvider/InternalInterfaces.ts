@@ -15,7 +15,7 @@ export interface IAzExtParentTreeItemInternal extends types.AzExtParentTreeItem,
     parent: IAzExtParentTreeItemInternal | undefined;
     treeDataProvider: IAzExtTreeDataProviderInternal;
     removeChildFromCache(node: AzExtTreeItem): void;
-    loadMoreChildren(): Promise<void>;
+    loadMoreChildren(context: types.IActionContext): Promise<void>;
 }
 
 export interface IAzExtTreeDataProviderInternal extends types.AzExtTreeDataProvider {

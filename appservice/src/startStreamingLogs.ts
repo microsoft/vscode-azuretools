@@ -47,8 +47,8 @@ export async function startStreamingLogs(client: SiteClient, verifyLoggingEnable
         return await new Promise((onLogStreamCreated: (ls: ILogStream) => void): void => {
             // Intentionally setting up a separate telemetry event and not awaiting the result here since log stream is a long-running action
             // tslint:disable-next-line:no-floating-promises
-            callWithTelemetryAndErrorHandling('appService.streamingLogs', async function (this: IActionContext): Promise<void> {
-                this.suppressErrorDisplay = true;
+            callWithTelemetryAndErrorHandling('appService.streamingLogs', async (context: IActionContext) => {
+                context.errorHandling.suppressDisplay = true;
                 let timerId: NodeJS.Timer | undefined;
                 if (client.isFunctionApp) {
                     // For Function Apps, we have to ping "/admin/host/status" every minute for logging to work

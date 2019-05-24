@@ -52,20 +52,24 @@ export declare class AzExtTreeDataProvider implements TreeDataProvider<AzExtTree
     /**
      * Loads more children for a specific tree item
      * @param treeItem the load more tree item
+     * @param context The action context
      */
-    public loadMore(treeItem: AzExtTreeItem): Promise<void>;
+    public loadMore(treeItem: AzExtTreeItem, context: IActionContext): Promise<void>;
 
     /**
      * Used to traverse the tree with a quick pick at each level. Primarily for command palette support
      * @param expectedContextValues a single context value or multiple matching context values matching the desired tree items
-     * @param startingTreeItem
+     * @param context The action context, with any additional user-defined properties that need to be passed along to `AzExtParentTreeItem.createChildImpl`
+     * @param startingTreeItem An optional parameter to start the picker from somewhere other than the root of the tree
      */
-    public showTreeItemPicker<T extends AzExtTreeItem>(expectedContextValues: string | RegExp | (string | RegExp)[], startingTreeItem?: AzExtTreeItem): Promise<T>;
+    public showTreeItemPicker<T extends AzExtTreeItem>(expectedContextValues: string | RegExp | (string | RegExp)[], context: IActionContext, startingTreeItem?: AzExtTreeItem): Promise<T>;
 
     /**
      * Traverses a tree to find a node matching the given fullId of a tree item. This will not "Load more..."
+     * @param fullId The full ID of the tree item
+     * @param context The action context
      */
-    public findTreeItem<T extends AzExtTreeItem>(fullId: string): Promise<T | undefined>;
+    public findTreeItem<T extends AzExtTreeItem>(fullId: string, context: IActionContext): Promise<T | undefined>;
 
     /**
      * Optional method to return the parent of `element`.
@@ -86,13 +90,13 @@ export abstract class SubscriptionTreeItemBase extends AzureParentTreeItem {
     public static readonly contextValue: string;
     public readonly contextValue: string;
     public readonly label: string;
-    constructor(parent: AzExtParentTreeItem, root: ISubscriptionRoot);
+    constructor(parent: AzExtParentTreeItem, root: ISubscriptionContext);
 }
 
 /**
- * Information specific to the Subscription for this branch of the tree
+ * Information specific to the Subscription
  */
-export interface ISubscriptionRoot {
+export interface ISubscriptionContext {
     credentials: ServiceClientCredentials;
     subscriptionDisplayName: string;
     subscriptionId: string;
@@ -144,7 +148,7 @@ export declare abstract class AzExtTreeItem {
     /**
      * Implement this to support the 'delete' action in the tree. Should not be called directly
      */
-    public deleteTreeItemImpl?(): Promise<void>;
+    public deleteTreeItemImpl?(context: IActionContext): Promise<void>;
 
     /**
      * Implement this to execute any async code when this node is refreshed. Should not be called directly
@@ -166,7 +170,7 @@ export declare abstract class AzExtTreeItem {
     /**
      * This class wraps deleteTreeItemImpl and ensures the tree is updated correctly when an item is deleted
      */
-    public deleteTreeItem(): Promise<void>;
+    public deleteTreeItem(context: IActionContext): Promise<void>;
 
     /**
      * Displays a 'Loading...' icon and temporarily changes the item's description while `callback` is being run
@@ -223,8 +227,9 @@ export declare abstract class AzExtParentTreeItem extends AzExtTreeItem {
     /**
      * Implement this to display child resources. Should not be called directly
      * @param clearCache If true, you should start the "Load more..." process over
+     * @param context The action context
      */
-    public abstract loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]>;
+    public abstract loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]>;
 
     /**
      * Implement this as a part of the "Load more..." action. Should not be called directly
@@ -234,9 +239,9 @@ export declare abstract class AzExtParentTreeItem extends AzExtTreeItem {
 
     /**
      * Implement this if you want the 'create' option to show up in the tree picker. Should not be called directly
-     * @param options User-defined options that are passed to the AzExtParentTreeItem.createChild call
+     * @param context The action context and any additional user-defined options that are passed to the `AzExtParentTreeItem.createChild` or `AzExtTreeDataProvider.showTreeItemPicker`
      */
-    createChildImpl?(showCreatingTreeItem: (label: string) => void, userOptions?: any): Promise<AzExtTreeItem>;
+    createChildImpl?(context: ICreateChildImplContext): Promise<AzExtTreeItem>;
 
     /**
      * Override this if you want non-default (i.e. non-alphabetical) sorting of children. Should not be called directly
@@ -269,17 +274,26 @@ export declare abstract class AzExtParentTreeItem extends AzExtTreeItem {
 
     /**
      * This class wraps createChildImpl and ensures the tree is updated correctly when an item is created
+     * @param context The action context, with any additional user-defined properties that need to be passed along to `AzExtParentTreeItem.createChildImpl`
      */
-    createChild<T extends AzExtTreeItem>(userOptions?: any): Promise<T>;
+    createChild<T extends AzExtTreeItem>(context: IActionContext): Promise<T>;
 
     /**
      * Get the currently cached children for this tree item. This will load the first batch if they have not been loaded yet.
+     * @param context The action context
      */
-    getCachedChildren(): Promise<AzExtTreeItem[]>;
+    getCachedChildren(context: IActionContext): Promise<AzExtTreeItem[]>;
+}
+
+export interface ICreateChildImplContext extends IActionContext {
+    /**
+     * Call this function to show a "Creating..." item in the tree while the create is in progress
+     */
+    showCreatingTreeItem(label: string): void;
 }
 
 /**
- * A tree time for an Azure Account, which will display subscriptions. For Azure-centered extensions, this will be at the root of the tree.
+ * A tree item for an Azure Account, which will display subscriptions. For Azure-centered extensions, this will be at the root of the tree.
  */
 export declare abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem implements Disposable {
     public static readonly contextValue: string;
@@ -294,7 +308,7 @@ export declare abstract class AzureAccountTreeItemBase extends AzExtParentTreeIt
      * Implement this to create a subscription tree item under this Azure Account node
      * @param root Contains basic information about the subscription - should be passed in to the constructor of `SubscriptionTreeItemBase`
      */
-    public abstract createSubscriptionTreeItem(root: ISubscriptionRoot): SubscriptionTreeItemBase | Promise<SubscriptionTreeItemBase>;
+    public abstract createSubscriptionTreeItem(root: ISubscriptionContext): SubscriptionTreeItemBase | Promise<SubscriptionTreeItemBase>;
     //#endregion
 
     /**
@@ -313,14 +327,14 @@ export declare abstract class AzureAccountTreeItemBase extends AzExtParentTreeIt
     public getSubscriptionPromptStep(wizardContext: Partial<ISubscriptionWizardContext>): Promise<AzureWizardPromptStep<ISubscriptionWizardContext> | undefined>;
 
     public hasMoreChildrenImpl(): boolean;
-    public loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]>;
+    public loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]>;
     public pickTreeItemImpl(expectedContextValues: (string | RegExp)[]): Promise<AzExtTreeItem | undefined>;
 }
 
 /**
  * Base class for all tree items representing resources in Azure.
  */
-export declare abstract class AzureTreeItem<TRoot extends ISubscriptionRoot = ISubscriptionRoot> extends AzExtTreeItem {
+export declare abstract class AzureTreeItem<TRoot extends ISubscriptionContext = ISubscriptionContext> extends AzExtTreeItem {
     /**
      * Contains subscription information specific to the root of this branch of the tree.
      */
@@ -335,7 +349,7 @@ export declare abstract class AzureTreeItem<TRoot extends ISubscriptionRoot = IS
 /**
  * Base class for all parent tree items representing resources in Azure.
  */
-export declare abstract class AzureParentTreeItem<TRoot extends ISubscriptionRoot = ISubscriptionRoot> extends AzExtParentTreeItem {
+export declare abstract class AzureParentTreeItem<TRoot extends ISubscriptionContext = ISubscriptionContext> extends AzExtParentTreeItem {
     /**
      * Contains subscription information specific to the root of this branch of the tree.
      */
@@ -350,7 +364,7 @@ export declare abstract class AzureParentTreeItem<TRoot extends ISubscriptionRoo
 /**
 * Combines the root.environment.portalLink and id to open the resource in the portal.
 */
-export declare function openInPortal(root: ISubscriptionRoot, id: string, options?: OpenInPortalOptions): Promise<void>;
+export declare function openInPortal(root: ISubscriptionContext, id: string, options?: OpenInPortalOptions): Promise<void>;
 
 export declare class UserCancelledError extends Error { }
 
@@ -395,39 +409,64 @@ export declare abstract class BaseEditor<ContextT> implements Disposable {
  * Used to register VSCode commands. It wraps your callback with consistent error and telemetry handling
  * Use debounce property if you need a delay between clicks for this particular command
  */
-export declare function registerCommand(commandId: string, callback: (this: IActionContext, ...args: any[]) => any, debounce?: number): void;
+export declare function registerCommand(commandId: string, callback: (context: IActionContext, ...args: any[]) => any, debounce?: number): void;
 
 /**
  * Used to register VSCode events. It wraps your callback with consistent error and telemetry handling
- * NOTE: By default, this sends a telemetry event every single time the event fires. It it recommended to use 'this.suppressTelemetry' to only send events if they apply to your extension
+ * NOTE: By default, this sends a telemetry event every single time the event fires. It it recommended to use 'context.telemetry.suppressIfSuccessful' to only send events if they apply to your extension
  */
-export declare function registerEvent<T>(eventId: string, event: Event<T>, callback: (this: IActionContext, ...args: any[]) => any): void;
+export declare function registerEvent<T>(eventId: string, event: Event<T>, callback: (context: IActionContext, ...args: any[]) => any): void;
 
-export declare function callWithTelemetryAndErrorHandling<T>(callbackId: string, callback: (this: IActionContext) => T | PromiseLike<T>): Promise<T | undefined>;
-export declare function callWithTelemetryAndErrorHandlingSync<T>(callbackId: string, callback: (this: IActionContext) => T): T | undefined;
+export declare function callWithTelemetryAndErrorHandling<T>(callbackId: string, callback: (context: IActionContext) => T | PromiseLike<T>): Promise<T | undefined>;
+export declare function callWithTelemetryAndErrorHandlingSync<T>(callbackId: string, callback: (context: IActionContext) => T): T | undefined;
 
+/**
+ * A generic context object that describes the behavior of an action and allows for specifying custom telemetry properties and measurements
+ * You may also extend this object if you need to pass along custom properties through things like a wizard or tree item picker
+ */
 export interface IActionContext {
+    /**
+     * Describes the behavior of telemetry for this action
+     */
+    telemetry: ITelemetryContext;
+
+    /**
+     * Describes the behavior of error handling for this action
+     */
+    errorHandling: IErrorHandlingContext;
+}
+
+export interface ITelemetryContext {
+    /**
+     * Custom properties that will be included in telemetry
+     */
     properties: TelemetryProperties;
+
+    /**
+     * Custom measurements that will be included in telemetry
+     */
     measurements: TelemetryMeasurements;
 
     /**
      * Defaults to `false`. If true, successful events are suppressed from telemetry, but cancel and error events are still sent.
      */
-    suppressTelemetry?: boolean;
+    suppressIfSuccessful?: boolean;
+}
+
+export interface IErrorHandlingContext {
+    /**
+     * Defaults to `false`. If true, does not display this error to the user.
+     */
+    suppressDisplay?: boolean;
 
     /**
-     * Defaults to `false`
+     * Defaults to `false`. If true, re-throws error outside the context of this action.
      */
-    suppressErrorDisplay?: boolean;
-
-    /**
-     * Defaults to `false`
-     */
-    rethrowError?: boolean;
+    rethrow?: boolean;
 }
 
 export interface ITelemetryReporter {
-    sendTelemetryEvent(eventName: string, properties?: { [key: string]: string | undefined }, measures?: { [key: string]: number | undefined }): void;
+    sendTelemetryEvent(eventName: string, properties?: { [key: string]: string | undefined }, measurements?: { [key: string]: number | undefined }): void;
 }
 
 /**
@@ -647,7 +686,7 @@ export interface IAzureMessageOptions extends MessageOptions {
     learnMoreLink?: string;
 }
 
-export interface IWizardOptions<T> {
+export interface IWizardOptions<T extends IActionContext> {
     /**
      * The steps to prompt for user input, in order
      */
@@ -667,18 +706,18 @@ export interface IWizardOptions<T> {
 /**
  * A wizard that links several user input steps together
  */
-export declare class AzureWizard<T extends {}> {
+export declare class AzureWizard<T extends IActionContext> {
     /**
      * @param wizardContext  A context object that should be used to pass information between steps
      * @param options Options describing this wizard
      */
     public constructor(wizardContext: T, options: IWizardOptions<T>);
 
-    public prompt(actionContext: IActionContext): Promise<void>;
-    public execute(actionContext: IActionContext): Promise<void>;
+    public prompt(): Promise<void>;
+    public execute(): Promise<void>;
 }
 
-export declare abstract class AzureWizardExecuteStep<T extends {}> {
+export declare abstract class AzureWizardExecuteStep<T extends IActionContext> {
     /**
      * The priority of this step. A smaller value will be executed first.
      */
@@ -696,7 +735,7 @@ export declare abstract class AzureWizardExecuteStep<T extends {}> {
     public abstract shouldExecute(wizardContext: T): boolean;
 }
 
-export declare abstract class AzureWizardPromptStep<T extends {}> {
+export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
     /**
      * If true, step count will not be displayed when prompting. Defaults to false.
      */
@@ -719,12 +758,7 @@ export declare abstract class AzureWizardPromptStep<T extends {}> {
     public abstract shouldPrompt(wizardContext: T): boolean;
 }
 
-export interface ISubscriptionWizardContext {
-    credentials: ServiceClientCredentials;
-    subscriptionId: string;
-    environment: Environment;
-    subscriptionDisplayName: string;
-}
+export type ISubscriptionWizardContext = ISubscriptionContext & IActionContext;
 
 export interface ILocationWizardContext extends ISubscriptionWizardContext {
     /**
@@ -777,7 +811,7 @@ export interface IAzureNamingRules {
     lowercaseOnly?: boolean;
 }
 
-export interface IRelatedNameWizardContext {
+export interface IRelatedNameWizardContext extends IActionContext {
     /**
      * A task that evaluates to the related name that should be used as the default for other new resources or undefined if a unique name could not be found
      * The task will be defined after `AzureNameStep.prompt` occurs.

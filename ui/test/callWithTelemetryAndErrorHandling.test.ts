@@ -30,15 +30,15 @@ suite('callWithTelemetryAndErrorHandling tests', () => {
         assert.equal(callWithTelemetryAndErrorHandlingSync('callbackId', testFuncError), undefined);
 
         assert.throws(
-            () => callWithTelemetryAndErrorHandlingSync('callbackId', function (this: IActionContext): string {
-                this.rethrowError = true;
+            () => callWithTelemetryAndErrorHandlingSync('callbackId', (context: IActionContext) => {
+                context.errorHandling.rethrow = true;
                 return testFuncError();
             }),
             /testFuncError/);
 
         assert.doesNotThrow(
-            () => callWithTelemetryAndErrorHandlingSync('callbackId', async function (this: IActionContext): Promise<string> {
-                this.rethrowError = true;
+            () => callWithTelemetryAndErrorHandlingSync('callbackId', async (context: IActionContext) => {
+                context.errorHandling.rethrow = true;
                 return await testFuncErrorAsync();
             }));
     });
@@ -50,15 +50,15 @@ suite('callWithTelemetryAndErrorHandling tests', () => {
         assert.equal(await callWithTelemetryAndErrorHandling('callbackId', testFuncErrorAsync), undefined);
 
         await assertThrowsAsync(
-            async () => await callWithTelemetryAndErrorHandling('callbackId', async function (this: IActionContext): Promise<string> {
-                this.rethrowError = true;
+            async () => await callWithTelemetryAndErrorHandling('callbackId', async (context: IActionContext) => {
+                context.errorHandling.rethrow = true;
                 return testFuncError();
             }),
             /testFuncError/);
 
         await assertThrowsAsync(
-            async () => await callWithTelemetryAndErrorHandling('callbackId', async function (this: IActionContext): Promise<string> {
-                this.rethrowError = true;
+            async () => await callWithTelemetryAndErrorHandling('callbackId', async (context: IActionContext) => {
+                context.errorHandling.rethrow = true;
                 return testFuncErrorAsync();
             }),
             /testFuncErrorAsync/);
