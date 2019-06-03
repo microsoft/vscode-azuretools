@@ -69,7 +69,8 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
         return false;
     }
 
-    public async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzExtTreeItem[]> {
+    public async loadMoreChildrenImpl(_clearCache: boolean, context: types.IActionContext): Promise<AzExtTreeItem[]> {
+        context.telemetry.properties.accountStatus = this._azureAccount.status;
         const existingSubscriptions: SubscriptionTreeItemBase[] = this._subscriptionTreeItems ? this._subscriptionTreeItems : [];
         this._subscriptionTreeItems = [];
 
