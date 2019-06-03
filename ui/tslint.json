@@ -70,6 +70,10 @@
             "variable-declaration",
             "member-variable-declaration"
         ],
-        "no-use-before-declare": false
+        "no-use-before-declare": false,
+        "prefer-template": [
+            true,
+            "allow-single-concat"
+        ]
     }
 }

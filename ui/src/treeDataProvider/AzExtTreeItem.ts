@@ -8,7 +8,7 @@ import * as types from '../../index';
 import { NotImplementedError } from '../errors';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
-import { IAzExtParentTreeItemInternal, IAzExtTreeDataProviderInternal } from "./InternalInterfaces";
+import { IAzExtParentTreeItemInternal, IAzExtTreeDataProviderInternal, isAzExtParentTreeItem } from "./InternalInterfaces";
 import { loadingIconPath } from "./treeConstants";
 
 export abstract class AzExtTreeItem implements types.AzExtTreeItem {
@@ -18,11 +18,13 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     public description?: string;
     public id?: string;
     public commandId?: string;
+    public commandArgs?: unknown[];
     public iconPath?: string | Uri | { light: string | Uri; dark: string | Uri };
     //#endregion
 
     public readonly collapsibleState: TreeItemCollapsibleState | undefined;
     public readonly parent: IAzExtParentTreeItemInternal | undefined;
+    public _isLoadingMore: boolean;
     private _temporaryDescription?: string;
     private _treeDataProvider: IAzExtTreeDataProviderInternal | undefined;
 
@@ -53,7 +55,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     }
 
     public get effectiveIconPath(): string | Uri | { light: string | Uri; dark: string | Uri } | undefined {
-        return this._temporaryDescription ? loadingIconPath : this.iconPath;
+        return this._temporaryDescription || this._isLoadingMore ? loadingIconPath : this.iconPath;
     }
 
     public get effectiveLabel(): string {
@@ -79,12 +81,23 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
         await this.treeDataProvider.refresh(this);
     }
 
-    public includeInTreePicker(expectedContextValues: (string | RegExp)[]): boolean {
+    public matchesContextValue(expectedContextValues: (string | RegExp)[]): boolean {
         return expectedContextValues.some((val: string | RegExp) => {
-            return this.contextValue === val ||
-                (val instanceof RegExp && val.test(this.contextValue)) ||
-                !this.isAncestorOfImpl ||
-                this.isAncestorOfImpl(val);
+            return this.contextValue === val || (val instanceof RegExp && val.test(this.contextValue));
+        });
+    }
+
+    public includeInTreePicker(expectedContextValues: (string | RegExp)[]): boolean {
+        if (this.matchesContextValue(expectedContextValues)) {
+            return true;
+        }
+
+        return expectedContextValues.some((val: string | RegExp) => {
+            if (this.isAncestorOfImpl) {
+                return this.isAncestorOfImpl(val);
+            } else {
+                return isAzExtParentTreeItem(this);
+            }
         });
     }
 

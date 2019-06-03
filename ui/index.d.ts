@@ -8,7 +8,7 @@ import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { StorageAccount } from 'azure-arm-storage/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment, AzureServiceClientOptions } from 'ms-rest-azure';
-import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri, QuickPick, InputBox, Progress } from 'vscode';
+import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri } from 'vscode';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 
 export type OpenInPortalOptions = {
@@ -61,7 +61,8 @@ export declare class AzExtTreeDataProvider implements TreeDataProvider<AzExtTree
      * @param context The action context, with any additional user-defined properties that need to be passed along to `AzExtParentTreeItem.createChildImpl`
      * @param startingTreeItem An optional parameter to start the picker from somewhere other than the root of the tree
      */
-    public showTreeItemPicker<T extends AzExtTreeItem>(expectedContextValues: string | RegExp | (string | RegExp)[], context: IActionContext, startingTreeItem?: AzExtTreeItem): Promise<T>;
+    public showTreeItemPicker<T extends AzExtTreeItem>(expectedContextValues: string | RegExp | (string | RegExp)[], context: ITreeItemPickerContext & { canPickMany: true }, startingTreeItem?: AzExtTreeItem): Promise<T[]>;
+    public showTreeItemPicker<T extends AzExtTreeItem>(expectedContextValues: string | RegExp | (string | RegExp)[], context: ITreeItemPickerContext, startingTreeItem?: AzExtTreeItem): Promise<T>;
 
     /**
      * Traverses a tree to find a node matching the given fullId of a tree item. This will not "Load more..."
@@ -80,6 +81,19 @@ export declare class AzExtTreeDataProvider implements TreeDataProvider<AzExtTree
      * @return Parent of `element`.
      */
     public getParent(treeItem: AzExtTreeItem): Promise<AzExtTreeItem | undefined>;
+}
+
+export interface ITreeItemPickerContext extends IActionContext {
+    /**
+     * If set to true, the last (and _only_ the last) stage of the tree item picker will show a multi-select quick pick
+     */
+    canPickMany?: boolean;
+
+    /**
+     * If set to true, the 'Create new...' pick will not be displayed.
+     * For example, this could be used when the command deletes a tree item.
+     */
+    suppressCreatePick?: boolean;
 }
 
 /**
@@ -127,6 +141,11 @@ export declare abstract class AzExtTreeItem {
     public description?: string;
     public iconPath?: string | Uri | { light: string | Uri; dark: string | Uri };
     public commandId?: string;
+
+    /**
+     * The arguments to pass in when executing `commandId`. If not specified, this tree item will be used.
+     */
+    public commandArgs?: unknown[];
     public abstract contextValue: string;
     //#endregion
 
@@ -202,6 +221,27 @@ export declare class GenericTreeItem extends AzExtTreeItem {
     constructor(parent: AzExtParentTreeItem | undefined, options: IGenericTreeItemOptions);
 }
 
+export interface IInvalidTreeItemOptions {
+    label: string;
+    contextValue: string;
+
+    /**
+     * Defaults to "Invalid" if undefined
+     */
+    description?: string;
+}
+
+export class InvalidTreeItem extends AzExtParentTreeItem {
+    public contextValue: string;
+    public label: string;
+    public iconPath: string;
+
+    constructor(parent: AzExtParentTreeItem, error: unknown, options: IInvalidTreeItemOptions);
+
+    public loadMoreChildrenImpl(): Promise<AzExtTreeItem[]>;
+    public hasMoreChildrenImpl(): boolean;
+}
+
 /**
  * Base class for all parent tree items in an *Az*ure *ext*ension, even if those resources aren't actually in Azure.
  * This provides more value than `TreeItem` (provided by `vscode`), but is more generic than `AzureParentTreeItem` (which is specific to Azure resources)
@@ -220,6 +260,11 @@ export declare abstract class AzExtParentTreeItem extends AzExtTreeItem {
      * Otherwise, it will prompt for a child like normal.
      */
     autoSelectInTreeItemPicker?: boolean;
+
+    /**
+     * If specified, this will be shown instead of the default message `Create new ${this.childTypeLabel}...` in the tree item picker
+     */
+    createNewLabel?: string;
     //#endregion
 
     //#region Methods implemented by base class
@@ -266,7 +311,7 @@ export declare abstract class AzExtParentTreeItem extends AzExtTreeItem {
      * @param getLabelOnError A minimal function that gets the label to display for an invalid source object
      */
     createTreeItemsWithErrorHandling<TSource>(
-        sourceArray: TSource[],
+        sourceArray: TSource[] | undefined | null,
         invalidContextValue: string,
         createTreeItem: (source: TSource) => AzExtTreeItem | undefined | Promise<AzExtTreeItem | undefined>,
         getLabelOnError: (source: TSource) => string | undefined | Promise<string | undefined>): Promise<AzExtTreeItem[]>;
@@ -700,6 +745,11 @@ export interface IWizardOptions<T extends IActionContext> {
      * A title used when prompting
      */
     title?: string;
+
+    /**
+     * If true, step count will not be displayed for the entire wizard. Defaults to false.
+     */
+    hideStepCount?: boolean;
 }
 
 /**

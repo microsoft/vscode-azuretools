@@ -590,4 +590,29 @@ background-color:#555555;}
 You do not have permission to view this directory or page using the credentials that you supplied.`);
         assert.strictEqual(pe2.isUserCancelledError, false);
     });
+
+    test('Docker Request Error', () => {
+        const err: {} = {
+            name: "StatusCodeError",
+            statusCode: 401,
+            message: "401 - {\"detail\":\"Incorrect authentication credentials.\"}",
+            error: {
+                detail: "Incorrect authentication credentials."
+            },
+            options: {},
+            response: {
+                statusCode: 401,
+                body: {
+                    detail: "Incorrect authentication credentials."
+                },
+                headers: {},
+                request: {}
+            }
+        };
+        const pe: IParsedError = parseError(err);
+
+        assert.strictEqual(pe.errorType, '401');
+        assert.strictEqual(pe.message, 'Incorrect authentication credentials.');
+        assert.strictEqual(pe.isUserCancelledError, false);
+    });
 });
