@@ -1057,16 +1057,22 @@ export function createAzureSubscriptionClient<T extends IAddUserAgent>(
 export function createApiProvider(azExts: AzureExtensionApi[]): AzureExtensionApiProvider;
 
 // tslint:disable-next-line:max-classes-per-file
+
+/**
+ * Wraps the vscode.OutputChannel to add timestamps to all messages by default.
+ * appendLine accepts optional parameters to override the date and to prepend the message with the resourceName
+ * Use append if you don't want timestamps for that output message
+ */
 export declare class AzureOutputChannel implements OutputChannel {
     public readonly name: string;
-    public outputChannel: OutputChannel;
+    private _outputChannel: OutputChannel;
 
     public constructor(name: string, outputChannel: OutputChannel);
 
     public append(value: string): void;
-    public appendLine(value: string): void;
+    public appendLine(value: string, resourceName?: string, date?: Date): void;
     public clear(): void;
-	public show(): void;
-	public hide(): void ;
-	public dispose(): void ;
+    public show(): void;
+    public hide(): void;
+    public dispose(): void;
 }
