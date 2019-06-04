@@ -11,5 +11,4 @@ export interface IConnectToGitHubWizardContext extends IActionContext {
     repoData?: gitHubRepoData;
     branchData?: gitHubBranchData;
     requestOption?: gitHubWebResource;
-
 }
