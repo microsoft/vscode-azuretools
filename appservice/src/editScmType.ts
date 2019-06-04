@@ -6,8 +6,8 @@
 import { WebSiteManagementModels } from 'azure-arm-website';
 import { window } from 'vscode';
 import { AzureTreeItem, IActionContext, IAzureQuickPickItem, IAzureQuickPickOptions, UserCancelledError } from 'vscode-azureextensionui';
-import { connectToGitHub } from './connectToGitHub';
 import { ext } from './extensionVariables';
+import { connectToGitHub } from './github/connectToGitHub';
 import { localize } from './localize';
 import { ScmType } from './ScmType';
 import { SiteClient } from './SiteClient';
