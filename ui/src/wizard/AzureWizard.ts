@@ -13,12 +13,13 @@ import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 import { AzureWizardUserInput, IInternalAzureWizard } from './AzureWizardUserInput';
 
 export class AzureWizard<T extends types.IActionContext> implements types.AzureWizard<T>, IInternalAzureWizard {
-    public hideStepCount: boolean;
     public title: string | undefined;
     private readonly _promptSteps: AzureWizardPromptStep<T>[];
     private readonly _executeSteps: AzureWizardExecuteStep<T>[];
     private readonly _finishedPromptSteps: AzureWizardPromptStep<T>[] = [];
     private readonly _context: T;
+    private _stepHideStepCount?: boolean;
+    private _wizardHideStepCount?: boolean;
 
     public constructor(context: T, options: types.IWizardOptions<T>) {
         // reverse steps to make it easier to use push/pop
@@ -28,6 +29,11 @@ export class AzureWizard<T extends types.IActionContext> implements types.AzureW
         // tslint:disable-next-line: strict-boolean-expressions
         this._executeSteps = options.executeSteps || [];
         this._context = context;
+        this._wizardHideStepCount = options.hideStepCount;
+    }
+
+    public get hideStepCount(): boolean {
+        return !!(this._wizardHideStepCount || this._stepHideStepCount);
     }
 
     public get currentStep(): number {
@@ -50,7 +56,7 @@ export class AzureWizard<T extends types.IActionContext> implements types.AzureW
 
                 this._context.telemetry.properties.lastStepAttempted = `prompt-${step.constructor.name}`;
                 this.title = step.effectiveTitle;
-                this.hideStepCount = step.hideStepCount;
+                this._stepHideStepCount = step.hideStepCount;
 
                 if (step.shouldPrompt(this._context)) {
                     step.propertiesBeforePrompt = Object.keys(this._context).filter(k => !isNullOrUndefined(this._context[k]));

@@ -15,10 +15,13 @@ import { GenericTreeItem } from './GenericTreeItem';
 import { IAzExtParentTreeItemInternal, isAzExtParentTreeItem } from './InternalInterfaces';
 import { loadingIconPath, loadMoreLabel } from './treeConstants';
 
+// tslint:disable: max-classes-per-file
+
 export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types.AzExtParentTreeItem, IAzExtParentTreeItemInternal {
     //#region Properties implemented by base class
     public childTypeLabel?: string;
     public autoSelectInTreeItemPicker?: boolean;
+    public createNewLabel?: string;
     //#endregion
 
     public readonly collapsibleState: TreeItemCollapsibleState | undefined = TreeItemCollapsibleState.Collapsed;
@@ -93,7 +96,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         return item1.effectiveLabel.localeCompare(item2.effectiveLabel);
     }
 
-    public async pickChildTreeItem(expectedContextValues: (string | RegExp)[], context: types.IActionContext): Promise<AzExtTreeItem> {
+    public async pickChildTreeItem(expectedContextValues: (string | RegExp)[], context: types.ITreeItemPickerContext): Promise<AzExtTreeItem | AzExtTreeItem[]> {
         if (this.pickTreeItemImpl) {
             const children: AzExtTreeItem[] = await this.getCachedChildren(context);
             const pickedItem: AzExtTreeItem | undefined = await this.pickTreeItemImpl(expectedContextValues);
@@ -105,19 +108,20 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
             }
         }
 
-        const options: types.IAzureQuickPickOptions = {
-            placeHolder: localize('selectTreeItem', 'Select {0}', this.childTypeLabel)
-        };
+        const placeHolder: string = localize('selectTreeItem', 'Select {0}', this.childTypeLabel);
 
         let getTreeItem: GetTreeItemFunction;
 
         try {
-            getTreeItem = (await ext.ui.showQuickPick(this.getQuickPicks(expectedContextValues, context), options)).data;
+            getTreeItem = (await ext.ui.showQuickPick(this.getQuickPicks(expectedContextValues, context), { placeHolder })).data;
         } catch (error) {
-            // We want the loading thing to show for `showQuickPick` but we also need to support auto-select if there's only one pick
+            // We want the loading thing to show for `showQuickPick` but we also need to support autoSelect and canPickMany based on the value of the picks
             // hence throwing an error instead of just awaiting `getQuickPicks`
             if (error instanceof AutoSelectError) {
                 getTreeItem = error.data;
+            } else if (error instanceof CanPickManyError) {
+                const result: types.IAzureQuickPickItem<GetTreeItemFunction>[] = (await ext.ui.showQuickPick(error.picks, { placeHolder, canPickMany: true }));
+                return await Promise.all(result.map(async pick => await pick.data()));
             } else {
                 throw error;
             }
@@ -164,13 +168,15 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
     }
 
     public async createTreeItemsWithErrorHandling<TSource>(
-        sourceArray: TSource[],
+        sourceArray: TSource[] | undefined | null,
         invalidContextValue: string,
         createTreeItem: (source: TSource) => AzExtTreeItem | undefined | Promise<AzExtTreeItem | undefined>,
         getLabelOnError: (source: TSource) => string | undefined | Promise<string | undefined>): Promise<AzExtTreeItem[]> {
 
         const treeItems: AzExtTreeItem[] = [];
         let lastUnknownItemError: unknown;
+        // tslint:disable-next-line: strict-boolean-expressions
+        sourceArray = sourceArray || [];
         await Promise.all(sourceArray.map(async (source: TSource) => {
             try {
                 const item: AzExtTreeItem | undefined = await createTreeItem(source);
@@ -186,7 +192,10 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
                 }
 
                 if (name) {
-                    treeItems.push(new InvalidTreeItem(this, name, error, invalidContextValue));
+                    treeItems.push(new InvalidTreeItem(this, error, {
+                        label: name,
+                        contextValue: invalidContextValue
+                    }));
                 } else if (!isNullOrUndefined(error)) {
                     lastUnknownItemError = error;
                 }
@@ -195,8 +204,12 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
 
         if (!isNullOrUndefined(lastUnknownItemError)) {
             // Display a generic error if there are any unknown items. Only the last error will be displayed
-            const message: string = localize('cantShowItems', 'Some items could not be displayed');
-            treeItems.push(new InvalidTreeItem(this, message, lastUnknownItemError, invalidContextValue, ''));
+            const label: string = localize('cantShowItems', 'Some items could not be displayed');
+            treeItems.push(new InvalidTreeItem(this, lastUnknownItemError, {
+                label,
+                description: '',
+                contextValue: invalidContextValue
+            }));
         }
 
         return treeItems;
@@ -214,11 +227,11 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         }
 
         const newTreeItems: AzExtTreeItem[] = await this.loadMoreChildrenImpl(this._clearCache, context);
-        this._cachedChildren = this._cachedChildren.concat(newTreeItems).sort(this.compareChildrenImpl);
+        this._cachedChildren = this._cachedChildren.concat(newTreeItems).sort((ti1, ti2) => this.compareChildrenImpl(ti1, ti2));
         this._clearCache = false;
     }
 
-    private async getQuickPicks(expectedContextValues: (string | RegExp)[], context: types.IActionContext): Promise<types.IAzureQuickPickItem<GetTreeItemFunction>[]> {
+    private async getQuickPicks(expectedContextValues: (string | RegExp)[], context: types.ITreeItemPickerContext): Promise<types.IAzureQuickPickItem<GetTreeItemFunction>[]> {
         let children: AzExtTreeItem[] = await this.getCachedChildren(context);
         children = children.filter((ti: AzExtTreeItem) => ti.includeInTreePicker(expectedContextValues));
 
@@ -248,9 +261,10 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
             }
         });
 
-        if (this.createChildImpl && this.childTypeLabel) {
+        if (this.createChildImpl && this.childTypeLabel && !context.suppressCreatePick) {
+            const createNewLabel: string = this.createNewLabel || localize('treePickerCreateNew', 'Create new {0}...', this.childTypeLabel);
             picks.unshift({
-                label: localize('treePickerCreateNew', '$(plus) Create New {0}', this.childTypeLabel),
+                label: `$(plus) ${createNewLabel}`,
                 description: '',
                 data: async (): Promise<AzExtTreeItem> => await this.createChild<AzExtTreeItem>(context)
             });
@@ -261,8 +275,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
                 label: `$(sync) ${loadMoreLabel}`,
                 description: '',
                 data: async (): Promise<AzExtTreeItem> => {
-                    await this.loadMoreChildren(context);
-                    this.treeDataProvider.refreshUIOnly(this);
+                    await this.treeDataProvider.loadMore(this, context);
                     return this;
                 }
             });
@@ -272,6 +285,9 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
             throw new Error(localize('noMatching', 'No matching resources found.'));
         } else if (picks.length === 1 && this.autoSelectInTreeItemPicker) {
             throw new AutoSelectError(picks[0].data);
+        } else if (context.canPickMany && children.some(c => c.matchesContextValue(expectedContextValues))) {
+            // canPickMany is only supported at the last stage of the picker, so only throw this error if some of the picks match
+            throw new CanPickManyError(picks);
         }
 
         return picks;
@@ -280,19 +296,19 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
 
 type GetTreeItemFunction = () => Promise<AzExtTreeItem>;
 
-class InvalidTreeItem extends AzExtParentTreeItem {
+export class InvalidTreeItem extends AzExtParentTreeItem implements types.InvalidTreeItem {
     public readonly contextValue: string;
     public readonly label: string;
     public readonly description: string;
 
     private _error: unknown;
 
-    constructor(parent: AzExtParentTreeItem, label: string, error: unknown, contextValue: string, description: string = localize('invalid', 'Invalid')) {
+    constructor(parent: AzExtParentTreeItem, error: unknown, options: types.IInvalidTreeItemOptions) {
         super(parent);
-        this.label = label;
+        this.label = options.label;
         this._error = error;
-        this.contextValue = contextValue;
-        this.description = description;
+        this.contextValue = options.contextValue;
+        this.description = options.description !== undefined ? options.description : localize('invalid', 'Invalid');
     }
 
     public get iconPath(): string {
@@ -318,5 +334,13 @@ class AutoSelectError extends Error {
     constructor(data: GetTreeItemFunction) {
         super();
         this.data = data;
+    }
+}
+
+class CanPickManyError extends Error {
+    public readonly picks: types.IAzureQuickPickItem<GetTreeItemFunction>[];
+    constructor(picks: types.IAzureQuickPickItem<GetTreeItemFunction>[]) {
+        super();
+        this.picks = picks;
     }
 }
