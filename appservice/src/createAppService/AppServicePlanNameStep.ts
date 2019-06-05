@@ -29,13 +29,13 @@ export class AppServicePlanNameStep extends AzureWizardPromptStep<IAppServiceWiz
         return !wizardContext.newPlanName;
     }
 
-    public async validatePlanName(wizardContext: IAppServiceWizardContext, name: string | undefined): Promise<string | undefined> {
+    private async validatePlanName(wizardContext: IAppServiceWizardContext, name: string | undefined): Promise<string | undefined> {
         name = name ? name.trim() : '';
 
         if (name.length < appServicePlanNamingRules.minLength || name.length > appServicePlanNamingRules.maxLength) {
             return localize('invalidLength', 'The name must be between {0} and {1} characters.', appServicePlanNamingRules.minLength, appServicePlanNamingRules.maxLength);
         } else if (name.match(appServicePlanNamingRules.invalidCharsRegExp)) {
-            return localize('invalidChars', "The name can only contain alphanumeric characters, hyphensn and underscores.");
+            return localize('invalidChars', "The name can only contain alphanumeric characters, hyphens, and underscores.");
         } else if (wizardContext.resourceGroup && !await AppServicePlanListStep.isNameAvailable(wizardContext, name, nonNullProp(wizardContext.resourceGroup, 'name'))) {
             return localize('nameAlreadyExists', 'App Service plan "{0}" already exists in resource group "{1}".', name, wizardContext.resourceGroup.name);
         } else {
