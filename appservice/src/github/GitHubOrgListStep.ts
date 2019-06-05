@@ -5,8 +5,7 @@
 
 import { AzureWizardPromptStep, IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
-import { nonNullProp } from '../utils/nonNull';
-import { createQuickPickFromJsons, getGitHubJsonResponse, gitHubOrgData, gitHubWebResource } from './connectToGitHub';
+import { createQuickPickFromJsons, createRequestOptions, getGitHubJsonResponse, gitHubOrgData, gitHubWebResource } from './connectToGitHub';
 import { IConnectToGitHubWizardContext } from './IConnectToGitHubWizardContext';
 
 export class GitHubOrgListStep extends AzureWizardPromptStep<IConnectToGitHubWizardContext> {
@@ -26,13 +25,11 @@ export class GitHubOrgListStep extends AzureWizardPromptStep<IConnectToGitHubWiz
     }
 
     private async getOrganizations(context: IConnectToGitHubWizardContext): Promise<IAzureQuickPickItem<gitHubOrgData | undefined>[]> {
-        const requestOption: gitHubWebResource = nonNullProp(context, 'requestOption');
+        let requestOptions: gitHubWebResource = await createRequestOptions(context, 'https://api.github.com/user');
+        let quickPickItems: IAzureQuickPickItem<gitHubOrgData>[] = createQuickPickFromJsons<gitHubOrgData>(await getGitHubJsonResponse<gitHubOrgData[]>(context, requestOptions), 'login');
 
-        requestOption.url = 'https://api.github.com/user';
-        let quickPickItems: IAzureQuickPickItem<gitHubOrgData>[] = createQuickPickFromJsons<gitHubOrgData>(await getGitHubJsonResponse<gitHubOrgData[]>(requestOption), 'login');
-
-        requestOption.url = 'https://api.github.com/user/orgs';
-        quickPickItems = quickPickItems.concat(createQuickPickFromJsons<gitHubOrgData>(await getGitHubJsonResponse<gitHubOrgData[]>(requestOption), 'login'));
+        requestOptions = await createRequestOptions(context, 'https://api.github.com/user/orgs');
+        quickPickItems = quickPickItems.concat(createQuickPickFromJsons<gitHubOrgData>(await getGitHubJsonResponse<gitHubOrgData[]>(context, requestOptions), 'login'));
 
         return quickPickItems;
     }

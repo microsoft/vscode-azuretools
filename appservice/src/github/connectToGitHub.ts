@@ -30,23 +30,10 @@ export type gitHubLink = { prev?: string, next?: string, last?: string, first?: 
 export type gitHubWebResource = WebResource & { resolveWithFullResponse?: boolean, nextLink?: string, type?: string };
 
 export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, context: IConnectToGitHubWizardContext): Promise<void> {
-    context.requestOption = new WebResource();
-    context.requestOption.resolveWithFullResponse = true;
-    context.requestOption.headers = {
-        ['User-Agent']: appendExtensionUserAgent()
-    };
-
-    const oAuth2Token: string | undefined = (await client.listSourceControls())[0].token;
-    if (!oAuth2Token) {
-        await showGitHubAuthPrompt(node, client, context);
-        context.errorHandling.suppressDisplay = true;
-        const noToken: string = localize('noToken', 'No oAuth2 Token.');
-        throw new Error(noToken);
-    }
-
-    await signRequest(context.requestOption, new TokenCredentials(oAuth2Token));
-
     const title: string = localize('connectGitHubRepo', 'Connect GitHub repository');
+    context.client = client;
+    context.node = node;
+
     const wizard: AzureWizard<IConnectToGitHubWizardContext> = new AzureWizard(context, {
         title,
         promptSteps: [
@@ -56,17 +43,7 @@ export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, c
         ]
     });
 
-    try {
-        await wizard.prompt();
-    } catch (error) {
-        const parsedError: IParsedError = parseError(error);
-        if (parsedError.message.indexOf('Bad credentials') > -1) {
-            // the default error is just "Bad credentials," which is an unhelpful error message
-            await showGitHubAuthPrompt(node, client, context);
-            context.errorHandling.suppressDisplay = true;
-        }
-        throw error;
-    }
+    await wizard.prompt();
 
     const siteSourceControl: SiteSourceControl = {
         repoUrl: nonNullProp(context, 'repoData').html_url,
@@ -108,7 +85,7 @@ async function showGitHubAuthPrompt(node: AzureTreeItem, client: SiteClient, con
     const goToPortal: vscode.MessageItem = { title: localize('goToPortal', 'Go to Portal') };
     let input: vscode.MessageItem | undefined = DialogResponses.learnMore;
     while (input === DialogResponses.learnMore) {
-        input = await vscode.window.showErrorMessage(invalidToken, goToPortal, DialogResponses.learnMore);
+        input = await vscode.window.showErrorMessage(invalidToken, { modal: true }, goToPortal, DialogResponses.learnMore);
         if (input === DialogResponses.learnMore) {
 
             context.telemetry.properties.githubLearnMore = 'true';
@@ -123,20 +100,29 @@ async function showGitHubAuthPrompt(node: AzureTreeItem, client: SiteClient, con
     }
 }
 
-export async function getGitHubJsonResponse<T>(requestOptions: gitHubWebResource): Promise<T> {
+export async function getGitHubJsonResponse<T>(context: IConnectToGitHubWizardContext, requestOptions: gitHubWebResource): Promise<T> {
     // Reference for GitHub REST routes
     // https://developer.github.com/v3/
     // Note: blank after user implies look up authorized user
-
-    // tslint:disable-next-line:no-unsafe-any
-    const gitHubResponse: Response = await request(requestOptions).promise();
-    if (gitHubResponse.headers.link) {
-        const headerLink: string = <string>gitHubResponse.headers.link;
-        const linkObject: gitHubLink = parseLinkHeaderToGitHubLinkObject(headerLink);
-        requestOptions.nextLink = linkObject.next;
+    try {
+        // tslint:disable-next-line:no-unsafe-any
+        const gitHubResponse: Response = await request(requestOptions).promise();
+        if (gitHubResponse.headers.link) {
+            const headerLink: string = <string>gitHubResponse.headers.link;
+            const linkObject: gitHubLink = parseLinkHeaderToGitHubLinkObject(headerLink);
+            requestOptions.nextLink = linkObject.next;
+        }
+        // tslint:disable-next-line:no-unsafe-any
+        return <T>JSON.parse(gitHubResponse.body);
+    } catch (error) {
+        const parsedError: IParsedError = parseError(error);
+        if (parsedError.message.indexOf('Bad credentials') > -1) {
+            // the default error is just "Bad credentials," which is an unhelpful error message
+            await showGitHubAuthPrompt(nonNullProp(context, 'node'), nonNullProp(context, 'client'), context);
+            context.errorHandling.suppressDisplay = true;
+        }
+        throw error;
     }
-    // tslint:disable-next-line:no-unsafe-any
-    return <T>JSON.parse(gitHubResponse.body);
 }
 
 /**
@@ -181,12 +167,12 @@ export interface ICachedQuickPicks<T> {
     picks: IAzureQuickPickItem<T>[];
 }
 
-export async function getGitHubQuickPicksWithLoadMore<T>(cache: ICachedQuickPicks<T>, requestOptions: gitHubWebResource, labelName: string, timeoutSeconds: number = 10): Promise<IAzureQuickPickItem<T | undefined>[]> {
+export async function getGitHubQuickPicksWithLoadMore<T>(context: IConnectToGitHubWizardContext, cache: ICachedQuickPicks<T>, requestOptions: gitHubWebResource, labelName: string, timeoutSeconds: number = 10): Promise<IAzureQuickPickItem<T | undefined>[]> {
     const timeoutMs: number = timeoutSeconds * 1000;
     const startTime: number = Date.now();
     let gitHubQuickPicks: T[] = [];
     do {
-        gitHubQuickPicks = gitHubQuickPicks.concat(await getGitHubJsonResponse<T[]>(requestOptions));
+        gitHubQuickPicks = gitHubQuickPicks.concat(await getGitHubJsonResponse<T[]>(context, requestOptions));
         if (requestOptions.nextLink) {
             // if there is another link, set the next request url to point at that
             requestOptions.url = requestOptions.nextLink;
@@ -205,4 +191,26 @@ export async function getGitHubQuickPicksWithLoadMore<T>(cache: ICachedQuickPick
     } else {
         return cache.picks;
     }
+}
+
+export async function createRequestOptions(context: IConnectToGitHubWizardContext, url: string): Promise<gitHubWebResource> {
+    const requestOptions: gitHubWebResource = new WebResource();
+    requestOptions.resolveWithFullResponse = true;
+    requestOptions.headers = {
+        ['User-Agent']: appendExtensionUserAgent()
+    };
+
+    const client: SiteClient = nonNullProp(context, 'client');
+    const oAuth2Token: string | undefined = (await client.listSourceControls())[0].token;
+    if (!oAuth2Token) {
+        await showGitHubAuthPrompt(nonNullProp(context, 'node'), client, context);
+        context.errorHandling.suppressDisplay = true;
+        const noToken: string = localize('noToken', 'No oAuth2 Token.');
+        throw new Error(noToken);
+    }
+
+    await signRequest(requestOptions, new TokenCredentials(oAuth2Token));
+    requestOptions.url = url;
+
+    return requestOptions;
 }
