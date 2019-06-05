@@ -11,13 +11,13 @@ import { IConnectToGitHubWizardContext } from './IConnectToGitHubWizardContext';
 export class GitHubOrgListStep extends AzureWizardPromptStep<IConnectToGitHubWizardContext> {
     public async prompt(context: IConnectToGitHubWizardContext): Promise<void> {
         const placeHolder: string = 'Choose your organization.';
-        let orgQuickPick: gitHubOrgData | undefined;
+        let orgData: gitHubOrgData | undefined;
 
         do {
-            orgQuickPick = (await ext.ui.showQuickPick(this.getOrganizations(context), { placeHolder })).data;
-        } while (!orgQuickPick);
+            orgData = (await ext.ui.showQuickPick(this.getOrganizations(context), { placeHolder })).data;
+        } while (!orgData);
 
-        context.orgData = orgQuickPick;
+        context.orgData = orgData;
     }
 
     public shouldPrompt(context: IConnectToGitHubWizardContext): boolean {

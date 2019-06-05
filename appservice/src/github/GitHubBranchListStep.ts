@@ -12,13 +12,13 @@ import { IConnectToGitHubWizardContext } from './IConnectToGitHubWizardContext';
 export class GitHubBranchListStep extends AzureWizardPromptStep<IConnectToGitHubWizardContext> {
     public async prompt(context: IConnectToGitHubWizardContext): Promise<void> {
         const placeHolder: string = 'Choose branch';
-        let branchQuickPick: gitHubBranchData | undefined;
+        let branchData: gitHubBranchData | undefined;
         const picksCache: ICachedQuickPicks<gitHubBranchData> = { picks: [] };
         do {
-            branchQuickPick = (await ext.ui.showQuickPick(this.getBranchPicks(context, picksCache), { placeHolder })).data;
-        } while (!branchQuickPick);
+            branchData = (await ext.ui.showQuickPick(this.getBranchPicks(context, picksCache), { placeHolder })).data;
+        } while (!branchData);
 
-        context.branchData = branchQuickPick;
+        context.branchData = branchData;
     }
 
     public shouldPrompt(context: IConnectToGitHubWizardContext): boolean {
