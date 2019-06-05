@@ -41,6 +41,10 @@ export class SiteNameStep extends AzureNameStep<IAppServiceWizardContext> {
         wizardContext.relatedNameTask = this.generateRelatedName(wizardContext, wizardContext.newSiteName, namingRules);
     }
 
+    public async getRelatedName(wizardContext: IAppServiceWizardContext, name: string): Promise<string | undefined> {
+        return await this.generateRelatedName(wizardContext, name, appServicePlanNamingRules);
+    }
+
     public shouldPrompt(wizardContext: IAppServiceWizardContext): boolean {
         return !wizardContext.newSiteName;
     }

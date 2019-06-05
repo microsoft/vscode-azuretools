@@ -18,14 +18,17 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
 
     public async execute(wizardContext: IAppServiceWizardContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         const newPlanName: string = nonNullProp(wizardContext, 'newPlanName');
+        const rgName: string = nonNullValueAndProp(wizardContext.resourceGroup, 'name');
+
         const findingAppServicePlan: string = localize('FindingAppServicePlan', 'Ensuring App Service plan "{0}" exists...', newPlanName);
         const creatingAppServicePlan: string = localize('CreatingAppServicePlan', 'Creating App Service plan "{0}"...', newPlanName);
         const foundAppServicePlan: string = localize('FoundAppServicePlan', 'Successfully found App Service plan "{0}".', newPlanName);
         const createdAppServicePlan: string = localize('CreatedAppServicePlan', 'Successfully created App Service plan "{0}".', newPlanName);
         ext.outputChannel.appendLine(findingAppServicePlan);
+
         const client: WebSiteManagementClient = createAzureClient(wizardContext, WebSiteManagementClient);
-        const rgName: string = nonNullValueAndProp(wizardContext.resourceGroup, 'name');
         const existingPlan: AppServicePlan | undefined = <AppServicePlan | undefined>await client.appServicePlans.get(rgName, newPlanName);
+
         if (existingPlan) {
             wizardContext.plan = existingPlan;
             ext.outputChannel.appendLine(foundAppServicePlan);
