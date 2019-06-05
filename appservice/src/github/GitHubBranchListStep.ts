@@ -5,13 +5,14 @@
 
 import { AzureWizardPromptStep, IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
+import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
 import { createRequestOptions, getGitHubQuickPicksWithLoadMore, gitHubBranchData, gitHubWebResource, ICachedQuickPicks } from './connectToGitHub';
 import { IConnectToGitHubWizardContext } from './IConnectToGitHubWizardContext';
 
 export class GitHubBranchListStep extends AzureWizardPromptStep<IConnectToGitHubWizardContext> {
     public async prompt(context: IConnectToGitHubWizardContext): Promise<void> {
-        const placeHolder: string = 'Choose branch';
+        const placeHolder: string = localize('chooseBranch', 'Choose branch');
         let branchData: gitHubBranchData | undefined;
         const picksCache: ICachedQuickPicks<gitHubBranchData> = { picks: [] };
         do {
