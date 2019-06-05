@@ -5,6 +5,7 @@
 
 import { User } from 'azure-arm-website/lib/models';
 import * as EventEmitter from 'events';
+import { IncomingMessage } from 'http';
 import { createServer, Server, Socket } from 'net';
 import * as requestP from 'request-promise';
 import { IParsedError, parseError } from 'vscode-azureextensionui';
@@ -170,6 +171,28 @@ export class TunnelProxy {
         this._server.unref();
     }
 
+    // Starts up an app when it is found to be in the STOPPED state
+    // Apps can be in the STOPPED state for different reasons:
+    //  1. A stop request was sent through the Azure API (using the portal, using the extension, etc)
+    //    - In this case it will respond with 403 until a start request is sent to the Azure API
+    //  2. The app is inactive, or was recently started
+    //    - In this case it will stay stopped until a request is made to the app itself, waking it up
+    //
+    // To cover both cases, we send a start request followed by a ping to the app url
+    private async startupApp(): Promise<void> {
+        ext.outputChannel.appendLine('[WebApp Tunnel] Sending start request...');
+        await this._client.start();
+
+        ext.outputChannel.appendLine('[WebApp Tunnel] Pinging app default url...');
+        // tslint:disable-next-line:no-unsafe-any
+        const pingResponse: IncomingMessage = await requestP.get({
+            uri: this._client.defaultHostUrl,
+            simple: false, // allows the call to succeed without exception, even when status code is not 2XX
+            resolveWithFullResponse: true // allows access to the status code from the response
+        });
+        ext.outputChannel.appendLine(`[WebApp Tunnel] Ping responded with status code: ${pingResponse.statusCode}`);
+    }
+
     private async checkTunnelStatus(): Promise<void> {
         const statusOptions: requestP.Options = {
             uri: `https://${this._client.kuduHostName}/AppServiceTunnel/Tunnel.ashx?GetStatus&GetStatusAPIVer=2`,
@@ -208,7 +231,8 @@ export class TunnelProxy {
         } else if (tunnelStatus.state === WebAppState.STARTING) {
             throw new RetryableTunnelStatusError('WebApp is starting');
         } else if (tunnelStatus.state === WebAppState.STOPPED) {
-            throw new Error('WebApp is stopped, try sending a request to start it up');
+            await this.startupApp();
+            throw new RetryableTunnelStatusError('WebApp is starting from STOPPED state');
         } else {
             throw new Error(`Unexpected WebApp state: ${tunnelStatus.state}`);
         }
