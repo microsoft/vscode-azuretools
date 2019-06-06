@@ -7,66 +7,53 @@ import { SiteSourceControl } from 'azure-arm-website/lib/models';
 import { TokenCredentials, WebResource } from 'ms-rest';
 import { Response } from 'request';
 import * as request from 'request-promise';
+import { isArray } from 'util';
 import * as vscode from 'vscode';
-import { appendExtensionUserAgent, AzureTreeItem, DialogResponses, IActionContext, IAzureQuickPickItem, IParsedError, openInPortal, parseError } from 'vscode-azureextensionui';
-import { ext } from './extensionVariables';
-import { localize } from './localize';
-import { signRequest } from './signRequest';
-import { SiteClient } from './SiteClient';
-import { nonNullProp } from './utils/nonNull';
-import { openUrl } from './utils/openUrl';
-import { verifyNoRunFromPackageSetting } from './verifyNoRunFromPackageSetting';
+import { appendExtensionUserAgent, AzureTreeItem, AzureWizard, DialogResponses, IActionContext, IAzureQuickPickItem, IParsedError, openInPortal, parseError } from 'vscode-azureextensionui';
+import { ext } from '../extensionVariables';
+import { localize } from '../localize';
+import { signRequest } from '../signRequest';
+import { SiteClient } from '../SiteClient';
+import { nonNullProp } from '../utils/nonNull';
+import { openUrl } from '../utils/openUrl';
+import { verifyNoRunFromPackageSetting } from '../verifyNoRunFromPackageSetting';
+import { GitHubBranchListStep } from './GitHubBranchListStep';
+import { GitHubOrgListStep } from './GitHubOrgListStep';
+import { GitHubRepoListStep } from './GitHubRepoListStep';
+import { IConnectToGitHubWizardContext } from './IConnectToGitHubWizardContext';
 
-type gitHubOrgData = { login: string, repos_url: string };
-type gitHubReposData = { name: string, repos_url: string, url: string, html_url: string };
-type gitHubBranchData = { name: string };
-type gitHubLink = { prev?: string, next?: string, last?: string, first?: string };
+export type gitHubOrgData = { login: string, repos_url: string };
+export type gitHubRepoData = { name: string, repos_url: string, url: string, html_url: string };
+export type gitHubBranchData = { name: string };
+export type gitHubLink = { prev?: string, next?: string, last?: string, first?: string };
 // tslint:disable-next-line:no-reserved-keywords
-type gitHubWebResource = WebResource & { resolveWithFullResponse?: boolean, nextLink?: string, type?: string };
+export type gitHubWebResource = WebResource & { resolveWithFullResponse?: boolean, nextLink?: string, type?: string };
 
-export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, context: IActionContext): Promise<void> {
-    const requestOptions: gitHubWebResource = new WebResource();
-    requestOptions.resolveWithFullResponse = true;
-    requestOptions.headers = {
-        ['User-Agent']: appendExtensionUserAgent()
-    };
-    const oAuth2Token: string | undefined = (await client.listSourceControls())[0].token;
-    if (!oAuth2Token) {
-        await showGitHubAuthPrompt(node, client, context);
-        context.errorHandling.suppressDisplay = true;
-        const noToken: string = localize('noToken', 'No oAuth2 Token.');
-        throw new Error(noToken);
-    }
+export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, context: IConnectToGitHubWizardContext): Promise<void> {
+    const title: string = localize('connectGitHubRepo', 'Connect GitHub repository');
+    context.client = client;
+    context.node = node;
 
-    await signRequest(requestOptions, new TokenCredentials(oAuth2Token));
-    requestOptions.url = 'https://api.github.com/user';
-    const gitHubUser: gitHubOrgData = await getJsonRequest<gitHubOrgData>(requestOptions, node, client, context);
-    requestOptions.url = 'https://api.github.com/user/orgs';
-    const gitHubOrgs: gitHubOrgData[] = await getJsonRequest<gitHubOrgData[]>(requestOptions, node, client, context);
-    const orgQuickPicks: IAzureQuickPickItem<gitHubOrgData>[] = createQuickPickFromJsons([gitHubUser], 'login').concat(createQuickPickFromJsons(gitHubOrgs, 'login'));
-    const orgQuickPick: gitHubOrgData = (await ext.ui.showQuickPick(orgQuickPicks, { placeHolder: 'Choose your organization.' })).data;
-    requestOptions.url = nonNullProp(orgQuickPick, 'repos_url');
+    const wizard: AzureWizard<IConnectToGitHubWizardContext> = new AzureWizard(context, {
+        title,
+        promptSteps: [
+            new GitHubOrgListStep(),
+            new GitHubRepoListStep(),
+            new GitHubBranchListStep()
+        ]
+    });
 
-    const picksCache: ICachedQuickPicks<gitHubReposData> = { picks: [] };
-    let repoQuickPick: gitHubReposData | undefined;
-    do {
-        repoQuickPick = (await ext.ui.showQuickPick(getGitHubReposQuickPicks(picksCache, requestOptions, node, client, context), { placeHolder: 'Choose repository.' })).data;
-    } while (!repoQuickPick);
-
-    requestOptions.url = `${repoQuickPick.url}/branches`;
-    const gitHubBranches: gitHubBranchData[] = await getJsonRequest<gitHubBranchData[]>(requestOptions, node, client, context);
-    const branchQuickPicks: IAzureQuickPickItem<gitHubBranchData>[] = createQuickPickFromJsons(gitHubBranches, 'name');
-    const branchQuickPick: gitHubBranchData = (await ext.ui.showQuickPick(branchQuickPicks, { placeHolder: 'Choose branch.' })).data;
+    await wizard.prompt();
 
     const siteSourceControl: SiteSourceControl = {
-        repoUrl: repoQuickPick.html_url,
-        branch: branchQuickPick.name,
+        repoUrl: nonNullProp(context, 'repoData').html_url,
+        branch: nonNullProp(context, 'branchData').name,
         isManualIntegration: false,
         deploymentRollbackEnabled: true,
         isMercurial: false
     };
 
-    const repoName: string = `${orgQuickPick.login}/${repoQuickPick.name}`;
+    const repoName: string = `${nonNullProp(context, 'orgData').login}/${nonNullProp(context, 'repoData').name}`;
 
     try {
         const connectingToGithub: string = localize('ConnectingToGithub', '"{0}" is being connected to repo "{1}". This may take several minutes...', client.fullName, repoName);
@@ -98,7 +85,7 @@ async function showGitHubAuthPrompt(node: AzureTreeItem, client: SiteClient, con
     const goToPortal: vscode.MessageItem = { title: localize('goToPortal', 'Go to Portal') };
     let input: vscode.MessageItem | undefined = DialogResponses.learnMore;
     while (input === DialogResponses.learnMore) {
-        input = await vscode.window.showErrorMessage(invalidToken, goToPortal, DialogResponses.learnMore);
+        input = await vscode.window.showErrorMessage(invalidToken, { modal: true }, goToPortal, DialogResponses.learnMore);
         if (input === DialogResponses.learnMore) {
 
             context.telemetry.properties.githubLearnMore = 'true';
@@ -113,7 +100,7 @@ async function showGitHubAuthPrompt(node: AzureTreeItem, client: SiteClient, con
     }
 }
 
-async function getJsonRequest<T>(requestOptions: gitHubWebResource, node: AzureTreeItem, client: SiteClient, context: IActionContext): Promise<T> {
+export async function getGitHubJsonResponse<T>(context: IConnectToGitHubWizardContext, requestOptions: gitHubWebResource): Promise<T> {
     // Reference for GitHub REST routes
     // https://developer.github.com/v3/
     // Note: blank after user implies look up authorized user
@@ -131,7 +118,7 @@ async function getJsonRequest<T>(requestOptions: gitHubWebResource, node: AzureT
         const parsedError: IParsedError = parseError(error);
         if (parsedError.message.indexOf('Bad credentials') > -1) {
             // the default error is just "Bad credentials," which is an unhelpful error message
-            await showGitHubAuthPrompt(node, client, context);
+            await showGitHubAuthPrompt(nonNullProp(context, 'node'), nonNullProp(context, 'client'), context);
             context.errorHandling.suppressDisplay = true;
         }
         throw error;
@@ -143,22 +130,20 @@ async function getJsonRequest<T>(requestOptions: gitHubWebResource, node: AzureT
  * @param description Optional property of JSON that will be used as QuickPicks description
  * @param data Optional property of JSON that will be used as QuickPicks data saved as a NameValue pair
  */
-function createQuickPickFromJsons<T extends Object>(jsons: T[], label: string, description?: string): IAzureQuickPickItem<T>[] {
+export function createQuickPickFromJsons<T>(jsons: T[], label: string): IAzureQuickPickItem<T>[] {
     const quickPicks: IAzureQuickPickItem<T>[] = [];
+    if (!isArray(jsons)) {
+        jsons = [jsons];
+    }
+
     for (const json of jsons) {
         if (!json[label]) {
             // skip this JSON if it doesn't have this label
             continue;
         }
 
-        if (description && !json[description]) {
-            // if the label exists, but the description does not, then description will just be left blank
-            description = undefined;
-        }
-
         quickPicks.push({
             label: <string>json[label],
-            description: `${description ? json[description] : ''}`,
             data: json
         });
     }
@@ -178,27 +163,27 @@ function parseLinkHeaderToGitHubLinkObject(linkHeader: string): gitHubLink {
     return linkMap;
 }
 
-interface ICachedQuickPicks<T> {
+export interface ICachedQuickPicks<T> {
     picks: IAzureQuickPickItem<T>[];
 }
 
-async function getGitHubReposQuickPicks(cache: ICachedQuickPicks<gitHubReposData>, requestOptions: gitHubWebResource, node: AzureTreeItem, client: SiteClient, context: IActionContext, timeoutSeconds: number = 10): Promise<IAzureQuickPickItem<gitHubReposData | undefined>[]> {
+export async function getGitHubQuickPicksWithLoadMore<T>(context: IConnectToGitHubWizardContext, cache: ICachedQuickPicks<T>, requestOptions: gitHubWebResource, labelName: string, timeoutSeconds: number = 10): Promise<IAzureQuickPickItem<T | undefined>[]> {
     const timeoutMs: number = timeoutSeconds * 1000;
     const startTime: number = Date.now();
-    let gitHubRepos: gitHubReposData[] = [];
+    let gitHubQuickPicks: T[] = [];
     do {
-        gitHubRepos = gitHubRepos.concat(await getJsonRequest<gitHubReposData[]>(requestOptions, node, client, context));
+        gitHubQuickPicks = gitHubQuickPicks.concat(await getGitHubJsonResponse<T[]>(context, requestOptions));
         if (requestOptions.nextLink) {
             // if there is another link, set the next request url to point at that
             requestOptions.url = requestOptions.nextLink;
         }
     } while (requestOptions.nextLink && startTime + timeoutMs > Date.now());
 
-    cache.picks = cache.picks.concat(createQuickPickFromJsons(gitHubRepos, 'name'));
+    cache.picks = cache.picks.concat(createQuickPickFromJsons(gitHubQuickPicks, labelName));
     cache.picks.sort((a: vscode.QuickPickItem, b: vscode.QuickPickItem) => a.label.localeCompare(b.label));
 
     if (requestOptions.nextLink) {
-        return (<IAzureQuickPickItem<gitHubReposData | undefined>[]>[{
+        return (<IAzureQuickPickItem<T | undefined>[]>[{
             label: '$(sync) Load More',
             suppressPersistence: true,
             data: undefined
@@ -206,4 +191,26 @@ async function getGitHubReposQuickPicks(cache: ICachedQuickPicks<gitHubReposData
     } else {
         return cache.picks;
     }
+}
+
+export async function createRequestOptions(context: IConnectToGitHubWizardContext, url: string): Promise<gitHubWebResource> {
+    const requestOptions: gitHubWebResource = new WebResource();
+    requestOptions.resolveWithFullResponse = true;
+    requestOptions.headers = {
+        ['User-Agent']: appendExtensionUserAgent()
+    };
+
+    const client: SiteClient = nonNullProp(context, 'client');
+    const oAuth2Token: string | undefined = (await client.listSourceControls())[0].token;
+    if (!oAuth2Token) {
+        await showGitHubAuthPrompt(nonNullProp(context, 'node'), client, context);
+        context.errorHandling.suppressDisplay = true;
+        const noToken: string = localize('noToken', 'No oAuth2 Token.');
+        throw new Error(noToken);
+    }
+
+    await signRequest(requestOptions, new TokenCredentials(oAuth2Token));
+    requestOptions.url = url;
+
+    return requestOptions;
 }
