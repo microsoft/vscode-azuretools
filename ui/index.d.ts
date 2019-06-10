@@ -1111,3 +1111,18 @@ export function createAzureSubscriptionClient<T extends IAddUserAgent>(
  * Multiple APIs with different versions can be supplied, but ideally a single backwards-compatible API is all that's necessary.
  */
 export function createApiProvider(azExts: AzureExtensionApi[]): AzureExtensionApiProvider;
+
+/**
+ * Opens a read-only editor to display json content
+ * @param node Typically (but not strictly) an `AzExtTreeItem`. `label` is used for the file name displayed in VS Code and `fullId` is used to uniquely identify this file
+ * @param data The data to stringify and display
+ */
+export function openReadOnlyJson(node: { label: string, fullId: string }, data: {}): Promise<void>;
+
+/**
+ * Opens a read-only editor to display content
+ * @param node Typically (but not strictly) an `AzExtTreeItem`. `label` is used for the file name displayed in VS Code and `fullId` is used to uniquely identify this file
+ * @param content The content to display
+ * @param fileExtension The file extension
+ */
+export function openReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string): Promise<void>;
