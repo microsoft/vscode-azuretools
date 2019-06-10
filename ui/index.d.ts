@@ -718,6 +718,11 @@ export interface IAzureQuickPickOptions extends QuickPickOptions {
      * Optionally used to suppress persistence for this quick pick, defaults to `false`
      */
     suppressPersistence?: boolean;
+
+    /**
+     * Optionally used to select default picks in a multi-select quick pick
+     */
+    isPickSelected?: (p: QuickPickItem) => boolean;
 }
 
 /**
