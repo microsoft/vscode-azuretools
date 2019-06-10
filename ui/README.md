@@ -233,7 +233,15 @@ export class ExampleEditor extends BaseEditor<AzureTreeItem> {
 }
 ```
 
-3. Register a command in your extension.ts under the activate function file and instantiate the ExampleEditor class
+3. Create a command in a separate file for extension.ts to register later on. 
+
+```typescript
+export async function selectCommand(node: {}, editor: ExampleEditor) {
+  await azureEditor.showEditor(node);
+}
+```
+
+4. Register a command in your extension.ts under the activate function file and instantiate the ExampleEditor class.
 
 ```typescript
 export function activate(context: vscode.ExtensionContext) {
@@ -246,11 +254,25 @@ export function activate(context: vscode.ExtensionContext) {
 }
 ```
 
-4. Create a function for the registered command
-
+5. For 'commandName.selectFile' to trigger, have a class that extends an AzureTreeItem and set a property for commandId and set it to 'commandName.selectFile'. Pulling from the DisplayAzureResources example, we have this class. 
 ```typescript
-export async function selectCommand(node: {}, editor: ExampleEditor) {
-  await azureEditor.showEditor(node);
+export class WebAppTreeItem extends AzureTreeItem {
+  public static contextValue: string = "azureWebApp";
+  public readonly contextValue: string = WebAppTreeItem.contextValue;
+  public readonly commandId: string = 'commandName.selectFile';
+  private readonly _site: Site;
+  constructor(parent: AzureParentTreeItem, site: Site) {
+    super(parent);
+    this._site = site;
+  }
+
+  public get id(): string {
+    return this._site.id;
+  }
+
+  public get label(): string {
+    return this._site.name;
+  }
 }
 ```
 
