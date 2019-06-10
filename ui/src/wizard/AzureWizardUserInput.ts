@@ -3,7 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, InputBox, InputBoxOptions, QuickInputButtons, QuickPick, QuickPickItem, QuickPickOptions, window } from 'vscode';
+import { Disposable, InputBox, InputBoxOptions, QuickInputButtons, QuickPick, QuickPickItem, window } from 'vscode';
+import * as types from '../../index';
 import { GoBackError, UserCancelledError } from '../errors';
 import { IRootUserInput } from '../extensionVariables';
 
@@ -24,7 +25,7 @@ export class AzureWizardUserInput implements IRootUserInput {
         this._wizard = wizard;
     }
 
-    public async showQuickPick<TPick extends QuickPickItem>(picks: TPick[] | Promise<TPick[]>, options: QuickPickOptions): Promise<TPick> {
+    public async showQuickPick<TPick extends QuickPickItem>(picks: TPick[] | Promise<TPick[]>, options: types.IAzureQuickPickOptions): Promise<TPick | TPick[]> {
         const disposables: Disposable[] = [];
         try {
             const quickPick: QuickPick<TPick> = window.createQuickPick<TPick>();
@@ -41,12 +42,16 @@ export class AzureWizardUserInput implements IRootUserInput {
             quickPick.ignoreFocusOut = !!options.ignoreFocusOut;
             quickPick.matchOnDescription = !!options.matchOnDescription;
             quickPick.matchOnDetail = !!options.matchOnDetail;
+            quickPick.canSelectMany = !!options.canPickMany;
 
-            return await new Promise<TPick>(async (resolve, reject): Promise<void> => {
+            return await new Promise<TPick | TPick[]>(async (resolve, reject): Promise<void> => {
                 disposables.push(
                     quickPick.onDidAccept(() => {
-                        // Only single input is supported for now
-                        resolve(quickPick.selectedItems[0]);
+                        if (options.canPickMany) {
+                            resolve(Array.from(quickPick.selectedItems));
+                        } else {
+                            resolve(quickPick.selectedItems[0]);
+                        }
                     }),
                     quickPick.onDidTriggerButton(_btn => {
                         // Only back button is supported for now
@@ -63,6 +68,10 @@ export class AzureWizardUserInput implements IRootUserInput {
                 quickPick.show();
                 try {
                     quickPick.items = await Promise.resolve(picks);
+                    if (options.canPickMany && options.isPickSelected) {
+                        // tslint:disable-next-line: no-non-null-assertion
+                        quickPick.selectedItems = quickPick.items.filter(p => options.isPickSelected!(p));
+                    }
                     quickPick.busy = false;
                     quickPick.enabled = true;
                 } catch (err) {
