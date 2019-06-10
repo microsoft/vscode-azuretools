@@ -179,7 +179,7 @@ If the environment variable `DEBUGTELEMETRY` is set to a non-empty, non-zero val
 
 ### Display file from Base editor
 
-Follow these steps to get access VSCodes editor functionality.
+Follow these steps to implement VSCode's editor functionality.
 
 1. First extend the BaseEditor and implement the BaseEditor Methods.
    The BaseEditor class will accept any type, for the sake of this example,
