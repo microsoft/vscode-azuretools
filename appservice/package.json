@@ -60,6 +60,7 @@
         "mocha": "^5.2.0",
         "mocha-junit-reporter": "^1.22.0",
         "mocha-multi-reporters": "^1.1.7",
+        "portfinder": "^1.0.20",
         "tslint": "^5.16.0",
         "tslint-microsoft-contrib": "5.0.1",
         "typescript": "^3.4.5",
