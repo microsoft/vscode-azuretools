@@ -8,9 +8,8 @@ import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { StorageAccount } from 'azure-arm-storage/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment, AzureServiceClientOptions } from 'ms-rest-azure';
-import { Disposable, Event, ExtensionContext, InputBox, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPick, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri } from 'vscode';
+import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri, QuickPick, InputBox, Progress } from 'vscode';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
-import { AzureOutputChannel } from './src';
 
 export type OpenInPortalOptions = {
     /**
@@ -213,13 +212,14 @@ export declare abstract class AzExtParentTreeItem extends AzExtTreeItem {
     /**
      * This will be used in the tree picker prompt when selecting children
      */
-    public childTypeLabel?: string;
+    childTypeLabel?: string;
+
 
     /**
      * If true and there is only one child node, that child will automatically be used in the tree item picker.
      * Otherwise, it will prompt for a child like normal.
      */
-    public autoSelectInTreeItemPicker?: boolean;
+    autoSelectInTreeItemPicker?: boolean;
     //#endregion
 
     //#region Methods implemented by base class
@@ -240,7 +240,7 @@ export declare abstract class AzExtParentTreeItem extends AzExtTreeItem {
      * Implement this if you want the 'create' option to show up in the tree picker. Should not be called directly
      * @param context The action context and any additional user-defined options that are passed to the `AzExtParentTreeItem.createChild` or `AzExtTreeDataProvider.showTreeItemPicker`
      */
-    public createChildImpl?(context: ICreateChildImplContext): Promise<AzExtTreeItem>;
+    createChildImpl?(context: ICreateChildImplContext): Promise<AzExtTreeItem>;
 
     /**
      * Override this if you want non-default (i.e. non-alphabetical) sorting of children. Should not be called directly
@@ -248,13 +248,13 @@ export declare abstract class AzExtParentTreeItem extends AzExtTreeItem {
      * @param item2 The second item to compare
      * @returns A negative number if the item1 occurs before item2; positive if item1 occurs after item2; 0 if they are equivalent
      */
-    public compareChildrenImpl(item1: AzExtTreeItem, item2: AzExtTreeItem): number;
+    compareChildrenImpl(item1: AzExtTreeItem, item2: AzExtTreeItem): number;
 
     /**
      * If this treeItem should not show up in the tree picker or you want custom logic to show quick picks, implement this to provide a child that corresponds to the expectedContextValue. Should not be called directly
      * Otherwise, all children will be shown in the tree picker
      */
-    public pickTreeItemImpl?(expectedContextValues: (string | RegExp)[]): AzExtTreeItem | undefined | Promise<AzExtTreeItem | undefined>;
+    pickTreeItemImpl?(expectedContextValues: (string | RegExp)[]): AzExtTreeItem | undefined | Promise<AzExtTreeItem | undefined>;
     //#endregion
 
     /**
@@ -265,7 +265,7 @@ export declare abstract class AzExtParentTreeItem extends AzExtTreeItem {
      * @param createTreeItem A function that converts a source object to a TreeItem. Return undefined if you want this object to be skipped.
      * @param getLabelOnError A minimal function that gets the label to display for an invalid source object
      */
-    public createTreeItemsWithErrorHandling<TSource>(
+    createTreeItemsWithErrorHandling<TSource>(
         sourceArray: TSource[],
         invalidContextValue: string,
         createTreeItem: (source: TSource) => AzExtTreeItem | undefined | Promise<AzExtTreeItem | undefined>,
@@ -275,13 +275,13 @@ export declare abstract class AzExtParentTreeItem extends AzExtTreeItem {
      * This class wraps createChildImpl and ensures the tree is updated correctly when an item is created
      * @param context The action context, with any additional user-defined properties that need to be passed along to `AzExtParentTreeItem.createChildImpl`
      */
-    public createChild<T extends AzExtTreeItem>(context: IActionContext): Promise<T>;
+    createChild<T extends AzExtTreeItem>(context: IActionContext): Promise<T>;
 
     /**
      * Get the currently cached children for this tree item. This will load the first batch if they have not been loaded yet.
      * @param context The action context
      */
-    public getCachedChildren(context: IActionContext): Promise<AzExtTreeItem[]>;
+    getCachedChildren(context: IActionContext): Promise<AzExtTreeItem[]>;
 }
 
 export interface ICreateChildImplContext extends IActionContext {
@@ -301,6 +301,13 @@ export declare abstract class AzureAccountTreeItemBase extends AzExtParentTreeIt
     public disposables: Disposable[];
     public childTypeLabel: string;
     public autoSelectInTreeItemPicker: boolean;
+
+    //#region Methods implemented by base class
+    /**
+     * Implement this to create a subscription tree item under this Azure Account node
+     * @param root Contains basic information about the subscription - should be passed in to the constructor of `SubscriptionTreeItemBase`
+     */
+    public abstract createSubscriptionTreeItem(root: ISubscriptionContext): SubscriptionTreeItemBase | Promise<SubscriptionTreeItemBase>;
     //#endregion
 
     /**
@@ -309,13 +316,6 @@ export declare abstract class AzureAccountTreeItemBase extends AzExtParentTreeIt
      * @param testAccount A test Azure Account that leverages a service principal instead of interactive login
      */
     public constructor(parent?: AzExtParentTreeItem, testAccount?: TestAzureAccount);
-
-    //#region Methods implemented by base class
-    /**
-     * Implement this to create a subscription tree item under this Azure Account node
-     * @param root Contains basic information about the subscription - should be passed in to the constructor of `SubscriptionTreeItemBase`
-     */
-    public abstract createSubscriptionTreeItem(root: ISubscriptionContext): SubscriptionTreeItemBase | Promise<SubscriptionTreeItemBase>;
 
     public dispose(): void;
 
@@ -377,31 +377,31 @@ export declare abstract class BaseEditor<ContextT> implements Disposable {
     /**
      * Implement this to retrieve data from your remote server, returns the file as a string
      */
-    public abstract getData(context: ContextT): Promise<string>;
+    abstract getData(context: ContextT): Promise<string>;
 
     /**
      * Implement this to allow for remote updating
      */
-    public abstract updateData(context: ContextT, data: string): Promise<string>;
+    abstract updateData(context: ContextT, data: string): Promise<string>;
 
     /**
      * Implement this to return the file name from the remote
      */
-    public abstract getFilename(context: ContextT): Promise<string>;
+    abstract getFilename(context: ContextT): Promise<string>;
 
     /**
      * Implement this to return the size in MB.
      */
-    public abstract getSize(context: ContextT): Promise<number>;
+    abstract getSize(context: ContextT): Promise<number>;
 
     /**
      * Implement this to edit what is displayed to the user when uploading the file to the remote
      */
-    public abstract getSaveConfirmationText(context: ContextT): Promise<string>;
+    abstract getSaveConfirmationText(context: ContextT): Promise<string>;
 
-    public onDidSaveTextDocument(actionContext: IActionContext, globalState: Memento, doc: TextDocument): Promise<void>;
-    public showEditor(context: ContextT, sizeLimit?: number): Promise<void>;
-    public dispose(): Promise<void>;
+    onDidSaveTextDocument(actionContext: IActionContext, globalState: Memento, doc: TextDocument): Promise<void>;
+    showEditor(context: ContextT, sizeLimit?: number): Promise<void>;
+    dispose(): Promise<void>;
 }
 
 /**
@@ -906,12 +906,12 @@ export interface IStorageAccountWizardContext extends IResourceGroupWizardContex
 export declare enum StorageAccountKind {
     Storage = "Storage",
     StorageV2 = "StorageV2",
-    BlobStorage = "BlobStorage"
+    BlobStorage = "BlobStorage",
 }
 
 export declare enum StorageAccountPerformance {
     Standard = "Standard",
-    Premium = "Premium"
+    Premium = "Premium",
 }
 
 export declare enum StorageAccountReplication {
@@ -930,7 +930,7 @@ export declare enum StorageAccountReplication {
     /**
      * Read-access geo-redundant storage
      */
-    RAGRS = "RAGRS"
+    RAGRS = "RAGRS",
 }
 
 export interface INewStorageAccountDefaults {
@@ -1012,7 +1012,7 @@ export declare function registerUIExtensionVariables(extVars: UIExtensionVariabl
  */
 export interface UIExtensionVariables {
     context: ExtensionContext;
-    outputChannel: AzureOutputChannel;
+    outputChannel: OutputChannel;
     ui: IAzureUserInput;
     reporter: ITelemetryReporter;
 }
