@@ -10,6 +10,7 @@ import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment, AzureServiceClientOptions } from 'ms-rest-azure';
 import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri, QuickPick, InputBox, Progress } from 'vscode';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
+import { AzureOutputChannel } from './src';
 
 export type OpenInPortalOptions = {
     /**
@@ -1012,7 +1013,7 @@ export declare function registerUIExtensionVariables(extVars: UIExtensionVariabl
  */
 export interface UIExtensionVariables {
     context: ExtensionContext;
-    outputChannel: OutputChannel;
+    outputChannel: AzureOutputChannel;
     ui: IAzureUserInput;
     reporter: ITelemetryReporter;
 }
