@@ -4,9 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import { ExtensionContext, InputBoxOptions, OutputChannel, QuickPickItem, QuickPickOptions } from "vscode";
+import { ExtensionContext, InputBoxOptions, QuickPickItem, QuickPickOptions } from "vscode";
 import TelemetryReporter from "vscode-extension-telemetry";
 import { IAzureUserInput, UIExtensionVariables } from "../index";
+import { AzureOutputChannel } from './AzureOutputChannel';
 import { localize } from "./localize";
 
 export interface IRootUserInput {
@@ -25,7 +26,7 @@ class UninitializedExtensionVariables implements UIExtensionVariables {
         throw this._error;
     }
 
-    public get outputChannel(): OutputChannel {
+    public get outputChannel(): AzureOutputChannel {
         throw this._error;
     }
 

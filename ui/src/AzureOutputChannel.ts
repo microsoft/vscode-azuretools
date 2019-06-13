@@ -3,7 +3,7 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { OutputChannel } from "vscode";
+import { OutputChannel, ViewColumn } from "vscode";
 
 export class AzureOutputChannel implements OutputChannel {
     public readonly name: string;
@@ -18,18 +18,25 @@ export class AzureOutputChannel implements OutputChannel {
         this._outputChannel.append(value);
     }
 
-    public appendLine(value: string, resourceName?: string, date?: Date): void {
+    public appendLine(value: string): void {
+        this._outputChannel.appendLine(value);
+    }
+
+    public appendLog(value: string, resourceName?: string, date?: Date): void {
         // tslint:disable-next-line:strict-boolean-expressions
         date = date || new Date();
-        this._outputChannel.appendLine(`${date.toLocaleTimeString()}${resourceName ? ' '.concat(resourceName) : ''}: ${value}`);
+        this.appendLine(`${date.toLocaleTimeString()}${resourceName ? ' '.concat(resourceName) : ''}: ${value}`);
     }
 
     public clear(): void {
         this._outputChannel.clear();
     }
 
-    public show(): void {
-        this._outputChannel.show();
+    public show(preserveFocus?: boolean | undefined): void;
+    public show(column?: ViewColumn | undefined, preserveFocus?: boolean | undefined): void;
+    // tslint:disable-next-line: no-any
+    public show(_column?: any, preserveFocus?: boolean | undefined): void {
+        this._outputChannel.show(preserveFocus);
     }
 
     public hide(): void {
@@ -38,7 +45,6 @@ export class AzureOutputChannel implements OutputChannel {
 
     public dispose(): void {
         this._outputChannel.dispose();
-        this.dispose();
     }
 
 }

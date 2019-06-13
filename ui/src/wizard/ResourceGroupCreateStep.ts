@@ -22,14 +22,14 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
         const resourceClient: ResourceManagementClient = createAzureClient(wizardContext, ResourceManagementClient);
         const rgExists: boolean = await resourceClient.resourceGroups.checkExistence(newName);
         if (rgExists) {
-            ext.outputChannel.appendLine(localize('existingResourceGroup', 'Using existing resource group "{0}".', newName));
+            ext.outputChannel.appendLog(localize('existingResourceGroup', 'Using existing resource group "{0}".', newName));
             wizardContext.resourceGroup = await resourceClient.resourceGroups.get(newName);
         } else {
             const creatingMessage: string = localize('creatingResourceGroup', 'Creating resource group "{0}" in location "{1}"...', newName, newLocation);
-            ext.outputChannel.appendLine(creatingMessage);
+            ext.outputChannel.appendLog(creatingMessage);
             progress.report({ message: creatingMessage });
             wizardContext.resourceGroup = await resourceClient.resourceGroups.createOrUpdate(newName, { location: newLocation });
-            ext.outputChannel.appendLine(localize('createdResourceGroup', 'Successfully created resource group "{0}".', newName));
+            ext.outputChannel.appendLog(localize('createdResourceGroup', 'Successfully created resource group "{0}".', newName));
         }
     }
 
