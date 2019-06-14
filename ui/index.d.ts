@@ -1114,10 +1114,9 @@ export function createAzureSubscriptionClient<T extends IAddUserAgent>(
 export function createApiProvider(azExts: AzureExtensionApi[]): AzureExtensionApiProvider;
 
 /**
-<<<<<<< HEAD
- * Wraps the vscode.OutputChannel to add timestamps to all messages by default.
- * appendLine accepts optional parameters to override the date and to prepend the message with the resourceName
- * Use append if you don't want timestamps for that output message
+ * Wraps the vscode.OutputChannel to add timestamps to all messages by calling appendLog.
+ * appendLog accepts optional parameters to override the date and to prepend the message with the resourceName
+ * Use appendLine if you don't want timestamps for that output message
  */
 export declare class AzExtOutputChannel implements OutputChannel {
     public readonly name: string;
@@ -1126,13 +1125,15 @@ export declare class AzExtOutputChannel implements OutputChannel {
     public constructor(name: string, outputChannel: OutputChannel);
 
     public append(value: string): void;
-    public appendLine(value: string, resourceName?: string, date?: Date): void;
+    public appendLine(value: string): void;
+    public appendLog(value: string, resourceName?: string, date?: Date): void;
     public clear(): void;
     public show(): void;
     public hide(): void;
     public dispose(): void;
 }
-=======
+
+/**
  * Opens a read-only editor to display json content
  * @param node Typically (but not strictly) an `AzExtTreeItem`. `label` is used for the file name displayed in VS Code and `fullId` is used to uniquely identify this file
  * @param data The data to stringify and display
@@ -1146,4 +1147,3 @@ export function openReadOnlyJson(node: { label: string, fullId: string }, data: 
  * @param fileExtension The file extension
  */
 export function openReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string): Promise<void>;
->>>>>>> 8432cbec0a00cca31277b6efa9fdb97d6996da1a
