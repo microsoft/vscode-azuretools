@@ -20,6 +20,7 @@ export function parseError(error: any): IParsedError {
         }
 
         stack = getCallstack(error);
+        errorType = getCode(error, errorType);
 
         // See https://github.com/Microsoft/vscode-azureappservice/issues/419 for an example error that requires these 'unpack's
         error = unpackErrorFromField(error, 'value');
@@ -112,7 +113,7 @@ function parseIfHtml(message: string): string {
 }
 
 function getMessage(o: any, defaultMessage: string): string {
-    return (o && (o.message || o.Message || (typeof parseIfJson(o.body) === 'string' && o.body))) || defaultMessage;
+    return (o && (o.message || o.Message || o.detail || (typeof parseIfJson(o.body) === 'string' && o.body))) || defaultMessage;
 }
 
 function getCode(o: any, defaultCode: string): string {

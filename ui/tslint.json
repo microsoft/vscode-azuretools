@@ -70,6 +70,11 @@
             "variable-declaration",
             "member-variable-declaration"
         ],
-        "no-use-before-declare": false
+        "no-use-before-declare": false,
+        "no-backbone-get-set-outside-model": false,
+        "prefer-template": [
+            true,
+            "allow-single-concat"
+        ]
     }
 }

@@ -5,7 +5,6 @@
 
 import * as path from 'path';
 import { Event, EventEmitter, TreeItem } from 'vscode';
-import { IActionContext } from '../../index';
 import * as types from '../../index';
 import { callWithTelemetryAndErrorHandling } from '../callWithTelemetryAndErrorHandling';
 import { localize } from '../localize';
@@ -47,14 +46,15 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
             command: treeItem.commandId ? {
                 command: treeItem.commandId,
                 title: '',
-                arguments: [treeItem]
+                // tslint:disable-next-line: strict-boolean-expressions
+                arguments: treeItem.commandArgs || [treeItem]
             } : undefined
         };
     }
 
     public async getChildren(treeItem?: AzExtParentTreeItem): Promise<AzExtTreeItem[]> {
         try {
-            return <AzExtTreeItem[]>await callWithTelemetryAndErrorHandling('AzureTreeDataProvider.getChildren', async (context: IActionContext) => {
+            return <AzExtTreeItem[]>await callWithTelemetryAndErrorHandling('AzureTreeDataProvider.getChildren', async (context: types.IActionContext) => {
                 context.errorHandling.suppressDisplay = true;
                 context.errorHandling.rethrow = true;
                 let result: AzExtTreeItem[];
@@ -71,8 +71,8 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                 context.telemetry.properties.hasMoreChildren = String(hasMoreChildren);
 
                 result = treeItem.creatingTreeItems.concat(cachedChildren);
-                if (hasMoreChildren) {
-                    result = result.concat(new GenericTreeItem(treeItem, {
+                if (hasMoreChildren && !treeItem._isLoadingMore) {
+                    const loadMoreTI: GenericTreeItem = new GenericTreeItem(treeItem, {
                         label: loadMoreLabel,
                         iconPath: {
                             light: path.join(__filename, '..', '..', '..', '..', 'resources', 'light', 'refresh.svg'),
@@ -80,7 +80,9 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                         },
                         contextValue: 'azureextensionui.loadMore',
                         commandId: this._loadMoreCommandId
-                    }));
+                    });
+                    loadMoreTI.commandArgs = [treeItem];
+                    result.push(loadMoreTI);
                 }
 
                 context.telemetry.measurements.childCount = result.length;
@@ -109,18 +111,26 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         this.refreshUIOnly(treeItem);
     }
 
-    public refreshUIOnly(treeItem: AzExtTreeItem | undefined): void {
-        this._onDidChangeTreeDataEmitter.fire(treeItem === this._rootTreeItem ? undefined : treeItem);
+    public refreshUIOnly(_treeItem: AzExtTreeItem | undefined): void {
+        // Pass undefined as temporary workaround for https://github.com/microsoft/vscode/issues/71698
+        this._onDidChangeTreeDataEmitter.fire(undefined);
+        // this._onDidChangeTreeDataEmitter.fire(treeItem === this._rootTreeItem ? undefined : treeItem);
     }
 
-    public async loadMore(treeItem: AzExtTreeItem, context: IActionContext): Promise<void> {
-        if (treeItem.parent) {
-            await treeItem.parent.loadMoreChildren(context);
-            this.refreshUIOnly(treeItem.parent);
+    public async loadMore(treeItem: AzExtParentTreeItem, context: types.IActionContext): Promise<void> {
+        treeItem._isLoadingMore = true;
+        try {
+            this.refreshUIOnly(treeItem);
+            await treeItem.loadMoreChildren(context);
+        } finally {
+            treeItem._isLoadingMore = false;
+            this.refreshUIOnly(treeItem);
         }
     }
 
-    public async showTreeItemPicker<T extends types.AzExtTreeItem>(expectedContextValues: string | (string | RegExp)[] | RegExp, context: IActionContext, startingTreeItem?: AzExtTreeItem): Promise<T> {
+    public async showTreeItemPicker<T extends types.AzExtTreeItem>(expectedContextValues: string | (string | RegExp)[] | RegExp, context: types.ITreeItemPickerContext & { canPickMany: true }, startingTreeItem?: AzExtTreeItem): Promise<T[]>;
+    public async showTreeItemPicker<T extends types.AzExtTreeItem>(expectedContextValues: string | (string | RegExp)[] | RegExp, context: types.ITreeItemPickerContext, startingTreeItem?: AzExtTreeItem): Promise<T>;
+    public async showTreeItemPicker<T extends types.AzExtTreeItem>(expectedContextValues: string | (string | RegExp)[] | RegExp, context: types.ITreeItemPickerContext, startingTreeItem?: AzExtTreeItem): Promise<T | T[]> {
         if (!Array.isArray(expectedContextValues)) {
             expectedContextValues = [expectedContextValues];
         }
@@ -128,9 +138,15 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         // tslint:disable-next-line:strict-boolean-expressions
         let treeItem: AzExtTreeItem = startingTreeItem || this._rootTreeItem;
 
-        while (!expectedContextValues.some((val: string | RegExp) => (val instanceof RegExp && val.test(treeItem.contextValue)) || treeItem.contextValue === val)) {
+        while (!treeItem.matchesContextValue(expectedContextValues)) {
             if (isAzExtParentTreeItem(treeItem)) {
-                treeItem = await (<AzExtParentTreeItem>treeItem).pickChildTreeItem(expectedContextValues, context);
+                const pickedItems: AzExtTreeItem | AzExtTreeItem[] = await (<AzExtParentTreeItem>treeItem).pickChildTreeItem(expectedContextValues, context);
+                if (Array.isArray(pickedItems)) {
+                    // canPickMany is only supported at the last stage of the picker, so automatically return if this is an array
+                    return <T[]><unknown>pickedItems;
+                } else {
+                    treeItem = pickedItems;
+                }
             } else {
                 throw new Error(localize('noResourcesError', 'No matching resources found.'));
             }
