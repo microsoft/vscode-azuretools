@@ -5,7 +5,7 @@
 
 export * from './AzureActionHandler';
 export * from './AzureUserInput';
-export * from './AzureOutputChannel';
+export * from './AzExtOutputChannel';
 export * from './BaseEditor';
 export * from './callWithTelemetryAndErrorHandling';
 export * from './createApiProvider';

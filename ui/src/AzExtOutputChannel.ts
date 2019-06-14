@@ -5,7 +5,7 @@
 
 import { OutputChannel, ViewColumn } from "vscode";
 
-export class AzureOutputChannel implements OutputChannel {
+export class AzExtOutputChannel implements OutputChannel {
     public readonly name: string;
     private _outputChannel: OutputChannel;
 
@@ -22,10 +22,10 @@ export class AzureOutputChannel implements OutputChannel {
         this._outputChannel.appendLine(value);
     }
 
-    public appendLog(value: string, resourceName?: string, date?: Date): void {
+    public appendLog(value: string, options: { resourceName?: string, date?: Date }): void {
         // tslint:disable-next-line:strict-boolean-expressions
-        date = date || new Date();
-        this.appendLine(`${date.toLocaleTimeString()}${resourceName ? ' '.concat(resourceName) : ''}: ${value}`);
+        const date: Date = options.date || new Date();
+        this.appendLine(`${date.toLocaleTimeString()}${options.resourceName ? ' '.concat(options.resourceName) : ''}: ${value}`);
     }
 
     public clear(): void {

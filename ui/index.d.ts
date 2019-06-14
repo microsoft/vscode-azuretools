@@ -10,7 +10,7 @@ import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment, AzureServiceClientOptions } from 'ms-rest-azure';
 import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri, QuickPick, InputBox, Progress } from 'vscode';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
-import { AzureOutputChannel } from './src';
+import { AzExtOutputChannel } from './src';
 
 export type OpenInPortalOptions = {
     /**
@@ -1013,7 +1013,7 @@ export declare function registerUIExtensionVariables(extVars: UIExtensionVariabl
  */
 export interface UIExtensionVariables {
     context: ExtensionContext;
-    outputChannel: AzureOutputChannel;
+    outputChannel: AzExtOutputChannel;
     ui: IAzureUserInput;
     reporter: ITelemetryReporter;
 }
@@ -1057,3 +1057,22 @@ export function createAzureSubscriptionClient<T extends IAddUserAgent>(
  * Multiple APIs with different versions can be supplied, but ideally a single backwards-compatible API is all that's necessary.
  */
 export function createApiProvider(azExts: AzureExtensionApi[]): AzureExtensionApiProvider;
+
+/**
+ * Wraps the vscode.OutputChannel to add timestamps to all messages by default.
+ * appendLine accepts optional parameters to override the date and to prepend the message with the resourceName
+ * Use append if you don't want timestamps for that output message
+ */
+export declare class AzExtOutputChannel implements OutputChannel {
+    public readonly name: string;
+    private _outputChannel: OutputChannel;
+
+    public constructor(name: string, outputChannel: OutputChannel);
+
+    public append(value: string): void;
+    public appendLine(value: string, resourceName?: string, date?: Date): void;
+    public clear(): void;
+    public show(): void;
+    public hide(): void;
+    public dispose(): void;
+}
