@@ -47,7 +47,7 @@ class ReadOnlyContentProvider implements TextDocumentContentProvider {
     }
 
     public async openReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string): Promise<void> {
-        const idHash: string = encodeURIComponent(randomUtils.getPseudononymousStringHash(node.fullId));
+        const idHash: string = randomUtils.getPseudononymousStringHash(node.fullId, 'hex');
         const uri: Uri = Uri.parse(`${scheme}:///${idHash}/${node.label}${fileExtension}`);
         this._contentMap.set(uri.toString(), content);
         await window.showTextDocument(uri);
