@@ -33,6 +33,10 @@ export class AzureUserInput implements types.IAzureUserInput, types.AzureUserInp
             persistenceKey = `showQuickPick.${randomUtils.getPseudononymousStringHash(unhashedKey)}`;
         }
 
+        if (options.canPickMany && options.placeHolder) {
+            options.placeHolder += localize('canPickManyInstructions', " (Press 'Space' to select and 'Enter' to confirm)");
+        }
+
         const result: T | T[] | undefined = await this.rootUserInput.showQuickPick(this.getOrderedItems(items, persistenceKey, options.suppressPersistence), options);
         if (result === undefined) {
             throw new UserCancelledError();
