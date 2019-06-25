@@ -9,14 +9,17 @@ import { callWithTelemetryAndErrorHandling, DialogResponses, IActionContext } fr
 import { ext } from '../extensionVariables';
 import { SiteClient } from '../SiteClient';
 
-export const remoteDebugLink: string = 'https://aka.ms/appsvc-remotedebug';
-
 export function reportMessage(message: string, progress: vscode.Progress<{}>): void {
     ext.outputChannel.appendLine(message);
     progress.report({ message: message });
 }
 
 export async function setRemoteDebug(isRemoteDebuggingToBeEnabled: boolean, confirmMessage: string, noopMessage: string | undefined, siteClient: SiteClient, siteConfig: SiteConfigResource, progress?: vscode.Progress<{}>, learnMoreLink?: string): Promise<void> {
+    const state: string | undefined = await siteClient.getState();
+    if (state && state.toLowerCase() === 'stopped') {
+        throw new Error('The app must be running, but is currently in state "Stopped". Start the app to continue.');
+    }
+
     if (isRemoteDebuggingToBeEnabled !== siteConfig.remoteDebuggingEnabled) {
         const confirmButton: vscode.MessageItem = isRemoteDebuggingToBeEnabled ? { title: 'Enable' } : { title: 'Disable' };
 

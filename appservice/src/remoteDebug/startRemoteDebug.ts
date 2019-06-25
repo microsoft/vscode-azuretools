@@ -10,7 +10,9 @@ import { callWithTelemetryAndErrorHandling, IActionContext } from 'vscode-azuree
 import { ext } from '../extensionVariables';
 import { SiteClient } from '../SiteClient';
 import { TunnelProxy } from '../TunnelProxy';
-import { remoteDebugLink, reportMessage, setRemoteDebug } from './remoteDebugCommon';
+import { reportMessage, setRemoteDebug } from './remoteDebugCommon';
+
+const remoteDebugLink: string = 'https://aka.ms/appsvc-remotedebug';
 
 let isRemoteDebugging: boolean = false;
 
@@ -34,9 +36,7 @@ async function startRemoteDebugInternal(siteClient: SiteClient, siteConfig: Site
         // tslint:disable-next-line:no-unsafe-any
         const localHostPortNumber: number = debugConfig.port;
 
-        reportMessage('Checking app settings...', progress);
-
-        const confirmEnableMessage: string = 'The app configuration will be updated to enable remote debugging and restarted. Would you like to continue?';
+        const confirmEnableMessage: string = 'The configuration will be updated to enable remote debugging. Would you like to continue? This will restart the app.';
         await setRemoteDebug(true, confirmEnableMessage, undefined, siteClient, siteConfig, progress, remoteDebugLink);
 
         reportMessage('Starting tunnel proxy...', progress);
@@ -68,7 +68,7 @@ async function startRemoteDebugInternal(siteClient: SiteClient, siteConfig: Site
                 }
                 terminateDebugListener.dispose();
 
-                const confirmDisableMessage: string = 'Leaving the app in debugging mode may cause performance issues. Would you like to disable debugging for this app? The app will be restarted.';
+                const confirmDisableMessage: string = 'Remaining in debugging mode may cause performance issues. Would you like to disable debugging? This will restart the app.';
                 await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (innerProgress: vscode.Progress<{}>): Promise<void> => {
                     await setRemoteDebug(false, confirmDisableMessage, undefined, siteClient, siteConfig, innerProgress, remoteDebugLink);
                 });
