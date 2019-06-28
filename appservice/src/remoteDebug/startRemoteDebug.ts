@@ -8,6 +8,7 @@ import * as portfinder from 'portfinder';
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling, IActionContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
+import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { TunnelProxy } from '../TunnelProxy';
 import { reportMessage, setRemoteDebug } from './remoteDebugCommon';
@@ -18,7 +19,7 @@ let isRemoteDebugging: boolean = false;
 
 export async function startRemoteDebug(siteClient: SiteClient, siteConfig: SiteConfigResource): Promise<void> {
     if (isRemoteDebugging) {
-        throw new Error('Azure Remote Debugging is currently starting or already started.');
+        throw new Error(localize('remoteDebugAlreadyStarted', 'Azure Remote Debugging is currently starting or already started.'));
     }
 
     isRemoteDebugging = true;
@@ -36,10 +37,10 @@ async function startRemoteDebugInternal(siteClient: SiteClient, siteConfig: Site
         // tslint:disable-next-line:no-unsafe-any
         const localHostPortNumber: number = debugConfig.port;
 
-        const confirmEnableMessage: string = 'The configuration will be updated to enable remote debugging. Would you like to continue? This will restart the app.';
+        const confirmEnableMessage: string = localize('remoteDebugEnablePrompt', 'The configuration will be updated to enable remote debugging. Would you like to continue? This will restart the app.');
         await setRemoteDebug(true, confirmEnableMessage, undefined, siteClient, siteConfig, progress, remoteDebugLink);
 
-        reportMessage('Starting tunnel proxy...', progress);
+        reportMessage(localize('remoteDebugStartingTunnel', 'Starting tunnel proxy...'), progress);
 
         const publishCredential: User = await siteClient.getWebAppPublishCredential();
         const tunnelProxy: TunnelProxy = new TunnelProxy(localHostPortNumber, siteClient, publishCredential);
@@ -49,7 +50,7 @@ async function startRemoteDebugInternal(siteClient: SiteClient, siteConfig: Site
             await tunnelProxy.startProxy();
         });
 
-        reportMessage('Attaching debugger...', progress);
+        reportMessage(localize('remoteDebugAttaching', 'Attaching debugger...'), progress);
 
         await callWithTelemetryAndErrorHandling('appService.remoteDebugAttach', async (attachContext: IActionContext) => {
             attachContext.errorHandling.suppressDisplay = true;
@@ -57,7 +58,7 @@ async function startRemoteDebugInternal(siteClient: SiteClient, siteConfig: Site
             await vscode.debug.startDebugging(undefined, debugConfig);
         });
 
-        reportMessage('Attached!', progress);
+        reportMessage(localize('remoteDebugAttached', 'Attached!'), progress);
 
         const terminateDebugListener: vscode.Disposable = vscode.debug.onDidTerminateDebugSession(async (event: vscode.DebugSession) => {
             if (event.name === debugConfig.name) {
@@ -68,7 +69,7 @@ async function startRemoteDebugInternal(siteClient: SiteClient, siteConfig: Site
                 }
                 terminateDebugListener.dispose();
 
-                const confirmDisableMessage: string = 'Remaining in debugging mode may cause performance issues. Would you like to disable debugging? This will restart the app.';
+                const confirmDisableMessage: string = localize('remoteDebugDisablePrompt', 'Remaining in debugging mode may cause performance issues. Would you like to disable debugging? This will restart the app.');
                 await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (innerProgress: vscode.Progress<{}>): Promise<void> => {
                     await setRemoteDebug(false, confirmDisableMessage, undefined, siteClient, siteConfig, innerProgress, remoteDebugLink);
                 });
@@ -101,11 +102,11 @@ async function getDebugConfiguration(): Promise<vscode.DebugConfiguration> {
             // In this case we don't know which folder to use. Show a warning and proceed.
             // In the future we should allow users to choose a workspace folder to map sources from.
             // tslint:disable-next-line:no-floating-promises
-            ext.ui.showWarningMessage('Unable to bind breakpoints from workspace when multiple folders are open. Use "loaded scripts" instead.');
+            ext.ui.showWarningMessage(localize('remoteDebugMultipleFolders', 'Unable to bind breakpoints from workspace when multiple folders are open. Use "loaded scripts" instead.'));
         }
     } else {
         // vscode will throw an error if you try to start debugging without any workspace folder open
-        throw new Error('Please open a workspace folder before attaching a debugger.');
+        throw new Error(localize('remoteDebugNoFolders', 'Please open a workspace folder before attaching a debugger.'));
     }
 
     return config;

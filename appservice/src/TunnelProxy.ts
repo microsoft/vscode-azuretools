@@ -11,6 +11,7 @@ import * as requestP from 'request-promise';
 import { IParsedError, parseError } from 'vscode-azureextensionui';
 import * as websocket from 'websocket';
 import { ext } from './extensionVariables';
+import { localize } from './localize';
 import { SiteClient } from './SiteClient';
 import { delay } from './utils/delay';
 
@@ -206,25 +207,25 @@ export class TunnelProxy {
         } catch (error) {
             const parsedError: IParsedError = parseError(error);
             ext.outputChannel.appendLine(`[Tunnel] Checking status, error: ${parsedError.message}`);
-            throw new Error(`Error getting tunnel status: ${parsedError.errorType}`);
+            throw new Error(localize('tunnelStatusError', 'Error getting tunnel status: {0}', parsedError.errorType));
         }
 
         if (tunnelStatus.state === AppState.STARTED) {
             if ((tunnelStatus.port === 2222 && !this._isSsh) || (tunnelStatus.port !== 2222 && this._isSsh)) {
                 // Tunnel is pointed to default SSH port and still needs time to restart
-                throw new RetryableTunnelStatusError('App is waiting for restart');
+                throw new RetryableTunnelStatusError();
             } else if (tunnelStatus.canReachPort) {
                 return;
             } else {
-                throw new Error('App is started, but port is unreachable');
+                throw new Error(localize('tunnelUnreachable', 'App is started, but port is unreachable'));
             }
         } else if (tunnelStatus.state === AppState.STARTING) {
-            throw new RetryableTunnelStatusError('App is starting');
+            throw new RetryableTunnelStatusError();
         } else if (tunnelStatus.state === AppState.STOPPED) {
             await this.startupApp();
-            throw new RetryableTunnelStatusError('App is starting from STOPPED state');
+            throw new RetryableTunnelStatusError();
         } else {
-            throw new Error(`Unexpected app state: ${tunnelStatus.state}`);
+            throw new Error(localize('tunnelStatusError', 'Unexpected app state: {0}', tunnelStatus.state));
         }
     }
 
@@ -242,14 +243,14 @@ export class TunnelProxy {
                     return;
                 } catch (error) {
                     if (!(error instanceof RetryableTunnelStatusError)) {
-                        reject(new Error(`Unable to establish connection to application: ${parseError(error).message}`));
+                        reject(new Error(localize('tunnelFailed', 'Unable to establish connection to application: {0}', parseError(error).message)));
                         return;
                     } // else allow retry
                 }
 
                 await delay(pollingIntervalMs);
             }
-            reject(new Error('Unable to establish connection to application: Timed out'));
+            reject(new Error(localize('tunnelTimedOut', 'Unable to establish connection to application: Timed out')));
         });
     }
 
