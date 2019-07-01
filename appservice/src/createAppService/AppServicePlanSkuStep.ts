@@ -85,6 +85,27 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
                 size: 'S3',
                 family: 'S',
                 capacity: 1
+            },
+            {
+                name: 'P1v2',
+                tier: 'Premium V2',
+                size: 'P1v2',
+                family: 'Pv2',
+                capacity: 1
+            },
+            {
+                name: 'P2v2',
+                tier: 'Premium V2',
+                size: 'P2v2',
+                family: 'Pv2',
+                capacity: 1
+            },
+            {
+                name: 'P3v2',
+                tier: 'Premium V2',
+                size: 'P3v2',
+                family: 'Pv2',
+                capacity: 1
             }
         ];
     }
