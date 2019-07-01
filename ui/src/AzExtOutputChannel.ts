@@ -4,8 +4,9 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { OutputChannel, ViewColumn } from "vscode";
+import * as types from '../index';
 
-export class AzExtOutputChannel implements OutputChannel {
+export class AzExtOutputChannel implements types.AzExtOutputChannel {
     public readonly name: string;
     private _outputChannel: OutputChannel;
 

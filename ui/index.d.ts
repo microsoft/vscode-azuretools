@@ -10,7 +10,6 @@ import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment, AzureServiceClientOptions } from 'ms-rest-azure';
 import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri } from 'vscode';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
-import { AzExtOutputChannel } from './src';
 
 export type OpenInPortalOptions = {
     /**
@@ -1114,9 +1113,7 @@ export function createAzureSubscriptionClient<T extends IAddUserAgent>(
 export function createApiProvider(azExts: AzureExtensionApi[]): AzureExtensionApiProvider;
 
 /**
- * Wraps the vscode.OutputChannel to add timestamps to all messages by calling appendLog.
- * appendLog accepts optional parameters to override the date and to prepend the message with the resourceName
- * Use appendLine if you don't want timestamps for that output message
+ * Wrapper for vscode.OutputChannel that adds timestamping for messages
  */
 export declare class AzExtOutputChannel implements OutputChannel {
     public readonly name: string;
@@ -1126,7 +1123,13 @@ export declare class AzExtOutputChannel implements OutputChannel {
 
     public append(value: string): void;
     public appendLine(value: string): void;
-    public appendLog(value: string, resourceName?: string, date?: Date): void;
+    /**
+     * appendLog adds the current timestamps to all messages
+     * @param value The message to be printed
+     * @param options.resourceName The name of the resource. If provided, it will be prepended before the message
+     * @param options.date If provided, the date will overwrite the timestamp
+     */
+    public appendLog(value: string, options: { resourceName?: string, date?: Date }): void;
     public clear(): void;
     public show(): void;
     public hide(): void;
