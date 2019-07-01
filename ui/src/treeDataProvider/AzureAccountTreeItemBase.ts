@@ -4,10 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as path from 'path';
-import { Disposable, Extension, extensions } from 'vscode';
-import * as vscode from 'vscode';
+import { commands, Disposable, Extension, extensions, MessageItem, ProgressLocation, window } from 'vscode';
 import * as types from '../../index';
 import { AzureAccount, AzureLoginStatus, AzureResourceFilter } from '../azure-account.api';
+import { UserCancelledError } from '../errors';
+import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { TestAzureAccount } from '../TestAzureAccount';
 import { nonNullProp, nonNullValue } from '../utils/nonNull';
@@ -23,6 +24,8 @@ const selectSubscriptionsLabel: string = localize('noSubscriptions', 'Select Sub
 const signInCommandId: string = 'azure-account.login';
 const createAccountCommandId: string = 'azure-account.createAccount';
 const selectSubscriptionsCommandId: string = 'azure-account.selectSubscriptions';
+const azureAccountExtensionId: string = 'ms-vscode.azure-account';
+const extensionOpenCommand: string = 'extension.open';
 
 export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem implements types.AzureAccountTreeItemBase {
     public static contextValue: string = 'azureextensionui.azureAccount';
@@ -32,29 +35,12 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
     public autoSelectInTreeItemPicker: boolean = true;
     public disposables: Disposable[] = [];
 
-    private _azureAccount: AzureAccount;
+    private _azureAccountTask: Promise<AzureAccount | undefined>;
     private _subscriptionTreeItems: SubscriptionTreeItemBase[] | undefined;
 
     constructor(parent?: AzExtParentTreeItem, testAccount?: TestAzureAccount) {
         super(parent);
-        // Rather than expose 'AzureAccount' types in the index.ts contract, simply get it inside of this npm package
-        const azureAccountExtension: Extension<AzureAccount> | undefined = extensions.getExtension<AzureAccount>('ms-vscode.azure-account');
-        if (testAccount) {
-            this._azureAccount = testAccount;
-        } else if (!azureAccountExtension) {
-            throw new Error(localize('NoAccountExtensionError', 'The Azure Account Extension is a required depenency.'));
-        } else {
-            this._azureAccount = azureAccountExtension.exports;
-        }
-
-        this.disposables.push(this._azureAccount.onFiltersChanged(async () => await this.refresh()));
-        this.disposables.push(this._azureAccount.onStatusChanged(async (status: AzureLoginStatus) => {
-            // Ignore status change to 'LoggedIn' and wait for the 'onFiltersChanged' event to fire instead
-            // (so that the tree stays in 'Loading...' state until the filters are actually ready)
-            if (status !== 'LoggedIn') {
-                await this.refresh();
-            }
-        }));
+        this._azureAccountTask = this.loadAzureAccount(testAccount);
     }
 
     //#region Methods implemented by base class
@@ -70,14 +56,23 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
     }
 
     public async loadMoreChildrenImpl(_clearCache: boolean, context: types.IActionContext): Promise<AzExtTreeItem[]> {
-        context.telemetry.properties.accountStatus = this._azureAccount.status;
+        const azureAccount: AzureAccount | undefined = await this._azureAccountTask;
+        if (!azureAccount) {
+            context.telemetry.properties.accountStatus = 'notInstalled';
+            const label: string = localize('installAzureAccount', 'Install Azure Account Extension...');
+            const result: AzExtTreeItem = new GenericTreeItem(this, { label, commandId: extensionOpenCommand, contextValue: 'installAzureAccount', includeInTreeItemPicker: true });
+            result.commandArgs = [azureAccountExtensionId];
+            return [result];
+        }
+
+        context.telemetry.properties.accountStatus = azureAccount.status;
         const existingSubscriptions: SubscriptionTreeItemBase[] = this._subscriptionTreeItems ? this._subscriptionTreeItems : [];
         this._subscriptionTreeItems = [];
 
         const contextValue: string = 'azureCommand';
-        if (this._azureAccount.status === 'Initializing' || this._azureAccount.status === 'LoggingIn') {
+        if (azureAccount.status === 'Initializing' || azureAccount.status === 'LoggingIn') {
             return [new GenericTreeItem(this, {
-                label: this._azureAccount.status === 'Initializing' ? localize('loadingTreeItem', 'Loading...') : localize('signingIn', 'Waiting for Azure sign-in...'),
+                label: azureAccount.status === 'Initializing' ? localize('loadingTreeItem', 'Loading...') : localize('signingIn', 'Waiting for Azure sign-in...'),
                 commandId: signInCommandId,
                 contextValue,
                 id: signInCommandId,
@@ -86,21 +81,21 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
                     dark: path.join(__filename, '..', '..', '..', '..', 'resources', 'dark', 'Loading.svg')
                 }
             })];
-        } else if (this._azureAccount.status === 'LoggedOut') {
+        } else if (azureAccount.status === 'LoggedOut') {
             return [
                 new GenericTreeItem(this, { label: signInLabel, commandId: signInCommandId, contextValue, id: signInCommandId, includeInTreeItemPicker: true }),
                 new GenericTreeItem(this, { label: createAccountLabel, commandId: createAccountCommandId, contextValue, id: createAccountCommandId, includeInTreeItemPicker: true })
             ];
         }
 
-        await this._azureAccount.waitForFilters();
+        await azureAccount.waitForFilters();
 
-        if (this._azureAccount.filters.length === 0) {
+        if (azureAccount.filters.length === 0) {
             return [
                 new GenericTreeItem(this, { label: selectSubscriptionsLabel, commandId: selectSubscriptionsCommandId, contextValue, id: selectSubscriptionsCommandId, includeInTreeItemPicker: true })
             ];
         } else {
-            this._subscriptionTreeItems = await Promise.all(this._azureAccount.filters.map(async (filter: AzureResourceFilter) => {
+            this._subscriptionTreeItems = await Promise.all(azureAccount.filters.map(async (filter: AzureResourceFilter) => {
                 const existingTreeItem: SubscriptionTreeItemBase | undefined = existingSubscriptions.find(ti => ti.id === filter.subscription.id);
                 if (existingTreeItem) {
                     // Return existing treeItem (which might have many 'cached' tree items underneath it) rather than creating a brand new tree item every time
@@ -143,15 +138,56 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
     }
 
     public async pickTreeItemImpl(_expectedContextValues: (string | RegExp)[]): Promise<AzExtTreeItem | undefined> {
-        if (this._azureAccount.status === 'LoggingIn' || this._azureAccount.status === 'Initializing') {
+        const azureAccount: AzureAccount | undefined = await this._azureAccountTask;
+        if (azureAccount && (azureAccount.status === 'LoggingIn' || azureAccount.status === 'Initializing')) {
             const title: string = localize('waitingForAzureSignin', 'Waiting for Azure sign-in...');
-            await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title }, async (): Promise<boolean> => await this._azureAccount.waitForSubscriptions());
+            // tslint:disable-next-line: no-non-null-assertion
+            await window.withProgress({ location: ProgressLocation.Notification, title }, async (): Promise<boolean> => await azureAccount!.waitForSubscriptions());
         }
 
         return undefined;
     }
 
+    private async loadAzureAccount(azureAccount: AzureAccount | undefined): Promise<AzureAccount | undefined> {
+        if (!azureAccount) {
+            const extension: Extension<AzureAccount> | undefined = extensions.getExtension<AzureAccount>(azureAccountExtensionId);
+            if (extension) {
+                if (!extension.isActive) {
+                    await extension.activate();
+                }
+
+                azureAccount = extension.exports;
+            }
+        }
+
+        if (azureAccount) {
+            this.disposables.push(azureAccount.onFiltersChanged(async () => await this.refresh()));
+            this.disposables.push(azureAccount.onStatusChanged(async (status: AzureLoginStatus) => {
+                // Ignore status change to 'LoggedIn' and wait for the 'onFiltersChanged' event to fire instead
+                // (so that the tree stays in 'Loading...' state until the filters are actually ready)
+                if (status !== 'LoggedIn') {
+                    await this.refresh();
+                }
+            }));
+            await commands.executeCommand('setContext', 'isAzureAccountInstalled', true);
+        }
+
+        return azureAccount;
+    }
+
     private async ensureSubscriptionTreeItems(context: types.IActionContext): Promise<SubscriptionTreeItemBase[]> {
+        const azureAccount: AzureAccount | undefined = await this._azureAccountTask;
+        if (!azureAccount) {
+            context.telemetry.properties.cancelStep = 'requiresAzureAccount';
+            const message: string = localize('requiresAzureAccount', "This functionality requires installing the Azure Account extension.");
+            const viewInMarketplace: MessageItem = { title: localize('viewInMarketplace', "View in Marketplace") };
+            if (await ext.ui.showWarningMessage(message, viewInMarketplace) === viewInMarketplace) {
+                await commands.executeCommand(extensionOpenCommand, azureAccountExtensionId);
+            }
+
+            throw new UserCancelledError();
+        }
+
         if (!this._subscriptionTreeItems) {
             await this.getCachedChildren(context);
         }

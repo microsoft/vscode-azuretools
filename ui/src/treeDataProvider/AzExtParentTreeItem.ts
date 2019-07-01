@@ -235,8 +235,11 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         let children: AzExtTreeItem[] = await this.getCachedChildren(context);
         children = children.filter((ti: AzExtTreeItem) => ti.includeInTreePicker(expectedContextValues));
 
+        let autoSelectInTreeItemPicker: boolean | undefined = this.autoSelectInTreeItemPicker;
         const picks: types.IAzureQuickPickItem<GetTreeItemFunction>[] = children.map((ti: AzExtTreeItem) => {
             if (ti instanceof GenericTreeItem) {
+                // Don't auto-select a command tree item
+                autoSelectInTreeItemPicker = false;
                 return {
                     label: ti.label,
                     description: ti.description,
@@ -245,7 +248,9 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
                         if (!ti.commandId) {
                             throw new Error(localize('noCommand', 'Failed to find commandId on generic tree item.'));
                         } else {
-                            await commands.executeCommand(ti.commandId);
+                            // tslint:disable-next-line: strict-boolean-expressions
+                            const commandArgs: unknown[] = ti.commandArgs || [];
+                            await commands.executeCommand(ti.commandId, ...commandArgs);
                             await this.refresh();
                             return this;
                         }
@@ -283,7 +288,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
 
         if (picks.length === 0) {
             throw new Error(localize('noMatching', 'No matching resources found.'));
-        } else if (picks.length === 1 && this.autoSelectInTreeItemPicker) {
+        } else if (picks.length === 1 && autoSelectInTreeItemPicker) {
             throw new AutoSelectError(picks[0].data);
         } else if (context.canPickMany && children.some(c => c.matchesContextValue(expectedContextValues))) {
             // canPickMany is only supported at the last stage of the picker, so only throw this error if some of the picks match
