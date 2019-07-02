@@ -11,6 +11,7 @@ import * as requestP from 'request-promise';
 import { IParsedError, parseError } from 'vscode-azureextensionui';
 import * as websocket from 'websocket';
 import { ext } from './extensionVariables';
+import { localize } from './localize';
 import { SiteClient } from './SiteClient';
 import { delay } from './utils/delay';
 
@@ -120,7 +121,7 @@ class TunnelSocket extends EventEmitter {
 /**
  * Interface for tunnel GetStatus API
  */
-enum WebAppState {
+enum AppState {
     STARTED = 'STARTED',
     STARTING = 'STARTING',
     STOPPED = 'STOPPED'
@@ -129,7 +130,7 @@ enum WebAppState {
 interface ITunnelStatus {
     port: number;
     canReachPort: boolean;
-    state: WebAppState;
+    state: AppState;
     msg: string;
 }
 
@@ -171,26 +172,16 @@ export class TunnelProxy {
         this._server.unref();
     }
 
-    // Starts up an app when it is found to be in the STOPPED state
-    // Apps can be in the STOPPED state for different reasons:
-    //  1. A stop request was sent through the Azure API (using the portal, using the extension, etc)
-    //    - In this case it will respond with 403 until a start request is sent to the Azure API
-    //  2. The app is inactive, or was recently started
-    //    - In this case it will stay stopped until a request is made to the app itself, waking it up
-    //
-    // To cover both cases, we send a start request followed by a ping to the app url
+    // Starts up an app by pinging it when it is found to be in the STOPPED state
     private async startupApp(): Promise<void> {
-        ext.outputChannel.appendLine('[WebApp Tunnel] Sending start request...');
-        await this._client.start();
-
-        ext.outputChannel.appendLine('[WebApp Tunnel] Pinging app default url...');
+        ext.outputChannel.appendLine('[Tunnel] Pinging app default url...');
         // tslint:disable-next-line:no-unsafe-any
         const pingResponse: IncomingMessage = await requestP.get({
             uri: this._client.defaultHostUrl,
             simple: false, // allows the call to succeed without exception, even when status code is not 2XX
             resolveWithFullResponse: true // allows access to the status code from the response
         });
-        ext.outputChannel.appendLine(`[WebApp Tunnel] Ping responded with status code: ${pingResponse.statusCode}`);
+        ext.outputChannel.appendLine(`[Tunnel] Ping responded with status code: ${pingResponse.statusCode}`);
     }
 
     private async checkTunnelStatus(): Promise<void> {
@@ -209,32 +200,32 @@ export class TunnelProxy {
         try {
             // tslint:disable-next-line:no-unsafe-any
             const responseBody: string = await requestP.get(statusOptions);
-            ext.outputChannel.appendLine(`[WebApp Tunnel] Checking status, body: ${responseBody}`);
+            ext.outputChannel.appendLine(`[Tunnel] Checking status, body: ${responseBody}`);
 
             // tslint:disable-next-line:no-unsafe-any
             tunnelStatus = JSON.parse(responseBody);
         } catch (error) {
             const parsedError: IParsedError = parseError(error);
-            ext.outputChannel.appendLine(`[WebApp Tunnel] Checking status, error: ${parsedError.message}`);
-            throw new Error(`Error getting tunnel status: ${parsedError.errorType}`);
+            ext.outputChannel.appendLine(`[Tunnel] Checking status, error: ${parsedError.message}`);
+            throw new Error(localize('tunnelStatusError', 'Error getting tunnel status: {0}', parsedError.errorType));
         }
 
-        if (tunnelStatus.state === WebAppState.STARTED) {
+        if (tunnelStatus.state === AppState.STARTED) {
             if ((tunnelStatus.port === 2222 && !this._isSsh) || (tunnelStatus.port !== 2222 && this._isSsh)) {
                 // Tunnel is pointed to default SSH port and still needs time to restart
-                throw new RetryableTunnelStatusError('WebApp is waiting for restart');
+                throw new RetryableTunnelStatusError();
             } else if (tunnelStatus.canReachPort) {
                 return;
             } else {
-                throw new Error('WebApp is started, but port is unreachable');
+                throw new Error(localize('tunnelUnreachable', 'App is started, but port is unreachable'));
             }
-        } else if (tunnelStatus.state === WebAppState.STARTING) {
-            throw new RetryableTunnelStatusError('WebApp is starting');
-        } else if (tunnelStatus.state === WebAppState.STOPPED) {
+        } else if (tunnelStatus.state === AppState.STARTING) {
+            throw new RetryableTunnelStatusError();
+        } else if (tunnelStatus.state === AppState.STOPPED) {
             await this.startupApp();
-            throw new RetryableTunnelStatusError('WebApp is starting from STOPPED state');
+            throw new RetryableTunnelStatusError();
         } else {
-            throw new Error(`Unexpected WebApp state: ${tunnelStatus.state}`);
+            throw new Error(localize('tunnelStatusError', 'Unexpected app state: {0}', tunnelStatus.state));
         }
     }
 
@@ -252,14 +243,14 @@ export class TunnelProxy {
                     return;
                 } catch (error) {
                     if (!(error instanceof RetryableTunnelStatusError)) {
-                        reject(new Error(`Unable to establish connection to application: ${parseError(error).message}`));
+                        reject(new Error(localize('tunnelFailed', 'Unable to establish connection to application: {0}', parseError(error).message)));
                         return;
                     } // else allow retry
                 }
 
                 await delay(pollingIntervalMs);
             }
-            reject(new Error('Unable to establish connection to application: Timed out'));
+            reject(new Error(localize('tunnelTimedOut', 'Unable to establish connection to application: Timed out')));
         });
     }
 
