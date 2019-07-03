@@ -18,7 +18,10 @@ export enum LinuxRuntimes {
     python = 'python',
     java = 'java',
     tomcat = 'tomcat',
-    wildfly = 'wildfly'
+    wildfly = 'wildfly',
+    dotnet = 'dotnet',
+    ruby = 'ruby',
+    php = 'php'
 }
 
 /**
