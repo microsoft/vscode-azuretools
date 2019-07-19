@@ -264,9 +264,19 @@ export declare abstract class AzExtParentTreeItem extends AzExtTreeItem {
     autoSelectInTreeItemPicker?: boolean;
 
     /**
+     * If true, an advanced creation pick will be shown in the tree item picker
+     */
+    supportsAdvancedCreation?: boolean;
+
+    /**
      * If specified, this will be shown instead of the default message `Create new ${this.childTypeLabel}...` in the tree item picker
      */
     createNewLabel?: string;
+
+    /**
+     * If specified, this will be shown instead of the default message `Create new ${this.childTypeLabel}... (Advanced)` in the tree item picker
+     */
+    createNewAdvancedLabel?: string;
     //#endregion
 
     //#region Methods implemented by base class
@@ -336,6 +346,11 @@ export interface ICreateChildImplContext extends IActionContext {
      * Call this function to show a "Creating..." item in the tree while the create is in progress
      */
     showCreatingTreeItem(label: string): void;
+
+    /**
+     * Indicates advanced creation should be used
+     */
+    advancedCreation?: boolean;
 }
 
 /**

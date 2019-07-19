@@ -21,7 +21,9 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
     //#region Properties implemented by base class
     public childTypeLabel?: string;
     public autoSelectInTreeItemPicker?: boolean;
+    public supportsAdvancedCreation?: boolean;
     public createNewLabel?: string;
+    public createNewAdvancedLabel?: string;
     //#endregion
 
     public readonly collapsibleState: TreeItemCollapsibleState | undefined = TreeItemCollapsibleState.Collapsed;
@@ -61,22 +63,24 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         this._clearCache = true;
     }
 
-    public async createChild<T extends types.AzExtTreeItem>(context: types.IActionContext): Promise<T> {
+    public async createChild<T extends types.AzExtTreeItem>(context: types.IActionContext & Partial<types.ICreateChildImplContext>): Promise<T> {
         if (this.createChildImpl) {
+            context.telemetry.properties.advancedCreation = String(!!context.advancedCreation);
+
             let creatingTreeItem: AzExtTreeItem | undefined;
             try {
-                const newTreeItem: AzExtTreeItem = await this.createChildImpl(
-                    Object.assign(context, {
-                        showCreatingTreeItem: (label: string): void => {
-                            creatingTreeItem = new GenericTreeItem(this, {
-                                label: localize('creatingLabel', 'Creating {0}...', label),
-                                contextValue: `azureextensionui.creating${label}`,
-                                iconPath: getThemedIconPath('Loading')
-                            });
-                            this._creatingTreeItems.push(creatingTreeItem);
-                            this.treeDataProvider.refreshUIOnly(this);
-                        }
-                    }));
+                const newTreeItem: AzExtTreeItem = await this.createChildImpl({
+                    ...context,
+                    showCreatingTreeItem: (label: string): void => {
+                        creatingTreeItem = new GenericTreeItem(this, {
+                            label: localize('creatingLabel', 'Creating {0}...', label),
+                            contextValue: `azureextensionui.creating${label}`,
+                            iconPath: getThemedIconPath('Loading')
+                        });
+                        this._creatingTreeItems.push(creatingTreeItem);
+                        this.treeDataProvider.refreshUIOnly(this);
+                    }
+                });
 
                 this.addChildToCache(newTreeItem);
                 this.treeDataProvider._onTreeItemCreateEmitter.fire(newTreeItem);
@@ -231,7 +235,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         this._clearCache = false;
     }
 
-    private async getQuickPicks(expectedContextValues: (string | RegExp)[], context: types.ITreeItemPickerContext): Promise<types.IAzureQuickPickItem<GetTreeItemFunction>[]> {
+    private async getQuickPicks(expectedContextValues: (string | RegExp)[], context: types.ITreeItemPickerContext & Partial<types.ICreateChildImplContext>): Promise<types.IAzureQuickPickItem<GetTreeItemFunction>[]> {
         let children: AzExtTreeItem[] = await this.getCachedChildren(context);
         children = children.filter((ti: AzExtTreeItem) => ti.includeInTreePicker(expectedContextValues));
 
@@ -267,10 +271,17 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         });
 
         if (this.createChildImpl && this.childTypeLabel && !context.suppressCreatePick) {
+            if (this.supportsAdvancedCreation) {
+                const createNewAdvancedLabel: string = this.createNewAdvancedLabel || localize('treePickerCreateNewAdvanced', 'Create new {0}... (Advanced)', this.childTypeLabel);
+                picks.unshift({
+                    label: `$(plus) ${createNewAdvancedLabel}`,
+                    data: async (): Promise<AzExtTreeItem> => await this.createChild<AzExtTreeItem>({ ...context, advancedCreation: true })
+                });
+            }
+
             const createNewLabel: string = this.createNewLabel || localize('treePickerCreateNew', 'Create new {0}...', this.childTypeLabel);
             picks.unshift({
                 label: `$(plus) ${createNewLabel}`,
-                description: '',
                 data: async (): Promise<AzExtTreeItem> => await this.createChild<AzExtTreeItem>(context)
             });
         }
