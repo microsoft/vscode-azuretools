@@ -119,6 +119,8 @@ export interface ISubscriptionContext {
     environment: AzureEnvironment;
 }
 
+export type TreeItemIconPath = string | Uri | { light: string | Uri; dark: string | Uri };
+
 /**
  * Base class for all tree items in an *Az*ure *ext*ension, even if those resources aren't actually in Azure.
  * This provides more value than `TreeItem` (provided by `vscode`), but is more generic than `AzureTreeItem` (which is specific to Azure resources)
@@ -139,7 +141,7 @@ export declare abstract class AzExtTreeItem {
      * Additional information about a tree item that is appended to the label with the format `label (description)`
      */
     public description?: string;
-    public iconPath?: string | Uri | { light: string | Uri; dark: string | Uri };
+    public iconPath?: TreeItemIconPath;
     public commandId?: string;
 
     /**
@@ -200,7 +202,7 @@ export interface IGenericTreeItemOptions {
     id?: string;
     label: string;
     description?: string;
-    iconPath?: string | Uri | { light: string | Uri; dark: string | Uri };
+    iconPath?: TreeItemIconPath;
     commandId?: string;
     contextValue: string;
 
@@ -234,7 +236,7 @@ export interface IInvalidTreeItemOptions {
 export class InvalidTreeItem extends AzExtParentTreeItem {
     public contextValue: string;
     public label: string;
-    public iconPath: string;
+    public iconPath: TreeItemIconPath;
 
     constructor(parent: AzExtParentTreeItem, error: unknown, options: IInvalidTreeItemOptions);
 
