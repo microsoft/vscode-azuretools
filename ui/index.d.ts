@@ -822,10 +822,10 @@ export interface ILocationWizardContext extends ISubscriptionWizardContext {
     location?: Location;
 
     /**
-     * The task used to get locations.
-     * By specifying this in the context, we can ensure that Azure is only queried once for the entire wizard
+     * Optional task to describe the subset of locations that should be displayed.
+     * If not specified, all locations supported by the user's subscription will be displayed.
      */
-    locationsTask?: Promise<Location[]>;
+    locationsTask?: Promise<{ name: string }[]>;
 }
 
 export declare class LocationListStep<T extends ILocationWizardContext> extends AzureWizardPromptStep<T> {
