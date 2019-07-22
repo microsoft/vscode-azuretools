@@ -111,7 +111,8 @@ export class AzureUserInput implements types.IAzureUserInput, types.AzureUserInp
             const previousValue: string | undefined = this._persistence.get(persistenceKey);
             if (previousValue) {
                 const index: number = items.findIndex((item: T) => getPersistenceValue(item) === previousValue);
-                if (index !== -1) {
+                // No need to do anything if "recently used" item is not found or already the first item
+                if (index > 0) {
                     const previousItem: T = items.splice(index, 1)[0];
 
                     const recentlyUsed: string = localize('recentlyUsed', '(recently used)');
