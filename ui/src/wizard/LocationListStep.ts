@@ -17,8 +17,16 @@ function generalizeLocationName(name: string | undefined): string {
     return (name || '').toLowerCase().replace(/\s/g, '');
 }
 
-export class LocationListStep<T extends types.ILocationWizardContext> extends AzureWizardPromptStep<T> implements types.LocationListStep<T> {
-    public static async setLocation<T extends types.ILocationWizardContext>(wizardContext: T, name: string): Promise<void> {
+interface ILocationWizardContextInternal extends types.ILocationWizardContext {
+    /**
+     * The task used to get locations.
+     * By specifying this in the context, we can ensure that Azure is only queried once for the entire wizard
+     */
+    _allLocationsTask?: Promise<Location[]>;
+}
+
+export class LocationListStep<T extends ILocationWizardContextInternal> extends AzureWizardPromptStep<T> implements types.LocationListStep<T> {
+    public static async setLocation<T extends ILocationWizardContextInternal>(wizardContext: T, name: string): Promise<void> {
         const locations: Location[] = await LocationListStep.getLocations(wizardContext);
         name = generalizeLocationName(name);
         wizardContext.location = locations.find((l: Location) => {
@@ -26,13 +34,19 @@ export class LocationListStep<T extends types.ILocationWizardContext> extends Az
         });
     }
 
-    public static async getLocations<T extends types.ILocationWizardContext>(wizardContext: T): Promise<Location[]> {
-        if (wizardContext.locationsTask === undefined) {
+    public static async getLocations<T extends ILocationWizardContextInternal>(wizardContext: T): Promise<Location[]> {
+        if (wizardContext._allLocationsTask === undefined) {
             const client: SubscriptionClient = createAzureSubscriptionClient(wizardContext, SubscriptionClient);
-            wizardContext.locationsTask = client.subscriptions.listLocations(wizardContext.subscriptionId);
+            wizardContext._allLocationsTask = client.subscriptions.listLocations(wizardContext.subscriptionId);
         }
 
-        return await wizardContext.locationsTask;
+        const allLocations: Location[] = await wizardContext._allLocationsTask;
+        if (wizardContext.locationsTask === undefined) {
+            return allLocations;
+        } else {
+            const locationsSubset: { name: string }[] = await wizardContext.locationsTask;
+            return allLocations.filter(l1 => locationsSubset.find(l2 => generalizeLocationName(l1.name) === generalizeLocationName(l2.name)));
+        }
     }
 
     public async prompt(wizardContext: T): Promise<void> {
