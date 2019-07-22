@@ -272,11 +272,6 @@ export declare abstract class AzExtParentTreeItem extends AzExtTreeItem {
      * If specified, this will be shown instead of the default message `Create new ${this.childTypeLabel}...` in the tree item picker
      */
     createNewLabel?: string;
-
-    /**
-     * If specified, this will be shown instead of the default message `Create new ${this.childTypeLabel}... (Advanced)` in the tree item picker
-     */
-    createNewAdvancedLabel?: string;
     //#endregion
 
     //#region Methods implemented by base class

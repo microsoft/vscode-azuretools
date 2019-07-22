@@ -23,7 +23,6 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
     public autoSelectInTreeItemPicker?: boolean;
     public supportsAdvancedCreation?: boolean;
     public createNewLabel?: string;
-    public createNewAdvancedLabel?: string;
     //#endregion
 
     public readonly collapsibleState: TreeItemCollapsibleState | undefined = TreeItemCollapsibleState.Collapsed;
@@ -271,15 +270,16 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         });
 
         if (this.createChildImpl && this.childTypeLabel && !context.suppressCreatePick) {
+            const createNewLabel: string = this.createNewLabel || localize('treePickerCreateNew', 'Create new {0}...', this.childTypeLabel);
+
             if (this.supportsAdvancedCreation) {
-                const createNewAdvancedLabel: string = this.createNewAdvancedLabel || localize('treePickerCreateNewAdvanced', 'Create new {0}... (Advanced)', this.childTypeLabel);
                 picks.unshift({
-                    label: `$(plus) ${createNewAdvancedLabel}`,
+                    label: `$(plus) ${createNewLabel}`,
+                    description: localize('advanced', 'Advanced'),
                     data: async (): Promise<AzExtTreeItem> => await this.createChild<AzExtTreeItem>({ ...context, advancedCreation: true })
                 });
             }
 
-            const createNewLabel: string = this.createNewLabel || localize('treePickerCreateNew', 'Create new {0}...', this.childTypeLabel);
             picks.unshift({
                 label: `$(plus) ${createNewLabel}`,
                 data: async (): Promise<AzExtTreeItem> => await this.createChild<AzExtTreeItem>(context)
