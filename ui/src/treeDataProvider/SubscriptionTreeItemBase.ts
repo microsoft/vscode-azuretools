@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as path from 'path';
 import * as types from '../../index';
 import { AzureParentTreeItem } from './AzureParentTreeItem';
+import { getIconPath } from './IconPath';
 
 export abstract class SubscriptionTreeItemBase extends AzureParentTreeItem implements types.SubscriptionTreeItemBase {
     public static readonly contextValue: string = 'azureextensionui.azureSubscription';
@@ -19,7 +19,7 @@ export abstract class SubscriptionTreeItemBase extends AzureParentTreeItem imple
         this._root = root;
         this.label = root.subscriptionDisplayName;
         this.id = root.subscriptionPath;
-        this.iconPath = path.join(__filename, '..', '..', '..', '..', 'resources', 'azureSubscription.svg');
+        this.iconPath = getIconPath('azureSubscription');
     }
 
     public get root(): types.ISubscriptionContext {

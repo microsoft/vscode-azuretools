@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as path from 'path';
 import { isNullOrUndefined } from 'util';
 import { commands, TreeItemCollapsibleState } from 'vscode';
 import * as types from '../../index';
@@ -12,8 +11,9 @@ import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { AzExtTreeItem } from './AzExtTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';
+import { getIconPath, getThemedIconPath } from './IconPath';
 import { IAzExtParentTreeItemInternal, isAzExtParentTreeItem } from './InternalInterfaces';
-import { loadingIconPath, loadMoreLabel } from './treeConstants';
+import { loadMoreLabel } from './treeConstants';
 
 // tslint:disable: max-classes-per-file
 
@@ -71,7 +71,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
                             creatingTreeItem = new GenericTreeItem(this, {
                                 label: localize('creatingLabel', 'Creating {0}...', label),
                                 contextValue: `azureextensionui.creating${label}`,
-                                iconPath: loadingIconPath
+                                iconPath: getThemedIconPath('Loading')
                             });
                             this._creatingTreeItems.push(creatingTreeItem);
                             this.treeDataProvider.refreshUIOnly(this);
@@ -316,8 +316,8 @@ export class InvalidTreeItem extends AzExtParentTreeItem implements types.Invali
         this.description = options.description !== undefined ? options.description : localize('invalid', 'Invalid');
     }
 
-    public get iconPath(): string {
-        return path.join(__filename, '..', '..', '..', '..', 'resources', 'warning.svg');
+    public get iconPath(): types.TreeItemIconPath {
+        return getIconPath('warning');
     }
 
     public async loadMoreChildrenImpl(): Promise<AzExtTreeItem[]> {
