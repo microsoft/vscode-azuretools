@@ -4,7 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 export * from './testing/addPackageLintSuites';
+export * from './TestAzureAccount';
 export * from './TestOutputChannel';
+export * from './TestUserInput';
 export { getDefaultWebpackConfig } from './webpack/getDefaultWebpackConfig';
 export * from './gulp/gulp_installAzureAccount';
 export * from './gulp/gulp_webpack';
