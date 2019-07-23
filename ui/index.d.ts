@@ -370,9 +370,9 @@ export declare abstract class AzureAccountTreeItemBase extends AzExtParentTreeIt
     /**
      * Azure Account Tree Item
      * @param parent The parent of this node or undefined if it's the root of the tree.
-     * @param testAccount A test Azure Account that leverages a service principal instead of interactive login
+     * @param testAccount Unofficial api for testing - see `TestAzureAccount` in vscode-azureextensiondev package
      */
-    public constructor(parent?: AzExtParentTreeItem, testAccount?: TestAzureAccount);
+    public constructor(parent?: AzExtParentTreeItem, testAccount?: {});
 
     public dispose(): void;
 
@@ -649,53 +649,6 @@ export declare class AzureUserInput implements IAzureUserInput {
     public showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
     public showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Promise<MessageItem>;
     public showOpenDialog(options: OpenDialogOptions): Promise<Uri[]>;
-}
-
-export declare enum TestInput {
-    /**
-     * Use the first entry in a quick pick or the default value (if it's defined) for an input box. In all other cases, throw an error
-     */
-    UseDefaultValue,
-
-    /**
-     * Simulates the user hitting the back button in an AzureWizard.
-     */
-    BackButton
-}
-
-/**
- * Wrapper class of several `vscode.window` methods that handle user input.
- * This class is meant to be used for testing in non-interactive mode.
- */
-export declare class TestUserInput implements IAzureUserInput {
-    /**
-     * @param inputs An ordered array of inputs that will be used instead of interactively prompting in VS Code. RegExp is only applicable for QuickPicks and will pick the first input that matches the RegExp.
-     */
-    public constructor(inputs: (string | RegExp | TestInput)[]);
-
-    public showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T>;
-    public showInputBox(options: InputBoxOptions): Promise<string>;
-    public showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
-    public showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Promise<MessageItem>;
-    public showOpenDialog(options: OpenDialogOptions): Promise<Uri[]>;
-}
-
-/**
- * Implements the AzureAccount interface to log in with a service principal rather than the normal interactive experience.
- * This class should be passed into the AzureTreeDataProvider to replace the dependencies on the Azure Account extension.
- * This class is meant to be used for testing in non-interactive mode in Travis CI.
- */
-export declare class TestAzureAccount {
-    public constructor();
-
-    /**
-     * Simulates a sign in to the Azure Account extension and populates the account with a subscription.
-     * Requires the following environment variables to be set: SERVICE_PRINCIPAL_CLIENT_ID, SERVICE_PRINCIPAL_SECRET, SERVICE_PRINCIPAL_DOMAIN
-     */
-    public signIn(): Promise<void>;
-    public signOut(): void;
-    public getSubscriptionId(): string;
-    public getSubscriptionCredentials(): ServiceClientCredentials;
 }
 
 /**

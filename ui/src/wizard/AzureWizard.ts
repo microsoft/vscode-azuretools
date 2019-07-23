@@ -8,6 +8,7 @@ import * as vscode from 'vscode';
 import * as types from '../../index';
 import { GoBackError } from '../errors';
 import { ext, IRootUserInput } from '../extensionVariables';
+import { parseError } from '../parseError';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 import { AzureWizardUserInput, IInternalAzureWizard } from './AzureWizardUserInput';
@@ -65,7 +66,7 @@ export class AzureWizard<T extends types.IActionContext> implements types.AzureW
                         await step.prompt(this._context);
                         step.prompted = true;
                     } catch (err) {
-                        if (err instanceof GoBackError) {
+                        if (parseError(err).errorType === 'GoBackError') { // Use `errorType` instead of `instanceof` so that tests can also hit this case
                             this._context.telemetry.properties.usedBackButton = 'true';
                             step = this.goBack(step);
                             continue;
