@@ -790,7 +790,7 @@ export interface ILocationWizardContext extends ISubscriptionWizardContext {
      * Optional task to describe the subset of locations that should be displayed.
      * If not specified, all locations supported by the user's subscription will be displayed.
      */
-    locationsTask?: Promise<{ name: string }[]>;
+    locationsTask?: Promise<{ name?: string }[]>;
 }
 
 export declare class LocationListStep<T extends ILocationWizardContext> extends AzureWizardPromptStep<T> {
