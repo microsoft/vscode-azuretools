@@ -9,7 +9,6 @@ import { AzureAccount, AzureLoginStatus, AzureResourceFilter } from '../azure-ac
 import { UserCancelledError } from '../errors';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { TestAzureAccount } from '../TestAzureAccount';
 import { nonNullProp, nonNullValue } from '../utils/nonNull';
 import { AzureWizardPromptStep } from '../wizard/AzureWizardPromptStep';
 import { AzExtParentTreeItem } from './AzExtParentTreeItem';
@@ -38,7 +37,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
     private _azureAccountTask: Promise<AzureAccount | undefined>;
     private _subscriptionTreeItems: SubscriptionTreeItemBase[] | undefined;
 
-    constructor(parent?: AzExtParentTreeItem, testAccount?: TestAzureAccount) {
+    constructor(parent?: AzExtParentTreeItem, testAccount?: AzureAccount) {
         super(parent);
         this._azureAccountTask = this.loadAzureAccount(testAccount);
     }

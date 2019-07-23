@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
+import { TestInput, TestUserInput } from 'vscode-azureextensiondev';
 import * as types from '../index';
-import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, TestInput, TestUserInput } from '../src';
+import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep } from '../src';
 import { ext } from '../src/extensionVariables';
 
 // tslint:disable: max-classes-per-file

@@ -17,8 +17,6 @@ export { registerUIExtensionVariables } from './extensionVariables';
 export * from './openInPortal';
 export * from './openReadOnlyContent';
 export * from './parseError';
-export * from './TestAzureAccount';
-export * from './TestUserInput';
 export * from './treeDataProvider/AzExtParentTreeItem';
 export * from './treeDataProvider/AzExtTreeDataProvider';
 export * from './treeDataProvider/AzExtTreeItem';
