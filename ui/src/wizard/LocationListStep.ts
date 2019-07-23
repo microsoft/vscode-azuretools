@@ -44,7 +44,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
         if (wizardContext.locationsTask === undefined) {
             return allLocations;
         } else {
-            const locationsSubset: { name: string }[] = await wizardContext.locationsTask;
+            const locationsSubset: { name?: string }[] = await wizardContext.locationsTask;
             return allLocations.filter(l1 => locationsSubset.find(l2 => generalizeLocationName(l1.name) === generalizeLocationName(l2.name)));
         }
     }
