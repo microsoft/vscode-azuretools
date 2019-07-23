@@ -10,6 +10,7 @@
             true,
             "allow-string",
             "allow-undefined-union",
+            "allow-null-union",
             "allow-mix"
         ],
         "completed-docs": [
@@ -58,6 +59,7 @@
                 "messageIndex": 1
             }
         ],
-        "no-backbone-get-set-outside-model": false
+        "no-backbone-get-set-outside-model": false,
+        "radix": false
     }
 }
