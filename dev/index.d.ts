@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { OutputChannel, QuickPickItem, QuickPickOptions, InputBoxOptions, MessageItem, OpenDialogOptions, Uri } from "vscode";
+import { OutputChannel, QuickPickItem, QuickPickOptions, InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, Uri } from "vscode";
 import * as webpack from 'webpack';
 import { Stream } from "stream";
 import * as cp from "child_process";
@@ -150,6 +150,6 @@ export declare class TestUserInput {
     public showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T>;
     public showInputBox(options: InputBoxOptions): Promise<string>;
     public showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
-    public showWarningMessage<T extends MessageItem>(message: string, options: cp.MessageOptions, ...items: T[]): Promise<MessageItem>;
+    public showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Promise<MessageItem>;
     public showOpenDialog(options: OpenDialogOptions): Promise<Uri[]>;
 }
