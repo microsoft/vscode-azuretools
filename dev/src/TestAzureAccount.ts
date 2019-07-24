@@ -20,15 +20,19 @@ export class TestAzureAccount implements AzureAccount, types.TestAzureAccount {
     public filters: AzureResourceFilter[] = [];
     public onFiltersChanged: Event<void>;
 
-    private readonly _onStatusChangedEmitter: EventEmitter<AzureLoginStatus> = new EventEmitter<AzureLoginStatus>();
-    private readonly _onFiltersChangedEmitter: EventEmitter<void> = new EventEmitter<void>();
-    private readonly _onSessionsChangedEmitter: EventEmitter<void> = new EventEmitter<void>();
-    private readonly _onSubscriptionsChangedEmitter: EventEmitter<void> = new EventEmitter<void>();
+    private readonly _onStatusChangedEmitter: EventEmitter<AzureLoginStatus>;
+    private readonly _onFiltersChangedEmitter: EventEmitter<void>;
+    private readonly _onSessionsChangedEmitter: EventEmitter<void>;
+    private readonly _onSubscriptionsChangedEmitter: EventEmitter<void>;
 
-    public constructor() {
+    public constructor(vscode: typeof import('vscode')) {
+        this._onStatusChangedEmitter = new vscode.EventEmitter<AzureLoginStatus>();
         this.onStatusChanged = this._onStatusChangedEmitter.event;
+        this._onFiltersChangedEmitter = new vscode.EventEmitter<void>();
         this.onFiltersChanged = this._onFiltersChangedEmitter.event;
+        this._onSessionsChangedEmitter = new vscode.EventEmitter<void>();
         this.onSessionsChanged = this._onSessionsChangedEmitter.event;
+        this._onSubscriptionsChangedEmitter = new vscode.EventEmitter<void>();
         this.onSubscriptionsChanged = this._onSubscriptionsChangedEmitter.event;
     }
 

@@ -114,7 +114,7 @@ export interface ISubscriptionContext {
  * This class is meant to be used for testing in non-interactive mode in Travis CI.
  */
 export declare class TestAzureAccount {
-    public constructor();
+    public constructor(vscode: typeof import('vscode'));
 
     /**
      * Simulates a sign in to the Azure Account extension and populates the account with a subscription.
@@ -142,10 +142,12 @@ export declare enum TestInput {
  * This class is meant to be used for testing in non-interactive mode.
  */
 export declare class TestUserInput {
+    public constructor(vscode: typeof import('vscode'));
+
     /**
-     * @param inputs An ordered array of inputs that will be used instead of interactively prompting in VS Code. RegExp is only applicable for QuickPicks and will pick the first input that matches the RegExp.
+     * An ordered array of inputs that will be used instead of interactively prompting in VS Code. RegExp is only applicable for QuickPicks and will pick the first input that matches the RegExp.
      */
-    public constructor(inputs: (string | RegExp | TestInput)[]);
+    public runWithInputs(inputs: (string | RegExp | TestInput)[], callback: () => Promise<void>): Promise<void>;
 
     public showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T>;
     public showInputBox(options: InputBoxOptions): Promise<string>;
