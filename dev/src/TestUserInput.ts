@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import * as assert from 'assert';
 import { InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, QuickPickItem, QuickPickOptions, Uri } from 'vscode';
 import * as types from '../index';
 
@@ -18,10 +19,17 @@ class GoBackError extends Error {
 }
 
 export class TestUserInput implements types.TestUserInput {
-    private readonly _inputs: (string | RegExp | TestInput)[];
+    private readonly _vscode: typeof import('vscode');
+    private _inputs: (string | RegExp | TestInput)[] = [];
 
-    constructor(inputs: (string | RegExp | TestInput)[]) {
-        this._inputs = inputs;
+    constructor(vscode: typeof import('vscode')) {
+        this._vscode = vscode;
+    }
+
+    public async runWithInputs(inputs: (string | RegExp | types.TestInput)[], callback: () => Promise<void>): Promise<void> {
+        this._inputs = <(string | RegExp | TestInput)[]>inputs;
+        await callback();
+        assert.equal(this._inputs.length, 0, `Not all inputs were used: ${this._inputs.toString()}`);
     }
 
     public async showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T> {
@@ -113,7 +121,7 @@ export class TestUserInput implements types.TestUserInput {
         if (input === undefined) {
             throw new Error(`No more inputs left for call to showOpenDialog. Message: ${options.openLabel}`);
         } else if (typeof input === 'string') {
-            return [Uri.file(input)];
+            return [this._vscode.Uri.file(input)];
         } else {
             throw new Error(`Unexpected input '${input}' for showOpenDialog.`);
         }
