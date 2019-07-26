@@ -25,22 +25,6 @@ export enum LinuxRuntimes {
 }
 
 /**
- * Retrieves a valid "kind" for Site
- */
-export function getSiteModelKind(kind: AppKind, os: WebsiteOS): string {
-    let planKind: string;
-
-    if (os === WebsiteOS.linux) {
-        return `${kind},${WebsiteOS.linux}`;
-    } else {
-        // "app" or "functionapp"
-        planKind = kind;
-    }
-
-    return planKind;
-}
-
-/**
  * Retrieves a valid "kind" for AppServicePlan
  */
 export function getAppServicePlanModelKind(_kind: AppKind, os: WebsiteOS): string {
