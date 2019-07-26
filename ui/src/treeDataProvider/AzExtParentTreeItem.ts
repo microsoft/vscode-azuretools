@@ -9,6 +9,7 @@ import * as types from '../../index';
 import { NotImplementedError } from '../errors';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
+import { randomUtils } from '../utils/randomUtils';
 import { AzExtTreeItem } from './AzExtTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';
 import { getIconPath, getThemedIconPath } from './IconPath';
@@ -337,6 +338,11 @@ export class InvalidTreeItem extends AzExtParentTreeItem implements types.Invali
         this.contextValue = options.contextValue;
         this.data = options.data;
         this.description = options.description !== undefined ? options.description : localize('invalid', 'Invalid');
+    }
+
+    public get id(): string {
+        // `id` doesn't really matter for invalid items, but we want to avoid duplicates since that could break the tree
+        return randomUtils.getRandomHexString(16);
     }
 
     public get iconPath(): types.TreeItemIconPath {
