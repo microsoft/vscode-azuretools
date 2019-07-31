@@ -14,7 +14,7 @@ import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { nonNullProp, nonNullValue, nonNullValueAndProp } from '../utils/nonNull';
 import { randomUtils } from '../utils/randomUtils';
-import { AppKind, getSiteModelKind, WebsiteOS } from './AppKind';
+import { AppKind, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export interface IAppSettingsContext {
@@ -43,7 +43,7 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
         const client: WebSiteManagementClient = createAzureClient(wizardContext, WebSiteManagementClient);
         wizardContext.site = await client.webApps.createOrUpdate(nonNullValueAndProp(wizardContext.resourceGroup, 'name'), nonNullProp(wizardContext, 'newSiteName'), {
             name: wizardContext.newSiteName,
-            kind: getSiteModelKind(wizardContext.newSiteKind, nonNullProp(wizardContext, 'newSiteOS')),
+            kind: wizardContext.newSiteKind,
             location: nonNullValueAndProp(wizardContext.location, 'name'),
             serverFarmId: wizardContext.plan ? wizardContext.plan.id : undefined,
             clientAffinityEnabled: wizardContext.newSiteKind === AppKind.app,
@@ -61,6 +61,10 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
         if (wizardContext.newSiteKind === AppKind.app) {
             newSiteConfig.linuxFxVersion = wizardContext.newSiteRuntime;
         } else {
+            if (!wizardContext.useConsumptionPlan) {
+                newSiteConfig.linuxFxVersion = getFunctionAppLinuxFxVersion(nonNullProp(wizardContext, 'newSiteRuntime'));
+            }
+
             const maxFileShareNameLength: number = 63;
             const storageClient: StorageManagementClient = createAzureClient(wizardContext, StorageManagementClient);
 
@@ -96,4 +100,23 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
 
         return newSiteConfig;
     }
+}
+
+function getFunctionAppLinuxFxVersion(runtime: string): string {
+    let middlePart: string;
+    switch (runtime) {
+        case 'node':
+            middlePart = 'node:2.0-node8';
+            break;
+        case 'python':
+            middlePart = 'python:2.0-python3.6';
+            break;
+        case 'dotnet':
+            middlePart = 'dotnet:2.0';
+            break;
+        default:
+            throw new RangeError(localize('unexpectedRuntime', 'Unexpected runtime "{0}".', runtime));
+    }
+
+    return `DOCKER|mcr.microsoft.com/azure-functions/${middlePart}-appservice`;
 }
