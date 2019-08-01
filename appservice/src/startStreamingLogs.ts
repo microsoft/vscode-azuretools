@@ -11,8 +11,8 @@ import { callWithTelemetryAndErrorHandling, IActionContext, parseError } from 'v
 import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { pingFunctionApp } from './pingFunctionApp';
-import { signRequest } from './signRequest';
 import { SiteClient } from './SiteClient';
+import { requestUtils } from './utils/requestUtils';
 
 export interface ILogStream extends vscode.Disposable {
     isConnected: boolean;
@@ -41,7 +41,7 @@ export async function startStreamingLogs(client: SiteClient, verifyLoggingEnable
         outputChannel.show();
         outputChannel.appendLine(localize('connectingToLogStream', 'Connecting to log stream...'));
         const httpRequest: WebResource = new WebResource();
-        await signRequest(httpRequest, client.kudu.credentials);
+        await requestUtils.signRequest(httpRequest, client.kudu.credentials);
 
         const requestApi: request.RequestAPI<request.Request, request.CoreOptions, {}> = request.defaults(httpRequest);
         return await new Promise((onLogStreamCreated: (ls: ILogStream) => void): void => {

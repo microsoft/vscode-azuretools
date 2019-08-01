@@ -6,14 +6,16 @@
 import { User } from 'azure-arm-website/lib/models';
 import * as EventEmitter from 'events';
 import { IncomingMessage } from 'http';
+import { BasicAuthenticationCredentials } from 'ms-rest';
 import { createServer, Server, Socket } from 'net';
-import * as requestP from 'request-promise';
 import { IParsedError, parseError } from 'vscode-azureextensionui';
 import * as websocket from 'websocket';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { SiteClient } from './SiteClient';
 import { delay } from './utils/delay';
+import { nonNullProp } from './utils/nonNull';
+import { requestUtils } from './utils/requestUtils';
 
 /**
  * Wrapper for net.Socket that forwards all traffic to the Kudu tunnel websocket endpoint.
@@ -175,31 +177,21 @@ export class TunnelProxy {
     // Starts up an app by pinging it when it is found to be in the STOPPED state
     private async startupApp(): Promise<void> {
         ext.outputChannel.appendLine('[Tunnel] Pinging app default url...');
-        // tslint:disable-next-line:no-unsafe-any
-        const pingResponse: IncomingMessage = await requestP.get({
-            uri: this._client.defaultHostUrl,
-            simple: false, // allows the call to succeed without exception, even when status code is not 2XX
-            resolveWithFullResponse: true // allows access to the status code from the response
-        });
+        const request: requestUtils.Request = await requestUtils.getDefaultRequest(this._client.defaultHostUrl);
+        request.simple = false; // allows the call to succeed without exception, even when status code is not 2XX
+        request.resolveWithFullResponse = true; // allows access to the status code from the response
+        const pingResponse: IncomingMessage = await requestUtils.sendRequest(request);
         ext.outputChannel.appendLine(`[Tunnel] Ping responded with status code: ${pingResponse.statusCode}`);
     }
 
     private async checkTunnelStatus(): Promise<void> {
-        const statusOptions: requestP.Options = {
-            uri: `https://${this._client.kuduHostName}/AppServiceTunnel/Tunnel.ashx?GetStatus&GetStatusAPIVer=2`,
-            headers: {
-                'User-Agent': 'vscode-azuretools'
-            },
-            auth: {
-                user: this._publishCredential.publishingUserName,
-                pass: this._publishCredential.publishingPassword
-            }
-        };
+        const password: string = nonNullProp(this._publishCredential, 'publishingPassword');
+        const url: string = `https://${this._client.kuduHostName}/AppServiceTunnel/Tunnel.ashx?GetStatus&GetStatusAPIVer=2`;
+        const request: requestUtils.Request = await requestUtils.getDefaultRequest(url, new BasicAuthenticationCredentials(this._publishCredential.publishingUserName, password));
 
         let tunnelStatus: ITunnelStatus;
         try {
-            // tslint:disable-next-line:no-unsafe-any
-            const responseBody: string = await requestP.get(statusOptions);
+            const responseBody: string = await requestUtils.sendRequest(request);
             ext.outputChannel.appendLine(`[Tunnel] Checking status, body: ${responseBody}`);
 
             // tslint:disable-next-line:no-unsafe-any

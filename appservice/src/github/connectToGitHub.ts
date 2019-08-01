@@ -4,18 +4,17 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { SiteSourceControl } from 'azure-arm-website/lib/models';
-import { TokenCredentials, WebResource } from 'ms-rest';
+import { TokenCredentials } from 'ms-rest';
 import { Response } from 'request';
-import * as request from 'request-promise';
 import { isArray } from 'util';
 import * as vscode from 'vscode';
-import { appendExtensionUserAgent, AzureTreeItem, AzureWizard, DialogResponses, IActionContext, IAzureQuickPickItem, IParsedError, openInPortal, parseError } from 'vscode-azureextensionui';
+import { AzureTreeItem, AzureWizard, DialogResponses, IActionContext, IAzureQuickPickItem, IParsedError, openInPortal, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { signRequest } from '../signRequest';
 import { SiteClient } from '../SiteClient';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
+import { requestUtils } from '../utils/requestUtils';
 import { verifyNoRunFromPackageSetting } from '../verifyNoRunFromPackageSetting';
 import { GitHubBranchListStep } from './GitHubBranchListStep';
 import { GitHubOrgListStep } from './GitHubOrgListStep';
@@ -26,8 +25,7 @@ export type gitHubOrgData = { login: string, repos_url: string };
 export type gitHubRepoData = { name: string, repos_url: string, url: string, html_url: string };
 export type gitHubBranchData = { name: string };
 export type gitHubLink = { prev?: string, next?: string, last?: string, first?: string };
-// tslint:disable-next-line:no-reserved-keywords
-export type gitHubWebResource = WebResource & { resolveWithFullResponse?: boolean, nextLink?: string, type?: string };
+export type gitHubWebResource = requestUtils.Request & { nextLink?: string };
 
 export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, context: IConnectToGitHubWizardContext): Promise<void> {
     const title: string = localize('connectGitHubRepo', 'Connect GitHub repository');
@@ -105,8 +103,7 @@ export async function getGitHubJsonResponse<T>(context: IConnectToGitHubWizardCo
     // https://developer.github.com/v3/
     // Note: blank after user implies look up authorized user
     try {
-        // tslint:disable-next-line:no-unsafe-any
-        const gitHubResponse: Response = await request(requestOptions).promise();
+        const gitHubResponse: Response = await requestUtils.sendRequest(requestOptions);
         if (gitHubResponse.headers.link) {
             const headerLink: string = <string>gitHubResponse.headers.link;
             const linkObject: gitHubLink = parseLinkHeaderToGitHubLinkObject(headerLink);
@@ -194,12 +191,6 @@ export async function getGitHubQuickPicksWithLoadMore<T>(context: IConnectToGitH
 }
 
 export async function createRequestOptions(context: IConnectToGitHubWizardContext, url: string): Promise<gitHubWebResource> {
-    const requestOptions: gitHubWebResource = new WebResource();
-    requestOptions.resolveWithFullResponse = true;
-    requestOptions.headers = {
-        ['User-Agent']: appendExtensionUserAgent()
-    };
-
     const client: SiteClient = nonNullProp(context, 'client');
     const oAuth2Token: string | undefined = (await client.listSourceControls())[0].token;
     if (!oAuth2Token) {
@@ -209,8 +200,7 @@ export async function createRequestOptions(context: IConnectToGitHubWizardContex
         throw new Error(noToken);
     }
 
-    await signRequest(requestOptions, new TokenCredentials(oAuth2Token));
-    requestOptions.url = url;
-
+    const requestOptions: gitHubWebResource = await requestUtils.getDefaultRequest(url, new TokenCredentials(oAuth2Token));
+    requestOptions.resolveWithFullResponse = true;
     return requestOptions;
 }
