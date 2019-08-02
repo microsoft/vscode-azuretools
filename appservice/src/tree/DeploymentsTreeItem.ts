@@ -4,15 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { SiteConfig, SiteSourceControl } from 'azure-arm-website/lib/models';
-import * as path from 'path';
 import { MessageItem } from 'vscode';
-import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, GenericTreeItem, IActionContext } from 'vscode-azureextensionui';
+import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, GenericTreeItem, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
 import { DeployResult } from 'vscode-azurekudu/lib/models';
 import { editScmType } from '../editScmType';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { ScmType } from '../ScmType';
 import { DeploymentTreeItem } from './DeploymentTreeItem';
+import { getThemedIconPath } from './IconPath';
 import { ISiteTreeRoot } from './ISiteTreeRoot';
 
 export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
@@ -33,11 +33,8 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         this._repoUrl = sourceControl.repoUrl;
     }
 
-    public get iconPath(): { light: string, dark: string } {
-        return {
-            light: path.join(__filename, '..', '..', '..', '..', 'resources', 'light', 'Deployments_x16.svg'),
-            dark: path.join(__filename, '..', '..', '..', '..', 'resources', 'dark', 'Deployments_x16.svg')
-        };
+    public get iconPath(): TreeItemIconPath {
+        return getThemedIconPath('Deployments_x16');
     }
 
     public get description(): string {
