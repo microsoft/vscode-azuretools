@@ -5,8 +5,8 @@
 
 import { SiteSourceControl } from 'azure-arm-website/lib/models';
 import * as os from 'os';
-import { ProgressLocation, TextDocument, window, workspace } from 'vscode';
-import { AzureTreeItem, TreeItemIconPath } from 'vscode-azureextensionui';
+import { ProgressLocation, window } from 'vscode';
+import { AzureTreeItem, openReadOnlyContent, TreeItemIconPath } from 'vscode-azureextensionui';
 import { DeployResult, LogEntry } from 'vscode-azurekudu/lib/models';
 import { formatDeployLog } from '../deploy/formatDeployLog';
 import { waitForDeploymentToComplete } from '../deploy/waitForDeploymentToComplete';
@@ -123,8 +123,7 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     public async viewDeploymentLogs(): Promise<void> {
         await this.runWithTemporaryDescription(localize('retrievingLogs', 'Retrieving logs...'), async () => {
             const logData: string = await this.getDeploymentLogs();
-            const logDocument: TextDocument = await workspace.openTextDocument({ content: logData, language: 'log' });
-            await window.showTextDocument(logDocument);
+            await openReadOnlyContent(this, logData, '.log');
         });
     }
 
