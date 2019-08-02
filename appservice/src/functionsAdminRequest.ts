@@ -3,15 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { TokenCredentials, WebResource } from 'ms-rest';
-import * as requestP from 'request-promise';
-import { signRequest } from './signRequest';
+import { TokenCredentials } from 'ms-rest';
 import { SiteClient } from './SiteClient';
+import { requestUtils } from './utils/requestUtils';
 
 export async function functionsAdminRequest(client: SiteClient, urlPath: string): Promise<string> {
-    const requestOptions: WebResource = new WebResource();
     const adminKey: string = await client.getFunctionsAdminToken();
-    await signRequest(requestOptions, new TokenCredentials(adminKey));
-    // tslint:disable-next-line:no-unsafe-any
-    return await requestP.get(`${client.defaultHostUrl}/admin/${urlPath}`, requestOptions);
+    const url: string = `${client.defaultHostUrl}/admin/${urlPath}`;
+    const request: requestUtils.Request = await requestUtils.getDefaultRequest(url, new TokenCredentials(adminKey));
+    return await requestUtils.sendRequest(request);
 }

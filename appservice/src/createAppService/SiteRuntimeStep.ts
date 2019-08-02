@@ -4,13 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ApplicationStack } from 'azure-arm-website/lib/models';
-import { WebResource } from 'ms-rest';
-import * as request from 'request-promise';
-import { appendExtensionUserAgent, AzureWizardPromptStep, IAzureQuickPickItem } from 'vscode-azureextensionui';
+import { AzureWizardPromptStep, IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { signRequest } from '../signRequest';
 import { nonNullProp } from '../utils/nonNull';
+import { requestUtils } from '../utils/requestUtils';
 import { AppKind, LinuxRuntimes, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
@@ -51,15 +49,9 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
 
     // the sdk has a bug that doesn't retrieve the full response for provider.getAvailableStacks(): https://github.com/Azure/azure-sdk-for-node/issues/5068
     private async getLinuxRuntimeStack(wizardContext: IAppServiceWizardContext): Promise<ApplicationStack[]> {
-        const requestOptions: WebResource = new WebResource();
-        requestOptions.headers = {
-            ['User-Agent']: appendExtensionUserAgent()
-        };
-
-        requestOptions.url = `${wizardContext.environment.resourceManagerEndpointUrl}providers/Microsoft.Web/availableStacks?osTypeSelected=Linux&api-version=2018-02-01`;
-        await signRequest(requestOptions, wizardContext.credentials);
-        // tslint:disable-next-line no-unsafe-any
-        const runtimes: string = <string>(await request(requestOptions).promise());
+        const urlPath: string = 'providers/Microsoft.Web/availableStacks?osTypeSelected=Linux&api-version=2018-02-01';
+        const requestOptions: requestUtils.Request = await requestUtils.getDefaultAzureRequest(urlPath, wizardContext);
+        const runtimes: string = await requestUtils.sendRequest(requestOptions);
         return (<ApplicationStackJsonResponse>JSON.parse(runtimes)).value.map(v => v.properties);
     }
 }
