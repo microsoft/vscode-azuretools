@@ -3,12 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IAppServiceWizardContext } from 'vscode-azureappservice';
 import { AzureWizardPromptStep, resourceGroupNamingRules } from 'vscode-azureextensionui';
-import { ext } from '../../extensionVariables';
-import { localize } from "../../localize";
-import { ICreateFuntionAppContext } from '../../tree/SubscriptionTreeItem';
+import { ext } from '../extensionVariables';
+import { localize } from '../localize';
 import { AppInsightsListStep } from './AppInsightsListStep';
+import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class AppInsightsNameStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
@@ -20,7 +19,7 @@ export class AppInsightsNameStep extends AzureWizardPromptStep<IAppServiceWizard
         })).trim();
     }
 
-    public shouldPrompt(wizardContext: IAppServiceWizardContext & Partial<ICreateFuntionAppContext>): boolean {
+    public shouldPrompt(wizardContext: IAppServiceWizardContext): boolean {
         return !wizardContext.newResourceGroupName;
     }
 

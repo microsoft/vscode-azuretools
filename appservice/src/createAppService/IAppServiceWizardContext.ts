@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { ApplicationInsightsComponent } from 'azure-arm-appinsights/lib/models';
 import { AppServicePlan, Site, SkuDescription } from 'azure-arm-website/lib/models';
 import { IResourceGroupWizardContext, IStorageAccountWizardContext } from 'vscode-azureextensionui';
 import { AppKind, LinuxRuntimes, WebsiteOS } from './AppKind';
@@ -72,4 +73,10 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
      */
 
     recommendedSiteRuntime?: LinuxRuntimes[];
+
+    /**
+     * Application insights components are necessary for Function apps log streaming.  By default, we should instance
+     * one for the user if there is a data farm available within the same region as the web app
+     */
+    applicationInsights?: ApplicationInsightsComponent;
 }

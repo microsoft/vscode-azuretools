@@ -4,20 +4,58 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ApplicationInsightsManagementClient } from 'azure-arm-appinsights';
-import { IAppServiceWizardContext } from 'vscode-azureappservice';
+import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { AzureWizardExecuteStep, createAzureClient } from 'vscode-azureextensionui';
-import { ICreateFuntionAppContext } from '../../tree/SubscriptionTreeItem';
-import { nonNullValue } from '../../utils/nonNull';
+import { ext } from '../extensionVariables';
+import { localize } from '../localize';
+import { nonNullProp, nonNullValue } from '../utils/nonNull';
+import { requestUtils } from '../utils/requestUtils';
+import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
     public priority: number = 500;
 
-    public async execute(context: IAppServiceWizardContext & Partial<ICreateFuntionAppContext>): Promise<void> {
-        const client = createAzureClient(context, ApplicationInsightsManagementClient);
-        context.applicationInsights = await client.components.createOrUpdate(nonNullValue(context.newResourceGroupName), nonNullValue(context.newSiteName), { kind: 'web', applicationType: 'web', location: 'centralus' });
+    public async execute(wizardContext: IAppServiceWizardContext): Promise<void> {
+        const location: Location = nonNullProp(wizardContext, 'location');
+        const verifyingAppInsightsAvailable: string = localize('verifyingAppInsightsAvailable', 'Verifying that application insights is available for this location...');
+        ext.outputChannel.appendLine(verifyingAppInsightsAvailable);
+        if (await this.appInsightsSupportedInLocation(wizardContext, location)) {
+
+            const creatingNewAppInsights: string = localize('creatingNewAppInsightsInsights', 'Creating new application insights component "{0}"...', wizardContext.newSiteName);
+            ext.outputChannel.appendLine(creatingNewAppInsights);
+
+            const client: ApplicationInsightsManagementClient = createAzureClient(wizardContext, ApplicationInsightsManagementClient);
+            wizardContext.applicationInsights = await client.components.createOrUpdate(
+                nonNullValue(wizardContext.newResourceGroupName),
+                nonNullValue(wizardContext.newSiteName),
+                { kind: 'web', applicationType: 'web', location: nonNullProp(location, 'name') });
+        } else {
+            const appInsightsNotAvailable: string = localize('appInsightsNotAvailable', 'Skipping creating an application insights component because it isn\'t compatible with this location.');
+            ext.outputChannel.appendLine(appInsightsNotAvailable);
+        }
     }
 
-    public shouldExecute(context: IAppServiceWizardContext): boolean {
-        return true;
+    public shouldExecute(wizardContext: IAppServiceWizardContext): boolean {
+        return !wizardContext.applicationInsights;
+    }
+
+    private async appInsightsSupportedInLocation(wizardContext: IAppServiceWizardContext, location: Location): Promise<boolean> {
+        const aiRegionMappingUrl: string = 'providers/microsoft.insights?api-version=2014-04-01-preview';
+        const aiRegionRequest: requestUtils.Request = await requestUtils.getDefaultAzureRequest(aiRegionMappingUrl, wizardContext);
+        const aiRegionMap: ApplicationInsightsJsonResponse = <ApplicationInsightsJsonResponse>JSON.parse((await requestUtils.sendRequest(aiRegionRequest)));
+        const aiComponents: ApplicationInsightsResourceType | undefined = aiRegionMap.resourceTypes.find((aiRt) => aiRt.resourceType === 'components');
+
+        return aiComponents ? aiComponents.locations.some((loc) => loc === location.displayName) : false;
     }
 }
+
+type ApplicationInsightsJsonResponse = {
+    namespace: string,
+    resourceTypes: ApplicationInsightsResourceType[]
+};
+
+type ApplicationInsightsResourceType = {
+    resourceType: string,
+    locations: string[],
+    apiVersions: string[]
+};

@@ -5,18 +5,17 @@
 
 import { ApplicationInsightsManagementClient } from "azure-arm-appinsights";
 import { ApplicationInsightsComponent, ApplicationInsightsComponentListResult } from "azure-arm-appinsights/lib/models";
-import { IAppServiceWizardContext } from "vscode-azureappservice";
 import { AzureWizardPromptStep, createAzureClient, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, LocationListStep } from "vscode-azureextensionui";
-import { ext } from "../../extensionVariables";
-import { localize } from "../../localize";
-import { ICreateFuntionAppContext } from "../../tree/SubscriptionTreeItem";
+import { ext } from "../extensionVariables";
+import { localize } from "../localize";
 import { AppInsightsCreateStep } from "./AppInsightsCreateStep";
 import { AppInsightsNameStep } from "./AppInsightsNameStep";
+import { IAppServiceWizardContext } from "./IAppServiceWizardContext";
 
 export class AppInsightsListStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
-    public static async getAppInsightsComponents(wizardContext: IAppServiceWizardContext & Partial<ICreateFuntionAppContext>): Promise<ApplicationInsightsComponentListResult> {
+    public static async getAppInsightsComponents(wizardContext: IAppServiceWizardContext): Promise<ApplicationInsightsComponentListResult> {
         const client: ApplicationInsightsManagementClient = createAzureClient(wizardContext, ApplicationInsightsManagementClient);
-        return await client.components.listByResourceGroup('naturinsapi');
+        return await client.components.list();
     }
 
     public static async isNameAvailable(wizardContext: IAppServiceWizardContext, name: string): Promise<boolean> {
@@ -24,18 +23,15 @@ export class AppInsightsListStep extends AzureWizardPromptStep<IAppServiceWizard
         return !(await resourceGroupsTask).some((rg: ApplicationInsightsComponent) => rg.name !== undefined && rg.name.toLowerCase() === name.toLowerCase());
     }
 
-    public async prompt(wizardContext: IAppServiceWizardContext & Partial<ICreateFuntionAppContext>): Promise<void> {
-        // Cache resource group separately per subscription
+    public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
         const options: IAzureQuickPickOptions = { placeHolder: 'Select an Application Insight for new resources.', id: `AppInsightsListStep/${wizardContext.subscriptionId}` };
         wizardContext.applicationInsights = (await ext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
     }
 
-    public async getSubWizard(wizardContext: IAppServiceWizardContext & Partial<ICreateFuntionAppContext>): Promise<IWizardOptions<IAppServiceWizardContext> | undefined> {
+    public async getSubWizard(wizardContext: IAppServiceWizardContext): Promise<IWizardOptions<IAppServiceWizardContext> | undefined> {
         if (!wizardContext.applicationInsights) {
             const promptSteps: AzureWizardPromptStep<IAppServiceWizardContext>[] = [new AppInsightsNameStep()];
-            if (!wizardContext.resourceGroupDeferLocationStep) {
-                promptSteps.push(new LocationListStep());
-            }
+            promptSteps.push(new LocationListStep());
 
             return {
                 promptSteps,
@@ -46,7 +42,7 @@ export class AppInsightsListStep extends AzureWizardPromptStep<IAppServiceWizard
         }
     }
 
-    public shouldPrompt(wizardContext: IAppServiceWizardContext & Partial<ICreateFuntionAppContext>): boolean {
+    public shouldPrompt(wizardContext: IAppServiceWizardContext): boolean {
         return !wizardContext.applicationInsights && !wizardContext.newResourceGroupName;
     }
 
