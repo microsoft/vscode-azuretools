@@ -7,6 +7,7 @@ import { SiteSourceControl } from 'azure-arm-website/lib/models';
 import * as os from 'os';
 import { ProgressLocation, window } from 'vscode';
 import { AzureTreeItem, openReadOnlyContent, TreeItemIconPath } from 'vscode-azureextensionui';
+import { KuduClient } from 'vscode-azurekudu';
 import { DeployResult, LogEntry } from 'vscode-azurekudu/lib/models';
 import { formatDeployLog } from '../deploy/formatDeployLog';
 import { waitForDeploymentToComplete } from '../deploy/waitForDeploymentToComplete';
@@ -89,8 +90,9 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         const redeployed: string = localize('redeployed', 'Commit "{0}" has been redeployed to "{1}".', this.id, this.root.client.fullName);
         await window.withProgress({ location: ProgressLocation.Notification, title: redeploying }, async (): Promise<void> => {
             ext.outputChannel.appendLine(formatDeployLog(this.root.client, localize('reployingOutput', 'Redeploying commit "{0}" to "{1}"...', this.id, this.root.client.fullName)));
+            const kuduClient: KuduClient = await this.root.client.getKuduClient();
             // tslint:disable-next-line:no-floating-promises
-            this.root.client.kudu.deployment.deploy(this.id);
+            kuduClient.deployment.deploy(this.id);
 
             const refreshingInteveral: NodeJS.Timer = setInterval(async () => { await this.refresh(); }, 1000); /* the status of the label changes during deployment so poll for that*/
             try {
@@ -106,12 +108,13 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     }
 
     public async getDeploymentLogs(): Promise<string> {
-        const logEntries: LogEntry[] = await this.root.client.kudu.deployment.getLogEntry(this.id);
+        const kuduClient: KuduClient = await this.root.client.getKuduClient();
+        const logEntries: LogEntry[] = await kuduClient.deployment.getLogEntry(this.id);
         let data: string = '';
         for (const logEntry of logEntries) {
             data += this.formatLogEntry(logEntry);
             if (logEntry.detailsUrl && logEntry.id) {
-                const detailedLogEntries: LogEntry[] = await this.root.client.kudu.deployment.getLogEntryDetails(this.id, logEntry.id);
+                const detailedLogEntries: LogEntry[] = await kuduClient.deployment.getLogEntryDetails(this.id, logEntry.id);
                 for (const detailedEntry of detailedLogEntries) {
                     data += this.formatLogEntry(detailedEntry);
                 }
@@ -139,7 +142,8 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     }
 
     public async refreshImpl(): Promise<void> {
-        this._deployResult = await this.root.client.kudu.deployment.getResult(this.id);
+        const kuduClient: KuduClient = await this.root.client.getKuduClient();
+        this._deployResult = await kuduClient.deployment.getResult(this.id);
     }
 
     private formatLogEntry(logEntry: LogEntry): string {

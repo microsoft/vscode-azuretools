@@ -8,6 +8,7 @@ import * as request from 'request';
 import { setInterval } from 'timers';
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling, IActionContext, parseError } from 'vscode-azureextensionui';
+import { KuduClient } from 'vscode-azurekudu';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { pingFunctionApp } from './pingFunctionApp';
@@ -41,7 +42,8 @@ export async function startStreamingLogs(client: SiteClient, verifyLoggingEnable
         outputChannel.show();
         outputChannel.appendLine(localize('connectingToLogStream', 'Connecting to log stream...'));
         const httpRequest: WebResource = new WebResource();
-        await requestUtils.signRequest(httpRequest, client.kudu.credentials);
+        const kuduClient: KuduClient = await client.getKuduClient();
+        await requestUtils.signRequest(httpRequest, kuduClient.credentials);
 
         const requestApi: request.RequestAPI<request.Request, request.CoreOptions, {}> = request.defaults(httpRequest);
         return await new Promise((onLogStreamCreated: (ls: ILogStream) => void): void => {
