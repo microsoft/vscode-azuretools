@@ -6,6 +6,7 @@
 import { AppServicePlan, Site, SkuDescription } from 'azure-arm-website/lib/models';
 import { IResourceGroupWizardContext, IStorageAccountWizardContext } from 'vscode-azureextensionui';
 import { AppKind, LinuxRuntimes, WebsiteOS } from './AppKind';
+import { ApplicationInsightsComponent } from 'azure-arm-appinsights/lib/models';
 
 export interface IAppServiceWizardContext extends IResourceGroupWizardContext, IStorageAccountWizardContext {
     newSiteKind: AppKind;
