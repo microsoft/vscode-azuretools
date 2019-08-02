@@ -10,6 +10,7 @@ import KuduClient from 'vscode-azurekudu';
 import { FunctionEnvelope } from 'vscode-azurekudu/lib/models';
 import { localize } from './localize';
 import { nonNullProp, nonNullValue } from './utils/nonNull';
+import { requestUtils } from './utils/requestUtils';
 
 /**
  * Wrapper of a WebSiteManagementClient for use with a specific Site
@@ -265,4 +266,38 @@ export class SiteClient {
             await this._client.webApps.listWebJobsSlot(this.resourceGroup, this.siteName, this.slotName) :
             await this._client.webApps.listWebJobs(this.resourceGroup, this.siteName);
     }
+
+    /**
+     * Temporary workaround because this isn't in azure sdk yet
+     * Spec: https://github.com/Azure/azure-functions-host/issues/3994
+     */
+    public async listHostKeys(): Promise<IHostKeys> {
+        const urlPath: string = `${this.id}/host/default/listkeys?api-version=2016-08-01`;
+        const requestOptions: requestUtils.Request = await requestUtils.getDefaultAzureRequest(urlPath, this._subscription, 'POST');
+        const result: string = await requestUtils.sendRequest(requestOptions);
+        return <IHostKeys>JSON.parse(result);
+    }
+
+    /**
+     * Temporary workaround because this isn't in azure sdk yet
+     * Spec: https://github.com/Azure/azure-functions-host/issues/3994
+     */
+    public async listFunctionKeys(functionName: string): Promise<IFunctionKeys> {
+        const urlPath: string = `${this.id}/functions/${functionName}/listKeys?api-version=2016-08-01`;
+        const requestOptions: requestUtils.Request = await requestUtils.getDefaultAzureRequest(urlPath, this._subscription, 'POST');
+        const result: string = await requestUtils.sendRequest(requestOptions);
+        return <IFunctionKeys>JSON.parse(result);
+    }
+}
+
+export interface IFunctionKeys {
+    // tslint:disable-next-line: no-reserved-keywords
+    default?: string;
+    [key: string]: string | undefined;
+}
+
+export interface IHostKeys {
+    masterKey?: string;
+    functionKeys?: { [key: string]: string | undefined };
+    systemKeys?: { [key: string]: string | undefined };
 }
