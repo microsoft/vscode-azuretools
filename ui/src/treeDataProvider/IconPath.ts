@@ -5,6 +5,7 @@
 
 import * as path from 'path';
 import * as types from '../../index';
+import { ext } from '../extensionVariables';
 
 export function getIconPath(iconName: string): types.TreeItemIconPath {
     return path.join(getResourcesPath(), `${iconName}.svg`);
@@ -18,5 +19,7 @@ export function getThemedIconPath(iconName: string): types.TreeItemIconPath {
 }
 
 function getResourcesPath(): string {
-    return path.join(__filename, '..', '..', '..', '..', 'resources');
+    return ext.ignoreBundle ?
+        path.join(__dirname, '..', '..', '..', 'resources') :
+        path.join(__dirname, 'node_modules', 'vscode-azureextensionui', 'resources');
 }
