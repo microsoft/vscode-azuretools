@@ -5,9 +5,8 @@
 
 import { SiteSourceControl } from 'azure-arm-website/lib/models';
 import * as os from 'os';
-import * as path from 'path';
 import { ProgressLocation, TextDocument, window, workspace } from 'vscode';
-import { AzureTreeItem } from 'vscode-azureextensionui';
+import { AzureTreeItem, TreeItemIconPath } from 'vscode-azureextensionui';
 import { DeployResult, LogEntry } from 'vscode-azurekudu/lib/models';
 import { formatDeployLog } from '../deploy/formatDeployLog';
 import { waitForDeploymentToComplete } from '../deploy/waitForDeploymentToComplete';
@@ -16,6 +15,7 @@ import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
 import { DeploymentsTreeItem } from './DeploymentsTreeItem';
+import { getThemedIconPath } from './IconPath';
 import { ISiteTreeRoot } from './ISiteTreeRoot';
 
 // Kudu DeployStatus: https://github.com/projectkudu/kudu/blob/a13592e6654585d5c2ee5c6a05fa39fa812ebb84/Kudu.Contracts/Deployment/DeployStatus.cs
@@ -48,11 +48,8 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         this.label = `${this.id.substring(0, 7)} - ${message}`;
     }
 
-    public get iconPath(): { light: string, dark: string } {
-        return {
-            light: path.join(__filename, '..', '..', '..', '..', 'resources', 'light', 'Git_Commit_16x.svg'),
-            dark: path.join(__filename, '..', '..', '..', '..', 'resources', 'dark', 'Git_Commit_16x.svg')
-        };
+    public get iconPath(): TreeItemIconPath {
+        return getThemedIconPath('Git_Commit_16x');
     }
 
     public get id(): string {
