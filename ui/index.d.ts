@@ -1035,6 +1035,11 @@ export interface UIExtensionVariables {
     outputChannel: OutputChannel;
     ui: IAzureUserInput;
     reporter: ITelemetryReporter;
+
+    /**
+     * Set to true if not running under a webpacked 'dist' folder as defined in 'vscode-azureextensiondev'
+     */
+    ignoreBundle?: boolean;
 }
 
 export interface IAddUserAgent {
