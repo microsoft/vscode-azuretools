@@ -5,6 +5,7 @@
 
 import { CancellationToken } from 'vscode';
 import { IParsedError, parseError } from 'vscode-azureextensionui';
+import { KuduClient } from 'vscode-azurekudu';
 import { DeployResult, LogEntry } from 'vscode-azurekudu/lib/models';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -21,9 +22,10 @@ export async function waitForDeploymentToComplete(client: SiteClient, expectedId
     let permanentId: string | undefined;
     // a 60 second timeout period to let Kudu initialize the deployment
     const maxTimeToWaitForExpectedId: number = Date.now() + 60 * 1000;
+    const kuduClient: KuduClient = await client.getKuduClient();
 
     while (!token || !token.isCancellationRequested) {
-        [deployment, permanentId, initialStartTime] = await tryGetLatestDeployment(client, permanentId, initialStartTime, expectedId);
+        [deployment, permanentId, initialStartTime] = await tryGetLatestDeployment(kuduClient, permanentId, initialStartTime, expectedId);
         if ((deployment === undefined || !deployment.id)) {
             if (expectedId && Date.now() < maxTimeToWaitForExpectedId) {
                 await delay(pollingInterval);
@@ -34,7 +36,7 @@ export async function waitForDeploymentToComplete(client: SiteClient, expectedId
         }
         let logEntries: LogEntry[] = [];
         try {
-            logEntries = <LogEntry[]>await client.kudu.deployment.getLogEntry(deployment.id);
+            logEntries = <LogEntry[]>await kuduClient.deployment.getLogEntry(deployment.id);
         } catch (error) {
             const parsedError: IParsedError = parseError(error);
             // Swallow 404 errors for a deployment while its still in the "temp" phase
@@ -59,7 +61,7 @@ export async function waitForDeploymentToComplete(client: SiteClient, expectedId
                     }
 
                     if (newEntry.detailsUrl) {
-                        const entryDetails: LogEntry[] = await client.kudu.deployment.getLogEntryDetails(deployment.id, newEntry.id);
+                        const entryDetails: LogEntry[] = await kuduClient.deployment.getLogEntryDetails(deployment.id, newEntry.id);
                         for (const entryDetail of entryDetails) {
                             if (entryDetail.message) {
                                 ext.outputChannel.appendLine(formatDeployLog(client, entryDetail.message, entryDetail.logTime));
@@ -83,16 +85,16 @@ export async function waitForDeploymentToComplete(client: SiteClient, expectedId
     }
 }
 
-async function tryGetLatestDeployment(client: SiteClient, permanentId: string | undefined, initialStartTime: Date | undefined, expectedId?: string): Promise<[DeployResult | undefined, string | undefined, Date | undefined]> {
+async function tryGetLatestDeployment(kuduClient: KuduClient, permanentId: string | undefined, initialStartTime: Date | undefined, expectedId?: string): Promise<[DeployResult | undefined, string | undefined, Date | undefined]> {
     let deployment: DeployResult | undefined;
 
     if (permanentId) {
         // Use "permanentId" to find the deployment during its "permanent" phase
-        deployment = await client.kudu.deployment.getResult(permanentId);
+        deployment = await kuduClient.deployment.getResult(permanentId);
     } else if (expectedId) {
         // if we have a "expectedId" we know which deployment we are looking for, so wait until latest id reflects that
         try {
-            const latestDeployment: DeployResult = await client.kudu.deployment.getResult('latest');
+            const latestDeployment: DeployResult = await kuduClient.deployment.getResult('latest');
             // if the latest deployment is temp, then a deployment has triggered so we should watch it even if it doesn't match the expectedId
             if (latestDeployment.isTemp) {
                 deployment = latestDeployment;
@@ -109,7 +111,7 @@ async function tryGetLatestDeployment(client: SiteClient, permanentId: string | 
         }
     } else if (initialStartTime) {
         // Use "initialReceivedTime" to find the deployment during its "temp" phase
-        deployment = (await client.kudu.deployment.getDeployResults())
+        deployment = (await kuduClient.deployment.getDeployResults())
             // tslint:disable-next-line:no-non-null-assertion
             .filter((deployResult: DeployResult) => deployResult.startTime && deployResult.startTime >= initialStartTime!)
             .sort((a: DeployResult, b: DeployResult) => nonNullProp(b, 'startTime').valueOf() - nonNullProp(a, 'startTime').valueOf())
@@ -121,7 +123,7 @@ async function tryGetLatestDeployment(client: SiteClient, permanentId: string | 
     } else {
         // Use "latest" to get the deployment before we know the "initialReceivedTime" or "permanentId"
         try {
-            deployment = <DeployResult | undefined>await client.kudu.deployment.getResult('latest');
+            deployment = <DeployResult | undefined>await kuduClient.deployment.getResult('latest');
         } catch (error) {
             const parsedError: IParsedError = parseError(error);
             // swallow 404 error since "latest" might not exist on the first deployment

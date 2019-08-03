@@ -6,6 +6,7 @@
 import { SiteConfig, SiteSourceControl } from 'azure-arm-website/lib/models';
 import { MessageItem } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, GenericTreeItem, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
+import { KuduClient } from 'vscode-azurekudu';
 import { DeployResult } from 'vscode-azurekudu/lib/models';
 import { editScmType } from '../editScmType';
 import { ext } from '../extensionVariables';
@@ -60,7 +61,8 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
 
     public async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzExtTreeItem[]> {
         const siteConfig: SiteConfig = await this.root.client.getSiteConfig();
-        const deployments: DeployResult[] = await this.root.client.kudu.deployment.getDeployResults();
+        const kuduClient: KuduClient = await this.root.client.getKuduClient();
+        const deployments: DeployResult[] = await kuduClient.deployment.getDeployResults();
         const children: DeploymentTreeItem[] | GenericTreeItem[] = await this.createTreeItemsWithErrorHandling(
             deployments,
             'invalidDeployment',

@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as fs from 'fs';
+import { KuduClient } from 'vscode-azurekudu';
 import { ext } from '../extensionVariables';
 import * as FileUtilities from '../FileUtilities';
 import { localize } from '../localize';
@@ -17,6 +18,7 @@ export async function deployWar(client: SiteClient, fsPath: string): Promise<voi
     }
 
     ext.outputChannel.appendLine(formatDeployLog(client, localize('deployStart', 'Starting deployment...')));
-    await client.kudu.pushDeployment.warPushDeploy(fs.createReadStream(fsPath), { isAsync: true });
+    const kuduClient: KuduClient = await client.getKuduClient();
+    await kuduClient.pushDeployment.warPushDeploy(fs.createReadStream(fsPath), { isAsync: true });
     await waitForDeploymentToComplete(client);
 }
