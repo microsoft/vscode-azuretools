@@ -231,12 +231,18 @@ export interface IInvalidTreeItemOptions {
      * Defaults to "Invalid" if undefined
      */
     description?: string;
+
+    /**
+     * Any arbitrary data to include with this tree item
+     */
+    data?: unknown;
 }
 
 export class InvalidTreeItem extends AzExtParentTreeItem {
     public contextValue: string;
     public label: string;
     public iconPath: TreeItemIconPath;
+    public readonly data?: unknown;
 
     constructor(parent: AzExtParentTreeItem, error: unknown, options: IInvalidTreeItemOptions);
 
