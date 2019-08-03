@@ -91,9 +91,13 @@ export class SiteClient {
     }
 
     public async getIsConsumption(): Promise<boolean> {
-        const asp: AppServicePlan | undefined = await this.getCachedAppServicePlan();
-        // Assume it's consumption if we can't get the plan (sometimes happens with brand new plans) and its a Function App. Consumption is recommended and more popular for functions
-        return (!asp && this.isFunctionApp) || Boolean(asp && asp.sku && asp.sku.tier && asp.sku.tier.toLowerCase() === 'dynamic');
+        if (this.isFunctionApp) {
+            const asp: AppServicePlan | undefined = await this.getCachedAppServicePlan();
+            // Assume it's consumption if we can't get the plan (sometimes happens with brand new plans). Consumption is recommended and more popular
+            return !!(asp && asp.sku && asp.sku.tier && asp.sku.tier.toLowerCase() === 'dynamic');
+        } else {
+            return false;
+        }
     }
 
     public async getKuduClient(): Promise<KuduClient> {
@@ -318,7 +322,7 @@ export class SiteClient {
      * This is only a temporary requirement and should be going away eventually
      */
     private async getKuduClientOptions(): Promise<ServiceClientOptions | undefined> {
-        if (this.isFunctionApp && this.isLinux) {
+        if (this.isLinux) {
             const isConsumption: boolean = await this.getIsConsumption();
             if (isConsumption) {
                 // Doing the best we can for types here - 'ms-rest' is severely lacking when it comes to filters
