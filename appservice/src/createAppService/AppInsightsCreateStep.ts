@@ -7,6 +7,7 @@ import { ApplicationInsightsManagementClient } from 'azure-arm-appinsights';
 import { ResourceManagementClient } from 'azure-arm-resource';
 import { Provider, ProviderResourceType } from 'azure-arm-resource/lib/resource/models';
 import { Location } from 'azure-arm-resource/lib/subscription/models';
+import { Progress } from 'vscode';
 import { AzureWizardExecuteStep, createAzureClient } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -14,9 +15,9 @@ import { nonNullProp, nonNullValue } from '../utils/nonNull';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
-    public priority: number = 500;
+    public priority: number = 135;
 
-    public async execute(wizardContext: IAppServiceWizardContext): Promise<void> {
+    public async execute(wizardContext: IAppServiceWizardContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         const location: Location = nonNullProp(wizardContext, 'location');
         const verifyingAppInsightsAvailable: string = localize('verifyingAppInsightsAvailable', 'Verifying that application insights is available for this location...');
         ext.outputChannel.appendLine(verifyingAppInsightsAvailable);
@@ -24,12 +25,16 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
 
             const creatingNewAppInsights: string = localize('creatingNewAppInsightsInsights', 'Creating new application insights component "{0}"...', wizardContext.newSiteName);
             ext.outputChannel.appendLine(creatingNewAppInsights);
+            progress.report({ message: creatingNewAppInsights });
 
             const client: ApplicationInsightsManagementClient = createAzureClient(wizardContext, ApplicationInsightsManagementClient);
             wizardContext.applicationInsights = await client.components.createOrUpdate(
                 nonNullValue(wizardContext.newResourceGroupName),
                 nonNullValue(wizardContext.newApplicationInsightsName),
                 { kind: 'web', applicationType: 'web', location: nonNullProp(location, 'name') });
+            const createdNewAppInsights: string = localize('createdNewAppInsights', 'Created new application insights component "{0}"...', wizardContext.newSiteName);
+            wizardContext.aiInstrumentationKey = wizardContext.applicationInsights.instrumentationKey;
+            ext.outputChannel.appendLine(createdNewAppInsights);
         } else {
             const appInsightsNotAvailable: string = localize('appInsightsNotAvailable', 'Skipping creating an application insights component because it isn\'t compatible with this location.');
             ext.outputChannel.appendLine(appInsightsNotAvailable);

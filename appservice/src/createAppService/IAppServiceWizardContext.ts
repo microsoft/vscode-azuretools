@@ -85,4 +85,10 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
      * This will be defined after `AppInsightsNameStep.prompt` occurs.
      */
     newApplicationInsightsName?: string;
+
+    /**
+     * The instrumention key that is associated to the newly created App Insights component
+     * This will be defined after `AppInsightsCreateStep.execute` occurs.
+     */
+    aiInstrumentationKey?: string;
 }
