@@ -108,7 +108,7 @@ function handleError(context: IActionContext, callbackId: string, error: unknown
 }
 
 function handleTelemetry(context: IActionContext, callbackId: string, start: number): void {
-    if (!((context.telemetry.suppressIfSuccessful || context.telemetry.suppressAll) && context.telemetry.properties.result === 'Succeeded')) {
+    if (!context.telemetry.suppressAll && !(context.telemetry.suppressIfSuccessful && context.telemetry.properties.result === 'Succeeded')) {
         const end: number = Date.now();
         context.telemetry.measurements.duration = (end - start) / 1000;
 
