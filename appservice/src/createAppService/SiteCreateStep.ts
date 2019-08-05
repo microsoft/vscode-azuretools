@@ -22,6 +22,7 @@ export interface IAppSettingsContext {
     fileShareName: string;
     os: string;
     runtime: string;
+    applicationInsightsInstrumentationKey?: string;
 }
 
 export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
