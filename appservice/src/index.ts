@@ -16,7 +16,6 @@ export * from './createAppService/SiteOSStep';
 export * from './createAppService/SiteRuntimeStep';
 export * from './remoteDebug/remoteDebugCommon';
 export * from './remoteDebug/startRemoteDebug';
-export * from './connectToAppInsights';
 export * from './createSlot';
 export * from './deploy/deploy';
 export * from './deploy/runPreDeployTask';
