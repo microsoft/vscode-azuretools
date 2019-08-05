@@ -61,7 +61,7 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
         if (wizardContext.newSiteKind === AppKind.app) {
             newSiteConfig.linuxFxVersion = wizardContext.newSiteRuntime;
         } else {
-            if (!wizardContext.useConsumptionPlan) {
+            if (!wizardContext.useConsumptionPlan && wizardContext.newSiteOS === 'linux') {
                 newSiteConfig.linuxFxVersion = getFunctionAppLinuxFxVersion(nonNullProp(wizardContext, 'newSiteRuntime'));
             }
 
