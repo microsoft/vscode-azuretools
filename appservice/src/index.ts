@@ -22,6 +22,7 @@ export * from './deploy/deploy';
 export * from './deploy/runPreDeployTask';
 export * from './deleteSite';
 export * from './editScmType';
+export * from './getFile';
 export * from './functionsAdminRequest';
 export * from './pingFunctionApp';
 export * from './putFile';

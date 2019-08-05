@@ -4,12 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ApplicationInsightsManagementClient } from 'azure-arm-appinsights';
+import { ResourceManagementClient } from 'azure-arm-resource';
+import { Provider, ProviderResourceType } from 'azure-arm-resource/lib/resource/models';
 import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { AzureWizardExecuteStep, createAzureClient } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { nonNullProp, nonNullValue } from '../utils/nonNull';
-import { requestUtils } from '../utils/requestUtils';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
@@ -27,7 +28,7 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
             const client: ApplicationInsightsManagementClient = createAzureClient(wizardContext, ApplicationInsightsManagementClient);
             wizardContext.applicationInsights = await client.components.createOrUpdate(
                 nonNullValue(wizardContext.newResourceGroupName),
-                nonNullValue(wizardContext.newSiteName),
+                nonNullValue(wizardContext.newApplicationInsightsName),
                 { kind: 'web', applicationType: 'web', location: nonNullProp(location, 'name') });
         } else {
             const appInsightsNotAvailable: string = localize('appInsightsNotAvailable', 'Skipping creating an application insights component because it isn\'t compatible with this location.');
@@ -40,22 +41,13 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
     }
 
     private async appInsightsSupportedInLocation(wizardContext: IAppServiceWizardContext, location: Location): Promise<boolean> {
-        const aiRegionMappingUrl: string = 'providers/microsoft.insights?api-version=2014-04-01-preview';
-        const aiRegionRequest: requestUtils.Request = await requestUtils.getDefaultAzureRequest(aiRegionMappingUrl, wizardContext);
-        const aiRegionMap: ApplicationInsightsJsonResponse = <ApplicationInsightsJsonResponse>JSON.parse((await requestUtils.sendRequest(aiRegionRequest)));
-        const aiComponents: ApplicationInsightsResourceType | undefined = aiRegionMap.resourceTypes.find((aiRt) => aiRt.resourceType === 'components');
+        const resourceClient: ResourceManagementClient = createAzureClient(wizardContext, ResourceManagementClient);
+        const insightsRegionMap: Provider = await resourceClient.providers.get('microsoft.insights');
+        const componentsResourceType: ProviderResourceType | undefined = insightsRegionMap.resourceTypes ? insightsRegionMap.resourceTypes.find((aiRt) => aiRt.resourceType === 'components') : undefined;
 
-        return aiComponents ? aiComponents.locations.some((loc) => loc === location.displayName) : false;
+        return componentsResourceType ?
+            componentsResourceType.locations ?
+                componentsResourceType.locations.some((loc) => loc === location.displayName) : false
+            : false;
     }
 }
-
-type ApplicationInsightsJsonResponse = {
-    namespace: string,
-    resourceTypes: ApplicationInsightsResourceType[]
-};
-
-type ApplicationInsightsResourceType = {
-    resourceType: string,
-    locations: string[],
-    apiVersions: string[]
-};

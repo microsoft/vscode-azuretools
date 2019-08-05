@@ -79,4 +79,10 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
      * one for the user if there is a data farm available within the same region as the web app
      */
     applicationInsights?: ApplicationInsightsComponent;
+
+    /**
+     * The name of the new application insights component
+     * This will be defined after `AppInsightsNameStep.prompt` occurs.
+     */
+    newApplicationInsightsName?: string;
 }
