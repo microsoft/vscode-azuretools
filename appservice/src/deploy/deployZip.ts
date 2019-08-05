@@ -7,6 +7,7 @@ import { AppServicePlan, StringDictionary } from 'azure-arm-website/lib/models';
 import * as fs from 'fs';
 import * as fse from 'fs-extra';
 import * as vscode from 'vscode';
+import { IActionContext } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
 import { ext } from '../extensionVariables';
 import * as FileUtilities from '../FileUtilities';
@@ -16,7 +17,7 @@ import { deployToStorageAccount } from './deployToStorageAccount';
 import { formatDeployLog } from './formatDeployLog';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
-export async function deployZip(client: SiteClient, fsPath: string, aspPromise: Promise<AppServicePlan | undefined>): Promise<void> {
+export async function deployZip(context: IActionContext, client: SiteClient, fsPath: string, aspPromise: Promise<AppServicePlan | undefined>): Promise<void> {
     if (!(await fse.pathExists(fsPath))) {
         throw new Error(localize('pathNotExist', 'Failed to deploy path that does not exist: {0}', fsPath));
     }
@@ -24,6 +25,7 @@ export async function deployZip(client: SiteClient, fsPath: string, aspPromise: 
     let zipFilePath: string;
     let createdZip: boolean = false;
     if (FileUtilities.getFileExtension(fsPath) === 'zip') {
+        context.telemetry.properties.alreadyZipped = 'true';
         zipFilePath = fsPath;
     } else {
         createdZip = true;
@@ -45,8 +47,9 @@ export async function deployZip(client: SiteClient, fsPath: string, aspPromise: 
         if (client.isFunctionApp && client.isLinux) {
             const doBuildKey: string = 'scmDoBuildDuringDeployment';
             const doBuild: boolean | undefined = !!vscode.workspace.getConfiguration('azureFunctions', vscode.Uri.file(fsPath)).get<boolean>(doBuildKey);
+            context.telemetry.properties.scmDoBuildDuringDeployment = String(doBuild);
             const isConsumption: boolean = await client.getIsConsumption();
-            await validateLinuxFunctionAppSettings(client, doBuild, isConsumption);
+            await validateLinuxFunctionAppSettings(context, client, doBuild, isConsumption);
             if (!doBuild && isConsumption) {
                 await deployToStorageAccount(client, zipFilePath);
                 return;
@@ -108,7 +111,7 @@ async function delayFirstWebAppDeploy(client: SiteClient, asp: AppServicePlan | 
     });
 }
 
-async function validateLinuxFunctionAppSettings(client: SiteClient, doBuild: boolean, isConsumption: boolean): Promise<void> {
+async function validateLinuxFunctionAppSettings(context: IActionContext, client: SiteClient, doBuild: boolean, isConsumption: boolean): Promise<void> {
     const appSettings: StringDictionary = await client.listApplicationSettings();
     // tslint:disable-next-line:strict-boolean-expressions
     appSettings.properties = appSettings.properties || {};
@@ -153,6 +156,7 @@ async function validateLinuxFunctionAppSettings(client: SiteClient, doBuild: boo
     }
 
     if (hasChanged) {
+        context.telemetry.properties.updatedAppSettings = 'true';
         await client.updateApplicationSettings(appSettings);
     }
 }
