@@ -4,8 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { MessageItem, window } from 'vscode';
-import { IActionContext } from '../index';
-import { IParsedError } from '../index';
+import { IActionContext, IParsedError } from '../index';
 import { DialogResponses } from './DialogResponses';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
@@ -30,7 +29,8 @@ function initContext(): [number, IActionContext] {
             measurements: {
                 duration: 0
             },
-            suppressIfSuccessful: false
+            suppressIfSuccessful: false,
+            suppressAll: false
         },
         errorHandling: {
             suppressDisplay: false,
@@ -77,7 +77,7 @@ function handleError(context: IActionContext, callbackId: string, error: unknown
         context.telemetry.properties.error = errorData.errorType;
         context.telemetry.properties.errorMessage = errorData.message;
         context.telemetry.properties.stack = errorData.stack ? limitLines(errorData.stack, maxStackLines) : undefined;
-        if (context.telemetry.suppressIfSuccessful) {
+        if (context.telemetry.suppressIfSuccessful || context.telemetry.suppressAll) {
             context.telemetry.properties.suppressTelemetry = 'true';
         }
     }
@@ -108,7 +108,7 @@ function handleError(context: IActionContext, callbackId: string, error: unknown
 }
 
 function handleTelemetry(context: IActionContext, callbackId: string, start: number): void {
-    if (!(context.telemetry.suppressIfSuccessful && context.telemetry.properties.result === 'Succeeded')) {
+    if (!((context.telemetry.suppressIfSuccessful || context.telemetry.suppressAll) && context.telemetry.properties.result === 'Succeeded')) {
         const end: number = Date.now();
         context.telemetry.measurements.duration = (end - start) / 1000;
 
