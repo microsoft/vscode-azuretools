@@ -6,14 +6,14 @@
 import { File } from 'decompress';
 import * as glob from 'glob';
 import * as gulp from 'gulp';
+// tslint:disable-next-line: no-require-imports
+import decompress = require('gulp-decompress');
 import * as os from 'os';
 import * as path from 'path';
 import * as request from 'request';
 import { Stream } from 'stream';
 import * as buffer from 'vinyl-buffer';
 import * as source from 'vinyl-source-stream';
-// tslint:disable-next-line: no-require-imports
-import decompress = require('gulp-decompress');
 
 export function gulp_installAzureAccount(): Promise<void> | Stream {
     const version: string = '0.8.4';
