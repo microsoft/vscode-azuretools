@@ -22,19 +22,22 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
         const verifyingAppInsightsAvailable: string = localize('verifyingAppInsightsAvailable', 'Verifying that application insights is available for this location...');
         ext.outputChannel.appendLine(verifyingAppInsightsAvailable);
         if (await this.appInsightsSupportedInLocation(wizardContext, location)) {
-
-            const creatingNewAppInsights: string = localize('creatingNewAppInsightsInsights', 'Creating new application insights component "{0}"...', wizardContext.newSiteName);
-            ext.outputChannel.appendLine(creatingNewAppInsights);
-            progress.report({ message: creatingNewAppInsights });
-
             const client: ApplicationInsightsManagementClient = createAzureClient(wizardContext, ApplicationInsightsManagementClient);
-            wizardContext.applicationInsights = await client.components.createOrUpdate(
-                nonNullValue(wizardContext.newResourceGroupName),
-                nonNullValue(wizardContext.newApplicationInsightsName),
-                { kind: 'web', applicationType: 'web', location: nonNullProp(location, 'name') });
-            const createdNewAppInsights: string = localize('createdNewAppInsights', 'Created new application insights component "{0}"...', wizardContext.newSiteName);
-            wizardContext.aiInstrumentationKey = wizardContext.applicationInsights.instrumentationKey;
-            ext.outputChannel.appendLine(createdNewAppInsights);
+            const rgName: string = nonNullValue(wizardContext.newResourceGroupName);
+            const aiName: string = nonNullValue(wizardContext.newApplicationInsightsName);
+            try {
+                wizardContext.applicationInsights = await client.components.get(rgName, aiName);
+                ext.outputChannel.appendLine(localize('existingNewAppInsights', 'Using existing application insights component "{0}".', aiName));
+            } catch (error) {
+                // Only expecting a resource not found error here
+                const creatingNewAppInsights: string = localize('creatingNewAppInsightsInsights', 'Creating new application insights component "{0}"...', wizardContext.newSiteName);
+                ext.outputChannel.appendLine(creatingNewAppInsights);
+                progress.report({ message: creatingNewAppInsights });
+
+                wizardContext.applicationInsights = await client.components.createOrUpdate(rgName, aiName, { kind: 'web', applicationType: 'web', location: nonNullProp(location, 'name') });
+                const createdNewAppInsights: string = localize('createdNewAppInsights', 'Created new application insights component "{0}"...', aiName);
+                ext.outputChannel.appendLine(createdNewAppInsights);
+            }
         } else {
             const appInsightsNotAvailable: string = localize('appInsightsNotAvailable', 'Skipping creating an application insights component because it isn\'t compatible with this location.');
             ext.outputChannel.appendLine(appInsightsNotAvailable);
@@ -47,12 +50,9 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
 
     private async appInsightsSupportedInLocation(wizardContext: IAppServiceWizardContext, location: Location): Promise<boolean> {
         const resourceClient: ResourceManagementClient = createAzureClient(wizardContext, ResourceManagementClient);
-        const insightsRegionMap: Provider = await resourceClient.providers.get('microsoft.insights');
-        const componentsResourceType: ProviderResourceType | undefined = insightsRegionMap.resourceTypes ? insightsRegionMap.resourceTypes.find((aiRt) => aiRt.resourceType === 'components') : undefined;
+        const supportedRegions: Provider = await resourceClient.providers.get('microsoft.insights');
+        const componentsResourceType: ProviderResourceType | undefined = supportedRegions.resourceTypes && supportedRegions.resourceTypes.find(aiRt => aiRt.resourceType === 'components');
 
-        return componentsResourceType ?
-            componentsResourceType.locations ?
-                componentsResourceType.locations.some((loc) => loc === location.displayName) : false
-            : false;
+        return !!componentsResourceType && !!componentsResourceType.locations && componentsResourceType.locations.some((loc) => loc === location.displayName);
     }
 }
