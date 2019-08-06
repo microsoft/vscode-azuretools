@@ -513,6 +513,12 @@ export interface ITelemetryContext {
      * Defaults to `false`. If true, successful events are suppressed from telemetry, but cancel and error events are still sent.
      */
     suppressIfSuccessful?: boolean;
+
+    /**
+     * Defaults to `false`. If true, all events are suppressed from telemetry.
+     */
+    suppressAll?: boolean;
+
 }
 
 export interface IErrorHandlingContext {
