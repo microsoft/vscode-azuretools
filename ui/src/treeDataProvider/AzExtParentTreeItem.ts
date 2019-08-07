@@ -9,6 +9,7 @@ import * as types from '../../index';
 import { NotImplementedError } from '../errors';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
+import { randomUtils } from '../utils/randomUtils';
 import { AzExtTreeItem } from './AzExtTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';
 import { getIconPath, getThemedIconPath } from './IconPath';
@@ -184,6 +185,15 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
             try {
                 const item: AzExtTreeItem | undefined = await createTreeItem(source);
                 if (item) {
+                    // Verify at least the following properties can be accessed without an error
+                    // tslint:disable: no-unused-expression
+                    item.contextValue;
+                    item.description;
+                    item.label;
+                    item.iconPath;
+                    item.id;
+                    // tslint:enable: no-unused-expression
+
                     treeItems.push(item);
                 }
             } catch (error) {
@@ -197,7 +207,8 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
                 if (name) {
                     treeItems.push(new InvalidTreeItem(this, error, {
                         label: name,
-                        contextValue: invalidContextValue
+                        contextValue: invalidContextValue,
+                        data: source
                     }));
                 } else if (!isNullOrUndefined(error)) {
                     lastUnknownItemError = error;
@@ -316,6 +327,7 @@ export class InvalidTreeItem extends AzExtParentTreeItem implements types.Invali
     public readonly contextValue: string;
     public readonly label: string;
     public readonly description: string;
+    public readonly data?: unknown;
 
     private _error: unknown;
 
@@ -324,7 +336,13 @@ export class InvalidTreeItem extends AzExtParentTreeItem implements types.Invali
         this.label = options.label;
         this._error = error;
         this.contextValue = options.contextValue;
+        this.data = options.data;
         this.description = options.description !== undefined ? options.description : localize('invalid', 'Invalid');
+    }
+
+    public get id(): string {
+        // `id` doesn't really matter for invalid items, but we want to avoid duplicates since that could break the tree
+        return randomUtils.getRandomHexString(16);
     }
 
     public get iconPath(): types.TreeItemIconPath {

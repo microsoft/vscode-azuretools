@@ -4,14 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as path from 'path';
-import * as types from '../../index';
+import { TreeItemIconPath } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 
-export function getIconPath(iconName: string): types.TreeItemIconPath {
+export function getIconPath(iconName: string): TreeItemIconPath {
     return path.join(getResourcesPath(), `${iconName}.svg`);
 }
 
-export function getThemedIconPath(iconName: string): types.TreeItemIconPath {
+export function getThemedIconPath(iconName: string): TreeItemIconPath {
     return {
         light: path.join(getResourcesPath(), 'light', `${iconName}.svg`),
         dark: path.join(getResourcesPath(), 'dark', `${iconName}.svg`)
@@ -21,5 +21,5 @@ export function getThemedIconPath(iconName: string): types.TreeItemIconPath {
 function getResourcesPath(): string {
     return ext.ignoreBundle ?
         path.join(__dirname, '..', '..', '..', 'resources') :
-        path.join(__dirname, 'node_modules', 'vscode-azureextensionui', 'resources');
+        path.join(__dirname, 'node_modules', 'vscode-azureappservice', 'resources');
 }

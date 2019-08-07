@@ -231,12 +231,18 @@ export interface IInvalidTreeItemOptions {
      * Defaults to "Invalid" if undefined
      */
     description?: string;
+
+    /**
+     * Any arbitrary data to include with this tree item
+     */
+    data?: unknown;
 }
 
 export class InvalidTreeItem extends AzExtParentTreeItem {
     public contextValue: string;
     public label: string;
     public iconPath: TreeItemIconPath;
+    public readonly data?: unknown;
 
     constructor(parent: AzExtParentTreeItem, error: unknown, options: IInvalidTreeItemOptions);
 
@@ -507,6 +513,12 @@ export interface ITelemetryContext {
      * Defaults to `false`. If true, successful events are suppressed from telemetry, but cancel and error events are still sent.
      */
     suppressIfSuccessful?: boolean;
+
+    /**
+     * Defaults to `false`. If true, all events are suppressed from telemetry.
+     */
+    suppressAll?: boolean;
+
 }
 
 export interface IErrorHandlingContext {
@@ -1035,6 +1047,11 @@ export interface UIExtensionVariables {
     outputChannel: OutputChannel;
     ui: IAzureUserInput;
     reporter: ITelemetryReporter;
+
+    /**
+     * Set to true if not running under a webpacked 'dist' folder as defined in 'vscode-azureextensiondev'
+     */
+    ignoreBundle?: boolean;
 }
 
 export interface IAddUserAgent {

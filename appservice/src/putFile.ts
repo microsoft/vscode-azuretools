@@ -5,6 +5,7 @@
 
 import { HttpOperationResponse } from 'ms-rest';
 import { Readable } from 'stream';
+import { KuduClient } from 'vscode-azurekudu';
 import { SiteClient } from './SiteClient';
 
 /**
@@ -23,6 +24,7 @@ export async function putFile(client: SiteClient, data: Readable | string, fileP
         stream = data;
     }
     const options: {} = etag ? { customHeaders: { ['If-Match']: etag } } : {};
-    const result: HttpOperationResponse<{}> = await client.kudu.vfs.putItemWithHttpOperationResponse(stream, filePath, options);
+    const kuduClient: KuduClient = await client.getKuduClient();
+    const result: HttpOperationResponse<{}> = await kuduClient.vfs.putItemWithHttpOperationResponse(stream, filePath, options);
     return <string>result.response.headers.etag;
 }

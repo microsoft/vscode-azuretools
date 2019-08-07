@@ -5,19 +5,15 @@
 
 import { ExtensionContext, OutputChannel } from "vscode";
 import { IAzureUserInput, registerUIExtensionVariables, UIExtensionVariables } from 'vscode-azureextensionui';
+import TelemetryReporter from "vscode-extension-telemetry";
 import { localize } from "./localize";
 
-/**
- * Interface for common extension variables used throughout the AppService package.
- */
-export interface IAppServiceExtensionVariables {
-    outputChannel: OutputChannel;
-    ui: IAzureUserInput;
-    context: ExtensionContext;
-}
+class UninitializedExtensionVariables implements UIExtensionVariables {
+    private _error: Error = new Error(localize('uninitializedError', '"registerUIExtensionVariables" must be called before using the vscode-azureappservice package.'));
 
-class UninitializedExtensionVariables implements IAppServiceExtensionVariables {
-    private _error: Error = new Error(localize('uninitializedError', '"registerAppServiceExtensionVariables" must be called before using the vscode-azureappservice package.'));
+    public get context(): ExtensionContext {
+        throw this._error;
+    }
 
     public get outputChannel(): OutputChannel {
         throw this._error;
@@ -27,7 +23,7 @@ class UninitializedExtensionVariables implements IAppServiceExtensionVariables {
         throw this._error;
     }
 
-    public get context(): ExtensionContext {
+    public get reporter(): TelemetryReporter {
         throw this._error;
     }
 }
@@ -35,12 +31,12 @@ class UninitializedExtensionVariables implements IAppServiceExtensionVariables {
 /**
  * Container for common extension variables used throughout the AppService package. They must be initialized with registerAppServiceExtensionVariables
  */
-export let ext: IAppServiceExtensionVariables = new UninitializedExtensionVariables();
+export let ext: UIExtensionVariables = new UninitializedExtensionVariables();
 
 /**
  * Call this to register common variables used throughout the AppService package.
  */
-export function registerAppServiceExtensionVariables(extVars: IAppServiceExtensionVariables & UIExtensionVariables): void {
+export function registerAppServiceExtensionVariables(extVars: UIExtensionVariables): void {
     ext = extVars;
     registerUIExtensionVariables(extVars);
 }

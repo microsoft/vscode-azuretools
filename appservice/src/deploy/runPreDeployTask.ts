@@ -84,7 +84,7 @@ async function waitForPreDeployTask(preDeployTask: vscode.Task): Promise<number>
 }
 
 export async function handleFailedPreDeployTask(context: IActionContext, preDeployResult: IPreDeployTaskResult): Promise<void> {
-    const message: string = localize('taskFailed', 'Pre-deploy task "{0}" failed with exit code "{1}".', preDeployResult.taskName, preDeployResult.exitCode);
+    const message: string = localize('taskFailed', 'Errors exist after running preDeployTask "{0}". See task output for more info.', preDeployResult.taskName);
     const deployAnyway: vscode.MessageItem = { title: localize('deployAnyway', 'Deploy Anyway') };
     const openSettings: vscode.MessageItem = { title: localize('openSettings', 'Open Settings') };
     const result: vscode.MessageItem | undefined = await vscode.window.showErrorMessage(message, { modal: true }, deployAnyway, openSettings);

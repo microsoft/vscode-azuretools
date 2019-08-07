@@ -4,11 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { SlotConfigNamesResource, StringDictionary } from 'azure-arm-website/lib/models';
-import * as path from 'path';
-import { AzureTreeItem, DialogResponses, IActionContext } from 'vscode-azureextensionui';
+import { AzureTreeItem, DialogResponses, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { AppSettingsTreeItem, validateAppSettingKey } from './AppSettingsTreeItem';
+import { getThemedIconPath } from './IconPath';
 import { ISiteTreeRoot } from './ISiteTreeRoot';
 
 export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
@@ -43,11 +43,8 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         return this._hideValue ? `${this._key}=Hidden value. Click to view.` : `${this._key}=${this._value}`;
     }
 
-    public get iconPath(): { light: string, dark: string } {
-        return {
-            light: path.join(__filename, '..', '..', '..', '..', 'resources', 'light', 'Item_16x_vscode.svg'),
-            dark: path.join(__filename, '..', '..', '..', '..', 'resources', 'dark', 'Item_16x_vscode.svg')
-        };
+    public get iconPath(): TreeItemIconPath {
+        return getThemedIconPath('Item_16x_vscode');
     }
 
     public async edit(context: IActionContext): Promise<void> {

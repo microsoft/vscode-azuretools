@@ -44,6 +44,7 @@ export async function deploy(client: SiteClient, fsPath: string, context: IActio
                     context.telemetry.properties.planKind = String(plan.kind);
                     if (plan.sku) {
                         context.telemetry.properties.planSize = String(plan.sku.size);
+                        context.telemetry.properties.planTier = String(plan.sku.tier);
                     }
                 }
             },
@@ -66,7 +67,7 @@ export async function deploy(client: SiteClient, fsPath: string, context: IActio
                     await deployWar(client, fsPath);
                     break;
                 }
-                await deployZip(client, fsPath, aspPromise);
+                await deployZip(context, client, fsPath, aspPromise);
                 break;
         }
     });
