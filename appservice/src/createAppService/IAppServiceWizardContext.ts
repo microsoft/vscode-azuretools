@@ -75,7 +75,7 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
     recommendedSiteRuntime?: LinuxRuntimes[];
 
     /**
-     * Application insights components are necessary for Function apps log streaming.  By default, we should instance
+     * Application insights components are necessary for Function apps log streaming.  By default, we should instantiate
      * one for the user if there is a data farm available within the same region as the web app
      */
     appInsightsComponent?: ApplicationInsightsComponent;
