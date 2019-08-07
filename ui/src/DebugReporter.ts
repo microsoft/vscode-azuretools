@@ -7,7 +7,7 @@ import * as console from 'console';
 import { ITelemetryReporter } from '../index';
 
 export class DebugReporter implements ITelemetryReporter {
-    constructor(private _extensionName: string, private _extensionVersion: string) {
+    constructor(private _extensionName: string, private _extensionVersion: string, private _verbose: boolean) {
     }
 
     public sendTelemetryEvent(eventName: string, properties?: { [key: string]: string | undefined; }, measures?: { [key: string]: number | undefined; }): void {
@@ -16,10 +16,14 @@ export class DebugReporter implements ITelemetryReporter {
             const propertiesString: string = JSON.stringify(properties || {});
             // tslint:disable-next-line:strict-boolean-expressions
             const measuresString: string = JSON.stringify(measures || {});
-            // tslint:disable-next-line:no-console
-            console.log(`** TELEMETRY("${this._extensionName}/${eventName}", ${this._extensionVersion}) properties=${propertiesString}, measures=${measuresString}`);
+
+            if (this._verbose) {
+                let msg: string = `** TELEMETRY("${this._extensionName}/${eventName}", ${this._extensionVersion}) properties=${propertiesString}, measures=${measuresString}`;
+                // tslint:disable-next-line:no-console
+                console.log(msg);
+            }
         } catch (error) {
-            console.error(error);
+            console.error(`ERROR (DebugReporter): ${error}`);
         }
     }
 }
