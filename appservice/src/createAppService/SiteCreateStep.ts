@@ -22,6 +22,7 @@ export interface IAppSettingsContext {
     fileShareName: string;
     os: string;
     runtime: string;
+    aiInstrumentationKey?: string;
 }
 
 export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
@@ -93,7 +94,8 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
                     // tslint:disable-next-line:no-non-null-assertion
                     os: wizardContext.newSiteOS!,
                     // tslint:disable-next-line:no-non-null-assertion
-                    runtime: wizardContext.newSiteRuntime!
+                    runtime: wizardContext.newSiteRuntime!,
+                    aiInstrumentationKey: wizardContext.appInsightsComponent ? wizardContext.appInsightsComponent.instrumentationKey : undefined
                 });
             }
         }
