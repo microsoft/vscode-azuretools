@@ -8,7 +8,7 @@ import { ResourceManagementClient } from 'azure-arm-resource';
 import { Provider, ProviderResourceType } from 'azure-arm-resource/lib/resource/models';
 import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { Progress } from 'vscode';
-import { AzureWizardExecuteStep, createAzureClient } from 'vscode-azureextensionui';
+import { AzureWizardExecuteStep, createAzureClient, IParsedError, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { nonNullProp, nonNullValue } from '../utils/nonNull';
@@ -24,19 +24,24 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
         if (await this.appInsightsSupportedInLocation(wizardContext, location)) {
             const client: ApplicationInsightsManagementClient = createAzureClient(wizardContext, ApplicationInsightsManagementClient);
             const rgName: string = nonNullValue(wizardContext.newResourceGroupName);
-            const aiName: string = nonNullValue(wizardContext.newApplicationInsightsName);
+            const aiName: string = nonNullValue(wizardContext.newAppInsightsName);
             try {
-                wizardContext.applicationInsights = await client.components.get(rgName, aiName);
+                wizardContext.appInsightsComponent = await client.components.get(rgName, aiName);
                 ext.outputChannel.appendLine(localize('existingNewAppInsights', 'Using existing application insights component "{0}".', aiName));
             } catch (error) {
-                // Only expecting a resource not found error here
-                const creatingNewAppInsights: string = localize('creatingNewAppInsightsInsights', 'Creating new application insights component "{0}"...', wizardContext.newSiteName);
-                ext.outputChannel.appendLine(creatingNewAppInsights);
-                progress.report({ message: creatingNewAppInsights });
+                const pError: IParsedError = parseError(error);
+                // Only expecting a resource not found error if this is a new component
+                if (pError.errorType === 'ResourceNotFound') {
+                    const creatingNewAppInsights: string = localize('creatingNewAppInsightsInsights', 'Creating new application insights component "{0}"...', wizardContext.newSiteName);
+                    ext.outputChannel.appendLine(creatingNewAppInsights);
+                    progress.report({ message: creatingNewAppInsights });
 
-                wizardContext.applicationInsights = await client.components.createOrUpdate(rgName, aiName, { kind: 'web', applicationType: 'web', location: nonNullProp(location, 'name') });
-                const createdNewAppInsights: string = localize('createdNewAppInsights', 'Created new application insights component "{0}"...', aiName);
-                ext.outputChannel.appendLine(createdNewAppInsights);
+                    wizardContext.appInsightsComponent = await client.components.createOrUpdate(rgName, aiName, { kind: 'web', applicationType: 'web', location: nonNullProp(location, 'name') });
+                    const createdNewAppInsights: string = localize('createdNewAppInsights', 'Created new application insights component "{0}"...', aiName);
+                    ext.outputChannel.appendLine(createdNewAppInsights);
+                } else {
+                    throw error;
+                }
             }
         } else {
             const appInsightsNotAvailable: string = localize('appInsightsNotAvailable', 'Skipping creating an application insights component because it isn\'t compatible with this location.');
@@ -45,7 +50,7 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
     }
 
     public shouldExecute(wizardContext: IAppServiceWizardContext): boolean {
-        return !wizardContext.applicationInsights;
+        return !wizardContext.appInsightsComponent;
     }
 
     private async appInsightsSupportedInLocation(wizardContext: IAppServiceWizardContext, location: Location): Promise<boolean> {

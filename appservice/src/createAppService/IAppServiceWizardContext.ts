@@ -78,11 +78,11 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
      * Application insights components are necessary for Function apps log streaming.  By default, we should instance
      * one for the user if there is a data farm available within the same region as the web app
      */
-    applicationInsights?: ApplicationInsightsComponent;
+    appInsightsComponent?: ApplicationInsightsComponent;
 
     /**
      * The name of the new application insights component
      * This will be defined after `AppInsightsNameStep.prompt` occurs.
      */
-    newApplicationInsightsName?: string;
+    newAppInsightsName?: string;
 }
