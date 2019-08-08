@@ -8,7 +8,7 @@ import { ResourceManagementClient } from 'azure-arm-resource';
 import { Provider, ProviderResourceType } from 'azure-arm-resource/lib/resource/models';
 import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { Progress } from 'vscode';
-import { AzureWizardExecuteStep, createAzureClient, IParsedError, parseError } from 'vscode-azureextensionui';
+import { AzureWizardExecuteStep, createAzureClient, IParsedError, LocationListStep, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { nonNullProp, nonNullValue } from '../utils/nonNull';
@@ -38,7 +38,7 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
                     ext.outputChannel.appendLine(creatingNewAppInsights);
                     progress.report({ message: creatingNewAppInsights });
 
-                    wizardContext.appInsightsComponent = await client.components.createOrUpdate(rgName, aiName, { kind: 'web', applicationType: 'web', location: nonNullProp(location, 'name') });
+                    wizardContext.appInsightsComponent = await client.components.createOrUpdate(rgName, aiName, { kind: 'web', applicationType: 'web', location: this._location });
                     const createdNewAppInsights: string = localize('createdNewAppInsights', 'Created new application insights component "{0}"...', aiName);
                     ext.outputChannel.appendLine(createdNewAppInsights);
                 } else {
@@ -84,3 +84,14 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
         }
     }
 }
+
+type RegionMappingJsonResponse = {
+    regions: {
+        [key: string]: RegionMap
+    }
+};
+
+type RegionMap = {
+    geo: string,
+    pairedRegions: string[]
+};
