@@ -3,37 +3,37 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureWizardPromptStep, resourceGroupNamingRules } from 'vscode-azureextensionui';
+import { AzureWizardPromptStep } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { AppInsightsListStep } from './AppInsightsListStep';
+import { AppInsightsListStep, appInsightsNamingRules } from './AppInsightsListStep';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class AppInsightsNameStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
         const suggestedName: string | undefined = wizardContext.relatedNameTask ? await wizardContext.relatedNameTask : undefined;
-        wizardContext.newResourceGroupName = (await ext.ui.showInputBox({
+        wizardContext.newAppInsightsName = (await ext.ui.showInputBox({
             value: suggestedName,
-            prompt: 'Enter the name of the new application insight.',
+            prompt: 'Enter the name of the new application insight component.',
             validateInput: async (value: string | undefined): Promise<string | undefined> => await this.validateApplicationInsightName(wizardContext, value)
         })).trim();
     }
 
     public shouldPrompt(wizardContext: IAppServiceWizardContext): boolean {
-        return !wizardContext.newResourceGroupName;
+        return !wizardContext.newAppInsightsName;
     }
 
     private async validateApplicationInsightName(wizardContext: IAppServiceWizardContext, name: string | undefined): Promise<string | undefined> {
         name = name ? name.trim() : '';
 
-        if (name.length < resourceGroupNamingRules.minLength || name.length > resourceGroupNamingRules.maxLength) {
-            return localize('invalidLength', 'The name must be between {0} and {1} characters.', resourceGroupNamingRules.minLength, resourceGroupNamingRules.maxLength);
-        } else if (name.match(resourceGroupNamingRules.invalidCharsRegExp) !== null) {
+        if (name.length < appInsightsNamingRules.minLength || name.length > appInsightsNamingRules.maxLength) {
+            return localize('invalidLength', 'The name must be between {0} and {1} characters.', appInsightsNamingRules.minLength, appInsightsNamingRules.maxLength);
+        } else if (name.match(appInsightsNamingRules.invalidCharsRegExp) !== null) {
             return localize('invalidChars', "The name can only contain alphanumeric characters or the symbols ._-()");
         } else if (name.endsWith('.')) {
             return localize('invalidEndingChar', "The name cannot end in a period.");
         } else if (!await AppInsightsListStep.isNameAvailable(wizardContext, name)) {
-            return localize('nameAlreadyExists', 'Resource group "{0}" already exists in subscription "{1}".', name, wizardContext.subscriptionDisplayName);
+            return localize('nameAlreadyExists', 'Application insights component "{0}" already exists in subscription "{1}".', name, wizardContext.subscriptionDisplayName);
         } else {
             return undefined;
         }
