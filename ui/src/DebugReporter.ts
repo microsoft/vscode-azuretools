@@ -18,7 +18,7 @@ export class DebugReporter implements ITelemetryReporter {
             const measuresString: string = JSON.stringify(measures || {});
 
             if (this._verbose) {
-                let msg: string = `** TELEMETRY("${this._extensionName}/${eventName}", ${this._extensionVersion}) properties=${propertiesString}, measures=${measuresString}`;
+                const msg: string = `** TELEMETRY("${this._extensionName}/${eventName}", ${this._extensionVersion}) properties=${propertiesString}, measures=${measuresString}`;
                 // tslint:disable-next-line:no-console
                 console.log(msg);
             }

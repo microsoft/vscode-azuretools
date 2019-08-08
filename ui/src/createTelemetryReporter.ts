@@ -12,6 +12,7 @@ import { getPackageInfo } from './getPackageInfo';
 
 // tslint:disable-next-line:strict-boolean-expressions
 const debugTelemetryEnabled: boolean = !/^(false|0)?$/i.test(process.env.DEBUGTELEMETRY || '');
+// tslint:disable-next-line:strict-boolean-expressions
 const debugTelemetryVerbose: boolean = /^(verbose|v)$/i.test(process.env.DEBUGTELEMETRY || '');
 
 export function createTelemetryReporter(ctx: vscode.ExtensionContext): ITelemetryReporter {
