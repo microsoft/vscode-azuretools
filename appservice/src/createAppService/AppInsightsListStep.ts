@@ -5,6 +5,7 @@
 
 import { ApplicationInsightsManagementClient } from "azure-arm-appinsights";
 import { ApplicationInsightsComponent, ApplicationInsightsComponentListResult } from "azure-arm-appinsights/lib/models";
+import { isString } from "util";
 import { AzureWizardPromptStep, createAzureClient, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions } from "vscode-azureextensionui";
 import { ext } from "../extensionVariables";
 import { localize } from "../localize";
@@ -35,6 +36,11 @@ export class AppInsightsListStep extends AzureWizardPromptStep<IAppServiceWizard
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
         const options: IAzureQuickPickOptions = { placeHolder: 'Select an App Insights component for your app.', id: `AppInsightsListStep/${wizardContext.subscriptionId}` };
         wizardContext.appInsightsComponent = (await ext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
+        if (wizardContext.appInsightsComponent) {
+            if (isString(wizardContext.appInsightsComponent)) {
+                wizardContext.telemetry.properties.skipForNow = 'true';
+            }
+        }
     }
 
     public shouldPrompt(wizardContext: IAppServiceWizardContext): boolean {

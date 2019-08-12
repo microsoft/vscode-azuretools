@@ -37,6 +37,7 @@ export class AppInsightsLocationStep extends AzureWizardPromptStep<IAppServiceWi
             const pairedRegions: string[] | undefined = await this.getPairedRegions(locationName);
             if (pairedRegions.length > 0) {
                 // if there is at least one region listed, return the first
+                wizardContext.telemetry.properties.locationSupported = 'pairedRegion';
                 return pairedRegions[0];
             }
 
