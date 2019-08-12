@@ -12,6 +12,8 @@ import { getPackageInfo } from './getPackageInfo';
 
 // tslint:disable-next-line:strict-boolean-expressions
 const debugTelemetryEnabled: boolean = !/^(false|0)?$/i.test(process.env.DEBUGTELEMETRY || '');
+// tslint:disable-next-line:strict-boolean-expressions
+const debugTelemetryVerbose: boolean = /^(verbose|v)$/i.test(process.env.DEBUGTELEMETRY || '');
 
 export function createTelemetryReporter(ctx: vscode.ExtensionContext): ITelemetryReporter {
     const { extensionName, extensionVersion, aiKey } = getPackageInfo(ctx);
@@ -19,7 +21,8 @@ export function createTelemetryReporter(ctx: vscode.ExtensionContext): ITelemetr
     let newReporter: ITelemetryReporter;
 
     if (debugTelemetryEnabled) {
-        newReporter = new DebugReporter(extensionName, extensionVersion);
+        console.warn(`${extensionName}: DEBUGTELEMETRY mode enabled (${debugTelemetryVerbose ? 'verbose' : 'quiet'}) - not sending telemetry`);
+        newReporter = new DebugReporter(extensionName, extensionVersion, debugTelemetryVerbose);
     } else {
         const reporter: TelemetryReporter = new TelemetryReporter(extensionName, extensionVersion, aiKey);
         ctx.subscriptions.push(reporter);

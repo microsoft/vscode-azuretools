@@ -77,12 +77,19 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
     /**
      * Application insights components are necessary for Function apps log streaming.  By default, we should instantiate
      * one for the user if there is a data farm available within the same region as the web app
+     * The string value is reserved for "Skip for now" which is used to by-pass creating an AI component
      */
-    appInsightsComponent?: ApplicationInsightsComponent;
+    appInsightsComponent?: ApplicationInsightsComponent | string;
 
     /**
      * The name of the new application insights component
      * This will be defined after `AppInsightsNameStep.prompt` occurs.
      */
     newAppInsightsName?: string;
+
+    /**
+     * The location of the new application insights component
+     * This will be defined after `AppInsightsLocationStep.prompt` occurs.
+     */
+    newAppInsightsLocation?: string;
 }

@@ -173,7 +173,7 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
 
 ### Debug telemetry
 
-If the environment variable `DEBUGTELEMETRY` is set to a non-empty, non-zero value, then the telemetry reporter created by `createTelemetryReporter()` will display to the console window only, and will not attempt to send any data.
+If the environment variable `DEBUGTELEMETRY` is set to a non-empty, non-zero value, then the telemetry reporter created by `createTelemetryReporter()` will not attempt to send any data.  If the value is 'verbose' or 'v', the telemetry will not be sent but will be displayed on the console window.
 
 ## Azure Base Editor
 
@@ -233,7 +233,7 @@ export class ExampleEditor extends BaseEditor<AzureTreeItem> {
 }
 ```
 
-3. Create a command in a separate file for extension.ts to register later on. 
+3. Create a command in a separate file for extension.ts to register later on.
 
 ```typescript
 export async function selectCommand(node: {}, editor: ExampleEditor) {
@@ -254,7 +254,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 ```
 
-5. For 'commandName.selectFile' to trigger, have a class that extends an AzureTreeItem and set a property for commandId and set it to 'commandName.selectFile'. Pulling from the DisplayAzureResources example, we have this class. 
+5. For 'commandName.selectFile' to trigger, have a class that extends an AzureTreeItem and set a property for commandId and set it to 'commandName.selectFile'. Pulling from the DisplayAzureResources example, we have this class.
 ```typescript
 export class WebAppTreeItem extends AzureTreeItem {
   public static contextValue: string = "azureWebApp";

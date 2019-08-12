@@ -8,6 +8,7 @@ import StorageManagementClient = require('azure-arm-storage');
 import { StorageAccount, StorageAccountListKeysResult } from 'azure-arm-storage/lib/models';
 import { WebSiteManagementClient } from 'azure-arm-website';
 import { NameValuePair, SiteConfig } from 'azure-arm-website/lib/models';
+import { isString } from 'util';
 import { Progress } from 'vscode';
 import { AzureWizardExecuteStep, createAzureClient } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
@@ -95,7 +96,7 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
                     os: wizardContext.newSiteOS!,
                     // tslint:disable-next-line:no-non-null-assertion
                     runtime: wizardContext.newSiteRuntime!,
-                    aiInstrumentationKey: wizardContext.appInsightsComponent ? wizardContext.appInsightsComponent.instrumentationKey : undefined
+                    aiInstrumentationKey: wizardContext.appInsightsComponent && !isString(wizardContext.appInsightsComponent) ? wizardContext.appInsightsComponent.instrumentationKey : undefined
                 });
             }
         }
