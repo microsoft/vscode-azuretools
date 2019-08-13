@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { ApplicationInsightsComponent, ApplicationInsightsComponentListResult } from 'azure-arm-appinsights/lib/models';
 import { AzureWizardPromptStep } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -10,6 +11,12 @@ import { AppInsightsListStep, appInsightsNamingRules } from './AppInsightsListSt
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class AppInsightsNameStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
+
+    public async isNameAvailable(wizardContext: IAppServiceWizardContext, name: string): Promise<boolean> {
+        const appInsightsTask: Promise<ApplicationInsightsComponentListResult> = AppInsightsListStep.getAppInsightsComponents(wizardContext);
+        return !(await appInsightsTask).some((ai: ApplicationInsightsComponent) => ai.name !== undefined && ai.name.toLowerCase() === name.toLowerCase());
+    }
+
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
         const suggestedName: string | undefined = wizardContext.relatedNameTask ? await wizardContext.relatedNameTask : undefined;
         wizardContext.newAppInsightsName = (await ext.ui.showInputBox({
@@ -28,11 +35,11 @@ export class AppInsightsNameStep extends AzureWizardPromptStep<IAppServiceWizard
 
         if (name.length < appInsightsNamingRules.minLength || name.length > appInsightsNamingRules.maxLength) {
             return localize('invalidLength', 'The name must be between {0} and {1} characters.', appInsightsNamingRules.minLength, appInsightsNamingRules.maxLength);
-        } else if (name.match(appInsightsNamingRules.invalidCharsRegExp) !== null) {
+        } else if (appInsightsNamingRules.invalidCharsRegExp.test(name)) {
             return localize('invalidChars', "The name can only contain alphanumeric characters or the symbols ._-()");
         } else if (name.endsWith('.')) {
             return localize('invalidEndingChar', "The name cannot end in a period.");
-        } else if (!await AppInsightsListStep.isNameAvailable(wizardContext, name)) {
+        } else if (!await this.isNameAvailable(wizardContext, name)) {
             return localize('nameAlreadyExists', 'Application insights component "{0}" already exists in subscription "{1}".', name, wizardContext.subscriptionDisplayName);
         } else {
             return undefined;

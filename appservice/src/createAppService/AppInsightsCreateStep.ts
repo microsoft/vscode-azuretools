@@ -15,7 +15,6 @@ import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
     public priority: number = 135;
-    public location: string;
 
     public async execute(wizardContext: IAppServiceWizardContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         if (!wizardContext.newAppInsightsLocation) {

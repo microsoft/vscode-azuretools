@@ -6,7 +6,7 @@
 import { ResourceManagementClient } from "azure-arm-resource";
 import { Provider, ProviderResourceType } from "azure-arm-resource/lib/resource/models";
 import { Location } from "azure-arm-resource/lib/subscription/models";
-import { AzureWizardPromptStep, createAzureClient, IAzureQuickPickItem, IAzureQuickPickOptions, LocationListStep } from "vscode-azureextensionui";
+import { AzureWizardPromptStep, createAzureClient, IAzureQuickPickItem, IAzureQuickPickOptions } from "vscode-azureextensionui";
 import { ext } from "../extensionVariables";
 import { localize } from "../localize";
 import { nonNullProp } from "../utils/nonNull";
@@ -14,6 +14,7 @@ import { requestUtils } from "../utils/requestUtils";
 import { IAppServiceWizardContext } from "./IAppServiceWizardContext";
 
 export class AppInsightsLocationStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
+
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
         const options: IAzureQuickPickOptions = { placeHolder: localize('locationAppInsights', 'Select a location for the new App Insights component.'), id: `AppInsightsLocationStep/${wizardContext.subscriptionId}` };
         wizardContext.newAppInsightsLocation = (await ext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).label;
@@ -24,12 +25,11 @@ export class AppInsightsLocationStep extends AzureWizardPromptStep<IAppServiceWi
     }
 
     public async getSupportedLocation(wizardContext: IAppServiceWizardContext, location: Location): Promise<string | undefined> {
-        const resourceClient: ResourceManagementClient = createAzureClient(wizardContext, ResourceManagementClient);
-        const supportedRegions: Provider = await resourceClient.providers.get('microsoft.insights');
-        const componentsResourceType: ProviderResourceType | undefined = supportedRegions.resourceTypes && supportedRegions.resourceTypes.find(aiRt => aiRt.resourceType === 'components');
+        // tslint:disable-next-line: strict-boolean-expressions
+        const locations: Location[] = await this.getLocations(wizardContext) || [];
         const locationName: string = nonNullProp(location, 'name');
         // still need to do a name step
-        if (!!componentsResourceType && !!componentsResourceType.locations && componentsResourceType.locations.some((loc) => loc === location.displayName)) {
+        if (locations.some((loc) => loc === location.displayName)) {
             wizardContext.telemetry.properties.locationSupported = 'true';
             return locationName;
         } else {
@@ -62,19 +62,25 @@ export class AppInsightsLocationStep extends AzureWizardPromptStep<IAppServiceWi
         return [];
     }
 
+    private generalizeLocationName(name: string | undefined): string {
+        // tslint:disable-next-line:strict-boolean-expressions
+        return (name || '').toLowerCase().replace(/\s/g, '');
+    }
+
     private async getQuickPicks(wizardContext: IAppServiceWizardContext): Promise<IAzureQuickPickItem<string | undefined>[]> {
         let picks: IAzureQuickPickItem<string | undefined>[] = [];
         const locationName: string = nonNullProp(nonNullProp(wizardContext, 'location'), 'name');
         let pairedRegions: string[] = [locationName];
         pairedRegions = pairedRegions.concat(await this.getPairedRegions(locationName));
 
-        const locations: Location[] = await LocationListStep.getLocations(wizardContext);
+        // tslint:disable-next-line: strict-boolean-expressions
+        const locations: Location[] = await this.getLocations(wizardContext) || [];
         const recommended: string = 'Recommended';
         picks = picks.concat(locations.map((loc: Location) => {
             return {
-                id: loc.id,
+                id: nonNullProp(loc, 'id'),
                 // tslint:disable-next-line:no-non-null-assertion
-                label: loc.displayName!,
+                label: nonNullProp(loc, 'displayName'),
                 description: pairedRegions.find((pr) => pr === loc.name) ? recommended : '',
                 data: loc.name
             };
@@ -90,6 +96,23 @@ export class AppInsightsLocationStep extends AzureWizardPromptStep<IAppServiceWi
                 return 0;
             }
         });
+    }
+
+    private async getLocations(wizardContext: IAppServiceWizardContext): Promise<Location[] | undefined> {
+        const resourceClient: ResourceManagementClient = createAzureClient(wizardContext, ResourceManagementClient);
+        const supportedRegions: Provider = await resourceClient.providers.get('microsoft.insights');
+        const componentsResourceType: ProviderResourceType | undefined = supportedRegions.resourceTypes && supportedRegions.resourceTypes.find(aiRt => aiRt.resourceType === 'components');
+        if (!!componentsResourceType && !!componentsResourceType.locations) {
+            return componentsResourceType.locations.map((locationDisplayName: string) => {
+                return {
+                    name: this.generalizeLocationName(locationDisplayName),
+                    displayName: locationDisplayName,
+                    id: `${wizardContext.subscriptionId}/locations/${this.generalizeLocationName(locationDisplayName)}`
+                };
+            });
+        } else {
+            return undefined;
+        }
     }
 }
 

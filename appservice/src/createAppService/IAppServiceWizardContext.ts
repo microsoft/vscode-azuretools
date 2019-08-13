@@ -3,9 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ApplicationInsightsComponent } from 'azure-arm-appinsights/lib/models';
+import { ApplicationInsightsComponent, ApplicationInsightsComponentListResult } from 'azure-arm-appinsights/lib/models';
 import { AppServicePlan, Site, SkuDescription } from 'azure-arm-website/lib/models';
 import { IResourceGroupWizardContext, IStorageAccountWizardContext } from 'vscode-azureextensionui';
+import { skipForNow } from './AppInsightsListStep';
 import { AppKind, LinuxRuntimes, WebsiteOS } from './AppKind';
 
 export interface IAppServiceWizardContext extends IResourceGroupWizardContext, IStorageAccountWizardContext {
@@ -77,9 +78,15 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
     /**
      * Application insights components are necessary for Function apps log streaming.  By default, we should instantiate
      * one for the user if there is a data farm available within the same region as the web app
-     * The string value is reserved for "Skip for now" which is used to by-pass creating an AI component
+     * The string value is reserved for "skipForNow" which is used to skip creating an AI component
      */
-    appInsightsComponent?: ApplicationInsightsComponent | string;
+    appInsightsComponent?: ApplicationInsightsComponent | skipForNow;
+
+    /**
+     * The task used to get existing Application insights components.
+     * By specifying this in the context, we can ensure that Azure is only queried once for the entire wizard
+     */
+    appInsightsTask?: Promise<ApplicationInsightsComponentListResult>;
 
     /**
      * The name of the new application insights component
