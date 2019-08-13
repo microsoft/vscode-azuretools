@@ -148,6 +148,18 @@ const stacks: ApplicationStack[] = [
         display: ".NET Core",
         majorVersions: [
             {
+                displayVersion: ".NET Core 1.0",
+                runtimeVersion: "DOTNETCORE|1.0"
+            },
+            {
+                displayVersion: ".NET Core 1.1",
+                runtimeVersion: "DOTNETCORE|1.1"
+            },
+            {
+                displayVersion: ".NET Core 2.0",
+                runtimeVersion: "DOTNETCORE|2.0"
+            },
+            {
                 displayVersion: ".NET Core 2.1",
                 runtimeVersion: "DOTNETCORE|2.1"
             },
@@ -228,24 +240,6 @@ const expectedDotnetPicks: {}[] = [
         id: "DOTNETCORE|2.1",
         label: ".NET Core 2.1",
         data: "DOTNETCORE|2.1",
-        description: undefined
-    },
-    {
-        id: "DOTNETCORE|2.0",
-        label: ".NET Core 2.0",
-        data: "DOTNETCORE|2.0",
-        description: undefined
-    },
-    {
-        id: "DOTNETCORE|1.1",
-        label: ".NET Core 1.1",
-        data: "DOTNETCORE|1.1",
-        description: undefined
-    },
-    {
-        id: "DOTNETCORE|1.0",
-        label: ".NET Core 1.0",
-        data: "DOTNETCORE|1.0",
         description: undefined
     }
 ];
