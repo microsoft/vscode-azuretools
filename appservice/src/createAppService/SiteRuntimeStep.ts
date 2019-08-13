@@ -28,7 +28,7 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
 
             const previewDescription: string = localize('previewDescription', '(Preview)');
             if (wizardContext.newSiteOS === WebsiteOS.linux) {
-                runtimeItems.push({ label: 'Python', description: previewDescription, data: 'python' });
+                runtimeItems.push({ label: 'Python', data: 'python' });
             } else {
                 runtimeItems.push({ label: 'Java', data: 'java' });
                 runtimeItems.push({ label: 'PowerShell', description: previewDescription, data: 'powershell' });
