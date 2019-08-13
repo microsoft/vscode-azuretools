@@ -148,18 +148,6 @@ const stacks: ApplicationStack[] = [
         display: ".NET Core",
         majorVersions: [
             {
-                displayVersion: ".NET Core 1.0",
-                runtimeVersion: "DOTNETCORE|1.0"
-            },
-            {
-                displayVersion: ".NET Core 1.1",
-                runtimeVersion: "DOTNETCORE|1.1"
-            },
-            {
-                displayVersion: ".NET Core 2.0",
-                runtimeVersion: "DOTNETCORE|2.0"
-            },
-            {
                 displayVersion: ".NET Core 2.1",
                 runtimeVersion: "DOTNETCORE|2.1"
             },
