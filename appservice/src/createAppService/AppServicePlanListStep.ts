@@ -47,8 +47,10 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
 
     public async getSubWizard(wizardContext: IAppServiceWizardContext): Promise<IWizardOptions<IAppServiceWizardContext> | undefined> {
         if (!wizardContext.plan) {
+            const promptSteps: AzureWizardPromptStep<IAppServiceWizardContext>[] = [new AppServicePlanNameStep(), new AppServicePlanSkuStep(), new ResourceGroupListStep()];
+            LocationListStep.addStep(wizardContext, promptSteps);
             return {
-                promptSteps: [new AppServicePlanNameStep(), new AppServicePlanSkuStep(), new ResourceGroupListStep(), new LocationListStep()],
+                promptSteps: promptSteps,
                 executeSteps: [new AppServicePlanCreateStep()]
             };
         } else {
