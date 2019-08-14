@@ -799,9 +799,9 @@ export interface ILocationWizardContext extends ISubscriptionWizardContext {
     location?: Location;
 
     /**
-     * Optional task to describe the subset of locations that should be displayed.
-     * If not specified, all locations supported by the user's subscription will be displayed.
-     */
+  * Optional task to describe the subset of locations that should be displayed.
+  * If not specified, all locations supported by the user's subscription will be displayed.
+  */
     locationsTask?: Promise<{ name?: string }[]>;
 }
 
@@ -885,12 +885,6 @@ export interface IResourceGroupWizardContext extends ILocationWizardContext, IRe
      * By specifying this in the context, we can ensure that Azure is only queried once for the entire wizard
      */
     resourceGroupsTask?: Promise<ResourceGroup[]>;
-
-    /**
-     * If true, this step will not add a LocationListStep for the "Create new resource group" sub wizard.
-     * This is meant for situations when the location can be inferred from other resources later in the wizard.
-     */
-    resourceGroupDeferLocationStep?: boolean;
 
     newResourceGroupName?: string;
 }
