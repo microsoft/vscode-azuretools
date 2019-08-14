@@ -13,15 +13,15 @@ import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 export class AppInsightsNameStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
 
     public async isNameAvailable(wizardContext: IAppServiceWizardContext, name: string): Promise<boolean> {
-        const appInsightsTask: Promise<ApplicationInsightsComponentListResult> = AppInsightsListStep.getAppInsightsComponents(wizardContext);
-        return !(await appInsightsTask).some((ai: ApplicationInsightsComponent) => ai.name !== undefined && ai.name.toLowerCase() === name.toLowerCase());
+        const appInsightsComponents: ApplicationInsightsComponentListResult = await AppInsightsListStep.getAppInsightsComponents(wizardContext);
+        return !appInsightsComponents.some((ai: ApplicationInsightsComponent) => ai.name !== undefined && ai.name.toLowerCase() === name.toLowerCase());
     }
 
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
         const suggestedName: string | undefined = wizardContext.relatedNameTask ? await wizardContext.relatedNameTask : undefined;
         wizardContext.newAppInsightsName = (await ext.ui.showInputBox({
             value: suggestedName,
-            prompt: 'Enter the name of the new application insight component.',
+            prompt: 'Enter the name of the new Application Insights resource.',
             validateInput: async (value: string | undefined): Promise<string | undefined> => await this.validateApplicationInsightName(wizardContext, value)
         })).trim();
     }
@@ -40,7 +40,7 @@ export class AppInsightsNameStep extends AzureWizardPromptStep<IAppServiceWizard
         } else if (name.endsWith('.')) {
             return localize('invalidEndingChar', "The name cannot end in a period.");
         } else if (!await this.isNameAvailable(wizardContext, name)) {
-            return localize('nameAlreadyExists', 'Application insights component "{0}" already exists in subscription "{1}".', name, wizardContext.subscriptionDisplayName);
+            return localize('nameAlreadyExists', 'Application Insights resource "{0}" already exists in subscription "{1}".', name, wizardContext.subscriptionDisplayName);
         } else {
             return undefined;
         }

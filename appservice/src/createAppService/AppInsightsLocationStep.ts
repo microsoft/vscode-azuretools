@@ -16,8 +16,8 @@ import { IAppServiceWizardContext } from "./IAppServiceWizardContext";
 export class AppInsightsLocationStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
 
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
-        const options: IAzureQuickPickOptions = { placeHolder: localize('locationAppInsights', 'Select a location for the new App Insights component.'), id: `AppInsightsLocationStep/${wizardContext.subscriptionId}` };
-        wizardContext.newAppInsightsLocation = (await ext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).label;
+        const options: IAzureQuickPickOptions = { placeHolder: localize('locationAppInsights', 'Select a location for the new Application Insights resource.'), id: `AppInsightsLocationStep/${wizardContext.subscriptionId}` };
+        wizardContext.newAppInsightsLocation = (await ext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
     }
 
     public shouldPrompt(wizardContext: IAppServiceWizardContext): boolean {

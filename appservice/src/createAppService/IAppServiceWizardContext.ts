@@ -76,26 +76,32 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
     recommendedSiteRuntime?: LinuxRuntimes[];
 
     /**
-     * Application insights components are necessary for Function apps log streaming.  By default, we should instantiate
+     * App Insights components are necessary for Function apps log streaming.  By default, we should instantiate
      * one for the user if there is a data farm available within the same region as the web app
      * The string value is reserved for "skipForNow" which is used to skip creating an AI component
      */
-    appInsightsComponent?: ApplicationInsightsComponent | skipForNow;
+    appInsightsComponent?: ApplicationInsightsComponent;
 
     /**
-     * The task used to get existing Application insights components.
+     * The task used to get existing App Insights components.
      * By specifying this in the context, we can ensure that Azure is only queried once for the entire wizard
      */
     appInsightsTask?: Promise<ApplicationInsightsComponentListResult>;
 
     /**
-     * The name of the new application insights component
+     * Boolean indicating that the user opted out of creating an Application inisghts component.
+     * Should be set in the AppInsightsListStep so any checks should be after that
+     */
+    appInsightsSkip?: boolean;
+
+    /**
+     * The name of the new App Insights component
      * This will be defined after `AppInsightsNameStep.prompt` occurs.
      */
     newAppInsightsName?: string;
 
     /**
-     * The location of the new application insights component
+     * The location of the new App Insights component
      * This will be defined after `AppInsightsLocationStep.prompt` occurs.
      */
     newAppInsightsLocation?: string;

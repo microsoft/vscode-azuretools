@@ -15,8 +15,6 @@ export * from './createAppService/SiteHostingPlanStep';
 export * from './createAppService/SiteNameStep';
 export * from './createAppService/SiteOSStep';
 export * from './createAppService/SiteRuntimeStep';
-export * from './createAppService/AppInsightsListStep';
-export * from './createAppService/AppInsightsCreateStep';
 export * from './remoteDebug/remoteDebugCommon';
 export * from './remoteDebug/startRemoteDebug';
 export * from './createSlot';
