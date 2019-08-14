@@ -807,6 +807,13 @@ export interface ILocationWizardContext extends ISubscriptionWizardContext {
 
 export declare class LocationListStep<T extends ILocationWizardContext> extends AzureWizardPromptStep<T> {
     /**
+     * Adds a LocationListStep to the wizard.  This function will ensure there is only one LocationListStep per wizard context.
+     * @param wizardContext The context of the wizard
+     * @param promptSteps The array of steps to include the LocationListStep to
+     */
+    public static addStep<T extends ILocationWizardContext>(wizardContext: T, promptSteps: AzureWizardPromptStep<T>[]): void;
+
+    /**
      * This will set the wizard context's location (in which case the user will _not_ be prompted for location)
      * For example, if the user selects an existing resource, you might want to use that location as the default for the wizard's other resources
      * @param wizardContext The context of the wizard
