@@ -98,8 +98,10 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
 
     public async getSubWizard(wizardContext: T): Promise<types.IWizardOptions<T> | undefined> {
         if (!wizardContext.storageAccount) {
+            const promptSteps: AzureWizardPromptStep<T>[] = [new StorageAccountNameStep(), new ResourceGroupListStep()];
+            LocationListStep.addStep(wizardContext, promptSteps);
             return {
-                promptSteps: [new StorageAccountNameStep(), new ResourceGroupListStep(), new LocationListStep()],
+                promptSteps: promptSteps,
                 executeSteps: [new StorageAccountCreateStep(this._newAccountDefaults)]
             };
         } else {
