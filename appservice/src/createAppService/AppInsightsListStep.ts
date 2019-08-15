@@ -52,7 +52,7 @@ export class AppInsightsListStep extends AzureWizardPromptStep<IAppServiceWizard
             const promptSteps: AzureWizardPromptStep<IAppServiceWizardContext>[] = [new AppInsightsNameStep()];
             LocationListStep.addStep(wizardContext, promptSteps);
             return {
-                promptSteps: [new AppInsightsNameStep()],
+                promptSteps: promptSteps,
                 executeSteps: [new AppInsightsCreateStep()]
             };
         } else {
