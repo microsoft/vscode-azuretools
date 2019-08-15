@@ -799,13 +799,15 @@ export interface ILocationWizardContext extends ISubscriptionWizardContext {
     location?: Location;
 
     /**
-  * Optional task to describe the subset of locations that should be displayed.
-  * If not specified, all locations supported by the user's subscription will be displayed.
-  */
+     * Optional task to describe the subset of locations that should be displayed.
+     * If not specified, all locations supported by the user's subscription will be displayed.
+     */
     locationsTask?: Promise<{ name?: string }[]>;
 }
 
 export declare class LocationListStep<T extends ILocationWizardContext> extends AzureWizardPromptStep<T> {
+    private constructor();
+
     /**
      * Adds a LocationListStep to the wizard.  This function will ensure there is only one LocationListStep per wizard context.
      * @param wizardContext The context of the wizard
