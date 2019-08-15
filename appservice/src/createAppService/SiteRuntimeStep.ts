@@ -28,7 +28,7 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
 
             const previewDescription: string = localize('previewDescription', '(Preview)');
             if (wizardContext.newSiteOS === WebsiteOS.linux) {
-                runtimeItems.push({ label: 'Python', description: previewDescription, data: 'python' });
+                runtimeItems.push({ label: 'Python', data: 'python' });
             } else {
                 runtimeItems.push({ label: 'Java', data: 'java' });
                 runtimeItems.push({ label: 'PowerShell', description: previewDescription, data: 'powershell' });
@@ -78,6 +78,8 @@ export function convertStacksToPicks(stacks: ApplicationStack[], recommendedRunt
         .reduce((acc, val) => acc.concat(val))
         // filter out Node 4.x and 6.x as they are EOL
         .filter(mv => !/node\|(4|6)\./i.test(mv.runtimeVersion))
+        // filter out .NET Core 1.x and 2.0 as they are EOL
+        .filter(mv => !/dotnetcore\|(1\.|2\.0)/i.test(mv.runtimeVersion))
         // sort
         .sort((a, b) => {
             const aInfo: IParsedRuntimeVersion = getRuntimeInfo(a.runtimeVersion);

@@ -806,6 +806,15 @@ export interface ILocationWizardContext extends ISubscriptionWizardContext {
 }
 
 export declare class LocationListStep<T extends ILocationWizardContext> extends AzureWizardPromptStep<T> {
+    private constructor();
+
+    /**
+     * Adds a LocationListStep to the wizard.  This function will ensure there is only one LocationListStep per wizard context.
+     * @param wizardContext The context of the wizard
+     * @param promptSteps The array of steps to include the LocationListStep to
+     */
+    public static addStep<T extends ILocationWizardContext>(wizardContext: T, promptSteps: AzureWizardPromptStep<T>[]): void;
+
     /**
      * This will set the wizard context's location (in which case the user will _not_ be prompted for location)
      * For example, if the user selects an existing resource, you might want to use that location as the default for the wizard's other resources
@@ -885,12 +894,6 @@ export interface IResourceGroupWizardContext extends ILocationWizardContext, IRe
      * By specifying this in the context, we can ensure that Azure is only queried once for the entire wizard
      */
     resourceGroupsTask?: Promise<ResourceGroup[]>;
-
-    /**
-     * If true, this step will not add a LocationListStep for the "Create new resource group" sub wizard.
-     * This is meant for situations when the location can be inferred from other resources later in the wizard.
-     */
-    resourceGroupDeferLocationStep?: boolean;
 
     newResourceGroupName?: string;
 }

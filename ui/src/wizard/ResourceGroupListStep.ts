@@ -45,9 +45,7 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
     public async getSubWizard(wizardContext: T): Promise<types.IWizardOptions<T> | undefined> {
         if (!wizardContext.resourceGroup) {
             const promptSteps: AzureWizardPromptStep<T>[] = [new ResourceGroupNameStep()];
-            if (!wizardContext.resourceGroupDeferLocationStep) {
-                promptSteps.push(new LocationListStep());
-            }
+            LocationListStep.addStep(wizardContext, promptSteps);
 
             return {
                 promptSteps,

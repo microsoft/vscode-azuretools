@@ -10,6 +10,7 @@ import * as types from '../../index';
 import { createAzureSubscriptionClient } from '../createAzureClient';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
+import { nonNullProp } from '../utils/nonNull';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 
 function generalizeLocationName(name: string | undefined): string {
@@ -23,9 +24,23 @@ interface ILocationWizardContextInternal extends types.ILocationWizardContext {
      * By specifying this in the context, we can ensure that Azure is only queried once for the entire wizard
      */
     _allLocationsTask?: Promise<Location[]>;
+
+    _alreadyHasLocationStep?: boolean;
 }
 
 export class LocationListStep<T extends ILocationWizardContextInternal> extends AzureWizardPromptStep<T> implements types.LocationListStep<T> {
+
+    private constructor() {
+        super();
+    }
+
+    public static addStep<T extends ILocationWizardContextInternal>(wizardContext: T, promptSteps: AzureWizardPromptStep<T>[]): void {
+        if (!wizardContext._alreadyHasLocationStep) {
+            promptSteps.push(new LocationListStep());
+            wizardContext._alreadyHasLocationStep = true;
+        }
+    }
+
     public static async setLocation<T extends ILocationWizardContextInternal>(wizardContext: T, name: string): Promise<void> {
         const locations: Location[] = await LocationListStep.getLocations(wizardContext);
         name = generalizeLocationName(name);
@@ -65,7 +80,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
         return locations.map((l: Location) => {
             return {
                 // tslint:disable-next-line:no-non-null-assertion
-                label: l.displayName!,
+                label: nonNullProp(l, 'displayName'),
                 description: '',
                 data: l
             };
