@@ -88,7 +88,7 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
 
     /**
      * Boolean indicating that the user opted out of creating an Application inisghts component.
-     * WThis will be defined after `AppInsightsLocationStep.prompt` occurs.
+     * This will be defined after `AppInsightsLocationStep.prompt` occurs.
      */
     appInsightsSkip?: boolean;
 

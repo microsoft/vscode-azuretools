@@ -62,7 +62,7 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
         // tslint:disable-next-line: strict-boolean-expressions
         const locations: string[] = await this.getLocations(wizardContext) || [];
         const locationName: string = nonNullProp(location, 'name');
-        // still need to do a name step
+
         if (locations.some((loc) => loc === location.displayName)) {
             wizardContext.telemetry.properties.locationSupported = 'true';
             return locationName;
