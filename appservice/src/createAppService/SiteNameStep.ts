@@ -8,6 +8,7 @@ import { ResourceNameAvailability } from 'azure-arm-website/lib/models';
 import { AzureNameStep, createAzureClient, IAzureNamingRules, ResourceGroupListStep, resourceGroupNamingRules, StorageAccountListStep, storageAccountNamingRules } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
+import { appInsightsNamingRules } from './AppInsightsListStep';
 import { AppKind } from './AppKind';
 import { AppServicePlanListStep } from './AppServicePlanListStep';
 import { appServicePlanNamingRules } from './AppServicePlanNameStep';
@@ -38,6 +39,8 @@ export class SiteNameStep extends AzureNameStep<IAppServiceWizardContext> {
         } else {
             namingRules.push(appServicePlanNamingRules);
         }
+
+        namingRules.push(appInsightsNamingRules);
         wizardContext.relatedNameTask = this.generateRelatedName(wizardContext, wizardContext.newSiteName, namingRules);
     }
 

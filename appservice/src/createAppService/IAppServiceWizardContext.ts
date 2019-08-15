@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ApplicationInsightsComponent } from 'azure-arm-appinsights/lib/models';
+import { ApplicationInsightsComponent, ApplicationInsightsComponentListResult } from 'azure-arm-appinsights/lib/models';
 import { AppServicePlan, Site, SkuDescription } from 'azure-arm-website/lib/models';
 import { IResourceGroupWizardContext, IStorageAccountWizardContext } from 'vscode-azureextensionui';
 import { AppKind, LinuxRuntimes, WebsiteOS } from './AppKind';
@@ -75,13 +75,25 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
     recommendedSiteRuntime?: LinuxRuntimes[];
 
     /**
-     * Application insights components are necessary for Function apps log streaming.  By default, we should instantiate
+     * App Insights components are necessary for Function apps log streaming.  By default, we should instantiate
      * one for the user if there is a data farm available within the same region as the web app
      */
     appInsightsComponent?: ApplicationInsightsComponent;
 
     /**
-     * The name of the new application insights component
+     * The task used to get existing App Insights components.
+     * By specifying this in the context, we can ensure that Azure is only queried once for the entire wizard
+     */
+    appInsightsTask?: Promise<ApplicationInsightsComponentListResult>;
+
+    /**
+     * Boolean indicating that the user opted out of creating an Application inisghts component.
+     * This will be defined after `AppInsightsLocationStep.prompt` occurs.
+     */
+    appInsightsSkip?: boolean;
+
+    /**
+     * The name of the new App Insights component
      * This will be defined after `AppInsightsNameStep.prompt` occurs.
      */
     newAppInsightsName?: string;

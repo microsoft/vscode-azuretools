@@ -6,6 +6,7 @@
 export * from './confirmOverwriteSettings';
 export { AppKind, LinuxRuntimes, WebsiteOS } from './createAppService/AppKind';
 export * from './createAppService/AppInsightsCreateStep';
+export * from './createAppService/AppInsightsListStep';
 export * from './createAppService/IAppServiceWizardContext';
 export * from './createAppService/AppServicePlanListStep';
 export * from './createAppService/AppServicePlanCreateStep';

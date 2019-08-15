@@ -92,10 +92,11 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
                     storageConnectionString,
                     fileShareName,
                     // tslint:disable-next-line:no-non-null-assertion
-                    os: wizardContext.newSiteOS!,
+                    os: nonNullProp(wizardContext, 'newSiteOS'),
                     // tslint:disable-next-line:no-non-null-assertion
-                    runtime: wizardContext.newSiteRuntime!,
-                    aiInstrumentationKey: wizardContext.appInsightsComponent ? wizardContext.appInsightsComponent.instrumentationKey : undefined
+                    runtime: nonNullProp(wizardContext, 'newSiteRuntime'),
+                    // tslint:disable-next-line: strict-boolean-expressions
+                    aiInstrumentationKey: wizardContext.appInsightsComponent && wizardContext.appInsightsComponent ? wizardContext.appInsightsComponent.instrumentationKey : undefined
                 });
             }
         }
