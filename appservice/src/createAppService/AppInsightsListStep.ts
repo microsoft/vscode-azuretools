@@ -5,13 +5,11 @@
 
 import { ApplicationInsightsManagementClient } from "azure-arm-appinsights";
 import { ApplicationInsightsComponent, ApplicationInsightsComponentListResult } from "azure-arm-appinsights/lib/models";
-import { isString } from "util";
 import { AzureWizardPromptStep, createAzureClient, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions } from "vscode-azureextensionui";
 import { ext } from "../extensionVariables";
 import { localize } from "../localize";
 import { nonNullProp } from "../utils/nonNull";
 import { AppInsightsCreateStep } from "./AppInsightsCreateStep";
-import { AppInsightsLocationStep } from "./AppInsightsLocationStep";
 import { AppInsightsNameStep } from "./AppInsightsNameStep";
 import { IAppServiceWizardContext } from "./IAppServiceWizardContext";
 
@@ -52,7 +50,7 @@ export class AppInsightsListStep extends AzureWizardPromptStep<IAppServiceWizard
     public async getSubWizard(wizardContext: IAppServiceWizardContext): Promise<IWizardOptions<IAppServiceWizardContext> | undefined> {
         if (!wizardContext.appInsightsComponent && !wizardContext.appInsightsSkip) {
             return {
-                promptSteps: [new AppInsightsNameStep(), new AppInsightsLocationStep()],
+                promptSteps: [new AppInsightsNameStep()],
                 executeSteps: [new AppInsightsCreateStep()]
             };
         } else {

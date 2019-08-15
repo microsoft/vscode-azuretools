@@ -4,27 +4,27 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ApplicationInsightsManagementClient } from 'azure-arm-appinsights';
+import { ResourceManagementClient } from 'azure-arm-resource';
+import { Provider, ProviderResourceType } from 'azure-arm-resource/lib/resource/models';
 import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { Progress } from 'vscode';
 import { AzureWizardExecuteStep, createAzureClient, IParsedError, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { nonNullProp, nonNullValue } from '../utils/nonNull';
-import { AppInsightsLocationStep } from './AppInsightsLocationStep';
+import { requestUtils } from '../utils/requestUtils';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
     public priority: number = 135;
 
     public async execute(wizardContext: IAppServiceWizardContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
-        if (!wizardContext.newAppInsightsLocation) {
-            const resourceLocation: Location = nonNullProp(wizardContext, 'location');
-            const verifyingAppInsightsAvailable: string = localize('verifyingAppInsightsAvailable', 'Verifying that Application Insights is available for this location...');
-            ext.outputChannel.appendLine(verifyingAppInsightsAvailable);
-            wizardContext.newAppInsightsLocation = await new AppInsightsLocationStep().getSupportedLocation(wizardContext, resourceLocation);
-        }
+        const resourceLocation: Location = nonNullProp(wizardContext, 'location');
+        const verifyingAppInsightsAvailable: string = localize('verifyingAppInsightsAvailable', 'Verifying that Application Insights is available for this location...');
+        ext.outputChannel.appendLine(verifyingAppInsightsAvailable);
+        const appInsightsLocation: string | undefined = await this.getSupportedLocation(wizardContext, resourceLocation);
 
-        if (wizardContext.newAppInsightsLocation) {
+        if (appInsightsLocation) {
             const client: ApplicationInsightsManagementClient = createAzureClient(wizardContext, ApplicationInsightsManagementClient);
             const rgName: string = nonNullValue(wizardContext.newResourceGroupName);
             const aiName: string = nonNullValue(wizardContext.newAppInsightsName);
@@ -36,11 +36,11 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
                 const pError: IParsedError = parseError(error);
                 // Only expecting a resource not found error if this is a new component
                 if (pError.errorType === 'ResourceNotFound') {
-                    const creatingNewAppInsights: string = localize('creatingNewAppInsightsInsights', 'Creating new aApplication Insights resource "{0}"...', wizardContext.newSiteName);
+                    const creatingNewAppInsights: string = localize('creatingNewAppInsightsInsights', 'Creating new Application Insights resource "{0}"...', wizardContext.newSiteName);
                     ext.outputChannel.appendLine(creatingNewAppInsights);
                     progress.report({ message: creatingNewAppInsights });
 
-                    wizardContext.appInsightsComponent = await client.components.createOrUpdate(rgName, aiName, { kind: 'web', applicationType: 'web', location: wizardContext.newAppInsightsLocation });
+                    wizardContext.appInsightsComponent = await client.components.createOrUpdate(rgName, aiName, { kind: 'web', applicationType: 'web', location: appInsightsLocation });
                     const createdNewAppInsights: string = localize('createdNewAppInsights', 'Created new Application Insights resource "{0}"...', aiName);
                     ext.outputChannel.appendLine(createdNewAppInsights);
                 } else {
@@ -56,4 +56,65 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
     public shouldExecute(wizardContext: IAppServiceWizardContext): boolean {
         return !wizardContext.appInsightsComponent && !!wizardContext.newAppInsightsName;
     }
+
+    // returns the supported location, a location in the region map, or undefined
+    private async getSupportedLocation(wizardContext: IAppServiceWizardContext, location: Location): Promise<string | undefined> {
+        // tslint:disable-next-line: strict-boolean-expressions
+        const locations: string[] = await this.getLocations(wizardContext) || [];
+        const locationName: string = nonNullProp(location, 'name');
+        // still need to do a name step
+        if (locations.some((loc) => loc === location.displayName)) {
+            wizardContext.telemetry.properties.locationSupported = 'true';
+            return locationName;
+        } else {
+            // If there is no exact match, then query the regionMapping.json
+            const pairedRegions: string[] | undefined = await this.getPairedRegions(locationName);
+            if (pairedRegions.length > 0) {
+                // if there is at least one region listed, return the first
+                wizardContext.telemetry.properties.locationSupported = 'pairedRegion';
+                return pairedRegions[0];
+            }
+
+            wizardContext.telemetry.properties.locationSupported = 'false';
+            return undefined;
+        }
+    }
+
+    private async getPairedRegions(locationName: string): Promise<string[]> {
+        try {
+            const request: requestUtils.Request = await requestUtils.getDefaultRequest('https://appinsights.azureedge.net/portal/regionMapping.json');
+            const response: string = await requestUtils.sendRequest(request);
+            const regionMappingJson: RegionMappingJsonResponse = <RegionMappingJsonResponse>JSON.parse(response);
+
+            // tslint:disable-next-line: strict-boolean-expressions
+            if (regionMappingJson.regions[locationName]) {
+                return regionMappingJson.regions[locationName].pairedRegions;
+            }
+        } catch (error) {
+            // ignore the error
+        }
+        return [];
+    }
+
+    private async getLocations(wizardContext: IAppServiceWizardContext): Promise<string[] | undefined> {
+        const resourceClient: ResourceManagementClient = createAzureClient(wizardContext, ResourceManagementClient);
+        const supportedRegions: Provider = await resourceClient.providers.get('microsoft.insights');
+        const componentsResourceType: ProviderResourceType | undefined = supportedRegions.resourceTypes && supportedRegions.resourceTypes.find(aiRt => aiRt.resourceType === 'components');
+        if (!!componentsResourceType && !!componentsResourceType.locations) {
+            return componentsResourceType.locations;
+        } else {
+            return undefined;
+        }
+    }
 }
+
+type RegionMappingJsonResponse = {
+    regions: {
+        [key: string]: RegionMap
+    }
+};
+
+type RegionMap = {
+    geo: string,
+    pairedRegions: string[]
+};

@@ -6,7 +6,6 @@
 import { ApplicationInsightsComponent, ApplicationInsightsComponentListResult } from 'azure-arm-appinsights/lib/models';
 import { AppServicePlan, Site, SkuDescription } from 'azure-arm-website/lib/models';
 import { IResourceGroupWizardContext, IStorageAccountWizardContext } from 'vscode-azureextensionui';
-import { skipForNow } from './AppInsightsListStep';
 import { AppKind, LinuxRuntimes, WebsiteOS } from './AppKind';
 
 export interface IAppServiceWizardContext extends IResourceGroupWizardContext, IStorageAccountWizardContext {
@@ -78,7 +77,6 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
     /**
      * App Insights components are necessary for Function apps log streaming.  By default, we should instantiate
      * one for the user if there is a data farm available within the same region as the web app
-     * The string value is reserved for "skipForNow" which is used to skip creating an AI component
      */
     appInsightsComponent?: ApplicationInsightsComponent;
 
@@ -90,7 +88,7 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
 
     /**
      * Boolean indicating that the user opted out of creating an Application inisghts component.
-     * Should be set in the AppInsightsListStep so any checks should be after that
+     * WThis will be defined after `AppInsightsLocationStep.prompt` occurs.
      */
     appInsightsSkip?: boolean;
 
@@ -99,10 +97,4 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
      * This will be defined after `AppInsightsNameStep.prompt` occurs.
      */
     newAppInsightsName?: string;
-
-    /**
-     * The location of the new App Insights component
-     * This will be defined after `AppInsightsLocationStep.prompt` occurs.
-     */
-    newAppInsightsLocation?: string;
 }

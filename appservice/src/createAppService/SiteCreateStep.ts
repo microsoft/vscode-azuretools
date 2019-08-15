@@ -14,7 +14,6 @@ import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { nonNullProp, nonNullValue, nonNullValueAndProp } from '../utils/nonNull';
 import { randomUtils } from '../utils/randomUtils';
-import { skipForNow } from './AppInsightsCreateStep';
 import { AppKind, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
@@ -93,10 +92,11 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
                     storageConnectionString,
                     fileShareName,
                     // tslint:disable-next-line:no-non-null-assertion
-                    os: wizardContext.newSiteOS!,
+                    os: nonNullProp(wizardContext, 'newSiteOS'),
                     // tslint:disable-next-line:no-non-null-assertion
-                    runtime: wizardContext.newSiteRuntime!,
-                    aiInstrumentationKey: wizardContext.appInsightsComponent && wizardContext.appInsightsComponent typeof skipForNow ? wizardContext.appInsightsComponent.instrumentationKey : undefined
+                    runtime: nonNullProp(wizardContext, 'newSiteRuntime'),
+                    // tslint:disable-next-line: strict-boolean-expressions
+                    aiInstrumentationKey: wizardContext.appInsightsComponent && wizardContext.appInsightsComponent ? wizardContext.appInsightsComponent.instrumentationKey : undefined
                 });
             }
         }
