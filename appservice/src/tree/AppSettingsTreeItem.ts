@@ -41,7 +41,7 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     }
 
     public get id(): string {
-        return 'application';
+        return 'configuration';
     }
 
     public get iconPath(): TreeItemIconPath {
