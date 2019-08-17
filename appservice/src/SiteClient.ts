@@ -94,7 +94,7 @@ export class SiteClient {
         if (this.isFunctionApp) {
             const asp: AppServicePlan | undefined = await this.getCachedAppServicePlan();
             // Assume it's consumption if we can't get the plan (sometimes happens with brand new plans). Consumption is recommended and more popular
-            return !!(asp && asp.sku && asp.sku.tier && asp.sku.tier.toLowerCase() === 'dynamic');
+            return !asp || !asp.sku || !asp.sku.tier || asp.sku.tier.toLowerCase() === 'dynamic';
         } else {
             return false;
         }
