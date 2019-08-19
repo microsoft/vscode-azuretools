@@ -38,7 +38,7 @@ export class AppInsightsListStep extends AzureWizardPromptStep<IAppServiceWizard
 
         // as create new and skipForNow both have undefined as the data type, check the label
         if (input.label === skipForNowLabel) {
-            wizardContext.telemetry.properties.skipForNow = 'true';
+            wizardContext.telemetry.properties.aiSkipForNow = 'true';
             wizardContext.appInsightsSkip = true;
         }
     }
