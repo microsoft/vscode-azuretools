@@ -64,18 +64,18 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
         const locationName: string = nonNullProp(location, 'name');
 
         if (locations.some((loc) => loc === location.displayName)) {
-            wizardContext.telemetry.properties.locationSupported = 'true';
+            wizardContext.telemetry.properties.aiLocationSupported = 'true';
             return locationName;
         } else {
             // If there is no exact match, then query the regionMapping.json
             const pairedRegions: string[] | undefined = await this.getPairedRegions(locationName);
             if (pairedRegions.length > 0) {
                 // if there is at least one region listed, return the first
-                wizardContext.telemetry.properties.locationSupported = 'pairedRegion';
+                wizardContext.telemetry.properties.aiLocationSupported = 'pairedRegion';
                 return pairedRegions[0];
             }
 
-            wizardContext.telemetry.properties.locationSupported = 'false';
+            wizardContext.telemetry.properties.aiLocationSupported = 'false';
             return undefined;
         }
     }
