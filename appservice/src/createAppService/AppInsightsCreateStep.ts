@@ -4,14 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ApplicationInsightsManagementClient } from 'azure-arm-appinsights';
-import { ResourceManagementClient } from 'azure-arm-resource';
+import { ResourceManagementClient, ResourceModels } from 'azure-arm-resource';
 import { Provider, ProviderResourceType } from 'azure-arm-resource/lib/resource/models';
 import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { Progress } from 'vscode';
 import { AzureWizardExecuteStep, createAzureClient, IParsedError, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { nonNullProp, nonNullValue } from '../utils/nonNull';
+import { nonNullProp } from '../utils/nonNull';
 import { requestUtils } from '../utils/requestUtils';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
@@ -26,8 +26,9 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
 
         if (appInsightsLocation) {
             const client: ApplicationInsightsManagementClient = createAzureClient(wizardContext, ApplicationInsightsManagementClient);
-            const rgName: string = nonNullValue(wizardContext.newResourceGroupName);
-            const aiName: string = nonNullValue(wizardContext.newAppInsightsName);
+            const rg: ResourceModels.ResourceGroup = nonNullProp(wizardContext, 'resourceGroup');
+            const rgName: string = nonNullProp(rg, 'name');
+            const aiName: string = nonNullProp(wizardContext, 'newAppInsightsName');
 
             try {
                 wizardContext.appInsightsComponent = await client.components.get(rgName, aiName);
