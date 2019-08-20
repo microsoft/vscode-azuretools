@@ -71,8 +71,14 @@ export class AppInsightsListStep extends AzureWizardPromptStep<IAppServiceWizard
             data: undefined
         }];
 
-        const applicationInsights: ApplicationInsightsComponentListResult = await AppInsightsListStep.getAppInsightsComponents(wizardContext);
-        return picks.concat(applicationInsights.map((ai: ApplicationInsightsComponent) => {
+        let components: ApplicationInsightsComponentListResult = await AppInsightsListStep.getAppInsightsComponents(wizardContext);
+
+        // https://github.com/microsoft/vscode-azurefunctions/issues/1454
+        if (!Array.isArray(components)) {
+            components = [];
+        }
+
+        return picks.concat(components.map((ai: ApplicationInsightsComponent) => {
             return {
                 id: ai.id,
                 label: nonNullProp(ai, 'name'),
