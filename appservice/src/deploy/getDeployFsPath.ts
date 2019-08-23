@@ -49,13 +49,3 @@ export async function getDeployFsPath(targetPath: string, extensionPrefix: strin
 
     return targetPath;
 }
-
-function isSubpath(expectedParent: string, expectedChild: string): boolean {
-    const relativePath: string = path.relative(expectedParent, expectedChild);
-    return relativePath !== '' && !relativePath.startsWith('..') && relativePath !== expectedChild;
-}
-
-function isPathEqual(fsPath1: string, fsPath2: string): boolean {
-    const relativePath: string = path.relative(fsPath1, fsPath2);
-    return relativePath === '';
-}
