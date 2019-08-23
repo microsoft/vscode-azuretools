@@ -35,8 +35,8 @@ export async function getDeployFsPath(target: vscode.Uri | string | AzureParentT
     const selectFolder: string = localize('selectZipDeployFolder', 'Select the folder to zip and deploy');
 
     return fileExtension ?
-        await workspaceUtil.selectWorkspaceFile(ext.ui, selectFile, f => getWorkspaceSetting(deploySubpathSetting, extensionPrefix, f.uri.fsPath), fileExtension) :
-        await workspaceUtil.selectWorkspaceFolder(ext.ui, selectFolder, f => getWorkspaceSetting(deploySubpathSetting, extensionPrefix, f.uri.fsPath));
+        await workspaceUtil.selectWorkspaceFile(selectFile, f => getWorkspaceSetting(deploySubpathSetting, extensionPrefix, f.uri.fsPath), fileExtension) :
+        await workspaceUtil.selectWorkspaceFolder(selectFolder, f => getWorkspaceSetting(deploySubpathSetting, extensionPrefix, f.uri.fsPath));
 }
 
 /**
