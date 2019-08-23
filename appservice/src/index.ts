@@ -19,6 +19,7 @@ export * from './remoteDebug/remoteDebugCommon';
 export * from './remoteDebug/startRemoteDebug';
 export * from './createSlot';
 export * from './deploy/deploy';
+export * from './deploy/getDeployFsPath';
 export * from './deploy/runPreDeployTask';
 export * from './deleteSite';
 export * from './editScmType';
