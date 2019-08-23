@@ -21,7 +21,7 @@ export function getGlobalSetting<T>(key: string, prefix: string): T | undefined 
     return result && result.globalValue;
 }
 
-export function getWorkspaceSetting<T>(key: string, fsPath?: string, prefix: string): T | undefined {
+export function getWorkspaceSetting<T>(key: string, prefix: string, fsPath?: string): T | undefined {
     const projectConfiguration: WorkspaceConfiguration = workspace.getConfiguration(prefix, fsPath ? Uri.file(fsPath) : undefined);
     return projectConfiguration.get<T>(key);
 }

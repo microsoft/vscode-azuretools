@@ -6,17 +6,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IAzureQuickPickItem, IAzureUserInput } from 'vscode-azureextensionui';
-import { deploySubpathSetting } from '../constants';
-import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { SlotTreeItemBase } from '../tree/SlotTreeItemBase';
-import { getWorkspaceSetting } from '../vsCodeConfig/settings';
-import * as fsUtils from './fs';
-
-export function isMultiRootWorkspace(): boolean {
-    return !!vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0
-        && vscode.workspace.name !== vscode.workspace.workspaceFolders[0].name; // multi-root workspaces always have something like "(Workspace)" appended to their name
-}
 
 export async function selectWorkspaceFolder(ui: IAzureUserInput, placeHolder: string, getSubPath?: (f: vscode.WorkspaceFolder) => string | undefined | Promise<string | undefined>): Promise<string> {
     return await selectWorkspaceItem(
@@ -32,7 +22,7 @@ export async function selectWorkspaceFolder(ui: IAzureUserInput, placeHolder: st
         getSubPath);
 }
 
-export async function selectWorkspaceFile(ui: IAzureUserInput, placeHolder: string, getSubPath?: (f: vscode.WorkspaceFolder) => string | undefined | Promise<string | undefined>): Promise<string> {
+export async function selectWorkspaceFile(ui: IAzureUserInput, placeHolder: string, getSubPath?: (f: vscode.WorkspaceFolder) => string | undefined | Promise<string | undefined>, fileExtension?: string): Promise<string> {
     let defaultUri: vscode.Uri | undefined;
     if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0 && getSubPath) {
         const firstFolder: vscode.WorkspaceFolder = vscode.workspace.workspaceFolders[0];
@@ -40,6 +30,12 @@ export async function selectWorkspaceFile(ui: IAzureUserInput, placeHolder: stri
         if (subPath) {
             defaultUri = vscode.Uri.file(path.join(firstFolder.uri.fsPath, subPath));
         }
+    }
+
+    const filter: { [name: string]: string[] } = {};
+
+    if (fileExtension) {
+        filter[fileExtension] = [fileExtension];
     }
 
     return await selectWorkspaceItem(
@@ -50,7 +46,8 @@ export async function selectWorkspaceFile(ui: IAzureUserInput, placeHolder: stri
             canSelectFolders: false,
             canSelectMany: false,
             defaultUri: defaultUri,
-            openLabel: localize('select', 'Select')
+            openLabel: localize('select', 'Select'),
+            filters: filter
         },
         getSubPath);
 }
@@ -73,30 +70,4 @@ export async function selectWorkspaceItem(ui: IAzureUserInput, placeHolder: stri
     }
 
     return folder && folder.data ? folder.data : (await ui.showOpenDialog(options))[0].fsPath;
-}
-
-export function getContainingWorkspace(fsPath: string): vscode.WorkspaceFolder | undefined {
-    // tslint:disable-next-line:strict-boolean-expressions
-    const openFolders: vscode.WorkspaceFolder[] = vscode.workspace.workspaceFolders || [];
-    return openFolders.find((f: vscode.WorkspaceFolder): boolean => {
-        return fsUtils.isPathEqual(f.uri.fsPath, fsPath) || fsUtils.isSubpath(f.uri.fsPath, fsPath);
-    });
-}
-
-export async function getDeploymentWorkspace(target?: vscode.Uri | string | SlotTreeItemBase): Promise<string> {
-
-    if (target instanceof vscode.Uri) {
-        return target.fsPath;
-    } else if (typeof target === 'string') {
-        return target;
-    } else if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length === 1) {
-        const folderPath: string = vscode.workspace.workspaceFolders[0].uri.fsPath;
-        // If there is only one workspace and it has 'deploySubPath' set - return that value without prompting
-        if (getWorkspaceSetting<string>(deploySubpathSetting, folderPath)) {
-            return folderPath;
-        }
-    }
-
-    const workspaceMessage: string = localize('selectZipDeployFolder', 'Select the folder to zip and deploy');
-    return await selectWorkspaceFolder(ext.ui, workspaceMessage, f => getWorkspaceSetting(deploySubpathSetting, f.uri.fsPath));
 }
