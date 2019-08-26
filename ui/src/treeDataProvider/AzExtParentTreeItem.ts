@@ -12,7 +12,7 @@ import { localize } from '../localize';
 import { randomUtils } from '../utils/randomUtils';
 import { AzExtTreeItem } from './AzExtTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';
-import { getIconPath, getThemedIconPath } from './IconPath';
+import { getThemedIconPath } from './IconPath';
 import { IAzExtParentTreeItemInternal, isAzExtParentTreeItem } from './InternalInterfaces';
 import { loadMoreLabel } from './treeConstants';
 
@@ -346,7 +346,7 @@ export class InvalidTreeItem extends AzExtParentTreeItem implements types.Invali
     }
 
     public get iconPath(): types.TreeItemIconPath {
-        return getIconPath('warning');
+        return getThemedIconPath('warning');
     }
 
     public async loadMoreChildrenImpl(): Promise<AzExtTreeItem[]> {
