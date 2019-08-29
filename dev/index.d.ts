@@ -91,6 +91,11 @@ export declare function getDefaultWebpackConfig(options: DefaultWebpackOptions):
 export declare function gulp_installAzureAccount(): Promise<void> | Stream;
 
 /**
+ * Installs a VS Code extension, typically useful before running tests
+ */
+export declare function gulp_installVSCodeExtension(version: string, publisherId: string, extensionName: string): Promise<void> | Stream;
+
+/**
  * Spawns a webpack process
  */
 export declare function gulp_webpack(mode: string): cp.ChildProcess;
