@@ -18,21 +18,21 @@ import { AppKind, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export interface IAppSettingsContext {
-    storageConnectionString: string;
-    fileShareName: string;
+    storageConnectionString?: string;
+    fileShareName?: string;
     os: string;
-    runtime: string;
+    runtime?: string;
     aiInstrumentationKey?: string;
 }
 
 export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
     public priority: number = 140;
 
-    private createFunctionAppSettings: ((context: IAppSettingsContext) => Promise<NameValuePair[]>) | undefined;
+    private createSiteAppSettings: ((context: IAppSettingsContext) => Promise<NameValuePair[]>) | undefined;
 
-    public constructor(createFunctionAppSettings?: ((context: IAppSettingsContext) => Promise<NameValuePair[]>)) {
+    public constructor(createSiteAppSettings?: ((context: IAppSettingsContext) => Promise<NameValuePair[]>)) {
         super();
-        this.createFunctionAppSettings = createFunctionAppSettings;
+        this.createSiteAppSettings = createSiteAppSettings;
     }
 
     public async execute(wizardContext: IAppServiceWizardContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
@@ -61,6 +61,16 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
         const newSiteConfig: SiteConfig = {};
         if (wizardContext.newSiteKind === AppKind.app) {
             newSiteConfig.linuxFxVersion = wizardContext.newSiteRuntime;
+
+            if (this.createSiteAppSettings) {
+                newSiteConfig.appSettings = await this.createSiteAppSettings(
+                    {
+                        os: nonNullProp(wizardContext, 'newSiteOS'),
+                        // tslint:disable-next-line: strict-boolean-expressions
+                        aiInstrumentationKey: wizardContext.appInsightsComponent && wizardContext.appInsightsComponent ? wizardContext.appInsightsComponent.instrumentationKey : undefined
+                    });
+            }
+
         } else {
             if (!wizardContext.useConsumptionPlan && wizardContext.newSiteOS === 'linux') {
                 newSiteConfig.linuxFxVersion = getFunctionAppLinuxFxVersion(nonNullProp(wizardContext, 'newSiteRuntime'));
@@ -87,17 +97,16 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
                 storageConnectionString = `DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${keysResult.keys[0].value};EndpointSuffix=${endpointSuffix}`;
             }
 
-            if (this.createFunctionAppSettings) {
-                newSiteConfig.appSettings = await this.createFunctionAppSettings({
-                    storageConnectionString,
-                    fileShareName,
-                    // tslint:disable-next-line:no-non-null-assertion
-                    os: nonNullProp(wizardContext, 'newSiteOS'),
-                    // tslint:disable-next-line:no-non-null-assertion
-                    runtime: nonNullProp(wizardContext, 'newSiteRuntime'),
-                    // tslint:disable-next-line: strict-boolean-expressions
-                    aiInstrumentationKey: wizardContext.appInsightsComponent && wizardContext.appInsightsComponent ? wizardContext.appInsightsComponent.instrumentationKey : undefined
-                });
+            if (this.createSiteAppSettings) {
+                newSiteConfig.appSettings = await this.createSiteAppSettings(
+                    {
+                        storageConnectionString,
+                        fileShareName,
+                        os: nonNullProp(wizardContext, 'newSiteOS'),
+                        runtime: nonNullProp(wizardContext, 'newSiteRuntime'),
+                        // tslint:disable-next-line: strict-boolean-expressions
+                        aiInstrumentationKey: wizardContext.appInsightsComponent && wizardContext.appInsightsComponent ? wizardContext.appInsightsComponent.instrumentationKey : undefined
+                    });
             }
         }
 
