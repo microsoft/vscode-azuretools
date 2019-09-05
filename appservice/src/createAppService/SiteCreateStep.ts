@@ -28,9 +28,9 @@ export interface IAppSettingsContext {
 export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
     public priority: number = 140;
 
-    private createSiteAppSettings: ((context: IAppSettingsContext) => Promise<NameValuePair[]>) | undefined;
+    private createSiteAppSettings: ((context: IAppSettingsContext) => Promise<NameValuePair[]>);
 
-    public constructor(createSiteAppSettings?: ((context: IAppSettingsContext) => Promise<NameValuePair[]>)) {
+    public constructor(createSiteAppSettings: ((context: IAppSettingsContext) => Promise<NameValuePair[]>)) {
         super();
         this.createSiteAppSettings = createSiteAppSettings;
     }
@@ -59,18 +59,11 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
 
     private async getNewSiteConfig(wizardContext: IAppServiceWizardContext): Promise<SiteConfig> {
         const newSiteConfig: SiteConfig = {};
+        let storageConnectionString: string | undefined;
+        let fileShareName: string | undefined;
+
         if (wizardContext.newSiteKind === AppKind.app) {
             newSiteConfig.linuxFxVersion = wizardContext.newSiteRuntime;
-
-            if (this.createSiteAppSettings) {
-                newSiteConfig.appSettings = await this.createSiteAppSettings(
-                    {
-                        os: nonNullProp(wizardContext, 'newSiteOS'),
-                        // tslint:disable-next-line: strict-boolean-expressions
-                        aiInstrumentationKey: wizardContext.appInsightsComponent && wizardContext.appInsightsComponent ? wizardContext.appInsightsComponent.instrumentationKey : undefined
-                    });
-            }
-
         } else {
             if (!wizardContext.useConsumptionPlan && wizardContext.newSiteOS === 'linux') {
                 newSiteConfig.linuxFxVersion = getFunctionAppLinuxFxVersion(nonNullProp(wizardContext, 'newSiteRuntime'));
@@ -83,7 +76,7 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
             const [, storageResourceGroup] = nonNullValue(nonNullProp(storageAccount, 'id').match(/\/resourceGroups\/([^/]+)\//), 'Invalid storage account id');
             const keysResult: StorageAccountListKeysResult = await storageClient.storageAccounts.listKeys(storageResourceGroup, nonNullProp(storageAccount, 'name'));
 
-            let fileShareName: string = nonNullProp(wizardContext, 'newSiteName').toLocaleLowerCase() + '-content'.slice(0, maxFileShareNameLength);
+            fileShareName = nonNullProp(wizardContext, 'newSiteName').toLocaleLowerCase() + '-content'.slice(0, maxFileShareNameLength);
             if (!wizardContext.newStorageAccountName) {
                 const randomLetters: number = 4;
                 fileShareName = `${fileShareName.slice(0, maxFileShareNameLength - randomLetters - 1)}-${randomUtils.getRandomHexString(randomLetters)}`;
@@ -92,23 +85,21 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
             // https://github.com/Azure/azure-sdk-for-node/issues/4706
             const endpointSuffix: string = wizardContext.environment.storageEndpointSuffix.replace(/^\./, '');
 
-            let storageConnectionString: string = '';
+            storageConnectionString = '';
             if (keysResult.keys && keysResult.keys[0].value) {
                 storageConnectionString = `DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${keysResult.keys[0].value};EndpointSuffix=${endpointSuffix}`;
             }
-
-            if (this.createSiteAppSettings) {
-                newSiteConfig.appSettings = await this.createSiteAppSettings(
-                    {
-                        storageConnectionString,
-                        fileShareName,
-                        os: nonNullProp(wizardContext, 'newSiteOS'),
-                        runtime: nonNullProp(wizardContext, 'newSiteRuntime'),
-                        // tslint:disable-next-line: strict-boolean-expressions
-                        aiInstrumentationKey: wizardContext.appInsightsComponent && wizardContext.appInsightsComponent ? wizardContext.appInsightsComponent.instrumentationKey : undefined
-                    });
-            }
         }
+
+        newSiteConfig.appSettings = await this.createSiteAppSettings(
+            {
+                storageConnectionString,
+                fileShareName,
+                os: nonNullProp(wizardContext, 'newSiteOS'),
+                runtime: nonNullProp(wizardContext, 'newSiteRuntime'),
+                // tslint:disable-next-line: strict-boolean-expressions
+                aiInstrumentationKey: wizardContext.appInsightsComponent && wizardContext.appInsightsComponent ? wizardContext.appInsightsComponent.instrumentationKey : undefined
+            });
 
         return newSiteConfig;
     }
