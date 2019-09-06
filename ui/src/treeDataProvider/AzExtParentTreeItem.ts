@@ -263,7 +263,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
                             throw new Error(localize('noCommand', 'Failed to find commandId on generic tree item.'));
                         } else {
                             // tslint:disable-next-line: strict-boolean-expressions
-                            const commandArgs: unknown[] = ti.commandArgs || [];
+                            const commandArgs: unknown[] = ti.commandArgs || [ti];
                             await commands.executeCommand(ti.commandId, ...commandArgs);
                             await this.refresh();
                             return this;
