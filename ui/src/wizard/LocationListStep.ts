@@ -34,7 +34,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
         super();
     }
 
-    public static addStep<T extends ILocationWizardContextInternal>(wizardContext: T, promptSteps: AzureWizardPromptStep<T>[]): void {
+    public static addStep<T extends ILocationWizardContextInternal>(wizardContext: types.IActionContext & Partial<ILocationWizardContextInternal>, promptSteps: AzureWizardPromptStep<T>[]): void {
         if (!wizardContext._alreadyHasLocationStep) {
             promptSteps.push(new LocationListStep());
             wizardContext._alreadyHasLocationStep = true;
