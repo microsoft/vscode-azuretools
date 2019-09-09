@@ -96,7 +96,7 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
                 storageConnectionString,
                 fileShareName,
                 os: nonNullProp(wizardContext, 'newSiteOS'),
-                runtime: nonNullProp(wizardContext, 'newSiteRuntime'),
+                runtime: wizardContext.newSiteRuntime,
                 // tslint:disable-next-line: strict-boolean-expressions
                 aiInstrumentationKey: wizardContext.appInsightsComponent && wizardContext.appInsightsComponent ? wizardContext.appInsightsComponent.instrumentationKey : undefined
             });
