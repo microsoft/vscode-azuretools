@@ -29,13 +29,17 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
             };
         });
 
-        pricingTiers.push({ label: localize('ShowPricingCalculator', '$(link-external) Show pricing calculator...'), data: undefined, suppressPersistence: true });
+        pricingTiers.push({ label: localize('ShowPricingCalculator', '$(link-external) Show pricing information...'), data: undefined, suppressPersistence: true });
 
         while (!wizardContext.newPlanSku) {
             wizardContext.newPlanSku = (await ext.ui.showQuickPick(pricingTiers, { placeHolder: localize('PricingTierPlaceholder', 'Select a pricing tier for the new App Service plan.') })).data;
 
             if (!wizardContext.newPlanSku) {
-                await openUrl('https://aka.ms/AA6202c');
+                if (wizardContext.newSiteOS === WebsiteOS.linux) {
+                    await openUrl('https://aka.ms/AA60znj');
+                } else {
+                    await openUrl('https://aka.ms/AA6202c');
+                }
             }
         }
     }
