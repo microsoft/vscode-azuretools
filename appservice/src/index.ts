@@ -5,6 +5,8 @@
 
 export * from './confirmOverwriteSettings';
 export { AppKind, LinuxRuntimes, WebsiteOS } from './createAppService/AppKind';
+export * from './createAppService/AppInsightsCreateStep';
+export * from './createAppService/AppInsightsListStep';
 export * from './createAppService/IAppServiceWizardContext';
 export * from './createAppService/AppServicePlanListStep';
 export * from './createAppService/AppServicePlanCreateStep';
@@ -13,8 +15,11 @@ export * from './createAppService/SiteHostingPlanStep';
 export * from './createAppService/SiteNameStep';
 export * from './createAppService/SiteOSStep';
 export * from './createAppService/SiteRuntimeStep';
+export * from './remoteDebug/remoteDebugCommon';
+export * from './remoteDebug/startRemoteDebug';
 export * from './createSlot';
 export * from './deploy/deploy';
+export * from './deploy/getDeployFsPath';
 export * from './deploy/runPreDeployTask';
 export * from './deleteSite';
 export * from './editScmType';

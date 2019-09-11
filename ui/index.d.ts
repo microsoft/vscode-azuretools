@@ -119,6 +119,8 @@ export interface ISubscriptionContext {
     environment: AzureEnvironment;
 }
 
+export type TreeItemIconPath = string | Uri | { light: string | Uri; dark: string | Uri };
+
 /**
  * Base class for all tree items in an *Az*ure *ext*ension, even if those resources aren't actually in Azure.
  * This provides more value than `TreeItem` (provided by `vscode`), but is more generic than `AzureTreeItem` (which is specific to Azure resources)
@@ -139,7 +141,7 @@ export declare abstract class AzExtTreeItem {
      * Additional information about a tree item that is appended to the label with the format `label (description)`
      */
     public description?: string;
-    public iconPath?: string | Uri | { light: string | Uri; dark: string | Uri };
+    public iconPath?: TreeItemIconPath;
     public commandId?: string;
 
     /**
@@ -200,7 +202,7 @@ export interface IGenericTreeItemOptions {
     id?: string;
     label: string;
     description?: string;
-    iconPath?: string | Uri | { light: string | Uri; dark: string | Uri };
+    iconPath?: TreeItemIconPath;
     commandId?: string;
     contextValue: string;
 
@@ -229,12 +231,18 @@ export interface IInvalidTreeItemOptions {
      * Defaults to "Invalid" if undefined
      */
     description?: string;
+
+    /**
+     * Any arbitrary data to include with this tree item
+     */
+    data?: unknown;
 }
 
 export class InvalidTreeItem extends AzExtParentTreeItem {
     public contextValue: string;
     public label: string;
-    public iconPath: string;
+    public iconPath: TreeItemIconPath;
+    public readonly data?: unknown;
 
     constructor(parent: AzExtParentTreeItem, error: unknown, options: IInvalidTreeItemOptions);
 
@@ -260,6 +268,11 @@ export declare abstract class AzExtParentTreeItem extends AzExtTreeItem {
      * Otherwise, it will prompt for a child like normal.
      */
     autoSelectInTreeItemPicker?: boolean;
+
+    /**
+     * If true, an advanced creation pick will be shown in the tree item picker
+     */
+    supportsAdvancedCreation?: boolean;
 
     /**
      * If specified, this will be shown instead of the default message `Create new ${this.childTypeLabel}...` in the tree item picker
@@ -334,6 +347,11 @@ export interface ICreateChildImplContext extends IActionContext {
      * Call this function to show a "Creating..." item in the tree while the create is in progress
      */
     showCreatingTreeItem(label: string): void;
+
+    /**
+     * Indicates advanced creation should be used
+     */
+    advancedCreation?: boolean;
 }
 
 /**
@@ -358,9 +376,9 @@ export declare abstract class AzureAccountTreeItemBase extends AzExtParentTreeIt
     /**
      * Azure Account Tree Item
      * @param parent The parent of this node or undefined if it's the root of the tree.
-     * @param testAccount A test Azure Account that leverages a service principal instead of interactive login
+     * @param testAccount Unofficial api for testing - see `TestAzureAccount` in vscode-azureextensiondev package
      */
-    public constructor(parent?: AzExtParentTreeItem, testAccount?: TestAzureAccount);
+    public constructor(parent?: AzExtParentTreeItem, testAccount?: {});
 
     public dispose(): void;
 
@@ -495,6 +513,12 @@ export interface ITelemetryContext {
      * Defaults to `false`. If true, successful events are suppressed from telemetry, but cancel and error events are still sent.
      */
     suppressIfSuccessful?: boolean;
+
+    /**
+     * Defaults to `false`. If true, all events are suppressed from telemetry.
+     */
+    suppressAll?: boolean;
+
 }
 
 export interface IErrorHandlingContext {
@@ -639,53 +663,6 @@ export declare class AzureUserInput implements IAzureUserInput {
     public showOpenDialog(options: OpenDialogOptions): Promise<Uri[]>;
 }
 
-export declare enum TestInput {
-    /**
-     * Use the first entry in a quick pick or the default value (if it's defined) for an input box. In all other cases, throw an error
-     */
-    UseDefaultValue,
-
-    /**
-     * Simulates the user hitting the back button in an AzureWizard.
-     */
-    BackButton
-}
-
-/**
- * Wrapper class of several `vscode.window` methods that handle user input.
- * This class is meant to be used for testing in non-interactive mode.
- */
-export declare class TestUserInput implements IAzureUserInput {
-    /**
-     * @param inputs An ordered array of inputs that will be used instead of interactively prompting in VS Code. RegExp is only applicable for QuickPicks and will pick the first input that matches the RegExp.
-     */
-    public constructor(inputs: (string | RegExp | TestInput)[]);
-
-    public showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T>;
-    public showInputBox(options: InputBoxOptions): Promise<string>;
-    public showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
-    public showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Promise<MessageItem>;
-    public showOpenDialog(options: OpenDialogOptions): Promise<Uri[]>;
-}
-
-/**
- * Implements the AzureAccount interface to log in with a service principal rather than the normal interactive experience.
- * This class should be passed into the AzureTreeDataProvider to replace the dependencies on the Azure Account extension.
- * This class is meant to be used for testing in non-interactive mode in Travis CI.
- */
-export declare class TestAzureAccount {
-    public constructor();
-
-    /**
-     * Simulates a sign in to the Azure Account extension and populates the account with a subscription.
-     * Requires the following environment variables to be set: SERVICE_PRINCIPAL_CLIENT_ID, SERVICE_PRINCIPAL_SECRET, SERVICE_PRINCIPAL_DOMAIN
-     */
-    public signIn(): Promise<void>;
-    public signOut(): void;
-    public getSubscriptionId(): string;
-    public getSubscriptionCredentials(): ServiceClientCredentials;
-}
-
 /**
  * Provides additional options for QuickPickItems used in Azure Extensions
  */
@@ -822,13 +799,22 @@ export interface ILocationWizardContext extends ISubscriptionWizardContext {
     location?: Location;
 
     /**
-     * The task used to get locations.
-     * By specifying this in the context, we can ensure that Azure is only queried once for the entire wizard
+     * Optional task to describe the subset of locations that should be displayed.
+     * If not specified, all locations supported by the user's subscription will be displayed.
      */
-    locationsTask?: Promise<Location[]>;
+    locationsTask?: Promise<{ name?: string }[]>;
 }
 
 export declare class LocationListStep<T extends ILocationWizardContext> extends AzureWizardPromptStep<T> {
+    private constructor();
+
+    /**
+     * Adds a LocationListStep to the wizard.  This function will ensure there is only one LocationListStep per wizard context.
+     * @param wizardContext The context of the wizard
+     * @param promptSteps The array of steps to include the LocationListStep to
+     */
+    public static addStep<T extends ILocationWizardContext>(wizardContext: IActionContext & Partial<ILocationWizardContext>, promptSteps: AzureWizardPromptStep<T>[]): void;
+
     /**
      * This will set the wizard context's location (in which case the user will _not_ be prompted for location)
      * For example, if the user selects an existing resource, you might want to use that location as the default for the wizard's other resources
@@ -908,12 +894,6 @@ export interface IResourceGroupWizardContext extends ILocationWizardContext, IRe
      * By specifying this in the context, we can ensure that Azure is only queried once for the entire wizard
      */
     resourceGroupsTask?: Promise<ResourceGroup[]>;
-
-    /**
-     * If true, this step will not add a LocationListStep for the "Create new resource group" sub wizard.
-     * This is meant for situations when the location can be inferred from other resources later in the wizard.
-     */
-    resourceGroupDeferLocationStep?: boolean;
 
     newResourceGroupName?: string;
 }
@@ -1070,6 +1050,11 @@ export interface UIExtensionVariables {
     outputChannel: AzExtOutputChannel;
     ui: IAzureUserInput;
     reporter: ITelemetryReporter;
+
+    /**
+     * Set to true if not running under a webpacked 'dist' folder as defined in 'vscode-azureextensiondev'
+     */
+    ignoreBundle?: boolean;
 }
 
 export interface IAddUserAgent {

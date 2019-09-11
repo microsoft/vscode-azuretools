@@ -18,23 +18,10 @@ export enum LinuxRuntimes {
     python = 'python',
     java = 'java',
     tomcat = 'tomcat',
-    wildfly = 'wildfly'
-}
-
-/**
- * Retrieves a valid "kind" for Site
- */
-export function getSiteModelKind(kind: AppKind, os: WebsiteOS): string {
-    let planKind: string;
-
-    if (os === WebsiteOS.linux) {
-        return `${kind},${WebsiteOS.linux}`;
-    } else {
-        // "app" or "functionapp"
-        planKind = kind;
-    }
-
-    return planKind;
+    wildfly = 'wildfly',
+    dotnet = 'dotnet',
+    ruby = 'ruby',
+    php = 'php'
 }
 
 /**

@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StringDictionary } from 'azure-arm-website/lib/models';
-import * as path from 'path';
-import { AzureParentTreeItem, AzureTreeItem, IActionContext, ICreateChildImplContext } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, AzureTreeItem, IActionContext, ICreateChildImplContext, TreeItemIconPath } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { AppSettingTreeItem } from './AppSettingTreeItem';
+import { getThemedIconPath } from './IconPath';
 import { ISiteTreeRoot } from './ISiteTreeRoot';
 
 export function validateAppSettingKey(settings: StringDictionary, newKey?: string, oldKey?: string): string | undefined {
@@ -41,14 +41,11 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     }
 
     public get id(): string {
-        return 'application';
+        return 'configuration';
     }
 
-    public get iconPath(): { light: string, dark: string } {
-        return {
-            light: path.join(__filename, '..', '..', '..', '..', 'resources', 'light', 'AppSettings_color.svg'),
-            dark: path.join(__filename, '..', '..', '..', '..', 'resources', 'dark', 'AppSettings_color.svg')
-        };
+    public get iconPath(): TreeItemIconPath {
+        return getThemedIconPath('AppSettings_color');
     }
 
     public hasMoreChildrenImpl(): boolean {

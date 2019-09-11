@@ -103,7 +103,7 @@ export class AzureWizardUserInput implements IRootUserInput {
             inputBox.placeholder = options.placeHolder;
             inputBox.prompt = options.prompt;
 
-            let latestValidation: Promise<string | undefined | null> = Promise.resolve('');
+            let latestValidation: Promise<string | undefined | null> = options.validateInput ? Promise.resolve(options.validateInput(inputBox.value)) : Promise.resolve('');
             return await new Promise<string>((resolve, reject): void => {
                 disposables.push(
                     inputBox.onDidChangeValue(async text => {
@@ -121,8 +121,11 @@ export class AzureWizardUserInput implements IRootUserInput {
                         // Run final validation and resolve if value passes
                         inputBox.enabled = false;
                         inputBox.busy = true;
-                        if (!await latestValidation) {
+                        const message: string | undefined | null = await latestValidation;
+                        if (!message) {
                             resolve(inputBox.value);
+                        } else {
+                            inputBox.validationMessage = message;
                         }
                         inputBox.enabled = true;
                         inputBox.busy = false;

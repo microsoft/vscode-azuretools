@@ -4,9 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
+import { TestInput } from 'vscode-azureextensiondev';
 import * as types from '../index';
-import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, TestInput, TestUserInput } from '../src';
+import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep } from '../src';
 import { ext } from '../src/extensionVariables';
+import { testUserInput } from './global.test';
 
 // tslint:disable: max-classes-per-file
 
@@ -266,8 +268,9 @@ async function validateWizard(options: types.IWizardOptions<ITestWizardContext>,
     Object.assign(expectedContext, context);
 
     const wizard: AzureWizard<ITestWizardContext> = new AzureWizard(context, options);
-    ext.ui = new TestUserInput(inputs);
-    await wizard.prompt();
+    await testUserInput.runWithInputs(inputs, async () => {
+        await wizard.prompt();
+    });
     await wizard.execute();
     assert.deepEqual(context, expectedContext);
     assert.equal(inputs.length, 0, 'Not all inputs were used.');

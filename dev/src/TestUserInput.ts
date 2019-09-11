@@ -3,21 +3,33 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { InputBoxOptions, MessageItem, MessageOptions, QuickPickItem, QuickPickOptions } from 'vscode';
-import * as vscode from 'vscode';
+import * as assert from 'assert';
+import { InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, QuickPickItem, QuickPickOptions, Uri } from 'vscode';
 import * as types from '../index';
-import { GoBackError } from './errors';
 
 export enum TestInput {
     UseDefaultValue,
     BackButton
 }
 
-export class TestUserInput implements types.IAzureUserInput, types.TestUserInput {
-    private _inputs: (string | RegExp | TestInput)[];
+class GoBackError extends Error {
+    constructor() {
+        super('Go back.');
+    }
+}
 
-    constructor(inputs: (string | RegExp | TestInput)[]) {
-        this._inputs = inputs;
+export class TestUserInput implements types.TestUserInput {
+    private readonly _vscode: typeof import('vscode');
+    private _inputs: (string | RegExp | TestInput)[] = [];
+
+    constructor(vscode: typeof import('vscode')) {
+        this._vscode = vscode;
+    }
+
+    public async runWithInputs(inputs: (string | RegExp | types.TestInput)[], callback: () => Promise<void>): Promise<void> {
+        this._inputs = <(string | RegExp | TestInput)[]>inputs;
+        await callback();
+        assert.equal(this._inputs.length, 0, `Not all inputs were used: ${this._inputs.toString()}`);
     }
 
     public async showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T> {
@@ -104,12 +116,12 @@ export class TestUserInput implements types.IAzureUserInput, types.TestUserInput
         }
     }
 
-    public async showOpenDialog(options: vscode.OpenDialogOptions): Promise<vscode.Uri[]> {
+    public async showOpenDialog(options: OpenDialogOptions): Promise<Uri[]> {
         const input: string | RegExp | TestInput | undefined = this._inputs.shift();
         if (input === undefined) {
             throw new Error(`No more inputs left for call to showOpenDialog. Message: ${options.openLabel}`);
         } else if (typeof input === 'string') {
-            return [vscode.Uri.file(input)];
+            return [this._vscode.Uri.file(input)];
         } else {
             throw new Error(`Unexpected input '${input}' for showOpenDialog.`);
         }

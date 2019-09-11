@@ -9,7 +9,6 @@ import { StorageAccount } from 'azure-arm-storage/lib/models';
 import { isString } from 'util';
 import * as types from '../../index';
 import { createAzureClient } from '../createAzureClient';
-import { UserCancelledError } from '../errors';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { openUrl } from '../utils/openUrl';
@@ -79,12 +78,16 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
         const client: StorageManagementClient = createAzureClient(wizardContext, StorageManagementClient);
 
         const quickPickOptions: types.IAzureQuickPickOptions = { placeHolder: 'Select a storage account.', id: `StorageAccountListStep/${wizardContext.subscriptionId}` };
-        const result: StorageAccount | string | undefined = (await ext.ui.showQuickPick(this.getQuickPicks(client.storageAccounts.list()), quickPickOptions)).data;
-        // If result is a string, that means the user selected the 'Learn more...' pick
-        if (isString(result)) {
-            await openUrl(result);
-            throw new UserCancelledError();
-        }
+        const picksTask: Promise<types.IAzureQuickPickItem<StorageAccount | string | undefined>[]> = this.getQuickPicks(client.storageAccounts.list());
+
+        let result: StorageAccount | string | undefined;
+        do {
+            result = (await ext.ui.showQuickPick(picksTask, quickPickOptions)).data;
+            // If result is a string, that means the user selected the 'Learn more...' pick
+            if (isString(result)) {
+                await openUrl(result);
+            }
+        } while (isString(result));
 
         wizardContext.storageAccount = result;
         if (wizardContext.storageAccount) {
@@ -95,8 +98,10 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
 
     public async getSubWizard(wizardContext: T): Promise<types.IWizardOptions<T> | undefined> {
         if (!wizardContext.storageAccount) {
+            const promptSteps: AzureWizardPromptStep<T>[] = [new StorageAccountNameStep(), new ResourceGroupListStep()];
+            LocationListStep.addStep(wizardContext, promptSteps);
             return {
-                promptSteps: [new StorageAccountNameStep(), new ResourceGroupListStep(), new LocationListStep()],
+                promptSteps: promptSteps,
                 executeSteps: [new StorageAccountCreateStep(this._newAccountDefaults)]
             };
         } else {

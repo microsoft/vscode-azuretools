@@ -47,6 +47,7 @@ export function excludeNodeModulesAndDependencies(
 
     // Tell webpack to copy the given modules' sources into dist\node_modules
     //   so they can be found through normal require calls.
+    // NOTE: copy-webpack-plugin doesn't work for this. See https://github.com/microsoft/vscode-azuretools/pull/403 and https://github.com/webpack-contrib/copy-webpack-plugin/issues/35
     // tslint:disable-next-line: strict-boolean-expressions
     webpackConfig.plugins = webpackConfig.plugins || [];
     webpackConfig.plugins.push(new FilemanagerWebpackPlugin(

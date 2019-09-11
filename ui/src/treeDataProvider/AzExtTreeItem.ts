@@ -8,8 +8,8 @@ import * as types from '../../index';
 import { NotImplementedError } from '../errors';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
+import { getThemedIconPath } from './IconPath';
 import { IAzExtParentTreeItemInternal, IAzExtTreeDataProviderInternal, isAzExtParentTreeItem } from "./InternalInterfaces";
-import { loadingIconPath } from "./treeConstants";
 
 export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     //#region Properties implemented by base class
@@ -55,7 +55,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     }
 
     public get effectiveIconPath(): string | Uri | { light: string | Uri; dark: string | Uri } | undefined {
-        return this._temporaryDescription || this._isLoadingMore ? loadingIconPath : this.iconPath;
+        return this._temporaryDescription || this._isLoadingMore ? getThemedIconPath('Loading') : this.iconPath;
     }
 
     public get effectiveLabel(): string {

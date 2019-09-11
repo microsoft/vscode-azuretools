@@ -5,11 +5,13 @@
 
 import { WebSiteManagementClient } from 'azure-arm-website';
 import { AppServicePlan, FunctionEnvelopeCollection, FunctionSecrets, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SlotConfigNamesResource, SourceControlCollection, StringDictionary, User, WebAppInstanceCollection, WebJobCollection } from 'azure-arm-website/lib/models';
+import { ServiceClientOptions, WebResource } from 'ms-rest';
 import { addExtensionUserAgent, createAzureClient, ISubscriptionContext, parseError } from 'vscode-azureextensionui';
-import KuduClient from 'vscode-azurekudu';
+import { KuduClient } from 'vscode-azurekudu';
 import { FunctionEnvelope } from 'vscode-azurekudu/lib/models';
 import { localize } from './localize';
 import { nonNullProp, nonNullValue } from './utils/nonNull';
+import { requestUtils } from './utils/requestUtils';
 
 /**
  * Wrapper of a WebSiteManagementClient for use with a specific Site
@@ -48,6 +50,10 @@ export class SiteClient {
     private readonly _subscription: ISubscriptionContext;
     private _funcPreviewSlotError: Error = new Error(localize('functionsSlotPreview', 'This operation is not supported for slots, which are still in preview.'));
 
+    private _cachedPlan: AppServicePlan | undefined;
+    private _cachedSiteRestrictedToken: string | undefined;
+    private _siteRestrictedTokenExpireTime: number = Date.now();
+
     constructor(site: Site, subscription: ISubscriptionContext) {
         let matches: RegExpMatchArray | null = nonNullProp(site, 'serverFarmId').match(/\/subscriptions\/(.*)\/resourceGroups\/(.*)\/providers\/Microsoft.Web\/serverfarms\/(.*)/);
         matches = nonNullValue(matches, 'Invalid serverFarmId.');
@@ -84,11 +90,23 @@ export class SiteClient {
         return createAzureClient(this._subscription, WebSiteManagementClient);
     }
 
-    public get kudu(): KuduClient {
+    public async getIsConsumption(): Promise<boolean> {
+        if (this.isFunctionApp) {
+            const asp: AppServicePlan | undefined = await this.getCachedAppServicePlan();
+            // Assume it's consumption if we can't get the plan (sometimes happens with brand new plans). Consumption is recommended and more popular
+            return !asp || !asp.sku || !asp.sku.tier || asp.sku.tier.toLowerCase() === 'dynamic';
+        } else {
+            return false;
+        }
+    }
+
+    public async getKuduClient(): Promise<KuduClient> {
         if (!this.kuduHostName) {
             throw new Error(localize('notSupportedLinux', 'This operation is not supported by this app service plan.'));
         }
-        const kuduClient: KuduClient = new KuduClient(this._subscription.credentials, this.kuduUrl);
+
+        const clientOptions: ServiceClientOptions | undefined = await this.getKuduClientOptions();
+        const kuduClient: KuduClient = new KuduClient(this._subscription.credentials, this.kuduUrl, clientOptions);
         addExtensionUserAgent(kuduClient);
         return kuduClient;
     }
@@ -265,4 +283,90 @@ export class SiteClient {
             await this._client.webApps.listWebJobsSlot(this.resourceGroup, this.siteName, this.slotName) :
             await this._client.webApps.listWebJobs(this.resourceGroup, this.siteName);
     }
+
+    /**
+     * Temporary workaround because this isn't in azure sdk yet
+     * Spec: https://github.com/Azure/azure-functions-host/issues/3994
+     */
+    public async listHostKeys(): Promise<IHostKeys> {
+        const urlPath: string = `${this.id}/host/default/listkeys?api-version=2016-08-01`;
+        const requestOptions: requestUtils.Request = await requestUtils.getDefaultAzureRequest(urlPath, this._subscription, 'POST');
+        const result: string = await requestUtils.sendRequest(requestOptions);
+        return <IHostKeys>JSON.parse(result);
+    }
+
+    /**
+     * Temporary workaround because this isn't in azure sdk yet
+     * Spec: https://github.com/Azure/azure-functions-host/issues/3994
+     */
+    public async listFunctionKeys(functionName: string): Promise<IFunctionKeys> {
+        const urlPath: string = `${this.id}/functions/${functionName}/listKeys?api-version=2016-08-01`;
+        const requestOptions: requestUtils.Request = await requestUtils.getDefaultAzureRequest(urlPath, this._subscription, 'POST');
+        const result: string = await requestUtils.sendRequest(requestOptions);
+        return <IFunctionKeys>JSON.parse(result);
+    }
+
+    /**
+     * To be used for better performance when checking something on the plan that doesn't change
+     */
+    private async getCachedAppServicePlan(): Promise<AppServicePlan | undefined> {
+        let result: AppServicePlan | undefined = this._cachedPlan;
+        if (!result) {
+            result = await this.getAppServicePlan();
+        }
+        return result;
+    }
+
+    /**
+     * Linux consumption currently requires a site-restricted token for all kudu calls (in addition to existing credentials)
+     * This is only a temporary requirement and should be going away eventually
+     */
+    private async getKuduClientOptions(): Promise<ServiceClientOptions | undefined> {
+        if (this.isLinux) {
+            const isConsumption: boolean = await this.getIsConsumption();
+            if (isConsumption) {
+                // Doing the best we can for types here - 'ms-rest' is severely lacking when it comes to filters
+                type callbackType = (err: unknown) => void;
+                type nextType = (r: WebResource, c: callbackType) => Promise<void>;
+                return {
+                    filters: [
+                        async (resource: WebResource, next: nextType, callback: callbackType): Promise<void> => {
+                            try {
+                                resource.headers['x-ms-site-restricted-token'] = await this.getSiteRestrictedToken();
+                                return next(resource, callback);
+                            } catch (error) {
+                                callback(error);
+                            }
+                        }
+                    ]
+                };
+            }
+        }
+
+        return undefined;
+    }
+
+    private async getSiteRestrictedToken(): Promise<string> {
+        if (!this._cachedSiteRestrictedToken || Date.now() > this._siteRestrictedTokenExpireTime) {
+            const urlPath: string = `${this.id}/hostruntime/admin/host/token?api-version=2015-08-01`;
+            const request: requestUtils.Request = await requestUtils.getDefaultAzureRequest(urlPath, this._subscription);
+            // token only lasts 5 minutes. Use 4 just to be safe
+            this._siteRestrictedTokenExpireTime = Date.now() + 4 * 60 * 1000;
+            this._cachedSiteRestrictedToken = await requestUtils.sendRequest<string>(request);
+        }
+
+        return this._cachedSiteRestrictedToken;
+    }
+}
+
+export interface IFunctionKeys {
+    // tslint:disable-next-line: no-reserved-keywords
+    default?: string;
+    [key: string]: string | undefined;
+}
+
+export interface IHostKeys {
+    masterKey?: string;
+    functionKeys?: { [key: string]: string | undefined };
+    systemKeys?: { [key: string]: string | undefined };
 }

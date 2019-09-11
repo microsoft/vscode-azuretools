@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as path from 'path';
 import { Event, EventEmitter, TreeItem } from 'vscode';
 import * as types from '../../index';
 import { callWithTelemetryAndErrorHandling } from '../callWithTelemetryAndErrorHandling';
@@ -12,6 +11,7 @@ import { parseError } from '../parseError';
 import { AzExtParentTreeItem } from './AzExtParentTreeItem';
 import { AzExtTreeItem } from './AzExtTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';
+import { getThemedIconPath } from './IconPath';
 import { IAzExtTreeDataProviderInternal, isAzExtParentTreeItem } from './InternalInterfaces';
 import { loadMoreLabel } from './treeConstants';
 
@@ -74,10 +74,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                 if (hasMoreChildren && !treeItem._isLoadingMore) {
                     const loadMoreTI: GenericTreeItem = new GenericTreeItem(treeItem, {
                         label: loadMoreLabel,
-                        iconPath: {
-                            light: path.join(__filename, '..', '..', '..', '..', 'resources', 'light', 'refresh.svg'),
-                            dark: path.join(__filename, '..', '..', '..', '..', 'resources', 'dark', 'refresh.svg')
-                        },
+                        iconPath: getThemedIconPath('refresh'),
                         contextValue: 'azureextensionui.loadMore',
                         commandId: this._loadMoreCommandId
                     });

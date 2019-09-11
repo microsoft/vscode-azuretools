@@ -9,6 +9,7 @@ import { IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
+import { openUrl } from '../utils/openUrl';
 import { AppKind, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
@@ -20,7 +21,7 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
 
         }
 
-        const pricingTiers: IAzureQuickPickItem<SkuDescription>[] = skus.map((s: SkuDescription) => {
+        const pricingTiers: IAzureQuickPickItem<SkuDescription | undefined>[] = skus.map((s: SkuDescription) => {
             return {
                 label: nonNullProp(s, 'name'),
                 description: s.tier,
@@ -28,7 +29,19 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
             };
         });
 
-        wizardContext.newPlanSku = (await ext.ui.showQuickPick(pricingTiers, { placeHolder: localize('PricingTierPlaceholder', 'Select a pricing tier for the new App Service plan.') })).data;
+        pricingTiers.push({ label: localize('ShowPricingCalculator', '$(link-external) Show pricing information...'), data: undefined, suppressPersistence: true });
+
+        while (!wizardContext.newPlanSku) {
+            wizardContext.newPlanSku = (await ext.ui.showQuickPick(pricingTiers, { placeHolder: localize('PricingTierPlaceholder', 'Select a pricing tier for the new App Service plan.') })).data;
+
+            if (!wizardContext.newPlanSku) {
+                if (wizardContext.newSiteOS === WebsiteOS.linux) {
+                    await openUrl('https://aka.ms/AA60znj');
+                } else {
+                    await openUrl('https://aka.ms/AA6202c');
+                }
+            }
+        }
     }
 
     public shouldPrompt(wizardContext: IAppServiceWizardContext): boolean {

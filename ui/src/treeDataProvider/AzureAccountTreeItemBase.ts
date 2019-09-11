@@ -3,19 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as path from 'path';
 import { commands, Disposable, Extension, extensions, MessageItem, ProgressLocation, window } from 'vscode';
 import * as types from '../../index';
 import { AzureAccount, AzureLoginStatus, AzureResourceFilter } from '../azure-account.api';
 import { UserCancelledError } from '../errors';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { TestAzureAccount } from '../TestAzureAccount';
 import { nonNullProp, nonNullValue } from '../utils/nonNull';
 import { AzureWizardPromptStep } from '../wizard/AzureWizardPromptStep';
 import { AzExtParentTreeItem } from './AzExtParentTreeItem';
 import { AzExtTreeItem } from './AzExtTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';
+import { getIconPath, getThemedIconPath } from './IconPath';
 import { SubscriptionTreeItemBase } from './SubscriptionTreeItemBase';
 
 const signInLabel: string = localize('signInLabel', 'Sign in to Azure...');
@@ -38,7 +37,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
     private _azureAccountTask: Promise<AzureAccount | undefined>;
     private _subscriptionTreeItems: SubscriptionTreeItemBase[] | undefined;
 
-    constructor(parent?: AzExtParentTreeItem, testAccount?: TestAzureAccount) {
+    constructor(parent?: AzExtParentTreeItem, testAccount?: AzureAccount) {
         super(parent);
         this._azureAccountTask = this.loadAzureAccount(testAccount);
     }
@@ -46,6 +45,10 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
     //#region Methods implemented by base class
     public abstract createSubscriptionTreeItem(root: types.ISubscriptionContext): SubscriptionTreeItemBase | Promise<SubscriptionTreeItemBase>;
     //#endregion
+
+    public get iconPath(): types.TreeItemIconPath {
+        return getIconPath('azure');
+    }
 
     public dispose(): void {
         Disposable.from(...this.disposables).dispose();
@@ -76,15 +79,12 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
                 commandId: signInCommandId,
                 contextValue,
                 id: signInCommandId,
-                iconPath: {
-                    light: path.join(__filename, '..', '..', '..', '..', 'resources', 'light', 'Loading.svg'),
-                    dark: path.join(__filename, '..', '..', '..', '..', 'resources', 'dark', 'Loading.svg')
-                }
+                iconPath: getThemedIconPath('Loading')
             })];
         } else if (azureAccount.status === 'LoggedOut') {
             return [
-                new GenericTreeItem(this, { label: signInLabel, commandId: signInCommandId, contextValue, id: signInCommandId, includeInTreeItemPicker: true }),
-                new GenericTreeItem(this, { label: createAccountLabel, commandId: createAccountCommandId, contextValue, id: createAccountCommandId, includeInTreeItemPicker: true })
+                new GenericTreeItem(this, { label: signInLabel, commandId: signInCommandId, contextValue, id: signInCommandId, iconPath: getThemedIconPath('signIn'), includeInTreeItemPicker: true }),
+                new GenericTreeItem(this, { label: createAccountLabel, commandId: createAccountCommandId, contextValue, id: createAccountCommandId, iconPath: getThemedIconPath('add'), includeInTreeItemPicker: true })
             ];
         }
 
@@ -146,6 +146,14 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
         }
 
         return undefined;
+    }
+
+    public compareChildrenImpl(item1: AzExtTreeItem, item2: AzExtTreeItem): number {
+        if (item1 instanceof GenericTreeItem && item2 instanceof GenericTreeItem) {
+            return 0; // already sorted
+        } else {
+            return super.compareChildrenImpl(item1, item2);
+        }
     }
 
     private async loadAzureAccount(azureAccount: AzureAccount | undefined): Promise<AzureAccount | undefined> {
