@@ -17,13 +17,14 @@ export class TestOutputChannel implements OutputChannel {
         console.log(value);
     }
 
+    // tslint:disable-next-line: type-literal-delimiter
     public appendLog(value: string, options?: { resourceName?: string, date?: Date }): void {
+        // tslint:disable: strict-boolean-expressions no-parameter-reassignment
         options = options || {};
         const date: Date = options.date || new Date();
         this.appendLine(`${date.toLocaleTimeString()}${options.resourceName ? ' '.concat(options.resourceName) : ''}: ${value}`);
 
     }
-
 
     public clear(): void {
         // do nothing
