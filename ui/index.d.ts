@@ -1098,19 +1098,21 @@ export function createAzureSubscriptionClient<T extends IAddUserAgent>(
 export function createApiProvider(azExts: AzureExtensionApi[]): AzureExtensionApiProvider;
 
 /**
- * Wrapper for vscode.OutputChannel that adds timestamping for messages
+ * Wrapper for vscode.OutputChannel that handles AzureExtension behavior for outputting messages
  */
 export declare class AzExtOutputChannel implements OutputChannel {
     public readonly name: string;
-    public constructor(name: string, outputChannel: OutputChannel);
+    public readonly extensionPrefix: string;
+
+    public constructor(name: string, extensionPrefix: string);
 
     public append(value: string): void;
     public appendLine(value: string): void;
     /**
      * appendLog adds the current timestamps to all messages
      * @param value The message to be printed
-     * @param options.resourceName The name of the resource. If provided, it will be prepended before the message
-     * @param options.date If provided, the date will overwrite the timestamp
+     * @param options.resourceName The name of the resource. If provided, the resource name will be prefixed to the message
+     * @param options.date The date to prepend before the message, otherwise it defaults to Date.now()
      */
     public appendLog(value: string, options?: { resourceName?: string, date?: Date }): void;
     public clear(): void;

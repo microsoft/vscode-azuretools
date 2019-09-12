@@ -3,18 +3,18 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { OutputChannel, ViewColumn, workspace, WorkspaceConfiguration } from "vscode";
+import { OutputChannel, ViewColumn, window, workspace, WorkspaceConfiguration } from "vscode";
 import * as types from '../index';
 
 export class AzExtOutputChannel implements types.AzExtOutputChannel {
     public readonly name: string;
+    public readonly extensionPrefix: string;
     private _outputChannel: OutputChannel;
 
-    constructor(extensionPrefix: string, outputChannel: OutputChannel) {
-        // name is required by outputChannel, but since the outputChannel already has a name, it is redundant
-        // this is used to determine which extension is calling outputChannel
-        this.name = extensionPrefix;
-        this._outputChannel = outputChannel;
+    constructor(name: string, extensionPrefix: string) {
+        this.name = name;
+        this.extensionPrefix = extensionPrefix;
+        this._outputChannel = window.createOutputChannel(this.name);
     }
 
     public append(value: string): void {
@@ -26,9 +26,9 @@ export class AzExtOutputChannel implements types.AzExtOutputChannel {
     }
 
     public appendLog(value: string, options?: { resourceName?: string, date?: Date }): void {
-        const key: string = 'enableOutputTimestamps';
-        const projectConfiguration: WorkspaceConfiguration = workspace.getConfiguration(this.name);
-        const result: boolean | undefined = projectConfiguration.get<boolean>(key);
+        const enableOutputTimestampsSetting: string = 'enableOutputTimestamps';
+        const projectConfiguration: WorkspaceConfiguration = workspace.getConfiguration(this.extensionPrefix);
+        const result: boolean | undefined = projectConfiguration.get<boolean>(enableOutputTimestampsSetting);
 
         if (!result) {
             this.appendLine(value);
@@ -36,7 +36,7 @@ export class AzExtOutputChannel implements types.AzExtOutputChannel {
             // tslint:disable: strict-boolean-expressions
             options = options || {};
             const date: Date = options.date || new Date();
-            this.appendLine(`${date.toLocaleTimeString(undefined, { hour12: false })}${options.resourceName ? ' '.concat(options.resourceName) : ''}: ${value}`);
+            this.appendLine(`${date.toLocaleTimeString()}${options.resourceName ? ' '.concat(options.resourceName) : ''}: ${value}`);
         }
     }
 
