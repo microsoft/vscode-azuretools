@@ -6,7 +6,7 @@
 import { OutputChannel, ViewColumn, window, workspace, WorkspaceConfiguration } from "vscode";
 import * as types from '../index';
 
-export class AzExtOutputChannel implements types.AzExtOutputChannel {
+export class AzExtOutputChannel implements types.IAzExtOutputChannel {
     public readonly name: string;
     public readonly extensionPrefix: string;
     private _outputChannel: OutputChannel;

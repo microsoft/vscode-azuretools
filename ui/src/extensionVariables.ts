@@ -6,7 +6,7 @@
 import * as assert from 'assert';
 import { ExtensionContext, InputBoxOptions, QuickPickItem, QuickPickOptions } from "vscode";
 import TelemetryReporter from "vscode-extension-telemetry";
-import { IAzureUserInput, UIExtensionVariables } from "../index";
+import { IAzExtOutputChannel, IAzureUserInput, UIExtensionVariables } from "../index";
 import { AzExtOutputChannel } from './AzExtOutputChannel';
 import { localize } from "./localize";
 
@@ -26,7 +26,7 @@ class UninitializedExtensionVariables implements UIExtensionVariables {
         throw this._error;
     }
 
-    public get outputChannel(): AzExtOutputChannel {
+    public get outputChannel(): IAzExtOutputChannel {
         throw this._error;
     }
 

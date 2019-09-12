@@ -1047,7 +1047,7 @@ export declare function registerUIExtensionVariables(extVars: UIExtensionVariabl
  */
 export interface UIExtensionVariables {
     context: ExtensionContext;
-    outputChannel: AzExtOutputChannel;
+    outputChannel: IAzExtOutputChannel;
     ui: IAzureUserInput;
     reporter: ITelemetryReporter;
 
@@ -1097,6 +1097,9 @@ export function createAzureSubscriptionClient<T extends IAddUserAgent>(
  */
 export function createApiProvider(azExts: AzureExtensionApi[]): AzureExtensionApiProvider;
 
+export interface IAzExtOutputChannel extends OutputChannel {
+    appendLog(value: string, options?: { resourceName?: string, date?: Date }): void;
+}
 /**
  * Wrapper for vscode.OutputChannel that handles AzureExtension behavior for outputting messages
  */
