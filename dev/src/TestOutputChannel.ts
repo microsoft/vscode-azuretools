@@ -17,6 +17,14 @@ export class TestOutputChannel implements OutputChannel {
         console.log(value);
     }
 
+    public appendLog(value: string, options?: { resourceName?: string, date?: Date }): void {
+        options = options || {};
+        const date: Date = options.date || new Date();
+        this.appendLine(`${date.toLocaleTimeString()}${options.resourceName ? ' '.concat(options.resourceName) : ''}: ${value}`);
+
+    }
+
+
     public clear(): void {
         // do nothing
     }
