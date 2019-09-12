@@ -17,23 +17,28 @@ const remoteDebugLink: string = 'https://aka.ms/appsvc-remotedebug';
 
 let isRemoteDebugging: boolean = false;
 
-export async function startRemoteDebug(siteClient: SiteClient, siteConfig: SiteConfigResource): Promise<void> {
+export enum RemoteDebugLanguage {
+    Node,
+    Python
+}
+
+export async function startRemoteDebug(siteClient: SiteClient, siteConfig: SiteConfigResource, language: RemoteDebugLanguage): Promise<void> {
     if (isRemoteDebugging) {
         throw new Error(localize('remoteDebugAlreadyStarted', 'Azure Remote Debugging is currently starting or already started.'));
     }
 
     isRemoteDebugging = true;
     try {
-        await startRemoteDebugInternal(siteClient, siteConfig);
+        await startRemoteDebugInternal(siteClient, siteConfig, language);
     } catch (error) {
         isRemoteDebugging = false;
         throw error;
     }
 }
 
-async function startRemoteDebugInternal(siteClient: SiteClient, siteConfig: SiteConfigResource): Promise<void> {
+async function startRemoteDebugInternal(siteClient: SiteClient, siteConfig: SiteConfigResource, language: RemoteDebugLanguage): Promise<void> {
     await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress: vscode.Progress<{}>): Promise<void> => {
-        const debugConfig: vscode.DebugConfiguration = await getDebugConfiguration();
+        const debugConfig: vscode.DebugConfiguration = await getDebugConfiguration(language);
         // tslint:disable-next-line:no-unsafe-any
         const localHostPortNumber: number = debugConfig.port;
 
@@ -78,20 +83,29 @@ async function startRemoteDebugInternal(siteClient: SiteClient, siteConfig: Site
     });
 }
 
-async function getDebugConfiguration(): Promise<vscode.DebugConfiguration> {
+const baseConfigs: { [key in RemoteDebugLanguage]: Object } = {
+    [RemoteDebugLanguage.Node]: {
+        type: 'node',
+        protocol: 'inspector'
+    },
+    [RemoteDebugLanguage.Python]: {
+        type: 'python'
+    }
+};
+
+async function getDebugConfiguration(language: RemoteDebugLanguage): Promise<vscode.DebugConfiguration> {
+    if (!(language in baseConfigs)) {
+        throw new Error(localize('remoteDebugLanguageNotSupported', 'The language "{0}" is not supported for remote debugging.', language));
+    }
+
     const sessionId: string = Date.now().toString();
     const portNumber: number = await portfinder.getPortPromise();
 
-    // So far only node is supported
-    const config: vscode.DebugConfiguration = {
-        // return {
-        name: sessionId,
-        type: 'node',
-        protocol: 'inspector',
-        request: 'attach',
-        address: 'localhost',
-        port: portNumber
-    };
+    const config: vscode.DebugConfiguration = <vscode.DebugConfiguration>baseConfigs[language];
+    config.name = sessionId;
+    config.request = 'attach';
+    config.address = 'localhost';
+    config.port = portNumber;
 
     // Try to map workspace folder source files to the remote instance
     if (vscode.workspace.workspaceFolders) {
