@@ -23,10 +23,12 @@ export class AzExtOutputChannel implements types.AzExtOutputChannel {
         this._outputChannel.appendLine(value);
     }
 
-    public appendLog(value: string, options: { resourceName?: string, date?: Date }): void {
-        // tslint:disable-next-line:strict-boolean-expressions
+    public appendLog(value: string, options?: { resourceName?: string, date?: Date }): void {
+        // tslint:disable: strict-boolean-expressions
+        options = options || {};
+
         const date: Date = options.date || new Date();
-        this.appendLine(`${date.toLocaleTimeString()}${options.resourceName ? ' '.concat(options.resourceName) : ''}: ${value}`);
+        this.appendLine(`${date.toLocaleTimeString(undefined, { hour12: false })}${options.resourceName ? ' '.concat(options.resourceName) : ''}: ${value}`);
     }
 
     public clear(): void {

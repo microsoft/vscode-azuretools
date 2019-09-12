@@ -8,7 +8,7 @@ import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { StorageAccount } from 'azure-arm-storage/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment, AzureServiceClientOptions } from 'ms-rest-azure';
-import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri } from 'vscode';
+import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri, ViewColumn } from 'vscode';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 
 export type OpenInPortalOptions = {
@@ -1102,8 +1102,6 @@ export function createApiProvider(azExts: AzureExtensionApi[]): AzureExtensionAp
  */
 export declare class AzExtOutputChannel implements OutputChannel {
     public readonly name: string;
-    private _outputChannel: OutputChannel;
-
     public constructor(name: string, outputChannel: OutputChannel);
 
     public append(value: string): void;
@@ -1114,9 +1112,24 @@ export declare class AzExtOutputChannel implements OutputChannel {
      * @param options.resourceName The name of the resource. If provided, it will be prepended before the message
      * @param options.date If provided, the date will overwrite the timestamp
      */
-    public appendLog(value: string, options: { resourceName?: string, date?: Date }): void;
+    public appendLog(value: string, options?: { resourceName?: string, date?: Date }): void;
     public clear(): void;
-    public show(): void;
+    /**
+		 * Reveal this channel in the UI.
+		 *
+		 * @param preserveFocus When `true` the channel will not take focus.
+		 */
+    public show(preserveFocus?: boolean): void;
+
+    /**
+     * ~~Reveal this channel in the UI.~~
+     *
+     * @deprecated Use the overload with just one parameter (`show(preserveFocus?: boolean): void`).
+     *
+     * @param column This argument is **deprecated** and will be ignored.
+     * @param preserveFocus When `true` the channel will not take focus.
+     */
+    public show(column?: ViewColumn, preserveFocus?: boolean): void;
     public hide(): void;
     public dispose(): void;
 }
