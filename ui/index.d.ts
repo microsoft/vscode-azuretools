@@ -1114,21 +1114,7 @@ export declare class AzExtOutputChannel implements OutputChannel {
      */
     public appendLog(value: string, options?: { resourceName?: string, date?: Date }): void;
     public clear(): void;
-    /**
-		 * Reveal this channel in the UI.
-		 *
-		 * @param preserveFocus When `true` the channel will not take focus.
-		 */
     public show(preserveFocus?: boolean): void;
-
-    /**
-     * ~~Reveal this channel in the UI.~~
-     *
-     * @deprecated Use the overload with just one parameter (`show(preserveFocus?: boolean): void`).
-     *
-     * @param column This argument is **deprecated** and will be ignored.
-     * @param preserveFocus When `true` the channel will not take focus.
-     */
     public show(column?: ViewColumn, preserveFocus?: boolean): void;
     public hide(): void;
     public dispose(): void;
