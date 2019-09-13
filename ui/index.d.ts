@@ -1101,6 +1101,7 @@ export function createApiProvider(azExts: AzureExtensionApi[]): AzureExtensionAp
  * Wrapper for vscode.OutputChannel that handles AzureExtension behavior for outputting messages
  */
 export interface IAzExtOutputChannel extends OutputChannel {
+
     /**
      * appendLog adds the current timestamps to all messages
      * @param value The message to be printed
@@ -1111,13 +1112,12 @@ export interface IAzExtOutputChannel extends OutputChannel {
 }
 
 /**
-		 * Create a new AzExtOutputChannel with the given name and the extensionPrefix.
-		 *
-		 * @param name Human-readable string which will be used to represent the channel in the UI.
-         * @param extensionPrefix The prefix used to associated the outputChannel with the extension
-		 */
+ * Create a new AzExtOutputChannel with the given name and the extensionPrefix.
+ *
+ * @param name Human-readable string which will be used to represent the channel in the UI.
+ * @param extensionPrefix The prefix used to associated the outputChannel with the extension
+ */
 export function createAzExtOutputChannel(name: string, extensionPrefix: string): IAzExtOutputChannel;
-
 
 /**
  * Opens a read-only editor to display json content

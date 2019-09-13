@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 const vscode = require('vscode');
-const AzExtOutputChannel = require('../../out/src/AzExtOutputChannel').AzExtOutputChannel;
+const createAzExtOutputChannel = require('../../out/src/AzExtOutputChannel').createAzExtOutputChannel;
 
 const ui_1 = require('../../out/src/index');
 const DebugReporter = require('../../out/src/DebugReporter').DebugReporter;
@@ -13,7 +13,7 @@ function activate(context) {
     const extVars = {
         context,
         reporter: new DebugReporter(),
-        outputChannel: new AzExtOutputChannel('Extension Test Output', 'azureextensionui'),
+        outputChannel: createAzExtOutputChannel('Extension Test Output', 'azureextensionui'),
         ui: new ui_1.AzureUserInput()
     };
     ui_1.registerUIExtensionVariables(extVars)
