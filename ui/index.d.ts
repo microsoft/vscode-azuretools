@@ -1097,33 +1097,27 @@ export function createAzureSubscriptionClient<T extends IAddUserAgent>(
  */
 export function createApiProvider(azExts: AzureExtensionApi[]): AzureExtensionApiProvider;
 
-export interface IAzExtOutputChannel extends OutputChannel {
-    appendLog(value: string, options?: { resourceName?: string, date?: Date }): void;
-}
 /**
  * Wrapper for vscode.OutputChannel that handles AzureExtension behavior for outputting messages
  */
-export declare class AzExtOutputChannel implements OutputChannel {
-    public readonly name: string;
-    public readonly extensionPrefix: string;
-
-    public constructor(name: string, extensionPrefix: string);
-
-    public append(value: string): void;
-    public appendLine(value: string): void;
+export interface IAzExtOutputChannel extends OutputChannel {
     /**
      * appendLog adds the current timestamps to all messages
      * @param value The message to be printed
      * @param options.resourceName The name of the resource. If provided, the resource name will be prefixed to the message
      * @param options.date The date to prepend before the message, otherwise it defaults to Date.now()
      */
-    public appendLog(value: string, options?: { resourceName?: string, date?: Date }): void;
-    public clear(): void;
-    public show(preserveFocus?: boolean): void;
-    public show(column?: ViewColumn, preserveFocus?: boolean): void;
-    public hide(): void;
-    public dispose(): void;
+    appendLog(value: string, options?: { resourceName?: string, date?: Date }): void;
 }
+
+/**
+		 * Create a new AzExtOutputChannel with the given name and the extensionPrefix.
+		 *
+		 * @param name Human-readable string which will be used to represent the channel in the UI.
+         * @param extensionPrefix The prefix used to associated the outputChannel with the extension
+		 */
+export function createAzExtOutputChannel(name: string, extensionPrefix: string): IAzExtOutputChannel;
+
 
 /**
  * Opens a read-only editor to display json content

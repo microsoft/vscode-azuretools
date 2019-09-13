@@ -6,7 +6,12 @@
 import { OutputChannel, ViewColumn, window, workspace, WorkspaceConfiguration } from "vscode";
 import * as types from '../index';
 
-export class AzExtOutputChannel implements types.IAzExtOutputChannel {
+// tslint:disable-next-line: export-name
+export function createAzExtOutputChannel(name: string, extensionPrefix: string): types.IAzExtOutputChannel {
+    return new AzExtOutputChannel(name, extensionPrefix);
+}
+
+class AzExtOutputChannel implements types.IAzExtOutputChannel {
     public readonly name: string;
     public readonly extensionPrefix: string;
     private _outputChannel: OutputChannel;
