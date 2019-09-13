@@ -37,6 +37,7 @@ export class TestOutputChannel implements OutputChannel {
     public name: string;
     public append(value: string): void;
     public appendLine(value: string): void;
+    public appendLog(value: string, options?: { resourceName?: string, date?: Date }): void
     public clear(): void;
     public show(): void;
     public hide(): void;
