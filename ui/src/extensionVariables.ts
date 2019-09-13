@@ -7,7 +7,6 @@ import * as assert from 'assert';
 import { ExtensionContext, InputBoxOptions, QuickPickItem, QuickPickOptions } from "vscode";
 import TelemetryReporter from "vscode-extension-telemetry";
 import { IAzExtOutputChannel, IAzureUserInput, UIExtensionVariables } from "../index";
-import { AzExtOutputChannel } from './AzExtOutputChannel';
 import { localize } from "./localize";
 
 export interface IRootUserInput {
