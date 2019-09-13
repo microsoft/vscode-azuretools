@@ -84,7 +84,7 @@ function handleError(context: IActionContext, callbackId: string, error: unknown
 
     if (!context.errorHandling.suppressDisplay) {
         // Always append the error to the output channel, but only 'show' the output channel for multiline errors
-        ext.outputChannel.appendLine(localize('outputError', 'Error: {0}', errorData.message));
+        ext.outputChannel.appendLog(localize('outputError', 'Error: {0}', errorData.message));
 
         let message: string;
         if (errorData.message.includes('\n')) {

@@ -8,7 +8,7 @@ import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { StorageAccount } from 'azure-arm-storage/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment, AzureServiceClientOptions } from 'ms-rest-azure';
-import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri } from 'vscode';
+import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri, ViewColumn } from 'vscode';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 
 export type OpenInPortalOptions = {
@@ -1047,7 +1047,7 @@ export declare function registerUIExtensionVariables(extVars: UIExtensionVariabl
  */
 export interface UIExtensionVariables {
     context: ExtensionContext;
-    outputChannel: OutputChannel;
+    outputChannel: IAzExtOutputChannel;
     ui: IAzureUserInput;
     reporter: ITelemetryReporter;
 
@@ -1096,6 +1096,28 @@ export function createAzureSubscriptionClient<T extends IAddUserAgent>(
  * Multiple APIs with different versions can be supplied, but ideally a single backwards-compatible API is all that's necessary.
  */
 export function createApiProvider(azExts: AzureExtensionApi[]): AzureExtensionApiProvider;
+
+/**
+ * Wrapper for vscode.OutputChannel that handles AzureExtension behavior for outputting messages
+ */
+export interface IAzExtOutputChannel extends OutputChannel {
+
+    /**
+     * appendLog adds the current timestamps to all messages
+     * @param value The message to be printed
+     * @param options.resourceName The name of the resource. If provided, the resource name will be prefixed to the message
+     * @param options.date The date to prepend before the message, otherwise it defaults to Date.now()
+     */
+    appendLog(value: string, options?: { resourceName?: string, date?: Date }): void;
+}
+
+/**
+ * Create a new AzExtOutputChannel with the given name and the extensionPrefix.
+ *
+ * @param name Human-readable string which will be used to represent the channel in the UI.
+ * @param extensionPrefix The prefix used to associated the outputChannel with the extension
+ */
+export function createAzExtOutputChannel(name: string, extensionPrefix: string): IAzExtOutputChannel;
 
 /**
  * Opens a read-only editor to display json content
