@@ -10,7 +10,6 @@ import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { delay } from '../utils/delay';
-import { formatDeployLog } from './formatDeployLog';
 
 /**
  * Method of deployment that is only intended to be used for Linux Consumption Function apps because it doesn't support kudu pushDeployment
@@ -21,7 +20,7 @@ export async function deployToStorageAccount(client: SiteClient, zipFilePath: st
     const blobName: string = azureStorage.date.secondsFromNow(0).toISOString().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '').replace(/\s/g, '');
 
     const blobService: azureStorage.BlobService = await createBlobService(client);
-    ext.outputChannel.appendLine(formatDeployLog(client, localize('creatingBlob', 'Uploading zip package to storage container...')));
+    ext.outputChannel.appendLog(localize('creatingBlob', 'Uploading zip package to storage container...'), { resourceName: client.fullName });
     const blobUrl: string = await createBlobFromZip(blobService, zipFilePath, blobName);
     const appSettings: StringDictionary = await client.listApplicationSettings();
     // tslint:disable-next-line:strict-boolean-expressions
@@ -42,7 +41,7 @@ export async function deployToStorageAccount(client: SiteClient, zipFilePath: st
             const message: string = currentAttempt === 1 ?
                 localize('syncingTriggers', 'Syncing triggers...') :
                 localize('syncingTriggersAttempt', 'Syncing triggers (Attempt {0}/{1})...', currentAttempt, retries + 1);
-            ext.outputChannel.appendLine(formatDeployLog(client, message));
+            ext.outputChannel.appendLog(message, { resourceName: client.fullName });
             await client.syncFunctionTriggers();
         },
         { retries, minTimeout: 5 * 1000 }

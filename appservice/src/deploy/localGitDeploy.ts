@@ -14,7 +14,6 @@ import { callWithMaskHandling } from '../utils/callWithMaskHandling';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
 import { verifyNoRunFromPackageSetting } from '../verifyNoRunFromPackageSetting';
-import { formatDeployLog } from './formatDeployLog';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
 export async function localGitDeploy(client: SiteClient, fsPath: string, context: IActionContext): Promise<void> {
@@ -39,7 +38,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string, context
                 }
 
                 await verifyNoRunFromPackageSetting(client);
-                ext.outputChannel.appendLine(formatDeployLog(client, (localize('localGitDeploy', `Deploying Local Git repository to "${client.fullName}"...`))));
+                ext.outputChannel.appendLog(localize('localGitDeploy', `Deploying Local Git repository to "${client.fullName}"...`), { resourceName: client.fullName });
                 await tryPushAndWaitForDeploymentToComplete();
 
             } catch (err) {

@@ -24,16 +24,16 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
         const creatingAppServicePlan: string = localize('CreatingAppServicePlan', 'Creating App Service plan "{0}"...', newPlanName);
         const foundAppServicePlan: string = localize('FoundAppServicePlan', 'Successfully found App Service plan "{0}".', newPlanName);
         const createdAppServicePlan: string = localize('CreatedAppServicePlan', 'Successfully created App Service plan "{0}".', newPlanName);
-        ext.outputChannel.appendLine(findingAppServicePlan);
+        ext.outputChannel.appendLog(findingAppServicePlan);
 
         const client: WebSiteManagementClient = createAzureClient(wizardContext, WebSiteManagementClient);
         const existingPlan: AppServicePlan | undefined = <AppServicePlan | undefined>await client.appServicePlans.get(rgName, newPlanName);
 
         if (existingPlan) {
             wizardContext.plan = existingPlan;
-            ext.outputChannel.appendLine(foundAppServicePlan);
+            ext.outputChannel.appendLog(foundAppServicePlan);
         } else {
-            ext.outputChannel.appendLine(creatingAppServicePlan);
+            ext.outputChannel.appendLog(creatingAppServicePlan);
             progress.report({ message: creatingAppServicePlan });
             wizardContext.plan = await client.appServicePlans.createOrUpdate(rgName, newPlanName, {
                 kind: getAppServicePlanModelKind(wizardContext.newSiteKind, nonNullProp(wizardContext, 'newSiteOS')),
@@ -41,7 +41,7 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
                 location: nonNullValueAndProp(wizardContext.location, 'name'),
                 reserved: wizardContext.newSiteOS === WebsiteOS.linux  // The secret property - must be set to true to make it a Linux plan. Confirmed by the team who owns this API.
             });
-            ext.outputChannel.appendLine(createdAppServicePlan);
+            ext.outputChannel.appendLog(createdAppServicePlan);
         }
     }
 

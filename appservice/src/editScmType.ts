@@ -31,7 +31,7 @@ export async function editScmType(client: SiteClient, node: AzureTreeItem<ISiteT
     }
     if (showToast) {
         const scmTypeUpdated: string = localize('deploymentSourceUpdated,', 'Deployment source for "{0}" has been updated to "{1}".', client.fullName, newScmType);
-        ext.outputChannel.appendLine(scmTypeUpdated);
+        ext.outputChannel.appendLog(scmTypeUpdated);
         window.showInformationMessage(scmTypeUpdated);
     }
 
@@ -40,7 +40,7 @@ export async function editScmType(client: SiteClient, node: AzureTreeItem<ISiteT
         if (user.publishingUserName) {
             // first time users must set up deployment credentials via the Portal or they will not have a UserName
             const gitCloneUri: string = `https://${user.publishingUserName}@${client.gitUrl}`;
-            ext.outputChannel.appendLine(localize('gitCloneUri', 'Git Clone Uri for "{0}": "{1}"', client.fullName, gitCloneUri));
+            ext.outputChannel.appendLog(localize('gitCloneUri', 'Git Clone Uri for "{0}": "{1}"', client.fullName, gitCloneUri));
         }
     }
     // returns the updated scmType

@@ -21,7 +21,7 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
     public async execute(wizardContext: IAppServiceWizardContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         const resourceLocation: Location = nonNullProp(wizardContext, 'location');
         const verifyingAppInsightsAvailable: string = localize('verifyingAppInsightsAvailable', 'Verifying that Application Insights is available for this location...');
-        ext.outputChannel.appendLine(verifyingAppInsightsAvailable);
+        ext.outputChannel.appendLog(verifyingAppInsightsAvailable);
         const appInsightsLocation: string | undefined = await this.getSupportedLocation(wizardContext, resourceLocation);
 
         if (appInsightsLocation) {
@@ -32,25 +32,25 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
 
             try {
                 wizardContext.appInsightsComponent = await client.components.get(rgName, aiName);
-                ext.outputChannel.appendLine(localize('existingNewAppInsights', 'Using existing Application Insights resource "{0}".', aiName));
+                ext.outputChannel.appendLog(localize('existingNewAppInsights', 'Using existing Application Insights resource "{0}".', aiName));
             } catch (error) {
                 const pError: IParsedError = parseError(error);
                 // Only expecting a resource not found error if this is a new component
                 if (pError.errorType === 'ResourceNotFound') {
                     const creatingNewAppInsights: string = localize('creatingNewAppInsightsInsights', 'Creating new Application Insights resource "{0}"...', wizardContext.newSiteName);
-                    ext.outputChannel.appendLine(creatingNewAppInsights);
+                    ext.outputChannel.appendLog(creatingNewAppInsights);
                     progress.report({ message: creatingNewAppInsights });
 
                     wizardContext.appInsightsComponent = await client.components.createOrUpdate(rgName, aiName, { kind: 'web', applicationType: 'web', location: appInsightsLocation });
                     const createdNewAppInsights: string = localize('createdNewAppInsights', 'Created new Application Insights resource "{0}"...', aiName);
-                    ext.outputChannel.appendLine(createdNewAppInsights);
+                    ext.outputChannel.appendLog(createdNewAppInsights);
                 } else {
                     throw error;
                 }
             }
         } else {
             const appInsightsNotAvailable: string = localize('appInsightsNotAvailable', 'Skipping creating an Application Insights resource because it isn\'t compatible with this location.');
-            ext.outputChannel.appendLine(appInsightsNotAvailable);
+            ext.outputChannel.appendLog(appInsightsNotAvailable);
         }
     }
 
