@@ -22,7 +22,7 @@ export async function selectWorkspaceFolder(placeHolder: string, getSubPath?: (f
         getSubPath);
 }
 
-export async function selectWorkspaceFile(placeHolder: string, getSubPath?: (f: vscode.WorkspaceFolder) => string | undefined | Promise<string | undefined>, fileExtension?: string): Promise<string> {
+export async function selectWorkspaceFile(placeHolder: string, getSubPath?: (f: vscode.WorkspaceFolder) => string | undefined | Promise<string | undefined>, fileExtensions?: string[]): Promise<string> {
     let defaultUri: vscode.Uri | undefined;
     if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0 && getSubPath) {
         const firstFolder: vscode.WorkspaceFolder = vscode.workspace.workspaceFolders[0];
@@ -32,10 +32,10 @@ export async function selectWorkspaceFile(placeHolder: string, getSubPath?: (f: 
         }
     }
 
-    const filter: { [name: string]: string[] } = {};
+    const filters: { [name: string]: string[] } = {};
 
-    if (fileExtension) {
-        filter[fileExtension] = [fileExtension];
+    if (fileExtensions) {
+        filters.Artifacts = fileExtensions;
     }
 
     return await selectWorkspaceItem(
@@ -46,7 +46,7 @@ export async function selectWorkspaceFile(placeHolder: string, getSubPath?: (f: 
             canSelectMany: false,
             defaultUri: defaultUri,
             openLabel: localize('select', 'Select'),
-            filters: filter
+            filters: filters
         },
         getSubPath);
 }

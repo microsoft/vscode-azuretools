@@ -17,7 +17,7 @@ const deploySubpathSetting: string = 'deploySubpath';
  * Entry point can be the workspace folder, the fsPath, or the tree item being deployed to
  * In App Service, users can deploy specific artifact files (such as .jar) which is handled by selectWorkspaceFile
  */
-export async function getDeployFsPath(target: vscode.Uri | string | AzureParentTreeItem | undefined, extensionPrefix: string, fileExtension?: string): Promise<string> {
+export async function getDeployFsPath(target: vscode.Uri | string | AzureParentTreeItem | undefined, extensionPrefix: string, fileExtensions?: string | string[]): Promise<string> {
     if (target instanceof vscode.Uri) {
         return await appendDeploySubpathSetting(target.fsPath, extensionPrefix);
     } else if (typeof target === 'string') {
@@ -31,11 +31,15 @@ export async function getDeployFsPath(target: vscode.Uri | string | AzureParentT
         }
     }
 
-    const selectFile: string = localize('selectDeployFile', 'Select the {0} file to deploy', fileExtension);
+    if (typeof fileExtensions === 'string') {
+        fileExtensions = [fileExtensions];
+    }
+
+    const selectFile: string = localize('selectDeployFile', 'Select the {0} file to deploy', fileExtensions ? fileExtensions.join('/') : '');
     const selectFolder: string = localize('selectZipDeployFolder', 'Select the folder to zip and deploy');
 
-    return fileExtension ?
-        await workspaceUtil.selectWorkspaceFile(selectFile, f => getWorkspaceSetting(deploySubpathSetting, extensionPrefix, f.uri.fsPath), fileExtension) :
+    return fileExtensions ?
+        await workspaceUtil.selectWorkspaceFile(selectFile, f => getWorkspaceSetting(deploySubpathSetting, extensionPrefix, f.uri.fsPath), fileExtensions) :
         await workspaceUtil.selectWorkspaceFolder(selectFolder, f => getWorkspaceSetting(deploySubpathSetting, extensionPrefix, f.uri.fsPath));
 }
 
