@@ -11,7 +11,7 @@ import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 
 export function reportMessage(message: string, progress: vscode.Progress<{}>): void {
-    ext.outputChannel.appendLine(message);
+    ext.outputChannel.appendLog(message);
     progress.report({ message: message });
 }
 

@@ -12,7 +12,6 @@ import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { delay } from '../utils/delay';
 import { nonNullProp } from '../utils/nonNull';
-import { formatDeployLog } from './formatDeployLog';
 
 export async function waitForDeploymentToComplete(client: SiteClient, expectedId?: string, token?: CancellationToken, pollingInterval: number = 5000): Promise<void> {
     const alreadyDisplayedLogs: string[] = [];
@@ -49,7 +48,7 @@ export async function waitForDeploymentToComplete(client: SiteClient, expectedId
         const newLogEntries: LogEntry[] = logEntries.filter((newEntry: LogEntry) => !alreadyDisplayedLogs.some((oldId: string) => newEntry.id === oldId));
         if (newLogEntries.length === 0) {
             if (Date.now() > nextTimeToDisplayWaitingLog) {
-                ext.outputChannel.appendLine(formatDeployLog(client, localize('waitingForComand', 'Waiting for long running command to finish...')));
+                ext.outputChannel.appendLog(localize('waitingForComand', 'Waiting for long running command to finish...'), { resourceName: client.fullName });
                 nextTimeToDisplayWaitingLog = Date.now() + 60 * 1000;
             }
         } else {
@@ -57,14 +56,14 @@ export async function waitForDeploymentToComplete(client: SiteClient, expectedId
                 if (newEntry.id) {
                     alreadyDisplayedLogs.push(newEntry.id);
                     if (newEntry.message) {
-                        ext.outputChannel.appendLine(formatDeployLog(client, newEntry.message, newEntry.logTime));
+                        ext.outputChannel.appendLog(newEntry.message, { date: newEntry.logTime, resourceName: client.fullName });
                     }
 
                     if (newEntry.detailsUrl) {
                         const entryDetails: LogEntry[] = await kuduClient.deployment.getLogEntryDetails(deployment.id, newEntry.id);
                         for (const entryDetail of entryDetails) {
                             if (entryDetail.message) {
-                                ext.outputChannel.appendLine(formatDeployLog(client, entryDetail.message, entryDetail.logTime));
+                                ext.outputChannel.appendLog(entryDetail.message, { date: entryDetail.logTime, resourceName: client.fullName });
                             }
                         }
                     }

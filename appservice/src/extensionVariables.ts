@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ExtensionContext, OutputChannel } from "vscode";
-import { IAzureUserInput, registerUIExtensionVariables, UIExtensionVariables } from 'vscode-azureextensionui';
+import { ExtensionContext } from "vscode";
+import { IAzExtOutputChannel, IAzureUserInput, registerUIExtensionVariables, UIExtensionVariables } from 'vscode-azureextensionui';
 import TelemetryReporter from "vscode-extension-telemetry";
 import { localize } from "./localize";
 
@@ -15,7 +15,7 @@ class UninitializedExtensionVariables implements UIExtensionVariables {
         throw this._error;
     }
 
-    public get outputChannel(): OutputChannel {
+    public get outputChannel(): IAzExtOutputChannel {
         throw this._error;
     }
 

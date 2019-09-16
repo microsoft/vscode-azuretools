@@ -32,9 +32,9 @@ export async function deleteSite(client: SiteClient): Promise<void> {
     const deleting: string = localize('Deleting', 'Deleting "{0}"...', client.fullName);
     const deleteSucceeded: string = localize('DeleteSucceeded', 'Successfully deleted "{0}".', client.fullName);
     await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: deleting }, async (): Promise<void> => {
-        ext.outputChannel.appendLine(deleting);
+        ext.outputChannel.appendLog(deleting);
         await client.deleteMethod({ deleteEmptyServerFarm: deletePlan });
         vscode.window.showInformationMessage(deleteSucceeded);
-        ext.outputChannel.appendLine(deleteSucceeded);
+        ext.outputChannel.appendLog(deleteSucceeded);
     });
 }

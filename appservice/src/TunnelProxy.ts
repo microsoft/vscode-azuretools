@@ -37,7 +37,7 @@ class TunnelSocket extends EventEmitter {
     }
 
     public connect(): void {
-        ext.outputChannel.appendLine('[Proxy Server] socket init');
+        ext.outputChannel.appendLog('[Proxy Server] socket init');
 
         // Pause socket until tunnel connection has been established to make sure we don't lose data
         this._socket.pause();
@@ -49,32 +49,32 @@ class TunnelSocket extends EventEmitter {
         });
 
         this._socket.on('close', () => {
-            ext.outputChannel.appendLine(`[Proxy Server] client disconnected ${this._socket.remoteAddress}:${this._socket.remotePort}`);
+            ext.outputChannel.appendLog(`[Proxy Server] client disconnected ${this._socket.remoteAddress}:${this._socket.remotePort}`);
             this.dispose();
             this.emit('close');
         });
 
         this._socket.on('error', (err: Error) => {
-            ext.outputChannel.appendLine(`[Proxy Server] socket error: ${err}`);
+            ext.outputChannel.appendLog(`[Proxy Server] socket error: ${err}`);
             this.dispose();
             this.emit('error', err);
         });
 
         this._wsClient.on('connect', (connection: websocket.connection) => {
-            ext.outputChannel.appendLine('[WebSocket] client connected');
+            ext.outputChannel.appendLog('[WebSocket] client connected');
             this._wsConnection = connection;
 
             // Resume socket after connection
             this._socket.resume();
 
             connection.on('close', () => {
-                ext.outputChannel.appendLine('[WebSocket] client closed');
+                ext.outputChannel.appendLog('[WebSocket] client closed');
                 this.dispose();
                 this.emit('close');
             });
 
             connection.on('error', (err: Error) => {
-                ext.outputChannel.appendLine(`[WebSocket] error: ${err}`);
+                ext.outputChannel.appendLog(`[WebSocket] error: ${err}`);
                 this.dispose();
                 this.emit('error', err);
             });
@@ -86,7 +86,7 @@ class TunnelSocket extends EventEmitter {
         });
 
         this._wsClient.on('connectFailed', (err: Error) => {
-            ext.outputChannel.appendLine(`[WebSocket] connectFailed: ${err}`);
+            ext.outputChannel.appendLog(`[WebSocket] connectFailed: ${err}`);
             this.dispose();
             this.emit('error', err);
         });
@@ -107,7 +107,7 @@ class TunnelSocket extends EventEmitter {
     }
 
     public dispose(): void {
-        ext.outputChannel.appendLine('[Proxy Server] socket dispose');
+        ext.outputChannel.appendLog('[Proxy Server] socket dispose');
 
         if (this._wsConnection) {
             this._wsConnection.close();
@@ -176,12 +176,12 @@ export class TunnelProxy {
 
     // Starts up an app by pinging it when it is found to be in the STOPPED state
     private async startupApp(): Promise<void> {
-        ext.outputChannel.appendLine('[Tunnel] Pinging app default url...');
+        ext.outputChannel.appendLog('[Tunnel] Pinging app default url...');
         const request: requestUtils.Request = await requestUtils.getDefaultRequest(this._client.defaultHostUrl);
         request.simple = false; // allows the call to succeed without exception, even when status code is not 2XX
         request.resolveWithFullResponse = true; // allows access to the status code from the response
         const pingResponse: IncomingMessage = await requestUtils.sendRequest(request);
-        ext.outputChannel.appendLine(`[Tunnel] Ping responded with status code: ${pingResponse.statusCode}`);
+        ext.outputChannel.appendLog(`[Tunnel] Ping responded with status code: ${pingResponse.statusCode}`);
     }
 
     private async checkTunnelStatus(): Promise<void> {
@@ -192,13 +192,13 @@ export class TunnelProxy {
         let tunnelStatus: ITunnelStatus;
         try {
             const responseBody: string = await requestUtils.sendRequest(request);
-            ext.outputChannel.appendLine(`[Tunnel] Checking status, body: ${responseBody}`);
+            ext.outputChannel.appendLog(`[Tunnel] Checking status, body: ${responseBody}`);
 
             // tslint:disable-next-line:no-unsafe-any
             tunnelStatus = JSON.parse(responseBody);
         } catch (error) {
             const parsedError: IParsedError = parseError(error);
-            ext.outputChannel.appendLine(`[Tunnel] Checking status, error: ${parsedError.message}`);
+            ext.outputChannel.appendLog(`[Tunnel] Checking status, error: ${parsedError.message}`);
             throw new Error(localize('tunnelStatusError', 'Error getting tunnel status: {0}', parsedError.errorType));
         }
 
@@ -256,21 +256,21 @@ export class TunnelProxy {
                     const index: number = this._openSockets.indexOf(tunnelSocket);
                     if (index >= 0) {
                         this._openSockets.splice(index, 1);
-                        ext.outputChannel.appendLine(`[Proxy Server] client closed, connection count: ${this._openSockets.length}`);
+                        ext.outputChannel.appendLog(`[Proxy Server] client closed, connection count: ${this._openSockets.length}`);
                     }
                 });
 
                 tunnelSocket.connect();
-                ext.outputChannel.appendLine(`[Proxy Server] client connected ${socket.remoteAddress}:${socket.remotePort}, connection count: ${this._openSockets.length}`);
+                ext.outputChannel.appendLog(`[Proxy Server] client connected ${socket.remoteAddress}:${socket.remotePort}, connection count: ${this._openSockets.length}`);
             });
 
             this._server.on('listening', () => {
-                ext.outputChannel.appendLine('[Proxy Server] start listening');
+                ext.outputChannel.appendLog('[Proxy Server] start listening');
                 resolve();
             });
 
             this._server.on('error', (err: Error) => {
-                ext.outputChannel.appendLine(`[Proxy Server] server error: ${err}`);
+                ext.outputChannel.appendLog(`[Proxy Server] server error: ${err}`);
                 this.dispose();
                 reject(err);
             });

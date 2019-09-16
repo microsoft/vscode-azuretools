@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StringDictionary } from "azure-arm-website/lib/models";
-import { formatDeployLog } from "./deploy/formatDeployLog";
 import { ext } from "./extensionVariables";
 import { localize } from "./localize";
 import { SiteClient } from "./SiteClient";
@@ -17,7 +16,7 @@ export async function verifyNoRunFromPackageSetting(client: SiteClient): Promise
     for (const settingName of runFromPackageSettings) {
         if (applicationSettings.properties && applicationSettings.properties[settingName]) {
             delete applicationSettings.properties[settingName];
-            ext.outputChannel.appendLine(formatDeployLog(client, localize('deletingSetting', 'Deleting setting "{0}"...', settingName)));
+            ext.outputChannel.appendLog(localize('deletingSetting', 'Deleting setting "{0}"...', settingName), { resourceName: client.fullName });
             updateSettings = true;
         }
     }

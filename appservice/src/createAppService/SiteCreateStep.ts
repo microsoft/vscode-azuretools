@@ -39,7 +39,7 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
         const creatingNewApp: string = wizardContext.newSiteKind === AppKind.functionapp ?
             localize('creatingNewFunctionApp', 'Creating new function app "{0}"...', wizardContext.newSiteName) :
             localize('creatingNewWebApp', 'Creating new web app "{0}"...', wizardContext.newSiteName);
-        ext.outputChannel.appendLine(creatingNewApp);
+        ext.outputChannel.appendLog(creatingNewApp);
         progress.report({ message: creatingNewApp });
         const client: WebSiteManagementClient = createAzureClient(wizardContext, WebSiteManagementClient);
         wizardContext.site = await client.webApps.createOrUpdate(nonNullValueAndProp(wizardContext.resourceGroup, 'name'), nonNullProp(wizardContext, 'newSiteName'), {

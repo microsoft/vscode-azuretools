@@ -39,7 +39,7 @@ export async function swapSlot(sourceSlotNode: AzureTreeItem<ISiteTreeRoot>, exi
     const targetSlotLabel: string = targetSlot ? targetSlot.root.client.fullName : `${sourceSlotClient.siteName}-${productionSlotLabel}`;
     const swappingSlots: string = localize('swapping', 'Swapping "{0}" with "{1}"...', targetSlotLabel, sourceSlotClient.fullName);
     const successfullySwapped: string = localize('swapped', 'Successfully swapped "{0}" with "{1}".', targetSlotLabel, sourceSlotClient.fullName);
-    ext.outputChannel.appendLine(swappingSlots);
+    ext.outputChannel.appendLog(swappingSlots);
     const client: WebSiteManagementClient = createAzureClient(sourceSlotNode.root, WebSiteManagementClient);
     await window.withProgress({ location: ProgressLocation.Notification, title: swappingSlots }, async () => {
         // if targetSlot was assigned undefined, the user selected 'production'
@@ -51,6 +51,6 @@ export async function swapSlot(sourceSlotNode: AzureTreeItem<ISiteTreeRoot>, exi
             await client.webApps.swapSlotSlot(sourceSlotClient.resourceGroup, sourceSlotClient.siteName, { targetSlot: targetSlot.root.client.slotName!, preserveVnet: true }, sourceSlotClient.slotName!);
         }
         window.showInformationMessage(successfullySwapped);
-        ext.outputChannel.appendLine(successfullySwapped);
+        ext.outputChannel.appendLog(successfullySwapped);
     });
 }

@@ -29,7 +29,7 @@ export async function tryRunPreDeployTask(context: IActionContext, deployFsPath:
     if (taskName) {
         if (scmType === ScmType.LocalGit || scmType === ScmType.GitHub) {
             // We don't run pre deploy tasks for non-zipdeploy since that stuff should be handled by kudu
-            ext.outputChannel.appendLine(localize('ignoringPreDeployTask', 'WARNING: Ignoring preDeployTask "{0}" for non-zip deploy.', taskName));
+            ext.outputChannel.appendLog(localize('ignoringPreDeployTask', 'WARNING: Ignoring preDeployTask "{0}" for non-zip deploy.', taskName));
         } else {
             const tasks: vscode.Task[] = await vscode.tasks.fetchTasks();
             const preDeployTask: vscode.Task | undefined = tasks.find((task: vscode.Task) => isTaskEqual(taskName, deployFsPath, task));

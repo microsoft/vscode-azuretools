@@ -14,7 +14,6 @@ import * as FileUtilities from '../FileUtilities';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { deployToStorageAccount } from './deployToStorageAccount';
-import { formatDeployLog } from './formatDeployLog';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
 export async function deployZip(context: IActionContext, client: SiteClient, fsPath: string, aspPromise: Promise<AppServicePlan | undefined>): Promise<void> {
@@ -29,12 +28,12 @@ export async function deployZip(context: IActionContext, client: SiteClient, fsP
         zipFilePath = fsPath;
     } else {
         createdZip = true;
-        ext.outputChannel.appendLine(formatDeployLog(client, localize('zipCreate', 'Creating zip package...')));
+        ext.outputChannel.appendLog(localize('zipCreate', 'Creating zip package...'), { resourceName: client.fullName });
         zipFilePath = await getZipFileToDeploy(fsPath, client.isFunctionApp);
     }
 
     try {
-        ext.outputChannel.appendLine(formatDeployLog(client, localize('deployStart', 'Starting deployment...')));
+        ext.outputChannel.appendLog(localize('deployStart', 'Starting deployment...'), { resourceName: client.fullName });
         let asp: AppServicePlan | undefined;
 
         // if a user has access to the app but not the plan, this will cause an error.  We will make the same assumption as below in this case.

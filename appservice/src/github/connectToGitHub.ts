@@ -57,11 +57,11 @@ export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, c
         const connectingToGithub: string = localize('ConnectingToGithub', '"{0}" is being connected to repo "{1}". This may take several minutes...', client.fullName, repoName);
         const connectedToGithub: string = localize('ConnectedToGithub', 'Repo "{0}" is connected and deployed to "{1}".', repoName, client.fullName);
         await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: connectingToGithub }, async (): Promise<void> => {
-            ext.outputChannel.appendLine(connectingToGithub);
+            ext.outputChannel.appendLog(connectingToGithub);
             await verifyNoRunFromPackageSetting(client);
             await client.updateSourceControl(siteSourceControl);
             vscode.window.showInformationMessage(connectedToGithub);
-            ext.outputChannel.appendLine(connectedToGithub);
+            ext.outputChannel.appendLog(connectedToGithub);
         });
     } catch (err) {
         try {
