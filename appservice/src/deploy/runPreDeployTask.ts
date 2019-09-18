@@ -37,7 +37,7 @@ export async function tryRunPreDeployTask(context: IActionContext, deployFsPath:
                 const progressMessage: string = localize('runningTask', 'Running preDeployTask "{0}"...', taskName);
                 await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: progressMessage }, async () => {
                     await vscode.tasks.executeTask(preDeployTask);
-                    exitCode = await waitForPreDeployTask(preDeployTask);
+                    exitCode = await waitForPreDeployTask(preDeployTask, deployFsPath);
                     context.telemetry.properties.preDeployTaskExitCode = String(exitCode);
                 });
             } else {
@@ -65,18 +65,29 @@ function isTaskEqual(expectedName: string, expectedPath: string, actualTask: vsc
     // Example with prefix: "func: extensions install"
     const regexp: RegExp = new RegExp(`^(${actualTask.source}: )?${actualTask.name}$`, 'i');
     if (regexp.test(expectedName) && actualTask.scope !== undefined) {
-        const workspaceFolder: Partial<vscode.WorkspaceFolder> = <Partial<vscode.WorkspaceFolder>>actualTask.scope;
-        return !!workspaceFolder.uri && (isPathEqual(workspaceFolder.uri.fsPath, expectedPath) || isSubpath(workspaceFolder.uri.fsPath, expectedPath));
+        return isScopeEqual(actualTask, expectedPath);
     } else {
         return false;
     }
 }
 
-async function waitForPreDeployTask(preDeployTask: vscode.Task): Promise<number> {
+function isScopeEqual(task: vscode.Task, workspaceFsPath: string): boolean {
+    const workspaceFolder: Partial<vscode.WorkspaceFolder> = <Partial<vscode.WorkspaceFolder>>task.scope;
+    return !!workspaceFolder.uri && (isPathEqual(workspaceFolder.uri.fsPath, workspaceFsPath) || isSubpath(workspaceFolder.uri.fsPath, workspaceFsPath));
+}
+
+async function waitForPreDeployTask(preDeployTask: vscode.Task, deployFsPath: string): Promise<number> {
     return await new Promise((resolve: (exitCode: number) => void): void => {
-        const listener: vscode.Disposable = vscode.tasks.onDidEndTaskProcess((e: vscode.TaskProcessEndEvent) => {
+        const errorListener: vscode.Disposable = vscode.tasks.onDidEndTaskProcess((e: vscode.TaskProcessEndEvent) => {
+            if (isScopeEqual(e.execution.task, deployFsPath) && e.exitCode !== 0) {
+                // Throw if _any_ task fails since preDeployTasks can depend on other tasks)
+                errorListener.dispose();
+                resolve(e.exitCode);
+            }
+
+            // this is the actual preDeployTask that we are waiting on
             if (e.execution.task === preDeployTask) {
-                listener.dispose();
+                errorListener.dispose();
                 resolve(e.exitCode);
             }
         });
