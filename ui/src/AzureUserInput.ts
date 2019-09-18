@@ -94,7 +94,7 @@ export class AzureUserInput implements types.IAzureUserInput, types.AzureUserInp
     public async showOpenDialog(options: vscode.OpenDialogOptions): Promise<vscode.Uri[]> {
         const result: vscode.Uri[] | undefined = await vscode.window.showOpenDialog(options);
 
-        if (result === undefined) {
+        if (result === undefined || result.length === 0) {
             throw new UserCancelledError();
         } else {
             return result;
