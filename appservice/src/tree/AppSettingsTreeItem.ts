@@ -24,6 +24,12 @@ export function validateAppSettingKey(settings: StringDictionary, newKey?: strin
         }
     }
 
+    const regExpKeyInvalid: RegExp = new RegExp('[^\\w\\.-]+', 'g');
+
+    if (regExpKeyInvalid.test(newKey)) {
+        return 'App setting names can only contain letters, numbers (0-9), periods ("."), and underscores ("_")';
+    }
+
     return undefined;
 }
 
