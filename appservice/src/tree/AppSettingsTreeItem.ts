@@ -20,7 +20,8 @@ export function validateAppSettingKey(settings: StringDictionary, newKey?: strin
         return 'App setting names must have at least one character.';
     }
 
-    oldKey = oldKey ? oldKey.toLowerCase() : oldKey;
+    newKey = newKey.trim();
+    oldKey = oldKey ? oldKey.trim().toLowerCase() : oldKey;
     if (settings.properties && newKey.toLowerCase() !== oldKey) {
         for (const key of Object.keys(settings.properties)) {
             if (key.toLowerCase() === newKey.toLowerCase()) {
