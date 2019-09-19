@@ -10,7 +10,8 @@ import { AppSettingTreeItem } from './AppSettingTreeItem';
 import { getThemedIconPath } from './IconPath';
 import { ISiteTreeRoot } from './ISiteTreeRoot';
 
-export function validateAppSettingKey(settings: StringDictionary, newKey?: string, oldKey?: string, isLinux?: boolean): string | undefined {
+export function validateAppSettingKey(settings: StringDictionary, newKey?: string, oldKey?: string, isLinux: boolean = false): string | undefined {
+    // Default to Windows webapp (isLinux = false) to let users access looser name validation, even if saving the key fails
     newKey = newKey ? newKey : '';
 
     if (isLinux && RegExp('[^\\w\\.]+').test(newKey)) {
