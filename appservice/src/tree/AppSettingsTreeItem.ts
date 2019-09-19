@@ -10,9 +10,10 @@ import { AppSettingTreeItem } from './AppSettingTreeItem';
 import { getThemedIconPath } from './IconPath';
 import { ISiteTreeRoot } from './ISiteTreeRoot';
 
-export function validateAppSettingKey(settings: StringDictionary, newKey?: string, oldKey?: string): string | undefined {
+export function validateAppSettingKey(settings: StringDictionary, newKey?: string, oldKey?: string, isLinux?: boolean): string | undefined {
     newKey = newKey ? newKey : '';
-    if (RegExp('[^\\w\\.]+').test(newKey)) {
+
+    if (isLinux && RegExp('[^\\w\\.]+').test(newKey)) {
         return 'App setting names can only contain letters, numbers (0-9), periods ("."), and underscores ("_")';
     }
     if (newKey.length === 0) {
@@ -101,7 +102,7 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         const settings: StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings(context)));
         const newKey: string = await ext.ui.showInputBox({
             prompt: 'Enter new setting key',
-            validateInput: (v?: string): string | undefined => validateAppSettingKey(settings, v)
+            validateInput: (v?: string): string | undefined => validateAppSettingKey(settings, v, undefined, this.root.client.isLinux)
         });
 
         const newValue: string = await ext.ui.showInputBox({
