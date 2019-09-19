@@ -11,23 +11,22 @@ import { getThemedIconPath } from './IconPath';
 import { ISiteTreeRoot } from './ISiteTreeRoot';
 
 export function validateAppSettingKey(settings: StringDictionary, newKey?: string, oldKey?: string): string | undefined {
-    newKey = newKey ? newKey.trim() : '';
-    oldKey = oldKey ? oldKey.trim().toLowerCase() : oldKey;
-    if (newKey.length === 0) {
-        return 'Key must have at least one non-whitespace character.';
+    newKey = newKey ? newKey : '';
+    if (RegExp('[^\\w\\.]+').test(newKey)) {
+        return 'App setting names can only contain letters, numbers (0-9), periods ("."), and underscores ("_")';
     }
+    if (newKey.length === 0) {
+        return 'App setting names must have at least one character.';
+    }
+
+    newKey = newKey.trim();
+    oldKey = oldKey ? oldKey.trim().toLowerCase() : oldKey;
     if (settings.properties && newKey.toLowerCase() !== oldKey) {
         for (const key of Object.keys(settings.properties)) {
             if (key.toLowerCase() === newKey.toLowerCase()) {
                 return `Setting "${newKey}" already exists.`;
             }
         }
-    }
-
-    const regExpKeyInvalid: RegExp = new RegExp('[^\\w\\.-]+', 'g');
-
-    if (regExpKeyInvalid.test(newKey)) {
-        return 'App setting names can only contain letters, numbers (0-9), periods ("."), and underscores ("_")';
     }
 
     return undefined;
