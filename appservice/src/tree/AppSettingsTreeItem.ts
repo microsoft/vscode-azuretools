@@ -6,15 +6,15 @@
 import { StringDictionary } from 'azure-arm-website/lib/models';
 import { AzureParentTreeItem, AzureTreeItem, IActionContext, ICreateChildImplContext, TreeItemIconPath } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
+import { SiteClient } from "../SiteClient";
 import { AppSettingTreeItem } from './AppSettingTreeItem';
 import { getThemedIconPath } from './IconPath';
 import { ISiteTreeRoot } from './ISiteTreeRoot';
 
-export function validateAppSettingKey(settings: StringDictionary, newKey?: string, oldKey?: string, isLinux: boolean = false): string | undefined {
-    // Default to Windows webapp (isLinux = false) to let users access looser name validation, even if saving the key fails
+export function validateAppSettingKey(settings: StringDictionary, client: SiteClient, newKey?: string, oldKey?: string): string | undefined {
     newKey = newKey ? newKey : '';
 
-    if (isLinux && RegExp('[^\\w\\.]+').test(newKey)) {
+    if (client.isLinux && RegExp('[^\\w\\.]+').test(newKey)) {
         return 'App setting names can only contain letters, numbers (0-9), periods ("."), and underscores ("_")';
     }
     if (newKey.length === 0) {
@@ -104,7 +104,7 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         const settings: StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings(context)));
         const newKey: string = await ext.ui.showInputBox({
             prompt: 'Enter new setting key',
-            validateInput: (v?: string): string | undefined => validateAppSettingKey(settings, v, undefined, this.root.client.isLinux)
+            validateInput: (v?: string): string | undefined => validateAppSettingKey(settings, this.root.client, v)
         });
 
         const newValue: string = await ext.ui.showInputBox({
