@@ -14,14 +14,15 @@ import { ISiteTreeRoot } from './ISiteTreeRoot';
 export function validateAppSettingKey(settings: StringDictionary, client: SiteClient, newKey?: string, oldKey?: string): string | undefined {
     newKey = newKey ? newKey : '';
 
-    if (client.isLinux && RegExp('[^\\w\\.]+').test(newKey)) {
+    if (client.isLinux && /[^\w\.]+/.test(newKey)) {
         return 'App setting names can only contain letters, numbers (0-9), periods ("."), and underscores ("_")';
-    }
-    if (newKey.length === 0) {
-        return 'App setting names must have at least one character.';
     }
 
     newKey = newKey.trim();
+    if (newKey.length === 0) {
+        return 'App setting names must have at least one non-whitespace character.';
+    }
+
     oldKey = oldKey ? oldKey.trim().toLowerCase() : oldKey;
     if (settings.properties && newKey.toLowerCase() !== oldKey) {
         for (const key of Object.keys(settings.properties)) {
