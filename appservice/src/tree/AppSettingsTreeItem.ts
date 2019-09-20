@@ -6,16 +6,24 @@
 import { StringDictionary } from 'azure-arm-website/lib/models';
 import { AzureParentTreeItem, AzureTreeItem, IActionContext, ICreateChildImplContext, TreeItemIconPath } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
+import { SiteClient } from "../SiteClient";
 import { AppSettingTreeItem } from './AppSettingTreeItem';
 import { getThemedIconPath } from './IconPath';
 import { ISiteTreeRoot } from './ISiteTreeRoot';
 
-export function validateAppSettingKey(settings: StringDictionary, newKey?: string, oldKey?: string): string | undefined {
-    newKey = newKey ? newKey.trim() : '';
-    oldKey = oldKey ? oldKey.trim().toLowerCase() : oldKey;
-    if (newKey.length === 0) {
-        return 'Key must have at least one non-whitespace character.';
+export function validateAppSettingKey(settings: StringDictionary, client: SiteClient, newKey?: string, oldKey?: string): string | undefined {
+    newKey = newKey ? newKey : '';
+
+    if (client.isLinux && /[^\w\.]+/.test(newKey)) {
+        return 'App setting names can only contain letters, numbers (0-9), periods ("."), and underscores ("_")';
     }
+
+    newKey = newKey.trim();
+    if (newKey.length === 0) {
+        return 'App setting names must have at least one non-whitespace character.';
+    }
+
+    oldKey = oldKey ? oldKey.trim().toLowerCase() : oldKey;
     if (settings.properties && newKey.toLowerCase() !== oldKey) {
         for (const key of Object.keys(settings.properties)) {
             if (key.toLowerCase() === newKey.toLowerCase()) {
@@ -97,7 +105,7 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         const settings: StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings(context)));
         const newKey: string = await ext.ui.showInputBox({
             prompt: 'Enter new setting key',
-            validateInput: (v?: string): string | undefined => validateAppSettingKey(settings, v)
+            validateInput: (v?: string): string | undefined => validateAppSettingKey(settings, this.root.client, v)
         });
 
         const newValue: string = await ext.ui.showInputBox({
