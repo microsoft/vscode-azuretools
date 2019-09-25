@@ -83,7 +83,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
             })];
         } else if (azureAccount.status === 'LoggedOut') {
             return [
-                new GenericTreeItem(this, { label: signInLabel, commandId: signInCommandId, contextValue, id: signInCommandId, iconPath: getThemedIconPath('signIn'), includeInTreeItemPicker: true }),
+                new GenericTreeItem(this, { label: signInLabel, commandId: signInCommandId, contextValue, id: signInCommandId, iconPath: getThemedIconPath('sign-in'), includeInTreeItemPicker: true }),
                 new GenericTreeItem(this, { label: createAccountLabel, commandId: createAccountCommandId, contextValue, id: createAccountCommandId, iconPath: getThemedIconPath('add'), includeInTreeItemPicker: true })
             ];
         }

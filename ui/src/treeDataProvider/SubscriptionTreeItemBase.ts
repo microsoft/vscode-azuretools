@@ -5,7 +5,7 @@
 
 import * as types from '../../index';
 import { AzureParentTreeItem } from './AzureParentTreeItem';
-import { getIconPath } from './IconPath';
+import { getThemedIconPath } from './IconPath';
 
 export abstract class SubscriptionTreeItemBase extends AzureParentTreeItem implements types.SubscriptionTreeItemBase {
     public static readonly contextValue: string = 'azureextensionui.azureSubscription';
@@ -19,7 +19,7 @@ export abstract class SubscriptionTreeItemBase extends AzureParentTreeItem imple
         this._root = root;
         this.label = root.subscriptionDisplayName;
         this.id = root.subscriptionPath;
-        this.iconPath = getIconPath('azureSubscription');
+        this.iconPath = getThemedIconPath('key');
     }
 
     public get root(): types.ISubscriptionContext {
