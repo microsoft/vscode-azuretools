@@ -53,7 +53,7 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     }
 
     public get iconPath(): TreeItemIconPath {
-        return getThemedIconPath('AppSettings_color');
+        return getThemedIconPath('settings');
     }
 
     public hasMoreChildrenImpl(): boolean {
