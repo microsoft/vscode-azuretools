@@ -49,7 +49,7 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     }
 
     public get iconPath(): TreeItemIconPath {
-        return getThemedIconPath('Git_Commit_16x');
+        return getThemedIconPath('git-commit');
     }
 
     public get id(): string {

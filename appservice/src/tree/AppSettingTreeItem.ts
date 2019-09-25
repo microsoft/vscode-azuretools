@@ -44,7 +44,7 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     }
 
     public get iconPath(): TreeItemIconPath {
-        return getThemedIconPath('Item_16x_vscode');
+        return getThemedIconPath('constant');
     }
 
     public async edit(context: IActionContext): Promise<void> {
