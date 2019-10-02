@@ -86,6 +86,8 @@ async function appendDeploySubpathSetting(targetPath: string, extensionPrefix: s
 }
 
 export type IDeployPaths = {
+    // the deploy path that the user actually deployed via the extension
     originalDeployFsPath: string,
+    // the deploy path after the deploySubpath setting has been appended
     effectiveDeployFsPath: string
 };
