@@ -17,17 +17,18 @@ const deploySubpathSetting: string = 'deploySubpath';
  * Entry point can be the workspace folder, the fsPath, or the tree item being deployed to
  * In App Service, users can deploy specific artifact files (such as .jar) which is handled by selectWorkspaceFile
  */
-export async function getDeployFsPath(target: vscode.Uri | string | AzureParentTreeItem | undefined, extensionPrefix: string, fileExtensions?: string | string[]): Promise<string> {
+
+export async function getDeployFsPath(target: vscode.Uri | string | AzureParentTreeItem | undefined, extensionPrefix: string, fileExtensions?: string | string[]): Promise<IDeployPaths> {
     if (target instanceof vscode.Uri) {
-        return await appendDeploySubpathSetting(target.fsPath, extensionPrefix);
+        return { originalDeployFsPath: target.fsPath, effectiveDeployFsPath: await appendDeploySubpathSetting(target.fsPath, extensionPrefix) };
     } else if (typeof target === 'string') {
-        return await appendDeploySubpathSetting(target, extensionPrefix);
+        return { originalDeployFsPath: target, effectiveDeployFsPath: await appendDeploySubpathSetting(target, extensionPrefix) };
     } else if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length === 1) {
         // If there is only one workspace and it has 'deploySubPath' set - return that value without prompting
         const folderPath: string = vscode.workspace.workspaceFolders[0].uri.fsPath;
         const deploySubpath: string | undefined = getWorkspaceSetting(deploySubpathSetting, extensionPrefix, folderPath);
         if (deploySubpath) {
-            return path.join(folderPath, deploySubpath);
+            return { originalDeployFsPath: folderPath, effectiveDeployFsPath: path.join(folderPath, deploySubpath) };
         }
     }
 
@@ -38,9 +39,11 @@ export async function getDeployFsPath(target: vscode.Uri | string | AzureParentT
     const selectFile: string = localize('selectDeployFile', 'Select the {0} file to deploy', fileExtensions ? fileExtensions.join('/') : '');
     const selectFolder: string = localize('selectZipDeployFolder', 'Select the folder to zip and deploy');
 
-    return fileExtensions ?
-        await workspaceUtil.selectWorkspaceFile(selectFile, f => getWorkspaceSetting(deploySubpathSetting, extensionPrefix, f.uri.fsPath), fileExtensions) :
-        await workspaceUtil.selectWorkspaceFolder(selectFolder, f => getWorkspaceSetting(deploySubpathSetting, extensionPrefix, f.uri.fsPath));
+    const originalDeployFsPath: string = fileExtensions ?
+        await workspaceUtil.selectWorkspaceFile(selectFile, undefined, fileExtensions) :
+        await workspaceUtil.selectWorkspaceFolder(selectFolder, undefined);
+
+    return { originalDeployFsPath, effectiveDeployFsPath: await appendDeploySubpathSetting(originalDeployFsPath, extensionPrefix) };
 }
 
 /**
@@ -81,3 +84,10 @@ async function appendDeploySubpathSetting(targetPath: string, extensionPrefix: s
 
     return targetPath;
 }
+
+export type IDeployPaths = {
+    // the deploy path that the user actually deployed via the extension
+    originalDeployFsPath: string,
+    // the deploy path after the deploySubpath setting has been appended
+    effectiveDeployFsPath: string
+};
