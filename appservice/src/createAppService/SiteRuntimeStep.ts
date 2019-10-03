@@ -70,7 +70,7 @@ export function convertStacksToPicks(stacks: ApplicationStack[], recommendedRunt
         .map(stack => (stack.majorVersions || []).map(mv => {
             return {
                 runtimeVersion: nonNullProp(mv, 'runtimeVersion'),
-                displayVersion: nonNullProp(mv, 'displayVersion'),
+                displayName: `${nonNullProp(stack, 'display')} ${nonNullProp(mv, 'displayVersion')}`,
                 stackDisplay: nonNullProp(stack, 'display')
             };
         }))
@@ -95,8 +95,8 @@ export function convertStacksToPicks(stacks: ApplicationStack[], recommendedRunt
                 return bInfo.minor - aInfo.minor;
             }
 
-            if (a.displayVersion !== b.displayVersion) {
-                return a.displayVersion.localeCompare(b.displayVersion);
+            if (a.displayName !== b.displayName) {
+                return a.displayName.localeCompare(b.displayName);
             } else {
                 return a.stackDisplay.localeCompare(b.stackDisplay);
             }
@@ -105,7 +105,7 @@ export function convertStacksToPicks(stacks: ApplicationStack[], recommendedRunt
         .map(mv => {
             return {
                 id: mv.runtimeVersion,
-                label: mv.displayVersion,
+                label: mv.displayName,
                 data: mv.runtimeVersion,
                 // include stack as description if it has a version
                 // tslint:disable-next-line: strict-boolean-expressions
