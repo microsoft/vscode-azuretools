@@ -82,7 +82,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string, context
                             tokenSource.cancel();
                         });
 
-                        waitForDeploymentToComplete(client, commitId, token).then(resolve).catch(reject);
+                        waitForDeploymentToComplete(context, client, commitId, token).then(resolve).catch(reject);
                     });
                 } finally {
                     tokenSource.dispose();
