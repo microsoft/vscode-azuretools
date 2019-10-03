@@ -76,8 +76,8 @@ export function convertStacksToPicks(stacks: ApplicationStack[], recommendedRunt
         }))
         // flatten array
         .reduce((acc, val) => acc.concat(val))
-        // filter out Node 4.x and 6.x as they are EOL
-        .filter(mv => !/node\|(4|6)\./i.test(mv.runtimeVersion))
+        // filter out Node 4.x, 6.x, and 6 LTS as they are EOL
+        .filter(mv => !/node\|(4|6)[\.-]/i.test(mv.runtimeVersion))
         // filter out .NET Core 1.x and 2.0 as they are EOL
         .filter(mv => !/dotnetcore\|(1\.|2\.0)/i.test(mv.runtimeVersion))
         // sort
