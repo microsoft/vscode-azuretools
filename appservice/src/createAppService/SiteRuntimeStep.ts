@@ -70,8 +70,10 @@ export function convertStacksToPicks(stacks: ApplicationStack[], recommendedRunt
         .map(stack => (stack.majorVersions || []).map(mv => {
             return {
                 runtimeVersion: nonNullProp(mv, 'runtimeVersion'),
-                displayName: `${nonNullProp(stack, 'display')} ${nonNullProp(mv, 'displayVersion')}`,
-                stackDisplay: nonNullProp(stack, 'display')
+                stackDisplay: nonNullProp(stack, 'display'),
+                // include stack display in the display name only if it doesn't include a version number
+                // this simplifies names such as 'Java 8 Tomcat 8.5' to just 'Tomcat 8.5'
+                displayName: /[0-9]/.test(nonNullProp(stack, 'display')) ? nonNullProp(mv, 'displayVersion') : `${nonNullProp(stack, 'display')} ${nonNullProp(mv, 'displayVersion')}`
             };
         }))
         // flatten array

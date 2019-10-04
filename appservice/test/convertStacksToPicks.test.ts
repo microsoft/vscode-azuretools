@@ -14,110 +14,134 @@ const stacks: ApplicationStack[] = [
         display: "Ruby",
         majorVersions: [
             {
-                displayVersion: "Ruby 2.3",
+                displayVersion: "2.3",
                 runtimeVersion: "RUBY|2.3"
             },
             {
-                displayVersion: "Ruby 2.4",
+                displayVersion: "2.4",
                 runtimeVersion: "RUBY|2.4"
             },
             {
-                displayVersion: "Ruby 2.5",
+                displayVersion: "2.5",
                 runtimeVersion: "RUBY|2.5"
             },
             {
-                displayVersion: "Ruby 2.6",
+                displayVersion: "2.6",
                 runtimeVersion: "RUBY|2.6"
             }
         ]
     },
     {
         name: "node",
-        display: "Node.js",
+        display: "Node",
         majorVersions: [
             {
-                displayVersion: "Node.js LTS",
+                displayVersion: "LTS",
                 runtimeVersion: "NODE|lts"
             },
             {
-                displayVersion: "Node.js 4.4",
+                displayVersion: "12 LTS",
+                runtimeVersion: "NODE|12-lts"
+            },
+            {
+                displayVersion: "10 LTS",
+                runtimeVersion: "NODE|10-lts"
+            },
+            {
+                displayVersion: "8 LTS",
+                runtimeVersion: "NODE|8-lts"
+            },
+            {
+                displayVersion: "6 LTS",
+                runtimeVersion: "NODE|6-lts"
+            },
+            {
+                displayVersion: "4.4",
                 runtimeVersion: "NODE|4.4"
             },
             {
-                displayVersion: "Node.js 4.5",
+                displayVersion: "4.5",
                 runtimeVersion: "NODE|4.5"
             },
             {
-                displayVersion: "Node.js 4.8",
+                displayVersion: "4.8",
                 runtimeVersion: "NODE|4.8"
             },
             {
-                displayVersion: "Node.js 6.2",
+                displayVersion: "6.2",
                 runtimeVersion: "NODE|6.2"
             },
             {
-                displayVersion: "Node.js 6.6",
+                displayVersion: "6.6",
                 runtimeVersion: "NODE|6.6"
             },
             {
-                displayVersion: "Node.js 6.9",
+                displayVersion: "6.9",
                 runtimeVersion: "NODE|6.9"
             },
             {
-                displayVersion: "Node.js 6.10",
+                displayVersion: "6.10",
                 runtimeVersion: "NODE|6.10"
             },
             {
-                displayVersion: "Node.js 6.11",
+                displayVersion: "6.11",
                 runtimeVersion: "NODE|6.11"
             },
             {
-                displayVersion: "Node.js 8.0",
+                displayVersion: "8.0",
                 runtimeVersion: "NODE|8.0"
             },
             {
-                displayVersion: "Node.js 8.1",
+                displayVersion: "8.1",
                 runtimeVersion: "NODE|8.1"
             },
             {
-                displayVersion: "Node.js 8.2",
+                displayVersion: "8.2",
                 runtimeVersion: "NODE|8.2"
             },
             {
-                displayVersion: "Node.js 8.8",
+                displayVersion: "8.8",
                 runtimeVersion: "NODE|8.8"
             },
             {
-                displayVersion: "Node.js 8.9",
+                displayVersion: "8.9",
                 runtimeVersion: "NODE|8.9"
             },
             {
-                displayVersion: "Node.js 8.11",
+                displayVersion: "8.11",
                 runtimeVersion: "NODE|8.11"
             },
             {
-                displayVersion: "Node.js 8.12",
+                displayVersion: "8.12",
                 runtimeVersion: "NODE|8.12"
             },
             {
-                displayVersion: "Node.js 9.4",
+                displayVersion: "9.4",
                 runtimeVersion: "NODE|9.4"
             },
             {
-                displayVersion: "Node.js 10.1",
+                displayVersion: "10.1",
                 runtimeVersion: "NODE|10.1"
             },
             {
-                displayVersion: "Node.js 10.10",
+                displayVersion: "10.10",
                 runtimeVersion: "NODE|10.10"
             },
             {
-                displayVersion: "Node.js 10.12",
+                displayVersion: "10.12",
                 runtimeVersion: "NODE|10.12"
             },
             {
-                displayVersion: "Node.js 10.14",
+                displayVersion: "10.14",
                 runtimeVersion: "NODE|10.14"
+            },
+            {
+                displayVersion: "10.16",
+                runtimeVersion: "NODE|10.16"
+            },
+            {
+                displayVersion: "12.9",
+                runtimeVersion: "NODE|12.9"
             }
         ]
     },
@@ -126,19 +150,19 @@ const stacks: ApplicationStack[] = [
         display: "PHP",
         majorVersions: [
             {
-                displayVersion: "PHP 5.6",
+                displayVersion: "5.6",
                 runtimeVersion: "PHP|5.6"
             },
             {
-                displayVersion: "PHP 7.0",
+                displayVersion: "7.0",
                 runtimeVersion: "PHP|7.0"
             },
             {
-                displayVersion: "PHP 7.2",
+                displayVersion: "7.2",
                 runtimeVersion: "PHP|7.2"
             },
             {
-                displayVersion: "PHP 7.3",
+                displayVersion: "7.3",
                 runtimeVersion: "PHP|7.3"
             }
         ]
@@ -148,24 +172,28 @@ const stacks: ApplicationStack[] = [
         display: ".NET Core",
         majorVersions: [
             {
-                displayVersion: ".NET Core 1.0",
+                displayVersion: "1.0",
                 runtimeVersion: "DOTNETCORE|1.0"
             },
             {
-                displayVersion: ".NET Core 1.1",
+                displayVersion: "1.1",
                 runtimeVersion: "DOTNETCORE|1.1"
             },
             {
-                displayVersion: ".NET Core 2.0",
+                displayVersion: "2.0",
                 runtimeVersion: "DOTNETCORE|2.0"
             },
             {
-                displayVersion: ".NET Core 2.1",
+                displayVersion: "2.1",
                 runtimeVersion: "DOTNETCORE|2.1"
             },
             {
-                displayVersion: ".NET Core 2.2",
+                displayVersion: "2.2",
                 runtimeVersion: "DOTNETCORE|2.2"
+            },
+            {
+                displayVersion: "3.0",
+                runtimeVersion: "DOTNETCORE|3.0"
             }
         ]
     },
@@ -214,15 +242,19 @@ const stacks: ApplicationStack[] = [
         display: "Python",
         majorVersions: [
             {
-                displayVersion: "Python 3.7",
+                displayVersion: "3.8",
+                runtimeVersion: "PYTHON|3.8"
+            },
+            {
+                displayVersion: "3.7",
                 runtimeVersion: "PYTHON|3.7"
             },
             {
-                displayVersion: "Python 3.6",
+                displayVersion: "3.6",
                 runtimeVersion: "PYTHON|3.6"
             },
             {
-                displayVersion: "Python 2.7",
+                displayVersion: "2.7",
                 runtimeVersion: "PYTHON|2.7"
             }
         ]
@@ -230,6 +262,12 @@ const stacks: ApplicationStack[] = [
 ];
 
 const expectedDotnetPicks: {}[] = [
+    {
+        id: "DOTNETCORE|3.0",
+        label: ".NET Core 3.0",
+        data: "DOTNETCORE|3.0",
+        description: undefined
+    },
     {
         id: "DOTNETCORE|2.2",
         label: ".NET Core 2.2",
@@ -262,79 +300,109 @@ const expectedJavaPicks: {}[] = [
 const expectedNodePicks: {}[] = [
     {
         id: "NODE|lts",
-        label: "Node.js LTS",
+        label: "Node LTS",
         data: "NODE|lts",
         description: undefined
     },
     {
+        id: "NODE|12-lts",
+        label: "Node 12 LTS",
+        data: "NODE|12-lts",
+        description: undefined
+    },
+    {
+        id: "NODE|12.9",
+        label: "Node 12.9",
+        data: "NODE|12.9",
+        description: undefined
+    },
+    {
+        id: "NODE|10-lts",
+        label: "Node 10 LTS",
+        data: "NODE|10-lts",
+        description: undefined
+    },
+    {
+        id: "NODE|10.16",
+        label: "Node 10.16",
+        data: "NODE|10.16",
+        description: undefined
+    },
+    {
         id: "NODE|10.14",
-        label: "Node.js 10.14",
+        label: "Node 10.14",
         data: "NODE|10.14",
         description: undefined
     },
     {
         id: "NODE|10.12",
-        label: "Node.js 10.12",
+        label: "Node 10.12",
         data: "NODE|10.12",
         description: undefined
     },
     {
         id: "NODE|10.10",
-        label: "Node.js 10.10",
+        label: "Node 10.10",
         data: "NODE|10.10",
         description: undefined
     },
     {
         id: "NODE|10.1",
-        label: "Node.js 10.1",
+        label: "Node 10.1",
         data: "NODE|10.1",
         description: undefined
     },
     {
         id: "NODE|9.4",
-        label: "Node.js 9.4",
+        label: "Node 9.4",
         data: "NODE|9.4",
         description: undefined
     },
     {
+        id: "NODE|8-lts",
+        label: "Node 8 LTS",
+        data: "NODE|8-lts",
+        description: undefined
+    },
+    {
         id: "NODE|8.12",
-        label: "Node.js 8.12",
+        label: "Node 8.12",
         data: "NODE|8.12",
         description: undefined
     },
     {
         id: "NODE|8.11",
-        label: "Node.js 8.11",
+        label: "Node 8.11",
         data: "NODE|8.11",
         description: undefined
     },
     {
         id: "NODE|8.9",
-        label: "Node.js 8.9",
+        label: "Node 8.9",
         data: "NODE|8.9",
         description: undefined
     },
     {
         id: "NODE|8.8",
-        label: "Node.js 8.8",
+        label: "Node 8.8",
         data: "NODE|8.8",
         description: undefined
     },
     {
         id: "NODE|8.2",
-        label: "Node.js 8.2",
+        label: "Node 8.2",
         data: "NODE|8.2",
         description: undefined
     },
     {
         id: "NODE|8.1",
-        label: "Node.js 8.1",
+        label: "Node 8.1",
         data: "NODE|8.1",
         description: undefined
     },
     {
         id: "NODE|8.0",
-        label: "Node.js 8.0",
+        label: "Node 8.0",
         data: "NODE|8.0",
         description: undefined
     }
@@ -368,6 +436,12 @@ const expectedPhpPicks: {}[] = [
 ];
 
 const expectedPythonPicks: {}[] = [
+    {
+        id: "PYTHON|3.8",
+        label: "Python 3.8",
+        data: "PYTHON|3.8",
+        description: undefined
+    },
     {
         id: "PYTHON|3.7",
         label: "Python 3.7",
