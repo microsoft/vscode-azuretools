@@ -69,18 +69,13 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
                 newSiteConfig.linuxFxVersion = getFunctionAppLinuxFxVersion(nonNullProp(wizardContext, 'newSiteRuntime'));
             }
 
-            const maxFileShareNameLength: number = 63;
             const storageClient: StorageManagementClient = createAzureClient(wizardContext, StorageManagementClient);
 
             const storageAccount: StorageAccount = nonNullProp(wizardContext, 'storageAccount');
             const [, storageResourceGroup] = nonNullValue(nonNullProp(storageAccount, 'id').match(/\/resourceGroups\/([^/]+)\//), 'Invalid storage account id');
             const keysResult: StorageAccountListKeysResult = await storageClient.storageAccounts.listKeys(storageResourceGroup, nonNullProp(storageAccount, 'name'));
 
-            fileShareName = nonNullProp(wizardContext, 'newSiteName').toLocaleLowerCase() + '-content'.slice(0, maxFileShareNameLength);
-            if (!wizardContext.newStorageAccountName) {
-                const randomLetters: number = 4;
-                fileShareName = `${fileShareName.slice(0, maxFileShareNameLength - randomLetters - 1)}-${randomUtils.getRandomHexString(randomLetters)}`;
-            }
+            fileShareName = getNewFileShareName(nonNullProp(wizardContext, 'newSiteName'));
 
             // https://github.com/Azure/azure-sdk-for-node/issues/4706
             const endpointSuffix: string = wizardContext.environment.storageEndpointSuffix.replace(/^\./, '');
@@ -103,6 +98,12 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
 
         return newSiteConfig;
     }
+}
+
+export function getNewFileShareName(siteName: string): string {
+    const randomLetters: number = 6;
+    const maxFileShareNameLength: number = 63;
+    return siteName.toLowerCase().substr(0, maxFileShareNameLength - randomLetters) + randomUtils.getRandomHexString(randomLetters);
 }
 
 function getFunctionAppLinuxFxVersion(runtime: string): string {
