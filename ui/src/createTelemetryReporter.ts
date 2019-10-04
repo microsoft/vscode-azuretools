@@ -16,7 +16,9 @@ const debugTelemetryEnabled: boolean = !/^(false|0)?$/i.test(process.env.DEBUGTE
 const debugTelemetryVerbose: boolean = /^(verbose|v)$/i.test(process.env.DEBUGTELEMETRY || '');
 
 export function createTelemetryReporter(ctx: vscode.ExtensionContext): ITelemetryReporter {
-    const { extensionName, extensionVersion, aiKey } = getPackageInfo(ctx);
+    // tslint:disable-next-line: prefer-const
+    let { extensionName, extensionVersion, aiKey } = getPackageInfo(ctx);
+    extensionName = extensionName.replace('-nightly', '');
 
     let newReporter: ITelemetryReporter;
 
