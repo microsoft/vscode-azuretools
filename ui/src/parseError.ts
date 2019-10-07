@@ -26,6 +26,7 @@ export function parseError(error: any): IParsedError {
         error = unpackErrorFromField(error, 'value');
         error = unpackErrorFromField(error, '_value');
         error = unpackErrorFromField(error, 'error');
+        error = unpackErrorFromField(error, 'error');
         if (Array.isArray(error.errors) && error.errors.length) {
             error = error.errors[0];
         }

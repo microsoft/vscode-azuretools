@@ -418,6 +418,25 @@ callWithTelemetryAndErrorHandling.js.__awaiter vscode-azureextensionui/extension
         assert.strictEqual(pe.isUserCancelledError, false);
     });
 
+    test('Azure StatusCodeError', () => {
+        const err: {} = {
+            name: "StatusCodeError",
+            statusCode: 400,
+            message: "400 - \"{\\\"error\\\":{\\\"code\\\":\\\"MissingApiVersionParameter\\\",\\\"message\\\":\\\"The api-version query parameter (?api-version=) is required for all requests.\\\"}}\"",
+            error: "{\"error\":{\"code\":\"MissingApiVersionParameter\",\"message\":\"The api-version query parameter (?api-version=) is required for all requests.\"}}",
+            response: {
+                statusCode: 400,
+                body: "{\"error\":{\"code\":\"MissingApiVersionParameter\",\"message\":\"The api-version query parameter (?api-version=) is required for all requests.\"}}"
+            }
+        };
+
+        const pe: IParsedError = parseError(err);
+
+        assert.strictEqual(pe.errorType, 'MissingApiVersionParameter');
+        assert.strictEqual(pe.message, 'The api-version query parameter (?api-version=) is required for all requests.');
+        assert.strictEqual(pe.isUserCancelledError, false);
+    });
+
     test('Error with only a statusCode', () => {
         const err: {} = {
             body: '',
