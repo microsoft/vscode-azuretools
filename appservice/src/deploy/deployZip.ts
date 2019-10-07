@@ -57,7 +57,7 @@ export async function deployZip(context: IActionContext, client: SiteClient, fsP
 
         const kuduClient: KuduClient = await client.getKuduClient();
         await kuduClient.pushDeployment.zipPushDeploy(fs.createReadStream(zipFilePath), { isAsync: true, author: 'VS Code' });
-        await waitForDeploymentToComplete(client);
+        await waitForDeploymentToComplete(context, client);
         // https://github.com/Microsoft/vscode-azureappservice/issues/644
         // This delay is a temporary stopgap that should be resolved with the new pipelines
         await delayFirstWebAppDeploy(client, asp);

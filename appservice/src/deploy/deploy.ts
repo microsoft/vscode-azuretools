@@ -64,7 +64,7 @@ export async function deploy(client: SiteClient, fsPath: string, context: IActio
                 throw new Error(localize('gitHubConnected', '"{0}" is connected to a GitHub repository. Push to GitHub repository to deploy.', client.fullName));
             default: //'None' or any other non-supported scmType
                 if (config.linuxFxVersion && /^(tomcat|wildfly)/i.test(config.linuxFxVersion)) {
-                    await deployWar(client, fsPath);
+                    await deployWar(context, client, fsPath);
                     break;
                 }
                 await deployZip(context, client, fsPath, aspPromise);

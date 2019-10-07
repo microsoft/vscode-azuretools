@@ -6,7 +6,7 @@
 import { SiteSourceControl } from 'azure-arm-website/lib/models';
 import * as os from 'os';
 import { ProgressLocation, window } from 'vscode';
-import { AzureTreeItem, openReadOnlyContent, TreeItemIconPath } from 'vscode-azureextensionui';
+import { AzureTreeItem, IActionContext, openReadOnlyContent, TreeItemIconPath } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
 import { DeployResult, LogEntry } from 'vscode-azurekudu/lib/models';
 import { waitForDeploymentToComplete } from '../deploy/waitForDeploymentToComplete';
@@ -81,7 +81,7 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         return this.contextValue === contextValue;
     }
 
-    public async redeployDeployment(showOutputChannelCommand: string): Promise<void> {
+    public async redeployDeployment(context: IActionContext, showOutputChannelCommand: string): Promise<void> {
         if (this._deployResult.isReadonly) {
             throw new Error(localize('redeployNotSupported', 'Redeploy is not supported for non-git deployments.'));
         }
@@ -95,7 +95,7 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
 
             const refreshingInteveral: NodeJS.Timer = setInterval(async () => { await this.refresh(); }, 1000); /* the status of the label changes during deployment so poll for that*/
             try {
-                await waitForDeploymentToComplete(this.root.client, this.id);
+                await waitForDeploymentToComplete(context, this.root.client, this.id);
                 await this.parent.refresh(); /* refresh entire node because active statuses has changed */
                 window.showInformationMessage(redeployed);
                 ext.outputChannel.appendLog(redeployed);
