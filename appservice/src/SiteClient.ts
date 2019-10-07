@@ -9,6 +9,7 @@ import { addExtensionUserAgent, createAzureClient, ISubscriptionContext, parseEr
 import { KuduClient } from 'vscode-azurekudu';
 import { FunctionEnvelope } from 'vscode-azurekudu/lib/models';
 import { localize } from './localize';
+import { deleteFunctionSlot, getFunctionSlot, listFunctionsSlot } from './slotFunctionOperations';
 import { nonNullProp, nonNullValue } from './utils/nonNull';
 import { requestUtils } from './utils/requestUtils';
 
@@ -47,7 +48,6 @@ export class SiteClient {
     public readonly gitUrl: string | undefined;
 
     private readonly _subscription: ISubscriptionContext;
-    private _funcPreviewSlotError: Error = new Error(localize('functionsSlotPreview', 'This operation is not supported for slots, which are still in preview.'));
 
     private _cachedPlan: AppServicePlan | undefined;
 
@@ -215,23 +215,19 @@ export class SiteClient {
 
     public async listFunctions(): Promise<FunctionEnvelopeCollection> {
         if (this.slotName) {
-            throw this._funcPreviewSlotError;
+            return await listFunctionsSlot(this._subscription, this.id);
         } else {
             return await this._client.webApps.listFunctions(this.resourceGroup, this.siteName);
         }
     }
 
     public async listFunctionsNext(nextPageLink: string): Promise<FunctionEnvelopeCollection> {
-        if (this.slotName) {
-            throw this._funcPreviewSlotError;
-        } else {
-            return await this._client.webApps.listFunctionsNext(nextPageLink);
-        }
+        return await this._client.webApps.listFunctionsNext(nextPageLink);
     }
 
     public async getFunction(functionName: string): Promise<FunctionEnvelope> {
         if (this.slotName) {
-            throw this._funcPreviewSlotError;
+            return await getFunctionSlot(this._subscription, this.id, functionName);
         } else {
             return await this._client.webApps.getFunction(this.resourceGroup, this.siteName, functionName);
         }
@@ -239,9 +235,9 @@ export class SiteClient {
 
     public async deleteFunction(functionName: string): Promise<void> {
         if (this.slotName) {
-            throw this._funcPreviewSlotError;
+            await deleteFunctionSlot(this._subscription, this.id, functionName);
         } else {
-            return await this._client.webApps.deleteFunction(this.resourceGroup, this.siteName, functionName);
+            await this._client.webApps.deleteFunction(this.resourceGroup, this.siteName, functionName);
         }
     }
 
