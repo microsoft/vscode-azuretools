@@ -7,7 +7,7 @@ import WebSiteManagementClient from "azure-arm-website";
 import { NameValuePair, ResourceNameAvailability, Site, StringDictionary } from "azure-arm-website/lib/models";
 import { ProgressLocation, window } from "vscode";
 import { AzureTreeItem, createAzureClient, IAzureQuickPickItem, ICreateChildImplContext } from "vscode-azureextensionui";
-import { getNewFileShareName } from "./createAppService/SiteCreateStep";
+import { getNewFileShareName } from "./createAppService/getNewFileShareName";
 import { ext } from "./extensionVariables";
 import { localize } from "./localize";
 import { SiteClient } from './SiteClient';

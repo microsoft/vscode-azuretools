@@ -13,8 +13,8 @@ import { AzureWizardExecuteStep, createAzureClient } from 'vscode-azureextension
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { nonNullProp, nonNullValue, nonNullValueAndProp } from '../utils/nonNull';
-import { randomUtils } from '../utils/randomUtils';
 import { AppKind, WebsiteOS } from './AppKind';
+import { getNewFileShareName } from './getNewFileShareName';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export interface IAppSettingsContext {
@@ -98,12 +98,6 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
 
         return newSiteConfig;
     }
-}
-
-export function getNewFileShareName(siteName: string): string {
-    const randomLetters: number = 6;
-    const maxFileShareNameLength: number = 63;
-    return siteName.toLowerCase().substr(0, maxFileShareNameLength - randomLetters) + randomUtils.getRandomHexString(randomLetters);
 }
 
 function getFunctionAppLinuxFxVersion(runtime: string): string {
