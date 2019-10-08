@@ -68,12 +68,13 @@ export function convertStacksToPicks(stacks: ApplicationStack[], recommendedRunt
         // convert each "majorVersion" to an object with all the info we need
         // tslint:disable-next-line: strict-boolean-expressions
         .map(stack => (stack.majorVersions || []).map(mv => {
+            const stackDisplay: string = nonNullProp(stack, 'display');
             return {
                 runtimeVersion: nonNullProp(mv, 'runtimeVersion'),
-                stackDisplay: nonNullProp(stack, 'display'),
+                stackDisplay: stackDisplay,
                 // include stack display in the display name only if it doesn't include a version number
                 // this simplifies names such as 'Java 8 Tomcat 8.5' to just 'Tomcat 8.5'
-                displayName: /[0-9]/.test(nonNullProp(stack, 'display')) ? nonNullProp(mv, 'displayVersion') : `${nonNullProp(stack, 'display')} ${nonNullProp(mv, 'displayVersion')}`
+                displayName: /[0-9]/.test(stackDisplay) ? nonNullProp(mv, 'displayVersion') : `${stackDisplay} ${nonNullProp(mv, 'displayVersion')}`
             };
         }))
         // flatten array
