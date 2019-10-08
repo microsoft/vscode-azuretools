@@ -32,7 +32,11 @@ export async function tryRunPreDeployTask(context: IActionContext, deployFsPath:
             ext.outputChannel.appendLog(localize('ignoringPreDeployTask', 'WARNING: Ignoring preDeployTask "{0}" for non-zip deploy.', taskName));
         } else {
             const tasks: vscode.Task[] = await vscode.tasks.fetchTasks();
-            const preDeployTask: vscode.Task | undefined = tasks.find((task: vscode.Task) => isTaskEqual(taskName, deployFsPath, task));
+            const taskNameWithoutSource: string = taskName.replace(/^[^:]*:\s*/, '');
+            // First, search for an exact match. If that doesn't work, search for a task without the source in the name (e.g. if taskName is "func: extensions install", search for just "extensions install")
+            const preDeployTask: vscode.Task | undefined = tasks.find((task: vscode.Task) => isTaskEqual(taskName, deployFsPath, task))
+                || tasks.find((task: vscode.Task) => isTaskEqual(taskNameWithoutSource, deployFsPath, task));
+
             if (preDeployTask) {
                 const progressMessage: string = localize('runningTask', 'Running preDeployTask "{0}"...', taskName);
                 await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: progressMessage }, async () => {
@@ -60,11 +64,7 @@ export interface IPreDeployTaskResult {
 }
 
 function isTaskEqual(expectedName: string, expectedPath: string, actualTask: vscode.Task): boolean {
-    // This regexp matches the name and optionally allows the source as a prefix
-    // Example with no prefix: "build"
-    // Example with prefix: "func: extensions install"
-    const regexp: RegExp = new RegExp(`^(${actualTask.source}: )?${actualTask.name}$`, 'i');
-    if (regexp.test(expectedName) && actualTask.scope !== undefined) {
+    if (expectedName.toLowerCase() === actualTask.name.toLowerCase() && actualTask.scope !== undefined) {
         const workspaceFolder: Partial<vscode.WorkspaceFolder> = <Partial<vscode.WorkspaceFolder>>actualTask.scope;
         return !!workspaceFolder.uri && (isPathEqual(workspaceFolder.uri.fsPath, expectedPath) || isSubpath(workspaceFolder.uri.fsPath, expectedPath));
     } else {
