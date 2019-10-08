@@ -5,8 +5,7 @@
 
 import { WebSiteManagementClient } from 'azure-arm-website';
 import { AppServicePlan } from 'azure-arm-website/lib/models';
-import { AzureWizardPromptStep, createAzureClient, IAzureQuickPickOptions, IWizardOptions, LocationListStep, ResourceGroupListStep } from 'vscode-azureextensionui';
-import { IAzureQuickPickItem } from 'vscode-azureextensionui';
+import { AzureWizardPromptStep, createAzureClient, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, LocationListStep, ResourceGroupListStep } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
@@ -73,8 +72,9 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
         for (const plan of plans) {
             const isNewSiteLinux: boolean = wizardContext.newSiteOS === WebsiteOS.linux;
             const isPlanLinux: boolean = nonNullProp(plan, 'kind').toLowerCase().includes(WebsiteOS.linux);
+            const family: string | undefined = nonNullProp(plan, 'sku').family;
             // plan.kind will contain "linux" for Linux plans, but will _not_ contain "windows" for Windows plans. Thus we check "isLinux" for both cases
-            if (isNewSiteLinux === isPlanLinux) {
+            if (isNewSiteLinux === isPlanLinux && (!wizardContext.planSkuFamilyFilter || !family || wizardContext.planSkuFamilyFilter.test(family))) {
                 picks.push({
                     id: plan.id,
                     label: nonNullProp(plan, 'name'),
