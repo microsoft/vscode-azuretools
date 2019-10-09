@@ -14,6 +14,7 @@ import * as FileUtilities from '../FileUtilities';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { deployToStorageAccount } from './deployToStorageAccount';
+import { syncTriggersPostDeploy } from './syncTriggersPostDeploy';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
 export async function deployZip(context: IActionContext, client: SiteClient, fsPath: string, aspPromise: Promise<AppServicePlan | undefined>): Promise<void> {
@@ -43,24 +44,34 @@ export async function deployZip(context: IActionContext, client: SiteClient, fsP
             asp = undefined;
         }
 
+        let useStorageAccountDeploy: boolean = false;
         if (client.isFunctionApp && client.isLinux) {
             const doBuildKey: string = 'scmDoBuildDuringDeployment';
             const doBuild: boolean | undefined = !!vscode.workspace.getConfiguration('azureFunctions', vscode.Uri.file(fsPath)).get<boolean>(doBuildKey);
             context.telemetry.properties.scmDoBuildDuringDeployment = String(doBuild);
             const isConsumption: boolean = await client.getIsConsumption();
             await validateLinuxFunctionAppSettings(context, client, doBuild, isConsumption);
-            if (!doBuild && isConsumption) {
-                await deployToStorageAccount(client, zipFilePath);
-                return;
-            }
+            useStorageAccountDeploy = !doBuild && isConsumption;
         }
 
-        const kuduClient: KuduClient = await client.getKuduClient();
-        await kuduClient.pushDeployment.zipPushDeploy(fs.createReadStream(zipFilePath), { isAsync: true, author: 'VS Code' });
-        await waitForDeploymentToComplete(context, client);
-        // https://github.com/Microsoft/vscode-azureappservice/issues/644
-        // This delay is a temporary stopgap that should be resolved with the new pipelines
-        await delayFirstWebAppDeploy(client, asp);
+        let shouldSyncTriggers: boolean;
+        if (useStorageAccountDeploy) {
+            await deployToStorageAccount(client, zipFilePath);
+            shouldSyncTriggers = true;
+        } else {
+            const kuduClient: KuduClient = await client.getKuduClient();
+            await kuduClient.pushDeployment.zipPushDeploy(fs.createReadStream(zipFilePath), { isAsync: true, author: 'VS Code' });
+            const fullLog: string = await waitForDeploymentToComplete(context, client);
+            shouldSyncTriggers = client.isFunctionApp && !/syncing/i.test(fullLog); // No need to sync triggers if kudu already did it
+
+            // https://github.com/Microsoft/vscode-azureappservice/issues/644
+            // This delay is a temporary stopgap that should be resolved with the new pipelines
+            await delayFirstWebAppDeploy(client, asp);
+        }
+
+        if (shouldSyncTriggers) {
+            await syncTriggersPostDeploy(client);
+        }
     } finally {
         if (createdZip) {
             await fse.remove(zipFilePath);
