@@ -18,7 +18,9 @@ import { nonNullProp } from '../utils/nonNull';
 // Thus we will retry a few times with exponential backoff. Each "set" of retries will take a max of about 15 seconds
 const retryOptions: retry.Options = { retries: 4, minTimeout: 1000 };
 
-export async function waitForDeploymentToComplete(context: IActionContext, client: SiteClient, expectedId?: string, token?: CancellationToken, pollingInterval: number = 5000): Promise<void> {
+export async function waitForDeploymentToComplete(context: IActionContext, client: SiteClient, expectedId?: string, token?: CancellationToken, pollingInterval: number = 5000): Promise<string> {
+    let fullLog: string = '';
+
     const alreadyDisplayedLogs: string[] = [];
     let nextTimeToDisplayWaitingLog: number = Date.now();
     let initialStartTime: Date | undefined;
@@ -68,6 +70,7 @@ export async function waitForDeploymentToComplete(context: IActionContext, clien
                 if (newEntry.id) {
                     alreadyDisplayedLogs.push(newEntry.id);
                     if (newEntry.message) {
+                        fullLog = fullLog.concat(newEntry.message);
                         ext.outputChannel.appendLog(newEntry.message, { date: newEntry.logTime, resourceName: client.fullName });
                     }
 
@@ -83,6 +86,7 @@ export async function waitForDeploymentToComplete(context: IActionContext, clien
                             );
                         for (const entryDetail of entryDetails) {
                             if (entryDetail.message) {
+                                fullLog = fullLog.concat(entryDetail.message);
                                 ext.outputChannel.appendLog(entryDetail.message, { date: entryDetail.logTime, resourceName: client.fullName });
                             }
                         }
@@ -96,12 +100,14 @@ export async function waitForDeploymentToComplete(context: IActionContext, clien
                 // If the deployment completed without making it to the "permanent" phase, it must have failed
                 throw new Error(localize('deploymentFailed', 'Deployment to "{0}" failed. See output channel for more details.', client.fullName));
             } else {
-                return;
+                return fullLog;
             }
         } else {
             await delay(pollingInterval);
         }
     }
+
+    return fullLog;
 }
 
 async function tryGetLatestDeployment(context: IActionContext, kuduClient: KuduClient, permanentId: string | undefined, initialStartTime: Date | undefined, expectedId?: string): Promise<[DeployResult | undefined, string | undefined, Date | undefined]> {

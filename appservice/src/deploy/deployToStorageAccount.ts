@@ -5,11 +5,9 @@
 
 import { StringDictionary } from 'azure-arm-website/lib/models';
 import * as azureStorage from "azure-storage";
-import * as retry from 'p-retry';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
-import { delay } from '../utils/delay';
 
 /**
  * Method of deployment that is only intended to be used for Linux Consumption Function apps because it doesn't support kudu pushDeployment
@@ -28,24 +26,6 @@ export async function deployToStorageAccount(client: SiteClient, zipFilePath: st
     delete appSettings.properties.WEBSITE_RUN_FROM_ZIP; // delete old app setting name if it exists
     appSettings.properties.WEBSITE_RUN_FROM_PACKAGE = blobUrl;
     await client.updateApplicationSettings(appSettings);
-
-    // Per functions team a short delay is necessary before syncing triggers for two reasons:
-    // (1) The call will definitely fail. (2) It will spin up a container unnecessarily in some cases.
-    await delay(5000);
-
-    // This can often fail with error "ServiceUnavailable", so we will retry with exponential backoff
-    // Retry at most 5 times, with initial spacing of 5 seconds and total max time of about 3 minutes
-    const retries: number = 5;
-    await retry(
-        async (currentAttempt: number) => {
-            const message: string = currentAttempt === 1 ?
-                localize('syncingTriggers', 'Syncing triggers...') :
-                localize('syncingTriggersAttempt', 'Syncing triggers (Attempt {0}/{1})...', currentAttempt, retries + 1);
-            ext.outputChannel.appendLog(message, { resourceName: client.fullName });
-            await client.syncFunctionTriggers();
-        },
-        { retries, minTimeout: 5 * 1000 }
-    );
 }
 
 async function createBlobService(client: SiteClient): Promise<azureStorage.BlobService> {
