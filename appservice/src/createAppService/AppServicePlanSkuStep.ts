@@ -11,11 +11,12 @@ import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
 import { AppKind, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
+import { setLocationsTask } from './setLocationsTask';
 
 export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
         let skus: SkuDescription[] = this.getCommonSkus();
-        if (wizardContext.newSiteOS === WebsiteOS.windows && wizardContext.newSiteKind === AppKind.functionapp) {
+        if (wizardContext.newSiteKind === AppKind.functionapp) {
             skus.push(...this.getElasticPremiumSkus());
         }
 
@@ -45,6 +46,8 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
                 }
             }
         }
+
+        setLocationsTask(wizardContext);
     }
 
     public shouldPrompt(wizardContext: IAppServiceWizardContext): boolean {
