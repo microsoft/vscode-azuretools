@@ -6,24 +6,21 @@
 import { AzureWizardPromptStep, IAzureQuickPickItem, IWizardOptions } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { WebsiteOS } from './AppKind';
 import { AppServicePlanListStep } from './AppServicePlanListStep';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
+import { setLocationsTask } from './setLocationsTask';
 
 export class SiteHostingPlanStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
         const placeHolder: string = localize('selectHostingPlan', 'Select a hosting plan.');
         const picks: IAzureQuickPickItem<[boolean, RegExp | undefined]>[] = [
-            { label: localize('consumption', 'Consumption'), data: [true, undefined] }
+            { label: localize('consumption', 'Consumption'), data: [true, undefined] },
+            { label: localize('premium', 'Premium'), data: [false, /^EP$/i] },
+            { label: localize('dedicated', 'App Service Plan'), data: [false, /^((?!EP).)*$/i] }
         ];
 
-        if (wizardContext.newSiteOS !== WebsiteOS.linux) { // Not supported on linux yet
-            picks.push({ label: localize('premium', 'Premium'), data: [false, /^EP/i] });
-        }
-
-        picks.push({ label: localize('dedicated', 'App Service Plan'), data: [false, /^[^E]/i] });
-
         [wizardContext.useConsumptionPlan, wizardContext.planSkuFamilyFilter] = (await ext.ui.showQuickPick(picks, { placeHolder })).data;
+        setLocationsTask(wizardContext);
     }
 
     public shouldPrompt(wizardContext: IAppServiceWizardContext): boolean {

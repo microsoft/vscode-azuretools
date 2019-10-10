@@ -3,31 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { WebSiteManagementClient } from 'azure-arm-website';
-import { AzureWizardPromptStep, createAzureClient, IAzureQuickPickItem } from 'vscode-azureextensionui';
+import { AzureWizardPromptStep, IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { AppKind, getWebsiteOSDisplayName, WebsiteOS } from './AppKind';
+import { getWebsiteOSDisplayName, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
+import { setLocationsTask } from './setLocationsTask';
 
 export class SiteOSStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
-    /**
-     * Overwrite the generic 'locationsTask' with a list of locations specific to provider "Microsoft.Web" (based on OS)
-     */
-    public static setLocationsTask(wizardContext: IAppServiceWizardContext): void {
-        let options: {} = {};
-        if (wizardContext.newSiteOS === 'linux') {
-            if (wizardContext.newSiteKind === AppKind.functionapp) {
-                options = { linuxDynamicWorkersEnabled: true };
-            } else {
-                options = { linuxWorkersEnabled: true };
-            }
-        }
-
-        const client: WebSiteManagementClient = createAzureClient(wizardContext, WebSiteManagementClient);
-        wizardContext.locationsTask = client.listGeoRegions(options);
-    }
-
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
         const picks: IAzureQuickPickItem<WebsiteOS>[] = Object.keys(WebsiteOS).map((key: string) => {
             const os: WebsiteOS = <WebsiteOS>WebsiteOS[key];
@@ -35,7 +18,7 @@ export class SiteOSStep extends AzureWizardPromptStep<IAppServiceWizardContext> 
         });
 
         wizardContext.newSiteOS = (await ext.ui.showQuickPick(picks, { placeHolder: localize('selectOS', 'Select an OS.') })).data;
-        SiteOSStep.setLocationsTask(wizardContext);
+        setLocationsTask(wizardContext);
     }
 
     public shouldPrompt(wizardContext: IAppServiceWizardContext): boolean {
