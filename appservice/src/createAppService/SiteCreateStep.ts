@@ -65,8 +65,12 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
         if (wizardContext.newSiteKind === AppKind.app) {
             newSiteConfig.linuxFxVersion = wizardContext.newSiteRuntime;
         } else {
-            if (!wizardContext.useConsumptionPlan && wizardContext.newSiteOS === 'linux') {
-                newSiteConfig.linuxFxVersion = getFunctionAppLinuxFxVersion(nonNullProp(wizardContext, 'newSiteRuntime'));
+            if (wizardContext.newSiteOS === 'linux') {
+                if (wizardContext.useConsumptionPlan) {
+                    newSiteConfig.use32BitWorkerProcess = false; // Needs to be explicitly set to false per the platform team
+                } else {
+                    newSiteConfig.linuxFxVersion = getFunctionAppLinuxFxVersion(nonNullProp(wizardContext, 'newSiteRuntime'));
+                }
             }
 
             const storageClient: StorageManagementClient = createAzureClient(wizardContext, StorageManagementClient);
