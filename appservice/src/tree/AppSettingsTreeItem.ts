@@ -41,12 +41,6 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     public readonly childTypeLabel: string = 'App Setting';
     public readonly contextValue: string = AppSettingsTreeItem.contextValue;
     private _settings: StringDictionary | undefined;
-    private _commandId: string;
-
-    constructor(parent: AzureParentTreeItem, commandId: string) {
-        super(parent);
-        this._commandId = commandId;
-    }
 
     public get id(): string {
         return 'configuration';
@@ -66,7 +60,7 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         // tslint:disable-next-line:strict-boolean-expressions
         const properties: { [name: string]: string } = this._settings.properties || {};
         await Promise.all(Object.keys(properties).map(async (key: string) => {
-            const appSettingTreeItem: AppSettingTreeItem = await AppSettingTreeItem.createAppSettingTreeItem(this, key, properties[key], this._commandId);
+            const appSettingTreeItem: AppSettingTreeItem = await AppSettingTreeItem.createAppSettingTreeItem(this, key, properties[key]);
             treeItems.push(appSettingTreeItem);
         }));
 
@@ -121,7 +115,7 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
 
         this._settings = await this.root.client.updateApplicationSettings(settings);
 
-        return await AppSettingTreeItem.createAppSettingTreeItem(this, newKey, newValue, this._commandId);
+        return await AppSettingTreeItem.createAppSettingTreeItem(this, newKey, newValue);
     }
 
     public async ensureSettings(context: IActionContext): Promise<StringDictionary> {

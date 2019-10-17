@@ -6,6 +6,7 @@
 import { AppServicePlan, SiteConfigResource } from 'azure-arm-website/lib/models';
 import { ProgressLocation, window } from 'vscode';
 import { IActionContext } from 'vscode-azureextensionui';
+import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { ScmType } from '../ScmType';
 import { SiteClient } from '../SiteClient';
@@ -14,7 +15,10 @@ import { deployWar } from './deployWar';
 import { deployZip } from './deployZip';
 import { localGitDeploy } from './localGitDeploy';
 
-export async function deploy(client: SiteClient, fsPath: string, context: IActionContext, showOutputChannelCommand: string): Promise<void> {
+/**
+ * NOTE: This leverages a command with id `ext.prefix + '.showOutputChannel'` that should be registered by each extension
+ */
+export async function deploy(client: SiteClient, fsPath: string, context: IActionContext): Promise<void> {
     const config: SiteConfigResource = await client.getSiteConfig();
     // We use the AppServicePlan in a few places, but we don't want to delay deployment, so start the promise now and save as a const
     const aspPromise: Promise<AppServicePlan | undefined> = client.getAppServicePlan();
@@ -55,7 +59,7 @@ export async function deploy(client: SiteClient, fsPath: string, context: IActio
         // Ignore
     }
 
-    await window.withProgress({ location: ProgressLocation.Notification, title: localize('deploying', 'Deploying to "{0}"... Check [output window](command:{1}) for status.', client.fullName, showOutputChannelCommand) }, async (): Promise<void> => {
+    await window.withProgress({ location: ProgressLocation.Notification, title: localize('deploying', 'Deploying to "{0}"... Check [output window](command:{1}) for status.', client.fullName, ext.prefix + '.showOutputChannel') }, async (): Promise<void> => {
         switch (config.scmType) {
             case ScmType.LocalGit:
                 await localGitDeploy(client, fsPath, context);

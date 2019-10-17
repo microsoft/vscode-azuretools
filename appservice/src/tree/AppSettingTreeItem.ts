@@ -11,26 +11,27 @@ import { AppSettingsTreeItem, validateAppSettingKey } from './AppSettingsTreeIte
 import { getThemedIconPath } from './IconPath';
 import { ISiteTreeRoot } from './ISiteTreeRoot';
 
+/**
+ * NOTE: This leverages a command with id `ext.prefix + '.toggleAppSettingVisibility'` that should be registered by each extension
+ */
 export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     public static contextValue: string = 'applicationSettingItem';
     public readonly contextValue: string = AppSettingTreeItem.contextValue;
     public readonly parent: AppSettingsTreeItem;
-    public readonly commandId: string;
 
     private _key: string;
     private _value: string;
     private _hideValue: boolean;
 
-    private constructor(parent: AppSettingsTreeItem, key: string, value: string, commandId: string) {
+    private constructor(parent: AppSettingsTreeItem, key: string, value: string) {
         super(parent);
         this._key = key;
         this._value = value;
-        this.commandId = commandId;
         this._hideValue = true;
     }
 
-    public static async createAppSettingTreeItem(parent: AppSettingsTreeItem, key: string, value: string, commandId: string): Promise<AppSettingTreeItem> {
-        const ti: AppSettingTreeItem = new AppSettingTreeItem(parent, key, value, commandId);
+    public static async createAppSettingTreeItem(parent: AppSettingsTreeItem, key: string, value: string): Promise<AppSettingTreeItem> {
+        const ti: AppSettingTreeItem = new AppSettingTreeItem(parent, key, value);
         // check if it's a slot setting
         await ti.refreshImpl();
         return ti;
@@ -45,6 +46,10 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
 
     public get iconPath(): TreeItemIconPath {
         return getThemedIconPath('constant');
+    }
+
+    public get commandId(): string {
+        return ext.prefix + '.toggleAppSettingVisibility';
     }
 
     public async edit(context: IActionContext): Promise<void> {

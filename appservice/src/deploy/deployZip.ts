@@ -47,7 +47,7 @@ export async function deployZip(context: IActionContext, client: SiteClient, fsP
         let useStorageAccountDeploy: boolean = false;
         if (client.isFunctionApp && client.isLinux) {
             const doBuildKey: string = 'scmDoBuildDuringDeployment';
-            const doBuild: boolean | undefined = !!vscode.workspace.getConfiguration('azureFunctions', vscode.Uri.file(fsPath)).get<boolean>(doBuildKey);
+            const doBuild: boolean | undefined = !!vscode.workspace.getConfiguration(ext.prefix, vscode.Uri.file(fsPath)).get<boolean>(doBuildKey);
             context.telemetry.properties.scmDoBuildDuringDeployment = String(doBuild);
             const isConsumption: boolean = await client.getIsConsumption();
             await validateLinuxFunctionAppSettings(context, client, doBuild, isConsumption);
@@ -84,7 +84,7 @@ async function getZipFileToDeploy(fsPath: string, isFunctionApp: boolean): Promi
         if (isFunctionApp) {
             return FileUtilities.zipDirectoryGitignore(fsPath, '.funcignore');
         } else {
-            const zipDeployConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('appService', vscode.Uri.file(fsPath));
+            const zipDeployConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration(ext.prefix, vscode.Uri.file(fsPath));
             const globPattern: string | undefined = zipDeployConfig.get<string>('zipGlobPattern');
             const ignorePattern: string | string[] | undefined = zipDeployConfig.get<string | string[]>('zipIgnorePattern');
             return FileUtilities.zipDirectoryGlob(fsPath, globPattern, ignorePattern);

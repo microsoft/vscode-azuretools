@@ -10,18 +10,18 @@ import { localize } from '../localize';
 import { ScmType } from '../ScmType';
 import { isPathEqual, isSubpath } from '../utils/pathUtils';
 
-export async function runPreDeployTask(context: IActionContext, deployFsPath: string, scmType: string | undefined, extensionPrefix: string): Promise<void> {
-    const preDeployResult: IPreDeployTaskResult = await tryRunPreDeployTask(context, deployFsPath, scmType, extensionPrefix);
+export async function runPreDeployTask(context: IActionContext, deployFsPath: string, scmType: string | undefined): Promise<void> {
+    const preDeployResult: IPreDeployTaskResult = await tryRunPreDeployTask(context, deployFsPath, scmType);
     if (preDeployResult.failedToFindTask) {
-        throw new Error(`Failed to find pre-deploy task "${preDeployResult.taskName}". Modify your tasks or the setting "${extensionPrefix}.preDeployTask".`);
+        throw new Error(`Failed to find pre-deploy task "${preDeployResult.taskName}". Modify your tasks or the setting "${ext.prefix}.preDeployTask".`);
     } else if (preDeployResult.exitCode !== undefined && preDeployResult.exitCode !== 0) {
         await handleFailedPreDeployTask(context, preDeployResult);
     }
 }
 
-export async function tryRunPreDeployTask(context: IActionContext, deployFsPath: string, scmType: string | undefined, extensionPrefix: string): Promise<IPreDeployTaskResult> {
+export async function tryRunPreDeployTask(context: IActionContext, deployFsPath: string, scmType: string | undefined): Promise<IPreDeployTaskResult> {
     const preDeployTaskKey: string = 'preDeployTask';
-    const taskName: string | undefined = vscode.workspace.getConfiguration(extensionPrefix, vscode.Uri.file(deployFsPath)).get(preDeployTaskKey);
+    const taskName: string | undefined = vscode.workspace.getConfiguration(ext.prefix, vscode.Uri.file(deployFsPath)).get(preDeployTaskKey);
     context.telemetry.properties.hasPreDeployTask = String(!!taskName);
 
     let failedToFindTask: boolean = false;
