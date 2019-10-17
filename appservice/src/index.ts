@@ -37,7 +37,11 @@ export * from './tree/AppSettingsTreeItem';
 export * from './tree/AppSettingTreeItem';
 export * from './tree/DeploymentsTreeItem';
 export * from './tree/DeploymentTreeItem';
+export * from './tree/FileTreeItem';
+export * from './tree/FolderTreeItem';
 export * from './tree/ISiteTreeRoot';
+export * from './tree/LogFilesTreeItem';
+export * from './tree/SiteFilesTreeItem';
 export * from './TunnelProxy';
 
 // Adding a comment here otherwise "source.organizeImports" will cause duplicate blank lines and tslint will complain

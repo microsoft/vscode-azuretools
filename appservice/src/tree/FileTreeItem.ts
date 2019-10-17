@@ -1,0 +1,44 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+import { AzureParentTreeItem, AzureTreeItem, openReadOnlyContent, TreeItemIconPath } from 'vscode-azureextensionui';
+import { ext } from '../extensionVariables';
+import { getFile, IFileResult } from '../getFile';
+import { localize } from '../localize';
+import { getThemedIconPath } from './IconPath';
+import { ISiteTreeRoot } from './ISiteTreeRoot';
+
+/**
+ * NOTE: This leverages a command with id `ext.prefix + '.openFile'` that should be registered by each extension
+ */
+export class FileTreeItem extends AzureTreeItem<ISiteTreeRoot> {
+    public static contextValue: string = 'file';
+    public readonly contextValue: string = FileTreeItem.contextValue;
+    public readonly label: string;
+    public readonly path: string;
+    public readonly isReadOnly: boolean;
+
+    constructor(parent: AzureParentTreeItem, label: string, path: string, isReadOnly: boolean) {
+        super(parent);
+        this.label = label;
+        this.path = path;
+        this.isReadOnly = isReadOnly;
+    }
+
+    public get iconPath(): TreeItemIconPath {
+        return getThemedIconPath('file');
+    }
+
+    public get commandId(): string {
+        return ext.prefix + '.openFile';
+    }
+
+    public async openReadOnly(): Promise<void> {
+        await this.runWithTemporaryDescription(localize('opening', 'Opening...'), async () => {
+            const file: IFileResult = await getFile(this.root.client, this.path);
+            await openReadOnlyContent(this, file.data, '');
+        });
+    }
+}

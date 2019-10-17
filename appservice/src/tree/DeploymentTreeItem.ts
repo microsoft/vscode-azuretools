@@ -27,6 +27,9 @@ enum DeployStatus {
     Success = 4
 }
 
+/**
+ * NOTE: This leverages a command with id `ext.prefix + '.showOutputChannel'` that should be registered by each extension
+ */
 export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     public static contextValue: RegExp = new RegExp('deployment\/.*');
     public readonly contextValue: string;
@@ -81,11 +84,11 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         return this.contextValue === contextValue;
     }
 
-    public async redeployDeployment(context: IActionContext, showOutputChannelCommand: string): Promise<void> {
+    public async redeployDeployment(context: IActionContext): Promise<void> {
         if (this._deployResult.isReadonly) {
             throw new Error(localize('redeployNotSupported', 'Redeploy is not supported for non-git deployments.'));
         }
-        const redeploying: string = localize('redeploying', 'Redeploying commit "{0}" to "{1}". Check [output window](command:{2}) for status.', this.id, this.root.client.fullName, showOutputChannelCommand);
+        const redeploying: string = localize('redeploying', 'Redeploying commit "{0}" to "{1}". Check [output window](command:{2}) for status.', this.id, this.root.client.fullName, ext.prefix + '.showOutputChannel');
         const redeployed: string = localize('redeployed', 'Commit "{0}" has been redeployed to "{1}".', this.id, this.root.client.fullName);
         await window.withProgress({ location: ProgressLocation.Notification, title: redeploying }, async (): Promise<void> => {
             ext.outputChannel.appendLog(localize('reployingOutput', 'Redeploying commit "{0}" to "{1}"...', this.id, this.root.client.fullName), { resourceName: this.root.client.fullName });
