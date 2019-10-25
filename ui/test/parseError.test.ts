@@ -33,8 +33,13 @@ suite('Error Parsing Tests', () => {
             assert(pe.stack!.includes('parseError.test.ts:'));
             assert(!pe.stack!.includes('extensions'), `Should have removed first path of path (extensions), stack is: ${pe.stack}`);
             assert(!pe.stack!.includes('repos'), `Should have removed first path of path (repos), stack is: ${pe.stack}`);
-            assert(!pe.stack!.includes(os.userInfo().username), `Should have removed first path of path (username), stack is: ${pe.stack}`);
-            assert(!pe.stack!.includes(os.userInfo().homedir), `Should have removed first path of path (homedir), stack is: ${pe.stack}`);
+            const username: string = os.userInfo().username;
+            // The Mac build machine uses "runner" as the username, but the stack references the file "vscode/mocha/runner.js" so the following assert won't work in that case ¯\_(ツ)_/¯
+            if (username.toLowerCase() !== 'runner') {
+                assert(!pe.stack!.includes(username), `Should have removed first path of path (username "${username}"), stack is: ${pe.stack}`);
+            }
+            const homedir: string = os.userInfo().homedir;
+            assert(!pe.stack!.includes(homedir), `Should have removed first path of path (homedir "${homedir}"), stack is: ${pe.stack}`);
         });
 
         test('Removes first part of paths: Windows', () => {
