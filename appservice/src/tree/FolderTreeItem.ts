@@ -35,7 +35,7 @@ export class FolderTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     }
 
     public get description(): string | undefined {
-        return this._isRoot && this.isReadOnly ? localize('readOnly', 'Read Only') : undefined;
+        return this._isRoot && this.isReadOnly ? localize('readOnly', 'Read only') : undefined;
     }
 
     public async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzExtTreeItem[]> {
