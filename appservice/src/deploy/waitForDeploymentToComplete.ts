@@ -44,7 +44,7 @@ export async function waitForDeploymentToComplete(context: IActionContext, clien
         try {
             logEntries = await retry(
                 async (attempt: number) => {
-                    context.telemetry.properties.getLogEntryAttempt = attempt.toString();
+                    addAttemptTelemetry(context, 'getLogEntry', attempt);
                     // tslint:disable-next-line: no-non-null-assertion
                     return <LogEntry[]>await kuduClient.deployment.getLogEntry(deployment!.id!);
                 },
@@ -78,7 +78,7 @@ export async function waitForDeploymentToComplete(context: IActionContext, clien
                         const entryDetails: LogEntry[] =
                             logEntries = await retry(
                                 async (attempt: number) => {
-                                    context.telemetry.properties.getLogEntryDetailsAttempt = attempt.toString();
+                                    addAttemptTelemetry(context, 'getLogEntryDetails', attempt);
                                     // tslint:disable-next-line: no-non-null-assertion
                                     return await kuduClient.deployment.getLogEntryDetails(deployment!.id!, newEntry.id!);
                                 },
@@ -117,7 +117,7 @@ async function tryGetLatestDeployment(context: IActionContext, kuduClient: KuduC
         // Use "permanentId" to find the deployment during its "permanent" phase
         deployment = await retry(
             async (attempt: number) => {
-                context.telemetry.properties.getResultAttempt = attempt.toString();
+                addAttemptTelemetry(context, 'getResult', attempt);
                 // tslint:disable-next-line: no-non-null-assertion
                 return await kuduClient.deployment.getResult(permanentId!);
             },
@@ -128,7 +128,7 @@ async function tryGetLatestDeployment(context: IActionContext, kuduClient: KuduC
         try {
             const latestDeployment: DeployResult = await retry(
                 async (attempt: number) => {
-                    context.telemetry.properties.getResultAttempt = attempt.toString();
+                    addAttemptTelemetry(context, 'getResult', attempt);
                     return await kuduClient.deployment.getResult('latest');
                 },
                 retryOptions
@@ -151,7 +151,7 @@ async function tryGetLatestDeployment(context: IActionContext, kuduClient: KuduC
         // Use "initialReceivedTime" to find the deployment during its "temp" phase
         const deployments: DeployResult[] = await retry(
             async (attempt: number) => {
-                context.telemetry.properties.getDeployResultsAttempt = attempt.toString();
+                addAttemptTelemetry(context, 'getDeployResults', attempt);
                 return await kuduClient.deployment.getDeployResults();
             },
             retryOptions
@@ -170,7 +170,7 @@ async function tryGetLatestDeployment(context: IActionContext, kuduClient: KuduC
         try {
             deployment = await retry(
                 async (attempt: number) => {
-                    context.telemetry.properties.getResultAttempt = attempt.toString();
+                    addAttemptTelemetry(context, 'getResult', attempt);
                     return <DeployResult | undefined>await kuduClient.deployment.getResult('latest');
                 },
                 retryOptions
@@ -190,4 +190,12 @@ async function tryGetLatestDeployment(context: IActionContext, kuduClient: KuduC
     }
 
     return [deployment, permanentId, initialStartTime];
+}
+
+function addAttemptTelemetry(context: IActionContext, methodName: string, attempt: number): void {
+    const key: string = methodName + 'MaxAttempt';
+    const existingValue: number | undefined = context.telemetry.measurements[key];
+    if (existingValue === undefined || existingValue < attempt) {
+        context.telemetry.measurements[key] = attempt;
+    }
 }
