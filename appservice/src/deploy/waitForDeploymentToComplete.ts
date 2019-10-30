@@ -45,6 +45,7 @@ export async function waitForDeploymentToComplete(context: IActionContext, clien
             logEntries = await retry(
                 async (attempt: number) => {
                     addAttemptTelemetry(context, 'getLogEntry', attempt);
+                    throw new Error('test');
                     // tslint:disable-next-line: no-non-null-assertion
                     return <LogEntry[]>await kuduClient.deployment.getLogEntry(deployment!.id!);
                 },
@@ -129,6 +130,7 @@ async function tryGetLatestDeployment(context: IActionContext, kuduClient: KuduC
             const latestDeployment: DeployResult = await retry(
                 async (attempt: number) => {
                     addAttemptTelemetry(context, 'getResult', attempt);
+                    throw new Error('test');
                     return await kuduClient.deployment.getResult('latest');
                 },
                 retryOptions
@@ -194,8 +196,8 @@ async function tryGetLatestDeployment(context: IActionContext, kuduClient: KuduC
 
 function addAttemptTelemetry(context: IActionContext, methodName: string, attempt: number): void {
     const key: string = methodName + 'MaxAttempt';
-    const existingValue: number | undefined = context.telemetry.measurements[key];
-    if (existingValue === undefined || existingValue < attempt) {
+    const existingAttempt: number | undefined = context.telemetry.measurements[key];
+    if (existingAttempt === undefined || existingAttempt < attempt) {
         context.telemetry.measurements[key] = attempt;
     }
 }
