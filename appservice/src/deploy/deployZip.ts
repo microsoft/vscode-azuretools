@@ -70,7 +70,11 @@ export async function deployZip(context: IActionContext, client: SiteClient, fsP
         }
 
         if (shouldSyncTriggers) {
-            await syncTriggersPostDeploy(client);
+            // Don't sync triggers if app is stopped https://github.com/microsoft/vscode-azurefunctions/issues/1608
+            const state: string | undefined = await client.getState();
+            if (state && state.toLowerCase() === 'running') {
+                await syncTriggersPostDeploy(client);
+            }
         }
     } finally {
         if (createdZip) {
