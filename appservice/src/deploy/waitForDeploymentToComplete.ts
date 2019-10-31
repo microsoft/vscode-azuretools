@@ -45,7 +45,6 @@ export async function waitForDeploymentToComplete(context: IActionContext, clien
             logEntries = await retry(
                 async (attempt: number) => {
                     addAttemptTelemetry(context, 'getLogEntry', attempt);
-                    throw new Error('test');
                     // tslint:disable-next-line: no-non-null-assertion
                     return <LogEntry[]>await kuduClient.deployment.getLogEntry(deployment!.id!);
                 },
@@ -130,7 +129,6 @@ async function tryGetLatestDeployment(context: IActionContext, kuduClient: KuduC
             const latestDeployment: DeployResult = await retry(
                 async (attempt: number) => {
                     addAttemptTelemetry(context, 'getResult', attempt);
-                    throw new Error('test');
                     return await kuduClient.deployment.getResult('latest');
                 },
                 retryOptions
