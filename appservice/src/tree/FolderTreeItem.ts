@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, TreeItemIconPath } from 'vscode-azureextensionui';
+import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, parseError, TreeItemIconPath } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
 import { localize } from '../localize';
 import { FileTreeItem } from './FileTreeItem';
@@ -40,7 +40,19 @@ export class FolderTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
 
     public async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzExtTreeItem[]> {
         const kuduClient: KuduClient = await this.root.client.getKuduClient();
-        const response: IKuduItemResponse = <IKuduItemResponse><unknown>(await kuduClient.vfs.getItemWithHttpOperationResponse(this.path)).response;
+        let response: IKuduItemResponse;
+        try {
+            response = <IKuduItemResponse><unknown>(await kuduClient.vfs.getItemWithHttpOperationResponse(this.path)).response;
+        } catch (error) {
+            // Linux Consumption doesn't seem to support logs/files, but hopefully it does eventually
+            // https://github.com/microsoft/vscode-azurefunctions/issues/1599
+            if (this._isRoot && parseError(error).errorType === '404') {
+                throw new Error(localize('notSupported', 'This plan does not support viewing files.'));
+            } else {
+                throw error;
+            }
+        }
+
         let files: IKuduFile[] = <IKuduFile[]>JSON.parse(response.body);
         // this file is being accessed by Kudu and is not viewable
         files = files.filter(f => f.mime !== 'text/xml' || !f.name.includes('LogFiles-kudu-trace_pending.xml'));
