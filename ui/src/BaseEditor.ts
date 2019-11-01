@@ -87,9 +87,8 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
     private async updateRemote(context: ContextT, doc: vscode.TextDocument): Promise<void> {
         const filename: string = await this.getFilename(context);
         this.appendLineToOutput(localize('updating', 'Updating "{0}" ...', filename));
-        const updatedData: string = await this.updateData(context, doc.getText());
+        await this.updateData(context, doc.getText());
         this.appendLineToOutput(localize('done', 'Updated "{0}".', filename));
-        await this.updateEditor(updatedData, vscode.window.activeTextEditor);
     }
 
     private async updateEditor(data: string, textEditor?: vscode.TextEditor): Promise<void> {
