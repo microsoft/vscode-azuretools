@@ -94,10 +94,11 @@ function handleError(context: IActionContext, callbackId: string, error: unknown
             message = errorData.message;
         }
 
-        const items: MessageItem[] =
-            context.errorHandling.suppressReportIssue ?
-                [] :
-                [DialogResponses.reportAnIssue];
+        const items: MessageItem[] = [];
+
+        if (!context.errorHandling.suppressReportIssue) {
+            items.push(DialogResponses.reportAnIssue);
+        }
 
         // don't wait
         window.showErrorMessage(message, ...items).then(async (result: MessageItem | undefined) => {
