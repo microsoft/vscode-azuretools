@@ -4,21 +4,25 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { SkuDescription } from 'azure-arm-website/lib/models';
-import { AzureWizardPromptStep } from 'vscode-azureextensionui';
-import { IAzureQuickPickItem } from 'vscode-azureextensionui';
+import { AzureWizardPromptStep, IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
 import { AppKind, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
+import { setLocationsTask } from './setLocationsTask';
 
 export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
-        const skus: SkuDescription[] = this.getCommonSkus();
-        if (wizardContext.newSiteOS === WebsiteOS.windows && wizardContext.newSiteKind === AppKind.functionapp) {
+        let skus: SkuDescription[] = this.getCommonSkus();
+        if (wizardContext.newSiteKind === AppKind.functionapp) {
             skus.push(...this.getElasticPremiumSkus());
+        }
 
+        const regExp: RegExp | undefined = wizardContext.planSkuFamilyFilter;
+        if (regExp) {
+            skus = skus.filter(s => !s.family || regExp.test(s.family));
         }
 
         const pricingTiers: IAzureQuickPickItem<SkuDescription | undefined>[] = skus.map((s: SkuDescription) => {
@@ -42,6 +46,8 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
                 }
             }
         }
+
+        setLocationsTask(wizardContext);
     }
 
     public shouldPrompt(wizardContext: IAppServiceWizardContext): boolean {

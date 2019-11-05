@@ -16,6 +16,9 @@ import { DeploymentTreeItem } from './DeploymentTreeItem';
 import { getThemedIconPath } from './IconPath';
 import { ISiteTreeRoot } from './ISiteTreeRoot';
 
+/**
+ * NOTE: This leverages a command with id `ext.prefix + '.connectToGitHub'` that should be registered by each extension
+ */
 export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     public static contextValueConnected: string = 'deploymentsConnected';
     public static contextValueUnconnected: string = 'deploymentsUnconnected';
@@ -23,13 +26,11 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     public readonly label: string = localize('Deployments', 'Deployments');
     public readonly childTypeLabel: string = localize('Deployment', 'Deployment');
 
-    private readonly _connectToGitHubCommandId: string;
     private _scmType?: string;
     private _repoUrl?: string;
 
-    public constructor(parent: AzureParentTreeItem<ISiteTreeRoot>, siteConfig: SiteConfig, sourceControl: SiteSourceControl, connectToGitHubCommandId: string) {
+    public constructor(parent: AzureParentTreeItem<ISiteTreeRoot>, siteConfig: SiteConfig, sourceControl: SiteSourceControl) {
         super(parent);
-        this._connectToGitHubCommandId = connectToGitHubCommandId;
         this._scmType = siteConfig.scmType;
         this._repoUrl = sourceControl.repoUrl;
     }
@@ -77,7 +78,7 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         if (siteConfig.scmType === ScmType.None) {
             // redeploy does not support Push deploys, so we still guide users to connect to a GitHub repo
             children.push(new GenericTreeItem(this, {
-                commandId: this._connectToGitHubCommandId,
+                commandId: ext.prefix + '.connectToGitHub',
                 contextValue: 'ConnectToGithub',
                 label: 'Connect to a GitHub Repository...'
             }));

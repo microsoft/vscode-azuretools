@@ -66,12 +66,17 @@ export async function zipDirectoryGitignore(folderPath: string, gitignoreName: s
     });
 }
 
+const commonGlobSettings: {} = {
+    dot: true, // Include paths starting with '.'
+    nodir: true, // required for symlinks https://github.com/archiverjs/node-archiver/issues/311#issuecomment-445924055
+    follow: true // Follow symlinks to get all sub folders https://github.com/microsoft/vscode-azurefunctions/issues/1289
+};
+
 async function addFilesByGlob(zipper: archiver.Archiver, folderPath: string, globPattern: string, ignorePattern: string | string[] | undefined): Promise<void> {
     zipper.glob(globPattern, {
         cwd: folderPath,
-        dot: true,
         ignore: ignorePattern,
-        nodir: true // required for symlinks https://github.com/archiverjs/node-archiver/issues/311#issuecomment-445924055
+        ...commonGlobSettings
     });
 }
 
@@ -86,9 +91,8 @@ async function addFilesByGitignore(zipper: archiver.Archiver, folderPath: string
     // tslint:disable-next-line:no-unsafe-any
     const paths: string[] = await globGitignore('**/*', {
         cwd: folderPath,
-        dot: true,
         ignore,
-        nodir: true // required for symlinks https://github.com/archiverjs/node-archiver/issues/311#issuecomment-445924055
+        ...commonGlobSettings
     });
     for (const p of paths) {
         zipper.file(path.join(folderPath, p), { name: p });

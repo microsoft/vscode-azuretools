@@ -6,7 +6,6 @@
 import { ApplicationStack } from 'azure-arm-website/lib/models';
 import { AzureWizardPromptStep, IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
-import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
 import { requestUtils } from '../utils/requestUtils';
 import { AppKind, LinuxRuntimes, WebsiteOS } from './AppKind';
@@ -26,12 +25,11 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
                 { label: '.NET', data: 'dotnet' }
             ];
 
-            const previewDescription: string = localize('previewDescription', '(Preview)');
             if (wizardContext.newSiteOS === WebsiteOS.linux) {
                 runtimeItems.push({ label: 'Python', data: 'python' });
             } else {
                 runtimeItems.push({ label: 'Java', data: 'java' });
-                runtimeItems.push({ label: 'PowerShell', description: previewDescription, data: 'powershell' });
+                runtimeItems.push({ label: 'PowerShell', data: 'powershell' });
             }
 
             wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new app.' })).data;
@@ -68,16 +66,19 @@ export function convertStacksToPicks(stacks: ApplicationStack[], recommendedRunt
         // convert each "majorVersion" to an object with all the info we need
         // tslint:disable-next-line: strict-boolean-expressions
         .map(stack => (stack.majorVersions || []).map(mv => {
+            const stackDisplay: string = nonNullProp(stack, 'display');
             return {
                 runtimeVersion: nonNullProp(mv, 'runtimeVersion'),
-                displayVersion: nonNullProp(mv, 'displayVersion'),
-                stackDisplay: nonNullProp(stack, 'display')
+                stackDisplay: stackDisplay,
+                // include stack display in the display name only if it doesn't include a version number
+                // this simplifies names such as 'Java 8 Tomcat 8.5' to just 'Tomcat 8.5'
+                displayName: /[0-9]/.test(stackDisplay) ? nonNullProp(mv, 'displayVersion') : `${stackDisplay} ${nonNullProp(mv, 'displayVersion')}`
             };
         }))
         // flatten array
         .reduce((acc, val) => acc.concat(val))
-        // filter out Node 4.x and 6.x as they are EOL
-        .filter(mv => !/node\|(4|6)\./i.test(mv.runtimeVersion))
+        // filter out Node 4.x, 6.x, and 6 LTS as they are EOL
+        .filter(mv => !/node\|(4|6)[\.-]/i.test(mv.runtimeVersion))
         // filter out .NET Core 1.x and 2.0 as they are EOL
         .filter(mv => !/dotnetcore\|(1\.|2\.0)/i.test(mv.runtimeVersion))
         // sort
@@ -95,8 +96,8 @@ export function convertStacksToPicks(stacks: ApplicationStack[], recommendedRunt
                 return bInfo.minor - aInfo.minor;
             }
 
-            if (a.displayVersion !== b.displayVersion) {
-                return a.displayVersion.localeCompare(b.displayVersion);
+            if (a.displayName !== b.displayName) {
+                return a.displayName.localeCompare(b.displayName);
             } else {
                 return a.stackDisplay.localeCompare(b.stackDisplay);
             }
@@ -105,7 +106,7 @@ export function convertStacksToPicks(stacks: ApplicationStack[], recommendedRunt
         .map(mv => {
             return {
                 id: mv.runtimeVersion,
-                label: mv.displayVersion,
+                label: mv.displayName,
                 data: mv.runtimeVersion,
                 // include stack as description if it has a version
                 // tslint:disable-next-line: strict-boolean-expressions

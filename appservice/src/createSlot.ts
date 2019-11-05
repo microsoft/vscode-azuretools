@@ -7,6 +7,7 @@ import WebSiteManagementClient from "azure-arm-website";
 import { NameValuePair, ResourceNameAvailability, Site, StringDictionary } from "azure-arm-website/lib/models";
 import { ProgressLocation, window } from "vscode";
 import { AzureTreeItem, createAzureClient, IAzureQuickPickItem, ICreateChildImplContext } from "vscode-azureextensionui";
+import { getNewFileShareName } from "./createAppService/getNewFileShareName";
 import { ext } from "./extensionVariables";
 import { localize } from "./localize";
 import { SiteClient } from './SiteClient';
@@ -60,30 +61,35 @@ async function validateSlotName(value: string | undefined, client: WebSiteManage
 }
 
 async function chooseConfigurationSource(root: ISiteTreeRoot, existingSlots: AzureTreeItem<ISiteTreeRoot>[]): Promise<SiteClient | undefined> {
-    const configurationSources: IAzureQuickPickItem<SiteClient | undefined>[] = [{
-        label: localize('dontClone', "Don't clone configuration from an existing slot"),
-        data: undefined
-    }];
+    if (root.client.isFunctionApp) {
+        // Function apps always clone from production slot without prompting
+        return root.client;
+    } else {
+        const configurationSources: IAzureQuickPickItem<SiteClient | undefined>[] = [{
+            label: localize('dontClone', "Don't clone configuration from an existing slot"),
+            data: undefined
+        }];
 
-    const prodSiteClient: SiteClient = root.client;
-    // add the production slot itself
-    configurationSources.push({
-        // tslint:disable-next-line:no-non-null-assertion
-        label: prodSiteClient.fullName,
-        data: prodSiteClient
-    });
-
-    // add the web app's current deployment slots
-    for (const slot of existingSlots) {
-        const slotSiteClient: SiteClient = slot.root.client;
+        const prodSiteClient: SiteClient = root.client;
+        // add the production slot itself
         configurationSources.push({
-            label: slotSiteClient.fullName,
-            data: slotSiteClient
+            // tslint:disable-next-line:no-non-null-assertion
+            label: prodSiteClient.fullName,
+            data: prodSiteClient
         });
-    }
 
-    const placeHolder: string = localize('chooseSource', 'Choose a configuration source.');
-    return (await ext.ui.showQuickPick(configurationSources, { placeHolder })).data;
+        // add the web app's current deployment slots
+        for (const slot of existingSlots) {
+            const slotSiteClient: SiteClient = slot.root.client;
+            configurationSources.push({
+                label: slotSiteClient.fullName,
+                data: slotSiteClient
+            });
+        }
+
+        const placeHolder: string = localize('chooseSource', 'Choose a configuration source.');
+        return (await ext.ui.showQuickPick(configurationSources, { placeHolder })).data;
+    }
 }
 
 async function parseAppSettings(siteClient: SiteClient): Promise<NameValuePair[]> {
@@ -92,7 +98,12 @@ async function parseAppSettings(siteClient: SiteClient): Promise<NameValuePair[]
     if (appSettings.properties) {
         // iterate String Dictionary to parse into NameValuePair[]
         for (const key of Object.keys(appSettings.properties)) {
-            appSettingPairs.push({ name: key, value: appSettings.properties[key] });
+            let value: string = appSettings.properties[key];
+            // This has to be different when cloning configuration for a function app slot
+            if (siteClient.isFunctionApp && key === 'WEBSITE_CONTENTSHARE') {
+                value = getNewFileShareName(siteClient.fullName);
+            }
+            appSettingPairs.push({ name: key, value });
         }
     }
     return appSettingPairs;

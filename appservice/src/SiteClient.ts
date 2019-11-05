@@ -5,11 +5,11 @@
 
 import { WebSiteManagementClient } from 'azure-arm-website';
 import { AppServicePlan, FunctionEnvelopeCollection, FunctionSecrets, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SlotConfigNamesResource, SourceControlCollection, StringDictionary, User, WebAppInstanceCollection, WebJobCollection } from 'azure-arm-website/lib/models';
-import { ServiceClientOptions, WebResource } from 'ms-rest';
 import { addExtensionUserAgent, createAzureClient, ISubscriptionContext, parseError } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
 import { FunctionEnvelope } from 'vscode-azurekudu/lib/models';
 import { localize } from './localize';
+import { deleteFunctionSlot, getFunctionSlot, listFunctionsSlot } from './slotFunctionOperations';
 import { nonNullProp, nonNullValue } from './utils/nonNull';
 import { requestUtils } from './utils/requestUtils';
 
@@ -48,11 +48,8 @@ export class SiteClient {
     public readonly gitUrl: string | undefined;
 
     private readonly _subscription: ISubscriptionContext;
-    private _funcPreviewSlotError: Error = new Error(localize('functionsSlotPreview', 'This operation is not supported for slots, which are still in preview.'));
 
     private _cachedPlan: AppServicePlan | undefined;
-    private _cachedSiteRestrictedToken: string | undefined;
-    private _siteRestrictedTokenExpireTime: number = Date.now();
 
     constructor(site: Site, subscription: ISubscriptionContext) {
         let matches: RegExpMatchArray | null = nonNullProp(site, 'serverFarmId').match(/\/subscriptions\/(.*)\/resourceGroups\/(.*)\/providers\/Microsoft.Web\/serverfarms\/(.*)/);
@@ -92,9 +89,14 @@ export class SiteClient {
 
     public async getIsConsumption(): Promise<boolean> {
         if (this.isFunctionApp) {
-            const asp: AppServicePlan | undefined = await this.getCachedAppServicePlan();
-            // Assume it's consumption if we can't get the plan (sometimes happens with brand new plans). Consumption is recommended and more popular
-            return !asp || !asp.sku || !asp.sku.tier || asp.sku.tier.toLowerCase() === 'dynamic';
+            try {
+                const asp: AppServicePlan | undefined = await this.getCachedAppServicePlan();
+                // Assume it's consumption if we can't get the plan (sometimes happens with brand new plans). Consumption is recommended and more popular
+                return !asp || !asp.sku || !asp.sku.tier || asp.sku.tier.toLowerCase() === 'dynamic';
+            } catch {
+                // Also assume it's consumption if we fail to get the plan (aka user doesn't have permissions for the plan)
+                return true;
+            }
         } else {
             return false;
         }
@@ -105,8 +107,7 @@ export class SiteClient {
             throw new Error(localize('notSupportedLinux', 'This operation is not supported by this app service plan.'));
         }
 
-        const clientOptions: ServiceClientOptions | undefined = await this.getKuduClientOptions();
-        const kuduClient: KuduClient = new KuduClient(this._subscription.credentials, this.kuduUrl, clientOptions);
+        const kuduClient: KuduClient = new KuduClient(this._subscription.credentials, this.kuduUrl);
         addExtensionUserAgent(kuduClient);
         return kuduClient;
     }
@@ -219,23 +220,19 @@ export class SiteClient {
 
     public async listFunctions(): Promise<FunctionEnvelopeCollection> {
         if (this.slotName) {
-            throw this._funcPreviewSlotError;
+            return await listFunctionsSlot(this._subscription, this.id);
         } else {
             return await this._client.webApps.listFunctions(this.resourceGroup, this.siteName);
         }
     }
 
     public async listFunctionsNext(nextPageLink: string): Promise<FunctionEnvelopeCollection> {
-        if (this.slotName) {
-            throw this._funcPreviewSlotError;
-        } else {
-            return await this._client.webApps.listFunctionsNext(nextPageLink);
-        }
+        return await this._client.webApps.listFunctionsNext(nextPageLink);
     }
 
     public async getFunction(functionName: string): Promise<FunctionEnvelope> {
         if (this.slotName) {
-            throw this._funcPreviewSlotError;
+            return await getFunctionSlot(this._subscription, this.id, functionName);
         } else {
             return await this._client.webApps.getFunction(this.resourceGroup, this.siteName, functionName);
         }
@@ -243,9 +240,9 @@ export class SiteClient {
 
     public async deleteFunction(functionName: string): Promise<void> {
         if (this.slotName) {
-            throw this._funcPreviewSlotError;
+            await deleteFunctionSlot(this._subscription, this.id, functionName);
         } else {
-            return await this._client.webApps.deleteFunction(this.resourceGroup, this.siteName, functionName);
+            await this._client.webApps.deleteFunction(this.resourceGroup, this.siteName, functionName);
         }
     }
 
@@ -315,47 +312,6 @@ export class SiteClient {
             result = await this.getAppServicePlan();
         }
         return result;
-    }
-
-    /**
-     * Linux consumption currently requires a site-restricted token for all kudu calls (in addition to existing credentials)
-     * This is only a temporary requirement and should be going away eventually
-     */
-    private async getKuduClientOptions(): Promise<ServiceClientOptions | undefined> {
-        if (this.isLinux) {
-            const isConsumption: boolean = await this.getIsConsumption();
-            if (isConsumption) {
-                // Doing the best we can for types here - 'ms-rest' is severely lacking when it comes to filters
-                type callbackType = (err: unknown) => void;
-                type nextType = (r: WebResource, c: callbackType) => Promise<void>;
-                return {
-                    filters: [
-                        async (resource: WebResource, next: nextType, callback: callbackType): Promise<void> => {
-                            try {
-                                resource.headers['x-ms-site-restricted-token'] = await this.getSiteRestrictedToken();
-                                return next(resource, callback);
-                            } catch (error) {
-                                callback(error);
-                            }
-                        }
-                    ]
-                };
-            }
-        }
-
-        return undefined;
-    }
-
-    private async getSiteRestrictedToken(): Promise<string> {
-        if (!this._cachedSiteRestrictedToken || Date.now() > this._siteRestrictedTokenExpireTime) {
-            const urlPath: string = `${this.id}/hostruntime/admin/host/token?api-version=2015-08-01`;
-            const request: requestUtils.Request = await requestUtils.getDefaultAzureRequest(urlPath, this._subscription);
-            // token only lasts 5 minutes. Use 4 just to be safe
-            this._siteRestrictedTokenExpireTime = Date.now() + 4 * 60 * 1000;
-            this._cachedSiteRestrictedToken = await requestUtils.sendRequest<string>(request);
-        }
-
-        return this._cachedSiteRestrictedToken;
     }
 }
 

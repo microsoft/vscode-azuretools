@@ -13,8 +13,8 @@ import { AzureWizardExecuteStep, createAzureClient } from 'vscode-azureextension
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { nonNullProp, nonNullValue, nonNullValueAndProp } from '../utils/nonNull';
-import { randomUtils } from '../utils/randomUtils';
 import { AppKind, WebsiteOS } from './AppKind';
+import { getNewFileShareName } from './getNewFileShareName';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export interface IAppSettingsContext {
@@ -65,22 +65,21 @@ export class SiteCreateStep extends AzureWizardExecuteStep<IAppServiceWizardCont
         if (wizardContext.newSiteKind === AppKind.app) {
             newSiteConfig.linuxFxVersion = wizardContext.newSiteRuntime;
         } else {
-            if (!wizardContext.useConsumptionPlan && wizardContext.newSiteOS === 'linux') {
-                newSiteConfig.linuxFxVersion = getFunctionAppLinuxFxVersion(nonNullProp(wizardContext, 'newSiteRuntime'));
+            if (wizardContext.newSiteOS === 'linux') {
+                if (wizardContext.useConsumptionPlan) {
+                    newSiteConfig.use32BitWorkerProcess = false; // Needs to be explicitly set to false per the platform team
+                } else {
+                    newSiteConfig.linuxFxVersion = getFunctionAppLinuxFxVersion(nonNullProp(wizardContext, 'newSiteRuntime'));
+                }
             }
 
-            const maxFileShareNameLength: number = 63;
             const storageClient: StorageManagementClient = createAzureClient(wizardContext, StorageManagementClient);
 
             const storageAccount: StorageAccount = nonNullProp(wizardContext, 'storageAccount');
             const [, storageResourceGroup] = nonNullValue(nonNullProp(storageAccount, 'id').match(/\/resourceGroups\/([^/]+)\//), 'Invalid storage account id');
             const keysResult: StorageAccountListKeysResult = await storageClient.storageAccounts.listKeys(storageResourceGroup, nonNullProp(storageAccount, 'name'));
 
-            fileShareName = nonNullProp(wizardContext, 'newSiteName').toLocaleLowerCase() + '-content'.slice(0, maxFileShareNameLength);
-            if (!wizardContext.newStorageAccountName) {
-                const randomLetters: number = 4;
-                fileShareName = `${fileShareName.slice(0, maxFileShareNameLength - randomLetters - 1)}-${randomUtils.getRandomHexString(randomLetters)}`;
-            }
+            fileShareName = getNewFileShareName(nonNullProp(wizardContext, 'newSiteName'));
 
             // https://github.com/Azure/azure-sdk-for-node/issues/4706
             const endpointSuffix: string = wizardContext.environment.storageEndpointSuffix.replace(/^\./, '');

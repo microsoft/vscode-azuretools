@@ -6,7 +6,7 @@
 import { SiteSourceControl } from 'azure-arm-website/lib/models';
 import * as os from 'os';
 import { ProgressLocation, window } from 'vscode';
-import { AzureTreeItem, openReadOnlyContent, TreeItemIconPath } from 'vscode-azureextensionui';
+import { AzureTreeItem, IActionContext, openReadOnlyContent, TreeItemIconPath } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
 import { DeployResult, LogEntry } from 'vscode-azurekudu/lib/models';
 import { waitForDeploymentToComplete } from '../deploy/waitForDeploymentToComplete';
@@ -27,6 +27,9 @@ enum DeployStatus {
     Success = 4
 }
 
+/**
+ * NOTE: This leverages a command with id `ext.prefix + '.showOutputChannel'` that should be registered by each extension
+ */
 export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     public static contextValue: RegExp = new RegExp('deployment\/.*');
     public readonly contextValue: string;
@@ -49,7 +52,7 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     }
 
     public get iconPath(): TreeItemIconPath {
-        return getThemedIconPath('Git_Commit_16x');
+        return getThemedIconPath('git-commit');
     }
 
     public get id(): string {
@@ -81,11 +84,11 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         return this.contextValue === contextValue;
     }
 
-    public async redeployDeployment(showOutputChannelCommand: string): Promise<void> {
+    public async redeployDeployment(context: IActionContext): Promise<void> {
         if (this._deployResult.isReadonly) {
             throw new Error(localize('redeployNotSupported', 'Redeploy is not supported for non-git deployments.'));
         }
-        const redeploying: string = localize('redeploying', 'Redeploying commit "{0}" to "{1}". Check [output window](command:{2}) for status.', this.id, this.root.client.fullName, showOutputChannelCommand);
+        const redeploying: string = localize('redeploying', 'Redeploying commit "{0}" to "{1}". Check [output window](command:{2}) for status.', this.id, this.root.client.fullName, ext.prefix + '.showOutputChannel');
         const redeployed: string = localize('redeployed', 'Commit "{0}" has been redeployed to "{1}".', this.id, this.root.client.fullName);
         await window.withProgress({ location: ProgressLocation.Notification, title: redeploying }, async (): Promise<void> => {
             ext.outputChannel.appendLog(localize('reployingOutput', 'Redeploying commit "{0}" to "{1}"...', this.id, this.root.client.fullName), { resourceName: this.root.client.fullName });
@@ -95,7 +98,7 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
 
             const refreshingInteveral: NodeJS.Timer = setInterval(async () => { await this.refresh(); }, 1000); /* the status of the label changes during deployment so poll for that*/
             try {
-                await waitForDeploymentToComplete(this.root.client, this.id);
+                await waitForDeploymentToComplete(context, this.root.client, this.id);
                 await this.parent.refresh(); /* refresh entire node because active statuses has changed */
                 window.showInformationMessage(redeployed);
                 ext.outputChannel.appendLog(redeployed);

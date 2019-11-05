@@ -61,6 +61,11 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
     newPlanSku?: SkuDescription;
 
     /**
+     * If specified, only skus matching this filter will be shown
+     */
+    planSkuFamilyFilter?: RegExp;
+
+    /**
      * The task used to get existing plans.
      * By specifying this in the context, we can ensure that Azure is only queried once for the entire wizard
      */

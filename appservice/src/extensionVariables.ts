@@ -26,17 +26,25 @@ class UninitializedExtensionVariables implements UIExtensionVariables {
     public get reporter(): TelemetryReporter {
         throw this._error;
     }
+
+    public get prefix(): string {
+        throw this._error;
+    }
+}
+
+interface IAppServiceExtensionVariables extends UIExtensionVariables {
+    prefix: string;
 }
 
 /**
  * Container for common extension variables used throughout the AppService package. They must be initialized with registerAppServiceExtensionVariables
  */
-export let ext: UIExtensionVariables = new UninitializedExtensionVariables();
+export let ext: IAppServiceExtensionVariables = new UninitializedExtensionVariables();
 
 /**
  * Call this to register common variables used throughout the AppService package.
  */
-export function registerAppServiceExtensionVariables(extVars: UIExtensionVariables): void {
+export function registerAppServiceExtensionVariables(extVars: IAppServiceExtensionVariables): void {
     ext = extVars;
     registerUIExtensionVariables(extVars);
 }
