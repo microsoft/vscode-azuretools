@@ -531,6 +531,11 @@ export interface IErrorHandlingContext {
      * Defaults to `false`. If true, re-throws error outside the context of this action.
      */
     rethrow?: boolean;
+
+    /**
+     * Defaults to `false`. If true, does not show the "Report Issue" button in the error notification.
+     */
+    suppressReportIssue?: boolean;
 }
 
 export interface ITelemetryReporter {
