@@ -40,6 +40,8 @@ export class AppInsightsListStep extends AzureWizardPromptStep<IAppServiceWizard
         if (input.label === skipForNowLabel) {
             wizardContext.telemetry.properties.aiSkipForNow = 'true';
             wizardContext.appInsightsSkip = true;
+        } else {
+            wizardContext.telemetry.properties.newAI = String(!wizardContext.appInsightsComponent);
         }
     }
 
