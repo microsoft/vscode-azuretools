@@ -39,6 +39,7 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
         const options: IAzureQuickPickOptions = { placeHolder: localize('selectPlan', 'Select a {0} App Service plan.', getWebsiteOSDisplayName(nonNullProp(wizardContext, 'newSiteOS'))), id: `AppServicePlanListStep/${wizardContext.subscriptionId}` };
         wizardContext.plan = (await ext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
 
+        wizardContext.telemetry.properties.newPlan = String(!wizardContext.plan);
         if (wizardContext.plan) {
             await LocationListStep.setLocation(wizardContext, wizardContext.plan.location);
         }
