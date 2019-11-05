@@ -24,7 +24,8 @@ export async function tryRunPreDeployTask(context: IActionContext, deployFsPath:
     const taskName: string | undefined = vscode.workspace.getConfiguration(ext.prefix, vscode.Uri.file(deployFsPath)).get(preDeployTaskKey);
     context.telemetry.properties.hasPreDeployTask = String(!!taskName);
 
-    let preDeployTaskResult: IPreDeployTaskResult = { taskName: undefined, exitCode: undefined, failedToFindTask: false };
+    let preDeployTaskResult: IPreDeployTaskResult = { taskName, exitCode: undefined, failedToFindTask: false };
+
     if (taskName) {
         if (scmType === ScmType.LocalGit || scmType === ScmType.GitHub) {
             // We don't run pre deploy tasks for non-zipdeploy since that stuff should be handled by kudu
