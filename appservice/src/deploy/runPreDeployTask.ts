@@ -69,8 +69,12 @@ function isTaskEqual(expectedName: string, expectedPath: string, actualTask: vsc
 }
 
 function isScopeEqual(task: vscode.Task, workspaceFsPath: string): boolean {
-    const workspaceFolder: Partial<vscode.WorkspaceFolder> = <Partial<vscode.WorkspaceFolder>>task.scope;
-    return !!workspaceFolder.uri && (isPathEqual(workspaceFolder.uri.fsPath, workspaceFsPath) || isSubpath(workspaceFolder.uri.fsPath, workspaceFsPath));
+    if (typeof task.scope === 'object') {
+        const workspaceFolder: Partial<vscode.WorkspaceFolder> = task.scope;
+        return !!workspaceFolder.uri && (isPathEqual(workspaceFolder.uri.fsPath, workspaceFsPath) || isSubpath(workspaceFolder.uri.fsPath, workspaceFsPath));
+    } else {
+        return false;
+    }
 }
 
 async function waitForPreDeployTask(preDeployTask: vscode.Task, deployFsPath: string): Promise<IPreDeployTaskResult> {
