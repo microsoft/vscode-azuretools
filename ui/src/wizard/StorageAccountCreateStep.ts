@@ -39,7 +39,8 @@ export class StorageAccountCreateStep<T extends types.IStorageAccountWizardConte
             {
                 sku: { name: newSkuName },
                 kind: this._defaults.kind,
-                location: newLocation
+                location: newLocation,
+                enableHttpsTrafficOnly: true
             }
         );
         const createdStorageAccount: string = localize('CreatedStorageAccount', 'Successfully created storage account "{0}".', newName);
