@@ -8,17 +8,17 @@ steps:
       echo "##vso[task.setvariable variable=skipPackage]"
       echo "Not skipping package"
     fi
-  displayName: 'Check if package "${{ parameters.package }}" should be skipped.'
+  displayName: '${{ parameters.package }}: check if package has changed'
   condition: ne(variables['Build.SourceBranchName'], 'master')
 
 - task: Npm@1
-  displayName: 'npm install ${{ parameters.package }}'
+  displayName: '${{ parameters.package }}: npm install'
   inputs:
     workingDir: '${{ parameters.package }}'
   condition: not(variables['skipPackage'])
 
 - task: Npm@1
-  displayName: 'Build ${{ parameters.package }}'
+  displayName: '${{ parameters.package }}: build'
   inputs:
     workingDir: '${{ parameters.package }}'
     command: custom
@@ -26,7 +26,7 @@ steps:
   condition: not(variables['skipPackage'])
 
 - task: Npm@1
-  displayName: 'Lint ${{ parameters.package }}'
+  displayName: '${{ parameters.package }}: lint'
   inputs:
     workingDir: '${{ parameters.package }}'
     command: custom
@@ -34,30 +34,42 @@ steps:
   condition: not(variables['skipPackage'])
 
 - task: Npm@1
-  displayName: 'Non-Linux: Test ${{ parameters.package }}'
+  displayName: '${{ parameters.package }}: pack'
   inputs:
     workingDir: '${{ parameters.package }}'
     command: custom
-    customCommand: run test
-  env:
-    SERVICE_PRINCIPAL_CLIENT_ID: $(SERVICE_PRINCIPAL_CLIENT_ID)
-    SERVICE_PRINCIPAL_SECRET: $(SERVICE_PRINCIPAL_SECRET)
-    SERVICE_PRINCIPAL_DOMAIN: $(SERVICE_PRINCIPAL_DOMAIN)
-  condition: and(not(variables['skipPackage']), ne(variables['Agent.OS'], 'Linux'))
+    customCommand: pack
+  condition: and(not(variables['skipPackage']), eq(variables['Agent.OS'], 'Linux'), ne(variables['System.PullRequest.IsFork'], 'True'))
 
-- script: |
-    export DISPLAY=:10
-    npm run test
-  displayName: 'Linux: Test ${{ parameters.package }}'
-  workingDirectory: '${{ parameters.package }}'
+- task: ExtractFiles@1
+  displayName: '${{ parameters.package }}: extract package'
+  inputs:
+    archiveFilePatterns: '${{ parameters.package }}/vscode-*.tgz'
+    destinationFolder: '$(build.artifactstagingdirectory)/${{ parameters.package }}'
+  condition: and(not(variables['skipPackage']), eq(variables['Agent.OS'], 'Linux'), ne(variables['System.PullRequest.IsFork'], 'True'))
+
+- task: PublishBuildArtifacts@1
+  displayName: '${{ parameters.package }}: publish package'
+  inputs:
+    PathtoPublish: '$(build.artifactstagingdirectory)/${{ parameters.package }}/package'
+    ArtifactName: '${{ parameters.package }}'
+  condition: and(not(variables['skipPackage']), eq(variables['Agent.OS'], 'Linux'), ne(variables['System.PullRequest.IsFork'], 'True'))
+
+- task: Npm@1
+  displayName: '${{ parameters.package }}: test'
+  inputs:
+    workingDir: '${{ parameters.package }}'
+    command: custom
+    customCommand: test
   env:
     SERVICE_PRINCIPAL_CLIENT_ID: $(SERVICE_PRINCIPAL_CLIENT_ID)
     SERVICE_PRINCIPAL_SECRET: $(SERVICE_PRINCIPAL_SECRET)
     SERVICE_PRINCIPAL_DOMAIN: $(SERVICE_PRINCIPAL_DOMAIN)
-  condition: and(not(variables['skipPackage']), eq(variables['Agent.OS'], 'Linux'))
+    DISPLAY: :10 # Only necessary for linux tests
+  condition: not(variables['skipPackage'])
 
 - task: PublishTestResults@2
-  displayName: 'Publish Test Results ${{ parameters.package }}'
+  displayName: '${{ parameters.package }}: publish test results'
   inputs:
     testResultsFiles: '${{ parameters.package }}/*-results.xml'
     testRunTitle: '$(Agent.OS) ${{ parameters.package }}'
