@@ -40,24 +40,26 @@ export async function waitForDeploymentToComplete(context: IActionContext, clien
 
             throw new Error(localize('failedToFindDeployment', 'Failed to get status of deployment.'));
         }
+
         let logEntries: LogEntry[] = [];
-        try {
-            logEntries = await retry(
-                async (attempt: number) => {
-                    addAttemptTelemetry(context, 'getLogEntry', attempt);
+        await retry(
+            async (attempt: number) => {
+                addAttemptTelemetry(context, 'getLogEntry', attempt);
+                try {
                     // tslint:disable-next-line: no-non-null-assertion
-                    return <LogEntry[]>await kuduClient.deployment.getLogEntry(deployment!.id!);
-                },
-                retryOptions
-            );
-        } catch (error) {
-            const parsedError: IParsedError = parseError(error);
-            // Swallow 404 errors for a deployment while its still in the "temp" phase
-            // (We can't reliably get logs until the deployment has shifted to the "permanent" phase)
-            if (!deployment.isTemp || parsedError.errorType !== '404') {
-                throw error;
-            }
-        }
+                    logEntries = <LogEntry[]>await kuduClient.deployment.getLogEntry(deployment!.id!);
+                } catch (error) {
+                    const parsedError: IParsedError = parseError(error);
+                    // Swallow 404 errors for a deployment while its still in the "temp" phase
+                    // (We can't reliably get logs until the deployment has shifted to the "permanent" phase)
+                    // tslint:disable-next-line: no-non-null-assertion
+                    if (!deployment!.isTemp || parsedError.errorType !== '404') {
+                        throw error;
+                    }
+                }
+            },
+            retryOptions
+        );
 
         const newLogEntries: LogEntry[] = logEntries.filter((newEntry: LogEntry) => !alreadyDisplayedLogs.some((oldId: string) => newEntry.id === oldId));
         if (newLogEntries.length === 0) {
