@@ -132,10 +132,7 @@ async function validateLinuxFunctionAppSettings(context: IActionContext, client:
 
     let hasChanged: boolean = false;
 
-    const keysToRemove: string[] = [
-        'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING',
-        'WEBSITE_CONTENTSHARE'
-    ];
+    const keysToRemove: string[] = [];
 
     if (doBuild) {
         keysToRemove.push(

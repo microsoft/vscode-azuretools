@@ -49,7 +49,7 @@ export class SiteClient {
 
     private readonly _subscription: ISubscriptionContext;
 
-    private _cachedPlan: AppServicePlan | undefined;
+    private _cachedSku: string | undefined;
 
     constructor(site: Site, subscription: ISubscriptionContext) {
         let matches: RegExpMatchArray | null = nonNullProp(site, 'serverFarmId').match(/\/subscriptions\/(.*)\/resourceGroups\/(.*)\/providers\/Microsoft.Web\/serverfarms\/(.*)/);
@@ -89,14 +89,8 @@ export class SiteClient {
 
     public async getIsConsumption(): Promise<boolean> {
         if (this.isFunctionApp) {
-            try {
-                const asp: AppServicePlan | undefined = await this.getCachedAppServicePlan();
-                // Assume it's consumption if we can't get the plan (sometimes happens with brand new plans). Consumption is recommended and more popular
-                return !asp || !asp.sku || !asp.sku.tier || asp.sku.tier.toLowerCase() === 'dynamic';
-            } catch {
-                // Also assume it's consumption if we fail to get the plan (aka user doesn't have permissions for the plan)
-                return true;
-            }
+            const sku: string | undefined = await this.getCachedSku();
+            return !!sku && sku.toLowerCase() === 'dynamic';
         } else {
             return false;
         }
@@ -304,14 +298,18 @@ export class SiteClient {
     }
 
     /**
-     * To be used for better performance when checking something on the plan that doesn't change
+     * Temporary workaround because the azure sdk doesn't return the full site object from Azure
+     * Hopefully this can be removed when we move to the new sdk
+     * Also, we're caching the sku - for better performance and because it's unlikely to change
      */
-    private async getCachedAppServicePlan(): Promise<AppServicePlan | undefined> {
-        let result: AppServicePlan | undefined = this._cachedPlan;
-        if (!result) {
-            result = await this.getAppServicePlan();
+    private async getCachedSku(): Promise<string | undefined> {
+        if (!this._cachedSku) {
+            const urlPath: string = `${this.id}?api-version=2016-08-01`;
+            const request: requestUtils.Request = await requestUtils.getDefaultAzureRequest(urlPath, this._subscription);
+            const response: string = await requestUtils.sendRequest(request);
+            this._cachedSku = (<{ properties: { sku?: string } }>JSON.parse(response)).properties.sku;
         }
-        return result;
+        return this._cachedSku;
     }
 }
 
