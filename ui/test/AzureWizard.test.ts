@@ -263,7 +263,7 @@ class StepWithSubWizardAndNoPrompt extends AzureWizardPromptStep<ITestWizardCont
 }
 
 async function validateWizard(options: types.IWizardOptions<ITestWizardContext>, inputs: (string | TestInput)[], expectedContext: Partial<ITestWizardContext>): Promise<void> {
-    const context: ITestWizardContext = { telemetry: { properties: {}, measurements: {} }, errorHandling: {} };
+    const context: ITestWizardContext = { telemetry: { properties: {}, measurements: {} }, errorHandling: { issueProperties: {} } };
     // copy over properties/measurements
     Object.assign(expectedContext, context);
 

@@ -518,7 +518,6 @@ export interface ITelemetryContext {
      * Defaults to `false`. If true, all events are suppressed from telemetry.
      */
     suppressAll?: boolean;
-
 }
 
 export interface IErrorHandlingContext {
@@ -536,6 +535,11 @@ export interface IErrorHandlingContext {
      * Defaults to `false`. If true, does not show the "Report Issue" button in the error notification.
      */
     suppressReportIssue?: boolean;
+
+    /**
+     * Custom properties that will be included in any error reports generated during this action
+     */
+    issueProperties: { [key: string]: string | undefined };
 }
 
 export interface ITelemetryReporter {
@@ -1120,7 +1124,7 @@ export interface IAzExtOutputChannel extends OutputChannel {
  * Create a new AzExtOutputChannel with the given name and the extensionPrefix.
  *
  * @param name Human-readable string which will be used to represent the channel in the UI.
- * @param extensionPrefix The prefix used to associated the outputChannel with the extension
+ * @param extensionPrefix The configuration prefix for the extension, used to access the enableOutputTimestamps setting
  */
 export function createAzExtOutputChannel(name: string, extensionPrefix: string): IAzExtOutputChannel;
 

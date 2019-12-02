@@ -34,7 +34,8 @@ function initContext(): [number, IActionContext] {
         },
         errorHandling: {
             suppressDisplay: false,
-            rethrow: false
+            rethrow: false,
+            issueProperties: {}
         }
     };
     return [start, context];
@@ -103,7 +104,7 @@ function handleError(context: IActionContext, callbackId: string, error: unknown
         // don't wait
         window.showErrorMessage(message, ...items).then(async (result: MessageItem | undefined) => {
             if (result === DialogResponses.reportAnIssue) {
-                await reportAnIssue(callbackId, errorData);
+                await reportAnIssue(callbackId, errorData, context.errorHandling.issueProperties);
             }
         });
     }
