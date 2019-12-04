@@ -246,12 +246,6 @@ export class SiteClient {
             await this._client.webApps.listFunctionSecrets(this.resourceGroup, this.siteName, functionName);
     }
 
-    public async getFunctionsAdminToken(): Promise<string> {
-        return this.slotName ?
-            await this._client.webApps.getFunctionsAdminTokenSlot(this.resourceGroup, this.siteName, this.slotName) :
-            await this._client.webApps.getFunctionsAdminToken(this.resourceGroup, this.siteName);
-    }
-
     public async syncFunctionTriggers(): Promise<void> {
         try {
             this.slotName ?
