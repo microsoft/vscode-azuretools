@@ -21,7 +21,6 @@ export * from './deploy/getDeployFsPath';
 export * from './deploy/runPreDeployTask';
 export * from './editScmType';
 export { registerAppServiceExtensionVariables } from './extensionVariables';
-export * from './functionsAdminRequest';
 export * from './getFile';
 export { IConnectToGitHubWizardContext } from './github/IConnectToGitHubWizardContext';
 export * from './pingFunctionApp';
