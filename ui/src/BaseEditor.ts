@@ -26,6 +26,7 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
     public abstract getFilename(context: ContextT): Promise<string>;
     public abstract getSaveConfirmationText(context: ContextT): Promise<string>;
     public abstract getSize(context: ContextT): Promise<number>;
+
     public async showEditor(context: ContextT, sizeLimit?: number /* in Megabytes */): Promise<void> {
         const fileName: string = await this.getFilename(context);
         this.appendLineToOutput(localize('opening', 'Opening "{0}"...', fileName));
@@ -89,7 +90,12 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
         this.appendLineToOutput(localize('updating', 'Updating "{0}" ...', filename));
         const updatedData: string = await this.updateData(context, doc.getText());
         this.appendLineToOutput(localize('done', 'Updated "{0}".', filename));
-        await this.updateEditor(updatedData, vscode.window.activeTextEditor);
+        if (doc.isClosed !== true) {
+            const visibleDocument: vscode.TextEditor | undefined = vscode.window.visibleTextEditors.find((ed) => ed.document === doc);
+            if (visibleDocument) {
+                await this.updateEditor(updatedData, visibleDocument);
+            }
+        }
     }
 
     private async updateEditor(data: string, textEditor?: vscode.TextEditor): Promise<void> {

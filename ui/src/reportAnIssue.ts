@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as assert from 'assert';
+import * as os from 'os';
 import * as vscode from 'vscode';
 import { IParsedError } from '../index';
 import { getPackageInfo } from "./getPackageInfo";
+import { localize } from './localize';
 import { openUrl } from './utils/openUrl';
-import { countLines, limitLines } from './utils/textStrings';
 
 // Some browsers don't have very long URLs
 // 2000 seems a reasonable number for most browsers,
@@ -18,74 +18,75 @@ export const maxUrlLength: number = 2000;
 /**
  * Used to open the browser to the "New Issue" page on GitHub with relevant context pre-filled in the issue body
  */
-export async function reportAnIssue(actionId: string, parsedError: IParsedError): Promise<void> {
-    const link: string = getReportAnIssueLink(actionId, parsedError);
+export async function reportAnIssue(actionId: string, parsedError: IParsedError, issueProperties: { [key: string]: string | undefined }): Promise<void> {
+    const link: string = await getReportAnIssueLink(actionId, parsedError, issueProperties);
     await openUrl(link);
 }
 
-export function getReportAnIssueLink(actionId: string, parsedError: IParsedError): string {
-    const { extensionName, extensionVersion, bugsUrl } = getPackageInfo();
-
+export async function getReportAnIssueLink(actionId: string, parsedError: IParsedError, issueProperties: { [key: string]: string | undefined }): Promise<string> {
     // tslint:disable-next-line: strict-boolean-expressions
     const stack: string = (parsedError.stack || '').replace(/\r\n/g, '\n');
 
-    // Try repeatedly with fewer lines of stack until we have a URL under the limit
-    for (let stackLines: number = countLines(stack); stackLines >= 0; stackLines -= 1) {
-        const url: string = createLink(stackLines, parsedError.message);
-        if (url.length <= maxUrlLength) {
-            return url;
-        }
-    }
+    return await createNewIssueLink(actionId, parsedError, stack, issueProperties);
+}
 
-    // If it's still too long, shorten the message;
-    const urlWithNoStack: string = createLink(0, parsedError.message);
-    const ellipses: string = '...';
-    const reduceByChars: number = urlWithNoStack.length - maxUrlLength + ellipses.length;
-    let shortMessageLength: number = parsedError.message.length - reduceByChars;
+async function createNewIssueLink(actionId: string, parsedError: IParsedError, stack: string, issueProperties: { [key: string]: string | undefined }): Promise<string> {
+    const { extensionVersion } = getPackageInfo();
 
-    // Since the link can increase the size of a message because of encoding, it's slightly possible that reduceByChars could overestimate
-    // the number of characters to reduce by, giving us a negative message length
-    shortMessageLength = Math.max(20, shortMessageLength); // (Assumes the boilerplate in the body has room for at least 20 encoded characters of message, which should be true)
+    let body: string = `
+<!-- ${localize('reportIssue_removePrivateInfo', "IMPORTANT: Please be sure to remove any private information before submitting.")} -->
 
-    const shortMessage: string = `${parsedError.message.slice(0, shortMessageLength)}${ellipses}`;
-    const shortLink: string = createLink(0, shortMessage);
-    assert(shortLink.length <= maxUrlLength);
-    return shortLink;
-
-    function createLink(stackLines: number, message: string): string {
-        let body: string = `
-<!-- IMPORTANT: Please be sure to remove any private information before submitting. -->
-
+${localize('reportIssue_isItConsistent', "Does this occur consistently? <!-- TODO: Type Yes or No -->")}
 Repro steps:
-<!-- TODO: Enter steps to reproduce issue -->
+<!-- ${localize('reportIssue_enterReproSteps', "TODO: Share the steps needed to reliably reproduce the problem. Please include actual and expected results.")} -->
 
 1.
 2.
 
 Action: ${actionId}
 Error type: ${parsedError.errorType}
-Error Message: ${message}
+Error Message: ${parsedError.message}
 
 Version: ${extensionVersion}
 OS: ${process.platform}
+OS Release: ${os.release()}
 Product: ${vscode.env.appName}
 Product Version: ${vscode.version}
 Language: ${vscode.env.language}`;
 
-        if (stack && stackLines > 0) {
-            body = body.concat(`
+    // Add stack and any custom issue properties as individual details
+    const details: { [key: string]: string | undefined } = Object.assign({}, stack ? { 'Call Stack': stack } : {}, issueProperties); // Don't localize call stack
+    for (const propName of Object.getOwnPropertyNames(details)) {
+        const value: string | undefined = details[propName];
+        body += createBodyDetail(propName, String(value));
+    }
+
+    const simpleLink: string = createNewIssueLinkFromBody(body);
+    if (simpleLink.length <= maxUrlLength) {
+        return simpleLink;
+    }
+
+    // If it's too long, paste it to the clipboard
+    await vscode.env.clipboard.writeText(body);
+    return createNewIssueLinkFromBody(localize('pasteIssue', "The issue text was copied to the clipboard.  Please paste it into this window."));
+}
+
+function createNewIssueLinkFromBody(issueBody: string): string {
+    const { extensionName, bugsUrl } = getPackageInfo();
+    const baseUrl: string = bugsUrl || `https://github.com/Microsoft/${extensionName}/issues`;
+    return `${baseUrl}/new?body=${encodeURIComponent(issueBody)}`;
+}
+
+function createBodyDetail(detailName: string, detail: string): string {
+    return `
 
 <details>
-<summary>Call Stack</summary>
+<summary>${detailName}</summary>
 
 \`\`\`
-${limitLines(stack, stackLines)}
+${detail}
 \`\`\`
 
-</details>`);
-        }
-
-        const baseUrl: string = bugsUrl || `https://github.com/Microsoft/${extensionName}/issues`;
-        return `${baseUrl}/new?body=${encodeURIComponent(body)}`;
-    }
+</details>
+`;
 }

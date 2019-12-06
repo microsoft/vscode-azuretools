@@ -19,21 +19,7 @@ type ApplicationStackJsonResponse = {
 
 export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
-        if (wizardContext.newSiteKind === AppKind.functionapp) {
-            const runtimeItems: IAzureQuickPickItem<string>[] = [
-                { label: 'JavaScript', data: 'node' },
-                { label: '.NET', data: 'dotnet' }
-            ];
-
-            if (wizardContext.newSiteOS === WebsiteOS.linux) {
-                runtimeItems.push({ label: 'Python', data: 'python' });
-            } else {
-                runtimeItems.push({ label: 'Java', data: 'java' });
-                runtimeItems.push({ label: 'PowerShell', data: 'powershell' });
-            }
-
-            wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(runtimeItems, { placeHolder: 'Select a runtime for your new app.' })).data;
-        } else if (wizardContext.newSiteOS === WebsiteOS.linux) {
+        if (wizardContext.newSiteOS === WebsiteOS.linux) {
             wizardContext.newSiteRuntime = (await ext.ui.showQuickPick(
                 this.getLinuxRuntimeStack(wizardContext).then(stacks => convertStacksToPicks(stacks, wizardContext.recommendedSiteRuntime)),
                 { placeHolder: 'Select a runtime for your new Linux app.' })

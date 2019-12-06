@@ -4,7 +4,6 @@ jobs:
     vmImage: VS2017-Win2016
   steps:
   - template: job-steps.yml
-  - template: intellinav.yml
 
 - job: Linux
   pool:

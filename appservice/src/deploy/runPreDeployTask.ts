@@ -24,8 +24,8 @@ export async function tryRunPreDeployTask(context: IActionContext, deployFsPath:
     const taskName: string | undefined = vscode.workspace.getConfiguration(ext.prefix, vscode.Uri.file(deployFsPath)).get(preDeployTaskKey);
     context.telemetry.properties.hasPreDeployTask = String(!!taskName);
 
-    let failedToFindTask: boolean = false;
-    let exitCode: number | undefined;
+    let preDeployTaskResult: IPreDeployTaskResult = { taskName, exitCode: undefined, failedToFindTask: false };
+
     if (taskName) {
         if (scmType === ScmType.LocalGit || scmType === ScmType.GitHub) {
             // We don't run pre deploy tasks for non-zipdeploy since that stuff should be handled by kudu
@@ -41,20 +41,16 @@ export async function tryRunPreDeployTask(context: IActionContext, deployFsPath:
                 const progressMessage: string = localize('runningTask', 'Running preDeployTask "{0}"...', taskName);
                 await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: progressMessage }, async () => {
                     await vscode.tasks.executeTask(preDeployTask);
-                    exitCode = await waitForPreDeployTask(preDeployTask);
-                    context.telemetry.properties.preDeployTaskExitCode = String(exitCode);
+                    preDeployTaskResult = await waitForPreDeployTask(preDeployTask, deployFsPath);
+                    context.telemetry.properties.preDeployTaskExitCode = String(preDeployTaskResult.exitCode);
                 });
             } else {
-                failedToFindTask = true;
+                preDeployTaskResult.failedToFindTask = true;
             }
         }
     }
 
-    return {
-        failedToFindTask,
-        exitCode,
-        taskName
-    };
+    return preDeployTaskResult;
 }
 
 export interface IPreDeployTaskResult {
@@ -72,12 +68,28 @@ function isTaskEqual(expectedName: string, expectedPath: string, actualTask: vsc
     }
 }
 
-async function waitForPreDeployTask(preDeployTask: vscode.Task): Promise<number> {
-    return await new Promise((resolve: (exitCode: number) => void): void => {
-        const listener: vscode.Disposable = vscode.tasks.onDidEndTaskProcess((e: vscode.TaskProcessEndEvent) => {
+function isScopeEqual(task: vscode.Task, workspaceFsPath: string): boolean {
+    if (typeof task.scope === 'object') {
+        const workspaceFolder: Partial<vscode.WorkspaceFolder> = task.scope;
+        return !!workspaceFolder.uri && (isPathEqual(workspaceFolder.uri.fsPath, workspaceFsPath) || isSubpath(workspaceFolder.uri.fsPath, workspaceFsPath));
+    } else {
+        return false;
+    }
+}
+
+async function waitForPreDeployTask(preDeployTask: vscode.Task, deployFsPath: string): Promise<IPreDeployTaskResult> {
+    return await new Promise((resolve: (preDeployTaskResult: IPreDeployTaskResult) => void): void => {
+        const errorListener: vscode.Disposable = vscode.tasks.onDidEndTaskProcess((e: vscode.TaskProcessEndEvent) => {
+            if (isScopeEqual(e.execution.task, deployFsPath) && e.exitCode !== 0) {
+                // Throw if _any_ task fails since preDeployTasks can depend on other tasks)
+                errorListener.dispose();
+                resolve({ taskName: e.execution.task.name, exitCode: e.exitCode, failedToFindTask: false });
+            }
+
+            // this is the actual preDeployTask that we are waiting on
             if (e.execution.task === preDeployTask) {
-                listener.dispose();
-                resolve(e.exitCode);
+                errorListener.dispose();
+                resolve({ taskName: e.execution.task.name, exitCode: e.exitCode, failedToFindTask: false });
             }
         });
     });
