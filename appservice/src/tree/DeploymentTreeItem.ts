@@ -44,7 +44,7 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         this._deployResult = deployResult;
         this.receivedTime = nonNullProp(deployResult, 'receivedTime');
         let message: string = nonNullProp(deployResult, 'message');
-        message = this.getFirstLine(message);
+        message = this.getDeploymentMessage(message);
         if (message.length > 50) { /* truncate long messages and add "..." */
             message = `${message.substring(0, 50)}...`;
         }
@@ -153,6 +153,15 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
             return `${logEntry.logTime.toISOString()} - ${logEntry.message}${os.EOL}`;
         } else {
             return '';
+        }
+    }
+
+    private getDeploymentMessage(message: string): string {
+        try {
+            const messageJSON = JSON.parse(message);
+            return (!!messageJSON && !!messageJSON.message) ? this.getFirstLine(messageJSON.message) : this.getFirstLine(message);
+        } catch {
+            return this.getFirstLine(message);
         }
     }
 
