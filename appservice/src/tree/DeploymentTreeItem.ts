@@ -158,8 +158,8 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
 
     private getDeploymentMessage(message: string): string {
         try {
-            const messageJSON = JSON.parse(message);
-            return (!!messageJSON && !!messageJSON.message) ? this.getFirstLine(messageJSON.message) : this.getFirstLine(message);
+            const messageJSON: { message?: string } = <{ message?: string }>JSON.parse(message);
+            return !!messageJSON.message ? this.getFirstLine(messageJSON.message) : this.getFirstLine(message);
         } catch {
             return this.getFirstLine(message);
         }
