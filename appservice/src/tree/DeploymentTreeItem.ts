@@ -43,11 +43,7 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         this.contextValue = `deployment/${scmType}`.toLocaleLowerCase();
         this._deployResult = deployResult;
         this.receivedTime = nonNullProp(deployResult, 'receivedTime');
-        let message: string = nonNullProp(deployResult, 'message');
-        message = this.getDeploymentMessage(message);
-        if (message.length > 50) { /* truncate long messages and add "..." */
-            message = `${message.substring(0, 50)}...`;
-        }
+        const message: string = this.getDeploymentMessage(deployResult);
         this.label = `${this.id.substring(0, 7)} - ${message}`;
     }
 
@@ -156,13 +152,19 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         }
     }
 
-    private getDeploymentMessage(message: string): string {
+    private getDeploymentMessage(deployResult: DeployResult): string {
+        let message: string = nonNullProp(deployResult, 'message');
         try {
             const messageJSON: { message?: string } = <{ message?: string }>JSON.parse(message);
-            return !!messageJSON.message ? this.getFirstLine(messageJSON.message) : this.getFirstLine(message);
+            if (!!messageJSON.message) {
+                message = messageJSON.message;
+            }
         } catch {
-            return this.getFirstLine(message);
+            // Ignore and assume message was not in JSON format
         }
+        const firstLine: string = this.getFirstLine(message);
+        /* truncate long messages and add "..." */
+        return firstLine.length > 50 ? `${firstLine.substring(0, 50)}...` : firstLine;
     }
 
     private getFirstLine(message: string): string {
