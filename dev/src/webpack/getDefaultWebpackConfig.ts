@@ -106,7 +106,10 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
 
                         // Don't mangle class names.  Otherwise parseError() will not recognize user cancelled errors (because their constructor name
                         // will match the mangled name, not UserCancelledError).  Also makes debugging easier in minified code.
-                        keep_classnames: true
+                        keep_classnames: true,
+
+                        // Don't mangle function names. https://github.com/microsoft/vscode-azurestorage/issues/525
+                        keep_fnames: true
                     }
                 })
             ]
