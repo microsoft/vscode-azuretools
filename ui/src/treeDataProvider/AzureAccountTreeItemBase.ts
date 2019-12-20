@@ -36,9 +36,11 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
 
     private _azureAccountTask: Promise<AzureAccount | undefined>;
     private _subscriptionTreeItems: SubscriptionTreeItemBase[] | undefined;
+    private _testAccount: AzureAccount | undefined;
 
     constructor(parent?: AzExtParentTreeItem, testAccount?: AzureAccount) {
         super(parent);
+        this._testAccount = testAccount;
         this._azureAccountTask = this.loadAzureAccount(testAccount);
     }
 
@@ -59,7 +61,13 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
     }
 
     public async loadMoreChildrenImpl(_clearCache: boolean, context: types.IActionContext): Promise<AzExtTreeItem[]> {
-        const azureAccount: AzureAccount | undefined = await this._azureAccountTask;
+        let azureAccount: AzureAccount | undefined = await this._azureAccountTask;
+        if (!azureAccount) {
+            // Refresh the AzureAccount, to handle Azure account extension installation after the previous refresh
+            this._azureAccountTask = this.loadAzureAccount(this._testAccount);
+            azureAccount = await this._azureAccountTask;
+        }
+
         if (!azureAccount) {
             context.telemetry.properties.accountStatus = 'notInstalled';
             const label: string = localize('installAzureAccount', 'Install Azure Account Extension...');
