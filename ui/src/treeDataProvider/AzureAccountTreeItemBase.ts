@@ -61,9 +61,13 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
     }
 
     public async loadMoreChildrenImpl(_clearCache: boolean, context: types.IActionContext): Promise<AzExtTreeItem[]> {
-        // Refresh the AzureAccount, to handle the Azure account extension installed/uninstalled between refreshes
-        this._azureAccountTask = this.loadAzureAccount(this._testAccount);
-        const azureAccount: AzureAccount | undefined = await this._azureAccountTask;
+        let azureAccount: AzureAccount | undefined = await this._azureAccountTask;
+        if (!azureAccount) {
+            // Refresh the AzureAccount, to handle Azure account extension installation after the previous refresh
+            this._azureAccountTask = this.loadAzureAccount(this._testAccount);
+            azureAccount = await this._azureAccountTask;
+        }
+
         if (!azureAccount) {
             context.telemetry.properties.accountStatus = 'notInstalled';
             const label: string = localize('installAzureAccount', 'Install Azure Account Extension...');
