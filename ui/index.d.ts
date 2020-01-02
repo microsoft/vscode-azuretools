@@ -8,7 +8,7 @@ import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { StorageAccount } from 'azure-arm-storage/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment, AzureServiceClientOptions } from 'ms-rest-azure';
-import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri, ViewColumn } from 'vscode';
+import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri } from 'vscode';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 
 export type OpenInPortalOptions = {
@@ -65,11 +65,11 @@ export declare class AzExtTreeDataProvider implements TreeDataProvider<AzExtTree
     public showTreeItemPicker<T extends AzExtTreeItem>(expectedContextValues: string | RegExp | (string | RegExp)[], context: ITreeItemPickerContext, startingTreeItem?: AzExtTreeItem): Promise<T>;
 
     /**
-     * Traverses a tree to find a node matching the given fullId of a tree item. This will not "Load more..."
+     * Traverses a tree to find a node matching the given fullId of a tree item
      * @param fullId The full ID of the tree item
      * @param context The action context
      */
-    public findTreeItem<T extends AzExtTreeItem>(fullId: string, context: IActionContext): Promise<T | undefined>;
+    public findTreeItem<T extends AzExtTreeItem>(fullId: string, context: IFindTreeItemContext): Promise<T | undefined>;
 
     /**
      * Optional method to return the parent of `element`.
@@ -81,6 +81,26 @@ export declare class AzExtTreeDataProvider implements TreeDataProvider<AzExtTree
      * @return Parent of `element`.
      */
     public getParent(treeItem: AzExtTreeItem): Promise<AzExtTreeItem | undefined>;
+}
+
+export interface ILoadingTreeContext extends IActionContext {
+    /**
+     * A custom message to overwrite the default message while loading
+     */
+    loadingMessage?: string;
+
+    /**
+     * Number of seconds to delay before showing the progress message (default is 2)
+     * This is meant to avoid flashing a progress message in cases where it takes less than 2 seconds to load everything
+     */
+    loadingMessageDelay?: number;
+}
+
+export interface IFindTreeItemContext extends ILoadingTreeContext {
+    /**
+     * If true, this will load all children when searching for the tree item
+     */
+    loadAll?: boolean;
 }
 
 export interface ITreeItemPickerContext extends IActionContext {
@@ -340,6 +360,12 @@ export declare abstract class AzExtParentTreeItem extends AzExtTreeItem {
      * @param context The action context
      */
     getCachedChildren(context: IActionContext): Promise<AzExtTreeItem[]>;
+
+    /**
+     * Loads all children and displays a progress notification allowing the user to cancel.
+     * @throws `UserCancelledError` if the user cancels.
+     */
+    loadAllChildren(context: ILoadingTreeContext): Promise<AzExtTreeItem[]>;
 }
 
 export interface ICreateChildImplContext extends IActionContext {

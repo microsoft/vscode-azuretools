@@ -6,7 +6,7 @@
 import { isNullOrUndefined } from 'util';
 import { commands, TreeItemCollapsibleState } from 'vscode';
 import * as types from '../../index';
-import { NotImplementedError } from '../errors';
+import { NotImplementedError, UserCancelledError } from '../errors';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { randomUtils } from '../utils/randomUtils';
@@ -14,6 +14,7 @@ import { AzExtTreeItem } from './AzExtTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';
 import { getThemedIconPath } from './IconPath';
 import { IAzExtParentTreeItemInternal, isAzExtParentTreeItem } from './InternalInterfaces';
+import { runWithLoadingNotification } from './runWithLoadingNotification';
 import { loadMoreLabel } from './treeConstants';
 
 // tslint:disable: max-classes-per-file
@@ -171,6 +172,22 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         }
     }
 
+    public async loadAllChildren(context: types.ILoadingTreeContext): Promise<AzExtTreeItem[]> {
+        context.loadingMessage = context.loadingMessage || localize('loadingTreeItem', 'Loading "{0}"...', this.label);
+        await runWithLoadingNotification(context, async (cancellationToken) => {
+            do {
+                if (cancellationToken.isCancellationRequested) {
+                    context.telemetry.properties.cancelStep = 'loadAllChildren';
+                    throw new UserCancelledError();
+                }
+
+                await this.loadMoreChildren(context);
+            } while (this.hasMoreChildrenImpl());
+        });
+
+        return this._cachedChildren;
+    }
+
     public async createTreeItemsWithErrorHandling<TSource>(
         sourceArray: TSource[] | undefined | null,
         invalidContextValue: string,
@@ -230,19 +247,30 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
     }
 
     private async loadMoreChildrenInternal(context: types.IActionContext): Promise<void> {
-        if (this._clearCache) {
-            // Just in case implementers of `loadMoreChildrenImpl` re-use the same child node, we want to clear those caches as well
-            for (const child of this._cachedChildren) {
-                if (isAzExtParentTreeItem(child)) {
-                    (<AzExtParentTreeItem>child).clearCache();
-                }
-            }
-            this._cachedChildren = [];
-        }
+        this._isLoadingMore = true;
+        try {
+            this.treeDataProvider.refreshUIOnly(this);
 
-        const newTreeItems: AzExtTreeItem[] = await this.loadMoreChildrenImpl(this._clearCache, context);
-        this._cachedChildren = this._cachedChildren.concat(newTreeItems).sort((ti1, ti2) => this.compareChildrenImpl(ti1, ti2));
-        this._clearCache = false;
+            if (this._clearCache) {
+                // Just in case implementers of `loadMoreChildrenImpl` re-use the same child node, we want to clear those caches as well
+                for (const child of this._cachedChildren) {
+                    if (isAzExtParentTreeItem(child)) {
+                        (<AzExtParentTreeItem>child).clearCache();
+                    }
+                }
+                this._cachedChildren = [];
+            } else if (!this.hasMoreChildrenImpl()) {
+                // No-op since all children are already loaded
+                return;
+            }
+
+            const newTreeItems: AzExtTreeItem[] = await this.loadMoreChildrenImpl(this._clearCache, context);
+            this._cachedChildren = this._cachedChildren.concat(newTreeItems).sort((ti1, ti2) => this.compareChildrenImpl(ti1, ti2));
+            this._clearCache = false;
+        } finally {
+            this._isLoadingMore = false;
+            this.treeDataProvider.refreshUIOnly(this);
+        }
     }
 
     private async getQuickPicks(expectedContextValues: (string | RegExp)[], context: types.ITreeItemPickerContext & Partial<types.ICreateChildImplContext>): Promise<types.IAzureQuickPickItem<GetTreeItemFunction>[]> {
