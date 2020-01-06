@@ -70,18 +70,19 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
 
             let creatingTreeItem: AzExtTreeItem | undefined;
             try {
-                const newTreeItem: AzExtTreeItem = await this.createChildImpl({
-                    ...context,
-                    showCreatingTreeItem: (label: string): void => {
-                        creatingTreeItem = new GenericTreeItem(this, {
-                            label: localize('creatingLabel', 'Creating {0}...', label),
-                            contextValue: `azureextensionui.creating${label}`,
-                            iconPath: getThemedIconPath('Loading')
-                        });
-                        this._creatingTreeItems.push(creatingTreeItem);
-                        this.treeDataProvider.refreshUIOnly(this);
-                    }
-                });
+                const newTreeItem: AzExtTreeItem = await this.createChildImpl(
+                    Object.assign(context, {
+                        showCreatingTreeItem: (label: string): void => {
+                            creatingTreeItem = new GenericTreeItem(this, {
+                                label: localize('creatingLabel', 'Creating {0}...', label),
+                                contextValue: `azureextensionui.creating${label}`,
+                                iconPath: getThemedIconPath('Loading')
+                            });
+                            this._creatingTreeItems.push(creatingTreeItem);
+                            this.treeDataProvider.refreshUIOnly(this);
+                        }
+                    })
+                );
 
                 this.addChildToCache(newTreeItem);
                 this.treeDataProvider._onTreeItemCreateEmitter.fire(newTreeItem);
@@ -315,7 +316,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
                 picks.unshift({
                     label: `$(plus) ${createNewLabel}`,
                     description: localize('advanced', 'Advanced'),
-                    data: async (): Promise<AzExtTreeItem> => await this.createChild<AzExtTreeItem>({ ...context, advancedCreation: true })
+                    data: async (): Promise<AzExtTreeItem> => await this.createChild<AzExtTreeItem>(Object.assign(context, { advancedCreation: true }))
                 });
             }
 
