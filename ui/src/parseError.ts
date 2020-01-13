@@ -54,6 +54,10 @@ export function parseError(error: any): IParsedError {
         errorType = getCode(parsedMessage, errorType);
         message = getMessage(parsedMessage, message);
 
+        // Azure storage SDK errors are presented in XML
+        // https://github.com/Azure/azure-sdk-for-js/issues/6927
+        message = parseIfXml(message);
+
         message = message || convertCodeToError(errorType) || JSON.stringify(error);
     } else if (error !== undefined && error !== null && error.toString && error.toString().trim() !== '') {
         errorType = typeof (error);
@@ -105,6 +109,19 @@ function parseIfHtml(message: string): string {
     if (/<html/i.test(message)) {
         try {
             return htmlToText.fromString(message, { wordwrap: false, uppercaseHeadings: false, ignoreImage: true });
+        } catch (err) {
+            // ignore
+        }
+    }
+
+    return message;
+}
+
+function parseIfXml(message: string): string {
+    const matches: RegExpMatchArray | null = message.match(/<\?xml.*<Message>(.*)/);
+    if (matches) {
+        try {
+            return matches[1];
         } catch (err) {
             // ignore
         }
