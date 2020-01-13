@@ -639,4 +639,30 @@ You do not have permission to view this directory or page using the credentials 
         assert.strictEqual(pe.message, 'Incorrect authentication credentials.');
         assert.strictEqual(pe.isUserCancelledError, false);
     });
+
+    test('XML errors', () => {
+        const err1: {} = {
+            statusCode: 409,
+            message: `<?xml version="1.0" encoding="utf-8"?><Error><Code>ContainerBeingDeleted</Code><Message>The specified container is being deleted. Try operation later.
+RequestId:35eae91c-a01e-0010-1b5c-ca2979000000
+Time:2020-01-13T21:57:13.6831007Z</Message></Error>`
+        };
+        const pe1: IParsedError = parseError(err1);
+
+        assert.strictEqual(pe1.errorType, '409');
+        assert.strictEqual(pe1.message, 'The specified container is being deleted. Try operation later.');
+        assert.strictEqual(pe1.isUserCancelledError, false);
+
+        const err2: {} = {
+            statusCode: 412,
+            message: `<?xml version="1.0" encoding="utf-8"?><Error><Code>LeaseIdMissing</Code><Message>There is currently a lease on the blob and no lease ID was specified in the request.
+RequestId:2392b993-901e-0018-625e-ca320a000000
+Time:2020-01-13T22:08:56.4055648Z</Message></Error>`
+        };
+        const pe2: IParsedError = parseError(err2);
+
+        assert.strictEqual(pe2.errorType, '412');
+        assert.strictEqual(pe2.message, 'There is currently a lease on the blob and no lease ID was specified in the request.');
+        assert.strictEqual(pe2.isUserCancelledError, false);
+    });
 });
