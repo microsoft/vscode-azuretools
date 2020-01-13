@@ -120,11 +120,7 @@ function parseIfHtml(message: string): string {
 function parseIfXml(message: string): string {
     const matches: RegExpMatchArray | null = message.match(/<\?xml.*<Message>(.*)/);
     if (matches) {
-        try {
-            return matches[1];
-        } catch (err) {
-            // ignore
-        }
+        return matches[1];
     }
 
     return message;
