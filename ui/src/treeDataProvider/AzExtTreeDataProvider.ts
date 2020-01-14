@@ -6,6 +6,7 @@
 import { Event, EventEmitter, TreeItem } from 'vscode';
 import * as types from '../../index';
 import { callWithTelemetryAndErrorHandling } from '../callWithTelemetryAndErrorHandling';
+import { NoResouceFoundError } from '../errors';
 import { localize } from '../localize';
 import { parseError } from '../parseError';
 import { AzExtParentTreeItem } from './AzExtParentTreeItem';
@@ -145,7 +146,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                     treeItem = pickedItems;
                 }
             } else {
-                throw new Error(localize('noResourcesError', 'No matching resources found.'));
+                throw new NoResouceFoundError();
             }
         }
 

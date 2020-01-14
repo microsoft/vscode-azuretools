@@ -19,7 +19,8 @@ suite('getReportAnIssueLink', () => {
             errorType: 'error Type',
             isUserCancelledError: false,
             message: message,
-            stack: createStack(1)
+            stack: createStack(1),
+            suppressReportIssue: false
         };
 
         const link: string = await getReportAnIssueLink('actionId', pe, {});
@@ -39,7 +40,8 @@ suite('getReportAnIssueLink', () => {
             errorType: 'error Type',
             isUserCancelledError: false,
             message: message,
-            stack: createStack(maxUrlLength) // definitely too long :-)
+            stack: createStack(maxUrlLength), // definitely too long :-)
+            suppressReportIssue: false
         };
 
         const link: string = await getReportAnIssueLink('actionId', pe, {}/*asdf*/);
@@ -60,7 +62,8 @@ suite('getReportAnIssueLink', () => {
             errorType: 'error Type',
             isUserCancelledError: false,
             message: message,
-            stack: undefined
+            stack: undefined,
+            suppressReportIssue: false
         };
 
         const link: string = await getReportAnIssueLink('actionId', pe, {});
@@ -79,7 +82,8 @@ suite('getReportAnIssueLink', () => {
                 errorType: 'error Type',
                 isUserCancelledError: false,
                 message: message,
-                stack: undefined
+                stack: undefined,
+                suppressReportIssue: false
             };
 
             const link: string = await getReportAnIssueLink('actionId', pe, { property1: "Property #1" });
@@ -94,7 +98,8 @@ suite('getReportAnIssueLink', () => {
                 errorType: 'error Type',
                 isUserCancelledError: false,
                 message: message,
-                stack: undefined
+                stack: undefined,
+                suppressReportIssue: false
             };
 
             const link: string = await getReportAnIssueLink('actionId', pe, { property1: "Property #1", property2: "Property #2" });
@@ -111,7 +116,8 @@ suite('getReportAnIssueLink', () => {
                 errorType: 'error Type',
                 isUserCancelledError: false,
                 message: message,
-                stack: createStack(1)
+                stack: createStack(1),
+                suppressReportIssue: false
             };
 
             const link: string = await getReportAnIssueLink('actionId', pe, { property1: "Property #1", property2: "Property #2" });
