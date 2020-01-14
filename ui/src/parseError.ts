@@ -118,7 +118,7 @@ function parseIfHtml(message: string): string {
 }
 
 function parseIfXml(message: string): string {
-    const matches: RegExpMatchArray | null = message.match(/<\?xml.*<Message>(.*)/);
+    const matches: RegExpMatchArray | null = message.match(/<\?xml.*<Message>(.*\nRequestId:.*\nTime:.*)<\/Message>/);
     if (matches) {
         return matches[1];
     }
