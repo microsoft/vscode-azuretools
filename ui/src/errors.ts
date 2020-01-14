@@ -16,7 +16,7 @@ export class AzureToolsError extends Error {
 
 export class UserCancelledError extends AzureToolsError {
     constructor() {
-        super(localize('userCancelledError', 'Operation cancelled1.'));
+        super(localize('userCancelledError', 'Operation cancelled.'));
         this.suppressDisplay = true;
         this.suppressReportIssue = true;
     }
