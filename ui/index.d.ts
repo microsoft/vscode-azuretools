@@ -583,7 +583,7 @@ export interface IParsedError {
     message: string;
     stack?: string;
     isUserCancelledError: boolean;
-    suppressReportIssue: boolean;
+    actionContext?: Partial<IActionContext>;
 }
 
 /**

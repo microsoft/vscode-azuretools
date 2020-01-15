@@ -69,12 +69,7 @@ export async function callWithTelemetryAndErrorHandling<T>(callbackId: string, c
 
 function handleError(context: IActionContext, callbackId: string, error: unknown): void {
     const errorData: IParsedError = parseError(error);
-
-    // First honor the settings from the context, which could be set by the callback that
-    // performs the action. Then use the value from the error.
-    if (context.errorHandling.suppressReportIssue === undefined) {
-        context.errorHandling.suppressReportIssue = errorData.suppressReportIssue;
-    }
+    context = { ...context, ...errorData.actionContext };
 
     if (errorData.isUserCancelledError) {
         context.telemetry.properties.result = 'Canceled';
