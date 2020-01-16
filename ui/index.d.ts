@@ -94,6 +94,11 @@ export interface ITreeItemPickerContext extends IActionContext {
      * For example, this could be used when the command deletes a tree item.
      */
     suppressCreatePick?: boolean;
+
+    /**
+     * When no item is available for user to pick, this message will be displayed in the error notification.
+     */
+    noItemFoundErrorMessage?: string;
 }
 
 /**
@@ -583,7 +588,6 @@ export interface IParsedError {
     message: string;
     stack?: string;
     isUserCancelledError: boolean;
-    actionContext?: Partial<IActionContext>;
 }
 
 /**

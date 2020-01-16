@@ -4,8 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as htmlToText from 'html-to-text';
-import { IActionContext, IParsedError } from '../index';
-import { OverwriteActionContextError } from './errors';
+import { IParsedError } from '../index';
 import { localize } from './localize';
 
 // tslint:disable:no-unsafe-any
@@ -69,19 +68,13 @@ export function parseError(error: any): IParsedError {
 
     message = parseIfHtml(message);
 
-    let actionContext: Partial<IActionContext> | undefined;
-    if (error instanceof OverwriteActionContextError) {
-        actionContext = (<OverwriteActionContextError>error).actionContext;
-    }
-
     return {
         errorType: errorType,
         message: message,
         stack: stack,
         // NOTE: Intentionally not using 'error instanceof UserCancelledError' because that doesn't work if multiple versions of the UI package are used in one extension
         // See https://github.com/Microsoft/vscode-azuretools/issues/51 for more info
-        isUserCancelledError: errorType === 'UserCancelledError',
-        actionContext: actionContext
+        isUserCancelledError: errorType === 'UserCancelledError'
     };
 }
 

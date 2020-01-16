@@ -7,48 +7,34 @@ import { IActionContext } from "..";
 import { localize } from "./localize";
 
 // tslint:disable: max-classes-per-file
-export class OverwriteActionContextError extends Error {
-    public actionContext?: Partial<IActionContext>;
 
-    constructor(message?: string, actionContext?: Partial<IActionContext>) {
-        super(message);
-        this.actionContext = actionContext;
-    }
-}
-
-export class UserCancelledError extends OverwriteActionContextError {
+export class UserCancelledError extends Error {
     constructor() {
-        const context: Partial<IActionContext> = {
-            errorHandling: {
-                suppressDisplay: true,
-                suppressReportIssue: true,
-                issueProperties: {}
-            }
-        };
-        super(localize('userCancelledError', 'Operation cancelled.'), context);
+        super(localize('userCancelledError', 'Operation cancelled.'));
     }
 }
 
-export class GoBackError extends OverwriteActionContextError {
+export class GoBackError extends Error {
     constructor() {
         super(localize('backError', 'Go back.'));
     }
 }
 
-export class NotImplementedError extends OverwriteActionContextError {
+export class NotImplementedError extends Error {
     constructor(methodName: string, obj: object) {
         super(localize('notImplementedError', '"{0}" is not implemented on "{1}".', methodName, obj.constructor.name));
     }
 }
 
-export class NoResouceFoundError extends OverwriteActionContextError {
-    constructor() {
-        const context: Partial<IActionContext> = {
-            errorHandling: {
-                suppressReportIssue: true,
-                issueProperties: {}
+export class NoResouceFoundError extends Error {
+    constructor(errorMessage?: string, context?: IActionContext) {
+        if (errorMessage) {
+            super(errorMessage);
+            if (context) {
+                context.errorHandling.suppressReportIssue = true;
             }
-        };
-        super(localize('noResourcesError', 'No matching resources found.'), context);
+        } else {
+            super(localize('noResourcesError', 'No matching resources found.'));
+        }
     }
 }

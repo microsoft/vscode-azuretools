@@ -309,7 +309,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         }
 
         if (picks.length === 0) {
-            throw new NoResouceFoundError();
+            throw new NoResouceFoundError(context.noItemFoundErrorMessage, context);
         } else if (picks.length === 1 && autoSelectInTreeItemPicker) {
             throw new AutoSelectError(picks[0].data);
         } else if (context.canPickMany && children.some(c => c.matchesContextValue(expectedContextValues))) {

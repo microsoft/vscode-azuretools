@@ -69,8 +69,6 @@ export async function callWithTelemetryAndErrorHandling<T>(callbackId: string, c
 
 function handleError(context: IActionContext, callbackId: string, error: unknown): void {
     const errorData: IParsedError = parseError(error);
-    context = { ...context, ...errorData.actionContext };
-
     if (errorData.isUserCancelledError) {
         context.telemetry.properties.result = 'Canceled';
         context.errorHandling.suppressDisplay = true;
