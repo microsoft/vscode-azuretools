@@ -6,7 +6,7 @@
 import { Event, EventEmitter, TreeItem } from 'vscode';
 import * as types from '../../index';
 import { callWithTelemetryAndErrorHandling } from '../callWithTelemetryAndErrorHandling';
-import { NoResouceFoundError } from '../errors';
+import { NoResouceFoundError, UserCancelledError } from '../errors';
 import { localize } from '../localize';
 import { parseError } from '../parseError';
 import { AzExtParentTreeItem } from './AzExtParentTreeItem';
@@ -14,6 +14,7 @@ import { AzExtTreeItem } from './AzExtTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';
 import { getThemedIconPath } from './IconPath';
 import { IAzExtTreeDataProviderInternal, isAzExtParentTreeItem } from './InternalInterfaces';
+import { runWithLoadingNotification } from './runWithLoadingNotification';
 import { loadMoreLabel } from './treeConstants';
 
 export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, types.AzExtTreeDataProvider {
@@ -22,6 +23,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
 
     private readonly _loadMoreCommandId: string;
     private readonly _rootTreeItem: AzExtParentTreeItem;
+    private readonly _findTreeItemTasks: Map<string, Promise<types.AzExtTreeItem | undefined>> = new Map();
 
     constructor(rootTreeItem: AzExtParentTreeItem, loadMoreCommandId: string) {
         this._loadMoreCommandId = loadMoreCommandId;
@@ -116,14 +118,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
     }
 
     public async loadMore(treeItem: AzExtParentTreeItem, context: types.IActionContext): Promise<void> {
-        treeItem._isLoadingMore = true;
-        try {
-            this.refreshUIOnly(treeItem);
-            await treeItem.loadMoreChildren(context);
-        } finally {
-            treeItem._isLoadingMore = false;
-            this.refreshUIOnly(treeItem);
-        }
+        await treeItem.loadMoreChildren(context);
     }
 
     public async showTreeItemPicker<T extends types.AzExtTreeItem>(expectedContextValues: string | (string | RegExp)[] | RegExp, context: types.ITreeItemPickerContext & { canPickMany: true }, startingTreeItem?: AzExtTreeItem): Promise<T[]>;
@@ -153,30 +148,64 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         return <T><unknown>treeItem;
     }
 
-    public async findTreeItem<T extends types.AzExtTreeItem>(fullId: string, context: types.IActionContext): Promise<T | undefined> {
-        let treeItems: AzExtTreeItem[] = await this.getChildren();
-        let foundAncestor: boolean;
-
-        do {
-            foundAncestor = false;
-
-            for (const treeItem of treeItems) {
-                if (treeItem.fullId === fullId) {
-                    return <T><unknown>treeItem;
-                } else if (fullId.startsWith(`${treeItem.fullId}/`) && isAzExtParentTreeItem(treeItem)) {
-                    // Append '/' to 'treeItem.fullId' when checking 'startsWith' to ensure its actually an ancestor, rather than a treeItem at the same level that _happens_ to start with the same id
-                    // For example, two databases named 'test' and 'test1' as described in this issue: https://github.com/Microsoft/vscode-cosmosdb/issues/488
-                    treeItems = await (<AzExtParentTreeItem>treeItem).getCachedChildren(context);
-                    foundAncestor = true;
-                    break;
-                }
-            }
-        } while (foundAncestor);
-
-        return undefined;
-    }
-
     public async getParent(treeItem: AzExtTreeItem): Promise<AzExtTreeItem | undefined> {
         return treeItem.parent === this._rootTreeItem ? undefined : treeItem.parent;
     }
+
+    public async findTreeItem<T extends types.AzExtTreeItem>(fullId: string, context: types.IFindTreeItemContext): Promise<T | undefined> {
+        let result: types.AzExtTreeItem | undefined;
+
+        const existingTask: Promise<types.AzExtTreeItem | undefined> | undefined = this._findTreeItemTasks.get(fullId);
+        if (existingTask) {
+            result = await existingTask;
+        } else {
+            const newTask: Promise<types.AzExtTreeItem | undefined> = this.findTreeItemInternal(fullId, context);
+            this._findTreeItemTasks.set(fullId, newTask);
+            try {
+                result = await newTask;
+            } finally {
+                this._findTreeItemTasks.delete(fullId);
+            }
+        }
+
+        return <T><unknown>result;
+    }
+
+    /**
+     * Wrapped by `findTreeItem` to ensure only one find is happening per `fullId` at a time
+     */
+    private async findTreeItemInternal(fullId: string, context: types.IFindTreeItemContext): Promise<types.AzExtTreeItem | undefined> {
+        let treeItem: AzExtParentTreeItem = this._rootTreeItem;
+        return await runWithLoadingNotification(context, async (cancellationToken) => {
+            // tslint:disable-next-line: no-constant-condition
+            outerLoop: while (true) {
+                if (cancellationToken.isCancellationRequested) {
+                    context.telemetry.properties.cancelStep = 'findTreeItem';
+                    throw new UserCancelledError();
+                }
+
+                const children: AzExtTreeItem[] = await treeItem.getCachedChildren(context);
+                for (const child of children) {
+                    if (child.fullId === fullId) {
+                        return child;
+                    } else if (isAncestor(child, fullId)) {
+                        treeItem = <AzExtParentTreeItem>child;
+                        continue outerLoop;
+                    }
+                }
+
+                if (context.loadAll && treeItem.hasMoreChildrenImpl()) {
+                    await treeItem.loadMoreChildren(context);
+                } else {
+                    return undefined;
+                }
+            }
+        });
+    }
+}
+
+function isAncestor(treeItem: AzExtTreeItem, fullId: string): boolean {
+    // Append '/' to 'treeItem.fullId' when checking 'startsWith' to ensure its actually an ancestor, rather than a treeItem at the same level that _happens_ to start with the same id
+    // For example, two databases named 'test' and 'test1' as described in this issue: https://github.com/Microsoft/vscode-cosmosdb/issues/488
+    return fullId.startsWith(`${treeItem.fullId}/`) && isAzExtParentTreeItem(treeItem);
 }
