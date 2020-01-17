@@ -146,7 +146,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                     treeItem = pickedItems;
                 }
             } else {
-                throw new NoResouceFoundError(context.noItemFoundErrorMessage, context);
+                throw new NoResouceFoundError(context);
             }
         }
 

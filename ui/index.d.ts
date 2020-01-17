@@ -97,6 +97,7 @@ export interface ITreeItemPickerContext extends IActionContext {
 
     /**
      * When no item is available for user to pick, this message will be displayed in the error notification.
+     * This will also suppress the report issue button.
      */
     noItemFoundErrorMessage?: string;
 }
