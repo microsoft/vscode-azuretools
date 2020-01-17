@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { ITreeItemPickerContext } from "..";
 import { localize } from "./localize";
 
 // tslint:disable: max-classes-per-file
@@ -22,5 +23,16 @@ export class GoBackError extends Error {
 export class NotImplementedError extends Error {
     constructor(methodName: string, obj: object) {
         super(localize('notImplementedError', '"{0}" is not implemented on "{1}".', methodName, obj.constructor.name));
+    }
+}
+
+export class NoResouceFoundError extends Error {
+    constructor(context?: ITreeItemPickerContext) {
+        if (context && context.noItemFoundErrorMessage) {
+            super(context.noItemFoundErrorMessage);
+            context.errorHandling.suppressReportIssue = true;
+        } else {
+            super(localize('noResourcesError', 'No matching resources found.'));
+        }
     }
 }
