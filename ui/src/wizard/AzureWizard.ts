@@ -67,7 +67,6 @@ export class AzureWizard<T extends types.IActionContext> implements types.AzureW
                         step.prompted = true;
                     } catch (err) {
                         if (parseError(err).errorType === 'GoBackError') { // Use `errorType` instead of `instanceof` so that tests can also hit this case
-                            this._context.telemetry.properties.usedBackButton = 'true';
                             step = this.goBack(step);
                             continue;
                         } else {
