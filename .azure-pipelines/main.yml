@@ -1,18 +1,18 @@
 jobs:
 - job: Windows
   pool:
-    vmImage: VS2017-Win2016
+    vmImage: windows-latest
   steps:
   - template: job-steps.yml
 
 - job: Linux
   pool:
-    vmImage: ubuntu-16.04
+    vmImage: ubuntu-latest
   steps:
   - template: job-steps.yml
 
 - job: macOS
   pool:
-    vmImage: macOS 10.13
+    vmImage: macOS-latest
   steps:
   - template: job-steps.yml
