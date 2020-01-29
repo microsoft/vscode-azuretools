@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+export { createAzExtOutputChannel } from './AzExtOutputChannel';
 export * from './AzureActionHandler';
 export * from './AzureUserInput';
 export * from './BaseEditor';
@@ -13,6 +14,7 @@ export * from './createTelemetryReporter';
 export * from './DialogResponses';
 export * from './errors';
 export * from './extensionUserAgent';
+export { registerUIExtensionVariables } from './extensionVariables';
 export * from './openInPortal';
 export * from './openReadOnlyContent';
 export * from './parseError';
@@ -34,5 +36,6 @@ export * from './wizard/ResourceGroupListStep';
 export * from './wizard/StorageAccountCreateStep';
 export * from './wizard/StorageAccountListStep';
 export * from './wizard/StorageAccountNameStep';
-export { createAzExtOutputChannel } from './AzExtOutputChannel';
-export { registerUIExtensionVariables } from './extensionVariables';
+export * from './wizard/VerifyProvidersStep';
+
+// NOTE: The auto-fix action "source.organizeImports" does weird things with this file, but there doesn't seem to be a way to disable it on a per-file basis so we'll just let it happen
