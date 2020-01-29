@@ -922,6 +922,24 @@ export declare abstract class AzureNameStep<T extends IRelatedNameWizardContext>
     protected generateRelatedName(wizardContext: T, name: string, namingRules: IAzureNamingRules | IAzureNamingRules[]): Promise<string | undefined>;
 }
 
+/**
+ * Checks to see if providers (i.e. 'Microsoft.Web') are registered and registers them if they're not
+ */
+export declare class VerifyProvidersStep<T extends ISubscriptionWizardContext> extends AzureWizardExecuteStep<T> {
+    /**
+     * 90
+     */
+    public priority: number;
+
+    /**
+     * @param providers List of providers to verify
+     */
+    public constructor(providers: string[]);
+
+    public execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
+    public shouldExecute(wizardContext: T): boolean;
+}
+
 export interface IResourceGroupWizardContext extends ILocationWizardContext, IRelatedNameWizardContext {
     /**
      * The resource group to use for new resources.
