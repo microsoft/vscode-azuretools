@@ -8,6 +8,7 @@ import { Progress } from 'vscode';
 import * as types from '../../index';
 import { createAzureClient } from '../createAzureClient';
 import { localize } from '../localize';
+import { parseError } from '../parseError';
 import { delay } from '../utils/delay';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 
@@ -38,8 +39,9 @@ export class VerifyProvidersStep<T extends types.ISubscriptionWizardContext> ext
                         provider = await client.providers.get(providerName);
                     } while (provider.registrationState?.toLowerCase() === 'registering' && Date.now() < maxTime);
                 }
-            } catch {
+            } catch (error) {
                 // ignore and continue with wizard. An error here would likely be confusing and un-actionable
+                context.telemetry.properties.providerError = parseError(error).message;
             }
         }));
     }
