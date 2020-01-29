@@ -34,9 +34,9 @@
     "devDependencies": {
         "@microsoft.azure/autorest.modeler": "2.3.47",
         "@microsoft.azure/autorest.nodejs": "2.1.59",
-        "@microsoft.azure/autorest-core": "2.0.4275",
+        "@microsoft.azure/autorest-core": "2.0.4413",
         "fs-extra": "^6.0.1",
-        "autorest": "2.0.4275",
+        "autorest": "2.0.4413",
         "gulp": "^4.0.0",
         "typescript": "^2.5.3"
     }
