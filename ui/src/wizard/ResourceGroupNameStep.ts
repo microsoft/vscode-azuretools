@@ -9,7 +9,7 @@ import { localize } from '../localize';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 import { ResourceGroupListStep, resourceGroupNamingRules } from './ResourceGroupListStep';
 
-export class ResourceGroupNameStep<T extends types.IResourceGroupWizardContext> extends AzureWizardPromptStep<T> {
+export class ResourceGroupNameStep<T extends types.IResourceGroupWizardContext> extends AzureWizardPromptStep<T> implements types.ResourceGroupNameStep<T> {
     public async prompt(wizardContext: T): Promise<void> {
         const suggestedName: string | undefined = wizardContext.relatedNameTask ? await wizardContext.relatedNameTask : undefined;
         wizardContext.newResourceGroupName = (await ext.ui.showInputBox({

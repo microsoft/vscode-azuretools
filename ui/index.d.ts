@@ -977,6 +977,11 @@ export declare class ResourceGroupListStep<T extends IResourceGroupWizardContext
     public shouldPrompt(wizardContext: T): boolean;
 }
 
+export class ResourceGroupNameStep<T extends IResourceGroupWizardContext> extends AzureWizardPromptStep<T> {
+    public prompt(wizardContext: T): Promise<void>;
+    public shouldPrompt(wizardContext: T): boolean;
+}
+
 export declare class ResourceGroupCreateStep<T extends IResourceGroupWizardContext> extends AzureWizardExecuteStep<T> {
     /**
      * 100
