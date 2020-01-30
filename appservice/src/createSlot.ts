@@ -6,7 +6,7 @@
 import WebSiteManagementClient from "azure-arm-website";
 import { NameValuePair, ResourceNameAvailability, Site, StringDictionary } from "azure-arm-website/lib/models";
 import { ProgressLocation, window } from "vscode";
-import { AzureTreeItem, createAzureClient, IAzureQuickPickItem, ICreateChildImplContext } from "vscode-azureextensionui";
+import { AzureTreeItem, createAzureClient, IAzureNamingRules, IAzureQuickPickItem, ICreateChildImplContext } from "vscode-azureextensionui";
 import { getNewFileShareName } from "./createAppService/getNewFileShareName";
 import { ext } from "./extensionVariables";
 import { localize } from "./localize";
@@ -45,19 +45,29 @@ export async function createSlot(root: ISiteTreeRoot, existingSlots: AzureTreeIt
     });
 }
 
+const slotNamingRules: IAzureNamingRules = {
+    minLength: 2,
+    maxLength: 59,
+    invalidCharsRegExp: /[^a-zA-Z0-9\-]/
+};
+
 async function validateSlotName(value: string | undefined, client: WebSiteManagementClient, root: ISiteTreeRoot): Promise<string | undefined> {
     value = value ? value.trim() : '';
     // Can not have "production" as a slot name, but checkNameAvailability doesn't validate that
     if (value === 'production') {
         return localize('slotNotAvailable', 'The slot name "{0}" is not available.', value);
+    } else if (value.length < slotNamingRules.minLength || value.length > slotNamingRules.maxLength) {
+        return localize('invalidLength', 'The name must be between {0} and {1} characters.', slotNamingRules.minLength, slotNamingRules.maxLength);
+    } else if (slotNamingRules.invalidCharsRegExp.test(value)) {
+        return localize('invalidChars', "The name can only contain letters, numbers, or hyphens.");
+    } else {
+        const nameAvailability: ResourceNameAvailability = await client.checkNameAvailability(`${root.client.siteName}-${value}`, 'Slot');
+        if (!nameAvailability.nameAvailable) {
+            return nameAvailability.message;
+        } else {
+            return undefined;
+        }
     }
-
-    const nameAvailability: ResourceNameAvailability = await client.checkNameAvailability(`${root.client.siteName}-${value}`, 'Slot');
-    if (!nameAvailability.nameAvailable) {
-        return nameAvailability.message;
-    }
-
-    return undefined;
 }
 
 async function chooseConfigurationSource(root: ISiteTreeRoot, existingSlots: AzureTreeItem<ISiteTreeRoot>[]): Promise<SiteClient | undefined> {
