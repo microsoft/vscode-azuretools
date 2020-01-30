@@ -33,6 +33,7 @@ export * from './wizard/AzureWizardPromptStep';
 export * from './wizard/LocationListStep';
 export * from './wizard/ResourceGroupCreateStep';
 export * from './wizard/ResourceGroupListStep';
+export * from './wizard/ResourceGroupNameStep';
 export * from './wizard/StorageAccountCreateStep';
 export * from './wizard/StorageAccountListStep';
 export * from './wizard/StorageAccountNameStep';
