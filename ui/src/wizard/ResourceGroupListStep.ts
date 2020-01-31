@@ -22,6 +22,13 @@ export const resourceGroupNamingRules: types.IAzureNamingRules = {
 };
 
 export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> extends AzureWizardPromptStep<T> implements types.ResourceGroupListStep<T> {
+    private _suppressCreate: boolean | undefined;
+
+    public constructor(suppressCreate?: boolean) {
+        super();
+        this._suppressCreate = suppressCreate;
+    }
+
     public static async getResourceGroups<T extends types.IResourceGroupWizardContext>(wizardContext: T): Promise<ResourceGroup[]> {
         if (wizardContext.resourceGroupsTask === undefined) {
             const client: ResourceManagementClient = createAzureClient(wizardContext, ResourceManagementClient);
@@ -61,11 +68,15 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
     }
 
     private async getQuickPicks(wizardContext: T): Promise<types.IAzureQuickPickItem<ResourceGroup | undefined>[]> {
-        const picks: types.IAzureQuickPickItem<ResourceGroup | undefined>[] = [{
-            label: localize('NewResourceGroup', '$(plus) Create new resource group'),
-            description: '',
-            data: undefined
-        }];
+        const picks: types.IAzureQuickPickItem<ResourceGroup | undefined>[] = [];
+
+        if (!this._suppressCreate) {
+            picks.push({
+                label: localize('NewResourceGroup', '$(plus) Create new resource group'),
+                description: '',
+                data: undefined
+            });
+        }
 
         const resourceGroups: ResourceGroup[] = await ResourceGroupListStep.getResourceGroups(wizardContext);
         return picks.concat(resourceGroups.map((rg: ResourceGroup) => {
