@@ -28,7 +28,7 @@ enum DeployStatus {
 }
 
 /**
- * NOTE: This leverages a command with id `ext.prefix + '.showOutputChannel'` that should be registered by each extension
+ * NOTE: This leverages two commands prefixed with `ext.prefix` that should be registered by each extension: "showOutputChannel" and "viewDeploymentLogs"
  */
 export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     public static contextValue: RegExp = new RegExp('deployment\/.*');
@@ -54,6 +54,10 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     public get id(): string {
         this._deployResult.id = nonNullProp(this._deployResult, 'id');
         return this._deployResult.id;
+    }
+
+    public get commandId(): string {
+        return `${ext.prefix}.viewDeploymentLogs`;
     }
 
     public get description(): string | undefined {
