@@ -955,6 +955,11 @@ export interface IResourceGroupWizardContext extends ILocationWizardContext, IRe
     resourceGroupsTask?: Promise<ResourceGroup[]>;
 
     newResourceGroupName?: string;
+
+    /**
+     * By default, users will be prompted to select an existing resource group if creating one fails with a 403 error. Set this to `true` to prevent that behavior
+     */
+    suppress403Handling?: boolean;
 }
 
 export declare const resourceGroupNamingRules: IAzureNamingRules;

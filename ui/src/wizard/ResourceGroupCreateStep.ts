@@ -35,7 +35,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
                 ext.outputChannel.appendLog(localize('createdResourceGroup', 'Successfully created resource group "{0}".', newName));
             }
         } catch (error) {
-            if (parseError(error).errorType !== '403') {
+            if (wizardContext.suppress403Handling || parseError(error).errorType !== '403') {
                 throw error;
             } else {
                 const message: string = localize('rgForbidden', 'You do not have permission to create a resource group in subscription "{0}".', wizardContext.subscriptionDisplayName);
