@@ -23,11 +23,13 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
 
     private readonly _loadMoreCommandId: string;
     private readonly _rootTreeItem: AzExtParentTreeItem;
+    private _effectiveRootTreeItem: AzExtParentTreeItem;
     private readonly _findTreeItemTasks: Map<string, Promise<types.AzExtTreeItem | undefined>> = new Map();
 
     constructor(rootTreeItem: AzExtParentTreeItem, loadMoreCommandId: string) {
         this._loadMoreCommandId = loadMoreCommandId;
         this._rootTreeItem = rootTreeItem;
+        this._effectiveRootTreeItem = rootTreeItem;
         rootTreeItem.treeDataProvider = <IAzExtTreeDataProviderInternal>this;
     }
 
@@ -64,7 +66,8 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
 
                 if (!treeItem) {
                     context.telemetry.properties.isActivationEvent = 'true';
-                    treeItem = this._rootTreeItem;
+                    await this.refreshEffectiveRoot(context);
+                    treeItem = this._effectiveRootTreeItem;
                 }
 
                 context.telemetry.properties.contextValue = treeItem.contextValue;
@@ -98,7 +101,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
 
     public async refresh(treeItem?: AzExtTreeItem): Promise<void> {
         // tslint:disable-next-line: strict-boolean-expressions
-        treeItem = treeItem || this._rootTreeItem;
+        treeItem = treeItem || this._effectiveRootTreeItem;
 
         if (treeItem.refreshImpl) {
             await treeItem.refreshImpl();
@@ -129,7 +132,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         }
 
         // tslint:disable-next-line:strict-boolean-expressions
-        let treeItem: AzExtTreeItem = startingTreeItem || this._rootTreeItem;
+        let treeItem: AzExtTreeItem = startingTreeItem || this._effectiveRootTreeItem;
 
         while (!treeItem.matchesContextValue(expectedContextValues)) {
             if (isAzExtParentTreeItem(treeItem)) {
@@ -149,7 +152,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
     }
 
     public async getParent(treeItem: AzExtTreeItem): Promise<AzExtTreeItem | undefined> {
-        return treeItem.parent === this._rootTreeItem ? undefined : treeItem.parent;
+        return treeItem.parent === this._effectiveRootTreeItem ? undefined : treeItem.parent;
     }
 
     public async findTreeItem<T extends types.AzExtTreeItem>(fullId: string, context: types.IFindTreeItemContext): Promise<T | undefined> {
@@ -171,11 +174,24 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         return <T><unknown>result;
     }
 
+    private async refreshEffectiveRoot(context: types.IActionContext): Promise<void> {
+        const cachedChildren: AzExtTreeItem[] = await this._rootTreeItem.getCachedChildren(context);
+        if (cachedChildren.length === 1 && !this._rootTreeItem.hasMoreChildrenImpl()) {
+            const child: AzExtTreeItem = cachedChildren[0];
+            if (isAzExtParentTreeItem(child)) {
+                this._effectiveRootTreeItem = <AzExtParentTreeItem>child;
+                return;
+            }
+        }
+
+        this._effectiveRootTreeItem = this._rootTreeItem;
+    }
+
     /**
      * Wrapped by `findTreeItem` to ensure only one find is happening per `fullId` at a time
      */
     private async findTreeItemInternal(fullId: string, context: types.IFindTreeItemContext): Promise<types.AzExtTreeItem | undefined> {
-        let treeItem: AzExtParentTreeItem = this._rootTreeItem;
+        let treeItem: AzExtParentTreeItem = this._effectiveRootTreeItem;
         return await runWithLoadingNotification(context, async (cancellationToken) => {
             // tslint:disable-next-line: no-constant-condition
             outerLoop: while (true) {
