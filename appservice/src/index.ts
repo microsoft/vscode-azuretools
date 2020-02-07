@@ -25,6 +25,7 @@ export * from './getFile';
 export { IConnectToGitHubWizardContext } from './github/IConnectToGitHubWizardContext';
 export * from './pingFunctionApp';
 export * from './putFile';
+export * from './registerSiteCommand';
 export * from './remoteDebug/remoteDebugCommon';
 export * from './remoteDebug/startRemoteDebug';
 export * from './SiteClient';
