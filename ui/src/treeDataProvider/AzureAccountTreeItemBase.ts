@@ -30,13 +30,15 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
     public static contextValue: string = 'azureextensionui.azureAccount';
     public readonly contextValue: string = AzureAccountTreeItemBase.contextValue;
     public readonly label: string = 'Azure';
-    public readonly childTypeLabel: string = localize('subscription', 'subscription');
+    public childTypeLabel: string;
     public autoSelectInTreeItemPicker: boolean = true;
     public disposables: Disposable[] = [];
 
     private _azureAccountTask: Promise<AzureAccount | undefined>;
     private _subscriptionTreeItems: SubscriptionTreeItemBase[] | undefined;
     private _testAccount: AzureAccount | undefined;
+
+    private _singleSubscriptionNode: SubscriptionTreeItemBase | undefined;
 
     constructor(parent?: AzExtParentTreeItem, testAccount?: AzureAccount) {
         super(parent);
@@ -57,10 +59,11 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
     }
 
     public hasMoreChildrenImpl(): boolean {
-        return false;
+        return this._singleSubscriptionNode ? this._singleSubscriptionNode.hasMoreChildrenImpl() : false;
     }
 
-    public async loadMoreChildrenImpl(_clearCache: boolean, context: types.IActionContext): Promise<AzExtTreeItem[]> {
+    public async loadMoreChildrenImpl(clearCache: boolean, context: types.IActionContext): Promise<AzExtTreeItem[]> {
+        this._singleSubscriptionNode = undefined;
         let azureAccount: AzureAccount | undefined = await this._azureAccountTask;
         if (!azureAccount) {
             // Refresh the AzureAccount, to handle Azure account extension installation after the previous refresh
@@ -122,7 +125,13 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
                     });
                 }
             }));
-            return this._subscriptionTreeItems;
+
+            if (this._subscriptionTreeItems.length === 1) {
+                this._singleSubscriptionNode = this._subscriptionTreeItems[0];
+                return await this._singleSubscriptionNode.loadMoreChildrenImpl(clearCache, context);
+            } else {
+                return this._subscriptionTreeItems;
+            }
         }
     }
 
@@ -153,11 +162,23 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
             await window.withProgress({ location: ProgressLocation.Notification, title }, async (): Promise<boolean> => await azureAccount!.waitForSubscriptions());
         }
 
-        return undefined;
+        if (this._singleSubscriptionNode?.childTypeLabel) {
+            this.childTypeLabel = this._singleSubscriptionNode.childTypeLabel;
+        } else {
+            this.childTypeLabel = localize('subscription', 'subscription');
+        }
+
+        if (this._singleSubscriptionNode?.pickTreeItemImpl) {
+            return await this._singleSubscriptionNode.pickTreeItemImpl(_expectedContextValues);
+        } else {
+            return undefined;
+        }
     }
 
     public compareChildrenImpl(item1: AzExtTreeItem, item2: AzExtTreeItem): number {
-        if (item1 instanceof GenericTreeItem && item2 instanceof GenericTreeItem) {
+        if (this._singleSubscriptionNode) {
+            return this._singleSubscriptionNode.compareChildrenImpl(item1, item2);
+        } else if (item1 instanceof GenericTreeItem && item2 instanceof GenericTreeItem) {
             return 0; // already sorted
         } else {
             return super.compareChildrenImpl(item1, item2);

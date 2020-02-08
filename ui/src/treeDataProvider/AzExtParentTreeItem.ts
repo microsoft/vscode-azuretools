@@ -107,10 +107,8 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
             const children: AzExtTreeItem[] = await this.getCachedChildren(context);
             const pickedItem: AzExtTreeItem | undefined = await this.pickTreeItemImpl(expectedContextValues);
             if (pickedItem) {
-                const child: AzExtTreeItem | undefined = children.find((ti: AzExtTreeItem) => ti.fullId === pickedItem.fullId);
-                if (child) {
-                    return child;
-                }
+                // tslint:disable-next-line: strict-boolean-expressions
+                return children.find((ti: AzExtTreeItem) => ti.fullId === pickedItem.fullId) || pickedItem;
             }
         }
 
