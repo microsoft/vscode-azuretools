@@ -260,6 +260,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
                     }
                 }
                 this._cachedChildren = [];
+                this._clearCache = false;
             } else if (!this.hasMoreChildrenImpl()) {
                 // No-op since all children are already loaded
                 return;
@@ -267,7 +268,6 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
 
             const newTreeItems: AzExtTreeItem[] = await this.loadMoreChildrenImpl(this._clearCache, context);
             this._cachedChildren = this._cachedChildren.concat(newTreeItems).sort((ti1, ti2) => this.compareChildrenImpl(ti1, ti2));
-            this._clearCache = false;
         } finally {
             this._isLoadingMore = false;
             this.treeDataProvider.refreshUIOnly(this);
