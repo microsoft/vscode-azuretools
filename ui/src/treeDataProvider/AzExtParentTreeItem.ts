@@ -267,8 +267,8 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
 
             const newTreeItems: AzExtTreeItem[] = await this.loadMoreChildrenImpl(this._clearCache, context);
             this._cachedChildren = this._cachedChildren.concat(newTreeItems).sort((ti1, ti2) => this.compareChildrenImpl(ti1, ti2));
-            this._clearCache = false;
         } finally {
+            this._clearCache = false;
             this._isLoadingMore = false;
             this.treeDataProvider.refreshUIOnly(this);
         }
