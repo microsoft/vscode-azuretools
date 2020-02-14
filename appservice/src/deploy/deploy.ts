@@ -5,7 +5,6 @@
 
 import { AppServicePlan, SiteConfigResource } from 'azure-arm-website/lib/models';
 import { ProgressLocation, window } from 'vscode';
-import { IActionContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { ScmType } from '../ScmType';
@@ -13,12 +12,14 @@ import { SiteClient } from '../SiteClient';
 import { randomUtils } from '../utils/randomUtils';
 import { deployWar } from './deployWar';
 import { deployZip } from './deployZip';
+import { IDeployContext } from './IDeployContext';
 import { localGitDeploy } from './localGitDeploy';
+import { syncTriggersPostDeploy } from './syncTriggersPostDeploy';
 
 /**
  * NOTE: This leverages a command with id `ext.prefix + '.showOutputChannel'` that should be registered by each extension
  */
-export async function deploy(client: SiteClient, fsPath: string, context: IActionContext): Promise<void> {
+export async function deploy(client: SiteClient, fsPath: string, context: IDeployContext): Promise<void> {
     const config: SiteConfigResource = await client.getSiteConfig();
     // We use the AppServicePlan in a few places, but we don't want to delay deployment, so start the promise now and save as a const
     const aspPromise: Promise<AppServicePlan | undefined> = client.getAppServicePlan();
@@ -65,20 +66,40 @@ export async function deploy(client: SiteClient, fsPath: string, context: IActio
         effectiveScmType = ScmType.None;
     }
 
-    await window.withProgress({ location: ProgressLocation.Notification, title: localize('deploying', 'Deploying to "{0}"... Check [output window](command:{1}) for status.', client.fullName, ext.prefix + '.showOutputChannel') }, async (): Promise<void> => {
-        switch (effectiveScmType) {
-            case ScmType.LocalGit:
-                await localGitDeploy(client, fsPath, context);
-                break;
-            case ScmType.GitHub:
-                throw new Error(localize('gitHubConnected', '"{0}" is connected to a GitHub repository. Push to GitHub repository to deploy.', client.fullName));
-            default: //'None' or any other non-supported scmType
-                if (config.linuxFxVersion && /^(tomcat|wildfly)/i.test(config.linuxFxVersion)) {
-                    await deployWar(context, client, fsPath);
+    const title: string = localize('deploying', 'Deploying to "{0}"... Check [output window](command:{1}) for status.', client.fullName, ext.prefix + '.showOutputChannel');
+    await window.withProgress({ location: ProgressLocation.Notification, title }, async () => {
+        if (context.stopAppBeforeDeploy) {
+            ext.outputChannel.appendLog(localize('stoppingApp', 'Stopping app...'), { resourceName: client.fullName });
+            await client.stop();
+        }
+
+        try {
+            switch (effectiveScmType) {
+                case ScmType.LocalGit:
+                    await localGitDeploy(client, fsPath, context);
                     break;
-                }
-                await deployZip(context, client, fsPath, aspPromise);
-                break;
+                case ScmType.GitHub:
+                    throw new Error(localize('gitHubConnected', '"{0}" is connected to a GitHub repository. Push to GitHub repository to deploy.', client.fullName));
+                default: //'None' or any other non-supported scmType
+                    if (config.linuxFxVersion && /^(tomcat|wildfly)/i.test(config.linuxFxVersion)) {
+                        await deployWar(context, client, fsPath);
+                    } else {
+                        await deployZip(context, client, fsPath, aspPromise);
+                    }
+            }
+        } finally {
+            if (context.stopAppBeforeDeploy) {
+                ext.outputChannel.appendLog(localize('startingApp', 'Starting app...'), { resourceName: client.fullName });
+                await client.start();
+            }
+        }
+
+        if (context.syncTriggersPostDeploy) {
+            // Don't sync triggers if app is stopped https://github.com/microsoft/vscode-azurefunctions/issues/1608
+            const state: string | undefined = await client.getState();
+            if (state?.toLowerCase() === 'running') {
+                await syncTriggersPostDeploy(client);
+            }
         }
     });
 }
