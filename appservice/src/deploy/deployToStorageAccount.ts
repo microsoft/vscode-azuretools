@@ -5,9 +5,13 @@
 
 import { StringDictionary } from 'azure-arm-website/lib/models';
 import * as azureStorage from "azure-storage";
+import * as crypto from "crypto";
+import * as fse from 'fs-extra';
+import * as moment from 'moment';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
+import { randomUtils } from '../utils/randomUtils';
 
 /**
  * Method of deployment that is only intended to be used for Linux Consumption Function apps because it doesn't support kudu pushDeployment
@@ -15,7 +19,9 @@ import { SiteClient } from '../SiteClient';
  * Then deploy via "zipdeploy" as usual.
  */
 export async function deployToStorageAccount(client: SiteClient, zipFilePath: string): Promise<void> {
-    const blobName: string = azureStorage.date.secondsFromNow(0).toISOString().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '').replace(/\s/g, '');
+    const datePart: string = moment.utc(Date.now()).format('YYYYMMDDHHmmss');
+    const randomPart: string = randomUtils.getRandomHexString(32);
+    const blobName: string = `${datePart}-${randomPart}.zip`;
 
     const blobService: azureStorage.BlobService = await createBlobService(client);
     ext.outputChannel.appendLog(localize('creatingBlob', 'Uploading zip package to storage container...'), { resourceName: client.fullName });
@@ -41,7 +47,9 @@ async function createBlobService(client: SiteClient): Promise<azureStorage.BlobS
 }
 
 async function createBlobFromZip(blobService: azureStorage.BlobService, zipFilePath: string, blobName: string): Promise<string> {
-    const containerName: string = 'azureappservice-run-from-package';
+    const localMd5Hash: string = crypto.createHash('md5').update(await fse.readFile(zipFilePath)).digest('base64');
+
+    const containerName: string = 'function-releases';
     await new Promise<void>((resolve: () => void, reject: (err: Error) => void): void => {
         blobService.createContainerIfNotExists(containerName, (err: Error) => {
             if (err !== null) {
@@ -52,16 +60,20 @@ async function createBlobFromZip(blobService: azureStorage.BlobService, zipFileP
         });
     });
 
-    await new Promise<void>((resolve: () => void, reject: (err: Error) => void): void => {
-        blobService.createBlockBlobFromLocalFile(containerName, blobName, zipFilePath, (error: Error, _result: azureStorage.BlobService.BlobResult, _response: azureStorage.ServiceResponse) => {
+    const result: azureStorage.BlobService.BlobResult = await new Promise((resolve, reject): void => {
+        blobService.createBlockBlobFromLocalFile(containerName, blobName, zipFilePath, (error: Error, r: azureStorage.BlobService.BlobResult, _response: azureStorage.ServiceResponse) => {
             if (error !== null) {
                 reject(error);
-
             } else {
-                resolve();
+                resolve(r);
             }
         });
     });
+
+    if (result.contentSettings?.contentMD5 !== localMd5Hash) {
+        throw new Error(localize('md5Error', "Upload failed: Integrity error: MD5 hash mismatch between the local copy and the uploaded copy."));
+    }
+
     const sasToken: string = blobService.generateSharedAccessSignature(containerName, blobName, <azureStorage.common.SharedAccessPolicy>{
         AccessPolicy: {
             Permissions: azureStorage.BlobUtilities.SharedAccessPermissions.READ,

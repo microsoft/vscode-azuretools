@@ -39,6 +39,7 @@
         "azure-storage": "^2.10.3",
         "fs-extra": "^4.0.2",
         "glob-gitignore": "^1.0.14",
+        "moment": "^2.24.0",
         "ms-rest": "^2.5.3",
         "ms-rest-azure": "^2.6.0",
         "p-retry": "^3.0.1",
