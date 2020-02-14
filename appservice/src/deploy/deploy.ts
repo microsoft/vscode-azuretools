@@ -59,8 +59,14 @@ export async function deploy(client: SiteClient, fsPath: string, context: IActio
         // Ignore
     }
 
+    let effectiveScmType: string | undefined = config.scmType;
+    if (config.scmType !== ScmType.None && client.isLinux && await client.getIsConsumption()) {
+        ext.outputChannel.appendLog(localize('linuxConsZipOnly', 'WARNING: Using zip deploy because scm type "{0}" is not supported on Linux consumption', config.scmType), { resourceName: client.fullName });
+        effectiveScmType = ScmType.None;
+    }
+
     await window.withProgress({ location: ProgressLocation.Notification, title: localize('deploying', 'Deploying to "{0}"... Check [output window](command:{1}) for status.', client.fullName, ext.prefix + '.showOutputChannel') }, async (): Promise<void> => {
-        switch (config.scmType) {
+        switch (effectiveScmType) {
             case ScmType.LocalGit:
                 await localGitDeploy(client, fsPath, context);
                 break;
