@@ -18,6 +18,7 @@ export * from './createSlot';
 export * from './deleteSite';
 export * from './deploy/deploy';
 export * from './deploy/getDeployFsPath';
+export * from './deploy/IDeployContext';
 export * from './deploy/runPreDeployTask';
 export * from './editScmType';
 export { registerAppServiceExtensionVariables } from './extensionVariables';

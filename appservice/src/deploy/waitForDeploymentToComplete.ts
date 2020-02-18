@@ -13,12 +13,13 @@ import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { delay } from '../utils/delay';
 import { nonNullProp } from '../utils/nonNull';
+import { IDeployContext } from './IDeployContext';
 
 // We get a lot of errors reported for deploy (e.g. InternalServerError), but it's possible that's just from listing the logs (which has a lot of calls to kudu), not actually a deploy failure
 // Thus we will retry a few times with exponential backoff. Each "set" of retries will take a max of about 15 seconds
 const retryOptions: retry.Options = { retries: 4, minTimeout: 1000 };
 
-export async function waitForDeploymentToComplete(context: IActionContext, client: SiteClient, expectedId?: string, token?: CancellationToken, pollingInterval: number = 5000): Promise<string> {
+export async function waitForDeploymentToComplete(context: IDeployContext, client: SiteClient, expectedId?: string, token?: CancellationToken, pollingInterval: number = 5000): Promise<void> {
     let fullLog: string = '';
 
     const alreadyDisplayedLogs: string[] = [];
@@ -102,14 +103,13 @@ export async function waitForDeploymentToComplete(context: IActionContext, clien
                 // If the deployment completed without making it to the "permanent" phase, it must have failed
                 throw new Error(localize('deploymentFailed', 'Deployment to "{0}" failed. See output channel for more details.', client.fullName));
             } else {
-                return fullLog;
+                context.syncTriggersPostDeploy = client.isFunctionApp && !/syncing/i.test(fullLog);
+                return;
             }
         } else {
             await delay(pollingInterval);
         }
     }
-
-    return fullLog;
 }
 
 async function tryGetLatestDeployment(context: IActionContext, kuduClient: KuduClient, permanentId: string | undefined, initialStartTime: Date | undefined, expectedId?: string): Promise<[DeployResult | undefined, string | undefined, Date | undefined]> {
