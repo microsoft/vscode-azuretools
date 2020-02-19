@@ -8,18 +8,24 @@ import { Memento, MessageItem, MessageOptions, QuickPickItem } from 'vscode';
 import * as types from '../index';
 import { DialogResponses } from './DialogResponses';
 import { UserCancelledError } from './errors';
-import { IRootUserInput } from './extensionVariables';
 import { localize } from './localize';
 import { validOnTimeoutOrException } from './utils/inputValidation';
 import { openUrl } from './utils/openUrl';
 import { randomUtils } from './utils/randomUtils';
+import { IRootUserInput, IWizardUserInput } from './wizard/IWizardUserInput';
 
 export class AzureUserInput implements types.IAzureUserInput, types.AzureUserInput {
-    public rootUserInput: IRootUserInput = vscode.window;
+    public wizardUserInput: IWizardUserInput | undefined;
     private readonly _persistence: Memento;
 
     public constructor(persistence: Memento) {
         this._persistence = persistence;
+    }
+
+    private get _rootUserInput(): IRootUserInput {
+        // If the current wizard is already prompting, that means the user started a new action outside the wizard and we should fall back to `vscode.window`
+        // https://github.com/microsoft/vscode-azurefunctions/issues/1461
+        return this.wizardUserInput && !this.wizardUserInput.isPrompting ? this.wizardUserInput : vscode.window;
     }
 
     public async showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: types.IAzureQuickPickOptions): Promise<T | T[]> {
@@ -37,7 +43,7 @@ export class AzureUserInput implements types.IAzureUserInput, types.AzureUserInp
             options.placeHolder += localize('canPickManyInstructions', " (Press 'Space' to select and 'Enter' to confirm)");
         }
 
-        const result: T | T[] | undefined = await this.rootUserInput.showQuickPick(this.getOrderedItems(items, persistenceKey, options.suppressPersistence), options);
+        const result: T | T[] | undefined = await this._rootUserInput.showQuickPick(this.getOrderedItems(items, persistenceKey, options.suppressPersistence), options);
         if (result === undefined) {
             throw new UserCancelledError();
         }
@@ -60,7 +66,7 @@ export class AzureUserInput implements types.IAzureUserInput, types.AzureUserInp
             options.validateInput = async (v): Promise<string | null | undefined> => validOnTimeoutOrException(async () => await validateInput(v));
         }
 
-        const result: string | undefined = await this.rootUserInput.showInputBox(options);
+        const result: string | undefined = await this._rootUserInput.showInputBox(options);
         if (result === undefined) {
             throw new UserCancelledError();
         } else {

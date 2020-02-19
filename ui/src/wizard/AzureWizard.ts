@@ -7,7 +7,7 @@ import { isNullOrUndefined } from 'util';
 import * as vscode from 'vscode';
 import * as types from '../../index';
 import { GoBackError } from '../errors';
-import { ext, IRootUserInput } from '../extensionVariables';
+import { ext } from '../extensionVariables';
 import { parseError } from '../parseError';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
@@ -46,9 +46,8 @@ export class AzureWizard<T extends types.IActionContext> implements types.AzureW
     }
 
     public async prompt(): Promise<void> {
-        // Insert Wizard UI into ext.ui.rootUserInput - to be used instead of vscode.window UI
-        const oldRootUserInput: IRootUserInput | undefined = ext.ui.rootUserInput;
-        ext.ui.rootUserInput = new AzureWizardUserInput(this);
+        const wizardUi: AzureWizardUserInput = new AzureWizardUserInput(this);
+        ext.ui.wizardUserInput = wizardUi;
 
         try {
             let step: AzureWizardPromptStep<T> | undefined = this._promptSteps.pop();
@@ -86,7 +85,9 @@ export class AzureWizard<T extends types.IActionContext> implements types.AzureW
                 step = this._promptSteps.pop();
             }
         } finally {
-            ext.ui.rootUserInput = oldRootUserInput;
+            if (ext.ui.wizardUserInput === wizardUi) { // don't reset if another wizard has already started
+                ext.ui.wizardUserInput = undefined;
+            }
         }
     }
 

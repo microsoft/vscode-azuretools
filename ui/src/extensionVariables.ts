@@ -4,18 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import { ExtensionContext, InputBoxOptions, QuickPickItem, QuickPickOptions } from "vscode";
+import { ExtensionContext } from "vscode";
 import TelemetryReporter from "vscode-extension-telemetry";
 import { IAzExtOutputChannel, IAzureUserInput, UIExtensionVariables } from "../index";
 import { localize } from "./localize";
-
-export interface IRootUserInput {
-    showQuickPick<T extends QuickPickItem>(picks: T[] | Thenable<T[]>, options: QuickPickOptions): Thenable<T>;
-    showInputBox(options: InputBoxOptions): Thenable<string | undefined>;
-}
+import { IWizardUserInput } from './wizard/IWizardUserInput';
 
 interface IInternalExtensionVariables extends UIExtensionVariables {
-    ui: IAzureUserInput & { rootUserInput?: IRootUserInput };
+    ui: IAzureUserInput & { wizardUserInput?: IWizardUserInput };
 }
 
 class UninitializedExtensionVariables implements UIExtensionVariables {

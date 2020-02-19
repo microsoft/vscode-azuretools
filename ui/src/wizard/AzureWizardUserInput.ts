@@ -6,7 +6,7 @@
 import { Disposable, InputBox, InputBoxOptions, QuickInputButtons, QuickPick, QuickPickItem, window } from 'vscode';
 import * as types from '../../index';
 import { GoBackError, UserCancelledError } from '../errors';
-import { IRootUserInput } from '../extensionVariables';
+import { IWizardUserInput } from './IWizardUserInput';
 
 export interface IInternalAzureWizard {
     title: string | undefined;
@@ -18,7 +18,9 @@ export interface IInternalAzureWizard {
 /**
  * Provides more advanced versions of vscode.window.showQuickPick and vscode.window.showInputBox for use in the AzureWizard
  */
-export class AzureWizardUserInput implements IRootUserInput {
+export class AzureWizardUserInput implements IWizardUserInput {
+    public isPrompting: boolean = false;
+
     private _wizard: IInternalAzureWizard;
 
     public constructor(wizard: IInternalAzureWizard) {
@@ -66,6 +68,7 @@ export class AzureWizardUserInput implements IRootUserInput {
                 quickPick.busy = true;
                 quickPick.enabled = false;
                 quickPick.show();
+                this.isPrompting = true;
                 try {
                     quickPick.items = await Promise.resolve(picks);
                     if (options.canPickMany && options.isPickSelected) {
@@ -79,6 +82,7 @@ export class AzureWizardUserInput implements IRootUserInput {
                 }
             });
         } finally {
+            this.isPrompting = false;
             disposables.forEach(d => { d.dispose(); });
         }
     }
@@ -139,8 +143,10 @@ export class AzureWizardUserInput implements IRootUserInput {
                     })
                 );
                 inputBox.show();
+                this.isPrompting = true;
             });
         } finally {
+            this.isPrompting = false;
             disposables.forEach(d => { d.dispose(); });
         }
     }
