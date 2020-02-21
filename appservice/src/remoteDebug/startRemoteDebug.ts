@@ -37,25 +37,25 @@ export async function startRemoteDebug(siteClient: SiteClient, siteConfig: SiteC
 }
 
 async function startRemoteDebugInternal(siteClient: SiteClient, siteConfig: SiteConfigResource, language: RemoteDebugLanguage): Promise<void> {
-    await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress: vscode.Progress<{}>): Promise<void> => {
+    await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, cancellable: true }, async (progress, token): Promise<void> => {
         const debugConfig: vscode.DebugConfiguration = await getDebugConfiguration(language);
         // tslint:disable-next-line:no-unsafe-any
         const localHostPortNumber: number = debugConfig.port;
 
         const confirmEnableMessage: string = localize('remoteDebugEnablePrompt', 'The configuration will be updated to enable remote debugging. Would you like to continue? This will restart the app.');
-        await setRemoteDebug(true, confirmEnableMessage, undefined, siteClient, siteConfig, progress, remoteDebugLink);
+        await setRemoteDebug(true, confirmEnableMessage, undefined, siteClient, siteConfig, progress, token, remoteDebugLink);
 
-        reportMessage(localize('remoteDebugStartingTunnel', 'Starting tunnel proxy...'), progress);
+        reportMessage(localize('remoteDebugStartingTunnel', 'Starting tunnel proxy...'), progress, token);
 
         const publishCredential: User = await siteClient.getWebAppPublishCredential();
         const tunnelProxy: TunnelProxy = new TunnelProxy(localHostPortNumber, siteClient, publishCredential);
         await callWithTelemetryAndErrorHandling('appService.remoteDebugStartProxy', async (startContext: IActionContext) => {
             startContext.errorHandling.suppressDisplay = true;
             startContext.errorHandling.rethrow = true;
-            await tunnelProxy.startProxy();
+            await tunnelProxy.startProxy(token);
         });
 
-        reportMessage(localize('remoteDebugAttaching', 'Attaching debugger...'), progress);
+        reportMessage(localize('remoteDebugAttaching', 'Attaching debugger...'), progress, token);
 
         await callWithTelemetryAndErrorHandling('appService.remoteDebugAttach', async (attachContext: IActionContext) => {
             attachContext.errorHandling.suppressDisplay = true;
@@ -63,7 +63,7 @@ async function startRemoteDebugInternal(siteClient: SiteClient, siteConfig: Site
             await vscode.debug.startDebugging(undefined, debugConfig);
         });
 
-        reportMessage(localize('remoteDebugAttached', 'Attached!'), progress);
+        reportMessage(localize('remoteDebugAttached', 'Attached!'), progress, token);
 
         const terminateDebugListener: vscode.Disposable = vscode.debug.onDidTerminateDebugSession(async (event: vscode.DebugSession) => {
             if (event.name === debugConfig.name) {
@@ -75,8 +75,8 @@ async function startRemoteDebugInternal(siteClient: SiteClient, siteConfig: Site
                 terminateDebugListener.dispose();
 
                 const confirmDisableMessage: string = localize('remoteDebugDisablePrompt', 'Remaining in debugging mode may cause performance issues. Would you like to disable debugging? This will restart the app.');
-                await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (innerProgress: vscode.Progress<{}>): Promise<void> => {
-                    await setRemoteDebug(false, confirmDisableMessage, undefined, siteClient, siteConfig, innerProgress, remoteDebugLink);
+                await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, cancellable: true }, async (innerProgress, innerToken): Promise<void> => {
+                    await setRemoteDebug(false, confirmDisableMessage, undefined, siteClient, siteConfig, innerProgress, innerToken, remoteDebugLink);
                 });
             }
         });

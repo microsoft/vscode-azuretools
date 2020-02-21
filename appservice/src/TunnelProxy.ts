@@ -8,7 +8,8 @@ import * as EventEmitter from 'events';
 import { IncomingMessage } from 'http';
 import { BasicAuthenticationCredentials } from 'ms-rest';
 import { createServer, Server, Socket } from 'net';
-import { IParsedError, parseError } from 'vscode-azureextensionui';
+import { CancellationToken, Disposable } from 'vscode';
+import { IParsedError, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import * as websocket from 'websocket';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
@@ -161,9 +162,14 @@ export class TunnelProxy {
         this._isSsh = isSsh;
     }
 
-    public async startProxy(): Promise<void> {
-        await this.checkTunnelStatusWithRetry();
-        await this.setupTunnelServer();
+    public async startProxy(token: CancellationToken): Promise<void> {
+        try {
+            await this.checkTunnelStatusWithRetry(token);
+            await this.setupTunnelServer(token);
+        } catch (error) {
+            this.dispose();
+            throw error;
+        }
     }
 
     public dispose(): void {
@@ -221,33 +227,38 @@ export class TunnelProxy {
         }
     }
 
-    private async checkTunnelStatusWithRetry(): Promise<void> {
+    private async checkTunnelStatusWithRetry(token: CancellationToken): Promise<void> {
         const timeoutSeconds: number = 240; // 4 minutes, matches App Service internal timeout for starting up an app
         const timeoutMs: number = timeoutSeconds * 1000;
         const pollingIntervalMs: number = 5000;
 
-        return new Promise<void>(async (resolve: () => void, reject: (error: Error) => void): Promise<void> => {
-            const start: number = Date.now();
-            while (Date.now() < start + timeoutMs) {
-                try {
-                    await this.checkTunnelStatus();
-                    resolve();
-                    return;
-                } catch (error) {
-                    if (!(error instanceof RetryableTunnelStatusError)) {
-                        reject(new Error(localize('tunnelFailed', 'Unable to establish connection to application: {0}', parseError(error).message)));
-                        return;
-                    } // else allow retry
-                }
-
-                await delay(pollingIntervalMs);
+        const start: number = Date.now();
+        while (Date.now() < start + timeoutMs) {
+            if (token.isCancellationRequested) {
+                throw new UserCancelledError();
             }
-            reject(new Error(localize('tunnelTimedOut', 'Unable to establish connection to application: Timed out')));
-        });
+
+            try {
+                await this.checkTunnelStatus();
+                return;
+            } catch (error) {
+                if (!(error instanceof RetryableTunnelStatusError)) {
+                    throw new Error(localize('tunnelFailed', 'Unable to establish connection to application: {0}', parseError(error).message));
+                } // else allow retry
+            }
+
+            await delay(pollingIntervalMs);
+        }
+        throw new Error(localize('tunnelTimedOut', 'Unable to establish connection to application: Timed out'));
     }
 
-    private async setupTunnelServer(): Promise<void> {
+    private async setupTunnelServer(token: CancellationToken): Promise<void> {
         return new Promise<void>((resolve: () => void, reject: (err: Error) => void): void => {
+            const listener: Disposable = token.onCancellationRequested(() => {
+                reject(new UserCancelledError());
+                listener.dispose();
+            });
+
             this._server.on('connection', (socket: Socket) => {
                 const tunnelSocket: TunnelSocket = new TunnelSocket(socket, this._client, this._publishCredential);
 
