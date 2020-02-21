@@ -5,17 +5,21 @@
 
 import { SiteConfigResource } from 'azure-arm-website/lib/models';
 import * as vscode from 'vscode';
-import { callWithTelemetryAndErrorHandling, DialogResponses, IActionContext } from 'vscode-azureextensionui';
+import { callWithTelemetryAndErrorHandling, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 
-export function reportMessage(message: string, progress: vscode.Progress<{}>): void {
+export function reportMessage(message: string, progress: vscode.Progress<{}>, token: vscode.CancellationToken): void {
+    if (token.isCancellationRequested) {
+        throw new UserCancelledError();
+    }
+
     ext.outputChannel.appendLog(message);
     progress.report({ message: message });
 }
 
-export async function setRemoteDebug(isRemoteDebuggingToBeEnabled: boolean, confirmMessage: string, noopMessage: string | undefined, siteClient: SiteClient, siteConfig: SiteConfigResource, progress?: vscode.Progress<{}>, learnMoreLink?: string): Promise<void> {
+export async function setRemoteDebug(isRemoteDebuggingToBeEnabled: boolean, confirmMessage: string, noopMessage: string | undefined, siteClient: SiteClient, siteConfig: SiteConfigResource, progress: vscode.Progress<{}>, token: vscode.CancellationToken, learnMoreLink?: string): Promise<void> {
     const state: string | undefined = await siteClient.getState();
     if (state && state.toLowerCase() === 'stopped') {
         throw new Error(localize('remoteDebugStopped', 'The app must be running, but is currently in state "Stopped". Start the app to continue.'));
@@ -27,9 +31,7 @@ export async function setRemoteDebug(isRemoteDebuggingToBeEnabled: boolean, conf
         // don't have to check input as this handles cancels and learnMore responses
         await ext.ui.showWarningMessage(confirmMessage, { modal: true, learnMoreLink }, confirmButton, DialogResponses.cancel);
         siteConfig.remoteDebuggingEnabled = isRemoteDebuggingToBeEnabled;
-        if (progress) {
-            reportMessage(localize('remoteDebugUpdate', 'Updating site configuration to set remote debugging...'), progress);
-        }
+        reportMessage(localize('remoteDebugUpdate', 'Updating site configuration to set remote debugging...'), progress, token);
 
         await callWithTelemetryAndErrorHandling('appService.remoteDebugUpdateConfiguration', async (context: IActionContext) => {
             context.errorHandling.suppressDisplay = true;
@@ -37,9 +39,7 @@ export async function setRemoteDebug(isRemoteDebuggingToBeEnabled: boolean, conf
             await siteClient.updateConfiguration(siteConfig);
         });
 
-        if (progress) {
-            reportMessage(localize('remoteDebugUpdateDone', 'Updating site configuration done.'), progress);
-        }
+        reportMessage(localize('remoteDebugUpdateDone', 'Updating site configuration done.'), progress, token);
     } else {
         // Update not needed
         if (noopMessage) {
