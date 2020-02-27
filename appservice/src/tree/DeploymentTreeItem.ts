@@ -12,6 +12,7 @@ import { DeployResult, LogEntry } from 'vscode-azurekudu/lib/models';
 import { waitForDeploymentToComplete } from '../deploy/waitForDeploymentToComplete';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
+import { ignore404Error, retryKuduCall } from '../utils/kuduUtils';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
 import { DeploymentsTreeItem } from './DeploymentsTreeItem';
@@ -109,25 +110,38 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         });
     }
 
-    public async getDeploymentLogs(): Promise<string> {
+    public async getDeploymentLogs(context: IActionContext): Promise<string> {
         const kuduClient: KuduClient = await this.root.client.getKuduClient();
-        const logEntries: LogEntry[] = await kuduClient.deployment.getLogEntry(this.id);
+        let logEntries: LogEntry[] = [];
+        await retryKuduCall(context, 'getLogEntry', async () => {
+            await ignore404Error(context, async () => {
+                logEntries = await kuduClient.deployment.getLogEntry(this.id);
+            });
+        });
+
         let data: string = '';
         for (const logEntry of logEntries) {
             data += this.formatLogEntry(logEntry);
-            if (logEntry.detailsUrl && logEntry.id) {
-                const detailedLogEntries: LogEntry[] = await kuduClient.deployment.getLogEntryDetails(this.id, logEntry.id);
-                for (const detailedEntry of detailedLogEntries) {
-                    data += this.formatLogEntry(detailedEntry);
-                }
+            let detailedLogEntries: LogEntry[] = [];
+            await retryKuduCall(context, 'getLogEntryDetails', async () => {
+                await ignore404Error(context, async () => {
+                    if (logEntry.detailsUrl && logEntry.id) {
+                        detailedLogEntries = await kuduClient.deployment.getLogEntryDetails(this.id, logEntry.id);
+                    }
+                });
+            });
+
+            for (const detailedEntry of detailedLogEntries) {
+                data += this.formatLogEntry(detailedEntry);
             }
         }
+
         return data;
     }
 
-    public async viewDeploymentLogs(): Promise<void> {
+    public async viewDeploymentLogs(context: IActionContext): Promise<void> {
         await this.runWithTemporaryDescription(localize('retrievingLogs', 'Retrieving logs...'), async () => {
-            const logData: string = await this.getDeploymentLogs();
+            const logData: string = await this.getDeploymentLogs(context);
             await openReadOnlyContent(this, logData, '.log');
         });
     }

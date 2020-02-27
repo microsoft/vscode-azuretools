@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as retry from 'p-retry';
 import { CancellationToken } from 'vscode';
 import { IActionContext, IParsedError, parseError } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
@@ -12,12 +11,9 @@ import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { delay } from '../utils/delay';
+import { ignore404Error, retryKuduCall } from '../utils/kuduUtils';
 import { nonNullProp } from '../utils/nonNull';
 import { IDeployContext } from './IDeployContext';
-
-// We get a lot of errors reported for deploy (e.g. InternalServerError), but it's possible that's just from listing the logs (which has a lot of calls to kudu), not actually a deploy failure
-// Thus we will retry a few times with exponential backoff. Each "set" of retries will take a max of about 15 seconds
-const retryOptions: retry.Options = { retries: 4, minTimeout: 1000 };
 
 export async function waitForDeploymentToComplete(context: IDeployContext, client: SiteClient, expectedId?: string, token?: CancellationToken, pollingInterval: number = 5000): Promise<void> {
     let fullLog: string = '';
@@ -42,25 +38,13 @@ export async function waitForDeploymentToComplete(context: IDeployContext, clien
             throw new Error(localize('failedToFindDeployment', 'Failed to get status of deployment.'));
         }
 
+        const deploymentId: string = deployment.id;
         let logEntries: LogEntry[] = [];
-        await retry(
-            async (attempt: number) => {
-                addAttemptTelemetry(context, 'getLogEntry', attempt);
-                try {
-                    // tslint:disable-next-line: no-non-null-assertion
-                    logEntries = <LogEntry[]>await kuduClient.deployment.getLogEntry(deployment!.id!);
-                } catch (error) {
-                    const parsedError: IParsedError = parseError(error);
-                    // Swallow 404 errors for a deployment while its still in the "temp" phase
-                    // (We can't reliably get logs until the deployment has shifted to the "permanent" phase)
-                    // tslint:disable-next-line: no-non-null-assertion
-                    if (!deployment!.isTemp || parsedError.errorType !== '404') {
-                        throw error;
-                    }
-                }
-            },
-            retryOptions
-        );
+        await retryKuduCall(context, 'getLogEntry', async () => {
+            await ignore404Error(context, async () => {
+                logEntries = <LogEntry[]>await kuduClient.deployment.getLogEntry(deploymentId);
+            });
+        });
 
         const newLogEntries: LogEntry[] = logEntries.filter((newEntry: LogEntry) => !alreadyDisplayedLogs.some((oldId: string) => newEntry.id === oldId));
         if (newLogEntries.length === 0) {
@@ -78,15 +62,13 @@ export async function waitForDeploymentToComplete(context: IDeployContext, clien
                     }
 
                     if (newEntry.detailsUrl) {
-                        const entryDetails: LogEntry[] =
-                            logEntries = await retry(
-                                async (attempt: number) => {
-                                    addAttemptTelemetry(context, 'getLogEntryDetails', attempt);
-                                    // tslint:disable-next-line: no-non-null-assertion
-                                    return await kuduClient.deployment.getLogEntryDetails(deployment!.id!, newEntry.id!);
-                                },
-                                retryOptions
-                            );
+                        let entryDetails: LogEntry[] = [];
+                        await retryKuduCall(context, 'getLogEntryDetails', async () => {
+                            await ignore404Error(context, async () => {
+                                entryDetails = await kuduClient.deployment.getLogEntryDetails(deploymentId, nonNullProp(newEntry, 'id'));
+                            });
+                        });
+
                         for (const entryDetail of entryDetails) {
                             if (entryDetail.message) {
                                 fullLog = fullLog.concat(entryDetail.message);
@@ -117,24 +99,16 @@ async function tryGetLatestDeployment(context: IActionContext, kuduClient: KuduC
 
     if (permanentId) {
         // Use "permanentId" to find the deployment during its "permanent" phase
-        deployment = await retry(
-            async (attempt: number) => {
-                addAttemptTelemetry(context, 'getResult', attempt);
-                // tslint:disable-next-line: no-non-null-assertion
-                return await kuduClient.deployment.getResult(permanentId!);
-            },
-            retryOptions
-        );
+        deployment = await retryKuduCall(context, 'getResult', async () => {
+            // tslint:disable-next-line: no-non-null-assertion
+            return await kuduClient.deployment.getResult(permanentId!);
+        });
     } else if (expectedId) {
         // if we have a "expectedId" we know which deployment we are looking for, so wait until latest id reflects that
         try {
-            const latestDeployment: DeployResult = await retry(
-                async (attempt: number) => {
-                    addAttemptTelemetry(context, 'getResult', attempt);
-                    return await kuduClient.deployment.getResult('latest');
-                },
-                retryOptions
-            );
+            const latestDeployment: DeployResult = await retryKuduCall(context, 'getResult', async () => {
+                return await kuduClient.deployment.getResult('latest');
+            });
             // if the latest deployment is temp, then a deployment has triggered so we should watch it even if it doesn't match the expectedId
             if (latestDeployment.isTemp) {
                 deployment = latestDeployment;
@@ -151,13 +125,9 @@ async function tryGetLatestDeployment(context: IActionContext, kuduClient: KuduC
         }
     } else if (initialStartTime) {
         // Use "initialReceivedTime" to find the deployment during its "temp" phase
-        const deployments: DeployResult[] = await retry(
-            async (attempt: number) => {
-                addAttemptTelemetry(context, 'getDeployResults', attempt);
-                return await kuduClient.deployment.getDeployResults();
-            },
-            retryOptions
-        );
+        const deployments: DeployResult[] = await retryKuduCall(context, 'getDeployResults', async () => {
+            return await kuduClient.deployment.getDeployResults();
+        });
         deployment = deployments
             // tslint:disable-next-line:no-non-null-assertion
             .filter((deployResult: DeployResult) => deployResult.startTime && deployResult.startTime >= initialStartTime!)
@@ -170,13 +140,9 @@ async function tryGetLatestDeployment(context: IActionContext, kuduClient: KuduC
     } else {
         // Use "latest" to get the deployment before we know the "initialReceivedTime" or "permanentId"
         try {
-            deployment = await retry(
-                async (attempt: number) => {
-                    addAttemptTelemetry(context, 'getResult', attempt);
-                    return <DeployResult | undefined>await kuduClient.deployment.getResult('latest');
-                },
-                retryOptions
-            );
+            deployment = await retryKuduCall(context, 'getResult', async () => {
+                return <DeployResult | undefined>await kuduClient.deployment.getResult('latest');
+            });
         } catch (error) {
             const parsedError: IParsedError = parseError(error);
             // swallow 404 error since "latest" might not exist on the first deployment
@@ -192,12 +158,4 @@ async function tryGetLatestDeployment(context: IActionContext, kuduClient: KuduC
     }
 
     return [deployment, permanentId, initialStartTime];
-}
-
-function addAttemptTelemetry(context: IActionContext, methodName: string, attempt: number): void {
-    const key: string = methodName + 'MaxAttempt';
-    const existingAttempt: number | undefined = context.telemetry.measurements[key];
-    if (existingAttempt === undefined || existingAttempt < attempt) {
-        context.telemetry.measurements[key] = attempt;
-    }
 }
