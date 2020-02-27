@@ -48,7 +48,7 @@ export async function waitForDeploymentToComplete(context: IDeployContext, clien
 
         const newLogEntries: LogEntry[] = logEntries.filter((newEntry: LogEntry) => !alreadyDisplayedLogs.some((oldId: string) => newEntry.id === oldId));
         if (newLogEntries.length === 0) {
-            if (Date.now() > nextTimeToDisplayWaitingLog) {
+            if (!deployment.complete && Date.now() > nextTimeToDisplayWaitingLog) {
                 ext.outputChannel.appendLog(localize('waitingForComand', 'Waiting for long running command to finish...'), { resourceName: client.fullName });
                 nextTimeToDisplayWaitingLog = Date.now() + 60 * 1000;
             }
@@ -59,6 +59,7 @@ export async function waitForDeploymentToComplete(context: IDeployContext, clien
                     if (newEntry.message) {
                         fullLog = fullLog.concat(newEntry.message);
                         ext.outputChannel.appendLog(newEntry.message, { date: newEntry.logTime, resourceName: client.fullName });
+                        nextTimeToDisplayWaitingLog = Date.now() + 30 * 1000; // wait at least 30 seconds from last log before displaying "Waiting" log
                     }
 
                     if (newEntry.detailsUrl) {
