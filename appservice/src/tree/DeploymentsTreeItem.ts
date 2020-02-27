@@ -12,6 +12,7 @@ import { editScmType } from '../editScmType';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { ScmType } from '../ScmType';
+import { retryKuduCall } from '../utils/kuduUtils';
 import { DeploymentTreeItem } from './DeploymentTreeItem';
 import { getThemedIconPath } from './IconPath';
 import { ISiteTreeRoot } from './ISiteTreeRoot';
@@ -60,10 +61,13 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         return false;
     }
 
-    public async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzExtTreeItem[]> {
+    public async loadMoreChildrenImpl(_clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {
         const siteConfig: SiteConfig = await this.root.client.getSiteConfig();
         const kuduClient: KuduClient = await this.root.client.getKuduClient();
-        const deployments: DeployResult[] = await kuduClient.deployment.getDeployResults();
+        const deployments: DeployResult[] = await retryKuduCall(context, 'getDeployResults', async () => {
+            return kuduClient.deployment.getDeployResults();
+        });
+
         const children: DeploymentTreeItem[] | GenericTreeItem[] = await this.createTreeItemsWithErrorHandling(
             deployments,
             'invalidDeployment',
