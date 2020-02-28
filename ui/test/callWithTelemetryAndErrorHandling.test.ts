@@ -5,7 +5,7 @@
 
 import * as assert from 'assert';
 import { IActionContext } from '..';
-import { callWithMaskHandling, callWithTelemetryAndErrorHandling, callWithTelemetryAndErrorHandlingSync } from '../src/callWithTelemetryAndErrorHandling';
+import { callWithTelemetryAndErrorHandling, callWithTelemetryAndErrorHandlingSync } from '../src/callWithTelemetryAndErrorHandling';
 import { assertThrowsAsync } from './assertThrowsAsync';
 
 function testFunc(): string {
@@ -62,15 +62,5 @@ suite('callWithTelemetryAndErrorHandling tests', () => {
                 return testFuncErrorAsync();
             }),
             /testFuncErrorAsync/);
-    });
-
-    test('mask', async () => {
-        await assertThrowsAsync(
-            async () => await callWithTelemetryAndErrorHandling('callbackId', async (context: IActionContext) => {
-                context.errorHandling.rethrow = true;
-                return callWithMaskHandling(testFuncErrorAsync, 'testFuncErrorAsync');
-            }),
-            // the mask is ***
-            /\*\*\*/);
     });
 });
