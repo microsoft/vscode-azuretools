@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { parseError } from '../src/parseError';
-import { callWithMaskHandling } from '../src/utils/callWithMaskHandling';
+import { callWithMaskHandling } from '../src/callWithMaskHandling';
 import { assertThrowsAsync } from './assertThrowsAsync';
 
 suite("callWithMaskHandling Tests", () => {
