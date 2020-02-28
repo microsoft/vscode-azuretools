@@ -81,7 +81,6 @@ export async function callWithMaskHandling<T>(callback: () => Promise<T>, valueT
     }
 }
 
-
 function handleError(context: IActionContext, callbackId: string, error: unknown): void {
     const errorData: IParsedError = parseError(error);
     if (errorData.isUserCancelledError) {
