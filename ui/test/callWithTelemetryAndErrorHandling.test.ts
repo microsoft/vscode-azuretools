@@ -5,7 +5,7 @@
 
 import * as assert from 'assert';
 import { IActionContext } from '..';
-import { callWithTelemetryAndErrorHandling, callWithTelemetryAndErrorHandlingSync } from '../src/callWithTelemetryAndErrorHandling';
+import { callWithTelemetryAndErrorHandling, callWithTelemetryAndErrorHandlingSync, callWithMaskHandling } from '../src/callWithTelemetryAndErrorHandling';
 import { assertThrowsAsync } from './assertThrowsAsync';
 
 function testFunc(): string {
@@ -63,4 +63,14 @@ suite('callWithTelemetryAndErrorHandling tests', () => {
             }),
             /testFuncErrorAsync/);
     });
+
+    test('mask', async () => {
+        const mask: string = '***';
+        await assertThrowsAsync(
+            async () => await callWithTelemetryAndErrorHandling('callbackId', async (context: IActionContext) => {
+                context.errorHandling.rethrow = true;
+                return callWithMaskHandling(testFuncErrorAsync, 'testFuncErrorAsync');
+            }),
+            /\*\*\*/);
+    })
 });

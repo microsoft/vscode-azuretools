@@ -67,6 +67,21 @@ export async function callWithTelemetryAndErrorHandling<T>(callbackId: string, c
     }
 }
 
+export async function callWithMaskHandling<T>(callback: () => Promise<T>, valueToMask: string): Promise<T> {
+    try {
+        return await callback();
+    } catch (error) {
+        const parsedError: IParsedError = parseError(error);
+
+        if (parsedError.isUserCancelledError) {
+            throw error;
+        }
+
+        throw new Error(parsedError.message.replace(new RegExp(valueToMask, 'g'), '***'));
+    }
+}
+
+
 function handleError(context: IActionContext, callbackId: string, error: unknown): void {
     const errorData: IParsedError = parseError(error);
     if (errorData.isUserCancelledError) {
