@@ -6,11 +6,10 @@
 import { User } from 'azure-arm-website/lib/models';
 import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
-import { DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
+import { callWithMaskHandling, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
-import { callWithMaskHandling } from '../utils/callWithMaskHandling';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
 import { verifyNoRunFromPackageSetting } from '../verifyNoRunFromPackageSetting';
