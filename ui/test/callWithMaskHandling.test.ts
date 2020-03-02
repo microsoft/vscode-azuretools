@@ -7,6 +7,7 @@ import { callWithMaskHandling } from '../src/callWithMaskHandling';
 import { parseError } from '../src/parseError';
 import { assertThrowsAsync } from './assertThrowsAsync';
 
+// tslint:disable: align
 suite("callWithMaskHandling Tests", () => {
     const credentials: string = 'scHQERrAlXSmlCeN1mrhDzsHWeDz2XZt5R343HgCNmxS0xlswcaA2Cowflda';
     const credentialsSpecialChars: string = 'sc()HQ*E+RrAlXSm[CeN1$$$rhDz^^HWeDz2X[t5R343HgCN.xS0x]swc|A2CÑwf¬da';
@@ -77,7 +78,7 @@ suite("callWithMaskHandling Tests", () => {
         });
     });
 });
-n;
+
 function validateError(err: unknown, value: string): boolean {
     return !JSON.stringify(parseError(err)).includes(value);
 }
