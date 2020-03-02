@@ -3,9 +3,9 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { parseError } from "./parseError";
-import { IParsedError } from "../index";
 import * as escape from 'escape-string-regexp';
+import { IParsedError } from "../index";
+import { parseError } from "./parseError";
 
 export async function callWithMaskHandling<T>(callback: () => Promise<T>, valueToMask: string): Promise<T> {
     try {

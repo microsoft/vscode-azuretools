@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { parseError } from '../src/parseError';
 import { callWithMaskHandling } from '../src/callWithMaskHandling';
+import { parseError } from '../src/parseError';
 import { assertThrowsAsync } from './assertThrowsAsync';
 
 suite("callWithMaskHandling Tests", () => {
@@ -77,7 +77,7 @@ suite("callWithMaskHandling Tests", () => {
         });
     });
 });
-
+n;
 function validateError(err: unknown, value: string): boolean {
     return !JSON.stringify(parseError(err)).includes(value);
 }
