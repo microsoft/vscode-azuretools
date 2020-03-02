@@ -5,6 +5,7 @@
 
 import { parseError } from "./parseError";
 import { IParsedError } from "../index";
+import * as escape from 'escape-string-regexp';
 
 export async function callWithMaskHandling<T>(callback: () => Promise<T>, valueToMask: string): Promise<T> {
     try {
@@ -15,7 +16,7 @@ export async function callWithMaskHandling<T>(callback: () => Promise<T>, valueT
         if (parsedError.isUserCancelledError) {
             throw error;
         }
-
-        throw new Error(parsedError.message.replace(new RegExp(valueToMask, 'g'), '***'));
+        const escapedMask: string = escape(valueToMask);
+        throw new Error(parsedError.message.replace(new RegExp(escapedMask, 'g'), '***'));
     }
 }

@@ -9,6 +9,7 @@ import { assertThrowsAsync } from './assertThrowsAsync';
 
 suite("callWithMaskHandling Tests", () => {
     const credentials: string = 'scHQERrAlXSmlCeN1mrhDzsHWeDz2XZt5R343HgCNmxS0xlswcaA2Cowflda';
+    const credentialsSpecialChars: string = 'sc()HQ*E+RrAlXSm[CeN1$$$rhDz^^HWeDz2X[t5R343HgCN.xS0x]swc|A2CÑwf¬da';
     suite("callWithMaskHandling", () => {
         test("Value masked (single occurance) with thrown error", async () => {
 
@@ -54,12 +55,12 @@ suite("callWithMaskHandling Tests", () => {
             }, 'Credentials were not properly masked from error string');
         });
 
-        test("Value masked (single occurance) with thrown error", async () => {
+        test("Value masked (with special characters) with thrown error", async () => {
 
             // tslint:disable-next-line: no-multiline-string
             const errorMessage: string = `To https://naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git
             ! [rejected]        HEAD -> master (fetch first)
-           error: failed to push some refs to 'https://$naturins-22-error-03:scHQERrAlXSmlCeN1mrhDzsHWeDz2XZt5R343HgCNmxS0xlswcaA2Cowflda@naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git'
+           error: failed to push some refs to 'https://$naturins-22-error-03:sc()HQ*E+RrAlXSm[CeN1$$$rhDz^^HWeDz2X[t5R343HgCN.xS0x]swc|A2CÑwf¬da@naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git'
            hint: Updates were rejected because the remote contains work that you do
            hint: not have locally. This is usually caused by another repository pushing
            hint: to the same ref. You may want to first integrate the remote changes
@@ -69,9 +70,9 @@ suite("callWithMaskHandling Tests", () => {
             await assertThrowsAsync(async (): Promise<void> => {
                 await callWithMaskHandling(async () => {
                     throw errorMessage;
-                }, credentials);
+                }, credentialsSpecialChars);
             }, (err) => {
-                return validateError(err, credentials);
+                return validateError(err, credentialsSpecialChars);
             }, 'Credentials were not properly masked from error string');
         });
     });

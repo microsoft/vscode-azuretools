@@ -33,6 +33,7 @@
     "dependencies": {
         "azure-arm-resource": "^3.0.0-preview",
         "azure-arm-storage": "^3.1.0",
+        "escape-string-regexp": "^2.0.0",
         "fs-extra": "^4.0.3",
         "html-to-text": "^4.0.0",
         "ms-rest": "^2.5.3",
