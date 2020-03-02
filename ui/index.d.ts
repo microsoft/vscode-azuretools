@@ -515,6 +515,11 @@ export declare function callWithTelemetryAndErrorHandling<T>(callbackId: string,
 export declare function callWithTelemetryAndErrorHandlingSync<T>(callbackId: string, callback: (context: IActionContext) => T): T | undefined;
 
 /**
+ * Used to mask values in error messages to protect user's confidential information from displaying in output and telemetry
+ */
+export declare function callWithMaskHandling<T>(callback: () => Promise<T>, valueToMask: string): Promise<T>;
+
+/**
  * A generic context object that describes the behavior of an action and allows for specifying custom telemetry properties and measurements
  * You may also extend this object if you need to pass along custom properties through things like a wizard or tree item picker
  */
