@@ -136,7 +136,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
             const me: AzureAccountTreeItemBase = this;
             class SubscriptionPromptStep extends AzureWizardPromptStep<types.ISubscriptionWizardContext> {
                 public async prompt(): Promise<void> {
-                    const ti: SubscriptionTreeItemBase = <SubscriptionTreeItemBase>await me.treeDataProvider.showTreeItemPicker(SubscriptionTreeItemBase.contextValue, context);
+                    const ti: SubscriptionTreeItemBase = <SubscriptionTreeItemBase>await me.treeDataProvider.showTreeItemPicker(SubscriptionTreeItemBase.contextValue, context, me);
                     Object.assign(context, ti.root);
                 }
                 public shouldPrompt(): boolean { return !(<types.ISubscriptionWizardContext>context).subscriptionId; }
