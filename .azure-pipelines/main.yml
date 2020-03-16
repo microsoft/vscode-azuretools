@@ -1,3 +1,7 @@
+variables:
+  ${{ if eq(variables['Build.Reason'], 'Schedule') }}:
+    ENABLE_LONG_RUNNING_TESTS: true
+
 jobs:
 - job: Windows
   pool:
@@ -16,3 +20,21 @@ jobs:
     vmImage: macOS-latest
   steps:
   - template: job-steps.yml
+
+trigger:
+  branches:
+    include:
+    - '*'
+
+pr:
+  branches:
+    include:
+    - '*'
+
+schedules:
+- cron: "0 11 * * *"
+  displayName: Nightly at 4:00 PT
+  always: true # Run even when there are no code changes
+  branches:
+    include:
+    - master
