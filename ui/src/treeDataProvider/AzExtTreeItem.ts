@@ -104,7 +104,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     public async deleteTreeItem(context: types.IActionContext): Promise<void> {
         await this.runWithTemporaryDescription(localize('deleting', 'Deleting...'), async () => {
             if (this.deleteTreeItemImpl) {
-                const result = await this.deleteTreeItemImpl(context);
+                const result: boolean = await this.deleteTreeItemImpl(context);
                 if (result && this.parent) {
                     this.parent.removeChildFromCache(this);
                 }
