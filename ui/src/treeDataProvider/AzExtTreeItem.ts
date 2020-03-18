@@ -74,7 +74,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     //#region Methods implemented by base class
     public refreshImpl?(): Promise<void>;
     public isAncestorOfImpl?(contextValue: string | RegExp): boolean;
-    public deleteTreeItemImpl?(deleteTreeItemImpl: types.IActionContext): Promise<void>;
+    public deleteTreeItemImpl?(deleteTreeItemImpl: types.IActionContext): Promise<boolean>;
     //#endregion
 
     public async refresh(): Promise<void> {
@@ -104,8 +104,8 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     public async deleteTreeItem(context: types.IActionContext): Promise<void> {
         await this.runWithTemporaryDescription(localize('deleting', 'Deleting...'), async () => {
             if (this.deleteTreeItemImpl) {
-                await this.deleteTreeItemImpl(context);
-                if (this.parent) {
+                const result = await this.deleteTreeItemImpl(context);
+                if (result && this.parent) {
                     this.parent.removeChildFromCache(this);
                 }
             } else {

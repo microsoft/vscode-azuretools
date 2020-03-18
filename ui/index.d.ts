@@ -192,9 +192,9 @@ export declare abstract class AzExtTreeItem {
 
     //#region Methods implemented by base class
     /**
-     * Implement this to support the 'delete' action in the tree. Should not be called directly
+     * Implement this to support the 'delete' action in the tree. Should not be called directly. Return true if deletion succeeded, false otherwise.
      */
-    public deleteTreeItemImpl?(context: IActionContext): Promise<void>;
+    public deleteTreeItemImpl?(context: IActionContext): Promise<boolean>;
 
     /**
      * Implement this to execute any async code when this node is refreshed. Should not be called directly
