@@ -5,7 +5,7 @@
 
 // tslint:disable: no-unsafe-any // Lots of plugin functions use any
 
-import * as CleanWebpackPlugin from 'clean-webpack-plugin';
+import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import * as FileManagerPlugin from 'filemanager-webpack-plugin';
 import * as fse from 'fs-extra';
 import * as path from 'path';
@@ -213,9 +213,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
         // tslint:disable-next-line:no-non-null-assertion
         config.plugins!.push(
             new CleanWebpackPlugin(
-                ['dist'],
                 {
-                    root: options.projectRoot,
                     verbose: true
                 })
         );

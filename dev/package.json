@@ -31,7 +31,6 @@
         "prepare": "node ./node_modules/vscode/bin/install"
     },
     "devDependencies": {
-        "@types/clean-webpack-plugin": "^0.1.2",
         "@types/fs-extra": "^5.0.4",
         "@types/gulp": "^4.0.5",
         "@types/mocha": "^5.2.5",
@@ -47,7 +46,7 @@
     },
     "dependencies": {
         "azure-arm-resource": "^3.0.0-preview",
-        "clean-webpack-plugin": "^0.1.19",
+        "clean-webpack-plugin": "^3.0.0",
         "filemanager-webpack-plugin": "^2.0.5",
         "fs-extra": "^7.0.1",
         "gulp": "^4.0.0",
