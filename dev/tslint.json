@@ -60,6 +60,12 @@
             }
         ],
         "no-backbone-get-set-outside-model": false,
-        "radix": false
+        "radix": false,
+        "no-implicit-dependencies": [
+            true,
+            [
+                "vscode"
+            ]
+        ]
     }
 }
