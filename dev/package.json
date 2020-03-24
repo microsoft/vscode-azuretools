@@ -1,7 +1,7 @@
 {
     "name": "vscode-azureextensiondev",
     "author": "Microsoft Corporation",
-    "version": "0.2.4",
+    "version": "0.3.0",
     "description": "Common dev dependency tools for developing Azure extensions for VS Code",
     "tags": [
         "azure",
@@ -31,17 +31,11 @@
         "prepare": "node ./node_modules/vscode/bin/install"
     },
     "devDependencies": {
-        "@types/clean-webpack-plugin": "^0.1.2",
-        "@types/decompress": "^4.2.3",
         "@types/fs-extra": "^5.0.4",
-        "@types/glob": "^7.1.1",
         "@types/gulp": "^4.0.5",
         "@types/mocha": "^5.2.5",
         "@types/node": "^10.12.21",
-        "@types/request": "^2.48.2",
         "@types/terser-webpack-plugin": "^1.2.0",
-        "@types/vinyl-buffer": "^1.0.0",
-        "@types/vinyl-source-stream": "^0.0.30",
         "mocha": "^5.2.0",
         "mocha-junit-reporter": "^1.18.0",
         "mocha-multi-reporters": "^1.1.7",
@@ -52,24 +46,18 @@
     },
     "dependencies": {
         "azure-arm-resource": "^3.0.0-preview",
-        "clean-webpack-plugin": "^0.1.19",
-        "decompress": "^4.2.0",
+        "clean-webpack-plugin": "^3.0.0",
         "filemanager-webpack-plugin": "^2.0.5",
         "fs-extra": "^7.0.1",
-        "glob": "^7.1.3",
         "gulp": "^4.0.0",
-        "gulp-decompress": "^2.0.2",
         "ms-rest": "^2.2.2",
         "ms-rest-azure": "^2.4.4",
-        "request": "^2.88.0",
         "terser-webpack-plugin": "^1.2.2",
         "ts-loader": "^5.3.3",
-        "vinyl-buffer": "^1.0.1",
-        "vinyl-source-stream": "^2.0.0",
         "vscode": "^1.1.36",
         "webpack": "4.28.1"
     },
     "engines": {
-        "vscode": "^1.23.0"
+        "vscode": "^1.31.0"
     }
 }

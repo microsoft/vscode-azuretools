@@ -3,12 +3,11 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { OutputChannel, QuickPickItem, QuickPickOptions, InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, Uri } from "vscode";
-import * as webpack from 'webpack';
-import { Stream } from "stream";
 import * as cp from "child_process";
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment } from 'ms-rest-azure';
+import { InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, Uri } from "vscode";
+import * as webpack from 'webpack';
 
 /**
  * Sets up test suites against an extension package.json file (run this at global level or inside a suite, not inside a test)
@@ -86,15 +85,14 @@ export interface DefaultWebpackOptions {
 export declare function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack.Configuration;
 
 /**
- * Installs the azure account extension before running tests (otherwise our extension would fail to activate)
- * NOTE: The version isn't super important since we don't actually use the account extension in tests
+ * "Installs" a fake version of the azure account extension before running tests. The extension isn't actually used for tests, but our extension would fail to activate without this
  */
-export declare function gulp_installAzureAccount(): Promise<void> | Stream;
+export declare function gulp_installAzureAccount(): Promise<void>;
 
 /**
- * Installs a VS Code extension, typically useful before running tests
+ * Writes down a fake extension to make VS Code think a dependency is installed, useful before running tests
  */
-export declare function gulp_installVSCodeExtension(version: string, publisherId: string, extensionName: string): Promise<void> | Stream;
+export declare function gulp_installVSCodeExtension(publisherId: string, extensionName: string): Promise<void>;
 
 /**
  * Spawns a webpack process

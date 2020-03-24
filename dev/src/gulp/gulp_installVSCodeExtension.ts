@@ -3,35 +3,41 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { File } from 'decompress';
-import * as glob from 'glob';
-import * as gulp from 'gulp';
-// tslint:disable-next-line: no-require-imports
-import decompress = require('gulp-decompress');
+import * as fse from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
-import * as request from 'request';
-import { Stream } from 'stream';
-import * as buffer from 'vinyl-buffer';
-import * as source from 'vinyl-source-stream';
 
-export function gulp_installVSCodeExtension(version: string, publisherId: string, extensionName: string): Promise<void> | Stream {
+// tslint:disable-next-line: export-name
+export async function gulp_installVSCodeExtension(publisherId: string, extensionName: string): Promise<void> {
     const extensionId: string = `${publisherId}.${extensionName}`;
-    const extensionPath: string = path.join(os.homedir(), `.vscode/extensions/${extensionId}-${version}`);
-    const existingExtensions: string[] = glob.sync(extensionPath.replace(version, '*'));
-    if (existingExtensions.length === 0) {
-        // tslint:disable-next-line:no-http-string
-        return request(`http://${publisherId}.gallery.vsassets.io/_apis/public/gallery/publisher/${publisherId}/extension/${extensionName}/${version}/assetbyname/Microsoft.VisualStudio.Services.VSIXPackage`)
-            .pipe(source('extension.vsix'))
-            .pipe(buffer())
-            .pipe(decompress({
-                filter: (file: File): boolean => file.path.startsWith('extension/'),
-                map: (file: File): File => {
-                    file.path = file.path.slice(10);
-                    return file;
-                }
-            }))
-            .pipe(gulp.dest(extensionPath));
+    const extensionsPath: string = path.join(os.homedir(), '.vscode', 'extensions');
+    const existingExtensions: string[] = await fse.readdir(extensionsPath);
+    if (!existingExtensions.some((e: string) => e.includes(extensionId))) {
+        console.log(`"Installing" test extension with id "${extensionId}".`);
+
+        const version: string = '0.0.1';
+        const extensionPath: string = path.join(extensionsPath, `${extensionId}-${version}`);
+        const packageJsonPath: string = path.join(extensionPath, 'package.json');
+        const packageJson: {} = {
+            name: extensionName,
+            displayName: "",
+            publisher: publisherId,
+            description: "",
+            version: version,
+            engines: {
+                vscode: "^1.31.0"
+            },
+            activationEvents: [],
+            main: "./extension",
+            contributes: {}
+        };
+        await fse.ensureFile(packageJsonPath);
+        await fse.writeJSON(packageJsonPath, packageJson);
+
+        const extensionJsPath: string = path.join(extensionPath, 'extension.js');
+        const extensionJs: string = `exports.activate = function activate() { };exports.deactivate = function deactivate() { };`;
+        await fse.ensureFile(extensionJsPath);
+        await fse.writeFile(extensionJsPath, extensionJs);
     } else {
         console.log(`Extension with id "${extensionId}" already installed.`);
         // We need to signal to gulp that we've completed this async task
