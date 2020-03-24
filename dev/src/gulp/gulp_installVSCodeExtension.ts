@@ -11,7 +11,11 @@ import * as path from 'path';
 export async function gulp_installVSCodeExtension(publisherId: string, extensionName: string): Promise<void> {
     const extensionId: string = `${publisherId}.${extensionName}`;
     const extensionsPath: string = path.join(os.homedir(), '.vscode', 'extensions');
-    const existingExtensions: string[] = await fse.readdir(extensionsPath);
+    let existingExtensions: string[] = [];
+    if (await fse.pathExists(extensionsPath)) {
+        existingExtensions = await fse.readdir(extensionsPath);
+    }
+
     if (!existingExtensions.some((e: string) => e.includes(extensionId))) {
         console.log(`"Installing" test extension with id "${extensionId}".`);
 

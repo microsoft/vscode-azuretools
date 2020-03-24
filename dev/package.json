@@ -1,7 +1,7 @@
 {
     "name": "vscode-azureextensiondev",
     "author": "Microsoft Corporation",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "description": "Common dev dependency tools for developing Azure extensions for VS Code",
     "tags": [
         "azure",
@@ -31,30 +31,30 @@
         "prepare": "node ./node_modules/vscode/bin/install"
     },
     "devDependencies": {
-        "@types/fs-extra": "^5.0.4",
+        "@types/fs-extra": "^8.0.0",
         "@types/gulp": "^4.0.5",
         "@types/mocha": "^5.2.5",
         "@types/node": "^10.12.21",
         "@types/terser-webpack-plugin": "^1.2.0",
+        "gulp": "^4.0.0",
         "mocha": "^5.2.0",
         "mocha-junit-reporter": "^1.18.0",
         "mocha-multi-reporters": "^1.1.7",
         "ts-node": "^7.0.1",
         "tslint": "^5.12.1",
         "tslint-microsoft-contrib": "^6.0.0",
-        "typescript": "^3.3.1"
+        "typescript": "^3.3.1",
+        "vscode": "^1.1.36"
     },
     "dependencies": {
         "azure-arm-resource": "^3.0.0-preview",
         "clean-webpack-plugin": "^3.0.0",
         "filemanager-webpack-plugin": "^2.0.5",
-        "fs-extra": "^7.0.1",
-        "gulp": "^4.0.0",
+        "fs-extra": "^8.0.0",
         "ms-rest": "^2.2.2",
         "ms-rest-azure": "^2.4.4",
         "terser-webpack-plugin": "^1.2.2",
         "ts-loader": "^5.3.3",
-        "vscode": "^1.1.36",
         "webpack": "4.28.1"
     },
     "engines": {
