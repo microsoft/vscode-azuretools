@@ -7,6 +7,7 @@ import * as cp from 'child_process';
 import * as path from 'path';
 import * as process from 'process';
 
+// tslint:disable-next-line: export-name
 export function gulp_webpack(mode: string): cp.ChildProcess {
     const env: {
         [key: string]: string | undefined;
