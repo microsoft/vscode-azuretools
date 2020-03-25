@@ -72,6 +72,13 @@
         "prefer-template": [
             true,
             "allow-single-concat"
-        ]
+        ],
+        "no-implicit-dependencies": [
+            true,
+            [
+                "vscode"
+            ]
+        ],
+        "no-use-before-declare": false
     }
 }

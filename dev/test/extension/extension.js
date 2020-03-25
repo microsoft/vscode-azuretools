@@ -3,14 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-const path = require('path');
-const cp = require('child_process');
+function activate() {
+}
+exports.activate = activate;
 
-function test() {
-    const env = process.env;
-    env.DEBUGTELEMETRY = 1;
-    env.CODE_EXTENSIONS_PATH = path.join(__dirname, 'test', 'extension');
-    return cp.spawn('node', ['./node_modules/vscode/bin/test'], { stdio: 'inherit', env });
-};
-
-exports.test = test;
+function deactivate() {
+}
+exports.deactivate = deactivate;
