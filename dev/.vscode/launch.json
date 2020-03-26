@@ -8,18 +8,16 @@
             "runtimeExecutable": "${execPath}",
             "args": [
                 "--extensionDevelopmentPath=${workspaceFolder}/test/extension",
-                "--extensionTestsPath=${workspaceFolder}/out/test"
+                "--extensionTestsPath=${workspaceFolder}/out/test/index"
             ],
-            "stopOnEntry": false,
-            "sourceMaps": true,
             "outFiles": [
                 "${workspaceFolder}/out/test/**/*.js"
             ],
-            "preLaunchTask": "npm: compile",
+            "preLaunchTask": "${defaultBuildTask}",
             "env": {
                 "MOCHA_grep": "", // RegExp of tests to run (empty for all)
-                "MOCHA_enableTimeouts": "0", // Disable time-outs,
-                "DEBUGTELEMETRY": "1",
+                "MOCHA_timeout": "0", // Disable time-outs
+                "DEBUGTELEMETRY": "v",
                 "NODE_DEBUG": ""
             }
         }
