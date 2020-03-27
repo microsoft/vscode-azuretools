@@ -32,6 +32,7 @@ export async function deployToStorageAccount(client: SiteClient, zipFilePath: st
     delete appSettings.properties.WEBSITE_RUN_FROM_ZIP; // delete old app setting name if it exists
     appSettings.properties.WEBSITE_RUN_FROM_PACKAGE = blobUrl;
     await client.updateApplicationSettings(appSettings);
+    ext.outputChannel.appendLog(localize('deploymentSuccessful', 'Deployment successful.'), { resourceName: client.fullName });
 }
 
 async function createBlobService(client: SiteClient): Promise<azureStorage.BlobService> {
