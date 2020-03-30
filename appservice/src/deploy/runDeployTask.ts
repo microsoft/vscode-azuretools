@@ -20,43 +20,71 @@ export async function runPreDeployTask(context: IActionContext, deployFsPath: st
 }
 
 export async function tryRunPreDeployTask(context: IActionContext, deployFsPath: string, scmType: string | undefined): Promise<IPreDeployTaskResult> {
-    const preDeployTaskKey: string = 'preDeployTask';
-    const taskName: string | undefined = vscode.workspace.getConfiguration(ext.prefix, vscode.Uri.file(deployFsPath)).get(preDeployTaskKey);
+    const settingKey: string = 'preDeployTask';
+    const taskName: string | undefined = vscode.workspace.getConfiguration(ext.prefix, vscode.Uri.file(deployFsPath)).get(settingKey);
     context.telemetry.properties.hasPreDeployTask = String(!!taskName);
 
     let preDeployTaskResult: IPreDeployTaskResult = { taskName, exitCode: undefined, failedToFindTask: false };
 
-    if (taskName) {
-        if (scmType === ScmType.LocalGit || scmType === ScmType.GitHub) {
-            // We don't run pre deploy tasks for non-zipdeploy since that stuff should be handled by kudu
-            ext.outputChannel.appendLog(localize('ignoringPreDeployTask', 'WARNING: Ignoring preDeployTask "{0}" for non-zip deploy.', taskName));
+    if (taskName && shouldExecuteTask(scmType, settingKey, taskName)) {
+        const task: vscode.Task | undefined = await findTask(deployFsPath, taskName);
+        context.telemetry.properties.foundPreDeployTask = String(!!task);
+        if (task) {
+            const progressMessage: string = localize('runningTask', 'Running preDeployTask "{0}"...', taskName);
+            await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: progressMessage }, async () => {
+                await vscode.tasks.executeTask(task);
+                preDeployTaskResult = await waitForPreDeployTask(task, deployFsPath);
+                context.telemetry.properties.preDeployTaskExitCode = String(preDeployTaskResult.exitCode);
+            });
         } else {
-            const tasks: vscode.Task[] = await vscode.tasks.fetchTasks();
-            const taskNameWithoutSource: string = taskName.replace(/^[^:]*:\s*/, '');
-            // First, search for an exact match. If that doesn't work, search for a task without the source in the name (e.g. if taskName is "func: extensions install", search for just "extensions install")
-            const preDeployTask: vscode.Task | undefined = tasks.find((task: vscode.Task) => isTaskEqual(taskName, deployFsPath, task))
-                || tasks.find((task: vscode.Task) => isTaskEqual(taskNameWithoutSource, deployFsPath, task));
-
-            if (preDeployTask) {
-                const progressMessage: string = localize('runningTask', 'Running preDeployTask "{0}"...', taskName);
-                await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: progressMessage }, async () => {
-                    await vscode.tasks.executeTask(preDeployTask);
-                    preDeployTaskResult = await waitForPreDeployTask(preDeployTask, deployFsPath);
-                    context.telemetry.properties.preDeployTaskExitCode = String(preDeployTaskResult.exitCode);
-                });
-            } else {
-                preDeployTaskResult.failedToFindTask = true;
-            }
+            preDeployTaskResult.failedToFindTask = true;
         }
     }
 
     return preDeployTaskResult;
 }
 
+/**
+ * Starts the post deploy task, but doesn't wait for the result (not worth it)
+ */
+export async function startPostDeployTask(context: IActionContext, deployFsPath: string, scmType: string | undefined, resourceName: string): Promise<void> {
+    const settingKey: string = 'postDeployTask';
+    const taskName: string | undefined = vscode.workspace.getConfiguration(ext.prefix, vscode.Uri.file(deployFsPath)).get(settingKey);
+    context.telemetry.properties.hasPostDeployTask = String(!!taskName);
+
+    if (taskName && shouldExecuteTask(scmType, settingKey, taskName)) {
+        const task: vscode.Task | undefined = await findTask(deployFsPath, taskName);
+        context.telemetry.properties.foundPostDeployTask = String(!!task);
+        if (task) {
+            await vscode.tasks.executeTask(task);
+            ext.outputChannel.appendLog(localize('startedPostDeployTask', 'Started {0} "{1}".', settingKey, taskName), { resourceName });
+        } else {
+            ext.outputChannel.appendLog(localize('noPostDeployTask', 'WARNING: Failed to find {0} "{1}".', settingKey, taskName), { resourceName });
+        }
+    }
+}
+
 export interface IPreDeployTaskResult {
     taskName: string | undefined;
     exitCode: number | undefined;
     failedToFindTask: boolean;
+}
+
+async function findTask(deployFsPath: string, taskName: string): Promise<vscode.Task | undefined> {
+    const tasks: vscode.Task[] = await vscode.tasks.fetchTasks();
+    const taskNameWithoutSource: string = taskName.replace(/^[^:]*:\s*/, '');
+    // First, search for an exact match. If that doesn't work, search for a task without the source in the name (e.g. if taskName is "func: extensions install", search for just "extensions install")
+    return tasks.find((task: vscode.Task) => isTaskEqual(taskName, deployFsPath, task))
+        || tasks.find((task: vscode.Task) => isTaskEqual(taskNameWithoutSource, deployFsPath, task));
+}
+
+function shouldExecuteTask(scmType: string | undefined, settingKey: string, taskName: string): boolean {
+    // We don't run deploy tasks for non-zipdeploy since that stuff should be handled by kudu
+    const shouldExecute: boolean = scmType !== ScmType.LocalGit && scmType !== ScmType.GitHub;
+    if (!shouldExecute) {
+        ext.outputChannel.appendLog(localize('ignoringDeployTask', 'WARNING: Ignoring {0} "{1}" for non-zip deploy.', settingKey, taskName));
+    }
+    return shouldExecute;
 }
 
 function isTaskEqual(expectedName: string, expectedPath: string, actualTask: vscode.Task): boolean {
