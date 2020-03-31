@@ -14,6 +14,7 @@ import { deployWar } from './deployWar';
 import { deployZip } from './deployZip';
 import { IDeployContext } from './IDeployContext';
 import { localGitDeploy } from './localGitDeploy';
+import { startPostDeployTask } from './runDeployTask';
 import { syncTriggersPostDeploy } from './syncTriggersPostDeploy';
 
 /**
@@ -93,6 +94,8 @@ export async function deploy(client: SiteClient, fsPath: string, context: IDeplo
                 await client.start();
             }
         }
+
+        await startPostDeployTask(context, fsPath, effectiveScmType, client.fullName);
 
         if (context.syncTriggersPostDeploy) {
             // Don't sync triggers if app is stopped https://github.com/microsoft/vscode-azurefunctions/issues/1608
