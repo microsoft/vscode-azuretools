@@ -8,6 +8,7 @@ import * as azureStorage from "azure-storage";
 import * as crypto from "crypto";
 import * as fse from 'fs-extra';
 import * as moment from 'moment';
+import { workspace } from 'vscode';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
@@ -71,7 +72,8 @@ async function createBlobFromZip(blobService: azureStorage.BlobService, zipFileP
         });
     });
 
-    if (result.contentSettings?.contentMD5 !== localMd5Hash) {
+    const suppressMd5Validation: boolean | undefined = workspace.getConfiguration(ext.prefix).get('suppressMd5Validation');
+    if (!suppressMd5Validation && result.contentSettings?.contentMD5 !== localMd5Hash) {
         throw new Error(localize('md5Error', "Upload failed: Integrity error: MD5 hash mismatch between the local copy and the uploaded copy."));
     }
 
