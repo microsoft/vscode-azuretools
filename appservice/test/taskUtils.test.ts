@@ -82,38 +82,38 @@ suite("taskUtils", () => {
     });
 
     suite('findTask', () => {
-        function testFindTask(taskPath: string, taskName: string, expectedTask: Task | undefined): void {
-            assert.equal(taskUtils.findTask(taskPath, taskName, allTasks), expectedTask);
+        async function testFindTask(taskPath: string, taskName: string, expectedTask: Task | undefined): Promise<void> {
+            assert.equal(await taskUtils.findTask(taskPath, taskName, allTasks), expectedTask);
             // test against reversed list just to make sure it didn't get lucky based on the order it searched
-            assert.equal(taskUtils.findTask(taskPath, taskName, allTasksReversed), expectedTask);
+            assert.equal(await taskUtils.findTask(taskPath, taskName, allTasksReversed), expectedTask);
         }
 
-        test('preDeployTask', () => {
-            testFindTask('/Users/erijiz/TestRepos/js1', 'npm prune', tasks.js.prune);
-            testFindTask('/Users/erijiz/TestRepos/ts1', 'npm prune', tasks.ts.prune);
-            testFindTask('/Users/erijiz/TestRepos/cs1', 'publish', tasks.cs.publish);
+        test('preDeployTask', async () => {
+            await testFindTask('/Users/erijiz/TestRepos/js1', 'npm prune', tasks.js.prune);
+            await testFindTask('/Users/erijiz/TestRepos/ts1', 'npm prune', tasks.ts.prune);
+            await testFindTask('/Users/erijiz/TestRepos/cs1', 'publish', tasks.cs.publish);
         });
 
-        test('postDeployTask', () => {
-            testFindTask('/Users/erijiz/TestRepos/js1', 'npm install', tasks.js.install);
-            testFindTask('/Users/erijiz/TestRepos/ts1', 'npm install', tasks.ts.install);
+        test('postDeployTask', async () => {
+            await testFindTask('/Users/erijiz/TestRepos/js1', 'npm install', tasks.js.install);
+            await testFindTask('/Users/erijiz/TestRepos/ts1', 'npm install', tasks.ts.install);
         });
 
-        test('preLaunchTask', () => {
-            testFindTask('/Users/erijiz/TestRepos/js1', 'func: host start', tasks.js.start);
-            testFindTask('/Users/erijiz/TestRepos/ts1', 'func: host start', tasks.ts.start);
-            testFindTask('/Users/erijiz/TestRepos/cs1', 'func: host start', tasks.cs.start);
-            testFindTask('/Users/erijiz/TestRepos/py1', 'func: host start', tasks.py.start);
+        test('preLaunchTask', async () => {
+            await testFindTask('/Users/erijiz/TestRepos/js1', 'func: host start', tasks.js.start);
+            await testFindTask('/Users/erijiz/TestRepos/ts1', 'func: host start', tasks.ts.start);
+            await testFindTask('/Users/erijiz/TestRepos/cs1', 'func: host start', tasks.cs.start);
+            await testFindTask('/Users/erijiz/TestRepos/py1', 'func: host start', tasks.py.start);
         });
 
-        test('other', () => {
-            testFindTask('/Users/erijiz/TestRepos/js1', 'nPm PrUnE', tasks.js.prune);
-            testFindTask('/Users/erijiz/TestRepos/js1', 'install', tasks.other.npmType);
-            testFindTask('/Users/erijiz/TestRepos/js1', 'npm: install', tasks.other.npmType);
-            testFindTask('/Users/erijiz/TestRepos/js1', 'notfunc: host start', tasks.other.nonFuncType);
-            testFindTask('/Users/erijiz/TestRepos/js1', 'tsc: build - tsconfig.json', tasks.other.tscBuild);
-            testFindTask('/Users/erijiz/TestRepos/js1', 'build - tsconfig.json', tasks.other.tscBuild);
-            testFindTask('/Users/erijiz/TestRepos/js1', 'nope', undefined);
+        test('other', async () => {
+            await testFindTask('/Users/erijiz/TestRepos/js1', 'nPm PrUnE', tasks.js.prune);
+            await testFindTask('/Users/erijiz/TestRepos/js1', 'install', tasks.other.npmType);
+            await testFindTask('/Users/erijiz/TestRepos/js1', 'npm: install', tasks.other.npmType);
+            await testFindTask('/Users/erijiz/TestRepos/js1', 'notfunc: host start', tasks.other.nonFuncType);
+            await testFindTask('/Users/erijiz/TestRepos/js1', 'tsc: build - tsconfig.json', tasks.other.tscBuild);
+            await testFindTask('/Users/erijiz/TestRepos/js1', 'build - tsconfig.json', tasks.other.tscBuild);
+            await testFindTask('/Users/erijiz/TestRepos/js1', 'nope', undefined);
         });
     });
 });

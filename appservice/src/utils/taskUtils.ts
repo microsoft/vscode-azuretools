@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Task, TaskScope, WorkspaceFolder } from "vscode";
+import { Task, tasks as codeTasks, TaskScope, WorkspaceFolder } from "vscode";
 import { isPathEqual, isSubpath } from "./pathUtils";
 
 export namespace taskUtils {
@@ -42,7 +42,9 @@ export namespace taskUtils {
         return isTaskScopeEqual(task1, task2) && task1.name === task2.name && task1.source === task2.source && task1.definition.type === task2.definition.type;
     }
 
-    export function findTask(deployFsPath: string, taskName: string, tasks: Task[]): Task | undefined {
+    export async function findTask(deployFsPath: string, taskName: string, tasks?: Task[]): Promise<Task | undefined> {
+        // tslint:disable-next-line: strict-boolean-expressions
+        tasks = tasks || await codeTasks.fetchTasks();
         taskName = taskName.toLowerCase();
         return tasks.find(t => {
             return isTaskInScopeOfPath(t, deployFsPath) && (

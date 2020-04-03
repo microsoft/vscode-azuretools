@@ -27,8 +27,7 @@ export async function tryRunPreDeployTask(context: IActionContext, deployFsPath:
     let preDeployTaskResult: IPreDeployTaskResult = { taskName, exitCode: undefined, failedToFindTask: false };
 
     if (taskName && shouldExecuteTask(scmType, settingKey, taskName)) {
-        const tasks: vscode.Task[] = await vscode.tasks.fetchTasks();
-        const task: vscode.Task | undefined = taskUtils.findTask(deployFsPath, taskName, tasks);
+        const task: vscode.Task | undefined = await taskUtils.findTask(deployFsPath, taskName);
         context.telemetry.properties.foundPreDeployTask = String(!!task);
         if (task) {
             const progressMessage: string = localize('runningTask', 'Running preDeployTask "{0}"...', taskName);
@@ -54,8 +53,7 @@ export async function startPostDeployTask(context: IActionContext, deployFsPath:
     context.telemetry.properties.hasPostDeployTask = String(!!taskName);
 
     if (taskName && shouldExecuteTask(scmType, settingKey, taskName)) {
-        const tasks: vscode.Task[] = await vscode.tasks.fetchTasks();
-        const task: vscode.Task | undefined = taskUtils.findTask(deployFsPath, taskName, tasks);
+        const task: vscode.Task | undefined = await taskUtils.findTask(deployFsPath, taskName);
         context.telemetry.properties.foundPostDeployTask = String(!!task);
         if (task) {
             await vscode.tasks.executeTask(task);
