@@ -23,11 +23,21 @@ const siteNamingRules: IAzureNamingRules = {
 export class SiteNameStep extends AzureNameStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
         const client: WebSiteManagementClient = createAzureClient(wizardContext, WebSiteManagementClient);
+
+        let placeHolder: string | undefined;
+        if (wizardContext.environment.name === 'Azure') {
+            // Unfortunately, the environment object doesn't have the url we need for this placeholder. Might be fixed in the new sdk: https://github.com/microsoft/vscode-azuretools/issues/510
+            // For now, we'll only display this placeholder for the most common case
+            const namePlaceholder: string = wizardContext.newSiteKind === AppKind.functionapp ? localize('funcAppName', 'function app name') : localize('webAppName', 'web app name');
+            placeHolder = `<${namePlaceholder}>.azurewebsites.net`;
+        }
+
         const prompt: string = wizardContext.newSiteKind === AppKind.functionapp ?
             localize('functionAppNamePrompt', 'Enter a globally unique name for the new function app.') :
             localize('webAppNamePrompt', 'Enter a globally unique name for the new web app.');
         wizardContext.newSiteName = (await ext.ui.showInputBox({
             prompt,
+            placeHolder,
             validateInput: async (name: string | undefined): Promise<string | undefined> => await this.validateSiteName(client, name)
         })).trim();
 
