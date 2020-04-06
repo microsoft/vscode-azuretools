@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, parseError, TreeItemIconPath } from 'vscode-azureextensionui';
+import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, IActionContext, parseError, TreeItemIconPath } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
 import { localize } from '../localize';
 import { FileTreeItem } from './FileTreeItem';
@@ -38,7 +38,7 @@ export class FolderTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         return this._isRoot && this.isReadOnly ? localize('readOnly', 'Read-only') : undefined;
     }
 
-    public async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzExtTreeItem[]> {
+    public async loadMoreChildrenImpl(_clearCache: boolean, _context: IActionContext): Promise<AzExtTreeItem[]> {
         const kuduClient: KuduClient = await this.root.client.getKuduClient();
         let response: IKuduItemResponse;
         try {
