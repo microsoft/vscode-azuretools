@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem } from 'vscode-azureextensionui';
+import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, IActionContext, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { FolderTreeItem } from './FolderTreeItem';
@@ -22,8 +22,20 @@ export class LogFilesTreeItem extends FolderTreeItem {
         super(parent, localize('logFiles', 'Logs'), '/LogFiles', true);
     }
 
-    public async loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]> {
-        const children: AzExtTreeItem[] = await super.loadMoreChildrenImpl(clearCache);
+    public async loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {
+        let children: AzExtTreeItem[];
+        try {
+            children = await super.loadMoreChildrenImpl(clearCache, context);
+        } catch (error) {
+            // We want to show the log stream tree item in all cases, so handle errors here
+            const message: string = parseError(error).message;
+            context.telemetry.properties.logFilesError = message;
+            children = [new GenericTreeItem(this, {
+                label: localize('errorTreeItem', 'Error: {0}', message),
+                contextValue: 'logFilesError'
+            })];
+        }
+
         if (clearCache) {
             const ti: AzExtTreeItem = new GenericTreeItem(this, {
                 contextValue: 'logStream',

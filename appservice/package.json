@@ -1,7 +1,7 @@
 {
     "name": "vscode-azureappservice",
     "author": "Microsoft Corporation",
-    "version": "0.57.5",
+    "version": "0.57.6",
     "description": "Common tools for developing Azure App Service extensions for VS Code",
     "tags": [
         "azure",
