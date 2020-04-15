@@ -212,10 +212,6 @@ const stacks: ApplicationStack[] = [
             {
                 displayVersion: "Java SE",
                 runtimeVersion: "JAVA|8-jre8"
-            },
-            {
-                displayVersion: "WildFly 14 - Preview",
-                runtimeVersion: "WILDFLY|14-jre8"
             }
         ]
     },
@@ -516,15 +512,6 @@ const expectedTomcatPicks: {}[] = [
     }
 ];
 
-const expectedWildflyPicks: {}[] = [
-    {
-        id: "WILDFLY|14-jre8",
-        label: "WildFly 14 - Preview",
-        data: "WILDFLY|14-jre8",
-        description: "Java 8"
-    }
-];
-
 suite("convertStacksToPicks", () => {
     test('No recommendations', () => {
         assert.deepEqual(convertStacksToPicks(stacks, undefined), [
@@ -534,16 +521,14 @@ suite("convertStacksToPicks", () => {
             ...expectedPhpPicks,
             ...expectedPythonPicks,
             ...expectedRubyPicks,
-            ...expectedTomcatPicks,
-            ...expectedWildflyPicks
+            ...expectedTomcatPicks
         ]);
     });
 
     test('Java recommendations', () => {
-        assert.deepEqual(convertStacksToPicks(stacks, [LinuxRuntimes.java, LinuxRuntimes.tomcat, LinuxRuntimes.wildfly]), [
+        assert.deepEqual(convertStacksToPicks(stacks, [LinuxRuntimes.java, LinuxRuntimes.tomcat]), [
             ...expectedJavaPicks,
             ...expectedTomcatPicks,
-            ...expectedWildflyPicks,
             ...expectedDotnetPicks,
             ...expectedNodePicks,
             ...expectedPhpPicks,
@@ -560,8 +545,7 @@ suite("convertStacksToPicks", () => {
             ...expectedPhpPicks,
             ...expectedPythonPicks,
             ...expectedRubyPicks,
-            ...expectedTomcatPicks,
-            ...expectedWildflyPicks
+            ...expectedTomcatPicks
         ]);
     });
 
@@ -573,8 +557,7 @@ suite("convertStacksToPicks", () => {
             ...expectedNodePicks,
             ...expectedPhpPicks,
             ...expectedRubyPicks,
-            ...expectedTomcatPicks,
-            ...expectedWildflyPicks
+            ...expectedTomcatPicks
         ]);
     });
 });
