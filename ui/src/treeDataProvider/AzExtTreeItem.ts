@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { TreeItemCollapsibleState, Uri, ThemeIcon } from 'vscode';
+import { TreeItemCollapsibleState } from 'vscode';
 import * as types from '../../index';
 import { NotImplementedError } from '../errors';
 import { localize } from '../localize';
@@ -19,7 +19,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     public id?: string;
     public commandId?: string;
     public commandArgs?: unknown[];
-    public iconPath?: string | Uri | { light: string | Uri; dark: string | Uri } | ThemeIcon;
+    public iconPath?: types.TreeItemIconPath;
     //#endregion
 
     public readonly collapsibleState: TreeItemCollapsibleState | undefined;
@@ -54,7 +54,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
         }
     }
 
-    public get effectiveIconPath(): string | Uri | { light: string | Uri; dark: string | Uri } | ThemeIcon | undefined {
+    public get effectiveIconPath(): types.TreeItemIconPath | undefined {
         return this._temporaryDescription || this._isLoadingMore ? getThemedIconPath('Loading') : this.iconPath;
     }
 
