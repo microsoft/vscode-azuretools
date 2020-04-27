@@ -581,6 +581,8 @@ export interface IErrorHandlingContext {
 
 export interface ITelemetryReporter {
     sendTelemetryEvent(eventName: string, properties?: { [key: string]: string | undefined }, measurements?: { [key: string]: number | undefined }): void;
+
+    sendTelemetryErrorEvent(eventName: string, properties?: { [key: string]: string | undefined }, measurements?: { [key: string]: number | undefined }): void;
 }
 
 /**
