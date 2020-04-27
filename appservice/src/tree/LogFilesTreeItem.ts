@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, IActionContext, parseError } from 'vscode-azureextensionui';
+import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, IActionContext, IContextValue, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { FolderTreeItem } from './FolderTreeItem';
@@ -13,13 +13,16 @@ import { getThemedIconPath } from './IconPath';
  * NOTE: This leverages a command with id `ext.prefix + '.startStreamingLogs'` that should be registered by each extension
  */
 export class LogFilesTreeItem extends FolderTreeItem {
-    public static contextValue: string = 'logFiles';
-    public readonly contextValue: string = LogFilesTreeItem.contextValue;
+    public static contextValueId: string = 'logFiles';
 
     protected readonly _isRoot: boolean = true;
 
     constructor(parent: AzureParentTreeItem) {
         super(parent, localize('logFiles', 'Logs'), '/LogFiles', true);
+    }
+
+    public get contextValue(): IContextValue {
+        return { id: LogFilesTreeItem.contextValueId };
     }
 
     public async loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {

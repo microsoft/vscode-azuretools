@@ -7,6 +7,7 @@ import * as types from '../../index';
 
 export abstract class AzureWizardPromptStep<T extends types.IActionContext> implements types.AzureWizardPromptStep<T> {
     public hideStepCount: boolean = false;
+    public supportsDuplicateSteps: boolean = false;
     public effectiveTitle: string | undefined;
     public hasSubWizard: boolean;
     public numSubPromptSteps: number;
@@ -14,11 +15,11 @@ export abstract class AzureWizardPromptStep<T extends types.IActionContext> impl
     public propertiesBeforePrompt: string[];
     public prompted: boolean;
 
-    public abstract prompt(wizardContext: T): Promise<void>;
+    public abstract prompt(context: T): Promise<void>;
 
-    public getSubWizard?(wizardContext: T): Promise<types.IWizardOptions<T> | undefined>;
+    public getSubWizard?(context: T): Promise<types.IWizardOptions<T> | undefined>;
 
-    public abstract shouldPrompt(wizardContext: T): boolean;
+    public abstract shouldPrompt(context: T): boolean;
 
     public reset(): void {
         this.hasSubWizard = false;

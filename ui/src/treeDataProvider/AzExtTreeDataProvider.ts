@@ -6,9 +6,11 @@
 import { Event, EventEmitter, TreeItem } from 'vscode';
 import * as types from '../../index';
 import { callWithTelemetryAndErrorHandling } from '../callWithTelemetryAndErrorHandling';
-import { NoResouceFoundError, UserCancelledError } from '../errors';
+import { UserCancelledError } from '../errors';
 import { localize } from '../localize';
 import { parseError } from '../parseError';
+import { nonNullProp } from '../utils/nonNull';
+import { AzureWizard } from '../wizard/AzureWizard';
 import { AzExtParentTreeItem } from './AzExtParentTreeItem';
 import { AzExtTreeItem } from './AzExtTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';
@@ -16,6 +18,7 @@ import { getThemedIconPath } from './IconPath';
 import { IAzExtTreeDataProviderInternal, isAzExtParentTreeItem } from './InternalInterfaces';
 import { runWithLoadingNotification } from './runWithLoadingNotification';
 import { loadMoreLabel } from './treeConstants';
+import { TreeItemListStep } from './TreeItemListStep';
 
 export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, types.AzExtTreeDataProvider {
     public _onTreeItemCreateEmitter: EventEmitter<AzExtTreeItem> = new EventEmitter<AzExtTreeItem>();
@@ -44,7 +47,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
             label: treeItem.effectiveLabel,
             id: treeItem.fullId,
             collapsibleState: treeItem.collapsibleState,
-            contextValue: treeItem.contextValue,
+            contextValue: treeItem.effectiveContextValue,
             iconPath: treeItem.effectiveIconPath,
             command: treeItem.commandId ? {
                 command: treeItem.commandId,
@@ -67,7 +70,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                     treeItem = this._rootTreeItem;
                 }
 
-                context.telemetry.properties.contextValue = treeItem.contextValue;
+                context.telemetry.properties.contextValue = treeItem.effectiveContextValue;
 
                 const cachedChildren: AzExtTreeItem[] = await treeItem.getCachedChildren(context);
                 const hasMoreChildren: boolean = treeItem.hasMoreChildrenImpl();
@@ -121,31 +124,47 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         await treeItem.loadMoreChildren(context);
     }
 
-    public async showTreeItemPicker<T extends types.AzExtTreeItem>(expectedContextValues: string | (string | RegExp)[] | RegExp, context: types.ITreeItemPickerContext & { canPickMany: true }, startingTreeItem?: AzExtTreeItem): Promise<T[]>;
-    public async showTreeItemPicker<T extends types.AzExtTreeItem>(expectedContextValues: string | (string | RegExp)[] | RegExp, context: types.ITreeItemPickerContext, startingTreeItem?: AzExtTreeItem): Promise<T>;
-    public async showTreeItemPicker<T extends types.AzExtTreeItem>(expectedContextValues: string | (string | RegExp)[] | RegExp, context: types.ITreeItemPickerContext, startingTreeItem?: AzExtTreeItem): Promise<T | T[]> {
-        if (!Array.isArray(expectedContextValues)) {
-            expectedContextValues = [expectedContextValues];
+    public async showTreeItemWizard<T extends types.AzExtTreeItem>(expectedContextValue: types.IExpectedContextValue | string, context: types.ITreeItemActionContext & { canPickMany: true }, startingTreeItem?: AzExtParentTreeItem): Promise<T[]>;
+    public async showTreeItemWizard<T extends types.AzExtTreeItem>(expectedContextValue: types.IExpectedContextValue | string, context: types.ITreeItemActionContext, startingTreeItem?: AzExtParentTreeItem): Promise<T>;
+    public async showTreeItemWizard<T extends types.AzExtTreeItem>(expectedContextValue: types.IExpectedContextValue | string, context: types.ITreeItemActionContext, startingTreeItem?: AzExtParentTreeItem): Promise<T | T[]> {
+        if (typeof expectedContextValue === 'string') {
+            expectedContextValue = {
+                id: expectedContextValue
+            };
         }
 
-        // tslint:disable-next-line:strict-boolean-expressions
-        let treeItem: AzExtTreeItem = startingTreeItem || this._rootTreeItem;
-
-        while (!treeItem.matchesContextValue(expectedContextValues)) {
-            if (isAzExtParentTreeItem(treeItem)) {
-                const pickedItems: AzExtTreeItem | AzExtTreeItem[] = await (<AzExtParentTreeItem>treeItem).pickChildTreeItem(expectedContextValues, context);
-                if (Array.isArray(pickedItems)) {
-                    // canPickMany is only supported at the last stage of the picker, so automatically return if this is an array
-                    return <T[]><unknown>pickedItems;
-                } else {
-                    treeItem = pickedItems;
-                }
-            } else {
-                throw new NoResouceFoundError(context);
-            }
+        const wizardContext: types.ITreeItemWizardContext = context;
+        if (startingTreeItem?.matchesContextValue(expectedContextValue)) {
+            wizardContext.pickedTreeItem = startingTreeItem;
         }
 
-        return <T><unknown>treeItem;
+        const wizard: AzureWizard<types.ITreeItemWizardContext> = new AzureWizard(wizardContext, {
+            // tslint:disable-next-line:strict-boolean-expressions
+            promptSteps: [new TreeItemListStep(startingTreeItem || this._rootTreeItem, expectedContextValue)]
+        });
+
+        await wizard.prompt();
+
+        if (wizardContext.action === 'createChild' || wizardContext.action === 'createChildAdvanced') {
+            const parent: AzExtParentTreeItem = <AzExtParentTreeItem>nonNullProp(wizardContext, 'pickedTreeItem'); // todo cast
+            const label: string = nonNullProp(wizardContext, 'newChildLabel');
+            await parent.withCreateProgress(label, async (): Promise<types.AzExtTreeItem> => {
+                await wizard.execute();
+                return nonNullProp(wizardContext, 'newChildTreeItem');
+            });
+        } else {
+            await wizard.execute();
+        }
+
+        return <T><unknown>nonNullProp(wizardContext, 'pickedTreeItem');
+    }
+
+    public initTreeCommand(expectedContextValue: types.IExpectedContextValue | string, action: types.TreeItemWizardAction): types.CommandCallback {
+        return async (context: types.IActionContext & Partial<types.ITreeItemWizardContext>, treeItem?: AzExtTreeItem): Promise<unknown> => {
+            context.action = action;
+            context.pickedTreeItem = treeItem;
+            return await this.showTreeItemWizard(expectedContextValue, context);
+        };
     }
 
     public async getParent(treeItem: AzExtTreeItem): Promise<AzExtTreeItem | undefined> {

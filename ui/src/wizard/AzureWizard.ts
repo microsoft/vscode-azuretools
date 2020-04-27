@@ -15,12 +15,16 @@ import { AzureWizardUserInput, IInternalAzureWizard } from './AzureWizardUserInp
 
 export class AzureWizard<T extends types.IActionContext> implements types.AzureWizard<T>, IInternalAzureWizard {
     public title: string | undefined;
+    public lastPromptValue: string | undefined;
     private readonly _promptSteps: AzureWizardPromptStep<T>[];
     private readonly _executeSteps: AzureWizardExecuteStep<T>[];
     private readonly _finishedPromptSteps: AzureWizardPromptStep<T>[] = [];
     private readonly _context: T;
     private _stepHideStepCount?: boolean;
     private _wizardHideStepCount?: boolean;
+
+    private _cachedInputBoxValues: { [step: string]: string | undefined } = {};
+    private _inputBoxKey: string | undefined;
 
     public constructor(context: T, options: types.IWizardOptions<T>) {
         // reverse steps to make it easier to use push/pop
@@ -31,6 +35,10 @@ export class AzureWizard<T extends types.IActionContext> implements types.AzureW
         this._executeSteps = options.executeSteps || [];
         this._context = context;
         this._wizardHideStepCount = options.hideStepCount;
+    }
+
+    public getPreviousInputBoxValue(): string | undefined {
+        return this._inputBoxKey ? this._cachedInputBoxValues[this._inputBoxKey] : undefined;
     }
 
     public get hideStepCount(): boolean {
@@ -61,9 +69,22 @@ export class AzureWizard<T extends types.IActionContext> implements types.AzureW
                 if (step.shouldPrompt(this._context)) {
                     step.propertiesBeforePrompt = Object.keys(this._context).filter(k => !isNullOrUndefined(this._context[k]));
 
+                    if (!ext.ui.onDidFinishPrompt) {
+                        throw new Error('todo onDidFinishPrompt undefined');
+                    }
+
+                    const disposable: vscode.Disposable = ext.ui.onDidFinishPrompt((result) => {
+                        // tslint:disable-next-line: no-non-null-assertion
+                        step!.prompted = true;
+                        if (result && this._inputBoxKey) {
+                            this._cachedInputBoxValues[this._inputBoxKey] = result;
+                        }
+                    });
+
                     try {
+                        this._inputBoxKey = step.supportsDuplicateSteps ? undefined : step.constructor.name;
+
                         await step.prompt(this._context);
-                        step.prompted = true;
                     } catch (err) {
                         if (parseError(err).errorType === 'GoBackError') { // Use `errorType` instead of `instanceof` so that tests can also hit this case
                             step = this.goBack(step);
@@ -71,6 +92,9 @@ export class AzureWizard<T extends types.IActionContext> implements types.AzureW
                         } else {
                             throw err;
                         }
+                    } finally {
+                        this._inputBoxKey = undefined;
+                        disposable.dispose();
                     }
                 }
 
@@ -151,7 +175,7 @@ export class AzureWizard<T extends types.IActionContext> implements types.AzureW
 
         if (subWizard.promptSteps) {
             subWizard.promptSteps = subWizard.promptSteps.filter(s1 => {
-                return !this._finishedPromptSteps.concat(this._promptSteps).some(s2 => s1.constructor.name === s2.constructor.name);
+                return s1.supportsDuplicateSteps || !this._finishedPromptSteps.concat(this._promptSteps).some(s2 => s1.constructor.name === s2.constructor.name);
             });
             this._promptSteps.push(...<AzureWizardPromptStep<T>[]>subWizard.promptSteps.reverse());
             step.numSubPromptSteps = subWizard.promptSteps.length;

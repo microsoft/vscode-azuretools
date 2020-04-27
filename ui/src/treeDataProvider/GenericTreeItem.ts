@@ -9,14 +9,14 @@ import { IAzExtParentTreeItemInternal } from "./InternalInterfaces";
 
 export class GenericTreeItem extends AzExtTreeItem implements types.GenericTreeItem {
     public label: string;
-    public contextValue: string;
+    public contextValue: types.IContextValue;
 
     private _includeInTreeItemPicker: boolean;
 
     constructor(parent: IAzExtParentTreeItemInternal | undefined, options: types.IGenericTreeItemOptions) {
         super(parent);
         this.label = options.label;
-        this.contextValue = options.contextValue;
+        this.contextValue = { id: options.contextValue };
         this.id = options.id;
         this.commandId = options.commandId;
         this.iconPath = options.iconPath;

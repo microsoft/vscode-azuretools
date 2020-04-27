@@ -129,12 +129,12 @@ If your tree displays non-Azure resources you can either provide a different roo
 
 #### Tree Item Picker
 
-The above steps will display your Azure Resources, but that's just the beginning. Let's say you implemented a `browse` function on your `WebAppTreeItem` that opened the Web App in the browser. In order to make that command work from the VS Code command palette, use the `showTreeItemPicker` method:
+The above steps will display your Azure Resources, but that's just the beginning. Let's say you implemented a `browse` function on your `WebAppTreeItem` that opened the Web App in the browser. In order to make that command work from the VS Code command palette, use the `showTreeItemWizard` method:
 
 ```typescript
 registerCommand('appService.Browse', async (context: IActionContext, treeItem?: WebAppTreeItem) => {
     if (!treeItem) {
-        treeItem = await treeDataProvider.showTreeItemPicker(WebAppTreeItem.contextValue, context);
+        treeItem = await treeDataProvider.showTreeItemWizard(WebAppTreeItem.contextValue, context);
     }
 
     treeItem.browse();

@@ -5,7 +5,7 @@
 
 import { SiteConfig, SiteSourceControl } from 'azure-arm-website/lib/models';
 import { MessageItem } from 'vscode';
-import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, GenericTreeItem, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
+import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, GenericTreeItem, IActionContext, IContextValue, IExpectedContextValue, TreeItemIconPath } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
 import { DeployResult } from 'vscode-azurekudu/lib/models';
 import { editScmType } from '../editScmType';
@@ -21,8 +21,7 @@ import { ISiteTreeRoot } from './ISiteTreeRoot';
  * NOTE: This leverages a command with id `ext.prefix + '.connectToGitHub'` that should be registered by each extension
  */
 export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
-    public static contextValueConnected: string = 'deploymentsConnected';
-    public static contextValueUnconnected: string = 'deploymentsUnconnected';
+    public static contextValueId: string = 'deployments';
     public parent: AzureParentTreeItem<ISiteTreeRoot>;
     public readonly label: string = localize('Deployments', 'Deployments');
     public readonly childTypeLabel: string = localize('Deployment', 'Deployment');
@@ -53,8 +52,11 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         }
     }
 
-    public get contextValue(): string {
-        return this._scmType === ScmType.None ? DeploymentsTreeItem.contextValueUnconnected : DeploymentsTreeItem.contextValueConnected;
+    public get contextValue(): IContextValue {
+        return {
+            id: DeploymentsTreeItem.contextValueId,
+            scmType: this._scmType
+        };
     }
 
     public hasMoreChildrenImpl(): boolean {
@@ -72,7 +74,7 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
             deployments,
             'invalidDeployment',
             (dr: DeployResult) => {
-                return new DeploymentTreeItem(this, dr, siteConfig.scmType);
+                return new DeploymentTreeItem(this, dr);
             },
             (dr: DeployResult) => {
                 return dr.id ? dr.id.substring(0, 7) : undefined;
@@ -114,5 +116,9 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         const sourceControl: SiteSourceControl = await this.root.client.getSourceControl();
         this._scmType = siteConfig.scmType;
         this._repoUrl = sourceControl.repoUrl;
+    }
+
+    public isAncestorOfImpl(expectedContextValue: IExpectedContextValue): boolean {
+        return expectedContextValue.id === DeploymentTreeItem.contextValueId;
     }
 }

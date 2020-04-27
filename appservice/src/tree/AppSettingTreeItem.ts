@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { SlotConfigNamesResource, StringDictionary } from 'azure-arm-website/lib/models';
-import { AzureTreeItem, DialogResponses, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
+import { AzureTreeItem, DialogResponses, IActionContext, IContextValue, TreeItemIconPath } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { AppSettingsTreeItem, validateAppSettingKey } from './AppSettingsTreeItem';
@@ -15,8 +15,7 @@ import { ISiteTreeRoot } from './ISiteTreeRoot';
  * NOTE: This leverages a command with id `ext.prefix + '.toggleAppSettingVisibility'` that should be registered by each extension
  */
 export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
-    public static contextValue: string = 'applicationSettingItem';
-    public readonly contextValue: string = AppSettingTreeItem.contextValue;
+    public static contextValueId: string = 'appSetting';
     public readonly parent: AppSettingsTreeItem;
 
     private _key: string;
@@ -36,6 +35,11 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         await ti.refreshImpl();
         return ti;
     }
+
+    public get contextValue(): IContextValue {
+        return { id: AppSettingTreeItem.contextValueId };
+    }
+
     public get id(): string {
         return this._key;
     }
@@ -78,9 +82,11 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         await this.refresh();
     }
 
-    public async deleteTreeItemImpl(context: IActionContext): Promise<void> {
-        await ext.ui.showWarningMessage(`Are you sure you want to delete setting "${this._key}"?`, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
-        await this.parent.deleteSettingItem(this._key, context);
+    public async deleteAppSetting(context: IActionContext): Promise<void> {
+        await this.withDeleteProgress(async () => {
+            await ext.ui.showWarningMessage(`Are you sure you want to delete setting "${this._key}"?`, { modal: true }, DialogResponses.deleteResponse);
+            await this.parent.deleteSettingItem(this._key, context);
+        });
     }
 
     public async toggleValueVisibility(): Promise<void> {

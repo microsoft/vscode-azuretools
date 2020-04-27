@@ -40,7 +40,7 @@ abstract class ParentTreeItemBase extends AzExtParentTreeItem {
 
 class RootTreeItem extends ParentTreeItemBase {
     public label: string = 'root';
-    public contextValue: string = 'root';
+    public contextValue: types.IContextValue = { id: 'root' };
 
     protected createChildTreeItem(index: number): AzExtTreeItem {
         return new MiddleTreeItem(this, index);
@@ -49,7 +49,7 @@ class RootTreeItem extends ParentTreeItemBase {
 
 class MiddleTreeItem extends ParentTreeItemBase {
     public label: string;
-    public contextValue: string = 'middle';
+    public contextValue: types.IContextValue = { id: 'middle' };
 
     constructor(parent: AzExtParentTreeItem, index: number) {
         super(parent);
@@ -63,7 +63,7 @@ class MiddleTreeItem extends ParentTreeItemBase {
 
 class LeafTreeItem extends AzExtTreeItem {
     public label: string;
-    public contextValue: string = 'leaf';
+    public contextValue: types.IContextValue = { id: 'leaf' };
 
     constructor(parent: AzExtParentTreeItem, index: number) {
         super(parent);

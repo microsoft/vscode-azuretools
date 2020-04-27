@@ -5,6 +5,7 @@
 
 import * as vscode from 'vscode';
 import { TestUserInput } from 'vscode-azureextensiondev';
+import * as types from '../index';
 import { ext } from '../src/extensionVariables';
 
 // tslint:disable-next-line: export-name
@@ -19,5 +20,5 @@ suiteSetup(async () => {
     } else {
         await extension.activate();
     }
-    ext.ui = testUserInput;
+    ext.ui = <types.IAzureUserInput><unknown>testUserInput; // todo
 });

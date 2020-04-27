@@ -8,7 +8,7 @@ import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { StorageAccount } from 'azure-arm-storage/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment, AzureServiceClientOptions } from 'ms-rest-azure';
-import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocument, TreeDataProvider, TreeItem, Uri, ThemeIcon } from 'vscode';
+import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocument, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 
 export type OpenInPortalOptions = {
@@ -61,8 +61,10 @@ export declare class AzExtTreeDataProvider implements TreeDataProvider<AzExtTree
      * @param context The action context, with any additional user-defined properties that need to be passed along to `AzExtParentTreeItem.createChildImpl`
      * @param startingTreeItem An optional parameter to start the picker from somewhere other than the root of the tree
      */
-    public showTreeItemPicker<T extends AzExtTreeItem>(expectedContextValues: string | RegExp | (string | RegExp)[], context: ITreeItemPickerContext & { canPickMany: true }, startingTreeItem?: AzExtTreeItem): Promise<T[]>;
-    public showTreeItemPicker<T extends AzExtTreeItem>(expectedContextValues: string | RegExp | (string | RegExp)[], context: ITreeItemPickerContext, startingTreeItem?: AzExtTreeItem): Promise<T>;
+    public showTreeItemWizard<T extends AzExtTreeItem>(expectedContextValues: IExpectedContextValue | string, context: ITreeItemActionContext & { canPickMany: true }, startingTreeItem?: AzExtTreeItem): Promise<T[]>;
+    public showTreeItemWizard<T extends AzExtTreeItem>(expectedContextValues: IExpectedContextValue | string, context: ITreeItemActionContext, startingTreeItem?: AzExtTreeItem): Promise<T>;
+
+    public initTreeCommand(expectedContextValue: IExpectedContextValue | string, action: TreeItemWizardAction): CommandCallback;
 
     /**
      * Traverses a tree to find a node matching the given fullId of a tree item
@@ -103,7 +105,9 @@ export interface IFindTreeItemContext extends ILoadingTreeContext {
     loadAll?: boolean;
 }
 
-export interface ITreeItemPickerContext extends IActionContext {
+export type ITreeItemActionContext = IActionContext & Partial<ITreeItemWizardContext>;
+
+export interface ITreeItemWizardContext extends IActionContext {
     /**
      * If set to true, the last (and _only_ the last) stage of the tree item picker will show a multi-select quick pick
      */
@@ -120,14 +124,24 @@ export interface ITreeItemPickerContext extends IActionContext {
      * This will also suppress the report issue button.
      */
     noItemFoundErrorMessage?: string;
+
+    pickedTreeItem?: AzExtTreeItem | AzExtTreeItem[];
+
+    newChildLabel?: string;
+
+    newChildTreeItem?: AzExtTreeItem;
+
+    action?: TreeItemWizardAction;
 }
+
+export type TreeItemWizardAction = 'createChild' | 'createChildAdvanced';
 
 /**
  * Implement this class to display resources under a standard subscription tree item
  */
 export abstract class SubscriptionTreeItemBase extends AzureParentTreeItem {
-    public static readonly contextValue: string;
-    public readonly contextValue: string;
+    public static readonly contextValueId: string;
+    public readonly contextValue: IContextValue;
     public readonly label: string;
     constructor(parent: AzExtParentTreeItem, root: ISubscriptionContext);
 }
@@ -146,6 +160,18 @@ export interface ISubscriptionContext {
 }
 
 export type TreeItemIconPath = string | Uri | { light: string | Uri; dark: string | Uri } | ThemeIcon;
+
+export interface IContextValue {
+    id: string;
+    idPrefix?: string;
+    [key: string]: string | undefined;
+}
+
+export type IExpectedContextValue = {
+    id: string;
+    [key: string]: string | RegExp | undefined;
+};
+
 
 /**
  * Base class for all tree items in an *Az*ure *ext*ension, even if those resources aren't actually in Azure.
@@ -174,7 +200,7 @@ export declare abstract class AzExtTreeItem {
      * The arguments to pass in when executing `commandId`. If not specified, this tree item will be used.
      */
     public commandArgs?: unknown[];
-    public abstract contextValue: string;
+    public abstract contextValue: IContextValue;
     //#endregion
 
     /**
@@ -182,6 +208,7 @@ export declare abstract class AzExtTreeItem {
      * This is used for AzureTreeDataProvider.findTreeItem and AzureTreeItem.openInPortal
      */
     public readonly fullId: string;
+    public readonly fullContextValue: IContextValue;
     public readonly parent?: AzExtParentTreeItem;
     public readonly treeDataProvider: AzExtTreeDataProvider;
 
@@ -194,7 +221,7 @@ export declare abstract class AzExtTreeItem {
     /**
      * Implement this to support the 'delete' action in the tree. Should not be called directly
      */
-    public deleteTreeItemImpl?(context: IActionContext): Promise<void>;
+    public deleteAppSetting?(context: IActionContext): Promise<void>;
 
     /**
      * Implement this to execute any async code when this node is refreshed. Should not be called directly
@@ -205,7 +232,7 @@ export declare abstract class AzExtTreeItem {
      * Optional function to filter items displayed in the tree picker. Should not be called directly
      * If not implemented, it's assumed that 'isAncestorOf' evaluates to true
      */
-    public isAncestorOfImpl?(contextValue: string | RegExp): boolean;
+    public isAncestorOfImpl(expectedContextValue: IExpectedContextValue): boolean;
     //#endregion
 
     /**
@@ -216,12 +243,12 @@ export declare abstract class AzExtTreeItem {
     /**
      * This class wraps deleteTreeItemImpl and ensures the tree is updated correctly when an item is deleted
      */
-    public deleteTreeItem(context: IActionContext): Promise<void>;
+    public withDeleteProgress(callback: () => Promise<void>): Promise<void>;
 
     /**
      * Displays a 'Loading...' icon and temporarily changes the item's description while `callback` is being run
      */
-    public runWithTemporaryDescription(description: string, callback: () => Promise<void>): Promise<void>;
+    public withTemporaryDescription(description: string, callback: () => Promise<void>): Promise<void>;
 }
 
 export interface IGenericTreeItemOptions {
@@ -245,7 +272,7 @@ export interface IGenericTreeItemOptions {
  */
 export declare class GenericTreeItem extends AzExtTreeItem {
     public label: string;
-    public contextValue: string;
+    public contextValue: IContextValue;
     constructor(parent: AzExtParentTreeItem | undefined, options: IGenericTreeItemOptions);
 }
 
@@ -265,7 +292,7 @@ export interface IInvalidTreeItemOptions {
 }
 
 export class InvalidTreeItem extends AzExtParentTreeItem {
-    public contextValue: string;
+    public contextValue: IContextValue;
     public label: string;
     public iconPath: TreeItemIconPath;
     public readonly data?: unknown;
@@ -321,10 +348,9 @@ export declare abstract class AzExtParentTreeItem extends AzExtTreeItem {
     public abstract hasMoreChildrenImpl(): boolean;
 
     /**
-     * Implement this if you want the 'create' option to show up in the tree picker. Should not be called directly
-     * @param context The action context and any additional user-defined options that are passed to the `AzExtParentTreeItem.createChild` or `AzExtTreeDataProvider.showTreeItemPicker`
+     * todo
      */
-    createChildImpl?(context: ICreateChildImplContext): Promise<AzExtTreeItem>;
+    getCreateSubWizardImpl?(context: ITreeItemWizardContext, advancedCreation: boolean): Promise<IWizardOptions<IActionContext>>;
 
     /**
      * Override this if you want non-default (i.e. non-alphabetical) sorting of children. Should not be called directly
@@ -338,7 +364,7 @@ export declare abstract class AzExtParentTreeItem extends AzExtTreeItem {
      * If this treeItem should not show up in the tree picker or you want custom logic to show quick picks, implement this to provide a child that corresponds to the expectedContextValue. Should not be called directly
      * Otherwise, all children will be shown in the tree picker
      */
-    pickTreeItemImpl?(expectedContextValues: (string | RegExp)[]): AzExtTreeItem | undefined | Promise<AzExtTreeItem | undefined>;
+    pickTreeItemImpl?(expectedContextValue: IExpectedContextValue): AzExtTreeItem | undefined | Promise<AzExtTreeItem | undefined>;
     //#endregion
 
     /**
@@ -355,11 +381,11 @@ export declare abstract class AzExtParentTreeItem extends AzExtTreeItem {
         createTreeItem: (source: TSource) => AzExtTreeItem | undefined | Promise<AzExtTreeItem | undefined>,
         getLabelOnError: (source: TSource) => string | undefined | Promise<string | undefined>): Promise<AzExtTreeItem[]>;
 
-    /**
-     * This class wraps createChildImpl and ensures the tree is updated correctly when an item is created
-     * @param context The action context, with any additional user-defined properties that need to be passed along to `AzExtParentTreeItem.createChildImpl`
+
+    /*
+     * todo
      */
-    createChild<T extends AzExtTreeItem>(context: IActionContext): Promise<T>;
+    withCreateProgress<T extends AzExtTreeItem>(newLabel: string, callback: () => Promise<T>): Promise<T>;
 
     /**
      * Get the currently cached children for this tree item. This will load the first batch if they have not been loaded yet.
@@ -374,24 +400,12 @@ export declare abstract class AzExtParentTreeItem extends AzExtTreeItem {
     loadAllChildren(context: ILoadingTreeContext): Promise<AzExtTreeItem[]>;
 }
 
-export interface ICreateChildImplContext extends IActionContext {
-    /**
-     * Call this function to show a "Creating..." item in the tree while the create is in progress
-     */
-    showCreatingTreeItem(label: string): void;
-
-    /**
-     * Indicates advanced creation should be used
-     */
-    advancedCreation?: boolean;
-}
-
 /**
  * A tree item for an Azure Account, which will display subscriptions. For Azure-centered extensions, this will be at the root of the tree.
  */
 export declare abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem implements Disposable {
-    public static readonly contextValue: string;
-    public contextValue: string;
+    public static readonly contextValue: IContextValue;
+    public contextValue: IContextValue;
     public label: string;
     public disposables: Disposable[];
     public childTypeLabel: string;
@@ -422,7 +436,7 @@ export declare abstract class AzureAccountTreeItemBase extends AzExtParentTreeIt
 
     public hasMoreChildrenImpl(): boolean;
     public loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]>;
-    public pickTreeItemImpl(expectedContextValues: (string | RegExp)[]): Promise<AzExtTreeItem | undefined>;
+    public pickTreeItemImpl(expectedContextValue: IExpectedContextValue): Promise<AzExtTreeItem | undefined>;
 }
 
 /**
@@ -499,11 +513,13 @@ export declare abstract class BaseEditor<ContextT> implements Disposable {
     dispose(): Promise<void>;
 }
 
+export type CommandCallback = (context: IActionContext, ...args: unknown[]) => unknown;
+
 /**
  * Used to register VSCode commands. It wraps your callback with consistent error and telemetry handling
  * Use debounce property if you need a delay between clicks for this particular command
  */
-export declare function registerCommand(commandId: string, callback: (context: IActionContext, ...args: any[]) => any, debounce?: number): void;
+export declare function registerCommand(commandId: string, callback: CommandCallback, debounce?: number): void;
 
 /**
  * Used to register VSCode events. It wraps your callback with consistent error and telemetry handling
@@ -632,6 +648,8 @@ export interface IParsedError {
  * 2. Persists 'recently used' items in quick picks and displays them at the top
  */
 export interface IAzureUserInput {
+    onDidFinishPrompt?: Event<string>; // todo make required
+
     /**
     * Shows a multi-selection list.
     *
@@ -698,6 +716,8 @@ export interface IAzureUserInput {
  * Wrapper class of several `vscode.window` methods that handle user input.
  */
 export declare class AzureUserInput implements IAzureUserInput {
+    onDidFinishPrompt?: Event<string>;
+
     /**
      * @param persistence Used to persist previous selections in the QuickPick.
      */
@@ -748,6 +768,11 @@ export interface IAzureQuickPickOptions extends QuickPickOptions {
      * Optionally used to select default picks in a multi-select quick pick
      */
     isPickSelected?: (p: QuickPickItem) => boolean;
+
+    /**
+     * todo
+     */
+    loadingPlaceHolder?: string;
 }
 
 /**
@@ -819,6 +844,8 @@ export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
      * If true, step count will not be displayed when prompting. Defaults to false.
      */
     public hideStepCount: boolean;
+
+    public supportsDuplicateSteps: boolean;
 
     /**
      * Prompt the user for input
@@ -923,7 +950,7 @@ export declare abstract class AzureNameStep<T extends IRelatedNameWizardContext>
      * Generates a related name for new resources
      * @param wizardContext The context of the wizard.
      * @param name The original name to base the related name on.
-     * @param namingRules The rules that the name must adhere to. You may specify an array of rules if the related name will be used for multiple resource types.
+     * @param namingRules The rules that the name must adhere to. You may specify an array of rules if the related name will be used for multiple resource
      * @returns A name that conforms to the namingRules and has a numeric suffix attached to make the name unique, or undefined if a unique name could not be found
      */
     protected generateRelatedName(wizardContext: T, name: string, namingRules: IAzureNamingRules | IAzureNamingRules[]): Promise<string | undefined>;

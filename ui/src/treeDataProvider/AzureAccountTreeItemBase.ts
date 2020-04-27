@@ -9,13 +9,13 @@ import { AzureAccount, AzureLoginStatus, AzureResourceFilter } from '../azure-ac
 import { UserCancelledError } from '../errors';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { nonNullProp, nonNullValue } from '../utils/nonNull';
-import { AzureWizardPromptStep } from '../wizard/AzureWizardPromptStep';
+import { nonNullProp } from '../utils/nonNull';
 import { AzExtParentTreeItem } from './AzExtParentTreeItem';
 import { AzExtTreeItem } from './AzExtTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';
 import { getIconPath, getThemedIconPath } from './IconPath';
 import { SubscriptionTreeItemBase } from './SubscriptionTreeItemBase';
+import { TreeItemListStep } from './TreeItemListStep';
 
 const signInLabel: string = localize('signInLabel', 'Sign in to Azure...');
 const createAccountLabel: string = localize('createAccountLabel', 'Create a Free Azure Account...');
@@ -27,8 +27,8 @@ const azureAccountExtensionId: string = 'ms-vscode.azure-account';
 const extensionOpenCommand: string = 'extension.open';
 
 export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem implements types.AzureAccountTreeItemBase {
-    public static contextValue: string = 'azureextensionui.azureAccount';
-    public readonly contextValue: string = AzureAccountTreeItemBase.contextValue;
+    public static contextValue: types.IContextValue = { id: 'azureextensionui.azureAccount' };
+    public readonly contextValue: types.IContextValue = AzureAccountTreeItemBase.contextValue;
     public readonly label: string = 'Azure';
     public readonly childTypeLabel: string = localize('subscription', 'subscription');
     public autoSelectInTreeItemPicker: boolean = true;
@@ -126,26 +126,23 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
         }
     }
 
-    public async getSubscriptionPromptStep(context: Partial<types.ISubscriptionWizardContext> & types.IActionContext): Promise<types.AzureWizardPromptStep<types.ISubscriptionWizardContext> | undefined> {
-        const subscriptions: SubscriptionTreeItemBase[] = await this.ensureSubscriptionTreeItems(context);
-        if (subscriptions.length === 1) {
-            Object.assign(context, subscriptions[0].root);
-            return undefined;
-        } else {
-            // tslint:disable-next-line: no-var-self
-            const me: AzureAccountTreeItemBase = this;
-            class SubscriptionPromptStep extends AzureWizardPromptStep<types.ISubscriptionWizardContext> {
-                public async prompt(): Promise<void> {
-                    const ti: SubscriptionTreeItemBase = <SubscriptionTreeItemBase>await me.treeDataProvider.showTreeItemPicker(SubscriptionTreeItemBase.contextValue, context, me);
-                    Object.assign(context, ti.root);
-                }
-                public shouldPrompt(): boolean { return !(<types.ISubscriptionWizardContext>context).subscriptionId; }
+    public async getSubscriptionPromptStep(context: Partial<types.ISubscriptionWizardContext> & types.IActionContext): Promise<types.AzureWizardPromptStep<types.IActionContext> | undefined> {
+        const azureAccount: AzureAccount | undefined = await this._azureAccountTask;
+        if (!azureAccount) {
+            context.telemetry.properties.cancelStep = 'requiresAzureAccount';
+            const message: string = localize('requiresAzureAccount', "This functionality requires installing the Azure Account extension.");
+            const viewInMarketplace: MessageItem = { title: localize('viewInMarketplace', "View in Marketplace") };
+            if (await ext.ui.showWarningMessage(message, viewInMarketplace) === viewInMarketplace) {
+                await commands.executeCommand(extensionOpenCommand, azureAccountExtensionId);
             }
-            return new SubscriptionPromptStep();
+
+            throw new UserCancelledError();
         }
+
+        return new TreeItemListStep(this, { id: SubscriptionTreeItemBase.contextValueId });
     }
 
-    public async pickTreeItemImpl(_expectedContextValues: (string | RegExp)[]): Promise<AzExtTreeItem | undefined> {
+    public async pickTreeItemImpl(_expectedContextValue: types.IExpectedContextValue): Promise<AzExtTreeItem | undefined> {
         const azureAccount: AzureAccount | undefined = await this._azureAccountTask;
         if (azureAccount && (azureAccount.status === 'LoggingIn' || azureAccount.status === 'Initializing')) {
             const title: string = localize('waitingForAzureSignin', 'Waiting for Azure sign-in...');
@@ -189,25 +186,5 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
         }
 
         return azureAccount;
-    }
-
-    private async ensureSubscriptionTreeItems(context: types.IActionContext): Promise<SubscriptionTreeItemBase[]> {
-        const azureAccount: AzureAccount | undefined = await this._azureAccountTask;
-        if (!azureAccount) {
-            context.telemetry.properties.cancelStep = 'requiresAzureAccount';
-            const message: string = localize('requiresAzureAccount', "This functionality requires installing the Azure Account extension.");
-            const viewInMarketplace: MessageItem = { title: localize('viewInMarketplace', "View in Marketplace") };
-            if (await ext.ui.showWarningMessage(message, viewInMarketplace) === viewInMarketplace) {
-                await commands.executeCommand(extensionOpenCommand, azureAccountExtensionId);
-            }
-
-            throw new UserCancelledError();
-        }
-
-        if (!this._subscriptionTreeItems) {
-            await this.getCachedChildren(context);
-        }
-
-        return nonNullValue(this._subscriptionTreeItems, 'subscriptionTreeItems');
     }
 }

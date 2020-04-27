@@ -6,7 +6,7 @@
 import { SiteSourceControl } from 'azure-arm-website/lib/models';
 import * as os from 'os';
 import { ProgressLocation, window } from 'vscode';
-import { AzureTreeItem, IActionContext, openReadOnlyContent, TreeItemIconPath } from 'vscode-azureextensionui';
+import { AzureTreeItem, IActionContext, IContextValue, openReadOnlyContent, TreeItemIconPath } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
 import { DeployResult, LogEntry } from 'vscode-azurekudu/lib/models';
 import { waitForDeploymentToComplete } from '../deploy/waitForDeploymentToComplete';
@@ -32,20 +32,22 @@ enum DeployStatus {
  * NOTE: This leverages two commands prefixed with `ext.prefix` that should be registered by each extension: "showOutputChannel" and "viewDeploymentLogs"
  */
 export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
-    public static contextValue: RegExp = new RegExp('deployment\/.*');
-    public readonly contextValue: string;
+    public static contextValueId: string = 'deployment';
     public label: string;
     public receivedTime: Date;
     public parent: DeploymentsTreeItem;
     private _deployResult: DeployResult;
 
-    constructor(parent: DeploymentsTreeItem, deployResult: DeployResult, scmType: string | undefined) {
+    constructor(parent: DeploymentsTreeItem, deployResult: DeployResult) {
         super(parent);
-        this.contextValue = `deployment/${scmType}`.toLocaleLowerCase();
         this._deployResult = deployResult;
         this.receivedTime = nonNullProp(deployResult, 'receivedTime');
         const message: string = this.getDeploymentMessage(deployResult);
         this.label = `${this.id.substring(0, 7)} - ${message}`;
+    }
+
+    public get contextValue(): IContextValue {
+        return { id: DeploymentTreeItem.contextValueId };
     }
 
     public get iconPath(): TreeItemIconPath {
@@ -79,10 +81,6 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
             default:
                 return;
         }
-    }
-
-    public isAncestorOfImpl(contextValue: string | RegExp): boolean {
-        return this.contextValue === contextValue;
     }
 
     public async redeployDeployment(context: IActionContext): Promise<void> {
@@ -140,7 +138,7 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     }
 
     public async viewDeploymentLogs(context: IActionContext): Promise<void> {
-        await this.runWithTemporaryDescription(localize('retrievingLogs', 'Retrieving logs...'), async () => {
+        await this.withTemporaryDescription(localize('retrievingLogs', 'Retrieving logs...'), async () => {
             const logData: string = await this.getDeploymentLogs(context);
             await openReadOnlyContent(this, logData, '.log');
         });

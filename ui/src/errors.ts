@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ITreeItemPickerContext } from "..";
+import * as types from '../index';
 import { localize } from "./localize";
 
 // tslint:disable: max-classes-per-file
@@ -27,7 +27,7 @@ export class NotImplementedError extends Error {
 }
 
 export class NoResouceFoundError extends Error {
-    constructor(context?: ITreeItemPickerContext) {
+    constructor(context?: types.IActionContext & Partial<types.ITreeItemWizardContext>) {
         if (context && context.noItemFoundErrorMessage) {
             super(context.noItemFoundErrorMessage);
             context.errorHandling.suppressReportIssue = true;

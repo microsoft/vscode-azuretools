@@ -27,7 +27,7 @@ export function registerCommand(commandId: string, callback: (context: IActionCo
                     const firstArg: any = args[0];
 
                     if (firstArg instanceof AzExtTreeItem) {
-                        context.telemetry.properties.contextValue = firstArg.contextValue;
+                        context.telemetry.properties.contextValue = firstArg.effectiveContextValue;
                     } else if (firstArg instanceof Uri) {
                         context.telemetry.properties.contextValue = 'Uri';
                     }

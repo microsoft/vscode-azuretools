@@ -5,10 +5,10 @@
 
 import { ApplicationInsightsComponent, ApplicationInsightsComponentListResult } from 'azure-arm-appinsights/lib/models';
 import { AppServicePlan, Site, SkuDescription } from 'azure-arm-website/lib/models';
-import { IResourceGroupWizardContext, IStorageAccountWizardContext } from 'vscode-azureextensionui';
+import { IResourceGroupWizardContext, IStorageAccountWizardContext, ITreeItemWizardContext } from 'vscode-azureextensionui';
 import { AppKind, LinuxRuntimes, WebsiteOS } from './AppKind';
 
-export interface IAppServiceWizardContext extends IResourceGroupWizardContext, IStorageAccountWizardContext {
+export interface IAppServiceWizardContext extends IResourceGroupWizardContext, IStorageAccountWizardContext, ITreeItemWizardContext {
     newSiteKind: AppKind;
 
     /**

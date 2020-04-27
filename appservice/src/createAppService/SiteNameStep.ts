@@ -40,6 +40,7 @@ export class SiteNameStep extends AzureNameStep<IAppServiceWizardContext> {
             placeHolder,
             validateInput: async (name: string | undefined): Promise<string | undefined> => await this.validateSiteName(client, name)
         })).trim();
+        wizardContext.newChildLabel = wizardContext.newSiteName;
 
         const namingRules: IAzureNamingRules[] = [resourceGroupNamingRules];
         if (wizardContext.newSiteKind === AppKind.functionapp) {

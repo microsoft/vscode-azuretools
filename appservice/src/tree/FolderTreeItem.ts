@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, IActionContext, parseError, TreeItemIconPath } from 'vscode-azureextensionui';
+import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, IActionContext, IContextValue, IExpectedContextValue, parseError, TreeItemIconPath } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
 import { localize } from '../localize';
 import { FileTreeItem } from './FileTreeItem';
@@ -11,8 +11,7 @@ import { getThemedIconPath } from './IconPath';
 import { ISiteTreeRoot } from './ISiteTreeRoot';
 
 export class FolderTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
-    public static contextValue: string = 'folder';
-    public readonly contextValue: string = FolderTreeItem.contextValue;
+    public static contextValueId: string = 'folder';
     public readonly childTypeLabel: string = localize('fileOrFolder', 'file or folder');
     public readonly label: string;
     public readonly path: string;
@@ -24,6 +23,10 @@ export class FolderTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         this.label = label;
         this.path = path;
         this.isReadOnly = isReadOnly;
+    }
+
+    public get contextValue(): IContextValue {
+        return { id: FolderTreeItem.contextValueId };
     }
 
     public get iconPath(): TreeItemIconPath {
@@ -75,6 +78,10 @@ export class FolderTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         }
 
         return result === undefined ? ti1.label.localeCompare(ti2.label) : result;
+    }
+
+    public isAncestorOfImpl(expectedContextValue: IExpectedContextValue): boolean {
+        return expectedContextValue.id === FileTreeItem.contextValueId;
     }
 }
 

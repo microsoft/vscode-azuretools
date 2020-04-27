@@ -8,8 +8,7 @@ import { AzureParentTreeItem } from './AzureParentTreeItem';
 import { getIconPath } from './IconPath';
 
 export abstract class SubscriptionTreeItemBase extends AzureParentTreeItem implements types.SubscriptionTreeItemBase {
-    public static readonly contextValue: string = 'azureextensionui.azureSubscription';
-    public readonly contextValue: string = SubscriptionTreeItemBase.contextValue;
+    public static readonly contextValueId: string = 'azureextensionui.azureSubscription';
     public readonly label: string;
 
     private _root: types.ISubscriptionContext;
@@ -22,7 +21,15 @@ export abstract class SubscriptionTreeItemBase extends AzureParentTreeItem imple
         this.iconPath = getIconPath('azureSubscription');
     }
 
+    public get contextValue(): types.IContextValue {
+        return { id: SubscriptionTreeItemBase.contextValueId };
+    }
+
     public get root(): types.ISubscriptionContext {
         return this._root;
+    }
+
+    public async onTreeItemPicked(context: types.ITreeItemWizardContext): Promise<void> {
+        Object.assign(context, this.root);
     }
 }

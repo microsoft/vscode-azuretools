@@ -4,10 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StringDictionary } from 'azure-arm-website/lib/models';
-import { AzureParentTreeItem, AzureTreeItem, IActionContext, ICreateChildImplContext, TreeItemIconPath } from 'vscode-azureextensionui';
-import { ext } from '../extensionVariables';
+import { AzureParentTreeItem, AzureTreeItem, IActionContext, IContextValue, IExpectedContextValue, ITreeItemWizardContext, IWizardOptions, TreeItemIconPath } from 'vscode-azureextensionui';
 import { SiteClient } from "../SiteClient";
 import { AppSettingTreeItem } from './AppSettingTreeItem';
+import { AppSettingCreateStep } from './AppSettingWizard/AppSettingCreateStep';
+import { AppSettingKeyStep } from './AppSettingWizard/AppSettingKeyStep';
+import { AppSettingValueStep } from './AppSettingWizard/AppSettingValueStep';
 import { getThemedIconPath } from './IconPath';
 import { ISiteTreeRoot } from './ISiteTreeRoot';
 
@@ -36,14 +38,17 @@ export function validateAppSettingKey(settings: StringDictionary, client: SiteCl
 }
 
 export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
-    public static contextValue: string = 'applicationSettings';
+    public static contextValueId: string = 'appSettings';
     public readonly label: string = 'Application Settings';
     public readonly childTypeLabel: string = 'App Setting';
-    public readonly contextValue: string = AppSettingsTreeItem.contextValue;
     private _settings: StringDictionary | undefined;
 
     public get id(): string {
         return 'configuration';
+    }
+
+    public get contextValue(): IContextValue {
+        return { id: AppSettingsTreeItem.contextValueId };
     }
 
     public get iconPath(): TreeItemIconPath {
@@ -93,29 +98,18 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         this._settings = await this.root.client.updateApplicationSettings(settings);
     }
 
-    public async createChildImpl(context: ICreateChildImplContext): Promise<AzureTreeItem<ISiteTreeRoot>> {
-        // make a deep copy so settings are not cached if there's a failure
-        // tslint:disable-next-line: no-unsafe-any
-        const settings: StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings(context)));
-        const newKey: string = await ext.ui.showInputBox({
-            prompt: 'Enter new setting key',
-            validateInput: (v?: string): string | undefined => validateAppSettingKey(settings, this.root.client, v)
+    public async postTreeItemListStep(context: ITreeItemWizardContext): Promise<void> {
+        Object.assign(context, {
+            appSettingsTreeItem: this,
+            appSettings: await this.ensureSettings(context)
         });
+    }
 
-        const newValue: string = await ext.ui.showInputBox({
-            prompt: `Enter setting value for "${newKey}"`
-        });
-
-        if (!settings.properties) {
-            settings.properties = {};
-        }
-
-        context.showCreatingTreeItem(newKey);
-        settings.properties[newKey] = newValue;
-
-        this._settings = await this.root.client.updateApplicationSettings(settings);
-
-        return await AppSettingTreeItem.createAppSettingTreeItem(this, newKey, newValue);
+    public async getCreateSubWizardImpl(_context: ITreeItemWizardContext): Promise<IWizardOptions<IActionContext>> {
+        return {
+            promptSteps: [new AppSettingKeyStep(), new AppSettingValueStep()],
+            executeSteps: [new AppSettingCreateStep()]
+        };
     }
 
     public async ensureSettings(context: IActionContext): Promise<StringDictionary> {
@@ -124,5 +118,9 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         }
 
         return <StringDictionary>this._settings;
+    }
+
+    public isAncestorOfImpl(expectedContextValue: IExpectedContextValue): boolean {
+        return expectedContextValue.id === AppSettingTreeItem.contextValueId;
     }
 }
