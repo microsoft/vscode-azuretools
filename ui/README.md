@@ -167,7 +167,7 @@ import { createTelemetryReporter } from 'vscode-azureextensionui';
 
 export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
     let reporter = createTelemetryReporter(ctx);
-    reporter.sendTelemetryEvent(<args>);
+    reporter.sendTelemetryErrorEvent(<args>);
 }
 ```
 
