@@ -13,6 +13,7 @@ export interface IInternalAzureWizard {
     currentStep: number;
     totalSteps: number;
     hideStepCount: boolean | undefined;
+    getCachedInputBoxValue(): string | undefined;
 }
 
 /**
@@ -27,6 +28,10 @@ export class AzureWizardUserInput implements IWizardUserInput {
         this._wizard = wizard;
     }
 
+    public get showBackButton(): boolean {
+        return this._wizard.currentStep > 1;
+    }
+
     public async showQuickPick<TPick extends QuickPickItem>(picks: TPick[] | Promise<TPick[]>, options: types.IAzureQuickPickOptions): Promise<TPick | TPick[]> {
         const disposables: Disposable[] = [];
         try {
@@ -37,10 +42,10 @@ export class AzureWizardUserInput implements IWizardUserInput {
                 quickPick.step = this._wizard.currentStep;
                 quickPick.totalSteps = this._wizard.totalSteps;
             }
-            quickPick.buttons = this._wizard.currentStep > 1 ? [QuickInputButtons.Back] : [];
+            quickPick.buttons = this.showBackButton ? [QuickInputButtons.Back] : [];
 
             // Copy settings that are common between options and quickPick
-            quickPick.placeholder = options.placeHolder;
+            quickPick.placeholder = options.loadingPlaceHolder || options.placeHolder;
             quickPick.ignoreFocusOut = !!options.ignoreFocusOut;
             quickPick.matchOnDescription = !!options.matchOnDescription;
             quickPick.matchOnDetail = !!options.matchOnDetail;
@@ -75,6 +80,7 @@ export class AzureWizardUserInput implements IWizardUserInput {
                         // tslint:disable-next-line: no-non-null-assertion
                         quickPick.selectedItems = quickPick.items.filter(p => options.isPickSelected!(p));
                     }
+                    quickPick.placeholder = options.placeHolder;
                     quickPick.busy = false;
                     quickPick.enabled = true;
                 } catch (err) {
@@ -97,11 +103,14 @@ export class AzureWizardUserInput implements IWizardUserInput {
                 inputBox.step = this._wizard.currentStep;
                 inputBox.totalSteps = this._wizard.totalSteps;
             }
-            inputBox.buttons = this._wizard.currentStep > 1 ? [QuickInputButtons.Back] : [];
+            inputBox.buttons = this.showBackButton ? [QuickInputButtons.Back] : [];
+
+            if (!inputBox.password) {
+                // tslint:disable-next-line: strict-boolean-expressions
+                inputBox.value = this._wizard.getCachedInputBoxValue() || options.value || '';
+            }
 
             // Copy settings that are common between options and inputBox
-            // tslint:disable-next-line: strict-boolean-expressions
-            inputBox.value = options.value || '';
             inputBox.ignoreFocusOut = !!options.ignoreFocusOut;
             inputBox.password = !!options.password;
             inputBox.placeholder = options.placeHolder;

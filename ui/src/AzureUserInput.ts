@@ -7,7 +7,7 @@ import * as vscode from 'vscode';
 import { Memento, MessageItem, MessageOptions, QuickPickItem } from 'vscode';
 import * as types from '../index';
 import { DialogResponses } from './DialogResponses';
-import { UserCancelledError } from './errors';
+import { GoBackError, UserCancelledError } from './errors';
 import { localize } from './localize';
 import { validOnTimeoutOrException } from './utils/inputValidation';
 import { openUrl } from './utils/openUrl';
@@ -17,9 +17,14 @@ import { IRootUserInput, IWizardUserInput } from './wizard/IWizardUserInput';
 export class AzureUserInput implements types.IAzureUserInput, types.AzureUserInput {
     public wizardUserInput: IWizardUserInput | undefined;
     private readonly _persistence: Memento;
+    private _onDidFinishPromptEmitter: vscode.EventEmitter<types.PromptResult> = new vscode.EventEmitter<types.PromptResult>();
 
     public constructor(persistence: Memento) {
         this._persistence = persistence;
+    }
+
+    public get onDidFinishPrompt(): vscode.Event<types.PromptResult> {
+        return this._onDidFinishPromptEmitter.event;
     }
 
     private get _rootUserInput(): IRootUserInput {
@@ -52,6 +57,7 @@ export class AzureUserInput implements types.IAzureUserInput, types.AzureUserInp
             this._persistence.update(persistenceKey, getPersistenceValue(result));
         }
 
+        this._onDidFinishPromptEmitter.fire(result);
         return result;
     }
 
@@ -70,6 +76,7 @@ export class AzureUserInput implements types.IAzureUserInput, types.AzureUserInp
         if (result === undefined) {
             throw new UserCancelledError();
         } else {
+            this._onDidFinishPromptEmitter.fire(result);
             return result;
         }
     }
@@ -83,6 +90,11 @@ export class AzureUserInput implements types.IAzureUserInput, types.AzureUserInp
             args.push(DialogResponses.learnMore);
         }
 
+        const back: MessageItem = { title: localize('back', 'Back') };
+        if (this.wizardUserInput?.showBackButton) {
+            args.push(back);
+        }
+
         // tslint:disable-next-line: no-constant-condition
         while (true) {
             // tslint:disable-next-line:no-unsafe-any
@@ -91,7 +103,10 @@ export class AzureUserInput implements types.IAzureUserInput, types.AzureUserInp
                 await openUrl(learnMoreLink);
             } else if (result === undefined || result === DialogResponses.cancel) {
                 throw new UserCancelledError();
+            } else if (result === back) {
+                throw new GoBackError();
             } else {
+                this._onDidFinishPromptEmitter.fire(result);
                 return result;
             }
         }
@@ -103,6 +118,7 @@ export class AzureUserInput implements types.IAzureUserInput, types.AzureUserInp
         if (result === undefined || result.length === 0) {
             throw new UserCancelledError();
         } else {
+            this._onDidFinishPromptEmitter.fire(result);
             return result;
         }
     }

@@ -22,6 +22,9 @@ export class AzureWizard<T extends types.IActionContext> implements types.AzureW
     private _stepHideStepCount?: boolean;
     private _wizardHideStepCount?: boolean;
 
+    private _cachedInputBoxValues: { [step: string]: string | undefined } = {};
+    private _currentStepName: string | undefined;
+
     public constructor(context: T, options: types.IWizardOptions<T>) {
         // reverse steps to make it easier to use push/pop
         // tslint:disable-next-line: strict-boolean-expressions
@@ -31,6 +34,10 @@ export class AzureWizard<T extends types.IActionContext> implements types.AzureW
         this._executeSteps = options.executeSteps || [];
         this._context = context;
         this._wizardHideStepCount = options.hideStepCount;
+    }
+
+    public getCachedInputBoxValue(): string | undefined {
+        return this._currentStepName ? this._cachedInputBoxValues[this._currentStepName] : undefined;
     }
 
     public get hideStepCount(): boolean {
@@ -61,9 +68,17 @@ export class AzureWizard<T extends types.IActionContext> implements types.AzureW
                 if (step.shouldPrompt(this._context)) {
                     step.propertiesBeforePrompt = Object.keys(this._context).filter(k => !isNullOrUndefined(this._context[k]));
 
+                    const disposable: vscode.Disposable = ext.ui.onDidFinishPrompt((result) => {
+                        // tslint:disable-next-line: no-non-null-assertion
+                        step!.prompted = true;
+                        if (typeof result === 'string' && this._currentStepName) {
+                            this._cachedInputBoxValues[this._currentStepName] = result;
+                        }
+                    });
+
                     try {
+                        this._currentStepName = step.constructor.name;
                         await step.prompt(this._context);
-                        step.prompted = true;
                     } catch (err) {
                         if (parseError(err).errorType === 'GoBackError') { // Use `errorType` instead of `instanceof` so that tests can also hit this case
                             step = this.goBack(step);
@@ -71,6 +86,9 @@ export class AzureWizard<T extends types.IActionContext> implements types.AzureW
                         } else {
                             throw err;
                         }
+                    } finally {
+                        this._currentStepName = undefined;
+                        disposable.dispose();
                     }
                 }
 
@@ -151,7 +169,7 @@ export class AzureWizard<T extends types.IActionContext> implements types.AzureW
 
         if (subWizard.promptSteps) {
             subWizard.promptSteps = subWizard.promptSteps.filter(s1 => {
-                return !this._finishedPromptSteps.concat(this._promptSteps).some(s2 => s1.constructor.name === s2.constructor.name);
+                return s1.supportsDuplicateSteps || !this._finishedPromptSteps.concat(this._promptSteps).some(s2 => s1.constructor.name === s2.constructor.name);
             });
             this._promptSteps.push(...<AzureWizardPromptStep<T>[]>subWizard.promptSteps.reverse());
             step.numSubPromptSteps = subWizard.promptSteps.length;

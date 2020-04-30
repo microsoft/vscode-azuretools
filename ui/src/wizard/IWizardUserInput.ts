@@ -7,6 +7,7 @@ import { InputBoxOptions, QuickPickItem, QuickPickOptions } from "vscode";
 
 export interface IWizardUserInput extends IRootUserInput {
     isPrompting: boolean;
+    showBackButton: boolean;
 }
 
 export interface IRootUserInput {
