@@ -6,7 +6,7 @@
 import * as cp from "child_process";
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment } from 'ms-rest-azure';
-import { InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, Uri } from "vscode";
+import { Event, InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, Uri } from "vscode";
 import * as webpack from 'webpack';
 
 /**
@@ -141,11 +141,15 @@ export declare enum TestInput {
     BackButton
 }
 
+export type PromptResult = string | QuickPickItem | QuickPickItem[] | MessageItem | Uri[];
+
 /**
  * Wrapper class of several `vscode.window` methods that handle user input.
  * This class is meant to be used for testing in non-interactive mode.
  */
 export declare class TestUserInput {
+    public readonly onDidFinishPrompt: Event<PromptResult>;
+
     public constructor(vscode: typeof import('vscode'));
 
     /**
@@ -154,6 +158,7 @@ export declare class TestUserInput {
     public runWithInputs(inputs: (string | RegExp | TestInput)[], callback: () => Promise<void>): Promise<void>;
 
     public showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T>;
+    public showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions & { canPickMany: true }): Promise<T[]>;
     public showInputBox(options: InputBoxOptions): Promise<string>;
     public showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
     public showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Promise<MessageItem>;
