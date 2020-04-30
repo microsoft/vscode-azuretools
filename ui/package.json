@@ -40,7 +40,7 @@
         "ms-rest-azure": "^2.6.0",
         "opn": "^6.0.0",
         "semver": "^5.7.1",
-        "vscode-extension-telemetry": "^0.1.4",
+        "vscode-extension-telemetry": "^0.1.5",
         "vscode-nls": "^4.1.1"
     },
     "devDependencies": {
