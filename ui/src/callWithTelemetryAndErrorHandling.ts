@@ -119,12 +119,8 @@ function handleTelemetry(context: IActionContext, callbackId: string, start: num
         const end: number = Date.now();
         context.telemetry.measurements.duration = (end - start) / 1000;
 
-        const errorPropRegExp: RegExp = /(error|stack|exception)/i;
+        const errorProps: string[] = Object.keys(context.telemetry.properties).filter(key => /(error|stack|exception)/i.test(key));
         // Note: The id of the extension is automatically prepended to the given callbackId (e.g. "vscode-cosmosdb/")
-        if (Object.entries(context.telemetry.properties).some(([key, value]) => errorPropRegExp.test(key) && value)) {
-            ext.reporter.sendTelemetryErrorEvent(callbackId, context.telemetry.properties, context.telemetry.measurements);
-        } else {
-            ext.reporter.sendTelemetryEvent(callbackId, context.telemetry.properties, context.telemetry.measurements);
-        }
+        ext.reporter.sendTelemetryErrorEvent(callbackId, context.telemetry.properties, context.telemetry.measurements, errorProps);
     }
 }

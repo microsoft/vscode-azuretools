@@ -9,15 +9,7 @@ import { ITelemetryReporter } from '../index';
 export class DebugReporter implements ITelemetryReporter {
     constructor(private _extensionName: string, private _extensionVersion: string, private _verbose: boolean) { }
 
-    public sendTelemetryEvent(eventName: string, properties?: { [key: string]: string | undefined; }, measures?: { [key: string]: number | undefined; }): void {
-        this.logTelemetryEvent(eventName, properties, measures, 'TELEMETRY');
-    }
-
-    public sendTelemetryErrorEvent(eventName: string, properties?: { [key: string]: string | undefined; }, measures?: { [key: string]: number | undefined; }): void {
-        this.logTelemetryEvent(eventName, properties, measures, 'TELEMETRY-ERROR');
-    }
-
-    private logTelemetryEvent(eventName: string, properties: { [key: string]: string | undefined; } | undefined, measures: { [key: string]: number | undefined; } | undefined, logPrefix: string): void {
+    public sendTelemetryErrorEvent(eventName: string, properties?: { [key: string]: string | undefined; }, measures?: { [key: string]: number | undefined; }, _errorProps?: string[]): void {
         try {
             // tslint:disable-next-line:strict-boolean-expressions
             const propertiesString: string = JSON.stringify(properties || {});
@@ -25,7 +17,7 @@ export class DebugReporter implements ITelemetryReporter {
             const measuresString: string = JSON.stringify(measures || {});
 
             if (this._verbose) {
-                const msg: string = `** ${logPrefix}("${this._extensionName}/${eventName}", ${this._extensionVersion}) properties=${propertiesString}, measures=${measuresString}`;
+                const msg: string = `** TELEMETRY("${this._extensionName}/${eventName}", ${this._extensionVersion}) properties=${propertiesString}, measures=${measuresString}`;
                 // tslint:disable-next-line:no-console
                 console.log(msg);
             }

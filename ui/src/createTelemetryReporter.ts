@@ -30,11 +30,7 @@ export function createTelemetryReporter(ctx: vscode.ExtensionContext): ITelemetr
     }
 
     // Send an event with some general info
-    newReporter.sendTelemetryEvent('info', {
-        isActivationEvent: 'true',
-        product: vscode.env.appName,
-        language: vscode.env.language
-    });
+    newReporter.sendTelemetryErrorEvent('info', { isActivationEvent: 'true', product: vscode.env.appName, language: vscode.env.language }, undefined, []);
 
     return newReporter;
 }
