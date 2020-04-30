@@ -16,7 +16,10 @@ export async function callWithMaskHandling<T>(callback: () => Promise<T>, valueT
         if (parsedError.isUserCancelledError) {
             throw error;
         }
-        const escapedMask: string = escape(valueToMask);
-        throw new Error(parsedError.message.replace(new RegExp(escapedMask, 'g'), '***'));
+
+        const maskedMessage: string = valueToMask ?
+            parsedError.message.replace(new RegExp(escape(valueToMask), 'g'), '***') :
+            parsedError.message;
+        throw new Error(maskedMessage);
     }
 }

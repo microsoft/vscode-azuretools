@@ -76,6 +76,18 @@ suite("callWithMaskHandling Tests", () => {
                 return validateError(err, credentialsSpecialChars);
             }, 'Credentials were not properly masked from error string');
         });
+
+        test("Value masked (empty string) with thrown error", async () => {
+            const errorMessage: string = "'ssh-keygen' is not recognized as an internal or external command";
+
+            await assertThrowsAsync(async (): Promise<void> => {
+                await callWithMaskHandling(async () => {
+                    throw errorMessage;
+                }, '');
+            }, (err: Error) => {
+                return err.message === errorMessage;
+            }, 'Credentials were not properly masked from error string');
+        });
     });
 });
 
