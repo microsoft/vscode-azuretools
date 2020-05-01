@@ -71,7 +71,7 @@ export class AzureWizard<T extends types.IActionContext> implements types.AzureW
                     const disposable: vscode.Disposable = ext.ui.onDidFinishPrompt((result) => {
                         // tslint:disable-next-line: no-non-null-assertion
                         step!.prompted = true;
-                        if (typeof result === 'string' && this._currentStepName) {
+                        if (typeof result === 'string' && this._currentStepName && !step?.supportsDuplicateSteps) {
                             this._cachedInputBoxValues[this._currentStepName] = result;
                         }
                     });
