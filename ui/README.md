@@ -158,22 +158,9 @@ export class WebAppProvider extends SubscriptionTreeItem {
 }
 ```
 
-## Telemetry
-
-To create a telemetry reporter for your extension's use, use the following code:
-
-```typescript
-import { createTelemetryReporter } from 'vscode-azureextensionui';
-
-export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
-    let reporter = createTelemetryReporter(ctx);
-    reporter.sendTelemetryErrorEvent(<args>);
-}
-```
-
 ### Debug telemetry
 
-If the environment variable `DEBUGTELEMETRY` is set to a non-empty, non-zero value, then the telemetry reporter created by `createTelemetryReporter()` will not attempt to send any data.  If the value is 'verbose' or 'v', the telemetry will not be sent but will be displayed on the console window.
+If the environment variable `DEBUGTELEMETRY` is set to a non-empty, non-zero value, then the telemetry reporter used internally by this package will not attempt to send any data.  If the value is 'verbose' or 'v', the telemetry will not be sent but will be displayed on the console window.
 
 ## Azure Base Editor
 

@@ -11,7 +11,6 @@ export * from './callWithMaskHandling';
 export * from './callWithTelemetryAndErrorHandling';
 export * from './createApiProvider';
 export * from './createAzureClient';
-export * from './createTelemetryReporter';
 export * from './DialogResponses';
 export * from './errors';
 export * from './extensionUserAgent';
