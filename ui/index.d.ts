@@ -499,11 +499,13 @@ export declare abstract class BaseEditor<ContextT> implements Disposable {
     dispose(): Promise<void>;
 }
 
+export type CommandCallback = (context: IActionContext, ...args: unknown[]) => unknown;
+
 /**
  * Used to register VSCode commands. It wraps your callback with consistent error and telemetry handling
  * Use debounce property if you need a delay between clicks for this particular command
  */
-export declare function registerCommand(commandId: string, callback: (context: IActionContext, ...args: any[]) => any, debounce?: number): void;
+export declare function registerCommand(commandId: string, callback: CommandCallback, debounce?: number): void;
 
 /**
  * Used to register VSCode events. It wraps your callback with consistent error and telemetry handling
@@ -627,6 +629,8 @@ export interface IParsedError {
     isUserCancelledError: boolean;
 }
 
+export type PromptResult = string | QuickPickItem | QuickPickItem[] | MessageItem | Uri[];
+
 /**
  * Wrapper interface of several `vscode.window` methods that handle user input. The main reason for this interface
  * is to facilitate unit testing in non-interactive mode with the `TestUserInput` class.
@@ -635,6 +639,8 @@ export interface IParsedError {
  * 2. Persists 'recently used' items in quick picks and displays them at the top
  */
 export interface IAzureUserInput {
+    readonly onDidFinishPrompt: Event<PromptResult>;
+
     /**
     * Shows a multi-selection list.
     *
@@ -701,6 +707,8 @@ export interface IAzureUserInput {
  * Wrapper class of several `vscode.window` methods that handle user input.
  */
 export declare class AzureUserInput implements IAzureUserInput {
+    readonly onDidFinishPrompt: Event<PromptResult>;
+
     /**
      * @param persistence Used to persist previous selections in the QuickPick.
      */
@@ -751,6 +759,11 @@ export interface IAzureQuickPickOptions extends QuickPickOptions {
      * Optionally used to select default picks in a multi-select quick pick
      */
     isPickSelected?: (p: QuickPickItem) => boolean;
+
+    /**
+     * Optional message to display while the quick pick is loading instead of the normal placeHolder. Only applies for quick picks used as a part of an `AzureWizard`
+     */
+    loadingPlaceHolder?: string;
 }
 
 /**
@@ -822,6 +835,11 @@ export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
      * If true, step count will not be displayed when prompting. Defaults to false.
      */
     public hideStepCount: boolean;
+
+    /**
+     * If true, multiple steps of the same type can be shown in a wizard. By default, duplicate steps are filtered out
+     */
+    public supportsDuplicateSteps: boolean;
 
     /**
      * Prompt the user for input

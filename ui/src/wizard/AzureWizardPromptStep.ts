@@ -7,6 +7,7 @@ import * as types from '../../index';
 
 export abstract class AzureWizardPromptStep<T extends types.IActionContext> implements types.AzureWizardPromptStep<T> {
     public hideStepCount: boolean = false;
+    public supportsDuplicateSteps: boolean = false;
     public effectiveTitle: string | undefined;
     public hasSubWizard: boolean;
     public numSubPromptSteps: number;
