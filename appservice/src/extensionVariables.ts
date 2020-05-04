@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ExtensionContext } from "vscode";
-import { IAzExtOutputChannel, IAzureUserInput, ITelemetryReporter, registerUIExtensionVariables, UIExtensionVariables } from 'vscode-azureextensionui';
+import { IAzExtOutputChannel, IAzureUserInput, registerUIExtensionVariables, UIExtensionVariables } from 'vscode-azureextensionui';
 import { localize } from "./localize";
 
 class UninitializedExtensionVariables implements UIExtensionVariables {
@@ -19,10 +19,6 @@ class UninitializedExtensionVariables implements UIExtensionVariables {
     }
 
     public get ui(): IAzureUserInput {
-        throw this._error;
-    }
-
-    public get reporter(): ITelemetryReporter {
         throw this._error;
     }
 
