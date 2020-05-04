@@ -5,13 +5,14 @@
 
 import * as assert from 'assert';
 import { ExtensionContext } from "vscode";
-import TelemetryReporter from "vscode-extension-telemetry";
 import { IAzExtOutputChannel, IAzureUserInput, UIExtensionVariables } from "../index";
+import { createTelemetryReporter, IInternalTelemetryReporter } from './createTelemetryReporter';
 import { localize } from "./localize";
 import { IWizardUserInput } from './wizard/IWizardUserInput';
 
 interface IInternalExtensionVariables extends UIExtensionVariables {
     ui: IAzureUserInput & { wizardUserInput?: IWizardUserInput };
+    _internalReporter: IInternalTelemetryReporter;
 }
 
 class UninitializedExtensionVariables implements UIExtensionVariables {
@@ -29,7 +30,7 @@ class UninitializedExtensionVariables implements UIExtensionVariables {
         throw this._error;
     }
 
-    public get reporter(): TelemetryReporter {
+    public get _internalReporter(): IInternalTelemetryReporter {
         throw this._error;
     }
 }
@@ -42,8 +43,7 @@ export let ext: IInternalExtensionVariables = new UninitializedExtensionVariable
 export function registerUIExtensionVariables(extVars: UIExtensionVariables): void {
     assert(extVars.context, 'registerUIExtensionVariables: Missing context');
     assert(extVars.outputChannel, 'registerUIExtensionVariables: Missing outputChannel');
-    assert(extVars.reporter, 'registerUIExtensionVariables: Missing reporter');
     assert(extVars.ui, 'registerUIExtensionVariables: Missing ui');
 
-    ext = extVars;
+    ext = Object.assign(extVars, { _internalReporter: createTelemetryReporter(extVars.context) });
 }

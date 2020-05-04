@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as console from 'console';
-import { ITelemetryReporter } from '../index';
+import { IInternalTelemetryReporter } from './createTelemetryReporter';
 
-export class DebugReporter implements ITelemetryReporter {
+export class DebugReporter implements IInternalTelemetryReporter {
     constructor(private _extensionName: string, private _extensionVersion: string, private _verbose: boolean) { }
 
     public sendTelemetryErrorEvent(eventName: string, properties?: { [key: string]: string | undefined; }, measures?: { [key: string]: number | undefined; }, _errorProps?: string[]): void {

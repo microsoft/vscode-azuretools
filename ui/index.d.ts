@@ -504,16 +504,25 @@ export type CommandCallback = (context: IActionContext, ...args: unknown[]) => u
 /**
  * Used to register VSCode commands. It wraps your callback with consistent error and telemetry handling
  * Use debounce property if you need a delay between clicks for this particular command
+ * NOTE: If the environment variable `DEBUGTELEMETRY` is set to a non-empty, non-zero value, then telemetry will not be sent. If the value is 'verbose' or 'v', telemetry will be displayed in the console window.
  */
 export declare function registerCommand(commandId: string, callback: CommandCallback, debounce?: number): void;
 
 /**
  * Used to register VSCode events. It wraps your callback with consistent error and telemetry handling
- * NOTE: By default, this sends a telemetry event every single time the event fires. It it recommended to use 'context.telemetry.suppressIfSuccessful' to only send events if they apply to your extension
+ * NOTE #1: By default, this sends a telemetry event every single time the event fires. It it recommended to use 'context.telemetry.suppressIfSuccessful' to only send events if they apply to your extension
+ * NOTE #2: If the environment variable `DEBUGTELEMETRY` is set to a non-empty, non-zero value, then telemetry will not be sent. If the value is 'verbose' or 'v', telemetry will be displayed in the console window.
  */
 export declare function registerEvent<T>(eventId: string, event: Event<T>, callback: (context: IActionContext, ...args: any[]) => any): void;
 
+/**
+ * NOTE: If the environment variable `DEBUGTELEMETRY` is set to a non-empty, non-zero value, then telemetry will not be sent. If the value is 'verbose' or 'v', telemetry will be displayed in the console window.
+ */
 export declare function callWithTelemetryAndErrorHandling<T>(callbackId: string, callback: (context: IActionContext) => T | PromiseLike<T>): Promise<T | undefined>;
+
+/**
+ * NOTE: If the environment variable `DEBUGTELEMETRY` is set to a non-empty, non-zero value, then telemetry will not be sent. If the value is 'verbose' or 'v', telemetry will be displayed in the console window.
+ */
 export declare function callWithTelemetryAndErrorHandlingSync<T>(callbackId: string, callback: (context: IActionContext) => T): T | undefined;
 
 /**
@@ -580,27 +589,6 @@ export interface IErrorHandlingContext {
      */
     issueProperties: { [key: string]: string | undefined };
 }
-
-export interface ITelemetryReporter {
-    /**
-     * Use this method for sending error telemetry as traditional events to App Insights.
-     * This method will automatically drop error properties in certain environments for first party extensions.
-     * The last parameter is an optional list of case-sensitive properties that should be dropped. If no array is passed, we will drop all properties but still send the event.
-     */
-    sendTelemetryErrorEvent(eventName: string, properties?: { [key: string]: string | undefined }, measurements?: { [key: string]: number | undefined }, errorProps?: string[]): void;
-}
-
-/**
- * Creates a telemetry reporter.
- *
- * If the environment variable DEBUGTELEMETRY is set to non-empty and non-zero, then the telemetry reporter returned will display
- * to the console window only, and will not send any data.
- *
- * The returned reporter does not need to be disposed by the caller, it will be disposed automatically.
- * @param ctx The extension context
- * @returns An object implementing ITelemetryReporter
- */
-export declare function createTelemetryReporter(ctx: ExtensionContext): ITelemetryReporter;
 
 export interface TelemetryProperties {
     /**
@@ -1146,7 +1134,6 @@ export interface UIExtensionVariables {
     context: ExtensionContext;
     outputChannel: IAzExtOutputChannel;
     ui: IAzureUserInput;
-    reporter: ITelemetryReporter;
 
     /**
      * Set to true if not running under a webpacked 'dist' folder as defined in 'vscode-azureextensiondev'
