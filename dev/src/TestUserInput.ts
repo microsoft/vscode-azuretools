@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import { Event, EventEmitter, InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, QuickPickItem, QuickPickOptions, Uri } from 'vscode';
+import * as vscodeTypes from 'vscode'; // `TestUserInput._vscode` should be used for anything that's not purely a type (e.g. instantiating a class)
 import * as types from '../index';
 
 export enum TestInput {
@@ -19,15 +19,16 @@ class GoBackError extends Error {
 }
 
 export class TestUserInput implements types.TestUserInput {
-    private readonly _onDidFinishPromptEmitter: EventEmitter<types.PromptResult> = new EventEmitter<types.PromptResult>();
-    private readonly _vscode: typeof import('vscode');
+    private readonly _onDidFinishPromptEmitter: vscodeTypes.EventEmitter<types.PromptResult>;
+    private readonly _vscode: typeof vscodeTypes;
     private _inputs: (string | RegExp | TestInput)[] = [];
 
-    constructor(vscode: typeof import('vscode')) {
+    constructor(vscode: typeof vscodeTypes) {
         this._vscode = vscode;
+        this._onDidFinishPromptEmitter = new this._vscode.EventEmitter<types.PromptResult>();
     }
 
-    public get onDidFinishPrompt(): Event<types.PromptResult> {
+    public get onDidFinishPrompt(): vscodeTypes.Event<types.PromptResult> {
         return this._onDidFinishPromptEmitter.event;
     }
 
@@ -37,7 +38,7 @@ export class TestUserInput implements types.TestUserInput {
         assert.equal(this._inputs.length, 0, `Not all inputs were used: ${this._inputs.toString()}`);
     }
 
-    public async showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T | T[]> {
+    public async showQuickPick<T extends vscodeTypes.QuickPickItem>(items: T[] | Thenable<T[]>, options: vscodeTypes.QuickPickOptions): Promise<T | T[]> {
         const resolvedItems: T[] = await Promise.resolve(items);
 
         let result: T | T[];
@@ -52,7 +53,7 @@ export class TestUserInput implements types.TestUserInput {
             } else if (input === TestInput.UseDefaultValue) {
                 result = resolvedItems[0];
             } else {
-                function qpiMatchesInput(qpi: QuickPickItem): boolean {
+                function qpiMatchesInput(qpi: vscodeTypes.QuickPickItem): boolean {
                     return (input instanceof RegExp && (input.test(qpi.label) || (qpi.description && input.test(qpi.description)))) || qpi.label === input || qpi.description === input;
                 }
 
@@ -73,7 +74,7 @@ export class TestUserInput implements types.TestUserInput {
         }
     }
 
-    public async showInputBox(options: InputBoxOptions): Promise<string> {
+    public async showInputBox(options: vscodeTypes.InputBoxOptions): Promise<string> {
         let result: string;
         const input: string | RegExp | TestInput | undefined = this._inputs.shift();
         if (input === undefined) {
@@ -102,10 +103,10 @@ export class TestUserInput implements types.TestUserInput {
         return result;
     }
 
-    public showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
-    public showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Promise<MessageItem>;
+    public showWarningMessage<T extends vscodeTypes.MessageItem>(message: string, ...items: T[]): Promise<T>;
+    public showWarningMessage<T extends vscodeTypes.MessageItem>(message: string, options: vscodeTypes.MessageOptions, ...items: T[]): Promise<vscodeTypes.MessageItem>;
     // tslint:disable-next-line:no-any
-    public async showWarningMessage<T extends MessageItem>(message: string, ...args: any[]): Promise<T> {
+    public async showWarningMessage<T extends vscodeTypes.MessageItem>(message: string, ...args: any[]): Promise<T> {
         let result: T;
         const input: string | RegExp | TestInput | undefined = this._inputs.shift();
         if (input === undefined) {
@@ -126,8 +127,8 @@ export class TestUserInput implements types.TestUserInput {
         return result;
     }
 
-    public async showOpenDialog(options: OpenDialogOptions): Promise<Uri[]> {
-        let result: Uri[];
+    public async showOpenDialog(options: vscodeTypes.OpenDialogOptions): Promise<vscodeTypes.Uri[]> {
+        let result: vscodeTypes.Uri[];
         const input: string | RegExp | TestInput | undefined = this._inputs.shift();
         if (input === undefined) {
             throw new Error(`No more inputs left for call to showOpenDialog. Message: ${options.openLabel}`);
