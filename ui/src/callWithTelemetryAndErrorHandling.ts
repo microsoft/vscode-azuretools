@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { MessageItem, window } from 'vscode';
-import { IActionContext, IParsedError } from '../index';
+import { Disposable, MessageItem, window } from 'vscode';
+import * as types from '../index';
 import { DialogResponses } from './DialogResponses';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
@@ -14,9 +14,9 @@ import { limitLines } from './utils/textStrings';
 
 const maxStackLines: number = 3;
 
-function initContext(): [number, IActionContext] {
+function initContext(): [number, types.IActionContext] {
     const start: number = Date.now();
-    const context: IActionContext = {
+    const context: types.IActionContext = {
         telemetry: {
             properties: {
                 isActivationEvent: 'false',
@@ -41,7 +41,7 @@ function initContext(): [number, IActionContext] {
     return [start, context];
 }
 
-export function callWithTelemetryAndErrorHandlingSync<T>(callbackId: string, callback: (context: IActionContext) => T): T | undefined {
+export function callWithTelemetryAndErrorHandlingSync<T>(callbackId: string, callback: (context: types.IActionContext) => T): T | undefined {
     const [start, context] = initContext();
 
     try {
@@ -54,7 +54,7 @@ export function callWithTelemetryAndErrorHandlingSync<T>(callbackId: string, cal
     }
 }
 
-export async function callWithTelemetryAndErrorHandling<T>(callbackId: string, callback: (context: IActionContext) => T | PromiseLike<T>): Promise<T | undefined> {
+export async function callWithTelemetryAndErrorHandling<T>(callbackId: string, callback: (context: types.IActionContext) => T | PromiseLike<T>): Promise<T | undefined> {
     const [start, context] = initContext();
 
     try {
@@ -67,8 +67,40 @@ export async function callWithTelemetryAndErrorHandling<T>(callbackId: string, c
     }
 }
 
-function handleError(context: IActionContext, callbackId: string, error: unknown): void {
-    const errorData: IParsedError = parseError(error);
+const errorHandlers: { [id: number]: types.ErrorHandler } = {};
+const telemetryHandlers: { [id: number]: types.TelemetryHandler } = {};
+
+export function registerErrorHandler(handler: types.ErrorHandler): Disposable {
+    return registerHandler(handler, errorHandlers);
+}
+
+export function registerTelemetryHandler(handler: types.TelemetryHandler): Disposable {
+    return registerHandler(handler, telemetryHandlers);
+}
+
+let handlerCount: number = 0;
+function registerHandler<T>(handler: T, handlers: { [id: string]: T }): Disposable {
+    handlerCount += 1;
+    const id: number = handlerCount;
+    handlers[id] = handler;
+    return {
+        dispose: (): void => {
+            delete handlers[id];
+        }
+    };
+}
+
+function handleError(context: types.IActionContext, callbackId: string, error: unknown): void {
+    const errorContext: types.IErrorHandlerContext = Object.assign(context, { error, callbackId });
+    for (const handler of Object.values(errorHandlers)) {
+        try {
+            handler(errorContext);
+        } catch {
+            // don't block other handlers
+        }
+    }
+
+    const errorData: types.IParsedError = parseError(errorContext.error);
     if (errorData.isUserCancelledError) {
         context.telemetry.properties.result = 'Canceled';
         context.errorHandling.suppressDisplay = true;
@@ -104,23 +136,32 @@ function handleError(context: IActionContext, callbackId: string, error: unknown
         // don't wait
         window.showErrorMessage(message, ...items).then(async (result: MessageItem | undefined) => {
             if (result === DialogResponses.reportAnIssue) {
-                await reportAnIssue(callbackId, errorData, context.errorHandling.issueProperties);
+                await reportAnIssue(errorContext.callbackId, errorData, context.errorHandling.issueProperties);
             }
         });
     }
 
     if (context.errorHandling.rethrow) {
-        throw error;
+        throw errorContext.error;
     }
 }
 
-function handleTelemetry(context: IActionContext, callbackId: string, start: number): void {
+function handleTelemetry(context: types.IActionContext, callbackId: string, start: number): void {
+    const handlerContext: types.IHandlerContext = Object.assign(context, { callbackId });
+    for (const handler of Object.values(telemetryHandlers)) {
+        try {
+            handler(handlerContext);
+        } catch {
+            // don't block other handlers
+        }
+    }
+
     if (!context.telemetry.suppressAll && !(context.telemetry.suppressIfSuccessful && context.telemetry.properties.result === 'Succeeded')) {
         const end: number = Date.now();
         context.telemetry.measurements.duration = (end - start) / 1000;
 
         const errorProps: string[] = Object.keys(context.telemetry.properties).filter(key => /(error|stack|exception)/i.test(key));
         // Note: The id of the extension is automatically prepended to the given callbackId (e.g. "vscode-cosmosdb/")
-        ext._internalReporter.sendTelemetryErrorEvent(callbackId, context.telemetry.properties, context.telemetry.measurements, errorProps);
+        ext._internalReporter.sendTelemetryErrorEvent(handlerContext.callbackId, context.telemetry.properties, context.telemetry.measurements, errorProps);
     }
 }
