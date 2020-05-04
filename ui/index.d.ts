@@ -608,6 +608,36 @@ export interface TelemetryMeasurements {
     [key: string]: number | undefined;
 }
 
+interface IHandlerContext extends IActionContext {
+    /**
+     * The id for the callback, used as the id for the telemetry event. This may be modified by any handler
+     */
+    callbackId: string;
+}
+
+interface IErrorHandlerContext extends IHandlerContext {
+    /**
+     * The error to be handled. This may be modified by any handler
+     */
+    error: unknown;
+}
+
+type ErrorHandler = (context: IErrorHandlerContext) => void;
+
+type TelemetryHandler = (context: IHandlerContext) => void;
+
+/**
+ * Register a handler to run after a callback errors out, but before the default error handling.
+ * NOTE: If more than one handler is registered, they are run in an arbitrary order.
+ */
+export function registerErrorHandler(handler: ErrorHandler): Disposable;
+
+/**
+ * Register a handler to run after a callback finishes, but before the default telemetry handling.
+ * NOTE: If more than one handler is registered, they are run in an arbitrary order.
+ */
+export function registerTelemetryHandler(handler: TelemetryHandler): Disposable;
+
 export declare function parseError(error: any): IParsedError;
 
 export interface IParsedError {
