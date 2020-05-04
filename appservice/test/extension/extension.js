@@ -10,7 +10,6 @@ const appservice_1 = require('../../out/src/index');
 function activate(context) {
     const extVars = {
         context,
-        reporter: ui_1.createTelemetryReporter(context),
         outputChannel: vscode.window.createOutputChannel('azureappservice'),
         ui: new ui_1.AzureUserInput()
     };
