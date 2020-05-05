@@ -40,6 +40,11 @@ export let ext: IAppServiceExtensionVariables = new UninitializedExtensionVariab
  * Call this to register common variables used throughout the AppService package.
  */
 export function registerAppServiceExtensionVariables(extVars: IAppServiceExtensionVariables): void {
+    if (ext === extVars) {
+        // already registered
+        return;
+    }
+
     ext = extVars;
     registerUIExtensionVariables(extVars);
 }
