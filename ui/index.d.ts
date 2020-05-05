@@ -499,7 +499,7 @@ export declare abstract class BaseEditor<ContextT> implements Disposable {
     dispose(): Promise<void>;
 }
 
-export type CommandCallback = (context: IActionContext, ...args: unknown[]) => unknown;
+export type CommandCallback = (context: IActionContext, ...args: any[]) => any;
 
 /**
  * Used to register VSCode commands. It wraps your callback with consistent error and telemetry handling
