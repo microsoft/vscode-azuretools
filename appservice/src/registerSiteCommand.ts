@@ -3,16 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IActionContext, IParsedError, parseError, registerCommand } from 'vscode-azureextensionui';
+import { CommandCallback, IActionContext, IParsedError, parseError, registerCommand } from 'vscode-azureextensionui';
 import { localize } from './localize';
 
 /**
  * Use this to get extra error handling for commands that interact directly with site APIs.
  */
-export function registerSiteCommand(commandId: string, callback: (context: IActionContext, ...args: unknown[]) => unknown, debounce?: number): void {
+export function registerSiteCommand(commandId: string, callback: CommandCallback, debounce?: number): void {
     registerCommand(
         commandId,
-        async (context, ...args: unknown[]) => {
+        // tslint:disable-next-line: no-any
+        async (context, ...args: any[]) => {
             try {
                 return await Promise.resolve(callback(context, ...args));
             } catch (error) {
