@@ -41,6 +41,11 @@ class UninitializedExtensionVariables implements UIExtensionVariables {
 export let ext: IInternalExtensionVariables = new UninitializedExtensionVariables();
 
 export function registerUIExtensionVariables(extVars: UIExtensionVariables): void {
+    if (ext === extVars) {
+        // already registered
+        return;
+    }
+
     assert(extVars.context, 'registerUIExtensionVariables: Missing context');
     assert(extVars.outputChannel, 'registerUIExtensionVariables: Missing outputChannel');
     assert(extVars.ui, 'registerUIExtensionVariables: Missing ui');
