@@ -24,12 +24,14 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
     public abstract getData(context: ContextT): Promise<string>;
     public abstract updateData(context: ContextT, data: string): Promise<string>;
     public abstract getFilename(context: ContextT): Promise<string>;
+    public abstract getResourceName(context: ContextT): Promise<string>;
     public abstract getSaveConfirmationText(context: ContextT): Promise<string>;
     public abstract getSize(context: ContextT): Promise<number>;
 
     public async showEditor(context: ContextT, sizeLimit?: number /* in Megabytes */): Promise<void> {
         const fileName: string = await this.getFilename(context);
-        this.appendLineToOutput(localize('opening', 'Opening "{0}"...', fileName));
+        const resourceName: string = await this.getResourceName(context);
+        this.appendLineToOutput(localize('opening', 'Opening "{0}"...', fileName), {resourceName: resourceName});
         if (sizeLimit !== undefined) {
             const size: number = await this.getSize(context);
             if (size > sizeLimit) {
@@ -80,16 +82,17 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
         }
     }
 
-    protected appendLineToOutput(value: string): void {
-        ext.outputChannel.appendLog(value);
+    protected appendLineToOutput(value: string, options?: { resourceName?: string, date?: Date }): void {
+        ext.outputChannel.appendLog(value, options);
         ext.outputChannel.show(true);
     }
 
     private async updateRemote(context: ContextT, doc: vscode.TextDocument): Promise<void> {
         const filename: string = await this.getFilename(context);
-        this.appendLineToOutput(localize('updating', 'Updating "{0}" ...', filename));
+        const resourceName: string = await this.getResourceName(context);
+        this.appendLineToOutput(localize('updating', 'Updating "{0}" ...', filename), {resourceName: resourceName});
         const updatedData: string = await this.updateData(context, doc.getText());
-        this.appendLineToOutput(localize('done', 'Updated "{0}".', filename));
+        this.appendLineToOutput(localize('done', 'Updated "{0}".', filename), {resourceName: resourceName});
         if (doc.isClosed !== true) {
             const visibleDocument: vscode.TextEditor | undefined = vscode.window.visibleTextEditors.find((ed) => ed.document === doc);
             if (visibleDocument) {
