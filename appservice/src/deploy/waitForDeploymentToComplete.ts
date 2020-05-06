@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from 'vscode';
+import { CancellationToken, window } from 'vscode';
 import { IActionContext, IParsedError, parseError } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
 import { DeployResult, LogEntry } from 'vscode-azurekudu/lib/models';
@@ -18,8 +18,7 @@ import { IDeployContext } from './IDeployContext';
 export async function waitForDeploymentToComplete(context: IDeployContext, client: SiteClient, expectedId?: string, token?: CancellationToken, pollingInterval: number = 5000): Promise<void> {
     let fullLog: string = '';
 
-    const alreadyDisplayedLogs: string[] = [];
-    let nextTimeToDisplayWaitingLog: number = Date.now();
+    let lastLogTime: Date = new Date(0);
     let initialStartTime: Date | undefined;
     let deployment: DeployResult | undefined;
     let permanentId: string | undefined;
@@ -27,7 +26,7 @@ export async function waitForDeploymentToComplete(context: IDeployContext, clien
     const maxTimeToWaitForExpectedId: number = Date.now() + 60 * 1000;
     const kuduClient: KuduClient = await client.getKuduClient();
 
-    while (!token || !token.isCancellationRequested) {
+    while (!token?.isCancellationRequested) {
         [deployment, permanentId, initialStartTime] = await tryGetLatestDeployment(context, kuduClient, permanentId, initialStartTime, expectedId);
         if ((deployment === undefined || !deployment.id)) {
             if (expectedId && Date.now() < maxTimeToWaitForExpectedId) {
@@ -42,49 +41,53 @@ export async function waitForDeploymentToComplete(context: IDeployContext, clien
         let logEntries: LogEntry[] = [];
         await retryKuduCall(context, 'getLogEntry', async () => {
             await ignore404Error(context, async () => {
-                logEntries = <LogEntry[]>await kuduClient.deployment.getLogEntry(deploymentId);
+                logEntries = (await kuduClient.deployment.getLogEntry(deploymentId)).reverse();
             });
         });
 
-        const newLogEntries: LogEntry[] = logEntries.filter((newEntry: LogEntry) => !alreadyDisplayedLogs.some((oldId: string) => newEntry.id === oldId));
-        if (newLogEntries.length === 0) {
-            if (!deployment.complete && Date.now() > nextTimeToDisplayWaitingLog) {
-                ext.outputChannel.appendLog(localize('waitingForComand', 'Waiting for long running command to finish...'), { resourceName: client.fullName });
-                nextTimeToDisplayWaitingLog = Date.now() + 60 * 1000;
+        let lastLogTimeForThisPoll: Date | undefined;
+        // tslint:disable-next-line: no-constant-condition
+        while (true) {
+            const newEntry: LogEntry | undefined = logEntries.pop();
+            if (!newEntry) {
+                break;
             }
-        } else {
-            for (const newEntry of newLogEntries) {
-                if (newEntry.id) {
-                    alreadyDisplayedLogs.push(newEntry.id);
-                    if (newEntry.message) {
-                        fullLog = fullLog.concat(newEntry.message);
-                        ext.outputChannel.appendLog(newEntry.message, { date: newEntry.logTime, resourceName: client.fullName });
-                        nextTimeToDisplayWaitingLog = Date.now() + 30 * 1000; // wait at least 30 seconds from last log before displaying "Waiting" log
-                    }
 
-                    if (newEntry.detailsUrl) {
-                        let entryDetails: LogEntry[] = [];
-                        await retryKuduCall(context, 'getLogEntryDetails', async () => {
-                            await ignore404Error(context, async () => {
-                                entryDetails = await kuduClient.deployment.getLogEntryDetails(deploymentId, nonNullProp(newEntry, 'id'));
-                            });
-                        });
-
-                        for (const entryDetail of entryDetails) {
-                            if (entryDetail.message) {
-                                fullLog = fullLog.concat(entryDetail.message);
-                                ext.outputChannel.appendLog(entryDetail.message, { date: entryDetail.logTime, resourceName: client.fullName });
-                            }
-                        }
-                    }
-                }
+            if (newEntry.message && newEntry.logTime && newEntry.logTime > lastLogTime) {
+                fullLog = fullLog.concat(newEntry.message);
+                ext.outputChannel.appendLog(newEntry.message, { date: newEntry.logTime, resourceName: client.fullName });
+                lastLogTimeForThisPoll = newEntry.logTime;
             }
+
+            await retryKuduCall(context, 'getLogEntryDetails', async () => {
+                await ignore404Error(context, async () => {
+                    if (newEntry.id && newEntry.detailsUrl) {
+                        const details: LogEntry[] = await kuduClient.deployment.getLogEntryDetails(deploymentId, newEntry.id);
+                        logEntries.push(...details.reverse());
+                    }
+                });
+            });
+        }
+
+        if (lastLogTimeForThisPoll) {
+            lastLogTime = lastLogTimeForThisPoll;
         }
 
         if (deployment.complete) {
-            if (deployment.isTemp) {
-                // If the deployment completed without making it to the "permanent" phase, it must have failed
-                throw new Error(localize('deploymentFailed', 'Deployment to "{0}" failed. See output channel for more details.', client.fullName));
+            if (deployment.status === 3 /* Failed */ || deployment.isTemp) { // If the deployment completed without making it to the "permanent" phase, it must have failed
+                const message: string = localize('deploymentFailed', 'Deployment to "{0}" failed.', client.fullName);
+                const viewOutput: string = localize('viewOutput', 'View Output');
+                // don't wait
+                window.showErrorMessage(message, viewOutput).then(result => {
+                    if (result === viewOutput) {
+                        ext.outputChannel.show();
+                    }
+                });
+
+                const messageWithoutName: string = localize('deploymentFailedWithoutName', 'Deployment failed.');
+                ext.outputChannel.appendLog(messageWithoutName, { resourceName: client.fullName });
+                context.errorHandling.suppressDisplay = true;
+                throw new Error(messageWithoutName);
             } else {
                 context.syncTriggersPostDeploy = client.isFunctionApp && !/syncing/i.test(fullLog);
                 return;
