@@ -485,6 +485,11 @@ export declare abstract class BaseEditor<ContextT> implements Disposable {
     abstract getFilename(context: ContextT): Promise<string>;
 
     /**
+     * Implement this to return the resource name from the remote
+     */
+    abstract getResourceName(context: ContextT): Promise<string>;
+
+    /**
      * Implement this to return the size in MB.
      */
     abstract getSize(context: ContextT): Promise<number>;
