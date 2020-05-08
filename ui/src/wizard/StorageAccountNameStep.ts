@@ -39,7 +39,7 @@ export class StorageAccountNameStep<T extends types.IStorageAccountWizardContext
     }
 
     private async validateStorageAccountName(client: StorageManagementClient, name: string): Promise<string | undefined> {
-        name = name ? name.trim() : '';
+        name = name.trim();
 
         if (!name || name.length < storageAccountNamingRules.minLength || name.length > storageAccountNamingRules.maxLength) {
             return localize('invalidLength', 'The name must be between {0} and {1} characters.', storageAccountNamingRules.minLength, storageAccountNamingRules.maxLength);

@@ -17,7 +17,7 @@ export async function createSlot(root: ISiteTreeRoot, existingSlots: AzureTreeIt
     const client: WebSiteManagementClient = createAzureClient(root, WebSiteManagementClient);
     const slotName: string = (await ext.ui.showInputBox({
         prompt: localize('enterSlotName', 'Enter a unique name for the new deployment slot'),
-        validateInput: async (value: string | undefined): Promise<string | undefined> => validateSlotName(value, client, root)
+        validateInput: async (value: string): Promise<string | undefined> => validateSlotName(value, client, root)
     })).trim();
 
     const newDeploymentSlot: Site = {
@@ -51,8 +51,8 @@ const slotNamingRules: IAzureNamingRules = {
     invalidCharsRegExp: /[^a-zA-Z0-9\-]/
 };
 
-async function validateSlotName(value: string | undefined, client: WebSiteManagementClient, root: ISiteTreeRoot): Promise<string | undefined> {
-    value = value ? value.trim() : '';
+async function validateSlotName(value: string, client: WebSiteManagementClient, root: ISiteTreeRoot): Promise<string | undefined> {
+    value = value.trim();
     // Can not have "production" as a slot name, but checkNameAvailability doesn't validate that
     if (value === 'production') {
         return localize('slotNotAvailable', 'The slot name "{0}" is not available.', value);

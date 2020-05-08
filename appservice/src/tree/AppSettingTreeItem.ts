@@ -70,7 +70,7 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         const newKey: string = await ext.ui.showInputBox({
             prompt: `Enter a new name for "${oldKey}"`,
             value: this._key,
-            validateInput: (v?: string): string | undefined => validateAppSettingKey(settings, this.root.client, v, oldKey)
+            validateInput: (v: string): string | undefined => validateAppSettingKey(settings, this.root.client, v, oldKey)
         });
 
         await this.parent.editSettingItem(oldKey, newKey, this._value, context);

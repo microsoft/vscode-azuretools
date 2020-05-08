@@ -22,7 +22,7 @@ export class AppInsightsNameStep extends AzureWizardPromptStep<IAppServiceWizard
         wizardContext.newAppInsightsName = (await ext.ui.showInputBox({
             value: suggestedName,
             prompt: 'Enter the name of the new Application Insights resource.',
-            validateInput: async (value: string | undefined): Promise<string | undefined> => await this.validateApplicationInsightName(wizardContext, value)
+            validateInput: async (value: string): Promise<string | undefined> => await this.validateApplicationInsightName(wizardContext, value)
         })).trim();
     }
 
@@ -30,8 +30,8 @@ export class AppInsightsNameStep extends AzureWizardPromptStep<IAppServiceWizard
         return !wizardContext.newAppInsightsName;
     }
 
-    private async validateApplicationInsightName(wizardContext: IAppServiceWizardContext, name: string | undefined): Promise<string | undefined> {
-        name = name ? name.trim() : '';
+    private async validateApplicationInsightName(wizardContext: IAppServiceWizardContext, name: string): Promise<string | undefined> {
+        name = name.trim();
 
         if (name.length < appInsightsNamingRules.minLength || name.length > appInsightsNamingRules.maxLength) {
             return localize('invalidLength', 'The name must be between {0} and {1} characters.', appInsightsNamingRules.minLength, appInsightsNamingRules.maxLength);

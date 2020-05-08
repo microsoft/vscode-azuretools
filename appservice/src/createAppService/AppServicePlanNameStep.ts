@@ -29,8 +29,8 @@ export class AppServicePlanNameStep extends AzureWizardPromptStep<IAppServiceWiz
         return !wizardContext.newPlanName;
     }
 
-    private async validatePlanName(wizardContext: IAppServiceWizardContext, name: string | undefined): Promise<string | undefined> {
-        name = name ? name.trim() : '';
+    private async validatePlanName(wizardContext: IAppServiceWizardContext, name: string): Promise<string | undefined> {
+        name = name.trim();
 
         if (name.length < appServicePlanNamingRules.minLength || name.length > appServicePlanNamingRules.maxLength) {
             return localize('invalidLength', 'The name must be between {0} and {1} characters.', appServicePlanNamingRules.minLength, appServicePlanNamingRules.maxLength);
