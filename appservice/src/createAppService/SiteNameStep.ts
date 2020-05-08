@@ -38,7 +38,7 @@ export class SiteNameStep extends AzureNameStep<IAppServiceWizardContext> {
         wizardContext.newSiteName = (await ext.ui.showInputBox({
             prompt,
             placeHolder,
-            validateInput: async (name: string | undefined): Promise<string | undefined> => await this.validateSiteName(client, name)
+            validateInput: async (name: string): Promise<string | undefined> => await this.validateSiteName(client, name)
         })).trim();
 
         const namingRules: IAzureNamingRules[] = [resourceGroupNamingRules];
@@ -71,8 +71,8 @@ export class SiteNameStep extends AzureNameStep<IAppServiceWizardContext> {
         return (await Promise.all(tasks)).every((v: boolean) => v);
     }
 
-    private async validateSiteName(client: WebSiteManagementClient, name: string | undefined): Promise<string | undefined> {
-        name = name ? name.trim() : '';
+    private async validateSiteName(client: WebSiteManagementClient, name: string): Promise<string | undefined> {
+        name = name.trim();
 
         if (name.length < siteNamingRules.minLength || name.length > siteNamingRules.maxLength) {
             return localize('invalidLength', 'The name must be between {0} and {1} characters.', siteNamingRules.minLength, siteNamingRules.maxLength);

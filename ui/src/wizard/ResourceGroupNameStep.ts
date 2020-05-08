@@ -15,7 +15,7 @@ export class ResourceGroupNameStep<T extends types.IResourceGroupWizardContext> 
         wizardContext.newResourceGroupName = (await ext.ui.showInputBox({
             value: suggestedName,
             prompt: 'Enter the name of the new resource group.',
-            validateInput: async (value: string | undefined): Promise<string | undefined> => await this.validateResourceGroupName(wizardContext, value)
+            validateInput: async (value: string): Promise<string | undefined> => await this.validateResourceGroupName(wizardContext, value)
         })).trim();
     }
 
@@ -23,8 +23,8 @@ export class ResourceGroupNameStep<T extends types.IResourceGroupWizardContext> 
         return !wizardContext.newResourceGroupName;
     }
 
-    private async validateResourceGroupName(wizardContext: T, name: string | undefined): Promise<string | undefined> {
-        name = name ? name.trim() : '';
+    private async validateResourceGroupName(wizardContext: T, name: string): Promise<string | undefined> {
+        name = name.trim();
 
         if (name.length < resourceGroupNamingRules.minLength || name.length > resourceGroupNamingRules.maxLength) {
             return localize('invalidLength', 'The name must be between {0} and {1} characters.', resourceGroupNamingRules.minLength, resourceGroupNamingRules.maxLength);
