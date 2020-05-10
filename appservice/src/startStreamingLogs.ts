@@ -13,6 +13,7 @@ import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { pingFunctionApp } from './pingFunctionApp';
 import { SiteClient } from './SiteClient';
+import { TrialAppClient } from './TrialAppClient';
 import { requestUtils } from './utils/requestUtils';
 
 export interface ILogStream extends vscode.Disposable {
@@ -22,11 +23,14 @@ export interface ILogStream extends vscode.Disposable {
 
 const logStreams: Map<string, ILogStream> = new Map();
 
-function getLogStreamId(client: SiteClient, logsPath: string): string {
-    return `${client.id}${logsPath}`;
+function getLogStreamId(client: SiteClient | TrialAppClient, logsPath: string): string {
+    if (client instanceof SiteClient) {
+        return `${client.id}${logsPath}`;
+    } else {
+        return `${client.metadata.siteGuid}${logsPath}`;
+    }
 }
-
-export async function startStreamingLogs(client: SiteClient, verifyLoggingEnabled: () => Promise<void>, logStreamLabel: string, logsPath: string = ''): Promise<ILogStream> {
+export async function startStreamingLogs(client: SiteClient | TrialAppClient, verifyLoggingEnabled: () => Promise<void>, logStreamLabel: string, logsPath: string = ''): Promise<ILogStream> {
     const logStreamId: string = getLogStreamId(client, logsPath);
     const logStream: ILogStream | undefined = logStreams.get(logStreamId);
     if (logStream && logStream.isConnected) {
@@ -52,16 +56,23 @@ export async function startStreamingLogs(client: SiteClient, verifyLoggingEnable
             callWithTelemetryAndErrorHandling('appService.streamingLogs', async (context: IActionContext) => {
                 context.errorHandling.suppressDisplay = true;
                 let timerId: NodeJS.Timer | undefined;
-                if (client.isFunctionApp) {
-                    // For Function Apps, we have to ping "/admin/host/status" every minute for logging to work
-                    // https://github.com/Microsoft/vscode-azurefunctions/issues/227
-                    await pingFunctionApp(client);
-                    timerId = setInterval(async () => await pingFunctionApp(client), 60 * 1000);
+                if (client instanceof SiteClient) {
+                    if (client.isFunctionApp) {
+                        // For Function Apps, we have to ping "/admin/host/status" every minute for logging to work
+                        // https://github.com/Microsoft/vscode-azurefunctions/issues/227
+                        await pingFunctionApp(client);
+                        timerId = setInterval(async () => await pingFunctionApp(client), 60 * 1000);
+                    }
                 }
 
                 await new Promise((onLogStreamEnded: () => void, reject: (err: Error) => void): void => {
                     let newLogStream: ILogStream;
-                    const logsRequest: request.Request = requestApi(`${client.kuduUrl}/api/logstream/${logsPath}`);
+                    let logsRequest: request.Request;
+                    if (client instanceof SiteClient) {
+                        logsRequest = requestApi(`${client.kuduUrl}/api/logstream/${logsPath}`);
+                    } else {
+                        logsRequest = requestApi(`https://${client.metadata.scmHostName}/api/logstream/${logsPath}`);
+                    }
                     newLogStream = {
                         dispose: (): void => {
                             logsRequest.removeAllListeners();

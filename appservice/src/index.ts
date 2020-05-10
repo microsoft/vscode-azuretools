@@ -38,9 +38,15 @@ export * from './tree/DeploymentsTreeItem';
 export * from './tree/DeploymentTreeItem';
 export * from './tree/FileTreeItem';
 export * from './tree/FolderTreeItem';
+export * from './tree/trialApp/TrialAppFolderTreeItem';
+export * from './tree/trialApp/TrialAppDeploymentTreeItem';
 export * from './tree/ISiteTreeRoot';
 export * from './tree/LogFilesTreeItem';
 export * from './tree/SiteFilesTreeItem';
 export * from './TunnelProxy';
-
+export * from './TrialAppClient';
+export * from './tree/trialApp/TrialAppSettingsTreeItem';
+export * from './tree/trialApp/TrialAppSettingTreeItem';
+export * from './tree/trialApp/TrialAppFileTreeItem';
+export * from './tree/trialApp/TrialAppLogFilesTreeItem';
 // Adding a comment here otherwise "source.organizeImports" will cause duplicate blank lines and tslint will complain
