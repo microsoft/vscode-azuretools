@@ -19,6 +19,7 @@ export async function waitForDeploymentToComplete(context: IDeployContext, clien
     let fullLog: string = '';
 
     let lastLogTime: Date = new Date(0);
+    let lastLine: string = '';
     let initialStartTime: Date | undefined;
     let deployment: DeployResult | undefined;
     let permanentId: string | undefined;
@@ -57,6 +58,7 @@ export async function waitForDeploymentToComplete(context: IDeployContext, clien
                 fullLog = fullLog.concat(newEntry.message);
                 ext.outputChannel.appendLog(newEntry.message, { date: newEntry.logTime, resourceName: client.fullName });
                 lastLogTimeForThisPoll = newEntry.logTime;
+                lastLine = newEntry.message;
             }
 
             await retryKuduCall(context, 'getLogEntryDetails', async () => {
@@ -87,6 +89,8 @@ export async function waitForDeploymentToComplete(context: IDeployContext, clien
                 const messageWithoutName: string = localize('deploymentFailedWithoutName', 'Deployment failed.');
                 ext.outputChannel.appendLog(messageWithoutName, { resourceName: client.fullName });
                 context.errorHandling.suppressDisplay = true;
+                // Hopefully the last line is enough to give us an idea why deployments are failing without excessively tracking everything
+                context.telemetry.properties.deployErrorLastLine = lastLine;
                 throw new Error(messageWithoutName);
             } else {
                 context.syncTriggersPostDeploy = client.isFunctionApp && !/syncing/i.test(fullLog);
