@@ -6,6 +6,7 @@
 import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, parseError, TreeItemIconPath } from 'vscode-azureextensionui';
 import KuduClient from 'vscode-azurekudu';
 import { localize } from '../../localize';
+import { TrialAppClient } from '../../TrialAppClient';
 import { getThemedIconPath } from '../IconPath';
 import { TrialAppFileTreeItem } from './TrialAppFileTreeItem';
 export class TrialAppFolderTreeItem extends AzExtParentTreeItem {
@@ -23,15 +24,15 @@ export class TrialAppFolderTreeItem extends AzExtParentTreeItem {
     public readonly label: string;
     public readonly path: string;
     public readonly isReadOnly: boolean;
-    public kuduClient: KuduClient;
+    public client: TrialAppClient;
     protected readonly _isRoot: boolean = false;
 
-    constructor(parent: AzExtParentTreeItem, label: string, path: string, isReadOnly: boolean, kuduClient: KuduClient) {
+    constructor(parent: AzExtParentTreeItem, label: string, path: string, isReadOnly: boolean, client: TrialAppClient) {
         super(parent);
         this.label = label;
         this.path = path;
         this.isReadOnly = isReadOnly;
-        this.kuduClient = kuduClient;
+        this.client = client;
     }
 
     public hasMoreChildrenImpl(): boolean {
@@ -39,7 +40,7 @@ export class TrialAppFolderTreeItem extends AzExtParentTreeItem {
     }
 
     public async loadMoreChildrenImpl(_clearCache: boolean, _context: IActionContext): Promise<AzExtTreeItem[]> {
-        const kuduClient: KuduClient = this.kuduClient;
+        const kuduClient: KuduClient = await this.client.getKuduClient();
         let response: IKuduItemResponse;
         try {
             response = <IKuduItemResponse><unknown>(await kuduClient.vfs.getItemWithHttpOperationResponse(this.path)).response;
@@ -63,7 +64,7 @@ export class TrialAppFolderTreeItem extends AzExtParentTreeItem {
             // the substring starts at file.path.indexOf(home) because the path sometimes includes site/ or D:\
             // the home.length + 1 is to account for the trailing slash, Linux uses / and Window uses \
             const fsPath: string = file.path.substring(file.path.indexOf(home) + home.length + 1);
-            return file.mime === 'inode/directory' ? new TrialAppFolderTreeItem(this, file.name, fsPath, this.isReadOnly, this.kuduClient) : new TrialAppFileTreeItem(this, file.name, fsPath, this.isReadOnly, this.kuduClient);
+            return file.mime === 'inode/directory' ? new TrialAppFolderTreeItem(this, file.name, fsPath, this.isReadOnly, this.client) : new TrialAppFileTreeItem(this, file.name, fsPath, this.isReadOnly, this.client);
         });
     }
 

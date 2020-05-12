@@ -14,6 +14,7 @@ import * as websocket from 'websocket';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { SiteClient } from './SiteClient';
+import { TrialAppClient } from './TrialAppClient';
 import { delay } from './utils/delay';
 import { nonNullProp } from './utils/nonNull';
 import { requestUtils } from './utils/requestUtils';
@@ -24,12 +25,12 @@ import { requestUtils } from './utils/requestUtils';
  */
 class TunnelSocket extends EventEmitter {
     private _socket: Socket;
-    private _client: SiteClient;
+    private _client: SiteClient | TrialAppClient;
     private _publishCredential: User;
     private _wsConnection: websocket.connection | undefined;
     private _wsClient: websocket.client;
 
-    constructor(socket: Socket, client: SiteClient, publishCredential: User) {
+    constructor(socket: Socket, client: SiteClient | TrialAppClient, publishCredential: User) {
         super();
         this._socket = socket;
         this._client = client;
