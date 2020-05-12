@@ -6,6 +6,7 @@
 import { AzExtParentTreeItem, AzureTreeItem, TreeItemIconPath } from 'vscode-azureextensionui';
 import { DeploymentsTreeItem, ISiteTreeRoot } from '../..';
 import { ScmType } from '../../ScmType';
+import { TrialAppClient } from '../../TrialAppClient';
 import { getThemedIconPath } from '../IconPath';
 
 // Kudu DeployStatus: https://github.com/projectkudu/kudu/blob/a13592e6654585d5c2ee5c6a05fa39fa812ebb84/Kudu.Contracts/Deployment/DeployStatus.cs
@@ -34,9 +35,11 @@ export class TrialAppDeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     public label: string;
     public receivedTime: Date;
     public parent: DeploymentsTreeItem;
+    public client: TrialAppClient;
 
-    constructor(parent: AzExtParentTreeItem) {
+    constructor(parent: AzExtParentTreeItem, client: TrialAppClient) {
         super(parent);
+        this.client = client;
         this.contextValue = `deployment/${ScmType.LocalGit}`.toLocaleLowerCase();
         this.label = 'Deploy';
     }

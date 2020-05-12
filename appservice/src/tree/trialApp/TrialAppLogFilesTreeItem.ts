@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, parseError } from 'vscode-azureextensionui';
-import KuduClient from 'vscode-azurekudu';
 import { TrialAppFolderTreeItem } from '../..';
 import { ext } from '../../extensionVariables';
 import { localize } from '../../localize';
+import { TrialAppClient } from '../../TrialAppClient';
 import { getThemedIconPath } from './../IconPath';
 
 /**
@@ -19,8 +19,8 @@ export class TrialAppLogFilesTreeItem extends TrialAppFolderTreeItem {
 
     protected readonly _isRoot: boolean = true;
 
-    constructor(parent: AzExtParentTreeItem, kuduClient: KuduClient) {
-        super(parent, localize('logFiles', 'Logs'), '/LogFiles', true, kuduClient);
+    constructor(parent: AzExtParentTreeItem, client: TrialAppClient) {
+        super(parent, localize('logFiles', 'Logs'), '/LogFiles', true, client);
     }
 
     public async loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {

@@ -3,7 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzExtTreeItem, TreeItemIconPath } from 'vscode-azureextensionui';
+import { StringDictionary } from 'azure-arm-website/lib/models';
+import { AzExtTreeItem, DialogResponses, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
+import { validateAppSettingKey } from '../..';
 import { getThemedIconPath } from '../IconPath';
 import { ext } from './../../extensionVariables';
 import { TrialAppSettingsTreeItem } from './TrialAppSettingsTreeItem';
@@ -30,6 +32,34 @@ export class TrialAppSettingTreeItem extends AzExtTreeItem {
     public static async createAppSettingTreeItem(parent: TrialAppSettingsTreeItem, key: string, value: string): Promise<TrialAppSettingTreeItem> {
         return new TrialAppSettingTreeItem(parent, key, value);
     }
+
+    public async edit(context: IActionContext): Promise<void> {
+        const newValue: string = await ext.ui.showInputBox({
+            prompt: `Enter setting value for "${this._key}"`,
+            value: this._value
+        });
+
+        await this.parent.editSettingItem(this._key, this._key, newValue, context);
+        this._value = newValue;
+        await this.refresh();
+    }
+
+    public async rename(context: IActionContext): Promise<void> {
+        // tslint:disable-next-line: no-unsafe-any
+        const settings: StringDictionary = JSON.parse(JSON.stringify(await this.parent.ensureSettings(context)));
+
+        const oldKey: string = this._key;
+        const newKey: string = await ext.ui.showInputBox({
+            prompt: `Enter a new name for "${oldKey}"`,
+            value: this._key,
+            validateInput: (v?: string): string | undefined => validateAppSettingKey(settings, this.parent.client, v, oldKey)
+        });
+
+        await this.parent.editSettingItem(oldKey, newKey, this._value, context);
+        this._key = newKey;
+        await this.refresh();
+    }
+
     public get id(): string {
         return this._key;
     }
@@ -40,6 +70,11 @@ export class TrialAppSettingTreeItem extends AzExtTreeItem {
 
     public get iconPath(): TreeItemIconPath {
         return getThemedIconPath('constant');
+    }
+
+    public async deleteTreeItemImpl(context: IActionContext): Promise<void> {
+        await ext.ui.showWarningMessage(`Are you sure you want to delete setting "${this._key}"?`, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
+        await this.parent.deleteSettingItem(this._key, context);
     }
 
     public get commandId(): string {
