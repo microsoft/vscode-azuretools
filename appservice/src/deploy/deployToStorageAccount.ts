@@ -9,6 +9,7 @@ import * as crypto from "crypto";
 import * as fse from 'fs-extra';
 import * as moment from 'moment';
 import { workspace } from 'vscode';
+import { IActionContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
@@ -19,14 +20,14 @@ import { randomUtils } from '../utils/randomUtils';
  * To deploy with Run from Package on a Windows plan, create the app setting "WEBSITE_RUN_FROM_PACKAGE" and set it to "1".
  * Then deploy via "zipdeploy" as usual.
  */
-export async function deployToStorageAccount(client: SiteClient, zipFilePath: string): Promise<void> {
+export async function deployToStorageAccount(context: IActionContext, client: SiteClient, zipFilePath: string): Promise<void> {
     const datePart: string = moment.utc(Date.now()).format('YYYYMMDDHHmmss');
     const randomPart: string = randomUtils.getRandomHexString(32);
     const blobName: string = `${datePart}-${randomPart}.zip`;
 
     const blobService: azureStorage.BlobService = await createBlobService(client);
     ext.outputChannel.appendLog(localize('creatingBlob', 'Uploading zip package to storage container...'), { resourceName: client.fullName });
-    const blobUrl: string = await createBlobFromZip(blobService, zipFilePath, blobName);
+    const blobUrl: string = await createBlobFromZip(context, blobService, zipFilePath, blobName);
     const appSettings: StringDictionary = await client.listApplicationSettings();
     // tslint:disable-next-line:strict-boolean-expressions
     appSettings.properties = appSettings.properties || {};
@@ -48,7 +49,7 @@ async function createBlobService(client: SiteClient): Promise<azureStorage.BlobS
     throw new Error(localize('azureWebJobsStorageKey', '"{0}" app setting is required for Run From Package deployment.', azureWebJobsStorageKey));
 }
 
-async function createBlobFromZip(blobService: azureStorage.BlobService, zipFilePath: string, blobName: string): Promise<string> {
+async function createBlobFromZip(context: IActionContext, blobService: azureStorage.BlobService, zipFilePath: string, blobName: string): Promise<string> {
     const localMd5Hash: string = crypto.createHash('md5').update(await fse.readFile(zipFilePath)).digest('base64');
 
     const containerName: string = 'function-releases';
@@ -70,6 +71,12 @@ async function createBlobFromZip(blobService: azureStorage.BlobService, zipFileP
                 resolve(r);
             }
         });
+    });
+
+    // don't wait
+    // NOTE: the `result` from `createBlockBlobFromLocalFile` above doesn't actually have the contentLength - thus we have to make a seperate call here
+    blobService.getBlobProperties(containerName, blobName, (_error: Error, r: azureStorage.BlobService.BlobResult) => {
+        context.telemetry.measurements.blobSize = Number(r.contentLength);
     });
 
     const suppressMd5Validation: boolean | undefined = workspace.getConfiguration(ext.prefix).get('suppressMd5Validation');
