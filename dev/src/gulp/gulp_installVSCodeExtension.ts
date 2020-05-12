@@ -16,7 +16,6 @@ export async function gulp_installVSCodeExtension(publisherId: string, extension
     if (await fse.pathExists(extensionsPath)) {
         existingExtensions = await fse.readdir(extensionsPath);
     }
-    
     if (!existingExtensions.some((e: string) => e.includes(extensionId))) {
         console.log(`"Installing" test extension with id "${extensionId}".`);
 
