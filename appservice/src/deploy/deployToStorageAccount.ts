@@ -79,7 +79,8 @@ async function createBlobFromZip(context: IActionContext, blobService: azureStor
         context.telemetry.measurements.blobSize = Number(r.contentLength);
     });
 
-    const suppressMd5Validation: boolean | undefined = workspace.getConfiguration(ext.prefix).get('suppressMd5Validation');
+    const suppressMd5Validation: boolean = !!workspace.getConfiguration(ext.prefix).get<boolean>('suppressMd5Validation');
+    context.telemetry.properties.suppressMd5Validation = String(suppressMd5Validation);
     if (!suppressMd5Validation && result.contentSettings?.contentMD5 !== localMd5Hash) {
         throw new Error(localize('md5Error', "Upload failed: Integrity error: MD5 hash mismatch between the local copy and the uploaded copy."));
     }
