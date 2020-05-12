@@ -32,16 +32,23 @@ export class AzureWizardUserInput implements IWizardUserInput {
         return this._wizard.currentStep > 1;
     }
 
+    private get _showTitle(): boolean {
+        return this._wizard.totalSteps > 1;
+    }
+
     public async showQuickPick<TPick extends QuickPickItem>(picks: TPick[] | Promise<TPick[]>, options: types.IAzureQuickPickOptions): Promise<TPick | TPick[]> {
         const disposables: Disposable[] = [];
         try {
             const quickPick: QuickPick<TPick> = window.createQuickPick<TPick>();
             disposables.push(quickPick);
-            quickPick.title = this._wizard.title;
-            if (!this._wizard.hideStepCount && this._wizard.title) {
-                quickPick.step = this._wizard.currentStep;
-                quickPick.totalSteps = this._wizard.totalSteps;
+            if (this._showTitle) {
+                quickPick.title = this._wizard.title;
+                if (!this._wizard.hideStepCount && this._wizard.title) {
+                    quickPick.step = this._wizard.currentStep;
+                    quickPick.totalSteps = this._wizard.totalSteps;
+                }
             }
+
             quickPick.buttons = this.showBackButton ? [QuickInputButtons.Back] : [];
 
             // Copy settings that are common between options and quickPick
@@ -98,11 +105,14 @@ export class AzureWizardUserInput implements IWizardUserInput {
         try {
             const inputBox: InputBox = window.createInputBox();
             disposables.push(inputBox);
-            inputBox.title = this._wizard.title;
-            if (!this._wizard.hideStepCount && this._wizard.title) {
-                inputBox.step = this._wizard.currentStep;
-                inputBox.totalSteps = this._wizard.totalSteps;
+            if (this._showTitle) {
+                inputBox.title = this._wizard.title;
+                if (!this._wizard.hideStepCount && this._wizard.title) {
+                    inputBox.step = this._wizard.currentStep;
+                    inputBox.totalSteps = this._wizard.totalSteps;
+                }
             }
+
             inputBox.buttons = this.showBackButton ? [QuickInputButtons.Back] : [];
 
             if (!inputBox.password) {
