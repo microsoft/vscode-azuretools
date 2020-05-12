@@ -91,8 +91,9 @@ export declare function gulp_installAzureAccount(): Promise<void>;
 
 /**
  * Writes down a fake extension to make VS Code think a dependency is installed, useful before running tests
+ * useInsiders defaults to false, only mark true if you want tests to run in vscode-insiders
  */
-export declare function gulp_installVSCodeExtension(publisherId: string, extensionName: string): Promise<void>;
+export declare function gulp_installVSCodeExtension(publisherId: string, extensionName: string, useInsiders?: boolean): Promise<void>;
 
 /**
  * Spawns a webpack process

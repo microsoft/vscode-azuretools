@@ -8,14 +8,14 @@ import * as os from 'os';
 import * as path from 'path';
 
 // tslint:disable-next-line: export-name
-export async function gulp_installVSCodeExtension(publisherId: string, extensionName: string): Promise<void> {
+export async function gulp_installVSCodeExtension(publisherId: string, extensionName: string, useInsiders: boolean = false): Promise<void> {
     const extensionId: string = `${publisherId}.${extensionName}`;
-    const extensionsPath: string = path.join(os.homedir(), '.vscode', 'extensions');
+    const vsCodeDir: string = useInsiders ? '.vscode-insiders' : '.vscode';
+    const extensionsPath: string = path.join(os.homedir(), vsCodeDir, 'extensions');
     let existingExtensions: string[] = [];
     if (await fse.pathExists(extensionsPath)) {
         existingExtensions = await fse.readdir(extensionsPath);
     }
-
     if (!existingExtensions.some((e: string) => e.includes(extensionId))) {
         console.log(`"Installing" test extension with id "${extensionId}".`);
 
