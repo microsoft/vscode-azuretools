@@ -34,6 +34,12 @@ export async function deployZip(context: IDeployContext, client: SiteClient, fsP
     }
 
     try {
+        // don't wait
+        // tslint:disable-next-line: no-floating-promises
+        fse.stat(zipFilePath).then((stats) => {
+            context.telemetry.measurements.zipFileSize = stats.size;
+        });
+
         ext.outputChannel.appendLog(localize('deployStart', 'Starting deployment...'), { resourceName: client.fullName });
         let asp: AppServicePlan | undefined;
 
@@ -54,8 +60,9 @@ export async function deployZip(context: IDeployContext, client: SiteClient, fsP
             useStorageAccountDeploy = !doBuild && isConsumption;
         }
 
+        context.telemetry.properties.useStorageAccountDeploy = String(useStorageAccountDeploy);
         if (useStorageAccountDeploy) {
-            await deployToStorageAccount(client, zipFilePath);
+            await deployToStorageAccount(context, client, zipFilePath);
             context.syncTriggersPostDeploy = true;
         } else {
             const kuduClient: KuduClient = await client.getKuduClient();
