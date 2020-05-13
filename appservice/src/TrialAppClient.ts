@@ -7,31 +7,10 @@ import { SiteConfigResource, StringDictionary, User } from 'azure-arm-website/li
 import { BasicAuthenticationCredentials, ServiceClientCredentials } from 'ms-rest';
 import { addExtensionUserAgent } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
+import { ITrialAppMetadata } from '.';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { requestUtils } from './utils/requestUtils';
-
-export interface ITrialAppMetadata {
-    url: string;
-    ibizaUrl: string;
-    monacoUrl: string;
-    contentDownloadUrl: string;
-    gitUrl: string;
-    bashGitUrl: string;
-    timeLeft: number;
-    AppService: string;
-    IsRbacEnabled: boolean;
-    templateName: string;
-    isExtended: boolean;
-    csmId: string;
-    siteName: string;
-    publishingUserName: string;
-    publishingPassword: string;
-    siteGuid: string;
-    loginSession: string;
-    hostName: string;
-    scmHostName: string;
-}
 
 export class TrialAppClient {
     public get fullName(): string {
@@ -66,6 +45,30 @@ export class TrialAppClient {
         return <StringDictionary>await kuduClient.settings.getAll();
     }
 
+    public async getTrialAppMetaData(loginsession: string): Promise<ITrialAppMetadata> {
+        const metadataRequest: requestUtils.Request = await requestUtils.getDefaultRequest('https://tryappservice.azure.com/api/vscoderesource', undefined, 'GET');
+
+        metadataRequest.headers = {
+            accept: '*/*',
+            'accept-language': 'en-US,en;q=0.9',
+            'sec-fetch-dest': 'empty',
+            'sec-fetch-mode': 'cors',
+            'sec-fetch-site': 'same-origin',
+            cookie: `loginsession=${loginsession}`
+        };
+
+        try {
+            const result: string = await requestUtils.sendRequest<string>(metadataRequest);
+            return <ITrialAppMetadata>JSON.parse(result);
+
+        } catch (e) {
+            ext.outputChannel.appendLine(`Error: Unable to fetch trial app metadata.\n ${e}`);
+            ext.context.globalState.update('trialApp.hasApp', false);
+            ext.context.globalState.update('trialApp.imported', false);
+            throw Error;
+        }
+    }
+
     public async deleteApplicationSetting(appSettings: StringDictionary, key: string): Promise<StringDictionary> {
         const requestUrl: string = `https://${this.metadata.scmHostName}/api/settings/${key}`;
         const request: requestUtils.Request = await requestUtils.getDefaultRequest(requestUrl, this.credentials, 'DELETE');
@@ -80,8 +83,7 @@ export class TrialAppClient {
             await requestUtils.sendRequest<string>(request);
 
         } catch (error) {
-            ext.outputChannel.appendLine(error);
-            throw Error(error);
+            throw error;
         }
         return Promise.resolve(appSettings);
     }
@@ -125,7 +127,8 @@ export class TrialAppClient {
         try {
             await requestUtils.sendRequest<string>(request);
         } catch (error) {
-            ext.outputChannel.appendLine(error);
+            ext.outputChannel.appendLine(<string>error);
+            throw error;
         }
 
         return Promise.resolve(appSettings);
