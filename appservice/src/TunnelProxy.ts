@@ -148,13 +148,13 @@ class RetryableTunnelStatusError extends Error { }
  */
 export class TunnelProxy {
     private _port: number;
-    private _client: SiteClient;
+    private _client: SiteClient | TrialAppClient;
     private _publishCredential: User;
     private _server: Server;
     private _openSockets: TunnelSocket[];
     private _isSsh: boolean;
 
-    constructor(port: number, client: SiteClient, publishCredential: User, isSsh: boolean = false) {
+    constructor(port: number, client: SiteClient | TrialAppClient, publishCredential: User, isSsh: boolean = false) {
         this._port = port;
         this._client = client;
         this._publishCredential = publishCredential;

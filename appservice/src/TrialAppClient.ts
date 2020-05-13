@@ -21,6 +21,10 @@ export class TrialAppClient {
         return this.metadata.scmHostName;
     }
 
+    public get defaultHostUrl(): string {
+        return `https://${this.metadata.hostName}`;
+    }
+
     public isLinux: boolean;
     public metadata: ITrialAppMetadata;
     public credentials: ServiceClientCredentials;
