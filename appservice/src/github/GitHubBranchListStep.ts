@@ -15,8 +15,9 @@ export class GitHubBranchListStep extends AzureWizardPromptStep<IConnectToGitHub
         const placeHolder: string = localize('chooseBranch', 'Choose branch');
         let branchData: gitHubBranchData | undefined;
         const picksCache: ICachedQuickPicks<gitHubBranchData> = { picks: [] };
+        const requestOption: gitHubWebResource = await createRequestOptions(context, `${nonNullProp(context, 'repoData').url}/branches`);
         do {
-            branchData = (await ext.ui.showQuickPick(this.getBranchPicks(context, picksCache), { placeHolder })).data;
+            branchData = (await ext.ui.showQuickPick(this.getBranchPicks(context, picksCache, requestOption), { placeHolder })).data;
         } while (!branchData);
 
         context.branchData = branchData;
@@ -26,8 +27,7 @@ export class GitHubBranchListStep extends AzureWizardPromptStep<IConnectToGitHub
         return !context.branchData;
     }
 
-    private async getBranchPicks(context: IConnectToGitHubWizardContext, picksCache: ICachedQuickPicks<gitHubBranchData>): Promise<IAzureQuickPickItem<gitHubBranchData | undefined>[]> {
-        const requestOption: gitHubWebResource = await createRequestOptions(context, `${nonNullProp(context, 'repoData').url}/branches`);
+    private async getBranchPicks(context: IConnectToGitHubWizardContext, picksCache: ICachedQuickPicks<gitHubBranchData>, requestOption: gitHubWebResource): Promise<IAzureQuickPickItem<gitHubBranchData | undefined>[]> {
         return await getGitHubQuickPicksWithLoadMore<gitHubBranchData>(context, picksCache, requestOption, 'name');
     }
 }
