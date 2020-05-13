@@ -24,7 +24,6 @@ export * from './editScmType';
 export { registerAppServiceExtensionVariables } from './extensionVariables';
 export * from './getFile';
 export { IConnectToGitHubWizardContext } from './github/IConnectToGitHubWizardContext';
-export * from './ITrialAppMetadata';
 export * from './pingFunctionApp';
 export * from './putFile';
 export * from './registerSiteCommand';
@@ -42,6 +41,5 @@ export * from './tree/FolderTreeItem';
 export * from './tree/ISiteTreeRoot';
 export * from './tree/LogFilesTreeItem';
 export * from './tree/SiteFilesTreeItem';
-export * from './TrialAppClient';
 export * from './TunnelProxy';
 // Adding a comment here otherwise "source.organizeImports" will cause duplicate blank lines and tslint will complain
