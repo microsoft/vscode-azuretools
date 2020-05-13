@@ -15,8 +15,9 @@ export class GitHubRepoListStep extends AzureWizardPromptStep<IConnectToGitHubWi
         const placeHolder: string = localize('chooseRepo', 'Choose repository');
         let repoData: gitHubRepoData | undefined;
         const picksCache: ICachedQuickPicks<gitHubRepoData> = { picks: [] };
+        const requestOptions: gitHubWebResource = await createRequestOptions(context, nonNullProp(context, 'orgData').repos_url);
         do {
-            repoData = (await ext.ui.showQuickPick(this.getRepositories(context, picksCache), { placeHolder })).data;
+            repoData = (await ext.ui.showQuickPick(this.getRepositories(context, picksCache, requestOptions), { placeHolder })).data;
         } while (!repoData);
 
         context.repoData = repoData;
@@ -26,8 +27,7 @@ export class GitHubRepoListStep extends AzureWizardPromptStep<IConnectToGitHubWi
         return !context.repoData;
     }
 
-    private async getRepositories(context: IConnectToGitHubWizardContext, picksCache: ICachedQuickPicks<gitHubRepoData>): Promise<IAzureQuickPickItem<gitHubRepoData | undefined>[]> {
-        const requestOptions: gitHubWebResource = await createRequestOptions(context, nonNullProp(context, 'orgData').repos_url);
+    private async getRepositories(context: IConnectToGitHubWizardContext, picksCache: ICachedQuickPicks<gitHubRepoData>, requestOptions: gitHubWebResource): Promise<IAzureQuickPickItem<gitHubRepoData | undefined>[]> {
         return await getGitHubQuickPicksWithLoadMore<gitHubRepoData>(context, picksCache, requestOptions, 'name');
     }
 }
