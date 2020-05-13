@@ -14,7 +14,6 @@ import * as websocket from 'websocket';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { SiteClient } from './SiteClient';
-import { TrialAppClient } from './TrialAppClient';
 import { delay } from './utils/delay';
 import { nonNullProp } from './utils/nonNull';
 import { requestUtils } from './utils/requestUtils';
@@ -25,12 +24,12 @@ import { requestUtils } from './utils/requestUtils';
  */
 class TunnelSocket extends EventEmitter {
     private _socket: Socket;
-    private _client: SiteClient | TrialAppClient;
+    private _client: SiteClient;
     private _publishCredential: User;
     private _wsConnection: websocket.connection | undefined;
     private _wsClient: websocket.client;
 
-    constructor(socket: Socket, client: SiteClient | TrialAppClient, publishCredential: User) {
+    constructor(socket: Socket, client: SiteClient, publishCredential: User) {
         super();
         this._socket = socket;
         this._client = client;
@@ -148,13 +147,13 @@ class RetryableTunnelStatusError extends Error { }
  */
 export class TunnelProxy {
     private _port: number;
-    private _client: SiteClient | TrialAppClient;
+    private _client: SiteClient;
     private _publishCredential: User;
     private _server: Server;
     private _openSockets: TunnelSocket[];
     private _isSsh: boolean;
 
-    constructor(port: number, client: SiteClient | TrialAppClient, publishCredential: User, isSsh: boolean = false) {
+    constructor(port: number, client: SiteClient, publishCredential: User, isSsh: boolean = false) {
         this._port = port;
         this._client = client;
         this._publishCredential = publishCredential;
