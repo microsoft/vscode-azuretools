@@ -37,12 +37,12 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
                 const pError: IParsedError = parseError(error);
                 // Only expecting a resource not found error if this is a new component
                 if (pError.errorType === 'ResourceNotFound') {
-                    const creatingNewAppInsights: string = localize('creatingNewAppInsightsInsights', 'Creating new Application Insights resource "{0}"...', wizardContext.newSiteName);
+                    const creatingNewAppInsights: string = localize('creatingNewAppInsightsInsights', 'Creating Application Insights resource "{0}"...', aiName);
                     ext.outputChannel.appendLog(creatingNewAppInsights);
                     progress.report({ message: creatingNewAppInsights });
 
                     wizardContext.appInsightsComponent = await client.components.createOrUpdate(rgName, aiName, { kind: 'web', applicationType: 'web', location: appInsightsLocation });
-                    const createdNewAppInsights: string = localize('createdNewAppInsights', 'Created new Application Insights resource "{0}"...', aiName);
+                    const createdNewAppInsights: string = localize('createdNewAppInsights', 'Successfully created Application Insights resource "{0}".', aiName);
                     ext.outputChannel.appendLog(createdNewAppInsights);
                 } else {
                     throw error;
