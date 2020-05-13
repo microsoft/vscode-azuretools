@@ -16,6 +16,7 @@ import { nonNullProp } from './utils/nonNull';
 
 export async function editScmType(client: SiteClient, node: AzureTreeItem<ISiteTreeRoot>, context: IActionContext, newScmType?: ScmType, showToast: boolean = true): Promise<ScmType | undefined> {
     if (client.isLinux && await client.getIsConsumption()) {
+        context.errorHandling.suppressReportIssue = true;
         throw new Error(localize('noEditScmOnLinuxCons', 'Linux consumption plans only support zip deploy. See [here](https://aka.ms/AA7avjx) for more information.'));
     }
 
