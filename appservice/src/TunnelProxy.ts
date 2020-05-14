@@ -81,7 +81,9 @@ class TunnelSocket extends EventEmitter {
             });
 
             connection.on('message', (data: websocket.IMessage) => {
-                this._socket.write(data.binaryData);
+                if (data.binaryData) {
+                    this._socket.write(data.binaryData);
+                }
             });
 
         });
