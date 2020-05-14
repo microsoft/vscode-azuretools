@@ -7,9 +7,9 @@ import { SiteConfigResource, User } from 'azure-arm-website/lib/models';
 import * as portfinder from 'portfinder';
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling, IActionContext } from 'vscode-azureextensionui';
+import { ISiteClient } from '../';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { SiteClient } from '../SiteClient';
 import { TunnelProxy } from '../TunnelProxy';
 import { reportMessage, setRemoteDebug } from './remoteDebugCommon';
 
@@ -22,7 +22,7 @@ export enum RemoteDebugLanguage {
     Python
 }
 
-export async function startRemoteDebug(siteClient: SiteClient, siteConfig: SiteConfigResource, language: RemoteDebugLanguage): Promise<void> {
+export async function startRemoteDebug(siteClient: ISiteClient, siteConfig: SiteConfigResource, language: RemoteDebugLanguage): Promise<void> {
     if (isRemoteDebugging) {
         throw new Error(localize('remoteDebugAlreadyStarted', 'Azure Remote Debugging is currently starting or already started.'));
     }
@@ -36,7 +36,7 @@ export async function startRemoteDebug(siteClient: SiteClient, siteConfig: SiteC
     }
 }
 
-async function startRemoteDebugInternal(siteClient: SiteClient, siteConfig: SiteConfigResource, language: RemoteDebugLanguage): Promise<void> {
+async function startRemoteDebugInternal(siteClient: ISiteClient, siteConfig: SiteConfigResource, language: RemoteDebugLanguage): Promise<void> {
     await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, cancellable: true }, async (progress, token): Promise<void> => {
         const debugConfig: vscode.DebugConfiguration = await getDebugConfiguration(language);
         // tslint:disable-next-line:no-unsafe-any

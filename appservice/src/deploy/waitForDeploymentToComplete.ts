@@ -8,14 +8,14 @@ import { IActionContext, IParsedError, parseError } from 'vscode-azureextensionu
 import { KuduClient } from 'vscode-azurekudu';
 import { DeployResult, LogEntry } from 'vscode-azurekudu/lib/models';
 import { ext } from '../extensionVariables';
+import { ISiteClient } from '../ISiteClient';
 import { localize } from '../localize';
-import { SiteClient } from '../SiteClient';
 import { delay } from '../utils/delay';
 import { ignore404Error, retryKuduCall } from '../utils/kuduUtils';
 import { nonNullProp } from '../utils/nonNull';
 import { IDeployContext } from './IDeployContext';
 
-export async function waitForDeploymentToComplete(context: IDeployContext, client: SiteClient, expectedId?: string, token?: CancellationToken, pollingInterval: number = 5000): Promise<void> {
+export async function waitForDeploymentToComplete(context: IDeployContext, client: ISiteClient, expectedId?: string, token?: CancellationToken, pollingInterval: number = 5000): Promise<void> {
     let fullLog: string = '';
 
     let lastLogTime: Date = new Date(0);

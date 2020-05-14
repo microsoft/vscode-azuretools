@@ -4,12 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as retry from 'p-retry';
+import { ISiteClient } from '../';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { SiteClient } from '../SiteClient';
 import { delay } from '../utils/delay';
 
-export async function syncTriggersPostDeploy(client: SiteClient): Promise<void> {
+export async function syncTriggersPostDeploy(client: ISiteClient): Promise<void> {
     // Per functions team a short delay is necessary before syncing triggers for two reasons:
     // (1) The call will definitely fail. (2) It will spin up a container unnecessarily in some cases.
     // Chose 10 because deploy logs say "App container will begin restart within 10 seconds."

@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+export * from './AttachedAccountRoot';
 export * from './confirmOverwriteSettings';
 export * from './createAppService/AppInsightsCreateStep';
 export * from './createAppService/AppInsightsListStep';

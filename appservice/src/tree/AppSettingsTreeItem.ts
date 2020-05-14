@@ -6,12 +6,12 @@
 import { StringDictionary } from 'azure-arm-website/lib/models';
 import { AzureParentTreeItem, AzureTreeItem, IActionContext, ICreateChildImplContext, TreeItemIconPath } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
-import { SiteClient } from "../SiteClient";
+import { ISiteClient } from '../ISiteClient';
 import { AppSettingTreeItem } from './AppSettingTreeItem';
 import { getThemedIconPath } from './IconPath';
 import { ISiteTreeRoot } from './ISiteTreeRoot';
 
-export function validateAppSettingKey(settings: StringDictionary, client: SiteClient, newKey: string, oldKey?: string): string | undefined {
+export function validateAppSettingKey(settings: StringDictionary, client: ISiteClient, newKey: string, oldKey?: string): string | undefined {
     if (client.isLinux && /[^\w\.]+/.test(newKey)) {
         return 'App setting names can only contain letters, numbers (0-9), periods ("."), and underscores ("_")';
     }

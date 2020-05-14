@@ -9,9 +9,9 @@ import { Response } from 'request';
 import { isArray } from 'util';
 import * as vscode from 'vscode';
 import { AzureTreeItem, AzureWizard, DialogResponses, IActionContext, IAzureQuickPickItem, IParsedError, openInPortal, parseError } from 'vscode-azureextensionui';
+import { ISiteClient } from '../';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { SiteClient } from '../SiteClient';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
 import { requestUtils } from '../utils/requestUtils';
@@ -27,7 +27,7 @@ export type gitHubBranchData = { name: string };
 export type gitHubLink = { prev?: string, next?: string, last?: string, first?: string };
 export type gitHubWebResource = requestUtils.Request & { nextLink?: string };
 
-export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, context: IConnectToGitHubWizardContext): Promise<void> {
+export async function connectToGitHub(node: AzureTreeItem, client: ISiteClient, context: IConnectToGitHubWizardContext): Promise<void> {
     const title: string = localize('connectGitHubRepo', 'Connect GitHub repository');
     context.client = client;
     context.node = node;
@@ -78,7 +78,7 @@ export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, c
     }
 }
 
-async function showGitHubAuthPrompt(node: AzureTreeItem, client: SiteClient, context: IActionContext): Promise<void> {
+async function showGitHubAuthPrompt(node: AzureTreeItem, client: ISiteClient, context: IActionContext): Promise<void> {
     const invalidToken: string = localize('tokenExpired', 'Azure\'s GitHub token is invalid.  Authorize in the "Deployment Center"');
     const goToPortal: vscode.MessageItem = { title: localize('goToPortal', 'Go to Portal') };
     let input: vscode.MessageItem | undefined = DialogResponses.learnMore;
@@ -191,7 +191,7 @@ export async function getGitHubQuickPicksWithLoadMore<T>(context: IConnectToGitH
 }
 
 export async function createRequestOptions(context: IConnectToGitHubWizardContext, url: string): Promise<gitHubWebResource> {
-    const client: SiteClient = nonNullProp(context, 'client');
+    const client: ISiteClient = nonNullProp(context, 'client');
     const oAuth2Token: string | undefined = (await client.listSourceControls())[0].token;
     if (!oAuth2Token) {
         await showGitHubAuthPrompt(nonNullProp(context, 'node'), client, context);

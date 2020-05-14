@@ -9,15 +9,15 @@ import * as fse from 'fs-extra';
 import * as vscode from 'vscode';
 import { IActionContext } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
+import { ISiteClient } from '../';
 import { ext } from '../extensionVariables';
 import * as FileUtilities from '../FileUtilities';
 import { localize } from '../localize';
-import { SiteClient } from '../SiteClient';
 import { deployToStorageAccount } from './deployToStorageAccount';
 import { IDeployContext } from './IDeployContext';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
-export async function deployZip(context: IDeployContext, client: SiteClient, fsPath: string, aspPromise: Promise<AppServicePlan | undefined>): Promise<void> {
+export async function deployZip(context: IDeployContext, client: ISiteClient, fsPath: string, aspPromise: Promise<AppServicePlan | undefined>): Promise<void> {
     if (!(await fse.pathExists(fsPath))) {
         throw new Error(localize('pathNotExist', 'Failed to deploy path that does not exist: {0}', fsPath));
     }
@@ -95,7 +95,7 @@ async function getZipFileToDeploy(fsPath: string, isFunctionApp: boolean): Promi
     }
 }
 
-async function delayFirstWebAppDeploy(client: SiteClient, asp: AppServicePlan | undefined): Promise<void> {
+async function delayFirstWebAppDeploy(client: ISiteClient, asp: AppServicePlan | undefined): Promise<void> {
     await new Promise<void>(async (resolve: () => void): Promise<void> => {
         setTimeout(resolve, 10000);
         try {
@@ -122,7 +122,7 @@ async function delayFirstWebAppDeploy(client: SiteClient, asp: AppServicePlan | 
     });
 }
 
-async function validateLinuxFunctionAppSettings(context: IActionContext, client: SiteClient, doBuild: boolean, isConsumption: boolean): Promise<void> {
+async function validateLinuxFunctionAppSettings(context: IActionContext, client: ISiteClient, doBuild: boolean, isConsumption: boolean): Promise<void> {
     const appSettings: StringDictionary = await client.listApplicationSettings();
     // tslint:disable-next-line:strict-boolean-expressions
     appSettings.properties = appSettings.properties || {};

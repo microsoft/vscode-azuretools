@@ -10,10 +10,10 @@ import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling, IActionContext, parseError } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
 import { ext } from './extensionVariables';
+import { ISiteClient } from './ISiteClient';
 import { localize } from './localize';
 import { pingFunctionApp } from './pingFunctionApp';
 import { SiteClient } from './SiteClient';
-import { TrialAppClient } from './TrialAppClient';
 import { requestUtils } from './utils/requestUtils';
 
 export interface ILogStream extends vscode.Disposable {
@@ -23,14 +23,11 @@ export interface ILogStream extends vscode.Disposable {
 
 const logStreams: Map<string, ILogStream> = new Map();
 
-function getLogStreamId(client: SiteClient | TrialAppClient, logsPath: string): string {
-    if (client instanceof SiteClient) {
-        return `${client.id}${logsPath}`;
-    } else {
-        return `${client.metadata.siteGuid}${logsPath}`;
-    }
+function getLogStreamId(client: ISiteClient, logsPath: string): string {
+    return `${client.id}${logsPath}`;
 }
-export async function startStreamingLogs(client: SiteClient | TrialAppClient, verifyLoggingEnabled: () => Promise<void>, logStreamLabel: string, logsPath: string = ''): Promise<ILogStream> {
+
+export async function startStreamingLogs(client: ISiteClient, verifyLoggingEnabled: () => Promise<void>, logStreamLabel: string, logsPath: string = ''): Promise<ILogStream> {
     const logStreamId: string = getLogStreamId(client, logsPath);
     const logStream: ILogStream | undefined = logStreams.get(logStreamId);
     if (logStream && logStream.isConnected) {
@@ -67,12 +64,7 @@ export async function startStreamingLogs(client: SiteClient | TrialAppClient, ve
 
                 await new Promise((onLogStreamEnded: () => void, reject: (err: Error) => void): void => {
                     let newLogStream: ILogStream;
-                    let logsRequest: request.Request;
-                    if (client instanceof SiteClient) {
-                        logsRequest = requestApi(`${client.kuduUrl}/api/logstream/${logsPath}`);
-                    } else {
-                        logsRequest = requestApi(`https://${client.metadata.scmHostName}/api/logstream/${logsPath}`);
-                    }
+                    let logsRequest: request.Request = requestApi(`${client.kuduUrl}/api/logstream/${logsPath}`);
                     newLogStream = {
                         dispose: (): void => {
                             logsRequest.removeAllListeners();
@@ -112,7 +104,7 @@ export async function startStreamingLogs(client: SiteClient | TrialAppClient, ve
     }
 }
 
-export async function stopStreamingLogs(client: SiteClient, logsPath: string = ''): Promise<void> {
+export async function stopStreamingLogs(client: ISiteClient, logsPath: string = ''): Promise<void> {
     const logStreamId: string = getLogStreamId(client, logsPath);
     const logStream: ILogStream | undefined = logStreams.get(logStreamId);
     if (logStream && logStream.isConnected) {
