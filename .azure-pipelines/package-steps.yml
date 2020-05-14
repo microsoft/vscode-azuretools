@@ -12,8 +12,9 @@ steps:
   condition: ne(variables['Build.SourceBranchName'], 'master')
 
 - task: Npm@1
-  displayName: '${{ parameters.package }}: npm install'
+  displayName: '${{ parameters.package }}: npm ci'
   inputs:
+    command: ci
     workingDir: '${{ parameters.package }}'
   condition: not(variables['skipPackage'])
 
