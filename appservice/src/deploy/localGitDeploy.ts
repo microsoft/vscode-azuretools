@@ -8,14 +8,14 @@ import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
 import { callWithMaskHandling, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
+import { ISiteClient } from '../ISiteClient';
 import { localize } from '../localize';
-import { SiteClient } from '../SiteClient';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
 import { verifyNoRunFromPackageSetting } from '../verifyNoRunFromPackageSetting';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
-export async function localGitDeploy(client: SiteClient, fsPath: string, context: IActionContext): Promise<void> {
+export async function localGitDeploy(client: ISiteClient, fsPath: string, context: IActionContext): Promise<void> {
     const publishCredentials: User = await client.getWebAppPublishCredential();
     const publishingPassword: string = nonNullProp(publishCredentials, 'publishingPassword');
 

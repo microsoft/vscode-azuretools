@@ -6,9 +6,9 @@
 import { SiteConfigResource } from 'azure-arm-website/lib/models';
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
+import { ISiteClient } from '../';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { SiteClient } from '../SiteClient';
 
 export function reportMessage(message: string, progress: vscode.Progress<{}>, token: vscode.CancellationToken): void {
     if (token.isCancellationRequested) {
@@ -19,7 +19,7 @@ export function reportMessage(message: string, progress: vscode.Progress<{}>, to
     progress.report({ message: message });
 }
 
-export async function setRemoteDebug(isRemoteDebuggingToBeEnabled: boolean, confirmMessage: string, noopMessage: string | undefined, siteClient: SiteClient, siteConfig: SiteConfigResource, progress: vscode.Progress<{}>, token: vscode.CancellationToken, learnMoreLink?: string): Promise<void> {
+export async function setRemoteDebug(isRemoteDebuggingToBeEnabled: boolean, confirmMessage: string, noopMessage: string | undefined, siteClient: ISiteClient, siteConfig: SiteConfigResource, progress: vscode.Progress<{}>, token: vscode.CancellationToken, learnMoreLink?: string): Promise<void> {
     const state: string | undefined = await siteClient.getState();
     if (state && state.toLowerCase() === 'stopped') {
         throw new Error(localize('remoteDebugStopped', 'The app must be running, but is currently in state "Stopped". Start the app to continue.'));

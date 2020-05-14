@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import WebSiteManagementClient from "azure-arm-website";
-import { NameValuePair, ResourceNameAvailability, Site, StringDictionary } from "azure-arm-website/lib/models";
-import { ProgressLocation, window } from "vscode";
-import { AzureTreeItem, createAzureClient, IAzureNamingRules, IAzureQuickPickItem, ICreateChildImplContext } from "vscode-azureextensionui";
-import { getNewFileShareName } from "./createAppService/getNewFileShareName";
-import { ext } from "./extensionVariables";
-import { localize } from "./localize";
-import { SiteClient } from './SiteClient';
-import { ISiteTreeRoot } from "./tree/ISiteTreeRoot";
+import WebSiteManagementClient from 'azure-arm-website';
+import { NameValuePair, ResourceNameAvailability, Site, StringDictionary } from 'azure-arm-website/lib/models';
+import { ProgressLocation, window } from 'vscode';
+import { AzureTreeItem, createAzureClient, IAzureNamingRules, IAzureQuickPickItem, ICreateChildImplContext } from 'vscode-azureextensionui';
+import { ISiteClient } from './';
+import { getNewFileShareName } from './createAppService/getNewFileShareName';
+import { ext } from './extensionVariables';
+import { localize } from './localize';
+import { ISiteTreeRoot } from './tree/ISiteTreeRoot';
 
 export async function createSlot(root: ISiteTreeRoot, existingSlots: AzureTreeItem<ISiteTreeRoot>[], context: ICreateChildImplContext): Promise<Site> {
     const client: WebSiteManagementClient = createAzureClient(root, WebSiteManagementClient);
@@ -30,7 +30,7 @@ export async function createSlot(root: ISiteTreeRoot, existingSlots: AzureTreeIt
         }
     };
 
-    const configurationSource: SiteClient | undefined = await chooseConfigurationSource(root, existingSlots);
+    const configurationSource: ISiteClient | undefined = await chooseConfigurationSource(root, existingSlots);
     if (!!configurationSource) {
         const appSettings: NameValuePair[] = await parseAppSettings(configurationSource);
         // tslint:disable-next-line:no-non-null-assertion
@@ -70,17 +70,17 @@ async function validateSlotName(value: string, client: WebSiteManagementClient, 
     }
 }
 
-async function chooseConfigurationSource(root: ISiteTreeRoot, existingSlots: AzureTreeItem<ISiteTreeRoot>[]): Promise<SiteClient | undefined> {
+async function chooseConfigurationSource(root: ISiteTreeRoot, existingSlots: AzureTreeItem<ISiteTreeRoot>[]): Promise<ISiteClient | undefined> {
     if (root.client.isFunctionApp) {
         // Function apps always clone from production slot without prompting
         return root.client;
     } else {
-        const configurationSources: IAzureQuickPickItem<SiteClient | undefined>[] = [{
+        const configurationSources: IAzureQuickPickItem<ISiteClient | undefined>[] = [{
             label: localize('dontClone', "Don't clone configuration from an existing slot"),
             data: undefined
         }];
 
-        const prodSiteClient: SiteClient = root.client;
+        const prodSiteClient: ISiteClient = root.client;
         // add the production slot itself
         configurationSources.push({
             // tslint:disable-next-line:no-non-null-assertion
@@ -90,7 +90,7 @@ async function chooseConfigurationSource(root: ISiteTreeRoot, existingSlots: Azu
 
         // add the web app's current deployment slots
         for (const slot of existingSlots) {
-            const slotSiteClient: SiteClient = slot.root.client;
+            const slotSiteClient: ISiteClient = slot.root.client;
             configurationSources.push({
                 label: slotSiteClient.fullName,
                 data: slotSiteClient
@@ -102,7 +102,7 @@ async function chooseConfigurationSource(root: ISiteTreeRoot, existingSlots: Azu
     }
 }
 
-async function parseAppSettings(siteClient: SiteClient): Promise<NameValuePair[]> {
+async function parseAppSettings(siteClient: ISiteClient): Promise<NameValuePair[]> {
     const appSettings: StringDictionary = await siteClient.listApplicationSettings();
     const appSettingPairs: NameValuePair[] = [];
     if (appSettings.properties) {

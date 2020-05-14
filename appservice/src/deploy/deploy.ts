@@ -6,9 +6,9 @@
 import { AppServicePlan, SiteConfigResource } from 'azure-arm-website/lib/models';
 import { ProgressLocation, window } from 'vscode';
 import { ext } from '../extensionVariables';
+import { ISiteClient } from '../ISiteClient';
 import { localize } from '../localize';
 import { ScmType } from '../ScmType';
-import { SiteClient } from '../SiteClient';
 import { randomUtils } from '../utils/randomUtils';
 import { deployWar } from './deployWar';
 import { deployZip } from './deployZip';
@@ -20,7 +20,7 @@ import { syncTriggersPostDeploy } from './syncTriggersPostDeploy';
 /**
  * NOTE: This leverages a command with id `ext.prefix + '.showOutputChannel'` that should be registered by each extension
  */
-export async function deploy(client: SiteClient, fsPath: string, context: IDeployContext): Promise<void> {
+export async function deploy(client: ISiteClient, fsPath: string, context: IDeployContext): Promise<void> {
     const config: SiteConfigResource = await client.getSiteConfig();
     // We use the AppServicePlan in a few places, but we don't want to delay deployment, so start the promise now and save as a const
     const aspPromise: Promise<AppServicePlan | undefined> = client.getAppServicePlan();

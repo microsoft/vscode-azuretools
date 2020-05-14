@@ -7,11 +7,11 @@ import { AppServicePlan } from 'azure-arm-website/lib/models';
 import { isNullOrUndefined } from 'util';
 import * as vscode from 'vscode';
 import { DialogResponses } from 'vscode-azureextensionui';
+import { ISiteClient } from './';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
-import { SiteClient } from './SiteClient';
 
-export async function deleteSite(client: SiteClient): Promise<void> {
+export async function deleteSite(client: ISiteClient): Promise<void> {
     const confirmMessage: string = localize('deleteConfirmation', 'Are you sure you want to delete "{0}"?', client.fullName);
     await ext.ui.showWarningMessage(confirmMessage, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
 

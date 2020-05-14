@@ -8,11 +8,11 @@ import { IActionContext } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
 import { ext } from '../extensionVariables';
 import * as FileUtilities from '../FileUtilities';
+import { ISiteClient } from '../ISiteClient';
 import { localize } from '../localize';
-import { SiteClient } from '../SiteClient';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
-export async function deployWar(context: IActionContext, client: SiteClient, fsPath: string): Promise<void> {
+export async function deployWar(context: IActionContext, client: ISiteClient, fsPath: string): Promise<void> {
     if (FileUtilities.getFileExtension(fsPath) !== 'war') {
         throw new Error(localize('NotAWarError', 'Path specified is not a war file'));
     }

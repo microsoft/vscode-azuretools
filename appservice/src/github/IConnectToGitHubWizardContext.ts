@@ -4,13 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzureTreeItem, IActionContext } from 'vscode-azureextensionui';
-import { SiteClient } from '../SiteClient';
+import { ISiteClient } from '../';
 import { gitHubBranchData, gitHubOrgData, gitHubRepoData } from './connectToGitHub';
 
 export interface IConnectToGitHubWizardContext extends IActionContext {
     orgData?: gitHubOrgData;
     repoData?: gitHubRepoData;
     branchData?: gitHubBranchData;
-    client?: SiteClient;
+    client?: ISiteClient;
     node?: AzureTreeItem;
 }

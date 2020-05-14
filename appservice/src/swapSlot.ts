@@ -7,12 +7,12 @@ import { WebSiteManagementClient } from 'azure-arm-website';
 import { ProgressLocation, window } from 'vscode';
 import { AzureTreeItem, createAzureClient, IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from './extensionVariables';
+import { ISiteClient } from './ISiteClient';
 import { localize } from './localize';
-import { SiteClient } from './SiteClient';
 import { ISiteTreeRoot } from './tree/ISiteTreeRoot';
 
 export async function swapSlot(sourceSlotNode: AzureTreeItem<ISiteTreeRoot>, existingSlots: AzureTreeItem<ISiteTreeRoot>[]): Promise<void> {
-    const sourceSlotClient: SiteClient = sourceSlotNode.root.client;
+    const sourceSlotClient: ISiteClient = sourceSlotNode.root.client;
 
     const productionSlotLabel: string = 'production';
     const otherSlots: IAzureQuickPickItem<AzureTreeItem<ISiteTreeRoot> | undefined>[] = [{

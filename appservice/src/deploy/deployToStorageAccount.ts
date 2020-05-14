@@ -4,14 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StringDictionary } from 'azure-arm-website/lib/models';
-import * as azureStorage from "azure-storage";
-import * as crypto from "crypto";
+import * as azureStorage from 'azure-storage';
+import * as crypto from 'crypto';
 import * as fse from 'fs-extra';
 import * as moment from 'moment';
 import { workspace } from 'vscode';
+import { ISiteClient } from '../';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { SiteClient } from '../SiteClient';
 import { randomUtils } from '../utils/randomUtils';
 
 /**
@@ -19,7 +19,7 @@ import { randomUtils } from '../utils/randomUtils';
  * To deploy with Run from Package on a Windows plan, create the app setting "WEBSITE_RUN_FROM_PACKAGE" and set it to "1".
  * Then deploy via "zipdeploy" as usual.
  */
-export async function deployToStorageAccount(client: SiteClient, zipFilePath: string): Promise<void> {
+export async function deployToStorageAccount(client: ISiteClient, zipFilePath: string): Promise<void> {
     const datePart: string = moment.utc(Date.now()).format('YYYYMMDDHHmmss');
     const randomPart: string = randomUtils.getRandomHexString(32);
     const blobName: string = `${datePart}-${randomPart}.zip`;
@@ -36,7 +36,7 @@ export async function deployToStorageAccount(client: SiteClient, zipFilePath: st
     ext.outputChannel.appendLog(localize('deploymentSuccessful', 'Deployment successful.'), { resourceName: client.fullName });
 }
 
-async function createBlobService(client: SiteClient): Promise<azureStorage.BlobService> {
+async function createBlobService(client: ISiteClient): Promise<azureStorage.BlobService> {
     // Use same storage account as AzureWebJobsStorage for deployments
     const azureWebJobsStorageKey: string = 'AzureWebJobsStorage';
     const settings: StringDictionary = await client.listApplicationSettings();
