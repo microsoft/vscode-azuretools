@@ -1,8 +1,8 @@
 steps:
 - task: NodeTool@0
-  displayName: 'Use Node 10.x'
+  displayName: 'Use Node 12.x'
   inputs:
-    versionSpec: 10.x
+    versionSpec: 12.x
 
 - script: |
     sudo cp .azure-pipelines/xvfb.init /etc/init.d/xvfb
