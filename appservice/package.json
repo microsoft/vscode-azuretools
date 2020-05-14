@@ -61,7 +61,7 @@
         "@types/request": "^2.48.4",
         "@types/request-promise": "4.1.41",
         "@types/vscode": "1.40.0",
-        "@types/websocket": "^0.0.38",
+        "@types/websocket": "^1.0.0",
         "glob": "^7.1.6",
         "mocha": "^7.1.1",
         "mocha-junit-reporter": "^1.23.3",
