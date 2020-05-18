@@ -40,6 +40,7 @@ export async function createSlot(root: ISiteTreeRoot, existingSlots: AzureTreeIt
     context.showCreatingTreeItem(slotName);
 
     const creatingSlot: string = localize('creatingSlot', 'Creating slot "{0}"...', slotName);
+    ext.outputChannel.appendLog(creatingSlot);
     return await window.withProgress({ location: ProgressLocation.Notification, title: creatingSlot }, async () => {
         return await client.webApps.createOrUpdateSlot(root.client.resourceGroup, root.client.siteName, newDeploymentSlot, slotName);
     });
