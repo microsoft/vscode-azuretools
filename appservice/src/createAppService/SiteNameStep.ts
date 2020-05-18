@@ -36,6 +36,7 @@ export class SiteNameStep extends AzureNameStep<IAppServiceWizardContext> {
             localize('functionAppNamePrompt', 'Enter a globally unique name for the new function app.') :
             localize('webAppNamePrompt', 'Enter a globally unique name for the new web app.');
         wizardContext.newSiteName = (await ext.ui.showInputBox({
+            value: wizardContext.recommendedNewSiteName,
             prompt,
             placeHolder,
             validateInput: async (name: string): Promise<string | undefined> => await this.validateSiteName(client, name)

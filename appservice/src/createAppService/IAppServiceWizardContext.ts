@@ -36,6 +36,10 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
     newSiteName?: string;
 
     /**
+     * The suggested name of the new site, that is prefilled in to the input for the site name.
+     */
+    recommendedNewSiteName?: string;
+    /**
      * The App Service plan to use.
      * If an existing plan is picked, this value will be defined after `AppServicePlanListStep.prompt` occurs
      * If a new plan is picked, this value will be defined after the `execute` phase of the 'create' subwizard
