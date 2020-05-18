@@ -21,7 +21,8 @@ export async function localGitDeploy(client: ISiteClient, fsPath: string, contex
 
     await callWithMaskHandling(
         async (): Promise<void> => {
-            const remote: string = `https://${nonNullProp(publishCredentials, 'publishingUserName')}:${nonNullProp(publishCredentials, 'publishingPassword')}@${client.gitUrl}`;
+            // const remote: string = `https://${nonNullProp(publishCredentials, 'publishingUserName')}:${nonNullProp(publishCredentials, 'publishingPassword')}@${client.gitUrl}`;
+            const remote: string = client.gitUrl ?? '';
             const localGit: git.SimpleGit = git(fsPath);
             const commitId: string = (await localGit.log()).latest.hash;
 
