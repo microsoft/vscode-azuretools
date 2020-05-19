@@ -64,7 +64,7 @@ export async function startStreamingLogs(client: ISiteClient, verifyLoggingEnabl
 
                 await new Promise((onLogStreamEnded: () => void, reject: (err: Error) => void): void => {
                     let newLogStream: ILogStream;
-                    let logsRequest: request.Request = requestApi(`${client.kuduUrl}/api/logstream/${logsPath}`);
+                    const logsRequest: request.Request = requestApi(`${client.kuduUrl}/api/logstream/${logsPath}`);
                     newLogStream = {
                         dispose: (): void => {
                             logsRequest.removeAllListeners();
