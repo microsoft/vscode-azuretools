@@ -182,8 +182,10 @@ export class TunnelProxy {
         this._server.unref();
     }
 
-    // Starts up an app by pinging it when it is found to be in the STOPPED state
-    private async startupApp(): Promise<void> {
+    /**
+     * Ensures the site is up and running (Even if the state is technically "Running", Azure doesn't always keep a site fully "up" if no one has hit the url in a while)
+     */
+    private async pingApp(): Promise<void> {
         ext.outputChannel.appendLog('[Tunnel] Pinging app default url...');
         const request: requestUtils.Request = await requestUtils.getDefaultRequest(this._client.defaultHostUrl);
         request.simple = false; // allows the call to succeed without exception, even when status code is not 2XX
@@ -222,7 +224,7 @@ export class TunnelProxy {
         } else if (tunnelStatus.state === AppState.STARTING) {
             throw new RetryableTunnelStatusError();
         } else if (tunnelStatus.state === AppState.STOPPED) {
-            await this.startupApp();
+            await this.pingApp();
             throw new RetryableTunnelStatusError();
         } else {
             throw new Error(localize('tunnelStatusError', 'Unexpected app state: {0}', tunnelStatus.state));
@@ -240,6 +242,7 @@ export class TunnelProxy {
                 throw new UserCancelledError();
             }
 
+            await this.pingApp();
             try {
                 await this.checkTunnelStatus();
                 return;
