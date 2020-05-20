@@ -5,7 +5,7 @@
 
 import { SiteConfigResource } from 'azure-arm-website/lib/models';
 import * as vscode from 'vscode';
-import { callWithTelemetryAndErrorHandling, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
+import { callWithTelemetryAndErrorHandling, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
@@ -29,7 +29,7 @@ export async function setRemoteDebug(isRemoteDebuggingToBeEnabled: boolean, conf
         const confirmButton: vscode.MessageItem = isRemoteDebuggingToBeEnabled ? { title: 'Enable' } : { title: 'Disable' };
 
         // don't have to check input as this handles cancels and learnMore responses
-        await ext.ui.showWarningMessage(confirmMessage, { modal: true, learnMoreLink }, confirmButton, DialogResponses.cancel);
+        await ext.ui.showWarningMessage(confirmMessage, { modal: true, learnMoreLink }, confirmButton);
         siteConfig.remoteDebuggingEnabled = isRemoteDebuggingToBeEnabled;
         reportMessage(localize('remoteDebugUpdate', 'Updating site configuration to set remote debugging...'), progress, token);
 

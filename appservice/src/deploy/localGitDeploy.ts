@@ -6,7 +6,7 @@
 import { User } from 'azure-arm-website/lib/models';
 import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
-import { callWithMaskHandling, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
+import { callWithMaskHandling, IActionContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
@@ -31,7 +31,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string, context
                     context.telemetry.properties.cancelStep = 'pushWithUncommitChanges';
                     const message: string = localize('localGitUncommit', '{0} uncommitted change(s) in local repo "{1}"', status.files.length, fsPath);
                     const deployAnyway: vscode.MessageItem = { title: localize('deployAnyway', 'Deploy Anyway') };
-                    await ext.ui.showWarningMessage(message, { modal: true }, deployAnyway, DialogResponses.cancel);
+                    await ext.ui.showWarningMessage(message, { modal: true }, deployAnyway);
                     context.telemetry.properties.cancelStep = undefined;
                     context.telemetry.properties.pushWithUncommitChanges = 'true';
                 }
@@ -55,13 +55,11 @@ export async function localGitDeploy(client: SiteClient, fsPath: string, context
                     const forcePushMessage: vscode.MessageItem = { title: localize('forcePush', 'Force Push') };
                     const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging.');
 
-                    if (await ext.ui.showWarningMessage(pushReject, { modal: true }, forcePushMessage, DialogResponses.cancel) === forcePushMessage) {
-                        context.telemetry.properties.forcePush = 'true';
-                        await tryPushAndWaitForDeploymentToComplete(true);
-                    } else {
-                        context.telemetry.properties.cancelStep = 'forcePush';
-                        throw new UserCancelledError();
-                    }
+                    context.telemetry.properties.cancelStep = 'forcePush';
+                    await ext.ui.showWarningMessage(pushReject, { modal: true }, forcePushMessage);
+                    context.telemetry.properties.cancelStep = undefined;
+                    context.telemetry.properties.forcePush = 'true';
+                    await tryPushAndWaitForDeploymentToComplete(true);
                 } else {
                     throw err;
                 }

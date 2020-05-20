@@ -79,7 +79,7 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     }
 
     public async deleteTreeItemImpl(context: IActionContext): Promise<void> {
-        await ext.ui.showWarningMessage(`Are you sure you want to delete setting "${this._key}"?`, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
+        await ext.ui.showWarningMessage(`Are you sure you want to delete setting "${this._key}"?`, { modal: true }, DialogResponses.deleteResponse);
         await this.parent.deleteSettingItem(this._key, context);
     }
 
