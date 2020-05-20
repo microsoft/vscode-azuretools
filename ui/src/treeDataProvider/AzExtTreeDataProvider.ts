@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event, EventEmitter, TreeItem } from 'vscode';
+import { CancellationToken, Event, EventEmitter, TreeItem } from 'vscode';
 import * as types from '../../index';
 import { callWithTelemetryAndErrorHandling } from '../callWithTelemetryAndErrorHandling';
 import { NoResouceFoundError, UserCancelledError } from '../errors';
@@ -159,7 +159,9 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         if (existingTask) {
             result = await existingTask;
         } else {
-            const newTask: Promise<types.AzExtTreeItem | undefined> = this.findTreeItemInternal(fullId, context);
+            const newTask: Promise<types.AzExtTreeItem | undefined> = context.loadAll ?
+                runWithLoadingNotification(context, cancellationToken => this.findTreeItemInternal(fullId, context, cancellationToken)) :
+                this.findTreeItemInternal(fullId, context);
             this._findTreeItemTasks.set(fullId, newTask);
             try {
                 result = await newTask;
@@ -174,33 +176,32 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
     /**
      * Wrapped by `findTreeItem` to ensure only one find is happening per `fullId` at a time
      */
-    private async findTreeItemInternal(fullId: string, context: types.IFindTreeItemContext): Promise<types.AzExtTreeItem | undefined> {
+    private async findTreeItemInternal(fullId: string, context: types.IFindTreeItemContext, cancellationToken?: CancellationToken): Promise<types.AzExtTreeItem | undefined> {
         let treeItem: AzExtParentTreeItem = this._rootTreeItem;
-        return await runWithLoadingNotification(context, async (cancellationToken) => {
-            // tslint:disable-next-line: no-constant-condition
-            outerLoop: while (true) {
-                if (cancellationToken.isCancellationRequested) {
-                    context.telemetry.properties.cancelStep = 'findTreeItem';
-                    throw new UserCancelledError();
-                }
 
-                const children: AzExtTreeItem[] = await treeItem.getCachedChildren(context);
-                for (const child of children) {
-                    if (child.fullId === fullId) {
-                        return child;
-                    } else if (isAncestor(child, fullId)) {
-                        treeItem = <AzExtParentTreeItem>child;
-                        continue outerLoop;
-                    }
-                }
+        // tslint:disable-next-line: no-constant-condition
+        outerLoop: while (true) {
+            if (cancellationToken?.isCancellationRequested) {
+                context.telemetry.properties.cancelStep = 'findTreeItem';
+                throw new UserCancelledError();
+            }
 
-                if (context.loadAll && treeItem.hasMoreChildrenImpl()) {
-                    await treeItem.loadMoreChildren(context);
-                } else {
-                    return undefined;
+            const children: AzExtTreeItem[] = await treeItem.getCachedChildren(context);
+            for (const child of children) {
+                if (child.fullId === fullId) {
+                    return child;
+                } else if (isAncestor(child, fullId)) {
+                    treeItem = <AzExtParentTreeItem>child;
+                    continue outerLoop;
                 }
             }
-        });
+
+            if (context.loadAll && treeItem.hasMoreChildrenImpl()) {
+                await treeItem.loadMoreChildren(context);
+            } else {
+                return undefined;
+            }
+        }
     }
 }
 
