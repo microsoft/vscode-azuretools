@@ -19,6 +19,7 @@ export * from './deleteSite';
 export * from './deploy/deploy';
 export * from './deploy/getDeployFsPath';
 export * from './deploy/IDeployContext';
+export { disconnectRepo } from './disconnectRepo';
 export { handleFailedPreDeployTask, IPreDeployTaskResult, runPreDeployTask, tryRunPreDeployTask } from './deploy/runDeployTask';
 export * from './editScmType';
 export { registerAppServiceExtensionVariables } from './extensionVariables';
