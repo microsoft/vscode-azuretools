@@ -5,33 +5,32 @@
 
 import { SiteConfig, SiteSourceControl } from 'azure-arm-website/lib/models';
 import { MessageItem } from 'vscode';
-import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
+import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
 import { DeployResult } from 'vscode-azurekudu/lib/models';
 import { editScmType } from '../editScmType';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { ScmType } from '../ScmType';
+import { SiteClient } from '../SiteClient';
 import { retryKuduCall } from '../utils/kuduUtils';
+import { DeploymentsTreeItemBase } from './DeploymentsTreeItemBase';
 import { DeploymentTreeItem } from './DeploymentTreeItem';
 import { getThemedIconPath } from './IconPath';
-import { ISiteTreeRoot } from './ISiteTreeRoot';
 
 /**
  * NOTE: This leverages a command with id `ext.prefix + '.connectToGitHub'` that should be registered by each extension
  */
-export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
-    public static contextValueConnected: string = 'deploymentsConnected';
-    public static contextValueUnconnected: string = 'deploymentsUnconnected';
-    public parent: AzureParentTreeItem<ISiteTreeRoot>;
-    public readonly label: string = localize('Deployments', 'Deployments');
-    public readonly childTypeLabel: string = localize('Deployment', 'Deployment');
-
+export class DeploymentsTreeItem extends DeploymentsTreeItemBase {
     private _scmType?: string;
     private _repoUrl?: string;
 
-    public constructor(parent: AzureParentTreeItem<ISiteTreeRoot>, siteConfig: SiteConfig, sourceControl: SiteSourceControl) {
+    private readonly _client: SiteClient;
+
+    public constructor(parent: AzExtParentTreeItem, client: SiteClient, siteConfig: SiteConfig, sourceControl: SiteSourceControl) {
         super(parent);
+
+        this._client = client;
         this._scmType = siteConfig.scmType;
         this._repoUrl = sourceControl.repoUrl;
     }
@@ -62,8 +61,8 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     }
 
     public async loadMoreChildrenImpl(_clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {
-        const siteConfig: SiteConfig = await this.root.client.getSiteConfig();
-        const kuduClient: KuduClient = await this.root.client.getKuduClient();
+        const siteConfig: SiteConfig = await this._client.getSiteConfig();
+        const kuduClient: KuduClient = await this._client.getKuduClient();
         const deployments: DeployResult[] = await retryKuduCall(context, 'getDeployResults', async () => {
             return kuduClient.deployment.getDeployResults();
         });
@@ -101,17 +100,17 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     }
 
     public async disconnectRepo(context: IActionContext): Promise<void> {
-        const sourceControl: SiteSourceControl = await this.root.client.getSourceControl();
+        const sourceControl: SiteSourceControl = await this._client.getSourceControl();
         const disconnectButton: MessageItem = { title: localize('disconnect', 'Disconnect') };
         const disconnect: string = localize('disconnectFromRepo', 'Disconnect from "{0}"? This will not affect your app\'s active deployment. You may reconnect a repository at any time.', sourceControl.repoUrl);
         await ext.ui.showWarningMessage(disconnect, { modal: true }, disconnectButton);
-        await editScmType(this.root.client, this.parent, context, ScmType.None);
+        await editScmType(this._client, this.parent, context, ScmType.None);
         await this.refresh();
     }
 
     public async refreshImpl(): Promise<void> {
-        const siteConfig: SiteConfig = await this.root.client.getSiteConfig();
-        const sourceControl: SiteSourceControl = await this.root.client.getSourceControl();
+        const siteConfig: SiteConfig = await this._client.getSiteConfig();
+        const sourceControl: SiteSourceControl = await this._client.getSourceControl();
         this._scmType = siteConfig.scmType;
         this._repoUrl = sourceControl.repoUrl;
     }

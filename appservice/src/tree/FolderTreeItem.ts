@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, IActionContext, parseError, TreeItemIconPath } from 'vscode-azureextensionui';
+import { AzExtParentTreeItem, AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, IActionContext, parseError, TreeItemIconPath } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
 import { localize } from '../localize';
 import { FileTreeItem } from './FileTreeItem';
@@ -19,7 +19,7 @@ export class FolderTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     public readonly isReadOnly: boolean;
     protected readonly _isRoot: boolean = false;
 
-    constructor(parent: AzureParentTreeItem, label: string, path: string, isReadOnly: boolean) {
+    constructor(parent: AzExtParentTreeItem, label: string, path: string, isReadOnly: boolean) {
         super(parent);
         this.label = label;
         this.path = path;

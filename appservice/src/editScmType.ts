@@ -5,16 +5,15 @@
 
 import { WebSiteManagementModels } from 'azure-arm-website';
 import { window } from 'vscode';
-import { AzureTreeItem, IActionContext, IAzureQuickPickItem, IAzureQuickPickOptions, UserCancelledError } from 'vscode-azureextensionui';
+import { AzExtTreeItem, IActionContext, IAzureQuickPickItem, IAzureQuickPickOptions, UserCancelledError } from 'vscode-azureextensionui';
 import { ext } from './extensionVariables';
 import { connectToGitHub } from './github/connectToGitHub';
 import { localize } from './localize';
 import { ScmType } from './ScmType';
 import { SiteClient } from './SiteClient';
-import { ISiteTreeRoot } from './tree/ISiteTreeRoot';
 import { nonNullProp } from './utils/nonNull';
 
-export async function editScmType(client: SiteClient, node: AzureTreeItem<ISiteTreeRoot>, context: IActionContext, newScmType?: ScmType, showToast: boolean = true): Promise<ScmType | undefined> {
+export async function editScmType(client: SiteClient, node: AzExtTreeItem, context: IActionContext, newScmType?: ScmType, showToast: boolean = true): Promise<ScmType | undefined> {
     if (client.isLinux && await client.getIsConsumption()) {
         context.errorHandling.suppressReportIssue = true;
         throw new Error(localize('noEditScmOnLinuxCons', 'Linux consumption plans only support zip deploy. See [here](https://aka.ms/AA7avjx) for more information.'));

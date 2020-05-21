@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureParentTreeItem } from 'vscode-azureextensionui';
+import { AzExtParentTreeItem } from 'vscode-azureextensionui';
 import { localize } from '../localize';
 import { FolderTreeItem } from './FolderTreeItem';
 
@@ -13,7 +13,7 @@ export class SiteFilesTreeItem extends FolderTreeItem {
 
     protected readonly _isRoot: boolean = true;
 
-    constructor(parent: AzureParentTreeItem, isReadOnly: boolean) {
+    constructor(parent: AzExtParentTreeItem, isReadOnly: boolean) {
         super(parent, localize('siteFiles', 'Files'), '/site/wwwroot', isReadOnly);
     }
 }
