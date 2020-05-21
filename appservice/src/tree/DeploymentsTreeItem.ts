@@ -4,11 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { SiteConfig, SiteSourceControl } from 'azure-arm-website/lib/models';
-import { MessageItem } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
 import { DeployResult } from 'vscode-azurekudu/lib/models';
-import { editScmType } from '../editScmType';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { ScmType } from '../ScmType';
@@ -98,15 +96,6 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         }
         // sorts in accordance of the most recent deployment
         return ti2.receivedTime.valueOf() - ti1.receivedTime.valueOf();
-    }
-
-    public async disconnectRepo(context: IActionContext): Promise<void> {
-        const sourceControl: SiteSourceControl = await this.root.client.getSourceControl();
-        const disconnectButton: MessageItem = { title: localize('disconnect', 'Disconnect') };
-        const disconnect: string = localize('disconnectFromRepo', 'Disconnect from "{0}"? This will not affect your app\'s active deployment. You may reconnect a repository at any time.', sourceControl.repoUrl);
-        await ext.ui.showWarningMessage(disconnect, { modal: true }, disconnectButton);
-        await editScmType(this.root.client, this.parent, context, ScmType.None);
-        await this.refresh();
     }
 
     public async refreshImpl(): Promise<void> {
