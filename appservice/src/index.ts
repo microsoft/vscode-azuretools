@@ -23,6 +23,7 @@ export { disconnectRepo } from './disconnectRepo';
 export { handleFailedPreDeployTask, IPreDeployTaskResult, runPreDeployTask, tryRunPreDeployTask } from './deploy/runDeployTask';
 export * from './editScmType';
 export { registerAppServiceExtensionVariables } from './extensionVariables';
+export * from './IAppSettingsClient';
 export * from './getFile';
 export { IConnectToGitHubWizardContext } from './github/IConnectToGitHubWizardContext';
 export * from './pingFunctionApp';
