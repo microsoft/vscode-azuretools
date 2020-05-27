@@ -3,9 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureParentTreeItem } from 'vscode-azureextensionui';
+import { AzExtParentTreeItem } from 'vscode-azureextensionui';
 import { localize } from '../localize';
 import { FolderTreeItem } from './FolderTreeItem';
+import { IFilesClient } from './IFilesClient';
 
 export class SiteFilesTreeItem extends FolderTreeItem {
     public static contextValue: string = 'siteFiles';
@@ -13,7 +14,7 @@ export class SiteFilesTreeItem extends FolderTreeItem {
 
     protected readonly _isRoot: boolean = true;
 
-    constructor(parent: AzureParentTreeItem, isReadOnly: boolean) {
-        super(parent, localize('siteFiles', 'Files'), '/site/wwwroot', isReadOnly);
+    constructor(parent: AzExtParentTreeItem, client: IFilesClient, isReadOnly: boolean) {
+        super(parent, client, localize('siteFiles', 'Files'), '/site/wwwroot', isReadOnly);
     }
 }

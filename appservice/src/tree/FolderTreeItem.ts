@@ -3,24 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, IActionContext, parseError, TreeItemIconPath } from 'vscode-azureextensionui';
+import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, parseError, TreeItemIconPath } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
 import { localize } from '../localize';
 import { FileTreeItem } from './FileTreeItem';
 import { getThemedIconPath } from './IconPath';
-import { ISiteTreeRoot } from './ISiteTreeRoot';
+import { IFilesClient } from './IFilesClient';
 
-export class FolderTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
+export class FolderTreeItem extends AzExtParentTreeItem {
     public static contextValue: string = 'folder';
     public readonly contextValue: string = FolderTreeItem.contextValue;
     public readonly childTypeLabel: string = localize('fileOrFolder', 'file or folder');
     public readonly label: string;
     public readonly path: string;
     public readonly isReadOnly: boolean;
+
+    public readonly client: IFilesClient;
     protected readonly _isRoot: boolean = false;
 
-    constructor(parent: AzureParentTreeItem, label: string, path: string, isReadOnly: boolean) {
+    constructor(parent: AzExtParentTreeItem, client: IFilesClient, label: string, path: string, isReadOnly: boolean) {
         super(parent);
+        this.client = client;
         this.label = label;
         this.path = path;
         this.isReadOnly = isReadOnly;
@@ -39,7 +42,7 @@ export class FolderTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     }
 
     public async loadMoreChildrenImpl(_clearCache: boolean, _context: IActionContext): Promise<AzExtTreeItem[]> {
-        const kuduClient: KuduClient = await this.root.client.getKuduClient();
+        const kuduClient: KuduClient = await this.client.getKuduClient();
         let response: IKuduItemResponse;
         try {
             response = <IKuduItemResponse><unknown>(await kuduClient.vfs.getItemWithHttpOperationResponse(this.path)).response;
@@ -63,7 +66,7 @@ export class FolderTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
             // the substring starts at file.path.indexOf(home) because the path sometimes includes site/ or D:\
             // the home.length + 1 is to account for the trailing slash, Linux uses / and Window uses \
             const fsPath: string = file.path.substring(file.path.indexOf(home) + home.length + 1);
-            return file.mime === 'inode/directory' ? new FolderTreeItem(this, file.name, fsPath, this.isReadOnly) : new FileTreeItem(this, file.name, fsPath, this.isReadOnly);
+            return file.mime === 'inode/directory' ? new FolderTreeItem(this, this.client, file.name, fsPath, this.isReadOnly) : new FileTreeItem(this, this.client, file.name, fsPath, this.isReadOnly);
         });
     }
 
