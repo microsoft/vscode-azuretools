@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { StringDictionary } from 'azure-arm-website/lib/models';
+import { SlotConfigNamesResource, StringDictionary } from 'azure-arm-website/lib/models';
 
 export interface IAppSettingsClient {
 
@@ -12,4 +12,8 @@ export interface IAppSettingsClient {
     listApplicationSettings(): Promise<StringDictionary>;
 
     updateApplicationSettings(appSettings: StringDictionary): Promise<StringDictionary>;
+
+    listSlotConfigurationNames?(): Promise<SlotConfigNamesResource>;
+
+    updateSlotConfigurationNames?(appSettings: SlotConfigNamesResource): Promise<SlotConfigNamesResource>;
 }
