@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { KuduClient } from 'vscode-azurekudu';
+import { IFilesClient } from './IFilesClient';
 import { localize } from './localize';
-import { IFilesClient } from './tree/IFilesClient';
 
 export interface IFileResult {
     data: string;

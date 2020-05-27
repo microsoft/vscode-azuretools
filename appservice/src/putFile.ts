@@ -6,7 +6,7 @@
 import { HttpOperationResponse } from 'ms-rest';
 import { Readable } from 'stream';
 import { KuduClient } from 'vscode-azurekudu';
-import { IFilesClient } from './tree/IFilesClient';
+import { IFilesClient } from './IFilesClient';
 
 /**
  * Overwrites or creates a file. The etag passed in may be `undefined` if the file is being created

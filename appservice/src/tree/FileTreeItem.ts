@@ -6,9 +6,9 @@
 import { AzExtParentTreeItem, AzExtTreeItem, openReadOnlyContent, TreeItemIconPath } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { getFile, IFileResult } from '../getFile';
+import { IFilesClient } from '../IFilesClient';
 import { localize } from '../localize';
 import { getThemedIconPath } from './IconPath';
-import { IFilesClient } from './IFilesClient';
 
 /**
  * NOTE: This leverages a command with id `ext.prefix + '.openFile'` that should be registered by each extension

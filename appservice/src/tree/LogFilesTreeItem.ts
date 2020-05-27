@@ -5,10 +5,10 @@
 
 import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
+import { IFilesClient } from '../IFilesClient';
 import { localize } from '../localize';
 import { FolderTreeItem } from './FolderTreeItem';
 import { getThemedIconPath } from './IconPath';
-import { IFilesClient } from './IFilesClient';
 
 /**
  * NOTE: This leverages a command with id `ext.prefix + '.startStreamingLogs'` that should be registered by each extension

@@ -5,10 +5,10 @@
 
 import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, parseError, TreeItemIconPath } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
+import { IFilesClient } from '../IFilesClient';
 import { localize } from '../localize';
 import { FileTreeItem } from './FileTreeItem';
 import { getThemedIconPath } from './IconPath';
-import { IFilesClient } from './IFilesClient';
 
 export class FolderTreeItem extends AzExtParentTreeItem {
     public static contextValue: string = 'folder';

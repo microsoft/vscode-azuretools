@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzExtParentTreeItem } from 'vscode-azureextensionui';
+import { IFilesClient } from '../IFilesClient';
 import { localize } from '../localize';
 import { FolderTreeItem } from './FolderTreeItem';
-import { IFilesClient } from './IFilesClient';
 
 export class SiteFilesTreeItem extends FolderTreeItem {
     public static contextValue: string = 'siteFiles';
