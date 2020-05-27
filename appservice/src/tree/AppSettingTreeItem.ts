@@ -4,17 +4,17 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { SlotConfigNamesResource, StringDictionary } from 'azure-arm-website/lib/models';
-import { AzureTreeItem, DialogResponses, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
+import { AzExtTreeItem, DialogResponses, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
+import { IAppSettingsClient } from '../IAppSettingsClient';
 import { localize } from '../localize';
 import { AppSettingsTreeItem, validateAppSettingKey } from './AppSettingsTreeItem';
 import { getThemedIconPath } from './IconPath';
-import { ISiteTreeRoot } from './ISiteTreeRoot';
 
 /**
  * NOTE: This leverages a command with id `ext.prefix + '.toggleAppSettingVisibility'` that should be registered by each extension
  */
-export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
+export class AppSettingTreeItem extends AzExtTreeItem {
     public static contextValue: string = 'applicationSettingItem';
     public readonly contextValue: string = AppSettingTreeItem.contextValue;
     public readonly parent: AppSettingsTreeItem;
@@ -23,15 +23,18 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     private _value: string;
     private _hideValue: boolean;
 
-    private constructor(parent: AppSettingsTreeItem, key: string, value: string) {
+    private readonly _client: IAppSettingsClient;
+
+    private constructor(parent: AppSettingsTreeItem, client: IAppSettingsClient, key: string, value: string) {
         super(parent);
+        this._client = client;
         this._key = key;
         this._value = value;
         this._hideValue = true;
     }
 
-    public static async createAppSettingTreeItem(parent: AppSettingsTreeItem, key: string, value: string): Promise<AppSettingTreeItem> {
-        const ti: AppSettingTreeItem = new AppSettingTreeItem(parent, key, value);
+    public static async createAppSettingTreeItem(parent: AppSettingsTreeItem, client: IAppSettingsClient, key: string, value: string): Promise<AppSettingTreeItem> {
+        const ti: AppSettingTreeItem = new AppSettingTreeItem(parent, client, key, value);
         // check if it's a slot setting
         await ti.refreshImpl();
         return ti;
@@ -70,7 +73,7 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         const newKey: string = await ext.ui.showInputBox({
             prompt: `Enter a new name for "${oldKey}"`,
             value: this._key,
-            validateInput: (v: string): string | undefined => validateAppSettingKey(settings, this.root.client, v, oldKey)
+            validateInput: (v: string): string | undefined => validateAppSettingKey(settings, this._client, v, oldKey)
         });
 
         await this.parent.editSettingItem(oldKey, newKey, this._value, context);
@@ -89,28 +92,34 @@ export class AppSettingTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     }
 
     public async toggleSlotSetting(): Promise<void> {
-        const slotSettings: SlotConfigNamesResource = await this.root.client.listSlotConfigurationNames();
-        if (!slotSettings.appSettingNames) {
-            slotSettings.appSettingNames = [];
-        }
-        const slotSettingIndex: number = slotSettings.appSettingNames.findIndex((value: string) => { return value === this._key; });
+        if (this._client.updateSlotConfigurationNames && this._client.listSlotConfigurationNames) {
+            const slotSettings: SlotConfigNamesResource = await this._client.listSlotConfigurationNames();
+            if (!slotSettings.appSettingNames) {
+                slotSettings.appSettingNames = [];
+            }
+            const slotSettingIndex: number = slotSettings.appSettingNames.findIndex((value: string) => { return value === this._key; });
 
-        if (slotSettingIndex >= 0) {
-            slotSettings.appSettingNames.splice(slotSettingIndex, 1);
+            if (slotSettingIndex >= 0) {
+                slotSettings.appSettingNames.splice(slotSettingIndex, 1);
+            } else {
+                slotSettings.appSettingNames.push(this._key);
+            }
+
+            await this._client.updateSlotConfigurationNames(slotSettings);
+            await this.refresh();
         } else {
-            slotSettings.appSettingNames.push(this._key);
+            throw Error(localize('toggleSlotSettingsNotSupported', 'Toggling slot settings is not supported.'));
         }
-
-        await this.root.client.updateSlotConfigurationNames(slotSettings);
-        await this.refresh();
     }
 
     public async refreshImpl(): Promise<void> {
-        const slotSettings: SlotConfigNamesResource = await this.root.client.listSlotConfigurationNames();
-        if (slotSettings.appSettingNames && slotSettings.appSettingNames.find((value: string) => { return value === this._key; })) {
-            this.description = localize('slotSetting', 'Slot Setting');
-        } else {
-            this.description = undefined;
+        if (this._client.listSlotConfigurationNames) {
+            const slotSettings: SlotConfigNamesResource = await this._client.listSlotConfigurationNames();
+            if (slotSettings.appSettingNames && slotSettings.appSettingNames.find((value: string) => { return value === this._key; })) {
+                this.description = localize('slotSetting', 'Slot Setting');
+            } else {
+                this.description = undefined;
+            }
         }
     }
 }

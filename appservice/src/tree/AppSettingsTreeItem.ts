@@ -4,14 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StringDictionary } from 'azure-arm-website/lib/models';
-import { AzureParentTreeItem, AzureTreeItem, IActionContext, ICreateChildImplContext, TreeItemIconPath } from 'vscode-azureextensionui';
+import { AzExtParentTreeItem, AzExtTreeItem, IActionContext, ICreateChildImplContext, TreeItemIconPath } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
-import { SiteClient } from "../SiteClient";
+import { IAppSettingsClient } from '../IAppSettingsClient';
 import { AppSettingTreeItem } from './AppSettingTreeItem';
 import { getThemedIconPath } from './IconPath';
-import { ISiteTreeRoot } from './ISiteTreeRoot';
 
-export function validateAppSettingKey(settings: StringDictionary, client: SiteClient, newKey: string, oldKey?: string): string | undefined {
+export function validateAppSettingKey(settings: StringDictionary, client: IAppSettingsClient, newKey: string, oldKey?: string): string | undefined {
     if (client.isLinux && /[^\w\.]+/.test(newKey)) {
         return 'App setting names can only contain letters, numbers (0-9), periods ("."), and underscores ("_")';
     }
@@ -33,12 +32,18 @@ export function validateAppSettingKey(settings: StringDictionary, client: SiteCl
     return undefined;
 }
 
-export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
+export class AppSettingsTreeItem extends AzExtParentTreeItem {
     public static contextValue: string = 'applicationSettings';
     public readonly label: string = 'Application Settings';
     public readonly childTypeLabel: string = 'App Setting';
     public readonly contextValue: string = AppSettingsTreeItem.contextValue;
+    public readonly client: IAppSettingsClient;
     private _settings: StringDictionary | undefined;
+
+    constructor(parent: AzExtParentTreeItem, client: IAppSettingsClient) {
+        super(parent);
+        this.client = client;
+    }
 
     public get id(): string {
         return 'configuration';
@@ -47,18 +52,17 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     public get iconPath(): TreeItemIconPath {
         return getThemedIconPath('settings');
     }
-
     public hasMoreChildrenImpl(): boolean {
         return false;
     }
 
-    public async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzureTreeItem<ISiteTreeRoot>[]> {
-        this._settings = await this.root.client.listApplicationSettings();
+    public async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzExtTreeItem[]> {
+        this._settings = await this.client.listApplicationSettings();
         const treeItems: AppSettingTreeItem[] = [];
         // tslint:disable-next-line:strict-boolean-expressions
         const properties: { [name: string]: string } = this._settings.properties || {};
         await Promise.all(Object.keys(properties).map(async (key: string) => {
-            const appSettingTreeItem: AppSettingTreeItem = await AppSettingTreeItem.createAppSettingTreeItem(this, key, properties[key]);
+            const appSettingTreeItem: AppSettingTreeItem = await AppSettingTreeItem.createAppSettingTreeItem(this, this.client, key, properties[key]);
             treeItems.push(appSettingTreeItem);
         }));
 
@@ -76,7 +80,7 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
             settings.properties[newKey] = value;
         }
 
-        this._settings = await this.root.client.updateApplicationSettings(settings);
+        this._settings = await this.client.updateApplicationSettings(settings);
     }
 
     public async deleteSettingItem(key: string, context: IActionContext): Promise<void> {
@@ -88,16 +92,16 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
             delete settings.properties[key];
         }
 
-        this._settings = await this.root.client.updateApplicationSettings(settings);
+        this._settings = await this.client.updateApplicationSettings(settings);
     }
 
-    public async createChildImpl(context: ICreateChildImplContext): Promise<AzureTreeItem<ISiteTreeRoot>> {
+    public async createChildImpl(context: ICreateChildImplContext): Promise<AzExtTreeItem> {
         // make a deep copy so settings are not cached if there's a failure
         // tslint:disable-next-line: no-unsafe-any
         const settings: StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings(context)));
         const newKey: string = await ext.ui.showInputBox({
             prompt: 'Enter new setting key',
-            validateInput: (v: string): string | undefined => validateAppSettingKey(settings, this.root.client, v)
+            validateInput: (v: string): string | undefined => validateAppSettingKey(settings, this.client, v)
         });
 
         const newValue: string = await ext.ui.showInputBox({
@@ -111,9 +115,9 @@ export class AppSettingsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         context.showCreatingTreeItem(newKey);
         settings.properties[newKey] = newValue;
 
-        this._settings = await this.root.client.updateApplicationSettings(settings);
+        this._settings = await this.client.updateApplicationSettings(settings);
 
-        return await AppSettingTreeItem.createAppSettingTreeItem(this, newKey, newValue);
+        return await AppSettingTreeItem.createAppSettingTreeItem(this, this.client, newKey, newValue);
     }
 
     public async ensureSettings(context: IActionContext): Promise<StringDictionary> {
