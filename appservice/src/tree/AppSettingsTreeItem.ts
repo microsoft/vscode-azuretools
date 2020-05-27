@@ -37,13 +37,12 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
     public readonly label: string = 'Application Settings';
     public readonly childTypeLabel: string = 'App Setting';
     public readonly contextValue: string = AppSettingsTreeItem.contextValue;
+    public readonly client: IAppSettingsClient;
     private _settings: StringDictionary | undefined;
-
-    private readonly _client: IAppSettingsClient;
 
     constructor(parent: AzExtParentTreeItem, client: IAppSettingsClient) {
         super(parent);
-        this._client = client;
+        this.client = client;
     }
 
     public get id(): string {
@@ -53,18 +52,17 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
     public get iconPath(): TreeItemIconPath {
         return getThemedIconPath('settings');
     }
-
     public hasMoreChildrenImpl(): boolean {
         return false;
     }
 
     public async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzExtTreeItem[]> {
-        this._settings = await this._client.listApplicationSettings();
+        this._settings = await this.client.listApplicationSettings();
         const treeItems: AppSettingTreeItem[] = [];
         // tslint:disable-next-line:strict-boolean-expressions
         const properties: { [name: string]: string } = this._settings.properties || {};
         await Promise.all(Object.keys(properties).map(async (key: string) => {
-            const appSettingTreeItem: AppSettingTreeItem = await AppSettingTreeItem.createAppSettingTreeItem(this, this._client, key, properties[key]);
+            const appSettingTreeItem: AppSettingTreeItem = await AppSettingTreeItem.createAppSettingTreeItem(this, this.client, key, properties[key]);
             treeItems.push(appSettingTreeItem);
         }));
 
@@ -82,7 +80,7 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
             settings.properties[newKey] = value;
         }
 
-        this._settings = await this._client.updateApplicationSettings(settings);
+        this._settings = await this.client.updateApplicationSettings(settings);
     }
 
     public async deleteSettingItem(key: string, context: IActionContext): Promise<void> {
@@ -94,7 +92,7 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
             delete settings.properties[key];
         }
 
-        this._settings = await this._client.updateApplicationSettings(settings);
+        this._settings = await this.client.updateApplicationSettings(settings);
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<AzExtTreeItem> {
@@ -103,7 +101,7 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
         const settings: StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings(context)));
         const newKey: string = await ext.ui.showInputBox({
             prompt: 'Enter new setting key',
-            validateInput: (v: string): string | undefined => validateAppSettingKey(settings, this._client, v)
+            validateInput: (v: string): string | undefined => validateAppSettingKey(settings, this.client, v)
         });
 
         const newValue: string = await ext.ui.showInputBox({
@@ -117,9 +115,9 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
         context.showCreatingTreeItem(newKey);
         settings.properties[newKey] = newValue;
 
-        this._settings = await this._client.updateApplicationSettings(settings);
+        this._settings = await this.client.updateApplicationSettings(settings);
 
-        return await AppSettingTreeItem.createAppSettingTreeItem(this, this._client, newKey, newValue);
+        return await AppSettingTreeItem.createAppSettingTreeItem(this, this.client, newKey, newValue);
     }
 
     public async ensureSettings(context: IActionContext): Promise<StringDictionary> {

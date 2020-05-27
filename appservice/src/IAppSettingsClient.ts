@@ -7,6 +7,8 @@ import { SlotConfigNamesResource, StringDictionary } from 'azure-arm-website/lib
 
 export interface IAppSettingsClient {
 
+    fullName: string;
+
     isLinux: boolean;
 
     listApplicationSettings(): Promise<StringDictionary>;
