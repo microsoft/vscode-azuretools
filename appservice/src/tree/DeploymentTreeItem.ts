@@ -6,7 +6,7 @@
 import { SiteSourceControl } from 'azure-arm-website/lib/models';
 import * as os from 'os';
 import { ProgressLocation, window } from 'vscode';
-import { AzureTreeItem, IActionContext, openReadOnlyContent, TreeItemIconPath } from 'vscode-azureextensionui';
+import { AzExtTreeItem, IActionContext, openReadOnlyContent, TreeItemIconPath } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
 import { DeployResult, LogEntry } from 'vscode-azurekudu/lib/models';
 import { waitForDeploymentToComplete } from '../deploy/waitForDeploymentToComplete';
@@ -17,7 +17,6 @@ import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
 import { DeploymentsTreeItem } from './DeploymentsTreeItem';
 import { getThemedIconPath } from './IconPath';
-import { ISiteTreeRoot } from './ISiteTreeRoot';
 
 // Kudu DeployStatus: https://github.com/projectkudu/kudu/blob/a13592e6654585d5c2ee5c6a05fa39fa812ebb84/Kudu.Contracts/Deployment/DeployStatus.cs
 enum DeployStatus {
@@ -31,7 +30,7 @@ enum DeployStatus {
 /**
  * NOTE: This leverages two commands prefixed with `ext.prefix` that should be registered by each extension: "showOutputChannel" and "viewDeploymentLogs"
  */
-export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
+export class DeploymentTreeItem extends AzExtTreeItem {
     public static contextValue: RegExp = new RegExp('deployment\/.*');
     public readonly contextValue: string;
     public label: string;
@@ -89,17 +88,17 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
         if (this._deployResult.isReadonly) {
             throw new Error(localize('redeployNotSupported', 'Redeploy is not supported for non-git deployments.'));
         }
-        const redeploying: string = localize('redeploying', 'Redeploying commit "{0}" to "{1}". Check [output window](command:{2}) for status.', this.id, this.root.client.fullName, ext.prefix + '.showOutputChannel');
-        const redeployed: string = localize('redeployed', 'Commit "{0}" has been redeployed to "{1}".', this.id, this.root.client.fullName);
+        const redeploying: string = localize('redeploying', 'Redeploying commit "{0}" to "{1}". Check [output window](command:{2}) for status.', this.id, this.parent.client.fullName, ext.prefix + '.showOutputChannel');
+        const redeployed: string = localize('redeployed', 'Commit "{0}" has been redeployed to "{1}".', this.id, this.parent.client.fullName);
         await window.withProgress({ location: ProgressLocation.Notification, title: redeploying }, async (): Promise<void> => {
-            ext.outputChannel.appendLog(localize('reployingOutput', 'Redeploying commit "{0}" to "{1}"...', this.id, this.root.client.fullName), { resourceName: this.root.client.fullName });
-            const kuduClient: KuduClient = await this.root.client.getKuduClient();
+            ext.outputChannel.appendLog(localize('reployingOutput', 'Redeploying commit "{0}" to "{1}"...', this.id, this.parent.client.fullName), { resourceName: this.parent.client.fullName });
+            const kuduClient: KuduClient = await this.parent.client.getKuduClient();
             // tslint:disable-next-line:no-floating-promises
             kuduClient.deployment.deploy(this.id);
 
             const refreshingInteveral: NodeJS.Timer = setInterval(async () => { await this.refresh(); }, 1000); /* the status of the label changes during deployment so poll for that*/
             try {
-                await waitForDeploymentToComplete(context, this.root.client, this.id);
+                await waitForDeploymentToComplete(context, this.parent.client, this.id);
                 await this.parent.refresh(); /* refresh entire node because active statuses has changed */
                 window.showInformationMessage(redeployed);
                 ext.outputChannel.appendLog(redeployed);
@@ -111,7 +110,7 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     }
 
     public async getDeploymentLogs(context: IActionContext): Promise<string> {
-        const kuduClient: KuduClient = await this.root.client.getKuduClient();
+        const kuduClient: KuduClient = await this.parent.client.getKuduClient();
         let logEntries: LogEntry[] = [];
         await retryKuduCall(context, 'getLogEntry', async () => {
             await ignore404Error(context, async () => {
@@ -147,7 +146,7 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     }
 
     public async viewCommitInGitHub(): Promise<void> {
-        const sourceControl: SiteSourceControl = await this.root.client.getSourceControl();
+        const sourceControl: SiteSourceControl = await this.parent.client.getSourceControl();
         if (sourceControl.repoUrl) {
             const gitHubCommitUrl: string = `${sourceControl.repoUrl}/commit/${this._deployResult.id}`;
             await openUrl(gitHubCommitUrl);
@@ -158,7 +157,7 @@ export class DeploymentTreeItem extends AzureTreeItem<ISiteTreeRoot> {
     }
 
     public async refreshImpl(): Promise<void> {
-        const kuduClient: KuduClient = await this.root.client.getKuduClient();
+        const kuduClient: KuduClient = await this.parent.client.getKuduClient();
         this._deployResult = await kuduClient.deployment.getResult(this.id);
     }
 

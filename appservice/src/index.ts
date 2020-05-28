@@ -24,6 +24,7 @@ export { handleFailedPreDeployTask, IPreDeployTaskResult, runPreDeployTask, tryR
 export * from './editScmType';
 export { registerAppServiceExtensionVariables } from './extensionVariables';
 export * from './IAppSettingsClient';
+export * from './IDeploymentsClient';
 export * from './getFile';
 export { IConnectToGitHubWizardContext } from './github/IConnectToGitHubWizardContext';
 export * from './pingFunctionApp';

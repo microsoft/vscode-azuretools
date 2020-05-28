@@ -4,32 +4,33 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { SiteConfig, SiteSourceControl } from 'azure-arm-website/lib/models';
-import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
+import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
 import { DeployResult } from 'vscode-azurekudu/lib/models';
 import { ext } from '../extensionVariables';
+import { IDeploymentsClient } from '../IDeploymentsClient';
 import { localize } from '../localize';
 import { ScmType } from '../ScmType';
 import { retryKuduCall } from '../utils/kuduUtils';
 import { DeploymentTreeItem } from './DeploymentTreeItem';
 import { getThemedIconPath } from './IconPath';
-import { ISiteTreeRoot } from './ISiteTreeRoot';
 
 /**
  * NOTE: This leverages a command with id `ext.prefix + '.connectToGitHub'` that should be registered by each extension
  */
-export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
+export class DeploymentsTreeItem extends AzExtParentTreeItem {
     public static contextValueConnected: string = 'deploymentsConnected';
     public static contextValueUnconnected: string = 'deploymentsUnconnected';
-    public parent: AzureParentTreeItem<ISiteTreeRoot>;
     public readonly label: string = localize('Deployments', 'Deployments');
     public readonly childTypeLabel: string = localize('Deployment', 'Deployment');
+    public readonly client: IDeploymentsClient;
 
     private _scmType?: string;
     private _repoUrl?: string;
 
-    public constructor(parent: AzureParentTreeItem<ISiteTreeRoot>, siteConfig: SiteConfig, sourceControl: SiteSourceControl) {
+    public constructor(parent: AzExtParentTreeItem, client: IDeploymentsClient, siteConfig: SiteConfig, sourceControl: SiteSourceControl) {
         super(parent);
+        this.client = client;
         this._scmType = siteConfig.scmType;
         this._repoUrl = sourceControl.repoUrl;
     }
@@ -60,8 +61,8 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     }
 
     public async loadMoreChildrenImpl(_clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {
-        const siteConfig: SiteConfig = await this.root.client.getSiteConfig();
-        const kuduClient: KuduClient = await this.root.client.getKuduClient();
+        const siteConfig: SiteConfig = await this.client.getSiteConfig();
+        const kuduClient: KuduClient = await this.client.getKuduClient();
         const deployments: DeployResult[] = await retryKuduCall(context, 'getDeployResults', async () => {
             return kuduClient.deployment.getDeployResults();
         });
@@ -99,8 +100,8 @@ export class DeploymentsTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     }
 
     public async refreshImpl(): Promise<void> {
-        const siteConfig: SiteConfig = await this.root.client.getSiteConfig();
-        const sourceControl: SiteSourceControl = await this.root.client.getSourceControl();
+        const siteConfig: SiteConfig = await this.client.getSiteConfig();
+        const sourceControl: SiteSourceControl = await this.client.getSourceControl();
         this._scmType = siteConfig.scmType;
         this._repoUrl = sourceControl.repoUrl;
     }
