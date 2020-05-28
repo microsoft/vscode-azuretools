@@ -3,8 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, IActionContext, parseError } from 'vscode-azureextensionui';
+import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
+import { IFilesClient } from '../IFilesClient';
 import { localize } from '../localize';
 import { FolderTreeItem } from './FolderTreeItem';
 import { getThemedIconPath } from './IconPath';
@@ -18,8 +19,8 @@ export class LogFilesTreeItem extends FolderTreeItem {
 
     protected readonly _isRoot: boolean = true;
 
-    constructor(parent: AzureParentTreeItem) {
-        super(parent, localize('logFiles', 'Logs'), '/LogFiles', true);
+    constructor(parent: AzExtParentTreeItem, client: IFilesClient) {
+        super(parent, client, localize('logFiles', 'Logs'), '/LogFiles', true);
     }
 
     public async loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {

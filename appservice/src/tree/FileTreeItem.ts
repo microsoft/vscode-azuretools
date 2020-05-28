@@ -3,25 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureParentTreeItem, AzureTreeItem, openReadOnlyContent, TreeItemIconPath } from 'vscode-azureextensionui';
+import { AzExtParentTreeItem, AzExtTreeItem, openReadOnlyContent, TreeItemIconPath } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { getFile, IFileResult } from '../getFile';
+import { IFilesClient } from '../IFilesClient';
 import { localize } from '../localize';
 import { getThemedIconPath } from './IconPath';
-import { ISiteTreeRoot } from './ISiteTreeRoot';
 
 /**
  * NOTE: This leverages a command with id `ext.prefix + '.openFile'` that should be registered by each extension
  */
-export class FileTreeItem extends AzureTreeItem<ISiteTreeRoot> {
+export class FileTreeItem extends AzExtTreeItem {
     public static contextValue: string = 'file';
     public readonly contextValue: string = FileTreeItem.contextValue;
     public readonly label: string;
     public readonly path: string;
     public readonly isReadOnly: boolean;
 
-    constructor(parent: AzureParentTreeItem, label: string, path: string, isReadOnly: boolean) {
+    public readonly client: IFilesClient;
+
+    constructor(parent: AzExtParentTreeItem, client: IFilesClient, label: string, path: string, isReadOnly: boolean) {
         super(parent);
+        this.client = client;
         this.label = label;
         this.path = path;
         this.isReadOnly = isReadOnly;
@@ -37,7 +40,7 @@ export class FileTreeItem extends AzureTreeItem<ISiteTreeRoot> {
 
     public async openReadOnly(): Promise<void> {
         await this.runWithTemporaryDescription(localize('opening', 'Opening...'), async () => {
-            const file: IFileResult = await getFile(this.root.client, this.path);
+            const file: IFileResult = await getFile(this.client, this.path);
             await openReadOnlyContent(this, file.data, '');
         });
     }

@@ -6,13 +6,13 @@
 import { HttpOperationResponse } from 'ms-rest';
 import { Readable } from 'stream';
 import { KuduClient } from 'vscode-azurekudu';
-import { SiteClient } from './SiteClient';
+import { IFilesClient } from './IFilesClient';
 
 /**
  * Overwrites or creates a file. The etag passed in may be `undefined` if the file is being created
  * Returns the latest etag of the updated file
  */
-export async function putFile(client: SiteClient, data: Readable | string, filePath: string, etag: string | undefined): Promise<string> {
+export async function putFile(client: IFilesClient, data: Readable | string, filePath: string, etag: string | undefined): Promise<string> {
     let stream: Readable;
     if (typeof data === 'string') {
         stream = new Readable();
