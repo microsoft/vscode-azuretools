@@ -8,7 +8,7 @@ import { TokenCredentials } from 'ms-rest';
 import { Response } from 'request';
 import { isArray } from 'util';
 import * as vscode from 'vscode';
-import { AzureWizard, DialogResponses, IActionContext, IAzureQuickPickItem, IParsedError, openInPortal, parseError } from 'vscode-azureextensionui';
+import { AzureTreeItem, AzureWizard, DialogResponses, IActionContext, IAzureQuickPickItem, IParsedError, openInPortal, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
@@ -28,7 +28,7 @@ export type gitHubBranchData = { name: string };
 export type gitHubLink = { prev?: string, next?: string, last?: string, first?: string };
 export type gitHubWebResource = requestUtils.Request & { nextLink?: string };
 
-export async function connectToGitHub(node: DeploymentsTreeItem, client: SiteClient, context: IConnectToGitHubWizardContext): Promise<void> {
+export async function connectToGitHub(node: DeploymentsTreeItem | AzureTreeItem, client: SiteClient, context: IConnectToGitHubWizardContext): Promise<void> {
     const title: string = localize('connectGitHubRepo', 'Connect GitHub repository');
     context.client = client;
     context.node = node;
@@ -79,7 +79,7 @@ export async function connectToGitHub(node: DeploymentsTreeItem, client: SiteCli
     }
 }
 
-async function showGitHubAuthPrompt(node: DeploymentsTreeItem, client: SiteClient, context: IActionContext): Promise<void> {
+async function showGitHubAuthPrompt(node: DeploymentsTreeItem | AzureTreeItem, client: SiteClient, context: IActionContext): Promise<void> {
     const invalidToken: string = localize('tokenExpired', 'Azure\'s GitHub token is invalid.  Authorize in the "Deployment Center"');
     const goToPortal: vscode.MessageItem = { title: localize('goToPortal', 'Go to Portal') };
     let input: vscode.MessageItem | undefined = DialogResponses.learnMore;

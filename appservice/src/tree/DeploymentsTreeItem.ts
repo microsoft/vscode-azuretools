@@ -32,9 +32,9 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
     private _scmType?: string;
     private _repoUrl?: string;
 
-    public constructor(parent: AzExtParentTreeItem | AzureParentTreeItem<ISiteTreeRoot>, client: IDeploymentsClient, siteConfig: SiteConfig, sourceControl: SiteSourceControl) {
+    public constructor(parent: AzExtParentTreeItem, client: IDeploymentsClient, siteConfig: SiteConfig, sourceControl: SiteSourceControl, root?: ISiteTreeRoot) {
         super(parent);
-        this.root = (parent instanceof AzureParentTreeItem) ? parent.root : undefined;
+        this.root = root;
         this.client = client;
         this._scmType = siteConfig.scmType;
         this._repoUrl = sourceControl.repoUrl;
