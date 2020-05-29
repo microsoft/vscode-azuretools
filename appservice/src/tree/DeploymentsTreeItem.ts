@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { SiteConfig, SiteSourceControl } from 'azure-arm-website/lib/models';
-import { AzExtParentTreeItem, AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
+import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
 import { DeployResult } from 'vscode-azurekudu/lib/models';
 import { ext } from '../extensionVariables';
@@ -14,7 +14,6 @@ import { ScmType } from '../ScmType';
 import { retryKuduCall } from '../utils/kuduUtils';
 import { DeploymentTreeItem } from './DeploymentTreeItem';
 import { getThemedIconPath } from './IconPath';
-import { ISiteTreeRoot } from './ISiteTreeRoot';
 
 /**
  * NOTE: This leverages a command with id `ext.prefix + '.connectToGitHub'` that should be registered by each extension
@@ -22,19 +21,15 @@ import { ISiteTreeRoot } from './ISiteTreeRoot';
 export class DeploymentsTreeItem extends AzExtParentTreeItem {
     public static contextValueConnected: string = 'deploymentsConnected';
     public static contextValueUnconnected: string = 'deploymentsUnconnected';
-    public static contextValueTrialApp: string = 'deploymentsTrialApp';
     public readonly label: string = localize('Deployments', 'Deployments');
     public readonly childTypeLabel: string = localize('Deployment', 'Deployment');
     public readonly client: IDeploymentsClient;
-    public root: ISiteTreeRoot | undefined;
-    public parent: AzExtParentTreeItem | AzureParentTreeItem<ISiteTreeRoot>;
 
     private _scmType?: string;
     private _repoUrl?: string;
 
-    public constructor(parent: AzExtParentTreeItem, client: IDeploymentsClient, siteConfig: SiteConfig, sourceControl: SiteSourceControl, root?: ISiteTreeRoot) {
+    public constructor(parent: AzExtParentTreeItem, client: IDeploymentsClient, siteConfig: SiteConfig, sourceControl: SiteSourceControl) {
         super(parent);
-        this.root = root;
         this.client = client;
         this._scmType = siteConfig.scmType;
         this._repoUrl = sourceControl.repoUrl;
@@ -58,9 +53,6 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
     }
 
     public get contextValue(): string {
-        if (this.root) {
-            return DeploymentsTreeItem.contextValueTrialApp;
-        }
         return this._scmType === ScmType.None ? DeploymentsTreeItem.contextValueUnconnected : DeploymentsTreeItem.contextValueConnected;
     }
 

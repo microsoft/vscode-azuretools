@@ -3,9 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureTreeItem, IActionContext } from 'vscode-azureextensionui';
+import { IActionContext, ISubscriptionContext } from 'vscode-azureextensionui';
 import { SiteClient } from '../SiteClient';
-import { DeploymentsTreeItem } from '../tree/DeploymentsTreeItem';
 import { gitHubBranchData, gitHubOrgData, gitHubRepoData } from './connectToGitHub';
 
 export interface IConnectToGitHubWizardContext extends IActionContext {
@@ -13,5 +12,5 @@ export interface IConnectToGitHubWizardContext extends IActionContext {
     repoData?: gitHubRepoData;
     branchData?: gitHubBranchData;
     client?: SiteClient;
-    node?: DeploymentsTreeItem | AzureTreeItem;
+    subscriptionContext?: ISubscriptionContext;
 }
