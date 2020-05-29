@@ -13,7 +13,7 @@ import { ScmType } from './ScmType';
 import { SiteClient } from './SiteClient';
 import { nonNullProp } from './utils/nonNull';
 
-export async function editScmType(client: SiteClient, subscriptionContext: ISubscriptionContext, context: IActionContext, newScmType?: ScmType, showToast: boolean = true): Promise<ScmType | undefined> {
+export async function editScmType(context: IActionContext, client: SiteClient, subscriptionContext: ISubscriptionContext, newScmType?: ScmType, showToast: boolean = true): Promise<ScmType | undefined> {
     if (client.isLinux && await client.getIsConsumption()) {
         context.errorHandling.suppressReportIssue = true;
         throw new Error(localize('noEditScmOnLinuxCons', 'Linux consumption plans only support zip deploy. See [here](https://aka.ms/AA7avjx) for more information.'));
@@ -25,7 +25,7 @@ export async function editScmType(client: SiteClient, subscriptionContext: ISubs
     if (newScmType === ScmType.GitHub) {
         if (config.scmType !== ScmType.None) {
             // GitHub cannot be configured if there is an existing configuration source-- a limitation of Azure
-            await editScmType(client, subscriptionContext, context, ScmType.None, false);
+            await editScmType(context, client, subscriptionContext, ScmType.None, false);
         }
         await connectToGitHub(subscriptionContext, client, Object.assign(context, subscriptionContext));
     } else {
