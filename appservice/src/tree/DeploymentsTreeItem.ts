@@ -58,7 +58,7 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
     }
 
     public get contextValue(): string {
-        if (this.parent instanceof AzureParentTreeItem) {
+        if (this.root) {
             return DeploymentsTreeItem.contextValueTrialApp;
         }
         return this._scmType === ScmType.None ? DeploymentsTreeItem.contextValueUnconnected : DeploymentsTreeItem.contextValueConnected;
