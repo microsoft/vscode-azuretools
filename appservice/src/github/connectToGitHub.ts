@@ -8,7 +8,7 @@ import { TokenCredentials } from 'ms-rest';
 import { Response } from 'request';
 import { isArray } from 'util';
 import * as vscode from 'vscode';
-import { AzureWizard, DialogResponses, IActionContext, IAzureQuickPickItem, IParsedError, ISubscriptionContext, openInPortal, parseError } from 'vscode-azureextensionui';
+import { AzureWizard, DialogResponses, IAzureQuickPickItem, IParsedError, ISubscriptionContext, openInPortal, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
@@ -30,7 +30,7 @@ export type gitHubWebResource = requestUtils.Request & { nextLink?: string };
 export async function connectToGitHub(subscriptionContext: ISubscriptionContext, client: SiteClient, context: IConnectToGitHubWizardContext): Promise<void> {
     const title: string = localize('connectGitHubRepo', 'Connect GitHub repository');
     context.client = client;
-    context.subscriptionContext = subscriptionContext;
+    context = Object.assign(context, { subscriptionContext });
 
     const wizard: AzureWizard<IConnectToGitHubWizardContext> = new AzureWizard(context, {
         title,
@@ -78,7 +78,7 @@ export async function connectToGitHub(subscriptionContext: ISubscriptionContext,
     }
 }
 
-async function showGitHubAuthPrompt(subscriptionContext: ISubscriptionContext, client: SiteClient, context: IActionContext): Promise<void> {
+async function showGitHubAuthPrompt(client: SiteClient, context: IConnectToGitHubWizardContext): Promise<void> {
     const invalidToken: string = localize('tokenExpired', 'Azure\'s GitHub token is invalid.  Authorize in the "Deployment Center"');
     const goToPortal: vscode.MessageItem = { title: localize('goToPortal', 'Go to Portal') };
     let input: vscode.MessageItem | undefined = DialogResponses.learnMore;
@@ -94,7 +94,7 @@ async function showGitHubAuthPrompt(subscriptionContext: ISubscriptionContext, c
 
     if (input === goToPortal) {
         context.telemetry.properties.githubGoToPortal = 'true';
-        await openInPortal(subscriptionContext, `${client.id}/vstscd`);
+        await openInPortal(context, `${client.id}/vstscd`);
     }
 }
 
@@ -115,7 +115,7 @@ export async function getGitHubJsonResponse<T>(context: IConnectToGitHubWizardCo
         const parsedError: IParsedError = parseError(error);
         if (parsedError.message.indexOf('Bad credentials') > -1) {
             // the default error is just "Bad credentials," which is an unhelpful error message
-            await showGitHubAuthPrompt(nonNullProp(context, 'subscriptionContext'), nonNullProp(context, 'client'), context);
+            await showGitHubAuthPrompt(nonNullProp(context, 'client'), context);
             context.errorHandling.suppressDisplay = true;
         }
         throw error;
@@ -194,7 +194,7 @@ export async function createRequestOptions(context: IConnectToGitHubWizardContex
     const client: SiteClient = nonNullProp(context, 'client');
     const oAuth2Token: string | undefined = (await client.listSourceControls())[0].token;
     if (!oAuth2Token) {
-        await showGitHubAuthPrompt(nonNullProp(context, 'subscriptionContext'), client, context);
+        await showGitHubAuthPrompt(client, context);
         context.errorHandling.suppressDisplay = true;
         const noToken: string = localize('noToken', 'No oAuth2 Token.');
         throw new Error(noToken);
