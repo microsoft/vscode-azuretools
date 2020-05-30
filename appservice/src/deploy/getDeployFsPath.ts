@@ -5,7 +5,7 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { AzureParentTreeItem, callWithTelemetryAndErrorHandling, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
+import { AzExtTreeItem, callWithTelemetryAndErrorHandling, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { isPathEqual, isSubpath } from '../utils/pathUtils';
@@ -19,7 +19,7 @@ const deploySubpathSetting: string = 'deploySubpath';
  * In App Service, users can deploy specific artifact files (such as .jar) which is handled by selectWorkspaceFile
  * This enforces that the `effectiveDeployFsPath` is currently open in a workspace
  */
-export async function getDeployFsPath(context: IActionContext, target: vscode.Uri | string | AzureParentTreeItem | undefined, fileExtensions?: string | string[]): Promise<IDeployPaths> {
+export async function getDeployFsPath(context: IActionContext, target: vscode.Uri | string | AzExtTreeItem | undefined, fileExtensions?: string | string[]): Promise<IDeployPaths> {
     let originalDeployFsPath: string | undefined;
     let effectiveDeployFsPath: string | undefined;
     if (target instanceof vscode.Uri) {

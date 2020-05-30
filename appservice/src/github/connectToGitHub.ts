@@ -8,7 +8,7 @@ import { TokenCredentials } from 'ms-rest';
 import { Response } from 'request';
 import { isArray } from 'util';
 import * as vscode from 'vscode';
-import { AzureTreeItem, AzureWizard, DialogResponses, IActionContext, IAzureQuickPickItem, IParsedError, openInPortal, parseError } from 'vscode-azureextensionui';
+import { AzureWizard, DialogResponses, IAzureQuickPickItem, IParsedError, openInPortal, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
@@ -27,10 +27,9 @@ export type gitHubBranchData = { name: string };
 export type gitHubLink = { prev?: string, next?: string, last?: string, first?: string };
 export type gitHubWebResource = requestUtils.Request & { nextLink?: string };
 
-export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, context: IConnectToGitHubWizardContext): Promise<void> {
+export async function connectToGitHub(client: SiteClient, context: IConnectToGitHubWizardContext): Promise<void> {
     const title: string = localize('connectGitHubRepo', 'Connect GitHub repository');
     context.client = client;
-    context.node = node;
 
     const wizard: AzureWizard<IConnectToGitHubWizardContext> = new AzureWizard(context, {
         title,
@@ -78,7 +77,7 @@ export async function connectToGitHub(node: AzureTreeItem, client: SiteClient, c
     }
 }
 
-async function showGitHubAuthPrompt(node: AzureTreeItem, client: SiteClient, context: IActionContext): Promise<void> {
+async function showGitHubAuthPrompt(client: SiteClient, context: IConnectToGitHubWizardContext): Promise<void> {
     const invalidToken: string = localize('tokenExpired', 'Azure\'s GitHub token is invalid.  Authorize in the "Deployment Center"');
     const goToPortal: vscode.MessageItem = { title: localize('goToPortal', 'Go to Portal') };
     let input: vscode.MessageItem | undefined = DialogResponses.learnMore;
@@ -94,7 +93,7 @@ async function showGitHubAuthPrompt(node: AzureTreeItem, client: SiteClient, con
 
     if (input === goToPortal) {
         context.telemetry.properties.githubGoToPortal = 'true';
-        await openInPortal(node.root, `${client.id}/vstscd`);
+        await openInPortal(context, `${client.id}/vstscd`);
     }
 }
 
@@ -115,7 +114,7 @@ export async function getGitHubJsonResponse<T>(context: IConnectToGitHubWizardCo
         const parsedError: IParsedError = parseError(error);
         if (parsedError.message.indexOf('Bad credentials') > -1) {
             // the default error is just "Bad credentials," which is an unhelpful error message
-            await showGitHubAuthPrompt(nonNullProp(context, 'node'), nonNullProp(context, 'client'), context);
+            await showGitHubAuthPrompt(nonNullProp(context, 'client'), context);
             context.errorHandling.suppressDisplay = true;
         }
         throw error;
@@ -194,7 +193,7 @@ export async function createRequestOptions(context: IConnectToGitHubWizardContex
     const client: SiteClient = nonNullProp(context, 'client');
     const oAuth2Token: string | undefined = (await client.listSourceControls())[0].token;
     if (!oAuth2Token) {
-        await showGitHubAuthPrompt(nonNullProp(context, 'node'), client, context);
+        await showGitHubAuthPrompt(client, context);
         context.errorHandling.suppressDisplay = true;
         const noToken: string = localize('noToken', 'No oAuth2 Token.');
         throw new Error(noToken);
