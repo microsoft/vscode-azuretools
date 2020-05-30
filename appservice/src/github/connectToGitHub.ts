@@ -8,7 +8,7 @@ import { TokenCredentials } from 'ms-rest';
 import { Response } from 'request';
 import { isArray } from 'util';
 import * as vscode from 'vscode';
-import { AzureWizard, DialogResponses, IAzureQuickPickItem, IParsedError, ISubscriptionContext, openInPortal, parseError } from 'vscode-azureextensionui';
+import { AzureWizard, DialogResponses, IAzureQuickPickItem, IParsedError, openInPortal, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
@@ -27,10 +27,9 @@ export type gitHubBranchData = { name: string };
 export type gitHubLink = { prev?: string, next?: string, last?: string, first?: string };
 export type gitHubWebResource = requestUtils.Request & { nextLink?: string };
 
-export async function connectToGitHub(subscriptionContext: ISubscriptionContext, client: SiteClient, context: IConnectToGitHubWizardContext): Promise<void> {
+export async function connectToGitHub(client: SiteClient, context: IConnectToGitHubWizardContext): Promise<void> {
     const title: string = localize('connectGitHubRepo', 'Connect GitHub repository');
     context.client = client;
-    context = Object.assign(context, { subscriptionContext });
 
     const wizard: AzureWizard<IConnectToGitHubWizardContext> = new AzureWizard(context, {
         title,

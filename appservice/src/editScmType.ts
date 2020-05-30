@@ -27,7 +27,7 @@ export async function editScmType(context: IActionContext, client: SiteClient, s
             // GitHub cannot be configured if there is an existing configuration source-- a limitation of Azure
             await editScmType(context, client, subscriptionContext, ScmType.None, false);
         }
-        await connectToGitHub(subscriptionContext, client, Object.assign(context, subscriptionContext));
+        await connectToGitHub(client, Object.assign(context, subscriptionContext));
     } else {
         config.scmType = newScmType;
         // to update one property, a complete config file must be sent
