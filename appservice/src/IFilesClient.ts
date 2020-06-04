@@ -4,9 +4,15 @@
 *--------------------------------------------------------------------------------------------*/
 
 import KuduClient from 'vscode-azurekudu';
+import { IHostKeys } from '.';
 
 export interface IFilesClient {
 
     fullName: string;
+    defaultHostUrl: string;
+    isFunctionApp: boolean;
+    id: string;
+    kuduUrl: string | undefined;
     getKuduClient(): Promise<KuduClient>;
+    listHostKeys(): Promise<IHostKeys>;
 }
