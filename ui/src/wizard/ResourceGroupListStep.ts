@@ -9,6 +9,7 @@ import * as types from '../../index';
 import { createAzureClient } from '../createAzureClient';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
+import { nonNullProp } from '../utils/nonNull';
 import { uiUtils } from '../utils/uiUtils';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 import { LocationListStep } from './LocationListStep';
@@ -68,7 +69,7 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
     }
 
     private async getQuickPicks(wizardContext: T): Promise<types.IAzureQuickPickItem<ResourceGroup | undefined>[]> {
-        let picks: types.IAzureQuickPickItem<ResourceGroup | undefined>[] = [];
+        const picks: types.IAzureQuickPickItem<ResourceGroup | undefined>[] = [];
 
         if (!this._suppressCreate) {
             picks.push({
@@ -78,8 +79,19 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
             });
         }
 
-        const resourceGroups: ResourceGroup[] = await ResourceGroupListStep.getResourceGroups(wizardContext);
-        picks = picks.concat(resourceGroups.map((rg: ResourceGroup) => {
+        const resourceGroups: ResourceGroup[] = (await ResourceGroupListStep.getResourceGroups(wizardContext)).sort((a, b) => {
+            const nameA: string = nonNullProp(a, 'name');
+            const nameB: string = nonNullProp(b, 'name');
+            if (nameA > nameB) {
+                return 1;
+            } else if (nameA < nameB) {
+                return -1;
+            } else {
+                return 0;
+            }
+        });
+
+        return picks.concat(resourceGroups.map((rg: ResourceGroup) => {
             return {
                 id: rg.id,
                 // tslint:disable-next-line:no-non-null-assertion
@@ -88,15 +100,5 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
                 data: rg
             };
         }));
-
-        return picks.sort((a, b) => {
-            if (a.label > b.label) {
-                return 1;
-            } else if (a.label < b.label) {
-                return -1;
-            } else {
-                return 0;
-            }
-        });
     }
 }
