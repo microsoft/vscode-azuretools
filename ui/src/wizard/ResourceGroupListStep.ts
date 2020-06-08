@@ -9,6 +9,7 @@ import * as types from '../../index';
 import { createAzureClient } from '../createAzureClient';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
+import { nonNullProp } from '../utils/nonNull';
 import { uiUtils } from '../utils/uiUtils';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 import { LocationListStep } from './LocationListStep';
@@ -78,7 +79,18 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
             });
         }
 
-        const resourceGroups: ResourceGroup[] = await ResourceGroupListStep.getResourceGroups(wizardContext);
+        const resourceGroups: ResourceGroup[] = (await ResourceGroupListStep.getResourceGroups(wizardContext)).sort((a, b) => {
+            const nameA: string = nonNullProp(a, 'name');
+            const nameB: string = nonNullProp(b, 'name');
+            if (nameA > nameB) {
+                return 1;
+            } else if (nameA < nameB) {
+                return -1;
+            } else {
+                return 0;
+            }
+        });
+
         return picks.concat(resourceGroups.map((rg: ResourceGroup) => {
             return {
                 id: rg.id,
