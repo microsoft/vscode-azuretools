@@ -68,7 +68,7 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
     }
 
     private async getQuickPicks(wizardContext: T): Promise<types.IAzureQuickPickItem<ResourceGroup | undefined>[]> {
-        const picks: types.IAzureQuickPickItem<ResourceGroup | undefined>[] = [];
+        let picks: types.IAzureQuickPickItem<ResourceGroup | undefined>[] = [];
 
         if (!this._suppressCreate) {
             picks.push({
@@ -79,7 +79,7 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
         }
 
         const resourceGroups: ResourceGroup[] = await ResourceGroupListStep.getResourceGroups(wizardContext);
-        return picks.concat(resourceGroups.map((rg: ResourceGroup) => {
+        picks = picks.concat(resourceGroups.map((rg: ResourceGroup) => {
             return {
                 id: rg.id,
                 // tslint:disable-next-line:no-non-null-assertion
@@ -88,5 +88,15 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
                 data: rg
             };
         }));
+
+        return picks.sort((a, b) => {
+            if (a.label > b.label) {
+                return 1;
+            } else if (a.label < b.label) {
+                return -1;
+            } else {
+                return 0;
+            }
+        });
     }
 }
