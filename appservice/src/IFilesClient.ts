@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import KuduClient from 'vscode-azurekudu';
-import { IHostKeys } from '.';
+import { IHostKeys } from './SiteClient';
 
 export interface IFilesClient {
 
