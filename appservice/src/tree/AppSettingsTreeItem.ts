@@ -62,11 +62,15 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
         // tslint:disable-next-line:strict-boolean-expressions
         const properties: { [name: string]: string } = this._settings.properties || {};
         await Promise.all(Object.keys(properties).map(async (key: string) => {
-            const appSettingTreeItem: AppSettingTreeItem = await AppSettingTreeItem.createAppSettingTreeItem(this, this.client, key, properties[key]);
+            const appSettingTreeItem: AppSettingTreeItem = await this.createAppSettingTreeItem(this, this.client, key, properties[key]);
             treeItems.push(appSettingTreeItem);
         }));
 
         return treeItems;
+    }
+
+    public async createAppSettingTreeItem(parent: AppSettingsTreeItem, client: IAppSettingsClient, key: string, value: string): Promise<AppSettingTreeItem> {
+        return await AppSettingTreeItem.createAppSettingTreeItem(parent, client, key, value);
     }
 
     public async editSettingItem(oldKey: string, newKey: string, value: string, context: IActionContext): Promise<void> {
