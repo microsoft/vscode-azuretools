@@ -6,6 +6,7 @@
 import { AppServicePlan, StringDictionary } from 'azure-arm-website/lib/models';
 import * as fs from 'fs';
 import * as fse from 'fs-extra';
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { IActionContext } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
@@ -82,6 +83,10 @@ export async function deployZip(context: IDeployContext, client: SiteClient, fsP
 
 async function getZipFileToDeploy(fsPath: string, isFunctionApp: boolean): Promise<string> {
     if ((await fse.lstat(fsPath)).isDirectory()) {
+        if (!fsPath.endsWith(path.sep)) {
+            fsPath += path.sep;
+        }
+
         if (isFunctionApp) {
             return FileUtilities.zipDirectoryGitignore(fsPath, '.funcignore');
         } else {

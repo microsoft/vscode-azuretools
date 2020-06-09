@@ -14,36 +14,26 @@ export function getFileExtension(fsPath: string): string | undefined {
 }
 
 export async function zipFile(filePath: string): Promise<string> {
-    const zipFilePath: string = path.join(os.tmpdir(), `${randomFileName()}.zip`);
-    await new Promise((resolve: () => void, reject: (err: Error) => void): void => {
-        const zipOutput: fse.WriteStream = fse.createWriteStream(zipFilePath);
-        const zipper: archiver.Archiver = archiver('zip');
-        zipOutput.on('close', resolve);
-        zipper.on('error', reject);
-        zipper.pipe(zipOutput);
-        zipper.file(filePath, { name: path.basename(filePath) });
-        zipper.finalize();
+    return await zipInternal(async (z) => {
+        z.file(filePath, { name: path.basename(filePath) });
     });
-    return zipFilePath;
 }
 
-async function zipDirectoryInternal(folderPath: string, addFiles: (zipper: archiver.Archiver) => Promise<void>): Promise<string> {
-    if (!folderPath.endsWith(path.sep)) {
-        folderPath += path.sep;
-    }
-
+async function zipInternal(addFiles: (zipper: archiver.Archiver) => Promise<void>): Promise<string> {
     const zipFilePath: string = path.join(os.tmpdir(), `${randomFileName()}.zip`);
-    const zipOutput: fse.WriteStream = fse.createWriteStream(zipFilePath);
+    const zipFileStream: fse.WriteStream = fse.createWriteStream(zipFilePath);
     // level 9 indicates best compression at the cost of slower zipping. Since sending the zip over the internet is usually the bottleneck, we want best compression.
     const zipper: archiver.Archiver = archiver('zip', { zlib: { level: 9 } });
     await addFiles(zipper);
 
-    await new Promise((resolve, reject): void => {
-        zipOutput.on('close', resolve);
+    const zipTask: Promise<void> = new Promise((resolve, reject): void => {
+        zipFileStream.on('close', resolve);
         zipper.on('error', reject);
-        zipper.pipe(zipOutput);
-        zipper.finalize();
     });
+    zipper.pipe(zipFileStream);
+
+    await zipper.finalize();
+    await zipTask;
 
     return zipFilePath;
 }
@@ -52,7 +42,7 @@ async function zipDirectoryInternal(folderPath: string, addFiles: (zipper: archi
  * Zips directory using glob filtering
  */
 export async function zipDirectoryGlob(folderPath: string, globPattern: string = '**/*', ignorePattern?: string | string[]): Promise<string> {
-    return await zipDirectoryInternal(folderPath, async (z) => {
+    return await zipInternal(async (z) => {
         await addFilesByGlob(z, folderPath, globPattern, ignorePattern);
     });
 }
@@ -61,7 +51,7 @@ export async function zipDirectoryGlob(folderPath: string, globPattern: string =
  * Zips directory using gitignore filtering
  */
 export async function zipDirectoryGitignore(folderPath: string, gitignoreName: string): Promise<string> {
-    return await zipDirectoryInternal(folderPath, async (z) => {
+    return await zipInternal(async (z) => {
         await addFilesByGitignore(z, folderPath, gitignoreName);
     });
 }
