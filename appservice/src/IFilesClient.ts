@@ -14,5 +14,5 @@ export interface IFilesClient {
     id: string;
     kuduUrl: string | undefined;
     getKuduClient(): Promise<KuduClient>;
-    listHostKeys(): Promise<IHostKeys>;
+    listHostKeys?(): Promise<IHostKeys>;
 }

@@ -4,11 +4,17 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IFilesClient } from '.';
+import { localize } from './localize';
 import { requestUtils } from './utils/requestUtils';
 
 export async function pingFunctionApp(client: IFilesClient): Promise<void> {
+
     const url: string = `${client.defaultHostUrl}/admin/host/status`;
     const request: requestUtils.Request = await requestUtils.getDefaultRequest(url);
-    request.headers['x-functions-key'] = (await client.listHostKeys()).masterKey;
-    await requestUtils.sendRequest(request);
+    if (client.listHostKeys) {
+        request.headers['x-functions-key'] = (await client.listHostKeys()).masterKey;
+        await requestUtils.sendRequest(request);
+    } else {
+        throw Error(localize('listHostKeysNotSupported', 'Listing host keys is not supported.'));
+    }
 }
