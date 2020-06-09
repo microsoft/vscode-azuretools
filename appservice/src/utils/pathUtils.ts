@@ -14,3 +14,7 @@ export function isPathEqual(fsPath1: string, fsPath2: string): boolean {
     const relativePath: string = relative(fsPath1, fsPath2);
     return relativePath === '';
 }
+
+export function getFileExtension(fsPath: string): string | undefined {
+    return fsPath.split('.').pop();
+}
