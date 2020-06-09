@@ -18,28 +18,26 @@ export class AppSettingTreeItem extends AzExtTreeItem {
     public static contextValue: string = 'applicationSettingItem';
     public static contextValueNoSlots: string = 'applicationSettingItemNoSlots';
     public get contextValue(): string {
-        return this._slotsAvailable ? AppSettingTreeItem.contextValue : AppSettingTreeItem.contextValueNoSlots;
+        return this.parent.supportsSlots ? AppSettingTreeItem.contextValue : AppSettingTreeItem.contextValueNoSlots;
     }
     public readonly parent: AppSettingsTreeItem;
 
     private _key: string;
     private _value: string;
     private _hideValue: boolean;
-    private readonly _slotsAvailable: boolean = true;
 
     private readonly _client: IAppSettingsClient;
 
-    private constructor(parent: AppSettingsTreeItem, client: IAppSettingsClient, key: string, value: string, slotsAvailable: boolean) {
+    private constructor(parent: AppSettingsTreeItem, client: IAppSettingsClient, key: string, value: string) {
         super(parent);
-        this._slotsAvailable = slotsAvailable;
         this._client = client;
         this._key = key;
         this._value = value;
         this._hideValue = true;
     }
 
-    public static async createAppSettingTreeItem(parent: AppSettingsTreeItem, client: IAppSettingsClient, key: string, value: string, slotsAvailable: boolean = true): Promise<AppSettingTreeItem> {
-        const ti: AppSettingTreeItem = new AppSettingTreeItem(parent, client, key, value, slotsAvailable);
+    public static async createAppSettingTreeItem(parent: AppSettingsTreeItem, client: IAppSettingsClient, key: string, value: string): Promise<AppSettingTreeItem> {
+        const ti: AppSettingTreeItem = new AppSettingTreeItem(parent, client, key, value);
         // check if it's a slot setting
         await ti.refreshImpl();
         return ti;
