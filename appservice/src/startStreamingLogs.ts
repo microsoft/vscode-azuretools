@@ -10,9 +10,9 @@ import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling, IActionContext, parseError } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
 import { ext } from './extensionVariables';
+import { IFilesClient } from './IFilesClient';
 import { localize } from './localize';
 import { pingFunctionApp } from './pingFunctionApp';
-import { SiteClient } from './SiteClient';
 import { requestUtils } from './utils/requestUtils';
 
 export interface ILogStream extends vscode.Disposable {
@@ -22,11 +22,11 @@ export interface ILogStream extends vscode.Disposable {
 
 const logStreams: Map<string, ILogStream> = new Map();
 
-function getLogStreamId(client: SiteClient, logsPath: string): string {
+function getLogStreamId(client: IFilesClient, logsPath: string): string {
     return `${client.id}${logsPath}`;
 }
 
-export async function startStreamingLogs(client: SiteClient, verifyLoggingEnabled: () => Promise<void>, logStreamLabel: string, logsPath: string = ''): Promise<ILogStream> {
+export async function startStreamingLogs(client: IFilesClient, verifyLoggingEnabled: () => Promise<void>, logStreamLabel: string, logsPath: string = ''): Promise<ILogStream> {
     const logStreamId: string = getLogStreamId(client, logsPath);
     const logStream: ILogStream | undefined = logStreams.get(logStreamId);
     if (logStream && logStream.isConnected) {
@@ -101,7 +101,7 @@ export async function startStreamingLogs(client: SiteClient, verifyLoggingEnable
     }
 }
 
-export async function stopStreamingLogs(client: SiteClient, logsPath: string = ''): Promise<void> {
+export async function stopStreamingLogs(client: IFilesClient, logsPath: string = ''): Promise<void> {
     const logStreamId: string = getLogStreamId(client, logsPath);
     const logStream: ILogStream | undefined = logStreams.get(logStreamId);
     if (logStream && logStream.isConnected) {
