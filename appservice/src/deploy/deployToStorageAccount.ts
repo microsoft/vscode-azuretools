@@ -5,10 +5,8 @@
 
 import { StringDictionary } from 'azure-arm-website/lib/models';
 import * as azureStorage from "azure-storage";
-import * as crypto from "crypto";
-import * as fse from 'fs-extra';
 import * as moment from 'moment';
-import { workspace } from 'vscode';
+import { Readable } from 'stream';
 import { IActionContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -20,14 +18,14 @@ import { randomUtils } from '../utils/randomUtils';
  * To deploy with Run from Package on a Windows plan, create the app setting "WEBSITE_RUN_FROM_PACKAGE" and set it to "1".
  * Then deploy via "zipdeploy" as usual.
  */
-export async function deployToStorageAccount(context: IActionContext, client: SiteClient, zipFilePath: string): Promise<void> {
+export async function deployToStorageAccount(context: IActionContext, client: SiteClient, zipStream: Readable): Promise<void> {
     const datePart: string = moment.utc(Date.now()).format('YYYYMMDDHHmmss');
     const randomPart: string = randomUtils.getRandomHexString(32);
     const blobName: string = `${datePart}-${randomPart}.zip`;
 
     const blobService: azureStorage.BlobService = await createBlobService(client);
     ext.outputChannel.appendLog(localize('creatingBlob', 'Uploading zip package to storage container...'), { resourceName: client.fullName });
-    const blobUrl: string = await createBlobFromZip(context, blobService, zipFilePath, blobName);
+    const blobUrl: string = await createBlobFromZip(context, zipStream, blobService, blobName);
     const appSettings: StringDictionary = await client.listApplicationSettings();
     // tslint:disable-next-line:strict-boolean-expressions
     appSettings.properties = appSettings.properties || {};
@@ -49,9 +47,7 @@ async function createBlobService(client: SiteClient): Promise<azureStorage.BlobS
     throw new Error(localize('azureWebJobsStorageKey', '"{0}" app setting is required for Run From Package deployment.', azureWebJobsStorageKey));
 }
 
-async function createBlobFromZip(context: IActionContext, blobService: azureStorage.BlobService, zipFilePath: string, blobName: string): Promise<string> {
-    const localMd5Hash: string = crypto.createHash('md5').update(await fse.readFile(zipFilePath)).digest('base64');
-
+async function createBlobFromZip(context: IActionContext, zipStream: Readable, blobService: azureStorage.BlobService, blobName: string): Promise<string> {
     const containerName: string = 'function-releases';
     await new Promise<void>((resolve: () => void, reject: (err: Error) => void): void => {
         blobService.createContainerIfNotExists(containerName, (err: Error) => {
@@ -63,8 +59,8 @@ async function createBlobFromZip(context: IActionContext, blobService: azureStor
         });
     });
 
-    const result: azureStorage.BlobService.BlobResult = await new Promise((resolve, reject): void => {
-        blobService.createBlockBlobFromLocalFile(containerName, blobName, zipFilePath, (error: Error, r: azureStorage.BlobService.BlobResult, _response: azureStorage.ServiceResponse) => {
+    await new Promise((resolve, reject): void => {
+        blobService.createBlockBlobFromStream(containerName, blobName, zipStream, zipStream.readableLength, (error: Error, r: azureStorage.BlobService.BlobResult, _response: azureStorage.ServiceResponse) => {
             if (error !== null) {
                 reject(error);
             } else {
@@ -78,12 +74,6 @@ async function createBlobFromZip(context: IActionContext, blobService: azureStor
     blobService.getBlobProperties(containerName, blobName, (_error: Error, r: azureStorage.BlobService.BlobResult) => {
         context.telemetry.measurements.blobSize = Number(r.contentLength);
     });
-
-    const suppressMd5Validation: boolean = !!workspace.getConfiguration(ext.prefix).get<boolean>('suppressMd5Validation');
-    context.telemetry.properties.suppressMd5Validation = String(suppressMd5Validation);
-    if (!suppressMd5Validation && result.contentSettings?.contentMD5 !== localMd5Hash) {
-        throw new Error(localize('md5Error', "Upload failed: Integrity error: MD5 hash mismatch between the local copy and the uploaded copy."));
-    }
 
     const sasToken: string = blobService.generateSharedAccessSignature(containerName, blobName, <azureStorage.common.SharedAccessPolicy>{
         AccessPolicy: {
