@@ -49,7 +49,7 @@ class ReadOnlyContentProvider implements TextDocumentContentProvider {
     public async openReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string): Promise<void> {
         const idHash: string = randomUtils.getPseudononymousStringHash(node.fullId, 'hex');
         // in a URI, # means fragment and ? means query and is parsed in that way, so they should be removed to not break the path
-        const uri: Uri = Uri.parse(`${scheme}:///${idHash}/${node.label.replace(/\#|\?/, '')}${fileExtension}`);
+        const uri: Uri = Uri.parse(`${scheme}:///${idHash}/${node.label.replace(/\#|\?/g, '')}${fileExtension}`);
         this._contentMap.set(uri.toString(), content);
         await window.showTextDocument(uri);
         this._onDidChangeEmitter.fire(uri);
