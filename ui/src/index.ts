@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 export { createAzExtOutputChannel } from './AzExtOutputChannel';
+export * from './AzExtTreeFileSystem';
 export * from './AzureActionHandler';
 export * from './AzureUserInput';
 export * from './BaseEditor';
