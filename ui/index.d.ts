@@ -1376,10 +1376,10 @@ export declare abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> i
     /**
      * May be overriden, for example if you want to add additional query parameters to the uri
      */
-    public getUriParts(item: TItem): AzExtItemUriParts;
+    protected getUriParts(item: TItem): AzExtItemUriParts;
 
     /**
      * May be overriden if the default `findTreeItem` logic is not sufficient
      */
-    public findItem(context: IActionContext, query: AzExtItemQuery): Promise<TItem | undefined>;
+    protected findItem(context: IActionContext, query: AzExtItemQuery): Promise<TItem | undefined>;
 }
