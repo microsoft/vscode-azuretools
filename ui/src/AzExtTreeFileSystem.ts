@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { parse as parseQuery, ParsedUrlQuery, stringify as stringifyQuery } from "querystring";
-import { Disposable, Event, EventEmitter, FileChangeEvent, FileStat, FileSystemError, FileType, Uri, window } from "vscode";
+import { Disposable, Event, EventEmitter, FileChangeEvent, FileStat, FileSystemError, FileSystemProvider, FileType, Uri, window } from "vscode";
 import * as types from '../index';
 import { callWithTelemetryAndErrorHandling } from "./callWithTelemetryAndErrorHandling";
 import { localize } from "./localize";
@@ -14,7 +14,7 @@ import { nonNullProp } from "./utils/nonNull";
 
 const unsupportedError: Error = new Error(localize('notSupported', 'This operation is not supported.'));
 
-export abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> implements InternalAzExtTreeFileSystem<TItem> {
+export abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> implements FileSystemProvider {
     public abstract scheme: string;
 
     private readonly _emitter: EventEmitter<FileChangeEvent[]> = new EventEmitter<FileChangeEvent[]>();
@@ -117,7 +117,7 @@ export abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> implement
         );
     }
 
-    public getUriParts(item: TItem): types.AzExtItemUriParts {
+    protected getUriParts(item: TItem): types.AzExtItemUriParts {
         return {
             filePath: this.getFilePath(item),
             query: {
@@ -126,7 +126,7 @@ export abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> implement
         };
     }
 
-    public async findItem(context: types.IActionContext, query: types.AzExtItemQuery): Promise<TItem | undefined> {
+    protected async findItem(context: types.IActionContext, query: types.AzExtItemQuery): Promise<TItem | undefined> {
         return await this._tree.findTreeItem(query.id, context);
     }
 
@@ -157,15 +157,4 @@ export abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> implement
             throw new Error('Internal Error: Expected "id" to be type string.');
         }
     }
-}
-
-/**
- * I want `AzExtTreeFileSystem` to implement `types.AzExtTreeFileSystem` to make sure they're in-sync, but "protected" methods cause a TypeScript error like this:
- *     Property 'getUriParts' is protected but type 'AzExtTreeFileSystem<TItem>' is not a class derived from 'AzExtTreeFileSystem<TItem>'.
- * Current workaround is to declare the methods as "protected" in the types (the place that actually matters) and relax the methods to "public" here
- * Adapted from https://github.com/microsoft/TypeScript/issues/3854#issuecomment-130025573
- */
-declare abstract class InternalAzExtTreeFileSystem<TItem extends AzExtTreeItem> extends types.AzExtTreeFileSystem<TItem> {
-    public getUriParts(item: TItem): types.AzExtItemUriParts;
-    public findItem(context: types.IActionContext, query: types.AzExtItemQuery): Promise<TItem | undefined>;
 }
