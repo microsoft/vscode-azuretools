@@ -32,7 +32,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
         this.parent = parent;
     }
 
-    private get _effectiveDescription(): string | undefined {
+    public get effectiveDescription(): string | undefined {
         return this._temporaryDescription || this.description;
     }
 
@@ -56,10 +56,6 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
 
     public get effectiveIconPath(): types.TreeItemIconPath | undefined {
         return this._temporaryDescription || this._isLoadingMore ? getThemedIconPath('Loading') : this.iconPath;
-    }
-
-    public get effectiveLabel(): string {
-        return this._effectiveDescription ? `${this.label} (${this._effectiveDescription})` : this.label;
     }
 
     public get treeDataProvider(): IAzExtTreeDataProviderInternal {

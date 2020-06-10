@@ -41,7 +41,8 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
 
     public getTreeItem(treeItem: AzExtTreeItem): TreeItem {
         return {
-            label: treeItem.effectiveLabel,
+            label: treeItem.label,
+            description: treeItem.effectiveDescription,
             id: treeItem.fullId,
             collapsibleState: treeItem.collapsibleState,
             contextValue: treeItem.contextValue,
