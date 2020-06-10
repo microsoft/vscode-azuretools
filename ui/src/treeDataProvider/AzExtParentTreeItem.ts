@@ -99,7 +99,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
     }
 
     public compareChildrenImpl(item1: AzExtTreeItem, item2: AzExtTreeItem): number {
-        return item1.effectiveLabel.localeCompare(item2.effectiveLabel);
+        return item1.label.localeCompare(item2.label);
     }
 
     public async pickChildTreeItem(expectedContextValues: (string | RegExp)[], context: types.ITreeItemPickerContext): Promise<AzExtTreeItem | AzExtTreeItem[]> {
