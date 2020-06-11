@@ -88,6 +88,25 @@ suite("callWithMaskHandling Tests", () => {
                 return err.message === errorMessage;
             }, 'Credentials were not properly masked from error string');
         });
+
+        test("Value masked (encoded string) with thrown error", async () => {
+            const errorMessage: string = `To https://naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git
+            ! [rejected]        HEAD -> master (fetch first)
+           error: failed to push some refs to 'https://$naturins-22-error-03:%24scHQERrAlXSmlCeN1mrhDzsHWeDz2XZt5R343HgCNmxS0xlswcaA2Cowflda@naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git'
+           hint: Updates were rejected because the remote contains work that you do
+           hint: not have locally. This is usually caused by another repository pushing
+           hint: to the same ref. You may want to first integrate the remote changes
+           hint: (e.g., 'git pull ...') before pushing again.
+           hint: See the 'Note about fast-forwards' in 'git push --help' for details.`;
+
+            await assertThrowsAsync(async (): Promise<void> => {
+                await callWithMaskHandling(async () => {
+                    throw errorMessage;
+                }, '$scHQERrAlXSmlCeN1mrhDzsHWeDz2XZt5R343HgCNmxS0xlswcaA2Cowflda');
+            }, (err: Error) => {
+                return validateError(err, credentials);
+            }, 'Credentials were not properly masked from error string');
+        });
     });
 });
 
