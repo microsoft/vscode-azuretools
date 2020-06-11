@@ -8,7 +8,7 @@ import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { StorageAccount } from 'azure-arm-storage/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment, AzureServiceClientOptions } from 'ms-rest-azure';
-import { Disposable, Event, ExtensionContext, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocument, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
+import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocument, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 
 export type OpenInPortalOptions = {
@@ -462,6 +462,9 @@ export declare function openInPortal(root: ISubscriptionContext, id: string, opt
 
 export declare class UserCancelledError extends Error { }
 
+/**
+ * @deprecated Use `AzExtTreeFileSystem` instead
+ */
 export declare abstract class BaseEditor<ContextT> implements Disposable {
     /**
     * Implement this interface if you need to download and upload remote files
@@ -1252,3 +1255,131 @@ export function openReadOnlyJson(node: { label: string, fullId: string }, data: 
  * @param fileExtension The file extension
  */
 export function openReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string): Promise<void>;
+
+/**
+ * The event used to signal an item change for `AzExtTreeFileSystem`
+ */
+export type AzExtItemChangeEvent<TItem> = { type: FileChangeType; item: TItem };
+
+/**
+ * The query of a URI used in `AzExtTreeFileSystem`
+ */
+export type AzExtItemQuery = {
+    /**
+     * The identifier of the item. Will not be displayed to the user
+     */
+    id: string;
+
+    [key: string]: string | string[] | undefined;
+};
+
+/**
+ * The basic parts of a URI used in `AzExtTreeFileSystem`
+ */
+export type AzExtItemUriParts = {
+    /**
+     * For display-purposes only. Will affect the tab-title and "Open Editors" panel
+     */
+    filePath: string;
+
+    query: AzExtItemQuery;
+};
+
+/**
+ * A virtual file system based around AzExTreeItems that only supports viewing/editing single files.
+ */
+export declare abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> implements FileSystemProvider {
+    public abstract scheme: string;
+
+    public constructor(tree: AzExtTreeDataProvider);
+
+    public get onDidChangeFile(): Event<FileChangeEvent[]>;
+
+    /**
+     * Retrieve the file path for an item, for display-purposes only. Will affect the tab-title and "Open Editors" panel
+     *
+     * @param item The item represented by the uri.
+     */
+    public abstract getFilePath(item: TItem): string;
+
+    /**
+     * Retrieve metadata about a file.
+     *
+     * Note that the metadata for symbolic links should be the metadata of the file they refer to.
+     * Still, the [SymbolicLink](#FileType.SymbolicLink)-type must be used in addition to the actual type, e.g.
+     * `FileType.SymbolicLink | FileType.Directory`.
+     *
+     * @param context The action context
+     * @param item The item represented by the uri.
+     * @param originalUri The original uri for the item.
+     * @return The file metadata about the file.
+     * @throws [`FileNotFound`](#FileSystemError.FileNotFound) when `item` is not found.
+     */
+    public abstract statImpl(context: IActionContext, item: TItem, originalUri: Uri): Promise<FileStat>;
+
+    /**
+     * Read the entire contents of a file.
+     *
+     * @param context The action context
+     * @param item The item represented by the uri.
+     * @param originalUri The original uri for the item.
+     * @return An array of bytes or a thenable that resolves to such.
+     * @throws [`FileNotFound`](#FileSystemError.FileNotFound) when `item` is not found.
+     */
+    public abstract readFileImpl(context: IActionContext, item: TItem, originalUri: Uri): Promise<Uint8Array>;
+
+    /**
+     * Write data to a file, replacing its entire contents.
+     *
+     * @param context The action context
+     * @param item The item represented by the uri.
+     * @param content The new content of the file.
+     * @param originalUri The original uri for the item.
+     * @throws [`FileNotFound`](#FileSystemError.FileNotFound) when `item` is not found.
+     */
+    public abstract writeFileImpl(context: IActionContext, item: TItem, content: Uint8Array, originalUri: Uri): Promise<void>;
+
+    public showTextDocument(item: TItem): Promise<void>;
+
+    /**
+     * Uses a simple buffer to group events that occur within a few milliseconds of each other
+     */
+    public fireSoon(...events: AzExtItemChangeEvent<TItem>[]): void;
+
+    //#region vscode.FileSystemProvider methods
+    public watch(): Disposable;
+    public stat(uri: Uri): Promise<FileStat>;
+    public readFile(uri: Uri): Promise<Uint8Array>;
+    public writeFile(uri: Uri, content: Uint8Array): Promise<void>;
+
+    /**
+     * Not supported for this file system
+     */
+    public readDirectory(uri: Uri): Promise<[string, FileType][]>;
+
+    /**
+     * Not supported for this file system
+     */
+    public createDirectory(uri: Uri): Promise<void>;
+
+    /**
+     * Not supported for this file system
+     */
+    public delete(uri: Uri): Promise<void>;
+
+    /**
+     * Not supported for this file system
+     */
+    public rename(uri: Uri): Promise<void>;
+    //#endregion
+
+    /**
+     * May be overriden, for example if you want to add additional query parameters to the uri
+     */
+    protected getUriParts(item: TItem): AzExtItemUriParts;
+
+    /**
+     * May be overriden if the default `findTreeItem` logic is not sufficient
+     */
+    protected findItem(context: IActionContext, query: AzExtItemQuery): Promise<TItem | undefined>;
+}

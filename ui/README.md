@@ -162,106 +162,26 @@ export class WebAppProvider extends SubscriptionTreeItem {
 
 If the environment variable `DEBUGTELEMETRY` is set to a non-empty, non-zero value, then the telemetry reporter used internally by this package will not attempt to send any data.  If the value is 'verbose' or 'v', the telemetry will not be sent but will be displayed on the console window.
 
-## Azure Base Editor
+## Azure Extension Tree File System
 
-### Display file from Base editor
+> NOTE: This replaces `BaseEditor`, which has been deprecated
 
-Follow these steps to implement VSCode's editor functionality.
+A virtual file system that supports viewing and editing single files in Azure. It is _not_ meant to be used as a fully-fledged file system. For now it is based around AzExtTreeItems, but it may be extended to support generic items of any kind if the need arises. Follow these basic steps:
 
-1. First extend the BaseEditor and implement the BaseEditor Methods.
-   The BaseEditor class will accept any type, for the sake of this example,
-   we'll use an AzureTreeItem
+1. Create a new class that extends `AzExtTreeFileSystem` for your file system. The primary purpose of this class is to describe how the file content is retrieved and updated. See the documentation on the class's types for more information.
+1. Set up the file system in your extension's `activate()` method:
 
-```typescript
-// In your ExampleEditor.ts file
-export class ExampleEditor extends BaseEditor<AzureTreeItem> {
-  constructor() {
-    super("commandname.showSavePrompt");
-  }
+    ```typescript
+    const fileSystem = new ExampleFileSystem(exampleTree);
+    context.subscriptions.push(vscode.workspace.registerFileSystemProvider('exampleScheme', fileSystem));
+    ```
+1. Make sure the file system is listed in the `activationEvents` of your extension's package.json:
 
-  public getSaveConfirmationText(context: AzureTreeItem) {
-    return "Whatever text you want the user to see on confirming a save";
-  }
-
-  public getData(context: AzureTreeItem): Promise<string> {
-    //   hypothetical request that returns a JSON
-    const file = createAzureClient(context.root, this.client);
-    //   The two will add an indentation of 2 for whitespace, used for formatting the stringified JSON
-    const fileData = JSON.stringify(file, null, 2);
-
-    return fileData;
-  }
-
-  public updateData(context: AzureTreeItem, data: string): Promise<string> {
-    return this.getData(context);
-  }
-
-  public getFileName(context: AzureTreeItem): Promise<string> {
-    const extension = "json";
-    return `${context.root.subscriptionDisplayName}.${extension}`;
-  }
-}
-```
-
-2. Register 'commandName.showSavePrompt' from constructor in the package.json
-   under configuration.
-
-```json
-{
-  "contributes": {
-    "configuration": {
-      "commandName.showSavePrompt": {
-        "type": "boolean",
-        "default": true,
-        "description": "Description for the command"
-      }
-    }
-  }
-}
-```
-
-3. Create a command in a separate file for extension.ts to register later on.
-
-```typescript
-export async function selectCommand(node: {}, editor: ExampleEditor) {
-  await azureEditor.showEditor(node);
-}
-```
-
-4. Register a command in your extension.ts under the activate function file and instantiate the ExampleEditor class.
-
-```typescript
-export function activate(context: vscode.ExtensionContext) {
-  const exampleEditor = new ExampleEditor();
-  context.subscriptions.push(exampleEditor);
-
-  vscode.commands.registerCommand("commandName.selectFile", (node: AzureTreeItem) =>
-    selectCommand(node, exampleEditor)
-  );
-}
-```
-
-5. For 'commandName.selectFile' to trigger, have a class that extends an AzureTreeItem and set a property for commandId and set it to 'commandName.selectFile'. Pulling from the DisplayAzureResources example, we have this class.
-```typescript
-export class WebAppTreeItem extends AzureTreeItem {
-  public static contextValue: string = "azureWebApp";
-  public readonly contextValue: string = WebAppTreeItem.contextValue;
-  public readonly commandId: string = 'commandName.selectFile';
-  private readonly _site: Site;
-  constructor(parent: AzureParentTreeItem, site: Site) {
-    super(parent);
-    this._site = site;
-  }
-
-  public get id(): string {
-    return this._site.id;
-  }
-
-  public get label(): string {
-    return this._site.name;
-  }
-}
-```
+    ```
+    "activationEvents": [
+        "onFileSystem:exampleScheme"
+    ]
+    ```
 
 ## License
 
