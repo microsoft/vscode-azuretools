@@ -5,11 +5,11 @@
 
 import { StringDictionary } from "azure-arm-website/lib/models";
 import { ext } from "./extensionVariables";
+import { IDeploymentsClient } from './IDeploymentsClient';
 import { localize } from "./localize";
-import { SiteClient } from "./SiteClient";
 
 // prior to git deploying, these settings must be deleted or it will fail
-export async function verifyNoRunFromPackageSetting(client: SiteClient): Promise<void> {
+export async function verifyNoRunFromPackageSetting(client: IDeploymentsClient): Promise<void> {
     let updateSettings: boolean = false;
     const runFromPackageSettings: string[] = ['WEBSITE_RUN_FROM_PACKAGE', 'WEBSITE_RUN_FROM_ZIP'];
     const applicationSettings: StringDictionary = await client.listApplicationSettings();
