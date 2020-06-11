@@ -18,10 +18,11 @@ import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 export async function localGitDeploy(client: SiteClient, fsPath: string, context: IActionContext): Promise<void> {
     const publishCredentials: User = await client.getWebAppPublishCredential();
     const publishingPassword: string = nonNullProp(publishCredentials, 'publishingPassword');
+    const publishingUserName: string = nonNullProp(publishCredentials, 'publishingUserName');
 
     await callWithMaskHandling(
         async (): Promise<void> => {
-            const remote: string = `https://${nonNullProp(publishCredentials, 'publishingUserName')}:${nonNullProp(publishCredentials, 'publishingPassword')}@${client.gitUrl}`;
+            const remote: string = `https://${encodeURIComponent(publishingUserName)}:${encodeURIComponent(publishingPassword)}@${client.gitUrl}`;
             const localGit: git.SimpleGit = git(fsPath);
             const commitId: string = (await localGit.log()).latest.hash;
 
