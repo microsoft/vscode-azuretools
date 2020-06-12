@@ -77,7 +77,7 @@ export async function deploy(client: SiteClient, fsPath: string, context: IDeplo
         try {
             switch (effectiveScmType) {
                 case ScmType.LocalGit:
-                    await localGitDeploy(client, fsPath, context);
+                    await localGitDeploy(client, { fsPath: fsPath }, context);
                     break;
                 case ScmType.GitHub:
                     throw new Error(localize('gitHubConnected', '"{0}" is connected to a GitHub repository. Push to GitHub repository to deploy.', client.fullName));

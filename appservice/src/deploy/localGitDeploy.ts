@@ -16,7 +16,13 @@ import { openUrl } from '../utils/openUrl';
 import { verifyNoRunFromPackageSetting } from '../verifyNoRunFromPackageSetting';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
-export async function localGitDeploy(client: IDeploymentsClient & IAppSettingsClient, fsPath: string, context: IActionContext, branch: string = 'master', commit: boolean = false): Promise<void> {
+type localGitOptions = {
+    fsPath: string;
+    branch?: string;
+    commit?: boolean;
+};
+
+export async function localGitDeploy(client: IDeploymentsClient & IAppSettingsClient, options: localGitOptions, context: IActionContext): Promise<void> {
     const publishCredentials: User = await client.getWebAppPublishCredential();
     const publishingPassword: string = nonNullProp(publishCredentials, 'publishingPassword');
     const publishingUserName: string = nonNullProp(publishCredentials, 'publishingUserName');
@@ -24,14 +30,14 @@ export async function localGitDeploy(client: IDeploymentsClient & IAppSettingsCl
     await callWithMaskHandling(
         async (): Promise<void> => {
             const remote: string = `https://${encodeURIComponent(publishingUserName)}:${encodeURIComponent(publishingPassword)}@${client.gitUrl}`;
-            const localGit: git.SimpleGit = git(fsPath);
+            const localGit: git.SimpleGit = git(options.fsPath);
             const commitId: string = (await localGit.log()).latest.hash;
             let status: git.StatusResult;
             try {
                 status = await localGit.status();
                 if (status.files.length > 0) {
                     context.telemetry.properties.cancelStep = 'pushWithUncommitChanges';
-                    const message: string = localize('localGitUncommit', '{0} uncommitted change(s) in local repo "{1}"', status.files.length, fsPath);
+                    const message: string = localize('localGitUncommit', '{0} uncommitted change(s) in local repo "{1}"', status.files.length, options.fsPath);
                     const deployAnyway: vscode.MessageItem = { title: localize('deployAnyway', 'Deploy Anyway') };
                     await ext.ui.showWarningMessage(message, { modal: true }, deployAnyway);
                     context.telemetry.properties.cancelStep = undefined;
@@ -70,15 +76,14 @@ export async function localGitDeploy(client: IDeploymentsClient & IAppSettingsCl
                 const tokenSource: vscode.CancellationTokenSource = new vscode.CancellationTokenSource();
                 const token: vscode.CancellationToken = tokenSource.token;
                 try {
-                    await new Promise(async (resolve: () => void, reject: (error: Error) => void): Promise<void> => {
-
-                        if (commit) {
-                            await localGit.commit('Deploy using LocalGit');
-                        }
+                    if (options.commit) {
+                        await localGit.commit('Deployed via Azure App Service Extension');
+                    }
+                    await new Promise((resolve: () => void, reject: (error: Error) => void): void => {
 
                         const pushOptions: git.Options = forcePush ? { '-f': null } : {};
 
-                        localGit.push(remote, `HEAD:${branch}`, pushOptions).catch(async (error) => {
+                        localGit.push(remote, `HEAD:${options.branch ?? 'master'}`, pushOptions).catch(async (error) => {
                             // tslint:disable-next-line:no-unsafe-any
                             reject(error);
                             tokenSource.cancel();
