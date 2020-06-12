@@ -8,6 +8,7 @@ import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
 import { callWithMaskHandling, IActionContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
+import { IAppSettingsClient } from '../IAppSettingsClient';
 import { IDeploymentsClient } from '../IDeploymentsClient';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
@@ -15,7 +16,7 @@ import { openUrl } from '../utils/openUrl';
 import { verifyNoRunFromPackageSetting } from '../verifyNoRunFromPackageSetting';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
-export async function localGitDeploy(client: IDeploymentsClient, fsPath: string, context: IActionContext): Promise<void> {
+export async function localGitDeploy(client: IDeploymentsClient & IAppSettingsClient, fsPath: string, context: IActionContext, branch: string = 'master', commit: boolean = false): Promise<void> {
     const publishCredentials: User = await client.getWebAppPublishCredential();
     const publishingPassword: string = nonNullProp(publishCredentials, 'publishingPassword');
     const publishingUserName: string = nonNullProp(publishCredentials, 'publishingUserName');
@@ -36,7 +37,6 @@ export async function localGitDeploy(client: IDeploymentsClient, fsPath: string,
                     context.telemetry.properties.cancelStep = undefined;
                     context.telemetry.properties.pushWithUncommitChanges = 'true';
                 }
-
                 await verifyNoRunFromPackageSetting(client);
                 ext.outputChannel.appendLog(localize('localGitDeploy', `Deploying Local Git repository to "${client.fullName}"...`), { resourceName: client.fullName });
                 await tryPushAndWaitForDeploymentToComplete();
@@ -70,11 +70,15 @@ export async function localGitDeploy(client: IDeploymentsClient, fsPath: string,
                 const tokenSource: vscode.CancellationTokenSource = new vscode.CancellationTokenSource();
                 const token: vscode.CancellationToken = tokenSource.token;
                 try {
-                    await new Promise((resolve: () => void, reject: (error: Error) => void): void => {
-                        // for whatever reason, is '-f' exists, true or false, it still force pushes
-                        const pushOptions: git.Options = forcePush ? { '-f': true } : {};
+                    await new Promise(async (resolve: () => void, reject: (error: Error) => void): Promise<void> => {
 
-                        localGit.push(remote, `HEAD:${status.current}`, pushOptions).catch(async (error) => {
+                        if (commit) {
+                            await localGit.commit('Deploy using LocalGit');
+                        }
+
+                        const pushOptions: git.Options = forcePush ? { '-f': null } : {};
+
+                        localGit.push(remote, `HEAD:${branch}`, pushOptions).catch(async (error) => {
                             // tslint:disable-next-line:no-unsafe-any
                             reject(error);
                             tokenSource.cancel();
