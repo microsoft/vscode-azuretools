@@ -46,7 +46,7 @@
         "portfinder": "^1.0.25",
         "request": "^2.83.0",
         "request-promise": "^4.2.5",
-        "simple-git": "~1.92.0",
+        "simple-git": "~2.6.0",
         "vscode-azureextensionui": "^0.33.0",
         "vscode-azurekudu": "^0.1.9",
         "vscode-nls": "^4.1.1",
