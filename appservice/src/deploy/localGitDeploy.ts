@@ -25,9 +25,9 @@ export async function localGitDeploy(client: SiteClient, fsPath: string, context
             const remote: string = `https://${encodeURIComponent(publishingUserName)}:${encodeURIComponent(publishingPassword)}@${client.gitUrl}`;
             const localGit: git.SimpleGit = git(fsPath);
             const commitId: string = (await localGit.log()).latest.hash;
-
+            let status: git.StatusResult;
             try {
-                const status: git.StatusResult = await localGit.status();
+                status = await localGit.status();
                 if (status.files.length > 0) {
                     context.telemetry.properties.cancelStep = 'pushWithUncommitChanges';
                     const message: string = localize('localGitUncommit', '{0} uncommitted change(s) in local repo "{1}"', status.files.length, fsPath);
@@ -74,7 +74,7 @@ export async function localGitDeploy(client: SiteClient, fsPath: string, context
                         // for whatever reason, is '-f' exists, true or false, it still force pushes
                         const pushOptions: git.Options = forcePush ? { '-f': true } : {};
 
-                        localGit.push(remote, 'HEAD:master', pushOptions).catch(async (error) => {
+                        localGit.push(remote, `HEAD:${status.current}`, pushOptions).catch(async (error) => {
                             // tslint:disable-next-line:no-unsafe-any
                             reject(error);
                             tokenSource.cancel();
