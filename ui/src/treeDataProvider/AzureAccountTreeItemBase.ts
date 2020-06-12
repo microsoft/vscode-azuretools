@@ -30,7 +30,6 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
     public static contextValue: string = 'azureextensionui.azureAccount';
     public readonly contextValue: string = AzureAccountTreeItemBase.contextValue;
     public readonly label: string = 'Azure';
-    public readonly childTypeLabel: string = localize('subscription', 'subscription');
     public autoSelectInTreeItemPicker: boolean = true;
     public disposables: Disposable[] = [];
 
@@ -47,6 +46,10 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
     //#region Methods implemented by base class
     public abstract createSubscriptionTreeItem(root: types.ISubscriptionContext): SubscriptionTreeItemBase | Promise<SubscriptionTreeItemBase>;
     //#endregion
+
+    public get childTypeLabel(): string {
+        return localize('subscription', 'subscription');
+    }
 
     public get iconPath(): types.TreeItemIconPath {
         return getIconPath('azure');
