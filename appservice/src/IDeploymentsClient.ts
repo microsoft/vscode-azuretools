@@ -3,7 +3,7 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { SiteConfigResource, SiteSourceControl, StringDictionary, User } from 'azure-arm-website/lib/models';
+import { SiteConfigResource, SiteSourceControl, User } from 'azure-arm-website/lib/models';
 import { KuduClient } from 'vscode-azurekudu';
 
 export interface IDeploymentsClient {
@@ -12,8 +12,6 @@ export interface IDeploymentsClient {
     isFunctionApp: boolean;
     isLinux: boolean;
     gitUrl: string | undefined;
-    listApplicationSettings(): Promise<StringDictionary>;
-    updateApplicationSettings(appSettings: StringDictionary): Promise<StringDictionary>;
     getKuduClient(): Promise<KuduClient>;
     getSiteConfig(): Promise<SiteConfigResource>;
     getSourceControl(): Promise<SiteSourceControl>;
