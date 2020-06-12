@@ -8,9 +8,11 @@ import { parseError } from '../src/parseError';
 import { assertThrowsAsync } from './assertThrowsAsync';
 
 // tslint:disable: align
+// tslint:disable: max-func-body-length
 suite("callWithMaskHandling Tests", () => {
     const credentials: string = 'scHQERrAlXSmlCeN1mrhDzsHWeDz2XZt5R343HgCNmxS0xlswcaA2Cowflda';
     const credentialsSpecialChars: string = 'sc()HQ*E+RrAlXSm[CeN1$$$rhDz^^HWeDz2X[t5R343HgCN.xS0x]swc|A2CÑwf¬da';
+    const credentialsWithReservedChars: string = '$scHQERrAlXSmlCeN1mrhDzsHWeDz2XZt5R343HgCNmxS0xlswcaA2Cowflda';
     suite("callWithMaskHandling", () => {
         test("Value masked (single occurance) with thrown error", async () => {
 
@@ -102,14 +104,15 @@ suite("callWithMaskHandling Tests", () => {
             await assertThrowsAsync(async (): Promise<void> => {
                 await callWithMaskHandling(async () => {
                     throw errorMessage;
-                }, '$scHQERrAlXSmlCeN1mrhDzsHWeDz2XZt5R343HgCNmxS0xlswcaA2Cowflda');
+                }, credentialsWithReservedChars);
             }, (err: Error) => {
-                return validateError(err, credentials);
+                return validateError(err, credentialsWithReservedChars);
             }, 'Credentials were not properly masked from error string');
         });
     });
 });
 
 function validateError(err: unknown, value: string): boolean {
-    return !JSON.stringify(parseError(err)).includes(value);
+    return !JSON.stringify(parseError(err)).includes(value) &&
+        !JSON.stringify(parseError(err)).includes(encodeURIComponent(value));
 }
