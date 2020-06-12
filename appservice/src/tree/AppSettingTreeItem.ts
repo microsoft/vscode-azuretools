@@ -16,7 +16,10 @@ import { getThemedIconPath } from './IconPath';
  */
 export class AppSettingTreeItem extends AzExtTreeItem {
     public static contextValue: string = 'applicationSettingItem';
-    public readonly contextValue: string = AppSettingTreeItem.contextValue;
+    public static contextValueNoSlots: string = 'applicationSettingItemNoSlots';
+    public get contextValue(): string {
+        return this.parent.supportsSlots ? AppSettingTreeItem.contextValue : AppSettingTreeItem.contextValueNoSlots;
+    }
     public readonly parent: AppSettingsTreeItem;
 
     private _key: string;

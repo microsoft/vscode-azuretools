@@ -38,11 +38,13 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
     public readonly childTypeLabel: string = 'App Setting';
     public readonly contextValue: string = AppSettingsTreeItem.contextValue;
     public readonly client: IAppSettingsClient;
+    public readonly supportsSlots: boolean;
     private _settings: StringDictionary | undefined;
 
-    constructor(parent: AzExtParentTreeItem, client: IAppSettingsClient) {
+    constructor(parent: AzExtParentTreeItem, client: IAppSettingsClient, supportsSlots: boolean = true) {
         super(parent);
         this.client = client;
+        this.supportsSlots = supportsSlots;
     }
 
     public get id(): string {
