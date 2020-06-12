@@ -17,14 +17,12 @@ export async function callWithMaskHandling<T>(callback: () => Promise<T>, valueT
             throw error;
         }
 
-        let maskedMessage: string = valueToMask ?
-            parsedError.message.replace(new RegExp(escape(valueToMask), 'g'), '***') :
-            parsedError.message;
+        const valuesToMask: string[] = [valueToMask, encodeURIComponent(valueToMask)];
 
-        // replace encoded value
-        maskedMessage = valueToMask ?
-            maskedMessage.replace(new RegExp(escape(encodeURIComponent(valueToMask)), 'g'), '***') :
-            maskedMessage;
+        let maskedMessage: string = parsedError.message;
+        for (const value of valuesToMask) {
+            maskedMessage = value ? maskedMessage.replace(new RegExp(escape(value), 'g'), '***') : maskedMessage;
+        }
 
         throw new Error(maskedMessage);
     }
