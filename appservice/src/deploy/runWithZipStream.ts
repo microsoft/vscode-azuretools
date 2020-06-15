@@ -16,11 +16,22 @@ import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { getFileExtension } from '../utils/pathUtils';
 
-export async function getZipStream(context: IActionContext, fsPath: string, client: SiteClient): Promise<Readable> {
-    let zipStream: Readable;
+export async function runWithZipStream(context: IActionContext, fsPath: string, client: SiteClient, callback: (zipStream: Readable) => Promise<void>): Promise<void> {
+    function onFileSize(size: number): void {
+        context.telemetry.measurements.zipFileSize = size;
+        ext.outputChannel.appendLog(localize('zipSize', 'Zip package size: {0}', prettybytes(size)), { resourceName: client.fullName });
+    }
+
+    let zipStream: Readable & { finalize?(): Promise<void>; };
     if (getFileExtension(fsPath) === 'zip') {
         context.telemetry.properties.alreadyZipped = 'true';
         zipStream = fse.createReadStream(fsPath);
+
+        // don't wait
+        // tslint:disable-next-line: no-floating-promises
+        fse.lstat(fsPath).then(stats => {
+            onFileSize(stats.size);
+        });
     } else {
         ext.outputChannel.appendLog(localize('zipCreate', 'Creating zip package...'), { resourceName: client.fullName });
 
@@ -39,13 +50,26 @@ export async function getZipStream(context: IActionContext, fsPath: string, clie
         } else {
             zipper.file(fsPath, { name: path.basename(fsPath) });
         }
-        await zipper.finalize();
         zipStream = zipper;
+        zipper.on('end', () => {
+            onFileSize(zipper.pointer());
+        });
     }
 
-    context.telemetry.measurements.zipFileSize = zipStream.readableLength;
-    ext.outputChannel.appendLog(localize('zipSize', 'Zip package size: {0}', prettybytes(zipStream.readableLength)), { resourceName: client.fullName });
-    return zipStream;
+    // Setup several tasks related to the zip stream and await them all together
+    const streamTasks: Promise<void>[] = [];
+    // 1. Generic task that will reject if there's an error with the stream
+    streamTasks.push(new Promise((resolve, reject): void => {
+        zipStream.on('end', resolve);
+        zipStream.on('error', reject);
+    }));
+    // 2. `callback` sets up where the zip stream is piped
+    streamTasks.push(callback(zipStream));
+    // 3. `zipStream.finalize` lets "archiver" know we're done adding files to the zip
+    if (zipStream.finalize) {
+        streamTasks.push(zipStream.finalize());
+    }
+    await Promise.all(streamTasks);
 }
 
 const commonGlobSettings: {} = {

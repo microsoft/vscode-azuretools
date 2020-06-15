@@ -5,7 +5,6 @@
 
 import { AppServicePlan } from 'azure-arm-website/lib/models';
 import * as fse from 'fs-extra';
-import { Readable } from 'stream';
 import * as vscode from 'vscode';
 import { KuduClient } from 'vscode-azurekudu';
 import { ext } from '../extensionVariables';
@@ -13,8 +12,8 @@ import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { delayFirstWebAppDeploy } from './delayFirstWebAppDeploy';
 import { deployToStorageAccount } from './deployToStorageAccount';
-import { getZipStream } from './getZipStream';
 import { IDeployContext } from './IDeployContext';
+import { runWithZipStream } from './runWithZipStream';
 import { validateLinuxFunctionAppSettings } from './validateLinuxFunctionAppSettings';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
@@ -22,8 +21,6 @@ export async function deployZip(context: IDeployContext, client: SiteClient, fsP
     if (!(await fse.pathExists(fsPath))) {
         throw new Error(localize('pathNotExist', 'Failed to deploy path that does not exist: {0}', fsPath));
     }
-
-    const zipStream: Readable = await getZipStream(context, fsPath, client);
 
     ext.outputChannel.appendLog(localize('deployStart', 'Starting deployment...'), { resourceName: client.fullName });
     let asp: AppServicePlan | undefined;
@@ -47,11 +44,15 @@ export async function deployZip(context: IDeployContext, client: SiteClient, fsP
 
     context.telemetry.properties.useStorageAccountDeploy = String(useStorageAccountDeploy);
     if (useStorageAccountDeploy) {
-        await deployToStorageAccount(context, client, zipStream);
+        await deployToStorageAccount(context, fsPath, client);
         context.syncTriggersPostDeploy = true;
     } else {
         const kuduClient: KuduClient = await client.getKuduClient();
-        await kuduClient.pushDeployment.zipPushDeploy(zipStream, { isAsync: true, author: 'VS Code' });
+
+        await runWithZipStream(context, fsPath, client, async zipStream => {
+            await kuduClient.pushDeployment.zipPushDeploy(zipStream, { isAsync: true, author: 'VS Code' });
+        });
+
         await waitForDeploymentToComplete(context, client);
 
         // https://github.com/Microsoft/vscode-azureappservice/issues/644

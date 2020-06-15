@@ -6,26 +6,26 @@
 import { StringDictionary } from 'azure-arm-website/lib/models';
 import * as azureStorage from "azure-storage";
 import * as moment from 'moment';
-import { Readable } from 'stream';
+import { Writable } from 'stream';
 import { IActionContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { randomUtils } from '../utils/randomUtils';
+import { runWithZipStream } from './runWithZipStream';
 
 /**
  * Method of deployment that is only intended to be used for Linux Consumption Function apps because it doesn't support kudu pushDeployment
  * To deploy with Run from Package on a Windows plan, create the app setting "WEBSITE_RUN_FROM_PACKAGE" and set it to "1".
  * Then deploy via "zipdeploy" as usual.
  */
-export async function deployToStorageAccount(context: IActionContext, client: SiteClient, zipStream: Readable): Promise<void> {
+export async function deployToStorageAccount(context: IActionContext, fsPath: string, client: SiteClient): Promise<void> {
     const datePart: string = moment.utc(Date.now()).format('YYYYMMDDHHmmss');
     const randomPart: string = randomUtils.getRandomHexString(32);
     const blobName: string = `${datePart}-${randomPart}.zip`;
 
     const blobService: azureStorage.BlobService = await createBlobService(client);
-    ext.outputChannel.appendLog(localize('creatingBlob', 'Uploading zip package to storage container...'), { resourceName: client.fullName });
-    const blobUrl: string = await createBlobFromZip(context, zipStream, blobService, blobName);
+    const blobUrl: string = await createBlobFromZip(context, fsPath, client, blobService, blobName);
     const appSettings: StringDictionary = await client.listApplicationSettings();
     // tslint:disable-next-line:strict-boolean-expressions
     appSettings.properties = appSettings.properties || {};
@@ -47,7 +47,7 @@ async function createBlobService(client: SiteClient): Promise<azureStorage.BlobS
     throw new Error(localize('azureWebJobsStorageKey', '"{0}" app setting is required for Run From Package deployment.', azureWebJobsStorageKey));
 }
 
-async function createBlobFromZip(context: IActionContext, zipStream: Readable, blobService: azureStorage.BlobService, blobName: string): Promise<string> {
+async function createBlobFromZip(context: IActionContext, fsPath: string, client: SiteClient, blobService: azureStorage.BlobService, blobName: string): Promise<string> {
     const containerName: string = 'function-releases';
     await new Promise<void>((resolve: () => void, reject: (err: Error) => void): void => {
         blobService.createContainerIfNotExists(containerName, (err: Error) => {
@@ -59,13 +59,17 @@ async function createBlobFromZip(context: IActionContext, zipStream: Readable, b
         });
     });
 
-    await new Promise((resolve, reject): void => {
-        blobService.createBlockBlobFromStream(containerName, blobName, zipStream, zipStream.readableLength, (error: Error, r: azureStorage.BlobService.BlobResult, _response: azureStorage.ServiceResponse) => {
-            if (error !== null) {
-                reject(error);
-            } else {
-                resolve(r);
-            }
+    await runWithZipStream(context, fsPath, client, async zipStream => {
+        await new Promise((resolve, reject): void => {
+            ext.outputChannel.appendLog(localize('creatingBlob', 'Uploading zip package to storage container...'), { resourceName: client.fullName });
+            const writeStream: Writable = blobService.createWriteStreamToBlockBlob(containerName, blobName, (error: Error, r: azureStorage.BlobService.BlobResult, _response: azureStorage.ServiceResponse) => {
+                if (error !== null) {
+                    reject(error);
+                } else {
+                    resolve(r);
+                }
+            });
+            zipStream.pipe(writeStream);
         });
     });
 
