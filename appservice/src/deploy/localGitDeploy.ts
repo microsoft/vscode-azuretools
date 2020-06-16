@@ -8,7 +8,6 @@ import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
 import { callWithMaskHandling, IActionContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
-import { IAppSettingsClient } from '../IAppSettingsClient';
 import { ISimplifiedSiteClient } from '../ISimplifiedSiteClient';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
@@ -28,7 +27,7 @@ type localGitOptions = {
     commit?: boolean;
 };
 
-export async function localGitDeploy(client: ISimplifiedSiteClient & IAppSettingsClient, options: localGitOptions, context: IActionContext): Promise<void> {
+export async function localGitDeploy(client: ISimplifiedSiteClient, options: localGitOptions, context: IActionContext): Promise<void> {
     const publishCredentials: User = await client.getWebAppPublishCredential();
     const publishingPassword: string = nonNullProp(publishCredentials, 'publishingPassword');
     const publishingUserName: string = nonNullProp(publishCredentials, 'publishingUserName');
