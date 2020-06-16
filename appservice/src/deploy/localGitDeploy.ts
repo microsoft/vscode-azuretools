@@ -18,7 +18,13 @@ import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
 type localGitOptions = {
     fsPath: string;
+    /**
+     * Set if you want to specify what branch to push to. Default is `HEAD:master`.
+     */
     branch?: string;
+    /**
+     * Set to `true` if you want to commit changes before pushing.
+     */
     commit?: boolean;
 };
 
