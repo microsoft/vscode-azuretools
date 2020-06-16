@@ -9,12 +9,10 @@ import { IAppSettingsClient } from './IAppSettingsClient';
 import { IHostKeys } from './SiteClient';
 
 export interface ISimplifiedSiteClient extends IAppSettingsClient {
-    fullName: string;
     defaultHostUrl: string;
     isFunctionApp: boolean;
     id: string;
     kuduUrl: string | undefined;
-    isLinux: boolean;
     gitUrl: string | undefined;
     getKuduClient(): Promise<KuduClient>;
     listHostKeys?(): Promise<IHostKeys>;
