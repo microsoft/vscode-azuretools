@@ -5,7 +5,7 @@
 
 import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, parseError, TreeItemIconPath } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
-import { IFilesClient } from '../IFilesClient';
+import { ISimplifiedSiteClient } from '../ISimplifiedSiteClient';
 import { localize } from '../localize';
 import { FileTreeItem } from './FileTreeItem';
 import { getThemedIconPath } from './IconPath';
@@ -18,10 +18,10 @@ export class FolderTreeItem extends AzExtParentTreeItem {
     public readonly path: string;
     public readonly isReadOnly: boolean;
 
-    public readonly client: IFilesClient;
+    public readonly client: ISimplifiedSiteClient;
     protected readonly _isRoot: boolean = false;
 
-    constructor(parent: AzExtParentTreeItem, client: IFilesClient, label: string, path: string, isReadOnly: boolean) {
+    constructor(parent: AzExtParentTreeItem, client: ISimplifiedSiteClient, label: string, path: string, isReadOnly: boolean) {
         super(parent);
         this.client = client;
         this.label = label;

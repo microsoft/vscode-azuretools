@@ -9,7 +9,7 @@ import * as vscode from 'vscode';
 import { callWithMaskHandling, IActionContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { IAppSettingsClient } from '../IAppSettingsClient';
-import { IDeploymentsClient } from '../IDeploymentsClient';
+import { ISimplifiedSiteClient } from '../ISimplifiedSiteClient';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
@@ -28,7 +28,7 @@ type localGitOptions = {
     commit?: boolean;
 };
 
-export async function localGitDeploy(client: IDeploymentsClient & IAppSettingsClient, options: localGitOptions, context: IActionContext): Promise<void> {
+export async function localGitDeploy(client: ISimplifiedSiteClient & IAppSettingsClient, options: localGitOptions, context: IActionContext): Promise<void> {
     const publishCredentials: User = await client.getWebAppPublishCredential();
     const publishingPassword: string = nonNullProp(publishCredentials, 'publishingPassword');
     const publishingUserName: string = nonNullProp(publishCredentials, 'publishingUserName');

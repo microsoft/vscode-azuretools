@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IFilesClient } from '.';
+import { ISimplifiedSiteClient } from '.';
 import { localize } from './localize';
 import { requestUtils } from './utils/requestUtils';
 
-export async function pingFunctionApp(client: IFilesClient): Promise<void> {
+export async function pingFunctionApp(client: ISimplifiedSiteClient): Promise<void> {
 
     const url: string = `${client.defaultHostUrl}/admin/host/status`;
     const request: requestUtils.Request = await requestUtils.getDefaultRequest(url);

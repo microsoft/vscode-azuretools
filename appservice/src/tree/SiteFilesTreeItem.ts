@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzExtParentTreeItem } from 'vscode-azureextensionui';
-import { IFilesClient } from '../IFilesClient';
+import { ISimplifiedSiteClient } from '../ISimplifiedSiteClient';
 import { localize } from '../localize';
 import { FolderTreeItem } from './FolderTreeItem';
 
@@ -14,7 +14,7 @@ export class SiteFilesTreeItem extends FolderTreeItem {
 
     protected readonly _isRoot: boolean = true;
 
-    constructor(parent: AzExtParentTreeItem, client: IFilesClient, isReadOnly: boolean) {
+    constructor(parent: AzExtParentTreeItem, client: ISimplifiedSiteClient, isReadOnly: boolean) {
         super(parent, client, localize('siteFiles', 'Files'), '/site/wwwroot', isReadOnly);
     }
 }

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { KuduClient } from 'vscode-azurekudu';
-import { IFilesClient } from './IFilesClient';
+import { ISimplifiedSiteClient } from './ISimplifiedSiteClient';
 import { localize } from './localize';
 
 export interface IFileResult {
@@ -12,7 +12,7 @@ export interface IFileResult {
     etag: string;
 }
 
-export async function getFile(client: IFilesClient, filePath: string): Promise<IFileResult> {
+export async function getFile(client: ISimplifiedSiteClient, filePath: string): Promise<IFileResult> {
     const kuduClient: KuduClient = await client.getKuduClient();
     // tslint:disable:no-unsafe-any
     // tslint:disable-next-line:no-any
