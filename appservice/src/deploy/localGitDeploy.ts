@@ -8,14 +8,27 @@ import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
 import { callWithMaskHandling, IActionContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
+import { IAppSettingsClient } from '../IAppSettingsClient';
+import { IDeploymentsClient } from '../IDeploymentsClient';
 import { localize } from '../localize';
-import { SiteClient } from '../SiteClient';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
 import { verifyNoRunFromPackageSetting } from '../verifyNoRunFromPackageSetting';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
-export async function localGitDeploy(client: SiteClient, fsPath: string, context: IActionContext): Promise<void> {
+type localGitOptions = {
+    fsPath: string;
+    /**
+     * Set if you want to specify what branch to push to. Default is `HEAD:master`.
+     */
+    branch?: string;
+    /**
+     * Set to `true` if you want to commit changes before pushing.
+     */
+    commit?: boolean;
+};
+
+export async function localGitDeploy(client: IDeploymentsClient & IAppSettingsClient, options: localGitOptions, context: IActionContext): Promise<void> {
     const publishCredentials: User = await client.getWebAppPublishCredential();
     const publishingPassword: string = nonNullProp(publishCredentials, 'publishingPassword');
     const publishingUserName: string = nonNullProp(publishCredentials, 'publishingUserName');
@@ -23,20 +36,19 @@ export async function localGitDeploy(client: SiteClient, fsPath: string, context
     await callWithMaskHandling(
         async (): Promise<void> => {
             const remote: string = `https://${encodeURIComponent(publishingUserName)}:${encodeURIComponent(publishingPassword)}@${client.gitUrl}`;
-            const localGit: git.SimpleGit = git(fsPath);
+            const localGit: git.SimpleGit = git(options.fsPath);
             const commitId: string = (await localGit.log()).latest.hash;
-
+            let status: git.StatusResult;
             try {
-                const status: git.StatusResult = await localGit.status();
+                status = await localGit.status();
                 if (status.files.length > 0) {
                     context.telemetry.properties.cancelStep = 'pushWithUncommitChanges';
-                    const message: string = localize('localGitUncommit', '{0} uncommitted change(s) in local repo "{1}"', status.files.length, fsPath);
+                    const message: string = localize('localGitUncommit', '{0} uncommitted change(s) in local repo "{1}"', status.files.length, options.fsPath);
                     const deployAnyway: vscode.MessageItem = { title: localize('deployAnyway', 'Deploy Anyway') };
                     await ext.ui.showWarningMessage(message, { modal: true }, deployAnyway);
                     context.telemetry.properties.cancelStep = undefined;
                     context.telemetry.properties.pushWithUncommitChanges = 'true';
                 }
-
                 await verifyNoRunFromPackageSetting(client);
                 ext.outputChannel.appendLog(localize('localGitDeploy', `Deploying Local Git repository to "${client.fullName}"...`), { resourceName: client.fullName });
                 await tryPushAndWaitForDeploymentToComplete();
@@ -70,11 +82,14 @@ export async function localGitDeploy(client: SiteClient, fsPath: string, context
                 const tokenSource: vscode.CancellationTokenSource = new vscode.CancellationTokenSource();
                 const token: vscode.CancellationToken = tokenSource.token;
                 try {
+                    if (options.commit) {
+                        await localGit.commit('Deployed via Azure App Service Extension');
+                    }
                     await new Promise((resolve: () => void, reject: (error: Error) => void): void => {
-                        // for whatever reason, is '-f' exists, true or false, it still force pushes
-                        const pushOptions: git.Options = forcePush ? { '-f': true } : {};
 
-                        localGit.push(remote, 'HEAD:master', pushOptions).catch(async (error) => {
+                        const pushOptions: git.Options = forcePush ? { '-f': null } : {};
+
+                        localGit.push(remote, `HEAD:${options.branch ?? 'master'}`, pushOptions).catch(async (error) => {
                             // tslint:disable-next-line:no-unsafe-any
                             reject(error);
                             tokenSource.cancel();
