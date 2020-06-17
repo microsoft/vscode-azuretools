@@ -26,7 +26,6 @@ export * from './editScmType';
 export { registerAppServiceExtensionVariables } from './extensionVariables';
 export * from './IAppSettingsClient';
 export * from './ISimplifiedSiteClient';
-export * from './ISimplifiedSiteClient';
 export * from './getFile';
 export { IConnectToGitHubWizardContext } from './github/IConnectToGitHubWizardContext';
 export * from './pingFunctionApp';

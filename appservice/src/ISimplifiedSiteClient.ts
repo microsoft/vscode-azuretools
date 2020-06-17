@@ -15,8 +15,8 @@ export interface ISimplifiedSiteClient extends IAppSettingsClient {
     kuduUrl: string | undefined;
     gitUrl: string | undefined;
     getKuduClient(): Promise<KuduClient>;
-    listHostKeys?(): Promise<IHostKeys>;
     getSiteConfig(): Promise<SiteConfigResource>;
     getSourceControl(): Promise<SiteSourceControl>;
     getWebAppPublishCredential(): Promise<User>;
+    listHostKeys?(): Promise<IHostKeys>;
 }
