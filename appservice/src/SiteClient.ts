@@ -8,9 +8,7 @@ import { AppServicePlan, FunctionEnvelopeCollection, FunctionSecrets, HostNameSs
 import { addExtensionUserAgent, createAzureClient, ISubscriptionContext, parseError } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
 import { FunctionEnvelope } from 'vscode-azurekudu/lib/models';
-import { IAppSettingsClient } from './IAppSettingsClient';
-import { IDeploymentsClient } from './IDeploymentsClient';
-import { IFilesClient } from './IFilesClient';
+import { ISimplifiedSiteClient } from './ISimplifiedSiteClient';
 import { localize } from './localize';
 import { deleteFunctionSlot, getFunctionSlot, listFunctionsSlot } from './slotFunctionOperations';
 import { nonNullProp, nonNullValue } from './utils/nonNull';
@@ -20,7 +18,7 @@ import { requestUtils } from './utils/requestUtils';
  * Wrapper of a WebSiteManagementClient for use with a specific Site
  * Reduces the number of arguments needed for every call and automatically ensures the 'slot' method is called when appropriate
  */
-export class SiteClient implements IAppSettingsClient, IDeploymentsClient, IFilesClient {
+export class SiteClient implements ISimplifiedSiteClient {
     public readonly id: string;
     public readonly isSlot: boolean;
     /**

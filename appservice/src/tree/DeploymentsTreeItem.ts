@@ -8,7 +8,7 @@ import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, Tr
 import { KuduClient } from 'vscode-azurekudu';
 import { DeployResult } from 'vscode-azurekudu/lib/models';
 import { ext } from '../extensionVariables';
-import { IDeploymentsClient } from '../IDeploymentsClient';
+import { ISimplifiedSiteClient } from '../ISimplifiedSiteClient';
 import { localize } from '../localize';
 import { ScmType } from '../ScmType';
 import { retryKuduCall } from '../utils/kuduUtils';
@@ -23,12 +23,12 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
     public static contextValueUnconnected: string = 'deploymentsUnconnected';
     public readonly label: string = localize('Deployments', 'Deployments');
     public readonly childTypeLabel: string = localize('Deployment', 'Deployment');
-    public readonly client: IDeploymentsClient;
+    public readonly client: ISimplifiedSiteClient;
 
     private _scmType?: string;
     private _repoUrl?: string;
 
-    public constructor(parent: AzExtParentTreeItem, client: IDeploymentsClient, siteConfig: SiteConfig, sourceControl: SiteSourceControl) {
+    public constructor(parent: AzExtParentTreeItem, client: ISimplifiedSiteClient, siteConfig: SiteConfig, sourceControl: SiteSourceControl) {
         super(parent);
         this.client = client;
         this._scmType = siteConfig.scmType;

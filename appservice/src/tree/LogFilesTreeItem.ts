@@ -5,7 +5,7 @@
 
 import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
-import { IFilesClient } from '../IFilesClient';
+import { ISimplifiedSiteClient } from '../ISimplifiedSiteClient';
 import { localize } from '../localize';
 import { FolderTreeItem } from './FolderTreeItem';
 import { getThemedIconPath } from './IconPath';
@@ -19,7 +19,7 @@ export class LogFilesTreeItem extends FolderTreeItem {
 
     protected readonly _isRoot: boolean = true;
 
-    constructor(parent: AzExtParentTreeItem, client: IFilesClient) {
+    constructor(parent: AzExtParentTreeItem, client: ISimplifiedSiteClient) {
         super(parent, client, localize('logFiles', 'Logs'), '/LogFiles', true);
     }
 
