@@ -82,7 +82,8 @@ export async function localGitDeploy(client: ISimplifiedSiteClient, options: loc
                 const token: vscode.CancellationToken = tokenSource.token;
                 try {
                     if (options.commit) {
-                        await localGit.commit('Deployed via Azure App Service Extension');
+                        const commitOptions: git.Options = { '-a': null };
+                        await localGit.commit('Deployed via Azure App Service Extension', undefined, commitOptions);
                     }
                     await new Promise((resolve: () => void, reject: (error: Error) => void): void => {
 
