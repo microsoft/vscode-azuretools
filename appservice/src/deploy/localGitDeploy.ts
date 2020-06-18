@@ -40,7 +40,7 @@ export async function localGitDeploy(client: ISimplifiedSiteClient, options: loc
             let status: git.StatusResult;
             try {
                 status = await localGit.status();
-                if (status.files.length > 0) {
+                if (status.files.length > 0 && !options.commit) {
                     context.telemetry.properties.cancelStep = 'pushWithUncommitChanges';
                     const message: string = localize('localGitUncommit', '{0} uncommitted change(s) in local repo "{1}"', status.files.length, options.fsPath);
                     const deployAnyway: vscode.MessageItem = { title: localize('deployAnyway', 'Deploy Anyway') };
@@ -82,7 +82,8 @@ export async function localGitDeploy(client: ISimplifiedSiteClient, options: loc
                 const token: vscode.CancellationToken = tokenSource.token;
                 try {
                     if (options.commit) {
-                        await localGit.commit('Deployed via Azure App Service Extension');
+                        const commitOptions: git.Options = { '-a': null };
+                        await localGit.commit('Deployed via Azure App Service Extension', undefined, commitOptions);
                     }
                     await new Promise((resolve: () => void, reject: (error: Error) => void): void => {
 
