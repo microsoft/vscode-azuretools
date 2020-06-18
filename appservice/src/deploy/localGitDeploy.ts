@@ -40,7 +40,7 @@ export async function localGitDeploy(client: ISimplifiedSiteClient, options: loc
             let status: git.StatusResult;
             try {
                 status = await localGit.status();
-                if (status.files.length > 0) {
+                if (status.files.length > 0 && !options.commit) {
                     context.telemetry.properties.cancelStep = 'pushWithUncommitChanges';
                     const message: string = localize('localGitUncommit', '{0} uncommitted change(s) in local repo "{1}"', status.files.length, options.fsPath);
                     const deployAnyway: vscode.MessageItem = { title: localize('deployAnyway', 'Deploy Anyway') };
