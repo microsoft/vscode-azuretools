@@ -8,6 +8,7 @@ import { Disposable, Event, EventEmitter, FileChangeEvent, FileStat, FileSystemE
 import * as types from '../index';
 import { callWithTelemetryAndErrorHandling } from "./callWithTelemetryAndErrorHandling";
 import { localize } from "./localize";
+import { parseError } from "./parseError";
 import { AzExtTreeDataProvider } from "./treeDataProvider/AzExtTreeDataProvider";
 import { AzExtTreeItem } from "./treeDataProvider/AzExtTreeItem";
 import { nonNullProp } from "./utils/nonNull";
@@ -37,7 +38,17 @@ export abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> implement
     public abstract getFilePath(item: TItem): string;
 
     public async showTextDocument(item: TItem): Promise<void> {
-        await window.showTextDocument(this.getUriFromItem(item));
+        await callWithTelemetryAndErrorHandling('showTextDocument', async (context) => {
+            try {
+                await window.showTextDocument(this.getUriFromItem(item));
+            } catch (err) {
+                const parsedError: types.IParsedError = parseError(err);
+                if (parsedError.message.match(/EntryNotFound \(FileSystemError\)/)) {
+                    context.errorHandling.suppressReportIssue = true;
+                    throw new Error(localize('treeItemDoesNotExist', `Tree item "${item.label}" does not exist.`));
+                }
+            }
+        });
     }
 
     public watch(): Disposable {
