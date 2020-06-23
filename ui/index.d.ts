@@ -458,6 +458,8 @@ export declare abstract class AzureParentTreeItem<TRoot extends ISubscriptionCon
 
 /**
 * Combines the root.environment.portalLink and id to open the resource in the portal.
+*
+* NOTE: If root is a tree item, it will find the subscription ancestor and get environment.portalLink from there
 */
 export declare function openInPortal(root: ISubscriptionContext | AzExtTreeItem, id: string, options?: OpenInPortalOptions): Promise<void>;
 
