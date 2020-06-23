@@ -134,7 +134,8 @@ export abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> implement
     private getUriFromItem(item: TItem): Uri {
         const data: types.AzExtItemUriParts = this.getUriParts(item);
         const query: string = stringifyQuery(data.query);
-        return Uri.parse(`${this.scheme}:///${data.filePath}?${query}`);
+        const filePath: string = encodeURIComponent(data.filePath);
+        return Uri.parse(`${this.scheme}:///${filePath}?${query}`);
     }
 
     private async lookup(context: types.IActionContext, uri: Uri): Promise<TItem> {
