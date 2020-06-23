@@ -4,9 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as types from '../index';
+import { AzExtTreeItem } from './treeDataProvider/AzExtTreeItem';
 import { openUrl } from "./utils/openUrl";
+import { findSubscriptionTreeItem } from './utils/treeUtils';
 
-export async function openInPortal(root: types.ISubscriptionContext, id: string, options?: types.OpenInPortalOptions): Promise<void> {
+export async function openInPortal(root: types.ISubscriptionContext | AzExtTreeItem, id: string, options?: types.OpenInPortalOptions): Promise<void> {
+    root = root instanceof AzExtTreeItem ? findSubscriptionTreeItem(root).root : root;
+
     const queryPrefix: string = (options && options.queryPrefix) ? `?${options.queryPrefix}` : '';
     const url: string = `${root.environment.portalUrl}/${queryPrefix}#@${root.tenantId}/resource${id}`;
 

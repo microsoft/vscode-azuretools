@@ -459,7 +459,7 @@ export declare abstract class AzureParentTreeItem<TRoot extends ISubscriptionCon
 /**
 * Combines the root.environment.portalLink and id to open the resource in the portal.
 */
-export declare function openInPortal(root: ISubscriptionContext, id: string, options?: OpenInPortalOptions): Promise<void>;
+export declare function openInPortal(root: ISubscriptionContext | AzExtTreeItem, id: string, options?: OpenInPortalOptions): Promise<void>;
 
 export declare class UserCancelledError extends Error { }
 
