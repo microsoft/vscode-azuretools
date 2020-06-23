@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { parse as parseQuery, ParsedUrlQuery, stringify as stringifyQuery } from "querystring";
-import { Disposable, Event, EventEmitter, FileChangeEvent, FileStat, FileSystemError, FileSystemProvider, FileType, Uri, window } from "vscode";
+import { Disposable, Event, EventEmitter, FileChangeEvent, FileStat, FileSystemError, FileSystemProvider, FileType, TextDocumentShowOptions, Uri, window } from "vscode";
 import * as types from '../index';
 import { callWithTelemetryAndErrorHandling } from "./callWithTelemetryAndErrorHandling";
 import { localize } from "./localize";
@@ -36,8 +36,8 @@ export abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> implement
     public abstract writeFileImpl(context: types.IActionContext, item: TItem, content: Uint8Array, originalUri: Uri): Promise<void>;
     public abstract getFilePath(item: TItem): string;
 
-    public async showTextDocument(item: TItem): Promise<void> {
-        await window.showTextDocument(this.getUriFromItem(item));
+    public async showTextDocument(item: TItem, options?: TextDocumentShowOptions): Promise<void> {
+        await window.showTextDocument(this.getUriFromItem(item), options);
     }
 
     public watch(): Disposable {
