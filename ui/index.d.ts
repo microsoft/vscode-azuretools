@@ -8,7 +8,7 @@ import { Location } from 'azure-arm-resource/lib/subscription/models';
 import { StorageAccount } from 'azure-arm-storage/lib/models';
 import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment, AzureServiceClientOptions } from 'ms-rest-azure';
-import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocument, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
+import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocument, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 
 export type OpenInPortalOptions = {
@@ -1340,7 +1340,7 @@ export declare abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> i
      */
     public abstract writeFileImpl(context: IActionContext, item: TItem, content: Uint8Array, originalUri: Uri): Promise<void>;
 
-    public showTextDocument(item: TItem): Promise<void>;
+    public showTextDocument(item: TItem, options?: TextDocumentShowOptions): Promise<void>;
 
     /**
      * Uses a simple buffer to group events that occur within a few milliseconds of each other
