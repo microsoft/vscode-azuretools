@@ -23,16 +23,18 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
     public static contextValueUnconnected: string = 'deploymentsUnconnected';
     public readonly label: string = localize('Deployments', 'Deployments');
     public readonly childTypeLabel: string = localize('Deployment', 'Deployment');
+    public readonly supportsOpenInPortal: boolean = true;
     public readonly client: ISimplifiedSiteClient;
 
     private _scmType?: string;
     private _repoUrl?: string;
 
-    public constructor(parent: AzExtParentTreeItem, client: ISimplifiedSiteClient, siteConfig: SiteConfig, sourceControl: SiteSourceControl) {
+    public constructor(parent: AzExtParentTreeItem, client: ISimplifiedSiteClient, siteConfig: SiteConfig, sourceControl: SiteSourceControl, supportsOpenInPortal: boolean = true) {
         super(parent);
         this.client = client;
         this._scmType = siteConfig.scmType;
         this._repoUrl = sourceControl.repoUrl;
+        this.supportsOpenInPortal = supportsOpenInPortal;
     }
 
     public get iconPath(): TreeItemIconPath {
@@ -53,7 +55,9 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
     }
 
     public get contextValue(): string {
-        return this._scmType === ScmType.None ? DeploymentsTreeItem.contextValueUnconnected : DeploymentsTreeItem.contextValueConnected;
+        const contextValueUnconnected: string = `${DeploymentsTreeItem.contextValueUnconnected}${this.supportsOpenInPortal ? '' : 'NoPortal'}`;
+        const contextValueConnected: string = `${DeploymentsTreeItem.contextValueConnected}${this.supportsOpenInPortal ? '' : 'NoPortal'}`;
+        return this._scmType === ScmType.None ? contextValueUnconnected : contextValueConnected;
     }
 
     public hasMoreChildrenImpl(): boolean {

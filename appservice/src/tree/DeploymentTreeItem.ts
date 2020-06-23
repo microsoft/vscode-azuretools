@@ -40,7 +40,7 @@ export class DeploymentTreeItem extends AzExtTreeItem {
 
     constructor(parent: DeploymentsTreeItem, deployResult: DeployResult, scmType: string | undefined) {
         super(parent);
-        this.contextValue = `deployment/${scmType}`.toLocaleLowerCase();
+        this.contextValue = this.parent.supportsOpenInPortal ? `deployment/${scmType}`.toLocaleLowerCase() : `deploymentNoPortal/${scmType}`.toLocaleLowerCase();
         this._deployResult = deployResult;
         this.receivedTime = nonNullProp(deployResult, 'receivedTime');
         const message: string = this.getDeploymentMessage(deployResult);
