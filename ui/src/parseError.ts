@@ -62,6 +62,8 @@ export function parseError(error: any): IParsedError {
 
     message = unpackErrorsInMessage(message);
 
+    [message, errorType] = parseIfFileSystemError(message, errorType);
+
     // tslint:disable-next-line:strict-boolean-expressions
     errorType = errorType || typeof (error);
     message = message || localize('unknownError', 'Unknown Error');
@@ -219,4 +221,16 @@ function getCallstack(error: { stack?: string }): string | undefined {
         .filter(l => !!l);
 
     return minifiedLines.length > 0 ? minifiedLines.join('\n') : undefined;
+}
+
+/**
+ * See https://github.com/microsoft/vscode-cosmosdb/issues/1580 for an example error
+ */
+function parseIfFileSystemError(message: string, errorType: string): [string, string] {
+    const match: RegExpMatchArray | null = message.match(/\((([a-z]*) \(FileSystemError\).*)\)$/i);
+    if (match) {
+        message = match[1];
+        errorType = match[2];
+    }
+    return [message, errorType];
 }
