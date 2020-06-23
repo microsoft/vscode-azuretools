@@ -669,4 +669,14 @@ RequestId:2392b993-901e-0018-625e-ca320a000000
 Time:2020-01-13T22:08:56.4055648Z`);
         assert.strictEqual(pe2.isUserCancelledError, false);
     });
+
+    test('FileSystemError', () => {
+        const pe: IParsedError = parseError({
+            name: 'Error',
+            message: "cannot open azureDatabases:/testCol33-cosmos-collection.json?id%3D%2FcosmosDBAttachedAccounts%2F127.0.0.1%3A27017%2FtestDB%2FtestCol33. Detail: Unable to read file 'azureDatabases:/testCol33-cosmos-collection.json?id=/cosmosDBAttachedAccounts/127.0.0.1:27017/testDB/testCol33' (EntryNotFound (FileSystemError): azureDatabases:/testCol33-cosmos-collection.json?id=/cosmosDBAttachedAccounts/127.0.0.1:27017/testDB/testCol33)"
+        });
+        assert.strictEqual(pe.errorType, 'EntryNotFound');
+        assert.strictEqual(pe.message, 'EntryNotFound (FileSystemError): azureDatabases:/testCol33-cosmos-collection.json?id=/cosmosDBAttachedAccounts/127.0.0.1:27017/testDB/testCol33');
+        assert.strictEqual(pe.isUserCancelledError, false);
+    });
 });
