@@ -3,8 +3,8 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { SubscriptionTreeItemBase } from '..';
 import { AzExtTreeItem } from '../treeDataProvider/AzExtTreeItem';
+import { SubscriptionTreeItemBase } from '../treeDataProvider/SubscriptionTreeItemBase';
 
 // tslint:disable-next-line:export-name
 export function findSubscriptionTreeItem(node: AzExtTreeItem): SubscriptionTreeItemBase {
