@@ -40,11 +40,13 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
     public readonly client: IAppSettingsClient;
     public readonly supportsSlots: boolean;
     private _settings: StringDictionary | undefined;
+    private readonly _settingsToHide: string[] | undefined;
 
-    constructor(parent: AzExtParentTreeItem, client: IAppSettingsClient, supportsSlots: boolean = true) {
+    constructor(parent: AzExtParentTreeItem, client: IAppSettingsClient, supportsSlots: boolean = true, settingsToHide?: string[]) {
         super(parent);
         this.client = client;
         this.supportsSlots = supportsSlots;
+        this._settingsToHide = settingsToHide;
     }
 
     public get id(): string {
@@ -65,7 +67,9 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
         const properties: { [name: string]: string } = this._settings.properties || {};
         await Promise.all(Object.keys(properties).map(async (key: string) => {
             const appSettingTreeItem: AppSettingTreeItem = await AppSettingTreeItem.createAppSettingTreeItem(this, this.client, key, properties[key]);
-            treeItems.push(appSettingTreeItem);
+            if (!this._settingsToHide?.includes(key)) {
+                treeItems.push(appSettingTreeItem);
+            }
         }));
 
         return treeItems;
