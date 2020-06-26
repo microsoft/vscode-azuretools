@@ -24,7 +24,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
 
     public readonly collapsibleState: TreeItemCollapsibleState | undefined;
     public readonly parent: IAzExtParentTreeItemInternal | undefined;
-    public _isLoadingMore: boolean;
+    public isLoadingMore: boolean;
     private _temporaryDescription?: string;
     private _treeDataProvider: IAzExtTreeDataProviderInternal | undefined;
 
@@ -55,7 +55,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     }
 
     public get effectiveIconPath(): types.TreeItemIconPath | undefined {
-        return this._temporaryDescription || this._isLoadingMore ? getThemedIconPath('Loading') : this.iconPath;
+        return this._temporaryDescription || this.isLoadingMore ? getThemedIconPath('Loading') : this.iconPath;
     }
 
     public get treeDataProvider(): IAzExtTreeDataProviderInternal {
