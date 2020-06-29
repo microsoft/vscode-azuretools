@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { isNumber } from "util";
-import { CancellationToken, Event, EventEmitter, TextDocumentContentProvider, Uri, window, workspace, WorkspaceConfiguration } from "vscode";
+import { CancellationToken, Event, EventEmitter, TextDocument, TextDocumentContentProvider, TextDocumentShowOptions, Uri, ViewColumn, window, workspace, WorkspaceConfiguration } from "vscode";
 import { ext } from "./extensionVariables";
 import { nonNullValue } from "./utils/nonNull";
 import { randomUtils } from "./utils/randomUtils";
@@ -29,13 +29,13 @@ export async function openReadOnlyJson(node: { label: string, fullId: string }, 
     await openReadOnlyContent(node, content, '.json');
 }
 
-export async function openReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string): Promise<void> {
+export async function openReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string, appendDelimiter?: string, openInNewViewColumn?: boolean): Promise<void> {
     if (!contentProvider) {
         contentProvider = new ReadOnlyContentProvider();
         ext.context.subscriptions.push(workspace.registerTextDocumentContentProvider(scheme, contentProvider));
     }
 
-    await contentProvider.openReadOnlyContent(node, content, fileExtension);
+    await contentProvider.openReadOnlyContent(node, content, fileExtension, appendDelimiter, openInNewViewColumn);
 }
 
 class ReadOnlyContentProvider implements TextDocumentContentProvider {
@@ -46,12 +46,34 @@ class ReadOnlyContentProvider implements TextDocumentContentProvider {
         return this._onDidChangeEmitter.event;
     }
 
-    public async openReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string): Promise<void> {
+    public async openReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string, appendDelimiter?: string, openInNewViewColumn?: boolean): Promise<void> {
         const idHash: string = randomUtils.getPseudononymousStringHash(node.fullId, 'hex');
         // in a URI, # means fragment and ? means query and is parsed in that way, so they should be removed to not break the path
         const uri: Uri = Uri.parse(`${scheme}:///${idHash}/${node.label.replace(/\#|\?/g, '_')}${fileExtension}`);
+        const showOptions: TextDocumentShowOptions = {};
+        let shouldShowTextDocument: boolean = true;
+
+        if (appendDelimiter) {
+            const existingContent: string | undefined = this._contentMap.get(uri.toString());
+            content = `${existingContent ? existingContent + appendDelimiter : ''}${content}`;
+        }
+
+        if (openInNewViewColumn) {
+            const document: TextDocument | undefined = workspace.textDocuments.find(doc => { return doc.uri.fsPath === uri.fsPath; });
+            if (!document) {
+                const viewColumn: ViewColumn | undefined = window.activeTextEditor?.viewColumn;
+                // tslint:disable-next-line: strict-boolean-expressions
+                showOptions.viewColumn = viewColumn ? viewColumn + 1 : undefined;
+            } else {
+                // The document is already open
+                shouldShowTextDocument = false;
+            }
+        }
+
         this._contentMap.set(uri.toString(), content);
-        await window.showTextDocument(uri);
+        if (shouldShowTextDocument) {
+            await window.showTextDocument(uri, showOptions);
+        }
         this._onDidChangeEmitter.fire(uri);
     }
 

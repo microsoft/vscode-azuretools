@@ -1256,8 +1256,10 @@ export function openReadOnlyJson(node: { label: string, fullId: string }, data: 
  * @param node Typically (but not strictly) an `AzExtTreeItem`. `label` is used for the file name displayed in VS Code and `fullId` is used to uniquely identify this file
  * @param content The content to display
  * @param fileExtension The file extension
+ * @param appendDelimiter If provided, `content` will be appended to the document delimited by this string
+ * @param openInNewViewColumn Whether or not to open the read-only editor in a new `ViewColumn`
  */
-export function openReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string): Promise<void>;
+export function openReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string, appendDelimiter?: string, openInNewViewColumn?: boolean): Promise<void>;
 
 /**
  * The event used to signal an item change for `AzExtTreeFileSystem`
