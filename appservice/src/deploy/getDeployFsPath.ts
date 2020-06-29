@@ -45,7 +45,7 @@ export async function getDeployFsPath(context: IActionContext, target: vscode.Ur
         }
 
         const selectFile: string = localize('selectDeployFile', 'Select the {0} file to deploy', fileExtensions ? fileExtensions.join('/') : '');
-        const selectFolder: string = localize('selectZipDeployFolder', 'Select the folder to zip and deploy');
+        const selectFolder: string = localize('selectDeployFolder', 'Select the folder to deploy');
 
         originalDeployFsPath = fileExtensions ?
             await workspaceUtil.selectWorkspaceFile(context, selectFile, fileExtensions) :
