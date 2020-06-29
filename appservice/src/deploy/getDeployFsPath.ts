@@ -19,7 +19,7 @@ const deploySubpathSetting: string = 'deploySubpath';
  * In App Service, users can deploy specific artifact files (such as .jar) which is handled by selectWorkspaceFile
  * This enforces that the `effectiveDeployFsPath` is currently open in a workspace
  */
-export async function getDeployFsPath(context: IActionContext, target: vscode.Uri | string | AzExtTreeItem | undefined, fileExtensions?: string | string[]): Promise<IDeployPaths> {
+export async function getDeployFsPath(context: IActionContext, target: vscode.Uri | string | AzExtTreeItem | undefined, fileExtensions?: string | string[], trialApp: boolean = false): Promise<IDeployPaths> {
     let originalDeployFsPath: string | undefined;
     let effectiveDeployFsPath: string | undefined;
     if (target instanceof vscode.Uri) {
@@ -45,7 +45,7 @@ export async function getDeployFsPath(context: IActionContext, target: vscode.Ur
         }
 
         const selectFile: string = localize('selectDeployFile', 'Select the {0} file to deploy', fileExtensions ? fileExtensions.join('/') : '');
-        const selectFolder: string = localize('selectZipDeployFolder', 'Select the folder to zip and deploy');
+        const selectFolder: string = trialApp ? localize('selectDeployFolder', 'Select the folder to deploy') : localize('selectZipDeployFolder', 'Select the folder to zip and deploy');
 
         originalDeployFsPath = fileExtensions ?
             await workspaceUtil.selectWorkspaceFile(context, selectFile, fileExtensions) :
