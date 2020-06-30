@@ -248,10 +248,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
     }
 
     private async loadMoreChildrenInternal(context: types.IActionContext): Promise<void> {
-        this._isLoadingMore = true;
         try {
-            this.treeDataProvider.refreshUIOnly(this);
-
             if (this._clearCache) {
                 // Just in case implementers of `loadMoreChildrenImpl` re-use the same child node, we want to clear those caches as well
                 for (const child of this._cachedChildren) {
@@ -269,8 +266,6 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
             this._cachedChildren = this._cachedChildren.concat(newTreeItems).sort((ti1, ti2) => this.compareChildrenImpl(ti1, ti2));
         } finally {
             this._clearCache = false;
-            this._isLoadingMore = false;
-            this.treeDataProvider.refreshUIOnly(this);
         }
     }
 

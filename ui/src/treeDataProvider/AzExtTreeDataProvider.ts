@@ -9,7 +9,7 @@ import { callWithTelemetryAndErrorHandling } from '../callWithTelemetryAndErrorH
 import { NoResouceFoundError, UserCancelledError } from '../errors';
 import { localize } from '../localize';
 import { parseError } from '../parseError';
-import { AzExtParentTreeItem } from './AzExtParentTreeItem';
+import { AzExtParentTreeItem, InvalidTreeItem } from './AzExtParentTreeItem';
 import { AzExtTreeItem } from './AzExtTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';
 import { getThemedIconPath } from './IconPath';
@@ -56,26 +56,38 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         };
     }
 
-    public async getChildren(treeItem?: AzExtParentTreeItem): Promise<AzExtTreeItem[]> {
+    public async getChildren(arg?: AzExtParentTreeItem): Promise<AzExtTreeItem[]> {
         try {
             return <AzExtTreeItem[]>await callWithTelemetryAndErrorHandling('AzureTreeDataProvider.getChildren', async (context: types.IActionContext) => {
                 context.errorHandling.suppressDisplay = true;
                 context.errorHandling.rethrow = true;
-                let result: AzExtTreeItem[];
 
-                if (!treeItem) {
+                let treeItem: AzExtParentTreeItem;
+                if (arg) {
+                    treeItem = arg;
+                } else {
                     context.telemetry.properties.isActivationEvent = 'true';
                     treeItem = this._rootTreeItem;
                 }
 
                 context.telemetry.properties.contextValue = treeItem.contextValue;
 
-                const cachedChildren: AzExtTreeItem[] = await treeItem.getCachedChildren(context);
+                const children: AzExtTreeItem[] = [...treeItem.creatingTreeItems, ...await treeItem.getCachedChildren(context)];
                 const hasMoreChildren: boolean = treeItem.hasMoreChildrenImpl();
                 context.telemetry.properties.hasMoreChildren = String(hasMoreChildren);
 
-                result = treeItem.creatingTreeItems.concat(cachedChildren);
-                if (hasMoreChildren && !treeItem._isLoadingMore) {
+                const result: AzExtTreeItem[] = [];
+                const duplicateChildren: AzExtTreeItem[] = [];
+                for (const child of children) {
+                    result.some(c => c.fullId === child.fullId) ? duplicateChildren.push(child) : result.push(child);
+                }
+
+                result.push(...duplicateChildren.map(c => {
+                    const message: string = localize('elementWithId', 'An element with the following id already exists: {0}', c.fullId);
+                    return new InvalidTreeItem(treeItem, new Error(message), { contextValue: 'azureextensionui.duplicate', label: c.label });
+                }));
+
+                if (hasMoreChildren && !treeItem.isLoadingMore) {
                     const loadMoreTI: GenericTreeItem = new GenericTreeItem(treeItem, {
                         label: loadMoreLabel,
                         iconPath: getThemedIconPath('refresh'),
@@ -90,7 +102,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                 return result;
             });
         } catch (error) {
-            return [new GenericTreeItem(treeItem, {
+            return [new GenericTreeItem(arg, {
                 label: localize('errorTreeItem', 'Error: {0}', parseError(error).message),
                 contextValue: 'azureextensionui.error'
             })];
@@ -119,7 +131,14 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
     }
 
     public async loadMore(treeItem: AzExtParentTreeItem, context: types.IActionContext): Promise<void> {
-        await treeItem.loadMoreChildren(context);
+        treeItem.isLoadingMore = true;
+        try {
+            this.refreshUIOnly(treeItem);
+            await treeItem.loadMoreChildren(context);
+        } finally {
+            treeItem.isLoadingMore = false;
+            this.refreshUIOnly(treeItem);
+        }
     }
 
     public async showTreeItemPicker<T extends types.AzExtTreeItem>(expectedContextValues: string | (string | RegExp)[] | RegExp, context: types.ITreeItemPickerContext & { canPickMany: true }, startingTreeItem?: AzExtTreeItem): Promise<T[]>;
