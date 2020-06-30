@@ -57,8 +57,10 @@ async function validateSlotName(value: string, client: WebSiteManagementClient, 
     // Can not have "production" as a slot name, but checkNameAvailability doesn't validate that
     if (value === 'production') {
         return localize('slotNotAvailable', 'The slot name "{0}" is not available.', value);
-    } else if (value.length < slotNamingRules.minLength || value.length > slotNamingRules.maxLength) {
-        return localize('invalidLength', 'The name must be between {0} and {1} characters.', slotNamingRules.minLength, slotNamingRules.maxLength);
+    } else if (value.length < slotNamingRules.minLength) {
+        return localize('nameTooShort', 'The slot name must be at least {0} characters.', slotNamingRules.minLength);
+    } else if (value.length + root.client.siteName.length > slotNamingRules.maxLength) {
+        return localize('nameTooLong', 'The combined site name and slot name must be fewer than {0} characters.', slotNamingRules.maxLength);
     } else if (slotNamingRules.invalidCharsRegExp.test(value)) {
         return localize('invalidChars', "The name can only contain letters, numbers, or hyphens.");
     } else {
