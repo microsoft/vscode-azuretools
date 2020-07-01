@@ -15,7 +15,7 @@ import { ignore404Error, retryKuduCall } from '../utils/kuduUtils';
 import { nonNullProp } from '../utils/nonNull';
 import { IDeployContext } from './IDeployContext';
 
-export async function waitForDeploymentToComplete(context: IDeployContext, client: ISimplifiedSiteClient, expectedId?: string, token?: CancellationToken, pollingInterval: number = 5000): Promise<void> {
+export async function waitForDeploymentToComplete(context: IActionContext & Partial<IDeployContext>, client: ISimplifiedSiteClient, expectedId?: string, token?: CancellationToken, pollingInterval: number = 5000): Promise<void> {
     let fullLog: string = '';
 
     let lastLogTime: Date = new Date(0);
