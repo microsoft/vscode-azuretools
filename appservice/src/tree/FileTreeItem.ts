@@ -5,9 +5,9 @@
 
 import { AzExtParentTreeItem, AzExtTreeItem, openReadOnlyContent, TreeItemIconPath } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
-import { getFile, IFileResult } from '../getFile';
 import { ISimplifiedSiteClient } from '../ISimplifiedSiteClient';
 import { localize } from '../localize';
+import { getFile, ISiteFile } from '../siteFiles';
 import { getThemedIconPath } from './IconPath';
 
 /**
@@ -40,7 +40,7 @@ export class FileTreeItem extends AzExtTreeItem {
 
     public async openReadOnly(): Promise<void> {
         await this.runWithTemporaryDescription(localize('opening', 'Opening...'), async () => {
-            const file: IFileResult = await getFile(this.client, this.path);
+            const file: ISiteFile = await getFile(this.client, this.path);
             await openReadOnlyContent(this, file.data, '');
         });
     }

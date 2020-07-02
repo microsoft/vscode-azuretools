@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, parseError, TreeItemIconPath } from 'vscode-azureextensionui';
-import { KuduClient } from 'vscode-azurekudu';
+import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
 import { ISimplifiedSiteClient } from '../ISimplifiedSiteClient';
 import { localize } from '../localize';
+import { ISiteFileMetadata, listFiles } from '../siteFiles';
 import { FileTreeItem } from './FileTreeItem';
 import { getThemedIconPath } from './IconPath';
 
@@ -42,25 +42,12 @@ export class FolderTreeItem extends AzExtParentTreeItem {
     }
 
     public async loadMoreChildrenImpl(_clearCache: boolean, _context: IActionContext): Promise<AzExtTreeItem[]> {
-        const kuduClient: KuduClient = await this.client.getKuduClient();
-        let response: IKuduItemResponse;
-        try {
-            response = <IKuduItemResponse><unknown>(await kuduClient.vfs.getItemWithHttpOperationResponse(this.path)).response;
-        } catch (error) {
-            // Linux Consumption doesn't seem to support logs/files, but hopefully it does eventually
-            // https://github.com/microsoft/vscode-azurefunctions/issues/1599
-            if (this._isRoot && parseError(error).errorType === '404') {
-                throw new Error(localize('notSupported', 'This plan does not support viewing files.'));
-            } else {
-                throw error;
-            }
-        }
+        let files: ISiteFileMetadata[] = await listFiles(this.client, this.path);
 
-        let files: IKuduFile[] = <IKuduFile[]>JSON.parse(response.body);
         // this file is being accessed by Kudu and is not viewable
         files = files.filter(f => f.mime !== 'text/xml' || !f.name.includes('LogFiles-kudu-trace_pending.xml'));
 
-        return files.map((file: IKuduFile) => {
+        return files.map(file => {
             const home: string = 'home';
             // truncate the home of the path
             // the substring starts at file.path.indexOf(home) because the path sometimes includes site/ or D:\
@@ -89,14 +76,4 @@ function instanceOfCompare<T>(ti1: AzExtTreeItem, ti2: AzExtTreeItem, typeToComp
     } else {
         return undefined;
     }
-}
-
-interface IKuduFile {
-    mime: string;
-    name: string;
-    path: string;
-}
-
-interface IKuduItemResponse {
-    body: string;
 }
