@@ -48,7 +48,7 @@ export class SiteClient implements ISimplifiedSiteClient {
     public readonly kuduUrl: string | undefined;
     public readonly gitUrl: string | undefined;
 
-    private readonly _subscription: ISubscriptionContext;
+    public readonly subscription: ISubscriptionContext;
 
     private _cachedSku: string | undefined;
 
@@ -81,11 +81,11 @@ export class SiteClient implements ISimplifiedSiteClient {
             this.gitUrl = `${this.kuduHostName}:443/${site.repositorySiteName}.git`;
         }
 
-        this._subscription = subscription;
+        this.subscription = subscription;
     }
 
     private get _client(): WebSiteManagementClient {
-        return createAzureClient(this._subscription, WebSiteManagementClient);
+        return createAzureClient(this.subscription, WebSiteManagementClient);
     }
 
     public async getIsConsumption(): Promise<boolean> {
@@ -102,7 +102,7 @@ export class SiteClient implements ISimplifiedSiteClient {
             throw new Error(localize('notSupportedLinux', 'This operation is not supported by this app service plan.'));
         }
 
-        const kuduClient: KuduClient = new KuduClient(this._subscription.credentials, this.kuduUrl);
+        const kuduClient: KuduClient = new KuduClient(this.subscription.credentials, this.kuduUrl);
         addExtensionUserAgent(kuduClient);
         return kuduClient;
     }
@@ -215,7 +215,7 @@ export class SiteClient implements ISimplifiedSiteClient {
 
     public async listFunctions(): Promise<FunctionEnvelopeCollection> {
         if (this.slotName) {
-            return await listFunctionsSlot(this._subscription, this.id);
+            return await listFunctionsSlot(this.subscription, this.id);
         } else {
             return await this._client.webApps.listFunctions(this.resourceGroup, this.siteName);
         }
@@ -227,7 +227,7 @@ export class SiteClient implements ISimplifiedSiteClient {
 
     public async getFunction(functionName: string): Promise<FunctionEnvelope> {
         if (this.slotName) {
-            return await getFunctionSlot(this._subscription, this.id, functionName);
+            return await getFunctionSlot(this.subscription, this.id, functionName);
         } else {
             return await this._client.webApps.getFunction(this.resourceGroup, this.siteName, functionName);
         }
@@ -235,7 +235,7 @@ export class SiteClient implements ISimplifiedSiteClient {
 
     public async deleteFunction(functionName: string): Promise<void> {
         if (this.slotName) {
-            await deleteFunctionSlot(this._subscription, this.id, functionName);
+            await deleteFunctionSlot(this.subscription, this.id, functionName);
         } else {
             await this._client.webApps.deleteFunction(this.resourceGroup, this.siteName, functionName);
         }
@@ -276,7 +276,7 @@ export class SiteClient implements ISimplifiedSiteClient {
      */
     public async listHostKeys(): Promise<IHostKeys> {
         const urlPath: string = `${this.id}/host/default/listkeys?api-version=2016-08-01`;
-        const requestOptions: requestUtils.Request = await requestUtils.getDefaultAzureRequest(urlPath, this._subscription, 'POST');
+        const requestOptions: requestUtils.Request = await requestUtils.getDefaultAzureRequest(urlPath, this.subscription, 'POST');
         const result: string = await requestUtils.sendRequest(requestOptions);
         return <IHostKeys>JSON.parse(result);
     }
@@ -287,7 +287,7 @@ export class SiteClient implements ISimplifiedSiteClient {
      */
     public async listFunctionKeys(functionName: string): Promise<IFunctionKeys> {
         const urlPath: string = `${this.id}/functions/${functionName}/listKeys?api-version=2016-08-01`;
-        const requestOptions: requestUtils.Request = await requestUtils.getDefaultAzureRequest(urlPath, this._subscription, 'POST');
+        const requestOptions: requestUtils.Request = await requestUtils.getDefaultAzureRequest(urlPath, this.subscription, 'POST');
         const result: string = await requestUtils.sendRequest(requestOptions);
         return <IFunctionKeys>JSON.parse(result);
     }
@@ -300,7 +300,7 @@ export class SiteClient implements ISimplifiedSiteClient {
     private async getCachedSku(): Promise<string | undefined> {
         if (!this._cachedSku) {
             const urlPath: string = `${this.id}?api-version=2016-08-01`;
-            const request: requestUtils.Request = await requestUtils.getDefaultAzureRequest(urlPath, this._subscription);
+            const request: requestUtils.Request = await requestUtils.getDefaultAzureRequest(urlPath, this.subscription);
             const response: string = await requestUtils.sendRequest(request);
             this._cachedSku = (<{ properties: { sku?: string } }>JSON.parse(response)).properties.sku;
         }
