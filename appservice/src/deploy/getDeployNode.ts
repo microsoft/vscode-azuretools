@@ -10,6 +10,12 @@ import { localize } from '../localize';
 import { getWorkspaceSetting, updateWorkspaceSetting } from '../utils/settings';
 import { AppSource, IDeployContext } from './IDeployContext';
 
+/**
+ * Converts the args passed in by VS Code and any relevant settings into the node used to deploy
+ *
+ * @param arg1 The first arg passed in by VS Code to the deploy command. Typically the node or uri
+ * @param arg2 The second arg passed in by VS Code to the deploy command. Usually this is ignored, but can be the appId if called programatically from an API
+ */
 export async function getDeployNode<T extends AzExtTreeItem>(context: IDeployContext, arg1: unknown, arg2: unknown, expectedContextValue: string | string[]): Promise<T> {
     let node: AzExtTreeItem | undefined;
 
