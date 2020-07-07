@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as vscode from 'vscode';
 import { ServiceClientCredentials } from "ms-rest";
 import { AzureEnvironment, AzureServiceClientOptions } from "ms-rest-azure";
+import * as vscode from "vscode";
 import { IAddUserAgent } from "../index";
 import { addExtensionUserAgent } from "./extensionUserAgent";
 
