@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { isNumber } from "util";
-import { CancellationToken, Event, EventEmitter, TextDocumentContentProvider, TextDocumentShowOptions, Uri, window, workspace, WorkspaceConfiguration } from "vscode";
+import { CancellationToken, Event, EventEmitter, TextDocument, TextDocumentContentProvider, TextDocumentShowOptions, Uri, window, workspace, WorkspaceConfiguration } from "vscode";
 import { ext } from "./extensionVariables";
 import { nonNullValue } from "./utils/nonNull";
 import { randomUtils } from "./utils/randomUtils";
@@ -39,12 +39,12 @@ export async function openReadOnlyContent(node: { label: string, fullId: string 
 }
 
 export class ReadOnlyContent {
-    public readonly uri: Uri;
+    private _uri: Uri;
     private _emitter: EventEmitter<Uri>;
     private _content: string;
 
     constructor(uri: Uri, emitter: EventEmitter<Uri>, content: string) {
-        this.uri = uri;
+        this._uri = uri;
         this._emitter = emitter;
         this._content = content;
     }
@@ -55,12 +55,21 @@ export class ReadOnlyContent {
 
     public async append(content: string): Promise<void> {
         this._content += content;
-        this._emitter.fire(this.uri);
+        this._emitter.fire(this._uri);
     }
 
     public clear(): void {
         this._content = '';
-        this._emitter.fire(this.uri);
+        this._emitter.fire(this._uri);
+    }
+
+    public async isVisible(): Promise<boolean> {
+        const visibleDocuments: TextDocument[] = window.visibleTextEditors.map(editor => editor.document);
+        return visibleDocuments.includes(await workspace.openTextDocument(this._uri));
+    }
+
+    public async show(options?: TextDocumentShowOptions): Promise<void> {
+        await window.showTextDocument(this._uri, options);
     }
 }
 
