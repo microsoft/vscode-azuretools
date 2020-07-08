@@ -1252,7 +1252,8 @@ export function createAzExtOutputChannel(name: string, extensionPrefix: string):
 export function openReadOnlyJson(node: { label: string, fullId: string }, data: {}): Promise<void>;
 
 export class ReadOnlyContent {
-    public append(content: string, options?: TextDocumentShowOptions): Promise<void>;
+    public readonly uri: Uri;
+    public append(content: string): Promise<void>;
     public clear(): void;
 }
 

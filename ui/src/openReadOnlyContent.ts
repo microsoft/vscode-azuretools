@@ -11,12 +11,8 @@ import { randomUtils } from "./utils/randomUtils";
 
 let contentProvider: ReadOnlyContentProvider | undefined;
 const scheme: string = 'azureextensionuiReadonly';
-interface INode {
-    label: string;
-    fullId: string;
-}
 
-export async function openReadOnlyJson(node: INode, data: {}): Promise<void> {
+export async function openReadOnlyJson(node: { label: string, fullId: string }, data: {}): Promise<void> {
     let tab: string = '	';
     const config: WorkspaceConfiguration = workspace.getConfiguration('editor');
     const insertSpaces: boolean = !!config.get<boolean>('insertSpaces');
@@ -33,7 +29,7 @@ export async function openReadOnlyJson(node: INode, data: {}): Promise<void> {
     await openReadOnlyContent(node, content, '.json');
 }
 
-export async function openReadOnlyContent(node: INode, content: string, fileExtension: string, options?: TextDocumentShowOptions): Promise<ReadOnlyContent> {
+export async function openReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string, options?: TextDocumentShowOptions): Promise<ReadOnlyContent> {
     if (!contentProvider) {
         contentProvider = new ReadOnlyContentProvider();
         ext.context.subscriptions.push(workspace.registerTextDocumentContentProvider(scheme, contentProvider));
@@ -43,59 +39,52 @@ export async function openReadOnlyContent(node: INode, content: string, fileExte
 }
 
 export class ReadOnlyContent {
-    private _contentProvider: ReadOnlyContentProvider;
-    private _node: INode;
-    private _fileExtension: string;
+    public readonly uri: Uri;
+    private _emitter: EventEmitter<Uri>;
+    private _content: string;
 
-    constructor(_contentProvider: ReadOnlyContentProvider, node: INode, fileExtension: string) {
-        this._contentProvider = _contentProvider;
-        this._node = node;
-        this._fileExtension = fileExtension;
+    constructor(uri: Uri, emitter: EventEmitter<Uri>, content: string) {
+        this.uri = uri;
+        this._emitter = emitter;
+        this._content = content;
     }
 
-    public async append(content: string, options?: TextDocumentShowOptions): Promise<void> {
-        await this._contentProvider.openReadOnlyContent(this._node, content, this._fileExtension, { append: true, ...options });
+    public get content(): string {
+        return this._content;
+    }
+
+    public async append(content: string): Promise<void> {
+        this._content += content;
+        this._emitter.fire(this.uri);
     }
 
     public clear(): void {
-        this._contentProvider.clearContent(this._node, this._fileExtension);
+        this._content = '';
+        this._emitter.fire(this.uri);
     }
 }
 
 class ReadOnlyContentProvider implements TextDocumentContentProvider {
     private _onDidChangeEmitter: EventEmitter<Uri> = new EventEmitter<Uri>();
-    private _contentMap: Map<string, string> = new Map<string, string>();
+    private _contentMap: Map<string, ReadOnlyContent> = new Map<string, ReadOnlyContent>();
 
     public get onDidChange(): Event<Uri> {
         return this._onDidChangeEmitter.event;
     }
 
-    public async openReadOnlyContent(node: INode, content: string, fileExtension: string, options?: { append?: boolean } & TextDocumentShowOptions): Promise<ReadOnlyContent> {
-        const uri: Uri = this.getUri(node, fileExtension);
-
-        if (options?.append) {
-            const existingContent: string | undefined = this._contentMap.get(uri.toString());
-            content = `${existingContent}${content}`;
-        }
-
-        this._contentMap.set(uri.toString(), content);
+    public async openReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string, options?: TextDocumentShowOptions): Promise<ReadOnlyContent> {
+        const idHash: string = randomUtils.getPseudononymousStringHash(node.fullId, 'hex');
+        // in a URI, # means fragment and ? means query and is parsed in that way, so they should be removed to not break the path
+        const uri: Uri = Uri.parse(`${scheme}:///${idHash}/${node.label.replace(/\#|\?/g, '_')}${fileExtension}`);
+        const readOnlyContent: ReadOnlyContent = new ReadOnlyContent(uri, this._onDidChangeEmitter, content);
+        this._contentMap.set(uri.toString(), readOnlyContent);
         await window.showTextDocument(uri, options);
         this._onDidChangeEmitter.fire(uri);
-        return new ReadOnlyContent(this, node, fileExtension);
+        return readOnlyContent;
     }
 
     public async provideTextDocumentContent(uri: Uri, _token: CancellationToken): Promise<string> {
-        return nonNullValue(this._contentMap.get(uri.toString()), 'ReadOnlyContentProvider._contentMap.get');
-    }
-
-    public clearContent(node: INode, fileExtension: string): void {
-        const uri: Uri = this.getUri(node, fileExtension);
-        this._contentMap.set(uri.toString(), '');
-    }
-
-    private getUri(node: INode, fileExtension: string): Uri {
-        const idHash: string = randomUtils.getPseudononymousStringHash(node.fullId, 'hex');
-        // in a URI, # means fragment and ? means query and is parsed in that way, so they should be removed to not break the path
-        return Uri.parse(`${scheme}:///${idHash}/${node.label.replace(/\#|\?/g, '_')}${fileExtension}`);
+        const readOnlyContent: ReadOnlyContent = nonNullValue(this._contentMap.get(uri.toString()), 'ReadOnlyContentProvider._contentMap.get');
+        return readOnlyContent.content;
     }
 }
