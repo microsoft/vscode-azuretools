@@ -20,7 +20,7 @@ export function createAzureClient<T extends IAddUserAgent>(
 export function createAzureSubscriptionClient<T extends IAddUserAgent>(
     clientInfo: { credentials: ServiceClientCredentials; environment: AzureEnvironment; },
     clientType: new (credentials: ServiceClientCredentials, baseUri?: string, options?: AzureServiceClientOptions) => T): T {
-    const client: T = new clientType(clientInfo.credentials, clientInfo.environment.resourceManagerEndpointUrl);
+    const client: T = new clientType(clientInfo.credentials, clientInfo.environment.resourceManagerEndpointUrl, { acceptLanguage: vscode.env.language });
     addExtensionUserAgent(client);
     return client;
 }
