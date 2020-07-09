@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { isNumber } from "util";
-import { CancellationToken, Event, EventEmitter, TextDocument, TextDocumentContentProvider, TextDocumentShowOptions, Uri, window, workspace, WorkspaceConfiguration } from "vscode";
+import { CancellationToken, Event, EventEmitter, TextDocumentContentProvider, TextDocumentShowOptions, Uri, window, workspace, WorkspaceConfiguration } from "vscode";
 import { ext } from "./extensionVariables";
 import { nonNullValue } from "./utils/nonNull";
 import { randomUtils } from "./utils/randomUtils";
@@ -61,15 +61,6 @@ export class ReadOnlyContent {
     public clear(): void {
         this._content = '';
         this._emitter.fire(this._uri);
-    }
-
-    public async isVisible(): Promise<boolean> {
-        const visibleDocuments: TextDocument[] = window.visibleTextEditors.map(editor => editor.document);
-        return visibleDocuments.includes(await workspace.openTextDocument(this._uri));
-    }
-
-    public async show(options?: TextDocumentShowOptions): Promise<void> {
-        await window.showTextDocument(this._uri, options);
     }
 }
 
