@@ -7,6 +7,7 @@ import { parse as parseQuery, ParsedUrlQuery, stringify as stringifyQuery } from
 import { Disposable, Event, EventEmitter, FileChangeEvent, FileStat, FileSystemError, FileSystemProvider, FileType, TextDocumentShowOptions, Uri, window } from "vscode";
 import * as types from '../index';
 import { callWithTelemetryAndErrorHandling } from "./callWithTelemetryAndErrorHandling";
+import { ext } from './extensionVariables';
 import { localize } from "./localize";
 import { AzExtTreeDataProvider } from "./treeDataProvider/AzExtTreeDataProvider";
 import { AzExtTreeItem } from "./treeDataProvider/AzExtTreeItem";
@@ -34,9 +35,12 @@ export abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> implement
     public abstract statImpl(context: types.IActionContext, item: TItem, originalUri: Uri): Promise<FileStat>;
     public abstract readFileImpl(context: types.IActionContext, item: TItem, originalUri: Uri): Promise<Uint8Array>;
     public abstract writeFileImpl(context: types.IActionContext, item: TItem, content: Uint8Array, originalUri: Uri): Promise<void>;
+    public abstract shouldWriteFileImpl?(context: types.IActionContext, item: TItem): Promise<boolean>;
     public abstract getFilePath(item: TItem): string;
+    public abstract getResourceName(item: TItem): string;
 
     public async showTextDocument(item: TItem, options?: TextDocumentShowOptions): Promise<void> {
+        this.appendLineToOutput(localize('opening', 'Opening "{0}"...', item.label), { resourceName: this.getResourceName(item) });
         await window.showTextDocument(this.getUriFromItem(item), options);
     }
 
@@ -70,7 +74,14 @@ export abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> implement
     public async writeFile(uri: Uri, content: Uint8Array): Promise<void> {
         await callWithTelemetryAndErrorHandling('writeFile', async (context) => {
             const item: TItem = await this.lookup(context, uri);
-            await this.writeFileImpl(context, item, content, uri);
+            const resourceName: string = this.getResourceName(item);
+
+            const shouldWriteFile: boolean = this.shouldWriteFileImpl ? await this.shouldWriteFileImpl(context, item) : true;
+            if (shouldWriteFile) {
+                this.appendLineToOutput(localize('updating', 'Updating "{0}"...', item.label), { resourceName: resourceName });
+                await this.writeFileImpl(context, item, content, uri);
+                this.appendLineToOutput(localize('done', 'Updated "{0}".', item.label), { resourceName: resourceName });
+            }
             await item.refresh();
         });
     }
@@ -129,6 +140,11 @@ export abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> implement
 
     protected async findItem(context: types.IActionContext, query: types.AzExtItemQuery): Promise<TItem | undefined> {
         return await this._tree.findTreeItem(query.id, context);
+    }
+
+    protected appendLineToOutput(value: string, options?: { resourceName?: string, date?: Date }): void {
+        ext.outputChannel.appendLog(value, options);
+        ext.outputChannel.show(true);
     }
 
     private getUriFromItem(item: TItem): Uri {

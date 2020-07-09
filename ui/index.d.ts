@@ -1312,6 +1312,13 @@ export declare abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> i
     public abstract getFilePath(item: TItem): string;
 
     /**
+     * Retrieve the resource name for an item, for display-purposes only. Appears in output logs.
+     *
+     * @param item The item represented by the uri.
+     */
+    public abstract getResourcename(item: TItem): string;
+
+    /**
      * Retrieve metadata about a file.
      *
      * Note that the metadata for symbolic links should be the metadata of the file they refer to.
@@ -1347,6 +1354,18 @@ export declare abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> i
      * @throws [`FileNotFound`](#FileSystemError.FileNotFound) when `item` is not found.
      */
     public abstract writeFileImpl(context: IActionContext, item: TItem, content: Uint8Array, originalUri: Uri): Promise<void>;
+
+    /**
+     * Implement to provide a custom check before `writeFileImpl` writes to the file.
+     * If not implemented `writeFileImpl` will write to the file.
+     *
+     * Return `true` and `writeFileImpl` will write to the file.
+     * Return `false` and `writeFileImpl` will NOT write to the file.
+     *
+     * @param context The action context
+     * @param item The item represented by the uri.
+     */
+    public abstract shouldWriteFileImpl?(context: IActionContext, item: TItem): Promise<boolean>;
 
     public showTextDocument(item: TItem, options?: TextDocumentShowOptions): Promise<void>;
 
@@ -1391,4 +1410,9 @@ export declare abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> i
      * May be overriden if the default `findTreeItem` logic is not sufficient
      */
     protected findItem(context: IActionContext, query: AzExtItemQuery): Promise<TItem | undefined>;
+
+    /**
+     * Outputs `value` to the output channel, and prepends the `resourceName` to the log.
+     */
+    protected appendLineToOutput(value: string, options?: { resourceName?: string, date?: Date }): void;
 }
