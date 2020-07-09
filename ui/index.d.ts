@@ -1316,7 +1316,7 @@ export declare abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> i
      *
      * @param item The item represented by the uri.
      */
-    public abstract getResourcename(item: TItem): string;
+    public abstract getResourceName(item: TItem): string;
 
     /**
      * Retrieve metadata about a file.
