@@ -36,7 +36,6 @@ export async function localGitDeploy(client: ISimplifiedSiteClient, options: loc
         async (): Promise<void> => {
             const remote: string = `https://${encodeURIComponent(publishingUserName)}:${encodeURIComponent(publishingPassword)}@${client.gitUrl}`;
             const localGit: git.SimpleGit = git(options.fsPath);
-            const commitId: string = (await localGit.log()).latest.hash;
             let status: git.StatusResult;
             try {
                 status = await localGit.status();
@@ -85,6 +84,8 @@ export async function localGitDeploy(client: ISimplifiedSiteClient, options: loc
                         const commitOptions: git.Options = { '-a': null };
                         await localGit.commit('Deployed via Azure App Service Extension', undefined, commitOptions);
                     }
+                    const commitId: string = (await localGit.log()).latest.hash;
+
                     await new Promise((resolve: () => void, reject: (error: Error) => void): void => {
 
                         const pushOptions: git.Options = forcePush ? { '-f': null } : {};
