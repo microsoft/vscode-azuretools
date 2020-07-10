@@ -28,7 +28,7 @@ export interface AzureSession {
     readonly environment: Environment;
     readonly userId: string;
     readonly tenantId: string;
-    readonly credentials: ServiceClientCredentials;
+    readonly credentials2: ServiceClientCredentials;
 }
 
 export interface AzureSubscription {

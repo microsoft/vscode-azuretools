@@ -57,7 +57,7 @@ export class TestAzureAccount implements AzureAccount, types.TestAzureAccount {
             environment: credentials.environment,
             userId: '',
             tenantId: tenantId,
-            credentials: credentials
+            credentials2: credentials
         };
 
         const testAzureSubscription: AzureSubscription = { session: session, subscription: nonNullValue(subscriptions[0]) };
@@ -76,7 +76,7 @@ export class TestAzureAccount implements AzureAccount, types.TestAzureAccount {
         this.verifySubscription();
         const info: AzureSubscription = this.subscriptions[0];
         return {
-            credentials: info.session.credentials,
+            credentials: info.session.credentials2,
             subscriptionDisplayName: nonNullProp(info.subscription, 'displayName'),
             subscriptionId: nonNullProp(info.subscription, 'subscriptionId'),
             subscriptionPath: nonNullProp(info.subscription, 'id'),
