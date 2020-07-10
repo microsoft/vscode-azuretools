@@ -3,8 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SubscriptionClient, SubscriptionModels } from 'azure-arm-resource';
-import { ApplicationTokenCredentials, AzureEnvironment, loginWithServicePrincipalSecret } from 'ms-rest-azure';
+import { SubscriptionClient, SubscriptionModels } from '@azure/arm-subscriptions';
+import { ApplicationTokenCredentials, loginWithServicePrincipalSecret } from '@azure/ms-rest-nodeauth';
+import { Environment } from '@azure/ms-rest-azure-env';
 import { Event, EventEmitter } from 'vscode';
 import * as types from '../index';
 import { AzureAccount, AzureLoginStatus, AzureResourceFilter, AzureSession, AzureSubscription } from './@types/azure-account.api';
@@ -37,7 +38,7 @@ export class TestAzureAccount implements AzureAccount, types.TestAzureAccount {
     }
 
     public async signIn(): Promise<void> {
-        type servicePrincipalCredentials = ApplicationTokenCredentials & { environment: AzureEnvironment };
+        type servicePrincipalCredentials = ApplicationTokenCredentials & { environment: Environment };
         const clientId: string | undefined = process.env.SERVICE_PRINCIPAL_CLIENT_ID;
         const secret: string | undefined = process.env.SERVICE_PRINCIPAL_SECRET;
         const domain: string | undefined = process.env.SERVICE_PRINCIPAL_DOMAIN;

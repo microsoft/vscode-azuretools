@@ -4,10 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as cp from "child_process";
-import { ServiceClientCredentials } from 'ms-rest';
-import { AzureEnvironment } from 'ms-rest-azure';
+import { ServiceClientCredentials } from '@azure/ms-rest-js';
+
 import { Event, InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, Uri } from "vscode";
 import * as webpack from 'webpack';
+import { Environment } from "@azure/ms-rest-azure-env";
 
 /**
  * Sets up test suites against an extension package.json file (run this at global level or inside a suite, not inside a test)
@@ -110,7 +111,7 @@ export interface ISubscriptionContext {
     subscriptionPath: string;
     tenantId: string;
     userId: string;
-    environment: AzureEnvironment;
+    environment: Environment;
 }
 
 /**
