@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { SubscriptionClient, SubscriptionModels } from '@azure/arm-subscriptions';
-import { ApplicationTokenCredentials, loginWithServicePrincipalSecret } from '@azure/ms-rest-nodeauth';
 import { Environment } from '@azure/ms-rest-azure-env';
+import { ApplicationTokenCredentials, loginWithServicePrincipalSecret } from '@azure/ms-rest-nodeauth';
 import { Event, EventEmitter } from 'vscode';
 import * as types from '../index';
 import { AzureAccount, AzureLoginStatus, AzureResourceFilter, AzureSession, AzureSubscription } from './@types/azure-account.api';

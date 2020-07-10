@@ -31,7 +31,6 @@
         "test": "node ./out/test/runTest.js"
     },
     "devDependencies": {
-        "@azure/ms-rest-azure-env": "^2.0.0",
         "@azure/ms-rest-js": "^2.0.7",
         "@types/fs-extra": "^8.0.0",
         "@types/mocha": "^7.0.2",
@@ -50,6 +49,7 @@
     },
     "dependencies": {
         "@azure/arm-subscriptions": "^2.0.0",
+        "@azure/ms-rest-azure-env": "^2.0.0",
         "@azure/ms-rest-nodeauth": "^3.0.5",
         "clean-webpack-plugin": "^3.0.0",
         "filemanager-webpack-plugin": "^2.0.5",
