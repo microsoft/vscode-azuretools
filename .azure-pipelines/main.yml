@@ -1,6 +1,7 @@
 variables:
   ${{ if eq(variables['Build.Reason'], 'Schedule') }}:
     ENABLE_LONG_RUNNING_TESTS: true
+    ENABLE_COMPLIANCE: true
 
 jobs:
 - job: Windows
@@ -8,6 +9,7 @@ jobs:
     vmImage: windows-latest
   steps:
   - template: job-steps.yml
+  - template: compliance/compliance.yml # Only works on Windows
 
 - job: Linux
   pool:
