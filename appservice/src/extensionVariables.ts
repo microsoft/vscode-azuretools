@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ExtensionContext } from "vscode";
-import { AzExtTreeDataProvider, IAzExtOutputChannel, IAzureUserInput, registerUIExtensionVariables, UIExtensionVariables } from 'vscode-azureextensionui';
+import { IAzExtOutputChannel, IAzureUserInput, registerUIExtensionVariables, UIExtensionVariables } from 'vscode-azureextensionui';
 import { localize } from "./localize";
 
 class UninitializedExtensionVariables implements UIExtensionVariables {
@@ -22,10 +22,6 @@ class UninitializedExtensionVariables implements UIExtensionVariables {
         throw this._error;
     }
 
-    public get tree(): AzExtTreeDataProvider {
-        throw this._error;
-    }
-
     public get prefix(): string {
         throw this._error;
     }
@@ -33,7 +29,6 @@ class UninitializedExtensionVariables implements UIExtensionVariables {
 
 interface IAppServiceExtensionVariables extends UIExtensionVariables {
     prefix: string;
-    tree: AzExtTreeDataProvider;
 }
 
 /**

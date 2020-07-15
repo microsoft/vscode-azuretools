@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { AzExtTreeItem } from 'vscode-azureextensionui';
+import { AzExtTreeDataProvider, AzExtTreeItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { getWorkspaceSetting, updateWorkspaceSetting } from '../utils/settings';
@@ -16,14 +16,14 @@ import { AppSource, IDeployContext } from './IDeployContext';
  * @param arg1 The first arg passed in by VS Code to the deploy command. Typically the node or uri
  * @param arg2 The second arg passed in by VS Code to the deploy command. Usually this is ignored, but can be the appId if called programatically from an API
  */
-export async function getDeployNode<T extends AzExtTreeItem>(context: IDeployContext, arg1: unknown, arg2: unknown, expectedContextValue: string | string[]): Promise<T> {
+export async function getDeployNode<T extends AzExtTreeItem>(context: IDeployContext, tree: AzExtTreeDataProvider, arg1: unknown, arg2: unknown, expectedContextValue: string | string[]): Promise<T> {
     let node: AzExtTreeItem | undefined;
 
     if (arg1 instanceof AzExtTreeItem) {
         node = arg1;
         context.appSource = AppSource.tree;
     } else if (typeof arg2 === 'string' && arg2) {
-        node = await ext.tree.findTreeItem(arg2, context);
+        node = await tree.findTreeItem(arg2, context);
         if (!node) {
             throw new Error(localize('noMatchingApp', 'Failed to find app matching id "{0}".', arg2));
         }
@@ -31,7 +31,7 @@ export async function getDeployNode<T extends AzExtTreeItem>(context: IDeployCon
     } else {
         const defaultAppId: string | undefined = getWorkspaceSetting(context.defaultAppSetting, ext.prefix, context.workspaceFolder.uri.fsPath);
         if (defaultAppId && defaultAppId.toLowerCase() !== 'none') {
-            node = await ext.tree.findTreeItem(defaultAppId, context);
+            node = await tree.findTreeItem(defaultAppId, context);
             if (node) {
                 context.appSource = AppSource.setting;
             } else {
@@ -42,9 +42,9 @@ export async function getDeployNode<T extends AzExtTreeItem>(context: IDeployCon
 
         if (!node) {
             const newNodes: AzExtTreeItem[] = [];
-            const disposable: vscode.Disposable = ext.tree.onTreeItemCreate(newNode => { newNodes.push(newNode); });
+            const disposable: vscode.Disposable = tree.onTreeItemCreate(newNode => { newNodes.push(newNode); });
             try {
-                node = await ext.tree.showTreeItemPicker<AzExtTreeItem>(expectedContextValue, context);
+                node = await tree.showTreeItemPicker<AzExtTreeItem>(expectedContextValue, context);
             } finally {
                 disposable.dispose();
             }
