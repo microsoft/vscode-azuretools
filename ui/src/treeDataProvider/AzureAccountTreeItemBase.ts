@@ -47,6 +47,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
 
     //#region Methods implemented by base class
     public abstract createSubscriptionTreeItem(root: types.ISubscriptionContext): SubscriptionTreeItemBase | Promise<SubscriptionTreeItemBase>;
+    public onAccountStatusChanged?(status: AzureLoginStatus): Promise<void>;
     //#endregion
 
     public get iconPath(): types.TreeItemIconPath {
@@ -191,6 +192,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
                 if (status !== 'LoggedIn') {
                     await this.refresh();
                 }
+                await this.onAccountStatusChanged?.(status);
             }));
             await commands.executeCommand('setContext', 'isAzureAccountInstalled', true);
         }

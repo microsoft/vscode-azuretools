@@ -10,6 +10,7 @@ import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment, AzureServiceClientOptions } from 'ms-rest-azure';
 import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocument, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
+import { AzureLoginStatus } from './src/azure-account.api';
 
 export type OpenInPortalOptions = {
     /**
@@ -404,6 +405,11 @@ export declare abstract class AzureAccountTreeItemBase extends AzExtParentTreeIt
      * @param root Contains basic information about the subscription - should be passed in to the constructor of `SubscriptionTreeItemBase`
      */
     public abstract createSubscriptionTreeItem(root: ISubscriptionContext): SubscriptionTreeItemBase | Promise<SubscriptionTreeItemBase>;
+    /**
+     * Implement this to listen for account status changes.
+     * @param status The new account status
+     */
+    public onAccountStatusChanged?(status: AzureLoginStatus): Promise<void>;
     //#endregion
 
     /**
