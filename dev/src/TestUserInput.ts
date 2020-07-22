@@ -32,10 +32,11 @@ export class TestUserInput implements types.TestUserInput {
         return this._onDidFinishPromptEmitter.event;
     }
 
-    public async runWithInputs(inputs: (string | RegExp | types.TestInput)[], callback: () => Promise<void>): Promise<void> {
+    public async runWithInputs<T>(inputs: (string | RegExp | types.TestInput)[], callback: () => Promise<T>): Promise<T> {
         this._inputs = <(string | RegExp | TestInput)[]>inputs;
-        await callback();
+        const result = await callback();
         assert.equal(this._inputs.length, 0, `Not all inputs were used: ${this._inputs.toString()}`);
+        return result;
     }
 
     public async showQuickPick<T extends vscodeTypes.QuickPickItem>(items: T[] | Thenable<T[]>, options: vscodeTypes.QuickPickOptions): Promise<T | T[]> {
