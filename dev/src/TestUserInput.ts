@@ -34,7 +34,7 @@ export class TestUserInput implements types.TestUserInput {
 
     public async runWithInputs<T>(inputs: (string | RegExp | types.TestInput)[], callback: () => Promise<T>): Promise<T> {
         this._inputs = <(string | RegExp | TestInput)[]>inputs;
-        const result = await callback();
+        const result: T = await callback();
         assert.equal(this._inputs.length, 0, `Not all inputs were used: ${this._inputs.toString()}`);
         return result;
     }
