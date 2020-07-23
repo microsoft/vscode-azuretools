@@ -3,8 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SubscriptionClient } from 'azure-arm-resource';
-import { Location } from 'azure-arm-resource/lib/subscription/models';
+import { SubscriptionClient, SubscriptionModels } from '@azure/arm-subscriptions';
 import { QuickPickOptions } from 'vscode';
 import * as types from '../../index';
 import { createAzureSubscriptionClient } from '../createAzureClient';
@@ -23,7 +22,7 @@ interface ILocationWizardContextInternal extends types.ILocationWizardContext {
      * The task used to get locations.
      * By specifying this in the context, we can ensure that Azure is only queried once for the entire wizard
      */
-    _allLocationsTask?: Promise<Location[]>;
+    _allLocationsTask?: Promise<SubscriptionModels.Location[]>;
 
     _alreadyHasLocationStep?: boolean;
 }
@@ -42,20 +41,20 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
     }
 
     public static async setLocation<T extends ILocationWizardContextInternal>(wizardContext: T, name: string): Promise<void> {
-        const locations: Location[] = await LocationListStep.getLocations(wizardContext);
+        const locations: SubscriptionModels.Location[] = await LocationListStep.getLocations(wizardContext);
         name = generalizeLocationName(name);
-        wizardContext.location = locations.find((l: Location) => {
+        wizardContext.location = locations.find(l => {
             return name === generalizeLocationName(l.name) || name === generalizeLocationName(l.displayName);
         });
     }
 
-    public static async getLocations<T extends ILocationWizardContextInternal>(wizardContext: T): Promise<Location[]> {
+    public static async getLocations<T extends ILocationWizardContextInternal>(wizardContext: T): Promise<SubscriptionModels.Location[]> {
         if (wizardContext._allLocationsTask === undefined) {
             const client: SubscriptionClient = createAzureSubscriptionClient(wizardContext, SubscriptionClient);
             wizardContext._allLocationsTask = client.subscriptions.listLocations(wizardContext.subscriptionId);
         }
 
-        const allLocations: Location[] = await wizardContext._allLocationsTask;
+        const allLocations: SubscriptionModels.Location[] = await wizardContext._allLocationsTask;
         if (wizardContext.locationsTask === undefined) {
             return allLocations;
         } else {
@@ -73,11 +72,11 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
         return !wizardContext.location;
     }
 
-    private async getQuickPicks(wizardContext: T): Promise<types.IAzureQuickPickItem<Location>[]> {
-        let locations: Location[] = await LocationListStep.getLocations(wizardContext);
+    private async getQuickPicks(wizardContext: T): Promise<types.IAzureQuickPickItem<SubscriptionModels.Location>[]> {
+        let locations: SubscriptionModels.Location[] = await LocationListStep.getLocations(wizardContext);
         // tslint:disable-next-line:no-non-null-assertion
-        locations = locations.sort((l1: Location, l2: Location) => l1.displayName!.localeCompare(l2.displayName!));
-        return locations.map((l: Location) => {
+        locations = locations.sort((l1, l2) => l1.displayName!.localeCompare(l2.displayName!));
+        return locations.map(l => {
             return {
                 // tslint:disable-next-line:no-non-null-assertion
                 label: nonNullProp(l, 'displayName'),
