@@ -1,6 +1,0 @@
-node_modules/
-.vscode/
-src/
-*.tgz
-tsconfig.json
-swagger.json

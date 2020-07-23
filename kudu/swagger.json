@@ -2,7 +2,7 @@
     "swagger": "2.0",
     "info": {
         "version": "v1",
-        "title": "Kudu.Services.Web"
+        "title": "KuduClient"
     },
     "host": "scm.azurewebsites.net",
     "schemes": [
