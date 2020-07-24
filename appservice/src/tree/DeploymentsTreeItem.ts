@@ -3,10 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SiteConfig, SiteSourceControl } from 'azure-arm-website/lib/models';
+import { WebSiteManagementModels } from '@azure/arm-appservice';
 import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
-import { KuduClient } from 'vscode-azurekudu';
-import { DeployResult } from 'vscode-azurekudu/lib/models';
+import { KuduClient, KuduModels } from 'vscode-azurekudu';
 import { ext } from '../extensionVariables';
 import { ISimplifiedSiteClient } from '../ISimplifiedSiteClient';
 import { localize } from '../localize';
@@ -28,7 +27,7 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
     private _scmType?: string;
     private _repoUrl?: string;
 
-    public constructor(parent: AzExtParentTreeItem, client: ISimplifiedSiteClient, siteConfig: SiteConfig, sourceControl: SiteSourceControl) {
+    public constructor(parent: AzExtParentTreeItem, client: ISimplifiedSiteClient, siteConfig: WebSiteManagementModels.SiteConfig, sourceControl: WebSiteManagementModels.SiteSourceControl) {
         super(parent);
         this.client = client;
         this._scmType = siteConfig.scmType;
@@ -61,19 +60,19 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
     }
 
     public async loadMoreChildrenImpl(_clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {
-        const siteConfig: SiteConfig = await this.client.getSiteConfig();
+        const siteConfig: WebSiteManagementModels.SiteConfig = await this.client.getSiteConfig();
         const kuduClient: KuduClient = await this.client.getKuduClient();
-        const deployments: DeployResult[] = await retryKuduCall(context, 'getDeployResults', async () => {
+        const deployments: KuduModels.DeployResult[] = await retryKuduCall(context, 'getDeployResults', async () => {
             return kuduClient.deployment.getDeployResults();
         });
 
         const children: DeploymentTreeItem[] | GenericTreeItem[] = await this.createTreeItemsWithErrorHandling(
             deployments,
             'invalidDeployment',
-            (dr: DeployResult) => {
+            dr => {
                 return new DeploymentTreeItem(this, dr, siteConfig.scmType);
             },
-            (dr: DeployResult) => {
+            dr => {
                 return dr.id ? dr.id.substring(0, 7) : undefined;
             }
         );
@@ -100,8 +99,8 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
     }
 
     public async refreshImpl(): Promise<void> {
-        const siteConfig: SiteConfig = await this.client.getSiteConfig();
-        const sourceControl: SiteSourceControl = await this.client.getSourceControl();
+        const siteConfig: WebSiteManagementModels.SiteConfig = await this.client.getSiteConfig();
+        const sourceControl: WebSiteManagementModels.SiteSourceControl = await this.client.getSourceControl();
         this._scmType = siteConfig.scmType;
         this._repoUrl = sourceControl.repoUrl;
     }

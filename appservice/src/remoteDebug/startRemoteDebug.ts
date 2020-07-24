@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SiteConfigResource, User } from 'azure-arm-website/lib/models';
+import { WebSiteManagementModels } from '@azure/arm-appservice';
 import * as portfinder from 'portfinder';
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling, IActionContext } from 'vscode-azureextensionui';
@@ -22,7 +22,7 @@ export enum RemoteDebugLanguage {
     Python
 }
 
-export async function startRemoteDebug(siteClient: SiteClient, siteConfig: SiteConfigResource, language: RemoteDebugLanguage): Promise<void> {
+export async function startRemoteDebug(siteClient: SiteClient, siteConfig: WebSiteManagementModels.SiteConfigResource, language: RemoteDebugLanguage): Promise<void> {
     if (isRemoteDebugging) {
         throw new Error(localize('remoteDebugAlreadyStarted', 'Azure Remote Debugging is currently starting or already started.'));
     }
@@ -36,7 +36,7 @@ export async function startRemoteDebug(siteClient: SiteClient, siteConfig: SiteC
     }
 }
 
-async function startRemoteDebugInternal(siteClient: SiteClient, siteConfig: SiteConfigResource, language: RemoteDebugLanguage): Promise<void> {
+async function startRemoteDebugInternal(siteClient: SiteClient, siteConfig: WebSiteManagementModels.SiteConfigResource, language: RemoteDebugLanguage): Promise<void> {
     await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, cancellable: true }, async (progress, token): Promise<void> => {
         const debugConfig: vscode.DebugConfiguration = await getDebugConfiguration(language);
         // tslint:disable-next-line:no-unsafe-any
@@ -47,7 +47,7 @@ async function startRemoteDebugInternal(siteClient: SiteClient, siteConfig: Site
 
         reportMessage(localize('remoteDebugStartingTunnel', 'Starting tunnel proxy...'), progress, token);
 
-        const publishCredential: User = await siteClient.getWebAppPublishCredential();
+        const publishCredential: WebSiteManagementModels.User = await siteClient.getWebAppPublishCredential();
         const tunnelProxy: TunnelProxy = new TunnelProxy(localHostPortNumber, siteClient, publishCredential);
         await callWithTelemetryAndErrorHandling('appService.remoteDebugStartProxy', async (startContext: IActionContext) => {
             startContext.errorHandling.suppressDisplay = true;

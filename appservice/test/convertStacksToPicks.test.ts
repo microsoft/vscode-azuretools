@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { WebSiteManagementModels } from '@azure/arm-appservice';
 import * as assert from 'assert';
-import { ApplicationStack } from 'azure-arm-website/lib/models';
 import { convertStacksToPicks } from '../src';
 import { LinuxRuntimes } from '../src/createAppService/AppKind';
 
-const stacks: ApplicationStack[] = [
+const stacks: WebSiteManagementModels.ApplicationStack[] = [
     {
         name: "ruby",
         display: "Ruby",

@@ -3,8 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { WebSiteManagementClient } from 'azure-arm-website';
-import { AppServicePlan } from 'azure-arm-website/lib/models';
+import { WebSiteManagementClient, WebSiteManagementModels } from '@azure/arm-appservice';
 import { AzureWizardPromptStep, createAzureClient, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, LocationListStep, ResourceGroupListStep } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -17,7 +16,7 @@ import { AppServicePlanSkuStep } from './AppServicePlanSkuStep';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
-    public static async getPlans(wizardContext: IAppServiceWizardContext): Promise<AppServicePlan[]> {
+    public static async getPlans(wizardContext: IAppServiceWizardContext): Promise<WebSiteManagementModels.AppServicePlan[]> {
         if (wizardContext.plansTask === undefined) {
             const client: WebSiteManagementClient = createAzureClient(wizardContext, WebSiteManagementClient);
             wizardContext.plansTask = uiUtils.listAll(client.appServicePlans, client.appServicePlans.list());
@@ -27,8 +26,8 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
     }
 
     public static async isNameAvailable(wizardContext: IAppServiceWizardContext, name: string, resourceGroupName: string): Promise<boolean> {
-        const plans: AppServicePlan[] = await AppServicePlanListStep.getPlans(wizardContext);
-        return !plans.some((plan: AppServicePlan) =>
+        const plans: WebSiteManagementModels.AppServicePlan[] = await AppServicePlanListStep.getPlans(wizardContext);
+        return !plans.some(plan =>
             nonNullProp(plan, 'resourceGroup').toLowerCase() === resourceGroupName.toLowerCase() &&
             nonNullProp(plan, 'name').toLowerCase() === name.toLowerCase()
         );
@@ -62,14 +61,14 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
         return !wizardContext.plan && !wizardContext.newPlanName;
     }
 
-    private async getQuickPicks(wizardContext: IAppServiceWizardContext): Promise<IAzureQuickPickItem<AppServicePlan | undefined>[]> {
-        const picks: IAzureQuickPickItem<AppServicePlan | undefined>[] = [{
+    private async getQuickPicks(wizardContext: IAppServiceWizardContext): Promise<IAzureQuickPickItem<WebSiteManagementModels.AppServicePlan | undefined>[]> {
+        const picks: IAzureQuickPickItem<WebSiteManagementModels.AppServicePlan | undefined>[] = [{
             label: localize('CreateNewAppServicePlan', '$(plus) Create new App Service plan'),
             description: '',
             data: undefined
         }];
 
-        let plans: AppServicePlan[] = await AppServicePlanListStep.getPlans(wizardContext);
+        let plans: WebSiteManagementModels.AppServicePlan[] = await AppServicePlanListStep.getPlans(wizardContext);
         const famFilter: RegExp | undefined = wizardContext.planSkuFamilyFilter;
         if (famFilter) {
             plans = plans.filter(plan => !plan.sku || !plan.sku.family || famFilter.test(plan.sku.family));
@@ -82,7 +81,7 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
             if (plan.sku && plan.sku.family === 'EP') {
                 // elastic premium plans do not have the os in the kind, so we have to check the "reserved" property
                 const client: WebSiteManagementClient = createAzureClient(wizardContext, WebSiteManagementClient);
-                const epPlan: AppServicePlan = await client.appServicePlans.get(nonNullProp(plan, 'resourceGroup'), nonNullProp(plan, 'name'));
+                const epPlan: WebSiteManagementModels.AppServicePlan = await client.appServicePlans.get(nonNullProp(plan, 'resourceGroup'), nonNullProp(plan, 'name'));
                 isPlanLinux = !!epPlan.reserved;
             }
 

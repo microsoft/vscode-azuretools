@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SlotConfigNamesResource, StringDictionary } from 'azure-arm-website/lib/models';
+import { WebSiteManagementModels } from '@azure/arm-appservice';
 
 export interface IAppSettingsClient {
 
@@ -11,11 +11,11 @@ export interface IAppSettingsClient {
 
     isLinux: boolean;
 
-    listApplicationSettings(): Promise<StringDictionary>;
+    listApplicationSettings(): Promise<WebSiteManagementModels.StringDictionary>;
 
-    updateApplicationSettings(appSettings: StringDictionary): Promise<StringDictionary>;
+    updateApplicationSettings(appSettings: WebSiteManagementModels.StringDictionary): Promise<WebSiteManagementModels.StringDictionary>;
 
-    listSlotConfigurationNames?(): Promise<SlotConfigNamesResource>;
+    listSlotConfigurationNames?(): Promise<WebSiteManagementModels.SlotConfigNamesResource>;
 
-    updateSlotConfigurationNames?(appSettings: SlotConfigNamesResource): Promise<SlotConfigNamesResource>;
+    updateSlotConfigurationNames?(appSettings: WebSiteManagementModels.SlotConfigNamesResource): Promise<WebSiteManagementModels.SlotConfigNamesResource>;
 }

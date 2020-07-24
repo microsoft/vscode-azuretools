@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AppServicePlan } from 'azure-arm-website/lib/models';
+import { WebSiteManagementModels } from '@azure/arm-appservice';
 import { isNullOrUndefined } from 'util';
 import * as vscode from 'vscode';
 import { DialogResponses } from 'vscode-azureextensionui';
@@ -20,7 +20,7 @@ export async function deleteSite(client: SiteClient): Promise<void> {
 
     await ext.ui.showWarningMessage(confirmMessage, { modal: true }, DialogResponses.deleteResponse);
 
-    let plan: AppServicePlan | undefined;
+    let plan: WebSiteManagementModels.AppServicePlan | undefined;
     let deletePlan: boolean = false;
 
     if (!client.isSlot) {

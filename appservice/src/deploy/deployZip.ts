@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AppServicePlan } from 'azure-arm-website/lib/models';
+import { WebSiteManagementModels } from '@azure/arm-appservice';
 import * as fse from 'fs-extra';
 import * as vscode from 'vscode';
 import { KuduClient } from 'vscode-azurekudu';
@@ -17,13 +17,13 @@ import { runWithZipStream } from './runWithZipStream';
 import { validateLinuxFunctionAppSettings } from './validateLinuxFunctionAppSettings';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
-export async function deployZip(context: IDeployContext, client: SiteClient, fsPath: string, aspPromise: Promise<AppServicePlan | undefined>): Promise<void> {
+export async function deployZip(context: IDeployContext, client: SiteClient, fsPath: string, aspPromise: Promise<WebSiteManagementModels.AppServicePlan | undefined>): Promise<void> {
     if (!(await fse.pathExists(fsPath))) {
         throw new Error(localize('pathNotExist', 'Failed to deploy path that does not exist: {0}', fsPath));
     }
 
     ext.outputChannel.appendLog(localize('deployStart', 'Starting deployment...'), { resourceName: client.fullName });
-    let asp: AppServicePlan | undefined;
+    let asp: WebSiteManagementModels.AppServicePlan | undefined;
 
     // if a user has access to the app but not the plan, this will cause an error.  We will make the same assumption as below in this case.
     try {
@@ -50,7 +50,7 @@ export async function deployZip(context: IDeployContext, client: SiteClient, fsP
         const kuduClient: KuduClient = await client.getKuduClient();
 
         await runWithZipStream(context, fsPath, client, async zipStream => {
-            await kuduClient.pushDeployment.zipPushDeploy(zipStream, { isAsync: true, author: 'VS Code' });
+            await kuduClient.pushDeployment.zipPushDeploy(() => zipStream, { isAsync: true, author: 'VS Code' });
         });
 
         await waitForDeploymentToComplete(context, client);

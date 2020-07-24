@@ -3,19 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ApplicationStack } from 'azure-arm-website/lib/models';
-import { AzureWizardPromptStep, IAzureQuickPickItem } from 'vscode-azureextensionui';
+import { WebSiteManagementClient, WebSiteManagementModels } from '@azure/arm-appservice';
+import { AzureWizardPromptStep, createAzureClient, IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { nonNullProp } from '../utils/nonNull';
-import { requestUtils } from '../utils/requestUtils';
 import { AppKind, LinuxRuntimes, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
-
-type ApplicationStackJsonResponse = {
-    value: [{
-        properties: ApplicationStack
-    }]
-};
 
 export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
@@ -31,16 +24,13 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
         return !wizardContext.newSiteRuntime && !(wizardContext.newSiteKind === AppKind.app && wizardContext.newSiteOS === WebsiteOS.windows);
     }
 
-    // the sdk has a bug that doesn't retrieve the full response for provider.getAvailableStacks(): https://github.com/Azure/azure-sdk-for-node/issues/5068
-    private async getLinuxRuntimeStack(wizardContext: IAppServiceWizardContext): Promise<ApplicationStack[]> {
-        const urlPath: string = 'providers/Microsoft.Web/availableStacks?osTypeSelected=Linux&api-version=2018-02-01';
-        const requestOptions: requestUtils.Request = await requestUtils.getDefaultAzureRequest(urlPath, wizardContext);
-        const runtimes: string = await requestUtils.sendRequest(requestOptions);
-        return (<ApplicationStackJsonResponse>JSON.parse(runtimes)).value.map(v => v.properties);
+    private async getLinuxRuntimeStack(wizardContext: IAppServiceWizardContext): Promise<WebSiteManagementModels.ApplicationStack[]> {
+        const client: WebSiteManagementClient = createAzureClient(wizardContext, WebSiteManagementClient);
+        return await client.provider.getAvailableStacks({ osTypeSelected: 'Linux' });
     }
 }
 
-export function convertStacksToPicks(stacks: ApplicationStack[], recommendedRuntimes: LinuxRuntimes[] | undefined): IAzureQuickPickItem<string>[] {
+export function convertStacksToPicks(stacks: WebSiteManagementModels.ApplicationStack[], recommendedRuntimes: LinuxRuntimes[] | undefined): IAzureQuickPickItem<string>[] {
     function getPriority(data: string): number {
         // tslint:disable-next-line: strict-boolean-expressions
         recommendedRuntimes = recommendedRuntimes || [];

@@ -3,12 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SiteSourceControl } from 'azure-arm-website/lib/models';
+import { WebSiteManagementModels } from '@azure/arm-appservice';
 import * as os from 'os';
 import { ProgressLocation, window } from 'vscode';
 import { AzExtTreeItem, IActionContext, openReadOnlyContent, TreeItemIconPath } from 'vscode-azureextensionui';
-import { KuduClient } from 'vscode-azurekudu';
-import { DeployResult, LogEntry } from 'vscode-azurekudu/lib/models';
+import { KuduClient, KuduModels } from 'vscode-azurekudu';
 import { waitForDeploymentToComplete } from '../deploy/waitForDeploymentToComplete';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -36,9 +35,9 @@ export class DeploymentTreeItem extends AzExtTreeItem {
     public label: string;
     public receivedTime: Date;
     public parent: DeploymentsTreeItem;
-    private _deployResult: DeployResult;
+    private _deployResult: KuduModels.DeployResult;
 
-    constructor(parent: DeploymentsTreeItem, deployResult: DeployResult, scmType: string | undefined) {
+    constructor(parent: DeploymentsTreeItem, deployResult: KuduModels.DeployResult, scmType: string | undefined) {
         super(parent);
         this.contextValue = `deployment/${scmType}`.toLocaleLowerCase();
         this._deployResult = deployResult;
@@ -111,7 +110,7 @@ export class DeploymentTreeItem extends AzExtTreeItem {
 
     public async getDeploymentLogs(context: IActionContext): Promise<string> {
         const kuduClient: KuduClient = await this.parent.client.getKuduClient();
-        let logEntries: LogEntry[] = [];
+        let logEntries: KuduModels.LogEntry[] = [];
         await retryKuduCall(context, 'getLogEntry', async () => {
             await ignore404Error(context, async () => {
                 logEntries = await kuduClient.deployment.getLogEntry(this.id);
@@ -121,7 +120,7 @@ export class DeploymentTreeItem extends AzExtTreeItem {
         let data: string = '';
         for (const logEntry of logEntries) {
             data += this.formatLogEntry(logEntry);
-            let detailedLogEntries: LogEntry[] = [];
+            let detailedLogEntries: KuduModels.LogEntry[] = [];
             await retryKuduCall(context, 'getLogEntryDetails', async () => {
                 await ignore404Error(context, async () => {
                     if (logEntry.detailsUrl && logEntry.id) {
@@ -146,7 +145,7 @@ export class DeploymentTreeItem extends AzExtTreeItem {
     }
 
     public async viewCommitInGitHub(): Promise<void> {
-        const sourceControl: SiteSourceControl = await this.parent.client.getSourceControl();
+        const sourceControl: WebSiteManagementModels.SiteSourceControl = await this.parent.client.getSourceControl();
         if (sourceControl.repoUrl) {
             const gitHubCommitUrl: string = `${sourceControl.repoUrl}/commit/${this._deployResult.id}`;
             await openUrl(gitHubCommitUrl);
@@ -161,7 +160,7 @@ export class DeploymentTreeItem extends AzExtTreeItem {
         this._deployResult = await kuduClient.deployment.getResult(this.id);
     }
 
-    private formatLogEntry(logEntry: LogEntry): string {
+    private formatLogEntry(logEntry: KuduModels.LogEntry): string {
         if (logEntry.logTime && logEntry.message) {
             return `${logEntry.logTime.toISOString()} - ${logEntry.message}${os.EOL}`;
         } else {
@@ -169,7 +168,7 @@ export class DeploymentTreeItem extends AzExtTreeItem {
         }
     }
 
-    private getDeploymentMessage(deployResult: DeployResult): string {
+    private getDeploymentMessage(deployResult: KuduModels.DeployResult): string {
         let message: string = nonNullProp(deployResult, 'message');
         try {
             const messageJSON: { message?: string } = <{ message?: string }>JSON.parse(message);

@@ -3,14 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { HttpOperationResponse } from 'ms-rest';
+import { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
 import * as path from 'path';
-import { Response } from 'request';
 import { Readable } from 'stream';
-import KuduClient from 'vscode-azurekudu';
+import { createGenericClient } from 'vscode-azureextensionui';
+import { KuduClient } from 'vscode-azurekudu';
 import { ISimplifiedSiteClient } from './ISimplifiedSiteClient';
 import { SiteClient } from './SiteClient';
-import { requestUtils } from './utils/requestUtils';
 
 export interface ISiteFile {
     data: string;
@@ -24,13 +23,13 @@ export interface ISiteFileMetadata {
 }
 
 export async function getFile(client: ISimplifiedSiteClient, filePath: string): Promise<ISiteFile> {
-    const response: Response = await getFsResponse(client, filePath);
-    return { data: <string>response.body, etag: <string>response.headers.etag };
+    const response: HttpOperationResponse = await getFsResponse(client, filePath);
+    return { data: <string>response.bodyAsText, etag: <string>response.headers.get('etag') };
 }
 
 export async function listFiles(client: ISimplifiedSiteClient, filePath: string): Promise<ISiteFileMetadata[]> {
-    const response: Response = await getFsResponse(client, filePath);
-    return <ISiteFileMetadata[]>JSON.parse(<string>response.body);
+    const response: HttpOperationResponse = await getFsResponse(client, filePath);
+    return <ISiteFileMetadata[]>response.parsedBody;
 }
 
 /**
@@ -50,30 +49,31 @@ export async function putFile(client: ISimplifiedSiteClient, data: Readable | st
     }
     const options: {} = etag ? { customHeaders: { ['If-Match']: etag } } : {};
     const kuduClient: KuduClient = await client.getKuduClient();
-    const result: HttpOperationResponse<{}> = await kuduClient.vfs.putItemWithHttpOperationResponse(stream, filePath, options);
-    return <string>result.response.headers.etag;
+    const result: HttpOperationResponse = (await kuduClient.vfs.putItem(stream, filePath, options))._response;
+    return <string>result.headers.get('etag');
 }
 
 /**
  * Kudu APIs don't work for Linux consumption function apps and ARM APIs don't seem to work for web apps. We'll just have to use both
  */
-async function getFsResponse(client: ISimplifiedSiteClient, filePath: string): Promise<Response> {
-    if (client.isFunctionApp) {
-        if (!(client instanceof SiteClient)) {
+async function getFsResponse(siteClient: ISimplifiedSiteClient, filePath: string): Promise<HttpOperationResponse> {
+    if (siteClient.isFunctionApp) {
+        if (!(siteClient instanceof SiteClient)) {
             throw new RangeError('Internal Error: Expected client to be of type SiteClient.');
         }
 
         const linuxHome: string = '/home';
-        if (client.isLinux && !filePath.startsWith(linuxHome)) {
+        if (siteClient.isLinux && !filePath.startsWith(linuxHome)) {
             filePath = path.posix.join(linuxHome, filePath);
         }
 
-        const urlPath: string = `${client.id}/hostruntime/admin/vfs/${filePath}?api-version=2018-11-01`;
-        const requestOptions: requestUtils.Request = await requestUtils.getDefaultAzureRequest(urlPath, client.subscription, 'GET');
-        requestOptions.resolveWithFullResponse = true;
-        return await requestUtils.sendRequest(requestOptions);
+        const client: ServiceClient = createGenericClient(siteClient.subscription);
+        return await client.sendRequest({
+            method: 'GET',
+            url: `${siteClient.id}/hostruntime/admin/vfs/${filePath}?api-version=2018-11-01`
+        });
     } else {
-        const kuduClient: KuduClient = await client.getKuduClient();
-        return <Response>(await kuduClient.vfs.getItemWithHttpOperationResponse(filePath)).response;
+        const kuduClient: KuduClient = await siteClient.getKuduClient();
+        return (await kuduClient.vfs.getItem(filePath))._response;
     }
 }

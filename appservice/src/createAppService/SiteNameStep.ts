@@ -3,8 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { WebSiteManagementClient } from 'azure-arm-website';
-import { ResourceNameAvailability } from 'azure-arm-website/lib/models';
+import { WebSiteManagementClient, WebSiteManagementModels } from '@azure/arm-appservice';
 import { AzureNameStep, createAzureClient, IAzureNamingRules, ResourceGroupListStep, resourceGroupNamingRules, StorageAccountListStep, storageAccountNamingRules } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -79,7 +78,7 @@ export class SiteNameStep extends AzureNameStep<IAppServiceWizardContext> {
         } else if (siteNamingRules.invalidCharsRegExp.test(name)) {
             return localize('invalidChars', "The name can only contain letters, numbers, or hyphens.");
         } else {
-            const nameAvailability: ResourceNameAvailability = await client.checkNameAvailability(name, 'site');
+            const nameAvailability: WebSiteManagementModels.ResourceNameAvailability = await client.checkNameAvailability(name, 'Site');
             if (!nameAvailability.nameAvailable) {
                 return nameAvailability.message;
             } else {

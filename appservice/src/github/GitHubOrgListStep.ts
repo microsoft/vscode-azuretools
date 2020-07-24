@@ -6,19 +6,13 @@
 import { AzureWizardPromptStep, IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { createQuickPickFromJsons, createRequestOptions, getGitHubJsonResponse, gitHubOrgData, gitHubWebResource } from './connectToGitHub';
+import { createQuickPickFromJsons, getGitHubJsonResponse, gitHubOrgData } from './connectToGitHub';
 import { IConnectToGitHubWizardContext } from './IConnectToGitHubWizardContext';
 
 export class GitHubOrgListStep extends AzureWizardPromptStep<IConnectToGitHubWizardContext> {
     public async prompt(context: IConnectToGitHubWizardContext): Promise<void> {
         const placeHolder: string = localize('chooseOrg', 'Choose organization.');
-        let orgData: gitHubOrgData | undefined;
-
-        do {
-            orgData = (await ext.ui.showQuickPick(this.getOrganizations(context), { placeHolder })).data;
-        } while (!orgData);
-
-        context.orgData = orgData;
+        context.orgData = (await ext.ui.showQuickPick(this.getOrganizations(context), { placeHolder })).data;
     }
 
     public shouldPrompt(context: IConnectToGitHubWizardContext): boolean {
@@ -26,11 +20,11 @@ export class GitHubOrgListStep extends AzureWizardPromptStep<IConnectToGitHubWiz
     }
 
     private async getOrganizations(context: IConnectToGitHubWizardContext): Promise<IAzureQuickPickItem<gitHubOrgData | undefined>[]> {
-        let requestOptions: gitHubWebResource = await createRequestOptions(context, 'https://api.github.com/user');
-        let quickPickItems: IAzureQuickPickItem<gitHubOrgData>[] = createQuickPickFromJsons<gitHubOrgData>(await getGitHubJsonResponse<gitHubOrgData[]>(context, requestOptions), 'login');
+        const [userData]: [gitHubOrgData[], string | undefined] = await getGitHubJsonResponse(context, 'https://api.github.com/user');
+        let quickPickItems: IAzureQuickPickItem<gitHubOrgData>[] = createQuickPickFromJsons(userData, 'login');
 
-        requestOptions = await createRequestOptions(context, 'https://api.github.com/user/orgs');
-        quickPickItems = quickPickItems.concat(createQuickPickFromJsons<gitHubOrgData>(await getGitHubJsonResponse<gitHubOrgData[]>(context, requestOptions), 'login'));
+        const [orgData]: [gitHubOrgData[], string | undefined] = await getGitHubJsonResponse(context, 'https://api.github.com/user/orgs');
+        quickPickItems = quickPickItems.concat(createQuickPickFromJsons(orgData, 'login'));
 
         return quickPickItems;
     }
