@@ -24,7 +24,7 @@ export function validateAppSettingKey(settings: StringDictionary, client: IAppSe
     if (settings.properties && newKey.toLowerCase() !== oldKey) {
         for (const key of Object.keys(settings.properties)) {
             if (key.toLowerCase() === newKey.toLowerCase()) {
-                return `Setting "${newKey}" already exists.`;
+                return `App setting name "${newKey}" already exists.`;
             }
         }
     }
@@ -106,12 +106,12 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
         // tslint:disable-next-line: no-unsafe-any
         const settings: StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings(context)));
         const newKey: string = await ext.ui.showInputBox({
-            prompt: 'Enter new setting key',
+            prompt: 'Enter new app setting name',
             validateInput: (v: string): string | undefined => validateAppSettingKey(settings, this.client, v)
         });
 
         const newValue: string = await ext.ui.showInputBox({
-            prompt: `Enter setting value for "${newKey}"`
+            prompt: `Enter value for "${newKey}"`
         });
 
         if (!settings.properties) {
