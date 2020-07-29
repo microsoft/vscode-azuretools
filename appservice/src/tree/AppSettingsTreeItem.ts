@@ -12,19 +12,19 @@ import { getThemedIconPath } from './IconPath';
 
 export function validateAppSettingKey(settings: StringDictionary, client: IAppSettingsClient, newKey: string, oldKey?: string): string | undefined {
     if (client.isLinux && /[^\w\.]+/.test(newKey)) {
-        return 'App setting key names can only contain letters, numbers (0-9), periods ("."), and underscores ("_")';
+        return 'App setting names can only contain letters, numbers (0-9), periods ("."), and underscores ("_")';
     }
 
     newKey = newKey.trim();
     if (newKey.length === 0) {
-        return 'App setting key names must have at least one non-whitespace character.';
+        return 'App setting names must have at least one non-whitespace character.';
     }
 
     oldKey = oldKey ? oldKey.trim().toLowerCase() : oldKey;
     if (settings.properties && newKey.toLowerCase() !== oldKey) {
         for (const key of Object.keys(settings.properties)) {
             if (key.toLowerCase() === newKey.toLowerCase()) {
-                return `App setting key "${newKey}" already exists.`;
+                return `App setting name "${newKey}" already exists.`;
             }
         }
     }
@@ -106,12 +106,12 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
         // tslint:disable-next-line: no-unsafe-any
         const settings: StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings(context)));
         const newKey: string = await ext.ui.showInputBox({
-            prompt: 'Enter new app setting key',
+            prompt: 'Enter new app setting name',
             validateInput: (v: string): string | undefined => validateAppSettingKey(settings, this.client, v)
         });
 
         const newValue: string = await ext.ui.showInputBox({
-            prompt: `Enter setting value for "${newKey}"`
+            prompt: `Enter value for "${newKey}"`
         });
 
         if (!settings.properties) {
