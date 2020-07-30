@@ -48,13 +48,7 @@ export function createGenericClient(clientInfo?: ServiceClientCredentials | { cr
 class GenericServiceClient extends ServiceClient {
     constructor(credentials: ServiceClientCredentials | undefined, options: types.IMinimumServiceClientOptions) {
         super(credentials, options);
-
-        if (options.baseUri) {
-            if (options.baseUri.endsWith('/')) {
-                options.baseUri = options.baseUri.slice(0, -1);
-            }
-            this.baseUri = options.baseUri;
-        }
+        this.baseUri = options.baseUri?.endsWith('/') ? options.baseUri.slice(0, -1) : options.baseUri;
     }
 
     public async sendRequest(options: RequestPrepareOptions | WebResourceLike): Promise<HttpOperationResponse> {
