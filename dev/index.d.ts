@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { Environment } from "@azure/ms-rest-azure-env";
+import { ServiceClientCredentials } from '@azure/ms-rest-js';
 import * as cp from "child_process";
-import { ServiceClientCredentials } from 'ms-rest';
-import { AzureEnvironment } from 'ms-rest-azure';
 import { Event, InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, Uri } from "vscode";
 import * as webpack from 'webpack';
 
@@ -110,7 +110,7 @@ export interface ISubscriptionContext {
     subscriptionPath: string;
     tenantId: string;
     userId: string;
-    environment: AzureEnvironment;
+    environment: Environment;
 }
 
 /**

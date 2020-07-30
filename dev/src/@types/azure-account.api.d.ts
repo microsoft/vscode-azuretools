@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { SubscriptionModels } from '@azure/arm-subscriptions';
+import { Environment } from '@azure/ms-rest-azure-env';
+import { TokenCredentialsBase } from '@azure/ms-rest-nodeauth';
 import { Event } from 'vscode';
-import { ServiceClientCredentials } from 'ms-rest';
-import { AzureEnvironment } from 'ms-rest-azure';
-import { SubscriptionModels } from 'azure-arm-resource';
 
 export type AzureLoginStatus = 'Initializing' | 'LoggingIn' | 'LoggedIn' | 'LoggedOut';
 
@@ -25,10 +25,14 @@ export interface AzureAccount {
 }
 
 export interface AzureSession {
-    readonly environment: AzureEnvironment;
+    readonly environment: Environment;
     readonly userId: string;
     readonly tenantId: string;
-    readonly credentials: ServiceClientCredentials;
+
+	/**
+	 * The credentials object for azure-sdk-for-js modules https://github.com/azure/azure-sdk-for-js
+	 */
+    readonly credentials2: TokenCredentialsBase;
 }
 
 export interface AzureSubscription {
