@@ -1,0 +1,10 @@
+{
+    "typescript": true,
+    "input-file": "swagger.json",
+    "output-folder": ".",
+    "license-header": "MICROSOFT_MIT_NO_VERSION",
+    "package-name": "vscode-azurekudu",
+    "package-version": "0.2.0",
+    "add-credentials": true,
+    "generate-metadata": false // Set to true to re-generate files like package.json/tsconfig.json/README.md/etc.
+}

@@ -11,36 +11,12 @@ This package provides an automatically generated typescript client for [Kudu](ht
 
 ## Development
 
-This package will not work in many cases because the Kudu repo is missing important metadata. It is slowly improving on an as-needed basis (largely driven by a few App Service extensions in VS Code). To make changes to the package, follow these steps:
-1. Clone the [forked version of Kudu](https://github.com/EricJizbaMSFT/kudu/tree/swagger) that has Swagger enabled
-1. Make your changes to the [swagger config file](https://github.com/EricJizbaMSFT/kudu/blob/swagger/Kudu.Services.Web/App_Start/SwaggerConfig.cs) or take a look at the [common fixes](#common-fixes) below.
-1. To setup Kudu, follow Kudu's [Getting started](https://github.com/projectkudu/kudu/wiki/Getting-started) guide.
-1. Run Kudu, create a new application, and navigate to the swagger endpoint (It will be a url similar to `http://localhost:16167/swagger/docs/v1`, but the port will likely be different)
-1. Copy the generated json to the [swagger.json](swagger.json) file in this repo.
-1. Run `npm run build` to generate your typescript client library from the updated [swagger.json](swagger.json).
+If changes to this package are necessary, manually edit "swagger.json". This file used to be generated off a [fork of kudu](https://github.com/EricJizbaMSFT/kudu) that enabled swagger, but the fork has fallen out of sync with the [original](https://github.com/projectkudu/kudu) and it's just not worth the effort to keep them in sync.
 
-> NOTE: It might be easier to manually edit the 'swagger.json' file when you're debugging this package. However, you should always make the corresponding change in the Kudu repo so that we can continue to automatically generate the [swagger.json](swagger.json) file.
-
-### Common Fixes
-1. Most of the generated typescript methods return a generic 'object'. You must add a `ResponseType` in the Kudu repo to actually get helpful types:
-    ```c#
-    using System.Web.Http.Description; // <-- This line must be added
-
-    class ExampleController
-    {
-        [HttpGet]
-        [ResponseType(typeof(Person))] // <-- This line must be added
-        public async Task<HttpResponseMessage> GetPerson()
-        {
-            return Request.CreateResponse(HttpStatusCode.OK, new Person('Nathan'));
-        }
-    }
-    ```
-1. Autorest assumes all responses are 'JSON' and does not support other types (See [this issue](https://github.com/Azure/autorest/issues/1527)). If a call returns something other than JSON, you must specify a return type of 'void' (`[ResponseType(typeof(void))]`) to avoid a JSON parse error and handle the response yourself.
-
-### Troubleshooting
-
-1. If Kudu returns a 500 error when creating an application, verify that your kudu repo is located in a directory that has read-access.  Creation will fail if it cannot read the config file.
+Then, install "autorest" and run the following command to re-generate the source code of this package:
+```
+autorest autorestconfig.json
+```
 
 ## License
 [MIT](LICENSE.md)
