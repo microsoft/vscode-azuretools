@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ResourceManagementClient } from 'azure-arm-resource';
+import { ResourceManagementClient } from '@azure/arm-resources';
 import { MessageItem, Progress } from 'vscode';
 import * as types from '../../index';
 import { createAzureClient } from '../createAzureClient';
@@ -23,7 +23,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
         const newLocation: string = wizardContext.location!.name!;
         const resourceClient: ResourceManagementClient = createAzureClient(wizardContext, ResourceManagementClient);
         try {
-            const rgExists: boolean = await resourceClient.resourceGroups.checkExistence(newName);
+            const rgExists: boolean = (await resourceClient.resourceGroups.checkExistence(newName)).body;
             if (rgExists) {
                 ext.outputChannel.appendLog(localize('existingResourceGroup', 'Using existing resource group "{0}".', newName));
                 wizardContext.resourceGroup = await resourceClient.resourceGroups.get(newName);

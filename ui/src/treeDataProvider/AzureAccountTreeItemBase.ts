@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import * as semver from 'semver';
 import { commands, Disposable, Extension, extensions, MessageItem, ProgressLocation, window } from 'vscode';
 import * as types from '../../index';
 import { AzureAccount, AzureLoginStatus, AzureResourceFilter } from '../azure-account.api';
@@ -26,6 +27,9 @@ const selectSubscriptionsCommandId: string = 'azure-account.selectSubscriptions'
 const azureAccountExtensionId: string = 'ms-vscode.azure-account';
 const extensionOpenCommand: string = 'extension.open';
 
+type AzureAccountResult = AzureAccount | 'notInstalled' | 'needsUpdate';
+const minAccountExtensionVersion: string = '0.9.0';
+
 export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem implements types.AzureAccountTreeItemBase {
     public static contextValue: string = 'azureextensionui.azureAccount';
     public readonly contextValue: string = AzureAccountTreeItemBase.contextValue;
@@ -34,7 +38,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
     public autoSelectInTreeItemPicker: boolean = true;
     public disposables: Disposable[] = [];
 
-    private _azureAccountTask: Promise<AzureAccount | undefined>;
+    private _azureAccountTask: Promise<AzureAccountResult>;
     private _subscriptionTreeItems: SubscriptionTreeItemBase[] | undefined;
     private _testAccount: AzureAccount | undefined;
     private _isLoggedIn: boolean = false;
@@ -66,17 +70,20 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
     }
 
     public async loadMoreChildrenImpl(_clearCache: boolean, context: types.IActionContext): Promise<AzExtTreeItem[]> {
-        let azureAccount: AzureAccount | undefined = await this._azureAccountTask;
-        if (!azureAccount) {
+        let azureAccount: AzureAccountResult = await this._azureAccountTask;
+        if (typeof azureAccount === 'string') {
             // Refresh the AzureAccount, to handle Azure account extension installation after the previous refresh
             this._azureAccountTask = this.loadAzureAccount(this._testAccount);
             azureAccount = await this._azureAccountTask;
         }
 
-        if (!azureAccount) {
-            context.telemetry.properties.accountStatus = 'notInstalled';
-            const label: string = localize('installAzureAccount', 'Install Azure Account Extension...');
-            const result: AzExtTreeItem = new GenericTreeItem(this, { label, commandId: extensionOpenCommand, contextValue: 'installAzureAccount', includeInTreeItemPicker: true });
+        if (typeof azureAccount === 'string') {
+            context.telemetry.properties.accountStatus = azureAccount;
+            const label: string = azureAccount === 'notInstalled' ?
+                localize('installAzureAccount', 'Install Azure Account Extension...') :
+                localize('updateAzureAccount', 'Update Azure Account Extension to at least version "{0}"...', minAccountExtensionVersion);
+            const iconPath: types.TreeItemIconPath = getThemedIconPath('warning');
+            const result: AzExtTreeItem = new GenericTreeItem(this, { label, commandId: extensionOpenCommand, contextValue: 'azureAccount' + azureAccount, includeInTreeItemPicker: true, iconPath });
             result.commandArgs = [azureAccountExtensionId];
             return [result];
         }
@@ -119,7 +126,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
                     // filter.subscription.id is the The fully qualified ID of the subscription (For example, /subscriptions/00000000-0000-0000-0000-000000000000) and should be used as the tree item's id for the purposes of OpenInPortal
                     // filter.subscription.subscriptionId is just the guid and is used in all other cases when creating clients for managing Azure resources
                     return await this.createSubscriptionTreeItem({
-                        credentials: filter.session.credentials,
+                        credentials: filter.session.credentials2,
                         subscriptionDisplayName: nonNullProp(filter.subscription, 'displayName'),
                         subscriptionId: nonNullProp(filter.subscription, 'subscriptionId'),
                         subscriptionPath: nonNullProp(filter.subscription, 'id'),
@@ -153,8 +160,8 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
     }
 
     public async pickTreeItemImpl(_expectedContextValues: (string | RegExp)[]): Promise<AzExtTreeItem | undefined> {
-        const azureAccount: AzureAccount | undefined = await this._azureAccountTask;
-        if (azureAccount && (azureAccount.status === 'LoggingIn' || azureAccount.status === 'Initializing')) {
+        const azureAccount: AzureAccountResult = await this._azureAccountTask;
+        if (typeof azureAccount !== 'string' && (azureAccount.status === 'LoggingIn' || azureAccount.status === 'Initializing')) {
             const title: string = localize('waitingForAzureSignin', 'Waiting for Azure sign-in...');
             // tslint:disable-next-line: no-non-null-assertion
             await window.withProgress({ location: ProgressLocation.Notification, title }, async (): Promise<boolean> => await azureAccount!.waitForSubscriptions());
@@ -171,10 +178,19 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
         }
     }
 
-    private async loadAzureAccount(azureAccount: AzureAccount | undefined): Promise<AzureAccount | undefined> {
+    private async loadAzureAccount(azureAccount: AzureAccount | undefined): Promise<AzureAccountResult> {
         if (!azureAccount) {
             const extension: Extension<AzureAccount> | undefined = extensions.getExtension<AzureAccount>(azureAccountExtensionId);
             if (extension) {
+                try {
+                    // tslint:disable-next-line: no-unsafe-any
+                    if (semver.lt(extension.packageJSON.version, minAccountExtensionVersion)) {
+                        return 'needsUpdate';
+                    }
+                } catch {
+                    // ignore and assume extension is up to date
+                }
+
                 if (!extension.isActive) {
                     await extension.activate();
                 }
@@ -193,16 +209,24 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
                 }
             }));
             await commands.executeCommand('setContext', 'isAzureAccountInstalled', true);
+            return azureAccount;
+        } else {
+            return 'notInstalled';
         }
-
-        return azureAccount;
     }
 
     private async ensureSubscriptionTreeItems(context: types.IActionContext): Promise<SubscriptionTreeItemBase[]> {
-        const azureAccount: AzureAccount | undefined = await this._azureAccountTask;
-        if (!azureAccount) {
-            context.telemetry.properties.cancelStep = 'requiresAzureAccount';
-            const message: string = localize('requiresAzureAccount', "This functionality requires installing the Azure Account extension.");
+        const azureAccount: AzureAccountResult = await this._azureAccountTask;
+        if (typeof azureAccount === 'string') {
+            let message: string;
+            if (azureAccount === 'notInstalled') {
+                context.telemetry.properties.cancelStep = 'requiresAzureAccount';
+                message = localize('requiresAzureAccount', "This functionality requires installing the Azure Account extension.");
+            } else {
+                context.telemetry.properties.cancelStep = 'requiresUpdateToAzureAccount';
+                message = localize('requiresUpdateToAzureAccount', 'This functionality requires updating the Azure Account extension to at least version "{0}".', minAccountExtensionVersion);
+            }
+
             const viewInMarketplace: MessageItem = { title: localize('viewInMarketplace', "View in Marketplace") };
             if (await ext.ui.showWarningMessage(message, viewInMarketplace) === viewInMarketplace) {
                 await commands.executeCommand(extensionOpenCommand, azureAccountExtensionId);

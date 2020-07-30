@@ -3,11 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ResourceGroup } from 'azure-arm-resource/lib/resource/models';
-import { Location } from 'azure-arm-resource/lib/subscription/models';
-import { StorageAccount } from 'azure-arm-storage/lib/models';
-import { ServiceClientCredentials } from 'ms-rest';
-import { AzureEnvironment, AzureServiceClientOptions } from 'ms-rest-azure';
+import { ResourceManagementModels } from '@azure/arm-resources';
+import { StorageManagementModels } from '@azure/arm-storage';
+import { SubscriptionModels } from '@azure/arm-subscriptions';
+import { Environment } from '@azure/ms-rest-azure-env';
+import { ServiceClient, ServiceClientCredentials } from '@azure/ms-rest-js';
+import { TokenCredentialsBase } from '@azure/ms-rest-nodeauth';
 import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocument, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 
@@ -136,13 +137,13 @@ export abstract class SubscriptionTreeItemBase extends AzureParentTreeItem {
  * Information specific to the Subscription
  */
 export interface ISubscriptionContext {
-    credentials: ServiceClientCredentials;
+    credentials: TokenCredentialsBase;
     subscriptionDisplayName: string;
     subscriptionId: string;
     subscriptionPath: string;
     tenantId: string;
     userId: string;
-    environment: AzureEnvironment;
+    environment: Environment;
 }
 
 export type TreeItemIconPath = string | Uri | { light: string | Uri; dark: string | Uri } | ThemeIcon;
@@ -894,7 +895,7 @@ export interface ILocationWizardContext extends ISubscriptionWizardContext {
      * The location to use for new resources
      * This value will be defined after `LocationListStep.prompt` occurs or after you call `LocationListStep.setLocation`
      */
-    location?: Location;
+    location?: SubscriptionModels.Location;
 
     /**
      * Optional task to describe the subset of locations that should be displayed.
@@ -925,7 +926,7 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
      * Used to get locations. By passing in the context, we can ensure that Azure is only queried once for the entire wizard
      * @param wizardContext The context of the wizard.
      */
-    public static getLocations<T extends ILocationWizardContext>(wizardContext: T): Promise<Location[]>;
+    public static getLocations<T extends ILocationWizardContext>(wizardContext: T): Promise<SubscriptionModels.Location[]>;
 
     public prompt(wizardContext: T): Promise<void>;
     public shouldPrompt(wizardContext: T): boolean;
@@ -1003,13 +1004,13 @@ export interface IResourceGroupWizardContext extends ILocationWizardContext, IRe
      * If an existing resource group is picked, this value will be defined after `ResourceGroupListStep.prompt` occurs
      * If a new resource group is picked, this value will be defined after the `execute` phase of the 'create' subwizard
      */
-    resourceGroup?: ResourceGroup;
+    resourceGroup?: ResourceManagementModels.ResourceGroup;
 
     /**
      * The task used to get existing resource groups.
      * By specifying this in the context, we can ensure that Azure is only queried once for the entire wizard
      */
-    resourceGroupsTask?: Promise<ResourceGroup[]>;
+    resourceGroupsTask?: Promise<ResourceManagementModels.ResourceGroup[]>;
 
     newResourceGroupName?: string;
 
@@ -1026,7 +1027,7 @@ export declare class ResourceGroupListStep<T extends IResourceGroupWizardContext
      * Used to get existing resource groups. By passing in the context, we can ensure that Azure is only queried once for the entire wizard
      * @param wizardContext The context of the wizard.
      */
-    public static getResourceGroups<T extends IResourceGroupWizardContext>(wizardContext: T): Promise<ResourceGroup[]>;
+    public static getResourceGroups<T extends IResourceGroupWizardContext>(wizardContext: T): Promise<ResourceManagementModels.ResourceGroup[]>;
 
     /**
      * Checks existing resource groups in the wizard's subscription to see if the name is available.
@@ -1059,7 +1060,7 @@ export interface IStorageAccountWizardContext extends IResourceGroupWizardContex
      * If an existing storage account is picked, this value will be defined after `StorageAccountListStep.prompt` occurs
      * If a new storage account is picked, this value will be defined after the `execute` phase of the 'create' subwizard
      */
-    storageAccount?: StorageAccount;
+    storageAccount?: StorageManagementModels.StorageAccount;
 
     newStorageAccountName?: string;
 }
@@ -1198,23 +1199,42 @@ export declare function appendExtensionUserAgent(existingUserAgent?: string): st
  */
 export declare function addExtensionUserAgent(client: IAddUserAgent): void;
 
+export interface IMinimumServiceClientOptions {
+    acceptLanguage?: string,
+    baseUri?: string;
+    userAgent?: string | ((defaultUserAgent: string) => string);
+}
+
+/**
+ * Creates a generic http rest client (i.e. for non-Azure calls or for Azure calls that the available sdks don't support), ensuring best practices are followed. For example:
+ * 1. Adds extension-specific user agent
+ * 2. Uses resourceManagerEndpointUrl to support sovereigns (if clientInfo corresponds to an Azure environment)
+ */
+export function createGenericClient(clientInfo?: ServiceClientCredentials | { credentials: ServiceClientCredentials; environment: Environment; }): ServiceClient;
+
 /**
  * Creates an Azure client, ensuring best practices are followed. For example:
  * 1. Adds extension-specific user agent
  * 2. Uses resourceManagerEndpointUrl to support sovereigns
+ *
+ * NOTE: `credentials` is of type `any` because several packages still rely on v1 of "@azure/ms-rest-js", which would cause type conflicts with v2 (even though the breaking changes seem minimal)
+ * For example: https://github.com/Azure/azure-sdk-for-js/issues/10045
  */
-export function createAzureClient<T extends IAddUserAgent>(
-    clientInfo: { credentials: ServiceClientCredentials; subscriptionId: string; environment: AzureEnvironment; },
-    clientType: new (credentials: ServiceClientCredentials, subscriptionId: string, baseUri?: string, options?: AzureServiceClientOptions) => T): T;
+export function createAzureClient<T>(
+    clientInfo: { credentials: any; subscriptionId: string; environment: Environment; },
+    clientType: new (credentials: any, subscriptionId: string, options?: IMinimumServiceClientOptions) => T): T;
 
 /**
  * Creates an Azure subscription client, ensuring best practices are followed. For example:
  * 1. Adds extension-specific user agent
  * 2. Uses resourceManagerEndpointUrl to support sovereigns
+ *
+ * NOTE: `credentials` is of type `any` because several packages still rely on v1 of "@azure/ms-rest-js", which would cause type conflicts with v2 (even though the breaking changes seem minimal)
+ * For example: https://github.com/Azure/azure-sdk-for-js/issues/10045
  */
-export function createAzureSubscriptionClient<T extends IAddUserAgent>(
-    clientInfo: { credentials: ServiceClientCredentials; environment: AzureEnvironment; },
-    clientType: new (credentials: ServiceClientCredentials, baseUri?: string, options?: AzureServiceClientOptions) => T): T;
+export function createAzureSubscriptionClient<T>(
+    clientInfo: { credentials: any; environment: Environment; },
+    clientType: new (credentials: any, options?: IMinimumServiceClientOptions) => T): T;
 
 /**
  * Wraps an Azure Extension's API in a very basic provider that adds versioning.

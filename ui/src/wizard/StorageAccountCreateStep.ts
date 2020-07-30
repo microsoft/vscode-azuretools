@@ -3,8 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// tslint:disable-next-line:no-require-imports
-import StorageManagementClient = require('azure-arm-storage');
+import { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
 import { Progress } from 'vscode';
 import * as types from '../../index';
 import { createAzureClient } from '../createAzureClient';
@@ -27,7 +26,7 @@ export class StorageAccountCreateStep<T extends types.IStorageAccountWizardConte
         const newLocation: string = wizardContext.location!.name!;
         // tslint:disable-next-line:no-non-null-assertion
         const newName: string = wizardContext.newStorageAccountName!;
-        const newSkuName: string = `${this._defaults.performance}_${this._defaults.replication}`;
+        const newSkuName: StorageManagementModels.SkuName = <StorageManagementModels.SkuName>`${this._defaults.performance}_${this._defaults.replication}`;
         const creatingStorageAccount: string = localize('CreatingStorageAccount', 'Creating storage account "{0}" in location "{1}" with sku "{2}"...', newName, newLocation, newSkuName);
         ext.outputChannel.appendLog(creatingStorageAccount);
         progress.report({ message: creatingStorageAccount });
