@@ -6,7 +6,7 @@
 import { WebSiteManagementClient, WebSiteManagementModels as Models } from '@azure/arm-appservice';
 import { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
 import { appendExtensionUserAgent, createAzureClient, createGenericClient, ISubscriptionContext, parseError } from 'vscode-azureextensionui';
-import { KuduClient, KuduModels } from 'vscode-azurekudu';
+import { KuduClient } from 'vscode-azurekudu';
 import { ISimplifiedSiteClient } from './ISimplifiedSiteClient';
 import { localize } from './localize';
 import { deleteFunctionSlot, getFunctionSlot, listFunctionsSlot } from './slotFunctionOperations';
@@ -224,7 +224,7 @@ export class SiteClient implements ISimplifiedSiteClient {
         return await this._client.webApps.listFunctionsNext(nextPageLink);
     }
 
-    public async getFunction(functionName: string): Promise<KuduModels.FunctionEnvelope> {
+    public async getFunction(functionName: string): Promise<Models.FunctionEnvelope> {
         if (this.slotName) {
             return await getFunctionSlot(this.subscription, this.id, functionName);
         } else {
