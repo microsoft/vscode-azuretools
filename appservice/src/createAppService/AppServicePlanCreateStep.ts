@@ -3,8 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { WebSiteManagementClient } from 'azure-arm-website';
-import { AppServicePlan } from 'azure-arm-website/lib/models';
+import { WebSiteManagementClient, WebSiteManagementModels } from '@azure/arm-appservice';
 import { Progress } from 'vscode';
 import { AzureWizardExecuteStep, createAzureClient } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
@@ -27,7 +26,7 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
         ext.outputChannel.appendLog(findingAppServicePlan);
 
         const client: WebSiteManagementClient = createAzureClient(wizardContext, WebSiteManagementClient);
-        const existingPlan: AppServicePlan | undefined = <AppServicePlan | undefined>await client.appServicePlans.get(rgName, newPlanName);
+        const existingPlan: WebSiteManagementModels.AppServicePlan | undefined = <WebSiteManagementModels.AppServicePlan | undefined>await client.appServicePlans.get(rgName, newPlanName);
 
         if (existingPlan) {
             wizardContext.plan = existingPlan;

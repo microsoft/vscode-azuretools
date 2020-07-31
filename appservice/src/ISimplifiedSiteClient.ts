@@ -3,10 +3,9 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { SiteConfigResource, SiteSourceControl, User } from 'azure-arm-website/lib/models';
-import KuduClient from 'vscode-azurekudu';
+import { WebSiteManagementModels } from '@azure/arm-appservice';
+import { KuduClient } from 'vscode-azurekudu';
 import { IAppSettingsClient } from './IAppSettingsClient';
-import { IHostKeys } from './SiteClient';
 
 export interface ISimplifiedSiteClient extends IAppSettingsClient {
     defaultHostUrl: string;
@@ -15,8 +14,8 @@ export interface ISimplifiedSiteClient extends IAppSettingsClient {
     kuduUrl: string | undefined;
     gitUrl: string | undefined;
     getKuduClient(): Promise<KuduClient>;
-    getSiteConfig(): Promise<SiteConfigResource>;
-    getSourceControl(): Promise<SiteSourceControl>;
-    getWebAppPublishCredential(): Promise<User>;
-    listHostKeys?(): Promise<IHostKeys>;
+    getSiteConfig(): Promise<WebSiteManagementModels.SiteConfigResource>;
+    getSourceControl(): Promise<WebSiteManagementModels.SiteSourceControl>;
+    getWebAppPublishCredential(): Promise<WebSiteManagementModels.User>;
+    listHostKeys?(): Promise<WebSiteManagementModels.HostKeys>;
 }

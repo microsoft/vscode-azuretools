@@ -19,6 +19,6 @@ export async function deployWar(context: IActionContext, client: SiteClient, fsP
 
     ext.outputChannel.appendLog(localize('deployStart', 'Starting deployment...'), { resourceName: client.fullName });
     const kuduClient: KuduClient = await client.getKuduClient();
-    await kuduClient.pushDeployment.warPushDeploy(fs.createReadStream(fsPath), { isAsync: true });
+    await kuduClient.pushDeployment.warPushDeploy(() => fs.createReadStream(fsPath), { isAsync: true });
     await waitForDeploymentToComplete(context, client);
 }

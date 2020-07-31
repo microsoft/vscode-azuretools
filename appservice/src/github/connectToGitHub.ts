@@ -3,18 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SiteSourceControl } from 'azure-arm-website/lib/models';
-import { TokenCredentials } from 'ms-rest';
-import { Response } from 'request';
+import { WebSiteManagementModels } from '@azure/arm-appservice';
+import { HttpOperationResponse, ServiceClient, TokenCredentials } from '@azure/ms-rest-js';
 import { isArray } from 'util';
 import * as vscode from 'vscode';
-import { AzureWizard, DialogResponses, IAzureQuickPickItem, IParsedError, openInPortal, parseError } from 'vscode-azureextensionui';
+import { AzureWizard, createGenericClient, DialogResponses, IAzureQuickPickItem, IParsedError, openInPortal, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
-import { requestUtils } from '../utils/requestUtils';
 import { verifyNoRunFromPackageSetting } from '../verifyNoRunFromPackageSetting';
 import { GitHubBranchListStep } from './GitHubBranchListStep';
 import { GitHubOrgListStep } from './GitHubOrgListStep';
@@ -25,7 +23,6 @@ export type gitHubOrgData = { login: string, repos_url: string };
 export type gitHubRepoData = { name: string, repos_url: string, url: string, html_url: string };
 export type gitHubBranchData = { name: string };
 export type gitHubLink = { prev?: string, next?: string, last?: string, first?: string };
-export type gitHubWebResource = requestUtils.Request & { nextLink?: string };
 
 export async function connectToGitHub(client: SiteClient, context: IConnectToGitHubWizardContext): Promise<void> {
     const title: string = localize('connectGitHubRepo', 'Connect GitHub repository');
@@ -42,7 +39,7 @@ export async function connectToGitHub(client: SiteClient, context: IConnectToGit
 
     await wizard.prompt();
 
-    const siteSourceControl: SiteSourceControl = {
+    const siteSourceControl: WebSiteManagementModels.SiteSourceControl = {
         repoUrl: nonNullProp(context, 'repoData').html_url,
         branch: nonNullProp(context, 'branchData').name,
         isManualIntegration: false,
@@ -97,19 +94,18 @@ async function showGitHubAuthPrompt(client: SiteClient, context: IConnectToGitHu
     }
 }
 
-export async function getGitHubJsonResponse<T>(context: IConnectToGitHubWizardContext, requestOptions: gitHubWebResource): Promise<T> {
+export async function getGitHubJsonResponse<T>(context: IConnectToGitHubWizardContext, url: string): Promise<[T, string | undefined]> {
+    // tslint:disable-next-line: strict-boolean-expressions
+    context.gitHubClient = context.gitHubClient || await createGitHubClient(context);
+
     // Reference for GitHub REST routes
     // https://developer.github.com/v3/
     // Note: blank after user implies look up authorized user
     try {
-        const gitHubResponse: Response = await requestUtils.sendRequest(requestOptions);
-        if (gitHubResponse.headers.link) {
-            const headerLink: string = <string>gitHubResponse.headers.link;
-            const linkObject: gitHubLink = parseLinkHeaderToGitHubLinkObject(headerLink);
-            requestOptions.nextLink = linkObject.next;
-        }
-        // tslint:disable-next-line:no-unsafe-any
-        return <T>JSON.parse(gitHubResponse.body);
+        const response: HttpOperationResponse = await context.gitHubClient.sendRequest({ method: 'GET', url });
+        const headerLink: string | undefined = response.headers.get('link');
+        const nextLink: string | undefined = headerLink && parseLinkHeaderToGitHubLinkObject(headerLink).next;
+        return [<T>response.parsedBody, nextLink];
     } catch (error) {
         const parsedError: IParsedError = parseError(error);
         if (parsedError.message.indexOf('Bad credentials') > -1) {
@@ -163,33 +159,32 @@ export interface ICachedQuickPicks<T> {
     picks: IAzureQuickPickItem<T>[];
 }
 
-export async function getGitHubQuickPicksWithLoadMore<T>(context: IConnectToGitHubWizardContext, cache: ICachedQuickPicks<T>, requestOptions: gitHubWebResource, labelName: string, timeoutSeconds: number = 10): Promise<IAzureQuickPickItem<T | undefined>[]> {
+export async function getGitHubQuickPicksWithLoadMore<T>(context: IConnectToGitHubWizardContext, cache: ICachedQuickPicks<T>, originalUrl: string, labelName: string, timeoutSeconds: number = 10): Promise<IAzureQuickPickItem<T | string>[]> {
     const timeoutMs: number = timeoutSeconds * 1000;
     const startTime: number = Date.now();
     let gitHubQuickPicks: T[] = [];
+    let url: string | undefined = originalUrl;
     do {
-        gitHubQuickPicks = gitHubQuickPicks.concat(await getGitHubJsonResponse<T[]>(context, requestOptions));
-        if (requestOptions.nextLink) {
-            // if there is another link, set the next request url to point at that
-            requestOptions.url = requestOptions.nextLink;
-        }
-    } while (requestOptions.nextLink && startTime + timeoutMs > Date.now());
+        const [result, nextLink]: [T[], string | undefined] = await getGitHubJsonResponse<T[]>(context, url);
+        gitHubQuickPicks = gitHubQuickPicks.concat(result);
+        url = nextLink;
+    } while (url && startTime + timeoutMs > Date.now());
 
     cache.picks = cache.picks.concat(createQuickPickFromJsons(gitHubQuickPicks, labelName));
     cache.picks.sort((a: vscode.QuickPickItem, b: vscode.QuickPickItem) => a.label.localeCompare(b.label));
 
-    if (requestOptions.nextLink) {
-        return (<IAzureQuickPickItem<T | undefined>[]>[{
+    if (url) {
+        return (<IAzureQuickPickItem<T | string>[]>[{
             label: '$(sync) Load More',
             suppressPersistence: true,
-            data: undefined
+            data: url
         }]).concat(cache.picks);
     } else {
         return cache.picks;
     }
 }
 
-export async function createRequestOptions(context: IConnectToGitHubWizardContext, url: string): Promise<gitHubWebResource> {
+export async function createGitHubClient(context: IConnectToGitHubWizardContext): Promise<ServiceClient> {
     const client: SiteClient = nonNullProp(context, 'client');
     const oAuth2Token: string | undefined = (await client.listSourceControls())[0].token;
     if (!oAuth2Token) {
@@ -199,7 +194,5 @@ export async function createRequestOptions(context: IConnectToGitHubWizardContex
         throw new Error(noToken);
     }
 
-    const requestOptions: gitHubWebResource = await requestUtils.getDefaultRequest(url, new TokenCredentials(oAuth2Token));
-    requestOptions.resolveWithFullResponse = true;
-    return requestOptions;
+    return createGenericClient(new TokenCredentials(oAuth2Token));
 }

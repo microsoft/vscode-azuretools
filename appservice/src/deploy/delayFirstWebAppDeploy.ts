@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AppServicePlan } from 'azure-arm-website/lib/models';
+import { WebSiteManagementModels } from '@azure/arm-appservice';
 import { KuduClient } from 'vscode-azurekudu';
 import { SiteClient } from '../SiteClient';
 
-export async function delayFirstWebAppDeploy(client: SiteClient, asp: AppServicePlan | undefined): Promise<void> {
+export async function delayFirstWebAppDeploy(client: SiteClient, asp: WebSiteManagementModels.AppServicePlan | undefined): Promise<void> {
     await new Promise<void>(async (resolve: () => void): Promise<void> => {
         setTimeout(resolve, 10000);
         try {

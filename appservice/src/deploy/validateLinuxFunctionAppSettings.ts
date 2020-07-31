@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { StringDictionary } from 'azure-arm-website/lib/models';
+import { WebSiteManagementModels } from '@azure/arm-appservice';
 import { IActionContext } from 'vscode-azureextensionui';
 import { SiteClient } from '../SiteClient';
 
 export async function validateLinuxFunctionAppSettings(context: IActionContext, client: SiteClient, doBuild: boolean, isConsumption: boolean): Promise<void> {
-    const appSettings: StringDictionary = await client.listApplicationSettings();
+    const appSettings: WebSiteManagementModels.StringDictionary = await client.listApplicationSettings();
     // tslint:disable-next-line:strict-boolean-expressions
     appSettings.properties = appSettings.properties || {};
 

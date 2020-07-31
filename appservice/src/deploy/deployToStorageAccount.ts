@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { StringDictionary } from 'azure-arm-website/lib/models';
-import * as azureStorage from "azure-storage";
+import { WebSiteManagementModels } from '@azure/arm-appservice';
+import { BlobSASPermissions, BlobServiceClient, BlockBlobClient, ContainerClient, generateBlobSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
 import * as moment from 'moment';
-import { Writable } from 'stream';
+import { URL } from 'url';
 import { IActionContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -24,9 +24,9 @@ export async function deployToStorageAccount(context: IActionContext, fsPath: st
     const randomPart: string = randomUtils.getRandomHexString(32);
     const blobName: string = `${datePart}-${randomPart}.zip`;
 
-    const blobService: azureStorage.BlobService = await createBlobService(client);
+    const blobService: BlobServiceClient = await createBlobServiceClient(client);
     const blobUrl: string = await createBlobFromZip(context, fsPath, client, blobService, blobName);
-    const appSettings: StringDictionary = await client.listApplicationSettings();
+    const appSettings: WebSiteManagementModels.StringDictionary = await client.listApplicationSettings();
     // tslint:disable-next-line:strict-boolean-expressions
     appSettings.properties = appSettings.properties || {};
     delete appSettings.properties.WEBSITE_RUN_FROM_ZIP; // delete old app setting name if it exists
@@ -35,59 +35,49 @@ export async function deployToStorageAccount(context: IActionContext, fsPath: st
     ext.outputChannel.appendLog(localize('deploymentSuccessful', 'Deployment successful.'), { resourceName: client.fullName });
 }
 
-async function createBlobService(client: SiteClient): Promise<azureStorage.BlobService> {
+async function createBlobServiceClient(client: SiteClient): Promise<BlobServiceClient> {
     // Use same storage account as AzureWebJobsStorage for deployments
     const azureWebJobsStorageKey: string = 'AzureWebJobsStorage';
-    const settings: StringDictionary = await client.listApplicationSettings();
+    const settings: WebSiteManagementModels.StringDictionary = await client.listApplicationSettings();
     if (settings.properties && settings.properties[azureWebJobsStorageKey]) {
-        const blobService: azureStorage.BlobService = azureStorage.createBlobService(settings.properties[azureWebJobsStorageKey]);
-        // Add retry filter since deploying may be a large file which can fail if network is poor
-        return blobService.withFilter(new azureStorage.ExponentialRetryPolicyFilter());
+        return BlobServiceClient.fromConnectionString(settings.properties[azureWebJobsStorageKey]);
     }
     throw new Error(localize('azureWebJobsStorageKey', '"{0}" app setting is required for Run From Package deployment.', azureWebJobsStorageKey));
 }
 
-async function createBlobFromZip(context: IActionContext, fsPath: string, client: SiteClient, blobService: azureStorage.BlobService, blobName: string): Promise<string> {
+async function createBlobFromZip(context: IActionContext, fsPath: string, client: SiteClient, blobService: BlobServiceClient, blobName: string): Promise<string> {
     const containerName: string = 'function-releases';
-    await new Promise<void>((resolve: () => void, reject: (err: Error) => void): void => {
-        blobService.createContainerIfNotExists(containerName, (err: Error) => {
-            if (err !== null) {
-                reject(err);
-            } else {
-                resolve();
-            }
-        });
-    });
+    const containerClient: ContainerClient = blobService.getContainerClient(containerName);
+    if (!await containerClient.exists()) {
+        await containerClient.create();
+    }
+
+    const blobClient: BlockBlobClient = containerClient.getBlockBlobClient(blobName);
 
     await runWithZipStream(context, fsPath, client, async zipStream => {
-        await new Promise((resolve, reject): void => {
-            ext.outputChannel.appendLog(localize('creatingBlob', 'Uploading zip package to storage container...'), { resourceName: client.fullName });
-            const writeStream: Writable = blobService.createWriteStreamToBlockBlob(containerName, blobName, (error: Error, r: azureStorage.BlobService.BlobResult, _response: azureStorage.ServiceResponse) => {
-                if (error !== null) {
-                    reject(error);
-                } else {
-                    resolve(r);
-                }
-            });
-            zipStream.pipe(writeStream);
-        });
+        ext.outputChannel.appendLog(localize('creatingBlob', 'Uploading zip package to storage container...'), { resourceName: client.fullName });
+        await blobClient.uploadStream(zipStream);
     });
 
-    // don't wait
-    // NOTE: the `result` from `createBlockBlobFromLocalFile` above doesn't actually have the contentLength - thus we have to make a seperate call here
-    blobService.getBlobProperties(containerName, blobName, (_error: Error, r: azureStorage.BlobService.BlobResult) => {
+    // NOTE: the `result` from `uploadStream` above doesn't actually have the contentLength - thus we have to make a seperate call here
+    // tslint:disable-next-line: no-floating-promises
+    blobClient.getProperties().then(r => {
         context.telemetry.measurements.blobSize = Number(r.contentLength);
     });
 
-    const sasToken: string = blobService.generateSharedAccessSignature(containerName, blobName, <azureStorage.common.SharedAccessPolicy>{
-        AccessPolicy: {
-            Permissions: azureStorage.BlobUtilities.SharedAccessPermissions.READ,
-            Start: azureStorage.date.minutesFromNow(-5),
-            // for clock desync
-            Expiry: azureStorage.date.daysFromNow(10 * 365),
-            ResourceTypes: azureStorage.BlobUtilities.BlobContainerPublicAccessType.BLOB
-        }
-    });
-
-    return blobService.getUrl(containerName, blobName, sasToken, true);
+    if (blobService.credential instanceof StorageSharedKeyCredential) {
+        const url: URL = new URL(blobClient.url);
+        url.search = generateBlobSASQueryParameters(
+            {
+                containerName,
+                blobName,
+                permissions: BlobSASPermissions.parse('r'),
+                startsOn: moment.utc(Date.now()).subtract(5, 'minutes').toDate(),
+                expiresOn: moment.utc(Date.now()).add(10, 'years').toDate()
+            },
+            blobService.credential).toString();
+        return url.toString();
+    } else {
+        throw new Error('Internal Error: Expected credential to be of type "StorageSharedKeyCredential".');
+    }
 }

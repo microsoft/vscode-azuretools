@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AppServicePlan, SiteConfigResource } from 'azure-arm-website/lib/models';
+import { WebSiteManagementModels } from '@azure/arm-appservice';
 import { ProgressLocation, window } from 'vscode';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -21,9 +21,9 @@ import { syncTriggersPostDeploy } from './syncTriggersPostDeploy';
  * NOTE: This leverages a command with id `ext.prefix + '.showOutputChannel'` that should be registered by each extension
  */
 export async function deploy(client: SiteClient, fsPath: string, context: IDeployContext): Promise<void> {
-    const config: SiteConfigResource = await client.getSiteConfig();
+    const config: WebSiteManagementModels.SiteConfigResource = await client.getSiteConfig();
     // We use the AppServicePlan in a few places, but we don't want to delay deployment, so start the promise now and save as a const
-    const aspPromise: Promise<AppServicePlan | undefined> = client.getAppServicePlan();
+    const aspPromise: Promise<WebSiteManagementModels.AppServicePlan | undefined> = client.getAppServicePlan();
     try {
         context.telemetry.properties.sourceHash = randomUtils.getPseudononymousStringHash(fsPath);
         context.telemetry.properties.destHash = randomUtils.getPseudononymousStringHash(client.fullName);
@@ -44,7 +44,7 @@ export async function deploy(client: SiteClient, fsPath: string, context: IDeplo
                 // ignore
             });
         aspPromise.then(
-            (plan: AppServicePlan | undefined) => {
+            (plan: WebSiteManagementModels.AppServicePlan | undefined) => {
                 if (plan) {
                     context.telemetry.properties.planStatus = String(plan.status);
                     context.telemetry.properties.planKind = String(plan.kind);

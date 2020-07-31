@@ -7,18 +7,25 @@ import { AzureWizardPromptStep, IAzureQuickPickItem } from 'vscode-azureextensio
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
-import { createRequestOptions, getGitHubQuickPicksWithLoadMore, gitHubRepoData, gitHubWebResource, ICachedQuickPicks } from './connectToGitHub';
+import { getGitHubQuickPicksWithLoadMore, gitHubRepoData, ICachedQuickPicks } from './connectToGitHub';
 import { IConnectToGitHubWizardContext } from './IConnectToGitHubWizardContext';
 
 export class GitHubRepoListStep extends AzureWizardPromptStep<IConnectToGitHubWizardContext> {
     public async prompt(context: IConnectToGitHubWizardContext): Promise<void> {
         const placeHolder: string = localize('chooseRepo', 'Choose repository');
-        let repoData: gitHubRepoData | undefined;
+        let repoData: gitHubRepoData | string;
         const picksCache: ICachedQuickPicks<gitHubRepoData> = { picks: [] };
-        const requestOptions: gitHubWebResource = await createRequestOptions(context, nonNullProp(context, 'orgData').repos_url);
-        do {
-            repoData = (await ext.ui.showQuickPick(this.getRepositories(context, picksCache, requestOptions), { placeHolder })).data;
-        } while (!repoData);
+
+        let url: string = nonNullProp(context, 'orgData').repos_url;
+        // tslint:disable-next-line: no-constant-condition
+        while (true) {
+            repoData = (await ext.ui.showQuickPick(this.getRepositories(context, picksCache, url), { placeHolder })).data;
+            if (typeof repoData === 'string') {
+                url = repoData;
+            } else {
+                break;
+            }
+        }
 
         context.repoData = repoData;
     }
@@ -27,7 +34,7 @@ export class GitHubRepoListStep extends AzureWizardPromptStep<IConnectToGitHubWi
         return !context.repoData;
     }
 
-    private async getRepositories(context: IConnectToGitHubWizardContext, picksCache: ICachedQuickPicks<gitHubRepoData>, requestOptions: gitHubWebResource): Promise<IAzureQuickPickItem<gitHubRepoData | undefined>[]> {
-        return await getGitHubQuickPicksWithLoadMore<gitHubRepoData>(context, picksCache, requestOptions, 'name');
+    private async getRepositories(context: IConnectToGitHubWizardContext, picksCache: ICachedQuickPicks<gitHubRepoData>, url: string): Promise<IAzureQuickPickItem<gitHubRepoData | string>[]> {
+        return await getGitHubQuickPicksWithLoadMore<gitHubRepoData>(context, picksCache, url, 'name');
     }
 }

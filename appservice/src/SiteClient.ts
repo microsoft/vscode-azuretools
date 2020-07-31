@@ -3,16 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { WebSiteManagementClient } from 'azure-arm-website';
-import { AppServicePlan, FunctionEnvelopeCollection, FunctionSecrets, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SlotConfigNamesResource, SourceControlCollection, StringDictionary, User, WebAppInstanceCollection, WebJobCollection } from 'azure-arm-website/lib/models';
-import { addExtensionUserAgent, createAzureClient, ISubscriptionContext, parseError } from 'vscode-azureextensionui';
+import { WebSiteManagementClient, WebSiteManagementModels as Models } from '@azure/arm-appservice';
+import { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
+import { appendExtensionUserAgent, createAzureClient, createGenericClient, ISubscriptionContext, parseError } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
-import { FunctionEnvelope } from 'vscode-azurekudu/lib/models';
 import { ISimplifiedSiteClient } from './ISimplifiedSiteClient';
 import { localize } from './localize';
 import { deleteFunctionSlot, getFunctionSlot, listFunctionsSlot } from './slotFunctionOperations';
 import { nonNullProp, nonNullValue } from './utils/nonNull';
-import { requestUtils } from './utils/requestUtils';
 
 /**
  * Wrapper of a WebSiteManagementClient for use with a specific Site
@@ -52,7 +50,7 @@ export class SiteClient implements ISimplifiedSiteClient {
 
     private _cachedSku: string | undefined;
 
-    constructor(site: Site, subscription: ISubscriptionContext) {
+    constructor(site: Models.Site, subscription: ISubscriptionContext) {
         let matches: RegExpMatchArray | null = nonNullProp(site, 'serverFarmId').match(/\/subscriptions\/(.*)\/resourceGroups\/(.*)\/providers\/Microsoft.Web\/serverfarms\/(.*)/);
         matches = nonNullValue(matches, 'Invalid serverFarmId.');
 
@@ -74,7 +72,7 @@ export class SiteClient implements ISimplifiedSiteClient {
 
         this.defaultHostName = nonNullProp(site, 'defaultHostName');
         this.defaultHostUrl = `https://${this.defaultHostName}`;
-        const kuduRepositoryUrl: HostNameSslState | undefined = nonNullProp(site, 'hostNameSslStates').find((h: HostNameSslState) => !!h.hostType && h.hostType.toLowerCase() === 'repository');
+        const kuduRepositoryUrl: Models.HostNameSslState | undefined = nonNullProp(site, 'hostNameSslStates').find(h => !!h.hostType && h.hostType.toLowerCase() === 'repository');
         if (kuduRepositoryUrl) {
             this.kuduHostName = kuduRepositoryUrl.name;
             this.kuduUrl = `https://${this.kuduHostName}`;
@@ -102,9 +100,10 @@ export class SiteClient implements ISimplifiedSiteClient {
             throw new Error(localize('notSupportedLinux', 'This operation is not supported by this app service plan.'));
         }
 
-        const kuduClient: KuduClient = new KuduClient(this.subscription.credentials, this.kuduUrl);
-        addExtensionUserAgent(kuduClient);
-        return kuduClient;
+        return new KuduClient(this.subscription.credentials, {
+            baseUri: this.kuduUrl,
+            userAgent: appendExtensionUserAgent
+        });
     }
 
     public async stop(): Promise<void> {
@@ -125,95 +124,95 @@ export class SiteClient implements ISimplifiedSiteClient {
             await this._client.webApps.get(this.resourceGroup, this.siteName)).state;
     }
 
-    public async getWebAppPublishCredential(): Promise<User> {
+    public async getWebAppPublishCredential(): Promise<Models.User> {
         return this.slotName ?
             await this._client.webApps.listPublishingCredentialsSlot(this.resourceGroup, this.siteName, this.slotName) :
             await this._client.webApps.listPublishingCredentials(this.resourceGroup, this.siteName);
     }
 
-    public async getSiteConfig(): Promise<SiteConfigResource> {
+    public async getSiteConfig(): Promise<Models.SiteConfigResource> {
         return this.slotName ?
             await this._client.webApps.getConfigurationSlot(this.resourceGroup, this.siteName, this.slotName) :
             await this._client.webApps.getConfiguration(this.resourceGroup, this.siteName);
     }
 
-    public async updateConfiguration(config: SiteConfigResource): Promise<SiteConfigResource> {
+    public async updateConfiguration(config: Models.SiteConfigResource): Promise<Models.SiteConfigResource> {
         return this.slotName ?
             await this._client.webApps.updateConfigurationSlot(this.resourceGroup, this.siteName, config, this.slotName) :
             await this._client.webApps.updateConfiguration(this.resourceGroup, this.siteName, config);
     }
 
-    public async getLogsConfig(): Promise<SiteLogsConfig> {
+    public async getLogsConfig(): Promise<Models.SiteLogsConfig> {
         return this.slotName ?
             await this._client.webApps.getDiagnosticLogsConfigurationSlot(this.resourceGroup, this.siteName, this.slotName) :
             await this._client.webApps.getDiagnosticLogsConfiguration(this.resourceGroup, this.siteName);
     }
 
-    public async updateLogsConfig(config: SiteLogsConfig): Promise<SiteLogsConfig> {
+    public async updateLogsConfig(config: Models.SiteLogsConfig): Promise<Models.SiteLogsConfig> {
         return this.slotName ?
             await this._client.webApps.updateDiagnosticLogsConfigSlot(this.resourceGroup, this.siteName, config, this.slotName) :
             await this._client.webApps.updateDiagnosticLogsConfig(this.resourceGroup, this.siteName, config);
     }
 
-    public async getAppServicePlan(): Promise<AppServicePlan | undefined> {
+    public async getAppServicePlan(): Promise<Models.AppServicePlan | undefined> {
         return await this._client.appServicePlans.get(this.planResourceGroup, this.planName);
     }
 
-    public async getSourceControl(): Promise<SiteSourceControl> {
+    public async getSourceControl(): Promise<Models.SiteSourceControl> {
         return this.slotName ?
             await this._client.webApps.getSourceControlSlot(this.resourceGroup, this.siteName, this.slotName) :
             await this._client.webApps.getSourceControl(this.resourceGroup, this.siteName);
     }
 
-    public async updateSourceControl(siteSourceControl: SiteSourceControl): Promise<SiteSourceControl> {
+    public async updateSourceControl(siteSourceControl: Models.SiteSourceControl): Promise<Models.SiteSourceControl> {
         return this.slotName ?
             await this._client.webApps.createOrUpdateSourceControlSlot(this.resourceGroup, this.siteName, siteSourceControl, this.slotName) :
             await this._client.webApps.createOrUpdateSourceControl(this.resourceGroup, this.siteName, siteSourceControl);
     }
 
     public async syncRepository(): Promise<void> {
-        return this.slotName ?
+        this.slotName ?
             await this._client.webApps.syncRepositorySlot(this.resourceGroup, this.siteName, this.slotName) :
             await this._client.webApps.syncRepository(this.resourceGroup, this.siteName);
     }
 
-    public async listApplicationSettings(): Promise<StringDictionary> {
+    public async listApplicationSettings(): Promise<Models.StringDictionary> {
         return this.slotName ?
             await this._client.webApps.listApplicationSettingsSlot(this.resourceGroup, this.siteName, this.slotName) :
             await this._client.webApps.listApplicationSettings(this.resourceGroup, this.siteName);
     }
 
-    public async updateApplicationSettings(appSettings: StringDictionary): Promise<StringDictionary> {
+    public async updateApplicationSettings(appSettings: Models.StringDictionary): Promise<Models.StringDictionary> {
         return this.slotName ?
             await this._client.webApps.updateApplicationSettingsSlot(this.resourceGroup, this.siteName, appSettings, this.slotName) :
             await this._client.webApps.updateApplicationSettings(this.resourceGroup, this.siteName, appSettings);
     }
 
-    public async listSlotConfigurationNames(): Promise<SlotConfigNamesResource> {
+    public async listSlotConfigurationNames(): Promise<Models.SlotConfigNamesResource> {
         return await this._client.webApps.listSlotConfigurationNames(this.resourceGroup, this.siteName);
     }
 
-    public async updateSlotConfigurationNames(appSettings: SlotConfigNamesResource): Promise<SlotConfigNamesResource> {
+    public async updateSlotConfigurationNames(appSettings: Models.SlotConfigNamesResource): Promise<Models.SlotConfigNamesResource> {
         return await this._client.webApps.updateSlotConfigurationNames(this.resourceGroup, this.siteName, appSettings);
     }
 
     public async deleteMethod(options?: { deleteMetrics?: boolean, deleteEmptyServerFarm?: boolean, skipDnsRegistration?: boolean, customHeaders?: { [headerName: string]: string; } }): Promise<void> {
-        return this.slotName ?
+        this.slotName ?
             await this._client.webApps.deleteSlot(this.resourceGroup, this.siteName, this.slotName, options) :
             await this._client.webApps.deleteMethod(this.resourceGroup, this.siteName, options);
     }
 
-    public async listInstanceIdentifiers(): Promise<WebAppInstanceCollection> {
+    public async listInstanceIdentifiers(): Promise<Models.WebAppInstanceCollection> {
         return this.slotName ?
             await this._client.webApps.listInstanceIdentifiersSlot(this.resourceGroup, this.siteName, this.slotName) :
             await this._client.webApps.listInstanceIdentifiers(this.resourceGroup, this.siteName);
     }
 
-    public async listSourceControls(): Promise<SourceControlCollection> {
+    public async listSourceControls(): Promise<Models.SourceControlCollection> {
         return await this._client.listSourceControls();
     }
 
-    public async listFunctions(): Promise<FunctionEnvelopeCollection> {
+    public async listFunctions(): Promise<Models.FunctionEnvelopeCollection> {
         if (this.slotName) {
             return await listFunctionsSlot(this.subscription, this.id);
         } else {
@@ -221,11 +220,11 @@ export class SiteClient implements ISimplifiedSiteClient {
         }
     }
 
-    public async listFunctionsNext(nextPageLink: string): Promise<FunctionEnvelopeCollection> {
+    public async listFunctionsNext(nextPageLink: string): Promise<Models.FunctionEnvelopeCollection> {
         return await this._client.webApps.listFunctionsNext(nextPageLink);
     }
 
-    public async getFunction(functionName: string): Promise<FunctionEnvelope> {
+    public async getFunction(functionName: string): Promise<Models.FunctionEnvelope> {
         if (this.slotName) {
             return await getFunctionSlot(this.subscription, this.id, functionName);
         } else {
@@ -241,7 +240,7 @@ export class SiteClient implements ISimplifiedSiteClient {
         }
     }
 
-    public async listFunctionSecrets(functionName: string): Promise<FunctionSecrets> {
+    public async listFunctionSecrets(functionName: string): Promise<Models.FunctionSecrets> {
         return this.slotName ?
             await this._client.webApps.listFunctionSecretsSlot(this.resourceGroup, this.siteName, functionName, this.slotName) :
             await this._client.webApps.listFunctionSecrets(this.resourceGroup, this.siteName, functionName);
@@ -260,36 +259,26 @@ export class SiteClient implements ISimplifiedSiteClient {
         }
     }
 
-    public async getPublishingUser(): Promise<User> {
+    public async getPublishingUser(): Promise<Models.User> {
         return await this._client.getPublishingUser({});
     }
 
-    public async listWebJobs(): Promise<WebJobCollection> {
+    public async listWebJobs(): Promise<Models.WebJobCollection> {
         return this.slotName ?
             await this._client.webApps.listWebJobsSlot(this.resourceGroup, this.siteName, this.slotName) :
             await this._client.webApps.listWebJobs(this.resourceGroup, this.siteName);
     }
 
-    /**
-     * Temporary workaround because this isn't in azure sdk yet
-     * Spec: https://github.com/Azure/azure-functions-host/issues/3994
-     */
-    public async listHostKeys(): Promise<IHostKeys> {
-        const urlPath: string = `${this.id}/host/default/listkeys?api-version=2016-08-01`;
-        const requestOptions: requestUtils.Request = await requestUtils.getDefaultAzureRequest(urlPath, this.subscription, 'POST');
-        const result: string = await requestUtils.sendRequest(requestOptions);
-        return <IHostKeys>JSON.parse(result);
+    public async listHostKeys(): Promise<Models.HostKeys> {
+        return this.slotName ?
+            await this._client.webApps.listHostKeysSlot(this.resourceGroup, this.siteName, this.slotName) :
+            await this._client.webApps.listHostKeys(this.resourceGroup, this.siteName);
     }
 
-    /**
-     * Temporary workaround because this isn't in azure sdk yet
-     * Spec: https://github.com/Azure/azure-functions-host/issues/3994
-     */
     public async listFunctionKeys(functionName: string): Promise<IFunctionKeys> {
-        const urlPath: string = `${this.id}/functions/${functionName}/listKeys?api-version=2016-08-01`;
-        const requestOptions: requestUtils.Request = await requestUtils.getDefaultAzureRequest(urlPath, this.subscription, 'POST');
-        const result: string = await requestUtils.sendRequest(requestOptions);
-        return <IFunctionKeys>JSON.parse(result);
+        return this.slotName ?
+            await this._client.webApps.listFunctionKeysSlot(this.resourceGroup, this.siteName, functionName, this.slotName) :
+            await this._client.webApps.listFunctionKeys(this.resourceGroup, this.siteName, functionName);
     }
 
     /**
@@ -299,23 +288,18 @@ export class SiteClient implements ISimplifiedSiteClient {
      */
     private async getCachedSku(): Promise<string | undefined> {
         if (!this._cachedSku) {
-            const urlPath: string = `${this.id}?api-version=2016-08-01`;
-            const request: requestUtils.Request = await requestUtils.getDefaultAzureRequest(urlPath, this.subscription);
-            const response: string = await requestUtils.sendRequest(request);
-            this._cachedSku = (<{ properties: { sku?: string } }>JSON.parse(response)).properties.sku;
+            const client: ServiceClient = createGenericClient(this.subscription);
+            const response: HttpOperationResponse = await client.sendRequest({ method: 'GET', url: `${this.id}?api-version=2016-08-01` });
+            this._cachedSku = (<{ properties: { sku?: string } }>response.parsedBody).properties.sku;
         }
         return this._cachedSku;
     }
 }
 
-export interface IFunctionKeys {
+/**
+ * The type in the sdk doesn't seem to be accurate
+ */
+export interface IFunctionKeys extends Models.WebAppsListFunctionKeysResponse {
     // tslint:disable-next-line: no-reserved-keywords
     default?: string;
-    [key: string]: string | undefined;
-}
-
-export interface IHostKeys {
-    masterKey?: string;
-    functionKeys?: { [key: string]: string | undefined };
-    systemKeys?: { [key: string]: string | undefined };
 }

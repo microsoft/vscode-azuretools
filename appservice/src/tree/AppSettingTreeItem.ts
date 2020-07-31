@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SlotConfigNamesResource, StringDictionary } from 'azure-arm-website/lib/models';
+import { WebSiteManagementModels } from '@azure/arm-appservice';
 import { AzExtTreeItem, DialogResponses, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { IAppSettingsClient } from '../IAppSettingsClient';
@@ -70,7 +70,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
     }
 
     public async rename(context: IActionContext): Promise<void> {
-        const settings: StringDictionary = await this.parent.ensureSettings(context);
+        const settings: WebSiteManagementModels.StringDictionary = await this.parent.ensureSettings(context);
 
         const oldKey: string = this._key;
         const newKey: string = await ext.ui.showInputBox({
@@ -96,7 +96,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
 
     public async toggleSlotSetting(): Promise<void> {
         if (this._client.updateSlotConfigurationNames && this._client.listSlotConfigurationNames) {
-            const slotSettings: SlotConfigNamesResource = await this._client.listSlotConfigurationNames();
+            const slotSettings: WebSiteManagementModels.SlotConfigNamesResource = await this._client.listSlotConfigurationNames();
             if (!slotSettings.appSettingNames) {
                 slotSettings.appSettingNames = [];
             }
@@ -117,7 +117,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
 
     public async refreshImpl(): Promise<void> {
         if (this._client.listSlotConfigurationNames) {
-            const slotSettings: SlotConfigNamesResource = await this._client.listSlotConfigurationNames();
+            const slotSettings: WebSiteManagementModels.SlotConfigNamesResource = await this._client.listSlotConfigurationNames();
             if (slotSettings.appSettingNames && slotSettings.appSettingNames.find((value: string) => { return value === this._key; })) {
                 this.description = localize('slotSetting', 'Slot Setting');
             } else {

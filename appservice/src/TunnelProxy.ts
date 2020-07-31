@@ -3,20 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { User } from 'azure-arm-website/lib/models';
+import { WebSiteManagementModels } from '@azure/arm-appservice';
+import { BasicAuthenticationCredentials, HttpOperationResponse, RestError, ServiceClient } from '@azure/ms-rest-js';
 import * as EventEmitter from 'events';
-import { IncomingMessage } from 'http';
-import { BasicAuthenticationCredentials } from 'ms-rest';
 import { createServer, Server, Socket } from 'net';
 import { CancellationToken, Disposable } from 'vscode';
-import { IParsedError, parseError, UserCancelledError } from 'vscode-azureextensionui';
+import { createGenericClient, IParsedError, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import * as websocket from 'websocket';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { SiteClient } from './SiteClient';
 import { delay } from './utils/delay';
 import { nonNullProp } from './utils/nonNull';
-import { requestUtils } from './utils/requestUtils';
 
 /**
  * Wrapper for net.Socket that forwards all traffic to the Kudu tunnel websocket endpoint.
@@ -25,11 +23,11 @@ import { requestUtils } from './utils/requestUtils';
 class TunnelSocket extends EventEmitter {
     private _socket: Socket;
     private _client: SiteClient;
-    private _publishCredential: User;
+    private _publishCredential: WebSiteManagementModels.User;
     private _wsConnection: websocket.connection | undefined;
     private _wsClient: websocket.client;
 
-    constructor(socket: Socket, client: SiteClient, publishCredential: User) {
+    constructor(socket: Socket, client: SiteClient, publishCredential: WebSiteManagementModels.User) {
         super();
         this._socket = socket;
         this._client = client;
@@ -150,12 +148,12 @@ class RetryableTunnelStatusError extends Error { }
 export class TunnelProxy {
     private _port: number;
     private _client: SiteClient;
-    private _publishCredential: User;
+    private _publishCredential: WebSiteManagementModels.User;
     private _server: Server;
     private _openSockets: TunnelSocket[];
     private _isSsh: boolean;
 
-    constructor(port: number, client: SiteClient, publishCredential: User, isSsh: boolean = false) {
+    constructor(port: number, client: SiteClient, publishCredential: WebSiteManagementModels.User, isSsh: boolean = false) {
         this._port = port;
         this._client = client;
         this._publishCredential = publishCredential;
@@ -187,25 +185,33 @@ export class TunnelProxy {
      */
     private async pingApp(): Promise<void> {
         ext.outputChannel.appendLog('[Tunnel] Pinging app default url...');
-        const request: requestUtils.Request = await requestUtils.getDefaultRequest(this._client.defaultHostUrl);
-        request.simple = false; // allows the call to succeed without exception, even when status code is not 2XX
-        request.resolveWithFullResponse = true; // allows access to the status code from the response
-        const pingResponse: IncomingMessage = await requestUtils.sendRequest(request);
-        ext.outputChannel.appendLog(`[Tunnel] Ping responded with status code: ${pingResponse.statusCode}`);
+        const client: ServiceClient = createGenericClient();
+        let statusCode: number | undefined;
+        try {
+            const response: HttpOperationResponse = await client.sendRequest({ method: 'GET', url: this._client.defaultHostUrl });
+            statusCode = response.status;
+        } catch (error) {
+            if (error instanceof RestError) {
+                statusCode = error.statusCode;
+            } else {
+                throw error;
+            }
+        }
+        ext.outputChannel.appendLog(`[Tunnel] Ping responded with status code: ${statusCode}`);
     }
 
     private async checkTunnelStatus(): Promise<void> {
         const password: string = nonNullProp(this._publishCredential, 'publishingPassword');
-        const url: string = `https://${this._client.kuduHostName}/AppServiceTunnel/Tunnel.ashx?GetStatus&GetStatusAPIVer=2`;
-        const request: requestUtils.Request = await requestUtils.getDefaultRequest(url, new BasicAuthenticationCredentials(this._publishCredential.publishingUserName, password));
+        const client: ServiceClient = createGenericClient(new BasicAuthenticationCredentials(this._publishCredential.publishingUserName, password));
 
         let tunnelStatus: ITunnelStatus;
         try {
-            const responseBody: string = await requestUtils.sendRequest(request);
-            ext.outputChannel.appendLog(`[Tunnel] Checking status, body: ${responseBody}`);
-
-            // tslint:disable-next-line:no-unsafe-any
-            tunnelStatus = JSON.parse(responseBody);
+            const response: HttpOperationResponse = await client.sendRequest({
+                method: 'GET',
+                url: `https://${this._client.kuduHostName}/AppServiceTunnel/Tunnel.ashx?GetStatus&GetStatusAPIVer=2`
+            });
+            ext.outputChannel.appendLog(`[Tunnel] Checking status, body: ${response.bodyAsText}`);
+            tunnelStatus = <ITunnelStatus>response.parsedBody;
         } catch (error) {
             const parsedError: IParsedError = parseError(error);
             ext.outputChannel.appendLog(`[Tunnel] Checking status, error: ${parsedError.message}`);

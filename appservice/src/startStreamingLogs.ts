@@ -3,17 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { WebResource } from 'ms-rest';
+import { WebSiteManagementModels } from '@azure/arm-appservice';
 import * as request from 'request';
 import { setInterval } from 'timers';
 import * as vscode from 'vscode';
-import { callWithTelemetryAndErrorHandling, IActionContext, parseError } from 'vscode-azureextensionui';
-import { KuduClient } from 'vscode-azurekudu';
+import { appendExtensionUserAgent, callWithTelemetryAndErrorHandling, IActionContext, parseError } from 'vscode-azureextensionui';
 import { ext } from './extensionVariables';
 import { ISimplifiedSiteClient } from './ISimplifiedSiteClient';
 import { localize } from './localize';
 import { pingFunctionApp } from './pingFunctionApp';
-import { requestUtils } from './utils/requestUtils';
+import { nonNullProp } from './utils/nonNull';
 
 export interface ILogStream extends vscode.Disposable {
     isConnected: boolean;
@@ -41,11 +40,9 @@ export async function startStreamingLogs(client: ISimplifiedSiteClient, verifyLo
         ext.context.subscriptions.push(outputChannel);
         outputChannel.show();
         outputChannel.appendLine(localize('connectingToLogStream', 'Connecting to log stream...'));
-        const httpRequest: WebResource = new WebResource();
-        const kuduClient: KuduClient = await client.getKuduClient();
-        await requestUtils.signRequest(httpRequest, kuduClient.credentials);
 
-        const requestApi: request.RequestAPI<request.Request, request.CoreOptions, {}> = request.defaults(httpRequest);
+        const creds: WebSiteManagementModels.User = await client.getWebAppPublishCredential();
+
         return await new Promise((onLogStreamCreated: (ls: ILogStream) => void): void => {
             // Intentionally setting up a separate telemetry event and not awaiting the result here since log stream is a long-running action
             // tslint:disable-next-line:no-floating-promises
@@ -61,7 +58,17 @@ export async function startStreamingLogs(client: ISimplifiedSiteClient, verifyLo
 
                 await new Promise((onLogStreamEnded: () => void, reject: (err: Error) => void): void => {
                     let newLogStream: ILogStream;
-                    const logsRequest: request.Request = requestApi(`${client.kuduUrl}/api/logstream/${logsPath}`);
+
+                    const logsRequest: request.Request = request(`${client.kuduUrl}/api/logstream/${logsPath}`, {
+                        auth: {
+                            user: creds.publishingUserName,
+                            password: nonNullProp(creds, 'publishingPassword')
+                        },
+                        headers: {
+                            'User-Agent': appendExtensionUserAgent()
+                        }
+                    });
+
                     newLogStream = {
                         dispose: (): void => {
                             logsRequest.removeAllListeners();
