@@ -41,7 +41,6 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
     private _azureAccountTask: Promise<AzureAccountResult>;
     private _subscriptionTreeItems: SubscriptionTreeItemBase[] | undefined;
     private _testAccount: AzureAccount | undefined;
-    private _isLoggedIn: boolean = false;
 
     constructor(parent?: AzExtParentTreeItem, testAccount?: AzureAccount) {
         super(parent);
@@ -55,10 +54,6 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
 
     public get iconPath(): types.TreeItemIconPath {
         return getIconPath('azure');
-    }
-
-    public get isLoggedIn(): boolean {
-        return this._isLoggedIn;
     }
 
     public dispose(): void {
@@ -91,8 +86,6 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
         context.telemetry.properties.accountStatus = azureAccount.status;
         const existingSubscriptions: SubscriptionTreeItemBase[] = this._subscriptionTreeItems ? this._subscriptionTreeItems : [];
         this._subscriptionTreeItems = [];
-
-        this._isLoggedIn = azureAccount.status === 'LoggedIn';
 
         const contextValue: string = 'azureCommand';
         if (azureAccount.status === 'Initializing' || azureAccount.status === 'LoggingIn') {
@@ -138,6 +131,11 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
             }));
             return this._subscriptionTreeItems;
         }
+    }
+
+    public async getIsLoggedIn(): Promise<boolean> {
+        const azureAccount: AzureAccountResult = await this._azureAccountTask;
+        return typeof azureAccount !== 'string' && azureAccount.status === 'LoggedIn';
     }
 
     public async getSubscriptionPromptStep(context: Partial<types.ISubscriptionWizardContext> & types.IActionContext): Promise<types.AzureWizardPromptStep<types.ISubscriptionWizardContext> | undefined> {

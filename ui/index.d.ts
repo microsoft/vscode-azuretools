@@ -397,7 +397,6 @@ export declare abstract class AzureAccountTreeItemBase extends AzExtParentTreeIt
     public disposables: Disposable[];
     public childTypeLabel: string;
     public autoSelectInTreeItemPicker: boolean;
-    public get isLoggedIn(): boolean;
 
     //#region Methods implemented by base class
     /**
@@ -425,6 +424,7 @@ export declare abstract class AzureAccountTreeItemBase extends AzExtParentTreeIt
     public hasMoreChildrenImpl(): boolean;
     public loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]>;
     public pickTreeItemImpl(expectedContextValues: (string | RegExp)[]): Promise<AzExtTreeItem | undefined>;
+    public getIsLoggedIn(): Promise<boolean>;
 }
 
 /**
