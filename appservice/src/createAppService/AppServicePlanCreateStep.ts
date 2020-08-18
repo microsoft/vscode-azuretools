@@ -8,6 +8,7 @@ import { Progress } from 'vscode';
 import { AzureWizardExecuteStep, createAzureClient } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
+import { tryGetAppServicePlan } from '../tryGetSiteResource';
 import { nonNullProp, nonNullValueAndProp } from '../utils/nonNull';
 import { getAppServicePlanModelKind, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
@@ -26,7 +27,7 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
         ext.outputChannel.appendLog(findingAppServicePlan);
 
         const client: WebSiteManagementClient = createAzureClient(wizardContext, WebSiteManagementClient);
-        const existingPlan: WebSiteManagementModels.AppServicePlan | undefined = <WebSiteManagementModels.AppServicePlan | undefined>await client.appServicePlans.get(rgName, newPlanName);
+        const existingPlan: WebSiteManagementModels.AppServicePlan | undefined = await tryGetAppServicePlan(client, rgName, newPlanName);
 
         if (existingPlan) {
             wizardContext.plan = existingPlan;

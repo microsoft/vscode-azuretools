@@ -7,6 +7,7 @@ import { WebSiteManagementClient, WebSiteManagementModels } from '@azure/arm-app
 import { AzureWizardPromptStep, createAzureClient, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, LocationListStep, ResourceGroupListStep } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
+import { tryGetAppServicePlan } from '../tryGetSiteResource';
 import { nonNullProp } from '../utils/nonNull';
 import { uiUtils } from '../utils/uiUtils';
 import { getWebsiteOSDisplayName, WebsiteOS } from './AppKind';
@@ -80,9 +81,10 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
 
             if (plan.sku && plan.sku.family === 'EP') {
                 // elastic premium plans do not have the os in the kind, so we have to check the "reserved" property
+                // also, the "reserved" property is always "false" in the list of plans returned above. We have to perform a separate get on each plan
                 const client: WebSiteManagementClient = createAzureClient(wizardContext, WebSiteManagementClient);
-                const epPlan: WebSiteManagementModels.AppServicePlan = await client.appServicePlans.get(nonNullProp(plan, 'resourceGroup'), nonNullProp(plan, 'name'));
-                isPlanLinux = !!epPlan.reserved;
+                const epPlan: WebSiteManagementModels.AppServicePlan | undefined = await tryGetAppServicePlan(client, nonNullProp(plan, 'resourceGroup'), nonNullProp(plan, 'name'));
+                isPlanLinux = !!epPlan?.reserved;
             }
 
             // plan.kind will contain "linux" for Linux plans, but will _not_ contain "windows" for Windows plans. Thus we check "isLinux" for both cases
