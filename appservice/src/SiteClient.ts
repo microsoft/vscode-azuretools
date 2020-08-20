@@ -10,6 +10,7 @@ import { KuduClient } from 'vscode-azurekudu';
 import { ISimplifiedSiteClient } from './ISimplifiedSiteClient';
 import { localize } from './localize';
 import { deleteFunctionSlot, getFunctionSlot, listFunctionsSlot } from './slotFunctionOperations';
+import { tryGetAppServicePlan, tryGetWebApp, tryGetWebAppSlot } from './tryGetSiteResource';
 import { nonNullProp, nonNullValue } from './utils/nonNull';
 
 /**
@@ -120,8 +121,8 @@ export class SiteClient implements ISimplifiedSiteClient {
 
     public async getState(): Promise<string | undefined> {
         return (this.slotName ?
-            await this._client.webApps.getSlot(this.resourceGroup, this.siteName, this.slotName) :
-            await this._client.webApps.get(this.resourceGroup, this.siteName)).state;
+            await tryGetWebAppSlot(this._client, this.resourceGroup, this.siteName, this.slotName) :
+            await tryGetWebApp(this._client, this.resourceGroup, this.siteName))?.state;
     }
 
     public async getWebAppPublishCredential(): Promise<Models.User> {
@@ -155,7 +156,7 @@ export class SiteClient implements ISimplifiedSiteClient {
     }
 
     public async getAppServicePlan(): Promise<Models.AppServicePlan | undefined> {
-        return await this._client.appServicePlans.get(this.planResourceGroup, this.planName);
+        return await tryGetAppServicePlan(this._client, this.planResourceGroup, this.planName);
     }
 
     public async getSourceControl(): Promise<Models.SiteSourceControl> {
