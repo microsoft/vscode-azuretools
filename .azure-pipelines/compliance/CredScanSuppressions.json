@@ -16,6 +16,30 @@
         {
             "folder": "ui\\node_modules\\",
             "_justification": "No need to scan external node modules."
+        },
+        {
+            "folder": "appservice\\.vscode-test\\",
+            "_justification": "No need to scan VS Code test folder."
+        },
+        {
+            "folder": "dev\\.vscode-test\\",
+            "_justification": "No need to scan VS Code test folder."
+        },
+        {
+            "folder": "kudu\\.vscode-test\\",
+            "_justification": "No need to scan VS Code test folder."
+        },
+        {
+            "folder": "ui\\.vscode-test\\",
+            "_justification": "No need to scan VS Code test folder."
+        },
+        {
+            "file": "ui\\test\\callWithMaskHandling.test.ts",
+            "_justification": "Fake credentials used for unit tests."
+        },
+        {
+            "file": "ui\\out\\test\\callWithMaskHandling.test.js",
+            "_justification": "Fake credentials used for unit tests."
         }
     ]
 }
