@@ -25,7 +25,7 @@ const packageJson: {} = {
 		"color": "#0072c6",
 		"theme": "dark"
 	},
-	"homepage": "https://github.com/Microsoft/vscode-azurestorage/blob/master/README.md",
+	"homepage": "https://github.com/Microsoft/vscode-azurestorage/blob/main/README.md",
 	"license": "SEE LICENSE IN LICENSE.md",
 	"categories": [
 		"Azure"

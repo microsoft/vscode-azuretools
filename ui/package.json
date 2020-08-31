@@ -21,7 +21,7 @@
     "bugs": {
         "url": "https://github.com/Microsoft/vscode-azuretools/issues"
     },
-    "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/master/ui/README.md",
+    "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/ui/README.md",
     "scripts": {
         "build": "tsc -p ./",
         "prepack": "tsc -p ./",
