@@ -1,6 +1,6 @@
 steps:
 - bash: |
-    CHANGES=$(git remote set-branches --add origin master && git fetch && git --no-pager diff --name-only origin/master...HEAD)
+    CHANGES=$(git remote set-branches --add origin main && git fetch && git --no-pager diff --name-only origin/main...HEAD)
     if [ -z "$(grep "${{ parameters.package }}/" <<< "$CHANGES")" ]; then
       echo "##vso[task.setvariable variable=skipPackage]1"
       echo "Skipping package"
@@ -9,7 +9,7 @@ steps:
       echo "Not skipping package"
     fi
   displayName: '${{ parameters.package }}: check if package has changed'
-  condition: ne(variables['Build.SourceBranchName'], 'master')
+  condition: ne(variables['Build.SourceBranchName'], 'main')
 
 - task: Npm@1
   displayName: '${{ parameters.package }}: npm ci'
