@@ -4,10 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { WebSiteManagementModels } from '@azure/arm-appservice';
+import { Environment } from '@azure/ms-rest-azure-env';
 import { BlobSASPermissions, BlobServiceClient, BlockBlobClient, ContainerClient, generateBlobSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
 import * as moment from 'moment';
 import { URL } from 'url';
-import { IActionContext } from 'vscode-azureextensionui';
+import { IActionContext, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
@@ -39,10 +40,28 @@ async function createBlobServiceClient(client: SiteClient): Promise<BlobServiceC
     // Use same storage account as AzureWebJobsStorage for deployments
     const azureWebJobsStorageKey: string = 'AzureWebJobsStorage';
     const settings: WebSiteManagementModels.StringDictionary = await client.listApplicationSettings();
-    if (settings.properties && settings.properties[azureWebJobsStorageKey]) {
-        return BlobServiceClient.fromConnectionString(settings.properties[azureWebJobsStorageKey]);
+    let connectionString: string | undefined = settings.properties && settings.properties[azureWebJobsStorageKey];
+    if (connectionString) {
+        try {
+            return BlobServiceClient.fromConnectionString(connectionString);
+        } catch (error) {
+            // EndpointSuffix was optional in the old sdk, but is required in the new sdk
+            // https://github.com/microsoft/vscode-azurefunctions/issues/2360
+            const endpointSuffix: string = 'EndpointSuffix';
+            const separator: string = ';';
+            if (parseError(error).message.includes(endpointSuffix) && !connectionString.includes(endpointSuffix)) {
+                if (!connectionString.endsWith(separator)) {
+                    connectionString += separator;
+                }
+                connectionString += `${endpointSuffix}=${Environment.AzureCloud.storageEndpointSuffix}${separator}`;
+                return BlobServiceClient.fromConnectionString(connectionString);
+            } else {
+                throw error;
+            }
+        }
+    } else {
+        throw new Error(localize('azureWebJobsStorageKey', '"{0}" app setting is required for Run From Package deployment.', azureWebJobsStorageKey));
     }
-    throw new Error(localize('azureWebJobsStorageKey', '"{0}" app setting is required for Run From Package deployment.', azureWebJobsStorageKey));
 }
 
 async function createBlobFromZip(context: IActionContext, fsPath: string, client: SiteClient, blobService: BlobServiceClient, blobName: string): Promise<string> {
