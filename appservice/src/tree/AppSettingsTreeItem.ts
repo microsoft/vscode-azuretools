@@ -5,8 +5,8 @@
 
 import { WebSiteManagementModels } from '@azure/arm-appservice';
 import { AzExtParentTreeItem, AzExtTreeItem, IActionContext, ICreateChildImplContext, TreeItemIconPath } from 'vscode-azureextensionui';
+import { IAppSettingsClient } from '../appSettings/IAppSettingsClient';
 import { ext } from '../extensionVariables';
-import { IAppSettingsClient } from '../IAppSettingsClient';
 import { AppSettingTreeItem } from './AppSettingTreeItem';
 import { getThemedIconPath } from './IconPath';
 

@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { WebSiteManagementModels } from "@azure/arm-appservice";
+import { IAppSettingsClient } from './appSettings/IAppSettingsClient';
 import { ext } from "./extensionVariables";
-import { IAppSettingsClient } from './IAppSettingsClient';
 import { localize } from "./localize";
 
 // prior to git deploying, these settings must be deleted or it will fail

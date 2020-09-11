@@ -5,7 +5,7 @@
 
 import { WebSiteManagementModels } from '@azure/arm-appservice';
 import { KuduClient } from 'vscode-azurekudu';
-import { IAppSettingsClient } from './IAppSettingsClient';
+import { IAppSettingsClient } from './appSettings/IAppSettingsClient';
 
 export interface ISimplifiedSiteClient extends IAppSettingsClient {
     defaultHostUrl: string;

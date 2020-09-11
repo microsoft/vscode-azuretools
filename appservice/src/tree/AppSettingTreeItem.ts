@@ -5,8 +5,8 @@
 
 import { WebSiteManagementModels } from '@azure/arm-appservice';
 import { AzExtTreeItem, DialogResponses, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
+import { IAppSettingsClient } from '../appSettings/IAppSettingsClient';
 import { ext } from '../extensionVariables';
-import { IAppSettingsClient } from '../IAppSettingsClient';
 import { localize } from '../localize';
 import { AppSettingsTreeItem, validateAppSettingKey } from './AppSettingsTreeItem';
 import { getThemedIconPath } from './IconPath';
