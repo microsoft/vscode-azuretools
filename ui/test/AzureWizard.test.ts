@@ -43,6 +43,14 @@ class QuickPickStep2 extends QuickPickStepBase {
     protected key: string = 'quickPick2';
 }
 
+class SubQuickPickStep1 extends QuickPickStepBase {
+    protected key: string = 'subQuickPick1';
+}
+
+class SubQuickPickStep2 extends QuickPickStepBase {
+    protected key: string = 'subQuickPick2';
+}
+
 class InputBoxStepIfNotPick1 extends AzureWizardPromptStep<ITestWizardContext> {
     private _key: string = 'inputBoxNotPick1';
     public async prompt(wizardContext: ITestWizardContext): Promise<void> {
@@ -206,6 +214,38 @@ class QuickPickStepWithSubSubWizard extends QuickPickStepWithSubWizardBase {
         return {
             promptSteps: [new QuickPickStepWithSubWizard()]
         };
+    }
+}
+
+class QuickPickStepAndNoPromptWithSubWizardOnlyIfPrevIsPick1 extends QuickPickStepBase {
+    protected key: string = 'quickPickWithSubOnlyPick1';
+    protected prevKey: string = 'quickPick1';
+
+    public async prompt(wizardContext: ITestWizardContext): Promise<void> {
+        const result: string = (await ext.ui.showQuickPick(
+            [
+                { label: 'Pick 1' },
+                { label: 'Pick 2' },
+                { label: 'Pick 3' }
+            ],
+            {}
+        )).label;
+
+        wizardContext[this.key] = result;
+    }
+
+    public shouldPrompt(): boolean {
+        return false;
+    }
+
+    public async getSubWizard(wizardContext: ITestWizardContext): Promise<types.IWizardOptions<ITestWizardContext> | undefined> {
+        if (wizardContext[this.prevKey] === 'Pick 1') {
+            return {
+                promptSteps: [new SubQuickPickStep1(), new SubQuickPickStep2()]
+            };
+        } else {
+            return undefined;
+        }
     }
 }
 
@@ -604,6 +644,17 @@ suite("AzureWizard tests", () => {
             },
             ['Pick 1', TestInput.BackButton, 'Pick 2', 'Pick 3'],
             { quickPick1: 'Pick 2', quickPick2: 'Pick 3', execute1: 'executeValue1', subExecute: 'subExecuteValue' }
+        );
+    });
+
+    test("Back button through step with sub wizard properly cleans up sub wizard steps", async () => {
+        await validateWizard(
+            {
+                promptSteps: [new QuickPickStep1(), new QuickPickStepAndNoPromptWithSubWizardOnlyIfPrevIsPick1(), new QuickPickStep2()],
+                executeSteps: [new ExecuteStep1()]
+            },
+            ['Pick 1', 'Pick 1', 'Pick 1', TestInput.BackButton, TestInput.BackButton, TestInput.BackButton, 'Pick 3', 'Pick 1'],
+            { quickPick1: 'Pick 3', quickPick2: 'Pick 1', execute1: 'executeValue1', subQuickPick1: undefined, subQuickPick2: undefined }
         );
     });
 });
