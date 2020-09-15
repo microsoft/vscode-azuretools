@@ -148,12 +148,12 @@ export class AzureWizard<T extends types.IActionContext> implements types.AzureW
             if (!step) {
                 throw new GoBackError();
             }
-        } while (!step.prompted);
 
-        if (step.hasSubWizard) {
-            removeFromEnd(this._promptSteps, step.numSubPromptSteps);
-            removeFromEnd(this._executeSteps, step.numSubExecuteSteps);
-        }
+            if (step.hasSubWizard) {
+                removeFromEnd(this._promptSteps, step.numSubPromptSteps);
+                removeFromEnd(this._executeSteps, step.numSubExecuteSteps);
+            }
+        } while (!step.prompted);
 
         for (const key of Object.keys(this._context)) {
             if (!step.propertiesBeforePrompt.find(p => p === key)) {
