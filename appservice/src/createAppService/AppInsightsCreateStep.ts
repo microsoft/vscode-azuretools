@@ -11,6 +11,7 @@ import { Progress } from 'vscode';
 import { AzureWizardExecuteStep, createAzureClient, createGenericClient, IParsedError, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
+import { areLocationNamesEqual } from '../utils/azureUtils';
 import { nonNullProp } from '../utils/nonNull';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
@@ -63,7 +64,7 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
         const locations: string[] = await this.getLocations(wizardContext) || [];
         const locationName: string = nonNullProp(location, 'name');
 
-        if (locations.some((loc) => loc === location.displayName)) {
+        if (locations.some((loc) => areLocationNamesEqual(loc, location.name))) {
             wizardContext.telemetry.properties.aiLocationSupported = 'true';
             return locationName;
         } else {
