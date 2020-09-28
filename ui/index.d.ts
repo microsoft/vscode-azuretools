@@ -117,7 +117,7 @@ export interface ITreeItemPickerContext extends IActionContext {
     suppressCreatePick?: boolean;
 
     /**
-     * If set to true, the quick pick dialog will not close when focus moves out.
+     * If set to true, the quick pick dialog will not close when focus moves out. Defaults to `true`.
      */
     ignoreFocusOut?: boolean;
 
