@@ -119,7 +119,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         let getTreeItem: GetTreeItemFunction;
 
         try {
-            getTreeItem = (await ext.ui.showQuickPick(this.getQuickPicks(expectedContextValues, context), { placeHolder })).data;
+            getTreeItem = (await ext.ui.showQuickPick(this.getQuickPicks(expectedContextValues, context), { placeHolder, ignoreFocusOut: context.ignoreFocusOut })).data;
         } catch (error) {
             // We want the loading thing to show for `showQuickPick` but we also need to support autoSelect and canPickMany based on the value of the picks
             // hence throwing an error instead of just awaiting `getQuickPicks`
