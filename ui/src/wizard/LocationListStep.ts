@@ -50,7 +50,8 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
 
     public static async getLocations<T extends ILocationWizardContextInternal>(wizardContext: T): Promise<SubscriptionModels.Location[]> {
         if (wizardContext._allLocationsTask === undefined) {
-            const client: SubscriptionClient = createAzureSubscriptionClient(wizardContext, SubscriptionClient);
+            const armSubscriptions: typeof import('@azure/arm-subscriptions') = await import('@azure/arm-subscriptions');
+            const client: SubscriptionClient = createAzureSubscriptionClient(wizardContext, armSubscriptions.SubscriptionClient);
             wizardContext._allLocationsTask = client.subscriptions.listLocations(wizardContext.subscriptionId);
         }
 

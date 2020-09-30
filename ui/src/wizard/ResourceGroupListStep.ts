@@ -31,7 +31,8 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
 
     public static async getResourceGroups<T extends types.IResourceGroupWizardContext>(wizardContext: T): Promise<ResourceManagementModels.ResourceGroup[]> {
         if (wizardContext.resourceGroupsTask === undefined) {
-            const client: ResourceManagementClient = createAzureClient(wizardContext, ResourceManagementClient);
+            const armResources: typeof import('@azure/arm-resources') = await import('@azure/arm-resources');
+            const client: ResourceManagementClient = createAzureClient(wizardContext, armResources.ResourceManagementClient);
             wizardContext.resourceGroupsTask = uiUtils.listAll(client.resourceGroups, client.resourceGroups.list());
         }
 

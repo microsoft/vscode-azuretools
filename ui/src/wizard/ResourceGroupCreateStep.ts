@@ -21,7 +21,8 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
         const newName: string = wizardContext.newResourceGroupName!;
         // tslint:disable-next-line:no-non-null-assertion
         const newLocation: string = wizardContext.location!.name!;
-        const resourceClient: ResourceManagementClient = createAzureClient(wizardContext, ResourceManagementClient);
+        const armResources: typeof import('@azure/arm-resources') = await import('@azure/arm-resources');
+        const resourceClient: ResourceManagementClient = createAzureClient(wizardContext, armResources.ResourceManagementClient);
         try {
             const rgExists: boolean = (await resourceClient.resourceGroups.checkExistence(newName)).body;
             if (rgExists) {

@@ -68,12 +68,14 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
     }
 
     public static async isNameAvailable<T extends types.IStorageAccountWizardContext>(wizardContext: T, name: string): Promise<boolean> {
-        const storageClient: StorageManagementClient = createAzureClient(wizardContext, StorageManagementClient);
+        const armStorage: typeof import('@azure/arm-storage') = await import('@azure/arm-storage');
+        const storageClient: StorageManagementClient = createAzureClient(wizardContext, armStorage.StorageManagementClient);
         return !!(await storageClient.storageAccounts.checkNameAvailability(name)).nameAvailable;
     }
 
     public async prompt(wizardContext: T): Promise<void> {
-        const client: StorageManagementClient = createAzureClient(wizardContext, StorageManagementClient);
+        const armStorage: typeof import('@azure/arm-storage') = await import('@azure/arm-storage');
+        const client: StorageManagementClient = createAzureClient(wizardContext, armStorage.StorageManagementClient);
 
         const quickPickOptions: types.IAzureQuickPickOptions = { placeHolder: 'Select a storage account.', id: `StorageAccountListStep/${wizardContext.subscriptionId}` };
         const picksTask: Promise<types.IAzureQuickPickItem<StorageManagementModels.StorageAccount | string | undefined>[]> = this.getQuickPicks(client.storageAccounts.list());

@@ -24,7 +24,8 @@ export class VerifyProvidersStep<T extends types.ISubscriptionWizardContext> ext
     public async execute(context: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         progress.report({ message: localize('registeringProviders', 'Registering Providers...') });
 
-        const client: ResourceManagementClient = createAzureClient(context, ResourceManagementClient);
+        const armResources: typeof import('@azure/arm-resources') = await import('@azure/arm-resources');
+        const client: ResourceManagementClient = createAzureClient(context, armResources.ResourceManagementClient);
         await Promise.all(this._providers.map(async providerName => {
             try {
                 let provider: ResourceManagementModels.Provider = await client.providers.get(providerName);
