@@ -6,7 +6,7 @@
 import { ResourceManagementClient } from '@azure/arm-resources';
 import { MessageItem, Progress } from 'vscode';
 import * as types from '../../index';
-import { createAzureClient } from '../createAzureClient';
+import { createResourcesClient } from '../clients';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { parseError } from '../parseError';
@@ -21,7 +21,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
         const newName: string = wizardContext.newResourceGroupName!;
         // tslint:disable-next-line:no-non-null-assertion
         const newLocation: string = wizardContext.location!.name!;
-        const resourceClient: ResourceManagementClient = createAzureClient(wizardContext, ResourceManagementClient);
+        const resourceClient: ResourceManagementClient = await createResourcesClient(wizardContext);
         try {
             const rgExists: boolean = (await resourceClient.resourceGroups.checkExistence(newName)).body;
             if (rgExists) {

@@ -5,7 +5,7 @@
 
 import { ResourceManagementClient, ResourceManagementModels } from '@azure/arm-resources';
 import * as types from '../../index';
-import { createAzureClient } from '../createAzureClient';
+import { createResourcesClient } from '../clients';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
@@ -31,7 +31,7 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
 
     public static async getResourceGroups<T extends types.IResourceGroupWizardContext>(wizardContext: T): Promise<ResourceManagementModels.ResourceGroup[]> {
         if (wizardContext.resourceGroupsTask === undefined) {
-            const client: ResourceManagementClient = createAzureClient(wizardContext, ResourceManagementClient);
+            const client: ResourceManagementClient = await createResourcesClient(wizardContext);
             wizardContext.resourceGroupsTask = uiUtils.listAll(client.resourceGroups, client.resourceGroups.list());
         }
 

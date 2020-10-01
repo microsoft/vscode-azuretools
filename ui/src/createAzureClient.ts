@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Environment } from '@azure/ms-rest-azure-env';
-import { HttpOperationResponse, RequestPrepareOptions, ServiceClient, ServiceClientCredentials, WebResourceLike } from '@azure/ms-rest-js';
+import { ServiceClient, ServiceClientCredentials } from '@azure/ms-rest-js';
 import * as vscode from "vscode";
 import * as types from '../index';
 import { appendExtensionUserAgent } from "./extensionUserAgent";
@@ -29,7 +29,7 @@ export function createAzureSubscriptionClient<T>(
     });
 }
 
-export function createGenericClient(clientInfo?: ServiceClientCredentials | { credentials: ServiceClientCredentials; environment: Environment; }): ServiceClient {
+export async function createGenericClient(clientInfo?: ServiceClientCredentials | { credentials: ServiceClientCredentials; environment: Environment; }): Promise<ServiceClient> {
     let credentials: ServiceClientCredentials | undefined;
     let baseUri: string | undefined;
     if (clientInfo && 'credentials' in clientInfo) {
@@ -39,31 +39,10 @@ export function createGenericClient(clientInfo?: ServiceClientCredentials | { cr
         credentials = clientInfo;
     }
 
-    return new GenericServiceClient(credentials, <types.IMinimumServiceClientOptions>{
+    const gsc: typeof import('./GenericServiceClient') = await import('./GenericServiceClient');
+
+    return new gsc.GenericServiceClient(credentials, <types.IMinimumServiceClientOptions>{
         baseUri,
         userAgent: appendExtensionUserAgent
     });
-}
-
-class GenericServiceClient extends ServiceClient {
-    constructor(credentials: ServiceClientCredentials | undefined, options: types.IMinimumServiceClientOptions) {
-        super(credentials, options);
-        this.baseUri = options.baseUri?.endsWith('/') ? options.baseUri.slice(0, -1) : options.baseUri;
-    }
-
-    public async sendRequest(options: RequestPrepareOptions | WebResourceLike): Promise<HttpOperationResponse> {
-        if (this.baseUri && options.url && !options.url.startsWith('http')) {
-            if (!options.url.startsWith('/')) {
-                options.url = `/${options.url}`;
-            }
-
-            options.url = this.baseUri + options.url;
-        }
-
-        // tslint:disable-next-line: strict-boolean-expressions
-        options.headers = options.headers || {};
-        options.headers['accept-language'] = vscode.env.language;
-
-        return await super.sendRequest(options);
-    }
 }
