@@ -185,7 +185,7 @@ export class TunnelProxy {
      */
     private async pingApp(): Promise<void> {
         ext.outputChannel.appendLog('[Tunnel] Pinging app default url...');
-        const client: ServiceClient = createGenericClient();
+        const client: ServiceClient = await createGenericClient();
         let statusCode: number | undefined;
         try {
             const response: HttpOperationResponse = await client.sendRequest({ method: 'GET', url: this._client.defaultHostUrl });
@@ -202,7 +202,7 @@ export class TunnelProxy {
 
     private async checkTunnelStatus(): Promise<void> {
         const password: string = nonNullProp(this._publishCredential, 'publishingPassword');
-        const client: ServiceClient = createGenericClient(new BasicAuthenticationCredentials(this._publishCredential.publishingUserName, password));
+        const client: ServiceClient = await createGenericClient(new BasicAuthenticationCredentials(this._publishCredential.publishingUserName, password));
 
         let tunnelStatus: ITunnelStatus;
         try {

@@ -67,7 +67,7 @@ async function getFsResponse(siteClient: ISimplifiedSiteClient, filePath: string
             filePath = path.posix.join(linuxHome, filePath);
         }
 
-        const client: ServiceClient = createGenericClient(siteClient.subscription);
+        const client: ServiceClient = await createGenericClient(siteClient.subscription);
         return await client.sendRequest({
             method: 'GET',
             url: `${siteClient.id}/hostruntime/admin/vfs/${filePath}?api-version=2018-11-01`
