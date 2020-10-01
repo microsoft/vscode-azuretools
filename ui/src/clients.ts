@@ -9,6 +9,9 @@ import { SubscriptionClient } from '@azure/arm-subscriptions';
 import * as types from '../index';
 import { createAzureClient, createAzureSubscriptionClient } from './createAzureClient';
 
+// Lazy-load @azure packages to improve startup performance.
+// NOTE: The client is the only import that matters, the rest of the types disappear when compiled to JavaScript
+
 export async function createStorageClient<T extends types.IStorageAccountWizardContext>(wizardContext: T): Promise<StorageManagementClient> {
     return createAzureClient(wizardContext, (await import('@azure/arm-storage')).StorageManagementClient);
 }
