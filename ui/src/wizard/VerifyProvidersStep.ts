@@ -6,7 +6,7 @@
 import { ResourceManagementClient, ResourceManagementModels } from '@azure/arm-resources';
 import { Progress } from 'vscode';
 import * as types from '../../index';
-import { createAzureClient } from '../createAzureClient';
+import { createResourcesClient } from '../clients';
 import { localize } from '../localize';
 import { parseError } from '../parseError';
 import { delay } from '../utils/delay';
@@ -24,8 +24,7 @@ export class VerifyProvidersStep<T extends types.ISubscriptionWizardContext> ext
     public async execute(context: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         progress.report({ message: localize('registeringProviders', 'Registering Providers...') });
 
-        const armResources: typeof import('@azure/arm-resources') = await import('@azure/arm-resources');
-        const client: ResourceManagementClient = createAzureClient(context, armResources.ResourceManagementClient);
+        const client: ResourceManagementClient = await createResourcesClient(context);
         await Promise.all(this._providers.map(async providerName => {
             try {
                 let provider: ResourceManagementModels.Provider = await client.providers.get(providerName);

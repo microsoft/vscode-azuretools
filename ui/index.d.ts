@@ -1215,7 +1215,7 @@ export interface IMinimumServiceClientOptions {
  * 1. Adds extension-specific user agent
  * 2. Uses resourceManagerEndpointUrl to support sovereigns (if clientInfo corresponds to an Azure environment)
  */
-export function createGenericClient(clientInfo?: ServiceClientCredentials | { credentials: ServiceClientCredentials; environment: Environment; }): ServiceClient;
+export async function createGenericClient(clientInfo?: ServiceClientCredentials | { credentials: ServiceClientCredentials; environment: Environment; }): Promise<ServiceClient>;
 
 /**
  * Creates an Azure client, ensuring best practices are followed. For example:

@@ -6,7 +6,7 @@
 import { SubscriptionClient, SubscriptionModels } from '@azure/arm-subscriptions';
 import { QuickPickOptions } from 'vscode';
 import * as types from '../../index';
-import { createAzureSubscriptionClient } from '../createAzureClient';
+import { createSubscriptionsClient } from '../clients';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
@@ -50,8 +50,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
 
     public static async getLocations<T extends ILocationWizardContextInternal>(wizardContext: T): Promise<SubscriptionModels.Location[]> {
         if (wizardContext._allLocationsTask === undefined) {
-            const armSubscriptions: typeof import('@azure/arm-subscriptions') = await import('@azure/arm-subscriptions');
-            const client: SubscriptionClient = createAzureSubscriptionClient(wizardContext, armSubscriptions.SubscriptionClient);
+            const client: SubscriptionClient = await createSubscriptionsClient(wizardContext);
             wizardContext._allLocationsTask = client.subscriptions.listLocations(wizardContext.subscriptionId);
         }
 

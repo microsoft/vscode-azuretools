@@ -6,7 +6,7 @@
 import { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
 import { isString } from 'util';
 import * as types from '../../index';
-import { createAzureClient } from '../createAzureClient';
+import { createStorageClient } from '../clients';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { openUrl } from '../utils/openUrl';
@@ -68,14 +68,12 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
     }
 
     public static async isNameAvailable<T extends types.IStorageAccountWizardContext>(wizardContext: T, name: string): Promise<boolean> {
-        const armStorage: typeof import('@azure/arm-storage') = await import('@azure/arm-storage');
-        const storageClient: StorageManagementClient = createAzureClient(wizardContext, armStorage.StorageManagementClient);
+        const storageClient: StorageManagementClient = await createStorageClient(wizardContext);
         return !!(await storageClient.storageAccounts.checkNameAvailability(name)).nameAvailable;
     }
 
     public async prompt(wizardContext: T): Promise<void> {
-        const armStorage: typeof import('@azure/arm-storage') = await import('@azure/arm-storage');
-        const client: StorageManagementClient = createAzureClient(wizardContext, armStorage.StorageManagementClient);
+        const client: StorageManagementClient = await createStorageClient(wizardContext);
 
         const quickPickOptions: types.IAzureQuickPickOptions = { placeHolder: 'Select a storage account.', id: `StorageAccountListStep/${wizardContext.subscriptionId}` };
         const picksTask: Promise<types.IAzureQuickPickItem<StorageManagementModels.StorageAccount | string | undefined>[]> = this.getQuickPicks(client.storageAccounts.list());
