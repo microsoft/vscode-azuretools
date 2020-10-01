@@ -289,7 +289,7 @@ export class SiteClient implements ISimplifiedSiteClient {
      */
     private async getCachedSku(): Promise<string | undefined> {
         if (!this._cachedSku) {
-            const client: ServiceClient = createGenericClient(this.subscription);
+            const client: ServiceClient = await createGenericClient(this.subscription);
             const response: HttpOperationResponse = await client.sendRequest({ method: 'GET', url: `${this.id}?api-version=2016-08-01` });
             this._cachedSku = (<{ properties: { sku?: string } }>response.parsedBody).properties.sku;
         }

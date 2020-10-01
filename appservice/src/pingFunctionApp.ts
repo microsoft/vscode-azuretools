@@ -10,7 +10,7 @@ import { localize } from './localize';
 
 export async function pingFunctionApp(siteClient: ISimplifiedSiteClient): Promise<void> {
     if (siteClient.listHostKeys) {
-        const client: ServiceClient = createGenericClient();
+        const client: ServiceClient = await createGenericClient();
         await client.sendRequest({
             method: 'GET',
             url: `${siteClient.defaultHostUrl}/admin/host/status`,

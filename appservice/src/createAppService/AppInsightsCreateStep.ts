@@ -83,7 +83,7 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
 
     private async getPairedRegions(locationName: string): Promise<string[]> {
         try {
-            const client: ServiceClient = createGenericClient();
+            const client: ServiceClient = await createGenericClient();
             const response: HttpOperationResponse = await client.sendRequest({
                 method: 'GET',
                 url: 'https://appinsights.azureedge.net/portal/regionMapping.json'

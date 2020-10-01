@@ -11,7 +11,7 @@ import { createGenericClient, ISubscriptionContext } from 'vscode-azureextension
  * Temporary workaround because this isn't in azure sdk yet
  */
 export async function listFunctionsSlot(subscription: ISubscriptionContext, id: string): Promise<WebSiteManagementModels.FunctionEnvelopeCollection> {
-    const client: ServiceClient = createGenericClient(subscription);
+    const client: ServiceClient = await createGenericClient(subscription);
     const response: HttpOperationResponse = await client.sendRequest({ method: 'GET', url: getUrlPath(id) });
     const rawResult: IRawFunctionEnvelopeCollection = <IRawFunctionEnvelopeCollection>response.parsedBody;
     const result: {}[] = rawResult.value.map(convertRawResource);
@@ -24,7 +24,7 @@ export async function listFunctionsSlot(subscription: ISubscriptionContext, id: 
  * Temporary workaround because this isn't in azure sdk yet
  */
 export async function getFunctionSlot(subscription: ISubscriptionContext, id: string, functionName: string): Promise<WebSiteManagementModels.FunctionEnvelope> {
-    const client: ServiceClient = createGenericClient(subscription);
+    const client: ServiceClient = await createGenericClient(subscription);
     const response: HttpOperationResponse = await client.sendRequest({ method: 'GET', url: getUrlPath(id, functionName) });
     return convertRawResource(<IRawAzureResource>response.parsedBody);
 }
@@ -33,7 +33,7 @@ export async function getFunctionSlot(subscription: ISubscriptionContext, id: st
  * Temporary workaround because this isn't in azure sdk yet
  */
 export async function deleteFunctionSlot(subscription: ISubscriptionContext, id: string, functionName: string): Promise<void> {
-    const client: ServiceClient = createGenericClient(subscription);
+    const client: ServiceClient = await createGenericClient(subscription);
     await client.sendRequest({ method: 'DELETE', url: getUrlPath(id, functionName) });
 }
 
