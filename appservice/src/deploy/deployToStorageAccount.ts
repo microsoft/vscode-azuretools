@@ -6,7 +6,9 @@
 import { WebSiteManagementModels } from '@azure/arm-appservice';
 import { Environment } from '@azure/ms-rest-azure-env';
 import { BlobSASPermissions, BlobServiceClient, BlockBlobClient, ContainerClient, generateBlobSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
-import * as moment from 'moment';
+import * as dayjs from 'dayjs';
+import * as relativeTime from 'dayjs/plugin/relativeTime';
+import * as utc from 'dayjs/plugin/utc';
 import { URL } from 'url';
 import { IActionContext, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
@@ -15,13 +17,16 @@ import { SiteClient } from '../SiteClient';
 import { randomUtils } from '../utils/randomUtils';
 import { runWithZipStream } from './runWithZipStream';
 
+dayjs.extend(relativeTime);
+dayjs.extend(utc);
+
 /**
  * Method of deployment that is only intended to be used for Linux Consumption Function apps because it doesn't support kudu pushDeployment
  * To deploy with Run from Package on a Windows plan, create the app setting "WEBSITE_RUN_FROM_PACKAGE" and set it to "1".
  * Then deploy via "zipdeploy" as usual.
  */
 export async function deployToStorageAccount(context: IActionContext, fsPath: string, client: SiteClient): Promise<void> {
-    const datePart: string = moment.utc(Date.now()).format('YYYYMMDDHHmmss');
+    const datePart: string = dayjs().utc().format('YYYYMMDDHHmmss');
     const randomPart: string = randomUtils.getRandomHexString(32);
     const blobName: string = `${datePart}-${randomPart}.zip`;
 
@@ -91,8 +96,8 @@ async function createBlobFromZip(context: IActionContext, fsPath: string, client
                 containerName,
                 blobName,
                 permissions: BlobSASPermissions.parse('r'),
-                startsOn: moment.utc(Date.now()).subtract(5, 'minutes').toDate(),
-                expiresOn: moment.utc(Date.now()).add(10, 'years').toDate()
+                startsOn: dayjs().utc().subtract(5, 'minute').toDate(),
+                expiresOn: dayjs().utc().add(10, 'year').toDate()
             },
             blobService.credential).toString();
         return url.toString();
