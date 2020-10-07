@@ -18,7 +18,7 @@ export class SiteOSStep extends AzureWizardPromptStep<IAppServiceWizardContext> 
         });
 
         wizardContext.newSiteOS = (await ext.ui.showQuickPick(picks, { placeHolder: localize('selectOS', 'Select an OS.') })).data;
-        setLocationsTask(wizardContext);
+        await setLocationsTask(wizardContext);
     }
 
     public shouldPrompt(wizardContext: IAppServiceWizardContext): boolean {

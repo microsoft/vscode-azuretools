@@ -5,12 +5,13 @@
 
 import { WebSiteManagementClient, WebSiteManagementModels as Models } from '@azure/arm-appservice';
 import { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
-import { appendExtensionUserAgent, createAzureClient, createGenericClient, ISubscriptionContext, parseError } from 'vscode-azureextensionui';
+import { appendExtensionUserAgent, createGenericClient, ISubscriptionContext, parseError } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
 import { ISimplifiedSiteClient } from './ISimplifiedSiteClient';
 import { localize } from './localize';
 import { deleteFunctionSlot, getFunctionSlot, listFunctionsSlot } from './slotFunctionOperations';
 import { tryGetAppServicePlan, tryGetWebApp, tryGetWebAppSlot } from './tryGetSiteResource';
+import { createWebSiteClient } from './utils/azureClients';
 import { nonNullProp, nonNullValue } from './utils/nonNull';
 
 /**
@@ -83,10 +84,6 @@ export class SiteClient implements ISimplifiedSiteClient {
         this.subscription = subscription;
     }
 
-    private get _client(): WebSiteManagementClient {
-        return createAzureClient(this.subscription, WebSiteManagementClient);
-    }
-
     public async getIsConsumption(): Promise<boolean> {
         if (this.isFunctionApp) {
             const sku: string | undefined = await this.getCachedSku();
@@ -108,150 +105,175 @@ export class SiteClient implements ISimplifiedSiteClient {
     }
 
     public async stop(): Promise<void> {
+        const client: WebSiteManagementClient = await this.createClient();
         this.slotName ?
-            await this._client.webApps.stopSlot(this.resourceGroup, this.siteName, this.slotName) :
-            await this._client.webApps.stop(this.resourceGroup, this.siteName);
+            await client.webApps.stopSlot(this.resourceGroup, this.siteName, this.slotName) :
+            await client.webApps.stop(this.resourceGroup, this.siteName);
     }
 
     public async start(): Promise<void> {
+        const client: WebSiteManagementClient = await this.createClient();
         this.slotName ?
-            await this._client.webApps.startSlot(this.resourceGroup, this.siteName, this.slotName) :
-            await this._client.webApps.start(this.resourceGroup, this.siteName);
+            await client.webApps.startSlot(this.resourceGroup, this.siteName, this.slotName) :
+            await client.webApps.start(this.resourceGroup, this.siteName);
     }
 
     public async getState(): Promise<string | undefined> {
+        const client: WebSiteManagementClient = await this.createClient();
         return (this.slotName ?
-            await tryGetWebAppSlot(this._client, this.resourceGroup, this.siteName, this.slotName) :
-            await tryGetWebApp(this._client, this.resourceGroup, this.siteName))?.state;
+            await tryGetWebAppSlot(client, this.resourceGroup, this.siteName, this.slotName) :
+            await tryGetWebApp(client, this.resourceGroup, this.siteName))?.state;
     }
 
     public async getWebAppPublishCredential(): Promise<Models.User> {
+        const client: WebSiteManagementClient = await this.createClient();
         return this.slotName ?
-            await this._client.webApps.listPublishingCredentialsSlot(this.resourceGroup, this.siteName, this.slotName) :
-            await this._client.webApps.listPublishingCredentials(this.resourceGroup, this.siteName);
+            await client.webApps.listPublishingCredentialsSlot(this.resourceGroup, this.siteName, this.slotName) :
+            await client.webApps.listPublishingCredentials(this.resourceGroup, this.siteName);
     }
 
     public async getSiteConfig(): Promise<Models.SiteConfigResource> {
+        const client: WebSiteManagementClient = await this.createClient();
         return this.slotName ?
-            await this._client.webApps.getConfigurationSlot(this.resourceGroup, this.siteName, this.slotName) :
-            await this._client.webApps.getConfiguration(this.resourceGroup, this.siteName);
+            await client.webApps.getConfigurationSlot(this.resourceGroup, this.siteName, this.slotName) :
+            await client.webApps.getConfiguration(this.resourceGroup, this.siteName);
     }
 
     public async updateConfiguration(config: Models.SiteConfigResource): Promise<Models.SiteConfigResource> {
+        const client: WebSiteManagementClient = await this.createClient();
         return this.slotName ?
-            await this._client.webApps.updateConfigurationSlot(this.resourceGroup, this.siteName, config, this.slotName) :
-            await this._client.webApps.updateConfiguration(this.resourceGroup, this.siteName, config);
+            await client.webApps.updateConfigurationSlot(this.resourceGroup, this.siteName, config, this.slotName) :
+            await client.webApps.updateConfiguration(this.resourceGroup, this.siteName, config);
     }
 
     public async getLogsConfig(): Promise<Models.SiteLogsConfig> {
+        const client: WebSiteManagementClient = await this.createClient();
         return this.slotName ?
-            await this._client.webApps.getDiagnosticLogsConfigurationSlot(this.resourceGroup, this.siteName, this.slotName) :
-            await this._client.webApps.getDiagnosticLogsConfiguration(this.resourceGroup, this.siteName);
+            await client.webApps.getDiagnosticLogsConfigurationSlot(this.resourceGroup, this.siteName, this.slotName) :
+            await client.webApps.getDiagnosticLogsConfiguration(this.resourceGroup, this.siteName);
     }
 
     public async updateLogsConfig(config: Models.SiteLogsConfig): Promise<Models.SiteLogsConfig> {
+        const client: WebSiteManagementClient = await this.createClient();
         return this.slotName ?
-            await this._client.webApps.updateDiagnosticLogsConfigSlot(this.resourceGroup, this.siteName, config, this.slotName) :
-            await this._client.webApps.updateDiagnosticLogsConfig(this.resourceGroup, this.siteName, config);
+            await client.webApps.updateDiagnosticLogsConfigSlot(this.resourceGroup, this.siteName, config, this.slotName) :
+            await client.webApps.updateDiagnosticLogsConfig(this.resourceGroup, this.siteName, config);
     }
 
     public async getAppServicePlan(): Promise<Models.AppServicePlan | undefined> {
-        return await tryGetAppServicePlan(this._client, this.planResourceGroup, this.planName);
+        const client: WebSiteManagementClient = await this.createClient();
+        return await tryGetAppServicePlan(client, this.planResourceGroup, this.planName);
     }
 
     public async getSourceControl(): Promise<Models.SiteSourceControl> {
+        const client: WebSiteManagementClient = await this.createClient();
         return this.slotName ?
-            await this._client.webApps.getSourceControlSlot(this.resourceGroup, this.siteName, this.slotName) :
-            await this._client.webApps.getSourceControl(this.resourceGroup, this.siteName);
+            await client.webApps.getSourceControlSlot(this.resourceGroup, this.siteName, this.slotName) :
+            await client.webApps.getSourceControl(this.resourceGroup, this.siteName);
     }
 
     public async updateSourceControl(siteSourceControl: Models.SiteSourceControl): Promise<Models.SiteSourceControl> {
+        const client: WebSiteManagementClient = await this.createClient();
         return this.slotName ?
-            await this._client.webApps.createOrUpdateSourceControlSlot(this.resourceGroup, this.siteName, siteSourceControl, this.slotName) :
-            await this._client.webApps.createOrUpdateSourceControl(this.resourceGroup, this.siteName, siteSourceControl);
+            await client.webApps.createOrUpdateSourceControlSlot(this.resourceGroup, this.siteName, siteSourceControl, this.slotName) :
+            await client.webApps.createOrUpdateSourceControl(this.resourceGroup, this.siteName, siteSourceControl);
     }
 
     public async syncRepository(): Promise<void> {
+        const client: WebSiteManagementClient = await this.createClient();
         this.slotName ?
-            await this._client.webApps.syncRepositorySlot(this.resourceGroup, this.siteName, this.slotName) :
-            await this._client.webApps.syncRepository(this.resourceGroup, this.siteName);
+            await client.webApps.syncRepositorySlot(this.resourceGroup, this.siteName, this.slotName) :
+            await client.webApps.syncRepository(this.resourceGroup, this.siteName);
     }
 
     public async listApplicationSettings(): Promise<Models.StringDictionary> {
+        const client: WebSiteManagementClient = await this.createClient();
         return this.slotName ?
-            await this._client.webApps.listApplicationSettingsSlot(this.resourceGroup, this.siteName, this.slotName) :
-            await this._client.webApps.listApplicationSettings(this.resourceGroup, this.siteName);
+            await client.webApps.listApplicationSettingsSlot(this.resourceGroup, this.siteName, this.slotName) :
+            await client.webApps.listApplicationSettings(this.resourceGroup, this.siteName);
     }
 
     public async updateApplicationSettings(appSettings: Models.StringDictionary): Promise<Models.StringDictionary> {
+        const client: WebSiteManagementClient = await this.createClient();
         return this.slotName ?
-            await this._client.webApps.updateApplicationSettingsSlot(this.resourceGroup, this.siteName, appSettings, this.slotName) :
-            await this._client.webApps.updateApplicationSettings(this.resourceGroup, this.siteName, appSettings);
+            await client.webApps.updateApplicationSettingsSlot(this.resourceGroup, this.siteName, appSettings, this.slotName) :
+            await client.webApps.updateApplicationSettings(this.resourceGroup, this.siteName, appSettings);
     }
 
     public async listSlotConfigurationNames(): Promise<Models.SlotConfigNamesResource> {
-        return await this._client.webApps.listSlotConfigurationNames(this.resourceGroup, this.siteName);
+        const client: WebSiteManagementClient = await this.createClient();
+        return await client.webApps.listSlotConfigurationNames(this.resourceGroup, this.siteName);
     }
 
     public async updateSlotConfigurationNames(appSettings: Models.SlotConfigNamesResource): Promise<Models.SlotConfigNamesResource> {
-        return await this._client.webApps.updateSlotConfigurationNames(this.resourceGroup, this.siteName, appSettings);
+        const client: WebSiteManagementClient = await this.createClient();
+        return await client.webApps.updateSlotConfigurationNames(this.resourceGroup, this.siteName, appSettings);
     }
 
     public async deleteMethod(options?: { deleteMetrics?: boolean, deleteEmptyServerFarm?: boolean, skipDnsRegistration?: boolean, customHeaders?: { [headerName: string]: string; } }): Promise<void> {
+        const client: WebSiteManagementClient = await this.createClient();
         this.slotName ?
-            await this._client.webApps.deleteSlot(this.resourceGroup, this.siteName, this.slotName, options) :
-            await this._client.webApps.deleteMethod(this.resourceGroup, this.siteName, options);
+            await client.webApps.deleteSlot(this.resourceGroup, this.siteName, this.slotName, options) :
+            await client.webApps.deleteMethod(this.resourceGroup, this.siteName, options);
     }
 
     public async listInstanceIdentifiers(): Promise<Models.WebAppInstanceCollection> {
+        const client: WebSiteManagementClient = await this.createClient();
         return this.slotName ?
-            await this._client.webApps.listInstanceIdentifiersSlot(this.resourceGroup, this.siteName, this.slotName) :
-            await this._client.webApps.listInstanceIdentifiers(this.resourceGroup, this.siteName);
+            await client.webApps.listInstanceIdentifiersSlot(this.resourceGroup, this.siteName, this.slotName) :
+            await client.webApps.listInstanceIdentifiers(this.resourceGroup, this.siteName);
     }
 
     public async listSourceControls(): Promise<Models.SourceControlCollection> {
-        return await this._client.listSourceControls();
+        const client: WebSiteManagementClient = await this.createClient();
+        return await client.listSourceControls();
     }
 
     public async listFunctions(): Promise<Models.FunctionEnvelopeCollection> {
+        const client: WebSiteManagementClient = await this.createClient();
         if (this.slotName) {
             return await listFunctionsSlot(this.subscription, this.id);
         } else {
-            return await this._client.webApps.listFunctions(this.resourceGroup, this.siteName);
+            return await client.webApps.listFunctions(this.resourceGroup, this.siteName);
         }
     }
 
     public async listFunctionsNext(nextPageLink: string): Promise<Models.FunctionEnvelopeCollection> {
-        return await this._client.webApps.listFunctionsNext(nextPageLink);
+        const client: WebSiteManagementClient = await this.createClient();
+        return await client.webApps.listFunctionsNext(nextPageLink);
     }
 
     public async getFunction(functionName: string): Promise<Models.FunctionEnvelope> {
+        const client: WebSiteManagementClient = await this.createClient();
         if (this.slotName) {
             return await getFunctionSlot(this.subscription, this.id, functionName);
         } else {
-            return await this._client.webApps.getFunction(this.resourceGroup, this.siteName, functionName);
+            return await client.webApps.getFunction(this.resourceGroup, this.siteName, functionName);
         }
     }
 
     public async deleteFunction(functionName: string): Promise<void> {
+        const client: WebSiteManagementClient = await this.createClient();
         if (this.slotName) {
             await deleteFunctionSlot(this.subscription, this.id, functionName);
         } else {
-            await this._client.webApps.deleteFunction(this.resourceGroup, this.siteName, functionName);
+            await client.webApps.deleteFunction(this.resourceGroup, this.siteName, functionName);
         }
     }
 
     public async listFunctionSecrets(functionName: string): Promise<Models.FunctionSecrets> {
+        const client: WebSiteManagementClient = await this.createClient();
         return this.slotName ?
-            await this._client.webApps.listFunctionSecretsSlot(this.resourceGroup, this.siteName, functionName, this.slotName) :
-            await this._client.webApps.listFunctionSecrets(this.resourceGroup, this.siteName, functionName);
+            await client.webApps.listFunctionSecretsSlot(this.resourceGroup, this.siteName, functionName, this.slotName) :
+            await client.webApps.listFunctionSecrets(this.resourceGroup, this.siteName, functionName);
     }
 
     public async syncFunctionTriggers(): Promise<void> {
+        const client: WebSiteManagementClient = await this.createClient();
         try {
             this.slotName ?
-                await this._client.webApps.syncFunctionTriggersSlot(this.resourceGroup, this.siteName, this.slotName) :
-                await this._client.webApps.syncFunctionTriggers(this.resourceGroup, this.siteName);
+                await client.webApps.syncFunctionTriggersSlot(this.resourceGroup, this.siteName, this.slotName) :
+                await client.webApps.syncFunctionTriggers(this.resourceGroup, this.siteName);
         } catch (error) {
             // For some reason this call incorrectly throws an error when the status code is 200
             if (parseError(error).errorType !== '200') {
@@ -261,25 +283,33 @@ export class SiteClient implements ISimplifiedSiteClient {
     }
 
     public async getPublishingUser(): Promise<Models.User> {
-        return await this._client.getPublishingUser({});
+        const client: WebSiteManagementClient = await this.createClient();
+        return await client.getPublishingUser({});
     }
 
     public async listWebJobs(): Promise<Models.WebJobCollection> {
+        const client: WebSiteManagementClient = await this.createClient();
         return this.slotName ?
-            await this._client.webApps.listWebJobsSlot(this.resourceGroup, this.siteName, this.slotName) :
-            await this._client.webApps.listWebJobs(this.resourceGroup, this.siteName);
+            await client.webApps.listWebJobsSlot(this.resourceGroup, this.siteName, this.slotName) :
+            await client.webApps.listWebJobs(this.resourceGroup, this.siteName);
     }
 
     public async listHostKeys(): Promise<Models.HostKeys> {
+        const client: WebSiteManagementClient = await this.createClient();
         return this.slotName ?
-            await this._client.webApps.listHostKeysSlot(this.resourceGroup, this.siteName, this.slotName) :
-            await this._client.webApps.listHostKeys(this.resourceGroup, this.siteName);
+            await client.webApps.listHostKeysSlot(this.resourceGroup, this.siteName, this.slotName) :
+            await client.webApps.listHostKeys(this.resourceGroup, this.siteName);
     }
 
     public async listFunctionKeys(functionName: string): Promise<IFunctionKeys> {
+        const client: WebSiteManagementClient = await this.createClient();
         return this.slotName ?
-            await this._client.webApps.listFunctionKeysSlot(this.resourceGroup, this.siteName, functionName, this.slotName) :
-            await this._client.webApps.listFunctionKeys(this.resourceGroup, this.siteName, functionName);
+            await client.webApps.listFunctionKeysSlot(this.resourceGroup, this.siteName, functionName, this.slotName) :
+            await client.webApps.listFunctionKeys(this.resourceGroup, this.siteName, functionName);
+    }
+
+    private async createClient(): Promise<WebSiteManagementClient> {
+        return await createWebSiteClient(this.subscription);
     }
 
     /**
