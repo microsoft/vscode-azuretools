@@ -4,10 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { WebSiteManagementClient, WebSiteManagementModels } from '@azure/arm-appservice';
-import { AzureWizardPromptStep, createAzureClient, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, LocationListStep, ResourceGroupListStep } from 'vscode-azureextensionui';
+import { AzureWizardPromptStep, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, LocationListStep, ResourceGroupListStep } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { tryGetAppServicePlan } from '../tryGetSiteResource';
+import { createWebSiteClient } from '../utils/azureClients';
 import { nonNullProp } from '../utils/nonNull';
 import { uiUtils } from '../utils/uiUtils';
 import { getWebsiteOSDisplayName, WebsiteOS } from './AppKind';
@@ -19,7 +20,7 @@ import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public static async getPlans(wizardContext: IAppServiceWizardContext): Promise<WebSiteManagementModels.AppServicePlan[]> {
         if (wizardContext.plansTask === undefined) {
-            const client: WebSiteManagementClient = createAzureClient(wizardContext, WebSiteManagementClient);
+            const client: WebSiteManagementClient = await createWebSiteClient(wizardContext);
             wizardContext.plansTask = uiUtils.listAll(client.appServicePlans, client.appServicePlans.list());
         }
 
@@ -82,7 +83,7 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
             if (plan.sku && plan.sku.family === 'EP') {
                 // elastic premium plans do not have the os in the kind, so we have to check the "reserved" property
                 // also, the "reserved" property is always "false" in the list of plans returned above. We have to perform a separate get on each plan
-                const client: WebSiteManagementClient = createAzureClient(wizardContext, WebSiteManagementClient);
+                const client: WebSiteManagementClient = await createWebSiteClient(wizardContext);
                 const epPlan: WebSiteManagementModels.AppServicePlan | undefined = await tryGetAppServicePlan(client, nonNullProp(plan, 'resourceGroup'), nonNullProp(plan, 'name'));
                 isPlanLinux = !!epPlan?.reserved;
             }

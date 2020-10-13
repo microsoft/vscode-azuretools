@@ -5,15 +5,16 @@
 
 import { WebSiteManagementClient, WebSiteManagementModels } from "@azure/arm-appservice";
 import { ProgressLocation, window } from "vscode";
-import { AzureTreeItem, createAzureClient, IAzureNamingRules, IAzureQuickPickItem, ICreateChildImplContext } from "vscode-azureextensionui";
+import { AzureTreeItem, IAzureNamingRules, IAzureQuickPickItem, ICreateChildImplContext } from "vscode-azureextensionui";
 import { getNewFileShareName } from "./createAppService/getNewFileShareName";
 import { ext } from "./extensionVariables";
 import { localize } from "./localize";
 import { SiteClient } from './SiteClient';
 import { ISiteTreeRoot } from "./tree/ISiteTreeRoot";
+import { createWebSiteClient } from "./utils/azureClients";
 
 export async function createSlot(root: ISiteTreeRoot, existingSlots: AzureTreeItem<ISiteTreeRoot>[], context: ICreateChildImplContext): Promise<WebSiteManagementModels.Site> {
-    const client: WebSiteManagementClient = createAzureClient(root, WebSiteManagementClient);
+    const client: WebSiteManagementClient = await createWebSiteClient(root);
     const slotName: string = (await ext.ui.showInputBox({
         prompt: localize('enterSlotName', 'Enter a unique name for the new deployment slot'),
         validateInput: async (value: string): Promise<string | undefined> => validateSlotName(value, client, root)

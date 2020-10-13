@@ -4,9 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { WebSiteManagementClient, WebSiteManagementModels } from '@azure/arm-appservice';
-import { AzureNameStep, createAzureClient, IAzureNamingRules, ResourceGroupListStep, resourceGroupNamingRules, StorageAccountListStep, storageAccountNamingRules } from 'vscode-azureextensionui';
+import { AzureNameStep, IAzureNamingRules, ResourceGroupListStep, resourceGroupNamingRules, StorageAccountListStep, storageAccountNamingRules } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
+import { createWebSiteClient } from '../utils/azureClients';
 import { appInsightsNamingRules } from './AppInsightsListStep';
 import { AppKind } from './AppKind';
 import { AppServicePlanListStep } from './AppServicePlanListStep';
@@ -21,7 +22,7 @@ const siteNamingRules: IAzureNamingRules = {
 
 export class SiteNameStep extends AzureNameStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
-        const client: WebSiteManagementClient = createAzureClient(wizardContext, WebSiteManagementClient);
+        const client: WebSiteManagementClient = await createWebSiteClient(wizardContext);
 
         let placeHolder: string | undefined;
         if (wizardContext.environment.name === 'Azure') {

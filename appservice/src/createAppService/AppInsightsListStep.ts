@@ -5,9 +5,10 @@
 
 import { ApplicationInsightsManagementClient } from "@azure/arm-appinsights";
 import { ApplicationInsightsComponent, ApplicationInsightsComponentListResult } from "@azure/arm-appinsights/lib/models";
-import { AzureWizardPromptStep, createAzureClient, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, LocationListStep } from "vscode-azureextensionui";
+import { AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, LocationListStep } from "vscode-azureextensionui";
 import { ext } from "../extensionVariables";
 import { localize } from "../localize";
+import { createAppInsightsClient } from "../utils/azureClients";
 import { nonNullProp } from "../utils/nonNull";
 import { AppInsightsCreateStep } from "./AppInsightsCreateStep";
 import { AppInsightsNameStep } from "./AppInsightsNameStep";
@@ -24,7 +25,7 @@ const skipForNowLabel: string = '$(clock) Skip for now';
 export class AppInsightsListStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public static async getAppInsightsComponents(wizardContext: IAppServiceWizardContext): Promise<ApplicationInsightsComponentListResult> {
         if (wizardContext.appInsightsTask === undefined) {
-            const client: ApplicationInsightsManagementClient = createAzureClient(wizardContext, ApplicationInsightsManagementClient);
+            const client: ApplicationInsightsManagementClient = await createAppInsightsClient(wizardContext);
             wizardContext.appInsightsTask = client.components.list();
         }
 

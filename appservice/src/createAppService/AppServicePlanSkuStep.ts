@@ -47,7 +47,7 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
             }
         }
 
-        setLocationsTask(wizardContext);
+        await setLocationsTask(wizardContext);
     }
 
     public shouldPrompt(wizardContext: IAppServiceWizardContext): boolean {

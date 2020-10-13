@@ -8,9 +8,10 @@ import { ResourceManagementClient, ResourceManagementModels } from '@azure/arm-r
 import { SubscriptionModels } from '@azure/arm-subscriptions';
 import { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
 import { Progress } from 'vscode';
-import { AzureWizardExecuteStep, createAzureClient, createGenericClient, IParsedError, parseError } from 'vscode-azureextensionui';
+import { AzureWizardExecuteStep, createGenericClient, IParsedError, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
+import { createAppInsightsClient, createResourceClient } from '../utils/azureClients';
 import { areLocationNamesEqual } from '../utils/azureUtils';
 import { nonNullProp } from '../utils/nonNull';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
@@ -25,7 +26,7 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
         const appInsightsLocation: string | undefined = await this.getSupportedLocation(wizardContext, resourceLocation);
 
         if (appInsightsLocation) {
-            const client: ApplicationInsightsManagementClient = createAzureClient(wizardContext, ApplicationInsightsManagementClient);
+            const client: ApplicationInsightsManagementClient = await createAppInsightsClient(wizardContext);
             const rg: ResourceManagementModels.ResourceGroup = nonNullProp(wizardContext, 'resourceGroup');
             const rgName: string = nonNullProp(rg, 'name');
             const aiName: string = nonNullProp(wizardContext, 'newAppInsightsName');
@@ -101,7 +102,7 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
     }
 
     private async getLocations(wizardContext: IAppServiceWizardContext): Promise<string[] | undefined> {
-        const resourceClient: ResourceManagementClient = createAzureClient(wizardContext, ResourceManagementClient);
+        const resourceClient: ResourceManagementClient = await createResourceClient(wizardContext);
         const supportedRegions: ResourceManagementModels.Provider = await resourceClient.providers.get('microsoft.insights');
         const componentsResourceType: ResourceManagementModels.ProviderResourceType | undefined = supportedRegions.resourceTypes && supportedRegions.resourceTypes.find(aiRt => aiRt.resourceType === 'components');
         if (!!componentsResourceType && !!componentsResourceType.locations) {

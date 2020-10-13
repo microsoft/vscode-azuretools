@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { WebSiteManagementClient, WebSiteManagementModels } from '@azure/arm-appservice';
-import { AzureWizardPromptStep, createAzureClient, IAzureQuickPickItem } from 'vscode-azureextensionui';
+import { AzureWizardPromptStep, IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
+import { createWebSiteClient } from '../utils/azureClients';
 import { nonNullProp } from '../utils/nonNull';
 import { AppKind, LinuxRuntimes, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
@@ -25,7 +26,7 @@ export class SiteRuntimeStep extends AzureWizardPromptStep<IAppServiceWizardCont
     }
 
     private async getLinuxRuntimeStack(wizardContext: IAppServiceWizardContext): Promise<WebSiteManagementModels.ApplicationStack[]> {
-        const client: WebSiteManagementClient = createAzureClient(wizardContext, WebSiteManagementClient);
+        const client: WebSiteManagementClient = await createWebSiteClient(wizardContext);
         return await client.provider.getAvailableStacks({ osTypeSelected: 'Linux' });
     }
 }
