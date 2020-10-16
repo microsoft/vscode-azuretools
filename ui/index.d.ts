@@ -471,6 +471,8 @@ export declare function openInPortal(root: ISubscriptionContext | AzExtTreeItem,
 
 export declare class UserCancelledError extends Error { }
 
+export declare class NoResourceFoundError extends Error { }
+
 /**
  * @deprecated Use `AzExtTreeFileSystem` instead
  */
