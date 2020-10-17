@@ -1215,7 +1215,7 @@ export interface IMinimumServiceClientOptions {
  * 1. Adds extension-specific user agent
  * 2. Uses resourceManagerEndpointUrl to support sovereigns (if clientInfo corresponds to an Azure environment)
  */
-export async function createGenericClient(clientInfo?: ServiceClientCredentials | { credentials: ServiceClientCredentials; environment: Environment; }): Promise<ServiceClient>;
+export function createGenericClient(clientInfo?: ServiceClientCredentials | { credentials: ServiceClientCredentials; environment: Environment; }): Promise<ServiceClient>;
 
 /**
  * Creates an Azure client, ensuring best practices are followed. For example:
@@ -1327,7 +1327,7 @@ export declare abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> i
 
     public constructor(tree: AzExtTreeDataProvider);
 
-    public get onDidChangeFile(): Event<FileChangeEvent[]>;
+    public readonly onDidChangeFile: Event<FileChangeEvent[]>;
 
     /**
      * Retrieve the file path for an item, for display-purposes only. Will affect the tab-title and "Open Editors" panel
