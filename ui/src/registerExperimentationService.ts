@@ -19,7 +19,7 @@ export async function registerExperimentationService(ctx: vscode.ExtensionContex
             result.wrappedExperimentationService = await tas.getExperimentationServiceAsync(
                 extensionId,
                 extensionVersion,
-                targetPopulation ?? tas.TargetPopulation.Public,
+                targetPopulation ?? (/alpha/ig.test(extensionVersion) ? tas.TargetPopulation.Insiders : tas.TargetPopulation.Public),
                 ext._internalReporter,
                 ctx.globalState
             );
