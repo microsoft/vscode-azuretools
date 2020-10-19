@@ -26,7 +26,7 @@ export class NotImplementedError extends Error {
     }
 }
 
-export class NoResouceFoundError extends Error {
+export class NoResourceFoundError extends Error {
     constructor(context?: ITreeItemPickerContext) {
         if (context && context.noItemFoundErrorMessage) {
             super(context.noItemFoundErrorMessage);

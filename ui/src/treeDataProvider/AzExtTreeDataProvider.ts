@@ -6,7 +6,7 @@
 import { CancellationToken, Event, EventEmitter, TreeItem } from 'vscode';
 import * as types from '../../index';
 import { callWithTelemetryAndErrorHandling } from '../callWithTelemetryAndErrorHandling';
-import { NoResouceFoundError, UserCancelledError } from '../errors';
+import { NoResourceFoundError, UserCancelledError } from '../errors';
 import { localize } from '../localize';
 import { parseError } from '../parseError';
 import { AzExtParentTreeItem, InvalidTreeItem } from './AzExtParentTreeItem';
@@ -161,7 +161,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                     treeItem = pickedItems;
                 }
             } else {
-                throw new NoResouceFoundError(context);
+                throw new NoResourceFoundError(context);
             }
         }
 

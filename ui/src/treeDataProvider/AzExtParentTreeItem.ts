@@ -6,7 +6,7 @@
 import { isNullOrUndefined } from 'util';
 import { commands, TreeItemCollapsibleState } from 'vscode';
 import * as types from '../../index';
-import { NoResouceFoundError, NotImplementedError, UserCancelledError } from '../errors';
+import { NoResourceFoundError, NotImplementedError, UserCancelledError } from '../errors';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { randomUtils } from '../utils/randomUtils';
@@ -333,7 +333,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         }
 
         if (picks.length === 0) {
-            throw new NoResouceFoundError(context);
+            throw new NoResourceFoundError(context);
         } else if (picks.length === 1 && autoSelectInTreeItemPicker) {
             throw new AutoSelectError(picks[0].data);
         } else if (context.canPickMany && children.some(c => c.matchesContextValue(expectedContextValues))) {
