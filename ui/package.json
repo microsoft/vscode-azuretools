@@ -1,7 +1,7 @@
 {
     "name": "vscode-azureextensionui",
     "author": "Microsoft Corporation",
-    "version": "0.36.0",
+    "version": "0.36.1",
     "description": "Common UI tools for developing Azure extensions for VS Code",
     "tags": [
         "azure",
@@ -31,19 +31,20 @@
         "test": "node ./out/test/runTest.js"
     },
     "dependencies": {
-        "@azure/arm-subscriptions": "^2.0.0",
-        "@azure/ms-rest-azure-env": "^2.0.0",
-        "@azure/ms-rest-nodeauth": "^3.0.5",
         "@azure/arm-resources": "^3.0.0",
         "@azure/arm-storage": "^15.0.0",
+        "@azure/arm-subscriptions": "^2.0.0",
+        "@azure/ms-rest-azure-env": "^2.0.0",
         "@azure/ms-rest-js": "^2.0.7",
+        "@azure/ms-rest-nodeauth": "^3.0.5",
         "escape-string-regexp": "^2.0.0",
         "fs-extra": "^8.0.0",
         "html-to-text": "^5.1.1",
         "opn": "^6.0.0",
         "semver": "^5.7.1",
         "vscode-extension-telemetry": "^0.1.5",
-        "vscode-nls": "^4.1.1"
+        "vscode-nls": "^4.1.1",
+        "vscode-tas-client": "^0.1.13"
     },
     "devDependencies": {
         "@types/fs-extra": "^8.1.0",

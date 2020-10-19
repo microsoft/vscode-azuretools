@@ -10,6 +10,7 @@ import { Environment } from '@azure/ms-rest-azure-env';
 import { ServiceClient, ServiceClientCredentials } from '@azure/ms-rest-js';
 import { TokenCredentialsBase } from '@azure/ms-rest-nodeauth';
 import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocument, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
+import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 
 export type OpenInPortalOptions = {
@@ -1175,6 +1176,11 @@ export declare namespace DialogResponses {
 export declare function registerUIExtensionVariables(extVars: UIExtensionVariables): void;
 
 /**
+ * Call this to register the experimentation service adapter
+ */
+export declare async function registerExperimentationService(ctx: ExtensionContext, targetPopulation?: TargetPopulation): Promise<void>;
+
+/**
  * Interface for common extension variables used throughout the UI package.
  */
 export interface UIExtensionVariables {
@@ -1182,10 +1188,17 @@ export interface UIExtensionVariables {
     outputChannel: IAzExtOutputChannel;
     ui: IAzureUserInput;
 
+    experimentationService?: IExperimentationServiceAdapter;
+
     /**
      * Set to true if not running under a webpacked 'dist' folder as defined in 'vscode-azureextensiondev'
      */
     ignoreBundle?: boolean;
+}
+
+export interface IExperimentationServiceAdapter {
+    isCachedFlightEnabled(flight: string): Promise<boolean>;
+    isLiveFlightEnabled(flight: string): Promise<boolean>;
 }
 
 export interface IAddUserAgent {

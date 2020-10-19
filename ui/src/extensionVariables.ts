@@ -5,7 +5,7 @@
 
 import * as assert from 'assert';
 import { ExtensionContext } from "vscode";
-import { IAzExtOutputChannel, IAzureUserInput, UIExtensionVariables } from "../index";
+import { IAzExtOutputChannel, IAzureUserInput, IExperimentationServiceAdapter, UIExtensionVariables } from "../index";
 import { createTelemetryReporter, IInternalTelemetryReporter } from './createTelemetryReporter';
 import { localize } from "./localize";
 import { IWizardUserInput } from './wizard/IWizardUserInput';
@@ -13,6 +13,7 @@ import { IWizardUserInput } from './wizard/IWizardUserInput';
 interface IInternalExtensionVariables extends UIExtensionVariables {
     ui: IAzureUserInput & { wizardUserInput?: IWizardUserInput };
     _internalReporter: IInternalTelemetryReporter;
+    experimentationService?: IExperimentationServiceAdapter;
 }
 
 class UninitializedExtensionVariables implements UIExtensionVariables {
@@ -27,6 +28,10 @@ class UninitializedExtensionVariables implements UIExtensionVariables {
     }
 
     public get ui(): IAzureUserInput {
+        throw this._error;
+    }
+
+    public get experimentationService(): IExperimentationServiceAdapter | undefined {
         throw this._error;
     }
 

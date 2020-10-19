@@ -9,6 +9,20 @@ import { IInternalTelemetryReporter } from './createTelemetryReporter';
 export class DebugReporter implements IInternalTelemetryReporter {
     constructor(private _extensionName: string, private _extensionVersion: string, private _verbose: boolean) { }
 
+    /**
+     * Implements `postEvent` for `IExperimentationTelemetry`.
+     */
+    public postEvent(): void {
+        // Not needed
+    }
+
+    /**
+     * Implements `setSharedProperty` for `IExperimentationTelemetry`
+     */
+    public setSharedProperty(): void {
+        // Not needed
+    }
+
     public sendTelemetryErrorEvent(eventName: string, properties?: { [key: string]: string | undefined; }, measures?: { [key: string]: number | undefined; }, _errorProps?: string[]): void {
         try {
             // tslint:disable-next-line:strict-boolean-expressions
