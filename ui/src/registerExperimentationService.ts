@@ -5,10 +5,11 @@
 
 import * as vscode from 'vscode';
 import * as tas from 'vscode-tas-client';
-import { IActionContext, IExperimentationServiceAdapter, registerTelemetryHandler } from '../index';
+import { IActionContext, IExperimentationServiceAdapter } from '../index';
 import { IInternalTelemetryReporter } from './createTelemetryReporter';
 import { ext } from './extensionVariables';
 import { getPackageInfo } from './getPackageInfo';
+import { registerTelemetryHandler } from './index';
 
 export async function registerExperimentationService(ctx: vscode.ExtensionContext, targetPopulation?: tas.TargetPopulation): Promise<void> {
     const result: ExperimentationServiceAdapter = new ExperimentationServiceAdapter();
