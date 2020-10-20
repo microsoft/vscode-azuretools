@@ -5,7 +5,8 @@
 
 import * as vscode from 'vscode';
 import * as tas from 'vscode-tas-client';
-import { IExperimentationServiceAdapter } from '../index';
+import { IActionContext, IExperimentationServiceAdapter, registerTelemetryHandler } from '../index';
+import { IInternalTelemetryReporter } from './createTelemetryReporter';
 import { ext } from './extensionVariables';
 import { getPackageInfo } from './getPackageInfo';
 
@@ -19,7 +20,7 @@ export async function registerExperimentationService(ctx: vscode.ExtensionContex
                 extensionId,
                 extensionVersion,
                 targetPopulation ?? (/alpha/ig.test(extensionVersion) ? tas.TargetPopulation.Insiders : tas.TargetPopulation.Public),
-                ext._internalReporter,
+                new ExperimentationTelemetry(ext._internalReporter, ctx),
                 ctx.globalState
             );
         } catch {
@@ -47,5 +48,48 @@ class ExperimentationServiceAdapter implements IExperimentationServiceAdapter {
         }
 
         return this.wrappedExperimentationService.isFlightEnabledAsync(flight);
+    }
+}
+
+class ExperimentationTelemetry implements tas.IExperimentationTelemetry {
+    private readonly sharedProperties: { [key: string]: string } = {};
+
+    public constructor(private readonly telemetryReporter: IInternalTelemetryReporter, context: vscode.ExtensionContext) {
+        context.subscriptions.push(registerTelemetryHandler((context: IActionContext) => this.handleTelemetry(context)));
+    }
+
+    /**
+     * Implements `postEvent` for `IExperimentationTelemetry`.
+     * @param eventName The name of the event
+     * @param props The properties to attach to the event
+     */
+    public postEvent(eventName: string, props: Map<string, string>): void {
+        const properties: { [key: string]: string } = {};
+
+        for (const key of props.keys()) {
+            properties[key] = <string>props.get(key);
+        }
+
+        this.telemetryReporter.sendTelemetryErrorEvent(eventName, properties);
+    }
+
+    /**
+     * Implements `setSharedProperty` for `IExperimentationTelemetry`
+     * @param name The name of the property
+     * @param value The value of the property
+     */
+    public setSharedProperty(name: string, value: string): void {
+        this.sharedProperties[name] = value;
+    }
+
+    /**
+     * Implements a telemetry handler that adds the shared properties to the event
+     * @param context The action context
+     */
+    public handleTelemetry(context: IActionContext): void {
+        context.telemetry.properties = {
+            ...context.telemetry.properties,
+            ...this.sharedProperties
+        };
     }
 }
