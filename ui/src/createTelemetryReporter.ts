@@ -19,6 +19,7 @@ const debugTelemetryVerbose: boolean = /^(verbose|v)$/i.test(process.env.DEBUGTE
 
 export interface IInternalTelemetryReporter extends IExperimentationTelemetry {
     sendTelemetryErrorEvent(eventName: string, properties?: { [key: string]: string | undefined }, measurements?: { [key: string]: number | undefined }, errorProps?: string[]): void;
+    handleTelemetry(context: IActionContext): void;
 }
 
 export function createTelemetryReporter(ctx: vscode.ExtensionContext): IInternalTelemetryReporter {
@@ -32,9 +33,10 @@ export function createTelemetryReporter(ctx: vscode.ExtensionContext): IInternal
     } else {
         const reporter: InternalTelemetryReporter = new InternalTelemetryReporter(extensionName, extensionVersion, aiKey);
         ctx.subscriptions.push(reporter);
-        ctx.subscriptions.push(registerTelemetryHandler((context: IActionContext) => { reporter.handleTelemetry(context); }));
         newReporter = reporter;
     }
+
+    ctx.subscriptions.push(registerTelemetryHandler((context: IActionContext) => { newReporter.handleTelemetry(context); }));
 
     // Send an event with some general info
     newReporter.sendTelemetryErrorEvent('info', { isActivationEvent: 'true', product: vscode.env.appName, language: vscode.env.language }, undefined, []);
@@ -57,7 +59,7 @@ class InternalTelemetryReporter extends TelemetryReporter implements IInternalTe
             properties[key] = <string>props.get(key);
         }
 
-        this.sendTelemetryEvent(eventName, properties);
+        this.sendTelemetryErrorEvent(eventName, properties);
     }
 
     /**
@@ -72,7 +74,7 @@ class InternalTelemetryReporter extends TelemetryReporter implements IInternalTe
     public handleTelemetry(context: IActionContext): void {
         context.telemetry.properties = {
             ...context.telemetry.properties,
-            ...this.sharedProperties,
+            ...this.sharedProperties
         };
     }
 }
