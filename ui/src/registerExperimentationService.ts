@@ -6,7 +6,6 @@
 import * as vscode from 'vscode';
 import * as tas from 'vscode-tas-client';
 import { IExperimentationServiceAdapter } from '../index';
-import { debugTelemetryEnabled } from './createTelemetryReporter';
 import { ext } from './extensionVariables';
 import { getPackageInfo } from './getPackageInfo';
 
@@ -14,7 +13,7 @@ export async function registerExperimentationService(ctx: vscode.ExtensionContex
     const result: ExperimentationServiceAdapter = new ExperimentationServiceAdapter();
     const { extensionId, extensionVersion } = getPackageInfo(ctx);
 
-    if (vscode.workspace.getConfiguration('telemetry').get('enableTelemetry', false) && !debugTelemetryEnabled) {
+    if (vscode.workspace.getConfiguration('telemetry').get('enableTelemetry', false)) {
         try {
             result.wrappedExperimentationService = await tas.getExperimentationServiceAsync(
                 extensionId,
