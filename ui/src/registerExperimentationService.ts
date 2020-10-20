@@ -55,7 +55,7 @@ class ExperimentationTelemetry implements tas.IExperimentationTelemetry {
     private readonly sharedProperties: { [key: string]: string } = {};
 
     public constructor(private readonly telemetryReporter: IInternalTelemetryReporter, context: vscode.ExtensionContext) {
-        context.subscriptions.push(registerTelemetryHandler((context: IActionContext) => this.handleTelemetry(context)));
+        context.subscriptions.push(registerTelemetryHandler((actionContext: IActionContext) => this.handleTelemetry(actionContext)));
     }
 
     /**
@@ -84,11 +84,11 @@ class ExperimentationTelemetry implements tas.IExperimentationTelemetry {
 
     /**
      * Implements a telemetry handler that adds the shared properties to the event
-     * @param context The action context
+     * @param actionContext The action context
      */
-    public handleTelemetry(context: IActionContext): void {
-        context.telemetry.properties = {
-            ...context.telemetry.properties,
+    public handleTelemetry(actionContext: IActionContext): void {
+        actionContext.telemetry.properties = {
+            ...actionContext.telemetry.properties,
             ...this.sharedProperties
         };
     }
