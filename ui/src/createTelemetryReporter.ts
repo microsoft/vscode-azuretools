@@ -7,6 +7,8 @@ import * as process from 'process';
 import * as vscode from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
 import { IExperimentationTelemetry } from 'vscode-tas-client';
+import { IActionContext } from '..';
+import { registerTelemetryHandler } from './callWithTelemetryAndErrorHandling';
 import { DebugReporter } from './DebugReporter';
 import { getPackageInfo } from './getPackageInfo';
 
@@ -30,6 +32,7 @@ export function createTelemetryReporter(ctx: vscode.ExtensionContext): IInternal
     } else {
         const reporter: InternalTelemetryReporter = new InternalTelemetryReporter(extensionName, extensionVersion, aiKey);
         ctx.subscriptions.push(reporter);
+        ctx.subscriptions.push(registerTelemetryHandler((context: IActionContext) => { reporter.handleTelemetry(context); }));
         newReporter = reporter;
     }
 
@@ -48,7 +51,7 @@ class InternalTelemetryReporter extends TelemetryReporter implements IInternalTe
      * @param props The properties to attach to the event
      */
     public postEvent(eventName: string, props: Map<string, string>): void {
-        const properties: { [key: string]: string } = { ...this.sharedProperties };
+        const properties: { [key: string]: string } = {};
 
         for (const key of props.keys()) {
             properties[key] = <string>props.get(key);
@@ -64,5 +67,12 @@ class InternalTelemetryReporter extends TelemetryReporter implements IInternalTe
      */
     public setSharedProperty(name: string, value: string): void {
         this.sharedProperties[name] = value;
+    }
+
+    public handleTelemetry(context: IActionContext): void {
+        context.telemetry.properties = {
+            ...context.telemetry.properties,
+            ...this.sharedProperties,
+        };
     }
 }
