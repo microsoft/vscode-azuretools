@@ -50,6 +50,22 @@ class ExperimentationServiceAdapter implements IExperimentationServiceAdapter {
 
         return this.wrappedExperimentationService.isFlightEnabledAsync(flight);
     }
+
+    public getCachedTreatmentVariable<T extends string | number | boolean>(name: string): T | undefined {
+        if (!this.wrappedExperimentationService) {
+            return undefined;
+        }
+
+        return this.wrappedExperimentationService.getTreatmentVariable('vscode', name);
+    }
+
+    public async getLiveTreatmentVariable<T extends string | number | boolean>(name: string): Promise<T | undefined> {
+        if (!this.wrappedExperimentationService) {
+            return undefined;
+        }
+
+        return this.wrappedExperimentationService.getTreatmentVariableAsync('vscode', name);
+    }
 }
 
 class ExperimentationTelemetry implements tas.IExperimentationTelemetry {

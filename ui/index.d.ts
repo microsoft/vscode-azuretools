@@ -1201,6 +1201,8 @@ export interface UIExtensionVariables {
 export interface IExperimentationServiceAdapter {
     isCachedFlightEnabled(flight: string): Promise<boolean>;
     isLiveFlightEnabled(flight: string): Promise<boolean>;
+    getCachedTreatmentVariable<T extends string | number | boolean>(name: string): T | undefined;
+    getLiveTreatmentVariable<T extends string | number | boolean>(name: string): Promise<T | undefined>;
 }
 
 export interface IAddUserAgent {
