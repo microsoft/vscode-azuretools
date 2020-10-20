@@ -87,7 +87,7 @@ class ExperimentationTelemetry implements tas.IExperimentationTelemetry {
             properties[key] = <string>props.get(key);
         }
 
-        this.telemetryReporter.sendTelemetryErrorEvent(eventName, properties);
+        this.telemetryReporter.sendTelemetryErrorEvent(eventName, { ...properties, ...this.sharedProperties });
     }
 
     /**
