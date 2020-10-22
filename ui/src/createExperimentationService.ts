@@ -11,7 +11,7 @@ import { ext } from './extensionVariables';
 import { getPackageInfo } from './getPackageInfo';
 import { registerTelemetryHandler } from './index';
 
-export async function registerExperimentationService(ctx: vscode.ExtensionContext, targetPopulation?: tas.TargetPopulation): Promise<void> {
+export async function createExperimentationService(ctx: vscode.ExtensionContext, targetPopulation?: tas.TargetPopulation): Promise<IExperimentationServiceAdapter> {
     const result: ExperimentationServiceAdapter = new ExperimentationServiceAdapter();
     const { extensionId, extensionVersion } = getPackageInfo(ctx);
 
@@ -29,7 +29,7 @@ export async function registerExperimentationService(ctx: vscode.ExtensionContex
         }
     }
 
-    ext.experimentationService = result;
+    return result;
 }
 
 class ExperimentationServiceAdapter implements IExperimentationServiceAdapter {
@@ -87,7 +87,9 @@ class ExperimentationTelemetry implements tas.IExperimentationTelemetry {
             properties[key] = <string>props.get(key);
         }
 
-        this.telemetryReporter.sendTelemetryErrorEvent(eventName, { ...properties, ...this.sharedProperties });
+        Object.assign(properties, this.sharedProperties);
+
+        this.telemetryReporter.sendTelemetryErrorEvent(eventName, properties);
     }
 
     /**
@@ -104,9 +106,6 @@ class ExperimentationTelemetry implements tas.IExperimentationTelemetry {
      * @param actionContext The action context
      */
     public handleTelemetry(actionContext: IActionContext): void {
-        actionContext.telemetry.properties = {
-            ...actionContext.telemetry.properties,
-            ...this.sharedProperties
-        };
+        Object.assign(actionContext.telemetry.properties, this.sharedProperties);
     }
 }

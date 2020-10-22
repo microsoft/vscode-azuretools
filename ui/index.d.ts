@@ -1178,9 +1178,16 @@ export declare namespace DialogResponses {
 export declare function registerUIExtensionVariables(extVars: UIExtensionVariables): void;
 
 /**
- * Call this to register the experimentation service adapter
+ * Call this to create the experimentation service adapter
+ * @param ctx The extension context
+ * @param targetPopulation Can be Team, Internal, Insiders, or Public. The definitions are somewhat subjective but generally:
+ * Team is the devs and test team.
+ * Internal is Microsoft
+ * Insiders is anyone installing alpha builds
+ * Public is everyone
+ * NOTE: if unspecified, this will be Insiders if the extension version contains "alpha", otherwise Public
  */
-export declare async function registerExperimentationService(ctx: ExtensionContext, targetPopulation?: TargetPopulation): Promise<void>;
+export declare async function createExperimentationService(ctx: ExtensionContext, targetPopulation?: TargetPopulation): Promise<IExperimentationServiceAdapter>;
 
 /**
  * Interface for common extension variables used throughout the UI package.
@@ -1190,18 +1197,38 @@ export interface UIExtensionVariables {
     outputChannel: IAzExtOutputChannel;
     ui: IAzureUserInput;
 
-    experimentationService?: IExperimentationServiceAdapter;
-
     /**
      * Set to true if not running under a webpacked 'dist' folder as defined in 'vscode-azureextensiondev'
      */
     ignoreBundle?: boolean;
 }
 
+/**
+ * Interface for experimentation service adapter
+ */
 export interface IExperimentationServiceAdapter {
+    /**
+     * Gets whether or not the flight is enabled from the cache (which will be ~1 session delayed)
+     * @param flight The flight variable name
+     */
     isCachedFlightEnabled(flight: string): Promise<boolean>;
+
+    /**
+     * Gets whether or not the flight is enabled directly from the web. This is slower than cache and can result in behavior changing mid-session.
+     * @param flight The flight variable name
+     */
     isLiveFlightEnabled(flight: string): Promise<boolean>;
+
+    /**
+     * Gets a treatment variable from the cache (which will be ~1 session delayed)
+     * @param name The variable name
+     */
     getCachedTreatmentVariable<T extends string | number | boolean>(name: string): T | undefined;
+
+    /**
+     * Gets a treatment variable directly from the web. This is slower than cache and can result in behavior changing mid-session.
+     * @param name The variable name
+     */
     getLiveTreatmentVariable<T extends string | number | boolean>(name: string): Promise<T | undefined>;
 }
 
