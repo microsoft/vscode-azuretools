@@ -1223,7 +1223,7 @@ export interface IExperimentationServiceAdapter {
      * Gets a treatment variable from the cache (which will be ~1 session delayed)
      * @param name The variable name
      */
-    getCachedTreatmentVariable<T extends string | number | boolean>(name: string): T | undefined;
+    getCachedTreatmentVariable<T extends string | number | boolean>(name: string): Promise<T | undefined>;
 
     /**
      * Gets a treatment variable directly from the web. This is slower than cache and can result in behavior changing mid-session.

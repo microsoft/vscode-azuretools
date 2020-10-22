@@ -51,12 +51,12 @@ class ExperimentationServiceAdapter implements IExperimentationServiceAdapter {
         return this.wrappedExperimentationService.isFlightEnabledAsync(flight);
     }
 
-    public getCachedTreatmentVariable<T extends string | number | boolean>(name: string): T | undefined {
+    public async getCachedTreatmentVariable<T extends string | number | boolean>(name: string): Promise<T | undefined> {
         if (!this.wrappedExperimentationService) {
-            return undefined;
+            return Promise.resolve(undefined);
         }
 
-        return this.wrappedExperimentationService.getTreatmentVariable('vscode', name);
+        return Promise.resolve(this.wrappedExperimentationService.getTreatmentVariable<T>('vscode', name));
     }
 
     public async getLiveTreatmentVariable<T extends string | number | boolean>(name: string): Promise<T | undefined> {
