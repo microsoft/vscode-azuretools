@@ -59,7 +59,7 @@
         "@types/node": "^12.0.0",
         "@types/p-retry": "^2.0.0",
         "@types/request": "^2.48.5",
-        "@types/vscode": "1.40.0",
+        "@types/vscode": "1.48.0",
         "@types/websocket": "^1.0.0",
         "glob": "^7.1.6",
         "mocha": "^7.1.1",
