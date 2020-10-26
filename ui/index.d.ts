@@ -1187,7 +1187,7 @@ export declare function registerUIExtensionVariables(extVars: UIExtensionVariabl
  * Public is everyone
  * NOTE: if unspecified, this will be Insiders if the extension version contains "alpha", otherwise Public
  */
-export declare async function createExperimentationService(ctx: ExtensionContext, targetPopulation?: TargetPopulation): Promise<IExperimentationServiceAdapter>;
+export declare function createExperimentationService(ctx: ExtensionContext, targetPopulation?: TargetPopulation): Promise<IExperimentationServiceAdapter>;
 
 /**
  * Interface for common extension variables used throughout the UI package.
