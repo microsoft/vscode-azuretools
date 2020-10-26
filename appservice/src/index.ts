@@ -6,14 +6,13 @@
 export * from './confirmOverwriteSettings';
 export * from './createAppService/AppInsightsCreateStep';
 export * from './createAppService/AppInsightsListStep';
-export { AppKind, LinuxRuntimes, WebsiteOS } from './createAppService/AppKind';
+export { AppKind, WebsiteOS } from './createAppService/AppKind';
 export * from './createAppService/AppServicePlanCreateStep';
 export * from './createAppService/AppServicePlanListStep';
 export * from './createAppService/IAppServiceWizardContext';
 export * from './createAppService/setLocationsTask';
 export * from './createAppService/SiteNameStep';
 export * from './createAppService/SiteOSStep';
-export * from './createAppService/SiteRuntimeStep';
 export * from './createSlot';
 export * from './deleteSite';
 export * from './deploy/deploy';

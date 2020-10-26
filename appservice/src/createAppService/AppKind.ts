@@ -13,17 +13,6 @@ export enum AppKind {
     functionapp = 'functionapp'
 }
 
-export enum LinuxRuntimes {
-    node = 'node',
-    python = 'python',
-    java = 'java',
-    tomcat = 'tomcat',
-    wildfly = 'wildfly',
-    dotnet = 'dotnet',
-    ruby = 'ruby',
-    php = 'php'
-}
-
 /**
  * Retrieves a valid "kind" for AppServicePlan
  */
