@@ -24,7 +24,7 @@ export type OpenInPortalOptions = {
  * Tree Data Provider for an *Az*ure *Ext*ension
  */
 export declare class AzExtTreeDataProvider implements TreeDataProvider<AzExtTreeItem> {
-    public onDidChangeTreeData: Event<AzExtTreeItem>;
+    public onDidChangeTreeData: Event<AzExtTreeItem | undefined>;
     public onTreeItemCreate: Event<AzExtTreeItem>;
 
     /**
