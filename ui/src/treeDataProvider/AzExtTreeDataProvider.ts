@@ -6,7 +6,7 @@
 import { CancellationToken, Event, EventEmitter, TreeItem } from 'vscode';
 import * as types from '../../index';
 import { callWithTelemetryAndErrorHandling } from '../callWithTelemetryAndErrorHandling';
-import { NoResouceFoundError, UserCancelledError } from '../errors';
+import { NoResourceFoundError, UserCancelledError } from '../errors';
 import { localize } from '../localize';
 import { parseError } from '../parseError';
 import { AzExtParentTreeItem, InvalidTreeItem } from './AzExtParentTreeItem';
@@ -19,7 +19,7 @@ import { loadMoreLabel } from './treeConstants';
 
 export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, types.AzExtTreeDataProvider {
     public _onTreeItemCreateEmitter: EventEmitter<AzExtTreeItem> = new EventEmitter<AzExtTreeItem>();
-    private _onDidChangeTreeDataEmitter: EventEmitter<AzExtTreeItem> = new EventEmitter<AzExtTreeItem>();
+    private _onDidChangeTreeDataEmitter: EventEmitter<AzExtTreeItem | undefined> = new EventEmitter<AzExtTreeItem | undefined>();
 
     private readonly _loadMoreCommandId: string;
     private readonly _rootTreeItem: AzExtParentTreeItem;
@@ -31,7 +31,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         rootTreeItem.treeDataProvider = <IAzExtTreeDataProviderInternal>this;
     }
 
-    public get onDidChangeTreeData(): Event<AzExtTreeItem> {
+    public get onDidChangeTreeData(): Event<AzExtTreeItem | undefined> {
         return this._onDidChangeTreeDataEmitter.event;
     }
 
@@ -161,7 +161,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                     treeItem = pickedItems;
                 }
             } else {
-                throw new NoResouceFoundError(context);
+                throw new NoResourceFoundError(context);
             }
         }
 

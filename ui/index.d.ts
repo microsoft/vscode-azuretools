@@ -10,6 +10,7 @@ import { Environment } from '@azure/ms-rest-azure-env';
 import { ServiceClient, ServiceClientCredentials } from '@azure/ms-rest-js';
 import { TokenCredentialsBase } from '@azure/ms-rest-nodeauth';
 import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocument, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
+import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 
 export type OpenInPortalOptions = {
@@ -23,7 +24,7 @@ export type OpenInPortalOptions = {
  * Tree Data Provider for an *Az*ure *Ext*ension
  */
 export declare class AzExtTreeDataProvider implements TreeDataProvider<AzExtTreeItem> {
-    public onDidChangeTreeData: Event<AzExtTreeItem>;
+    public onDidChangeTreeData: Event<AzExtTreeItem | undefined>;
     public onTreeItemCreate: Event<AzExtTreeItem>;
 
     /**
@@ -470,6 +471,8 @@ export declare abstract class AzureParentTreeItem<TRoot extends ISubscriptionCon
 export declare function openInPortal(root: ISubscriptionContext | AzExtTreeItem, id: string, options?: OpenInPortalOptions): Promise<void>;
 
 export declare class UserCancelledError extends Error { }
+
+export declare class NoResourceFoundError extends Error { }
 
 /**
  * @deprecated Use `AzExtTreeFileSystem` instead
@@ -1175,6 +1178,18 @@ export declare namespace DialogResponses {
 export declare function registerUIExtensionVariables(extVars: UIExtensionVariables): void;
 
 /**
+ * Call this to create the experimentation service adapter
+ * @param ctx The extension context
+ * @param targetPopulation Can be Team, Internal, Insiders, or Public. The definitions are somewhat subjective but generally:
+ * Team is the devs and test team.
+ * Internal is Microsoft
+ * Insiders is anyone installing alpha builds
+ * Public is everyone
+ * NOTE: if unspecified, this will be Insiders if the extension version contains "alpha", otherwise Public
+ */
+export declare async function createExperimentationService(ctx: ExtensionContext, targetPopulation?: TargetPopulation): Promise<IExperimentationServiceAdapter>;
+
+/**
  * Interface for common extension variables used throughout the UI package.
  */
 export interface UIExtensionVariables {
@@ -1186,6 +1201,35 @@ export interface UIExtensionVariables {
      * Set to true if not running under a webpacked 'dist' folder as defined in 'vscode-azureextensiondev'
      */
     ignoreBundle?: boolean;
+}
+
+/**
+ * Interface for experimentation service adapter
+ */
+export interface IExperimentationServiceAdapter {
+    /**
+     * Gets whether or not the flight is enabled from the cache (which will be ~1 session delayed)
+     * @param flight The flight variable name
+     */
+    isCachedFlightEnabled(flight: string): Promise<boolean>;
+
+    /**
+     * Gets whether or not the flight is enabled directly from the web. This is slower than cache and can result in behavior changing mid-session.
+     * @param flight The flight variable name
+     */
+    isLiveFlightEnabled(flight: string): Promise<boolean>;
+
+    /**
+     * Gets a treatment variable from the cache (which will be ~1 session delayed)
+     * @param name The variable name
+     */
+    getCachedTreatmentVariable<T extends string | number | boolean>(name: string): Promise<T | undefined>;
+
+    /**
+     * Gets a treatment variable directly from the web. This is slower than cache and can result in behavior changing mid-session.
+     * @param name The variable name
+     */
+    getLiveTreatmentVariable<T extends string | number | boolean>(name: string): Promise<T | undefined>;
 }
 
 export interface IAddUserAgent {

@@ -16,6 +16,7 @@ export * from './DialogResponses';
 export * from './errors';
 export * from './extensionUserAgent';
 export { registerUIExtensionVariables } from './extensionVariables';
+export { createExperimentationService } from './createExperimentationService';
 export * from './openInPortal';
 export * from './openReadOnlyContent';
 export * from './parseError';

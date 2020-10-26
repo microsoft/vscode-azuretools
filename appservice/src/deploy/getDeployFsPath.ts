@@ -111,7 +111,7 @@ export type IDeployPaths = {
 
 function getContainingWorkspace(context: IActionContext, fsPath: string): vscode.WorkspaceFolder {
     // tslint:disable-next-line:strict-boolean-expressions
-    const openFolders: vscode.WorkspaceFolder[] = vscode.workspace.workspaceFolders || [];
+    const openFolders: readonly vscode.WorkspaceFolder[] = vscode.workspace.workspaceFolders || [];
     const workspaceFolder: vscode.WorkspaceFolder | undefined = openFolders.find((f: vscode.WorkspaceFolder): boolean => {
         return isPathEqual(f.uri.fsPath, fsPath) || isSubpath(f.uri.fsPath, fsPath);
     });
