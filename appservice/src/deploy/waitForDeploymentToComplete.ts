@@ -64,7 +64,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
                 await ignore404Error(context, async () => {
                     if (newEntry.id && newEntry.detailsUrl) {
                         const details: KuduModels.LogEntry[] = await kuduClient.deployment.getLogEntryDetails(deploymentId, newEntry.id);
-                        logEntries.push(...details.reverse());
+                        logEntries.push(...cleanDetails(details));
                     }
                 });
             });
@@ -165,4 +165,25 @@ async function tryGetLatestDeployment(context: IActionContext, kuduClient: KuduC
     }
 
     return [deployment, permanentId, initialStartTime];
+}
+
+/**
+ * Workaround for some weird Oryx behavior where it shows several duplicate logs on a single line
+ */
+function cleanDetails(entries: KuduModels.LogEntry[]): KuduModels.LogEntry[] {
+    const result: KuduModels.LogEntry[] = [];
+    for (const entry of entries) {
+        const oryxEOL: string = '\\n';
+        if (entry.message?.includes(oryxEOL)) {
+            const newMessages: string[] = entry.message.split(oryxEOL);
+            for (const newMessage of newMessages) {
+                if (!entries.find(d => d.message === newMessage)) {
+                    result.push({ ...entry, message: newMessage });
+                }
+            }
+        } else {
+            result.push(entry);
+        }
+    }
+    return result.reverse();
 }
