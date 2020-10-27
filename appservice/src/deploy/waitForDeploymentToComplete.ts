@@ -18,7 +18,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
     let fullLog: string = '';
 
     let lastLogTime: Date = new Date(0);
-    let lastLine: string = '';
+    let lastErrorLine: string = '';
     let initialStartTime: Date | undefined;
     let deployment: KuduModels.DeployResult | undefined;
     let permanentId: string | undefined;
@@ -57,7 +57,9 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
                 fullLog = fullLog.concat(newEntry.message);
                 ext.outputChannel.appendLog(newEntry.message, { date: newEntry.logTime, resourceName: client.fullName });
                 lastLogTimeForThisPoll = newEntry.logTime;
-                lastLine = newEntry.message;
+                if (/error/i.test(newEntry.message)) {
+                    lastErrorLine = newEntry.message;
+                }
             }
 
             await retryKuduCall(context, 'getLogEntryDetails', async () => {
@@ -89,7 +91,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
                 ext.outputChannel.appendLog(messageWithoutName, { resourceName: client.fullName });
                 context.errorHandling.suppressDisplay = true;
                 // Hopefully the last line is enough to give us an idea why deployments are failing without excessively tracking everything
-                context.telemetry.properties.deployErrorLastLine = lastLine;
+                context.telemetry.properties.deployErrorLastLine = lastErrorLine;
                 throw new Error(messageWithoutName);
             } else {
                 context.syncTriggersPostDeploy = client.isFunctionApp && !/syncing/i.test(fullLog);
