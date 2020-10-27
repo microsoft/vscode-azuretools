@@ -5,7 +5,6 @@
 
 import { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
 import * as path from 'path';
-import { Readable } from 'stream';
 import { createGenericClient } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
 import { ISimplifiedSiteClient } from './ISimplifiedSiteClient';
@@ -36,20 +35,10 @@ export async function listFiles(client: ISimplifiedSiteClient, filePath: string)
  * Overwrites or creates a file. The etag passed in may be `undefined` if the file is being created
  * Returns the latest etag of the updated file
  */
-export async function putFile(client: ISimplifiedSiteClient, data: Readable | string, filePath: string, etag: string | undefined): Promise<string> {
-    let stream: Readable;
-    if (typeof data === 'string') {
-        stream = new Readable();
-        stream._read = function (this: Readable): void {
-            this.push(data);
-            this.push(null);
-        };
-    } else {
-        stream = data;
-    }
+export async function putFile(client: ISimplifiedSiteClient, data: string | ArrayBuffer, filePath: string, etag: string | undefined): Promise<string> {
     const options: {} = etag ? { customHeaders: { ['If-Match']: etag } } : {};
     const kuduClient: KuduClient = await client.getKuduClient();
-    const result: HttpOperationResponse = (await kuduClient.vfs.putItem(stream, filePath, options))._response;
+    const result: HttpOperationResponse = (await kuduClient.vfs.putItem(data, filePath, options))._response;
     return <string>result.headers.get('etag');
 }
 
