@@ -6,7 +6,7 @@
 import { ApplicationInsightsManagementModels } from '@azure/arm-appinsights';
 import { WebSiteManagementModels } from '@azure/arm-appservice';
 import { IResourceGroupWizardContext, IStorageAccountWizardContext } from 'vscode-azureextensionui';
-import { AppKind, LinuxRuntimes, WebsiteOS } from './AppKind';
+import { AppKind, WebsiteOS } from './AppKind';
 
 export interface IAppServiceWizardContext extends IResourceGroupWizardContext, IStorageAccountWizardContext {
     newSiteKind: AppKind;
@@ -16,12 +16,6 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
      * This will be defined after `SiteOSStep.prompt` occurs.
      */
     newSiteOS?: WebsiteOS;
-
-    /**
-     * The runtime for a new Linux site
-     * This will be defined after `SiteRuntimeStep.prompt` occurs.
-     */
-    newSiteRuntime?: string;
 
     /**
      * The newly created site
@@ -70,14 +64,6 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
      * By specifying this in the context, we can ensure that Azure is only queried once for the entire wizard
      */
     plansTask?: Promise<WebSiteManagementModels.AppServicePlan[]>;
-
-    /**
-     * The runtimes to put to the top of the QuickPick list to recommend to the user.
-     * In the array, Higher ranking means higher priority, thus will have higher position in the QuickPick list.
-     * This should be set by the extension
-     */
-
-    recommendedSiteRuntime?: LinuxRuntimes[];
 
     /**
      * App Insights components are necessary for Function apps log streaming.  By default, we should instantiate
