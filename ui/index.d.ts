@@ -1187,7 +1187,7 @@ export declare function registerUIExtensionVariables(extVars: UIExtensionVariabl
  * Public is everyone
  * NOTE: if unspecified, this will be Insiders if the extension version contains "alpha", otherwise Public
  */
-export declare async function createExperimentationService(ctx: ExtensionContext, targetPopulation?: TargetPopulation): Promise<IExperimentationServiceAdapter>;
+export declare function createExperimentationService(ctx: ExtensionContext, targetPopulation?: TargetPopulation): Promise<IExperimentationServiceAdapter>;
 
 /**
  * Interface for common extension variables used throughout the UI package.
@@ -1259,7 +1259,7 @@ export interface IMinimumServiceClientOptions {
  * 1. Adds extension-specific user agent
  * 2. Uses resourceManagerEndpointUrl to support sovereigns (if clientInfo corresponds to an Azure environment)
  */
-export async function createGenericClient(clientInfo?: ServiceClientCredentials | { credentials: ServiceClientCredentials; environment: Environment; }): Promise<ServiceClient>;
+export function createGenericClient(clientInfo?: ServiceClientCredentials | { credentials: ServiceClientCredentials; environment: Environment; }): Promise<ServiceClient>;
 
 /**
  * Creates an Azure client, ensuring best practices are followed. For example:
