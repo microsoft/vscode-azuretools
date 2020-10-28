@@ -1371,7 +1371,7 @@ export declare abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> i
 
     public constructor(tree: AzExtTreeDataProvider);
 
-    public readonly onDidChangeFile: Event<FileChangeEvent[]>;
+    public get onDidChangeFile(): Event<FileChangeEvent[]>;
 
     /**
      * Retrieve the file path for an item, for display-purposes only. Will affect the tab-title and "Open Editors" panel
