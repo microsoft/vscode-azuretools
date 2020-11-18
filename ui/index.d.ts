@@ -5,6 +5,7 @@
 
 import { ResourceManagementModels } from '@azure/arm-resources';
 import { StorageManagementModels } from '@azure/arm-storage';
+import { StorageManagementModels as StackManagementModels } from '@azure/arm-storage-profile-2019-03-01-hybrid'
 import { SubscriptionModels } from '@azure/arm-subscriptions';
 import { Environment } from '@azure/ms-rest-azure-env';
 import { ServiceClient, ServiceClientCredentials } from '@azure/ms-rest-js';
@@ -1068,7 +1069,7 @@ export interface IStorageAccountWizardContext extends IResourceGroupWizardContex
      * If an existing storage account is picked, this value will be defined after `StorageAccountListStep.prompt` occurs
      * If a new storage account is picked, this value will be defined after the `execute` phase of the 'create' subwizard
      */
-    storageAccount?: StorageManagementModels.StorageAccount;
+    storageAccount?: StorageManagementModels.StorageAccount | StackManagementModels.StorageAccount;
 
     newStorageAccountName?: string;
 }
