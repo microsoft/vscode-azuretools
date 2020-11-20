@@ -9,7 +9,8 @@ import { DialogResponses } from './DialogResponses';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { parseError } from './parseError';
-import { reportAnIssue } from './reportAnIssue';
+import { cacheIssueForCommand } from './registerReportIssueCommand';
+import { IReportableIssue, reportAnIssue } from './reportAnIssue';
 import { limitLines } from './utils/textStrings';
 
 const maxStackLines: number = 3;
@@ -129,6 +130,14 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
 
         const items: MessageItem[] = [];
 
+        const issue: IReportableIssue = {
+            callbackId: errorContext.callbackId,
+            error: errorData,
+            issueProperties: context.errorHandling.issueProperties,
+            time: Date.now()
+        };
+
+        cacheIssueForCommand(issue);
         if (!context.errorHandling.suppressReportIssue) {
             items.push(DialogResponses.reportAnIssue);
         }
@@ -136,7 +145,7 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
         // don't wait
         window.showErrorMessage(message, ...items).then(async (result: MessageItem | undefined) => {
             if (result === DialogResponses.reportAnIssue) {
-                await reportAnIssue(errorContext.callbackId, errorData, context.errorHandling.issueProperties);
+                await reportAnIssue(issue);
             }
         });
     }
