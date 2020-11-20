@@ -1461,3 +1461,8 @@ export declare abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> i
      */
     protected findItem(context: IActionContext, query: AzExtItemQuery): Promise<TItem | undefined>;
 }
+
+/**
+ * Registers a command that will prompt users with a list of issues they can report from that session of VS Code
+ */
+export function registerReportIssueCommand(commandId: string): void;

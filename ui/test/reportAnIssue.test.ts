@@ -15,14 +15,14 @@ suite('getReportAnIssueLink', () => {
 
     test('Short stack, entire body should be in link', async () => {
         const message: string = 'This is a "message"?';
-        const pe: IParsedError = {
+        const error: IParsedError = {
             errorType: 'error Type',
             isUserCancelledError: false,
             message: message,
             stack: createStack(1)
         };
 
-        const link: string = await getReportAnIssueLink('actionId', pe, {});
+        const link: string = await getReportAnIssueLink({ callbackId: 'actionId', time: Date.now(), error, issueProperties: {} });
 
         assert(link.length <= maxUrlLength);
         assert.notEqual(link, pasteIntoWindowBody);
@@ -35,14 +35,14 @@ suite('getReportAnIssueLink', () => {
 
     test('Long stack - should copy body to clipboard', async () => {
         const message: string = 'This is a "message"?';
-        const pe: IParsedError = {
+        const error: IParsedError = {
             errorType: 'error Type',
             isUserCancelledError: false,
             message: message,
             stack: createStack(maxUrlLength) // definitely too long :-)
         };
 
-        const link: string = await getReportAnIssueLink('actionId', pe, {}/*asdf*/);
+        const link: string = await getReportAnIssueLink({ callbackId: 'actionId', time: Date.now(), error, issueProperties: {}/*asdf*/ });
 
         assert(link.length <= maxUrlLength);
         assert.equal(link, pasteIntoWindowBody);
@@ -56,14 +56,14 @@ suite('getReportAnIssueLink', () => {
 
     test('message long - should copy body to clipboard', async () => {
         const message: string = 'x'.repeat(maxUrlLength);
-        const pe: IParsedError = {
+        const error: IParsedError = {
             errorType: 'error Type',
             isUserCancelledError: false,
             message: message,
             stack: undefined
         };
 
-        const link: string = await getReportAnIssueLink('actionId', pe, {});
+        const link: string = await getReportAnIssueLink({ callbackId: 'actionId', time: Date.now(), error, issueProperties: {} });
 
         assert.equal(link, pasteIntoWindowBody);
 
@@ -75,14 +75,14 @@ suite('getReportAnIssueLink', () => {
     suite("issueProperties", () => {
         test('single property', async () => {
             const message: string = "This is my message";
-            const pe: IParsedError = {
+            const error: IParsedError = {
                 errorType: 'error Type',
                 isUserCancelledError: false,
                 message: message,
                 stack: undefined
             };
 
-            const link: string = await getReportAnIssueLink('actionId', pe, { property1: "Property #1" });
+            const link: string = await getReportAnIssueLink({ callbackId: 'actionId', time: Date.now(), error, issueProperties: { property1: "Property #1" } });
 
             assert(linkIncludes(link, "property1"));
             assert(linkIncludes(link, "Property #1"));
@@ -90,14 +90,14 @@ suite('getReportAnIssueLink', () => {
 
         test('multiple properties', async () => {
             const message: string = "This is my message";
-            const pe: IParsedError = {
+            const error: IParsedError = {
                 errorType: 'error Type',
                 isUserCancelledError: false,
                 message: message,
                 stack: undefined
             };
 
-            const link: string = await getReportAnIssueLink('actionId', pe, { property1: "Property #1", property2: "Property #2" });
+            const link: string = await getReportAnIssueLink({ callbackId: 'actionId', time: Date.now(), error, issueProperties: { property1: "Property #1", property2: "Property #2" } });
 
             assert(linkIncludes(link, "property1"));
             assert(linkIncludes(link, "Property #1"));
@@ -107,14 +107,14 @@ suite('getReportAnIssueLink', () => {
 
         test('multiple properties and stack', async () => {
             const message: string = "This is my message";
-            const pe: IParsedError = {
+            const error: IParsedError = {
                 errorType: 'error Type',
                 isUserCancelledError: false,
                 message: message,
                 stack: createStack(1)
             };
 
-            const link: string = await getReportAnIssueLink('actionId', pe, { property1: "Property #1", property2: "Property #2" });
+            const link: string = await getReportAnIssueLink({ callbackId: 'actionId', time: Date.now(), error, issueProperties: { property1: "Property #1", property2: "Property #2" } });
 
             assert(linkIncludes(link, "property1"));
             assert(linkIncludes(link, "Property #1"));

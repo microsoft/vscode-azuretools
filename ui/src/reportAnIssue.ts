@@ -5,7 +5,7 @@
 
 import * as os from 'os';
 import * as vscode from 'vscode';
-import { IParsedError } from '../index';
+import * as types from '../index';
 import { getPackageInfo } from "./getPackageInfo";
 import { localize } from './localize';
 import { openUrl } from './utils/openUrl';
@@ -15,23 +15,26 @@ import { openUrl } from './utils/openUrl';
 // see https://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers
 export const maxUrlLength: number = 2000;
 
+export interface IReportableIssue {
+    callbackId: string;
+    error: types.IParsedError;
+    issueProperties: { [key: string]: string | undefined };
+    time: number;
+}
+
 /**
  * Used to open the browser to the "New Issue" page on GitHub with relevant context pre-filled in the issue body
  */
-export async function reportAnIssue(actionId: string, parsedError: IParsedError, issueProperties: { [key: string]: string | undefined }): Promise<void> {
-    const link: string = await getReportAnIssueLink(actionId, parsedError, issueProperties);
+export async function reportAnIssue(issue: IReportableIssue | undefined): Promise<void> {
+    const link: string = await getReportAnIssueLink(issue);
     await openUrl(link);
 }
 
-export async function getReportAnIssueLink(actionId: string, parsedError: IParsedError, issueProperties: { [key: string]: string | undefined }): Promise<string> {
-    // tslint:disable-next-line: strict-boolean-expressions
-    const stack: string = (parsedError.stack || '').replace(/\r\n/g, '\n');
-
-    return await createNewIssueLink(actionId, parsedError, stack, issueProperties);
-}
-
-async function createNewIssueLink(actionId: string, parsedError: IParsedError, stack: string, issueProperties: { [key: string]: string | undefined }): Promise<string> {
+export async function getReportAnIssueLink(issue: IReportableIssue | undefined): Promise<string> {
     const { extensionVersion } = getPackageInfo();
+
+    // tslint:disable-next-line: strict-boolean-expressions
+    const stack: string = (issue?.error.stack || '').replace(/\r\n/g, '\n');
 
     let body: string = `
 <!-- ${localize('reportIssue_removePrivateInfo', "IMPORTANT: Please be sure to remove any private information before submitting.")} -->
@@ -41,11 +44,18 @@ Repro steps:
 <!-- ${localize('reportIssue_enterReproSteps', "TODO: Share the steps needed to reliably reproduce the problem. Please include actual and expected results.")} -->
 
 1.
-2.
+2.`;
 
-Action: ${actionId}
-Error type: ${parsedError.errorType}
-Error Message: ${parsedError.message}
+    if (issue) {
+        body += `
+
+Action: ${issue.callbackId}
+Error type: ${issue.error.errorType}
+Error Message: ${issue.error.message}
+`;
+    }
+
+    body += `
 
 Version: ${extensionVersion}
 OS: ${process.platform}
@@ -55,7 +65,7 @@ Product Version: ${vscode.version}
 Language: ${vscode.env.language}`;
 
     // Add stack and any custom issue properties as individual details
-    const details: { [key: string]: string | undefined } = Object.assign({}, stack ? { 'Call Stack': stack } : {}, issueProperties); // Don't localize call stack
+    const details: { [key: string]: string | undefined } = Object.assign({}, stack ? { 'Call Stack': stack } : {}, issue?.issueProperties); // Don't localize call stack
     for (const propName of Object.getOwnPropertyNames(details)) {
         const value: string | undefined = details[propName];
         body += createBodyDetail(propName, String(value));
