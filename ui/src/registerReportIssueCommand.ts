@@ -26,7 +26,7 @@ export function cacheIssueForCommand(issue: IReportableIssue): void {
 
         const maxIssues: number = 50;
         if (cachedIssues.length > maxIssues) {
-            cachedIssues.pop();
+            cachedIssues.shift();
         }
     }
 }
