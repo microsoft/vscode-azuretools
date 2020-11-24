@@ -5,7 +5,7 @@
 
 import { WebSiteManagementClient, WebSiteManagementModels } from "@azure/arm-appservice";
 import { ProgressLocation, window } from "vscode";
-import { AzureTreeItem, IAzureNamingRules, IAzureQuickPickItem, ICreateChildImplContext } from "vscode-azureextensionui";
+import { AzureTreeItem, IActionContext, IAzureNamingRules, IAzureQuickPickItem, ICreateChildImplContext } from "vscode-azureextensionui";
 import { getNewFileShareName } from "./createAppService/getNewFileShareName";
 import { ext } from "./extensionVariables";
 import { localize } from "./localize";
@@ -15,7 +15,7 @@ import { createWebSiteClient } from "./utils/azureClients";
 
 export async function createSlot(root: ISiteTreeRoot, existingSlots: AzureTreeItem<ISiteTreeRoot>[], context: ICreateChildImplContext): Promise<WebSiteManagementModels.Site> {
     const client: WebSiteManagementClient = await createWebSiteClient(root);
-    const slotName: string = (await ext.ui.showInputBox({
+    const slotName: string = (await context.ui.showInputBox({
         prompt: localize('enterSlotName', 'Enter a unique name for the new deployment slot'),
         validateInput: async (value: string): Promise<string | undefined> => validateSlotName(value, client, root)
     })).trim();
@@ -30,7 +30,7 @@ export async function createSlot(root: ISiteTreeRoot, existingSlots: AzureTreeIt
         }
     };
 
-    const configurationSource: SiteClient | undefined = await chooseConfigurationSource(root, existingSlots);
+    const configurationSource: SiteClient | undefined = await chooseConfigurationSource(context, root, existingSlots);
     if (!!configurationSource) {
         const appSettings: WebSiteManagementModels.NameValuePair[] = await parseAppSettings(configurationSource);
         // tslint:disable-next-line:no-non-null-assertion
@@ -73,7 +73,7 @@ async function validateSlotName(value: string, client: WebSiteManagementClient, 
     }
 }
 
-async function chooseConfigurationSource(root: ISiteTreeRoot, existingSlots: AzureTreeItem<ISiteTreeRoot>[]): Promise<SiteClient | undefined> {
+async function chooseConfigurationSource(context: IActionContext, root: ISiteTreeRoot, existingSlots: AzureTreeItem<ISiteTreeRoot>[]): Promise<SiteClient | undefined> {
     if (root.client.isFunctionApp) {
         // Function apps always clone from production slot without prompting
         return root.client;
@@ -101,7 +101,7 @@ async function chooseConfigurationSource(root: ISiteTreeRoot, existingSlots: Azu
         }
 
         const placeHolder: string = localize('chooseSource', 'Choose a configuration source.');
-        return (await ext.ui.showQuickPick(configurationSources, { placeHolder })).data;
+        return (await context.ui.showQuickPick(configurationSources, { placeHolder })).data;
     }
 }
 

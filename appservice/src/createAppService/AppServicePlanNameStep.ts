@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzureWizardPromptStep, IAzureNamingRules } from 'vscode-azureextensionui';
-import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
 import { AppServicePlanListStep } from './AppServicePlanListStep';
@@ -18,7 +17,7 @@ export const appServicePlanNamingRules: IAzureNamingRules = {
 
 export class AppServicePlanNameStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
-        wizardContext.newPlanName = (await ext.ui.showInputBox({
+        wizardContext.newPlanName = (await wizardContext.ui.showInputBox({
             value: await wizardContext.relatedNameTask,
             prompt: localize('AppServicePlanPrompt', 'Enter the name of the new App Service plan.'),
             validateInput: async (value: string): Promise<string | undefined> => await this.validatePlanName(wizardContext, value)

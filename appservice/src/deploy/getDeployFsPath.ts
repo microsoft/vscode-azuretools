@@ -83,7 +83,7 @@ async function appendDeploySubpathSetting(context: IActionContext, targetPath: s
                             const message: string = localize('mismatchDeployPath', 'Deploying "{0}" instead of selected folder "{1}". Use "{2}.{3}" to change this behavior.', deploySubPath, selectedFolder, ext.prefix, deploySubpathSetting);
                             // don't wait
                             // tslint:disable-next-line:no-floating-promises
-                            ext.ui.showWarningMessage(message, { title: localize('ok', 'OK') }, DialogResponses.dontWarnAgain).then(async (result: vscode.MessageItem) => {
+                            context.ui.showWarningMessage(message, { title: localize('ok', 'OK') }, DialogResponses.dontWarnAgain).then(async (result: vscode.MessageItem) => {
                                 if (result === DialogResponses.dontWarnAgain) {
                                     await updateGlobalSetting(settingKey, false, ext.prefix);
                                 }
@@ -122,7 +122,7 @@ function getContainingWorkspace(context: IActionContext, fsPath: string): vscode
 
         // don't wait
         // tslint:disable-next-line: no-floating-promises
-        ext.ui.showWarningMessage(message, openInNewWindow).then(async result => {
+        context.ui.showWarningMessage(message, openInNewWindow).then(async result => {
             await callWithTelemetryAndErrorHandling('deployWarning.openInNewWindow', async (postDeployContext: IActionContext) => {
                 postDeployContext.telemetry.properties.dialogResult = result?.title;
                 if (result === openInNewWindow) {

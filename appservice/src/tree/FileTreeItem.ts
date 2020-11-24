@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzExtParentTreeItem, AzExtTreeItem, openReadOnlyContent, TreeItemIconPath } from 'vscode-azureextensionui';
+import { AzExtParentTreeItem, AzExtTreeItem, IActionContext, openReadOnlyContent, TreeItemIconPath } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { ISimplifiedSiteClient } from '../ISimplifiedSiteClient';
 import { localize } from '../localize';
@@ -38,8 +38,8 @@ export class FileTreeItem extends AzExtTreeItem {
         return ext.prefix + '.openFile';
     }
 
-    public async openReadOnly(): Promise<void> {
-        await this.runWithTemporaryDescription(localize('opening', 'Opening...'), async () => {
+    public async openReadOnly(context: IActionContext): Promise<void> {
+        await this.runWithTemporaryDescription(context, localize('opening', 'Opening...'), async () => {
             const file: ISiteFile = await getFile(this.client, this.path);
             await openReadOnlyContent(this, file.data, '');
         });

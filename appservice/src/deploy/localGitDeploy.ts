@@ -43,7 +43,7 @@ export async function localGitDeploy(client: ISimplifiedSiteClient, options: loc
                     context.telemetry.properties.cancelStep = 'pushWithUncommitChanges';
                     const message: string = localize('localGitUncommit', '{0} uncommitted change(s) in local repo "{1}"', status.files.length, options.fsPath);
                     const deployAnyway: vscode.MessageItem = { title: localize('deployAnyway', 'Deploy Anyway') };
-                    await ext.ui.showWarningMessage(message, { modal: true }, deployAnyway);
+                    await context.ui.showWarningMessage(message, { modal: true }, deployAnyway);
                     context.telemetry.properties.cancelStep = undefined;
                     context.telemetry.properties.pushWithUncommitChanges = 'true';
                 }
@@ -67,7 +67,7 @@ export async function localGitDeploy(client: ISimplifiedSiteClient, options: loc
                     const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging.');
 
                     context.telemetry.properties.cancelStep = 'forcePush';
-                    await ext.ui.showWarningMessage(pushReject, { modal: true }, forcePushMessage);
+                    await context.ui.showWarningMessage(pushReject, { modal: true }, forcePushMessage);
                     context.telemetry.properties.cancelStep = undefined;
                     context.telemetry.properties.forcePush = 'true';
                     await tryPushAndWaitForDeploymentToComplete(true);

@@ -5,7 +5,6 @@
 
 import { WebSiteManagementClient, WebSiteManagementModels } from '@azure/arm-appservice';
 import { AzureNameStep, IAzureNamingRules, ResourceGroupListStep, resourceGroupNamingRules, StorageAccountListStep, storageAccountNamingRules } from 'vscode-azureextensionui';
-import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { createWebSiteClient } from '../utils/azureClients';
 import { appInsightsNamingRules } from './AppInsightsListStep';
@@ -35,7 +34,7 @@ export class SiteNameStep extends AzureNameStep<IAppServiceWizardContext> {
         const prompt: string = wizardContext.newSiteKind === AppKind.functionapp ?
             localize('functionAppNamePrompt', 'Enter a globally unique name for the new function app.') :
             localize('webAppNamePrompt', 'Enter a globally unique name for the new web app.');
-        wizardContext.newSiteName = (await ext.ui.showInputBox({
+        wizardContext.newSiteName = (await wizardContext.ui.showInputBox({
             prompt,
             placeHolder,
             validateInput: async (name: string): Promise<string | undefined> => await this.validateSiteName(client, name)

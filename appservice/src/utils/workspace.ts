@@ -6,7 +6,6 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IActionContext, IAzureQuickPickItem } from 'vscode-azureextensionui';
-import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 
 export async function selectWorkspaceFolder(context: IActionContext, placeHolder: string): Promise<string> {
@@ -47,13 +46,13 @@ export async function selectWorkspaceItem(context: IActionContext, placeHolder: 
         }));
 
         folderPicks.push({ label: localize('azFunc.browse', '$(file-directory) Browse...'), description: '', data: undefined });
-        folder = await ext.ui.showQuickPick(folderPicks, { placeHolder });
+        folder = await context.ui.showQuickPick(folderPicks, { placeHolder });
     }
 
     if (folder?.data) {
         return folder.data;
     } else {
         context.telemetry.properties.browse = 'true';
-        return (await ext.ui.showOpenDialog(options))[0].fsPath;
+        return (await context.ui.showOpenDialog(options))[0].fsPath;
     }
 }
