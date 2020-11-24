@@ -45,10 +45,10 @@ export declare class AzExtTreeDataProvider implements TreeDataProvider<AzExtTree
     public getChildren(treeItem?: AzExtParentTreeItem): Promise<AzExtTreeItem[]>;
 
     /**
-     *  Refreshes the tree
+     * Refreshes the tree
      * @param treeItem The treeItem to refresh or 'undefined' to refresh the whole tree
      */
-    public refresh(treeItem?: AzExtTreeItem): Promise<void>;
+    public refresh(context: IActionContext, treeItem?: AzExtTreeItem): Promise<void>;
 
     /**
      * Loads more children for a specific tree item
@@ -206,7 +206,7 @@ export declare abstract class AzExtTreeItem {
     /**
      * Implement this to execute any async code when this node is refreshed. Should not be called directly
      */
-    public refreshImpl?(): Promise<void>;
+    public refreshImpl?(context: IActionContext): Promise<void>;
 
     /**
      * Optional function to filter items displayed in the tree picker. Should not be called directly
@@ -218,7 +218,7 @@ export declare abstract class AzExtTreeItem {
     /**
      * Refresh this node in the tree
      */
-    public refresh(): Promise<void>;
+    public refresh(context: IActionContext): Promise<void>;
 
     /**
      * This class wraps deleteTreeItemImpl and ensures the tree is updated correctly when an item is deleted
@@ -228,7 +228,7 @@ export declare abstract class AzExtTreeItem {
     /**
      * Displays a 'Loading...' icon and temporarily changes the item's description while `callback` is being run
      */
-    public runWithTemporaryDescription(description: string, callback: () => Promise<void>): Promise<void>;
+    public runWithTemporaryDescription(context: IActionContext, description: string, callback: () => Promise<void>): Promise<void>;
 }
 
 export interface IGenericTreeItemOptions {
@@ -345,7 +345,7 @@ export declare abstract class AzExtParentTreeItem extends AzExtTreeItem {
      * If this treeItem should not show up in the tree picker or you want custom logic to show quick picks, implement this to provide a child that corresponds to the expectedContextValue. Should not be called directly
      * Otherwise, all children will be shown in the tree picker
      */
-    pickTreeItemImpl?(expectedContextValues: (string | RegExp)[]): AzExtTreeItem | undefined | Promise<AzExtTreeItem | undefined>;
+    pickTreeItemImpl?(expectedContextValues: (string | RegExp)[], context: IActionContext): AzExtTreeItem | undefined | Promise<AzExtTreeItem | undefined>;
     //#endregion
 
     /**
@@ -564,6 +564,11 @@ export interface IActionContext {
      * Describes the behavior of error handling for this action
      */
     errorHandling: IErrorHandlingContext;
+
+    /**
+     * Action-specific alternative to `ext.ui`
+     */
+    ui: IAzureUserInput;
 }
 
 export interface ITelemetryContext {

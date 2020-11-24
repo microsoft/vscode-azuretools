@@ -7,8 +7,8 @@ import * as semver from 'semver';
 import { commands, Disposable, Extension, extensions, MessageItem, ProgressLocation, window } from 'vscode';
 import * as types from '../../index';
 import { AzureAccount, AzureLoginStatus, AzureResourceFilter } from '../azure-account.api';
+import { registerEvent } from '../AzureActionHandler';
 import { UserCancelledError } from '../errors';
-import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { nonNullProp, nonNullValue } from '../utils/nonNull';
 import { AzureWizardPromptStep } from '../wizard/AzureWizardPromptStep';
@@ -198,14 +198,20 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
         }
 
         if (azureAccount) {
-            this.disposables.push(azureAccount.onFiltersChanged(async () => await this.refresh()));
-            this.disposables.push(azureAccount.onStatusChanged(async (status: AzureLoginStatus) => {
+            registerEvent('azureAccount.onFiltersChanged', azureAccount.onFiltersChanged, async (context) => {
+                context.errorHandling.suppressDisplay = true;
+                context.telemetry.suppressIfSuccessful = true;
+                await this.refresh(context);
+            });
+            registerEvent('azureAccount.onStatusChanged', azureAccount.onStatusChanged, async (context: types.IActionContext, status: AzureLoginStatus) => {
+                context.errorHandling.suppressDisplay = true;
+                context.telemetry.suppressIfSuccessful = true;
                 // Ignore status change to 'LoggedIn' and wait for the 'onFiltersChanged' event to fire instead
                 // (so that the tree stays in 'Loading...' state until the filters are actually ready)
                 if (status !== 'LoggedIn') {
-                    await this.refresh();
+                    await this.refresh(context);
                 }
-            }));
+            });
             await commands.executeCommand('setContext', 'isAzureAccountInstalled', true);
             return azureAccount;
         } else {
@@ -226,7 +232,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
             }
 
             const viewInMarketplace: MessageItem = { title: localize('viewInMarketplace', "View in Marketplace") };
-            if (await ext.ui.showWarningMessage(message, viewInMarketplace) === viewInMarketplace) {
+            if (await context.ui.showWarningMessage(message, viewInMarketplace) === viewInMarketplace) {
                 await commands.executeCommand(extensionOpenCommand, azureAccountExtensionId);
             }
 

@@ -6,7 +6,6 @@
 import { ResourceManagementClient, ResourceManagementModels } from '@azure/arm-resources';
 import * as types from '../../index';
 import { createResourcesClient } from '../clients';
-import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
 import { uiUtils } from '../utils/uiUtils';
@@ -46,7 +45,7 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
     public async prompt(wizardContext: T): Promise<void> {
         // Cache resource group separately per subscription
         const options: types.IAzureQuickPickOptions = { placeHolder: 'Select a resource group for new resources.', id: `ResourceGroupListStep/${wizardContext.subscriptionId}` };
-        wizardContext.resourceGroup = (await ext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
+        wizardContext.resourceGroup = (await wizardContext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
     }
 
     public async getSubWizard(wizardContext: T): Promise<types.IWizardOptions<T> | undefined> {

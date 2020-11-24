@@ -6,7 +6,6 @@
 import { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
 import * as types from '../../index';
 import { createStorageClient } from '../clients';
-import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { AzureNameStep } from './AzureNameStep';
 import { ResourceGroupListStep, resourceGroupNamingRules } from './ResourceGroupListStep';
@@ -17,7 +16,7 @@ export class StorageAccountNameStep<T extends types.IStorageAccountWizardContext
         const client: StorageManagementClient = await createStorageClient(wizardContext);
 
         const suggestedName: string | undefined = wizardContext.relatedNameTask ? await wizardContext.relatedNameTask : undefined;
-        wizardContext.newStorageAccountName = (await ext.ui.showInputBox({
+        wizardContext.newStorageAccountName = (await wizardContext.ui.showInputBox({
             value: suggestedName,
             prompt: 'Enter the name of the new storage account.',
             validateInput: async (value: string): Promise<string | undefined> => await this.validateStorageAccountName(client, value)

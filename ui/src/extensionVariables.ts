@@ -8,10 +8,8 @@ import { ExtensionContext } from "vscode";
 import { IAzExtOutputChannel, IAzureUserInput, UIExtensionVariables } from "../index";
 import { createTelemetryReporter, IInternalTelemetryReporter } from './createTelemetryReporter';
 import { localize } from "./localize";
-import { IWizardUserInput } from './wizard/IWizardUserInput';
 
 interface IInternalExtensionVariables extends UIExtensionVariables {
-    ui: IAzureUserInput & { wizardUserInput?: IWizardUserInput };
     _internalReporter: IInternalTelemetryReporter;
 }
 

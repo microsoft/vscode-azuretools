@@ -4,6 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
+import * as vscode from 'vscode';
+import { TestUserInput } from 'vscode-azureextensiondev';
 import * as types from '../index';
 import { AzExtParentTreeItem } from '../src/treeDataProvider/AzExtParentTreeItem';
 import { AzExtTreeDataProvider } from '../src/treeDataProvider/AzExtTreeDataProvider';
@@ -74,7 +76,7 @@ class LeafTreeItem extends AzExtTreeItem {
 suite("AzExtTreeDataProvider", () => {
     let root: RootTreeItem;
     let tree: AzExtTreeDataProvider;
-    const context: types.IActionContext = { errorHandling: { issueProperties: {} }, telemetry: { measurements: {}, properties: {} } };
+    const context: types.IActionContext = { errorHandling: { issueProperties: {} }, telemetry: { measurements: {}, properties: {} }, ui: new TestUserInput(vscode) };
 
     suiteSetup(() => {
         root = new RootTreeItem(undefined);
@@ -108,7 +110,7 @@ suite("AzExtTreeDataProvider", () => {
     });
 
     async function resetTree(): Promise<void> {
-        await root.refresh();
+        await root.refresh(context);
     }
 
     interface IFindTestCase {

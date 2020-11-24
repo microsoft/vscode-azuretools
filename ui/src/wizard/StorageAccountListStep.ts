@@ -7,7 +7,6 @@ import { StorageManagementClient, StorageManagementModels } from '@azure/arm-sto
 import { isString } from 'util';
 import * as types from '../../index';
 import { createStorageClient } from '../clients';
-import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { openUrl } from '../utils/openUrl';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
@@ -80,7 +79,7 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
 
         let result: StorageManagementModels.StorageAccount | string | undefined;
         do {
-            result = (await ext.ui.showQuickPick(picksTask, quickPickOptions)).data;
+            result = (await wizardContext.ui.showQuickPick(picksTask, quickPickOptions)).data;
             // If result is a string, that means the user selected the 'Learn more...' pick
             if (isString(result)) {
                 await openUrl(result);

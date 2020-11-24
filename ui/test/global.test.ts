@@ -7,9 +7,6 @@ import * as vscode from 'vscode';
 import { TestUserInput } from 'vscode-azureextensiondev';
 import { ext } from '../src/extensionVariables';
 
-// tslint:disable-next-line: export-name
-export let testUserInput: TestUserInput = new TestUserInput(vscode);
-
 // Runs before all tests
 suiteSetup(async () => {
     const id: string = 'ms-azuretools.azureextensionui';
@@ -19,5 +16,5 @@ suiteSetup(async () => {
     } else {
         await extension.activate();
     }
-    ext.ui = testUserInput;
+    ext.ui = new TestUserInput(vscode);
 });

@@ -4,11 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import { TestInput } from 'vscode-azureextensiondev';
+import * as vscode from 'vscode';
+import { TestInput, TestUserInput } from 'vscode-azureextensiondev';
 import * as types from '../index';
 import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep } from '../src';
-import { ext } from '../src/extensionVariables';
-import { testUserInput } from './global.test';
 
 // tslint:disable: max-classes-per-file
 
@@ -19,7 +18,7 @@ interface ITestWizardContext extends types.IActionContext {
 abstract class QuickPickStepBase extends AzureWizardPromptStep<ITestWizardContext> {
     protected abstract key: string;
     public async prompt(wizardContext: ITestWizardContext): Promise<void> {
-        wizardContext[this.key] = (await ext.ui.showQuickPick(
+        wizardContext[this.key] = (await wizardContext.ui.showQuickPick(
             [
                 { label: 'Pick 1' },
                 { label: 'Pick 2' },
@@ -54,7 +53,7 @@ class SubQuickPickStep2 extends QuickPickStepBase {
 class InputBoxStepIfNotPick1 extends AzureWizardPromptStep<ITestWizardContext> {
     private _key: string = 'inputBoxNotPick1';
     public async prompt(wizardContext: ITestWizardContext): Promise<void> {
-        wizardContext[this._key] = await ext.ui.showInputBox({});
+        wizardContext[this._key] = await wizardContext.ui.showInputBox({});
     }
 
     public shouldPrompt(wizardContext: ITestWizardContext): boolean {
@@ -65,7 +64,7 @@ class InputBoxStepIfNotPick1 extends AzureWizardPromptStep<ITestWizardContext> {
 abstract class InputBoxStepBase extends AzureWizardPromptStep<ITestWizardContext> {
     protected abstract key: string;
     public async prompt(wizardContext: ITestWizardContext): Promise<void> {
-        wizardContext[this.key] = await ext.ui.showInputBox({});
+        wizardContext[this.key] = await wizardContext.ui.showInputBox({});
     }
 
     public shouldPrompt(wizardContext: ITestWizardContext): boolean {
@@ -156,7 +155,7 @@ class SubSubExecuteStep extends AzureWizardExecuteStep<ITestWizardContext> {
 
 abstract class QuickPickStepWithSubWizardBase extends QuickPickStepBase {
     public async prompt(wizardContext: ITestWizardContext): Promise<void> {
-        const result: string = (await ext.ui.showQuickPick(
+        const result: string = (await wizardContext.ui.showQuickPick(
             [
                 { label: 'Create' },
                 { label: 'Pick 1' },
@@ -222,7 +221,7 @@ class QuickPickStepAndNoPromptWithSubWizardOnlyIfPrevIsPick1 extends QuickPickSt
     protected prevKey: string = 'quickPick1';
 
     public async prompt(wizardContext: ITestWizardContext): Promise<void> {
-        const result: string = (await ext.ui.showQuickPick(
+        const result: string = (await wizardContext.ui.showQuickPick(
             [
                 { label: 'Pick 1' },
                 { label: 'Pick 2' },
@@ -262,7 +261,7 @@ class QuickPickStepWithSubSubExecute extends QuickPickStepWithSubWizardBase {
 class QuickPickStepSubWizardNoExecute extends AzureWizardPromptStep<ITestWizardContext> {
     private _key: string = 'subQuickPickNoExecute';
     public async prompt(wizardContext: ITestWizardContext): Promise<void> {
-        const result: string = (await ext.ui.showQuickPick(
+        const result: string = (await wizardContext.ui.showQuickPick(
             [
                 { label: 'Pick 1' },
                 { label: 'Pick 2' },
@@ -303,7 +302,8 @@ class StepWithSubWizardAndNoPrompt extends AzureWizardPromptStep<ITestWizardCont
 }
 
 async function validateWizard(options: types.IWizardOptions<ITestWizardContext>, inputs: (string | TestInput)[], expectedContext: Partial<ITestWizardContext>): Promise<void> {
-    const context: ITestWizardContext = { telemetry: { properties: {}, measurements: {} }, errorHandling: { issueProperties: {} } };
+    const testUserInput: TestUserInput = new TestUserInput(vscode);
+    const context: ITestWizardContext = { telemetry: { properties: {}, measurements: {} }, errorHandling: { issueProperties: {} }, ui: testUserInput };
     // copy over properties/measurements
     Object.assign(expectedContext, context);
 

@@ -7,13 +7,17 @@ import { isNullOrUndefined } from 'util';
 import * as vscode from 'vscode';
 import * as types from '../../index';
 import { GoBackError } from '../errors';
-import { ext } from '../extensionVariables';
 import { parseError } from '../parseError';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 import { AzureWizardUserInput, IInternalAzureWizard } from './AzureWizardUserInput';
+import { IWizardUserInput } from './IWizardUserInput';
 
-export class AzureWizard<T extends types.IActionContext> implements types.AzureWizard<T>, IInternalAzureWizard {
+interface IInternalActionContext extends types.IActionContext {
+    ui: types.IAzureUserInput & { wizardUserInput?: IWizardUserInput };
+}
+
+export class AzureWizard<T extends IInternalActionContext> implements types.AzureWizard<T>, IInternalAzureWizard {
     public title: string | undefined;
     private readonly _promptSteps: AzureWizardPromptStep<T>[];
     private readonly _executeSteps: AzureWizardExecuteStep<T>[];
@@ -54,7 +58,7 @@ export class AzureWizard<T extends types.IActionContext> implements types.AzureW
 
     public async prompt(): Promise<void> {
         const wizardUi: AzureWizardUserInput = new AzureWizardUserInput(this);
-        ext.ui.wizardUserInput = wizardUi;
+        this._context.ui.wizardUserInput = wizardUi;
 
         try {
             let step: AzureWizardPromptStep<T> | undefined = this._promptSteps.pop();
@@ -68,7 +72,7 @@ export class AzureWizard<T extends types.IActionContext> implements types.AzureW
                 if (step.shouldPrompt(this._context)) {
                     step.propertiesBeforePrompt = Object.keys(this._context).filter(k => !isNullOrUndefined(this._context[k]));
 
-                    const disposable: vscode.Disposable = ext.ui.onDidFinishPrompt((result) => {
+                    const disposable: vscode.Disposable = this._context.ui.onDidFinishPrompt((result) => {
                         // tslint:disable-next-line: no-non-null-assertion
                         step!.prompted = true;
                         if (typeof result === 'string' && this._currentStepName && !step?.supportsDuplicateSteps) {
@@ -103,8 +107,8 @@ export class AzureWizard<T extends types.IActionContext> implements types.AzureW
                 step = this._promptSteps.pop();
             }
         } finally {
-            if (ext.ui.wizardUserInput === wizardUi) { // don't reset if another wizard has already started
-                ext.ui.wizardUserInput = undefined;
+            if (this._context.ui.wizardUserInput === wizardUi) { // don't reset if another wizard has already started
+                this._context.ui.wizardUserInput = undefined;
             }
         }
     }

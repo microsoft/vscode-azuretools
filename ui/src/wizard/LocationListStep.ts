@@ -7,7 +7,6 @@ import { SubscriptionClient, SubscriptionModels } from '@azure/arm-subscriptions
 import { QuickPickOptions } from 'vscode';
 import * as types from '../../index';
 import { createSubscriptionsClient } from '../clients';
-import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
@@ -65,7 +64,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
 
     public async prompt(wizardContext: T): Promise<void> {
         const options: QuickPickOptions = { placeHolder: localize('selectLocation', 'Select a location for new resources.') };
-        wizardContext.location = (await ext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
+        wizardContext.location = (await wizardContext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
     }
 
     public shouldPrompt(wizardContext: T): boolean {
