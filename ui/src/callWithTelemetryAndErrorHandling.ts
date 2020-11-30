@@ -37,7 +37,8 @@ function initContext(): [number, types.IActionContext] {
             suppressDisplay: false,
             rethrow: false,
             issueProperties: {}
-        }
+        },
+        ui: ext.ui
     };
     return [start, context];
 }

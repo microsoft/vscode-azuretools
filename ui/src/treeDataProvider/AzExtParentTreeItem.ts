@@ -7,7 +7,6 @@ import { isNullOrUndefined } from 'util';
 import { commands, TreeItemCollapsibleState } from 'vscode';
 import * as types from '../../index';
 import { NoResourceFoundError, NotImplementedError, UserCancelledError } from '../errors';
-import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { randomUtils } from '../utils/randomUtils';
 import { AzExtTreeItem } from './AzExtTreeItem';
@@ -119,14 +118,14 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         let getTreeItem: GetTreeItemFunction;
 
         try {
-            getTreeItem = (await ext.ui.showQuickPick(this.getQuickPicks(expectedContextValues, context), { placeHolder, ignoreFocusOut: context.ignoreFocusOut })).data;
+            getTreeItem = (await context.ui.showQuickPick(this.getQuickPicks(expectedContextValues, context), { placeHolder, ignoreFocusOut: context.ignoreFocusOut })).data;
         } catch (error) {
             // We want the loading thing to show for `showQuickPick` but we also need to support autoSelect and canPickMany based on the value of the picks
             // hence throwing an error instead of just awaiting `getQuickPicks`
             if (error instanceof AutoSelectError) {
                 getTreeItem = error.data;
             } else if (error instanceof CanPickManyError) {
-                const result: types.IAzureQuickPickItem<GetTreeItemFunction>[] = (await ext.ui.showQuickPick(error.picks, { placeHolder, canPickMany: true }));
+                const result: types.IAzureQuickPickItem<GetTreeItemFunction>[] = (await context.ui.showQuickPick(error.picks, { placeHolder, canPickMany: true }));
                 return await Promise.all(result.map(async pick => await pick.data()));
             } else {
                 throw error;
@@ -289,7 +288,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
                             // tslint:disable-next-line: strict-boolean-expressions
                             const commandArgs: unknown[] = ti.commandArgs || [ti];
                             await commands.executeCommand(ti.commandId, ...commandArgs);
-                            await this.refresh();
+                            await this.refresh(context);
                             return this;
                         }
                     }

@@ -68,13 +68,13 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     }
 
     //#region Methods implemented by base class
-    public refreshImpl?(): Promise<void>;
+    public refreshImpl?(context: types.IActionContext): Promise<void>;
     public isAncestorOfImpl?(contextValue: string | RegExp): boolean;
     public deleteTreeItemImpl?(deleteTreeItemImpl: types.IActionContext): Promise<void>;
     //#endregion
 
-    public async refresh(): Promise<void> {
-        await this.treeDataProvider.refresh(this);
+    public async refresh(context: types.IActionContext): Promise<void> {
+        await this.treeDataProvider.refresh(context, this);
     }
 
     public matchesContextValue(expectedContextValues: (string | RegExp)[]): boolean {
@@ -98,7 +98,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     }
 
     public async deleteTreeItem(context: types.IActionContext): Promise<void> {
-        await this.runWithTemporaryDescription(localize('deleting', 'Deleting...'), async () => {
+        await this.runWithTemporaryDescription(context, localize('deleting', 'Deleting...'), async () => {
             if (this.deleteTreeItemImpl) {
                 await this.deleteTreeItemImpl(context);
                 if (this.parent) {
@@ -110,14 +110,14 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
         });
     }
 
-    public async runWithTemporaryDescription(description: string, callback: () => Promise<void>): Promise<void> {
+    public async runWithTemporaryDescription(context: types.IActionContext, description: string, callback: () => Promise<void>): Promise<void> {
         this._temporaryDescription = description;
         try {
             this.treeDataProvider.refreshUIOnly(this);
             await callback();
         } finally {
             this._temporaryDescription = undefined;
-            await this.refresh();
+            await this.refresh(context);
         }
     }
 }

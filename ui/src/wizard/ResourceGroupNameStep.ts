@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as types from '../../index';
-import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 import { ResourceGroupListStep, resourceGroupNamingRules } from './ResourceGroupListStep';
@@ -12,7 +11,7 @@ import { ResourceGroupListStep, resourceGroupNamingRules } from './ResourceGroup
 export class ResourceGroupNameStep<T extends types.IResourceGroupWizardContext> extends AzureWizardPromptStep<T> implements types.ResourceGroupNameStep<T> {
     public async prompt(wizardContext: T): Promise<void> {
         const suggestedName: string | undefined = wizardContext.relatedNameTask ? await wizardContext.relatedNameTask : undefined;
-        wizardContext.newResourceGroupName = (await ext.ui.showInputBox({
+        wizardContext.newResourceGroupName = (await wizardContext.ui.showInputBox({
             value: suggestedName,
             prompt: 'Enter the name of the new resource group.',
             validateInput: async (value: string): Promise<string | undefined> => await this.validateResourceGroupName(wizardContext, value)

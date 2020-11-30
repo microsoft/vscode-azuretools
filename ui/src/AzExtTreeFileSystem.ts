@@ -71,7 +71,7 @@ export abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> implement
         await callWithTelemetryAndErrorHandling('writeFile', async (context) => {
             const item: TItem = await this.lookup(context, uri);
             await this.writeFileImpl(context, item, content, uri);
-            await item.refresh();
+            await item.refresh(context);
         });
     }
 

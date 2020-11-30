@@ -109,12 +109,12 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         }
     }
 
-    public async refresh(treeItem?: AzExtTreeItem): Promise<void> {
+    public async refresh(context: types.IActionContext, treeItem?: AzExtTreeItem): Promise<void> {
         // tslint:disable-next-line: strict-boolean-expressions
         treeItem = treeItem || this._rootTreeItem;
 
         if (treeItem.refreshImpl) {
-            await treeItem.refreshImpl();
+            await treeItem.refreshImpl(context);
         }
 
         if (isAzExtParentTreeItem(treeItem)) {
