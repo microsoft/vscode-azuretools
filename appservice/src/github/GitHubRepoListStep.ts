@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzureWizardPromptStep, IAzureQuickPickItem } from 'vscode-azureextensionui';
-import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
 import { getGitHubQuickPicksWithLoadMore, gitHubRepoData, ICachedQuickPicks } from './connectToGitHub';
@@ -19,7 +18,7 @@ export class GitHubRepoListStep extends AzureWizardPromptStep<IConnectToGitHubWi
         let url: string = nonNullProp(context, 'orgData').repos_url;
         // tslint:disable-next-line: no-constant-condition
         while (true) {
-            repoData = (await ext.ui.showQuickPick(this.getRepositories(context, picksCache, url), { placeHolder })).data;
+            repoData = (await context.ui.showQuickPick(this.getRepositories(context, picksCache, url), { placeHolder })).data;
             if (typeof repoData === 'string') {
                 url = repoData;
             } else {

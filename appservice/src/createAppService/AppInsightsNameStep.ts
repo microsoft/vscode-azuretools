@@ -5,7 +5,6 @@
 
 import { ApplicationInsightsComponent, ApplicationInsightsComponentListResult } from '@azure/arm-appinsights/lib/models';
 import { AzureWizardPromptStep } from 'vscode-azureextensionui';
-import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { AppInsightsListStep, appInsightsNamingRules } from './AppInsightsListStep';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
@@ -19,7 +18,7 @@ export class AppInsightsNameStep extends AzureWizardPromptStep<IAppServiceWizard
 
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
         const suggestedName: string | undefined = wizardContext.relatedNameTask ? await wizardContext.relatedNameTask : undefined;
-        wizardContext.newAppInsightsName = (await ext.ui.showInputBox({
+        wizardContext.newAppInsightsName = (await wizardContext.ui.showInputBox({
             value: suggestedName,
             prompt: 'Enter the name of the new Application Insights resource.',
             validateInput: async (value: string): Promise<string | undefined> => await this.validateApplicationInsightName(wizardContext, value)

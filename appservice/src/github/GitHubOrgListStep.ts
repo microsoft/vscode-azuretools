@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzureWizardPromptStep, IAzureQuickPickItem } from 'vscode-azureextensionui';
-import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { createQuickPickFromJsons, getGitHubJsonResponse, gitHubOrgData } from './connectToGitHub';
 import { IConnectToGitHubWizardContext } from './IConnectToGitHubWizardContext';
@@ -12,7 +11,7 @@ import { IConnectToGitHubWizardContext } from './IConnectToGitHubWizardContext';
 export class GitHubOrgListStep extends AzureWizardPromptStep<IConnectToGitHubWizardContext> {
     public async prompt(context: IConnectToGitHubWizardContext): Promise<void> {
         const placeHolder: string = localize('chooseOrg', 'Choose organization.');
-        context.orgData = (await ext.ui.showQuickPick(this.getOrganizations(context), { placeHolder })).data;
+        context.orgData = (await context.ui.showQuickPick(this.getOrganizations(context), { placeHolder })).data;
     }
 
     public shouldPrompt(context: IConnectToGitHubWizardContext): boolean {

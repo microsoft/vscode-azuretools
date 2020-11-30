@@ -5,7 +5,6 @@
 
 import { WebSiteManagementModels } from '@azure/arm-appservice';
 import { AzExtParentTreeItem, AzExtTreeItem, IActionContext, ICreateChildImplContext, TreeItemIconPath } from 'vscode-azureextensionui';
-import { ext } from '../extensionVariables';
 import { IAppSettingsClient } from '../IAppSettingsClient';
 import { AppSettingTreeItem } from './AppSettingTreeItem';
 import { getThemedIconPath } from './IconPath';
@@ -105,12 +104,12 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
         // make a deep copy so settings are not cached if there's a failure
         // tslint:disable-next-line: no-unsafe-any
         const settings: WebSiteManagementModels.StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings(context)));
-        const newKey: string = await ext.ui.showInputBox({
+        const newKey: string = await context.ui.showInputBox({
             prompt: 'Enter new app setting name',
             validateInput: (v: string): string | undefined => validateAppSettingKey(settings, this.client, v)
         });
 
-        const newValue: string = await ext.ui.showInputBox({
+        const newValue: string = await context.ui.showInputBox({
             prompt: `Enter value for "${newKey}"`
         });
 

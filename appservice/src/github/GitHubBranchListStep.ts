@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzureWizardPromptStep, IAzureQuickPickItem } from 'vscode-azureextensionui';
-import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
 import { getGitHubQuickPicksWithLoadMore, gitHubBranchData, ICachedQuickPicks } from './connectToGitHub';
@@ -18,7 +17,7 @@ export class GitHubBranchListStep extends AzureWizardPromptStep<IConnectToGitHub
         let url: string = `${nonNullProp(context, 'repoData').url}/branches`;
         // tslint:disable-next-line: no-constant-condition
         while (true) {
-            branchData = (await ext.ui.showQuickPick(this.getBranchPicks(context, picksCache, url), { placeHolder })).data;
+            branchData = (await context.ui.showQuickPick(this.getBranchPicks(context, picksCache, url), { placeHolder })).data;
             if (typeof branchData === 'string') {
                 url = branchData;
             } else {

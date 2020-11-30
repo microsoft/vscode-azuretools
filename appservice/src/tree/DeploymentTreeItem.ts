@@ -95,10 +95,10 @@ export class DeploymentTreeItem extends AzExtTreeItem {
             // tslint:disable-next-line:no-floating-promises
             kuduClient.deployment.deploy(this.id);
 
-            const refreshingInteveral: NodeJS.Timer = setInterval(async () => { await this.refresh(); }, 1000); /* the status of the label changes during deployment so poll for that*/
+            const refreshingInteveral: NodeJS.Timer = setInterval(async () => { await this.refresh(context); }, 1000); /* the status of the label changes during deployment so poll for that*/
             try {
                 await waitForDeploymentToComplete(context, this.parent.client, this.id);
-                await this.parent.refresh(); /* refresh entire node because active statuses has changed */
+                await this.parent.refresh(context); /* refresh entire node because active statuses has changed */
                 window.showInformationMessage(redeployed);
                 ext.outputChannel.appendLog(redeployed);
             } finally {
@@ -138,7 +138,7 @@ export class DeploymentTreeItem extends AzExtTreeItem {
     }
 
     public async viewDeploymentLogs(context: IActionContext): Promise<void> {
-        await this.runWithTemporaryDescription(localize('retrievingLogs', 'Retrieving logs...'), async () => {
+        await this.runWithTemporaryDescription(context, localize('retrievingLogs', 'Retrieving logs...'), async () => {
             const logData: string = await this.getDeploymentLogs(context);
             await openReadOnlyContent(this, logData, '.log');
         });

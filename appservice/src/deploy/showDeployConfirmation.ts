@@ -22,7 +22,7 @@ export async function showDeployConfirmation(context: IDeployContext, client: Si
         items.push(resetDefault);
     }
 
-    const result: MessageItem = await ext.ui.showWarningMessage(warning, { modal: true }, ...items);
+    const result: MessageItem = await context.ui.showWarningMessage(warning, { modal: true }, ...items);
 
     // a temporary workaround for this issue:
     // https://github.com/Microsoft/vscode-azureappservice/issues/844

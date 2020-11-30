@@ -6,7 +6,6 @@
 import { ApplicationInsightsManagementClient } from "@azure/arm-appinsights";
 import { ApplicationInsightsComponent, ApplicationInsightsComponentListResult } from "@azure/arm-appinsights/lib/models";
 import { AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, LocationListStep } from "vscode-azureextensionui";
-import { ext } from "../extensionVariables";
 import { localize } from "../localize";
 import { createAppInsightsClient } from "../utils/azureClients";
 import { nonNullProp } from "../utils/nonNull";
@@ -34,7 +33,7 @@ export class AppInsightsListStep extends AzureWizardPromptStep<IAppServiceWizard
 
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
         const options: IAzureQuickPickOptions = { placeHolder: 'Select an Application Insights resource for your app.', id: `AppInsightsListStep/${wizardContext.subscriptionId}` };
-        const input: IAzureQuickPickItem<ApplicationInsightsComponent | undefined> = (await ext.ui.showQuickPick(this.getQuickPicks(wizardContext), options));
+        const input: IAzureQuickPickItem<ApplicationInsightsComponent | undefined> = (await wizardContext.ui.showQuickPick(this.getQuickPicks(wizardContext), options));
         wizardContext.appInsightsComponent = input.data;
 
         // as create new and skipForNow both have undefined as the data type, check the label

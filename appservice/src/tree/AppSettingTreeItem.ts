@@ -59,21 +59,21 @@ export class AppSettingTreeItem extends AzExtTreeItem {
     }
 
     public async edit(context: IActionContext): Promise<void> {
-        const newValue: string = await ext.ui.showInputBox({
+        const newValue: string = await context.ui.showInputBox({
             prompt: `Enter setting value for "${this._key}"`,
             value: this._value
         });
 
         await this.parent.editSettingItem(this._key, this._key, newValue, context);
         this._value = newValue;
-        await this.refresh();
+        await this.refresh(context);
     }
 
     public async rename(context: IActionContext): Promise<void> {
         const settings: WebSiteManagementModels.StringDictionary = await this.parent.ensureSettings(context);
 
         const oldKey: string = this._key;
-        const newKey: string = await ext.ui.showInputBox({
+        const newKey: string = await context.ui.showInputBox({
             prompt: `Enter a new name for "${oldKey}"`,
             value: this._key,
             validateInput: (v: string): string | undefined => validateAppSettingKey(settings, this._client, v, oldKey)
@@ -81,20 +81,20 @@ export class AppSettingTreeItem extends AzExtTreeItem {
 
         await this.parent.editSettingItem(oldKey, newKey, this._value, context);
         this._key = newKey;
-        await this.refresh();
+        await this.refresh(context);
     }
 
     public async deleteTreeItemImpl(context: IActionContext): Promise<void> {
-        await ext.ui.showWarningMessage(`Are you sure you want to delete setting "${this._key}"?`, { modal: true }, DialogResponses.deleteResponse);
+        await context.ui.showWarningMessage(`Are you sure you want to delete setting "${this._key}"?`, { modal: true }, DialogResponses.deleteResponse);
         await this.parent.deleteSettingItem(this._key, context);
     }
 
-    public async toggleValueVisibility(): Promise<void> {
+    public async toggleValueVisibility(context: IActionContext): Promise<void> {
         this._hideValue = !this._hideValue;
-        await this.refresh();
+        await this.refresh(context);
     }
 
-    public async toggleSlotSetting(): Promise<void> {
+    public async toggleSlotSetting(context: IActionContext): Promise<void> {
         if (this._client.updateSlotConfigurationNames && this._client.listSlotConfigurationNames) {
             const slotSettings: WebSiteManagementModels.SlotConfigNamesResource = await this._client.listSlotConfigurationNames();
             if (!slotSettings.appSettingNames) {
@@ -109,7 +109,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
             }
 
             await this._client.updateSlotConfigurationNames(slotSettings);
-            await this.refresh();
+            await this.refresh(context);
         } else {
             throw Error(localize('toggleSlotSettingsNotSupported', 'Toggling slot settings is not supported.'));
         }
