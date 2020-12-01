@@ -9,7 +9,7 @@ import * as types from '../../index';
 import { AzureAccount, AzureLoginStatus, AzureResourceFilter } from '../azure-account.api';
 import { UserCancelledError } from '../errors';
 import { localize } from '../localize';
-import { registerEvent } from '../registerCommand';
+import { registerEvent } from '../registerEvent';
 import { nonNullProp, nonNullValue } from '../utils/nonNull';
 import { AzureWizardPromptStep } from '../wizard/AzureWizardPromptStep';
 import { AzExtParentTreeItem } from './AzExtParentTreeItem';
