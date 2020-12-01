@@ -7,9 +7,9 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { TestUserInput } from 'vscode-azureextensiondev';
 import * as types from '../index';
-import { AzExtParentTreeItem } from '../src/treeDataProvider/AzExtParentTreeItem';
-import { AzExtTreeDataProvider } from '../src/treeDataProvider/AzExtTreeDataProvider';
-import { AzExtTreeItem } from '../src/treeDataProvider/AzExtTreeItem';
+import { AzExtParentTreeItem } from '../src/tree/AzExtParentTreeItem';
+import { AzExtTreeDataProvider } from '../src/tree/AzExtTreeDataProvider';
+import { AzExtTreeItem } from '../src/tree/AzExtTreeItem';
 
 // tslint:disable: max-classes-per-file
 

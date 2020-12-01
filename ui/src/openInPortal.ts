@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as types from '../index';
-import { AzExtTreeItem } from './treeDataProvider/AzExtTreeItem';
+import { AzExtTreeItem } from './tree/AzExtTreeItem';
 import { openUrl } from "./utils/openUrl";
 import { findSubscriptionTreeItem } from './utils/treeUtils';
 

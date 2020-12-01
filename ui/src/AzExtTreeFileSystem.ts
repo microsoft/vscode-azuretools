@@ -8,8 +8,8 @@ import { Disposable, Event, EventEmitter, FileChangeEvent, FileStat, FileSystemE
 import * as types from '../index';
 import { callWithTelemetryAndErrorHandling } from "./callWithTelemetryAndErrorHandling";
 import { localize } from "./localize";
-import { AzExtTreeDataProvider } from "./treeDataProvider/AzExtTreeDataProvider";
-import { AzExtTreeItem } from "./treeDataProvider/AzExtTreeItem";
+import { AzExtTreeDataProvider } from "./tree/AzExtTreeDataProvider";
+import { AzExtTreeItem } from "./tree/AzExtTreeItem";
 import { nonNullProp } from "./utils/nonNull";
 
 const unsupportedError: Error = new Error(localize('notSupported', 'This operation is not supported.'));
