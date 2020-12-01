@@ -6,9 +6,9 @@
 import * as dayjs from 'dayjs';
 import * as relativeTime from 'dayjs/plugin/relativeTime';
 import * as types from '../index';
-import { registerCommand } from "./AzureActionHandler";
 import { ext } from "./extensionVariables";
 import { localize } from './localize';
+import { registerCommand } from "./registerCommand";
 import { IReportableIssue, reportAnIssue } from './reportAnIssue';
 import { nonNullValue } from './utils/nonNull';
 

@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { commands, Event, Uri } from 'vscode';
-import { IActionContext } from '../index';
+import { commands, Uri } from 'vscode';
+import * as types from '../index';
 import { callWithTelemetryAndErrorHandling } from './callWithTelemetryAndErrorHandling';
 import { ext } from './extensionVariables';
-import { AzExtTreeItem } from './treeDataProvider/AzExtTreeItem';
+import { AzExtTreeItem } from './tree/AzExtTreeItem';
 
 // tslint:disable:no-any no-unsafe-any
-export function registerCommand(commandId: string, callback: (context: IActionContext, ...args: any[]) => any, debounce?: number): void {
+export function registerCommand(commandId: string, callback: (context: types.IActionContext, ...args: any[]) => any, debounce?: number): void {
     let lastClickTime: number | undefined; /* Used for debounce */
     ext.context.subscriptions.push(commands.registerCommand(commandId, async (...args: any[]): Promise<any> => {
         // tslint:disable-next-line:strict-boolean-expressions
@@ -22,7 +22,7 @@ export function registerCommand(commandId: string, callback: (context: IActionCo
         }
         return await callWithTelemetryAndErrorHandling(
             commandId,
-            (context: IActionContext) => {
+            (context: types.IActionContext) => {
                 if (args.length > 0) {
                     const firstArg: any = args[0];
 
@@ -33,17 +33,6 @@ export function registerCommand(commandId: string, callback: (context: IActionCo
                     }
                 }
 
-                return callback(context, ...args);
-            }
-        );
-    }));
-}
-
-export function registerEvent<T>(eventId: string, event: Event<T>, callback: (context: IActionContext, ...args: any[]) => any): void {
-    ext.context.subscriptions.push(event(async (...args: any[]): Promise<any> => {
-        return await callWithTelemetryAndErrorHandling(
-            eventId,
-            (context: IActionContext) => {
                 return callback(context, ...args);
             }
         );
