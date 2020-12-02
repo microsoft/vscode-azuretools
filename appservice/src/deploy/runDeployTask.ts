@@ -32,7 +32,7 @@ export async function tryRunPreDeployTask(context: IActionContext, deployFsPath:
         if (task) {
             const progressMessage: string = localize('runningTask', 'Running preDeployTask "{0}"...', taskName);
             await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: progressMessage }, async () => {
-                await vscode.tasks.executeTask(task);
+                await taskUtils.executeIfNotActive(task);
                 preDeployTaskResult = await waitForPreDeployTask(task, deployFsPath);
                 context.telemetry.properties.preDeployTaskExitCode = String(preDeployTaskResult.exitCode);
             });
@@ -56,7 +56,7 @@ export async function startPostDeployTask(context: IActionContext, deployFsPath:
         const task: vscode.Task | undefined = await taskUtils.findTask(deployFsPath, taskName);
         context.telemetry.properties.foundPostDeployTask = String(!!task);
         if (task) {
-            await vscode.tasks.executeTask(task);
+            await taskUtils.executeIfNotActive(task);
             ext.outputChannel.appendLog(localize('startedPostDeployTask', 'Started {0} "{1}".', settingKey, taskName), { resourceName });
         } else {
             ext.outputChannel.appendLog(localize('noPostDeployTask', 'WARNING: Failed to find {0} "{1}".', settingKey, taskName), { resourceName });
