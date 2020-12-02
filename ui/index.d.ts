@@ -551,6 +551,13 @@ export declare function callWithTelemetryAndErrorHandlingSync<T>(callbackId: str
 export declare function callWithMaskHandling<T>(callback: () => Promise<T>, valueToMask: string): Promise<T>;
 
 /**
+ * Add an extension-wide value to mask for all commands
+ * This will apply to telemetry and "Report Issue", but _not_ VS Code UI (i.e. the error notification or output channnel)
+ * IMPORTANT: For the most sensitive information, `callWithMaskHandling` should be used instead
+ */
+export function addExtensionValueToMask(...values: string[]): void;
+
+/**
  * A generic context object that describes the behavior of an action and allows for specifying custom telemetry properties and measurements
  * You may also extend this object if you need to pass along custom properties through things like a wizard or tree item picker
  */
@@ -569,6 +576,13 @@ export interface IActionContext {
      * Action-specific alternative to `ext.ui`
      */
     ui: IAzureUserInput;
+
+    /**
+     * Add a value to mask for this action
+     * This will apply to telemetry and "Report Issue", but _not_ VS Code UI (i.e. the error notification or output channnel)
+     * IMPORTANT: For the most sensitive information, `callWithMaskHandling` should be used instead
+     */
+    valuesToMask: string[];
 }
 
 export interface ITelemetryContext {

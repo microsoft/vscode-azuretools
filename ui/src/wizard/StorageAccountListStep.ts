@@ -8,6 +8,7 @@ import { isString } from 'util';
 import * as types from '../../index';
 import { createStorageClient } from '../clients';
 import { localize } from '../localize';
+import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 import { LocationListStep } from './LocationListStep';
@@ -102,6 +103,7 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
                 executeSteps: [new StorageAccountCreateStep(this._newAccountDefaults)]
             };
         } else {
+            wizardContext.valuesToMask.push(nonNullProp(wizardContext.storageAccount, 'name'));
             return undefined;
         }
     }

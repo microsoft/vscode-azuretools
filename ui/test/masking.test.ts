@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { callWithMaskHandling } from '../src/callWithMaskHandling';
+import { callWithMaskHandling } from '../src/masking';
 import { parseError } from '../src/parseError';
 import { assertThrowsAsync } from './assertThrowsAsync';
 

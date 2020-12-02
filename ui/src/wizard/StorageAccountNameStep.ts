@@ -25,6 +25,7 @@ export class StorageAccountNameStep<T extends types.IStorageAccountWizardContext
         if (!wizardContext.relatedNameTask) {
             wizardContext.relatedNameTask = this.generateRelatedName(wizardContext, wizardContext.newStorageAccountName, resourceGroupNamingRules);
         }
+        wizardContext.valuesToMask.push(wizardContext.newStorageAccountName);
     }
 
     public shouldPrompt(wizardContext: T): boolean {
