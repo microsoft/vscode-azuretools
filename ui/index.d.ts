@@ -593,6 +593,13 @@ export interface ITelemetryContext {
     suppressAll?: boolean;
 }
 
+export interface AzExtErrorButton extends MessageItem {
+    /**
+     * To be called if the button is clicked
+     */
+    callback: () => Promise<void>;
+}
+
 export interface IErrorHandlingContext {
     /**
      * Defaults to `false`. If true, does not display this error to the user.
@@ -608,6 +615,11 @@ export interface IErrorHandlingContext {
      * Defaults to `false`. If true, does not show the "Report Issue" button in the error notification.
      */
     suppressReportIssue?: boolean;
+
+    /**
+     * Additional buttons to include in error notification besides "Report an Issue"
+     */
+    buttons?: AzExtErrorButton[];
 
     /**
      * Custom properties that will be included in any error reports generated during this action

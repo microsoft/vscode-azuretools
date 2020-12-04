@@ -143,10 +143,16 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
             items.push(DialogResponses.reportAnIssue);
         }
 
+        if (context.errorHandling.buttons) {
+            items.push(...context.errorHandling.buttons);
+        }
+
         // don't wait
-        window.showErrorMessage(message, ...items).then(async (result: MessageItem | undefined) => {
+        window.showErrorMessage(message, ...items).then(async (result: MessageItem | types.AzExtErrorButton | undefined) => {
             if (result === DialogResponses.reportAnIssue) {
                 await reportAnIssue(issue);
+            } else if (result && 'callback' in result) {
+                await result.callback();
             }
         });
     }

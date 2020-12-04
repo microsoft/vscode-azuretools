@@ -4,27 +4,29 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import { ExtensionContext } from "vscode";
-import { IAzExtOutputChannel, IAzureUserInput, UIExtensionVariables } from "../index";
+import { commands, ExtensionContext } from "vscode";
+import * as types from "../index";
+import { registerErrorHandler } from './callWithTelemetryAndErrorHandling';
 import { createTelemetryReporter, IInternalTelemetryReporter } from './createTelemetryReporter';
 import { localize } from "./localize";
+import { parseError } from './parseError';
 
-interface IInternalExtensionVariables extends UIExtensionVariables {
+interface IInternalExtensionVariables extends types.UIExtensionVariables {
     _internalReporter: IInternalTelemetryReporter;
 }
 
-class UninitializedExtensionVariables implements UIExtensionVariables {
+class UninitializedExtensionVariables implements types.UIExtensionVariables {
     private _error: Error = new Error(localize('uninitializedError', '"registerUIExtensionVariables" must be called before using the vscode-azureextensionui package.'));
 
     public get context(): ExtensionContext {
         throw this._error;
     }
 
-    public get outputChannel(): IAzExtOutputChannel {
+    public get outputChannel(): types.IAzExtOutputChannel {
         throw this._error;
     }
 
-    public get ui(): IAzureUserInput {
+    public get ui(): types.IAzureUserInput {
         throw this._error;
     }
 
@@ -38,7 +40,7 @@ class UninitializedExtensionVariables implements UIExtensionVariables {
  */
 export let ext: IInternalExtensionVariables = new UninitializedExtensionVariables();
 
-export function registerUIExtensionVariables(extVars: UIExtensionVariables): void {
+export function registerUIExtensionVariables(extVars: types.UIExtensionVariables): void {
     if (ext === extVars) {
         // already registered
         return;
@@ -49,4 +51,25 @@ export function registerUIExtensionVariables(extVars: UIExtensionVariables): voi
     assert(extVars.ui, 'registerUIExtensionVariables: Missing ui');
 
     ext = Object.assign(extVars, { _internalReporter: createTelemetryReporter(extVars.context) });
+
+    registerErrorHandler(handleEntryNotFound);
+}
+
+/**
+ * Long-standing issue that is pretty common for all Azure calls, but can be fixed with a simple reload of VS Code
+ * https://github.com/microsoft/vscode-azure-account/issues/53
+ */
+async function handleEntryNotFound(context: types.IErrorHandlerContext): Promise<void> {
+    if (parseError(context.error).message === 'Entry not found in cache.') {
+        context.error = new Error(localize('mustReload', 'Your VS Code window must be reloaded to perform this action.'));
+        context.errorHandling.suppressReportIssue = true;
+        context.errorHandling.buttons = [
+            {
+                title: localize('reloadWindow', 'Reload Window'),
+                callback: async (): Promise<void> => {
+                    await commands.executeCommand('workbench.action.reloadWindow');
+                }
+            }
+        ];
+    }
 }
