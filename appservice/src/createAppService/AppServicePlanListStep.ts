@@ -54,6 +54,7 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
                 executeSteps: [new AppServicePlanCreateStep()]
             };
         } else {
+            wizardContext.valuesToMask.push(nonNullProp(wizardContext.plan, 'name'));
             return undefined;
         }
     }

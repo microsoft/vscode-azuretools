@@ -39,6 +39,7 @@ export class SiteNameStep extends AzureNameStep<IAppServiceWizardContext> {
             placeHolder,
             validateInput: async (name: string): Promise<string | undefined> => await this.validateSiteName(client, name)
         })).trim();
+        wizardContext.valuesToMask.push(wizardContext.newSiteName);
 
         const namingRules: IAzureNamingRules[] = [resourceGroupNamingRules];
         if (wizardContext.newSiteKind === AppKind.functionapp) {

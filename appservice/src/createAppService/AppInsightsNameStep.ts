@@ -23,6 +23,7 @@ export class AppInsightsNameStep extends AzureWizardPromptStep<IAppServiceWizard
             prompt: 'Enter the name of the new Application Insights resource.',
             validateInput: async (value: string): Promise<string | undefined> => await this.validateApplicationInsightName(wizardContext, value)
         })).trim();
+        wizardContext.valuesToMask.push(wizardContext.newAppInsightsName);
     }
 
     public shouldPrompt(wizardContext: IAppServiceWizardContext): boolean {

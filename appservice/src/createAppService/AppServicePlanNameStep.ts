@@ -22,6 +22,7 @@ export class AppServicePlanNameStep extends AzureWizardPromptStep<IAppServiceWiz
             prompt: localize('AppServicePlanPrompt', 'Enter the name of the new App Service plan.'),
             validateInput: async (value: string): Promise<string | undefined> => await this.validatePlanName(wizardContext, value)
         })).trim();
+        wizardContext.valuesToMask.push(wizardContext.newPlanName);
     }
 
     public shouldPrompt(wizardContext: IAppServiceWizardContext): boolean {
