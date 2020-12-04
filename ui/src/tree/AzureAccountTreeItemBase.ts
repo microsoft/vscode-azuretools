@@ -9,6 +9,7 @@ import * as types from '../../index';
 import { AzureAccount, AzureLoginStatus, AzureResourceFilter } from '../azure-account.api';
 import { UserCancelledError } from '../errors';
 import { localize } from '../localize';
+import { addExtensionValueToMask } from '../masking';
 import { registerEvent } from '../registerEvent';
 import { nonNullProp, nonNullValue } from '../utils/nonNull';
 import { AzureWizardPromptStep } from '../wizard/AzureWizardPromptStep';
@@ -118,10 +119,12 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
                 } else {
                     // filter.subscription.id is the The fully qualified ID of the subscription (For example, /subscriptions/00000000-0000-0000-0000-000000000000) and should be used as the tree item's id for the purposes of OpenInPortal
                     // filter.subscription.subscriptionId is just the guid and is used in all other cases when creating clients for managing Azure resources
+                    const subscriptionId: string = nonNullProp(filter.subscription, 'subscriptionId');
+                    addExtensionValueToMask(subscriptionId);
                     return await this.createSubscriptionTreeItem({
                         credentials: filter.session.credentials2,
                         subscriptionDisplayName: nonNullProp(filter.subscription, 'displayName'),
-                        subscriptionId: nonNullProp(filter.subscription, 'subscriptionId'),
+                        subscriptionId,
                         subscriptionPath: nonNullProp(filter.subscription, 'id'),
                         tenantId: filter.session.tenantId,
                         userId: filter.session.userId,

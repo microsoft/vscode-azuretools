@@ -8,6 +8,7 @@ import * as types from '../../index';
 import { callWithTelemetryAndErrorHandling } from '../callWithTelemetryAndErrorHandling';
 import { NoResourceFoundError, UserCancelledError } from '../errors';
 import { localize } from '../localize';
+import { addValuesToMaskFromAzureId } from '../masking';
 import { parseError } from '../parseError';
 import { AzExtParentTreeItem, InvalidTreeItem } from './AzExtParentTreeItem';
 import { AzExtTreeItem } from './AzExtTreeItem';
@@ -165,6 +166,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
             }
         }
 
+        addValuesToMaskFromAzureId(context, treeItem);
         return <T><unknown>treeItem;
     }
 

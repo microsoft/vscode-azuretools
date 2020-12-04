@@ -8,6 +8,7 @@ import * as types from '../index';
 import { DialogResponses } from './DialogResponses';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
+import { maskValues } from './masking';
 import { parseError } from './parseError';
 import { cacheIssueForCommand } from './registerReportIssueCommand';
 import { IReportableIssue, reportAnIssue } from './reportAnIssue';
@@ -38,7 +39,8 @@ function initContext(): [number, types.IActionContext] {
             rethrow: false,
             issueProperties: {}
         },
-        ui: ext.ui
+        ui: ext.ui,
+        valuesToMask: []
     };
     return [start, context];
 }
@@ -103,6 +105,8 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
     }
 
     const errorData: types.IParsedError = parseError(errorContext.error);
+    const unMaskedMessage: string = errorData.message;
+    errorData.message = maskValues(errorData.message, context.valuesToMask);
     if (errorData.isUserCancelledError) {
         context.telemetry.properties.result = 'Canceled';
         context.errorHandling.suppressDisplay = true;
@@ -119,14 +123,14 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
 
     if (!context.errorHandling.suppressDisplay) {
         // Always append the error to the output channel, but only 'show' the output channel for multiline errors
-        ext.outputChannel.appendLog(localize('outputError', 'Error: {0}', errorData.message));
+        ext.outputChannel.appendLog(localize('outputError', 'Error: {0}', unMaskedMessage));
 
         let message: string;
-        if (errorData.message.includes('\n')) {
+        if (unMaskedMessage.includes('\n')) {
             ext.outputChannel.show();
             message = localize('multilineError', 'An error has occured. Check output window for more details.');
         } else {
-            message = errorData.message;
+            message = unMaskedMessage;
         }
 
         const items: MessageItem[] = [];

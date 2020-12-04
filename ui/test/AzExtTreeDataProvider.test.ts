@@ -76,7 +76,7 @@ class LeafTreeItem extends AzExtTreeItem {
 suite("AzExtTreeDataProvider", () => {
     let root: RootTreeItem;
     let tree: AzExtTreeDataProvider;
-    const context: types.IActionContext = { errorHandling: { issueProperties: {} }, telemetry: { measurements: {}, properties: {} }, ui: new TestUserInput(vscode) };
+    const context: types.IActionContext = { errorHandling: { issueProperties: {} }, telemetry: { measurements: {}, properties: {} }, ui: new TestUserInput(vscode), valuesToMask: [] };
 
     suiteSetup(() => {
         root = new RootTreeItem(undefined);

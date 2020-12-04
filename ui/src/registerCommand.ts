@@ -7,6 +7,7 @@ import { commands, Uri } from 'vscode';
 import * as types from '../index';
 import { callWithTelemetryAndErrorHandling } from './callWithTelemetryAndErrorHandling';
 import { ext } from './extensionVariables';
+import { addValuesToMaskFromAzureId } from './masking';
 import { AzExtTreeItem } from './tree/AzExtTreeItem';
 
 // tslint:disable:no-any no-unsafe-any
@@ -28,6 +29,7 @@ export function registerCommand(commandId: string, callback: (context: types.IAc
 
                     if (firstArg instanceof AzExtTreeItem) {
                         context.telemetry.properties.contextValue = firstArg.contextValue;
+                        addValuesToMaskFromAzureId(context, firstArg);
                     } else if (firstArg instanceof Uri) {
                         context.telemetry.properties.contextValue = 'Uri';
                     }

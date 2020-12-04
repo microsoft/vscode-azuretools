@@ -58,6 +58,7 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
                 executeSteps: [new ResourceGroupCreateStep()]
             };
         } else {
+            wizardContext.valuesToMask.push(nonNullProp(wizardContext.resourceGroup, 'name'));
             return undefined;
         }
     }
