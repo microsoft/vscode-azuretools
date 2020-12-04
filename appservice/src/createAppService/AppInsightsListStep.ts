@@ -50,16 +50,18 @@ export class AppInsightsListStep extends AzureWizardPromptStep<IAppServiceWizard
     }
 
     public async getSubWizard(wizardContext: IAppServiceWizardContext): Promise<IWizardOptions<IAppServiceWizardContext> | undefined> {
-        if (!wizardContext.appInsightsComponent && !wizardContext.appInsightsSkip) {
+        if (wizardContext.appInsightsComponent) {
+            wizardContext.valuesToMask.push(nonNullProp(wizardContext.appInsightsComponent, 'name'));
+        } else if (!wizardContext.appInsightsSkip) {
             const promptSteps: AzureWizardPromptStep<IAppServiceWizardContext>[] = [new AppInsightsNameStep()];
             LocationListStep.addStep(wizardContext, promptSteps);
             return {
                 promptSteps: promptSteps,
                 executeSteps: [new AppInsightsCreateStep()]
             };
-        } else {
-            return undefined;
         }
+
+        return undefined;
     }
 
     private async getQuickPicks(wizardContext: IAppServiceWizardContext): Promise<IAzureQuickPickItem<ApplicationInsightsComponent | undefined>[]> {
