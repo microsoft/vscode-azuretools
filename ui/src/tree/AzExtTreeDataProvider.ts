@@ -40,11 +40,11 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         return this._onTreeItemCreateEmitter.event;
     }
 
-    public getTreeItem(treeItem: AzExtTreeItem): TreeItem {
+    public getTreeItem(treeItem: AzExtTreeItem & { uniqueFullId?: string }): TreeItem {
         return {
             label: treeItem.label,
             description: treeItem.effectiveDescription,
-            id: treeItem.fullId,
+            id: treeItem.uniqueFullId || treeItem.fullId,
             collapsibleState: treeItem.collapsibleState,
             contextValue: treeItem.contextValue,
             iconPath: treeItem.effectiveIconPath,
@@ -57,7 +57,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         };
     }
 
-    public async getChildren(arg?: AzExtParentTreeItem): Promise<AzExtTreeItem[]> {
+    public async getChildren(arg?: AzExtParentTreeItem): Promise<(AzExtTreeItem & { uniqueFullId?: string })[]> {
         try {
             return <AzExtTreeItem[]>await callWithTelemetryAndErrorHandling('AzureTreeDataProvider.getChildren', async (context: types.IActionContext) => {
                 context.errorHandling.suppressDisplay = true;
@@ -78,10 +78,23 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                 const hasMoreChildren: boolean = treeItem.hasMoreChildrenImpl();
                 context.telemetry.properties.hasMoreChildren = String(hasMoreChildren);
 
-                const result: AzExtTreeItem[] = [];
+                const result: (AzExtTreeItem & { uniqueFullId?: string })[] = [];
                 const duplicateChildren: AzExtTreeItem[] = [];
                 for (const child of children) {
-                    result.some(c => c.fullId === child.fullId) ? duplicateChildren.push(child) : result.push(child);
+                    let shouldPushChild: boolean = true;
+                    for (const resultChild of result) {
+                        if (child.fullId === resultChild.fullId) {
+                            if (child.contextValue === resultChild.contextValue) {
+                                duplicateChildren.push(child);
+                            } else {
+                                result.push(Object.assign(child, { uniqueFullId: `${child.fullId}-${child.contextValue}` }));
+                            }
+                            shouldPushChild = false;
+                            break;
+                        }
+                    }
+
+                    shouldPushChild && result.push(child);
                 }
 
                 result.push(...duplicateChildren.map(c => {
