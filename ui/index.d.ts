@@ -616,7 +616,7 @@ export interface AzExtErrorButton extends MessageItem {
 
 export interface IErrorHandlingContext {
     /**
-     * Defaults to `false`. If true, does not display this error to the user.
+     * Defaults to `false`. If true, does not display this error to the user and does not include it in the "Report Issue" command.
      */
     suppressDisplay?: boolean;
 
@@ -629,6 +629,11 @@ export interface IErrorHandlingContext {
      * Defaults to `false`. If true, does not show the "Report Issue" button in the error notification.
      */
     suppressReportIssue?: boolean;
+
+    /**
+     * Defaults to `false`. If true, this error will be included in the "Report Issue" command regardless of `suppressDisplay`
+     */
+    forceIncludeInReportIssueCommand?: boolean;
 
     /**
      * Additional buttons to include in error notification besides "Report an Issue"
