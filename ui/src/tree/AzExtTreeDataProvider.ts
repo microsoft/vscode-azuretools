@@ -62,6 +62,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
             return <AzExtTreeItem[]>await callWithTelemetryAndErrorHandling('AzureTreeDataProvider.getChildren', async (context: types.IActionContext) => {
                 context.errorHandling.suppressDisplay = true;
                 context.errorHandling.rethrow = true;
+                context.errorHandling.forceIncludeInReportIssueCommand = true;
 
                 let treeItem: AzExtParentTreeItem;
                 if (arg) {

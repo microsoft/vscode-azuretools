@@ -121,6 +121,17 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
         }
     }
 
+    const issue: IReportableIssue = {
+        callbackId: errorContext.callbackId,
+        error: errorData,
+        issueProperties: context.errorHandling.issueProperties,
+        time: Date.now()
+    };
+
+    if (!context.errorHandling.suppressDisplay || context.errorHandling.forceIncludeInReportIssueCommand) {
+        cacheIssueForCommand(issue);
+    }
+
     if (!context.errorHandling.suppressDisplay) {
         // Always append the error to the output channel, but only 'show' the output channel for multiline errors
         ext.outputChannel.appendLog(localize('outputError', 'Error: {0}', unMaskedMessage));
@@ -134,15 +145,6 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
         }
 
         const items: MessageItem[] = [];
-
-        const issue: IReportableIssue = {
-            callbackId: errorContext.callbackId,
-            error: errorData,
-            issueProperties: context.errorHandling.issueProperties,
-            time: Date.now()
-        };
-
-        cacheIssueForCommand(issue);
         if (!context.errorHandling.suppressReportIssue) {
             items.push(DialogResponses.reportAnIssue);
         }
