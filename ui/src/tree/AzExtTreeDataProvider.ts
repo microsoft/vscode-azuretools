@@ -94,7 +94,9 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                         }
                     }
 
-                    shouldPushChild && result.push(child);
+                    if (shouldPushChild) {
+                        result.push(child);
+                    }
                 }
 
                 result.push(...duplicateChildren.map(c => {
