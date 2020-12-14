@@ -40,7 +40,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         return this._onTreeItemCreateEmitter.event;
     }
 
-    public getTreeItem(treeItem: AzExtTreeItem & { uniqueFullId?: string }): TreeItem {
+    public getTreeItem(treeItem: AzExtTreeItem): TreeItem {
         return {
             label: treeItem.label,
             description: treeItem.effectiveDescription,
@@ -57,7 +57,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         };
     }
 
-    public async getChildren(arg?: AzExtParentTreeItem): Promise<(AzExtTreeItem & { uniqueFullId?: string })[]> {
+    public async getChildren(arg?: AzExtParentTreeItem): Promise<AzExtTreeItem[]> {
         try {
             return <AzExtTreeItem[]>await callWithTelemetryAndErrorHandling('AzureTreeDataProvider.getChildren', async (context: types.IActionContext) => {
                 context.errorHandling.suppressDisplay = true;
@@ -78,25 +78,10 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                 const hasMoreChildren: boolean = treeItem.hasMoreChildrenImpl();
                 context.telemetry.properties.hasMoreChildren = String(hasMoreChildren);
 
-                const result: (AzExtTreeItem & { uniqueFullId?: string })[] = [];
+                const result: AzExtTreeItem[] = [];
                 const duplicateChildren: AzExtTreeItem[] = [];
                 for (const child of children) {
-                    let shouldPushChild: boolean = true;
-                    for (const resultChild of result) {
-                        if (child.fullId === resultChild.fullId) {
-                            if (child.contextValue === resultChild.contextValue) {
-                                duplicateChildren.push(child);
-                            } else {
-                                result.push(Object.assign(child, { uniqueFullId: `${child.fullId}-${child.contextValue}` }));
-                            }
-                            shouldPushChild = false;
-                            break;
-                        }
-                    }
-
-                    if (shouldPushChild) {
-                        result.push(child);
-                    }
+                    this.isDuplicateChild(child, result) ? duplicateChildren.push(child) : result.push(child);
                 }
 
                 result.push(...duplicateChildren.map(c => {
@@ -240,6 +225,21 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                 return undefined;
             }
         }
+    }
+
+    private isDuplicateChild(child: AzExtTreeItem, existingChildren: AzExtTreeItem[]): boolean {
+        for (const existingChild of existingChildren) {
+            if (child.fullId === existingChild.fullId) {
+                if (child.contextValue === existingChild.contextValue) {
+                    return true;
+                } else {
+                    child.uniqueFullId = `${child.fullId}-${child.contextValue}`;
+                    return false;
+                }
+            }
+        }
+
+        return false;
     }
 }
 

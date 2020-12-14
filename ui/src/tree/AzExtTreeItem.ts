@@ -25,6 +25,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     public readonly collapsibleState: TreeItemCollapsibleState | undefined;
     public readonly parent: IAzExtParentTreeItemInternal | undefined;
     public isLoadingMore: boolean;
+    public uniqueFullId?: string;
     private _temporaryDescription?: string;
     private _treeDataProvider: IAzExtTreeDataProviderInternal | undefined;
 
