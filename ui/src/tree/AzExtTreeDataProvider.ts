@@ -78,12 +78,13 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                 const hasMoreChildren: boolean = treeItem.hasMoreChildrenImpl();
                 context.telemetry.properties.hasMoreChildren = String(hasMoreChildren);
 
-                const result: AzExtTreeItem[] = [];
+                const resultMap: Map<string, AzExtTreeItem> = new Map();
                 const duplicateChildren: AzExtTreeItem[] = [];
                 for (const child of children) {
-                    this.isDuplicateChild(child, result) ? duplicateChildren.push(child) : result.push(child);
+                    this.isDuplicateChild(child, resultMap) ? duplicateChildren.push(child) : resultMap.set(child.uniqueFullId || child.fullId, child);
                 }
 
+                const result: AzExtTreeItem[] = Array.from(resultMap.values());
                 result.push(...duplicateChildren.map(c => {
                     const message: string = localize('elementWithId', 'An element with the following id already exists: {0}', c.fullId);
                     return new InvalidTreeItem(treeItem, new Error(message), { contextValue: 'azureextensionui.duplicate', label: c.label });
@@ -227,15 +228,18 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         }
     }
 
-    private isDuplicateChild(child: AzExtTreeItem, existingChildren: AzExtTreeItem[]): boolean {
-        for (const existingChild of existingChildren) {
-            if (child.fullId === existingChild.fullId) {
-                if (child.contextValue === existingChild.contextValue) {
+    private isDuplicateChild(child: AzExtTreeItem, children: Map<string, AzExtTreeItem>): boolean {
+        const existingChild: AzExtTreeItem | undefined = children.get(child.fullId);
+        if (existingChild) {
+            if (existingChild.contextValue === child.contextValue) {
+                return true;
+            } else {
+                const uniqueFullId: string = `${child.fullId}-${child.contextValue}`;
+                if (children.has(uniqueFullId)) {
+                    // A child with this `fullId` and `contextValue` already exists
                     return true;
-                } else {
-                    child.uniqueFullId = `${child.fullId}-${child.contextValue}`;
-                    return false;
                 }
+                child.uniqueFullId = uniqueFullId;
             }
         }
 
