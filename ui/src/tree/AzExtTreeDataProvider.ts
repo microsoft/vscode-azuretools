@@ -44,7 +44,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         return {
             label: treeItem.label,
             description: treeItem.effectiveDescription,
-            id: treeItem.uniqueFullId || treeItem.fullId,
+            id: treeItem.fullIdWithContext || treeItem.fullId,
             collapsibleState: treeItem.collapsibleState,
             contextValue: treeItem.contextValue,
             iconPath: treeItem.effectiveIconPath,
@@ -81,7 +81,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                 const resultMap: Map<string, AzExtTreeItem> = new Map();
                 const duplicateChildren: AzExtTreeItem[] = [];
                 for (const child of children) {
-                    this.isDuplicateChild(child, resultMap) ? duplicateChildren.push(child) : resultMap.set(child.uniqueFullId || child.fullId, child);
+                    this.isDuplicateChild(child, resultMap) ? duplicateChildren.push(child) : resultMap.set(child.fullIdWithContext || child.fullId, child);
                 }
 
                 const result: AzExtTreeItem[] = Array.from(resultMap.values());
@@ -234,12 +234,11 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
             if (existingChild.contextValue === child.contextValue) {
                 return true;
             } else {
-                const uniqueFullId: string = `${child.fullId}-${child.contextValue}`;
-                if (children.has(uniqueFullId)) {
-                    // A child with this `fullId` and `contextValue` already exists
+                const fullIdWithContext: string = `${child.fullId}-${child.contextValue}`;
+                if (children.has(fullIdWithContext)) {
                     return true;
                 }
-                child.uniqueFullId = uniqueFullId;
+                child.fullIdWithContext = fullIdWithContext;
             }
         }
 
