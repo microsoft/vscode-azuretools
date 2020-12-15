@@ -22,6 +22,10 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     public iconPath?: types.TreeItemIconPath;
     //#endregion
 
+    /**
+     * Used to prevent VS Code from erroring out on nodes with the same label, but different context values (i.e. a folder and file with the same name)
+     */
+    public fullIdWithContext?: string;
     public readonly collapsibleState: TreeItemCollapsibleState | undefined;
     public readonly parent: IAzExtParentTreeItemInternal | undefined;
     public isLoadingMore: boolean;

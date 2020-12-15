@@ -44,7 +44,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         return {
             label: treeItem.label,
             description: treeItem.effectiveDescription,
-            id: treeItem.fullId,
+            id: treeItem.fullIdWithContext || treeItem.fullId,
             collapsibleState: treeItem.collapsibleState,
             contextValue: treeItem.contextValue,
             iconPath: treeItem.effectiveIconPath,
@@ -78,12 +78,13 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                 const hasMoreChildren: boolean = treeItem.hasMoreChildrenImpl();
                 context.telemetry.properties.hasMoreChildren = String(hasMoreChildren);
 
-                const result: AzExtTreeItem[] = [];
+                const resultMap: Map<string, AzExtTreeItem> = new Map();
                 const duplicateChildren: AzExtTreeItem[] = [];
                 for (const child of children) {
-                    result.some(c => c.fullId === child.fullId) ? duplicateChildren.push(child) : result.push(child);
+                    this.isDuplicateChild(child, resultMap) ? duplicateChildren.push(child) : resultMap.set(child.fullIdWithContext || child.fullId, child);
                 }
 
+                const result: AzExtTreeItem[] = Array.from(resultMap.values());
                 result.push(...duplicateChildren.map(c => {
                     const message: string = localize('elementWithId', 'An element with the following id already exists: {0}', c.fullId);
                     return new InvalidTreeItem(treeItem, new Error(message), { contextValue: 'azureextensionui.duplicate', label: c.label });
@@ -225,6 +226,23 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                 return undefined;
             }
         }
+    }
+
+    private isDuplicateChild(child: AzExtTreeItem, children: Map<string, AzExtTreeItem>): boolean {
+        const existingChild: AzExtTreeItem | undefined = children.get(child.fullId);
+        if (existingChild) {
+            if (existingChild.contextValue === child.contextValue) {
+                return true;
+            } else {
+                const fullIdWithContext: string = `${child.fullId}-${child.contextValue}`;
+                if (children.has(fullIdWithContext)) {
+                    return true;
+                }
+                child.fullIdWithContext = fullIdWithContext;
+            }
+        }
+
+        return false;
     }
 }
 
