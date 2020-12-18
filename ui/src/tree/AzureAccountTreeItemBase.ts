@@ -8,6 +8,7 @@ import { commands, Disposable, Extension, extensions, MessageItem, ProgressLocat
 import * as types from '../../index';
 import { AzureAccount, AzureLoginStatus, AzureResourceFilter } from '../azure-account.api';
 import { UserCancelledError } from '../errors';
+import { getEnvironment, ifStack } from '../getEnvironment';
 import { localize } from '../localize';
 import { addExtensionValueToMask } from '../masking';
 import { registerEvent } from '../registerEvent';
@@ -113,6 +114,10 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
         } else {
             this._subscriptionTreeItems = await Promise.all(azureAccount.filters.map(async (filter: AzureResourceFilter) => {
                 const existingTreeItem: SubscriptionTreeItemBase | undefined = existingSubscriptions.find(ti => ti.id === filter.subscription.id);
+                let isStack = ifStack();
+                if (isStack) {
+                    getEnvironment(filter)
+                }
                 if (existingTreeItem) {
                     // Return existing treeItem (which might have many 'cached' tree items underneath it) rather than creating a brand new tree item every time
                     return existingTreeItem;
