@@ -114,9 +114,9 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
         } else {
             this._subscriptionTreeItems = await Promise.all(azureAccount.filters.map(async (filter: AzureResourceFilter) => {
                 const existingTreeItem: SubscriptionTreeItemBase | undefined = existingSubscriptions.find(ti => ti.id === filter.subscription.id);
-                let isStack = ifStack();
+                const isStack: boolean = ifStack();
                 if (isStack) {
-                    getEnvironment(filter)
+                    await getEnvironment(filter);
                 }
                 if (existingTreeItem) {
                     // Return existing treeItem (which might have many 'cached' tree items underneath it) rather than creating a brand new tree item every time
