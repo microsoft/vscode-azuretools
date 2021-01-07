@@ -32,8 +32,8 @@ interface IAzureStackSession extends AzureSession {
 
 export function ifStack(): boolean {
     try {
-        const targetAzurestackApiVersion: string | undefined = vscode.workspace.getConfiguration('azure').get('target_azurestack_api_version');
-        if (targetAzurestackApiVersion) {
+        const targetAzurestackApiProfile: boolean | undefined = vscode.workspace.getConfiguration('azure').get('target_azurestack_api_profile');
+        if (targetAzurestackApiProfile) {
             isStack = true;
             const ppe: IPPE | undefined = vscode.workspace.getConfiguration('azure').get<IPPE>('ppe');
             const resourceManagerUrl: string | undefined = ppe?.resourceManagerEndpointUrl;
