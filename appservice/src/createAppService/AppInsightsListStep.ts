@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ApplicationInsightsManagementClient } from "@azure/arm-appinsights";
-import { ApplicationInsightsComponent, ApplicationInsightsComponentListResult } from "@azure/arm-appinsights/lib/models";
+import { ApplicationInsightsComponent, ApplicationInsightsComponentListResult } from "@azure/arm-appinsights/esm/models";
 import { AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, LocationListStep } from "vscode-azureextensionui";
 import { localize } from "../localize";
 import { createAppInsightsClient } from "../utils/azureClients";

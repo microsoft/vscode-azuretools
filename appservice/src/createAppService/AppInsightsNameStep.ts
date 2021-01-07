@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ApplicationInsightsComponent, ApplicationInsightsComponentListResult } from '@azure/arm-appinsights/lib/models';
+import { ApplicationInsightsComponent, ApplicationInsightsComponentListResult } from '@azure/arm-appinsights/esm/models';
 import { AzureWizardPromptStep } from 'vscode-azureextensionui';
 import { localize } from '../localize';
 import { AppInsightsListStep, appInsightsNamingRules } from './AppInsightsListStep';
