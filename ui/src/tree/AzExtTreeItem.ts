@@ -20,6 +20,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     public commandId?: string;
     public commandArgs?: unknown[];
     public iconPath?: types.TreeItemIconPath;
+    public abstract tooltip?: string;
     //#endregion
 
     /**

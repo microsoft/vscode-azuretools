@@ -182,6 +182,7 @@ export declare abstract class AzExtTreeItem {
      */
     public commandArgs?: unknown[];
     public abstract contextValue: string;
+    public abstract tooltip?: string;
     //#endregion
 
     /**
