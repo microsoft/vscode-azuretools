@@ -54,7 +54,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                 // tslint:disable-next-line: strict-boolean-expressions
                 arguments: treeItem.commandArgs || [treeItem]
             } : undefined,
-            tooltip: treeItem.tooltip,
+            tooltip: treeItem.tooltip
         };
     }
 
