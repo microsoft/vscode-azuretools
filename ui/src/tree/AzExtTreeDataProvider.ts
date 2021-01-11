@@ -63,7 +63,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
             ...ti,
             // If `resolveTooltip` is undefined we shouldn't be here anyway, but we'll fall back to the item's tooltip if this does happen
             tooltip: treeItem.resolveTooltip ? await treeItem.resolveTooltip() : treeItem.tooltip
-        }
+        };
     }
 
     public async getChildren(arg?: AzExtParentTreeItem): Promise<AzExtTreeItem[]> {

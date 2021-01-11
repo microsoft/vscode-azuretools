@@ -232,7 +232,7 @@ export declare abstract class AzExtTreeItem {
     public runWithTemporaryDescription(context: IActionContext, description: string, callback: () => Promise<void>): Promise<void>;
 
     /**
-     * If implemented, resolves the tooltip at the time of hovering. Otherwise, the `tooltip` property is used
+     * If implemented, resolves the tooltip at the time of hovering, and the value of the `tooltip` property is ignored. Otherwise, the `tooltip` property is used.
      */
     public resolveTooltip?(): Promise<string>;
 }
