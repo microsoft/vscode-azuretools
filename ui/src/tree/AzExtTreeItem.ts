@@ -76,6 +76,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     public refreshImpl?(context: types.IActionContext): Promise<void>;
     public isAncestorOfImpl?(contextValue: string | RegExp): boolean;
     public deleteTreeItemImpl?(deleteTreeItemImpl: types.IActionContext): Promise<void>;
+    public resolveTooltip?(): Promise<string>;
     //#endregion
 
     public async refresh(context: types.IActionContext): Promise<void> {

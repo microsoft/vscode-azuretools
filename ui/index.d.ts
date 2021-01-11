@@ -230,6 +230,11 @@ export declare abstract class AzExtTreeItem {
      * Displays a 'Loading...' icon and temporarily changes the item's description while `callback` is being run
      */
     public runWithTemporaryDescription(context: IActionContext, description: string, callback: () => Promise<void>): Promise<void>;
+
+    /**
+     * If implemented, resolves the tooltip at the time of hovering. Otherwise, the `tooltip` property is used
+     */
+    public resolveTooltip?(): Promise<string>;
 }
 
 export interface IGenericTreeItemOptions {
