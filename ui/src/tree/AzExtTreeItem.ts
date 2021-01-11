@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { TreeItemCollapsibleState } from 'vscode';
+import { MarkdownString, TreeItemCollapsibleState } from 'vscode';
 import * as types from '../../index';
 import { NotImplementedError } from '../errors';
 import { localize } from '../localize';
@@ -20,7 +20,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     public commandId?: string;
     public commandArgs?: unknown[];
     public iconPath?: types.TreeItemIconPath;
-    public abstract tooltip?: string;
+    public tooltip?: string | MarkdownString;
     //#endregion
 
     /**
