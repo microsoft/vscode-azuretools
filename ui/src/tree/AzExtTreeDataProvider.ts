@@ -62,8 +62,8 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         if (treeItem.resolveTooltip) {
             ti.tooltip = await treeItem.resolveTooltip();
         }
+
         return ti;
-        };
     }
 
     public async getChildren(arg?: AzExtParentTreeItem): Promise<AzExtTreeItem[]> {
