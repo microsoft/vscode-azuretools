@@ -53,8 +53,17 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                 title: '',
                 // tslint:disable-next-line: strict-boolean-expressions
                 arguments: treeItem.commandArgs || [treeItem]
-            } : undefined
+            } : undefined,
+            tooltip: treeItem.resolveTooltip ? undefined : treeItem.tooltip // If `resolveTooltip` is defined, return undefined here, so that `resolveTreeItem` and `resolveTooltip` get used
         };
+    }
+
+    public async resolveTreeItem(ti: TreeItem, treeItem: AzExtTreeItem): Promise<TreeItem> {
+        if (treeItem.resolveTooltip) {
+            ti.tooltip = await treeItem.resolveTooltip();
+        }
+
+        return ti;
     }
 
     public async getChildren(arg?: AzExtParentTreeItem): Promise<AzExtTreeItem[]> {

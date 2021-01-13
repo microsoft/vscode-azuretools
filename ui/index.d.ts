@@ -176,6 +176,7 @@ export declare abstract class AzExtTreeItem {
     public description?: string;
     public iconPath?: TreeItemIconPath;
     public commandId?: string;
+    public tooltip?: string;
 
     /**
      * The arguments to pass in when executing `commandId`. If not specified, this tree item will be used.
@@ -229,6 +230,11 @@ export declare abstract class AzExtTreeItem {
      * Displays a 'Loading...' icon and temporarily changes the item's description while `callback` is being run
      */
     public runWithTemporaryDescription(context: IActionContext, description: string, callback: () => Promise<void>): Promise<void>;
+
+    /**
+     * If implemented, resolves the tooltip at the time of hovering, and the value of the `tooltip` property is ignored. Otherwise, the `tooltip` property is used.
+     */
+    public resolveTooltip?(): Promise<string>;
 }
 
 export interface IGenericTreeItemOptions {
