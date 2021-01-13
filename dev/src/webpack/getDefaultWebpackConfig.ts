@@ -28,9 +28,6 @@ verbosityMap.set('normal', 1);
 verbosityMap.set('debug', 2);
 
 const defaultExternalNodeModules: string[] = [
-    // Electron fork depends on file at location of original source
-    'vscode-languageclient',
-
     // contain dynamically-loaded binaries
     'clipboardy',
     'opn'
