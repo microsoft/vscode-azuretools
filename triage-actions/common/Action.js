@@ -17,7 +17,7 @@ class Action {
         var _a;
         try {
             const token = utils_1.getRequiredInput('token');
-            const readonly = !!core_1.getInput('readonly');
+            const readonly = !/^(false|0)?$/i.test(core_1.getInput('readonly'));
             const issue = (_a = github_1.context === null || github_1.context === void 0 ? void 0 : github_1.context.issue) === null || _a === void 0 ? void 0 : _a.number;
             if (issue) {
                 const octokit = new octokit_1.OctoKitIssue(token, github_1.context.repo, { number: issue }, { readonly });

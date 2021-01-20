@@ -19,7 +19,7 @@ export abstract class Action {
 	public async run() {
 		try {
 			const token = getRequiredInput('token')
-			const readonly = !!getInput('readonly')
+			const readonly = !/^(false|0)?$/i.test(getInput('readonly'))
 
 			const issue = context?.issue?.number
 			if (issue) {
