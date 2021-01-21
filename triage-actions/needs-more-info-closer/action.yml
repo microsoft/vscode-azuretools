@@ -19,6 +19,8 @@ inputs:
     description: Pipe-separated list of users to treat as team for purposes of closing `needs more info` issues
   pingComment:
     description: Comment to add when pinging assignee. ${assignee} and ${author} are replaced.
+  readonly:
+    description: If set, perform a dry-run
 runs:
   using: 'node12'
   main: 'index.js'
