@@ -100,6 +100,8 @@ inputs:
     required: true
   labelsToExclude:
     description: Comma-separated list of labels to exclude from automatic closure
+  staleLabel:
+    description: Optional label to apply when closing the issue
   readonly:
     description: If set, perform a dry-run
 ```

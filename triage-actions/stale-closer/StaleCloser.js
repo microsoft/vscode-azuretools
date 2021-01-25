@@ -8,7 +8,7 @@ const utils_1 = require("../common/utils");
 exports.WARN_MARKER = '<!-- cf875a82-7fe9-4a1c-aaf3-c2cc1703df6c -->'; // do not change, this is how we find the comments the bot made when writing a warning message
 exports.STALE_MARKER = '<!-- 22a51d4d-6881-47c9-8a03-83e12877da20 -->'; // do not change, this is how we find the comments the bot made when rejecting an issue
 class StaleCloser {
-    constructor(github, closeDays, closeComment, warnDays, warnComment, upvotesRequired, numCommentsOverride, candidateMilestone, labelsToExclude) {
+    constructor(github, closeDays, closeComment, warnDays, warnComment, upvotesRequired, numCommentsOverride, candidateMilestone, labelsToExclude, staleLabel) {
         this.github = github;
         this.closeDays = closeDays;
         this.closeComment = closeComment;
@@ -18,6 +18,7 @@ class StaleCloser {
         this.numCommentsOverride = numCommentsOverride;
         this.candidateMilestone = candidateMilestone;
         this.labelsToExclude = labelsToExclude;
+        this.staleLabel = staleLabel;
     }
     async run() {
         let query = `is:open is:issue is:unlocked milestone:"${this.candidateMilestone}"`;
@@ -71,6 +72,9 @@ class StaleCloser {
                 utils_1.safeLog(`Issue #${issueData.number} is stale`);
                 await issue.postComment(exports.STALE_MARKER + '\n' + this.closeComment);
                 await issue.closeIssue();
+                if (this.staleLabel) {
+                    await issue.addLabel(this.staleLabel);
+                }
             }
         }
     }

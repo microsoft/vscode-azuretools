@@ -20,6 +20,7 @@ export class StaleCloser {
 		private numCommentsOverride: number,
 		private candidateMilestone: string,
 		private labelsToExclude: string | undefined,
+		private staleLabel: string | undefined,
 	) {}
 
 	async run() {
@@ -78,6 +79,9 @@ export class StaleCloser {
 				safeLog(`Issue #${issueData.number} is stale`)
 				await issue.postComment(STALE_MARKER + '\n' + this.closeComment)
 				await issue.closeIssue()
+				if (this.staleLabel) {
+					await issue.addLabel(this.staleLabel)
+				}
 			}
 		}
 	}

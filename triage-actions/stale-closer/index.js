@@ -13,7 +13,7 @@ class Stale extends Action_1.Action {
         this.id = 'Stale';
     }
     async onTriggered(github) {
-        await new StaleCloser_1.StaleCloser(github, +utils_1.getRequiredInput('closeDays'), utils_1.getRequiredInput('closeComment'), +utils_1.getRequiredInput('warnDays'), utils_1.getRequiredInput('warnComment'), +utils_1.getRequiredInput('upvotesRequired'), +utils_1.getRequiredInput('numCommentsOverride'), utils_1.getRequiredInput('candidateMilestone'), utils_1.getInput('labelsToExclude')).run();
+        await new StaleCloser_1.StaleCloser(github, +utils_1.getRequiredInput('closeDays'), utils_1.getRequiredInput('closeComment'), +utils_1.getRequiredInput('warnDays'), utils_1.getRequiredInput('warnComment'), +utils_1.getRequiredInput('upvotesRequired'), +utils_1.getRequiredInput('numCommentsOverride'), utils_1.getRequiredInput('candidateMilestone'), utils_1.getInput('labelsToExclude'), utils_1.getInput('staleLabel')).run();
     }
 }
 new Stale().run(); // eslint-disable-line

@@ -22,6 +22,7 @@ class Stale extends Action {
 			+getRequiredInput('numCommentsOverride'),
 			getRequiredInput('candidateMilestone'),
 			getInput('labelsToExclude'),
+			getInput('staleLabel'),
 		).run()
 	}
 }

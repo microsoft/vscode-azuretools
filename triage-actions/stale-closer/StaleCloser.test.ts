@@ -47,7 +47,7 @@ const getAllComments = async (issue: TestbedIssue): Promise<Comment[]> => {
 	return comments
 }
 
-const testConfig: [number, string, number, string, number, number, string, string] = [
+const testConfig: [number, string, number, string, number, number, string, string, string] = [
 	6,
 	'staleComment',
 	2,
@@ -56,6 +56,7 @@ const testConfig: [number, string, number, string, number, number, string, strin
 	4,
 	'backlog candidates',
 	'P0,P1',
+	'out of scope',
 ]
 
 describe('StaleCloser', () => {
@@ -68,6 +69,7 @@ describe('StaleCloser', () => {
 			expect((await getAllComments(issueTestbed)).length).equal(1)
 			expect((await getAllComments(issueTestbed))[0].body).contains(WARN_MARKER)
 			expect((await getAllComments(issueTestbed))[0].body).contains('warnComment')
+			expect(issueTestbed.issueConfig.labels.length).equals(0)
 		})
 
 		it('Does not warn if the issue is closed', async () => {
@@ -146,6 +148,8 @@ describe('StaleCloser', () => {
 			expect((await getAllComments(issueTestbed))[1].body).contains(STALE_MARKER)
 			expect((await getAllComments(issueTestbed))[1].body).contains('staleComment')
 			expect(issueTestbed.issueConfig.issue.open).false
+			expect(issueTestbed.issueConfig.labels.length).equals(1)
+			expect(issueTestbed.issueConfig.labels[0]).equals('out of scope')
 		})
 
 		it('Closes issue only after the proper days have passed since warning', async () => {
