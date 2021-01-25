@@ -79,6 +79,7 @@ export class OctoKit implements GitHub {
 			reactions: (issue as any).reactions,
 			assignee: issue.assignee?.login ?? (issue as any).assignees?.[0]?.login,
 			milestoneId: issue.milestone?.number ?? null,
+			milestone: issue.milestone?.title,
 			createdAt: +new Date(issue.created_at),
 			updatedAt: +new Date(issue.updated_at),
 			closedAt: issue.closed_at ? +new Date((issue.closed_at as unknown) as string) : undefined,

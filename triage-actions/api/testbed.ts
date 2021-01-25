@@ -53,6 +53,7 @@ type TestbedIssueConfig = {
 	issue: Omit<Issue, 'labels'>
 	comments: Comment[]
 	labels: string[]
+	upvotes?: number
 }
 
 export type TestbedIssueConstructorArgs = Partial<Omit<TestbedIssueConfig, 'issue'>> & {
@@ -77,7 +78,7 @@ export class TestbedIssue extends Testbed implements GitHubIssue {
 			title: 'issue title',
 			assignee: undefined,
 			reactions: {
-				'+1': 0,
+				'+1': issueConfig.upvotes || 0,
 				'-1': 0,
 				confused: 0,
 				eyes: 0,

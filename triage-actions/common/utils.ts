@@ -8,6 +8,8 @@ import * as core from '@actions/core'
 export const getInput = (name: string) => core.getInput(name) || undefined
 export const getRequiredInput = (name: string) => core.getInput(name, { required: true })
 
+export const daysSince = (timestamp: number): number => (Date.now() - timestamp) / 1000 / 60 / 60 / 24
+
 export const daysAgoToTimestamp = (days: number): number => +new Date(Date.now() - days * 24 * 60 * 60 * 1000)
 
 export const daysAgoToHumanReadbleDate = (days: number) =>

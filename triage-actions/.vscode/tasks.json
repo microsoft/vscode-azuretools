@@ -10,7 +10,10 @@
 				"kind": "build",
 				"isDefault": true
 			},
-			"problemMatcher": []
+			"problemMatcher": [],
+			"presentation": {
+				"reveal": "silent",
+			}
 		},
 		{
 			"type": "npm",
