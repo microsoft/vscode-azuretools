@@ -70,6 +70,7 @@ export interface Issue {
 	numComments: number
 	reactions: Reactions
 	milestoneId: number | null
+	milestone?: string
 	assignee?: string
 	createdAt: number
 	updatedAt: number

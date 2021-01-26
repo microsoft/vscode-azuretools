@@ -7,6 +7,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const core = require("@actions/core");
 exports.getInput = (name) => core.getInput(name) || undefined;
 exports.getRequiredInput = (name) => core.getInput(name, { required: true });
+exports.daysSince = (timestamp) => (Date.now() - timestamp) / 1000 / 60 / 60 / 24;
 exports.daysAgoToTimestamp = (days) => +new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 exports.daysAgoToHumanReadbleDate = (days) => new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().replace(/\.\d{3}\w$/, '');
 exports.safeLog = (message, ...args) => {

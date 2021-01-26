@@ -47,7 +47,7 @@ class TestbedIssue extends Testbed {
             title: 'issue title',
             assignee: undefined,
             reactions: {
-                '+1': 0,
+                '+1': issueConfig.upvotes || 0,
                 '-1': 0,
                 confused: 0,
                 eyes: 0,

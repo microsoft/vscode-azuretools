@@ -69,6 +69,43 @@ inputs:
     description: Comment to add whenn pinging assignee. ${assignee} and ${author} are replaced.
 ```
 
+### Stale Closer
+Close issues in a backlog candidate milestone that have become stale.
+
+```yml
+inputs:
+  token:
+    description: GitHub token with issue, comment, and label read/write permissions
+    default: ${{ github.token }}
+  closeDays:
+    description: Days to wait before closing the issue
+    required: true
+  closeComment:
+    description: Comment to add upon closing the issue
+    required: true
+  warnDays:
+    description: Number of days before closing the issue to warn about it's impending closure
+    required: true
+  warnComment:
+    description: Comment when an issue is nearing automatic closure
+    required: true
+  upvotesRequired:
+    description: Number of upvotes required to prevent automatic closure
+    required: true
+  numCommentsOverride:
+    description: Number of comments required to prevent automatic closure
+    required: true
+  candidateMilestone:
+    description: Milestone with candidate issues that will be checked for automatic closure
+    required: true
+  labelsToExclude:
+    description: Comma-separated list of labels to exclude from automatic closure
+  staleLabel:
+    description: Optional label to apply when closing the issue
+  readonly:
+    description: If set, perform a dry-run
+```
+
 ## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
