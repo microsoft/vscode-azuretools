@@ -63,6 +63,11 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
             ti.tooltip = await treeItem.resolveTooltip();
         }
 
+        // If the tooltip is falsy, change it to the label--otherwise, it will be stuck on 'Loading...'
+        // (VSCode sees there's a `resolveTreeItem` method, so it tries resolving, but only replaces 'Loading...' with your tooltip if your tooltip is truthy)
+        // Label is the default behavior if tooltip is falsy, so we'll supply that
+        ti.tooltip = ti.tooltip || ti.label;
+
         return ti;
     }
 
