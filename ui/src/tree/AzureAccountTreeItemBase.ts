@@ -128,7 +128,8 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
                         subscriptionPath: nonNullProp(filter.subscription, 'id'),
                         tenantId: filter.session.tenantId,
                         userId: filter.session.userId,
-                        environment: filter.session.environment
+                        environment: filter.session.environment,
+                        isStack: filter.session.environment.name === 'AzurePPE'
                     });
                 }
             }));
