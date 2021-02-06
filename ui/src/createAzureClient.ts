@@ -55,10 +55,10 @@ function addAzExtFactories(defaultFactories: RequestPolicyFactory[]): RequestPol
     // NOTE: Factories at the end of the array are executed first, and we want these to happen before the deserialization factory
     defaultFactories.push(
         {
-            create: (nextPolicy, options) => new RemoveBOMFactory(nextPolicy, options)
+            create: (nextPolicy, options): RequestPolicy => new RemoveBOMPolicy(nextPolicy, options)
         },
         {
-            create: (nextPolicy, options) => new MissingContentTypeFactory(nextPolicy, options)
+            create: (nextPolicy, options): RequestPolicy => new MissingContentTypePolicy(nextPolicy, options)
         }
     );
     return defaultFactories;
@@ -69,7 +69,7 @@ const contentTypeName: string = 'Content-Type';
 /**
  * Removes the BOM character if it exists in bodyAsText for a json response, to prevent a parse error
  */
-class RemoveBOMFactory extends BaseRequestPolicy {
+class RemoveBOMPolicy extends BaseRequestPolicy {
     constructor(nextPolicy: RequestPolicy, requestPolicyOptions: RequestPolicyOptions) {
         super(nextPolicy, requestPolicyOptions);
     }
@@ -88,7 +88,7 @@ class RemoveBOMFactory extends BaseRequestPolicy {
  * The Azure SDK will assume "JSON" if no content-type is specified, which can cause false-positive parse errors.
  * This will be a little smarter and try to detect if it's json or generic data
  */
-class MissingContentTypeFactory extends BaseRequestPolicy {
+class MissingContentTypePolicy extends BaseRequestPolicy {
     constructor(nextPolicy: RequestPolicy, requestPolicyOptions: RequestPolicyOptions) {
         super(nextPolicy, requestPolicyOptions);
     }
