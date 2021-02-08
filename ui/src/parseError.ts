@@ -6,6 +6,7 @@
 import * as htmlToText from 'html-to-text';
 import { IParsedError } from '../index';
 import { localize } from './localize';
+import { parseJson } from './utils/parseJson';
 
 // tslint:disable:no-unsafe-any
 // tslint:disable:no-any
@@ -98,7 +99,7 @@ function convertCodeToError(errorType: string | undefined): string | undefined {
 function parseIfJson(o: any): any {
     if (typeof o === 'string' && o.indexOf('{') >= 0) {
         try {
-            return JSON.parse(o);
+            return parseJson(o);
         } catch (err) {
             // ignore
         }
@@ -157,7 +158,7 @@ function unpackErrorFromField(error: any, prop: string): any {
     if (field) {
         if (typeof field === 'string' && field.indexOf('{') >= 0) {
             try {
-                field = JSON.parse(field);
+                field = parseJson(field);
             } catch (err) {
                 // Ignore
             }
