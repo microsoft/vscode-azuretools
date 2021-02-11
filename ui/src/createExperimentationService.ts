@@ -89,6 +89,11 @@ class ExperimentationTelemetry implements tas.IExperimentationTelemetry {
 
         Object.assign(properties, this.sharedProperties);
 
+        // Treat the TAS query event as activation
+        if (/query-expfeature/i.test(eventName)) {
+            properties.isActivationEvent = 'true';
+        }
+
         this.telemetryReporter.sendTelemetryErrorEvent(eventName, properties);
     }
 
