@@ -12,7 +12,6 @@ interface IMenu {
     group?: string;
 }
 
-// tslint:disable:typedef
 interface IPackage {
     name?: string;
     activationEvents?: string[];
@@ -38,10 +37,8 @@ interface IPackage {
         };
     };
 }
-// tslint:enable:typedef
 
 function emptyIfUndefined<T extends {}>(value: T | undefined): T {
-    // tslint:disable-next-line:strict-boolean-expressions no-object-literal-type-assertion
     return value || <T>{};
 }
 
@@ -50,7 +47,6 @@ function emptyIfUndefined<T extends {}>(value: T | undefined): T {
  *
  * @param packageJson The extension's package.json contents as an object
  */
-// tslint:disable:max-func-body-length
 export function addPackageLintSuites(
     getExtensionContext: () => {},
     getCommands: () => Promise<string[]>,
@@ -59,7 +55,6 @@ export function addPackageLintSuites(
 ): void {
     const packageJson: IPackage = <IPackage>packageJsonAsObject;
 
-    //tslint:disable-next-line:strict-boolean-expressions
     const commandsRegisteredButNotInPackage: string[] = options.commandsRegisteredButNotInPackage || [];
 
     let _registeredCommands: string[] | undefined;
@@ -78,11 +73,8 @@ export function addPackageLintSuites(
     }
 
     const activationEvents: string[] = emptyIfUndefined(packageJson.activationEvents);
-    // tslint:disable-next-line:typedef
     const contributes = emptyIfUndefined(packageJson.contributes);
-    // tslint:disable-next-line:typedef
     const views = emptyIfUndefined(contributes.views);
-    // tslint:disable-next-line:typedef
     const commands = emptyIfUndefined(contributes.commands);
 
     // All commands should start with the same prefix - get prefix from first command
@@ -96,7 +88,6 @@ export function addPackageLintSuites(
         const predefinedIds: string[] = [];
 
         for (const viewContainerName of Object.keys(views)) {
-            // tslint:disable-next-line:typedef
             const viewContainer = views[viewContainerName];
             for (const view of viewContainer) {
                 // vscode automatic creates focus commands for each view
@@ -107,9 +98,8 @@ export function addPackageLintSuites(
         return predefinedIds;
     }
 
-    suite('Activation events for views', async () => {
+    suite('Activation events for views', () => {
         for (const viewContainerName of Object.keys(views)) {
-            // tslint:disable-next-line:typedef
             const viewContainer = views[viewContainerName];
             for (const view of viewContainer) {
                 const activationEvent: string = `onView:${view.id}`;
@@ -120,7 +110,7 @@ export function addPackageLintSuites(
         }
     });
 
-    suite('Activation events for commands in package.json', async () => {
+    suite('Activation events for commands in package.json', () => {
         for (const cmd of commands) {
             const cmdId: string = cmd.command;
             const activationEvent: string = `onCommand:${cmdId}`;
@@ -142,7 +132,6 @@ export function addPackageLintSuites(
                 test(event, async () => {
                     const registeredCommands: string[] = await getRegisteredCommands();
                     assert(registeredCommands.some((c: string) => c === cmdId), `${event} is in package.json but ${cmdId} wasn't registered with vscode`);
-                    // tslint:disable-next-line:typedef
                     assert(commands.some(cmd => cmd.command === cmdId), `${event} is in package.json but ${cmdId} wasn't a command in package.json`);
                 });
             }
@@ -156,7 +145,6 @@ export function addPackageLintSuites(
             const activationEvent: string = `onCommand:${cmdId}`;
 
             if (cmdId.startsWith(extensionPrefixWithPeriod)) {
-                // tslint:disable-next-line:typedef
                 const isInPackage: boolean = commands.some(c => c.command === cmdId);
                 if (commandsRegisteredButNotInPackage.some((c: string) => c === cmdId)) {
                     assert(!isInPackage, `${cmdId} is in commandsRegisteredButNotInPackage but was found in package.json`);

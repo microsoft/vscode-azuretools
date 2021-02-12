@@ -40,7 +40,6 @@ export function excludeNodeModulesAndDependencies(
     const copyEntries: CopyEntry[] = getNodeModuleCopyEntries(projectRoot, externalModulesClosure);
 
     // Tell webpack to not place our modules into bundles
-    // tslint:disable-next-line:strict-boolean-expressions
     webpackConfig.externals = webpackConfig.externals || {};
     log('Excluded node modules (external node modules plus dependencies)', externalModulesClosure);
     Object.assign(webpackConfig.externals, excludeEntries);
@@ -48,7 +47,6 @@ export function excludeNodeModulesAndDependencies(
     // Tell webpack to copy the given modules' sources into dist\node_modules
     //   so they can be found through normal require calls.
     // NOTE: copy-webpack-plugin doesn't work for this. See https://github.com/microsoft/vscode-azuretools/pull/403 and https://github.com/webpack-contrib/copy-webpack-plugin/issues/35
-    // tslint:disable-next-line: strict-boolean-expressions
     webpackConfig.plugins = webpackConfig.plugins || [];
     webpackConfig.plugins.push(new FilemanagerWebpackPlugin(
         {
@@ -64,13 +62,12 @@ export function excludeNodeModulesAndDependencies(
  */
 export function getNodeModulesDependencyClosure(packageLock: PackageLock, moduleNames: string[]): string[] {
     const closure: Set<string> = new Set<string>();
-    // tslint:disable-next-line:strict-boolean-expressions no-object-literal-type-assertion
     const dependencies: { [key: string]: DependencyEntry | undefined } = packageLock.dependencies || <{ [key: string]: DependencyEntry }>{};
 
     for (const moduleName of moduleNames) {
         if (dependencies[moduleName]) {
             closure.add(moduleName);
-            // tslint:disable-next-line:no-non-null-assertion
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             const subdeps: string[] = getDependenciesFromEntry(dependencies[moduleName]!, packageLock);
             for (const subdep of subdeps) {
                 closure.add(subdep);
@@ -105,16 +102,14 @@ function getDependenciesFromEntry(depEntry: DependencyEntry, packageLock: Packag
 
     const closure: Set<string> = new Set<string>();
 
-    // tslint:disable-next-line:strict-boolean-expressions no-object-literal-type-assertion
     const dependencies: { [key: string]: DependencyEntry | undefined } = depEntry.dependencies || <{ [key: string]: DependencyEntry }>{};
-    // tslint:disable-next-line:no-object-literal-type-assertion strict-boolean-expressions
     const requires: { [key: string]: string } = depEntry.requires || <{ [key: string]: string }>{};
 
     // Handle dependencies
     for (const moduleName of Object.keys(dependencies)) {
         closure.add(moduleName);
 
-        // tslint:disable-next-line:no-non-null-assertion
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const dependenciesSubdeps: string[] = getDependenciesFromEntry(dependencies[moduleName]!, packageLock);
         for (const subdep of dependenciesSubdeps) {
             closure.add(subdep);

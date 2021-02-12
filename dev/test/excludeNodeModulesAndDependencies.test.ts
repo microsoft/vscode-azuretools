@@ -3,8 +3,6 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// tslint:disable:max-func-body-length no-multiline-string indent object-literal-key-quotes typedef no-require-imports
-
 import * as assert from 'assert';
 import FileManagerWebpackPlugin = require('filemanager-webpack-plugin');
 import * as os from 'os';
@@ -2500,7 +2498,6 @@ suite('excludeNodeModulesAndDependencies', () => {
             }
         );
 
-        // tslint:disable-next-line:strict-boolean-expressions
         assert.equal(config.plugins && config.plugins.length, 1);
     });
 
@@ -2526,7 +2523,6 @@ suite('excludeNodeModulesAndDependencies', () => {
             }
         );
 
-        // tslint:disable-next-line:strict-boolean-expressions
         assert.equal(config.plugins && config.plugins.length, 2);
     });
 });

@@ -106,14 +106,14 @@ export class TestUserInput implements types.TestUserInput {
 
     public showWarningMessage<T extends vscodeTypes.MessageItem>(message: string, ...items: T[]): Promise<T>;
     public showWarningMessage<T extends vscodeTypes.MessageItem>(message: string, options: vscodeTypes.MessageOptions, ...items: T[]): Promise<vscodeTypes.MessageItem>;
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public async showWarningMessage<T extends vscodeTypes.MessageItem>(message: string, ...args: any[]): Promise<T> {
         let result: T;
         const input: string | RegExp | TestInput | undefined = this._inputs.shift();
         if (input === undefined) {
             throw new Error(`No more inputs left for call to showWarningMessage. Message: ${message}`);
         } else if (typeof input === 'string') {
-            // tslint:disable-next-line:no-unsafe-any
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             const matchingItem: T | undefined = args.find((item: T) => item.title === input);
             if (matchingItem) {
                 result = matchingItem;
