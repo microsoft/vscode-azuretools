@@ -9,3 +9,5 @@ out/test/
 .vscode-test/
 gulpfile.js
 test-results.xml
+.eslintignore
+.eslintrc.js
