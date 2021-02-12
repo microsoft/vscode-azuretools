@@ -19,7 +19,7 @@ export interface ILogStream extends vscode.Disposable {
     outputChannel: vscode.OutputChannel;
 }
 
-const logStreams: Map<string, ILogStream> = new Map();
+const logStreams: Map<string, ILogStream> = new Map<string, ILogStream>();
 
 function getLogStreamId(client: ISimplifiedSiteClient, logsPath: string): string {
     return `${client.id}${logsPath}`;
@@ -30,8 +30,7 @@ export async function startStreamingLogs(client: ISimplifiedSiteClient, verifyLo
     const logStream: ILogStream | undefined = logStreams.get(logStreamId);
     if (logStream && logStream.isConnected) {
         logStream.outputChannel.show();
-        // tslint:disable-next-line:no-floating-promises
-        ext.ui.showWarningMessage(localize('logStreamAlreadyActive', 'The log-streaming service for "{0}" is already active.', logStreamLabel));
+        void ext.ui.showWarningMessage(localize('logStreamAlreadyActive', 'The log-streaming service for "{0}" is already active.', logStreamLabel));
         return logStream;
     } else {
         await verifyLoggingEnabled();
@@ -45,20 +44,18 @@ export async function startStreamingLogs(client: ISimplifiedSiteClient, verifyLo
 
         return await new Promise((onLogStreamCreated: (ls: ILogStream) => void): void => {
             // Intentionally setting up a separate telemetry event and not awaiting the result here since log stream is a long-running action
-            // tslint:disable-next-line:no-floating-promises
-            callWithTelemetryAndErrorHandling('appService.streamingLogs', async (context: IActionContext) => {
+            void callWithTelemetryAndErrorHandling('appService.streamingLogs', async (context: IActionContext) => {
                 context.errorHandling.suppressDisplay = true;
                 let timerId: NodeJS.Timer | undefined;
                 if (client.isFunctionApp) {
                     // For Function Apps, we have to ping "/admin/host/status" every minute for logging to work
                     // https://github.com/Microsoft/vscode-azurefunctions/issues/227
                     await pingFunctionApp(client);
+                    // eslint-disable-next-line @typescript-eslint/no-misused-promises
                     timerId = setInterval(async () => await pingFunctionApp(client), 60 * 1000);
                 }
 
-                await new Promise((onLogStreamEnded: () => void, reject: (err: Error) => void): void => {
-                    let newLogStream: ILogStream;
-
+                await new Promise<void>((onLogStreamEnded: () => void, reject: (err: Error) => void): void => {
                     const logsRequest: request.Request = request(`${client.kuduUrl}/api/logstream/${logsPath}`, {
                         auth: {
                             user: creds.publishingUserName,
@@ -69,7 +66,7 @@ export async function startStreamingLogs(client: ISimplifiedSiteClient, verifyLo
                         }
                     });
 
-                    newLogStream = {
+                    const newLogStream: ILogStream = {
                         dispose: (): void => {
                             logsRequest.removeAllListeners();
                             logsRequest.destroy();
@@ -79,7 +76,7 @@ export async function startStreamingLogs(client: ISimplifiedSiteClient, verifyLo
                             }
                             outputChannel.appendLine(localize('logStreamDisconnected', 'Disconnected from log-streaming service.'));
                             newLogStream.isConnected = false;
-                            onLogStreamEnded();
+                            void onLogStreamEnded();
                         },
                         isConnected: true,
                         outputChannel: outputChannel

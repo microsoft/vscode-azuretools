@@ -331,6 +331,5 @@ export class SiteClient implements ISimplifiedSiteClient {
  * The type in the sdk doesn't seem to be accurate
  */
 export interface IFunctionKeys extends Models.WebAppsListFunctionKeysResponse {
-    // tslint:disable-next-line: no-reserved-keywords
     default?: string;
 }

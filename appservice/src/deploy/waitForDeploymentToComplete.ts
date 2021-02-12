@@ -46,7 +46,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
         });
 
         let lastLogTimeForThisPoll: Date | undefined;
-        // tslint:disable-next-line: no-constant-condition
+        // eslint-disable-next-line no-constant-condition
         while (true) {
             const newEntry: KuduModels.LogEntry | undefined = logEntries.pop();
             if (!newEntry) {
@@ -81,7 +81,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
                 const message: string = localize('deploymentFailed', 'Deployment to "{0}" failed.', client.fullName);
                 const viewOutput: string = localize('viewOutput', 'View Output');
                 // don't wait
-                window.showErrorMessage(message, viewOutput).then(result => {
+                void window.showErrorMessage(message, viewOutput).then(result => {
                     if (result === viewOutput) {
                         ext.outputChannel.show();
                     }
@@ -109,7 +109,7 @@ async function tryGetLatestDeployment(context: IActionContext, kuduClient: KuduC
     if (permanentId) {
         // Use "permanentId" to find the deployment during its "permanent" phase
         deployment = await retryKuduCall(context, 'getResult', async () => {
-            // tslint:disable-next-line: no-non-null-assertion
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             return await kuduClient.deployment.getResult(permanentId!);
         });
     } else if (expectedId) {
@@ -138,7 +138,7 @@ async function tryGetLatestDeployment(context: IActionContext, kuduClient: KuduC
             return await kuduClient.deployment.getDeployResults();
         });
         deployment = deployments
-            // tslint:disable-next-line:no-non-null-assertion
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             .filter(deployResult => deployResult.startTime && deployResult.startTime >= initialStartTime!)
             .sort((a, b) => nonNullProp(b, 'startTime').valueOf() - nonNullProp(a, 'startTime').valueOf())
             .shift();

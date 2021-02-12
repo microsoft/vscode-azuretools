@@ -47,5 +47,3 @@ export * from './tree/LogFilesTreeItem';
 export * from './tree/SiteFilesTreeItem';
 export * from './tryGetSiteResource';
 export * from './TunnelProxy';
-
-// Adding a comment here otherwise "source.organizeImports" will cause duplicate blank lines and tslint will complain

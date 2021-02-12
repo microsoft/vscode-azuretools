@@ -28,6 +28,7 @@ export async function getFile(client: ISimplifiedSiteClient, filePath: string): 
 
 export async function listFiles(client: ISimplifiedSiteClient, filePath: string): Promise<ISiteFileMetadata[]> {
     const response: HttpOperationResponse = await getFsResponse(client, filePath);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return Array.isArray(response.parsedBody) ? response.parsedBody : [];
 }
 

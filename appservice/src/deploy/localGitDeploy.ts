@@ -52,7 +52,7 @@ export async function localGitDeploy(client: ISimplifiedSiteClient, options: loc
                 await tryPushAndWaitForDeploymentToComplete();
 
             } catch (err) {
-                // tslint:disable-next-line:no-unsafe-any
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
                 if (err.message.indexOf('spawn git ENOENT') >= 0) {
                     const installString: string = localize('Install', 'Install');
                     const input: string | undefined = await vscode.window.showErrorMessage(localize('GitRequired', 'Git must be installed to use Local Git Deploy.'), installString);
@@ -61,7 +61,7 @@ export async function localGitDeploy(client: ISimplifiedSiteClient, options: loc
                     }
                     context.telemetry.properties.gitNotInstalled = 'true';
                     return undefined;
-                    // tslint:disable-next-line:no-unsafe-any
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
                 } else if (err.message.indexOf('error: failed to push') >= 0) {
                     const forcePushMessage: vscode.MessageItem = { title: localize('forcePush', 'Force Push') };
                     const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging.');
@@ -86,12 +86,11 @@ export async function localGitDeploy(client: ISimplifiedSiteClient, options: loc
                     }
                     const commitId: string = (await localGit.log()).latest.hash;
 
-                    await new Promise((resolve: () => void, reject: (error: Error) => void): void => {
+                    await new Promise<void>((resolve: () => void, reject: (error: Error) => void): void => {
 
                         const pushOptions: git.Options = forcePush ? { '-f': null } : {};
 
-                        localGit.push(remote, `HEAD:${options.branch ?? 'master'}`, pushOptions).catch(async (error) => {
-                            // tslint:disable-next-line:no-unsafe-any
+                        localGit.push(remote, `HEAD:${options.branch ?? 'master'}`, pushOptions).catch((error) => {
                             reject(error);
                             tokenSource.cancel();
                         });

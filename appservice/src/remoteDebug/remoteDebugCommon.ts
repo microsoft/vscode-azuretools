@@ -43,7 +43,7 @@ export async function setRemoteDebug(isRemoteDebuggingToBeEnabled: boolean, conf
     } else {
         // Update not needed
         if (noopMessage) {
-            vscode.window.showWarningMessage(noopMessage);
+            void vscode.window.showWarningMessage(noopMessage);
         }
     }
 }

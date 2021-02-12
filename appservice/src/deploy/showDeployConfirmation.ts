@@ -30,12 +30,12 @@ export async function showDeployConfirmation(context: IDeployContext, client: Si
 
     if (result === resetDefault) {
         const settingsPath: string = join(context.workspaceFolder.uri.fsPath, '.vscode', 'settings.json');
-        window.showTextDocument(Uri.file(settingsPath));
+        void window.showTextDocument(Uri.file(settingsPath));
         await updateWorkspaceSetting(context.defaultAppSetting, '', context.workspaceFolder.uri.fsPath, ext.prefix);
 
         // If resetDefault button was clicked we ask what and where to deploy again
         // don't wait
-        commands.executeCommand(deployCommandId);
+        void commands.executeCommand(deployCommandId);
         context.telemetry.properties.cancelStep = 'resetDefault';
         throw new UserCancelledError();
     }

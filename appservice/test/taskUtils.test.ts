@@ -321,7 +321,6 @@ namespace tasks {
         export const install = <Task><unknown>{
             definition: {
                 type: "shell",
-                // tslint:disable-next-line: no-invalid-template-strings
                 id: "shell,${config:azureFunctions.pythonVenv}/bin/python -m pip install -r requirements.txt,"
             },
             scope: {

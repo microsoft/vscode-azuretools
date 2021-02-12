@@ -92,14 +92,14 @@ export class DeploymentTreeItem extends AzExtTreeItem {
         await window.withProgress({ location: ProgressLocation.Notification, title: redeploying }, async (): Promise<void> => {
             ext.outputChannel.appendLog(localize('reployingOutput', 'Redeploying commit "{0}" to "{1}"...', this.id, this.parent.client.fullName), { resourceName: this.parent.client.fullName });
             const kuduClient: KuduClient = await this.parent.client.getKuduClient();
-            // tslint:disable-next-line:no-floating-promises
-            kuduClient.deployment.deploy(this.id);
+            void kuduClient.deployment.deploy(this.id);
 
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             const refreshingInteveral: NodeJS.Timer = setInterval(async () => { await this.refresh(context); }, 1000); /* the status of the label changes during deployment so poll for that*/
             try {
                 await waitForDeploymentToComplete(context, this.parent.client, this.id);
                 await this.parent.refresh(context); /* refresh entire node because active statuses has changed */
-                window.showInformationMessage(redeployed);
+                void window.showInformationMessage(redeployed);
                 ext.outputChannel.appendLog(redeployed);
             } finally {
                 clearInterval(refreshingInteveral);
@@ -172,7 +172,7 @@ export class DeploymentTreeItem extends AzExtTreeItem {
         let message: string = nonNullProp(deployResult, 'message');
         try {
             const messageJSON: { message?: string } = <{ message?: string }>JSON.parse(message);
-            if (!!messageJSON.message) {
+            if (messageJSON.message) {
                 message = messageJSON.message;
             }
         } catch {
