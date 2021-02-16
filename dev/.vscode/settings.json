@@ -8,7 +8,8 @@
         "out": true,
         "**/node_modules": true
     },
-    "tslint.autoFixOnSave": true,
-    "tslint.ignoreDefinitionFiles": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": true
+    },
     "typescript.tsdk": "node_modules\\typescript\\lib"
 }

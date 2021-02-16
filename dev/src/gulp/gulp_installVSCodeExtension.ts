@@ -7,7 +7,6 @@ import * as fse from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
 
-// tslint:disable-next-line: export-name
 export async function gulp_installVSCodeExtension(publisherId: string, extensionName: string, useInsiders: boolean = false): Promise<void> {
     const extensionId: string = `${publisherId}.${extensionName}`;
     const vsCodeDir: string = useInsiders ? '.vscode-insiders' : '.vscode';
