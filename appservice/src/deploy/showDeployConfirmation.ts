@@ -30,8 +30,8 @@ export async function showDeployConfirmation(context: IDeployContext, client: Si
 
     if (result === resetDefault) {
         const settingsPath: string = join(context.workspaceFolder.uri.fsPath, '.vscode', 'settings.json');
-        void window.showTextDocument(Uri.file(settingsPath));
         await updateWorkspaceSetting(context.defaultAppSetting, '', context.workspaceFolder.uri.fsPath, ext.prefix);
+        await window.showTextDocument(Uri.file(settingsPath));
 
         // If resetDefault button was clicked we ask what and where to deploy again
         // don't wait
