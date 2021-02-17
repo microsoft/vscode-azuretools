@@ -62,7 +62,6 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
     public async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzExtTreeItem[]> {
         this._settings = await this.client.listApplicationSettings();
         const treeItems: AppSettingTreeItem[] = [];
-        // tslint:disable-next-line:strict-boolean-expressions
         const properties: { [name: string]: string } = this._settings.properties || {};
         await Promise.all(Object.keys(properties).map(async (key: string) => {
             const appSettingTreeItem: AppSettingTreeItem = await AppSettingTreeItem.createAppSettingTreeItem(this, this.client, key, properties[key]);
@@ -76,7 +75,7 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
 
     public async editSettingItem(oldKey: string, newKey: string, value: string, context: IActionContext): Promise<void> {
         // make a deep copy so settings are not cached if there's a failure
-        // tslint:disable-next-line: no-unsafe-any
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const settings: WebSiteManagementModels.StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings(context)));
         if (settings.properties) {
             if (oldKey !== newKey) {
@@ -90,7 +89,7 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
 
     public async deleteSettingItem(key: string, context: IActionContext): Promise<void> {
         // make a deep copy so settings are not cached if there's a failure
-        // tslint:disable-next-line: no-unsafe-any
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const settings: WebSiteManagementModels.StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings(context)));
 
         if (settings.properties) {
@@ -102,7 +101,7 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<AzExtTreeItem> {
         // make a deep copy so settings are not cached if there's a failure
-        // tslint:disable-next-line: no-unsafe-any
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const settings: WebSiteManagementModels.StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings(context)));
         const newKey: string = await context.ui.showInputBox({
             prompt: 'Enter new app setting name',

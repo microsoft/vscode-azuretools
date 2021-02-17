@@ -16,7 +16,7 @@ export class GitHubRepoListStep extends AzureWizardPromptStep<IConnectToGitHubWi
         const picksCache: ICachedQuickPicks<gitHubRepoData> = { picks: [] };
 
         let url: string = nonNullProp(context, 'orgData').repos_url;
-        // tslint:disable-next-line: no-constant-condition
+        // eslint-disable-next-line no-constant-condition
         while (true) {
             repoData = (await context.ui.showQuickPick(this.getRepositories(context, picksCache, url), { placeHolder })).data;
             if (typeof repoData === 'string') {

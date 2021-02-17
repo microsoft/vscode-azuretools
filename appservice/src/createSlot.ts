@@ -31,9 +31,9 @@ export async function createSlot(root: ISiteTreeRoot, existingSlots: AzureTreeIt
     };
 
     const configurationSource: SiteClient | undefined = await chooseConfigurationSource(context, root, existingSlots);
-    if (!!configurationSource) {
+    if (configurationSource) {
         const appSettings: WebSiteManagementModels.NameValuePair[] = await parseAppSettings(configurationSource);
-        // tslint:disable-next-line:no-non-null-assertion
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         newDeploymentSlot.siteConfig!.appSettings = appSettings;
     }
 
@@ -86,7 +86,6 @@ async function chooseConfigurationSource(context: IActionContext, root: ISiteTre
         const prodSiteClient: SiteClient = root.client;
         // add the production slot itself
         configurationSources.push({
-            // tslint:disable-next-line:no-non-null-assertion
             label: prodSiteClient.fullName,
             data: prodSiteClient
         });

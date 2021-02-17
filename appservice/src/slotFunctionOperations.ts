@@ -15,7 +15,7 @@ export async function listFunctionsSlot(subscription: ISubscriptionContext, id: 
     const response: HttpOperationResponse = await client.sendRequest({ method: 'GET', url: getUrlPath(id) });
     const rawResult: IRawFunctionEnvelopeCollection = <IRawFunctionEnvelopeCollection>response.parsedBody;
     const result: {}[] = rawResult.value.map(convertRawResource);
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
     (<any>result).nextLink = convertPropertyValue(rawResult.nextLink);
     return result;
 }
@@ -49,7 +49,6 @@ interface IRawFunctionEnvelopeCollection {
 interface IRawAzureResource {
     properties: { [key: string]: string };
     name: string;
-    // tslint:disable-next-line: no-reserved-keywords
     type: string;
     id: string;
     location: string;
@@ -76,7 +75,7 @@ function convertRawResource(resource: IRawAzureResource): { [key: string]: strin
  * Converts property name like "function_app_id" to "functionAppId"
  */
 function convertPropertyName(name: string): string {
-    // tslint:disable-next-line: no-constant-condition
+    // eslint-disable-next-line no-constant-condition
     while (true) {
         const match: RegExpMatchArray | null = /_([a-z])/g.exec(name);
         if (match) {

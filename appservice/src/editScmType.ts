@@ -20,7 +20,6 @@ export async function editScmType(context: IActionContext, client: SiteClient, s
     }
 
     const config: WebSiteManagementModels.SiteConfigResource = await client.getSiteConfig();
-    // tslint:disable-next-line:strict-boolean-expressions
     newScmType = newScmType ? newScmType : await showScmPrompt(nonNullProp(config, 'scmType'));
     if (newScmType === ScmType.GitHub) {
         if (config.scmType !== ScmType.None) {
@@ -36,7 +35,7 @@ export async function editScmType(context: IActionContext, client: SiteClient, s
     if (showToast) {
         const scmTypeUpdated: string = localize('deploymentSourceUpdated,', 'Deployment source for "{0}" has been updated to "{1}".', client.fullName, newScmType);
         ext.outputChannel.appendLog(scmTypeUpdated);
-        window.showInformationMessage(scmTypeUpdated);
+        void window.showInformationMessage(scmTypeUpdated);
     }
 
     if (newScmType === ScmType.LocalGit) {

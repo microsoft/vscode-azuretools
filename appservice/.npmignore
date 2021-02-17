@@ -2,7 +2,6 @@ node_modules/
 .vscode/
 src/
 tsconfig.json
-tslint.json
 *.tgz
 test/
 out/test/
@@ -10,3 +9,5 @@ out/test/
 .vscode-test/
 gulpfile.js
 test-results.xml
+.eslintignore
+.eslintrc.js

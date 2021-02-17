@@ -28,8 +28,7 @@ export async function runWithZipStream(context: IActionContext, fsPath: string, 
         zipStream = fse.createReadStream(fsPath);
 
         // don't wait
-        // tslint:disable-next-line: no-floating-promises
-        fse.lstat(fsPath).then(stats => {
+        void fse.lstat(fsPath).then(stats => {
             onFileSize(stats.size);
         });
     } else {
@@ -83,7 +82,6 @@ const commonGlobSettings: {} = {
  */
 function addFilesGlob(zipper: archiver.Archiver, folderPath: string): void {
     const zipDeployConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration(ext.prefix, vscode.Uri.file(folderPath));
-    // tslint:disable-next-line: strict-boolean-expressions
     const globPattern: string = zipDeployConfig.get<string>('zipGlobPattern') || '**/*';
     const ignorePattern: string | string[] | undefined = zipDeployConfig.get<string | string[]>('zipIgnorePattern');
     zipper.glob(globPattern, { cwd: folderPath, ignore: ignorePattern, ...commonGlobSettings });
@@ -100,7 +98,7 @@ async function addFilesGitignore(zipper: archiver.Archiver, folderPath: string, 
         ignore = funcIgnoreContents.split('\n').map(l => l.trim());
     }
 
-    // tslint:disable-next-line:no-unsafe-any
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
     const paths: string[] = await globGitignore('**/*', { cwd: folderPath, ignore, ...commonGlobSettings });
     for (const p of paths) {
         zipper.file(path.join(folderPath, p), { name: p });

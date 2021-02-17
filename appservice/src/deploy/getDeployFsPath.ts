@@ -77,13 +77,11 @@ async function appendDeploySubpathSetting(context: IActionContext, targetPath: s
                         context.telemetry.properties.overwriteTargetWithSubpathSetting = 'true';
 
                         const settingKey: string = 'showDeploySubpathWarning';
-                        // tslint:disable-next-line: strict-boolean-expressions
                         if (getWorkspaceSetting(settingKey, ext.prefix)) {
                             const selectedFolder: string = path.relative(folder.uri.fsPath, targetPath);
                             const message: string = localize('mismatchDeployPath', 'Deploying "{0}" instead of selected folder "{1}". Use "{2}.{3}" to change this behavior.', deploySubPath, selectedFolder, ext.prefix, deploySubpathSetting);
                             // don't wait
-                            // tslint:disable-next-line:no-floating-promises
-                            context.ui.showWarningMessage(message, { title: localize('ok', 'OK') }, DialogResponses.dontWarnAgain).then(async (result: vscode.MessageItem) => {
+                            void context.ui.showWarningMessage(message, { title: localize('ok', 'OK') }, DialogResponses.dontWarnAgain).then(async (result: vscode.MessageItem) => {
                                 if (result === DialogResponses.dontWarnAgain) {
                                     await updateGlobalSetting(settingKey, false, ext.prefix);
                                 }
@@ -110,7 +108,6 @@ export type IDeployPaths = {
 };
 
 function getContainingWorkspace(context: IActionContext, fsPath: string): vscode.WorkspaceFolder {
-    // tslint:disable-next-line:strict-boolean-expressions
     const openFolders: readonly vscode.WorkspaceFolder[] = vscode.workspace.workspaceFolders || [];
     const workspaceFolder: vscode.WorkspaceFolder | undefined = openFolders.find((f: vscode.WorkspaceFolder): boolean => {
         return isPathEqual(f.uri.fsPath, fsPath) || isSubpath(f.uri.fsPath, fsPath);
@@ -121,8 +118,7 @@ function getContainingWorkspace(context: IActionContext, fsPath: string): vscode
         const message: string = localize('folderOpenWarning', 'Failed to deploy because "{0}" is not part of an open workspace.', path.basename(fsPath));
 
         // don't wait
-        // tslint:disable-next-line: no-floating-promises
-        context.ui.showWarningMessage(message, openInNewWindow).then(async result => {
+        void context.ui.showWarningMessage(message, openInNewWindow).then(async result => {
             await callWithTelemetryAndErrorHandling('deployWarning.openInNewWindow', async (postDeployContext: IActionContext) => {
                 postDeployContext.telemetry.properties.dialogResult = result?.title;
                 if (result === openInNewWindow) {
