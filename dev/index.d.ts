@@ -89,6 +89,11 @@ export declare function getDefaultWebpackConfig(options: DefaultWebpackOptions):
 export declare function gulp_installAzureAccount(): Promise<void>;
 
 /**
+ * "Installs" a fake version of the resource groups extension before running tests. The extension isn't actually used for tests, but our extension would fail to activate without this
+ */
+export declare function gulp_installResourceGroups(): Promise<void>;
+
+/**
  * Writes down a fake extension to make VS Code think a dependency is installed, useful before running tests
  * useInsiders defaults to false, only mark true if you want tests to run in vscode-insiders
  */
