@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-export * from './testing/addPackageLintSuites';
+export * from './gulp/gulp_installVSCodeExtension';
+export * from './gulp/gulp_webpack';
 export * from './TestAzureAccount';
+export * from './testing/addPackageLintSuites';
 export * from './TestOutputChannel';
 export * from './TestUserInput';
 export { getDefaultWebpackConfig } from './webpack/getDefaultWebpackConfig';
-export * from './gulp/gulp_installAzureAccount';
-export * from './gulp/gulp_installVSCodeExtension';
-export * from './gulp/gulp_webpack';
+
