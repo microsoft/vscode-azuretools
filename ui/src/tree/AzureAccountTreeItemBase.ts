@@ -121,6 +121,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
                     // filter.subscription.subscriptionId is just the guid and is used in all other cases when creating clients for managing Azure resources
                     const subscriptionId: string = nonNullProp(filter.subscription, 'subscriptionId');
                     addExtensionValueToMask(subscriptionId);
+                    const {azureStackApiProfile, ...cloudEnvironment} = filter.session.environment;
                     return await this.createSubscriptionTreeItem({
                         credentials: filter.session.credentials2,
                         subscriptionDisplayName: nonNullProp(filter.subscription, 'displayName'),
@@ -128,7 +129,8 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
                         subscriptionPath: nonNullProp(filter.subscription, 'id'),
                         tenantId: filter.session.tenantId,
                         userId: filter.session.userId,
-                        environment: filter.session.environment
+                        environment: cloudEnvironment,
+                        isStack: azureStackApiProfile ? true : false
                     });
                 }
             }));
