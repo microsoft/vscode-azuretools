@@ -24,12 +24,8 @@ export interface AzureAccount {
     readonly waitForFilters: () => Promise<boolean>;
 }
 
-export interface AzureAccountEnvironment extends Environment {
-	azureStackApiProfile?: boolean;
-}
-
 export interface AzureSession {
-    readonly environment: AzureAccountEnvironment;
+    readonly environment: Environment;
     readonly userId: string;
     readonly tenantId: string;
 

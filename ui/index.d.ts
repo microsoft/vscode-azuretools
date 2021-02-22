@@ -150,7 +150,7 @@ export interface ISubscriptionContext {
     tenantId: string;
     userId: string;
     environment: Environment;
-    isStack: boolean;
+    isCustomCloud: boolean;
 }
 
 export type TreeItemIconPath = string | Uri | { light: string | Uri; dark: string | Uri } | ThemeIcon;
