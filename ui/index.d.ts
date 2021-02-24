@@ -1326,6 +1326,7 @@ export function createGenericClient(clientInfo?: AzExtGenericClientInfo): Promis
 
 /**
  * Send request with a timeout specified and turn off retry policy (because retrying could take a lot longer)
+ * @param timeout The timeout in milliseconds
  */
 export function sendRequestWithTimeout(options: RequestPrepareOptions, timeout: number, clientInfo?: AzExtGenericClientInfo): Promise<HttpOperationResponse>;
 
