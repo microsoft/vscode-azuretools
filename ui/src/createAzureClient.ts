@@ -4,10 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Environment } from '@azure/ms-rest-azure-env';
-import { BaseRequestPolicy, HttpOperationResponse, RequestPolicy, RequestPolicyFactory, RequestPolicyOptions, ServiceClient, WebResourceLike } from '@azure/ms-rest-js';
+import { BaseRequestPolicy, HttpOperationResponse, RequestPolicy, RequestPolicyFactory, RequestPolicyOptions, RequestPrepareOptions, ServiceClient, WebResource, WebResourceLike } from '@azure/ms-rest-js';
 import * as vscode from "vscode";
 import * as types from '../index';
 import { appendExtensionUserAgent } from "./extensionUserAgent";
+import { GenericServiceClient } from './GenericServiceClient';
 import { parseJson, removeBom } from './utils/parseJson';
 
 export function createAzureClient<T>(
@@ -32,7 +33,19 @@ export function createAzureSubscriptionClient<T>(
     });
 }
 
-export async function createGenericClient(clientInfo?: types.AzExtServiceClientCredentials | { credentials: types.AzExtServiceClientCredentials; environment: Environment; }): Promise<ServiceClient> {
+export async function sendRequestWithTimeout(options: RequestPrepareOptions, timeout: number, clientInfo?: types.AzExtGenericClientInfo): Promise<HttpOperationResponse> {
+    let request: WebResource = new WebResource();
+    request = request.prepare(options);
+    request.timeout = timeout;
+    const client: GenericServiceClient = await createGenericClient(clientInfo, { noRetryPolicy: true });
+    return await client.sendRequest(options);
+}
+
+interface IGenericClientOptions {
+    noRetryPolicy?: boolean;
+}
+
+export async function createGenericClient(clientInfo?: types.AzExtGenericClientInfo, options?: IGenericClientOptions): Promise<ServiceClient> {
     let credentials: types.AzExtServiceClientCredentials | undefined;
     let baseUri: string | undefined;
     if (clientInfo && 'credentials' in clientInfo) {
@@ -47,7 +60,8 @@ export async function createGenericClient(clientInfo?: types.AzExtServiceClientC
     return new gsc.GenericServiceClient(credentials, <types.IMinimumServiceClientOptions>{
         baseUri,
         userAgent: appendExtensionUserAgent,
-        requestPolicyFactories: addAzExtFactories
+        requestPolicyFactories: addAzExtFactories,
+        noRetryPolicy: options?.noRetryPolicy
     });
 }
 

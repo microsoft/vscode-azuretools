@@ -7,7 +7,7 @@ import { ResourceManagementModels } from '@azure/arm-resources';
 import { StorageManagementModels } from '@azure/arm-storage';
 import { SubscriptionModels } from '@azure/arm-subscriptions';
 import { Environment } from '@azure/ms-rest-azure-env';
-import { ServiceClient } from '@azure/ms-rest-js';
+import { HttpOperationResponse, RequestPrepareOptions, ServiceClient } from '@azure/ms-rest-js';
 import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocument, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
@@ -1315,12 +1315,19 @@ export interface IMinimumServiceClientOptions {
     requestPolicyFactories?: any[] | ((defaultRequestPolicyFactories: any[]) => (void | any[]));
 }
 
+export type AzExtGenericClientInfo = AzExtServiceClientCredentials | { credentials: AzExtServiceClientCredentials; environment: Environment; };
+
 /**
  * Creates a generic http rest client (i.e. for non-Azure calls or for Azure calls that the available sdks don't support), ensuring best practices are followed. For example:
  * 1. Adds extension-specific user agent
  * 2. Uses resourceManagerEndpointUrl to support sovereigns (if clientInfo corresponds to an Azure environment)
  */
-export function createGenericClient(clientInfo?: AzExtServiceClientCredentials | { credentials: AzExtServiceClientCredentials; environment: Environment; }): Promise<ServiceClient>;
+export function createGenericClient(clientInfo?: AzExtGenericClientInfo): Promise<ServiceClient>;
+
+/**
+ * Send request with a timeout specified and turn off retry policy (because retrying could take a lot longer)
+ */
+export function sendRequestWithTimeout(options: RequestPrepareOptions, timeout: number, clientInfo?: AzExtGenericClientInfo): Promise<HttpOperationResponse>;
 
 /**
  * Creates an Azure client, ensuring best practices are followed. For example:
