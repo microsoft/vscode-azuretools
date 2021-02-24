@@ -129,7 +129,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
                         tenantId: filter.session.tenantId,
                         userId: filter.session.userId,
                         environment: filter.session.environment,
-                        isCustomCloud: filter.session.environment.name === 'CustomCloud'
+                        isCustomCloud: filter.session.environment.name === 'AzureCustomCloud'
                     });
                 }
             }));
