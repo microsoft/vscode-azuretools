@@ -1241,7 +1241,7 @@ export declare function registerUIExtensionVariables(extVars: UIExtensionVariabl
  * Internal is Microsoft
  * Insiders is anyone installing alpha builds
  * Public is everyone
- * NOTE: if unspecified, this will be Insiders if the extension version contains "alpha", otherwise Public
+ * NOTE: if unspecified, this will be "Team" if the extension is running in the Development Host, "Insiders" if the extension version contains "alpha", otherwise "Public"
  */
 export declare function createExperimentationService(ctx: ExtensionContext, targetPopulation?: TargetPopulation): Promise<IExperimentationServiceAdapter>;
 
