@@ -12,4 +12,5 @@
     "editor.codeActionsOnSave": {
         "source.fixAll.eslint": true
     },
+    "appService.showBuildDuringDeployPrompt": false,
 }

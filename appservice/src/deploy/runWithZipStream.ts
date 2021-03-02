@@ -15,14 +15,15 @@ import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { getFileExtension } from '../utils/pathUtils';
+import { zip } from '../utils/zip';
 
-export async function runWithZipStream(context: IActionContext, fsPath: string, client: SiteClient, callback: (zipStream: Readable) => Promise<void>): Promise<void> {
+export async function runWithZipStream(context: IActionContext, fsPath: string, client: SiteClient, callback: (zipStream: NodeJS.ReadableStream) => Promise<void>): Promise<void> {
     function onFileSize(size: number): void {
         context.telemetry.measurements.zipFileSize = size;
         ext.outputChannel.appendLog(localize('zipSize', 'Zip package size: {0}', prettybytes(size)), { resourceName: client.fullName });
     }
 
-    let zipStream: Readable & { finalize?(): Promise<void>; };
+    let zipStream: NodeJS.ReadableStream & { finalize?(): Promise<void>; };
     if (getFileExtension(fsPath) === 'zip') {
         context.telemetry.properties.alreadyZipped = 'true';
         zipStream = fse.createReadStream(fsPath);
@@ -31,6 +32,8 @@ export async function runWithZipStream(context: IActionContext, fsPath: string, 
         void fse.lstat(fsPath).then(stats => {
             onFileSize(stats.size);
         });
+
+        await callback(zipStream);
     } else {
         ext.outputChannel.appendLog(localize('zipCreate', 'Creating zip package...'), { resourceName: client.fullName });
 
@@ -41,6 +44,7 @@ export async function runWithZipStream(context: IActionContext, fsPath: string, 
                 fsPath += path.sep;
             }
 
+
             if (client.isFunctionApp) {
                 await addFilesGitignore(zipper, fsPath, '.funcignore');
             } else {
@@ -49,26 +53,26 @@ export async function runWithZipStream(context: IActionContext, fsPath: string, 
         } else {
             zipper.file(fsPath, { name: path.basename(fsPath) });
         }
-        zipStream = zipper;
-        zipper.on('end', () => {
-            onFileSize(zipper.pointer());
-        });
-    }
+        const { zipFile, buffer } = await zip(fsPath);
+        // Setup several tasks related to the zip stream and await them all together
+        const streamTasks: Promise<void>[] = [];
 
-    // Setup several tasks related to the zip stream and await them all together
-    const streamTasks: Promise<void>[] = [];
-    // 1. Generic task that will reject if there's an error with the stream
-    streamTasks.push(new Promise((resolve, reject): void => {
-        zipStream.on('end', resolve);
-        zipStream.on('error', reject);
-    }));
-    // 2. `callback` sets up where the zip stream is piped
-    streamTasks.push(callback(zipStream));
-    // 3. `zipStream.finalize` lets "archiver" know we're done adding files to the zip
-    if (zipStream.finalize) {
-        streamTasks.push(zipStream.finalize());
+
+        // 1. Generic task that will reject if there's an error with the stream
+        streamTasks.push(new Promise((resolve, reject): void => {
+            zipFile.outputStream.on('finish', async () => {
+                console.log('finish');
+                await callback(Readable.from(buffer));
+                resolve();
+            });
+            zipFile.outputStream.on('error', () => {
+                console.log('error');
+                reject();
+            });
+        }));
+
+        await Promise.all(streamTasks);
     }
-    await Promise.all(streamTasks);
 }
 
 const commonGlobSettings: {} = {

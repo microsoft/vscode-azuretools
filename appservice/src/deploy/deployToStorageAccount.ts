@@ -9,6 +9,7 @@ import { BlobSASPermissions, BlobServiceClient, BlockBlobClient, ContainerClient
 import * as dayjs from 'dayjs';
 import * as relativeTime from 'dayjs/plugin/relativeTime';
 import * as utc from 'dayjs/plugin/utc';
+import { Readable } from 'stream';
 import { URL } from 'url';
 import { IActionContext, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
@@ -79,7 +80,7 @@ async function createBlobFromZip(context: IActionContext, fsPath: string, client
 
     await runWithZipStream(context, fsPath, client, async zipStream => {
         ext.outputChannel.appendLog(localize('creatingBlob', 'Uploading zip package to storage container...'), { resourceName: client.fullName });
-        await blobClient.uploadStream(zipStream);
+        await blobClient.uploadStream(<Readable>zipStream);
     });
 
     // NOTE: the `result` from `uploadStream` above doesn't actually have the contentLength - thus we have to make a separate call here
