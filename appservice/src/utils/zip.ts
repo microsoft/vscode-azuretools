@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { rejects } from 'assert';
 import * as path from 'path';
 import { Readable } from 'stream';
 import * as yazl from 'yazl';
