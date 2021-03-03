@@ -8,6 +8,7 @@ import * as globby from 'globby';
 import { glob as globGitignore } from 'glob-gitignore';
 import * as path from 'path';
 import * as prettybytes from 'pretty-bytes';
+import { Readable } from 'stream';
 import * as vscode from 'vscode';
 import { IActionContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
@@ -17,13 +18,13 @@ import { getFileExtension } from '../utils/pathUtils';
 import { zip } from '../utils/zip';
 
 
-export async function runWithZipStream(context: IActionContext, fsPath: string, client: SiteClient, callback: (zipStream: NodeJS.ReadableStream) => Promise<void>): Promise<void> {
+export async function runWithZipStream(context: IActionContext, fsPath: string, client: SiteClient, callback: (zipStream: Readable) => Promise<void>): Promise<void> {
     function onFileSize(size: number): void {
         context.telemetry.measurements.zipFileSize = size;
         ext.outputChannel.appendLog(localize('zipSize', 'Zip package size: {0}', prettybytes(size)), { resourceName: client.fullName });
     }
 
-    let zipStream: NodeJS.ReadableStream & { finalize?(): Promise<void>; };
+    let zipStream: Readable & { finalize?(): Promise<void>; };
     if (getFileExtension(fsPath) === 'zip') {
         context.telemetry.properties.alreadyZipped = 'true';
         zipStream = fse.createReadStream(fsPath);
@@ -32,8 +33,8 @@ export async function runWithZipStream(context: IActionContext, fsPath: string, 
         void fse.lstat(fsPath).then(stats => {
             onFileSize(stats.size);
         });
-
         await callback(zipStream);
+
     } else {
         ext.outputChannel.appendLog(localize('zipCreate', 'Creating zip package...'), { resourceName: client.fullName });
         let filesToZip: string[] = [];

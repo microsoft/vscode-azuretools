@@ -80,7 +80,7 @@ async function createBlobFromZip(context: IActionContext, fsPath: string, client
 
     await runWithZipStream(context, fsPath, client, async zipStream => {
         ext.outputChannel.appendLog(localize('creatingBlob', 'Uploading zip package to storage container...'), { resourceName: client.fullName });
-        await blobClient.uploadStream(<Readable>zipStream);
+        await blobClient.uploadStream(zipStream);
     });
 
     // NOTE: the `result` from `uploadStream` above doesn't actually have the contentLength - thus we have to make a separate call here
