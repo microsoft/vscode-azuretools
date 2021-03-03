@@ -3,35 +3,33 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as fse from 'fs-extra';
-import * as os from 'os';
+import { rejects } from 'assert';
 import * as path from 'path';
+import { Readable } from 'stream';
 import * as yazl from 'yazl';
 
-export async function zip(deployPath: string): Promise<{ zipFile: yazl.ZipFile, buffer: string[] }> {
+export async function zip(deployPath: string, files: string[]): Promise<Readable> {
     const zipFile = new yazl.ZipFile();
-    zipFile.outputStream.on('error', err => {
-        throw err;
-    });
     const buffer: string[] = [];
     zipFile.outputStream.on('data', (data) => {
         buffer.push(data);
     });
 
-    zipFile.outputStream.pipe(fse.createWriteStream(path.join(os.homedir(), 'Desktop', 'test.zip')));
-    await addFilesToZip(deployPath);
+
+
+    for (const file of files) {
+        zipFile.addFile(path.join(deployPath, file), file);
+    }
+
     zipFile.end();
 
-    return { zipFile, buffer };
+    return await new Promise((resolve, reject): void => {
+        zipFile.outputStream.on('finish', (): void => {
+            resolve(Readable.from(buffer));
+        });
 
-    async function addFilesToZip(fsPath: string): Promise<void> {
-        for (let file of await fse.readdir(fsPath)) {
-            const filePath: string = path.join(fsPath, file);
-            if (fse.lstatSync(filePath).isDirectory()) {
-                await addFilesToZip(filePath)
-            } else if (fse.lstatSync(filePath).isFile()) {
-                zipFile.addFile(filePath, path.relative(deployPath, filePath));
-            }
-        }
-    }
+        zipFile.outputStream.once('error', (er) => {
+            reject(er)
+        });
+    })
 }
