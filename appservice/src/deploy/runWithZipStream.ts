@@ -24,7 +24,7 @@ export async function runWithZipStream(context: IActionContext, fsPath: string, 
         ext.outputChannel.appendLog(localize('zipSize', 'Zip package size: {0}', prettybytes(size)), { resourceName: client.fullName });
     }
 
-    let zipStream: Readable & { finalize?(): Promise<void>; };
+    let zipStream: Readable;
     if (getFileExtension(fsPath) === 'zip') {
         context.telemetry.properties.alreadyZipped = 'true';
         zipStream = fse.createReadStream(fsPath);
@@ -33,8 +33,6 @@ export async function runWithZipStream(context: IActionContext, fsPath: string, 
         void fse.lstat(fsPath).then(stats => {
             onFileSize(stats.size);
         });
-        await callback(zipStream);
-
     } else {
         ext.outputChannel.appendLog(localize('zipCreate', 'Creating zip package...'), { resourceName: client.fullName });
         let filesToZip: string[] = [];
@@ -56,8 +54,10 @@ export async function runWithZipStream(context: IActionContext, fsPath: string, 
             filesToZip.push(path.basename(fsPath));
         }
 
-        await callback(await zip(fsPath, filesToZip));
+        zipStream = await zip(fsPath, filesToZip);
     }
+
+    await callback(zipStream);
 }
 
 const commonGlobSettings: {} = {

@@ -9,7 +9,6 @@ import { BlobSASPermissions, BlobServiceClient, BlockBlobClient, ContainerClient
 import * as dayjs from 'dayjs';
 import * as relativeTime from 'dayjs/plugin/relativeTime';
 import * as utc from 'dayjs/plugin/utc';
-import { Readable } from 'stream';
 import { URL } from 'url';
 import { IActionContext, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
