@@ -11,18 +11,19 @@ import * as prettybytes from 'pretty-bytes';
 import { Readable } from 'stream';
 import * as vscode from 'vscode';
 import { IActionContext } from 'vscode-azureextensionui';
+import * as yazl from 'yazl';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { getFileExtension } from '../utils/pathUtils';
-import { zip } from '../utils/zip';
-
 
 export async function runWithZipStream(context: IActionContext, fsPath: string, client: SiteClient, callback: (zipStream: Readable) => Promise<void>): Promise<void> {
     function onFileSize(size: number): void {
         context.telemetry.measurements.zipFileSize = size;
         ext.outputChannel.appendLog(localize('zipSize', 'Zip package size: {0}', prettybytes(size)), { resourceName: client.fullName });
     }
+
+
 
     let zipStream: Readable;
     if (getFileExtension(fsPath) === 'zip') {
@@ -42,19 +43,23 @@ export async function runWithZipStream(context: IActionContext, fsPath: string, 
                 fsPath += path.sep;
             }
 
-
             if (client.isFunctionApp) {
                 filesToZip = await getFilesFromGitignore(fsPath, '.funcignore');
             } else {
                 filesToZip = await getFilesFromGlob(fsPath);
             }
         } else {
-            // remove the file from the fsPath
-            fsPath = fsPath.substring(0, fsPath.lastIndexOf(path.sep));
             filesToZip.push(path.basename(fsPath));
+            // remove the file from the fsPath
+            fsPath = path.dirname(fsPath);
+        }
+        const zipFile = new yazl.ZipFile();
+        for (const file of filesToZip) {
+            zipFile.addFile(path.join(fsPath, file), file);
         }
 
-        zipStream = await zip(fsPath, filesToZip);
+        zipFile.end();
+        zipStream = new Readable().wrap(zipFile.outputStream);
     }
 
     await callback(zipStream);
@@ -69,13 +74,13 @@ const commonGlobSettings: {} = {
 /**
  * Adds files using glob filtering
  */
-export async function getFilesFromGlob(folderPath: string): Promise<string[]> {
+async function getFilesFromGlob(folderPath: string): Promise<string[]> {
     const zipDeployConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration(ext.prefix, vscode.Uri.file(folderPath));
     const globPattern: string = zipDeployConfig.get<string>('zipGlobPattern') || '**/*';
     const filesToInclude: string[] = await globby(globPattern, { cwd: folderPath });
 
     const ignorePattern: string | string[] = zipDeployConfig.get<string | string[]>('zipIgnorePattern') || '';
-    const filesToIgnore: string[] = await globby(ignorePattern, { cwd: folderPath });
+    const filesToIgnore: string[] = await globby(ignorePattern, { cwd: folderPath, followSymbolicLinks: true, dot: true });
 
     return filesToInclude.filter(file => {
         return !filesToIgnore.includes(file);
