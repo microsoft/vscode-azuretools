@@ -23,8 +23,6 @@ export async function runWithZipStream(context: IActionContext, fsPath: string, 
         ext.outputChannel.appendLog(localize('zipSize', 'Zip package size: {0}', prettybytes(size)), { resourceName: client.fullName });
     }
 
-
-
     let zipStream: Readable;
     if (getFileExtension(fsPath) === 'zip') {
         context.telemetry.properties.alreadyZipped = 'true';
@@ -36,6 +34,7 @@ export async function runWithZipStream(context: IActionContext, fsPath: string, 
         });
     } else {
         ext.outputChannel.appendLog(localize('zipCreate', 'Creating zip package...'), { resourceName: client.fullName });
+        const zipFile = new yazl.ZipFile();
         let filesToZip: string[] = [];
 
         if ((await fse.lstat(fsPath)).isDirectory()) {
@@ -48,14 +47,12 @@ export async function runWithZipStream(context: IActionContext, fsPath: string, 
             } else {
                 filesToZip = await getFilesFromGlob(fsPath);
             }
+
+            for (const file of filesToZip) {
+                zipFile.addFile(path.join(fsPath, file), file);
+            }
         } else {
-            filesToZip.push(path.basename(fsPath));
-            // remove the file from the fsPath
-            fsPath = path.dirname(fsPath);
-        }
-        const zipFile = new yazl.ZipFile();
-        for (const file of filesToZip) {
-            zipFile.addFile(path.join(fsPath, file), file);
+            zipFile.addFile(fsPath, path.basename(fsPath));
         }
 
         zipFile.end();
@@ -76,11 +73,12 @@ const commonGlobSettings: {} = {
  */
 async function getFilesFromGlob(folderPath: string): Promise<string[]> {
     const zipDeployConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration(ext.prefix, vscode.Uri.file(folderPath));
+    const globOptions = { cwd: folderPath, followSymbolicLinks: true, dot: true };
     const globPattern: string = zipDeployConfig.get<string>('zipGlobPattern') || '**/*';
-    const filesToInclude: string[] = await globby(globPattern, { cwd: folderPath });
+    const filesToInclude: string[] = await globby(globPattern, globOptions);
 
     const ignorePattern: string | string[] = zipDeployConfig.get<string | string[]>('zipIgnorePattern') || '';
-    const filesToIgnore: string[] = await globby(ignorePattern, { cwd: folderPath, followSymbolicLinks: true, dot: true });
+    const filesToIgnore: string[] = await globby(ignorePattern, globOptions);
 
     return filesToInclude.filter(file => {
         return !filesToIgnore.includes(file);
