@@ -3,14 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as archiver from 'archiver';
 import * as fse from 'fs-extra';
+import * as globby from 'globby';
 import { glob as globGitignore } from 'glob-gitignore';
 import * as path from 'path';
 import * as prettybytes from 'pretty-bytes';
 import { Readable } from 'stream';
 import * as vscode from 'vscode';
 import { IActionContext } from 'vscode-azureextensionui';
+import * as yazl from 'yazl';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
@@ -22,7 +23,7 @@ export async function runWithZipStream(context: IActionContext, fsPath: string, 
         ext.outputChannel.appendLog(localize('zipSize', 'Zip package size: {0}', prettybytes(size)), { resourceName: client.fullName });
     }
 
-    let zipStream: Readable & { finalize?(): Promise<void>; };
+    let zipStream: Readable;
     if (getFileExtension(fsPath) === 'zip') {
         context.telemetry.properties.alreadyZipped = 'true';
         zipStream = fse.createReadStream(fsPath);
@@ -33,42 +34,32 @@ export async function runWithZipStream(context: IActionContext, fsPath: string, 
         });
     } else {
         ext.outputChannel.appendLog(localize('zipCreate', 'Creating zip package...'), { resourceName: client.fullName });
+        const zipFile = new yazl.ZipFile();
+        let filesToZip: string[] = [];
 
-        // level 9 indicates best compression at the cost of slower zipping. Since sending the zip over the internet is usually the bottleneck, we want best compression.
-        const zipper: archiver.Archiver = archiver('zip', { zlib: { level: 9 } });
         if ((await fse.lstat(fsPath)).isDirectory()) {
             if (!fsPath.endsWith(path.sep)) {
                 fsPath += path.sep;
             }
 
             if (client.isFunctionApp) {
-                await addFilesGitignore(zipper, fsPath, '.funcignore');
+                filesToZip = await getFilesFromGitignore(fsPath, '.funcignore');
             } else {
-                addFilesGlob(zipper, fsPath);
+                filesToZip = await getFilesFromGlob(fsPath);
+            }
+
+            for (const file of filesToZip) {
+                zipFile.addFile(path.join(fsPath, file), file);
             }
         } else {
-            zipper.file(fsPath, { name: path.basename(fsPath) });
+            zipFile.addFile(fsPath, path.basename(fsPath));
         }
-        zipStream = zipper;
-        zipper.on('end', () => {
-            onFileSize(zipper.pointer());
-        });
+
+        zipFile.end();
+        zipStream = new Readable().wrap(zipFile.outputStream);
     }
 
-    // Setup several tasks related to the zip stream and await them all together
-    const streamTasks: Promise<void>[] = [];
-    // 1. Generic task that will reject if there's an error with the stream
-    streamTasks.push(new Promise((resolve, reject): void => {
-        zipStream.on('end', resolve);
-        zipStream.on('error', reject);
-    }));
-    // 2. `callback` sets up where the zip stream is piped
-    streamTasks.push(callback(zipStream));
-    // 3. `zipStream.finalize` lets "archiver" know we're done adding files to the zip
-    if (zipStream.finalize) {
-        streamTasks.push(zipStream.finalize());
-    }
-    await Promise.all(streamTasks);
+    await callback(zipStream);
 }
 
 const commonGlobSettings: {} = {
@@ -80,17 +71,24 @@ const commonGlobSettings: {} = {
 /**
  * Adds files using glob filtering
  */
-function addFilesGlob(zipper: archiver.Archiver, folderPath: string): void {
+async function getFilesFromGlob(folderPath: string): Promise<string[]> {
     const zipDeployConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration(ext.prefix, vscode.Uri.file(folderPath));
+    const globOptions = { cwd: folderPath, followSymbolicLinks: true, dot: true };
     const globPattern: string = zipDeployConfig.get<string>('zipGlobPattern') || '**/*';
-    const ignorePattern: string | string[] | undefined = zipDeployConfig.get<string | string[]>('zipIgnorePattern');
-    zipper.glob(globPattern, { cwd: folderPath, ignore: ignorePattern, ...commonGlobSettings });
+    const filesToInclude: string[] = await globby(globPattern, globOptions);
+
+    const ignorePattern: string | string[] = zipDeployConfig.get<string | string[]>('zipIgnorePattern') || '';
+    const filesToIgnore: string[] = await globby(ignorePattern, globOptions);
+
+    return filesToInclude.filter(file => {
+        return !filesToIgnore.includes(file);
+    })
 }
 
 /**
  * Adds files using gitignore filtering
  */
-async function addFilesGitignore(zipper: archiver.Archiver, folderPath: string, gitignoreName: string): Promise<void> {
+async function getFilesFromGitignore(folderPath: string, gitignoreName: string): Promise<string[]> {
     let ignore: string[] = [];
     const gitignorePath: string = path.join(folderPath, gitignoreName);
     if (await fse.pathExists(gitignorePath)) {
@@ -100,7 +98,5 @@ async function addFilesGitignore(zipper: archiver.Archiver, folderPath: string, 
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
     const paths: string[] = await globGitignore('**/*', { cwd: folderPath, ignore, ...commonGlobSettings });
-    for (const p of paths) {
-        zipper.file(path.join(folderPath, p), { name: p });
-    }
+    return paths;
 }
