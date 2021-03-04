@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as fse from 'fs-extra';
-import * as globby from 'globby';
 import { glob as globGitignore } from 'glob-gitignore';
+import * as globby from 'globby';
 import * as path from 'path';
 import * as prettybytes from 'pretty-bytes';
 import { Readable } from 'stream';
@@ -34,7 +34,7 @@ export async function runWithZipStream(context: IActionContext, fsPath: string, 
         });
     } else {
         ext.outputChannel.appendLog(localize('zipCreate', 'Creating zip package...'), { resourceName: client.fullName });
-        const zipFile = new yazl.ZipFile();
+        const zipFile: yazl.ZipFile & { outputStreamCursor?: number } = new yazl.ZipFile();
         let filesToZip: string[] = [];
 
         if ((await fse.lstat(fsPath)).isDirectory()) {
@@ -54,6 +54,12 @@ export async function runWithZipStream(context: IActionContext, fsPath: string, 
         } else {
             zipFile.addFile(fsPath, path.basename(fsPath));
         }
+
+        zipFile.outputStream.on('finish', () => {
+            if (zipFile.outputStreamCursor) {
+                onFileSize(zipFile.outputStreamCursor);
+            }
+        });
 
         zipFile.end();
         zipStream = new Readable().wrap(zipFile.outputStream);
