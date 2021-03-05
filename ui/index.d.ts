@@ -7,8 +7,7 @@ import { ResourceManagementModels } from '@azure/arm-resources';
 import { StorageManagementModels } from '@azure/arm-storage';
 import { SubscriptionModels } from '@azure/arm-subscriptions';
 import { Environment } from '@azure/ms-rest-azure-env';
-import { ServiceClient, ServiceClientCredentials } from '@azure/ms-rest-js';
-import { TokenCredentialsBase } from '@azure/ms-rest-nodeauth';
+import { HttpOperationResponse, RequestPrepareOptions, ServiceClient } from '@azure/ms-rest-js';
 import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocument, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
@@ -140,10 +139,25 @@ export abstract class SubscriptionTreeItemBase extends AzureParentTreeItem {
 }
 
 /**
+ * Loose interface to allow for the use of different versions of "@azure/ms-rest-js"
+ * There's several cases where we don't control which "credentials" interface gets used, causing build errors even though the functionality itself seems to be compatible
+ * For example: https://github.com/Azure/azure-sdk-for-js/issues/10045
+ */
+export interface AzExtServiceClientCredentials {
+    /**
+     * Signs a request with the Authentication header.
+     *
+     * @param {WebResourceLike} webResource The WebResourceLike/request to be signed.
+     * @returns {Promise<WebResourceLike>} The signed request object;
+     */
+    signRequest(webResource: any): Promise<any>;
+}
+
+/**
  * Information specific to the Subscription
  */
 export interface ISubscriptionContext {
-    credentials: TokenCredentialsBase;
+    credentials: AzExtServiceClientCredentials;
     subscriptionDisplayName: string;
     subscriptionId: string;
     subscriptionPath: string;
@@ -1228,7 +1242,7 @@ export declare function registerUIExtensionVariables(extVars: UIExtensionVariabl
  * Internal is Microsoft
  * Insiders is anyone installing alpha builds
  * Public is everyone
- * NOTE: if unspecified, this will be Insiders if the extension version contains "alpha", otherwise Public
+ * NOTE: if unspecified, this will be "Team" if the extension is running in the Development Host, "Insiders" if the extension version contains "alpha", otherwise "Public"
  */
 export declare function createExperimentationService(ctx: ExtensionContext, targetPopulation?: TargetPopulation): Promise<IExperimentationServiceAdapter>;
 
@@ -1295,38 +1309,45 @@ export interface IMinimumServiceClientOptions {
     acceptLanguage?: string,
     baseUri?: string;
     userAgent?: string | ((defaultUserAgent: string) => string);
+
+    /**
+     * NOTE: Using "any" to allow for the use of different versions of "@azure/ms-rest-js", which are largely compatible for our purposes
+     */
+    requestPolicyFactories?: any[] | ((defaultRequestPolicyFactories: any[]) => (void | any[]));
 }
+
+export type AzExtGenericClientInfo = AzExtServiceClientCredentials | { credentials: AzExtServiceClientCredentials; environment: Environment; };
 
 /**
  * Creates a generic http rest client (i.e. for non-Azure calls or for Azure calls that the available sdks don't support), ensuring best practices are followed. For example:
  * 1. Adds extension-specific user agent
  * 2. Uses resourceManagerEndpointUrl to support sovereigns (if clientInfo corresponds to an Azure environment)
  */
-export function createGenericClient(clientInfo?: ServiceClientCredentials | { credentials: ServiceClientCredentials; environment: Environment; }): Promise<ServiceClient>;
+export function createGenericClient(clientInfo?: AzExtGenericClientInfo): Promise<ServiceClient>;
+
+/**
+ * Send request with a timeout specified and turn off retry policy (because retrying could take a lot longer)
+ * @param timeout The timeout in milliseconds
+ */
+export function sendRequestWithTimeout(options: RequestPrepareOptions, timeout: number, clientInfo?: AzExtGenericClientInfo): Promise<HttpOperationResponse>;
 
 /**
  * Creates an Azure client, ensuring best practices are followed. For example:
  * 1. Adds extension-specific user agent
  * 2. Uses resourceManagerEndpointUrl to support sovereigns
- *
- * NOTE: `credentials` is of type `any` because several packages still rely on v1 of "@azure/ms-rest-js", which would cause type conflicts with v2 (even though the breaking changes seem minimal)
- * For example: https://github.com/Azure/azure-sdk-for-js/issues/10045
  */
 export function createAzureClient<T>(
-    clientInfo: { credentials: any; subscriptionId: string; environment: Environment; },
-    clientType: new (credentials: any, subscriptionId: string, options?: IMinimumServiceClientOptions) => T): T;
+    clientInfo: { credentials: AzExtServiceClientCredentials; subscriptionId: string; environment: Environment; },
+    clientType: new (credentials: AzExtServiceClientCredentials, subscriptionId: string, options?: IMinimumServiceClientOptions) => T): T;
 
 /**
  * Creates an Azure subscription client, ensuring best practices are followed. For example:
  * 1. Adds extension-specific user agent
  * 2. Uses resourceManagerEndpointUrl to support sovereigns
- *
- * NOTE: `credentials` is of type `any` because several packages still rely on v1 of "@azure/ms-rest-js", which would cause type conflicts with v2 (even though the breaking changes seem minimal)
- * For example: https://github.com/Azure/azure-sdk-for-js/issues/10045
  */
 export function createAzureSubscriptionClient<T>(
-    clientInfo: { credentials: any; environment: Environment; },
-    clientType: new (credentials: any, options?: IMinimumServiceClientOptions) => T): T;
+    clientInfo: { credentials: AzExtServiceClientCredentials; environment: Environment; },
+    clientType: new (credentials: AzExtServiceClientCredentials, options?: IMinimumServiceClientOptions) => T): T;
 
 /**
  * Wraps an Azure Extension's API in a very basic provider that adds versioning.

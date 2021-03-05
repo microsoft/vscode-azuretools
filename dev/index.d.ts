@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Environment } from "@azure/ms-rest-azure-env";
-import { ServiceClientCredentials } from '@azure/ms-rest-js';
 import * as cp from "child_process";
 import { Event, InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, Uri } from "vscode";
 import * as webpack from 'webpack';
@@ -90,6 +89,11 @@ export declare function getDefaultWebpackConfig(options: DefaultWebpackOptions):
 export declare function gulp_installAzureAccount(): Promise<void>;
 
 /**
+ * "Installs" a fake version of the resource groups extension before running tests. The extension isn't actually used for tests, but our extension would fail to activate without this
+ */
+export declare function gulp_installResourceGroups(): Promise<void>;
+
+/**
  * Writes down a fake extension to make VS Code think a dependency is installed, useful before running tests
  * useInsiders defaults to false, only mark true if you want tests to run in vscode-insiders
  */
@@ -101,10 +105,25 @@ export declare function gulp_installVSCodeExtension(publisherId: string, extensi
 export declare function gulp_webpack(mode: string): cp.ChildProcess;
 
 /**
+ * Loose interface to allow for the use of different versions of "@azure/ms-rest-js"
+ * There's several cases where we don't control which "credentials" interface gets used, causing build errors even though the functionality itself seems to be compatible
+ * For example: https://github.com/Azure/azure-sdk-for-js/issues/10045
+ */
+export interface AzExtServiceClientCredentials {
+    /**
+     * Signs a request with the Authentication header.
+     *
+     * @param {WebResourceLike} webResource The WebResourceLike/request to be signed.
+     * @returns {Promise<WebResourceLike>} The signed request object;
+     */
+    signRequest(webResource: any): Promise<any>;
+}
+
+/**
  * Information specific to the Subscription
  */
 export interface ISubscriptionContext {
-    credentials: ServiceClientCredentials;
+    credentials: AzExtServiceClientCredentials;
     subscriptionDisplayName: string;
     subscriptionId: string;
     subscriptionPath: string;

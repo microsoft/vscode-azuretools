@@ -39,7 +39,7 @@ export async function startRemoteDebug(siteClient: SiteClient, siteConfig: WebSi
 async function startRemoteDebugInternal(siteClient: SiteClient, siteConfig: WebSiteManagementModels.SiteConfigResource, language: RemoteDebugLanguage): Promise<void> {
     await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, cancellable: true }, async (progress, token): Promise<void> => {
         const debugConfig: vscode.DebugConfiguration = await getDebugConfiguration(language);
-        // tslint:disable-next-line:no-unsafe-any
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const localHostPortNumber: number = debugConfig.port;
 
         const confirmEnableMessage: string = localize('remoteDebugEnablePrompt', 'The configuration will be updated to enable remote debugging. Would you like to continue? This will restart the app.');
@@ -115,8 +115,7 @@ async function getDebugConfiguration(language: RemoteDebugLanguage): Promise<vsc
         } else {
             // In this case we don't know which folder to use. Show a warning and proceed.
             // In the future we should allow users to choose a workspace folder to map sources from.
-            // tslint:disable-next-line:no-floating-promises
-            ext.ui.showWarningMessage(localize('remoteDebugMultipleFolders', 'Unable to bind breakpoints from workspace when multiple folders are open. Use "loaded scripts" instead.'));
+            void ext.ui.showWarningMessage(localize('remoteDebugMultipleFolders', 'Unable to bind breakpoints from workspace when multiple folders are open. Use "loaded scripts" instead.'));
         }
     } else {
         // vscode will throw an error if you try to start debugging without any workspace folder open

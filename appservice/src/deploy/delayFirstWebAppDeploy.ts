@@ -8,6 +8,7 @@ import { KuduClient } from 'vscode-azurekudu';
 import { SiteClient } from '../SiteClient';
 
 export async function delayFirstWebAppDeploy(client: SiteClient, asp: WebSiteManagementModels.AppServicePlan | undefined): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises, no-async-promise-executor
     await new Promise<void>(async (resolve: () => void): Promise<void> => {
         setTimeout(resolve, 10000);
         try {

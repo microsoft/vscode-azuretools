@@ -9,7 +9,6 @@ import { SiteClient } from '../SiteClient';
 
 export async function validateLinuxFunctionAppSettings(context: IActionContext, client: SiteClient, doBuild: boolean, isConsumption: boolean): Promise<void> {
     const appSettings: WebSiteManagementModels.StringDictionary = await client.listApplicationSettings();
-    // tslint:disable-next-line:strict-boolean-expressions
     appSettings.properties = appSettings.properties || {};
 
     let hasChanged: boolean = false;

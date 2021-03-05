@@ -7,7 +7,14 @@ import * as fse from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
 
-// tslint:disable-next-line: export-name
+export async function gulp_installAzureAccount(): Promise<void> {
+    return gulp_installVSCodeExtension('ms-vscode', 'azure-account');
+}
+
+export async function gulp_installResourceGroups(): Promise<void> {
+    return gulp_installVSCodeExtension('ms-azuretools', 'vscode-azureresourcegroups');
+}
+
 export async function gulp_installVSCodeExtension(publisherId: string, extensionName: string, useInsiders: boolean = false): Promise<void> {
     const extensionId: string = `${publisherId}.${extensionName}`;
     const vsCodeDir: string = useInsiders ? '.vscode-insiders' : '.vscode';

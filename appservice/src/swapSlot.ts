@@ -25,7 +25,7 @@ export async function swapSlot(sourceSlotNode: AzureTreeItem<ISiteTreeRoot>, exi
         if (sourceSlotClient.slotName !== slot.root.client.slotName) {
             // Deployment slots must have an unique name
             const otherSlot: IAzureQuickPickItem<AzureTreeItem<ISiteTreeRoot> | undefined> = {
-                // tslint:disable-next-line:no-non-null-assertion
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 label: slot.root.client.slotName!,
                 data: slot
             };
@@ -45,13 +45,13 @@ export async function swapSlot(sourceSlotNode: AzureTreeItem<ISiteTreeRoot>, exi
     await window.withProgress({ location: ProgressLocation.Notification, title: swappingSlots }, async () => {
         // if targetSlot was assigned undefined, the user selected 'production'
         if (!targetSlot) {
-            // tslint:disable-next-line:no-non-null-assertion
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             await client.webApps.swapSlotWithProduction(sourceSlotClient.resourceGroup, sourceSlotClient.siteName, { targetSlot: sourceSlotClient.slotName!, preserveVnet: true });
         } else {
-            // tslint:disable-next-line:no-non-null-assertion
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             await client.webApps.swapSlotSlot(sourceSlotClient.resourceGroup, sourceSlotClient.siteName, { targetSlot: targetSlot.root.client.slotName!, preserveVnet: true }, sourceSlotClient.slotName!);
         }
-        window.showInformationMessage(successfullySwapped);
+        void window.showInformationMessage(successfullySwapped);
         ext.outputChannel.appendLog(successfullySwapped);
     });
 }

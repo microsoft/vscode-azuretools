@@ -43,7 +43,6 @@ export namespace taskUtils {
     }
 
     export async function findTask(deployFsPath: string, taskName: string, tasks?: Task[]): Promise<Task | undefined> {
-        // tslint:disable-next-line: strict-boolean-expressions
         tasks = tasks || await codeTasks.fetchTasks();
         taskName = taskName.toLowerCase();
         return tasks.find(t => {

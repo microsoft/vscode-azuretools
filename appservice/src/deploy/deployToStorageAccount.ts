@@ -33,7 +33,6 @@ export async function deployToStorageAccount(context: IActionContext, fsPath: st
     const blobService: BlobServiceClient = await createBlobServiceClient(client);
     const blobUrl: string = await createBlobFromZip(context, fsPath, client, blobService, blobName);
     const appSettings: WebSiteManagementModels.StringDictionary = await client.listApplicationSettings();
-    // tslint:disable-next-line:strict-boolean-expressions
     appSettings.properties = appSettings.properties || {};
     delete appSettings.properties.WEBSITE_RUN_FROM_ZIP; // delete old app setting name if it exists
     appSettings.properties.WEBSITE_RUN_FROM_PACKAGE = blobUrl;
@@ -83,9 +82,8 @@ async function createBlobFromZip(context: IActionContext, fsPath: string, client
         await blobClient.uploadStream(zipStream);
     });
 
-    // NOTE: the `result` from `uploadStream` above doesn't actually have the contentLength - thus we have to make a seperate call here
-    // tslint:disable-next-line: no-floating-promises
-    blobClient.getProperties().then(r => {
+    // NOTE: the `result` from `uploadStream` above doesn't actually have the contentLength - thus we have to make a separate call here
+    void blobClient.getProperties().then(r => {
         context.telemetry.measurements.blobSize = Number(r.contentLength);
     });
 

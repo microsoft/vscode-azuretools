@@ -61,7 +61,6 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
 
     // returns the supported location, a location in the region map, or undefined
     private async getSupportedLocation(wizardContext: IAppServiceWizardContext, location: SubscriptionModels.Location): Promise<string | undefined> {
-        // tslint:disable-next-line: strict-boolean-expressions
         const locations: string[] = await this.getLocations(wizardContext) || [];
         const locationName: string = nonNullProp(location, 'name');
 
@@ -91,7 +90,6 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
             });
             const regionMappingJson: RegionMappingJsonResponse = <RegionMappingJsonResponse>response.parsedBody;
 
-            // tslint:disable-next-line: strict-boolean-expressions
             if (regionMappingJson.regions[locationName]) {
                 return regionMappingJson.regions[locationName].pairedRegions;
             }

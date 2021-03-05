@@ -12,9 +12,10 @@ import { localize } from './localize';
 export function registerSiteCommand(commandId: string, callback: CommandCallback, debounce?: number): void {
     registerCommand(
         commandId,
-        // tslint:disable-next-line: no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         async (context, ...args: any[]) => {
             try {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
                 return await Promise.resolve(callback(context, ...args));
             } catch (error) {
                 handleSiteErrors(context, error);

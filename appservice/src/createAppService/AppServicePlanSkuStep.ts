@@ -12,9 +12,11 @@ import { AppKind, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 import { setLocationsTask } from './setLocationsTask';
 
+type ExtendedSkuDescription = WebSiteManagementModels.SkuDescription & { label?: string; description?: string }
+
 export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
-        let skus: WebSiteManagementModels.SkuDescription[] = this.getCommonSkus();
+        let skus: ExtendedSkuDescription[] = wizardContext.advancedCreation ? this.getCommonSkus() : this.getRecommendedSkus();
         if (wizardContext.newSiteKind === AppKind.functionapp) {
             skus.push(...this.getElasticPremiumSkus());
         }
@@ -26,8 +28,8 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
 
         const pricingTiers: IAzureQuickPickItem<WebSiteManagementModels.SkuDescription | undefined>[] = skus.map(s => {
             return {
-                label: nonNullProp(s, 'name'),
-                description: s.tier,
+                label: s.label || nonNullProp(s, 'name'),
+                description: s.description || s.tier,
                 data: s
             };
         });
@@ -35,7 +37,8 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
         pricingTiers.push({ label: localize('ShowPricingCalculator', '$(link-external) Show pricing information...'), data: undefined, suppressPersistence: true });
 
         while (!wizardContext.newPlanSku) {
-            wizardContext.newPlanSku = (await wizardContext.ui.showQuickPick(pricingTiers, { placeHolder: localize('PricingTierPlaceholder', 'Select a pricing tier for the new App Service plan.') })).data;
+            const placeHolder = localize('pricingTierPlaceholder', 'Select a pricing tier');
+            wizardContext.newPlanSku = (await wizardContext.ui.showQuickPick(pricingTiers, { placeHolder })).data;
 
             if (!wizardContext.newPlanSku) {
                 if (wizardContext.newSiteOS === WebsiteOS.linux) {
@@ -51,6 +54,38 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
 
     public shouldPrompt(wizardContext: IAppServiceWizardContext): boolean {
         return !wizardContext.newPlanSku;
+    }
+
+    private getRecommendedSkus(): ExtendedSkuDescription[] {
+        return [
+            {
+                name: 'F1',
+                tier: 'Free',
+                size: 'F1',
+                family: 'F',
+                capacity: 1,
+                label: localize('freeLabel', 'Free'),
+                description: localize('freeDescription', 'Try out Azure at no cost')
+            },
+            {
+                name: 'B1',
+                tier: 'Basic',
+                size: 'B1',
+                family: 'B',
+                capacity: 1,
+                label: localize('basicLabel', 'Basic'),
+                description: localize('basicDescription', 'Develop and test')
+            },
+            {
+                name: 'P1v2',
+                tier: 'Premium V2',
+                size: 'P1v2',
+                family: 'Pv2',
+                capacity: 1,
+                label: localize('premiumLabel', 'Premium'),
+                description: localize('premiumDescription', 'Use in production')
+            }
+        ];
     }
 
     private getCommonSkus(): WebSiteManagementModels.SkuDescription[] {

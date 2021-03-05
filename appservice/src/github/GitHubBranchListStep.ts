@@ -15,7 +15,7 @@ export class GitHubBranchListStep extends AzureWizardPromptStep<IConnectToGitHub
         let branchData: gitHubBranchData | string;
         const picksCache: ICachedQuickPicks<gitHubBranchData> = { picks: [] };
         let url: string = `${nonNullProp(context, 'repoData').url}/branches`;
-        // tslint:disable-next-line: no-constant-condition
+        // eslint-disable-next-line no-constant-condition
         while (true) {
             branchData = (await context.ui.showQuickPick(this.getBranchPicks(context, picksCache, url), { placeHolder })).data;
             if (typeof branchData === 'string') {

@@ -3,8 +3,6 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// tslint:disable:max-func-body-length no-multiline-string indent object-literal-key-quotes
-
 import { addPackageLintSuites } from '../src';
 
 const packageJson: {} = {

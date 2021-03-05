@@ -3,11 +3,10 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as glob from 'glob';
+import * as globby from 'globby';
 import * as Mocha from 'mocha';
 import * as path from 'path';
 
-// tslint:disable-next-line: export-name
 export async function run(): Promise<void> {
     const options: Mocha.MochaOptions = {
         ui: 'tdd',
@@ -26,11 +25,7 @@ export async function run(): Promise<void> {
 
     const mocha = new Mocha(options);
 
-    const files: string[] = await new Promise((resolve, reject) => {
-        glob('**/**.test.js', { cwd: __dirname }, (err, result) => {
-            err ? reject(err) : resolve(result);
-        });
-    });
+    const files: string[] = await globby('**/**.test.js', { cwd: __dirname });
 
     files.forEach(f => mocha.addFile(path.resolve(__dirname, f)));
 
@@ -45,12 +40,10 @@ function addEnvVarsToMochaOptions(options: Mocha.MochaOptions): void {
         const match: RegExpMatchArray | null = envVar.match(/^mocha_(.+)/i);
         if (match) {
             const [, option] = match;
-            // tslint:disable-next-line:strict-boolean-expressions
             let value: string | number = process.env[envVar] || '';
             if (typeof value === 'string' && !isNaN(parseInt(value))) {
                 value = parseInt(value);
             }
-            // tslint:disable-next-line: no-any
             (<any>options)[option] = value;
         }
     }

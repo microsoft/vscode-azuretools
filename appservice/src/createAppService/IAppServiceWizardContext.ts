@@ -88,4 +88,9 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
      * This will be defined after `AppInsightsNameStep.prompt` occurs.
      */
     newAppInsightsName?: string;
+
+    /**
+     * Indicates advanced creation should be used
+     */
+    advancedCreation?: boolean;
 }

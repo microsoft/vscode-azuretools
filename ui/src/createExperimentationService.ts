@@ -16,11 +16,21 @@ export async function createExperimentationService(ctx: vscode.ExtensionContext,
     const { extensionId, extensionVersion } = getPackageInfo(ctx);
 
     if (vscode.workspace.getConfiguration('telemetry').get('enableTelemetry', false)) {
+        if (targetPopulation === undefined) {
+            if (ctx.extensionMode !== vscode.ExtensionMode.Production) {
+                targetPopulation = tas.TargetPopulation.Team;
+            } else if (/alpha/ig.test(extensionVersion)) {
+                targetPopulation = tas.TargetPopulation.Insiders;
+            } else {
+                targetPopulation = tas.TargetPopulation.Public;
+            }
+        }
+
         try {
             result.wrappedExperimentationService = await tas.getExperimentationServiceAsync(
                 extensionId,
                 extensionVersion,
-                targetPopulation ?? (/alpha/ig.test(extensionVersion) ? tas.TargetPopulation.Insiders : tas.TargetPopulation.Public),
+                targetPopulation,
                 new ExperimentationTelemetry(ext._internalReporter, ctx),
                 ctx.globalState
             );
@@ -88,6 +98,11 @@ class ExperimentationTelemetry implements tas.IExperimentationTelemetry {
         }
 
         Object.assign(properties, this.sharedProperties);
+
+        // Treat the TAS query event as activation
+        if (/query-expfeature/i.test(eventName)) {
+            properties.isActivationEvent = 'true';
+        }
 
         this.telemetryReporter.sendTelemetryErrorEvent(eventName, properties);
     }
