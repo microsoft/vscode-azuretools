@@ -40,11 +40,17 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
     }
 
     public static async setLocation<T extends ILocationWizardContextInternal>(wizardContext: T, name: string): Promise<void> {
+        /**
+         * Get location from locations list if passed in default location name is availble
+         * Otherwise get the first location from location list.
+         */
         const locations: SubscriptionModels.Location[] = await LocationListStep.getLocations(wizardContext);
         name = generalizeLocationName(name);
-        wizardContext.location = locations.find(l => {
-            return name === generalizeLocationName(l.name) || name === generalizeLocationName(l.displayName);
-        });
+        let location: SubscriptionModels.Location | undefined = locations.find(l => { return name === generalizeLocationName(l.name) || name === generalizeLocationName(l.displayName); });
+        if (!location) {
+            location = locations.find(l => l.displayName !== undefined || l.name !== undefined );
+        }
+        wizardContext.location = location;
     }
 
     public static async getLocations<T extends ILocationWizardContextInternal>(wizardContext: T): Promise<SubscriptionModels.Location[]> {
