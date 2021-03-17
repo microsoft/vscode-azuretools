@@ -679,4 +679,13 @@ Time:2020-01-13T22:08:56.4055648Z`);
         assert.strictEqual(pe.message, 'EntryNotFound (FileSystemError): azureDatabases:/testCol33-cosmos-collection.json?id=/cosmosDBAttachedAccounts/127.0.0.1:27017/testDB/testCol33');
         assert.strictEqual(pe.isUserCancelledError, false);
     });
+
+    test('Error with weird stack', () => {
+        const pe: IParsedError = parseError({
+            stack: {}
+        });
+        assert.strictEqual(pe.errorType, 'object');
+        assert.strictEqual(pe.message, '{"stack":{}}');
+        assert.strictEqual(pe.isUserCancelledError, false);
+    });
 });
