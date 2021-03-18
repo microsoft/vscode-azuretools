@@ -179,9 +179,9 @@ function unpackErrorFromField(error: any, prop: string): any {
  * Final minified line:
  * FileService.StorageServiceClient._processResponse azure-storage/storageserviceclient.js:751:50
  */
-function getCallstack(error: { stack?: string }): string | undefined {
+function getCallstack(error: { stack?: unknown }): string | undefined {
     // tslint:disable-next-line: strict-boolean-expressions
-    const stack: string = error.stack || '';
+    const stack: string = typeof error.stack === 'string' ? error.stack : '';
 
     const minifiedLines: (string | undefined)[] = stack
         .split(/(\r\n|\n)/g) // split by line ending
