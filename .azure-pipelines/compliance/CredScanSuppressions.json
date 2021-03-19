@@ -34,11 +34,11 @@
             "_justification": "No need to scan VS Code test folder."
         },
         {
-            "file": "ui\\test\\callWithMaskHandling.test.ts",
+            "file": "ui\\test\\masking.test.ts",
             "_justification": "Fake credentials used for unit tests."
         },
         {
-            "file": "ui\\out\\test\\callWithMaskHandling.test.js",
+            "file": "ui\\out\\test\\masking.test.js",
             "_justification": "Fake credentials used for unit tests."
         }
     ]
