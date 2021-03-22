@@ -45,20 +45,26 @@ export async function createExperimentationService(ctx: vscode.ExtensionContext,
 class ExperimentationServiceAdapter implements IExperimentationServiceAdapter {
     public wrappedExperimentationService?: tas.IExperimentationService;
 
+    /**
+     * @deprecated Use `getCachedTreatmentVariable<boolean>('flight-name') instead
+     */
     public async isCachedFlightEnabled(flight: string): Promise<boolean> {
         if (!this.wrappedExperimentationService) {
             return false;
         }
 
-        return this.wrappedExperimentationService.isCachedFlightEnabled(flight);
+        return !!(await this.getCachedTreatmentVariable<boolean>(flight));
     }
 
+    /**
+     * @deprecated Use `getLiveTreatmentVariable<boolean>('flight-name') instead
+     */
     public async isLiveFlightEnabled(flight: string): Promise<boolean> {
         if (!this.wrappedExperimentationService) {
             return false;
         }
 
-        return this.wrappedExperimentationService.isFlightEnabledAsync(flight);
+        return !!(await this.getLiveTreatmentVariable<boolean>(flight));
     }
 
     public async getCachedTreatmentVariable<T extends string | number | boolean>(name: string): Promise<T | undefined> {
