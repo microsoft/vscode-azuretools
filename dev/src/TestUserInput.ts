@@ -70,7 +70,7 @@ export class TestUserInput implements types.TestUserInput {
                 }
             }
 
-            this._onDidFinishPromptEmitter.fire(result);
+            this._onDidFinishPromptEmitter.fire({ value: result });
             return result;
         }
     }
@@ -100,7 +100,10 @@ export class TestUserInput implements types.TestUserInput {
             throw new Error(`Unexpected input '${input}' for showInputBox.`);
         }
 
-        this._onDidFinishPromptEmitter.fire(result);
+        this._onDidFinishPromptEmitter.fire({
+            value: result,
+            matchesDefault: result === options.value
+        });
         return result;
     }
 
@@ -124,7 +127,7 @@ export class TestUserInput implements types.TestUserInput {
             throw new Error(`Unexpected input '${input}' for showWarningMessage.`);
         }
 
-        this._onDidFinishPromptEmitter.fire(result);
+        this._onDidFinishPromptEmitter.fire({ value: result });
         return result;
     }
 
@@ -139,7 +142,7 @@ export class TestUserInput implements types.TestUserInput {
             throw new Error(`Unexpected input '${input}' for showOpenDialog.`);
         }
 
-        this._onDidFinishPromptEmitter.fire(result);
+        this._onDidFinishPromptEmitter.fire({ value: result });
         return result;
     }
 }
