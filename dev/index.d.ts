@@ -161,7 +161,14 @@ export declare enum TestInput {
     BackButton
 }
 
-export type PromptResult = string | QuickPickItem | QuickPickItem[] | MessageItem | Uri[];
+export type PromptResult = {
+    value: string | QuickPickItem | QuickPickItem[] | MessageItem | Uri[];
+
+    /**
+     * True if the user did not change from the default value, currently only supported for `showInputBox`
+     */
+    matchesDefault?: boolean;
+};
 
 /**
  * Wrapper class of several `vscode.window` methods that handle user input.
