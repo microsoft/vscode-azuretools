@@ -27,7 +27,7 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
     private _wizardHideStepCount?: boolean;
 
     private _cachedInputBoxValues: { [step: string]: string | undefined } = {};
-    private _currentStepName: string | undefined;
+    private _currentStepId: string | undefined;
 
     public constructor(context: T, options: types.IWizardOptions<T>) {
         // reverse steps to make it easier to use push/pop
@@ -41,7 +41,7 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
     }
 
     public getCachedInputBoxValue(): string | undefined {
-        return this._currentStepName ? this._cachedInputBoxValues[this._currentStepName] : undefined;
+        return this._currentStepId ? this._cachedInputBoxValues[this._currentStepId] : undefined;
     }
 
     public get hideStepCount(): boolean {
@@ -65,7 +65,7 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
             while (step) {
                 step.reset();
 
-                this._context.telemetry.properties.lastStepAttempted = `prompt-${step.constructor.name}`;
+                this._context.telemetry.properties.lastStepAttempted = `prompt-${getEffectiveStepId(step)}`;
                 this.title = step.effectiveTitle;
                 this._stepHideStepCount = step.hideStepCount;
 
@@ -75,23 +75,27 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
                     const disposable: vscode.Disposable = this._context.ui.onDidFinishPrompt((result) => {
                         // tslint:disable-next-line: no-non-null-assertion
                         step!.prompted = true;
-                        if (typeof result === 'string' && this._currentStepName && !step?.supportsDuplicateSteps) {
-                            this._cachedInputBoxValues[this._currentStepName] = result;
+                        if (typeof result.value === 'string' && !result.matchesDefault && this._currentStepId && !step?.supportsDuplicateSteps) {
+                            this._cachedInputBoxValues[this._currentStepId] = result.value;
                         }
                     });
 
                     try {
-                        this._currentStepName = step.constructor.name;
+                        this._currentStepId = getEffectiveStepId(step);
                         await step.prompt(this._context);
                     } catch (err) {
-                        if (parseError(err).errorType === 'GoBackError') { // Use `errorType` instead of `instanceof` so that tests can also hit this case
+                        const pe: types.IParsedError = parseError(err);
+                        if (pe.errorType === 'GoBackError') { // Use `errorType` instead of `instanceof` so that tests can also hit this case
                             step = this.goBack(step);
                             continue;
                         } else {
+                            if (pe.isUserCancelledError) {
+                                this._context.telemetry.properties.cancelStep = getEffectiveStepId(step);
+                            }
                             throw err;
                         }
                     } finally {
-                        this._currentStepName = undefined;
+                        this._currentStepId = undefined;
                         disposable.dispose();
                     }
                 }
@@ -134,7 +138,7 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
             let step: AzureWizardExecuteStep<T> | undefined = steps.pop();
             while (step) {
                 if (step.shouldExecute(this._context)) {
-                    this._context.telemetry.properties.lastStepAttempted = `execute-${step.constructor.name}`;
+                    this._context.telemetry.properties.lastStepAttempted = `execute-${getEffectiveStepId(step)}`;
                     await step.execute(this._context, internalProgress);
                     currentStep += 1;
                 }
@@ -173,7 +177,7 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
 
         if (subWizard.promptSteps) {
             subWizard.promptSteps = subWizard.promptSteps.filter(s1 => {
-                return s1.supportsDuplicateSteps || !this._finishedPromptSteps.concat(this._promptSteps).some(s2 => s1.constructor.name === s2.constructor.name);
+                return s1.supportsDuplicateSteps || !this._finishedPromptSteps.concat(this._promptSteps).some(s2 => getEffectiveStepId(s1) === getEffectiveStepId(s2));
             });
             this._promptSteps.push(...<AzureWizardPromptStep<T>[]>subWizard.promptSteps.reverse());
             step.numSubPromptSteps = subWizard.promptSteps.length;
@@ -186,6 +190,10 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
             step.numSubExecuteSteps = subWizard.executeSteps.length;
         }
     }
+}
+
+function getEffectiveStepId<T extends types.IActionContext>(step: types.AzureWizardPromptStep<T> | types.AzureWizardExecuteStep<T>): string {
+    return step.id || step.constructor.name;
 }
 
 function removeFromEnd<T>(array: T[], n: number): void {

@@ -57,7 +57,7 @@ export class AzureUserInput implements types.IAzureUserInput, types.AzureUserInp
             this._persistence.update(persistenceKey, getPersistenceValue(result));
         }
 
-        this._onDidFinishPromptEmitter.fire(result);
+        this._onDidFinishPromptEmitter.fire({ value: result });
         return result;
     }
 
@@ -76,7 +76,10 @@ export class AzureUserInput implements types.IAzureUserInput, types.AzureUserInp
         if (result === undefined) {
             throw new UserCancelledError();
         } else {
-            this._onDidFinishPromptEmitter.fire(result);
+            this._onDidFinishPromptEmitter.fire({
+                value: result,
+                matchesDefault: result === options.value
+            });
             return result;
         }
     }
@@ -106,7 +109,7 @@ export class AzureUserInput implements types.IAzureUserInput, types.AzureUserInp
             } else if (result === back) {
                 throw new GoBackError();
             } else {
-                this._onDidFinishPromptEmitter.fire(result);
+                this._onDidFinishPromptEmitter.fire({ value: result });
                 return result;
             }
         }
@@ -118,7 +121,7 @@ export class AzureUserInput implements types.IAzureUserInput, types.AzureUserInp
         if (result === undefined || result.length === 0) {
             throw new UserCancelledError();
         } else {
-            this._onDidFinishPromptEmitter.fire(result);
+            this._onDidFinishPromptEmitter.fire({ value: result });
             return result;
         }
     }

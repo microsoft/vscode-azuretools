@@ -14,6 +14,7 @@ export abstract class AzureWizardPromptStep<T extends types.IActionContext> impl
     public numSubExecuteSteps: number;
     public propertiesBeforePrompt: string[];
     public prompted: boolean;
+    public id?: string;
 
     public abstract prompt(wizardContext: T): Promise<void>;
 

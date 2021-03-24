@@ -724,7 +724,14 @@ export interface IParsedError {
     isUserCancelledError: boolean;
 }
 
-export type PromptResult = string | QuickPickItem | QuickPickItem[] | MessageItem | Uri[];
+export type PromptResult = {
+    value: string | QuickPickItem | QuickPickItem[] | MessageItem | Uri[];
+
+    /**
+     * True if the user did not change from the default value, currently only supported for `showInputBox`
+     */
+    matchesDefault?: boolean;
+};
 
 /**
  * Wrapper interface of several `vscode.window` methods that handle user input. The main reason for this interface
@@ -914,6 +921,12 @@ export declare abstract class AzureWizardExecuteStep<T extends IActionContext> {
     public abstract priority: number;
 
     /**
+     * Optional id used to determine if this step is unique, for things like caching values and telemetry
+     * If not specified, the class name will be used instead
+     */
+    public id?: string;
+
+    /**
      * Execute the step
      */
     public abstract execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
@@ -933,8 +946,15 @@ export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
 
     /**
      * If true, multiple steps of the same type can be shown in a wizard. By default, duplicate steps are filtered out
+     * NOTE: You can also use the `id` property to prevent a step from registering as a duplicate in the first place
      */
     public supportsDuplicateSteps: boolean;
+
+    /**
+     * Optional id used to determine if this step is unique, for things like caching values and telemetry
+     * If not specified, the class name will be used instead
+     */
+    public id?: string;
 
     /**
      * Prompt the user for input
