@@ -4,11 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Environment } from '@azure/ms-rest-azure-env';
-import { BaseRequestPolicy, HttpOperationResponse, RequestPolicy, RequestPolicyFactory, RequestPolicyOptions, RequestPrepareOptions, ServiceClient, WebResource, WebResourceLike } from '@azure/ms-rest-js';
+import { BaseRequestPolicy, HttpOperationResponse, RequestPolicy, RequestPolicyFactory, RequestPolicyOptions, RequestPrepareOptions, RestError, ServiceClient, WebResource, WebResourceLike } from '@azure/ms-rest-js';
 import * as vscode from "vscode";
 import * as types from '../index';
 import { appendExtensionUserAgent } from "./extensionUserAgent";
 import { GenericServiceClient } from './GenericServiceClient';
+import { localize } from './localize';
+import { parseError } from './parseError';
 import { parseJson, removeBom } from './utils/parseJson';
 
 export function createAzureClient<T>(
@@ -75,6 +77,14 @@ function addAzExtFactories(defaultFactories: RequestPolicyFactory[]): RequestPol
             create: (nextPolicy, options): RequestPolicy => new MissingContentTypePolicy(nextPolicy, options)
         }
     );
+
+    // We want this one to execute last
+    defaultFactories.unshift(
+        {
+            create: (nextPolicy, options): RequestPolicy => new StatusCodePolicy(nextPolicy, options)
+        }
+    );
+
     return defaultFactories;
 }
 
@@ -118,5 +128,26 @@ class MissingContentTypePolicy extends BaseRequestPolicy {
             }
         }
         return response;
+    }
+}
+
+/**
+ * The Azure SDK will only throw errors for bad status codes if it has an "operationSpec", but none of our "generic" requests will have that
+ */
+class StatusCodePolicy extends BaseRequestPolicy {
+    constructor(nextPolicy: RequestPolicy, requestPolicyOptions: RequestPolicyOptions) {
+        super(nextPolicy, requestPolicyOptions);
+    }
+
+    public async sendRequest(request: WebResourceLike): Promise<HttpOperationResponse> {
+        const response: HttpOperationResponse = await this._nextPolicy.sendRequest(request);
+        if (response.status < 200 || response.status >= 300) {
+            const errorMessage: string = response.bodyAsText ?
+                parseError(response.parsedBody || response.bodyAsText).message :
+                localize('unexpectedStatusCode', 'Unexpected status code: {0}', response.status);
+            throw new RestError(errorMessage, undefined, response.status, request, response, response.bodyAsText);
+        } else {
+            return response;
+        }
     }
 }
