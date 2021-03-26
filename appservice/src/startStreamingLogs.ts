@@ -3,8 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { AbortController } from '@azure/abort-controller';
 import { WebSiteManagementModels } from '@azure/arm-appservice';
-import * as request from 'request';
+import { Request, default as fetch } from 'node-fetch';
 import { setInterval } from 'timers';
 import * as vscode from 'vscode';
 import { appendExtensionUserAgent, callWithTelemetryAndErrorHandling, IActionContext, parseError } from 'vscode-azureextensionui';
@@ -55,21 +56,24 @@ export async function startStreamingLogs(client: ISimplifiedSiteClient, verifyLo
                     timerId = setInterval(async () => await pingFunctionApp(client), 60 * 1000);
                 }
 
-                await new Promise<void>((onLogStreamEnded: () => void, reject: (err: Error) => void): void => {
-                    const logsRequest: request.Request = request(`${client.kuduUrl}/api/logstream/${logsPath}`, {
-                        auth: {
-                            user: creds.publishingUserName,
-                            password: nonNullProp(creds, 'publishingPassword')
-                        },
-                        headers: {
-                            'User-Agent': appendExtensionUserAgent()
-                        }
-                    });
+                const buffer = Buffer.from(`${creds.publishingUserName}${nonNullProp(creds, 'publishingPassword')}`);
+                const abortController = new AbortController();
 
+                const logsRequest = new Request(`${client.kuduUrl}/api/logstream/${logsPath}`, {
+                    headers: {
+                        Authorization: `Basic ${buffer.toString('base64')}`,
+                        'User-Agent': appendExtensionUserAgent(),
+                    },
+                    signal: abortController.signal,
+                });
+
+                const logsResponse = await fetch(logsRequest);
+
+                await new Promise<void>((onLogStreamEnded: () => void, reject: (err: Error) => void): void => {
                     const newLogStream: ILogStream = {
                         dispose: (): void => {
-                            logsRequest.removeAllListeners();
-                            logsRequest.destroy();
+                            logsResponse.body.removeAllListeners();
+                            abortController.abort();
                             outputChannel.show();
                             if (timerId) {
                                 clearInterval(timerId);
@@ -82,7 +86,7 @@ export async function startStreamingLogs(client: ISimplifiedSiteClient, verifyLo
                         outputChannel: outputChannel
                     };
 
-                    logsRequest.on('data', (chunk: Buffer | string) => {
+                    logsResponse.body.on('data', (chunk: Buffer | string) => {
                         outputChannel.append(chunk.toString());
                     }).on('error', (err: Error) => {
                         if (timerId) {
