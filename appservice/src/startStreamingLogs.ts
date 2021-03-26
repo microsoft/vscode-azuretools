@@ -56,7 +56,7 @@ export async function startStreamingLogs(client: ISimplifiedSiteClient, verifyLo
                     timerId = setInterval(async () => await pingFunctionApp(client), 60 * 1000);
                 }
 
-                const buffer: Buffer = Buffer.from(`${creds.publishingUserName}${nonNullProp(creds, 'publishingPassword')}`);
+                const buffer: Buffer = Buffer.from(`${creds.publishingUserName}:${nonNullProp(creds, 'publishingPassword')}`);
                 const abortController: AbortController = new AbortController();
 
                 const logsRequest: Request = new Request(`${client.kuduUrl}/api/logstream/${logsPath}`, {
@@ -73,7 +73,11 @@ export async function startStreamingLogs(client: ISimplifiedSiteClient, verifyLo
                     const newLogStream: ILogStream = {
                         dispose: (): void => {
                             logsResponse.body.removeAllListeners();
-                            abortController.abort();
+                            try {
+                                abortController.abort();
+                            } catch (err) {
+                                // The above throws an AbortError which we need to catch and ignore
+                            }
                             outputChannel.show();
                             if (timerId) {
                                 clearInterval(timerId);
