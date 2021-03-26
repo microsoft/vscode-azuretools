@@ -5,10 +5,10 @@
 
 import { AbortController } from '@azure/abort-controller';
 import { WebSiteManagementModels } from '@azure/arm-appservice';
-import { Response, Request, default as fetch } from 'node-fetch';
+import { BasicAuthenticationCredentials, HttpOperationResponse, ServiceClient, WebResource } from '@azure/ms-rest-js';
 import { setInterval } from 'timers';
 import * as vscode from 'vscode';
-import { appendExtensionUserAgent, callWithTelemetryAndErrorHandling, IActionContext, parseError } from 'vscode-azureextensionui';
+import { callWithTelemetryAndErrorHandling, createGenericClient, IActionContext, parseError } from 'vscode-azureextensionui';
 import { ext } from './extensionVariables';
 import { ISimplifiedSiteClient } from './ISimplifiedSiteClient';
 import { localize } from './localize';
@@ -56,39 +56,28 @@ export async function startStreamingLogs(client: ISimplifiedSiteClient, verifyLo
                     timerId = setInterval(async () => await pingFunctionApp(client), 60 * 1000);
                 }
 
-                const buffer: Buffer = Buffer.from(`${creds.publishingUserName}:${nonNullProp(creds, 'publishingPassword')}`);
+                const genericClient: ServiceClient = await createGenericClient(new BasicAuthenticationCredentials(creds.publishingUserName, nonNullProp(creds, 'publishingPassword')));
+
                 const abortController: AbortController = new AbortController();
 
-                const logsRequest: Request = new Request(`${client.kuduUrl}/api/logstream/${logsPath}`, {
-                    headers: {
-                        Authorization: `Basic ${buffer.toString('base64')}`,
-                        'User-Agent': appendExtensionUserAgent(),
-                    },
-                    signal: abortController.signal,
-                });
+                const request = new WebResource(
+                    `${client.kuduUrl}/api/logstream/${logsPath}`,
+                    'GET',
+                    undefined, // body
+                    undefined, // query
+                    undefined, // headers, will be updated by GenericServiceClient
+                    true, // streamResponseBody
+                    undefined, // withCredentials
+                    abortController.signal, //abortSignal
+                );
 
-                const logsResponse: Response = await fetch(logsRequest);
-
-                if (logsResponse.status < 200 || logsResponse.status >= 300) {
-                    if (timerId) {
-                        clearInterval(timerId);
-                    }
-                    outputChannel.show();
-                    outputChannel.appendLine(localize('logStreamError', 'Error connecting to log-streaming service:'));
-                    const message = `${logsResponse.status}: ${logsResponse.statusText}`;
-                    outputChannel.appendLine(message);
-                    throw new Error(message);
-                }
+                const logsResponse: HttpOperationResponse = await genericClient.sendRequest(request);
 
                 await new Promise<void>((onLogStreamEnded: () => void, reject: (err: Error) => void): void => {
                     const newLogStream: ILogStream = {
                         dispose: (): void => {
-                            logsResponse.body.removeAllListeners();
-                            try {
-                                abortController.abort();
-                            } catch (err) {
-                                // The above throws an AbortError which we need to catch and ignore
-                            }
+                            logsResponse.readableStreamBody?.removeAllListeners();
+                            abortController.abort();
                             outputChannel.show();
                             if (timerId) {
                                 clearInterval(timerId);
@@ -101,7 +90,7 @@ export async function startStreamingLogs(client: ISimplifiedSiteClient, verifyLo
                         outputChannel: outputChannel
                     };
 
-                    logsResponse.body.on('data', (chunk: Buffer | string) => {
+                    logsResponse.readableStreamBody?.on('data', (chunk: Buffer | string) => {
                         outputChannel.append(chunk.toString());
                     }).on('error', (err: Error) => {
                         if (timerId) {
