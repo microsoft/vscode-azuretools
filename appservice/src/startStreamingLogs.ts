@@ -69,6 +69,17 @@ export async function startStreamingLogs(client: ISimplifiedSiteClient, verifyLo
 
                 const logsResponse: Response = await fetch(logsRequest);
 
+                if (logsResponse.status < 200 || logsResponse.status >= 300) {
+                    if (timerId) {
+                        clearInterval(timerId);
+                    }
+                    outputChannel.show();
+                    outputChannel.appendLine(localize('logStreamError', 'Error connecting to log-streaming service:'));
+                    const message = `${logsResponse.status}: ${logsResponse.statusText}`;
+                    outputChannel.appendLine(message);
+                    throw new Error(message);
+                }
+
                 await new Promise<void>((onLogStreamEnded: () => void, reject: (err: Error) => void): void => {
                     const newLogStream: ILogStream = {
                         dispose: (): void => {
