@@ -5,7 +5,7 @@
 
 import { AbortController } from '@azure/abort-controller';
 import { WebSiteManagementModels } from '@azure/arm-appservice';
-import { Request, default as fetch } from 'node-fetch';
+import { Response, Request, default as fetch } from 'node-fetch';
 import { setInterval } from 'timers';
 import * as vscode from 'vscode';
 import { appendExtensionUserAgent, callWithTelemetryAndErrorHandling, IActionContext, parseError } from 'vscode-azureextensionui';
@@ -56,10 +56,10 @@ export async function startStreamingLogs(client: ISimplifiedSiteClient, verifyLo
                     timerId = setInterval(async () => await pingFunctionApp(client), 60 * 1000);
                 }
 
-                const buffer = Buffer.from(`${creds.publishingUserName}${nonNullProp(creds, 'publishingPassword')}`);
-                const abortController = new AbortController();
+                const buffer: Buffer = Buffer.from(`${creds.publishingUserName}${nonNullProp(creds, 'publishingPassword')}`);
+                const abortController: AbortController = new AbortController();
 
-                const logsRequest = new Request(`${client.kuduUrl}/api/logstream/${logsPath}`, {
+                const logsRequest: Request = new Request(`${client.kuduUrl}/api/logstream/${logsPath}`, {
                     headers: {
                         Authorization: `Basic ${buffer.toString('base64')}`,
                         'User-Agent': appendExtensionUserAgent(),
@@ -67,7 +67,7 @@ export async function startStreamingLogs(client: ISimplifiedSiteClient, verifyLo
                     signal: abortController.signal,
                 });
 
-                const logsResponse = await fetch(logsRequest);
+                const logsResponse: Response = await fetch(logsRequest);
 
                 await new Promise<void>((onLogStreamEnded: () => void, reject: (err: Error) => void): void => {
                     const newLogStream: ILogStream = {
