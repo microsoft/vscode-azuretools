@@ -40,6 +40,7 @@
         "escape-string-regexp": "^2.0.0",
         "fs-extra": "^8.0.0",
         "html-to-text": "^5.1.1",
+        "open": "^8.0.4",
         "semver": "^5.7.1",
         "vscode-extension-telemetry": "^0.1.5",
         "vscode-nls": "^4.1.1",
