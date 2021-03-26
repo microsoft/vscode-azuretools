@@ -10,6 +10,5 @@ export async function openUrl(url: string): Promise<void> {
     // Using this functionality is blocked by https://github.com/Microsoft/vscode/issues/25852:
     // await vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
 
-    // tslint:disable-next-line: no-unsafe-any
-    open(url);
+    await open(url);
 }
