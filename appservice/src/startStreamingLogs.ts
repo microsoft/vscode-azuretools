@@ -60,6 +60,8 @@ export async function startStreamingLogs(client: ISimplifiedSiteClient, verifyLo
 
                 const abortController: AbortController = new AbortController();
 
+                // Due to https://github.com/Azure/ms-rest-js/issues/393 we need to use the WebResource constructor
+                // When that is fixed this can be simplified to just an options object passed to `genericClient.sendRequest`
                 const request = new WebResource(
                     `${client.kuduUrl}/api/logstream/${logsPath}`,
                     'GET',
