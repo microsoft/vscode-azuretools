@@ -26,7 +26,7 @@ verbosityMap.set('debug', 2);
 const defaultExternalNodeModules: string[] = [
     // contain dynamically-loaded binaries
     'clipboardy',
-    'opn', // Superseded by 'open' in vscode-azureextensionui
+    'opn', // Superseded by 'open' in vscode-azureextensionui v0.41.0+
     'open'
 ];
 
