@@ -5,7 +5,7 @@
 
 import { AbortController } from '@azure/abort-controller';
 import { WebSiteManagementModels } from '@azure/arm-appservice';
-import { BasicAuthenticationCredentials, HttpOperationResponse, ServiceClient, WebResource } from '@azure/ms-rest-js';
+import { BasicAuthenticationCredentials, HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
 import { setInterval } from 'timers';
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling, createGenericClient, IActionContext, parseError } from 'vscode-azureextensionui';
@@ -57,23 +57,14 @@ export async function startStreamingLogs(client: ISimplifiedSiteClient, verifyLo
                 }
 
                 const genericClient: ServiceClient = await createGenericClient(new BasicAuthenticationCredentials(creds.publishingUserName, nonNullProp(creds, 'publishingPassword')));
-
                 const abortController: AbortController = new AbortController();
 
-                // Due to https://github.com/Azure/ms-rest-js/issues/393 we need to use the WebResource constructor
-                // When that is fixed this can be simplified to just an options object passed to `genericClient.sendRequest`
-                const request = new WebResource(
-                    `${client.kuduUrl}/api/logstream/${logsPath}`,
-                    'GET',
-                    undefined, // body
-                    undefined, // query
-                    undefined, // headers, will be updated by GenericServiceClient
-                    true, // streamResponseBody
-                    undefined, // withCredentials
-                    abortController.signal, //abortSignal
-                );
-
-                const logsResponse: HttpOperationResponse = await genericClient.sendRequest(request);
+                const logsResponse: HttpOperationResponse = await genericClient.sendRequest({
+                    method: 'GET',
+                    url: `${client.kuduUrl}/api/logstream/${logsPath}`,
+                    streamResponseBody: true,
+                    abortSignal: abortController.signal
+                });
 
                 await new Promise<void>((onLogStreamEnded: () => void, reject: (err: Error) => void): void => {
                     const newLogStream: ILogStream = {
