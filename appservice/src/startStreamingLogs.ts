@@ -3,11 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { AbortController } from '@azure/abort-controller';
 import { WebSiteManagementModels } from '@azure/arm-appservice';
-import * as request from 'request';
+import { BasicAuthenticationCredentials, HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
 import { setInterval } from 'timers';
 import * as vscode from 'vscode';
-import { appendExtensionUserAgent, callWithTelemetryAndErrorHandling, IActionContext, parseError } from 'vscode-azureextensionui';
+import { callWithTelemetryAndErrorHandling, createGenericClient, IActionContext, parseError } from 'vscode-azureextensionui';
 import { ext } from './extensionVariables';
 import { ISimplifiedSiteClient } from './ISimplifiedSiteClient';
 import { localize } from './localize';
@@ -55,21 +56,21 @@ export async function startStreamingLogs(client: ISimplifiedSiteClient, verifyLo
                     timerId = setInterval(async () => await pingFunctionApp(client), 60 * 1000);
                 }
 
-                await new Promise<void>((onLogStreamEnded: () => void, reject: (err: Error) => void): void => {
-                    const logsRequest: request.Request = request(`${client.kuduUrl}/api/logstream/${logsPath}`, {
-                        auth: {
-                            user: creds.publishingUserName,
-                            password: nonNullProp(creds, 'publishingPassword')
-                        },
-                        headers: {
-                            'User-Agent': appendExtensionUserAgent()
-                        }
-                    });
+                const genericClient: ServiceClient = await createGenericClient(new BasicAuthenticationCredentials(creds.publishingUserName, nonNullProp(creds, 'publishingPassword')));
+                const abortController: AbortController = new AbortController();
 
+                const logsResponse: HttpOperationResponse = await genericClient.sendRequest({
+                    method: 'GET',
+                    url: `${client.kuduUrl}/api/logstream/${logsPath}`,
+                    streamResponseBody: true,
+                    abortSignal: abortController.signal
+                });
+
+                await new Promise<void>((onLogStreamEnded: () => void, reject: (err: Error) => void): void => {
                     const newLogStream: ILogStream = {
                         dispose: (): void => {
-                            logsRequest.removeAllListeners();
-                            logsRequest.destroy();
+                            logsResponse.readableStreamBody?.removeAllListeners();
+                            abortController.abort();
                             outputChannel.show();
                             if (timerId) {
                                 clearInterval(timerId);
@@ -82,7 +83,7 @@ export async function startStreamingLogs(client: ISimplifiedSiteClient, verifyLo
                         outputChannel: outputChannel
                     };
 
-                    logsRequest.on('data', (chunk: Buffer | string) => {
+                    logsResponse.readableStreamBody?.on('data', (chunk: Buffer | string) => {
                         outputChannel.append(chunk.toString());
                     }).on('error', (err: Error) => {
                         if (timerId) {
