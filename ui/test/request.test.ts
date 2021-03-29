@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { HttpOperationResponse } from '@azure/ms-rest-js';
+import { HttpOperationResponse, Serializer, WebResource } from '@azure/ms-rest-js';
 import * as assert from 'assert';
 import * as http from 'http';
-import { sendRequestWithTimeout } from '../src/createAzureClient';
+import { createGenericClient, sendRequestWithTimeout } from '../src/createAzureClient';
 import { assertThrowsAsync } from './assertThrowsAsync';
 
 type ResponseData = { status: number; contentType?: string; body?: string; } | ((response: http.ServerResponse) => void);
@@ -109,5 +109,24 @@ suite('request', () => {
 
     test('ECONNRESET', async () => {
         await assertThrowsAsync(async () => await sendTestRequest(res => res.destroy()), /socket hang up/i);
+    });
+
+    test('operationSpec with unexpected  error', async () => {
+        testResponses = [{ status: 404, body: 'oops' }];
+
+        const request = new WebResource(url);
+        request.operationSpec = { httpMethod: "GET", responses: { 200: {}, default: {} }, serializer: new Serializer() };
+        const client = await createGenericClient();
+        await assertThrowsAsync(async () => await client.sendRequest(request), /oops/);
+    });
+
+    test('operationSpec with expected error', async () => {
+        testResponses = [{ status: 404, body: 'oops' }];
+
+        const request = new WebResource(url);
+        request.operationSpec = { httpMethod: "GET", responses: { 200: {}, 404: {}, default: {} }, serializer: new Serializer() };
+        const client = await createGenericClient();
+        const response = await client.sendRequest(request);
+        assert.strictEqual(response.parsedBody, undefined);
     });
 });

@@ -141,7 +141,7 @@ class StatusCodePolicy extends BaseRequestPolicy {
 
     public async sendRequest(request: WebResourceLike): Promise<HttpOperationResponse> {
         const response: HttpOperationResponse = await this._nextPolicy.sendRequest(request);
-        if (response.status < 200 || response.status >= 300) {
+        if (!request.operationSpec && (response.status < 200 || response.status >= 300)) {
             const errorMessage: string = response.bodyAsText ?
                 parseError(response.parsedBody || response.bodyAsText).message :
                 localize('unexpectedStatusCode', 'Unexpected status code: {0}', response.status);
