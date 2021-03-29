@@ -7,7 +7,7 @@
 import open = require("open");
 
 export async function openUrl(url: string): Promise<void> {
-    // Using this functionality is blocked by https://github.com/Microsoft/vscode/issues/25852:
+    // Using this functionality is blocked by https://github.com/Microsoft/vscode/issues/85930
     // await vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
 
     await open(url);
