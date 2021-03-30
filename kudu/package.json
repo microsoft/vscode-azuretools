@@ -19,10 +19,10 @@
   "module": "./esm/kuduClient.js",
   "types": "./esm/kuduClient.d.ts",
   "devDependencies": {
-    "typescript": "^3.5.3",
     "rollup": "^1.18.0",
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-sourcemaps": "^0.4.2",
+    "typescript": "^3.5.3",
     "uglify-js": "^3.6.0"
   },
   "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/kudu/README.md",
