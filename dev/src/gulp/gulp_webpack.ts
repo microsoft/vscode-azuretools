@@ -24,7 +24,7 @@ export function gulp_webpack(mode: string): cp.ChildProcess {
             process.platform === 'win32' ? 'webpack.cmd' : 'webpack'),
         [
             '--mode', mode,
-            '--display', 'minimal'
+            '--stats', 'minimal'
         ],
         {
             stdio: 'inherit',

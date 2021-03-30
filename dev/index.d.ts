@@ -58,7 +58,7 @@ export interface DefaultWebpackOptions {
     externalNodeModules?: string[];
 
     /** Additional external entries (externalNodeModules are added automatically) */
-    externals?: webpack.ExternalsObjectElement,
+    externals?: { [key: string]: string },
 
     /**
      * Additional loader module rules
@@ -68,7 +68,7 @@ export interface DefaultWebpackOptions {
     /**
      * Additional plug-ins
      */
-    plugins?: webpack.Plugin[];
+    plugins?: webpack.Configuration['plugins'];
 
     /**
      * Suppress deleting the dist folder before webpack

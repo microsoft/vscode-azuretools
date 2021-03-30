@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
-import * as FileManagerPlugin from 'filemanager-webpack-plugin';
+import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as TerserPlugin from 'terser-webpack-plugin';
@@ -107,24 +107,22 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
         },
         plugins: [
             // Copy files to dist folder where the runtime can find them
-            new FileManagerPlugin({
-                onEnd: {
-                    copy: [
-                        // Test files -> dist/test (these files are ignored during packaging)
-                        {
-                            source: path.join(options.projectRoot, 'out', 'test'),
-                            destination: path.join(options.projectRoot, 'dist', 'test')
-                        },
-                        {
-                            source: path.join(options.projectRoot, 'node_modules', 'vscode-azureextensionui', 'resources', '**', '*.svg'),
-                            destination: path.join(options.projectRoot, 'dist', 'node_modules', 'vscode-azureextensionui', 'resources')
-                        },
-                        {
-                            source: path.join(options.projectRoot, 'node_modules', 'vscode-azureappservice', 'resources', '**', '*.svg'),
-                            destination: path.join(options.projectRoot, 'dist', 'node_modules', 'vscode-azureappservice', 'resources')
-                        }
-                    ]
-                }
+            new CopyWebpackPlugin({
+                patterns: [
+                    // Test files -> dist/test (these files are ignored during packaging)
+                    {
+                        from: path.join(options.projectRoot, 'out', 'test'),
+                        to: path.join(options.projectRoot, 'dist', 'test')
+                    },
+                    {
+                        from: path.join(options.projectRoot, 'node_modules', 'vscode-azureextensionui', 'resources', '**', '*.svg'),
+                        to: path.join(options.projectRoot, 'dist')
+                    },
+                    {
+                        from: path.join(options.projectRoot, 'node_modules', 'vscode-azureappservice', 'resources', '**', '*.svg'),
+                        to: path.join(options.projectRoot, 'dist')
+                    }
+                ]
             }),
 
             // Fix error:
