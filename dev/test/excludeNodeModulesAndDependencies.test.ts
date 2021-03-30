@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import FileManagerWebpackPlugin = require('filemanager-webpack-plugin');
 import * as os from 'os';
 import { Configuration } from 'webpack';
 import { excludeNodeModulesAndDependencies, getExternalsEntries, getNodeModuleCopyEntries, getNodeModulesDependencyClosure, PackageLock } from "../src/webpack/excludeNodeModulesAndDependencies";
@@ -2506,9 +2505,7 @@ suite('excludeNodeModulesAndDependencies', () => {
             externals: {
                 previous: 'commonjs previous'
             },
-            plugins: [
-                new FileManagerWebpackPlugin({})
-            ]
+            plugins: [{ apply: () => { /* do nothing */ } }]
         };
         excludeNodeModulesAndDependencies('/root', config, packageLockJson, ['yauzl']);
 

@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as FilemanagerWebpackPlugin from 'filemanager-webpack-plugin';
+import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as webpack from 'webpack';
 
@@ -44,17 +44,24 @@ export function excludeNodeModulesAndDependencies(
     log('Excluded node modules (external node modules plus dependencies)', externalModulesClosure);
     Object.assign(webpackConfig.externals, excludeEntries);
 
-    // Tell webpack to copy the given modules' sources into dist\node_modules
-    //   so they can be found through normal require calls.
-    // NOTE: copy-webpack-plugin doesn't work for this. See https://github.com/microsoft/vscode-azuretools/pull/403 and https://github.com/webpack-contrib/copy-webpack-plugin/issues/35
+    /**
+     * Tell webpack to copy the given modules' sources into dist\node_modules so they can be found through normal require calls.
+     *
+     * NOTE:
+     * copy-webpack-plugin doesn't preserve the executable bit, so we can't use it here. See https://github.com/microsoft/vscode-azuretools/pull/403 and https://github.com/webpack-contrib/copy-webpack-plugin/issues/35
+     * filemanager-webpack-plugin is another option, but it's much less popular and has it's own problems like https://github.com/gregnb/filemanager-webpack-plugin/issues/94
+     * We'll just create our own simple plugin leveraging "fs-extra" to copy the files
+     */
     webpackConfig.plugins = webpackConfig.plugins || [];
-    webpackConfig.plugins.push(new FilemanagerWebpackPlugin(
-        {
-            onEnd: {
-                copy: copyEntries
-            }
+    webpackConfig.plugins.push({
+        apply: (compiler) => {
+            compiler.hooks.afterEmit.tapPromise('AzCodeCopyWorkaround', async () => {
+                await Promise.all(copyEntries.map(async ce => {
+                    await fse.copy(ce.source, ce.destination);
+                }));
+            });
         }
-    ));
+    });
 }
 
 /**
@@ -146,13 +153,6 @@ export function getExternalsEntries(moduleNames: string[]): { [moduleName: strin
 }
 
 export function getNodeModuleCopyEntries(projectRoot: string, moduleNames: string[]): CopyEntry[] {
-    // e.g.
-    // new FilemanagerWebpackPlugin([
-    //     {
-    //         onEnd: {
-    //             copy: [
-    //                 { source: '/root/node_modules/clipboardy', destination: '/root/dist/node_modules/clipboardy' }
-    //     ...
     const copyEntries: CopyEntry[] = [];
     for (const moduleName of moduleNames) {
         copyEntries.push({
