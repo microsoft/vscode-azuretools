@@ -55,9 +55,16 @@ export function excludeNodeModulesAndDependencies(
     webpackConfig.plugins = webpackConfig.plugins || [];
     webpackConfig.plugins.push({
         apply: (compiler) => {
-            compiler.hooks.afterEmit.tapPromise('AzCodeCopyWorkaround', async () => {
+            const pluginName = 'AzCodeCopyWorkaround';
+            compiler.hooks.afterEmit.tapPromise(pluginName, async () => {
                 await Promise.all(copyEntries.map(async ce => {
-                    await fse.copy(ce.source, ce.destination);
+                    const entryName = path.basename(ce.source);
+                    if (await fse.pathExists(ce.source)) {
+                        log(`${pluginName}: Copying "${entryName}"...`);
+                        await fse.copy(ce.source, ce.destination);
+                    } else {
+                        log(`${pluginName}: Ignoring "${entryName}" because it doesn't exist`);
+                    }
                 }));
             });
         }

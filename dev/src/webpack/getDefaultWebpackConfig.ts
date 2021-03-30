@@ -112,15 +112,18 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                     // Test files -> dist/test (these files are ignored during packaging)
                     {
                         from: path.join(options.projectRoot, 'out', 'test'),
-                        to: path.join(options.projectRoot, 'dist', 'test')
+                        to: path.join(options.projectRoot, 'dist', 'test'),
+                        noErrorOnMissing: true
                     },
                     {
                         from: path.join(options.projectRoot, 'node_modules', 'vscode-azureextensionui', 'resources', '**', '*.svg'),
-                        to: path.join(options.projectRoot, 'dist')
+                        to: path.join(options.projectRoot, 'dist'),
+                        noErrorOnMissing: true
                     },
                     {
                         from: path.join(options.projectRoot, 'node_modules', 'vscode-azureappservice', 'resources', '**', '*.svg'),
-                        to: path.join(options.projectRoot, 'dist')
+                        to: path.join(options.projectRoot, 'dist'),
+                        noErrorOnMissing: true
                     }
                 ]
             }),
