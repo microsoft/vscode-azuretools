@@ -23,6 +23,7 @@
         ],
         "no-unexternalized-strings": false,
         "no-unsafe-any": false,
-        "align": false
+        "align": false,
+        "max-func-body-length": false
     }
 }
