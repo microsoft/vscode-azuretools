@@ -45,7 +45,7 @@ export async function runWithZipStream(context: IActionContext, fsPath: string, 
             if (client.isFunctionApp) {
                 filesToZip = await getFilesFromGitignore(fsPath, '.funcignore');
             } else {
-                filesToZip = await getFilesFromGlob(fsPath);
+                filesToZip = await getFilesFromGlob(fsPath, client);
             }
 
             for (const file of filesToZip) {
@@ -71,7 +71,7 @@ const commonGlobSettings: {} = {
 /**
  * Adds files using glob filtering
  */
-async function getFilesFromGlob(folderPath: string): Promise<string[]> {
+async function getFilesFromGlob(folderPath: string, client: SiteClient): Promise<string[]> {
     const zipDeployConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration(ext.prefix, vscode.Uri.file(folderPath));
     const globOptions = { cwd: folderPath, followSymbolicLinks: true, dot: true };
     const globPattern: string = zipDeployConfig.get<string>('zipGlobPattern') || '**/*';
@@ -79,6 +79,11 @@ async function getFilesFromGlob(folderPath: string): Promise<string[]> {
 
     const ignorePattern: string | string[] = zipDeployConfig.get<string | string[]>('zipIgnorePattern') || '';
     const filesToIgnore: string[] = await globby(ignorePattern, globOptions);
+
+    ext.outputChannel.appendLog(localize('zipIgnoreFilesMsg', 'Ignoring files from .vscode/settings.json \"appService.zipIgnorePattern\"'), { resourceName: client.fullName });
+    for (const file of filesToIgnore) {
+        ext.outputChannel.appendLine(localize('zipIgnoreFileNames', '\"{0}\"', file));
+    }
 
     return filesToInclude.filter(file => {
         return !filesToIgnore.includes(file);
