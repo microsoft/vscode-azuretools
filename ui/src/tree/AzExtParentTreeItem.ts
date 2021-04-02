@@ -44,7 +44,8 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
             await this._initChildrenTask;
         }
 
-        return this._cachedChildren;
+        // Return a clone to prevent timing issues and/or unintended modifications
+        return [...this._cachedChildren];
     }
 
     public get creatingTreeItems(): AzExtTreeItem[] {
@@ -185,7 +186,8 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
             } while (this.hasMoreChildrenImpl());
         });
 
-        return this._cachedChildren;
+        // Return a clone to prevent timing issues and/or unintended modifications
+        return [...this._cachedChildren];
     }
 
     public async createTreeItemsWithErrorHandling<TSource>(
