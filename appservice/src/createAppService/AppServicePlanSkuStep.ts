@@ -16,7 +16,7 @@ type ExtendedSkuDescription = WebSiteManagementModels.SkuDescription & { label?:
 
 export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
-        let skus: ExtendedSkuDescription[] = wizardContext.advancedCreation ? this.getCommonSkus() : this.getRecommendedSkus();
+        let skus: ExtendedSkuDescription[] = wizardContext.advancedCreation ? this.getRecommendedSkus().concat(this.getCommonSkus()) : this.getRecommendedSkus();
         if (wizardContext.newSiteKind === AppKind.functionapp) {
             skus.push(...this.getElasticPremiumSkus());
         }
