@@ -116,12 +116,12 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                         noErrorOnMissing: true
                     },
                     {
-                        from: path.join(options.projectRoot, 'node_modules', 'vscode-azureextensionui', 'resources', '**', '*.svg'),
+                        from: toGlobSafePath(path.join(options.projectRoot, 'node_modules', 'vscode-azureextensionui', 'resources', '**', '*.svg')),
                         to: path.join(options.projectRoot, 'dist'),
                         noErrorOnMissing: true
                     },
                     {
-                        from: path.join(options.projectRoot, 'node_modules', 'vscode-azureappservice', 'resources', '**', '*.svg'),
+                        from: toGlobSafePath(path.join(options.projectRoot, 'node_modules', 'vscode-azureappservice', 'resources', '**', '*.svg')),
                         to: path.join(options.projectRoot, 'dist'),
                         noErrorOnMissing: true
                     }
@@ -228,4 +228,12 @@ function logCore(loggingVerbosity: Verbosity, messageVerbosity: MessageVerbosity
     if (messageVerbosityValue >= loggingVerbosityValue) {
         console.log(...args);
     }
+}
+
+/**
+ * We always want to use posix separators for glob paths
+ * See https://github.com/microsoft/vscode-azuretools/issues/879 and https://github.com/webpack-contrib/copy-webpack-plugin#from
+ */
+function toGlobSafePath(fsPath: string): string {
+    return fsPath.replace(/\\/g, '/');
 }
