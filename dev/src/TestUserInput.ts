@@ -65,7 +65,8 @@ export class TestUserInput implements types.TestUserInput {
                     if (resolvedItem) {
                         result = resolvedItem;
                     } else {
-                        throw new Error(`Did not find quick pick item matching '${input}'. Placeholder: '${options.placeHolder}'`);
+                        const picksString = resolvedItems.map(i => `"${i.label}"`).join(', ')
+                        throw new Error(`Did not find quick pick item matching "${input}". Placeholder: "${options.placeHolder}". Picks: ${picksString}`);
                     }
                 }
             }
