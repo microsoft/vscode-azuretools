@@ -121,8 +121,6 @@ function getDependenciesFromEntry(depEntry: DependencyEntry, packageLock: Packag
 
     // Handle dependencies
     for (const moduleName of Object.keys(dependencies)) {
-        closure.add(moduleName);
-
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const dependenciesSubdeps: string[] = getDependenciesFromEntry(dependencies[moduleName]!, packageLock);
         for (const subdep of dependenciesSubdeps) {

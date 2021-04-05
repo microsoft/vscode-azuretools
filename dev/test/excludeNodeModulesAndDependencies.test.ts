@@ -2445,8 +2445,7 @@ suite('getNodeModulesDependencyClosure', () => {
             closure,
             [
                 'engine.io',
-                'options',
-                'ws'
+                'options'
             ]);
     });
 });
