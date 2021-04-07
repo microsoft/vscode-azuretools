@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { ThemeIcon } from 'vscode';
 import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
 import { ISimplifiedSiteClient } from '../ISimplifiedSiteClient';
 import { localize } from '../localize';
 import { ISiteFileMetadata, listFiles } from '../siteFiles';
 import { FileTreeItem } from './FileTreeItem';
-import { getThemedIconPath } from './IconPath';
 
 export class FolderTreeItem extends AzExtParentTreeItem {
     public static contextValue: string = 'folder';
@@ -30,7 +30,7 @@ export class FolderTreeItem extends AzExtParentTreeItem {
     }
 
     public get iconPath(): TreeItemIconPath {
-        return getThemedIconPath('folder');
+        return new ThemeIcon('folder');
     }
 
     public hasMoreChildrenImpl(): boolean {

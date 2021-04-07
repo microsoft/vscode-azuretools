@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { isNullOrUndefined } from 'util';
-import { commands, TreeItemCollapsibleState } from 'vscode';
+import { commands, ThemeIcon, TreeItemCollapsibleState } from 'vscode';
 import * as types from '../../index';
 import { NoResourceFoundError, NotImplementedError, UserCancelledError } from '../errors';
 import { localize } from '../localize';
@@ -371,7 +371,7 @@ export class InvalidTreeItem extends AzExtParentTreeItem implements types.Invali
     }
 
     public get iconPath(): types.TreeItemIconPath {
-        return getThemedIconPath('warning');
+        return new ThemeIcon('warning');
     }
 
     public async loadMoreChildrenImpl(): Promise<AzExtTreeItem[]> {

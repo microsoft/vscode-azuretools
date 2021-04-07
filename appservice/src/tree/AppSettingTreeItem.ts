@@ -4,12 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { WebSiteManagementModels } from '@azure/arm-appservice';
+import { ThemeIcon } from 'vscode';
 import { AzExtTreeItem, DialogResponses, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { IAppSettingsClient } from '../IAppSettingsClient';
 import { localize } from '../localize';
 import { AppSettingsTreeItem, validateAppSettingKey } from './AppSettingsTreeItem';
-import { getThemedIconPath } from './IconPath';
 
 /**
  * NOTE: This leverages a command with id `ext.prefix + '.toggleAppSettingVisibility'` that should be registered by each extension
@@ -51,7 +51,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
     }
 
     public get iconPath(): TreeItemIconPath {
-        return getThemedIconPath('constant');
+        return new ThemeIcon('symbol-constant');
     }
 
     public get commandId(): string {

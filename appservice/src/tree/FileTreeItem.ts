@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { ThemeIcon } from 'vscode';
 import { AzExtParentTreeItem, AzExtTreeItem, IActionContext, openReadOnlyContent, TreeItemIconPath } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { ISimplifiedSiteClient } from '../ISimplifiedSiteClient';
 import { localize } from '../localize';
 import { getFile, ISiteFile } from '../siteFiles';
-import { getThemedIconPath } from './IconPath';
 
 /**
  * NOTE: This leverages a command with id `ext.prefix + '.openFile'` that should be registered by each extension
@@ -31,7 +31,7 @@ export class FileTreeItem extends AzExtTreeItem {
     }
 
     public get iconPath(): TreeItemIconPath {
-        return getThemedIconPath('file');
+        return new ThemeIcon('file');
     }
 
     public get commandId(): string {

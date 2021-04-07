@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as semver from 'semver';
-import { commands, Disposable, Extension, extensions, MessageItem, ProgressLocation, window } from 'vscode';
+import { commands, Disposable, Extension, extensions, MessageItem, ProgressLocation, ThemeIcon, window } from 'vscode';
 import * as types from '../../index';
 import { AzureAccount, AzureLoginStatus, AzureResourceFilter } from '../azure-account.api';
 import { UserCancelledError } from '../errors';
@@ -78,7 +78,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
             const label: string = azureAccount === 'notInstalled' ?
                 localize('installAzureAccount', 'Install Azure Account Extension...') :
                 localize('updateAzureAccount', 'Update Azure Account Extension to at least version "{0}"...', minAccountExtensionVersion);
-            const iconPath: types.TreeItemIconPath = getThemedIconPath('warning');
+            const iconPath: types.TreeItemIconPath = new ThemeIcon('warning');
             const result: AzExtTreeItem = new GenericTreeItem(this, { label, commandId: extensionOpenCommand, contextValue: 'azureAccount' + azureAccount, includeInTreeItemPicker: true, iconPath });
             result.commandArgs = [azureAccountExtensionId];
             return [result];
@@ -99,8 +99,8 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
             })];
         } else if (azureAccount.status === 'LoggedOut') {
             return [
-                new GenericTreeItem(this, { label: signInLabel, commandId: signInCommandId, contextValue, id: signInCommandId, iconPath: getThemedIconPath('signIn'), includeInTreeItemPicker: true }),
-                new GenericTreeItem(this, { label: createAccountLabel, commandId: createAccountCommandId, contextValue, id: createAccountCommandId, iconPath: getThemedIconPath('add'), includeInTreeItemPicker: true })
+                new GenericTreeItem(this, { label: signInLabel, commandId: signInCommandId, contextValue, id: signInCommandId, iconPath: new ThemeIcon('sign-in'), includeInTreeItemPicker: true }),
+                new GenericTreeItem(this, { label: createAccountLabel, commandId: createAccountCommandId, contextValue, id: createAccountCommandId, iconPath: new ThemeIcon('add'), includeInTreeItemPicker: true })
             ];
         }
 

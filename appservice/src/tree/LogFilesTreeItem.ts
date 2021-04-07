@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { ThemeIcon } from 'vscode';
 import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { ISimplifiedSiteClient } from '../ISimplifiedSiteClient';
 import { localize } from '../localize';
 import { FolderTreeItem } from './FolderTreeItem';
-import { getThemedIconPath } from './IconPath';
 
 /**
  * NOTE: This leverages a command with id `ext.prefix + '.startStreamingLogs'` that should be registered by each extension
@@ -41,7 +41,7 @@ export class LogFilesTreeItem extends FolderTreeItem {
             const ti: AzExtTreeItem = new GenericTreeItem(this, {
                 contextValue: 'logStream',
                 commandId: ext.prefix + '.startStreamingLogs',
-                iconPath: getThemedIconPath('start-log'),
+                iconPath: new ThemeIcon('play'),
                 label: localize('connectLogStream', 'Connect to Log Stream...')
             });
             ti.commandArgs = [this.parent]; // should be the slot tree item

@@ -5,7 +5,7 @@
 
 import { WebSiteManagementModels } from '@azure/arm-appservice';
 import * as os from 'os';
-import { ProgressLocation, window } from 'vscode';
+import { ProgressLocation, ThemeIcon, window } from 'vscode';
 import { AzExtTreeItem, IActionContext, openReadOnlyContent, TreeItemIconPath } from 'vscode-azureextensionui';
 import { KuduClient, KuduModels } from 'vscode-azurekudu';
 import { waitForDeploymentToComplete } from '../deploy/waitForDeploymentToComplete';
@@ -15,7 +15,6 @@ import { ignore404Error, retryKuduCall } from '../utils/kuduUtils';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
 import { DeploymentsTreeItem } from './DeploymentsTreeItem';
-import { getThemedIconPath } from './IconPath';
 
 // Kudu DeployStatus: https://github.com/projectkudu/kudu/blob/a13592e6654585d5c2ee5c6a05fa39fa812ebb84/Kudu.Contracts/Deployment/DeployStatus.cs
 enum DeployStatus {
@@ -47,7 +46,7 @@ export class DeploymentTreeItem extends AzExtTreeItem {
     }
 
     public get iconPath(): TreeItemIconPath {
-        return getThemedIconPath('git-commit');
+        return new ThemeIcon('git-commit');
     }
 
     public get id(): string {
