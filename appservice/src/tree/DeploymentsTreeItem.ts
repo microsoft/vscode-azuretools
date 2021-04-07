@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { WebSiteManagementModels } from '@azure/arm-appservice';
+import { ThemeIcon } from 'vscode';
 import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
 import { KuduClient, KuduModels } from 'vscode-azurekudu';
 import { ext } from '../extensionVariables';
@@ -12,7 +13,6 @@ import { localize } from '../localize';
 import { ScmType } from '../ScmType';
 import { retryKuduCall } from '../utils/kuduUtils';
 import { DeploymentTreeItem } from './DeploymentTreeItem';
-import { getThemedIconPath } from './IconPath';
 
 /**
  * NOTE: This leverages a command with id `ext.prefix + '.connectToGitHub'` that should be registered by each extension
@@ -35,7 +35,7 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
     }
 
     public get iconPath(): TreeItemIconPath {
-        return getThemedIconPath('Deployments_x16');
+        return new ThemeIcon('cloud-upload');
     }
 
     public get description(): string {

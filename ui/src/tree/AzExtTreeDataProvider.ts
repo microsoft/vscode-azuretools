@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken, Event, EventEmitter, TreeItem } from 'vscode';
+import { CancellationToken, Event, EventEmitter, ThemeIcon, TreeItem } from 'vscode';
 import * as types from '../../index';
 import { callWithTelemetryAndErrorHandling } from '../callWithTelemetryAndErrorHandling';
 import { NoResourceFoundError, UserCancelledError } from '../errors';
@@ -13,7 +13,6 @@ import { parseError } from '../parseError';
 import { AzExtParentTreeItem, InvalidTreeItem } from './AzExtParentTreeItem';
 import { AzExtTreeItem } from './AzExtTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';
-import { getThemedIconPath } from './IconPath';
 import { IAzExtTreeDataProviderInternal, isAzExtParentTreeItem } from './InternalInterfaces';
 import { runWithLoadingNotification } from './runWithLoadingNotification';
 import { loadMoreLabel } from './treeConstants';
@@ -102,7 +101,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                 if (hasMoreChildren && !treeItem.isLoadingMore) {
                     const loadMoreTI: GenericTreeItem = new GenericTreeItem(treeItem, {
                         label: loadMoreLabel,
-                        iconPath: getThemedIconPath('refresh'),
+                        iconPath: new ThemeIcon('refresh'),
                         contextValue: 'azureextensionui.loadMore',
                         commandId: this._loadMoreCommandId
                     });

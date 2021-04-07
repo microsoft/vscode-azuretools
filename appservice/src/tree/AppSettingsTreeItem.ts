@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { WebSiteManagementModels } from '@azure/arm-appservice';
+import { ThemeIcon } from 'vscode';
 import { AzExtParentTreeItem, AzExtTreeItem, IActionContext, ICreateChildImplContext, TreeItemIconPath } from 'vscode-azureextensionui';
 import { IAppSettingsClient } from '../IAppSettingsClient';
 import { AppSettingTreeItem } from './AppSettingTreeItem';
-import { getThemedIconPath } from './IconPath';
 
 export function validateAppSettingKey(settings: WebSiteManagementModels.StringDictionary, client: IAppSettingsClient, newKey: string, oldKey?: string): string | undefined {
     if (client.isLinux && /[^\w\.]+/.test(newKey)) {
@@ -53,7 +53,7 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
     }
 
     public get iconPath(): TreeItemIconPath {
-        return getThemedIconPath('settings');
+        return new ThemeIcon('settings');
     }
     public hasMoreChildrenImpl(): boolean {
         return false;
