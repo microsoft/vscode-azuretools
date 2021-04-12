@@ -15,28 +15,26 @@ export async function createExperimentationService(ctx: vscode.ExtensionContext,
     const result: ExperimentationServiceAdapter = new ExperimentationServiceAdapter();
     const { extensionId, extensionVersion } = getPackageInfo(ctx);
 
-    if (vscode.workspace.getConfiguration('telemetry').get('enableTelemetry', false)) {
-        if (targetPopulation === undefined) {
-            if (ctx.extensionMode !== vscode.ExtensionMode.Production) {
-                targetPopulation = tas.TargetPopulation.Team;
-            } else if (/alpha/ig.test(extensionVersion)) {
-                targetPopulation = tas.TargetPopulation.Insiders;
-            } else {
-                targetPopulation = tas.TargetPopulation.Public;
-            }
+    if (targetPopulation === undefined) {
+        if (ctx.extensionMode !== vscode.ExtensionMode.Production) {
+            targetPopulation = tas.TargetPopulation.Team;
+        } else if (/alpha/ig.test(extensionVersion)) {
+            targetPopulation = tas.TargetPopulation.Insiders;
+        } else {
+            targetPopulation = tas.TargetPopulation.Public;
         }
+    }
 
-        try {
-            result.wrappedExperimentationService = await tas.getExperimentationServiceAsync(
-                extensionId,
-                extensionVersion,
-                targetPopulation,
-                new ExperimentationTelemetry(ext._internalReporter, ctx),
-                ctx.globalState
-            );
-        } catch {
-            // Best effort
-        }
+    try {
+        result.wrappedExperimentationService = await tas.getExperimentationServiceAsync(
+            extensionId,
+            extensionVersion,
+            targetPopulation,
+            new ExperimentationTelemetry(ext._internalReporter, ctx),
+            ctx.globalState
+        );
+    } catch {
+        // Best effort
     }
 
     return result;
