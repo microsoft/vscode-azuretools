@@ -10,7 +10,8 @@ export enum WebsiteOS {
 
 export enum AppKind {
     app = 'app',
-    functionapp = 'functionapp'
+    functionapp = 'functionapp',
+    workflowapp = 'functionapp,workflowapp'
 }
 
 /**
