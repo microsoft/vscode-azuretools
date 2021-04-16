@@ -12,7 +12,6 @@ import { nonNullProp } from '../utils/nonNull';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 
 function generalizeLocationName(name: string | undefined): string {
-    // tslint:disable-next-line:strict-boolean-expressions
     return (name || '').toLowerCase().replace(/\s/g, '');
 }
 
@@ -73,11 +72,10 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
 
     private async getQuickPicks(wizardContext: T): Promise<types.IAzureQuickPickItem<SubscriptionModels.Location>[]> {
         let locations: SubscriptionModels.Location[] = await LocationListStep.getLocations(wizardContext);
-        // tslint:disable-next-line:no-non-null-assertion
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         locations = locations.sort((l1, l2) => l1.displayName!.localeCompare(l2.displayName!));
         return locations.map(l => {
             return {
-                // tslint:disable-next-line:no-non-null-assertion
                 label: nonNullProp(l, 'displayName'),
                 description: '',
                 data: l

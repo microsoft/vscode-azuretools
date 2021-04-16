@@ -9,9 +9,6 @@ import { IParsedError } from '../index';
 import { UserCancelledError } from '../src/errors';
 import { parseError } from '../src/parseError';
 
-// tslint:disable:no-non-null-assertion max-func-body-length
-
-// tslint:disable-next-line:max-func-body-length
 suite('Error Parsing Tests', () => {
     suite('Call Stacks', () => {
         test('Not an error', () => {
@@ -26,8 +23,8 @@ suite('Error Parsing Tests', () => {
             } catch (err) {
                 pe = parseError(err);
             }
-            // tslint:disable-next-line: strict-boolean-expressions
             assert(!!pe && !!pe.stack);
+            /* eslint-disable @typescript-eslint/no-non-null-assertion */
             assert(!pe.stack!.includes('Error: \n'));
             assert(!pe.stack!.startsWith('at '));
             assert(pe.stack!.includes('parseError.test.js:'));
@@ -40,6 +37,7 @@ suite('Error Parsing Tests', () => {
             }
             const homedir: string = os.userInfo().homedir;
             assert(!pe.stack!.includes(homedir), `Should have removed first path of path (homedir "${homedir}"), stack is: ${pe.stack}`);
+            /* eslint-enable @typescript-eslint/no-non-null-assertion */
         });
 
         test('Removes first part of paths: Windows', () => {
@@ -477,7 +475,6 @@ callWithTelemetryAndErrorHandling.js.__awaiter vscode-azureextensionui/extension
         assert.strictEqual(pe.isUserCancelledError, false);
     });
 
-    // tslint:disable-next-line:max-func-body-length
     test('HTML errors', () => {
         const err: string = `<!DOCTYPE html>
 <html>

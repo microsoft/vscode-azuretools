@@ -8,12 +8,15 @@ import * as types from '../index';
 import { callWithTelemetryAndErrorHandling } from './callWithTelemetryAndErrorHandling';
 import { ext } from './extensionVariables';
 
-// tslint:disable:no-any no-unsafe-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function registerEvent<T>(eventId: string, event: Event<T>, callback: (context: types.IActionContext, ...args: any[]) => any): void {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ext.context.subscriptions.push(event(async (...args: any[]): Promise<any> => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return await callWithTelemetryAndErrorHandling(
             eventId,
             (context: types.IActionContext) => {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
                 return callback(context, ...args);
             }
         );

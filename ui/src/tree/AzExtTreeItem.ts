@@ -64,7 +64,6 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     }
 
     public get treeDataProvider(): IAzExtTreeDataProviderInternal {
-        // tslint:disable-next-line: strict-boolean-expressions
         return this._treeDataProvider || nonNullProp(this, 'parent').treeDataProvider;
     }
 

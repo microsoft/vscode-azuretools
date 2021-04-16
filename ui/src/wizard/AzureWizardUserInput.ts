@@ -58,6 +58,7 @@ export class AzureWizardUserInput implements IWizardUserInput {
             quickPick.matchOnDetail = !!options.matchOnDetail;
             quickPick.canSelectMany = !!options.canPickMany;
 
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises, no-async-promise-executor
             return await new Promise<TPick | TPick[]>(async (resolve, reject): Promise<void> => {
                 disposables.push(
                     quickPick.onDidAccept(() => {
@@ -84,7 +85,7 @@ export class AzureWizardUserInput implements IWizardUserInput {
                 try {
                     quickPick.items = await Promise.resolve(picks);
                     if (options.canPickMany && options.isPickSelected) {
-                        // tslint:disable-next-line: no-non-null-assertion
+                        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                         quickPick.selectedItems = quickPick.items.filter(p => options.isPickSelected!(p));
                     }
                     quickPick.placeholder = options.placeHolder;
@@ -116,7 +117,6 @@ export class AzureWizardUserInput implements IWizardUserInput {
             inputBox.buttons = this.showBackButton ? [QuickInputButtons.Back] : [];
 
             if (!inputBox.password) {
-                // tslint:disable-next-line: strict-boolean-expressions
                 inputBox.value = this._wizard.getCachedInputBoxValue() || options.value || '';
             }
 
@@ -135,7 +135,6 @@ export class AzureWizardUserInput implements IWizardUserInput {
                             latestValidation = validation;
                             const message: string | undefined | null = await validation;
                             if (validation === latestValidation) {
-                                // tslint:disable-next-line: strict-boolean-expressions
                                 inputBox.validationMessage = message || '';
                             }
                         }

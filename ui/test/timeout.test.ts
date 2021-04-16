@@ -6,7 +6,6 @@
 import * as assert from 'assert';
 import { rejectOnTimeout, valueOnTimeout } from '../src/utils/timeout';
 
-// tslint:disable-next-line:max-func-body-length
 suite("timeout Tests", () => {
     suite("rejectOnTimeout", () => {
         test("executes synchronously", async () => {
@@ -23,7 +22,7 @@ suite("timeout Tests", () => {
             let executed: boolean = false;
 
             await rejectOnTimeout(1, async () => {
-                return new Promise((resolve, _reject) => {
+                return new Promise<void>((resolve, _reject) => {
                     executed = true;
                     resolve();
                 });
@@ -36,7 +35,7 @@ suite("timeout Tests", () => {
             let executed: boolean = false;
 
             await rejectOnTimeout(1000, async () => {
-                return new Promise((resolve, _reject) => {
+                return new Promise<void>((resolve, _reject) => {
                     setTimeout(
                         () => {
                             executed = true;
@@ -54,7 +53,7 @@ suite("timeout Tests", () => {
 
             try {
                 await rejectOnTimeout(1, async () => {
-                    await new Promise((resolve, _reject) => {
+                    await new Promise<void>((resolve, _reject) => {
                         setTimeout(
                             () => {
                                 executed = true;
@@ -79,13 +78,12 @@ suite("timeout Tests", () => {
 
             try {
                 await rejectOnTimeout(1000, async () => {
-                    // tslint:disable-next-line:promise-must-complete
                     await new Promise((_resolve, _reject) => {
                         throw new Error("I threw up");
                     });
                 });
             } catch (err) {
-                // tslint:disable-next-line:no-unsafe-any
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 error = err;
             }
 
@@ -124,7 +122,7 @@ suite("timeout Tests", () => {
                     });
                 });
             } catch (err) {
-                // tslint:disable-next-line:no-unsafe-any
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 error = err;
             }
 

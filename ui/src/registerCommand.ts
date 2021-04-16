@@ -10,21 +10,23 @@ import { ext } from './extensionVariables';
 import { addValuesToMaskFromAzureId } from './masking';
 import { AzExtTreeItem } from './tree/AzExtTreeItem';
 
-// tslint:disable:no-any no-unsafe-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function registerCommand(commandId: string, callback: (context: types.IActionContext, ...args: any[]) => any, debounce?: number): void {
     let lastClickTime: number | undefined; /* Used for debounce */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ext.context.subscriptions.push(commands.registerCommand(commandId, async (...args: any[]): Promise<any> => {
-        // tslint:disable-next-line:strict-boolean-expressions
         if (debounce) { /* Only check for debounce if registered command specifies */
             if (debounceCommand(debounce, lastClickTime)) {
                 return;
             }
             lastClickTime = Date.now();
         }
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return await callWithTelemetryAndErrorHandling(
             commandId,
             (context: types.IActionContext) => {
                 if (args.length > 0) {
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
                     const firstArg: any = args[0];
 
                     if (firstArg instanceof AzExtTreeItem) {
@@ -35,6 +37,7 @@ export function registerCommand(commandId: string, callback: (context: types.IAc
                     }
                 }
 
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
                 return callback(context, ...args);
             }
         );
@@ -42,7 +45,6 @@ export function registerCommand(commandId: string, callback: (context: types.IAc
 }
 
 function debounceCommand(debounce: number, lastClickTime?: number): boolean {
-    // tslint:disable-next-line:strict-boolean-expressions
     if (lastClickTime && lastClickTime + debounce > Date.now()) {
         return true;
     }

@@ -6,7 +6,6 @@
 import { OutputChannel, ViewColumn, window, workspace, WorkspaceConfiguration } from "vscode";
 import * as types from '../index';
 
-// tslint:disable-next-line: export-name
 export function createAzExtOutputChannel(name: string, extensionPrefix: string): types.IAzExtOutputChannel {
     return new AzExtOutputChannel(name, extensionPrefix);
 }
@@ -38,7 +37,6 @@ class AzExtOutputChannel implements types.IAzExtOutputChannel {
         if (!result) {
             this.appendLine(value);
         } else {
-            // tslint:disable: strict-boolean-expressions
             options = options || {};
             const date: Date = options.date || new Date();
             this.appendLine(`${date.toLocaleTimeString()}${options.resourceName ? ' '.concat(options.resourceName) : ''}: ${value}`);
@@ -51,7 +49,7 @@ class AzExtOutputChannel implements types.IAzExtOutputChannel {
 
     public show(preserveFocus?: boolean | undefined): void;
     public show(column?: ViewColumn | undefined, preserveFocus?: boolean | undefined): void;
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public show(_column?: any, preserveFocus?: boolean | undefined): void {
         this._outputChannel.show(preserveFocus);
     }

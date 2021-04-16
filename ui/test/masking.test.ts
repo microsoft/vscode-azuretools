@@ -7,8 +7,6 @@ import { callWithMaskHandling } from '../src/masking';
 import { parseError } from '../src/parseError';
 import { assertThrowsAsync } from './assertThrowsAsync';
 
-// tslint:disable: align
-// tslint:disable: max-func-body-length
 suite("callWithMaskHandling Tests", () => {
     const credentials: string = 'scHQERrAlXSmlCeN1mrhDzsHWeDz2XZt5R343HgCNmxS0xlswcaA2Cowflda';
     const credentialsSpecialChars: string = 'sc()HQ*E+RrAlXSm[CeN1$$$rhDz^^HWeDz2X[t5R343HgCN.xS0x]swc|A2CÑwf¬da';
@@ -16,7 +14,6 @@ suite("callWithMaskHandling Tests", () => {
     suite("callWithMaskHandling", () => {
         test("Value masked (single occurance) with thrown error", async () => {
 
-            // tslint:disable-next-line: no-multiline-string
             const errorMessage: string = `To https://naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git
             ! [rejected]        HEAD -> master (fetch first)
            error: failed to push some refs to 'https://$naturins-22-error-03:scHQERrAlXSmlCeN1mrhDzsHWeDz2XZt5R343HgCNmxS0xlswcaA2Cowflda@naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git'
@@ -37,7 +34,6 @@ suite("callWithMaskHandling Tests", () => {
 
         test("Value masked (multiple occurance) with thrown error", async () => {
 
-            // tslint:disable-next-line: no-multiline-string
             const errorMessage: string = `"To https://naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git
             ! [rejected]        HEAD -> master (fetch first)
            error: failed to push some refs to 'https://$naturins-22-error-03:scHQERrAlXSmlCeN1mrhDzsHWeDz2XZt5R343HgCNmxS0xlswcaA2Cowflda@naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git'
@@ -60,7 +56,6 @@ suite("callWithMaskHandling Tests", () => {
 
         test("Value masked (with special characters) with thrown error", async () => {
 
-            // tslint:disable-next-line: no-multiline-string
             const errorMessage: string = `To https://naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git
             ! [rejected]        HEAD -> master (fetch first)
            error: failed to push some refs to 'https://$naturins-22-error-03:sc()HQ*E+RrAlXSm[CeN1$$$rhDz^^HWeDz2X[t5R343HgCN.xS0x]swc|A2CÑwf¬da@naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git'

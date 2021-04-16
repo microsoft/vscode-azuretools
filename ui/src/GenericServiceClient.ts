@@ -22,7 +22,6 @@ export class GenericServiceClient extends ServiceClient {
             options.url = this.baseUri + options.url;
         }
 
-        // tslint:disable-next-line: strict-boolean-expressions
         options.headers = options.headers || {};
         options.headers['accept-language'] = vscode.env.language;
 

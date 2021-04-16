@@ -25,7 +25,6 @@ export function getPackageInfo(ctx?: ExtensionContext): IPackageInfo {
 
         const packageJson: IPackageJson = <IPackageJson>fse.readJsonSync(ctx.asAbsolutePath('package.json'));
 
-        // tslint:disable-next-line:strict-boolean-expressions
         const extensionName: string | undefined = packageJson.name;
         const extensionVersion: string | undefined = packageJson.version;
         const aiKey: string | undefined = packageJson.aiKey;
