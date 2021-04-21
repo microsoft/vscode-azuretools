@@ -28,11 +28,19 @@ export async function tryGetWebAppSlot(client: WebSiteManagementClient, resource
  * 3. { "Code": "NotFound", "Message": "Server farm with name appsvc_linux_centralus not found." }
  */
 async function tryGetSiteResource<T>(callback: () => Promise<T | WebSiteManagementModels.DefaultErrorResponse>): Promise<T | undefined> {
-    const result: T | WebSiteManagementModels.DefaultErrorResponse = await callback();
-    const regExp: RegExp = /NotFound/i;
-    if (regExp.test(parseError(result).errorType) || ('error' in result && regExp.test(parseError(result.error).errorType))) {
-        return undefined;
-    } else {
-        return <T>result;
+    try {
+        const result: T | WebSiteManagementModels.DefaultErrorResponse = await callback();
+        const regExp: RegExp = /NotFound/i;
+        if (regExp.test(parseError(result).errorType) || ('error' in result && regExp.test(parseError(result.error).errorType))) {
+            return undefined;
+        } else {
+            return <T>result;
+        }
+    } catch (error) {
+        if (parseError(error).errorType === 'AuthorizationFailed') {
+            return undefined;
+        } else {
+            throw error;
+        }
     }
 }
