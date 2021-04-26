@@ -3,8 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// tslint:disable: max-func-body-length
-
 import * as assert from 'assert';
 import { env } from 'vscode';
 import { IParsedError } from '..';

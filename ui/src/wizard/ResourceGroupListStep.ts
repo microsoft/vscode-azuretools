@@ -93,7 +93,7 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
         return picks.concat(resourceGroups.map((rg: ResourceManagementModels.ResourceGroup) => {
             return {
                 id: rg.id,
-                // tslint:disable-next-line:no-non-null-assertion
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 label: rg.name!,
                 description: rg.location,
                 data: rg

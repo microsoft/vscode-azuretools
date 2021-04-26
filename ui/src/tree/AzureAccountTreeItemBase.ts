@@ -148,7 +148,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
             Object.assign(context, subscriptions[0].root);
             return undefined;
         } else {
-            // tslint:disable-next-line: no-var-self
+            // eslint-disable-next-line @typescript-eslint/no-this-alias
             const me: AzureAccountTreeItemBase = this;
             class SubscriptionPromptStep extends AzureWizardPromptStep<types.ISubscriptionWizardContext> {
                 public async prompt(): Promise<void> {
@@ -165,7 +165,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
         const azureAccount: AzureAccountResult = await this._azureAccountTask;
         if (typeof azureAccount !== 'string' && (azureAccount.status === 'LoggingIn' || azureAccount.status === 'Initializing')) {
             const title: string = localize('waitingForAzureSignin', 'Waiting for Azure sign-in...');
-            // tslint:disable-next-line: no-non-null-assertion
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             await window.withProgress({ location: ProgressLocation.Notification, title }, async (): Promise<boolean> => await azureAccount!.waitForSubscriptions());
         }
 
@@ -185,7 +185,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
             const extension: Extension<AzureAccount> | undefined = extensions.getExtension<AzureAccount>(azureAccountExtensionId);
             if (extension) {
                 try {
-                    // tslint:disable-next-line: no-unsafe-any
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                     if (semver.lt(extension.packageJSON.version, minAccountExtensionVersion)) {
                         return 'needsUpdate';
                     }

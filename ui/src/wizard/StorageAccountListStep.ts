@@ -63,7 +63,6 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
     public constructor(newAccountDefaults: types.INewStorageAccountDefaults, filters?: types.IStorageAccountFilters) {
         super();
         this._newAccountDefaults = newAccountDefaults;
-        // tslint:disable-next-line:strict-boolean-expressions
         this._filters = filters || {};
     }
 
@@ -89,7 +88,7 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
 
         wizardContext.storageAccount = result;
         if (wizardContext.storageAccount) {
-            // tslint:disable-next-line:no-non-null-assertion
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             await LocationListStep.setLocation(wizardContext, wizardContext.storageAccount.location!);
         }
     }
@@ -126,16 +125,14 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
         let hasFilteredAccounts: boolean = false;
         const storageAccounts: StorageManagementModels.StorageAccount[] = await storageAccountsTask;
         for (const sa of storageAccounts) {
-            // tslint:disable:strict-boolean-expressions
             if (!sa.kind || sa.kind.match(kindRegExp) || !sa.sku || sa.sku.name.match(performanceRegExp) || sa.sku.name.match(replicationRegExp)) {
-                // tslint:enable:strict-boolean-expressions
                 hasFilteredAccounts = true;
                 continue;
             }
 
             picks.push({
                 id: sa.id,
-                // tslint:disable-next-line:no-non-null-assertion
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 label: sa.name!,
                 description: '',
                 data: sa
@@ -156,7 +153,6 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
 }
 
 function convertFilterToPattern(values?: string[]): string {
-    // tslint:disable-next-line:strict-boolean-expressions
     values = values || [];
     return `(${values.join('|')})`;
 }

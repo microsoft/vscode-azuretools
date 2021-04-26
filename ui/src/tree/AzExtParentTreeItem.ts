@@ -16,8 +16,6 @@ import { IAzExtParentTreeItemInternal, isAzExtParentTreeItem } from './InternalI
 import { runWithLoadingNotification } from './runWithLoadingNotification';
 import { loadMoreLabel } from './treeConstants';
 
-// tslint:disable: max-classes-per-file
-
 export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types.AzExtParentTreeItem, IAzExtParentTreeItemInternal {
     //#region Properties implemented by base class
     public childTypeLabel?: string;
@@ -55,7 +53,6 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
     //#region Methods implemented by base class
     public abstract loadMoreChildrenImpl(clearCache: boolean, context: types.IActionContext): Promise<AzExtTreeItem[]>;
     public abstract hasMoreChildrenImpl(): boolean;
-    // tslint:disable-next-line:no-any
     public createChildImpl?(context: types.ICreateChildImplContext): Promise<AzExtTreeItem>;
     public pickTreeItemImpl?(expectedContextValues: (string | RegExp)[]): AzExtTreeItem | undefined | Promise<AzExtTreeItem | undefined>;
     //#endregion
@@ -140,7 +137,6 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         if (!this._cachedChildren.find((ti) => ti.fullId === childToAdd.fullId)) {
             // set index to the last element by default
             let index: number = this._cachedChildren.length;
-            // tslint:disable-next-line:no-increment-decrement
             for (let i: number = 0; i < this._cachedChildren.length; i++) {
                 if (childToAdd.label.localeCompare(this._cachedChildren[i].label) < 1) {
                     index = i;
@@ -198,20 +194,17 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
 
         const treeItems: AzExtTreeItem[] = [];
         let lastUnknownItemError: unknown;
-        // tslint:disable-next-line: strict-boolean-expressions
         sourceArray = sourceArray || [];
         await Promise.all(sourceArray.map(async (source: TSource) => {
             try {
                 const item: AzExtTreeItem | undefined = await createTreeItem(source);
                 if (item) {
                     // Verify at least the following properties can be accessed without an error
-                    // tslint:disable: no-unused-expression
                     item.contextValue;
                     item.description;
                     item.label;
                     item.iconPath;
                     item.id;
-                    // tslint:enable: no-unused-expression
 
                     treeItems.push(item);
                 }
@@ -287,7 +280,6 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
                         if (!ti.commandId) {
                             throw new Error(localize('noCommand', 'Failed to find commandId on generic tree item.'));
                         } else {
-                            // tslint:disable-next-line: strict-boolean-expressions
                             const commandArgs: unknown[] = ti.commandArgs || [ti];
                             await commands.executeCommand(ti.commandId, ...commandArgs);
                             await this.refresh(context);

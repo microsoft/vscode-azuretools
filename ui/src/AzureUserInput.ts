@@ -54,7 +54,7 @@ export class AzureUserInput implements types.IAzureUserInput, types.AzureUserInp
         }
 
         if (!Array.isArray(result) && persistenceKey && !(<types.IAzureQuickPickItem><{}>result).suppressPersistence) {
-            this._persistence.update(persistenceKey, getPersistenceValue(result));
+            void this._persistence.update(persistenceKey, getPersistenceValue(result));
         }
 
         this._onDidFinishPromptEmitter.fire({ value: result });
@@ -66,7 +66,6 @@ export class AzureUserInput implements types.IAzureUserInput, types.AzureUserInp
             options.ignoreFocusOut = true;
         }
 
-        // tslint:disable-next-line:typedef
         const validateInput = options.validateInput;
         if (validateInput) {
             options.validateInput = async (v): Promise<string | null | undefined> => validOnTimeoutOrException(async () => await validateInput(v));
@@ -86,7 +85,7 @@ export class AzureUserInput implements types.IAzureUserInput, types.AzureUserInp
 
     public showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
     public showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Promise<MessageItem>;
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public async showWarningMessage<T extends MessageItem>(message: string, ...args: any[]): Promise<T> {
         const learnMoreLink: string | undefined = args[0] && (<types.IAzureMessageOptions>args[0]).learnMoreLink;
         if (learnMoreLink) {
@@ -98,9 +97,9 @@ export class AzureUserInput implements types.IAzureUserInput, types.AzureUserInp
             args.push(back);
         }
 
-        // tslint:disable-next-line: no-constant-condition
+        // eslint-disable-next-line no-constant-condition
         while (true) {
-            // tslint:disable-next-line:no-unsafe-any
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             const result: T = await vscode.window.showWarningMessage(message, ...args);
             if (learnMoreLink && result === DialogResponses.learnMore) {
                 await openUrl(learnMoreLink);

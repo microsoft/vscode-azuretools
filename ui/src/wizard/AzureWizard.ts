@@ -31,10 +31,8 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
 
     public constructor(context: T, options: types.IWizardOptions<T>) {
         // reverse steps to make it easier to use push/pop
-        // tslint:disable-next-line: strict-boolean-expressions
         this._promptSteps = (<AzureWizardPromptStep<T>[]>options.promptSteps || []).reverse();
         this._promptSteps.forEach(s => { s.effectiveTitle = options.title; });
-        // tslint:disable-next-line: strict-boolean-expressions
         this._executeSteps = options.executeSteps || [];
         this._context = context;
         this._wizardHideStepCount = options.hideStepCount;
@@ -73,7 +71,7 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
                     step.propertiesBeforePrompt = Object.keys(this._context).filter(k => !isNullOrUndefined(this._context[k]));
 
                     const disposable: vscode.Disposable = this._context.ui.onDidFinishPrompt((result) => {
-                        // tslint:disable-next-line: no-non-null-assertion
+                        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                         step!.prompted = true;
                         if (typeof result.value === 'string' && !result.matchesDefault && this._currentStepId && !step?.supportsDuplicateSteps) {
                             this._cachedInputBoxValues[this._currentStepId] = result.value;

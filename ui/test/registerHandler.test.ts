@@ -9,13 +9,13 @@ import { Disposable } from 'vscode';
 import { ErrorHandler } from '..';
 import { callWithTelemetryAndErrorHandling, registerErrorHandler, registerTelemetryHandler } from '../src/callWithTelemetryAndErrorHandling';
 
-// tslint:disable-next-line: max-func-body-length
 suite('registerHandler', () => {
     const errorCallback = () => { throw new Error('test'); };
     const doNothingCallback = () => { /* do nothing */ };
 
     let disposables: Disposable[] = [];
     teardown(() => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         disposables.forEach(d => d.dispose());
         disposables = [];
     });

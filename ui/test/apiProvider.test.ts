@@ -49,9 +49,11 @@ suite('AzureExtensionApiProvider tests', () => {
         const api12: TestApi = new TestApi('1.2.0');
         const apiProvider: AzureExtensionApiProvider = createApiProvider([api1, api111, api11, api12]);
 
+        /* eslint-disable @typescript-eslint/no-unsafe-return */
         assert.throws(() => apiProvider.getApi('0.1'), (error) => validateApiError(error, /no longer supported/, 'NoLongerSupported'));
         assert.throws(() => apiProvider.getApi('1.1.2'), (error) => validateApiError(error, /must be updated/, 'NotYetSupported'));
         assert.throws(() => apiProvider.getApi('2'), (error) => validateApiError(error, /must be updated/, 'NotYetSupported'));
+        /* eslint-enable @typescript-eslint/no-unsafe-return */
 
         const latestApi12: TestApi = apiProvider.getApi<TestApi>('1');
         assert.equal(latestApi12.apiVersion, '1.2.0');
@@ -66,6 +68,7 @@ suite('AzureExtensionApiProvider tests', () => {
         assert.equal(latestApi11Tilde.apiVersion, '1.1.1');
 
         const emptyApiProvider: AzureExtensionApiProvider = createApiProvider([]);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         assert.throws(() => emptyApiProvider.getApi('^1.0.0'), (error) => validateApiError(error, /must be updated/, 'NotYetSupported'));
     });
 

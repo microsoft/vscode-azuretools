@@ -6,8 +6,6 @@
 import { ITreeItemPickerContext } from "..";
 import { localize } from "./localize";
 
-// tslint:disable: max-classes-per-file
-
 export class UserCancelledError extends Error {
     constructor() {
         super(localize('userCancelledError', 'Operation cancelled.'));
