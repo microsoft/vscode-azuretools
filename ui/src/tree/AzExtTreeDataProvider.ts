@@ -23,8 +23,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
 
     private readonly _loadMoreCommandId: string;
     private readonly _rootTreeItem: AzExtParentTreeItem;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    private readonly _findTreeItemTasks: Map<string, Promise<types.AzExtTreeItem | undefined>> = new Map();
+    private readonly _findTreeItemTasks: Map<string, Promise<types.AzExtTreeItem | undefined>> = new Map<string, Promise<types.AzExtTreeItem | undefined>>();
 
     constructor(rootTreeItem: AzExtParentTreeItem, loadMoreCommandId: string) {
         this._loadMoreCommandId = loadMoreCommandId;

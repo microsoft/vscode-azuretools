@@ -3,21 +3,25 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 import * as htmlToText from 'html-to-text';
 import { IParsedError } from '../index';
 import { localize } from './localize';
 import { parseJson } from './utils/parseJson';
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
 export function parseError(error: any): IParsedError {
     let errorType: string = '';
     let message: string = '';
     let stack: string | undefined;
 
     if (typeof (error) === 'object' && error !== null) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         if (error.constructor !== Object) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
             errorType = error.constructor.name;
         }
 
@@ -25,25 +29,19 @@ export function parseError(error: any): IParsedError {
         errorType = getCode(error, errorType);
 
         // See https://github.com/Microsoft/vscode-azureappservice/issues/419 for an example error that requires these 'unpack's
-        /* eslint-disable @typescript-eslint/no-unsafe-assignment */
         error = unpackErrorFromField(error, 'value');
         error = unpackErrorFromField(error, '_value');
         error = unpackErrorFromField(error, 'error');
         error = unpackErrorFromField(error, 'error');
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         if (Array.isArray(error.errors) && error.errors.length) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             error = error.errors[0];
         }
-        /* eslint-enable @typescript-eslint/no-unsafe-assignment */
 
         errorType = getCode(error, errorType);
         message = getMessage(error, message);
 
         if (!errorType || !message || /error.*deserializing.*response.*body/i.test(message)) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             error = unpackErrorFromField(error, 'response');
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             error = unpackErrorFromField(error, 'body');
 
             errorType = getCode(error, errorType);
@@ -51,15 +49,11 @@ export function parseError(error: any): IParsedError {
         }
 
         // Azure errors have a JSON object in the message
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
         let parsedMessage: any = parseIfJson(error.message);
         // For some reason, the message is sometimes serialized twice and we need to parse it again
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         parsedMessage = parseIfJson(parsedMessage);
         // Extract out the "internal" error if it exists
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         if (parsedMessage && parsedMessage.error) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
             parsedMessage = parsedMessage.error;
         }
 
@@ -67,10 +61,8 @@ export function parseError(error: any): IParsedError {
         message = getMessage(parsedMessage, message);
 
         message = message || convertCodeToError(errorType) || JSON.stringify(error);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     } else if (error !== undefined && error !== null && error.toString && error.toString().trim() !== '') {
         errorType = typeof (error);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         message = error.toString();
     }
 
@@ -108,18 +100,15 @@ function convertCodeToError(errorType: string | undefined): string | undefined {
     return undefined;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function parseIfJson(o: any): any {
     if (typeof o === 'string' && o.indexOf('{') >= 0) {
         try {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             return parseJson(o);
         } catch (err) {
             // ignore
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return o;
 }
 
@@ -144,15 +133,11 @@ function parseIfXml(message: string): string {
     return message;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getMessage(o: any, defaultMessage: string): string {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return
     return (o && (o.message || o.Message || o.detail || (typeof parseIfJson(o.body) === 'string' && o.body))) || defaultMessage;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getCode(o: any, defaultCode: string): string {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
     const code: any = o && (o.code || o.Code || o.errorCode || o.statusCode);
     return code ? String(code) : defaultCode;
 }
@@ -171,15 +156,12 @@ function unpackErrorsInMessage(message: string): string {
     return message;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function unpackErrorFromField(error: any, prop: string): any {
     // Handle objects from Azure SDK that contain the error information in a "body" field (serialized or not)
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
     let field: any = error && error[prop];
     if (field) {
         if (typeof field === 'string' && field.indexOf('{') >= 0) {
             try {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 field = parseJson(field);
             } catch (err) {
                 // Ignore
@@ -187,12 +169,10 @@ function unpackErrorFromField(error: any, prop: string): any {
         }
 
         if (typeof field === 'object') {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             return field;
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return error;
 }
 
