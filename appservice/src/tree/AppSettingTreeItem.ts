@@ -32,7 +32,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
         super(parent);
         this._client = client;
         this._key = key;
-        this._value = value;
+        this._value = value.trim();
         this._hideValue = true;
     }
 
@@ -65,7 +65,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
         });
 
         await this.parent.editSettingItem(this._key, this._key, newValue, context);
-        this._value = newValue;
+        this._value = newValue.trim();
         await this.refresh(context);
     }
 
