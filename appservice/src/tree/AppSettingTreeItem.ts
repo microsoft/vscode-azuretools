@@ -32,7 +32,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
         super(parent);
         this._client = client;
         this._key = key;
-        this._value = value.trim();
+        this._value = value;
         this._hideValue = true;
     }
 
@@ -59,13 +59,13 @@ export class AppSettingTreeItem extends AzExtTreeItem {
     }
 
     public async edit(context: IActionContext): Promise<void> {
-        const newValue: string = await context.ui.showInputBox({
+        const newValue: string = (await context.ui.showInputBox({
             prompt: `Enter setting value for "${this._key}"`,
             value: this._value
-        });
+        })).trim();
 
         await this.parent.editSettingItem(this._key, this._key, newValue, context);
-        this._value = newValue.trim();
+        this._value = newValue;
         await this.refresh(context);
     }
 

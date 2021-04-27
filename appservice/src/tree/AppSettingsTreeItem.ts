@@ -108,9 +108,9 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
             validateInput: (v: string): string | undefined => validateAppSettingKey(settings, this.client, v)
         });
 
-        const newValue: string = await context.ui.showInputBox({
+        const newValue: string = (await context.ui.showInputBox({
             prompt: `Enter value for "${newKey}"`
-        });
+        })).trim();
 
         if (!settings.properties) {
             settings.properties = {};
