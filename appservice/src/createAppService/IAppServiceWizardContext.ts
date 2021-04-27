@@ -46,7 +46,7 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
      * Whether or not to use a consumption plan
      * This will be defined after `SiteHostingPlanStep.prompt` occurs.
      */
-     useConsumptionPlan?: boolean;
+    useConsumptionPlan?: boolean;
 
     /**
      * The name of the new plan
