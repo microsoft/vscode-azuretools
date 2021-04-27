@@ -36,13 +36,14 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
         } else {
             ext.outputChannel.appendLog(creatingAppServicePlan);
             progress.report({ message: creatingAppServicePlan });
-            const isElasticPremium: boolean = wizardContext.newPlanSku?.family?.toLowerCase() === 'ep';
+            const skuFamily = wizardContext.newPlanSku?.family ? wizardContext.newPlanSku?.family.toLowerCase() : '';
+            const isElasticPremiumOrWorkflowStandard: boolean = skuFamily === 'ep' || skuFamily === 'ws';
             wizardContext.plan = await client.appServicePlans.createOrUpdate(rgName, newPlanName, {
                 kind: getAppServicePlanModelKind(wizardContext.newSiteKind, nonNullProp(wizardContext, 'newSiteOS')),
                 sku: nonNullProp(wizardContext, 'newPlanSku'),
                 location: nonNullValueAndProp(wizardContext.location, 'name'),
                 reserved: wizardContext.newSiteOS === WebsiteOS.linux,  // The secret property - must be set to true to make it a Linux plan. Confirmed by the team who owns this API.
-                maximumElasticWorkerCount: isElasticPremium ? 20 : undefined
+                maximumElasticWorkerCount: isElasticPremiumOrWorkflowStandard ? 20 : undefined
             });
             ext.outputChannel.appendLog(createdAppServicePlan);
         }

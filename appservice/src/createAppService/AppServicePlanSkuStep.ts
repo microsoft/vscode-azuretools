@@ -17,7 +17,9 @@ type ExtendedSkuDescription = WebSiteManagementModels.SkuDescription & { label?:
 export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
         let skus: ExtendedSkuDescription[] = wizardContext.advancedCreation ? this.getCommonSkus() : this.getRecommendedSkus();
-        if (wizardContext.newSiteKind === AppKind.functionapp) {
+        if (wizardContext.newSiteKind.includes(AppKind.workflowapp)) {
+            skus = this.getWorkflowStandardSkus();
+        } else if (wizardContext.newSiteKind === AppKind.functionapp) {
             skus.push(...this.getElasticPremiumSkus());
         }
 
@@ -184,6 +186,32 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
                 tier: 'Elastic Premium',
                 size: 'EP3',
                 family: 'EP',
+                capacity: 1
+            }
+        ];
+    }
+
+    private getWorkflowStandardSkus(): WebSiteManagementModels.SkuDescription[] {
+        return [
+            {
+                name: 'WS1',
+                tier: 'Workflow Standard',
+                size: 'WS1',
+                family: 'WS',
+                capacity: 1
+            },
+            {
+                name: 'WS2',
+                tier: 'Workflow Standard',
+                size: 'WS2',
+                family: 'WS',
+                capacity: 1
+            },
+            {
+                name: 'WS3',
+                tier: 'Workflow Standard',
+                size: 'WS3',
+                family: 'WS',
                 capacity: 1
             }
         ];
