@@ -28,7 +28,6 @@ export * from './editScmType';
 export { registerAppServiceExtensionVariables } from './extensionVariables';
 export { IConnectToGitHubWizardContext } from './github/IConnectToGitHubWizardContext';
 export * from './IAppSettingsClient';
-export * from './ISimplifiedSiteClient';
 export * from './pingFunctionApp';
 export * from './registerSiteCommand';
 export * from './remoteDebug/remoteDebugCommon';

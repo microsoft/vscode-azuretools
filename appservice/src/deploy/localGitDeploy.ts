@@ -8,8 +8,8 @@ import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
 import { callWithMaskHandling, IActionContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
-import { ISimplifiedSiteClient } from '../ISimplifiedSiteClient';
 import { localize } from '../localize';
+import { SiteClient } from '../SiteClient';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
 import { verifyNoRunFromPackageSetting } from '../verifyNoRunFromPackageSetting';
@@ -27,7 +27,7 @@ type localGitOptions = {
     commit?: boolean;
 };
 
-export async function localGitDeploy(client: ISimplifiedSiteClient, options: localGitOptions, context: IActionContext): Promise<void> {
+export async function localGitDeploy(client: SiteClient, options: localGitOptions, context: IActionContext): Promise<void> {
     const publishCredentials: WebSiteManagementModels.User = await client.getWebAppPublishCredential();
     const publishingPassword: string = nonNullProp(publishCredentials, 'publishingPassword');
     const publishingUserName: string = nonNullProp(publishCredentials, 'publishingUserName');
@@ -61,7 +61,7 @@ export async function localGitDeploy(client: ISimplifiedSiteClient, options: loc
                     }
                     context.telemetry.properties.gitNotInstalled = 'true';
                     return undefined;
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
                 } else if (err.message.indexOf('error: failed to push') >= 0) {
                     const forcePushMessage: vscode.MessageItem = { title: localize('forcePush', 'Force Push') };
                     const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging.');

@@ -6,7 +6,7 @@
 import { WebSiteManagementModels } from '@azure/arm-appservice';
 import * as fse from 'fs-extra';
 import * as vscode from 'vscode';
-import { KuduClient } from 'vscode-azurekudu';
+import { createKuduClient } from '../createKuduClient';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
@@ -47,7 +47,7 @@ export async function deployZip(context: IDeployContext, client: SiteClient, fsP
         await deployToStorageAccount(context, fsPath, client);
         context.syncTriggersPostDeploy = true;
     } else {
-        const kuduClient: KuduClient = await client.getKuduClient();
+        const kuduClient = await createKuduClient(client);
 
         await runWithZipStream(context, fsPath, client, async zipStream => {
             await kuduClient.pushDeployment.zipPushDeploy(() => zipStream, { isAsync: true, author: 'VS Code' });

@@ -6,11 +6,12 @@
 import { WebSiteManagementModels } from '@azure/arm-appservice';
 import { ThemeIcon } from 'vscode';
 import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
-import { KuduClient, KuduModels } from 'vscode-azurekudu';
+import { KuduModels } from 'vscode-azurekudu';
+import { createKuduClient } from '../createKuduClient';
 import { ext } from '../extensionVariables';
-import { ISimplifiedSiteClient } from '../ISimplifiedSiteClient';
 import { localize } from '../localize';
 import { ScmType } from '../ScmType';
+import { SiteClient } from '../SiteClient';
 import { retryKuduCall } from '../utils/kuduUtils';
 import { DeploymentTreeItem } from './DeploymentTreeItem';
 
@@ -22,12 +23,12 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
     public static contextValueUnconnected: string = 'deploymentsUnconnected';
     public readonly label: string = localize('Deployments', 'Deployments');
     public readonly childTypeLabel: string = localize('Deployment', 'Deployment');
-    public readonly client: ISimplifiedSiteClient;
+    public readonly client: SiteClient;
 
     private _scmType?: string;
     private _repoUrl?: string;
 
-    public constructor(parent: AzExtParentTreeItem, client: ISimplifiedSiteClient, siteConfig: WebSiteManagementModels.SiteConfig, sourceControl: WebSiteManagementModels.SiteSourceControl) {
+    public constructor(parent: AzExtParentTreeItem, client: SiteClient, siteConfig: WebSiteManagementModels.SiteConfig, sourceControl: WebSiteManagementModels.SiteSourceControl) {
         super(parent);
         this.client = client;
         this._scmType = siteConfig.scmType;
@@ -61,7 +62,7 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
 
     public async loadMoreChildrenImpl(_clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {
         const siteConfig: WebSiteManagementModels.SiteConfig = await this.client.getSiteConfig();
-        const kuduClient: KuduClient = await this.client.getKuduClient();
+        const kuduClient = await createKuduClient(this.client);
         const deployments: KuduModels.DeployResult[] = await retryKuduCall(context, 'getDeployResults', async () => {
             return kuduClient.deployment.getDeployResults();
         });
