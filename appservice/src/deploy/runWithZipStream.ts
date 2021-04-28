@@ -78,13 +78,13 @@ async function getFilesFromGlob(folderPath: string, client: SiteClient): Promise
     const filesToInclude: string[] = await globby(globPattern, globOptions);
     const zipIgnorePatternStr = 'zipIgnorePattern';
 
-    const ignorePattern: string | string[] = zipDeployConfig.get<string | string[]>(zipIgnorePatternStr) || '';
-    const filesToIgnore: string[] = await globby(ignorePattern, globOptions);
+    const ignorePatternList: string | string[] = zipDeployConfig.get<string | string[]>(zipIgnorePatternStr) || '';
+    const filesToIgnore: string[] = await globby(ignorePatternList, globOptions);
 
-    ext.outputChannel.appendLog(`Ignoring files from \"${ext.prefix}.${zipIgnorePatternStr}\"`, { resourceName: client.fullName });
+    ext.outputChannel.appendLog(localize('zipIgnoreFileMsg', `Ignoring files from \"{0}.{1}\"`, ext.prefix, zipIgnorePatternStr), { resourceName: client.fullName });
 
-    for (const file of filesToIgnore) {
-        ext.outputChannel.appendLine(`\"${file}\"`);
+    for (const pattern of ignorePatternList) {
+        ext.outputChannel.appendLine(`\"${pattern}\"`);
     }
 
     return filesToInclude.filter(file => {
