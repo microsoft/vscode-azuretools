@@ -14,6 +14,7 @@ export * from './createAppService/IAppServiceWizardContext';
 export * from './createAppService/setLocationsTask';
 export * from './createAppService/SiteNameStep';
 export * from './createAppService/SiteOSStep';
+export * from './createKuduClient';
 export * from './createSlot';
 export * from './deleteSite';
 export * from './deploy/deploy';
