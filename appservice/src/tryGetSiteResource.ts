@@ -5,7 +5,6 @@
 
 import { WebSiteManagementClient, WebSiteManagementModels } from '@azure/arm-appservice';
 import { parseError } from "vscode-azureextensionui";
-import { ext } from './extensionVariables';
 
 export async function tryGetAppServicePlan(client: WebSiteManagementClient, resourceGroupName: string, name: string): Promise<WebSiteManagementModels.AppServicePlansGetResponse | undefined> {
     return await tryGetSiteResource(async () => await client.appServicePlans.get(resourceGroupName, name));
