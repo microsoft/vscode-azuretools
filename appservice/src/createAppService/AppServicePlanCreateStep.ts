@@ -51,6 +51,8 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
         } catch (e) {
             if (parseError(e).errorType === 'AuthorizationFailed') {
                 await this.selectExistingPrompt(wizardContext);
+            } else {
+                throw e;
             }
         }
 
