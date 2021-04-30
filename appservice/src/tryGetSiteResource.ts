@@ -5,6 +5,7 @@
 
 import { WebSiteManagementClient, WebSiteManagementModels } from '@azure/arm-appservice';
 import { parseError } from "vscode-azureextensionui";
+import { ext } from './extensionVariables';
 
 export async function tryGetAppServicePlan(client: WebSiteManagementClient, resourceGroupName: string, name: string): Promise<WebSiteManagementModels.AppServicePlansGetResponse | undefined> {
     return await tryGetSiteResource(async () => await client.appServicePlans.get(resourceGroupName, name));
@@ -28,19 +29,11 @@ export async function tryGetWebAppSlot(client: WebSiteManagementClient, resource
  * 3. { "Code": "NotFound", "Message": "Server farm with name appsvc_linux_centralus not found." }
  */
 async function tryGetSiteResource<T>(callback: () => Promise<T | WebSiteManagementModels.DefaultErrorResponse>): Promise<T | undefined> {
-    try {
-        const result: T | WebSiteManagementModels.DefaultErrorResponse = await callback();
-        const regExp: RegExp = /NotFound/i;
-        if (regExp.test(parseError(result).errorType) || ('error' in result && regExp.test(parseError(result.error).errorType))) {
-            return undefined;
-        } else {
-            return <T>result;
-        }
-    } catch (error) {
-        if (parseError(error).errorType === 'AuthorizationFailed') {
-            return undefined;
-        } else {
-            throw error;
-        }
+    const result: T | WebSiteManagementModels.DefaultErrorResponse = await callback();
+    const regExp: RegExp = /NotFound/i;
+    if (regExp.test(parseError(result).errorType) || ('error' in result && regExp.test(parseError(result.error).errorType))) {
+        return undefined;
+    } else {
+        return <T>result;
     }
 }
