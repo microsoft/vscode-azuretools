@@ -5,8 +5,8 @@
 
 import * as fs from 'fs';
 import { IActionContext } from 'vscode-azureextensionui';
+import { KuduClient } from 'vscode-azurekudu';
 import { createKuduClient } from '../createKuduClient';
-import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { getFileExtension } from '../utils/pathUtils';
@@ -17,8 +17,7 @@ export async function deployWar(context: IActionContext, client: SiteClient, fsP
         throw new Error(localize('NotAWarError', 'Path specified is not a war file'));
     }
 
-    ext.outputChannel.appendLog(localize('deployStart', 'Starting deployment...'), { resourceName: client.fullName });
-    const kuduClient = await createKuduClient(client);
+    const kuduClient: KuduClient = await createKuduClient(client);
     await kuduClient.pushDeployment.warPushDeploy(() => fs.createReadStream(fsPath), { isAsync: true });
     await waitForDeploymentToComplete(context, client);
 }

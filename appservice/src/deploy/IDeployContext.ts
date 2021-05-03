@@ -22,6 +22,11 @@ export interface IDeployContext extends IActionContext {
     appSource?: AppSource;
     isNewApp?: boolean;
 
+    /**
+     * Used to overwrite default deploy method based on scm type
+     */
+    deployMethod?: 'zip' | 'storage';
+
     stopAppBeforeDeploy?: boolean;
     syncTriggersPostDeploy?: boolean;
 }
