@@ -5,7 +5,6 @@
 
 import { ResourceManagementModels } from '@azure/arm-resources';
 import { StorageManagementModels } from '@azure/arm-storage';
-import { SubscriptionModels } from '@azure/arm-subscriptions';
 import { Environment } from '@azure/ms-rest-azure-env';
 import { HttpOperationResponse, RequestPrepareOptions, ServiceClient } from '@azure/ms-rest-js';
 import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocument, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
@@ -837,6 +836,11 @@ export interface IAzureQuickPickItem<T = undefined> extends QuickPickItem {
     data: T;
 
     /**
+     * The group that this pick belongs to. Set `IAzureQuickPickOptions.enableGrouping` for this property to take effect
+     */
+    group?: string;
+
+    /**
      * Optionally used to suppress persistence for this item, defaults to `false`
      */
     suppressPersistence?: boolean;
@@ -861,6 +865,11 @@ export interface IAzureQuickPickOptions extends QuickPickOptions {
      * Optionally used to select default picks in a multi-select quick pick
      */
     isPickSelected?: (p: QuickPickItem) => boolean;
+
+    /**
+     * If true, you must specify a `group` property on each `IAzureQuickPickItem` and the picks will be grouped into collapsible sections
+     */
+    enableGrouping?: boolean;
 
     /**
      * Optional message to display while the quick pick is loading instead of the normal placeHolder. Only applies for quick picks used as a part of an `AzureWizard`
@@ -975,12 +984,27 @@ export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
 
 export type ISubscriptionWizardContext = ISubscriptionContext & IActionContext;
 
+/**
+ * Replacement for `SubscriptionModels.Location` because the sdk is pretty far behind in terms of api-version
+ */
+export type AzExtLocation = {
+    id: string;
+    name: string;
+    displayName: string;
+    regionalDisplayName?: string;
+    metadata?: {
+        regionCategory?: string;
+        geographyGroup?: string;
+        regionType?: string;
+    }
+}
+
 export interface ILocationWizardContext extends ISubscriptionWizardContext {
     /**
      * The location to use for new resources
      * This value will be defined after `LocationListStep.prompt` occurs or after you call `LocationListStep.setLocation`
      */
-    location?: SubscriptionModels.Location;
+    location?: AzExtLocation;
 
     /**
      * Optional task to describe the subset of locations that should be displayed.
@@ -990,7 +1014,7 @@ export interface ILocationWizardContext extends ISubscriptionWizardContext {
 }
 
 export declare class LocationListStep<T extends ILocationWizardContext> extends AzureWizardPromptStep<T> {
-    private constructor();
+    protected constructor();
 
     /**
      * Adds a LocationListStep to the wizard.  This function will ensure there is only one LocationListStep per wizard context.
@@ -1011,10 +1035,12 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
      * Used to get locations. By passing in the context, we can ensure that Azure is only queried once for the entire wizard
      * @param wizardContext The context of the wizard.
      */
-    public static getLocations<T extends ILocationWizardContext>(wizardContext: T): Promise<SubscriptionModels.Location[]>;
+    public static getLocations<T extends ILocationWizardContext>(wizardContext: T): Promise<AzExtLocation[]>;
 
     public prompt(wizardContext: T): Promise<void>;
     public shouldPrompt(wizardContext: T): boolean;
+
+    protected async getQuickPicks(wizardContext: T): Promise<IAzureQuickPickItem<AzExtLocation>[]>;
 }
 
 export interface IAzureNamingRules {
