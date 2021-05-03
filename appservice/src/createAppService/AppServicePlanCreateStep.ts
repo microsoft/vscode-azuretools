@@ -49,10 +49,10 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
                 ext.outputChannel.appendLog(createdAppServicePlan);
             }
         } catch (e) {
-            if (parseError(e).errorType === 'AuthorizationFailed') {
-                await this.selectExistingPrompt(wizardContext);
-            } else {
+            if (wizardContext.suppress403Handling || parseError(e).errorType !== '403') {
                 throw e;
+            } else {
+                await this.selectExistingPrompt(wizardContext);
             }
         }
 
