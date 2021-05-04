@@ -16,7 +16,7 @@ type ExtendedSkuDescription = WebSiteManagementModels.SkuDescription & { label?:
 
 export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
-        let skus: ExtendedSkuDescription[] = wizardContext.advancedCreation ? this.getCommonSkus() : this.getRecommendedSkus();
+        let skus: ExtendedSkuDescription[] = wizardContext.advancedCreation ? this.getRecommendedSkus().concat(this.getAdvancedSkus()) : this.getRecommendedSkus();
         if (wizardContext.newSiteKind === AppKind.functionapp) {
             skus.push(...this.getElasticPremiumSkus());
         }
@@ -38,7 +38,7 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
 
         while (!wizardContext.newPlanSku) {
             const placeHolder = localize('pricingTierPlaceholder', 'Select a pricing tier');
-            wizardContext.newPlanSku = (await wizardContext.ui.showQuickPick(pricingTiers, { placeHolder })).data;
+            wizardContext.newPlanSku = (await wizardContext.ui.showQuickPick(pricingTiers, { placeHolder, suppressPersistence: true })).data;
 
             if (!wizardContext.newPlanSku) {
                 if (wizardContext.newSiteOS === WebsiteOS.linux) {
@@ -88,15 +88,8 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
         ];
     }
 
-    private getCommonSkus(): WebSiteManagementModels.SkuDescription[] {
+    private getAdvancedSkus(): WebSiteManagementModels.SkuDescription[] {
         return [
-            {
-                name: 'F1',
-                tier: 'Free',
-                size: 'F1',
-                family: 'F',
-                capacity: 1
-            },
             {
                 name: 'B1',
                 tier: 'Basic',
