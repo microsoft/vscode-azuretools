@@ -112,7 +112,7 @@ export class AzureWizardUserInput implements IWizardUserInput {
 
                     if (groups.length > 0) {
                         // If grouping is enabled, make the first actual pick active by default, rather than the group label pick
-                        quickPick.activeItems = [quickPick.items[1]];
+                        quickPick.activeItems = [<TPick>groups[0].picks[0]];
                     }
 
                     if (options.canPickMany && options.isPickSelected) {
@@ -155,17 +155,22 @@ export class AzureWizardUserInput implements IWizardUserInput {
     }
 
     private getGroupedPicks<TPick extends QuickPickItem>(groups: QuickPickGroup[]): TPick[] {
-        const picks: QuickPickItem[] = [];
-        for (const group of groups) {
-            picks.push(<types.IAzureQuickPickItem<QuickPickGroup>>{
-                label: `$(chevron-${group.isCollapsed ? 'right' : 'down'}) ${group.name || ''}`,
-                data: group
-            });
-            if (!group.isCollapsed) {
-                picks.push(...group.picks);
+        if (groups.length === 1) {
+            // No point in grouping if there's only one group
+            return <TPick[]>groups[0].picks;
+        } else {
+            const picks: QuickPickItem[] = [];
+            for (const group of groups) {
+                picks.push(<types.IAzureQuickPickItem<QuickPickGroup>>{
+                    label: `$(chevron-${group.isCollapsed ? 'right' : 'down'}) ${group.name || ''}`,
+                    data: group
+                });
+                if (!group.isCollapsed) {
+                    picks.push(...group.picks);
+                }
             }
+            return <TPick[]>picks;
         }
-        return <TPick[]>picks;
     }
 
     public async showInputBox(options: InputBoxOptions): Promise<string> {
