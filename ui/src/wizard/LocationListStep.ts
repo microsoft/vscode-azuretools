@@ -11,7 +11,10 @@ import { nonNullProp } from '../utils/nonNull';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 
 function generalizeLocationName(name: string | undefined): string {
-    return (name || '').toLowerCase().replace(/\s/g, '');
+    return (name || '')
+        .toLowerCase()
+        .replace(/\([^\)]*\)/g, '') // remove parentheticals, like in "North Central US (Stage)"
+        .replace(/[^a-z0-9]/g, ''); // remove anything else other than letters/numbers
 }
 
 interface ILocationWizardContextInternal extends types.ILocationWizardContext {
