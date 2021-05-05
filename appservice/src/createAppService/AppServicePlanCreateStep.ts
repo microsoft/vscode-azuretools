@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { WebSiteManagementClient, WebSiteManagementModels } from '@azure/arm-appservice';
+import { WebSiteManagementClient, WebSiteManagementMappers, WebSiteManagementModels } from '@azure/arm-appservice';
 import { Progress } from 'vscode';
 import { AzureWizardExecuteStep } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
@@ -38,12 +38,13 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
             progress.report({ message: creatingAppServicePlan });
             const skuFamily = wizardContext.newPlanSku?.family ? wizardContext.newPlanSku?.family.toLowerCase() : '';
             const isElasticPremiumOrWorkflowStandard: boolean = skuFamily === 'ep' || skuFamily === 'ws';
-            wizardContext.plan = await client.appServicePlans.createOrUpdate(rgName, newPlanName, {
+            wizardContext.plan = await client.appServicePlans.createOrUpdate(rgName, newPlanName, <ExtendedAppServicePlan{
                 kind: getAppServicePlanModelKind(wizardContext.newSiteKind, nonNullProp(wizardContext, 'newSiteOS')),
                 sku: nonNullProp(wizardContext, 'newPlanSku'),
                 location: nonNullValueAndProp(wizardContext.location, 'name'),
                 reserved: wizardContext.newSiteOS === WebsiteOS.linux,  // The secret property - must be set to true to make it a Linux plan. Confirmed by the team who owns this API.
-                maximumElasticWorkerCount: isElasticPremiumOrWorkflowStandard ? 20 : undefined
+                maximumElasticWorkerCount: isElasticPremiumOrWorkflowStandard ? 20 : undefined,
+                kubeEnvironmentProfile: getKubeProfile(wizardContext)
             });
             ext.outputChannel.appendLog(createdAppServicePlan);
         }
@@ -51,5 +52,36 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
 
     public shouldExecute(wizardContext: IAppServiceWizardContext): boolean {
         return !wizardContext.plan;
+    }
+}
+
+function getKubeProfile(wizardContext: IAppServiceWizardContext) {
+    if (wizardContext.customLocation) {
+        // Temporary workaround so that the sdk allows "kubeEnvironmentProfile" on the plan
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        WebSiteManagementMappers.AppServicePlan.type.modelProperties!.kubeEnvironmentProfile = {
+            serializedName: 'properties.kubeEnvironmentProfile',
+            type: {
+                name: "Composite",
+                modelProperties: {
+                    id: {
+                        serializedName: "id",
+                        type: {
+                            name: "String"
+                        }
+                    }
+                }
+            }
+        };
+
+        return { id: wizardContext.customLocation.kubeEnvironment.id };
+    } else {
+        return undefined;
+    }
+}
+
+interface ExtendedAppServicePlan extends WebSiteManagementModels.AppServicePlan {
+    kubeEnvironmentProfile?: {
+        id: string;
     }
 }
