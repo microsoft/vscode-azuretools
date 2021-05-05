@@ -17,6 +17,13 @@ import { AppServicePlanSkuStep } from './AppServicePlanSkuStep';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
+    private _suppressCreate: boolean | undefined;
+
+    public constructor(suppressCreate?: boolean) {
+        super();
+        this._suppressCreate = suppressCreate;
+    }
+
     public static async getPlans(wizardContext: IAppServiceWizardContext): Promise<WebSiteManagementModels.AppServicePlan[]> {
         if (wizardContext.plansTask === undefined) {
             const client: WebSiteManagementClient = await createWebSiteClient(wizardContext);
@@ -37,7 +44,7 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
         // Cache hosting plan separately per subscription
         const options: IAzureQuickPickOptions = {
-            placeHolder: wizardContext.newSiteKind.includes(AppKind.workflowapp)
+            placeHolder: wizardContext.newSiteKind.includes(AppKind.workflowapp) && wizardContext.planSkuFamilyFilter?.test('IV2')
                 ? localize('selectV3Plan', 'Select an App Service Environment (v3) Plan')
                 : localize('selectPlan', 'Select a {0} App Service plan.', getWebsiteOSDisplayName(nonNullProp(wizardContext, 'newSiteOS'))),
             id: `AppServicePlanListStep/${wizardContext.subscriptionId}`
@@ -69,7 +76,7 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
     }
 
     private async getQuickPicks(wizardContext: IAppServiceWizardContext): Promise<IAzureQuickPickItem<WebSiteManagementModels.AppServicePlan | undefined>[]> {
-        const picks: IAzureQuickPickItem<WebSiteManagementModels.AppServicePlan | undefined>[] = !wizardContext.disablePlanCreate
+        const picks: IAzureQuickPickItem<WebSiteManagementModels.AppServicePlan | undefined>[] = !this._suppressCreate
             ? [{
                 label: localize('CreateNewAppServicePlan', '$(plus) Create new App Service plan'),
                 description: '',

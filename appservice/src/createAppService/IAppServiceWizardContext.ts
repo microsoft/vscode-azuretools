@@ -37,12 +37,6 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
     plan?: WebSiteManagementModels.AppServicePlan;
 
     /**
-     * Whether or not to show plan create step
-     * This will be defined after `SiteHostingPlanStep.prompt` occurs.
-     */
-    disablePlanCreate?: boolean;
-
-    /**
      * Whether or not to use a consumption plan
      * This will be defined after `SiteHostingPlanStep.prompt` occurs.
      */
