@@ -16,7 +16,7 @@ type ExtendedSkuDescription = WebSiteManagementModels.SkuDescription & { label?:
 
 export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
-        let skus: ExtendedSkuDescription[] = wizardContext.advancedCreation ? this.getCommonSkus() : this.getRecommendedSkus();
+        let skus: ExtendedSkuDescription[] = wizardContext.advancedCreation ? this.getRecommendedSkus().concat(this.getAdvancedSkus()) : this.getRecommendedSkus();
         if (wizardContext.newSiteKind.includes(AppKind.workflowapp)) {
             skus = this.getWorkflowStandardSkus();
         } else if (wizardContext.newSiteKind === AppKind.functionapp) {
@@ -90,15 +90,8 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
         ];
     }
 
-    private getCommonSkus(): WebSiteManagementModels.SkuDescription[] {
+    private getAdvancedSkus(): WebSiteManagementModels.SkuDescription[] {
         return [
-            {
-                name: 'F1',
-                tier: 'Free',
-                size: 'F1',
-                family: 'F',
-                capacity: 1
-            },
             {
                 name: 'B1',
                 tier: 'Basic',
