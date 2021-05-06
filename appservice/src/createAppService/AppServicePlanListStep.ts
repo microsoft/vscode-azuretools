@@ -78,15 +78,13 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
     }
 
     private async getQuickPicks(wizardContext: IAppServiceWizardContext): Promise<IAzureQuickPickItem<WebSiteManagementModels.AppServicePlan | undefined>[]> {
-        const picks: IAzureQuickPickItem<WebSiteManagementModels.AppServicePlan | undefined>[] = [];
-
-        if (!this._suppressCreate) {
-            picks.push({
+        const picks: IAzureQuickPickItem<WebSiteManagementModels.AppServicePlan | undefined>[] = !this._suppressCreate
+            ? [{
                 label: localize('CreateNewAppServicePlan', '$(plus) Create new App Service plan'),
                 description: '',
                 data: undefined
-            });
-        }
+            }]
+            : [];
 
         let plans: WebSiteManagementModels.AppServicePlan[] = await AppServicePlanListStep.getPlans(wizardContext);
         const famFilter: RegExp | undefined = wizardContext.planSkuFamilyFilter;
