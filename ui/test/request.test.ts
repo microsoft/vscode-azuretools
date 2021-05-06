@@ -40,7 +40,6 @@ suite('request', () => {
         server.listen();
         const address = server.address();
         if (address && typeof address === 'object') {
-            // tslint:disable-next-line: no-http-string
             url = `http://127.0.0.1:${address.port}`;
         } else {
             throw new Error('Invalid address');
@@ -63,6 +62,7 @@ suite('request', () => {
 
     test('200, json body, no content type', async () => {
         const response = await sendTestRequest({ status: 200, body: '{ "data": "Hello World!" }' });
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         assert.strictEqual(response.parsedBody.data, 'Hello World!');
     });
 
@@ -82,16 +82,19 @@ suite('request', () => {
 
     test('200, json body, json content type', async () => {
         const response = await sendTestRequest({ status: 200, body: '{ "data": "Hello World!" }', contentType: 'application/json' });
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         assert.strictEqual(response.parsedBody.data, 'Hello World!');
     });
 
     test('200, json body, no content type, with bom', async () => {
         const response = await sendTestRequest({ status: 200, body: `\ufeff{ "data": "Hello World!" }` });
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         assert.strictEqual(response.parsedBody.data, 'Hello World!');
     });
 
     test('200, json body, json content type, with bom', async () => {
         const response = await sendTestRequest({ status: 200, body: `\ufeff{ "data": "Hello World!" }`, contentType: 'application/json' });
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         assert.strictEqual(response.parsedBody.data, 'Hello World!');
     });
 

@@ -5,10 +5,7 @@
 
 import { WebSiteManagementClient, WebSiteManagementModels as Models } from '@azure/arm-appservice';
 import { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
-import { appendExtensionUserAgent, createGenericClient, ISubscriptionContext, parseError } from 'vscode-azureextensionui';
-import { KuduClient } from 'vscode-azurekudu';
-import { ISimplifiedSiteClient } from './ISimplifiedSiteClient';
-import { localize } from './localize';
+import { createGenericClient, ISubscriptionContext, parseError } from 'vscode-azureextensionui';
 import { deleteFunctionSlot, getFunctionSlot, listFunctionsSlot } from './slotFunctionOperations';
 import { tryGetAppServicePlan, tryGetWebApp, tryGetWebAppSlot } from './tryGetSiteResource';
 import { createWebSiteClient } from './utils/azureClients';
@@ -18,7 +15,7 @@ import { nonNullProp, nonNullValue } from './utils/nonNull';
  * Wrapper of a WebSiteManagementClient for use with a specific Site
  * Reduces the number of arguments needed for every call and automatically ensures the 'slot' method is called when appropriate
  */
-export class SiteClient implements ISimplifiedSiteClient {
+export class SiteClient {
     public readonly id: string;
     public readonly isSlot: boolean;
     /**
@@ -91,17 +88,6 @@ export class SiteClient implements ISimplifiedSiteClient {
         } else {
             return false;
         }
-    }
-
-    public async getKuduClient(): Promise<KuduClient> {
-        if (!this.kuduHostName) {
-            throw new Error(localize('notSupportedLinux', 'This operation is not supported by this app service plan.'));
-        }
-
-        return new KuduClient(this.subscription.credentials, {
-            baseUri: this.kuduUrl,
-            userAgent: appendExtensionUserAgent
-        });
     }
 
     public async stop(): Promise<void> {

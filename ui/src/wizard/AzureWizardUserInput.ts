@@ -16,6 +16,12 @@ export interface IInternalAzureWizard {
     getCachedInputBoxValue(): string | undefined;
 }
 
+type QuickPickGroup = {
+    name?: string;
+    isCollapsed?: boolean;
+    picks: QuickPickItem[]
+}
+
 /**
  * Provides more advanced versions of vscode.window.showQuickPick and vscode.window.showInputBox for use in the AzureWizard
  */
@@ -58,13 +64,33 @@ export class AzureWizardUserInput implements IWizardUserInput {
             quickPick.matchOnDetail = !!options.matchOnDetail;
             quickPick.canSelectMany = !!options.canPickMany;
 
+            const groups: QuickPickGroup[] = [];
+
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises, no-async-promise-executor
             return await new Promise<TPick | TPick[]>(async (resolve, reject): Promise<void> => {
                 disposables.push(
                     quickPick.onDidAccept(() => {
-                        if (options.canPickMany) {
-                            resolve(Array.from(quickPick.selectedItems));
-                        } else {
-                            resolve(quickPick.selectedItems[0]);
+                        try {
+                            if (options.canPickMany) {
+                                resolve(Array.from(quickPick.selectedItems));
+                            } else {
+                                const selectedItem = <TPick & Partial<types.IAzureQuickPickItem<unknown>>>quickPick.selectedItems[0];
+                                const group = groups.find(g => selectedItem.data === g);
+                                if (group) {
+                                    group.isCollapsed = !group.isCollapsed;
+                                    quickPick.items = this.getGroupedPicks(groups);
+
+                                    // The active pick gets reset when we change the items, but we can explicitly set it here to persist the active state
+                                    const newGroupPick = quickPick.items.find((i: Partial<types.IAzureQuickPickItem<unknown>>) => i.data === group);
+                                    if (newGroupPick) {
+                                        quickPick.activeItems = [newGroupPick];
+                                    }
+                                } else {
+                                    resolve(selectedItem);
+                                }
+                            }
+                        } catch (error) {
+                            reject(error);
                         }
                     }),
                     quickPick.onDidTriggerButton(_btn => {
@@ -82,9 +108,15 @@ export class AzureWizardUserInput implements IWizardUserInput {
                 quickPick.show();
                 this.isPrompting = true;
                 try {
-                    quickPick.items = await Promise.resolve(picks);
+                    quickPick.items = await this.initializePicks<TPick>(picks, options, groups);
+
+                    if (groups.length > 0) {
+                        // If grouping is enabled, make the first actual pick active by default, rather than the group label pick
+                        quickPick.activeItems = [<TPick>groups[0].picks[0]];
+                    }
+
                     if (options.canPickMany && options.isPickSelected) {
-                        // tslint:disable-next-line: no-non-null-assertion
+                        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                         quickPick.selectedItems = quickPick.items.filter(p => options.isPickSelected!(p));
                     }
                     quickPick.placeholder = options.placeHolder;
@@ -97,6 +129,47 @@ export class AzureWizardUserInput implements IWizardUserInput {
         } finally {
             this.isPrompting = false;
             disposables.forEach(d => { d.dispose(); });
+        }
+    }
+
+    private async initializePicks<TPick extends QuickPickItem>(picks: TPick[] | Promise<TPick[]>, options: types.IAzureQuickPickOptions, groups: QuickPickGroup[]): Promise<TPick[]> {
+        picks = await picks;
+        if (!options.enableGrouping) {
+            return picks;
+        } else {
+            if (options.canPickMany) {
+                throw new Error('Internal error: "canPickMany" and "enableGrouping" are not supported at the same time.')
+            }
+
+            for (const pick of picks) {
+                const groupName: string | undefined = (<Partial<types.IAzureQuickPickItem<unknown>>>pick).group;
+                const group = groups.find(g => g.name === groupName);
+                if (group) {
+                    group.picks.push(pick);
+                } else {
+                    groups.push({ name: groupName, picks: [pick] });
+                }
+            }
+            return this.getGroupedPicks(groups);
+        }
+    }
+
+    private getGroupedPicks<TPick extends QuickPickItem>(groups: QuickPickGroup[]): TPick[] {
+        if (groups.length === 1) {
+            // No point in grouping if there's only one group
+            return <TPick[]>groups[0].picks;
+        } else {
+            const picks: QuickPickItem[] = [];
+            for (const group of groups) {
+                picks.push(<types.IAzureQuickPickItem<QuickPickGroup>>{
+                    label: `$(chevron-${group.isCollapsed ? 'right' : 'down'}) ${group.name || ''}`,
+                    data: group
+                });
+                if (!group.isCollapsed) {
+                    picks.push(...group.picks);
+                }
+            }
+            return <TPick[]>picks;
         }
     }
 
@@ -116,7 +189,6 @@ export class AzureWizardUserInput implements IWizardUserInput {
             inputBox.buttons = this.showBackButton ? [QuickInputButtons.Back] : [];
 
             if (!inputBox.password) {
-                // tslint:disable-next-line: strict-boolean-expressions
                 inputBox.value = this._wizard.getCachedInputBoxValue() || options.value || '';
             }
 
@@ -135,7 +207,6 @@ export class AzureWizardUserInput implements IWizardUserInput {
                             latestValidation = validation;
                             const message: string | undefined | null = await validation;
                             if (validation === latestValidation) {
-                                // tslint:disable-next-line: strict-boolean-expressions
                                 inputBox.validationMessage = message || '';
                             }
                         }

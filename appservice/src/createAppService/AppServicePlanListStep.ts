@@ -10,7 +10,7 @@ import { tryGetAppServicePlan } from '../tryGetSiteResource';
 import { createWebSiteClient } from '../utils/azureClients';
 import { nonNullProp } from '../utils/nonNull';
 import { uiUtils } from '../utils/uiUtils';
-import { getWebsiteOSDisplayName, WebsiteOS } from './AppKind';
+import { getWebsiteOSDisplayName, WebsiteOS, AppKind } from './AppKind';
 import { AppServicePlanCreateStep } from './AppServicePlanCreateStep';
 import { AppServicePlanNameStep } from './AppServicePlanNameStep';
 import { AppServicePlanSkuStep } from './AppServicePlanSkuStep';
@@ -43,7 +43,14 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
 
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
         // Cache hosting plan separately per subscription
-        const options: IAzureQuickPickOptions = { placeHolder: localize('selectPlan', 'Select a {0} App Service plan.', getWebsiteOSDisplayName(nonNullProp(wizardContext, 'newSiteOS'))), id: `AppServicePlanListStep/${wizardContext.subscriptionId}` };
+        // Logic Apps only supports Workflow Standard sku and for App Service Plan it only supports one Isolated sku.
+        // Since create is not enabled for isolated skus, we explicitly reference the type of plan picked in the placeHolder.
+        const options: IAzureQuickPickOptions = {
+            placeHolder: wizardContext.newSiteKind?.includes(AppKind.workflowapp) && wizardContext.planSkuFamilyFilter?.test('IV2')
+                ? localize('selectV3Plan', 'Select an App Service Environment (v3) Plan')
+                : localize('selectPlan', 'Select a {0} App Service plan.', getWebsiteOSDisplayName(nonNullProp(wizardContext, 'newSiteOS'))),
+            id: `AppServicePlanListStep/${wizardContext.subscriptionId}`
+        };
         wizardContext.plan = (await wizardContext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
 
         wizardContext.telemetry.properties.newPlan = String(!wizardContext.plan);
@@ -91,8 +98,8 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
             const isNewSiteLinux: boolean = wizardContext.newSiteOS === WebsiteOS.linux;
             let isPlanLinux: boolean = nonNullProp(plan, 'kind').toLowerCase().includes(WebsiteOS.linux);
 
-            if (plan.sku && plan.sku.family === 'EP') {
-                // elastic premium plans do not have the os in the kind, so we have to check the "reserved" property
+            if (plan.sku && (plan.sku.family === 'EP' || plan.sku.family === 'WS')) {
+                // elastic premium plans and workflow standard plans do not have the os in the kind, so we have to check the "reserved" property
                 // also, the "reserved" property is always "false" in the list of plans returned above. We have to perform a separate get on each plan
                 const client: WebSiteManagementClient = await createWebSiteClient(wizardContext);
                 const epPlan: WebSiteManagementModels.AppServicePlan | undefined = await tryGetAppServicePlan(client, nonNullProp(plan, 'resourceGroup'), nonNullProp(plan, 'name'));

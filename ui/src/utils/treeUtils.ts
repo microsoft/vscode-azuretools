@@ -6,7 +6,6 @@
 import { AzExtTreeItem } from '../tree/AzExtTreeItem';
 import { SubscriptionTreeItemBase } from '../tree/SubscriptionTreeItemBase';
 
-// tslint:disable-next-line:export-name
 export function findSubscriptionTreeItem(node: AzExtTreeItem): SubscriptionTreeItemBase {
     let root: AzExtTreeItem = node;
     while (!(root instanceof SubscriptionTreeItemBase) && root.parent !== undefined) {

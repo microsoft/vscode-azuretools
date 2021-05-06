@@ -13,7 +13,6 @@ import { ext } from './extensionVariables';
 import { localize } from "./localize";
 import { createTemporaryFile } from './utils/createTemporaryFile';
 
-// tslint:disable-next-line:no-unsafe-any
 export abstract class BaseEditor<ContextT> implements vscode.Disposable {
     private fileMap: { [key: string]: [vscode.TextDocument, ContextT] } = {};
     private ignoreSave: boolean = false;
@@ -57,6 +56,7 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
     }
 
     public async dispose(): Promise<void> {
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         Object.keys(this.fileMap).forEach(async (key: string) => await fse.remove(path.dirname(key)));
     }
 
@@ -102,7 +102,7 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
     }
 
     private async updateEditor(data: string, textEditor?: vscode.TextEditor): Promise<void> {
-        if (!!textEditor) {
+        if (textEditor) {
             await BaseEditor.writeToEditor(textEditor, data);
             this.ignoreSave = true;
             try {
@@ -112,7 +112,7 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
             }
         }
     }
-    // tslint:disable-next-line:member-ordering
+
     private static async writeToEditor(editor: vscode.TextEditor, data: string): Promise<void> {
         await editor.edit((editBuilder: vscode.TextEditorEdit) => {
             if (editor.document.lineCount > 0) {

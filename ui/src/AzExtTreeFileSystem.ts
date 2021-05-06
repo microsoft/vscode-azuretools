@@ -52,7 +52,6 @@ export abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> implement
 
             const item: TItem = await this.lookup(context, uri);
             return await this.statImpl(context, item, uri);
-            // tslint:disable-next-line: strict-boolean-expressions
         }) || { type: FileType.Unknown, ctime: 0, mtime: 0, size: 0 };
     }
 
@@ -63,7 +62,6 @@ export abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> implement
 
             const item: TItem = await this.lookup(context, uri);
             return await this.readFileImpl(context, item, uri);
-            // tslint:disable-next-line: strict-boolean-expressions
         }) || Buffer.from('');
     }
 
@@ -83,7 +81,6 @@ export abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> implement
         throw unsupportedError;
     }
 
-    // tslint:disable-next-line: no-reserved-keywords
     public async delete(_uri: Uri): Promise<void> {
         throw unsupportedError;
     }
@@ -96,7 +93,6 @@ export abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> implement
      * Uses a simple buffer to group events that occur within a few milliseconds of each other
      * Adapted from https://github.com/microsoft/vscode-extension-samples/blob/master/fsprovider-sample/src/fileSystemProvider.ts
      */
-    // tslint:disable-next-line: no-reserved-keywords
     public fireSoon(...events: types.AzExtItemChangeEvent<TItem>[]): void {
         this._bufferedEvents.push(...events.map(e => {
             return {

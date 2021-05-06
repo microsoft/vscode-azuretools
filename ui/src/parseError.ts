@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+/* eslint-disable */
+
 import * as htmlToText from 'html-to-text';
 import { IParsedError } from '../index';
 import { localize } from './localize';
 import { parseJson } from './utils/parseJson';
 
-// tslint:disable:no-unsafe-any
-// tslint:disable:no-any
 export function parseError(error: any): IParsedError {
     let errorType: string = '';
     let message: string = '';
@@ -65,7 +65,6 @@ export function parseError(error: any): IParsedError {
 
     [message, errorType] = parseIfFileSystemError(message, errorType);
 
-    // tslint:disable-next-line:strict-boolean-expressions
     errorType = errorType || typeof (error);
     message = message || localize('unknownError', 'Unknown Error');
 
@@ -180,7 +179,6 @@ function unpackErrorFromField(error: any, prop: string): any {
  * FileService.StorageServiceClient._processResponse azure-storage/storageserviceclient.js:751:50
  */
 function getCallstack(error: { stack?: unknown }): string | undefined {
-    // tslint:disable-next-line: strict-boolean-expressions
     const stack: string = typeof error.stack === 'string' ? error.stack : '';
 
     const minifiedLines: (string | undefined)[] = stack

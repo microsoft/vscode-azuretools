@@ -6,8 +6,8 @@
 import { ThemeIcon } from 'vscode';
 import { AzExtParentTreeItem, AzExtTreeItem, IActionContext, openReadOnlyContent, TreeItemIconPath } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
-import { ISimplifiedSiteClient } from '../ISimplifiedSiteClient';
 import { localize } from '../localize';
+import { SiteClient } from '../SiteClient';
 import { getFile, ISiteFile } from '../siteFiles';
 
 /**
@@ -20,9 +20,9 @@ export class FileTreeItem extends AzExtTreeItem {
     public readonly path: string;
     public readonly isReadOnly: boolean;
 
-    public readonly client: ISimplifiedSiteClient;
+    public readonly client: SiteClient;
 
-    constructor(parent: AzExtParentTreeItem, client: ISimplifiedSiteClient, label: string, path: string, isReadOnly: boolean) {
+    constructor(parent: AzExtParentTreeItem, client: SiteClient, label: string, path: string, isReadOnly: boolean) {
         super(parent);
         this.client = client;
         this.label = label;

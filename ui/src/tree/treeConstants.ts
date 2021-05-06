@@ -5,5 +5,4 @@
 
 import { localize } from '../localize';
 
-// tslint:disable-next-line: export-name
 export const loadMoreLabel: string = localize('LoadMore', 'Load More...');
