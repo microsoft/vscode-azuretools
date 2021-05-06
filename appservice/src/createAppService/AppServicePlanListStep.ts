@@ -44,7 +44,7 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
         // Cache hosting plan separately per subscription
         const options: IAzureQuickPickOptions = {
-            placeHolder: wizardContext.newSiteKind.includes(AppKind.workflowapp) && wizardContext.planSkuFamilyFilter?.test('IV2')
+            placeHolder: wizardContext.newSiteKind?.includes(AppKind.workflowapp) && wizardContext.planSkuFamilyFilter?.test('IV2')
                 ? localize('selectV3Plan', 'Select an App Service Environment (v3) Plan')
                 : localize('selectPlan', 'Select a {0} App Service plan.', getWebsiteOSDisplayName(nonNullProp(wizardContext, 'newSiteOS'))),
             id: `AppServicePlanListStep/${wizardContext.subscriptionId}`

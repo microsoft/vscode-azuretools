@@ -19,7 +19,7 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
         let skus: ExtendedSkuDescription[] = wizardContext.advancedCreation ? this.getRecommendedSkus().concat(this.getAdvancedSkus()) : this.getRecommendedSkus();
         if (wizardContext.newSiteKind === AppKind.functionapp) {
             skus.push(...this.getElasticPremiumSkus());
-        } else if (wizardContext.newSiteKind.includes(AppKind.workflowapp)) {
+        } else if (wizardContext.newSiteKind?.includes(AppKind.workflowapp)) {
             skus = this.getWorkflowStandardSkus();
         }
 
