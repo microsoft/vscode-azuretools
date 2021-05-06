@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { WebSiteManagementModels } from '@azure/arm-appservice';
-import { KuduClient } from 'vscode-azurekudu';
+import { createKuduClient } from '../createKuduClient';
 import { SiteClient } from '../SiteClient';
 
-export async function delayFirstWebAppDeploy(client: SiteClient, asp: WebSiteManagementModels.AppServicePlan | undefined): Promise<void> {
+export async function delayFirstWebAppDeploy(client: SiteClient, aspPromise: Promise<WebSiteManagementModels.AppServicePlan | undefined>): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises, no-async-promise-executor
     await new Promise<void>(async (resolve: () => void): Promise<void> => {
         setTimeout(resolve, 10000);
@@ -16,6 +16,8 @@ export async function delayFirstWebAppDeploy(client: SiteClient, asp: WebSiteMan
             if (client.isFunctionApp) {
                 resolve();
             }
+
+            const asp: WebSiteManagementModels.AppServicePlan | undefined = await aspPromise;
             if (!asp || !asp.sku || !asp.sku.tier || asp.sku.tier.toLowerCase() !== 'basic') {
                 resolve();
             }
@@ -23,7 +25,7 @@ export async function delayFirstWebAppDeploy(client: SiteClient, asp: WebSiteMan
                 resolve();
             }
 
-            const kuduClient: KuduClient = await client.getKuduClient();
+            const kuduClient = await createKuduClient(client);
             const deployments: number = (await kuduClient.deployment.getDeployResults()).length;
             if (deployments > 1) {
                 resolve();

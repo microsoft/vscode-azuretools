@@ -4,12 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { WebSiteManagementModels } from '@azure/arm-appservice';
+import * as fse from 'fs-extra';
 import { ProgressLocation, window } from 'vscode';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { ScmType } from '../ScmType';
 import { SiteClient } from '../SiteClient';
 import { randomUtils } from '../utils/randomUtils';
+import { deployToStorageAccount } from './deployToStorageAccount';
 import { deployWar } from './deployWar';
 import { deployZip } from './deployZip';
 import { IDeployContext } from './IDeployContext';
@@ -61,12 +63,6 @@ export async function deploy(client: SiteClient, fsPath: string, context: IDeplo
         // Ignore
     }
 
-    let effectiveScmType: string | undefined = config.scmType;
-    if (config.scmType !== ScmType.None && client.isLinux && await client.getIsConsumption()) {
-        ext.outputChannel.appendLog(localize('linuxConsZipOnly', 'WARNING: Using zip deploy because scm type "{0}" is not supported on Linux consumption', config.scmType), { resourceName: client.fullName });
-        effectiveScmType = ScmType.None;
-    }
-
     const title: string = localize('deploying', 'Deploying to "{0}"... Check [output window](command:{1}) for status.', client.fullName, ext.prefix + '.showOutputChannel');
     await window.withProgress({ location: ProgressLocation.Notification, title }, async () => {
         if (context.stopAppBeforeDeploy) {
@@ -74,19 +70,24 @@ export async function deploy(client: SiteClient, fsPath: string, context: IDeplo
             await client.stop();
         }
 
+        ext.outputChannel.appendLog(localize('deployStart', 'Starting deployment...'), { resourceName: client.fullName });
         try {
-            switch (effectiveScmType) {
-                case ScmType.LocalGit:
-                    await localGitDeploy(client, { fsPath: fsPath }, context);
-                    break;
-                case ScmType.GitHub:
-                    throw new Error(localize('gitHubConnected', '"{0}" is connected to a GitHub repository. Push to GitHub repository to deploy.', client.fullName));
-                default: //'None' or any other non-supported scmType
-                    if (config.linuxFxVersion && /^(tomcat|wildfly)/i.test(config.linuxFxVersion)) {
-                        await deployWar(context, client, fsPath);
-                    } else {
-                        await deployZip(context, client, fsPath, aspPromise);
-                    }
+            if (!context.deployMethod && config.scmType === ScmType.GitHub) {
+                throw new Error(localize('gitHubConnected', '"{0}" is connected to a GitHub repository. Push to GitHub repository to deploy.', client.fullName));
+            } else if (!context.deployMethod && config.scmType === ScmType.LocalGit) {
+                await localGitDeploy(client, { fsPath: fsPath }, context);
+            } else {
+                if (!(await fse.pathExists(fsPath))) {
+                    throw new Error(localize('pathNotExist', 'Failed to deploy path that does not exist: {0}', fsPath));
+                }
+
+                if (config.linuxFxVersion && /^(tomcat|wildfly)/i.test(config.linuxFxVersion)) {
+                    await deployWar(context, client, fsPath);
+                } else if (context.deployMethod === 'storage') {
+                    await deployToStorageAccount(context, fsPath, client);
+                } else {
+                    await deployZip(context, client, fsPath, aspPromise);
+                }
             }
         } finally {
             if (context.stopAppBeforeDeploy) {
@@ -95,7 +96,7 @@ export async function deploy(client: SiteClient, fsPath: string, context: IDeplo
             }
         }
 
-        await startPostDeployTask(context, fsPath, effectiveScmType, client.fullName);
+        await startPostDeployTask(context, fsPath, config.scmType, client.fullName);
 
         if (context.syncTriggersPostDeploy) {
             // Don't sync triggers if app is stopped https://github.com/microsoft/vscode-azurefunctions/issues/1608

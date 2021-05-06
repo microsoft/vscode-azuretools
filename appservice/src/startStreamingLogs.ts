@@ -10,9 +10,9 @@ import { setInterval } from 'timers';
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling, createGenericClient, IActionContext, parseError } from 'vscode-azureextensionui';
 import { ext } from './extensionVariables';
-import { ISimplifiedSiteClient } from './ISimplifiedSiteClient';
 import { localize } from './localize';
 import { pingFunctionApp } from './pingFunctionApp';
+import { SiteClient } from './SiteClient';
 import { nonNullProp } from './utils/nonNull';
 
 export interface ILogStream extends vscode.Disposable {
@@ -22,11 +22,11 @@ export interface ILogStream extends vscode.Disposable {
 
 const logStreams: Map<string, ILogStream> = new Map<string, ILogStream>();
 
-function getLogStreamId(client: ISimplifiedSiteClient, logsPath: string): string {
+function getLogStreamId(client: SiteClient, logsPath: string): string {
     return `${client.id}${logsPath}`;
 }
 
-export async function startStreamingLogs(client: ISimplifiedSiteClient, verifyLoggingEnabled: () => Promise<void>, logStreamLabel: string, logsPath: string = ''): Promise<ILogStream> {
+export async function startStreamingLogs(client: SiteClient, verifyLoggingEnabled: () => Promise<void>, logStreamLabel: string, logsPath: string = ''): Promise<ILogStream> {
     const logStreamId: string = getLogStreamId(client, logsPath);
     const logStream: ILogStream | undefined = logStreams.get(logStreamId);
     if (logStream && logStream.isConnected) {
@@ -106,7 +106,7 @@ export async function startStreamingLogs(client: ISimplifiedSiteClient, verifyLo
     }
 }
 
-export async function stopStreamingLogs(client: ISimplifiedSiteClient, logsPath: string = ''): Promise<void> {
+export async function stopStreamingLogs(client: SiteClient, logsPath: string = ''): Promise<void> {
     const logStreamId: string = getLogStreamId(client, logsPath);
     const logStream: ILogStream | undefined = logStreams.get(logStreamId);
     if (logStream && logStream.isConnected) {
