@@ -18,7 +18,7 @@ export class CustomLocationListStep<T extends IAppServiceWizardContext> extends 
             await LocationListStep.setLocation(wizardContext, result.kubeEnvironment.location);
             // Plan has very little effect when a custom location is used, so default this info instead of prompting
             wizardContext.newPlanName = await wizardContext.relatedNameTask;
-            wizardContext.newPlanSku = { name: 'U1', tier: 'ANY', size: 'U1', family: 'U', capacity: 1 };
+            wizardContext.newPlanSku = { name: 'K1', tier: 'Kubernetes', size: 'K1', family: 'K', capacity: 1 };
         } else {
             wizardContext.location = result;
         }
@@ -26,7 +26,7 @@ export class CustomLocationListStep<T extends IAppServiceWizardContext> extends 
 
     protected async getCustomQuickPicks(wizardContext: T): Promise<IAzureQuickPickItem<AzExtLocation | CustomLocation>[]> {
         const picks: IAzureQuickPickItem<AzExtLocation | CustomLocation>[] = await super.getQuickPicks(wizardContext);
-        if (wizardContext.newSiteOS === 'linux') {
+        if (wizardContext.newSiteOS !== 'windows') {
             try {
                 const client = await createResourceGraphClient(wizardContext);
                 const response = await client.resources({

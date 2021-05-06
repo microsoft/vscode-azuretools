@@ -11,7 +11,7 @@ import { localize } from '../localize';
 import { tryGetAppServicePlan } from '../tryGetSiteResource';
 import { createWebSiteClient } from '../utils/azureClients';
 import { nonNullProp, nonNullValueAndProp } from '../utils/nonNull';
-import { getAppServicePlanModelKind, WebsiteOS } from './AppKind';
+import { AppKind, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
@@ -39,12 +39,13 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
             const skuFamily = wizardContext.newPlanSku?.family ? wizardContext.newPlanSku?.family.toLowerCase() : '';
             const isElasticPremiumOrWorkflowStandard: boolean = skuFamily === 'ep' || skuFamily === 'ws';
             wizardContext.plan = await client.appServicePlans.createOrUpdate(rgName, newPlanName, <ExtendedAppServicePlan{
-                kind: getAppServicePlanModelKind(wizardContext.newSiteKind, nonNullProp(wizardContext, 'newSiteOS')),
+                kind: getPlanKind(wizardContext),
                 sku: nonNullProp(wizardContext, 'newPlanSku'),
                 location: nonNullValueAndProp(wizardContext.location, 'name'),
                 reserved: wizardContext.newSiteOS === WebsiteOS.linux,  // The secret property - must be set to true to make it a Linux plan. Confirmed by the team who owns this API.
                 maximumElasticWorkerCount: isElasticPremiumOrWorkflowStandard ? 20 : undefined,
-                kubeEnvironmentProfile: getKubeProfile(wizardContext)
+                kubeEnvironmentProfile: getKubeProfile(wizardContext),
+                perSiteScaling: !!wizardContext.customLocation
             });
             ext.outputChannel.appendLog(createdAppServicePlan);
         }
@@ -83,5 +84,15 @@ function getKubeProfile(wizardContext: IAppServiceWizardContext) {
 interface ExtendedAppServicePlan extends WebSiteManagementModels.AppServicePlan {
     kubeEnvironmentProfile?: {
         id: string;
+    }
+}
+
+export function getPlanKind(wizardContext: IAppServiceWizardContext): string {
+    if (wizardContext.customLocation) {
+        return 'linux,kubernetes';
+    } else if (wizardContext.newSiteOS === WebsiteOS.linux) {
+        return WebsiteOS.linux;
+    } else {
+        return AppKind.app;
     }
 }
