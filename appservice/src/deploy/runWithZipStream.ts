@@ -45,7 +45,7 @@ export async function runWithZipStream(context: IActionContext, fsPath: string, 
             if (client.isFunctionApp) {
                 filesToZip = await getFilesFromGitignore(fsPath, '.funcignore');
             } else {
-                filesToZip = await getFilesFromGlob(fsPath);
+                filesToZip = await getFilesFromGlob(fsPath, client);
             }
 
             for (const file of filesToZip) {
@@ -71,14 +71,25 @@ const commonGlobSettings: {} = {
 /**
  * Adds files using glob filtering
  */
-async function getFilesFromGlob(folderPath: string): Promise<string[]> {
+async function getFilesFromGlob(folderPath: string, client: SiteClient): Promise<string[]> {
     const zipDeployConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration(ext.prefix, vscode.Uri.file(folderPath));
     const globOptions = { cwd: folderPath, followSymbolicLinks: true, dot: true };
     const globPattern: string = zipDeployConfig.get<string>('zipGlobPattern') || '**/*';
     const filesToInclude: string[] = await globby(globPattern, globOptions);
+    const zipIgnorePatternStr = 'zipIgnorePattern';
 
-    const ignorePattern: string | string[] = zipDeployConfig.get<string | string[]>('zipIgnorePattern') || '';
-    const filesToIgnore: string[] = await globby(ignorePattern, globOptions);
+    let ignorePatternList: string | string[] = zipDeployConfig.get<string | string[]>(zipIgnorePatternStr) || '';
+    const filesToIgnore: string[] = await globby(ignorePatternList, globOptions);
+
+    if (ignorePatternList) {
+        if (typeof ignorePatternList === 'string') {
+            ignorePatternList = [ignorePatternList];
+        }
+        ext.outputChannel.appendLog(localize('zipIgnoreFileMsg', `Ignoring files from \"{0}.{1}\"`, ext.prefix, zipIgnorePatternStr), { resourceName: client.fullName });
+        for (const pattern of ignorePatternList) {
+            ext.outputChannel.appendLine(`\"${pattern}\"`);
+        }
+    }
 
     return filesToInclude.filter(file => {
         return !filesToIgnore.includes(file);
