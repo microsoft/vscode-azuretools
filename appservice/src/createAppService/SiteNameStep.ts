@@ -27,13 +27,26 @@ export class SiteNameStep extends AzureNameStep<IAppServiceWizardContext> {
         if (wizardContext.environment.name === 'Azure') {
             // Unfortunately, the environment object doesn't have the url we need for this placeholder. Might be fixed in the new sdk: https://github.com/microsoft/vscode-azuretools/issues/510
             // For now, we'll only display this placeholder for the most common case
-            const namePlaceholder: string = wizardContext.newSiteKind === AppKind.functionapp ? localize('funcAppName', 'function app name') : localize('webAppName', 'web app name');
+            let namePlaceholder: string;
+            if (wizardContext.newSiteKind === AppKind.functionapp) {
+                namePlaceholder = localize('funcAppName', 'function app name');
+            } else if (wizardContext.newSiteKind?.includes(AppKind.workflowapp)) {
+                namePlaceholder = localize('logicAppName', 'logic app name');
+            } else {
+                namePlaceholder = localize('webAppName', 'web app name');
+            } 
             placeHolder = `<${namePlaceholder}>.azurewebsites.net`;
         }
 
-        const prompt: string = wizardContext.newSiteKind === AppKind.functionapp ?
-            localize('functionAppNamePrompt', 'Enter a globally unique name for the new function app.') :
-            localize('webAppNamePrompt', 'Enter a globally unique name for the new web app.');
+        let prompt: string;
+        if (wizardContext.newSiteKind === AppKind.functionapp) {
+            prompt = localize('functionAppNamePrompt', 'Enter a globally unique name for the new function app.');
+        } else if (wizardContext.newSiteKind?.includes(AppKind.workflowapp)) {
+            prompt = localize('functionAppNamePrompt', 'Enter a globally unique name for the new logic app.');
+        } else {
+            prompt = localize('webAppNamePrompt', 'Enter a globally unique name for the new web app.');
+        }
+
         wizardContext.newSiteName = (await wizardContext.ui.showInputBox({
             prompt,
             placeHolder,
