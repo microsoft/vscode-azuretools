@@ -86,7 +86,6 @@ async function getFilesFromGlob(folderPath: string, client: SiteClient): Promise
             ignorePatternList = [ignorePatternList];
         }
         ext.outputChannel.appendLog(localize('zipIgnoreFileMsg', `Ignoring files from \"{0}.{1}\"`, ext.prefix, zipIgnorePatternStr), { resourceName: client.fullName });
-        ext.outputChannel.appendLine(`\"${ignorePatternList}\"`);
         for (const pattern of ignorePatternList) {
             ext.outputChannel.appendLine(`\"${pattern}\"`);
         }
