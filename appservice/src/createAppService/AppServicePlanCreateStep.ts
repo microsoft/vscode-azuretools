@@ -38,7 +38,7 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
             progress.report({ message: creatingAppServicePlan });
             const skuFamily = wizardContext.newPlanSku?.family ? wizardContext.newPlanSku?.family.toLowerCase() : '';
             const isElasticPremiumOrWorkflowStandard: boolean = skuFamily === 'ep' || skuFamily === 'ws';
-            wizardContext.plan = await client.appServicePlans.createOrUpdate(rgName, newPlanName, <ExtendedAppServicePlan{
+            wizardContext.plan = await client.appServicePlans.createOrUpdate(rgName, newPlanName, <ExtendedAppServicePlan>{
                 kind: getPlanKind(wizardContext),
                 sku: nonNullProp(wizardContext, 'newPlanSku'),
                 location: nonNullValueAndProp(wizardContext.location, 'name'),
@@ -87,7 +87,7 @@ interface ExtendedAppServicePlan extends WebSiteManagementModels.AppServicePlan 
     }
 }
 
-export function getPlanKind(wizardContext: IAppServiceWizardContext): string {
+function getPlanKind(wizardContext: IAppServiceWizardContext): string {
     if (wizardContext.customLocation) {
         return 'linux,kubernetes';
     } else if (wizardContext.newSiteOS === WebsiteOS.linux) {
