@@ -44,7 +44,7 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
         // Cache hosting plan separately per subscription
         // Logic Apps only supports Workflow Standard sku and for App Service Plan it only supports one Isolated sku.
-        // Since create is not enabled in isolated skus so we explicitly call out the type of plan picked in the picker text .
+        // Since create is not enabled for isolated skus, we explicitly reference the type of plan picked in the placeHolder.
         const options: IAzureQuickPickOptions = {
             placeHolder: wizardContext.newSiteKind?.includes(AppKind.workflowapp) && wizardContext.planSkuFamilyFilter?.test('IV2')
                 ? localize('selectV3Plan', 'Select an App Service Environment (v3) Plan')
