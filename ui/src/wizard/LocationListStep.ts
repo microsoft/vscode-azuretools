@@ -5,14 +5,11 @@
 
 import * as types from '../../index';
 import { createResourcesClient } from '../clients';
+import { resourceGroupProvider } from '../constants';
 import { createGenericClient } from '../createAzureClient';
 import { localize } from '../localize';
-import { nonNullProp } from '../utils/nonNull';
+import { nonNullProp, nonNullValue } from '../utils/nonNull';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
-
-function generalizeLocationName(name: string | undefined): string {
-    return (name || '').toLowerCase().replace(/\s/g, '');
-}
 
 interface ILocationWizardContextInternal extends types.ILocationWizardContext {
     /**
@@ -22,50 +19,108 @@ interface ILocationWizardContextInternal extends types.ILocationWizardContext {
     _allLocationsTask?: Promise<types.AzExtLocation[]>;
 
     _alreadyHasLocationStep?: boolean;
+
+    /**
+     * Map of the provider (i.e. 'Microsoft.Web') to it's supported locations
+     */
+    _providerLocationsMap?: Map<string, Promise<string[]>>;
+
+    /**
+     * The selected location. There's a small chance it's not supported by all providers if `setLocation` was used
+     */
+    _location?: types.AzExtLocation;
 }
 
 export class LocationListStep<T extends ILocationWizardContextInternal> extends AzureWizardPromptStep<T> {
-
     protected constructor() {
         super();
     }
 
-    public static addStep<T extends ILocationWizardContextInternal>(wizardContext: types.IActionContext & Partial<ILocationWizardContextInternal>, promptSteps: AzureWizardPromptStep<T>[]): void {
+    public static addStep<T extends ILocationWizardContextInternal>(wizardContext: types.ISubscriptionContext & Partial<ILocationWizardContextInternal>, promptSteps: AzureWizardPromptStep<T>[]): void {
         if (!wizardContext._alreadyHasLocationStep) {
             promptSteps.push(new this());
             wizardContext._alreadyHasLocationStep = true;
+            this.getInternalVariables(wizardContext); // initialize
         }
     }
 
-    public static async setLocation<T extends ILocationWizardContextInternal>(wizardContext: T, name: string): Promise<void> {
-        const locations: types.AzExtLocation[] = await LocationListStep.getLocations(wizardContext);
-        name = generalizeLocationName(name);
-        wizardContext.location = locations.find(l => {
-            return name === generalizeLocationName(l.name) || name === generalizeLocationName(l.displayName);
-        });
-    }
-
-    public static async getLocations<T extends ILocationWizardContextInternal>(wizardContext: T): Promise<types.AzExtLocation[]> {
-        if (wizardContext._allLocationsTask === undefined) {
+    private static getInternalVariables(wizardContext: types.ISubscriptionContext & Partial<ILocationWizardContextInternal>): [Promise<types.AzExtLocation[]>, Map<string, Promise<string[]>>] {
+        if (!wizardContext._allLocationsTask) {
             wizardContext._allLocationsTask = getAllLocations(wizardContext);
         }
 
-        const allLocations = await wizardContext._allLocationsTask;
-        if (wizardContext.locationsTask === undefined) {
-            return allLocations;
-        } else {
-            const locationsSubset: { name?: string }[] = await wizardContext.locationsTask;
-            return allLocations.filter(l1 => locationsSubset.find(l2 => generalizeLocationName(l1.name) === generalizeLocationName(l2.name)));
+        if (!wizardContext._providerLocationsMap) {
+            wizardContext._providerLocationsMap = new Map<string, Promise<string[]>>();
+            // Should be relevant for all our wizards
+            wizardContext._providerLocationsMap.set(resourceGroupProvider.toLowerCase(), getResourceGroupLocations(wizardContext));
         }
+        return [wizardContext._allLocationsTask, wizardContext._providerLocationsMap];
+    }
+
+    public static async setLocation<T extends ILocationWizardContextInternal>(wizardContext: T, name: string): Promise<void> {
+        const [allLocationsTask] = this.getInternalVariables(wizardContext);
+        wizardContext._location = (await allLocationsTask).find(l => matchesLocation(l, name));
+    }
+
+    public static setLocationSubset<T extends ILocationWizardContextInternal>(wizardContext: T, task: Promise<string[]>, provider: string): void {
+        const [, providerLocationsMap] = this.getInternalVariables(wizardContext);
+        providerLocationsMap.set(provider.toLowerCase(), task);
+    }
+
+    public static hasLocation<T extends ILocationWizardContextInternal>(wizardContext: T): boolean {
+        return !!wizardContext._location;
+    }
+
+    public static async getLocation<T extends ILocationWizardContextInternal>(wizardContext: T, provider?: string): Promise<types.AzExtLocation> {
+        const location = nonNullProp(wizardContext, '_location');
+        if (provider) {
+            const [allLocationsTask, providerLocationsMap] = this.getInternalVariables(wizardContext);
+            const providerLocations = await providerLocationsMap.get(provider.toLowerCase());
+            if (providerLocations) {
+                function isSupportedByProvider(loc: types.AzExtLocation): boolean {
+                    return !!providerLocations?.find(name => matchesLocation(loc, name));
+                }
+                function useProviderName(loc: types.AzExtLocation): types.AzExtLocation {
+                    // Some providers prefer their version of the name over the standard one, so we'll create a shallow clone using theirs
+                    return { ...loc, name: nonNullValue(providerLocations?.find(name => matchesLocation(loc, name), 'providerName')) };
+                }
+
+                if (isSupportedByProvider(location)) {
+                    return useProviderName(location);
+                }
+
+                if (location.name.toLowerCase().endsWith('stage')) {
+                    const nonStageName = location.name.replace(/stage/i, '');
+                    const nonStageLocation = (await allLocationsTask).find(l => matchesLocation(l, nonStageName));
+                    if (nonStageLocation && isSupportedByProvider(nonStageLocation)) {
+                        return useProviderName(nonStageLocation);
+                    }
+                }
+
+                // Fall through to use the selected location just in case our "supported" list is wrong and since Azure should give them an error anyways
+                wizardContext.telemetry.properties.locationProviderNotFound = provider;
+            }
+        }
+
+        return location;
+    }
+
+    public static async getLocations<T extends ILocationWizardContextInternal>(wizardContext: T): Promise<types.AzExtLocation[]> {
+        const [allLocationsTask, providerLocationsMap] = this.getInternalVariables(wizardContext);
+        const locationSubsets: string[][] = await Promise.all(providerLocationsMap.values());
+        // Filter to locations supported by every provider
+        return (await allLocationsTask).filter(l1 => locationSubsets.every(subset =>
+            subset.find(l2 => generalizeLocationName(l1.name) === generalizeLocationName(l2))
+        ));
     }
 
     public async prompt(wizardContext: T): Promise<void> {
         const options: types.IAzureQuickPickOptions = { placeHolder: localize('selectLocation', 'Select a location for new resources.'), enableGrouping: true };
-        wizardContext.location = (await wizardContext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
+        wizardContext._location = (await wizardContext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
     }
 
     public shouldPrompt(wizardContext: T): boolean {
-        return !wizardContext.location;
+        return !wizardContext._location;
     }
 
     protected async getQuickPicks(wizardContext: T): Promise<types.IAzureQuickPickItem<types.AzExtLocation>[]> {
@@ -82,7 +137,16 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
     }
 }
 
-async function getAllLocations(wizardContext: ILocationWizardContextInternal): Promise<types.AzExtLocation[]> {
+function generalizeLocationName(name: string | undefined): string {
+    return (name || '').toLowerCase().replace(/[^a-z0-9]/gi, '');
+}
+
+function matchesLocation(loc: types.AzExtLocation, name: string): boolean {
+    name = generalizeLocationName(name);
+    return name === generalizeLocationName(loc.name) || name === generalizeLocationName(loc.displayName);
+}
+
+async function getAllLocations(wizardContext: types.ISubscriptionContext): Promise<types.AzExtLocation[]> {
     // NOTE: Using a generic client because the subscriptions sdk is pretty far behind on api-version
     const client = await createGenericClient(wizardContext);
     const response = await client.sendRequest({
@@ -90,16 +154,14 @@ async function getAllLocations(wizardContext: ILocationWizardContextInternal): P
         url: `/subscriptions/${wizardContext.subscriptionId}/locations?api-version=2019-11-01`
     });
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    let locations: types.AzExtLocation[] = <types.AzExtLocation[]>response.parsedBody.value;
-    locations = locations.filter(l => l.metadata?.regionType?.toLowerCase() === 'physical');
+    return <types.AzExtLocation[]>response.parsedBody.value;
+}
 
-    // Filter out any region where the user can't create resource groups - the bare minimum needed for all our wizards
+async function getResourceGroupLocations(wizardContext: types.ISubscriptionContext): Promise<string[]> {
     const rgClient = await createResourcesClient(wizardContext);
     const provider = await rgClient.providers.get('microsoft.resources');
     const rgType = provider.resourceTypes?.find(rt => rt.resourceType?.toLowerCase() === 'resourcegroups');
-    locations = locations.filter(l1 => rgType?.locations?.find(l2 => generalizeLocationName(l1.name) === generalizeLocationName(l2)));
-
-    return locations;
+    return nonNullProp(nonNullValue(rgType, 'rgType'), 'locations');
 }
 
 function compareLocation(l1: types.AzExtLocation, l2: types.AzExtLocation): number {
