@@ -3,15 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { WebSiteManagementClient, WebSiteManagementModels } from '@azure/arm-appservice';
+import { WebSiteManagementClient, WebSiteManagementMappers, WebSiteManagementModels } from '@azure/arm-appservice';
 import { Progress } from 'vscode';
-import { AzureWizardExecuteStep } from 'vscode-azureextensionui';
+import { AzExtLocation, AzureWizardExecuteStep, LocationListStep } from 'vscode-azureextensionui';
+import { webProvider } from '../constants';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { tryGetAppServicePlan } from '../tryGetSiteResource';
 import { createWebSiteClient } from '../utils/azureClients';
 import { nonNullProp, nonNullValueAndProp } from '../utils/nonNull';
-import { getAppServicePlanModelKind, WebsiteOS } from './AppKind';
+import { AppKind, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
@@ -36,14 +37,18 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
         } else {
             ext.outputChannel.appendLog(creatingAppServicePlan);
             progress.report({ message: creatingAppServicePlan });
+
+            const location: AzExtLocation = await LocationListStep.getLocation(wizardContext, webProvider);
             const skuFamily = wizardContext.newPlanSku?.family ? wizardContext.newPlanSku?.family.toLowerCase() : '';
             const isElasticPremiumOrWorkflowStandard: boolean = skuFamily === 'ep' || skuFamily === 'ws';
-            wizardContext.plan = await client.appServicePlans.createOrUpdate(rgName, newPlanName, {
-                kind: getAppServicePlanModelKind(wizardContext.newSiteKind, nonNullProp(wizardContext, 'newSiteOS')),
+            wizardContext.plan = await client.appServicePlans.createOrUpdate(rgName, newPlanName, <ExtendedAppServicePlan>{
+                kind: getPlanKind(wizardContext),
                 sku: nonNullProp(wizardContext, 'newPlanSku'),
-                location: nonNullValueAndProp(wizardContext.location, 'name'),
+                location: location.name,
                 reserved: wizardContext.newSiteOS === WebsiteOS.linux,  // The secret property - must be set to true to make it a Linux plan. Confirmed by the team who owns this API.
-                maximumElasticWorkerCount: isElasticPremiumOrWorkflowStandard ? 20 : undefined
+                maximumElasticWorkerCount: isElasticPremiumOrWorkflowStandard ? 20 : undefined,
+                kubeEnvironmentProfile: getKubeProfile(wizardContext),
+                perSiteScaling: !!wizardContext.customLocation
             });
             ext.outputChannel.appendLog(createdAppServicePlan);
         }
@@ -51,5 +56,46 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
 
     public shouldExecute(wizardContext: IAppServiceWizardContext): boolean {
         return !wizardContext.plan;
+    }
+}
+
+function getKubeProfile(wizardContext: IAppServiceWizardContext) {
+    if (wizardContext.customLocation) {
+        // Temporary workaround so that the sdk allows "kubeEnvironmentProfile" on the plan
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        WebSiteManagementMappers.AppServicePlan.type.modelProperties!.kubeEnvironmentProfile = {
+            serializedName: 'properties.kubeEnvironmentProfile',
+            type: {
+                name: "Composite",
+                modelProperties: {
+                    id: {
+                        serializedName: "id",
+                        type: {
+                            name: "String"
+                        }
+                    }
+                }
+            }
+        };
+
+        return { id: wizardContext.customLocation.kubeEnvironment.id };
+    } else {
+        return undefined;
+    }
+}
+
+interface ExtendedAppServicePlan extends WebSiteManagementModels.AppServicePlan {
+    kubeEnvironmentProfile?: {
+        id: string;
+    }
+}
+
+function getPlanKind(wizardContext: IAppServiceWizardContext): string {
+    if (wizardContext.customLocation) {
+        return 'linux,kubernetes';
+    } else if (wizardContext.newSiteOS === WebsiteOS.linux) {
+        return WebsiteOS.linux;
+    } else {
+        return AppKind.app;
     }
 }

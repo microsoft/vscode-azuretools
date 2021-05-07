@@ -10,6 +10,7 @@ export { AppKind, WebsiteOS } from './createAppService/AppKind';
 export * from './createAppService/AppServicePlanCreateStep';
 export * from './createAppService/AppServicePlanListStep';
 export * from './createAppService/AppServicePlanSkuStep';
+export * from './createAppService/CustomLocationListStep';
 export * from './createAppService/IAppServiceWizardContext';
 export * from './createAppService/setLocationsTask';
 export * from './createAppService/SiteNameStep';
