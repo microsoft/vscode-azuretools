@@ -1038,7 +1038,7 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
      * @param wizardContext The context of the wizard
      * @param provider If specified, this will check against that provider's supported locations and attempt to find a "related" location if the selected location is not supported.
      */
-    public static async getLocation<T extends ILocationWizardContext>(wizardContext: T, provider?: string): Promise<AzExtLocation>;
+    public static getLocation<T extends ILocationWizardContext>(wizardContext: T, provider?: string): Promise<AzExtLocation>;
 
     /**
      * Returns true if a location has been set on the context
@@ -1054,7 +1054,7 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
     public prompt(wizardContext: T): Promise<void>;
     public shouldPrompt(wizardContext: T): boolean;
 
-    protected async getQuickPicks(wizardContext: T): Promise<IAzureQuickPickItem<AzExtLocation>[]>;
+    protected getQuickPicks(wizardContext: T): Promise<IAzureQuickPickItem<AzExtLocation>[]>;
 }
 
 export interface IAzureNamingRules {
