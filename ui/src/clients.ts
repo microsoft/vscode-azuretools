@@ -12,22 +12,22 @@ import { createAzureClient, createAzureSubscriptionClient } from './createAzureC
 // Lazy-load @azure packages to improve startup performance.
 // NOTE: The client is the only import that matters, the rest of the types disappear when compiled to JavaScript
 
-export async function createStorageClient<T extends types.IStorageAccountWizardContext>(wizardContext: T): Promise<StorageManagementClient> {
-    if (wizardContext.isCustomCloud) {
-        return <StorageManagementClient><unknown>createAzureClient(wizardContext, (await import('@azure/arm-storage-profile-2020-09-01-hybrid')).StorageManagementClient);
+export async function createStorageClient<T extends types.ISubscriptionContext>(context: T): Promise<StorageManagementClient> {
+    if (context.isCustomCloud) {
+        return <StorageManagementClient><unknown>createAzureClient(context, (await import('@azure/arm-storage-profile-2020-09-01-hybrid')).StorageManagementClient);
     } else {
-        return createAzureClient(wizardContext, (await import('@azure/arm-storage')).StorageManagementClient);
+        return createAzureClient(context, (await import('@azure/arm-storage')).StorageManagementClient);
     }
 }
 
-export async function createResourcesClient<T extends types.IResourceGroupWizardContext>(wizardContext: T): Promise<ResourceManagementClient> {
-    if (wizardContext.isCustomCloud) {
-        return <ResourceManagementClient><unknown>createAzureClient(wizardContext, (await import('@azure/arm-resources-profile-2020-09-01-hybrid')).ResourceManagementClient);
+export async function createResourcesClient<T extends types.ISubscriptionContext>(context: T): Promise<ResourceManagementClient> {
+    if (context.isCustomCloud) {
+        return <ResourceManagementClient><unknown>createAzureClient(context, (await import('@azure/arm-resources-profile-2020-09-01-hybrid')).ResourceManagementClient);
     } else {
-        return createAzureClient(wizardContext, (await import('@azure/arm-resources')).ResourceManagementClient);
+        return createAzureClient(context, (await import('@azure/arm-resources')).ResourceManagementClient);
     }
 }
 
-export async function createSubscriptionsClient<T extends types.ISubscriptionWizardContext>(wizardContext: T): Promise<SubscriptionClient> {
-    return createAzureSubscriptionClient(wizardContext, (await import('@azure/arm-subscriptions')).SubscriptionClient);
+export async function createSubscriptionsClient<T extends types.ISubscriptionContext>(context: T): Promise<SubscriptionClient> {
+    return createAzureSubscriptionClient(context, (await import('@azure/arm-subscriptions')).SubscriptionClient);
 }

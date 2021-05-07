@@ -999,18 +999,11 @@ export type AzExtLocation = {
     }
 }
 
+/**
+ * Currently no location-specific properties on the wizard context, but keeping this interface for backwards compatability and ease of use
+ * Instead, use static methods on `LocationListStep` like `getLocation` and `setLocationSubset`
+ */
 export interface ILocationWizardContext extends ISubscriptionWizardContext {
-    /**
-     * The location to use for new resources
-     * This value will be defined after `LocationListStep.prompt` occurs or after you call `LocationListStep.setLocation`
-     */
-    location?: AzExtLocation;
-
-    /**
-     * Optional task to describe the subset of locations that should be displayed.
-     * If not specified, all locations supported by the user's subscription will be displayed.
-     */
-    locationsTask?: Promise<{ name?: string }[]>;
 }
 
 export declare class LocationListStep<T extends ILocationWizardContext> extends AzureWizardPromptStep<T> {
@@ -1021,15 +1014,36 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
      * @param wizardContext The context of the wizard
      * @param promptSteps The array of steps to include the LocationListStep to
      */
-    public static addStep<T extends ILocationWizardContext>(wizardContext: IActionContext & Partial<ILocationWizardContext>, promptSteps: AzureWizardPromptStep<T>[]): void;
+    public static addStep<T extends ILocationWizardContext>(wizardContext: IActionContext & ISubscriptionContext & Partial<ILocationWizardContext>, promptSteps: AzureWizardPromptStep<T>[]): void;
 
     /**
      * This will set the wizard context's location (in which case the user will _not_ be prompted for location)
      * For example, if the user selects an existing resource, you might want to use that location as the default for the wizard's other resources
+     * This _will_ set the location even if not all providers support it - in the hopes that a related location can be found during `getLocation`
      * @param wizardContext The context of the wizard
      * @param name The name or display name of the location
      */
     public static setLocation<T extends ILocationWizardContext>(wizardContext: T, name: string): Promise<void>;
+
+    /**
+     * Specify a task that will be used to filter locations
+     * @param wizardContext The context of the wizard
+     * @param task A task evaluating to the locations supported by this provider
+     * @param provider The relevant provider (i.e. 'Microsoft.Web')
+     */
+    public static setLocationSubset<T extends ILocationWizardContext>(wizardContext: T, task: Promise<string[]>, provider: string): void;
+
+    /**
+     * Gets the selected location for this wizard.
+     * @param wizardContext The context of the wizard
+     * @param provider If specified, this will check against that provider's supported locations and attempt to find a "related" location if the selected location is not supported.
+     */
+    public static getLocation<T extends ILocationWizardContext>(wizardContext: T, provider?: string): Promise<AzExtLocation>;
+
+    /**
+     * Returns true if a location has been set on the context
+     */
+    public static hasLocation<T extends ILocationWizardContextInternal>(wizardContext: T): boolean;
 
     /**
      * Used to get locations. By passing in the context, we can ensure that Azure is only queried once for the entire wizard
@@ -1040,7 +1054,7 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
     public prompt(wizardContext: T): Promise<void>;
     public shouldPrompt(wizardContext: T): boolean;
 
-    protected async getQuickPicks(wizardContext: T): Promise<IAzureQuickPickItem<AzExtLocation>[]>;
+    protected getQuickPicks(wizardContext: T): Promise<IAzureQuickPickItem<AzExtLocation>[]>;
 }
 
 export interface IAzureNamingRules {
