@@ -1043,7 +1043,7 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
     /**
      * Returns true if a location has been set on the context
      */
-    public static hasLocation<T extends ILocationWizardContextInternal>(wizardContext: T): boolean;
+    public static hasLocation<T extends ILocationWizardContext>(wizardContext: T): boolean;
 
     /**
      * Used to get locations. By passing in the context, we can ensure that Azure is only queried once for the entire wizard
