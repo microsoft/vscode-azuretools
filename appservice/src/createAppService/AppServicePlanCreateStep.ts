@@ -5,7 +5,8 @@
 
 import { WebSiteManagementClient, WebSiteManagementMappers, WebSiteManagementModels } from '@azure/arm-appservice';
 import { Progress } from 'vscode';
-import { AzureWizardExecuteStep } from 'vscode-azureextensionui';
+import { AzExtLocation, AzureWizardExecuteStep, LocationListStep } from 'vscode-azureextensionui';
+import { webProvider } from '../constants';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { tryGetAppServicePlan } from '../tryGetSiteResource';
@@ -36,12 +37,14 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
         } else {
             ext.outputChannel.appendLog(creatingAppServicePlan);
             progress.report({ message: creatingAppServicePlan });
+
+            const location: AzExtLocation = await LocationListStep.getLocation(wizardContext, webProvider);
             const skuFamily = wizardContext.newPlanSku?.family ? wizardContext.newPlanSku?.family.toLowerCase() : '';
             const isElasticPremiumOrWorkflowStandard: boolean = skuFamily === 'ep' || skuFamily === 'ws';
             wizardContext.plan = await client.appServicePlans.createOrUpdate(rgName, newPlanName, <ExtendedAppServicePlan>{
                 kind: getPlanKind(wizardContext),
                 sku: nonNullProp(wizardContext, 'newPlanSku'),
-                location: nonNullValueAndProp(wizardContext.location, 'name'),
+                location: location.name,
                 reserved: wizardContext.newSiteOS === WebsiteOS.linux,  // The secret property - must be set to true to make it a Linux plan. Confirmed by the team who owns this API.
                 maximumElasticWorkerCount: isElasticPremiumOrWorkflowStandard ? 20 : undefined,
                 kubeEnvironmentProfile: getKubeProfile(wizardContext),
