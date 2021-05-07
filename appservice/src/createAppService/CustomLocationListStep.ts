@@ -20,7 +20,7 @@ export class CustomLocationListStep<T extends IAppServiceWizardContext> extends 
             wizardContext.newPlanName = await wizardContext.relatedNameTask;
             wizardContext.newPlanSku = { name: 'K1', tier: 'Kubernetes', size: 'K1', family: 'K', capacity: 1 };
         } else {
-            wizardContext.location = result;
+            await LocationListStep.setLocation(wizardContext, result.name);
         }
     }
 

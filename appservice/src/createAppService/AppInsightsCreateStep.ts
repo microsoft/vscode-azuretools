@@ -5,10 +5,9 @@
 
 import { ApplicationInsightsManagementClient } from '@azure/arm-appinsights';
 import { ResourceManagementClient, ResourceManagementModels } from '@azure/arm-resources';
-import { SubscriptionModels } from '@azure/arm-subscriptions';
 import { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
 import { Progress } from 'vscode';
-import { AzureWizardExecuteStep, createGenericClient, IParsedError, parseError } from 'vscode-azureextensionui';
+import { AzExtLocation, AzureWizardExecuteStep, createGenericClient, IParsedError, LocationListStep, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { createAppInsightsClient, createResourceClient } from '../utils/azureClients';
@@ -20,7 +19,7 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
     public priority: number = 135;
 
     public async execute(wizardContext: IAppServiceWizardContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
-        const resourceLocation: SubscriptionModels.Location = nonNullProp(wizardContext, 'location');
+        const resourceLocation: AzExtLocation = await LocationListStep.getLocation(wizardContext);
         const verifyingAppInsightsAvailable: string = localize('verifyingAppInsightsAvailable', 'Verifying that Application Insights is available for this location...');
         ext.outputChannel.appendLog(verifyingAppInsightsAvailable);
         const appInsightsLocation: string | undefined = await this.getSupportedLocation(wizardContext, resourceLocation);
@@ -60,7 +59,7 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
     }
 
     // returns the supported location, a location in the region map, or undefined
-    private async getSupportedLocation(wizardContext: IAppServiceWizardContext, location: SubscriptionModels.Location): Promise<string | undefined> {
+    private async getSupportedLocation(wizardContext: IAppServiceWizardContext, location: AzExtLocation): Promise<string | undefined> {
         const locations: string[] = await this.getLocations(wizardContext) || [];
         const locationName: string = nonNullProp(location, 'name');
 
