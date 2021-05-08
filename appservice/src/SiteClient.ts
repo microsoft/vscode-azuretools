@@ -6,6 +6,7 @@
 import { WebSiteManagementClient, WebSiteManagementModels as Models } from '@azure/arm-appservice';
 import { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
 import { createGenericClient, ISubscriptionContext, parseError } from 'vscode-azureextensionui';
+import { AppKind } from './createAppService/AppKind';
 import { deleteFunctionSlot, getFunctionSlot, listFunctionsSlot } from './slotFunctionOperations';
 import { tryGetAppServicePlan, tryGetWebApp, tryGetWebAppSlot } from './tryGetSiteResource';
 import { createWebSiteClient } from './utils/azureClients';
@@ -35,6 +36,7 @@ export class SiteClient {
     public readonly initialState?: string;
     public readonly isFunctionApp: boolean;
     public readonly isLinux: boolean;
+    public readonly isWorkflowApp: boolean;
 
     public readonly planResourceGroup: string;
     public readonly planName: string;
@@ -63,8 +65,9 @@ export class SiteClient {
         this.serverFarmId = nonNullProp(site, 'serverFarmId');
         this.kind = nonNullProp(site, 'kind');
         this.initialState = site.state;
-        this.isFunctionApp = !!site.kind && site.kind.includes('functionapp');
+        this.isFunctionApp = !!site.kind && site.kind.includes(AppKind.functionapp);
         this.isLinux = !!site.kind && site.kind.toLowerCase().includes('linux');
+        this.isWorkflowApp = !!site.kind && site.kind.includes(AppKind.workflowapp);
 
         this.planResourceGroup = matches[2];
         this.planName = matches[3];
