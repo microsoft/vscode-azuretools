@@ -41,8 +41,8 @@ export class FolderTreeItem extends AzExtParentTreeItem {
         return this._isRoot && this.isReadOnly ? localize('readOnly', 'Read-only') : undefined;
     }
 
-    public async loadMoreChildrenImpl(_clearCache: boolean, _context: IActionContext): Promise<AzExtTreeItem[]> {
-        let files: ISiteFileMetadata[] = await listFiles(this.client, this.path);
+    public async loadMoreChildrenImpl(_clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {
+        let files: ISiteFileMetadata[] = await listFiles(context, this.client, this.path);
 
         // this file is being accessed by Kudu and is not viewable
         files = files.filter(f => f.mime !== 'text/xml' || !f.name.includes('LogFiles-kudu-trace_pending.xml'));
