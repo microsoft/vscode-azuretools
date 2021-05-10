@@ -25,7 +25,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
     let permanentId: string | undefined;
     // a 60 second timeout period to let Kudu initialize the deployment
     const maxTimeToWaitForExpectedId: number = Date.now() + 60 * 1000;
-    const kuduClient = await createKuduClient(client);
+    const kuduClient = await createKuduClient(context, client);
 
     while (!token?.isCancellationRequested) {
         [deployment, permanentId, initialStartTime] = await tryGetLatestDeployment(context, kuduClient, permanentId, initialStartTime, expectedId);

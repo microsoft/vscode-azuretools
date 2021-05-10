@@ -40,7 +40,7 @@ export class FileTreeItem extends AzExtTreeItem {
 
     public async openReadOnly(context: IActionContext): Promise<void> {
         await this.runWithTemporaryDescription(context, localize('opening', 'Opening...'), async () => {
-            const file: ISiteFile = await getFile(this.client, this.path);
+            const file: ISiteFile = await getFile(context, this.client, this.path);
             await openReadOnlyContent(this, file.data, '');
         });
     }

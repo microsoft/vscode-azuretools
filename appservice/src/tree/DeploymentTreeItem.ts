@@ -91,7 +91,7 @@ export class DeploymentTreeItem extends AzExtTreeItem {
         const redeployed: string = localize('redeployed', 'Commit "{0}" has been redeployed to "{1}".', this.id, this.parent.client.fullName);
         await window.withProgress({ location: ProgressLocation.Notification, title: redeploying }, async (): Promise<void> => {
             ext.outputChannel.appendLog(localize('reployingOutput', 'Redeploying commit "{0}" to "{1}"...', this.id, this.parent.client.fullName), { resourceName: this.parent.client.fullName });
-            const kuduClient = await createKuduClient(this.parent.client);
+            const kuduClient = await createKuduClient(context, this.parent.client);
             void kuduClient.deployment.deploy(this.id);
 
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -109,7 +109,7 @@ export class DeploymentTreeItem extends AzExtTreeItem {
     }
 
     public async getDeploymentLogs(context: IActionContext): Promise<string> {
-        const kuduClient = await createKuduClient(this.parent.client);
+        const kuduClient = await createKuduClient(context, this.parent.client);
         let logEntries: KuduModels.LogEntry[] = [];
         await retryKuduCall(context, 'getLogEntry', async () => {
             await ignore404Error(context, async () => {
@@ -155,8 +155,8 @@ export class DeploymentTreeItem extends AzExtTreeItem {
         }
     }
 
-    public async refreshImpl(): Promise<void> {
-        const kuduClient = await createKuduClient(this.parent.client);
+    public async refreshImpl(context: IActionContext): Promise<void> {
+        const kuduClient = await createKuduClient(context, this.parent.client);
         this._deployResult = await kuduClient.deployment.getResult(this.id);
     }
 
