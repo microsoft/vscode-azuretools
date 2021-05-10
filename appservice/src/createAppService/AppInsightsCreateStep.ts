@@ -44,9 +44,6 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
                     wizardContext.appInsightsComponent = await client.components.createOrUpdate(rgName, aiName, { kind: 'web', applicationType: 'web', location: appInsightsLocation });
                     const createdNewAppInsights: string = localize('createdNewAppInsights', 'Successfully created Application Insights resource "{0}".', aiName);
                     ext.outputChannel.appendLog(createdNewAppInsights);
-                } else if (wizardContext.suppress403Handling || pError.errorType !== '403') {
-                    const createAppInsightsNotAvailable: string = localize('appInsightsNotAvailable', 'Skipping creating an Application Insights because the user doesn\'t have the right permissions.');
-                    ext.outputChannel.appendLog(createAppInsightsNotAvailable);
                 } else {
                     throw error;
                 }
