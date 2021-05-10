@@ -27,7 +27,7 @@ export async function createKuduClient(context: IInternalKuduActionContext, site
 
         const clientOptions = { baseUri: siteClient.kuduUrl, userAgent: appendExtensionUserAgent };
 
-        context._cachedKuduClient = new (await import('vscode-azurekudu')).KuduClient(siteClient.subscription.credentials, clientOptions);
+        let credentials = siteClient.subscription.credentials;
 
         try {
             await pingKuduSite(siteClient, siteClient.subscription.credentials);
@@ -37,14 +37,16 @@ export async function createKuduClient(context: IInternalKuduActionContext, site
                     const user = await siteClient.getWebAppPublishCredential();
                     const basicCreds = new BasicAuthenticationCredentials(nonNullProp(user, 'publishingUserName'), nonNullProp(user, 'publishingPassword'));
                     await pingKuduSite(siteClient, basicCreds);
-                    context._cachedKuduClient = new (await import('vscode-azurekudu')).KuduClient(basicCreds, clientOptions);
+                    credentials = basicCreds;
                     context.telemetry.properties.usedPublishCreds = 'true';
                 } catch (pubCredError) {
-                    // Pub creds didn't work. Fall back to original client
+                    // Pub creds didn't work. Fall back to original credentials
                     context.telemetry.properties.pubCredError = parseError(pubCredError).message;
                 }
             }
         }
+
+        context._cachedKuduClient = new (await import('vscode-azurekudu')).KuduClient(credentials, clientOptions);
     }
 
     return context._cachedKuduClient;
