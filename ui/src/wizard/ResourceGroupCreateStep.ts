@@ -7,7 +7,7 @@ import { ResourceManagementClient } from '@azure/arm-resources';
 import { MessageItem, Progress } from 'vscode';
 import * as types from '../../index';
 import { createResourcesClient } from '../clients';
-import { resourceGroupProvider } from '../constants';
+import { resourcesProvider } from '../constants';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { parseError } from '../parseError';
@@ -21,7 +21,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
     public async execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const newName: string = wizardContext.newResourceGroupName!;
-        const newLocation: string = (await LocationListStep.getLocation(wizardContext, resourceGroupProvider)).name;
+        const newLocation: string = (await LocationListStep.getLocation(wizardContext, resourcesProvider)).name;
         const resourceClient: ResourceManagementClient = await createResourcesClient(wizardContext);
         try {
             const rgExists: boolean = (await resourceClient.resourceGroups.checkExistence(newName)).body;

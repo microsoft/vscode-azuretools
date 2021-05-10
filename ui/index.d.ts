@@ -996,6 +996,7 @@ export type AzExtLocation = {
         regionCategory?: string;
         geographyGroup?: string;
         regionType?: string;
+        pairedRegion?: { name?: string }[]
     }
 }
 
@@ -1014,7 +1015,7 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
      * @param wizardContext The context of the wizard
      * @param promptSteps The array of steps to include the LocationListStep to
      */
-    public static addStep<T extends ILocationWizardContext>(wizardContext: IActionContext & ISubscriptionContext & Partial<ILocationWizardContext>, promptSteps: AzureWizardPromptStep<T>[]): void;
+    public static addStep<T extends ILocationWizardContext>(wizardContext: T, promptSteps: AzureWizardPromptStep<T>[]): void;
 
     /**
      * This will set the wizard context's location (in which case the user will _not_ be prompted for location)
@@ -1032,6 +1033,15 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
      * @param provider The relevant provider (i.e. 'Microsoft.Web')
      */
     public static setLocationSubset<T extends ILocationWizardContext>(wizardContext: T, task: Promise<string[]>, provider: string): void;
+
+    /**
+     * Adds default location filtering for a provider
+     * If more granular filtering is needed, use `setLocationSubset` instead (i.e. if the provider further filters locations based on features)
+     * @param wizardContext The context of the wizard
+     * @param provider The provider (i.e. 'Microsoft.Storage')
+     * @param resourceType The resource type (i.e. 'storageAccounts')
+     */
+    public static addProviderForFiltering<T extends ILocationWizardContext>(wizardContext: T, provider: string, resourceType: string): void;
 
     /**
      * Gets the selected location for this wizard.

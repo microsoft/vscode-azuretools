@@ -5,8 +5,9 @@
 
 import * as types from '../../index';
 import { createResourcesClient } from '../clients';
-import { resourceGroupProvider } from '../constants';
+import { resourcesProvider } from '../constants';
 import { createGenericClient } from '../createAzureClient';
+import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { nonNullProp, nonNullValue } from '../utils/nonNull';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
@@ -36,7 +37,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
         super();
     }
 
-    public static addStep<T extends ILocationWizardContextInternal>(wizardContext: types.ISubscriptionContext & Partial<ILocationWizardContextInternal>, promptSteps: AzureWizardPromptStep<T>[]): void {
+    public static addStep<T extends ILocationWizardContextInternal>(wizardContext: T, promptSteps: AzureWizardPromptStep<T>[]): void {
         if (!wizardContext._alreadyHasLocationStep) {
             promptSteps.push(new this());
             wizardContext._alreadyHasLocationStep = true;
@@ -44,7 +45,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
         }
     }
 
-    private static getInternalVariables(wizardContext: types.ISubscriptionContext & Partial<ILocationWizardContextInternal>): [Promise<types.AzExtLocation[]>, Map<string, Promise<string[]>>] {
+    private static getInternalVariables<T extends ILocationWizardContextInternal>(wizardContext: T): [Promise<types.AzExtLocation[]>, Map<string, Promise<string[]>>] {
         if (!wizardContext._allLocationsTask) {
             wizardContext._allLocationsTask = getAllLocations(wizardContext);
         }
@@ -52,7 +53,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
         if (!wizardContext._providerLocationsMap) {
             wizardContext._providerLocationsMap = new Map<string, Promise<string[]>>();
             // Should be relevant for all our wizards
-            wizardContext._providerLocationsMap.set(resourceGroupProvider.toLowerCase(), getResourceGroupLocations(wizardContext));
+            this.addProviderForFiltering(wizardContext, resourcesProvider, 'resourceGroups');
         }
         return [wizardContext._allLocationsTask, wizardContext._providerLocationsMap];
     }
@@ -65,6 +66,10 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
     public static setLocationSubset<T extends ILocationWizardContextInternal>(wizardContext: T, task: Promise<string[]>, provider: string): void {
         const [, providerLocationsMap] = this.getInternalVariables(wizardContext);
         providerLocationsMap.set(provider.toLowerCase(), task);
+    }
+
+    public static addProviderForFiltering<T extends ILocationWizardContextInternal>(wizardContext: T, provider: string, resourceType: string): void {
+        this.setLocationSubset(wizardContext, getProviderLocations(wizardContext, provider, resourceType), provider);
     }
 
     public static hasLocation<T extends ILocationWizardContextInternal>(wizardContext: T): boolean {
@@ -84,15 +89,32 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
                     // Some providers prefer their version of the name over the standard one, so we'll create a shallow clone using theirs
                     return { ...loc, name: nonNullValue(providerLocations?.find(name => matchesLocation(loc, name), 'providerName')) };
                 }
+                function warnAboutRelatedLocation(loc: types.AzExtLocation): void {
+                    ext.outputChannel.appendLog(localize('relatedLocWarning', 'WARNING: Provider "{0}" does not support location "{1}". Using "{2}" instead.', provider, location.displayName, loc.displayName));
+                }
 
                 if (isSupportedByProvider(location)) {
                     return useProviderName(location);
                 }
 
+                const allLocations = await allLocationsTask;
+                if (location.metadata?.pairedRegion) {
+                    const pairedLocation: types.AzExtLocation | undefined = location.metadata?.pairedRegion
+                        .map(paired => allLocations.find(l => paired.name && matchesLocation(l, paired.name)))
+                        .find(pairedLoc => pairedLoc && isSupportedByProvider(pairedLoc));
+                    if (pairedLocation) {
+                        wizardContext.telemetry.properties.relatedLocationSource = 'paired';
+                        warnAboutRelatedLocation(pairedLocation);
+                        return useProviderName(pairedLocation);
+                    }
+                }
+
                 if (location.name.toLowerCase().endsWith('stage')) {
                     const nonStageName = location.name.replace(/stage/i, '');
-                    const nonStageLocation = (await allLocationsTask).find(l => matchesLocation(l, nonStageName));
+                    const nonStageLocation = allLocations.find(l => matchesLocation(l, nonStageName));
                     if (nonStageLocation && isSupportedByProvider(nonStageLocation)) {
+                        wizardContext.telemetry.properties.relatedLocationSource = 'nonStage';
+                        warnAboutRelatedLocation(nonStageLocation);
                         return useProviderName(nonStageLocation);
                     }
                 }
@@ -157,11 +179,11 @@ async function getAllLocations(wizardContext: types.ISubscriptionContext): Promi
     return <types.AzExtLocation[]>response.parsedBody.value;
 }
 
-async function getResourceGroupLocations(wizardContext: types.ISubscriptionContext): Promise<string[]> {
+async function getProviderLocations(wizardContext: types.ISubscriptionContext, provider: string, resourceType: string): Promise<string[]> {
     const rgClient = await createResourcesClient(wizardContext);
-    const provider = await rgClient.providers.get('microsoft.resources');
-    const rgType = provider.resourceTypes?.find(rt => rt.resourceType?.toLowerCase() === 'resourcegroups');
-    return nonNullProp(nonNullValue(rgType, 'rgType'), 'locations');
+    const providerData = await rgClient.providers.get(provider);
+    const resourceTypeData = providerData.resourceTypes?.find(rt => rt.resourceType?.toLowerCase() === resourceType.toLowerCase());
+    return nonNullProp(nonNullValue(resourceTypeData, 'resourceTypeData'), 'locations');
 }
 
 function compareLocation(l1: types.AzExtLocation, l2: types.AzExtLocation): number {
