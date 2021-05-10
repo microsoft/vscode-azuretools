@@ -19,6 +19,7 @@ export class CustomLocationListStep<T extends IAppServiceWizardContext> extends 
             // Plan has very little effect when a custom location is used, so default this info instead of prompting
             wizardContext.newPlanName = await wizardContext.relatedNameTask;
             wizardContext.newPlanSku = { name: 'K1', tier: 'Kubernetes', size: 'K1', family: 'K', capacity: 1 };
+            wizardContext.useConsumptionPlan = false;
         } else {
             await LocationListStep.setLocation(wizardContext, result.name);
         }
