@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as fse from 'fs-extra';
-import * as globby from 'globby';
 import { glob as globGitignore } from 'glob-gitignore';
+import * as globby from 'globby';
 import * as path from 'path';
 import * as prettybytes from 'pretty-bytes';
 import { Readable } from 'stream';
@@ -85,9 +85,11 @@ async function getFilesFromGlob(folderPath: string, client: SiteClient): Promise
         if (typeof ignorePatternList === 'string') {
             ignorePatternList = [ignorePatternList];
         }
-        ext.outputChannel.appendLog(localize('zipIgnoreFileMsg', `Ignoring files from \"{0}.{1}\"`, ext.prefix, zipIgnorePatternStr), { resourceName: client.fullName });
-        for (const pattern of ignorePatternList) {
-            ext.outputChannel.appendLine(`\"${pattern}\"`);
+        if (ignorePatternList.length > 0) {
+            ext.outputChannel.appendLog(localize('zipIgnoreFileMsg', `Ignoring files from \"{0}.{1}\"`, ext.prefix, zipIgnorePatternStr), { resourceName: client.fullName });
+            for (const pattern of ignorePatternList) {
+                ext.outputChannel.appendLine(`\"${pattern}\"`);
+            }
         }
     }
 
