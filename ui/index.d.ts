@@ -1015,7 +1015,7 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
      * @param wizardContext The context of the wizard
      * @param promptSteps The array of steps to include the LocationListStep to
      */
-    public static addStep<T extends ILocationWizardContext>(wizardContext: T, promptSteps: AzureWizardPromptStep<T>[]): void;
+    public static addStep<T extends ILocationWizardContext>(wizardContext: IActionContext & Partial<ILocationWizardContext>, promptSteps: AzureWizardPromptStep<T>[]): void;
 
     /**
      * This will set the wizard context's location (in which case the user will _not_ be prompted for location)
