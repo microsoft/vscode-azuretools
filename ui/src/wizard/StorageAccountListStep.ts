@@ -6,6 +6,7 @@
 import { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
 import * as types from '../../index';
 import { createStorageClient } from '../clients';
+import { storageProvider } from '../constants';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
@@ -115,7 +116,7 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
 
         let location: types.AzExtLocation | undefined;
         if (LocationListStep.hasLocation(wizardContext)) {
-            location = await LocationListStep.getLocation(wizardContext);
+            location = await LocationListStep.getLocation(wizardContext, storageProvider);
         }
 
         let hasFilteredAccountsBySku: boolean = false;
