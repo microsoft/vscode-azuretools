@@ -66,7 +66,7 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
     }
 
     public async selectExistingPrompt(wizardContext: IAppServiceWizardContext): Promise<void> {
-        const message: string = localize('planForbidden', 'You do not have permission to create a app service plan in subscription "{0}".', wizardContext.subscriptionDisplayName);
+        const message: string = localize('planForbidden', 'You do not have permission to create an app service plan in subscription "{0}".', wizardContext.subscriptionDisplayName);
         const selectExisting: MessageItem = { title: localize('selectExisting', 'Select Existing') };
         wizardContext.telemetry.properties.cancelStep = 'AspNoPermissions';
         await wizardContext.ui.showWarningMessage(message, { modal: true }, selectExisting);
