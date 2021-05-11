@@ -5,6 +5,7 @@
 
 import { WebSiteManagementClient, WebSiteManagementModels } from '@azure/arm-appservice';
 import { AzExtLocation, AzureWizardPromptStep, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, LocationListStep, ResourceGroupListStep } from 'vscode-azureextensionui';
+import { webProvider } from '../constants';
 import { localize } from '../localize';
 import { tryGetAppServicePlan } from '../tryGetSiteResource';
 import { createWebSiteClient } from '../utils/azureClients';
@@ -94,7 +95,7 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
 
         let location: AzExtLocation | undefined;
         if (LocationListStep.hasLocation(wizardContext)) {
-            location = await LocationListStep.getLocation(wizardContext);
+            location = await LocationListStep.getLocation(wizardContext, webProvider);
         }
 
         let hasFilteredLocations: boolean = false;
