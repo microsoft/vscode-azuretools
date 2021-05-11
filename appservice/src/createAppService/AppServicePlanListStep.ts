@@ -4,13 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { WebSiteManagementClient, WebSiteManagementModels } from '@azure/arm-appservice';
-import { AzureWizardPromptStep, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, LocationListStep, ResourceGroupListStep } from 'vscode-azureextensionui';
+import { AzExtLocation, AzureWizardPromptStep, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, LocationListStep, ResourceGroupListStep } from 'vscode-azureextensionui';
 import { localize } from '../localize';
 import { tryGetAppServicePlan } from '../tryGetSiteResource';
 import { createWebSiteClient } from '../utils/azureClients';
 import { nonNullProp } from '../utils/nonNull';
 import { uiUtils } from '../utils/uiUtils';
-import { getWebsiteOSDisplayName, WebsiteOS, AppKind } from './AppKind';
+import { AppKind, getWebsiteOSDisplayName, WebsiteOS } from './AppKind';
 import { AppServicePlanCreateStep } from './AppServicePlanCreateStep';
 import { AppServicePlanNameStep } from './AppServicePlanNameStep';
 import { AppServicePlanSkuStep } from './AppServicePlanSkuStep';
@@ -92,6 +92,12 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
             plans = plans.filter(plan => !plan.sku || !plan.sku.family || famFilter.test(plan.sku.family));
         }
 
+        let location: AzExtLocation | undefined;
+        if (LocationListStep.hasLocation(wizardContext)) {
+            location = await LocationListStep.getLocation(wizardContext);
+        }
+
+        let hasFilteredLocations: boolean = false;
         for (const plan of plans) {
             const isNewSiteLinux: boolean = wizardContext.newSiteOS === WebsiteOS.linux;
             let isPlanLinux: boolean = nonNullProp(plan, 'kind').toLowerCase().includes(WebsiteOS.linux);
@@ -106,14 +112,25 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
 
             // plan.kind will contain "linux" for Linux plans, but will _not_ contain "windows" for Windows plans. Thus we check "isLinux" for both cases
             if (isNewSiteLinux === isPlanLinux) {
-                picks.push({
-                    id: plan.id,
-                    label: nonNullProp(plan, 'name'),
-                    description: `${nonNullProp(plan, 'sku').name} (${plan.geoRegion})`,
-                    detail: plan.resourceGroup,
-                    data: plan
-                });
+                if (location && !LocationListStep.locationMatchesName(location, plan.location)) {
+                    hasFilteredLocations = true;
+                } else {
+                    picks.push({
+                        id: plan.id,
+                        label: nonNullProp(plan, 'name'),
+                        description: plan.sku?.name,
+                        data: plan
+                    });
+                }
             }
+        }
+
+        if (hasFilteredLocations && location) {
+            picks.push({
+                label: localize('hasFilteredLocations', '$(warning) Only plans in the selected region "{0}" are shown.', location.displayName),
+                onPicked: () => { /* do nothing */ },
+                data: undefined
+            });
         }
 
         return picks;
