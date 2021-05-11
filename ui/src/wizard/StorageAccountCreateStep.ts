@@ -10,6 +10,7 @@ import { createStorageClient } from '../clients';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
+import { LocationListStep } from './LocationListStep';
 
 export class StorageAccountCreateStep<T extends types.IStorageAccountWizardContext> extends AzureWizardExecuteStep<T> implements types.StorageAccountCreateStep<T> {
     public priority: number = 130;
@@ -22,8 +23,7 @@ export class StorageAccountCreateStep<T extends types.IStorageAccountWizardConte
     }
 
     public async execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const newLocation: string = wizardContext.location!.name!;
+        const newLocation: string = (await LocationListStep.getLocation(wizardContext, 'Microsoft.Storage')).name;
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const newName: string = wizardContext.newStorageAccountName!;
         const newSkuName: StorageManagementModels.SkuName = <StorageManagementModels.SkuName>`${this._defaults.performance}_${this._defaults.replication}`;

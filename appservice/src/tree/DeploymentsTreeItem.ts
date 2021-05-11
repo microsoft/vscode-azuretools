@@ -62,7 +62,7 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
 
     public async loadMoreChildrenImpl(_clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {
         const siteConfig: WebSiteManagementModels.SiteConfig = await this.client.getSiteConfig();
-        const kuduClient = await createKuduClient(this.client);
+        const kuduClient = await createKuduClient(context, this.client);
         const deployments: KuduModels.DeployResult[] = await retryKuduCall(context, 'getDeployResults', async () => {
             return kuduClient.deployment.getDeployResults();
         });
