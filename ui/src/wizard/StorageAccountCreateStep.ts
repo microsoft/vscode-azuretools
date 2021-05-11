@@ -7,6 +7,7 @@ import { StorageManagementClient, StorageManagementModels } from '@azure/arm-sto
 import { Progress } from 'vscode';
 import * as types from '../../index';
 import { createStorageClient } from '../clients';
+import { storageProvider } from '../constants';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
@@ -23,7 +24,7 @@ export class StorageAccountCreateStep<T extends types.IStorageAccountWizardConte
     }
 
     public async execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
-        const newLocation: string = (await LocationListStep.getLocation(wizardContext, 'Microsoft.Storage')).name;
+        const newLocation: string = (await LocationListStep.getLocation(wizardContext, storageProvider)).name;
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const newName: string = wizardContext.newStorageAccountName!;
         const newSkuName: StorageManagementModels.SkuName = <StorageManagementModels.SkuName>`${this._defaults.performance}_${this._defaults.replication}`;

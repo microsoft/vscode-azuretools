@@ -836,7 +836,15 @@ export interface IAzureQuickPickItem<T = undefined> extends QuickPickItem {
     data: T;
 
     /**
+     * Callback to use when this item is picked, instead of returning the pick
+     * Only applies when used as part of an `AzureWizard`
+     * This is not compatible with `canPickMany`
+     */
+    onPicked?: () => void | Promise<void>;
+
+    /**
      * The group that this pick belongs to. Set `IAzureQuickPickOptions.enableGrouping` for this property to take effect
+     * Only applies when used as part of an `AzureWizard`
      */
     group?: string;
 
@@ -868,11 +876,14 @@ export interface IAzureQuickPickOptions extends QuickPickOptions {
 
     /**
      * If true, you must specify a `group` property on each `IAzureQuickPickItem` and the picks will be grouped into collapsible sections
+     * Only applies when used as part of an `AzureWizard`
+     * This is not compatible with `canPickMany`
      */
     enableGrouping?: boolean;
 
     /**
-     * Optional message to display while the quick pick is loading instead of the normal placeHolder. Only applies for quick picks used as a part of an `AzureWizard`
+     * Optional message to display while the quick pick is loading instead of the normal placeHolder.
+     * Only applies when used as part of an `AzureWizard`
      */
     loadingPlaceHolder?: string;
 }
@@ -1060,6 +1071,11 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
      * @param wizardContext The context of the wizard.
      */
     public static getLocations<T extends ILocationWizardContext>(wizardContext: T): Promise<AzExtLocation[]>;
+
+    /**
+     * Returns true if the given location matches the name
+     */
+    public static locationMatchesName(location: AzExtLocation, name: string): boolean;
 
     public prompt(wizardContext: T): Promise<void>;
     public shouldPrompt(wizardContext: T): boolean;

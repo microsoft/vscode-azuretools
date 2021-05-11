@@ -69,7 +69,7 @@ export class AzureWizardUserInput implements IWizardUserInput {
             // eslint-disable-next-line @typescript-eslint/no-misused-promises, no-async-promise-executor
             return await new Promise<TPick | TPick[]>(async (resolve, reject): Promise<void> => {
                 disposables.push(
-                    quickPick.onDidAccept(() => {
+                    quickPick.onDidAccept(async () => {
                         try {
                             if (options.canPickMany) {
                                 resolve(Array.from(quickPick.selectedItems));
@@ -85,6 +85,8 @@ export class AzureWizardUserInput implements IWizardUserInput {
                                     if (newGroupPick) {
                                         quickPick.activeItems = [newGroupPick];
                                     }
+                                } else if (selectedItem.onPicked) {
+                                    await selectedItem.onPicked();
                                 } else {
                                     resolve(selectedItem);
                                 }

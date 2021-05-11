@@ -59,7 +59,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
 
     public static async setLocation<T extends ILocationWizardContextInternal>(wizardContext: T, name: string): Promise<void> {
         const [allLocationsTask] = this.getInternalVariables(wizardContext);
-        wizardContext._location = (await allLocationsTask).find(l => matchesLocation(l, name));
+        wizardContext._location = (await allLocationsTask).find(l => LocationListStep.locationMatchesName(l, name));
     }
 
     public static setLocationSubset<T extends ILocationWizardContextInternal>(wizardContext: T, task: Promise<string[]>, provider: string): void {
@@ -82,11 +82,11 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
             const providerLocations = await providerLocationsMap.get(provider.toLowerCase());
             if (providerLocations) {
                 function isSupportedByProvider(loc: types.AzExtLocation): boolean {
-                    return !!providerLocations?.find(name => matchesLocation(loc, name));
+                    return !!providerLocations?.find(name => LocationListStep.locationMatchesName(loc, name));
                 }
                 function useProviderName(loc: types.AzExtLocation): types.AzExtLocation {
                     // Some providers prefer their version of the name over the standard one, so we'll create a shallow clone using theirs
-                    return { ...loc, name: nonNullValue(providerLocations?.find(name => matchesLocation(loc, name), 'providerName')) };
+                    return { ...loc, name: nonNullValue(providerLocations?.find(name => LocationListStep.locationMatchesName(loc, name), 'providerName')) };
                 }
                 function warnAboutRelatedLocation(loc: types.AzExtLocation): void {
                     ext.outputChannel.appendLog(localize('relatedLocWarning', 'WARNING: Provider "{0}" does not support location "{1}". Using "{2}" instead.', provider, location.displayName, loc.displayName));
@@ -99,7 +99,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
                 const allLocations = await allLocationsTask;
                 if (location.metadata?.pairedRegion) {
                     const pairedLocation: types.AzExtLocation | undefined = location.metadata?.pairedRegion
-                        .map(paired => allLocations.find(l => paired.name && matchesLocation(l, paired.name)))
+                        .map(paired => allLocations.find(l => paired.name && LocationListStep.locationMatchesName(l, paired.name)))
                         .find(pairedLoc => pairedLoc && isSupportedByProvider(pairedLoc));
                     if (pairedLocation) {
                         wizardContext.telemetry.properties.relatedLocationSource = 'paired';
@@ -110,7 +110,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
 
                 if (location.name.toLowerCase().endsWith('stage')) {
                     const nonStageName = location.name.replace(/stage/i, '');
-                    const nonStageLocation = allLocations.find(l => matchesLocation(l, nonStageName));
+                    const nonStageLocation = allLocations.find(l => LocationListStep.locationMatchesName(l, nonStageName));
                     if (nonStageLocation && isSupportedByProvider(nonStageLocation)) {
                         wizardContext.telemetry.properties.relatedLocationSource = 'nonStage';
                         warnAboutRelatedLocation(nonStageLocation);
@@ -133,6 +133,11 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
         return (await allLocationsTask).filter(l1 => locationSubsets.every(subset =>
             subset.find(l2 => generalizeLocationName(l1.name) === generalizeLocationName(l2))
         ));
+    }
+
+    public static locationMatchesName(location: types.AzExtLocation, name: string): boolean {
+        name = generalizeLocationName(name);
+        return name === generalizeLocationName(location.name) || name === generalizeLocationName(location.displayName);
     }
 
     public async prompt(wizardContext: T): Promise<void> {
@@ -160,11 +165,6 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
 
 function generalizeLocationName(name: string | undefined): string {
     return (name || '').toLowerCase().replace(/[^a-z0-9]/gi, '');
-}
-
-function matchesLocation(loc: types.AzExtLocation, name: string): boolean {
-    name = generalizeLocationName(name);
-    return name === generalizeLocationName(loc.name) || name === generalizeLocationName(loc.displayName);
 }
 
 async function getAllLocations(wizardContext: types.ISubscriptionContext): Promise<types.AzExtLocation[]> {
