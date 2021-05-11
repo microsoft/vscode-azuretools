@@ -128,7 +128,7 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
 
         if (hasFilteredLocations && location) {
             picks.push({
-                label: localize('hasFilteredLocations', '$(warning) Only plans in the selected region "{0}" are shown.', location.displayName),
+                label: localize('hasFilteredLocations', '$(warning) Only plans in the region "{0}" are shown.', location.displayName),
                 onPicked: () => { /* do nothing */ },
                 data: undefined
             });
