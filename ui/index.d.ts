@@ -838,6 +838,7 @@ export interface IAzureQuickPickItem<T = undefined> extends QuickPickItem {
     /**
      * Callback to use when this item is picked, instead of returning the pick
      * Only applies when used as part of an `AzureWizard`
+     * This is not compatible with `canPickMany`
      */
     onPicked?: () => void | Promise<void>;
 
@@ -876,6 +877,7 @@ export interface IAzureQuickPickOptions extends QuickPickOptions {
     /**
      * If true, you must specify a `group` property on each `IAzureQuickPickItem` and the picks will be grouped into collapsible sections
      * Only applies when used as part of an `AzureWizard`
+     * This is not compatible with `canPickMany`
      */
     enableGrouping?: boolean;
 
