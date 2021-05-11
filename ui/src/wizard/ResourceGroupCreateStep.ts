@@ -44,6 +44,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
                     const rgs = await resourceClient.resourceGroups.list();
                     if (rgs.length === 1 && rgs[0].name && /^learn/i.test(rgs[0].name)) {
                         wizardContext.resourceGroup = rgs[0];
+                        wizardContext.telemetry.properties.forbiddenResponse = 'SelectLearnRg';
                         return undefined;
                     }
                 }
