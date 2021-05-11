@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
-import { isString } from 'util';
 import * as types from '../../index';
 import { createStorageClient } from '../clients';
 import { localize } from '../localize';
@@ -75,17 +74,9 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
         const client: StorageManagementClient = await createStorageClient(wizardContext);
 
         const quickPickOptions: types.IAzureQuickPickOptions = { placeHolder: 'Select a storage account.', id: `StorageAccountListStep/${wizardContext.subscriptionId}` };
-        const picksTask: Promise<types.IAzureQuickPickItem<StorageManagementModels.StorageAccount | string | undefined>[]> = this.getQuickPicks(client.storageAccounts.list());
+        const picksTask: Promise<types.IAzureQuickPickItem<StorageManagementModels.StorageAccount | undefined>[]> = this.getQuickPicks(wizardContext, client.storageAccounts.list());
 
-        let result: StorageManagementModels.StorageAccount | string | undefined;
-        do {
-            result = (await wizardContext.ui.showQuickPick(picksTask, quickPickOptions)).data;
-            // If result is a string, that means the user selected the 'Learn more...' pick
-            if (isString(result)) {
-                await openUrl(result);
-            }
-        } while (isString(result));
-
+        const result: StorageManagementModels.StorageAccount | undefined = (await wizardContext.ui.showQuickPick(picksTask, quickPickOptions)).data;
         wizardContext.storageAccount = result;
         if (wizardContext.storageAccount) {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -111,8 +102,8 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
         return !wizardContext.storageAccount && !wizardContext.newStorageAccountName;
     }
 
-    private async getQuickPicks(storageAccountsTask: Promise<StorageManagementModels.StorageAccount[]>): Promise<types.IAzureQuickPickItem<StorageManagementModels.StorageAccount | string | undefined>[]> {
-        const picks: types.IAzureQuickPickItem<StorageManagementModels.StorageAccount | string | undefined>[] = [{
+    private async getQuickPicks(wizardContext: T, storageAccountsTask: Promise<StorageManagementModels.StorageAccount[]>): Promise<types.IAzureQuickPickItem<StorageManagementModels.StorageAccount | undefined>[]> {
+        const picks: types.IAzureQuickPickItem<StorageManagementModels.StorageAccount | undefined>[] = [{
             label: localize('NewStorageAccount', '$(plus) Create new storage account'),
             description: '',
             data: undefined
@@ -122,11 +113,22 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
         const performanceRegExp: RegExp = new RegExp(`^${convertFilterToPattern(this._filters.performance)}_.*$`, 'i');
         const replicationRegExp: RegExp = new RegExp(`^.*_${convertFilterToPattern(this._filters.replication)}$`, 'i');
 
-        let hasFilteredAccounts: boolean = false;
+        let location: types.AzExtLocation | undefined;
+        if (LocationListStep.hasLocation(wizardContext)) {
+            location = await LocationListStep.getLocation(wizardContext);
+        }
+
+        let hasFilteredAccountsBySku: boolean = false;
+        let hasFilteredAccountsByLocation: boolean = false;
         const storageAccounts: StorageManagementModels.StorageAccount[] = await storageAccountsTask;
         for (const sa of storageAccounts) {
             if (!sa.kind || sa.kind.match(kindRegExp) || !sa.sku || sa.sku.name.match(performanceRegExp) || sa.sku.name.match(replicationRegExp)) {
-                hasFilteredAccounts = true;
+                hasFilteredAccountsBySku = true;
+                continue;
+            }
+
+            if (location && !LocationListStep.locationMatchesName(location, sa.location)) {
+                hasFilteredAccountsByLocation = true;
                 continue;
             }
 
@@ -139,12 +141,22 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
             });
         }
 
-        if (hasFilteredAccounts && this._filters.learnMoreLink) {
+        if (hasFilteredAccountsBySku && this._filters.learnMoreLink) {
             picks.push({
-                label: localize('filtered', '$(info) Some storage accounts were filtered. Learn more...'),
-                description: '',
-                suppressPersistence: true,
-                data: this._filters.learnMoreLink
+                label: localize('hasFilteredAccountsBySku', '$(info) Some storage accounts were filtered because of their sku. Learn more...'),
+                onPicked: async () => {
+                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                    await openUrl(this._filters.learnMoreLink!);
+                },
+                data: undefined
+            });
+        }
+
+        if (hasFilteredAccountsByLocation && location) {
+            picks.push({
+                label: localize('hasFilteredAccountsByLocation', '$(warning) Only storage accounts in the selected region "{0}" are shown.', location.displayName),
+                onPicked: () => { /* do nothing */ },
+                data: undefined
             });
         }
 
