@@ -6,7 +6,7 @@
 import { WebSiteManagementClient, WebSiteManagementMappers, WebSiteManagementModels } from '@azure/arm-appservice';
 import { MessageItem, Progress } from 'vscode';
 import { AzExtLocation, AzureWizardExecuteStep, LocationListStep, parseError } from 'vscode-azureextensionui';
-import { AppServicePlanListStep } from '..';
+import { AppServicePlanListStep } from './AppServicePlanListStep';
 import { webProvider } from '../constants';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -55,7 +55,7 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
                 ext.outputChannel.appendLog(createdAppServicePlan);
             }
         } catch (e) {
-            if (parseError(e).errorType === '403' || parseError(e).errorType === 'AuthorizationFailed') {
+            if (parseError(e).errorType === 'AuthorizationFailed') {
                 await this.selectExistingPrompt(wizardContext);
             } else {
                 throw e;
