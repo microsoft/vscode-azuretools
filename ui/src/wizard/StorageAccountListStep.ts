@@ -155,7 +155,7 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
 
         if (hasFilteredAccountsByLocation && location) {
             picks.push({
-                label: localize('hasFilteredAccountsByLocation', '$(warning) Only storage accounts in the selected region "{0}" are shown.', location.displayName),
+                label: localize('hasFilteredAccountsByLocation', '$(warning) Only storage accounts in the region "{0}" are shown.', location.displayName),
                 onPicked: () => { /* do nothing */ },
                 data: undefined
             });
