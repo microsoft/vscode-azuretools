@@ -32,14 +32,14 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
         try {
             const client: WebSiteManagementClient = await createWebSiteClient(wizardContext);
             const existingPlan: WebSiteManagementModels.AppServicePlan | undefined = await tryGetAppServicePlan(client, rgName, newPlanName);
-    
+
             if (existingPlan) {
                 wizardContext.plan = existingPlan;
                 ext.outputChannel.appendLog(foundAppServicePlan);
             } else {
                 ext.outputChannel.appendLog(creatingAppServicePlan);
                 progress.report({ message: creatingAppServicePlan });
-    
+
                 const location: AzExtLocation = await LocationListStep.getLocation(wizardContext, webProvider);
                 const skuFamily = wizardContext.newPlanSku?.family ? wizardContext.newPlanSku?.family.toLowerCase() : '';
                 const isElasticPremiumOrWorkflowStandard: boolean = skuFamily === 'ep' || skuFamily === 'ws';
@@ -54,14 +54,14 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
                 });
                 ext.outputChannel.appendLog(createdAppServicePlan);
             }
-        } catch(e) {
-            if (parseError(e).errorType !== '403') {
-                throw e;
-            } else {
+        } catch (e) {
+            if (parseError(e).errorType === '403' || parseError(e).errorType === 'AuthorizationFailed') {
                 await this.selectExistingPrompt(wizardContext);
+            } else {
+                throw e;
             }
         }
-   
+
 
     }
 
