@@ -5,6 +5,7 @@
 
 import { WebSiteManagementModels } from '@azure/arm-appservice';
 import * as fse from 'fs-extra';
+import * as path from 'path';
 import { ProgressLocation, window } from 'vscode';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -80,9 +81,17 @@ export async function deploy(client: SiteClient, fsPath: string, context: IDeplo
                 if (!(await fse.pathExists(fsPath))) {
                     throw new Error(localize('pathNotExist', 'Failed to deploy path that does not exist: {0}', fsPath));
                 }
-
-                if (config.linuxFxVersion && /^(tomcat|wildfly)/i.test(config.linuxFxVersion)) {
+                const javaRutime = client.isLinux ? config.linuxFxVersion : config.javaContainer;
+                if (javaRutime && /^(tomcat|wildfly|jobss)/i.test(javaRutime)) {
                     await deployWar(context, client, fsPath);
+                } else if (javaRutime && /^java/i.test(javaRutime)) {
+                    // For Java SE runtime, need rename the artifact to app.jar
+                    let javaArtifact: string = fsPath;
+                    if (path.basename(javaArtifact) !== "app.jar") {
+                        javaArtifact = path.join(await fse.mkdtemp("app-service"), "app.jar");
+                        await fse.copyFile(fsPath, javaArtifact);
+                    }
+                    await deployZip(context, client, javaArtifact, aspPromise);
                 } else if (context.deployMethod === 'storage') {
                     await deployToStorageAccount(context, fsPath, client);
                 } else {
