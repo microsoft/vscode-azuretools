@@ -74,21 +74,23 @@ export class AzureWizardUserInput implements IWizardUserInput {
                             if (options.canPickMany) {
                                 resolve(Array.from(quickPick.selectedItems));
                             } else {
-                                const selectedItem = <TPick & Partial<types.IAzureQuickPickItem<unknown>>>quickPick.selectedItems[0];
-                                const group = groups.find(g => selectedItem.data === g);
-                                if (group) {
-                                    group.isCollapsed = !group.isCollapsed;
-                                    quickPick.items = this.getGroupedPicks(groups);
+                                const selectedItem = <TPick & Partial<types.IAzureQuickPickItem<unknown>> | undefined>quickPick.selectedItems[0];
+                                if (selectedItem) {
+                                    const group = groups.find(g => selectedItem.data === g);
+                                    if (group) {
+                                        group.isCollapsed = !group.isCollapsed;
+                                        quickPick.items = this.getGroupedPicks(groups);
 
-                                    // The active pick gets reset when we change the items, but we can explicitly set it here to persist the active state
-                                    const newGroupPick = quickPick.items.find((i: Partial<types.IAzureQuickPickItem<unknown>>) => i.data === group);
-                                    if (newGroupPick) {
-                                        quickPick.activeItems = [newGroupPick];
+                                        // The active pick gets reset when we change the items, but we can explicitly set it here to persist the active state
+                                        const newGroupPick = quickPick.items.find((i: Partial<types.IAzureQuickPickItem<unknown>>) => i.data === group);
+                                        if (newGroupPick) {
+                                            quickPick.activeItems = [newGroupPick];
+                                        }
+                                    } else if (selectedItem.onPicked) {
+                                        await selectedItem.onPicked();
+                                    } else {
+                                        resolve(selectedItem);
                                     }
-                                } else if (selectedItem.onPicked) {
-                                    await selectedItem.onPicked();
-                                } else {
-                                    resolve(selectedItem);
                                 }
                             }
                         } catch (error) {
