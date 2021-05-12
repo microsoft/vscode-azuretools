@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { WebSiteManagementClient, WebSiteManagementMappers, WebSiteManagementModels } from '@azure/arm-appservice';
-import { Progress } from 'vscode';
-import { AzExtLocation, AzureWizardExecuteStep, LocationListStep } from 'vscode-azureextensionui';
+import { MessageItem, Progress } from 'vscode';
+import { AzExtLocation, AzureWizardExecuteStep, LocationListStep, parseError } from 'vscode-azureextensionui';
+import { AppServicePlanListStep } from './AppServicePlanListStep';
 import { webProvider } from '../constants';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -28,30 +29,52 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
         const createdAppServicePlan: string = localize('CreatedAppServicePlan', 'Successfully created App Service plan "{0}".', newPlanName);
         ext.outputChannel.appendLog(findingAppServicePlan);
 
-        const client: WebSiteManagementClient = await createWebSiteClient(wizardContext);
-        const existingPlan: WebSiteManagementModels.AppServicePlan | undefined = await tryGetAppServicePlan(client, rgName, newPlanName);
+        try {
+            const client: WebSiteManagementClient = await createWebSiteClient(wizardContext);
+            const existingPlan: WebSiteManagementModels.AppServicePlan | undefined = await tryGetAppServicePlan(client, rgName, newPlanName);
 
-        if (existingPlan) {
-            wizardContext.plan = existingPlan;
-            ext.outputChannel.appendLog(foundAppServicePlan);
-        } else {
-            ext.outputChannel.appendLog(creatingAppServicePlan);
-            progress.report({ message: creatingAppServicePlan });
+            if (existingPlan) {
+                wizardContext.plan = existingPlan;
+                ext.outputChannel.appendLog(foundAppServicePlan);
+            } else {
+                ext.outputChannel.appendLog(creatingAppServicePlan);
+                progress.report({ message: creatingAppServicePlan });
 
-            const location: AzExtLocation = await LocationListStep.getLocation(wizardContext, webProvider);
-            const skuFamily = wizardContext.newPlanSku?.family ? wizardContext.newPlanSku?.family.toLowerCase() : '';
-            const isElasticPremiumOrWorkflowStandard: boolean = skuFamily === 'ep' || skuFamily === 'ws';
-            wizardContext.plan = await client.appServicePlans.createOrUpdate(rgName, newPlanName, <ExtendedAppServicePlan>{
-                kind: getPlanKind(wizardContext),
-                sku: nonNullProp(wizardContext, 'newPlanSku'),
-                location: location.name,
-                reserved: wizardContext.newSiteOS === WebsiteOS.linux,  // The secret property - must be set to true to make it a Linux plan. Confirmed by the team who owns this API.
-                maximumElasticWorkerCount: isElasticPremiumOrWorkflowStandard ? 20 : undefined,
-                kubeEnvironmentProfile: getKubeProfile(wizardContext),
-                perSiteScaling: !!wizardContext.customLocation
-            });
-            ext.outputChannel.appendLog(createdAppServicePlan);
+                const location: AzExtLocation = await LocationListStep.getLocation(wizardContext, webProvider);
+                const skuFamily = wizardContext.newPlanSku?.family ? wizardContext.newPlanSku?.family.toLowerCase() : '';
+                const isElasticPremiumOrWorkflowStandard: boolean = skuFamily === 'ep' || skuFamily === 'ws';
+                wizardContext.plan = await client.appServicePlans.createOrUpdate(rgName, newPlanName, <ExtendedAppServicePlan>{
+                    kind: getPlanKind(wizardContext),
+                    sku: nonNullProp(wizardContext, 'newPlanSku'),
+                    location: location.name,
+                    reserved: wizardContext.newSiteOS === WebsiteOS.linux,  // The secret property - must be set to true to make it a Linux plan. Confirmed by the team who owns this API.
+                    maximumElasticWorkerCount: isElasticPremiumOrWorkflowStandard ? 20 : undefined,
+                    kubeEnvironmentProfile: getKubeProfile(wizardContext),
+                    perSiteScaling: !!wizardContext.customLocation
+                });
+                ext.outputChannel.appendLog(createdAppServicePlan);
+            }
+        } catch (e) {
+            if (parseError(e).errorType === 'AuthorizationFailed') {
+                await this.selectExistingPrompt(wizardContext);
+            } else {
+                throw e;
+            }
         }
+
+
+    }
+
+    public async selectExistingPrompt(wizardContext: IAppServiceWizardContext): Promise<void> {
+        const message: string = localize('planForbidden', 'You do not have permission to create an app service plan in subscription "{0}".', wizardContext.subscriptionDisplayName);
+        const selectExisting: MessageItem = { title: localize('selectExisting', 'Select Existing') };
+        wizardContext.telemetry.properties.cancelStep = 'AspNoPermissions';
+        await wizardContext.ui.showWarningMessage(message, { modal: true }, selectExisting);
+
+        wizardContext.telemetry.properties.cancelStep = undefined;
+        wizardContext.telemetry.properties.forbiddenResponse = 'SelectExistingAsp';
+        const step: AppServicePlanListStep = new AppServicePlanListStep(true /* suppressCreate */);
+        await step.prompt(wizardContext);
     }
 
     public shouldExecute(wizardContext: IAppServiceWizardContext): boolean {
