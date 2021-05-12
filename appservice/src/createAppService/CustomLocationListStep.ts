@@ -13,6 +13,7 @@ export class CustomLocationListStep<T extends IAppServiceWizardContext> extends 
         const options: IAzureQuickPickOptions = { placeHolder: localize('selectLocation', 'Select a location for new resources.'), enableGrouping: true };
         const result: AzExtLocation | CustomLocation = (await wizardContext.ui.showQuickPick(this.getCustomQuickPicks(wizardContext), options)).data;
         if ('kubeEnvironment' in result) {
+            wizardContext.telemetry.properties.pickedCustomLoc = 'true';
             wizardContext.customLocation = result;
             // For any resources other than the app, we still need a non-custom location, so we'll use the kubeEnvironment's location
             await LocationListStep.setLocation(wizardContext, result.kubeEnvironment.location);
@@ -21,6 +22,7 @@ export class CustomLocationListStep<T extends IAppServiceWizardContext> extends 
             wizardContext.newPlanSku = { name: 'K1', tier: 'Kubernetes', size: 'K1', family: 'K', capacity: 1 };
             wizardContext.useConsumptionPlan = false;
         } else {
+            wizardContext.telemetry.properties.pickedCustomLoc = 'false';
             await LocationListStep.setLocation(wizardContext, result.name);
         }
     }
@@ -36,6 +38,7 @@ export class CustomLocationListStep<T extends IAppServiceWizardContext> extends 
                 });
                 let customLocations = <CustomLocation[]>response.data;
                 customLocations = customLocations.sort((a, b) => a.name.localeCompare(b.name));
+                wizardContext.telemetry.properties.hasCustomLoc = String(customLocations.length > 0);
                 picks.unshift(...customLocations.map(cl => {
                     return {
                         label: cl.name,
