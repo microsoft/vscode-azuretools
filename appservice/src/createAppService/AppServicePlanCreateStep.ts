@@ -6,7 +6,6 @@
 import { WebSiteManagementClient, WebSiteManagementMappers, WebSiteManagementModels } from '@azure/arm-appservice';
 import { MessageItem, Progress } from 'vscode';
 import { AzExtLocation, AzureWizardExecuteStep, LocationListStep, parseError } from 'vscode-azureextensionui';
-import { AppServicePlanListStep } from './AppServicePlanListStep';
 import { webProvider } from '../constants';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -14,7 +13,8 @@ import { tryGetAppServicePlan } from '../tryGetSiteResource';
 import { createWebSiteClient } from '../utils/azureClients';
 import { nonNullProp, nonNullValueAndProp } from '../utils/nonNull';
 import { AppKind, WebsiteOS } from './AppKind';
-import { IAppServiceWizardContext } from './IAppServiceWizardContext';
+import { AppServicePlanListStep } from './AppServicePlanListStep';
+import { CustomLocation, IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
     public priority: number = 120;
@@ -40,18 +40,7 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
                 ext.outputChannel.appendLog(creatingAppServicePlan);
                 progress.report({ message: creatingAppServicePlan });
 
-                const location: AzExtLocation = await LocationListStep.getLocation(wizardContext, webProvider);
-                const skuFamily = wizardContext.newPlanSku?.family ? wizardContext.newPlanSku?.family.toLowerCase() : '';
-                const isElasticPremiumOrWorkflowStandard: boolean = skuFamily === 'ep' || skuFamily === 'ws';
-                wizardContext.plan = await client.appServicePlans.createOrUpdate(rgName, newPlanName, <ExtendedAppServicePlan>{
-                    kind: getPlanKind(wizardContext),
-                    sku: nonNullProp(wizardContext, 'newPlanSku'),
-                    location: location.name,
-                    reserved: wizardContext.newSiteOS === WebsiteOS.linux,  // The secret property - must be set to true to make it a Linux plan. Confirmed by the team who owns this API.
-                    maximumElasticWorkerCount: isElasticPremiumOrWorkflowStandard ? 20 : undefined,
-                    kubeEnvironmentProfile: getKubeProfile(wizardContext),
-                    perSiteScaling: !!wizardContext.customLocation
-                });
+                wizardContext.plan = await client.appServicePlans.createOrUpdate(rgName, newPlanName, await getNewPlan(wizardContext));
                 ext.outputChannel.appendLog(createdAppServicePlan);
             }
         } catch (e) {
@@ -61,8 +50,6 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
                 throw e;
             }
         }
-
-
     }
 
     public async selectExistingPrompt(wizardContext: IAppServiceWizardContext): Promise<void> {
@@ -82,35 +69,76 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
     }
 }
 
-function getKubeProfile(wizardContext: IAppServiceWizardContext) {
+async function getNewPlan(wizardContext: IAppServiceWizardContext): Promise<WebSiteManagementModels.AppServicePlan> {
+    const location: AzExtLocation = await LocationListStep.getLocation(wizardContext, webProvider);
+    const plan: WebSiteManagementModels.AppServicePlan = {
+        kind: getPlanKind(wizardContext),
+        sku: nonNullProp(wizardContext, 'newPlanSku'),
+        location: location.name,
+        reserved: wizardContext.newSiteOS === WebsiteOS.linux  // The secret property - must be set to true to make it a Linux plan. Confirmed by the team who owns this API.
+    };
+
+    const skuFamily = wizardContext.newPlanSku?.family ? wizardContext.newPlanSku?.family.toLowerCase() : '';
+    if (skuFamily === 'ep' || skuFamily === 'ws') {
+        plan.maximumElasticWorkerCount = 20;
+    }
+
     if (wizardContext.customLocation) {
-        // Temporary workaround so that the sdk allows "kubeEnvironmentProfile" on the plan
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        WebSiteManagementMappers.AppServicePlan.type.modelProperties!.kubeEnvironmentProfile = {
-            serializedName: 'properties.kubeEnvironmentProfile',
-            type: {
-                name: "Composite",
-                modelProperties: {
-                    id: {
-                        serializedName: "id",
-                        type: {
-                            name: "String"
-                        }
+        addCustomLocationProperties(plan, wizardContext.customLocation);
+    }
+
+    return plan;
+}
+
+/**
+ * Has a few temporary workarounds so that the sdk allows some newer properties on the plan
+ */
+function addCustomLocationProperties(plan: WebSiteManagementModels.AppServicePlan, customLocation: CustomLocation): void {
+    plan.perSiteScaling = true;
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    WebSiteManagementMappers.AppServicePlan.type.modelProperties!.kubeEnvironmentProfile = {
+        serializedName: 'properties.kubeEnvironmentProfile',
+        type: {
+            name: "Composite",
+            modelProperties: {
+                id: {
+                    serializedName: "id",
+                    type: {
+                        name: "String"
                     }
                 }
             }
-        };
+        }
+    };
 
-        return { id: wizardContext.customLocation.kubeEnvironment.id };
-    } else {
-        return undefined;
-    }
-}
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+    (<any>plan).kubeEnvironmentProfile = { id: customLocation.kubeEnvironment.id };
 
-interface ExtendedAppServicePlan extends WebSiteManagementModels.AppServicePlan {
-    kubeEnvironmentProfile?: {
-        id: string;
-    }
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    WebSiteManagementMappers.AppServicePlan.type.modelProperties!.extendedLocation = {
+        serializedName: 'extendedLocation',
+        type: {
+            name: "Composite",
+            modelProperties: {
+                name: {
+                    serializedName: "name",
+                    type: {
+                        name: "String"
+                    }
+                },
+                type: {
+                    serializedName: "type",
+                    type: {
+                        name: "String"
+                    }
+                }
+            }
+        }
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+    (<any>plan).extendedLocation = { name: customLocation.id, type: 'customLocation' };
 }
 
 function getPlanKind(wizardContext: IAppServiceWizardContext): string {
