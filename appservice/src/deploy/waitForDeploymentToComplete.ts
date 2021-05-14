@@ -95,7 +95,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
                 context.telemetry.properties.deployErrorLastLine = lastErrorLine;
                 throw new Error(messageWithoutName);
             } else {
-                context.syncTriggersPostDeploy = client.isFunctionApp && !/syncing/i.test(fullLog);
+                context.syncTriggersPostDeploy = client.isFunctionApp && !/syncing/i.test(fullLog) && !client.isKubernetesApp && !client.isWorkflowApp;
                 return;
             }
         } else {
