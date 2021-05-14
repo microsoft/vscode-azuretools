@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
+import { HttpOperationResponse, RestError, ServiceClient } from '@azure/ms-rest-js';
 import * as path from 'path';
 import { createGenericClient, IActionContext } from 'vscode-azureextensionui';
 import { createKuduClient } from './createKuduClient';
@@ -21,7 +21,17 @@ export interface ISiteFileMetadata {
 }
 
 export async function getFile(context: IActionContext, client: SiteClient, filePath: string): Promise<ISiteFile> {
-    const response: HttpOperationResponse = await getFsResponse(context, client, filePath);
+    let response: HttpOperationResponse;
+    try {
+        response = await getFsResponse(context, client, filePath);
+    } catch (error) {
+        if (error instanceof RestError && error.code === 'PARSE_ERROR' && error.response?.status === 200) {
+            // Some files incorrectly list the content-type as json and fail to parse, but we always just want the text itself
+            response = error.response;
+        } else {
+            throw error;
+        }
+    }
     return { data: <string>response.bodyAsText, etag: <string>response.headers.get('etag') };
 }
 
