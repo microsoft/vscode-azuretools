@@ -21,7 +21,7 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
                 label: s.label || nonNullProp(s, 'name'),
                 description: s.description || s.tier,
                 data: s,
-                group: 'Recommended'
+                group: wizardContext.advancedCreation ? 'Recommended' : ''
             };
         });
 
@@ -45,7 +45,7 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
                     label: s.label || nonNullProp(s, 'name'),
                     description: s.description || s.tier,
                     data: s,
-                    group: s.tier,
+                    group: 'Additional Options',
                 };
             }));
         }
