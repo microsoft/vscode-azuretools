@@ -38,10 +38,8 @@ export async function runWithZipStream(context: IActionContext, fsPath: string, 
         let filesToZip: string[] = [];
         let sizeOfZipFile: number = 0;
 
-        zipFile.outputStream.on('data', (chunk) => {
-            if (Array.isArray(chunk)) {
-                sizeOfZipFile += chunk.length
-            }
+        zipFile.outputStream.on('data', (chunk: unknown[]) => {
+            sizeOfZipFile += 'length' in chunk ? chunk.length : 0;
         });
 
         zipFile.outputStream.on('finish', () => onFileSize(sizeOfZipFile));
