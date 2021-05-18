@@ -3,11 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
+import { HttpOperationResponse, RestError, ServiceClient } from '@azure/ms-rest-js';
 import * as path from 'path';
-import { createGenericClient } from 'vscode-azureextensionui';
-import { KuduClient } from 'vscode-azurekudu';
-import { ISimplifiedSiteClient } from './ISimplifiedSiteClient';
+import { createGenericClient, IActionContext } from 'vscode-azureextensionui';
+import { createKuduClient } from './createKuduClient';
 import { SiteClient } from './SiteClient';
 
 export interface ISiteFile {
@@ -21,13 +20,23 @@ export interface ISiteFileMetadata {
     path: string;
 }
 
-export async function getFile(client: ISimplifiedSiteClient, filePath: string): Promise<ISiteFile> {
-    const response: HttpOperationResponse = await getFsResponse(client, filePath);
+export async function getFile(context: IActionContext, client: SiteClient, filePath: string): Promise<ISiteFile> {
+    let response: HttpOperationResponse;
+    try {
+        response = await getFsResponse(context, client, filePath);
+    } catch (error) {
+        if (error instanceof RestError && error.code === 'PARSE_ERROR' && error.response?.status === 200) {
+            // Some files incorrectly list the content-type as json and fail to parse, but we always just want the text itself
+            response = error.response;
+        } else {
+            throw error;
+        }
+    }
     return { data: <string>response.bodyAsText, etag: <string>response.headers.get('etag') };
 }
 
-export async function listFiles(client: ISimplifiedSiteClient, filePath: string): Promise<ISiteFileMetadata[]> {
-    const response: HttpOperationResponse = await getFsResponse(client, filePath);
+export async function listFiles(context: IActionContext, client: SiteClient, filePath: string): Promise<ISiteFileMetadata[]> {
+    const response: HttpOperationResponse = await getFsResponse(context, client, filePath);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return Array.isArray(response.parsedBody) ? response.parsedBody : [];
 }
@@ -36,9 +45,9 @@ export async function listFiles(client: ISimplifiedSiteClient, filePath: string)
  * Overwrites or creates a file. The etag passed in may be `undefined` if the file is being created
  * Returns the latest etag of the updated file
  */
-export async function putFile(client: ISimplifiedSiteClient, data: string | ArrayBuffer, filePath: string, etag: string | undefined): Promise<string> {
+export async function putFile(context: IActionContext, client: SiteClient, data: string | ArrayBuffer, filePath: string, etag: string | undefined): Promise<string> {
     const options: {} = etag ? { customHeaders: { ['If-Match']: etag } } : {};
-    const kuduClient: KuduClient = await client.getKuduClient();
+    const kuduClient = await createKuduClient(context, client);
     const result: HttpOperationResponse = (await kuduClient.vfs.putItem(data, filePath, options))._response;
     return <string>result.headers.get('etag');
 }
@@ -46,7 +55,7 @@ export async function putFile(client: ISimplifiedSiteClient, data: string | Arra
 /**
  * Kudu APIs don't work for Linux consumption function apps and ARM APIs don't seem to work for web apps. We'll just have to use both
  */
-async function getFsResponse(siteClient: ISimplifiedSiteClient, filePath: string): Promise<HttpOperationResponse> {
+async function getFsResponse(context: IActionContext, siteClient: SiteClient, filePath: string): Promise<HttpOperationResponse> {
     if (siteClient.isFunctionApp) {
         if (!(siteClient instanceof SiteClient)) {
             throw new RangeError('Internal Error: Expected client to be of type SiteClient.');
@@ -63,7 +72,7 @@ async function getFsResponse(siteClient: ISimplifiedSiteClient, filePath: string
             url: `${siteClient.id}/hostruntime/admin/vfs/${filePath}?api-version=2018-11-01`
         });
     } else {
-        const kuduClient: KuduClient = await siteClient.getKuduClient();
+        const kuduClient = await createKuduClient(context, siteClient);
         return (await kuduClient.vfs.getItem(filePath))._response;
     }
 }

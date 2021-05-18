@@ -4,7 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { WebSiteManagementClient, WebSiteManagementModels } from '@azure/arm-appservice';
+import { LocationListStep } from 'vscode-azureextensionui';
+import { webProvider } from '../constants';
 import { createWebSiteClient } from '../utils/azureClients';
+import { nonNullProp } from '../utils/nonNull';
 import { AppKind, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
@@ -12,6 +15,10 @@ import { IAppServiceWizardContext } from './IAppServiceWizardContext';
  * Overwrite the generic 'locationsTask' with a list of locations specific to provider "Microsoft.Web", based on OS and sku
  */
 export async function setLocationsTask(wizardContext: IAppServiceWizardContext): Promise<void> {
+    LocationListStep.setLocationSubset(wizardContext, getWebLocations(wizardContext), webProvider);
+}
+
+export async function getWebLocations(wizardContext: IAppServiceWizardContext): Promise<string[]> {
     let options: WebSiteManagementModels.WebSiteManagementClientListGeoRegionsOptionalParams = {};
     if (wizardContext.newSiteOS === WebsiteOS.linux) {
         if (wizardContext.newSiteKind === AppKind.functionapp && wizardContext.useConsumptionPlan) {
@@ -26,5 +33,6 @@ export async function setLocationsTask(wizardContext: IAppServiceWizardContext):
     }
 
     const client: WebSiteManagementClient = await createWebSiteClient(wizardContext);
-    wizardContext.locationsTask = client.listGeoRegions(options);
+    const locations = await client.listGeoRegions(options);
+    return locations.map(l => nonNullProp(l, 'name'));
 }

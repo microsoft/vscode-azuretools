@@ -5,7 +5,6 @@
 
 import { ResourceManagementModels } from '@azure/arm-resources';
 import { StorageManagementModels } from '@azure/arm-storage';
-import { SubscriptionModels } from '@azure/arm-subscriptions';
 import { Environment } from '@azure/ms-rest-azure-env';
 import { HttpOperationResponse, RequestPrepareOptions, ServiceClient } from '@azure/ms-rest-js';
 import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocument, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
@@ -164,6 +163,7 @@ export interface ISubscriptionContext {
     tenantId: string;
     userId: string;
     environment: Environment;
+    isCustomCloud: boolean;
 }
 
 export type TreeItemIconPath = string | Uri | { light: string | Uri; dark: string | Uri } | ThemeIcon;
@@ -723,7 +723,14 @@ export interface IParsedError {
     isUserCancelledError: boolean;
 }
 
-export type PromptResult = string | QuickPickItem | QuickPickItem[] | MessageItem | Uri[];
+export type PromptResult = {
+    value: string | QuickPickItem | QuickPickItem[] | MessageItem | Uri[];
+
+    /**
+     * True if the user did not change from the default value, currently only supported for `showInputBox`
+     */
+    matchesDefault?: boolean;
+};
 
 /**
  * Wrapper interface of several `vscode.window` methods that handle user input. The main reason for this interface
@@ -829,6 +836,19 @@ export interface IAzureQuickPickItem<T = undefined> extends QuickPickItem {
     data: T;
 
     /**
+     * Callback to use when this item is picked, instead of returning the pick
+     * Only applies when used as part of an `AzureWizard`
+     * This is not compatible with `canPickMany`
+     */
+    onPicked?: () => void | Promise<void>;
+
+    /**
+     * The group that this pick belongs to. Set `IAzureQuickPickOptions.enableGrouping` for this property to take effect
+     * Only applies when used as part of an `AzureWizard`
+     */
+    group?: string;
+
+    /**
      * Optionally used to suppress persistence for this item, defaults to `false`
      */
     suppressPersistence?: boolean;
@@ -855,7 +875,15 @@ export interface IAzureQuickPickOptions extends QuickPickOptions {
     isPickSelected?: (p: QuickPickItem) => boolean;
 
     /**
-     * Optional message to display while the quick pick is loading instead of the normal placeHolder. Only applies for quick picks used as a part of an `AzureWizard`
+     * If true, you must specify a `group` property on each `IAzureQuickPickItem` and the picks will be grouped into collapsible sections
+     * Only applies when used as part of an `AzureWizard`
+     * This is not compatible with `canPickMany`
+     */
+    enableGrouping?: boolean;
+
+    /**
+     * Optional message to display while the quick pick is loading instead of the normal placeHolder.
+     * Only applies when used as part of an `AzureWizard`
      */
     loadingPlaceHolder?: string;
 }
@@ -913,6 +941,12 @@ export declare abstract class AzureWizardExecuteStep<T extends IActionContext> {
     public abstract priority: number;
 
     /**
+     * Optional id used to determine if this step is unique, for things like caching values and telemetry
+     * If not specified, the class name will be used instead
+     */
+    public id?: string;
+
+    /**
      * Execute the step
      */
     public abstract execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
@@ -932,8 +966,15 @@ export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
 
     /**
      * If true, multiple steps of the same type can be shown in a wizard. By default, duplicate steps are filtered out
+     * NOTE: You can also use the `id` property to prevent a step from registering as a duplicate in the first place
      */
     public supportsDuplicateSteps: boolean;
+
+    /**
+     * Optional id used to determine if this step is unique, for things like caching values and telemetry
+     * If not specified, the class name will be used instead
+     */
+    public id?: string;
 
     /**
      * Prompt the user for input
@@ -954,22 +995,31 @@ export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
 
 export type ISubscriptionWizardContext = ISubscriptionContext & IActionContext;
 
-export interface ILocationWizardContext extends ISubscriptionWizardContext {
-    /**
-     * The location to use for new resources
-     * This value will be defined after `LocationListStep.prompt` occurs or after you call `LocationListStep.setLocation`
-     */
-    location?: SubscriptionModels.Location;
+/**
+ * Replacement for `SubscriptionModels.Location` because the sdk is pretty far behind in terms of api-version
+ */
+export type AzExtLocation = {
+    id: string;
+    name: string;
+    displayName: string;
+    regionalDisplayName?: string;
+    metadata?: {
+        regionCategory?: string;
+        geographyGroup?: string;
+        regionType?: string;
+        pairedRegion?: { name?: string }[]
+    }
+}
 
-    /**
-     * Optional task to describe the subset of locations that should be displayed.
-     * If not specified, all locations supported by the user's subscription will be displayed.
-     */
-    locationsTask?: Promise<{ name?: string }[]>;
+/**
+ * Currently no location-specific properties on the wizard context, but keeping this interface for backwards compatability and ease of use
+ * Instead, use static methods on `LocationListStep` like `getLocation` and `setLocationSubset`
+ */
+export interface ILocationWizardContext extends ISubscriptionWizardContext {
 }
 
 export declare class LocationListStep<T extends ILocationWizardContext> extends AzureWizardPromptStep<T> {
-    private constructor();
+    protected constructor();
 
     /**
      * Adds a LocationListStep to the wizard.  This function will ensure there is only one LocationListStep per wizard context.
@@ -981,19 +1031,56 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
     /**
      * This will set the wizard context's location (in which case the user will _not_ be prompted for location)
      * For example, if the user selects an existing resource, you might want to use that location as the default for the wizard's other resources
+     * This _will_ set the location even if not all providers support it - in the hopes that a related location can be found during `getLocation`
      * @param wizardContext The context of the wizard
      * @param name The name or display name of the location
      */
     public static setLocation<T extends ILocationWizardContext>(wizardContext: T, name: string): Promise<void>;
 
     /**
+     * Specify a task that will be used to filter locations
+     * @param wizardContext The context of the wizard
+     * @param task A task evaluating to the locations supported by this provider
+     * @param provider The relevant provider (i.e. 'Microsoft.Web')
+     */
+    public static setLocationSubset<T extends ILocationWizardContext>(wizardContext: T, task: Promise<string[]>, provider: string): void;
+
+    /**
+     * Adds default location filtering for a provider
+     * If more granular filtering is needed, use `setLocationSubset` instead (i.e. if the provider further filters locations based on features)
+     * @param wizardContext The context of the wizard
+     * @param provider The provider (i.e. 'Microsoft.Storage')
+     * @param resourceType The resource type (i.e. 'storageAccounts')
+     */
+    public static addProviderForFiltering<T extends ILocationWizardContext>(wizardContext: T, provider: string, resourceType: string): void;
+
+    /**
+     * Gets the selected location for this wizard.
+     * @param wizardContext The context of the wizard
+     * @param provider If specified, this will check against that provider's supported locations and attempt to find a "related" location if the selected location is not supported.
+     */
+    public static getLocation<T extends ILocationWizardContext>(wizardContext: T, provider?: string): Promise<AzExtLocation>;
+
+    /**
+     * Returns true if a location has been set on the context
+     */
+    public static hasLocation<T extends ILocationWizardContext>(wizardContext: T): boolean;
+
+    /**
      * Used to get locations. By passing in the context, we can ensure that Azure is only queried once for the entire wizard
      * @param wizardContext The context of the wizard.
      */
-    public static getLocations<T extends ILocationWizardContext>(wizardContext: T): Promise<SubscriptionModels.Location[]>;
+    public static getLocations<T extends ILocationWizardContext>(wizardContext: T): Promise<AzExtLocation[]>;
+
+    /**
+     * Returns true if the given location matches the name
+     */
+    public static locationMatchesName(location: AzExtLocation, name: string): boolean;
 
     public prompt(wizardContext: T): Promise<void>;
     public shouldPrompt(wizardContext: T): boolean;
+
+    protected getQuickPicks(wizardContext: T): Promise<IAzureQuickPickItem<AzExtLocation>[]>;
 }
 
 export interface IAzureNamingRules {

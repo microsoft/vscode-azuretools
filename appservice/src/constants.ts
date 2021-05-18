@@ -3,6 +3,4 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../localize';
-
-export const loadMoreLabel: string = localize('LoadMore', 'Load More...');
+export const webProvider: string = 'Microsoft.Web';

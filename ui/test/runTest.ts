@@ -21,5 +21,4 @@ async function main(): Promise<void> {
     }
 }
 
-// tslint:disable-next-line: no-floating-promises
-main();
+void main();

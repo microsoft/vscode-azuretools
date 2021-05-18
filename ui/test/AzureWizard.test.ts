@@ -9,8 +9,6 @@ import { TestInput, TestUserInput } from 'vscode-azureextensiondev';
 import * as types from '../index';
 import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep } from '../src';
 
-// tslint:disable: max-classes-per-file
-
 interface ITestWizardContext extends types.IActionContext {
     [key: string]: {} | boolean | string | undefined;
 }
@@ -186,7 +184,6 @@ class QuickPickStepWithSubWizard extends QuickPickStepWithSubWizardBase {
     private _executeStep: AzureWizardExecuteStep<ITestWizardContext>;
     constructor(executeStep?: AzureWizardExecuteStep<ITestWizardContext>) {
         super();
-        // tslint:disable-next-line: strict-boolean-expressions
         this._executeStep = executeStep || new SubExecuteStep();
     }
     protected getSubWizardInternal(): types.IWizardOptions<ITestWizardContext> {
@@ -316,7 +313,6 @@ async function validateWizard(options: types.IWizardOptions<ITestWizardContext>,
     assert.equal(inputs.length, 0, 'Not all inputs were used.');
 }
 
-// tslint:disable-next-line: max-func-body-length
 suite("AzureWizard tests", () => {
     test("QuickPick", async () => {
         await validateWizard(

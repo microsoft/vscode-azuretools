@@ -15,6 +15,7 @@ import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { randomUtils } from '../utils/randomUtils';
+import { IDeployContext } from './IDeployContext';
 import { runWithZipStream } from './runWithZipStream';
 
 dayjs.extend(relativeTime);
@@ -25,7 +26,9 @@ dayjs.extend(utc);
  * To deploy with Run from Package on a Windows plan, create the app setting "WEBSITE_RUN_FROM_PACKAGE" and set it to "1".
  * Then deploy via "zipdeploy" as usual.
  */
-export async function deployToStorageAccount(context: IActionContext, fsPath: string, client: SiteClient): Promise<void> {
+export async function deployToStorageAccount(context: IDeployContext, fsPath: string, client: SiteClient): Promise<void> {
+    context.telemetry.properties.useStorageAccountDeploy = 'true';
+
     const datePart: string = dayjs().utc().format('YYYYMMDDHHmmss');
     const randomPart: string = randomUtils.getRandomHexString(32);
     const blobName: string = `${datePart}-${randomPart}.zip`;
@@ -38,6 +41,8 @@ export async function deployToStorageAccount(context: IActionContext, fsPath: st
     appSettings.properties.WEBSITE_RUN_FROM_PACKAGE = blobUrl;
     await client.updateApplicationSettings(appSettings);
     ext.outputChannel.appendLog(localize('deploymentSuccessful', 'Deployment successful.'), { resourceName: client.fullName });
+
+    context.syncTriggersPostDeploy = true;
 }
 
 async function createBlobServiceClient(client: SiteClient): Promise<BlobServiceClient> {

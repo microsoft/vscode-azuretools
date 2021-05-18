@@ -93,4 +93,16 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
      * Indicates advanced creation should be used
      */
     advancedCreation?: boolean;
+
+    customLocation?: CustomLocation;
+}
+
+export type CustomLocation = {
+    name: string;
+    id: string;
+    kubeEnvironment: {
+        name: string;
+        id: string;
+        location: string;
+    }
 }

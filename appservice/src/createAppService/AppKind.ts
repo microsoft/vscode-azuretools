@@ -10,19 +10,8 @@ export enum WebsiteOS {
 
 export enum AppKind {
     app = 'app',
-    functionapp = 'functionapp'
-}
-
-/**
- * Retrieves a valid "kind" for AppServicePlan
- */
-export function getAppServicePlanModelKind(_kind: AppKind, os: WebsiteOS): string {
-    // Always create app plans, no matter what the website kind
-    if (os === WebsiteOS.linux) {
-        return WebsiteOS.linux;
-    } else {
-        return AppKind.app;
-    }
+    functionapp = 'functionapp',
+    workflowapp = 'workflowapp'
 }
 
 export function getWebsiteOSDisplayName(kind: WebsiteOS): string {

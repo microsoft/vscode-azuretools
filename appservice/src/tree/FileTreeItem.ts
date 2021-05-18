@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { ThemeIcon } from 'vscode';
 import { AzExtParentTreeItem, AzExtTreeItem, IActionContext, openReadOnlyContent, TreeItemIconPath } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
-import { ISimplifiedSiteClient } from '../ISimplifiedSiteClient';
 import { localize } from '../localize';
+import { SiteClient } from '../SiteClient';
 import { getFile, ISiteFile } from '../siteFiles';
-import { getThemedIconPath } from './IconPath';
 
 /**
  * NOTE: This leverages a command with id `ext.prefix + '.openFile'` that should be registered by each extension
@@ -20,9 +20,9 @@ export class FileTreeItem extends AzExtTreeItem {
     public readonly path: string;
     public readonly isReadOnly: boolean;
 
-    public readonly client: ISimplifiedSiteClient;
+    public readonly client: SiteClient;
 
-    constructor(parent: AzExtParentTreeItem, client: ISimplifiedSiteClient, label: string, path: string, isReadOnly: boolean) {
+    constructor(parent: AzExtParentTreeItem, client: SiteClient, label: string, path: string, isReadOnly: boolean) {
         super(parent);
         this.client = client;
         this.label = label;
@@ -31,7 +31,7 @@ export class FileTreeItem extends AzExtTreeItem {
     }
 
     public get iconPath(): TreeItemIconPath {
-        return getThemedIconPath('file');
+        return new ThemeIcon('file');
     }
 
     public get commandId(): string {
@@ -40,7 +40,7 @@ export class FileTreeItem extends AzExtTreeItem {
 
     public async openReadOnly(context: IActionContext): Promise<void> {
         await this.runWithTemporaryDescription(context, localize('opening', 'Opening...'), async () => {
-            const file: ISiteFile = await getFile(this.client, this.path);
+            const file: ISiteFile = await getFile(context, this.client, this.path);
             await openReadOnlyContent(this, file.data, '');
         });
     }

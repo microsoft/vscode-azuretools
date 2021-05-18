@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as semver from 'semver';
-import { commands, Disposable, Extension, extensions, MessageItem, ProgressLocation, window } from 'vscode';
+import { commands, Disposable, Extension, extensions, MessageItem, ProgressLocation, ThemeIcon, window } from 'vscode';
 import * as types from '../../index';
 import { AzureAccount, AzureLoginStatus, AzureResourceFilter } from '../azure-account.api';
 import { UserCancelledError } from '../errors';
@@ -78,7 +78,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
             const label: string = azureAccount === 'notInstalled' ?
                 localize('installAzureAccount', 'Install Azure Account Extension...') :
                 localize('updateAzureAccount', 'Update Azure Account Extension to at least version "{0}"...', minAccountExtensionVersion);
-            const iconPath: types.TreeItemIconPath = getThemedIconPath('warning');
+            const iconPath: types.TreeItemIconPath = new ThemeIcon('warning');
             const result: AzExtTreeItem = new GenericTreeItem(this, { label, commandId: extensionOpenCommand, contextValue: 'azureAccount' + azureAccount, includeInTreeItemPicker: true, iconPath });
             result.commandArgs = [azureAccountExtensionId];
             return [result];
@@ -99,8 +99,8 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
             })];
         } else if (azureAccount.status === 'LoggedOut') {
             return [
-                new GenericTreeItem(this, { label: signInLabel, commandId: signInCommandId, contextValue, id: signInCommandId, iconPath: getThemedIconPath('signIn'), includeInTreeItemPicker: true }),
-                new GenericTreeItem(this, { label: createAccountLabel, commandId: createAccountCommandId, contextValue, id: createAccountCommandId, iconPath: getThemedIconPath('add'), includeInTreeItemPicker: true })
+                new GenericTreeItem(this, { label: signInLabel, commandId: signInCommandId, contextValue, id: signInCommandId, iconPath: new ThemeIcon('sign-in'), includeInTreeItemPicker: true }),
+                new GenericTreeItem(this, { label: createAccountLabel, commandId: createAccountCommandId, contextValue, id: createAccountCommandId, iconPath: new ThemeIcon('add'), includeInTreeItemPicker: true })
             ];
         }
 
@@ -128,7 +128,8 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
                         subscriptionPath: nonNullProp(filter.subscription, 'id'),
                         tenantId: filter.session.tenantId,
                         userId: filter.session.userId,
-                        environment: filter.session.environment
+                        environment: filter.session.environment,
+                        isCustomCloud: filter.session.environment.name === 'AzureCustomCloud'
                     });
                 }
             }));
@@ -147,7 +148,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
             Object.assign(context, subscriptions[0].root);
             return undefined;
         } else {
-            // tslint:disable-next-line: no-var-self
+            // eslint-disable-next-line @typescript-eslint/no-this-alias
             const me: AzureAccountTreeItemBase = this;
             class SubscriptionPromptStep extends AzureWizardPromptStep<types.ISubscriptionWizardContext> {
                 public async prompt(): Promise<void> {
@@ -164,7 +165,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
         const azureAccount: AzureAccountResult = await this._azureAccountTask;
         if (typeof azureAccount !== 'string' && (azureAccount.status === 'LoggingIn' || azureAccount.status === 'Initializing')) {
             const title: string = localize('waitingForAzureSignin', 'Waiting for Azure sign-in...');
-            // tslint:disable-next-line: no-non-null-assertion
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             await window.withProgress({ location: ProgressLocation.Notification, title }, async (): Promise<boolean> => await azureAccount!.waitForSubscriptions());
         }
 
@@ -184,7 +185,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
             const extension: Extension<AzureAccount> | undefined = extensions.getExtension<AzureAccount>(azureAccountExtensionId);
             if (extension) {
                 try {
-                    // tslint:disable-next-line: no-unsafe-any
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                     if (semver.lt(extension.packageJSON.version, minAccountExtensionVersion)) {
                         return 'needsUpdate';
                     }

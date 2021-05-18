@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
-import * as FileManagerPlugin from 'filemanager-webpack-plugin';
+import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as TerserPlugin from 'terser-webpack-plugin';
@@ -26,7 +26,8 @@ verbosityMap.set('debug', 2);
 const defaultExternalNodeModules: string[] = [
     // contain dynamically-loaded binaries
     'clipboardy',
-    'opn'
+    'opn', // Superseded by 'open' in vscode-azureextensionui v0.41.0+
+    'open'
 ];
 
 export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack.Configuration {
@@ -106,24 +107,25 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
         },
         plugins: [
             // Copy files to dist folder where the runtime can find them
-            new FileManagerPlugin({
-                onEnd: {
-                    copy: [
-                        // Test files -> dist/test (these files are ignored during packaging)
-                        {
-                            source: path.join(options.projectRoot, 'out', 'test'),
-                            destination: path.join(options.projectRoot, 'dist', 'test')
-                        },
-                        {
-                            source: path.join(options.projectRoot, 'node_modules', 'vscode-azureextensionui', 'resources', '**', '*.svg'),
-                            destination: path.join(options.projectRoot, 'dist', 'node_modules', 'vscode-azureextensionui', 'resources')
-                        },
-                        {
-                            source: path.join(options.projectRoot, 'node_modules', 'vscode-azureappservice', 'resources', '**', '*.svg'),
-                            destination: path.join(options.projectRoot, 'dist', 'node_modules', 'vscode-azureappservice', 'resources')
-                        }
-                    ]
-                }
+            new CopyWebpackPlugin({
+                patterns: [
+                    // Test files -> dist/test (these files are ignored during packaging)
+                    {
+                        from: path.join(options.projectRoot, 'out', 'test'),
+                        to: path.join(options.projectRoot, 'dist', 'test'),
+                        noErrorOnMissing: true
+                    },
+                    {
+                        from: toGlobSafePath(path.join(options.projectRoot, 'node_modules', 'vscode-azureextensionui', 'resources', '**', '*.svg')),
+                        to: path.join(options.projectRoot, 'dist'),
+                        noErrorOnMissing: true
+                    },
+                    {
+                        from: toGlobSafePath(path.join(options.projectRoot, 'node_modules', 'vscode-azureappservice', 'resources', '**', '*.svg')),
+                        to: path.join(options.projectRoot, 'dist'),
+                        noErrorOnMissing: true
+                    }
+                ]
             }),
 
             // Fix error:
@@ -226,4 +228,12 @@ function logCore(loggingVerbosity: Verbosity, messageVerbosity: MessageVerbosity
     if (messageVerbosityValue >= loggingVerbosityValue) {
         console.log(...args);
     }
+}
+
+/**
+ * We always want to use posix separators for glob paths
+ * See https://github.com/microsoft/vscode-azuretools/issues/879 and https://github.com/webpack-contrib/copy-webpack-plugin#from
+ */
+function toGlobSafePath(fsPath: string): string {
+    return fsPath.replace(/\\/g, '/');
 }

@@ -8,12 +8,13 @@ import * as types from '../index';
 import { callWithTelemetryAndErrorHandling } from './callWithTelemetryAndErrorHandling';
 import { ext } from './extensionVariables';
 
-// tslint:disable:no-any no-unsafe-any
-export function registerEvent<T>(eventId: string, event: Event<T>, callback: (context: types.IActionContext, ...args: any[]) => any): void {
-    ext.context.subscriptions.push(event(async (...args: any[]): Promise<any> => {
+export function registerEvent<T>(eventId: string, event: Event<T>, callback: (context: types.IActionContext, ...args: unknown[]) => unknown): void {
+    ext.context.subscriptions.push(event(async (...args: unknown[]): Promise<unknown> => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return await callWithTelemetryAndErrorHandling(
             eventId,
             (context: types.IActionContext) => {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
                 return callback(context, ...args);
             }
         );

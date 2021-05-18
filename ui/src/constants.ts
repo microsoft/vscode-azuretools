@@ -3,6 +3,5 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../localize';
-
-export const loadMoreLabel: string = localize('LoadMore', 'Load More...');
+export const resourcesProvider: string = 'Microsoft.Resources';
+export const storageProvider: string = 'Microsoft.Storage';

@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken, Event, EventEmitter, TreeItem } from 'vscode';
+import { CancellationToken, Event, EventEmitter, ThemeIcon, TreeItem } from 'vscode';
 import * as types from '../../index';
 import { callWithTelemetryAndErrorHandling } from '../callWithTelemetryAndErrorHandling';
 import { NoResourceFoundError, UserCancelledError } from '../errors';
@@ -13,7 +13,6 @@ import { parseError } from '../parseError';
 import { AzExtParentTreeItem, InvalidTreeItem } from './AzExtParentTreeItem';
 import { AzExtTreeItem } from './AzExtTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';
-import { getThemedIconPath } from './IconPath';
 import { IAzExtTreeDataProviderInternal, isAzExtParentTreeItem } from './InternalInterfaces';
 import { runWithLoadingNotification } from './runWithLoadingNotification';
 import { loadMoreLabel } from './treeConstants';
@@ -24,7 +23,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
 
     private readonly _loadMoreCommandId: string;
     private readonly _rootTreeItem: AzExtParentTreeItem;
-    private readonly _findTreeItemTasks: Map<string, Promise<types.AzExtTreeItem | undefined>> = new Map();
+    private readonly _findTreeItemTasks: Map<string, Promise<types.AzExtTreeItem | undefined>> = new Map<string, Promise<types.AzExtTreeItem | undefined>>();
 
     constructor(rootTreeItem: AzExtParentTreeItem, loadMoreCommandId: string) {
         this._loadMoreCommandId = loadMoreCommandId;
@@ -51,7 +50,6 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
             command: treeItem.commandId ? {
                 command: treeItem.commandId,
                 title: '',
-                // tslint:disable-next-line: strict-boolean-expressions
                 arguments: treeItem.commandArgs || [treeItem]
             } : undefined,
             tooltip: treeItem.resolveTooltip ? undefined : treeItem.tooltip // If `resolveTooltip` is defined, return undefined here, so that `resolveTreeItem` and `resolveTooltip` get used
@@ -87,6 +85,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                 const hasMoreChildren: boolean = treeItem.hasMoreChildrenImpl();
                 context.telemetry.properties.hasMoreChildren = String(hasMoreChildren);
 
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 const resultMap: Map<string, AzExtTreeItem> = new Map();
                 const duplicateChildren: AzExtTreeItem[] = [];
                 for (const child of children) {
@@ -102,7 +101,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                 if (hasMoreChildren && !treeItem.isLoadingMore) {
                     const loadMoreTI: GenericTreeItem = new GenericTreeItem(treeItem, {
                         label: loadMoreLabel,
-                        iconPath: getThemedIconPath('refresh'),
+                        iconPath: new ThemeIcon('refresh'),
                         contextValue: 'azureextensionui.loadMore',
                         commandId: this._loadMoreCommandId
                     });
@@ -122,7 +121,6 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
     }
 
     public async refresh(context: types.IActionContext, treeItem?: AzExtTreeItem): Promise<void> {
-        // tslint:disable-next-line: strict-boolean-expressions
         treeItem = treeItem || this._rootTreeItem;
 
         if (treeItem.refreshImpl) {
@@ -160,7 +158,6 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
             expectedContextValues = [expectedContextValues];
         }
 
-        // tslint:disable-next-line:strict-boolean-expressions
         let treeItem: AzExtTreeItem = startingTreeItem || this._rootTreeItem;
 
         while (!treeItem.matchesContextValue(expectedContextValues)) {
@@ -212,7 +209,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
     private async findTreeItemInternal(fullId: string, context: types.IFindTreeItemContext, cancellationToken?: CancellationToken): Promise<types.AzExtTreeItem | undefined> {
         let treeItem: AzExtParentTreeItem = this._rootTreeItem;
 
-        // tslint:disable-next-line: no-constant-condition
+        // eslint-disable-next-line no-constant-condition
         outerLoop: while (true) {
             if (cancellationToken?.isCancellationRequested) {
                 context.telemetry.properties.cancelStep = 'findTreeItem';

@@ -33,7 +33,6 @@ export async function reportAnIssue(issue: IReportableIssue | undefined): Promis
 export async function getReportAnIssueLink(issue: IReportableIssue | undefined): Promise<string> {
     const { extensionVersion } = getPackageInfo();
 
-    // tslint:disable-next-line: strict-boolean-expressions
     const stack: string = (issue?.error.stack || '').replace(/\r\n/g, '\n');
 
     let body: string = `

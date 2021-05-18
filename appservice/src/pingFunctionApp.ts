@@ -5,10 +5,10 @@
 
 import { ServiceClient } from '@azure/ms-rest-js';
 import { createGenericClient } from 'vscode-azureextensionui';
-import { ISimplifiedSiteClient } from '.';
 import { localize } from './localize';
+import { SiteClient } from './SiteClient';
 
-export async function pingFunctionApp(siteClient: ISimplifiedSiteClient): Promise<void> {
+export async function pingFunctionApp(siteClient: SiteClient): Promise<void> {
     if (siteClient.listHostKeys) {
         const client: ServiceClient = await createGenericClient();
         await client.sendRequest({

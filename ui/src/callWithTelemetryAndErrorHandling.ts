@@ -154,7 +154,7 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
         }
 
         // don't wait
-        window.showErrorMessage(message, ...items).then(async (result: MessageItem | types.AzExtErrorButton | undefined) => {
+        void window.showErrorMessage(message, ...items).then(async (result: MessageItem | types.AzExtErrorButton | undefined) => {
             if (result === DialogResponses.reportAnIssue) {
                 await reportAnIssue(issue);
             } else if (result && 'callback' in result) {

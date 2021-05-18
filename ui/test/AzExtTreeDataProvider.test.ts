@@ -11,8 +11,6 @@ import { AzExtParentTreeItem } from '../src/tree/AzExtParentTreeItem';
 import { AzExtTreeDataProvider } from '../src/tree/AzExtTreeDataProvider';
 import { AzExtTreeItem } from '../src/tree/AzExtTreeItem';
 
-// tslint:disable: max-classes-per-file
-
 abstract class ParentTreeItemBase extends AzExtParentTreeItem {
     private _childIndex: number = 0;
 

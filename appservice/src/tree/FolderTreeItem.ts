@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { ThemeIcon } from 'vscode';
 import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
-import { ISimplifiedSiteClient } from '../ISimplifiedSiteClient';
 import { localize } from '../localize';
+import { SiteClient } from '../SiteClient';
 import { ISiteFileMetadata, listFiles } from '../siteFiles';
 import { FileTreeItem } from './FileTreeItem';
-import { getThemedIconPath } from './IconPath';
 
 export class FolderTreeItem extends AzExtParentTreeItem {
     public static contextValue: string = 'folder';
@@ -18,10 +18,10 @@ export class FolderTreeItem extends AzExtParentTreeItem {
     public readonly path: string;
     public readonly isReadOnly: boolean;
 
-    public readonly client: ISimplifiedSiteClient;
+    public readonly client: SiteClient;
     protected readonly _isRoot: boolean = false;
 
-    constructor(parent: AzExtParentTreeItem, client: ISimplifiedSiteClient, label: string, path: string, isReadOnly: boolean) {
+    constructor(parent: AzExtParentTreeItem, client: SiteClient, label: string, path: string, isReadOnly: boolean) {
         super(parent);
         this.client = client;
         this.label = label;
@@ -30,7 +30,7 @@ export class FolderTreeItem extends AzExtParentTreeItem {
     }
 
     public get iconPath(): TreeItemIconPath {
-        return getThemedIconPath('folder');
+        return new ThemeIcon('folder');
     }
 
     public hasMoreChildrenImpl(): boolean {
@@ -41,8 +41,8 @@ export class FolderTreeItem extends AzExtParentTreeItem {
         return this._isRoot && this.isReadOnly ? localize('readOnly', 'Read-only') : undefined;
     }
 
-    public async loadMoreChildrenImpl(_clearCache: boolean, _context: IActionContext): Promise<AzExtTreeItem[]> {
-        let files: ISiteFileMetadata[] = await listFiles(this.client, this.path);
+    public async loadMoreChildrenImpl(_clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {
+        let files: ISiteFileMetadata[] = await listFiles(context, this.client, this.path);
 
         // this file is being accessed by Kudu and is not viewable
         files = files.filter(f => f.mime !== 'text/xml' || !f.name.includes('LogFiles-kudu-trace_pending.xml'));

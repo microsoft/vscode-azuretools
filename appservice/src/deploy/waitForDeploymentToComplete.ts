@@ -6,15 +6,16 @@
 import { CancellationToken, window } from 'vscode';
 import { IActionContext, IParsedError, parseError } from 'vscode-azureextensionui';
 import { KuduClient, KuduModels } from 'vscode-azurekudu';
+import { createKuduClient } from '../createKuduClient';
 import { ext } from '../extensionVariables';
-import { ISimplifiedSiteClient } from '../ISimplifiedSiteClient';
 import { localize } from '../localize';
+import { SiteClient } from '../SiteClient';
 import { delay } from '../utils/delay';
 import { ignore404Error, retryKuduCall } from '../utils/kuduUtils';
 import { nonNullProp } from '../utils/nonNull';
 import { IDeployContext } from './IDeployContext';
 
-export async function waitForDeploymentToComplete(context: IActionContext & Partial<IDeployContext>, client: ISimplifiedSiteClient, expectedId?: string, token?: CancellationToken, pollingInterval: number = 5000): Promise<void> {
+export async function waitForDeploymentToComplete(context: IActionContext & Partial<IDeployContext>, client: SiteClient, expectedId?: string, token?: CancellationToken, pollingInterval: number = 5000): Promise<void> {
     let fullLog: string = '';
 
     let lastLogTime: Date = new Date(0);
@@ -24,7 +25,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
     let permanentId: string | undefined;
     // a 60 second timeout period to let Kudu initialize the deployment
     const maxTimeToWaitForExpectedId: number = Date.now() + 60 * 1000;
-    const kuduClient: KuduClient = await client.getKuduClient();
+    const kuduClient = await createKuduClient(context, client);
 
     while (!token?.isCancellationRequested) {
         [deployment, permanentId, initialStartTime] = await tryGetLatestDeployment(context, kuduClient, permanentId, initialStartTime, expectedId);
@@ -94,7 +95,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
                 context.telemetry.properties.deployErrorLastLine = lastErrorLine;
                 throw new Error(messageWithoutName);
             } else {
-                context.syncTriggersPostDeploy = client.isFunctionApp && !/syncing/i.test(fullLog);
+                context.syncTriggersPostDeploy = client.isFunctionApp && !/syncing/i.test(fullLog) && !client.isKubernetesApp && !client.isWorkflowApp;
                 return;
             }
         } else {

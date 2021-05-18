@@ -15,28 +15,26 @@ export async function createExperimentationService(ctx: vscode.ExtensionContext,
     const result: ExperimentationServiceAdapter = new ExperimentationServiceAdapter();
     const { extensionId, extensionVersion } = getPackageInfo(ctx);
 
-    if (vscode.workspace.getConfiguration('telemetry').get('enableTelemetry', false)) {
-        if (targetPopulation === undefined) {
-            if (ctx.extensionMode !== vscode.ExtensionMode.Production) {
-                targetPopulation = tas.TargetPopulation.Team;
-            } else if (/alpha/ig.test(extensionVersion)) {
-                targetPopulation = tas.TargetPopulation.Insiders;
-            } else {
-                targetPopulation = tas.TargetPopulation.Public;
-            }
+    if (targetPopulation === undefined) {
+        if (ctx.extensionMode !== vscode.ExtensionMode.Production) {
+            targetPopulation = tas.TargetPopulation.Team;
+        } else if (/alpha/ig.test(extensionVersion)) {
+            targetPopulation = tas.TargetPopulation.Insiders;
+        } else {
+            targetPopulation = tas.TargetPopulation.Public;
         }
+    }
 
-        try {
-            result.wrappedExperimentationService = await tas.getExperimentationServiceAsync(
-                extensionId,
-                extensionVersion,
-                targetPopulation,
-                new ExperimentationTelemetry(ext._internalReporter, ctx),
-                ctx.globalState
-            );
-        } catch {
-            // Best effort
-        }
+    try {
+        result.wrappedExperimentationService = await tas.getExperimentationServiceAsync(
+            extensionId,
+            extensionVersion,
+            targetPopulation,
+            new ExperimentationTelemetry(ext._internalReporter, ctx),
+            ctx.globalState
+        );
+    } catch {
+        // Best effort
     }
 
     return result;
@@ -45,20 +43,26 @@ export async function createExperimentationService(ctx: vscode.ExtensionContext,
 class ExperimentationServiceAdapter implements IExperimentationServiceAdapter {
     public wrappedExperimentationService?: tas.IExperimentationService;
 
+    /**
+     * @deprecated Use `getCachedTreatmentVariable<boolean>('flight-name') instead
+     */
     public async isCachedFlightEnabled(flight: string): Promise<boolean> {
         if (!this.wrappedExperimentationService) {
             return false;
         }
 
-        return this.wrappedExperimentationService.isCachedFlightEnabled(flight);
+        return !!(await this.getCachedTreatmentVariable<boolean>(flight));
     }
 
+    /**
+     * @deprecated Use `getLiveTreatmentVariable<boolean>('flight-name') instead
+     */
     public async isLiveFlightEnabled(flight: string): Promise<boolean> {
         if (!this.wrappedExperimentationService) {
             return false;
         }
 
-        return this.wrappedExperimentationService.isFlightEnabledAsync(flight);
+        return !!(await this.getLiveTreatmentVariable<boolean>(flight));
     }
 
     public async getCachedTreatmentVariable<T extends string | number | boolean>(name: string): Promise<T | undefined> {

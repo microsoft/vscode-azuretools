@@ -5,9 +5,10 @@
 
 import { WebSiteManagementModels } from '@azure/arm-appservice';
 import * as os from 'os';
-import { ProgressLocation, window } from 'vscode';
+import { ProgressLocation, ThemeIcon, window } from 'vscode';
 import { AzExtTreeItem, IActionContext, openReadOnlyContent, TreeItemIconPath } from 'vscode-azureextensionui';
-import { KuduClient, KuduModels } from 'vscode-azurekudu';
+import { KuduModels } from 'vscode-azurekudu';
+import { createKuduClient } from '../createKuduClient';
 import { waitForDeploymentToComplete } from '../deploy/waitForDeploymentToComplete';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -15,7 +16,6 @@ import { ignore404Error, retryKuduCall } from '../utils/kuduUtils';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
 import { DeploymentsTreeItem } from './DeploymentsTreeItem';
-import { getThemedIconPath } from './IconPath';
 
 // Kudu DeployStatus: https://github.com/projectkudu/kudu/blob/a13592e6654585d5c2ee5c6a05fa39fa812ebb84/Kudu.Contracts/Deployment/DeployStatus.cs
 enum DeployStatus {
@@ -47,7 +47,7 @@ export class DeploymentTreeItem extends AzExtTreeItem {
     }
 
     public get iconPath(): TreeItemIconPath {
-        return getThemedIconPath('git-commit');
+        return new ThemeIcon('git-commit');
     }
 
     public get id(): string {
@@ -91,7 +91,7 @@ export class DeploymentTreeItem extends AzExtTreeItem {
         const redeployed: string = localize('redeployed', 'Commit "{0}" has been redeployed to "{1}".', this.id, this.parent.client.fullName);
         await window.withProgress({ location: ProgressLocation.Notification, title: redeploying }, async (): Promise<void> => {
             ext.outputChannel.appendLog(localize('reployingOutput', 'Redeploying commit "{0}" to "{1}"...', this.id, this.parent.client.fullName), { resourceName: this.parent.client.fullName });
-            const kuduClient: KuduClient = await this.parent.client.getKuduClient();
+            const kuduClient = await createKuduClient(context, this.parent.client);
             void kuduClient.deployment.deploy(this.id);
 
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -109,7 +109,7 @@ export class DeploymentTreeItem extends AzExtTreeItem {
     }
 
     public async getDeploymentLogs(context: IActionContext): Promise<string> {
-        const kuduClient: KuduClient = await this.parent.client.getKuduClient();
+        const kuduClient = await createKuduClient(context, this.parent.client);
         let logEntries: KuduModels.LogEntry[] = [];
         await retryKuduCall(context, 'getLogEntry', async () => {
             await ignore404Error(context, async () => {
@@ -155,8 +155,8 @@ export class DeploymentTreeItem extends AzExtTreeItem {
         }
     }
 
-    public async refreshImpl(): Promise<void> {
-        const kuduClient: KuduClient = await this.parent.client.getKuduClient();
+    public async refreshImpl(context: IActionContext): Promise<void> {
+        const kuduClient = await createKuduClient(context, this.parent.client);
         this._deployResult = await kuduClient.deployment.getResult(this.id);
     }
 

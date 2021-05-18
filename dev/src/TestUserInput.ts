@@ -65,12 +65,13 @@ export class TestUserInput implements types.TestUserInput {
                     if (resolvedItem) {
                         result = resolvedItem;
                     } else {
-                        throw new Error(`Did not find quick pick item matching '${input}'. Placeholder: '${options.placeHolder}'`);
+                        const picksString = resolvedItems.map(i => `"${i.label}"`).join(', ')
+                        throw new Error(`Did not find quick pick item matching "${input}". Placeholder: "${options.placeHolder}". Picks: ${picksString}`);
                     }
                 }
             }
 
-            this._onDidFinishPromptEmitter.fire(result);
+            this._onDidFinishPromptEmitter.fire({ value: result });
             return result;
         }
     }
@@ -100,7 +101,10 @@ export class TestUserInput implements types.TestUserInput {
             throw new Error(`Unexpected input '${input}' for showInputBox.`);
         }
 
-        this._onDidFinishPromptEmitter.fire(result);
+        this._onDidFinishPromptEmitter.fire({
+            value: result,
+            matchesDefault: result === options.value
+        });
         return result;
     }
 
@@ -124,7 +128,7 @@ export class TestUserInput implements types.TestUserInput {
             throw new Error(`Unexpected input '${input}' for showWarningMessage.`);
         }
 
-        this._onDidFinishPromptEmitter.fire(result);
+        this._onDidFinishPromptEmitter.fire({ value: result });
         return result;
     }
 
@@ -139,7 +143,7 @@ export class TestUserInput implements types.TestUserInput {
             throw new Error(`Unexpected input '${input}' for showOpenDialog.`);
         }
 
-        this._onDidFinishPromptEmitter.fire(result);
+        this._onDidFinishPromptEmitter.fire({ value: result });
         return result;
     }
 }
