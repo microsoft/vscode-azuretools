@@ -36,6 +36,13 @@ export async function runWithZipStream(context: IActionContext, fsPath: string, 
         ext.outputChannel.appendLog(localize('zipCreate', 'Creating zip package...'), { resourceName: client.fullName });
         const zipFile: yazl.ZipFile & { outputStreamCursor?: number } = new yazl.ZipFile();
         let filesToZip: string[] = [];
+        let sizeOfZipFile: number = 0;
+
+        zipFile.outputStream.on('data', (chunk) => {
+            sizeOfZipFile += chunk.length
+        });
+
+        zipFile.outputStream.on('finish', () => onFileSize(sizeOfZipFile));
 
         if ((await fse.lstat(fsPath)).isDirectory()) {
             if (!fsPath.endsWith(path.sep)) {
