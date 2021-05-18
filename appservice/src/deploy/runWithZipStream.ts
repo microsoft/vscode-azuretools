@@ -62,12 +62,6 @@ export async function runWithZipStream(context: IActionContext, fsPath: string, 
             zipFile.addFile(fsPath, path.basename(fsPath));
         }
 
-        zipFile.outputStream.on('finish', () => {
-            if (zipFile.outputStreamCursor) {
-                onFileSize(zipFile.outputStreamCursor);
-            }
-        });
-
         zipFile.end();
         zipStream = new Readable().wrap(zipFile.outputStream);
     }
