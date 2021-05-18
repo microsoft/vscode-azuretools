@@ -34,12 +34,14 @@ export async function runWithZipStream(context: IActionContext, fsPath: string, 
         });
     } else {
         ext.outputChannel.appendLog(localize('zipCreate', 'Creating zip package...'), { resourceName: client.fullName });
-        const zipFile: yazl.ZipFile & { outputStreamCursor?: number } = new yazl.ZipFile();
+        const zipFile: yazl.ZipFile = new yazl.ZipFile();
         let filesToZip: string[] = [];
         let sizeOfZipFile: number = 0;
 
         zipFile.outputStream.on('data', (chunk) => {
-            sizeOfZipFile += chunk.length
+            if (Array.isArray(chunk)) {
+                sizeOfZipFile += chunk.length
+            }
         });
 
         zipFile.outputStream.on('finish', () => onFileSize(sizeOfZipFile));
