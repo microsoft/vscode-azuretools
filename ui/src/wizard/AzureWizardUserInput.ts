@@ -165,12 +165,16 @@ export class AzureWizardUserInput implements IWizardUserInput {
         } else {
             const picks: QuickPickItem[] = [];
             for (const group of groups) {
-                picks.push(<types.IAzureQuickPickItem<QuickPickGroup>>{
-                    label: `$(chevron-${group.isCollapsed ? 'right' : 'down'}) ${group.name || ''}`,
-                    data: group
-                });
-                if (!group.isCollapsed) {
+                if (!group.name) {
                     picks.push(...group.picks);
+                } else {
+                    picks.push(<types.IAzureQuickPickItem<QuickPickGroup>>{
+                        label: `$(chevron-${group.isCollapsed ? 'right' : 'down'}) ${group.name}`,
+                        data: group
+                    });
+                    if (!group.isCollapsed) {
+                        picks.push(...group.picks);
+                    }
                 }
             }
             return <TPick[]>picks;
