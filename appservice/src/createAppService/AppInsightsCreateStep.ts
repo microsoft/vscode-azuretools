@@ -6,13 +6,14 @@
 import { ApplicationInsightsManagementClient } from '@azure/arm-appinsights';
 import { ResourceManagementClient, ResourceManagementModels } from '@azure/arm-resources';
 import { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
-import { Progress } from 'vscode';
+import { MessageItem, Progress } from 'vscode';
 import { AzExtLocation, AzureWizardExecuteStep, createGenericClient, IParsedError, LocationListStep, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { createAppInsightsClient, createResourceClient } from '../utils/azureClients';
 import { areLocationNamesEqual } from '../utils/azureUtils';
 import { nonNullProp } from '../utils/nonNull';
+import { AppInsightsListStep } from './AppInsightsListStep';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
@@ -45,8 +46,12 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
                     const createdNewAppInsights: string = localize('createdNewAppInsights', 'Successfully created Application Insights resource "{0}".', aiName);
                     ext.outputChannel.appendLog(createdNewAppInsights);
                 } else if (pError.errorType === 'AuthorizationFailed') {
-                    const createAppInsightsNotAvailable: string = localize('appInsightsNotAvailable', 'Skipping creating an Application Insights because the user doesn\'t have the right permissions.');
-                    ext.outputChannel.appendLog(createAppInsightsNotAvailable);
+                    if (!wizardContext.advancedCreation) {
+                        const createAppInsightsNotAvailable: string = localize('appInsightsNotAvailable', 'Skipping creating an Application Insights because the user doesn\'t have the right permissions.');
+                        ext.outputChannel.appendLog(createAppInsightsNotAvailable);
+                    } else {
+                        await this.selectExistingPrompt(wizardContext);
+                    }
                 } else {
                     throw error;
                 }
@@ -55,6 +60,18 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
             const appInsightsNotAvailable: string = localize('appInsightsNotAvailable', 'Skipping creating an Application Insights resource because it isn\'t compatible with this location.');
             ext.outputChannel.appendLog(appInsightsNotAvailable);
         }
+    }
+
+    public async selectExistingPrompt(wizardContext: IAppServiceWizardContext): Promise<void> {
+        const message: string = localize('planForbidden', 'You do not have permission to create an app insights resource in subscription "{0}".', wizardContext.subscriptionDisplayName);
+        const selectExisting: MessageItem = { title: localize('selectExisting', 'Select Existing') };
+        wizardContext.telemetry.properties.cancelStep = 'AppInsightsNoPermissions';
+        await wizardContext.ui.showWarningMessage(message, { modal: true }, selectExisting);
+
+        wizardContext.telemetry.properties.cancelStep = undefined;
+        wizardContext.telemetry.properties.forbiddenResponse = 'SelectExistingAsp';
+        const step: AppInsightsListStep = new AppInsightsListStep(true /* suppressCreate */);
+        await step.prompt(wizardContext);
     }
 
     public shouldExecute(wizardContext: IAppServiceWizardContext): boolean {
