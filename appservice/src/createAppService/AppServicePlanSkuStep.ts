@@ -56,7 +56,7 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
 
         while (!wizardContext.newPlanSku) {
             const placeHolder = localize('pricingTierPlaceholder', 'Select a pricing tier');
-            wizardContext.newPlanSku = <WebSiteManagementModels.SkuDescription | undefined>(await wizardContext.ui.showQuickPick(pricingTiers, { placeHolder, suppressPersistence: true, enableGrouping: wizardContext.advancedCreation })).data;
+            wizardContext.newPlanSku = (await wizardContext.ui.showQuickPick(pricingTiers, { placeHolder, suppressPersistence: true, enableGrouping: wizardContext.advancedCreation })).data;
 
             if (!wizardContext.newPlanSku) {
                 if (wizardContext.newSiteOS === WebsiteOS.linux) {
