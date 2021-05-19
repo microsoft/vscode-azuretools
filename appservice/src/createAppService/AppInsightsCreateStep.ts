@@ -65,14 +65,21 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
     public async selectExistingPrompt(wizardContext: IAppServiceWizardContext): Promise<void> {
         const message: string = localize('aiForbidden', 'You do not have permission to create an app insights resource in subscription "{0}".', wizardContext.subscriptionDisplayName);
         const selectExisting: MessageItem = { title: localize('selectExisting', 'Select Existing') };
+        const skipForNow: MessageItem = { title: localize('skipForNow', 'Skip for Now') };
         wizardContext.telemetry.properties.cancelStep = 'AppInsightsNoPermissions';
-        await wizardContext.ui.showWarningMessage(message, { modal: true }, selectExisting);
+        const result = await wizardContext.ui.showWarningMessage(message, { modal: true }, selectExisting, skipForNow);
 
-        wizardContext.telemetry.properties.cancelStep = undefined;
-        wizardContext.telemetry.properties.forbiddenResponse = 'SelectExistingAppInsights';
-        const step: AppInsightsListStep = new AppInsightsListStep(true /* suppressCreate */);
-        await step.prompt(wizardContext);
+        if (result === skipForNow) {
+            wizardContext.telemetry.properties.aiSkipForNow = 'true';
+            wizardContext.appInsightsSkip = true;
+        } else {
+            wizardContext.telemetry.properties.cancelStep = undefined;
+            wizardContext.telemetry.properties.forbiddenResponse = 'SelectExistingAppInsights';
+            const step: AppInsightsListStep = new AppInsightsListStep(true /* suppressCreate */);
+            await step.prompt(wizardContext);
+        }
     }
+
 
     public shouldExecute(wizardContext: IAppServiceWizardContext): boolean {
         return !wizardContext.appInsightsComponent && !!wizardContext.newAppInsightsName;
