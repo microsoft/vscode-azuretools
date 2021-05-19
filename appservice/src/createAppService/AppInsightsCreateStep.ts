@@ -47,7 +47,7 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
                     ext.outputChannel.appendLog(createdNewAppInsights);
                 } else if (pError.errorType === 'AuthorizationFailed') {
                     if (!wizardContext.advancedCreation) {
-                        const createAppInsightsNotAvailable: string = localize('appInsightsNotAvailable', 'Skipping creating an Application Insights because the user doesn\'t have the right permissions.');
+                        const createAppInsightsNotAvailable: string = localize('appInsightsNotAvailable', 'Skipping Application Insights resource because you do not have permission to create one in this subscription.');
                         ext.outputChannel.appendLog(createAppInsightsNotAvailable);
                     } else {
                         await this.selectExistingPrompt(wizardContext);
@@ -57,19 +57,19 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
                 }
             }
         } else {
-            const appInsightsNotAvailable: string = localize('appInsightsNotAvailable', 'Skipping creating an Application Insights resource because it isn\'t compatible with this location.');
+            const appInsightsNotAvailable: string = localize('appInsightsNotAvailable', 'Skipping Application Insights resource because it isn\'t compatible with this location.');
             ext.outputChannel.appendLog(appInsightsNotAvailable);
         }
     }
 
     public async selectExistingPrompt(wizardContext: IAppServiceWizardContext): Promise<void> {
-        const message: string = localize('planForbidden', 'You do not have permission to create an app insights resource in subscription "{0}".', wizardContext.subscriptionDisplayName);
+        const message: string = localize('aiForbidden', 'You do not have permission to create an app insights resource in subscription "{0}".', wizardContext.subscriptionDisplayName);
         const selectExisting: MessageItem = { title: localize('selectExisting', 'Select Existing') };
         wizardContext.telemetry.properties.cancelStep = 'AppInsightsNoPermissions';
         await wizardContext.ui.showWarningMessage(message, { modal: true }, selectExisting);
 
         wizardContext.telemetry.properties.cancelStep = undefined;
-        wizardContext.telemetry.properties.forbiddenResponse = 'SelectExistingAsp';
+        wizardContext.telemetry.properties.forbiddenResponse = 'SelectExistingAppInsights';
         const step: AppInsightsListStep = new AppInsightsListStep(true /* suppressCreate */);
         await step.prompt(wizardContext);
     }
