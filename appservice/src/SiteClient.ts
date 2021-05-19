@@ -111,11 +111,15 @@ export class SiteClient {
             await client.webApps.start(this.resourceGroup, this.siteName);
     }
 
-    public async getState(): Promise<string | undefined> {
+    public async getSite(): Promise<Models.Site | undefined> {
         const client: WebSiteManagementClient = await this.createClient();
         return (this.slotName ?
             await tryGetWebAppSlot(client, this.resourceGroup, this.siteName, this.slotName) :
-            await tryGetWebApp(client, this.resourceGroup, this.siteName))?.state;
+            await tryGetWebApp(client, this.resourceGroup, this.siteName));
+    }
+
+    public async getState(): Promise<string | undefined> {
+        return (await this.getSite())?.state;
     }
 
     public async getWebAppPublishCredential(): Promise<Models.User> {
