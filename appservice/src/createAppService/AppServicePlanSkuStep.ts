@@ -16,47 +16,32 @@ type ExtendedSkuDescription = WebSiteManagementModels.SkuDescription & { label?:
 
 export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
-        let recommendedSkus = this.getRecommendedSkus();
+        let skus: ExtendedSkuDescription[] = wizardContext.advancedCreation ? this.getRecommendedSkus().concat(this.getAdvancedSkus()) : this.getRecommendedSkus();
+        if (wizardContext.newSiteKind === AppKind.functionapp) {
+            skus.push(...this.getElasticPremiumSkus());
+        } else if (wizardContext.newSiteKind?.includes(AppKind.workflowapp)) {
+            skus = this.getWorkflowStandardSkus();
+        }
+
         const regExp: RegExp | undefined = wizardContext.planSkuFamilyFilter;
         if (regExp) {
-            recommendedSkus = recommendedSkus.filter(s => !s.family || regExp.test(s.family));
+            skus = skus.filter(s => !s.family || regExp.test(s.family));
         }
-        const pricingTiers: IAzureQuickPickItem<WebSiteManagementModels.SkuDescription | undefined>[] = recommendedSkus.map(s => {
+
+        const pricingTiers: IAzureQuickPickItem<WebSiteManagementModels.SkuDescription | undefined>[] = skus.map(s => {
             return {
                 label: s.label || nonNullProp(s, 'name'),
                 description: s.description || s.tier,
                 data: s,
-                group: localize('recommendedSkusLabel', 'Recommended')
+                group: s.label && s.description ? localize('recommendedLabel', 'Recommended') : localize('additionalOptionsLabel', 'Additional Options')
             };
         });
-
-        let advancedSkus: ExtendedSkuDescription[] = [];
-        if (wizardContext.advancedCreation) {
-            advancedSkus.push(...this.getAdvancedSkus());
-            if (regExp) {
-                advancedSkus = advancedSkus.filter(s => !s.family || regExp.test(s.family));
-            }
-            if (wizardContext.newSiteKind === AppKind.functionapp) {
-                advancedSkus.push(...this.getElasticPremiumSkus());
-            } else if (wizardContext.newSiteKind?.includes(AppKind.workflowapp)) {
-                advancedSkus = this.getWorkflowStandardSkus();
-            }
-
-            pricingTiers.push(...advancedSkus.map(s => {
-                return {
-                    label: s.label || nonNullProp(s, 'name'),
-                    description: s.description || s.tier,
-                    data: s,
-                    group: localize('additionalOptionsLabel', 'Additional Options'),
-                };
-            }));
-        }
 
         pricingTiers.push({ label: localize('ShowPricingCalculator', '$(link-external) Show pricing information...'), data: undefined, suppressPersistence: true });
 
         while (!wizardContext.newPlanSku) {
             const placeHolder = localize('pricingTierPlaceholder', 'Select a pricing tier');
-            wizardContext.newPlanSku = <WebSiteManagementModels.SkuDescription | undefined>(await wizardContext.ui.showQuickPick(pricingTiers, { placeHolder, suppressPersistence: true, enableGrouping: wizardContext.advancedCreation })).data;
+            wizardContext.newPlanSku = (await wizardContext.ui.showQuickPick(pricingTiers, { placeHolder, suppressPersistence: true, enableGrouping: wizardContext.advancedCreation })).data;
 
             if (!wizardContext.newPlanSku) {
                 if (wizardContext.newSiteOS === WebsiteOS.linux) {
