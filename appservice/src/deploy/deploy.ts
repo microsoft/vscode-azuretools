@@ -5,13 +5,13 @@
 
 import { WebSiteManagementModels } from '@azure/arm-appservice';
 import * as fse from 'fs-extra';
-import * as path from 'path';
 import { ProgressLocation, window } from 'vscode';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { ScmType } from '../ScmType';
 import { SiteClient } from '../SiteClient';
 import { randomUtils } from '../utils/randomUtils';
+import { deployJar } from './deployJar';
 import { deployToStorageAccount } from './deployToStorageAccount';
 import { deployWar } from './deployWar';
 import { deployZip } from './deployZip';
@@ -85,13 +85,7 @@ export async function deploy(client: SiteClient, fsPath: string, context: IDeplo
                 if (javaRuntime && /^(tomcat|wildfly|jboss)/i.test(javaRuntime)) {
                     await deployWar(context, client, fsPath);
                 } else if (javaRuntime && /^java/i.test(javaRuntime)) {
-                    // For Java SE runtime, need rename the artifact to app.jar
-                    let javaArtifact: string = fsPath;
-                    if (path.basename(javaArtifact) !== "app.jar") {
-                        javaArtifact = path.join(await fse.mkdtemp("app-service"), "app.jar");
-                        await fse.copyFile(fsPath, javaArtifact);
-                    }
-                    await deployZip(context, client, javaArtifact, aspPromise);
+                    await deployJar(context, client, fsPath, aspPromise);
                 } else if (context.deployMethod === 'storage') {
                     await deployToStorageAccount(context, fsPath, client);
                 } else {
