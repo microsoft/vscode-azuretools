@@ -47,8 +47,8 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
                     ext.outputChannel.appendLog(createdNewAppInsights);
                 } else if (pError.errorType === 'AuthorizationFailed') {
                     if (!wizardContext.advancedCreation) {
-                        const createAppInsightsNotAvailable: string = localize('appInsightsNotAvailable', 'Skipping Application Insights resource because you do not have permission to create one in this subscription.');
-                        ext.outputChannel.appendLog(createAppInsightsNotAvailable);
+                        const appInsightsNotAuthorized: string = localize('appInsightsNotAuthorized', 'Skipping Application Insights resource because you do not have permission to create one in this subscription.');
+                        ext.outputChannel.appendLog(appInsightsNotAuthorized);
                     } else {
                         await this.selectExistingPrompt(wizardContext);
                     }
@@ -68,12 +68,12 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
         const skipForNow: MessageItem = { title: localize('skipForNow', 'Skip for Now') };
         wizardContext.telemetry.properties.cancelStep = 'AppInsightsNoPermissions';
         const result = await wizardContext.ui.showWarningMessage(message, { modal: true }, selectExisting, skipForNow);
-
+        wizardContext.telemetry.properties.cancelStep = undefined;
         if (result === skipForNow) {
             wizardContext.telemetry.properties.aiSkipForNow = 'true';
             wizardContext.appInsightsSkip = true;
+            wizardContext.telemetry.properties.forbiddenResponse = 'SkipAppInsights';
         } else {
-            wizardContext.telemetry.properties.cancelStep = undefined;
             wizardContext.telemetry.properties.forbiddenResponse = 'SelectExistingAppInsights';
             const step: AppInsightsListStep = new AppInsightsListStep(true /* suppressCreate */);
             await step.prompt(wizardContext);
