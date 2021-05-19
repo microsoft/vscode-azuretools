@@ -81,10 +81,10 @@ export async function deploy(client: SiteClient, fsPath: string, context: IDeplo
                 if (!(await fse.pathExists(fsPath))) {
                     throw new Error(localize('pathNotExist', 'Failed to deploy path that does not exist: {0}', fsPath));
                 }
-                const javaRutime = client.isLinux ? config.linuxFxVersion : config.javaContainer;
-                if (javaRutime && /^(tomcat|wildfly|jboss)/i.test(javaRutime)) {
+                const javaRuntime = client.isLinux ? config.linuxFxVersion : config.javaContainer;
+                if (javaRuntime && /^(tomcat|wildfly|jboss)/i.test(javaRuntime)) {
                     await deployWar(context, client, fsPath);
-                } else if (javaRutime && /^java/i.test(javaRutime)) {
+                } else if (javaRuntime && /^java/i.test(javaRuntime)) {
                     // For Java SE runtime, need rename the artifact to app.jar
                     let javaArtifact: string = fsPath;
                     if (path.basename(javaArtifact) !== "app.jar") {
