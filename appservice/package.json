@@ -49,7 +49,7 @@
         "portfinder": "^1.0.25",
         "pretty-bytes": "^5.3.0",
         "simple-git": "1.132.0",
-        "vscode-azureextensionui": "^0.43.3",
+        "vscode-azureextensionui": "^0.43.6",
         "vscode-azurekudu": "^0.2.0",
         "vscode-nls": "^4.1.1",
         "websocket": "^1.0.31",

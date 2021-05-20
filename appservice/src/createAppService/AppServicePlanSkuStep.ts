@@ -12,7 +12,7 @@ import { AppKind, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 import { setLocationsTask } from './setLocationsTask';
 
-type ExtendedSkuDescription = WebSiteManagementModels.SkuDescription & { label?: string; description?: string }
+type ExtendedSkuDescription = WebSiteManagementModels.SkuDescription & { label?: string; description?: string; group?: string }
 
 export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
@@ -32,7 +32,8 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
             return {
                 label: s.label || nonNullProp(s, 'name'),
                 description: s.description || s.tier,
-                data: s
+                data: s,
+                group: s.group || localize('additionalOptionsLabel', 'Additional Options')
             };
         });
 
@@ -40,7 +41,7 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
 
         while (!wizardContext.newPlanSku) {
             const placeHolder = localize('pricingTierPlaceholder', 'Select a pricing tier');
-            wizardContext.newPlanSku = (await wizardContext.ui.showQuickPick(pricingTiers, { placeHolder, suppressPersistence: true })).data;
+            wizardContext.newPlanSku = (await wizardContext.ui.showQuickPick(pricingTiers, { placeHolder, suppressPersistence: true, enableGrouping: wizardContext.advancedCreation })).data;
 
             if (!wizardContext.newPlanSku) {
                 if (wizardContext.newSiteOS === WebsiteOS.linux) {
@@ -59,6 +60,7 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
     }
 
     private getRecommendedSkus(): ExtendedSkuDescription[] {
+        const recommendedGroup: string = localize('recommendedGroup', 'Recommended');
         return [
             {
                 name: 'F1',
@@ -66,8 +68,9 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
                 size: 'F1',
                 family: 'F',
                 capacity: 1,
-                label: localize('freeLabel', 'Free'),
-                description: localize('freeDescription', 'Try out Azure at no cost')
+                label: localize('freeLabel', 'Free (F1)'),
+                description: localize('freeDescription', 'Try out Azure at no cost'),
+                group: recommendedGroup
             },
             {
                 name: 'B1',
@@ -75,8 +78,9 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
                 size: 'B1',
                 family: 'B',
                 capacity: 1,
-                label: localize('basicLabel', 'Basic'),
-                description: localize('basicDescription', 'Develop and test')
+                label: localize('basicLabel', 'Basic (B1)'),
+                description: localize('basicDescription', 'Develop and test'),
+                group: recommendedGroup
             },
             {
                 name: 'P1v2',
@@ -84,21 +88,15 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
                 size: 'P1v2',
                 family: 'Pv2',
                 capacity: 1,
-                label: localize('premiumLabel', 'Premium'),
-                description: localize('premiumDescription', 'Use in production')
+                label: localize('premiumLabel', 'Premium (P1v2)'),
+                description: localize('premiumDescription', 'Use in production'),
+                group: recommendedGroup
             }
         ];
     }
 
     private getAdvancedSkus(): WebSiteManagementModels.SkuDescription[] {
         return [
-            {
-                name: 'B1',
-                tier: 'Basic',
-                size: 'B1',
-                family: 'B',
-                capacity: 1
-            },
             {
                 name: 'B2',
                 tier: 'Basic',
@@ -132,13 +130,6 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
                 tier: 'Standard',
                 size: 'S3',
                 family: 'S',
-                capacity: 1
-            },
-            {
-                name: 'P1v2',
-                tier: 'Premium V2',
-                size: 'P1v2',
-                family: 'Pv2',
                 capacity: 1
             },
             {
