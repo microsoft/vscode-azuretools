@@ -88,7 +88,7 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
                 size: 'P1v2',
                 family: 'Pv2',
                 capacity: 1,
-                label: localize('premiumLabel', 'Premium (P1V2)'),
+                label: localize('premiumLabel', 'Premium (P1v2)'),
                 description: localize('premiumDescription', 'Use in production'),
                 group: recommendedGroup
             }
