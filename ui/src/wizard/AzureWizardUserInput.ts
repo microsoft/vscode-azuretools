@@ -114,7 +114,7 @@ export class AzureWizardUserInput implements IWizardUserInput {
                 try {
                     quickPick.items = await this.initializePicks<TPick>(picks, options, groups);
 
-                    if (groups.length > 0) {
+                    if (this.shouldDisplayGroups(groups)) {
                         // If grouping is enabled, make the first actual pick active by default, rather than the group label pick
                         quickPick.activeItems = [<TPick>groups[0].picks[0]];
                     }
@@ -159,11 +159,8 @@ export class AzureWizardUserInput implements IWizardUserInput {
     }
 
     private getGroupedPicks<TPick extends QuickPickItem>(groups: QuickPickGroup[]): TPick[] {
-        if (groups.length === 1) {
-            // No point in grouping if there's only one group
-            return <TPick[]>groups[0].picks;
-        } else {
-            const picks: QuickPickItem[] = [];
+        let picks: QuickPickItem[] = [];
+        if (this.shouldDisplayGroups(groups)) {
             for (const group of groups) {
                 if (!group.name) {
                     picks.push(...group.picks);
@@ -177,8 +174,14 @@ export class AzureWizardUserInput implements IWizardUserInput {
                     }
                 }
             }
-            return <TPick[]>picks;
+        } else {
+            picks = picks.concat(...groups.map(g => g.picks));
         }
+        return <TPick[]>picks;
+    }
+
+    private shouldDisplayGroups(groups: QuickPickGroup[]): boolean {
+        return groups.filter(g => g.name).length > 1;
     }
 
     public async showInputBox(options: InputBoxOptions): Promise<string> {
