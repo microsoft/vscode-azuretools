@@ -39,7 +39,7 @@ export async function runWithZipStream(context: IActionContext, fsPath: string, 
         let sizeOfZipFile: number = 0;
 
         zipFile.outputStream.on('data', (chunk) => {
-            if (Array.isArray(chunk)) {
+            if (typeof chunk === 'string' || Buffer.isBuffer(chunk)) {
                 sizeOfZipFile += chunk.length;
             }
         });
