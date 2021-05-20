@@ -6,13 +6,14 @@
 import { ApplicationInsightsManagementClient } from '@azure/arm-appinsights';
 import { ResourceManagementClient, ResourceManagementModels } from '@azure/arm-resources';
 import { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
-import { Progress } from 'vscode';
+import { MessageItem, Progress } from 'vscode';
 import { AzExtLocation, AzureWizardExecuteStep, createGenericClient, IParsedError, LocationListStep, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { createAppInsightsClient, createResourceClient } from '../utils/azureClients';
 import { areLocationNamesEqual } from '../utils/azureUtils';
 import { nonNullProp } from '../utils/nonNull';
+import { AppInsightsListStep } from './AppInsightsListStep';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
@@ -44,15 +45,41 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
                     wizardContext.appInsightsComponent = await client.components.createOrUpdate(rgName, aiName, { kind: 'web', applicationType: 'web', location: appInsightsLocation });
                     const createdNewAppInsights: string = localize('createdNewAppInsights', 'Successfully created Application Insights resource "{0}".', aiName);
                     ext.outputChannel.appendLog(createdNewAppInsights);
+                } else if (pError.errorType === 'AuthorizationFailed') {
+                    if (!wizardContext.advancedCreation) {
+                        const appInsightsNotAuthorized: string = localize('appInsightsNotAuthorized', 'Skipping Application Insights resource because you do not have permission to create one in this subscription.');
+                        ext.outputChannel.appendLog(appInsightsNotAuthorized);
+                    } else {
+                        await this.selectExistingPrompt(wizardContext);
+                    }
                 } else {
                     throw error;
                 }
             }
         } else {
-            const appInsightsNotAvailable: string = localize('appInsightsNotAvailable', 'Skipping creating an Application Insights resource because it isn\'t compatible with this location.');
+            const appInsightsNotAvailable: string = localize('appInsightsNotAvailable', 'Skipping Application Insights resource because it isn\'t compatible with this location.');
             ext.outputChannel.appendLog(appInsightsNotAvailable);
         }
     }
+
+    public async selectExistingPrompt(wizardContext: IAppServiceWizardContext): Promise<void> {
+        const message: string = localize('aiForbidden', 'You do not have permission to create an app insights resource in subscription "{0}".', wizardContext.subscriptionDisplayName);
+        const selectExisting: MessageItem = { title: localize('selectExisting', 'Select Existing') };
+        const skipForNow: MessageItem = { title: localize('skipForNow', 'Skip for Now') };
+        wizardContext.telemetry.properties.cancelStep = 'AppInsightsNoPermissions';
+        const result = await wizardContext.ui.showWarningMessage(message, { modal: true }, selectExisting, skipForNow);
+        wizardContext.telemetry.properties.cancelStep = undefined;
+        if (result === skipForNow) {
+            wizardContext.telemetry.properties.aiSkipForNow = 'true';
+            wizardContext.appInsightsSkip = true;
+            wizardContext.telemetry.properties.forbiddenResponse = 'SkipAppInsights';
+        } else {
+            wizardContext.telemetry.properties.forbiddenResponse = 'SelectExistingAppInsights';
+            const step: AppInsightsListStep = new AppInsightsListStep(true /* suppressCreate */);
+            await step.prompt(wizardContext);
+        }
+    }
+
 
     public shouldExecute(wizardContext: IAppServiceWizardContext): boolean {
         return !wizardContext.appInsightsComponent && !!wizardContext.newAppInsightsName;
