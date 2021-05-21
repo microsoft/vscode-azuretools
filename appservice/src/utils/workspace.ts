@@ -8,7 +8,7 @@ import * as vscode from 'vscode';
 import { IActionContext, IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { localize } from '../localize';
 
-export async function selectWorkspaceFolder(context: IActionContext, placeHolder: string, suggestions?: IAzureQuickPickItem<string>[]): Promise<string> {
+export async function selectWorkspaceFolder(context: IActionContext, placeHolder: string, quickPicks?: IAzureQuickPickItem<string>[]): Promise<string> {
     return await selectWorkspaceItem(
         context,
         placeHolder,
@@ -18,10 +18,10 @@ export async function selectWorkspaceFolder(context: IActionContext, placeHolder
             canSelectMany: false,
             defaultUri: vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0 ? vscode.workspace.workspaceFolders[0].uri : undefined,
             openLabel: localize('select', 'Select')
-        }, suggestions);
+        }, quickPicks);
 }
 
-export async function selectWorkspaceFile(context: IActionContext, placeHolder: string, fileExtensions?: string[], suggestions?: IAzureQuickPickItem<string>[]): Promise<string> {
+export async function selectWorkspaceFile(context: IActionContext, placeHolder: string, fileExtensions?: string[], quickPicks?: IAzureQuickPickItem<string>[]): Promise<string> {
     const filters: { [name: string]: string[] } = {};
     if (fileExtensions) {
         filters.Artifacts = fileExtensions;
@@ -36,23 +36,23 @@ export async function selectWorkspaceFile(context: IActionContext, placeHolder: 
             openLabel: localize('select', 'Select'),
             filters: filters
         },
-        suggestions);
+        quickPicks);
 }
 
 export async function selectWorkspaceItem(context: IActionContext, placeHolder: string, options: vscode.OpenDialogOptions,
-    suggestions?: IAzureQuickPickItem<string | undefined>[]): Promise<string> {
-    let folder: IAzureQuickPickItem<string | undefined> | undefined;
+    quickPicks?: IAzureQuickPickItem<string | undefined>[]): Promise<string> {
+    let fileOrFolder: IAzureQuickPickItem<string | undefined> | undefined;
     if (vscode.workspace.workspaceFolders) {
-        const defaultSuggestions: IAzureQuickPickItem<string | undefined>[] = await Promise.all(vscode.workspace.workspaceFolders.map((f: vscode.WorkspaceFolder) => {
+        const defaultQuickPicks: IAzureQuickPickItem<string | undefined>[] = await Promise.all(vscode.workspace.workspaceFolders.map((f: vscode.WorkspaceFolder) => {
             return { label: path.basename(f.uri.fsPath), description: f.uri.fsPath, data: f.uri.fsPath };
         }));
-        suggestions = suggestions?.length ? suggestions : defaultSuggestions;
-        const fileChooser = { label: localize('azFunc.browse', '$(file-directory) Browse...'), description: '', data: undefined };
-        folder = await context.ui.showQuickPick([...suggestions, fileChooser], { placeHolder });
+        quickPicks = quickPicks?.length ? quickPicks : defaultQuickPicks;
+        const fileOrFolderPick = { label: localize('azFunc.browse', '$(file-directory) Browse...'), description: '', data: undefined };
+        fileOrFolder = await context.ui.showQuickPick([...quickPicks, fileOrFolderPick], { placeHolder });
     }
 
-    if (folder?.data) {
-        return folder.data;
+    if (fileOrFolder?.data) {
+        return fileOrFolder.data;
     } else {
         context.telemetry.properties.browse = 'true';
         return (await context.ui.showOpenDialog(options))[0].fsPath;
