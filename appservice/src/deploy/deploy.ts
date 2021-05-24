@@ -38,6 +38,7 @@ export async function deploy(client: SiteClient, fsPath: string, context: IDeplo
         context.telemetry.properties.hasCors = config.cors ? 'true' : 'false';
         context.telemetry.properties.hasIpSecurityRestrictions = config.ipSecurityRestrictions && config.ipSecurityRestrictions.length > 0 ? 'true' : 'false';
         context.telemetry.properties.javaVersion = String(config.javaVersion);
+        context.telemetry.properties.siteKind = client.kind;
         client.getState().then(
             (state: string) => {
                 context.telemetry.properties.state = state;
