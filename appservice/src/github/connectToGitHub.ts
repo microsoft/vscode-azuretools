@@ -166,6 +166,7 @@ export async function getGitHubQuickPicksWithLoadMore<T>(context: IConnectToGitH
     do {
         const [result, nextLink]: [T[], string | undefined] = await getGitHubJsonResponse<T[]>(context, url);
         gitHubQuickPicks = gitHubQuickPicks.concat(result);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         url = nextLink;
     } while (url && startTime + timeoutMs > Date.now());
 
