@@ -17,7 +17,7 @@ import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { getFileExtension } from '../utils/pathUtils';
 
-export async function runWithZipStream(context: IActionContext, fsPath: string, client: SiteClient, callback: (zipStream: Readable) => Promise<void>): Promise<void> {
+export async function runWithZipStream(context: IActionContext, fsPath: string, client: SiteClient, callback: (zipStream: Readable) => Promise<void>, zipFileMetadata?: Map<string, string>): Promise<void> {
     function onFileSize(size: number): void {
         context.telemetry.measurements.zipFileSize = size;
         ext.outputChannel.appendLog(localize('zipSize', 'Zip package size: {0}', prettybytes(size)), { resourceName: client.fullName });
@@ -49,10 +49,10 @@ export async function runWithZipStream(context: IActionContext, fsPath: string, 
             }
 
             for (const file of filesToZip) {
-                zipFile.addFile(path.join(fsPath, file), file);
+                zipFile.addFile(path.join(fsPath, file), getMetadataPathForFile(file, zipFileMetadata));
             }
         } else {
-            zipFile.addFile(fsPath, path.basename(fsPath));
+            zipFile.addFile(fsPath, getMetadataPathForFile(path.basename(fsPath), zipFileMetadata));
         }
 
         zipFile.end();
@@ -60,6 +60,10 @@ export async function runWithZipStream(context: IActionContext, fsPath: string, 
     }
 
     await callback(zipStream);
+}
+
+function getMetadataPathForFile(originMetadataPath: string, zipFileMetadata?: Map<string, string>): string {
+    return zipFileMetadata?.get(originMetadataPath) || originMetadataPath;
 }
 
 const commonGlobSettings: {} = {

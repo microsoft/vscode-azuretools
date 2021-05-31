@@ -11,7 +11,7 @@ import { localize } from '../localize';
 import { ScmType } from '../ScmType';
 import { SiteClient } from '../SiteClient';
 import { randomUtils } from '../utils/randomUtils';
-import { deployJar } from './deployJar';
+import * as path from 'path';
 import { deployToStorageAccount } from './deployToStorageAccount';
 import { deployWar } from './deployWar';
 import { deployZip } from './deployZip';
@@ -85,7 +85,10 @@ export async function deploy(client: SiteClient, fsPath: string, context: IDeplo
                 if (javaRuntime && /^(tomcat|wildfly|jboss)/i.test(javaRuntime)) {
                     await deployWar(context, client, fsPath);
                 } else if (javaRuntime && /^java/i.test(javaRuntime)) {
-                    await deployJar(context, client, fsPath, aspPromise);
+                    const metadata = new Map<string, string>([
+                        [path.basename(fsPath), 'app.jar']
+                    ]);
+                    await deployZip(context, client, fsPath, aspPromise, metadata);
                 } else if (context.deployMethod === 'storage') {
                     await deployToStorageAccount(context, fsPath, client);
                 } else {
