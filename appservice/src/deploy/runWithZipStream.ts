@@ -17,13 +17,22 @@ import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { getFileExtension } from '../utils/pathUtils';
 
-export async function runWithZipStream(context: IActionContext, fsPath: string, client: SiteClient, callback: (zipStream: Readable) => Promise<void>, zipFileMetadata?: Map<string, string>): Promise<void> {
+export async function runWithZipStream(context: IActionContext, options: {
+    fsPath: string,
+    client: SiteClient,
+    pathFileMap?: Map<string, string>
+    callback: (zipStream: Readable) => Promise<void>
+}): Promise<void> {
+
     function onFileSize(size: number): void {
         context.telemetry.measurements.zipFileSize = size;
         ext.outputChannel.appendLog(localize('zipSize', 'Zip package size: {0}', prettybytes(size)), { resourceName: client.fullName });
     }
 
     let zipStream: Readable;
+    const { client, pathFileMap, callback } = options;
+    let { fsPath } = options;
+
     if (getFileExtension(fsPath) === 'zip') {
         context.telemetry.properties.alreadyZipped = 'true';
         zipStream = fse.createReadStream(fsPath);
@@ -58,10 +67,10 @@ export async function runWithZipStream(context: IActionContext, fsPath: string, 
             }
 
             for (const file of filesToZip) {
-                zipFile.addFile(path.join(fsPath, file), getMetadataPathForFile(file, zipFileMetadata));
+                zipFile.addFile(path.join(fsPath, file), getPathFromMap(file, pathFileMap));
             }
         } else {
-            zipFile.addFile(fsPath, getMetadataPathForFile(path.basename(fsPath), zipFileMetadata));
+            zipFile.addFile(fsPath, getPathFromMap(path.basename(fsPath), pathFileMap));
         }
 
         zipFile.end();
@@ -71,8 +80,8 @@ export async function runWithZipStream(context: IActionContext, fsPath: string, 
     await callback(zipStream);
 }
 
-function getMetadataPathForFile(originMetadataPath: string, zipFileMetadata?: Map<string, string>): string {
-    return zipFileMetadata?.get(originMetadataPath) || originMetadataPath;
+function getPathFromMap(realPath: string, pathfileMap?: Map<string, string>): string {
+    return pathfileMap?.get(realPath) || realPath;
 }
 
 const commonGlobSettings: {} = {

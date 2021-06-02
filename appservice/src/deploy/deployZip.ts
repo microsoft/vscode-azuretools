@@ -11,12 +11,15 @@ import { IDeployContext } from './IDeployContext';
 import { runWithZipStream } from './runWithZipStream';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
-export async function deployZip(context: IDeployContext, client: SiteClient, fsPath: string, aspPromise: Promise<WebSiteManagementModels.AppServicePlan | undefined>, zipFileMetadata?: Map<string, string>): Promise<void> {
+export async function deployZip(context: IDeployContext, client: SiteClient, fsPath: string, aspPromise: Promise<WebSiteManagementModels.AppServicePlan | undefined>, pathFileMap?: Map<string, string>): Promise<void> {
     const kuduClient = await createKuduClient(context, client);
 
-    await runWithZipStream(context, fsPath, client, async zipStream => {
-        await kuduClient.pushDeployment.zipPushDeploy(() => zipStream, { isAsync: true, author: 'VS Code' });
-    }, zipFileMetadata);
+    await runWithZipStream(context, {
+        fsPath, client, pathFileMap,
+        callback: async zipStream => {
+            await kuduClient.pushDeployment.zipPushDeploy(() => zipStream, { isAsync: true, author: 'VS Code' });
+        }
+    });
 
     await waitForDeploymentToComplete(context, client);
 
