@@ -9,8 +9,24 @@ import { ext } from "./extensionVariables";
 import { nonNullValue } from "./utils/nonNull";
 import { randomUtils } from "./utils/randomUtils";
 
-let contentProvider: ReadOnlyContentProvider | undefined;
-const scheme: string = 'azureextensionuiReadonly';
+
+let _cachedScheme: string | undefined;
+function getScheme(): string {
+    if (!_cachedScheme) {
+        // Generate a unique scheme so that multiple extensions using this same code don't conflict with each other
+        _cachedScheme = `azuretools${randomUtils.getRandomHexString(6)}`;
+    }
+    return _cachedScheme;
+}
+
+let _cachedContentProvider: ReadOnlyContentProvider | undefined;
+function getContentProvider(): ReadOnlyContentProvider {
+    if (!_cachedContentProvider) {
+        _cachedContentProvider = new ReadOnlyContentProvider();
+        ext.context.subscriptions.push(workspace.registerTextDocumentContentProvider(getScheme(), _cachedContentProvider));
+    }
+    return _cachedContentProvider;
+}
 
 export async function openReadOnlyJson(node: { label: string, fullId: string }, data: {}): Promise<void> {
     let tab: string = '	';
@@ -30,11 +46,7 @@ export async function openReadOnlyJson(node: { label: string, fullId: string }, 
 }
 
 export async function openReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string, options?: TextDocumentShowOptions): Promise<ReadOnlyContent> {
-    if (!contentProvider) {
-        contentProvider = new ReadOnlyContentProvider();
-        ext.context.subscriptions.push(workspace.registerTextDocumentContentProvider(scheme, contentProvider));
-    }
-
+    const contentProvider = getContentProvider();
     return await contentProvider.openReadOnlyContent(node, content, fileExtension, options);
 }
 
@@ -73,9 +85,10 @@ class ReadOnlyContentProvider implements TextDocumentContentProvider {
     }
 
     public async openReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string, options?: TextDocumentShowOptions): Promise<ReadOnlyContent> {
+        const scheme = getScheme();
         const idHash: string = randomUtils.getPseudononymousStringHash(node.fullId, 'hex');
-        // in a URI, # means fragment and ? means query and is parsed in that way, so they should be removed to not break the path
-        const uri: Uri = Uri.parse(`${scheme}:///${idHash}/${node.label.replace(/\#|\?/g, '_')}${fileExtension}`);
+        const fileName = node.label.replace(/[^a-z0-9]/gi, '_'); // Remove special characters which may prove troublesome when parsing the uri
+        const uri: Uri = Uri.parse(`${scheme}:///${idHash}/${fileName}${fileExtension}`);
         const readOnlyContent: ReadOnlyContent = new ReadOnlyContent(uri, this._onDidChangeEmitter, content);
         this._contentMap.set(uri.toString(), readOnlyContent);
         await window.showTextDocument(uri, options);
