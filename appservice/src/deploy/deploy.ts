@@ -82,14 +82,15 @@ export async function deploy(client: SiteClient, fsPath: string, context: IDeplo
                 if (!(await fse.pathExists(fsPath))) {
                     throw new Error(localize('pathNotExist', 'Failed to deploy path that does not exist: {0}', fsPath));
                 }
+
                 const javaRuntime = client.isLinux ? config.linuxFxVersion : config.javaContainer;
                 if (javaRuntime && /^(tomcat|wildfly|jboss)/i.test(javaRuntime)) {
                     await deployWar(context, client, fsPath);
                 } else if (javaRuntime && /^java/i.test(javaRuntime)) {
-                    const metadata = new Map<string, string>([
+                    const pathFileMap = new Map<string, string>([
                         [path.basename(fsPath), 'app.jar']
                     ]);
-                    await deployZip(context, client, fsPath, aspPromise, metadata);
+                    await deployZip(context, client, fsPath, aspPromise, pathFileMap);
                 } else if (context.deployMethod === 'storage') {
                     await deployToStorageAccount(context, fsPath, client);
                 } else {
