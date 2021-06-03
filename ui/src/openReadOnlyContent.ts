@@ -87,7 +87,8 @@ class ReadOnlyContentProvider implements TextDocumentContentProvider {
     public async openReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string, options?: TextDocumentShowOptions): Promise<ReadOnlyContent> {
         const scheme = getScheme();
         const idHash: string = randomUtils.getPseudononymousStringHash(node.fullId, 'hex');
-        const fileName = node.label.replace(/[^a-z0-9]/gi, '_'); // Remove special characters which may prove troublesome when parsing the uri
+        // Remove special characters which may prove troublesome when parsing the uri. We'll allow the same set as `encodeUriComponent`
+        const fileName = node.label.replace(/[^a-z0-9\-\_\.\!\~\*\'\(\)]/gi, '_');
         const uri: Uri = Uri.parse(`${scheme}:///${idHash}/${fileName}${fileExtension}`);
         const readOnlyContent: ReadOnlyContent = new ReadOnlyContent(uri, this._onDidChangeEmitter, content);
         this._contentMap.set(uri.toString(), readOnlyContent);
