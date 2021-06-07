@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IActionContext } from '..';
@@ -30,7 +29,7 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
     public async showEditor(context: ContextT, sizeLimit?: number /* in Megabytes */): Promise<void> {
         const fileName: string = await this.getFilename(context);
         const resourceName: string = await this.getResourceName(context);
-        this.appendLineToOutput(localize('opening', 'Opening "{0}"...', fileName), {resourceName: resourceName});
+        this.appendLineToOutput(localize('opening', 'Opening "{0}"...', fileName), { resourceName: resourceName });
         if (sizeLimit !== undefined) {
             const size: number = await this.getSize(context);
             if (size > sizeLimit) {
@@ -57,7 +56,7 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
 
     public async dispose(): Promise<void> {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        Object.keys(this.fileMap).forEach(async (key: string) => await fse.remove(path.dirname(key)));
+        Object.keys(this.fileMap).forEach(async key => await vscode.workspace.fs.delete(this.fileMap[key][0].uri));
     }
 
     public async onDidSaveTextDocument(actionContext: IActionContext, globalState: vscode.Memento, doc: vscode.TextDocument): Promise<void> {
@@ -90,9 +89,9 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
     private async updateRemote(context: ContextT, doc: vscode.TextDocument): Promise<void> {
         const filename: string = await this.getFilename(context);
         const resourceName: string = await this.getResourceName(context);
-        this.appendLineToOutput(localize('updating', 'Updating "{0}" ...', filename), {resourceName: resourceName});
+        this.appendLineToOutput(localize('updating', 'Updating "{0}" ...', filename), { resourceName: resourceName });
         const updatedData: string = await this.updateData(context, doc.getText());
-        this.appendLineToOutput(localize('done', 'Updated "{0}".', filename), {resourceName: resourceName});
+        this.appendLineToOutput(localize('done', 'Updated "{0}".', filename), { resourceName: resourceName });
         if (doc.isClosed !== true) {
             const visibleDocument: vscode.TextEditor | undefined = vscode.window.visibleTextEditors.find((ed) => ed.document === doc);
             if (visibleDocument) {

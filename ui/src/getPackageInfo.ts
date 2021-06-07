@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as fse from 'fs-extra';
-import { ExtensionContext } from "vscode";
+import { ExtensionContext, workspace } from "vscode";
 import { ext } from "./extensionVariables";
 
 interface IPackageInfo {
@@ -22,7 +22,7 @@ export function getPackageInfo(ctx?: ExtensionContext): IPackageInfo {
         if (!ctx) {
             ctx = ext.context;
         }
-
+        workspace.fs
         const packageJson: IPackageJson = <IPackageJson>fse.readJsonSync(ctx.asAbsolutePath('package.json'));
 
         const extensionName: string | undefined = packageJson.name;
