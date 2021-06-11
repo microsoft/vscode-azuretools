@@ -7,7 +7,7 @@ import { ResourceManagementModels } from '@azure/arm-resources';
 import { StorageManagementModels } from '@azure/arm-storage';
 import { Environment } from '@azure/ms-rest-azure-env';
 import { HttpOperationResponse, RequestPrepareOptions, ServiceClient } from '@azure/ms-rest-js';
-import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocument, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
+import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 
@@ -493,51 +493,6 @@ export declare function openInPortal(root: ISubscriptionContext | AzExtTreeItem,
 export declare class UserCancelledError extends Error { }
 
 export declare class NoResourceFoundError extends Error { }
-
-/**
- * @deprecated Use `AzExtTreeFileSystem` instead
- */
-export declare abstract class BaseEditor<ContextT> implements Disposable {
-    /**
-    * Implement this interface if you need to download and upload remote files
-    * @param showSavePromptKey Key used globally by VS Code to determine whether or not to show the savePrompt
-    */
-    constructor(showSavePromptKey: string);
-
-    /**
-     * Implement this to retrieve data from your remote server, returns the file as a string
-     */
-    abstract getData(context: ContextT): Promise<string>;
-
-    /**
-     * Implement this to allow for remote updating
-     */
-    abstract updateData(context: ContextT, data: string): Promise<string>;
-
-    /**
-     * Implement this to return the file name from the remote
-     */
-    abstract getFilename(context: ContextT): Promise<string>;
-
-    /**
-     * Implement this to return the resource name from the remote
-     */
-    abstract getResourceName(context: ContextT): Promise<string>;
-
-    /**
-     * Implement this to return the size in MB.
-     */
-    abstract getSize(context: ContextT): Promise<number>;
-
-    /**
-     * Implement this to edit what is displayed to the user when uploading the file to the remote
-     */
-    abstract getSaveConfirmationText(context: ContextT): Promise<string>;
-
-    onDidSaveTextDocument(actionContext: IActionContext, globalState: Memento, doc: TextDocument): Promise<void>;
-    showEditor(context: ContextT, sizeLimit?: number): Promise<void>;
-    dispose(): Promise<void>;
-}
 
 export type CommandCallback = (context: IActionContext, ...args: any[]) => any;
 
