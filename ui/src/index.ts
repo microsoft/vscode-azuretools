@@ -6,7 +6,6 @@
 export { createAzExtOutputChannel } from './AzExtOutputChannel';
 export * from './AzExtTreeFileSystem';
 export * from './AzureUserInput';
-export * from './BaseEditor';
 export * from './callWithTelemetryAndErrorHandling';
 export * from './createApiProvider';
 export * from './createAzureClient';
