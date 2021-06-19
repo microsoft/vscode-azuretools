@@ -841,6 +841,12 @@ export interface IAzureQuickPickOptions extends QuickPickOptions {
      * Only applies when used as part of an `AzureWizard`
      */
     loadingPlaceHolder?: string;
+
+    /**
+     * Optional message to display when no picks are found
+     * Only applies when used as part of an `AzureWizard`
+     */
+    noPicksMessage?: string;
 }
 
 /**

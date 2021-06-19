@@ -138,7 +138,13 @@ export class AzureWizardUserInput implements IWizardUserInput {
 
     private async initializePicks<TPick extends QuickPickItem>(picks: TPick[] | Promise<TPick[]>, options: types.IAzureQuickPickOptions, groups: QuickPickGroup[]): Promise<TPick[]> {
         picks = await picks;
-        if (!options.enableGrouping) {
+
+        if (picks.length === 0) {
+            if (options.noPicksMessage) {
+                picks.push(<TPick><unknown>{ label: options.noPicksMessage, suppressPersistence: true, onPicked: async () => { /* do nothing */ } });
+            }
+            return picks;
+        } else if (!options.enableGrouping) {
             return picks;
         } else {
             if (options.canPickMany) {
