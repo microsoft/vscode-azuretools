@@ -136,7 +136,7 @@ suite("masking", () => {
         test('Values from azure id', async () => {
             const appId = `/subscriptions/${randomUtils.getRandomHexString()}/resourceGroups/${randomUtils.getRandomHexString()}/providers/Microsoft.Web/sites/${randomUtils.getRandomHexString()}`;
             const context = <types.IActionContext><any>{ valuesToMask: [] };
-            addValuesToMaskFromAzureId(context, <any>{ fullId: appId });
+            addValuesToMaskFromAzureId(context, appId);
             assert.strictEqual(maskUserInfo(appId, context.valuesToMask), '/subscriptions/---/resourceGroups/---/providers/Microsoft.Web/sites/---');
         })
 

@@ -7,7 +7,6 @@ import * as escape from 'escape-string-regexp';
 import * as os from 'os';
 import { IActionContext, IParsedError } from "../index";
 import { parseError } from "./parseError";
-import { AzExtTreeItem } from './tree/AzExtTreeItem';
 
 let _extValuesToMask: string[] | undefined;
 function getExtValuesToMask(): string[] {
@@ -33,8 +32,8 @@ export function addExtensionValueToMask(...values: (string | undefined)[]): void
 /**
  * Example id: /subscriptions/00000000-0000-0000-0000-00000000/resourceGroups/rg1/providers/Microsoft.Web/sites/site1
  */
-export function addValuesToMaskFromAzureId(context: IActionContext, node: AzExtTreeItem): void {
-    const parts: string[] = node.fullId.toLowerCase().split('/');
+export function addValuesToMaskFromAzureId(context: IActionContext, id: string | undefined): void {
+    const parts: string[] = (id || '').toLowerCase().split('/');
     if (parts[1] === 'subscriptions' && parts[3] === 'resourcegroups') {
         context.valuesToMask.push(parts[2]);
         context.valuesToMask.push(parts[4]);
