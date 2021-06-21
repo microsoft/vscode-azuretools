@@ -117,10 +117,17 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
                     // Return existing treeItem (which might have many 'cached' tree items underneath it) rather than creating a brand new tree item every time
                     return existingTreeItem;
                 } else {
+                    addExtensionValueToMask(filter.subscription.id);
+                    addExtensionValueToMask(filter.subscription.subscriptionId);
+                    addExtensionValueToMask(filter.subscription.displayName);
+                    addExtensionValueToMask(filter.session.userId);
+                    addExtensionValueToMask(filter.session.tenantId);
+                    addExtensionValueToMask(filter.session.credentials2.clientId);
+                    addExtensionValueToMask(filter.session.credentials2.domain);
+
                     // filter.subscription.id is the The fully qualified ID of the subscription (For example, /subscriptions/00000000-0000-0000-0000-000000000000) and should be used as the tree item's id for the purposes of OpenInPortal
                     // filter.subscription.subscriptionId is just the guid and is used in all other cases when creating clients for managing Azure resources
                     const subscriptionId: string = nonNullProp(filter.subscription, 'subscriptionId');
-                    addExtensionValueToMask(subscriptionId);
                     return await this.createSubscriptionTreeItem({
                         credentials: filter.session.credentials2,
                         subscriptionDisplayName: nonNullProp(filter.subscription, 'displayName'),

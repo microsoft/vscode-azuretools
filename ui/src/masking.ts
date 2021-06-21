@@ -21,10 +21,10 @@ function getExtValuesToMask(): string[] {
     return _extValuesToMask;
 }
 
-export function addExtensionValueToMask(...values: string[]): void {
+export function addExtensionValueToMask(...values: (string | undefined)[]): void {
     const extValuesToMask: string[] = getExtValuesToMask();
     for (const v of values) {
-        if (!extValuesToMask.includes(v)) {
+        if (v && !extValuesToMask.includes(v)) {
             extValuesToMask.push(v);
         }
     }
@@ -35,7 +35,8 @@ export function addExtensionValueToMask(...values: string[]): void {
  */
 export function addValuesToMaskFromAzureId(context: IActionContext, node: AzExtTreeItem): void {
     const parts: string[] = node.fullId.toLowerCase().split('/');
-    if (parts[1] === 'subscriptions' && parts[3] === 'resourcegroups') { // NOTE: subscription id is already added to extValuesToMask elsewhere
+    if (parts[1] === 'subscriptions' && parts[3] === 'resourcegroups') {
+        context.valuesToMask.push(parts[2]);
         context.valuesToMask.push(parts[4]);
 
         if (parts[5] === 'providers' && parts[6]?.startsWith('microsoft.') && parts[8]) {
@@ -58,19 +59,34 @@ export async function callWithMaskHandling<T>(callback: () => Promise<T>, valueT
     }
 }
 
-export function maskValues(data: string, valuesToMask: string[]): string {
-    for (const value of valuesToMask.concat(getExtValuesToMask())) {
+/**
+ * Best effort to mask all data that could potentially identify a user
+ */
+export function maskUserInfo(data: string, actionValuesToMask: string[]): string {
+    // Mask longest values first just in case one is a substring of another
+    const valuesToMask = actionValuesToMask.concat(getExtValuesToMask()).sort((a, b) => b.length - a.length);
+    for (const value of valuesToMask) {
         data = maskValue(data, value);
+    }
+
+    return maskEmails(data);
+}
+
+const maskedValue = '---';
+
+/**
+ * Mask a single specific value
+ */
+function maskValue(data: string, valueToMask: string | undefined): string {
+    if (valueToMask) {
+        const formsOfValue: string[] = [valueToMask, encodeURIComponent(valueToMask)];
+        for (const v of formsOfValue) {
+            data = data.replace(new RegExp(escape(v), 'gi'), maskedValue);
+        }
     }
     return data;
 }
 
-function maskValue(data: string, valueToMask: string): string {
-    if (valueToMask) {
-        const formsOfValue: string[] = [valueToMask, encodeURIComponent(valueToMask)];
-        for (const v of formsOfValue) {
-            data = data.replace(new RegExp(escape(v), 'gi'), '---');
-        }
-    }
-    return data;
+function maskEmails(data: string): string {
+    return data.replace(/\S+@\S+/gi, maskedValue);
 }

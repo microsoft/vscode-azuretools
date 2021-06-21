@@ -10,7 +10,7 @@ export namespace randomUtils {
         return crypto.createHash('sha256').update(s).digest(encoding);
     }
 
-    export function getRandomHexString(length: number): string {
+    export function getRandomHexString(length: number = 6): string {
         const buffer: Buffer = crypto.randomBytes(Math.ceil(length / 2));
         return buffer.toString('hex').slice(0, length);
     }

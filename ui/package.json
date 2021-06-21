@@ -1,7 +1,7 @@
 {
     "name": "vscode-azureextensionui",
     "author": "Microsoft Corporation",
-    "version": "0.44.1",
+    "version": "0.44.2",
     "description": "Common UI tools for developing Azure extensions for VS Code",
     "tags": [
         "azure",
@@ -45,7 +45,7 @@
         "html-to-text": "^5.1.1",
         "open": "^8.0.4",
         "semver": "^5.7.1",
-        "vscode-extension-telemetry": "^0.1.5",
+        "vscode-extension-telemetry": "^0.1.7",
         "vscode-nls": "^4.1.1",
         "vscode-tas-client": "^0.1.22"
     },
