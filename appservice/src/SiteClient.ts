@@ -5,7 +5,7 @@
 
 import { WebSiteManagementClient, WebSiteManagementModels as Models } from '@azure/arm-appservice';
 import { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
-import { createGenericClient, ISubscriptionContext, parseError } from 'vscode-azureextensionui';
+import { createGenericClient, IActionContext, ISubscriptionContext, parseError } from 'vscode-azureextensionui';
 import { AppKind } from './createAppService/AppKind';
 import { deleteFunctionSlot, getFunctionSlot, listFunctionsSlot } from './slotFunctionOperations';
 import { tryGetAppServicePlan, tryGetWebApp, tryGetWebAppSlot } from './tryGetSiteResource';
@@ -52,7 +52,7 @@ export class SiteClient {
 
     private _cachedSku: string | undefined;
 
-    constructor(site: Models.Site, subscription: ISubscriptionContext) {
+    constructor(context: IActionContext, site: Models.Site, subscription: ISubscriptionContext) {
         let matches: RegExpMatchArray | null = nonNullProp(site, 'serverFarmId').match(/\/subscriptions\/(.*)\/resourceGroups\/(.*)\/providers\/Microsoft.Web\/serverfarms\/(.*)/);
         matches = nonNullValue(matches, 'Invalid serverFarmId.');
 
@@ -86,6 +86,8 @@ export class SiteClient {
         }
 
         this.subscription = subscription;
+
+        context.valuesToMask.push(this.fullName);
     }
 
     public async getIsConsumption(): Promise<boolean> {
