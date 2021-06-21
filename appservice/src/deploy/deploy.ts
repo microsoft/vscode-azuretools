@@ -75,6 +75,7 @@ export async function deploy(client: SiteClient, fsPath: string, context: IDeplo
         ext.outputChannel.appendLog(localize('deployStart', 'Starting deployment...'), { resourceName: client.fullName });
         try {
             if (!context.deployMethod && config.scmType === ScmType.GitHub) {
+                context.valuesToMask.push(client.fullName);
                 throw new Error(localize('gitHubConnected', '"{0}" is connected to a GitHub repository. Push to GitHub repository to deploy.', client.fullName));
             } else if (!context.deployMethod && config.scmType === ScmType.LocalGit) {
                 await localGitDeploy(client, { fsPath: fsPath }, context);
