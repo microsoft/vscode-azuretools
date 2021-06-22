@@ -87,7 +87,7 @@ export class SiteClient {
 
         this.subscription = subscription;
 
-        context.valuesToMask.push(this.fullName);
+        context.valuesToMask.push(this.defaultHostName, this.fullName, this.siteName, ...(site.hostNames || []));
     }
 
     public async getIsConsumption(): Promise<boolean> {
