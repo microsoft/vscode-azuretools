@@ -8,7 +8,7 @@ import * as types from '../index';
 import { DialogResponses } from './DialogResponses';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
-import { maskValues } from './masking';
+import { maskUserInfo } from './masking';
 import { parseError } from './parseError';
 import { cacheIssueForCommand } from './registerReportIssueCommand';
 import { IReportableIssue, reportAnIssue } from './reportAnIssue';
@@ -106,7 +106,7 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
 
     const errorData: types.IParsedError = parseError(errorContext.error);
     const unMaskedMessage: string = errorData.message;
-    errorData.message = maskValues(errorData.message, context.valuesToMask);
+    errorData.message = maskUserInfo(errorData.message, context.valuesToMask);
     if (errorData.isUserCancelledError) {
         context.telemetry.properties.result = 'Canceled';
         context.errorHandling.suppressDisplay = true;

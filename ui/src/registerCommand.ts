@@ -31,7 +31,7 @@ export function registerCommand(commandId: string, callback: (context: types.IAc
 
                     if (firstArg instanceof AzExtTreeItem) {
                         context.telemetry.properties.contextValue = firstArg.contextValue;
-                        addValuesToMaskFromAzureId(context, firstArg);
+                        addValuesToMaskFromAzureId(context, firstArg.fullId);
                     } else if (firstArg instanceof Uri) {
                         context.telemetry.properties.contextValue = 'Uri';
                     }

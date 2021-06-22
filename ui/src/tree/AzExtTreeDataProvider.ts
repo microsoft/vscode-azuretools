@@ -174,7 +174,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
             }
         }
 
-        addValuesToMaskFromAzureId(context, treeItem);
+        addValuesToMaskFromAzureId(context, treeItem.fullId);
         return <T><unknown>treeItem;
     }
 
@@ -200,6 +200,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
             }
         }
 
+        addValuesToMaskFromAzureId(context, result?.fullId);
         return <T><unknown>result;
     }
 
