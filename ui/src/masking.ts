@@ -68,10 +68,11 @@ export function maskUserInfo(data: string, actionValuesToMask: string[]): string
         data = maskValue(data, value);
     }
 
-    return maskEmails(data);
+    data = data.replace(/\S+@\S+/gi, getRedactedLabel('email'));
+    data = data.replace(/\b[0-9a-f\-\:\.]{4,}\b/gi, getRedactedLabel('id')); // should cover guids, ip addresses, etc.
+    data = data.replace(/http(s|):\/\/\S*/gi, getRedactedLabel('url'));
+    return data;
 }
-
-const maskedValue = '---';
 
 /**
  * Mask a single specific value
@@ -80,12 +81,12 @@ function maskValue(data: string, valueToMask: string | undefined): string {
     if (valueToMask) {
         const formsOfValue: string[] = [valueToMask, encodeURIComponent(valueToMask)];
         for (const v of formsOfValue) {
-            data = data.replace(new RegExp(escape(v), 'gi'), maskedValue);
+            data = data.replace(new RegExp(escape(v), 'gi'), '---');
         }
     }
     return data;
 }
 
-function maskEmails(data: string): string {
-    return data.replace(/\S+@\S+/gi, maskedValue);
+function getRedactedLabel(reason: string): string {
+    return `<redacted:${reason}>`;
 }
