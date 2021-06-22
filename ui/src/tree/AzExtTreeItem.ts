@@ -21,6 +21,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     public commandArgs?: unknown[];
     public iconPath?: types.TreeItemIconPath;
     public tooltip?: string;
+    public suppressMaskLabel?: boolean;
     //#endregion
 
     /**
@@ -30,6 +31,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     public readonly collapsibleState: TreeItemCollapsibleState | undefined;
     public readonly parent: IAzExtParentTreeItemInternal | undefined;
     public isLoadingMore: boolean;
+    public readonly valuesToMask: string[] = [];
     private _temporaryDescription?: string;
     private _treeDataProvider: IAzExtTreeDataProviderInternal | undefined;
 

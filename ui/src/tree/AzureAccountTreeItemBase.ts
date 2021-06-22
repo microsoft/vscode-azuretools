@@ -38,6 +38,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
     public childTypeLabel: string = localize('subscription', 'subscription');
     public autoSelectInTreeItemPicker: boolean = true;
     public disposables: Disposable[] = [];
+    public suppressMaskLabel: boolean = true;
 
     private _azureAccountTask: Promise<AzureAccountResult>;
     private _subscriptionTreeItems: SubscriptionTreeItemBase[] | undefined;
