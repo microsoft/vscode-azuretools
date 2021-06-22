@@ -52,7 +52,7 @@ export class SiteClient {
 
     private _cachedSku: string | undefined;
 
-    constructor(context: IActionContext, site: Models.Site, subscription: ISubscriptionContext) {
+    constructor(site: Models.Site, subscription: ISubscriptionContext) {
         let matches: RegExpMatchArray | null = nonNullProp(site, 'serverFarmId').match(/\/subscriptions\/(.*)\/resourceGroups\/(.*)\/providers\/Microsoft.Web\/serverfarms\/(.*)/);
         matches = nonNullValue(matches, 'Invalid serverFarmId.');
 
