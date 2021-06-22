@@ -7,7 +7,7 @@ import { commands, Uri } from 'vscode';
 import * as types from '../index';
 import { callWithTelemetryAndErrorHandling } from './callWithTelemetryAndErrorHandling';
 import { ext } from './extensionVariables';
-import { addValuesToMaskFromAzureId } from './masking';
+import { addTreeItemValuesToMask } from './tree/addTreeItemValuesToMask';
 import { AzExtTreeItem } from './tree/AzExtTreeItem';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -26,14 +26,18 @@ export function registerCommand(commandId: string, callback: (context: types.IAc
             commandId,
             (context: types.IActionContext) => {
                 if (args.length > 0) {
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
-                    const firstArg: any = args[0];
+                    const firstArg: unknown = args[0];
 
                     if (firstArg instanceof AzExtTreeItem) {
                         context.telemetry.properties.contextValue = firstArg.contextValue;
-                        addValuesToMaskFromAzureId(context, firstArg.fullId);
                     } else if (firstArg instanceof Uri) {
                         context.telemetry.properties.contextValue = 'Uri';
+                    }
+
+                    for (const arg of args) {
+                        if (arg instanceof AzExtTreeItem) {
+                            addTreeItemValuesToMask(context, arg, 'command');
+                        }
                     }
                 }
 

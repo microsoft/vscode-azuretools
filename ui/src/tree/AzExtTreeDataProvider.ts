@@ -8,8 +8,8 @@ import * as types from '../../index';
 import { callWithTelemetryAndErrorHandling } from '../callWithTelemetryAndErrorHandling';
 import { NoResourceFoundError, UserCancelledError } from '../errors';
 import { localize } from '../localize';
-import { addValuesToMaskFromAzureId } from '../masking';
 import { parseError } from '../parseError';
+import { addTreeItemValuesToMask } from './addTreeItemValuesToMask';
 import { AzExtParentTreeItem, InvalidTreeItem } from './AzExtParentTreeItem';
 import { AzExtTreeItem } from './AzExtTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';
@@ -78,6 +78,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                     context.telemetry.properties.isActivationEvent = 'true';
                     treeItem = this._rootTreeItem;
                 }
+                addTreeItemValuesToMask(context, treeItem, 'getChildren');
 
                 context.telemetry.properties.contextValue = treeItem.contextValue;
 
@@ -174,7 +175,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
             }
         }
 
-        addValuesToMaskFromAzureId(context, treeItem.fullId);
+        addTreeItemValuesToMask(context, treeItem, 'treeItemPicker');
         return <T><unknown>treeItem;
     }
 
@@ -200,7 +201,9 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
             }
         }
 
-        addValuesToMaskFromAzureId(context, result?.fullId);
+        if (result) {
+            addTreeItemValuesToMask(context, result, 'findTreeItem');
+        }
         return <T><unknown>result;
     }
 

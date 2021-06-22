@@ -208,6 +208,17 @@ export declare abstract class AzExtTreeItem {
     public readonly treeDataProvider: AzExtTreeDataProvider;
 
     /**
+     * Values to mask in error messages whenever an action uses this tree item
+     * NOTE: Some values are automatically masked without the need to add anything here, like the label and parts of the id if it's an Azure id
+     */
+    public readonly valuesToMask: string[];
+
+    /**
+     * Set to true if the label of this tree item does not need to be masked
+     */
+    public suppressMaskLabel?: boolean;
+
+    /**
      * @param parent The parent of the new tree item or 'undefined' if it is a root item
      */
     public constructor(parent: AzExtParentTreeItem | undefined);
