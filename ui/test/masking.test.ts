@@ -110,6 +110,11 @@ suite("masking", () => {
     });
 
     suite("maskUserInfo", () => {
+        test('generic text should not be masked', async () => {
+            const loremIpsum = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.';
+            assert.strictEqual(maskUserInfo(loremIpsum, []), loremIpsum);
+        });
+
         test('Action value', async () => {
             assert.strictEqual(maskUserInfo('test1', ['test1']), '---');
         });
@@ -141,11 +146,27 @@ suite("masking", () => {
         })
 
         test('Email', async () => {
-            assert.strictEqual(maskUserInfo('user@microsoft.com', []), '---');
+            assert.strictEqual(maskUserInfo('user@microsoft.com user2@microsoft.com us---Er@mic.rosoft.com', []), '<redacted:email> <redacted:email> <redacted:email>');
         });
 
-        test('Multiple emails', async () => {
-            assert.strictEqual(maskUserInfo('user@microsoft.com user2@microsoft.com us---Er@mic.rosoft.com', []), '--- --- ---');
+        test('Guid', async () => {
+            assert.strictEqual(maskUserInfo('c35d6342-5917-46f8-953e-9d3faffd1c72 C35D6342-5917-46F8-953E-9D3FAFFD1C72 c35d6342591746f8953e9d3faffd1c72', []), '<redacted:id> <redacted:id> <redacted:id>');
+        });
+
+        test('id with word breaks', async () => {
+            assert.strictEqual(maskUserInfo('(c35d6342) "c35d6342" \'c35d6342\'', []), '(<redacted:id>) "<redacted:id>" \'<redacted:id>\'');
+        });
+
+        test('Ip address', async () => {
+            assert.strictEqual(maskUserInfo('127.0.0.1 aaaa:0000:0000:0000:ffff:0000:0000:0001', []), '<redacted:id> <redacted:id>');
+        });
+
+        test('Phone number', async () => {
+            assert.strictEqual(maskUserInfo('000-0000 000-111-2222', []), '<redacted:id> <redacted:id>');
+        });
+
+        test('Url', async () => {
+            assert.strictEqual(maskUserInfo('https://microsoft.com http://microsoft.com', []), '<redacted:url> <redacted:url>');
         });
     });
 });
