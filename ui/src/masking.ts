@@ -77,7 +77,7 @@ export function maskUserInfo(data: string, actionValuesToMask: string[]): string
 /**
  * Mask a single specific value
  */
-function maskValue(data: string, valueToMask: string | undefined): string {
+export function maskValue(data: string, valueToMask: string | undefined): string {
     if (valueToMask) {
         const formsOfValue: string[] = [valueToMask, encodeURIComponent(valueToMask)];
         for (const v of formsOfValue) {

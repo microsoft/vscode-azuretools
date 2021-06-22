@@ -4,12 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Environment } from '@azure/ms-rest-azure-env';
-import { BaseRequestPolicy, HttpOperationResponse, RequestPolicy, RequestPolicyFactory, RequestPolicyOptions, RequestPrepareOptions, RestError, ServiceClient, WebResource, WebResourceLike } from '@azure/ms-rest-js';
+import { BaseRequestPolicy, BasicAuthenticationCredentials, HttpOperationResponse, RequestPolicy, RequestPolicyFactory, RequestPolicyOptions, RequestPrepareOptions, RestError, ServiceClient, TokenCredentials, WebResource, WebResourceLike } from '@azure/ms-rest-js';
 import * as vscode from "vscode";
 import * as types from '../index';
 import { appendExtensionUserAgent } from "./extensionUserAgent";
 import { GenericServiceClient } from './GenericServiceClient';
 import { localize } from './localize';
+import { maskValue } from './masking';
 import { parseError } from './parseError';
 import { parseJson, removeBom } from './utils/parseJson';
 
@@ -20,7 +21,7 @@ export function createAzureClient<T>(
         acceptLanguage: vscode.env.language,
         baseUri: clientInfo.environment.resourceManagerEndpointUrl,
         userAgent: appendExtensionUserAgent,
-        requestPolicyFactories: addAzExtFactories
+        requestPolicyFactories: (defaultFactories: RequestPolicyFactory[]) => addAzExtFactories(clientInfo.credentials, defaultFactories),
     });
 }
 
@@ -31,7 +32,7 @@ export function createAzureSubscriptionClient<T>(
         acceptLanguage: vscode.env.language,
         baseUri: clientInfo.environment.resourceManagerEndpointUrl,
         userAgent: appendExtensionUserAgent,
-        requestPolicyFactories: addAzExtFactories
+        requestPolicyFactories: (defaultFactories: RequestPolicyFactory[]) => addAzExtFactories(clientInfo.credentials, defaultFactories),
     });
 }
 
@@ -62,12 +63,12 @@ export async function createGenericClient(clientInfo?: types.AzExtGenericClientI
     return new gsc.GenericServiceClient(credentials, <types.IMinimumServiceClientOptions>{
         baseUri,
         userAgent: appendExtensionUserAgent,
-        requestPolicyFactories: addAzExtFactories,
+        requestPolicyFactories: (defaultFactories: RequestPolicyFactory[]) => addAzExtFactories(credentials, defaultFactories),
         noRetryPolicy: options?.noRetryPolicy
     });
 }
 
-function addAzExtFactories(defaultFactories: RequestPolicyFactory[]): RequestPolicyFactory[] {
+function addAzExtFactories(credentials: types.AzExtServiceClientCredentials | undefined, defaultFactories: RequestPolicyFactory[]): RequestPolicyFactory[] {
     // NOTE: Factories at the end of the array are executed first, and we want these to happen before the deserialization factory
     defaultFactories.push(
         {
@@ -78,8 +79,11 @@ function addAzExtFactories(defaultFactories: RequestPolicyFactory[]): RequestPol
         }
     );
 
-    // We want this one to execute last
+    // We want these to execute last
     defaultFactories.unshift(
+        {
+            create: (nextPolicy, options): RequestPolicy => new MaskCredentialsPolicy(nextPolicy, options, credentials)
+        },
         {
             create: (nextPolicy, options): RequestPolicy => new StatusCodePolicy(nextPolicy, options)
         }
@@ -148,6 +152,37 @@ class StatusCodePolicy extends BaseRequestPolicy {
             throw new RestError(errorMessage, undefined, response.status, request, response, response.bodyAsText);
         } else {
             return response;
+        }
+    }
+}
+
+/**
+ * In the highly unlikely event that a request error includes the original credentials used for the request,
+ * this policy will make sure those credentials get masked in the error message
+ */
+class MaskCredentialsPolicy extends BaseRequestPolicy {
+    private _credentials: types.AzExtServiceClientCredentials | undefined;
+    constructor(nextPolicy: RequestPolicy, requestPolicyOptions: RequestPolicyOptions, credentials: types.AzExtServiceClientCredentials | undefined,) {
+        super(nextPolicy, requestPolicyOptions);
+        this._credentials = credentials;
+    }
+
+    public async sendRequest(request: WebResourceLike): Promise<HttpOperationResponse> {
+        try {
+            return await this._nextPolicy.sendRequest(request);
+        } catch (error) {
+            const pe = parseError(error);
+            if (this._credentials) {
+                const tokenOrPassword = (<Partial<TokenCredentials>>this._credentials).token || (<Partial<BasicAuthenticationCredentials>>this._credentials).password;
+
+                const maskedMessage = maskValue(pe.message, tokenOrPassword);
+                const maskedErrorType = maskValue(pe.errorType, tokenOrPassword);
+                if (pe.message !== maskedMessage || pe.errorType !== maskedErrorType) {
+                    throw Object.assign(new Error(maskedMessage), { code: maskedErrorType });
+                }
+            }
+
+            throw error;
         }
     }
 }
