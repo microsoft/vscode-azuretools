@@ -5,7 +5,7 @@
 
 import { WebSiteManagementClient, WebSiteManagementModels as Models } from '@azure/arm-appservice';
 import { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
-import { createGenericClient, IActionContext, ISubscriptionContext, parseError } from 'vscode-azureextensionui';
+import { addExtensionValueToMask, createGenericClient, IActionContext, ISubscriptionContext, parseError } from 'vscode-azureextensionui';
 import { AppKind } from './createAppService/AppKind';
 import { deleteFunctionSlot, getFunctionSlot, listFunctionsSlot } from './slotFunctionOperations';
 import { tryGetAppServicePlan, tryGetWebApp, tryGetWebAppSlot } from './tryGetSiteResource';
@@ -87,7 +87,7 @@ export class SiteClient {
 
         this.subscription = subscription;
 
-        context.valuesToMask.push(this.defaultHostName, this.fullName, this.siteName, ...(site.hostNames || []));
+        addExtensionValueToMask(this.defaultHostName, this.fullName, this.siteName, ...(site.hostNames || []));
     }
 
     public async getIsConsumption(): Promise<boolean> {
