@@ -166,7 +166,23 @@ suite("masking", () => {
         });
 
         test('Url', async () => {
-            assert.strictEqual(maskUserInfo('https://microsoft.com http://microsoft.com', []), '<redacted:url> <redacted:url>');
+            assert.strictEqual(maskUserInfo('https://microsoft.com http://microsoft.com mongodb://mongodb0.example.com:27017', []), '<redacted:url> <redacted:url> <redacted:url>');
+        });
+
+        test('Url without scheme', async () => {
+            assert.strictEqual(maskUserInfo('microsoft.com microsoft.org?queryParam=test1 microsoft.net', []), '<redacted:url> <redacted:url> <redacted:url>');
+        });
+
+        test('key', async () => {
+            assert.strictEqual(maskUserInfo('sv=2012-02-12&st=2009-02-09&se=2009-02-10&sr=c&sp=r&si=YWJjZGVmZw%3d%3d&sig=dddddddddddddddddddddddddddddddddddddddddddddddd', []), '<redacted:key>');
+            assert.strictEqual(maskUserInfo('DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=dddddddddddddddddddddddddddddddddddddddddddddddd/dddddddd/dddddddd==;', []), '<redacted:key>');
+            assert.strictEqual(maskUserInfo('AccountEndpoint=accountname.documents.azure:443;AccountKey=accountkey==;', []), '<redacted:key>');
+            assert.strictEqual(maskUserInfo('microsoft.co?token=dddd', []), '<redacted:key>');
+        });
+
+        test('lessAggressive', async () => {
+            const valueToMask = 'valueToMask';
+            assert.strictEqual(maskUserInfo('https://microsoft.com c35d6342-5917-46f8-953e-9d3faffd1c72 hello@world accountkey=1234 valueToMask', [valueToMask], true /* lessAggressive */), '<redacted:url> c35d6342-5917-46f8-953e-9d3faffd1c72 hello@world <redacted:key> ---');
         });
     });
 });
