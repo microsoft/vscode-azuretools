@@ -56,23 +56,24 @@ export async function putFile(context: IActionContext, client: SiteClient, data:
  * Kudu APIs don't work for Linux consumption function apps and ARM APIs don't seem to work for web apps. We'll just have to use both
  */
 async function getFsResponse(context: IActionContext, siteClient: SiteClient, filePath: string): Promise<HttpOperationResponse> {
-    if (siteClient.isFunctionApp) {
-        if (!(siteClient instanceof SiteClient)) {
-            throw new RangeError('Internal Error: Expected client to be of type SiteClient.');
-        }
+    try {
+        if (siteClient.isFunctionApp) {
+            const linuxHome: string = '/home';
+            if (siteClient.isLinux && !filePath.startsWith(linuxHome)) {
+                filePath = path.posix.join(linuxHome, filePath);
+            }
 
-        const linuxHome: string = '/home';
-        if (siteClient.isLinux && !filePath.startsWith(linuxHome)) {
-            filePath = path.posix.join(linuxHome, filePath);
+            const client: ServiceClient = await createGenericClient(siteClient.subscription);
+            return await client.sendRequest({
+                method: 'GET',
+                url: `${siteClient.id}/hostruntime/admin/vfs/${filePath}?api-version=2018-11-01`
+            });
+        } else {
+            const kuduClient = await createKuduClient(context, siteClient);
+            return (await kuduClient.vfs.getItem(filePath))._response;
         }
-
-        const client: ServiceClient = await createGenericClient(siteClient.subscription);
-        return await client.sendRequest({
-            method: 'GET',
-            url: `${siteClient.id}/hostruntime/admin/vfs/${filePath}?api-version=2018-11-01`
-        });
-    } else {
-        const kuduClient = await createKuduClient(context, siteClient);
-        return (await kuduClient.vfs.getItem(filePath))._response;
+    } catch (error) {
+        context.telemetry.maskEntireErrorMessage = true; // since the error could have the contents of the user's file
+        throw error;
     }
 }

@@ -16,6 +16,7 @@ import { FolderTreeItem } from './FolderTreeItem';
 export class LogFilesTreeItem extends FolderTreeItem {
     public static contextValue: string = 'logFiles';
     public readonly contextValue: string = LogFilesTreeItem.contextValue;
+    public suppressMaskLabel: boolean = true;
 
     protected readonly _isRoot: boolean = true;
 

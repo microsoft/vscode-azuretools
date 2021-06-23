@@ -5,13 +5,13 @@
 
 import { WebSiteManagementModels } from '@azure/arm-appservice';
 import * as fse from 'fs-extra';
+import * as path from 'path';
 import { ProgressLocation, window } from 'vscode';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { ScmType } from '../ScmType';
 import { SiteClient } from '../SiteClient';
 import { randomUtils } from '../utils/randomUtils';
-import * as path from 'path';
 import { deployToStorageAccount } from './deployToStorageAccount';
 import { deployWar } from './deployWar';
 import { deployZip } from './deployZip';
@@ -33,7 +33,7 @@ export async function deploy(client: SiteClient, fsPath: string, context: IDeplo
         context.telemetry.properties.scmType = String(config.scmType);
         context.telemetry.properties.isSlot = client.isSlot ? 'true' : 'false';
         context.telemetry.properties.alwaysOn = config.alwaysOn ? 'true' : 'false';
-        context.telemetry.properties.linuxFxVersion = String(config.linuxFxVersion);
+        context.telemetry.properties.linuxFxVersion = getLinuxFxVersionForTelemetry(config);
         context.telemetry.properties.nodeVersion = String(config.nodeVersion);
         context.telemetry.properties.pythonVersion = String(config.pythonVersion);
         context.telemetry.properties.hasCors = config.cors ? 'true' : 'false';
@@ -114,4 +114,10 @@ export async function deploy(client: SiteClient, fsPath: string, context: IDeplo
             }
         }
     });
+}
+
+function getLinuxFxVersionForTelemetry(config: WebSiteManagementModels.SiteConfigResource): string {
+    const linuxFxVersion = config.linuxFxVersion || '';
+    // Docker values point to the user's specific image, which we don't want to track
+    return /^docker/i.test(linuxFxVersion) ? 'docker' : linuxFxVersion;
 }
