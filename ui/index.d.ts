@@ -591,6 +591,11 @@ export interface ITelemetryContext {
      * Defaults to `false`. If true, all events are suppressed from telemetry.
      */
     suppressAll?: boolean;
+
+    /**
+     * If true, any error message for this event will not be tracked in telemetry
+     */
+    maskEntireErrorMessage?: boolean;
 }
 
 export interface AzExtErrorButton extends MessageItem {
