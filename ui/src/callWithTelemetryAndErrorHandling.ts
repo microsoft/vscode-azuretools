@@ -8,7 +8,7 @@ import * as types from '../index';
 import { DialogResponses } from './DialogResponses';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
-import { maskUserInfo } from './masking';
+import { getRedactedLabel, maskUserInfo } from './masking';
 import { parseError } from './parseError';
 import { cacheIssueForCommand } from './registerReportIssueCommand';
 import { IReportableIssue, reportAnIssue } from './reportAnIssue';
@@ -181,9 +181,16 @@ function handleTelemetry(context: types.IActionContext, callbackId: string, star
     if (!context.telemetry.suppressAll && !(context.telemetry.suppressIfSuccessful && context.telemetry.properties.result === 'Succeeded')) {
         const end: number = Date.now();
         context.telemetry.measurements.duration = (end - start) / 1000;
+        const errorProps: string[] = Object.keys(context.telemetry.properties).filter(key => /(error|exception)/i.test(key));
+        for (const key of errorProps) {
+            const value = context.telemetry.properties[key];
+            if (value) {
+                context.telemetry.properties[key] = context.telemetry.maskEntireErrorMessage ? getRedactedLabel('action') : maskUserInfo(value, context.valuesToMask);
+            }
+        }
 
-        const errorProps: string[] = Object.keys(context.telemetry.properties).filter(key => /(error|stack|exception)/i.test(key));
+        const stackProps: string[] = Object.keys(context.telemetry.properties).filter(key => /stack/i.test(key));
         // Note: The id of the extension is automatically prepended to the given callbackId (e.g. "vscode-cosmosdb/")
-        ext._internalReporter.sendTelemetryErrorEvent(handlerContext.callbackId, context.telemetry.properties, context.telemetry.measurements, errorProps);
+        ext._internalReporter.sendTelemetryErrorEvent(handlerContext.callbackId, context.telemetry.properties, context.telemetry.measurements, errorProps.concat(stackProps));
     }
 }

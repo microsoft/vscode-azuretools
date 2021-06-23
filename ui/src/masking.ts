@@ -89,6 +89,6 @@ function maskValue(data: string, valueToMask: string | undefined): string {
     return data;
 }
 
-function getRedactedLabel(reason: string): string {
+export function getRedactedLabel(reason: string): string {
     return `<redacted:${reason}>`;
 }
