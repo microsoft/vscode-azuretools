@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { HttpOperationResponse, Serializer, WebResource } from '@azure/ms-rest-js';
+import { BasicAuthenticationCredentials, HttpOperationResponse, Serializer, TokenCredentials, WebResource } from '@azure/ms-rest-js';
 import * as assert from 'assert';
 import * as http from 'http';
 import { createGenericClient, sendRequestWithTimeout } from '../src/createAzureClient';
@@ -131,5 +131,21 @@ suite('request', () => {
         const client = await createGenericClient();
         const response = await client.sendRequest(request);
         assert.strictEqual(response.parsedBody, undefined);
+    });
+
+    test('Basic credentials are masked in error message', async () => {
+        const password: string = 'notActuallyCredentials';
+        testResponses = [{ status: 404, body: password }];
+
+        const client = await createGenericClient(new BasicAuthenticationCredentials('userName', password));
+        await assertThrowsAsync(async () => await client.sendRequest({ method: 'GET', url }), (err: Error) => err.message === '---');
+    });
+
+    test('Token credentials are masked in error message', async () => {
+        const token: string = 'notActuallyCredentials';
+        testResponses = [{ status: 404, body: token }];
+
+        const client = await createGenericClient(new TokenCredentials(token));
+        await assertThrowsAsync(async () => await client.sendRequest({ method: 'GET', url }), (err: Error) => err.message === '---');
     });
 });
