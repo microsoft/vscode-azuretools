@@ -64,9 +64,7 @@ export async function callWithMaskHandling<T>(callback: () => Promise<T>, valueT
  */
 export function maskUserInfo(data: string, actionValuesToMask: string[], lessAggressive: boolean = false): string {
     // Mask longest values first just in case one is a substring of another
-    let valuesToMask = actionValuesToMask.concat(getExtValuesToMask()).sort((a, b) => b.length - a.length);
-    // de-dupe
-    valuesToMask = valuesToMask.filter((v, index) => valuesToMask.indexOf(v) === index);
+    const valuesToMask = actionValuesToMask.concat(getExtValuesToMask()).sort((a, b) => b.length - a.length);
     for (const value of valuesToMask) {
         data = maskValue(data, value);
     }

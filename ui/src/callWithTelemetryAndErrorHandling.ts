@@ -181,6 +181,8 @@ function handleTelemetry(context: types.IActionContext, callbackId: string, star
     if (!context.telemetry.suppressAll && !(context.telemetry.suppressIfSuccessful && context.telemetry.properties.result === 'Succeeded')) {
         const end: number = Date.now();
         context.telemetry.measurements.duration = (end - start) / 1000;
+        // de-dupe
+        context.valuesToMask = context.valuesToMask.filter((v, index) => context.valuesToMask.indexOf(v) === index);
         for (const [key, value] of Object.entries(context.telemetry.properties)) {
             if (value) {
                 if (/(error|exception)/i.test(key)) {
