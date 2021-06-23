@@ -34,6 +34,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
         this._key = key;
         this._value = value;
         this._hideValue = true;
+        this.valuesToMask.push(key, value);
     }
 
     public static async createAppSettingTreeItem(parent: AppSettingsTreeItem, client: IAppSettingsClient, key: string, value: string): Promise<AppSettingTreeItem> {

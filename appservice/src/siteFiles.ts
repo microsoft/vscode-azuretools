@@ -56,6 +56,8 @@ export async function putFile(context: IActionContext, client: SiteClient, data:
  * Kudu APIs don't work for Linux consumption function apps and ARM APIs don't seem to work for web apps. We'll just have to use both
  */
 async function getFsResponse(context: IActionContext, siteClient: SiteClient, filePath: string): Promise<HttpOperationResponse> {
+    context.telemetry.maskEntireErrorMessage = true; // since the error could have the contents of the user's file
+
     if (siteClient.isFunctionApp) {
         if (!(siteClient instanceof SiteClient)) {
             throw new RangeError('Internal Error: Expected client to be of type SiteClient.');

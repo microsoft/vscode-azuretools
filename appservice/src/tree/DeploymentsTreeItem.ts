@@ -24,6 +24,7 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
     public readonly label: string = localize('Deployments', 'Deployments');
     public readonly childTypeLabel: string = localize('Deployment', 'Deployment');
     public readonly client: SiteClient;
+    public suppressMaskLabel: boolean = true;
 
     private _scmType?: string;
     private _repoUrl?: string;

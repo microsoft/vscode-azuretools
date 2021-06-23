@@ -38,6 +38,7 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
     public readonly contextValue: string = AppSettingsTreeItem.contextValue;
     public readonly client: IAppSettingsClient;
     public readonly supportsSlots: boolean;
+    public suppressMaskLabel: boolean = true;
     private _settings: WebSiteManagementModels.StringDictionary | undefined;
     private readonly _settingsToHide: string[] | undefined;
 
