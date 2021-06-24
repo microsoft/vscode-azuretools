@@ -181,16 +181,20 @@ function handleTelemetry(context: types.IActionContext, callbackId: string, star
     if (!context.telemetry.suppressAll && !(context.telemetry.suppressIfSuccessful && context.telemetry.properties.result === 'Succeeded')) {
         const end: number = Date.now();
         context.telemetry.measurements.duration = (end - start) / 1000;
-        const errorProps: string[] = Object.keys(context.telemetry.properties).filter(key => /(error|exception)/i.test(key));
-        for (const key of errorProps) {
-            const value = context.telemetry.properties[key];
+        // de-dupe
+        context.valuesToMask = context.valuesToMask.filter((v, index) => context.valuesToMask.indexOf(v) === index);
+        for (const [key, value] of Object.entries(context.telemetry.properties)) {
             if (value) {
-                context.telemetry.properties[key] = context.telemetry.maskEntireErrorMessage ? getRedactedLabel('action') : maskUserInfo(value, context.valuesToMask);
+                if (/(error|exception)/i.test(key)) {
+                    context.telemetry.properties[key] = context.telemetry.maskEntireErrorMessage ? getRedactedLabel('action') : maskUserInfo(value, context.valuesToMask);
+                } else {
+                    context.telemetry.properties[key] = maskUserInfo(value, context.valuesToMask, true /* lessAggressive */);
+                }
             }
         }
 
-        const stackProps: string[] = Object.keys(context.telemetry.properties).filter(key => /stack/i.test(key));
+        const errorProps: string[] = Object.keys(context.telemetry.properties).filter(key => /(error|exception|stack)/i.test(key));
         // Note: The id of the extension is automatically prepended to the given callbackId (e.g. "vscode-cosmosdb/")
-        ext._internalReporter.sendTelemetryErrorEvent(handlerContext.callbackId, context.telemetry.properties, context.telemetry.measurements, errorProps.concat(stackProps));
+        ext._internalReporter.sendTelemetryErrorEvent(handlerContext.callbackId, context.telemetry.properties, context.telemetry.measurements, errorProps);
     }
 }

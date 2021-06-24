@@ -60,19 +60,24 @@ export async function callWithMaskHandling<T>(callback: () => Promise<T>, valueT
 
 /**
  * Best effort to mask all data that could potentially identify a user
+ * @param lessAggressive If set to true, the most aggressive masking will be skipped
  */
-export function maskUserInfo(data: string, actionValuesToMask: string[]): string {
+export function maskUserInfo(data: string, actionValuesToMask: string[], lessAggressive: boolean = false): string {
     // Mask longest values first just in case one is a substring of another
-    let valuesToMask = actionValuesToMask.concat(getExtValuesToMask()).sort((a, b) => b.length - a.length);
-    // de-dupe
-    valuesToMask = valuesToMask.filter((v, index) => valuesToMask.indexOf(v) === index);
+    const valuesToMask = actionValuesToMask.concat(getExtValuesToMask()).sort((a, b) => b.length - a.length);
     for (const value of valuesToMask) {
         data = maskValue(data, value);
     }
 
-    data = data.replace(/\S+@\S+/gi, getRedactedLabel('email'));
-    data = data.replace(/\b[0-9a-f\-\:\.]{4,}\b/gi, getRedactedLabel('id')); // should cover guids, ip addresses, etc.
-    data = data.replace(/http(s|):\/\/\S*/gi, getRedactedLabel('url'));
+    if (!lessAggressive) {
+        data = data.replace(/\S+@\S+/gi, getRedactedLabel('email'));
+        data = data.replace(/\b[0-9a-f\-\:\.]{4,}\b/gi, getRedactedLabel('id')); // should cover guids, ip addresses, etc.
+    }
+
+    data = data.replace(/[a-z]+:\/\/\S*/gi, getRedactedLabel('url'));
+    data = data.replace(/\S*\.(com|org|net)\S*/gi, getRedactedLabel('url'));
+    data = data.replace(/\S*(key|token|sig|password)=\S*/gi, getRedactedLabel('key'));
+
     return data;
 }
 
