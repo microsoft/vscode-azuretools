@@ -191,3 +191,22 @@ export declare class TestUserInput {
     public showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Promise<MessageItem>;
     public showOpenDialog(options: OpenDialogOptions): Promise<Uri[]>;
 }
+
+export interface TestActionContext {
+    telemetry: {
+        properties: { [key: string]: string | undefined; }
+        measurements: { [key: string]: number | undefined; }
+    };
+    errorHandling: {
+        issueProperties: {}
+    };
+    valuesToMask: string[];
+    ui: TestUserInput;
+}
+
+export declare function createTestActionContext(): TestActionContext;
+
+/**
+ * Similar to `createTestActionContext` but with some extra logging
+ */
+export declare function runWithTestActionContext(callbackId: string, callback: (context: TestActionContext) => Promise<void>): Promise<void>;
