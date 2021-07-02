@@ -204,7 +204,7 @@ export interface TestActionContext {
     ui: TestUserInput;
 }
 
-export declare function createTestActionContext(): TestActionContext;
+export declare function createTestActionContext(): Promise<TestActionContext>;
 
 /**
  * Similar to `createTestActionContext` but with some extra logging

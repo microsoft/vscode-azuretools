@@ -3,19 +3,18 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as vscode from 'vscode';
 import * as types from '../index';
 import { TestUserInput } from './TestUserInput';
 
-export function createTestActionContext(): types.TestActionContext {
-    return { telemetry: { properties: {}, measurements: {} }, errorHandling: { issueProperties: {} }, valuesToMask: [], ui: new TestUserInput(vscode) };
+export async function createTestActionContext(): Promise<types.TestActionContext> {
+    return { telemetry: { properties: {}, measurements: {} }, errorHandling: { issueProperties: {} }, valuesToMask: [], ui: new TestUserInput(await import('vscode')) };
 }
 
 /**
  * Similar to `createTestActionContext` but with some extra logging
  */
 export async function runWithTestActionContext(callbackId: string, callback: (context: types.TestActionContext) => Promise<void>): Promise<void> {
-    const context = createTestActionContext();
+    const context = await createTestActionContext();
     const start: number = Date.now();
     try {
         await callback(context);
