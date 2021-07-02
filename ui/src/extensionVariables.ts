@@ -26,10 +26,6 @@ class UninitializedExtensionVariables implements types.UIExtensionVariables {
         throw this._error;
     }
 
-    public get ui(): types.IAzureUserInput {
-        throw this._error;
-    }
-
     public get _internalReporter(): IInternalTelemetryReporter {
         throw this._error;
     }
@@ -48,7 +44,6 @@ export function registerUIExtensionVariables(extVars: types.UIExtensionVariables
 
     assert(extVars.context, 'registerUIExtensionVariables: Missing context');
     assert(extVars.outputChannel, 'registerUIExtensionVariables: Missing outputChannel');
-    assert(extVars.ui, 'registerUIExtensionVariables: Missing ui');
 
     ext = Object.assign(extVars, { _internalReporter: createTelemetryReporter(extVars.context) });
 

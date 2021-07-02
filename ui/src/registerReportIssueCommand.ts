@@ -6,7 +6,6 @@
 import * as dayjs from 'dayjs';
 import * as relativeTime from 'dayjs/plugin/relativeTime';
 import * as types from '../index';
-import { ext } from "./extensionVariables";
 import { localize } from './localize';
 import { registerCommand } from "./registerCommand";
 import { IReportableIssue, reportAnIssue } from './reportAnIssue';
@@ -54,7 +53,7 @@ export function registerReportIssueCommand(commandId: string): void {
                 data: undefined
             });
             const placeHolder: string = localize('selectError', 'Select the error you would like to report');
-            const issue: IReportableIssue | undefined = (await ext.ui.showQuickPick(picks, { placeHolder, suppressPersistence: true })).data;
+            const issue: IReportableIssue | undefined = (await context.ui.showQuickPick(picks, { placeHolder, suppressPersistence: true })).data;
             await reportAnIssue(issue);
         }
     });

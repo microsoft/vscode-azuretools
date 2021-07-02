@@ -4,8 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { TestUserInput } from 'vscode-azureextensiondev';
-import { ext } from '../src/extensionVariables';
 
 // Runs before all tests
 suiteSetup(async () => {
@@ -16,5 +14,4 @@ suiteSetup(async () => {
     } else {
         await extension.activate();
     }
-    ext.ui = new TestUserInput(vscode);
 });
