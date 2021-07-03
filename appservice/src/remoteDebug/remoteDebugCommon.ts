@@ -19,7 +19,7 @@ export function reportMessage(message: string, progress: vscode.Progress<{}>, to
     progress.report({ message: message });
 }
 
-export async function setRemoteDebug(isRemoteDebuggingToBeEnabled: boolean, confirmMessage: string, noopMessage: string | undefined, siteClient: SiteClient, siteConfig: WebSiteManagementModels.SiteConfigResource, progress: vscode.Progress<{}>, token: vscode.CancellationToken, learnMoreLink?: string): Promise<void> {
+export async function setRemoteDebug(context: IActionContext, isRemoteDebuggingToBeEnabled: boolean, confirmMessage: string, noopMessage: string | undefined, siteClient: SiteClient, siteConfig: WebSiteManagementModels.SiteConfigResource, progress: vscode.Progress<{}>, token: vscode.CancellationToken, learnMoreLink?: string): Promise<void> {
     const state: string | undefined = await siteClient.getState();
     if (state && state.toLowerCase() === 'stopped') {
         throw new Error(localize('remoteDebugStopped', 'The app must be running, but is currently in state "Stopped". Start the app to continue.'));
@@ -29,13 +29,13 @@ export async function setRemoteDebug(isRemoteDebuggingToBeEnabled: boolean, conf
         const confirmButton: vscode.MessageItem = isRemoteDebuggingToBeEnabled ? { title: 'Enable' } : { title: 'Disable' };
 
         // don't have to check input as this handles cancels and learnMore responses
-        await ext.ui.showWarningMessage(confirmMessage, { modal: true, learnMoreLink }, confirmButton);
+        await context.ui.showWarningMessage(confirmMessage, { modal: true, learnMoreLink }, confirmButton);
         siteConfig.remoteDebuggingEnabled = isRemoteDebuggingToBeEnabled;
         reportMessage(localize('remoteDebugUpdate', 'Updating site configuration to set remote debugging...'), progress, token);
 
-        await callWithTelemetryAndErrorHandling('appService.remoteDebugUpdateConfiguration', async (context: IActionContext) => {
-            context.errorHandling.suppressDisplay = true;
-            context.errorHandling.rethrow = true;
+        await callWithTelemetryAndErrorHandling('appService.remoteDebugUpdateConfiguration', async (updateContext: IActionContext) => {
+            updateContext.errorHandling.suppressDisplay = true;
+            updateContext.errorHandling.rethrow = true;
             await siteClient.updateConfiguration(siteConfig);
         });
 

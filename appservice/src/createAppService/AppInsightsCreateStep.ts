@@ -19,20 +19,20 @@ import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
     public priority: number = 135;
 
-    public async execute(wizardContext: IAppServiceWizardContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
-        const resourceLocation: AzExtLocation = await LocationListStep.getLocation(wizardContext);
+    public async execute(context: IAppServiceWizardContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
+        const resourceLocation: AzExtLocation = await LocationListStep.getLocation(context);
         const verifyingAppInsightsAvailable: string = localize('verifyingAppInsightsAvailable', 'Verifying that Application Insights is available for this location...');
         ext.outputChannel.appendLog(verifyingAppInsightsAvailable);
-        const appInsightsLocation: string | undefined = await this.getSupportedLocation(wizardContext, resourceLocation);
+        const appInsightsLocation: string | undefined = await this.getSupportedLocation(context, resourceLocation);
 
         if (appInsightsLocation) {
-            const client: ApplicationInsightsManagementClient = await createAppInsightsClient(wizardContext);
-            const rg: ResourceManagementModels.ResourceGroup = nonNullProp(wizardContext, 'resourceGroup');
+            const client: ApplicationInsightsManagementClient = await createAppInsightsClient(context);
+            const rg: ResourceManagementModels.ResourceGroup = nonNullProp(context, 'resourceGroup');
             const rgName: string = nonNullProp(rg, 'name');
-            const aiName: string = nonNullProp(wizardContext, 'newAppInsightsName');
+            const aiName: string = nonNullProp(context, 'newAppInsightsName');
 
             try {
-                wizardContext.appInsightsComponent = await client.components.get(rgName, aiName);
+                context.appInsightsComponent = await client.components.get(rgName, aiName);
                 ext.outputChannel.appendLog(localize('existingNewAppInsights', 'Using existing Application Insights resource "{0}".', aiName));
             } catch (error) {
                 const pError: IParsedError = parseError(error);
@@ -42,15 +42,15 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
                     ext.outputChannel.appendLog(creatingNewAppInsights);
                     progress.report({ message: creatingNewAppInsights });
 
-                    wizardContext.appInsightsComponent = await client.components.createOrUpdate(rgName, aiName, { kind: 'web', applicationType: 'web', location: appInsightsLocation });
+                    context.appInsightsComponent = await client.components.createOrUpdate(rgName, aiName, { kind: 'web', applicationType: 'web', location: appInsightsLocation });
                     const createdNewAppInsights: string = localize('createdNewAppInsights', 'Successfully created Application Insights resource "{0}".', aiName);
                     ext.outputChannel.appendLog(createdNewAppInsights);
                 } else if (pError.errorType === 'AuthorizationFailed') {
-                    if (!wizardContext.advancedCreation) {
+                    if (!context.advancedCreation) {
                         const appInsightsNotAuthorized: string = localize('appInsightsNotAuthorized', 'Skipping Application Insights resource because you do not have permission to create one in this subscription.');
                         ext.outputChannel.appendLog(appInsightsNotAuthorized);
                     } else {
-                        await this.selectExistingPrompt(wizardContext);
+                        await this.selectExistingPrompt(context);
                     }
                 } else {
                     throw error;
@@ -62,47 +62,47 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
         }
     }
 
-    public async selectExistingPrompt(wizardContext: IAppServiceWizardContext): Promise<void> {
-        const message: string = localize('aiForbidden', 'You do not have permission to create an app insights resource in subscription "{0}".', wizardContext.subscriptionDisplayName);
+    public async selectExistingPrompt(context: IAppServiceWizardContext): Promise<void> {
+        const message: string = localize('aiForbidden', 'You do not have permission to create an app insights resource in subscription "{0}".', context.subscriptionDisplayName);
         const selectExisting: MessageItem = { title: localize('selectExisting', 'Select Existing') };
         const skipForNow: MessageItem = { title: localize('skipForNow', 'Skip for Now') };
-        wizardContext.telemetry.properties.cancelStep = 'AppInsightsNoPermissions';
-        const result = await wizardContext.ui.showWarningMessage(message, { modal: true }, selectExisting, skipForNow);
-        wizardContext.telemetry.properties.cancelStep = undefined;
+        context.telemetry.properties.cancelStep = 'AppInsightsNoPermissions';
+        const result = await context.ui.showWarningMessage(message, { modal: true }, selectExisting, skipForNow);
+        context.telemetry.properties.cancelStep = undefined;
         if (result === skipForNow) {
-            wizardContext.telemetry.properties.aiSkipForNow = 'true';
-            wizardContext.appInsightsSkip = true;
-            wizardContext.telemetry.properties.forbiddenResponse = 'SkipAppInsights';
+            context.telemetry.properties.aiSkipForNow = 'true';
+            context.appInsightsSkip = true;
+            context.telemetry.properties.forbiddenResponse = 'SkipAppInsights';
         } else {
-            wizardContext.telemetry.properties.forbiddenResponse = 'SelectExistingAppInsights';
+            context.telemetry.properties.forbiddenResponse = 'SelectExistingAppInsights';
             const step: AppInsightsListStep = new AppInsightsListStep(true /* suppressCreate */);
-            await step.prompt(wizardContext);
+            await step.prompt(context);
         }
     }
 
 
-    public shouldExecute(wizardContext: IAppServiceWizardContext): boolean {
-        return !wizardContext.appInsightsComponent && !!wizardContext.newAppInsightsName;
+    public shouldExecute(context: IAppServiceWizardContext): boolean {
+        return !context.appInsightsComponent && !!context.newAppInsightsName;
     }
 
     // returns the supported location, a location in the region map, or undefined
-    private async getSupportedLocation(wizardContext: IAppServiceWizardContext, location: AzExtLocation): Promise<string | undefined> {
-        const locations: string[] = await this.getLocations(wizardContext) || [];
+    private async getSupportedLocation(context: IAppServiceWizardContext, location: AzExtLocation): Promise<string | undefined> {
+        const locations: string[] = await this.getLocations(context) || [];
         const locationName: string = nonNullProp(location, 'name');
 
         if (locations.some((loc) => areLocationNamesEqual(loc, location.name))) {
-            wizardContext.telemetry.properties.aiLocationSupported = 'true';
+            context.telemetry.properties.aiLocationSupported = 'true';
             return locationName;
         } else {
             // If there is no exact match, then query the regionMapping.json
             const pairedRegions: string[] | undefined = await this.getPairedRegions(locationName);
             if (pairedRegions.length > 0) {
                 // if there is at least one region listed, return the first
-                wizardContext.telemetry.properties.aiLocationSupported = 'pairedRegion';
+                context.telemetry.properties.aiLocationSupported = 'pairedRegion';
                 return pairedRegions[0];
             }
 
-            wizardContext.telemetry.properties.aiLocationSupported = 'false';
+            context.telemetry.properties.aiLocationSupported = 'false';
             return undefined;
         }
     }
@@ -125,8 +125,8 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
         return [];
     }
 
-    private async getLocations(wizardContext: IAppServiceWizardContext): Promise<string[] | undefined> {
-        const resourceClient: ResourceManagementClient = await createResourceClient(wizardContext);
+    private async getLocations(context: IAppServiceWizardContext): Promise<string[] | undefined> {
+        const resourceClient: ResourceManagementClient = await createResourceClient(context);
         const supportedRegions: ResourceManagementModels.Provider = await resourceClient.providers.get('microsoft.insights');
         const componentsResourceType: ResourceManagementModels.ProviderResourceType | undefined = supportedRegions.resourceTypes && supportedRegions.resourceTypes.find(aiRt => aiRt.resourceType === 'components');
         if (!!componentsResourceType && !!componentsResourceType.locations) {

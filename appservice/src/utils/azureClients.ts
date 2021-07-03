@@ -24,6 +24,6 @@ export async function createResourceClient<T extends ISubscriptionContext>(conte
     return createAzureClient(context, (await import('@azure/arm-resources')).ResourceManagementClient);
 }
 
-export async function createResourceGraphClient<T extends ISubscriptionContext>(wizardContext: T): Promise<ResourceGraphClient> {
-    return createAzureSubscriptionClient(wizardContext, (await import('@azure/arm-resourcegraph')).ResourceGraphClient);
+export async function createResourceGraphClient<T extends ISubscriptionContext>(context: T): Promise<ResourceGraphClient> {
+    return createAzureSubscriptionClient(context, (await import('@azure/arm-resourcegraph')).ResourceGraphClient);
 }

@@ -19,9 +19,9 @@ import { CustomLocation, IAppServiceWizardContext } from './IAppServiceWizardCon
 export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
     public priority: number = 120;
 
-    public async execute(wizardContext: IAppServiceWizardContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
-        const newPlanName: string = nonNullProp(wizardContext, 'newPlanName');
-        const rgName: string = nonNullValueAndProp(wizardContext.resourceGroup, 'name');
+    public async execute(context: IAppServiceWizardContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
+        const newPlanName: string = nonNullProp(context, 'newPlanName');
+        const rgName: string = nonNullValueAndProp(context.resourceGroup, 'name');
 
         const findingAppServicePlan: string = localize('FindingAppServicePlan', 'Ensuring App Service plan "{0}" exists...', newPlanName);
         const creatingAppServicePlan: string = localize('CreatingAppServicePlan', 'Creating App Service plan "{0}"...', newPlanName);
@@ -30,61 +30,61 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
         ext.outputChannel.appendLog(findingAppServicePlan);
 
         try {
-            const client: WebSiteManagementClient = await createWebSiteClient(wizardContext);
+            const client: WebSiteManagementClient = await createWebSiteClient(context);
             const existingPlan: WebSiteManagementModels.AppServicePlan | undefined = await tryGetAppServicePlan(client, rgName, newPlanName);
 
             if (existingPlan) {
-                wizardContext.plan = existingPlan;
+                context.plan = existingPlan;
                 ext.outputChannel.appendLog(foundAppServicePlan);
             } else {
                 ext.outputChannel.appendLog(creatingAppServicePlan);
                 progress.report({ message: creatingAppServicePlan });
 
-                wizardContext.plan = await client.appServicePlans.createOrUpdate(rgName, newPlanName, await getNewPlan(wizardContext));
+                context.plan = await client.appServicePlans.createOrUpdate(rgName, newPlanName, await getNewPlan(context));
                 ext.outputChannel.appendLog(createdAppServicePlan);
             }
         } catch (e) {
             if (parseError(e).errorType === 'AuthorizationFailed') {
-                await this.selectExistingPrompt(wizardContext);
+                await this.selectExistingPrompt(context);
             } else {
                 throw e;
             }
         }
     }
 
-    public async selectExistingPrompt(wizardContext: IAppServiceWizardContext): Promise<void> {
-        const message: string = localize('planForbidden', 'You do not have permission to create an app service plan in subscription "{0}".', wizardContext.subscriptionDisplayName);
+    public async selectExistingPrompt(context: IAppServiceWizardContext): Promise<void> {
+        const message: string = localize('planForbidden', 'You do not have permission to create an app service plan in subscription "{0}".', context.subscriptionDisplayName);
         const selectExisting: MessageItem = { title: localize('selectExisting', 'Select Existing') };
-        wizardContext.telemetry.properties.cancelStep = 'AspNoPermissions';
-        await wizardContext.ui.showWarningMessage(message, { modal: true }, selectExisting);
+        context.telemetry.properties.cancelStep = 'AspNoPermissions';
+        await context.ui.showWarningMessage(message, { modal: true }, selectExisting);
 
-        wizardContext.telemetry.properties.cancelStep = undefined;
-        wizardContext.telemetry.properties.forbiddenResponse = 'SelectExistingAsp';
+        context.telemetry.properties.cancelStep = undefined;
+        context.telemetry.properties.forbiddenResponse = 'SelectExistingAsp';
         const step: AppServicePlanListStep = new AppServicePlanListStep(true /* suppressCreate */);
-        await step.prompt(wizardContext);
+        await step.prompt(context);
     }
 
-    public shouldExecute(wizardContext: IAppServiceWizardContext): boolean {
-        return !wizardContext.plan;
+    public shouldExecute(context: IAppServiceWizardContext): boolean {
+        return !context.plan;
     }
 }
 
-async function getNewPlan(wizardContext: IAppServiceWizardContext): Promise<WebSiteManagementModels.AppServicePlan> {
-    const location: AzExtLocation = await LocationListStep.getLocation(wizardContext, webProvider);
+async function getNewPlan(context: IAppServiceWizardContext): Promise<WebSiteManagementModels.AppServicePlan> {
+    const location: AzExtLocation = await LocationListStep.getLocation(context, webProvider);
     const plan: WebSiteManagementModels.AppServicePlan = {
-        kind: getPlanKind(wizardContext),
-        sku: nonNullProp(wizardContext, 'newPlanSku'),
+        kind: getPlanKind(context),
+        sku: nonNullProp(context, 'newPlanSku'),
         location: location.name,
-        reserved: wizardContext.newSiteOS === WebsiteOS.linux  // The secret property - must be set to true to make it a Linux plan. Confirmed by the team who owns this API.
+        reserved: context.newSiteOS === WebsiteOS.linux  // The secret property - must be set to true to make it a Linux plan. Confirmed by the team who owns this API.
     };
 
-    const skuFamily = wizardContext.newPlanSku?.family ? wizardContext.newPlanSku?.family.toLowerCase() : '';
+    const skuFamily = context.newPlanSku?.family ? context.newPlanSku?.family.toLowerCase() : '';
     if (skuFamily === 'ep' || skuFamily === 'ws') {
         plan.maximumElasticWorkerCount = 20;
     }
 
-    if (wizardContext.customLocation) {
-        addCustomLocationProperties(plan, wizardContext.customLocation);
+    if (context.customLocation) {
+        addCustomLocationProperties(plan, context.customLocation);
     }
 
     return plan;
@@ -141,10 +141,10 @@ function addCustomLocationProperties(plan: WebSiteManagementModels.AppServicePla
     (<any>plan).extendedLocation = { name: customLocation.id, type: 'customLocation' };
 }
 
-function getPlanKind(wizardContext: IAppServiceWizardContext): string {
-    if (wizardContext.customLocation) {
+function getPlanKind(context: IAppServiceWizardContext): string {
+    if (context.customLocation) {
         return 'linux,kubernetes';
-    } else if (wizardContext.newSiteOS === WebsiteOS.linux) {
+    } else if (context.newSiteOS === WebsiteOS.linux) {
         return WebsiteOS.linux;
     } else {
         return AppKind.app;

@@ -26,12 +26,12 @@ function getLogStreamId(client: SiteClient, logsPath: string): string {
     return `${client.id}${logsPath}`;
 }
 
-export async function startStreamingLogs(client: SiteClient, verifyLoggingEnabled: () => Promise<void>, logStreamLabel: string, logsPath: string = ''): Promise<ILogStream> {
+export async function startStreamingLogs(context: IActionContext, client: SiteClient, verifyLoggingEnabled: () => Promise<void>, logStreamLabel: string, logsPath: string = ''): Promise<ILogStream> {
     const logStreamId: string = getLogStreamId(client, logsPath);
     const logStream: ILogStream | undefined = logStreams.get(logStreamId);
     if (logStream && logStream.isConnected) {
         logStream.outputChannel.show();
-        void ext.ui.showWarningMessage(localize('logStreamAlreadyActive', 'The log-streaming service for "{0}" is already active.', logStreamLabel));
+        void context.ui.showWarningMessage(localize('logStreamAlreadyActive', 'The log-streaming service for "{0}" is already active.', logStreamLabel));
         return logStream;
     } else {
         await verifyLoggingEnabled();

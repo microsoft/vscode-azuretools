@@ -5,14 +5,14 @@
 
 import { WebSiteManagementClient } from '@azure/arm-appservice';
 import { ProgressLocation, window } from 'vscode';
-import { AzureTreeItem, IAzureQuickPickItem } from 'vscode-azureextensionui';
+import { AzureTreeItem, IActionContext, IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { SiteClient } from './SiteClient';
 import { ISiteTreeRoot } from './tree/ISiteTreeRoot';
 import { createWebSiteClient } from './utils/azureClients';
 
-export async function swapSlot(sourceSlotNode: AzureTreeItem<ISiteTreeRoot>, existingSlots: AzureTreeItem<ISiteTreeRoot>[]): Promise<void> {
+export async function swapSlot(context: IActionContext, sourceSlotNode: AzureTreeItem<ISiteTreeRoot>, existingSlots: AzureTreeItem<ISiteTreeRoot>[]): Promise<void> {
     const sourceSlotClient: SiteClient = sourceSlotNode.root.client;
 
     const productionSlotLabel: string = 'production';
@@ -35,7 +35,7 @@ export async function swapSlot(sourceSlotNode: AzureTreeItem<ISiteTreeRoot>, exi
     }
 
     const placeHolder: string = localize('selectSlotToSwap', 'Select which slot to swap with "{0}".', sourceSlotClient.slotName);
-    const targetSlot: AzureTreeItem<ISiteTreeRoot> | undefined = (await ext.ui.showQuickPick(otherSlots, { placeHolder })).data;
+    const targetSlot: AzureTreeItem<ISiteTreeRoot> | undefined = (await context.ui.showQuickPick(otherSlots, { placeHolder })).data;
 
     const targetSlotLabel: string = targetSlot ? targetSlot.root.client.fullName : `${sourceSlotClient.siteName}-${productionSlotLabel}`;
     const swappingSlots: string = localize('swapping', 'Swapping "{0}" with "{1}"...', targetSlotLabel, sourceSlotClient.fullName);

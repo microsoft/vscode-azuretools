@@ -7,7 +7,6 @@ import { WebSiteManagementModels } from '@azure/arm-appservice';
 import * as portfinder from 'portfinder';
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling, IActionContext } from 'vscode-azureextensionui';
-import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { SiteClient } from '../SiteClient';
 import { TunnelProxy } from '../TunnelProxy';
@@ -22,28 +21,28 @@ export enum RemoteDebugLanguage {
     Python
 }
 
-export async function startRemoteDebug(siteClient: SiteClient, siteConfig: WebSiteManagementModels.SiteConfigResource, language: RemoteDebugLanguage): Promise<void> {
+export async function startRemoteDebug(context: IActionContext, siteClient: SiteClient, siteConfig: WebSiteManagementModels.SiteConfigResource, language: RemoteDebugLanguage): Promise<void> {
     if (isRemoteDebugging) {
         throw new Error(localize('remoteDebugAlreadyStarted', 'Azure Remote Debugging is currently starting or already started.'));
     }
 
     isRemoteDebugging = true;
     try {
-        await startRemoteDebugInternal(siteClient, siteConfig, language);
+        await startRemoteDebugInternal(context, siteClient, siteConfig, language);
     } catch (error) {
         isRemoteDebugging = false;
         throw error;
     }
 }
 
-async function startRemoteDebugInternal(siteClient: SiteClient, siteConfig: WebSiteManagementModels.SiteConfigResource, language: RemoteDebugLanguage): Promise<void> {
+async function startRemoteDebugInternal(context: IActionContext, siteClient: SiteClient, siteConfig: WebSiteManagementModels.SiteConfigResource, language: RemoteDebugLanguage): Promise<void> {
     await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, cancellable: true }, async (progress, token): Promise<void> => {
-        const debugConfig: vscode.DebugConfiguration = await getDebugConfiguration(language);
+        const debugConfig: vscode.DebugConfiguration = await getDebugConfiguration(context, language);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const localHostPortNumber: number = debugConfig.port;
 
         const confirmEnableMessage: string = localize('remoteDebugEnablePrompt', 'The configuration will be updated to enable remote debugging. Would you like to continue? This will restart the app.');
-        await setRemoteDebug(true, confirmEnableMessage, undefined, siteClient, siteConfig, progress, token, remoteDebugLink);
+        await setRemoteDebug(context, true, confirmEnableMessage, undefined, siteClient, siteConfig, progress, token, remoteDebugLink);
 
         reportMessage(localize('remoteDebugStartingTunnel', 'Starting tunnel proxy...'), progress, token);
 
@@ -76,7 +75,7 @@ async function startRemoteDebugInternal(siteClient: SiteClient, siteConfig: WebS
 
                 const confirmDisableMessage: string = localize('remoteDebugDisablePrompt', 'Remaining in debugging mode may cause performance issues. Would you like to disable debugging? This will restart the app.');
                 await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, cancellable: true }, async (innerProgress, innerToken): Promise<void> => {
-                    await setRemoteDebug(false, confirmDisableMessage, undefined, siteClient, siteConfig, innerProgress, innerToken, remoteDebugLink);
+                    await setRemoteDebug(context, false, confirmDisableMessage, undefined, siteClient, siteConfig, innerProgress, innerToken, remoteDebugLink);
                 });
             }
         });
@@ -93,7 +92,7 @@ const baseConfigs: { [key in RemoteDebugLanguage]: Object } = {
     }
 };
 
-async function getDebugConfiguration(language: RemoteDebugLanguage): Promise<vscode.DebugConfiguration> {
+async function getDebugConfiguration(context: IActionContext, language: RemoteDebugLanguage): Promise<vscode.DebugConfiguration> {
     if (!(language in baseConfigs)) {
         throw new Error(localize('remoteDebugLanguageNotSupported', 'The language "{0}" is not supported for remote debugging.', language));
     }
@@ -115,7 +114,7 @@ async function getDebugConfiguration(language: RemoteDebugLanguage): Promise<vsc
         } else {
             // In this case we don't know which folder to use. Show a warning and proceed.
             // In the future we should allow users to choose a workspace folder to map sources from.
-            void ext.ui.showWarningMessage(localize('remoteDebugMultipleFolders', 'Unable to bind breakpoints from workspace when multiple folders are open. Use "loaded scripts" instead.'));
+            void context.ui.showWarningMessage(localize('remoteDebugMultipleFolders', 'Unable to bind breakpoints from workspace when multiple folders are open. Use "loaded scripts" instead.'));
         }
     } else {
         // vscode will throw an error if you try to start debugging without any workspace folder open

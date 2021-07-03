@@ -9,36 +9,36 @@ import { createResourceGraphClient } from '../utils/azureClients';
 import { CustomLocation, IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class CustomLocationListStep<T extends IAppServiceWizardContext> extends LocationListStep<T> {
-    public async prompt(wizardContext: T): Promise<void> {
+    public async prompt(context: T): Promise<void> {
         const options: IAzureQuickPickOptions = { placeHolder: localize('selectLocation', 'Select a location for new resources.'), enableGrouping: true };
-        const result: AzExtLocation | CustomLocation = (await wizardContext.ui.showQuickPick(this.getCustomQuickPicks(wizardContext), options)).data;
+        const result: AzExtLocation | CustomLocation = (await context.ui.showQuickPick(this.getCustomQuickPicks(context), options)).data;
         if ('kubeEnvironment' in result) {
-            wizardContext.telemetry.properties.pickedCustomLoc = 'true';
-            wizardContext.customLocation = result;
+            context.telemetry.properties.pickedCustomLoc = 'true';
+            context.customLocation = result;
             // For any resources other than the app, we still need a non-custom location, so we'll use the kubeEnvironment's location
-            await LocationListStep.setLocation(wizardContext, result.kubeEnvironment.location);
+            await LocationListStep.setLocation(context, result.kubeEnvironment.location);
             // Plan has very little effect when a custom location is used, so default this info instead of prompting
-            wizardContext.newPlanName = await wizardContext.relatedNameTask;
-            wizardContext.newPlanSku = { name: 'K1', tier: 'Kubernetes', size: 'K1', family: 'K', capacity: 1 };
-            wizardContext.useConsumptionPlan = false;
+            context.newPlanName = await context.relatedNameTask;
+            context.newPlanSku = { name: 'K1', tier: 'Kubernetes', size: 'K1', family: 'K', capacity: 1 };
+            context.useConsumptionPlan = false;
         } else {
-            wizardContext.telemetry.properties.pickedCustomLoc = 'false';
-            await LocationListStep.setLocation(wizardContext, result.name);
+            context.telemetry.properties.pickedCustomLoc = 'false';
+            await LocationListStep.setLocation(context, result.name);
         }
     }
 
-    protected async getCustomQuickPicks(wizardContext: T): Promise<IAzureQuickPickItem<AzExtLocation | CustomLocation>[]> {
-        const picks: IAzureQuickPickItem<AzExtLocation | CustomLocation>[] = await super.getQuickPicks(wizardContext);
-        if (wizardContext.newSiteOS !== 'windows') {
+    protected async getCustomQuickPicks(context: T): Promise<IAzureQuickPickItem<AzExtLocation | CustomLocation>[]> {
+        const picks: IAzureQuickPickItem<AzExtLocation | CustomLocation>[] = await super.getQuickPicks(context);
+        if (context.newSiteOS !== 'windows') {
             try {
-                const client = await createResourceGraphClient(wizardContext);
+                const client = await createResourceGraphClient(context);
                 const response = await client.resources({
                     query: customLocationQuery,
-                    subscriptions: [wizardContext.subscriptionId]
+                    subscriptions: [context.subscriptionId]
                 });
                 let customLocations = <CustomLocation[]>response.data;
                 customLocations = customLocations.sort((a, b) => a.name.localeCompare(b.name));
-                wizardContext.telemetry.properties.hasCustomLoc = String(customLocations.length > 0);
+                context.telemetry.properties.hasCustomLoc = String(customLocations.length > 0);
                 picks.unshift(...customLocations.map(cl => {
                     return {
                         label: cl.name,
@@ -47,7 +47,7 @@ export class CustomLocationListStep<T extends IAppServiceWizardContext> extends 
                     };
                 }));
             } catch (error) {
-                wizardContext.telemetry.properties.customLocationError = parseError(error).message;
+                context.telemetry.properties.customLocationError = parseError(error).message;
                 // ignore error and display non-custom locations
             }
         }
