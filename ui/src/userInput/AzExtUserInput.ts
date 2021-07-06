@@ -12,8 +12,8 @@ import { showQuickPick } from './showQuickPick';
 import { showWarningMessage } from './showWarningMessage';
 
 export class AzExtUserInput implements types.IAzureUserInput {
-    public _onDidFinishPromptEmitter: EventEmitter<types.PromptResult> = new EventEmitter<types.PromptResult>();
     public wizard?: IInternalAzureWizard;
+    private _onDidFinishPromptEmitter: EventEmitter<types.PromptResult> = new EventEmitter<types.PromptResult>();
     private _context: IInternalActionContext;
 
     public constructor(context: IInternalActionContext) {
