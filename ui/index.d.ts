@@ -675,6 +675,14 @@ type ErrorHandler = (context: IErrorHandlerContext) => void;
 
 type TelemetryHandler = (context: IHandlerContext) => void;
 
+type OnActionStartHandler = (context: IHandlerContext) => void;
+
+/**
+ * Register a handler to run right after an `IActionContext` is created and before the action starts
+ * NOTE: If more than one handler is registered, they are run in an arbitrary order.
+ */
+export function registerOnActionStartHandler(handler: OnActionStartHandler): Disposable;
+
 /**
  * Register a handler to run after a callback errors out, but before the default error handling.
  * NOTE: If more than one handler is registered, they are run in an arbitrary order.

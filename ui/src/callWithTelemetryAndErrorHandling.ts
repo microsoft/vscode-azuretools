@@ -17,7 +17,7 @@ import { limitLines } from './utils/textStrings';
 
 const maxStackLines: number = 3;
 
-function initContext(): [number, types.IActionContext] {
+function initContext(callbackId: string): [number, types.IActionContext] {
     const start: number = Date.now();
     const context: types.IActionContext = {
         telemetry: {
@@ -44,11 +44,21 @@ function initContext(): [number, types.IActionContext] {
         valuesToMask: []
     };
     context.ui = new AzExtUserInput(context);
+
+    const handlerContext: types.IHandlerContext = Object.assign(context, { callbackId });
+    for (const handler of Object.values(onActionStartHandlers)) {
+        try {
+            handler(handlerContext);
+        } catch {
+            // don't block other handlers
+        }
+    }
+
     return [start, context];
 }
 
 export function callWithTelemetryAndErrorHandlingSync<T>(callbackId: string, callback: (context: types.IActionContext) => T): T | undefined {
-    const [start, context] = initContext();
+    const [start, context] = initContext(callbackId);
 
     try {
         return callback(context);
@@ -61,7 +71,7 @@ export function callWithTelemetryAndErrorHandlingSync<T>(callbackId: string, cal
 }
 
 export async function callWithTelemetryAndErrorHandling<T>(callbackId: string, callback: (context: types.IActionContext) => T | PromiseLike<T>): Promise<T | undefined> {
-    const [start, context] = initContext();
+    const [start, context] = initContext(callbackId);
 
     try {
         return await Promise.resolve(callback(context));
@@ -73,8 +83,13 @@ export async function callWithTelemetryAndErrorHandling<T>(callbackId: string, c
     }
 }
 
+const onActionStartHandlers: { [id: number]: types.OnActionStartHandler } = {};
 const errorHandlers: { [id: number]: types.ErrorHandler } = {};
 const telemetryHandlers: { [id: number]: types.TelemetryHandler } = {};
+
+export function registerOnActionStartHandler(handler: types.OnActionStartHandler): Disposable {
+    return registerHandler(handler, onActionStartHandlers);
+}
 
 export function registerErrorHandler(handler: types.ErrorHandler): Disposable {
     return registerHandler(handler, errorHandlers);
