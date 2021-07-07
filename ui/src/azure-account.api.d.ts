@@ -5,7 +5,9 @@
 
 import { SubscriptionModels } from '@azure/arm-subscriptions';
 import { Environment } from '@azure/ms-rest-azure-env';
+import { AzureIdentityCredentialAdapter } from '@azure/ms-rest-js';
 import { TokenCredentialsBase } from '@azure/ms-rest-nodeauth';
+import { AccountInfo } from '@azure/msal-common';
 import { Event } from 'vscode';
 
 export type AzureLoginStatus = 'Initializing' | 'LoggingIn' | 'LoggedIn' | 'LoggedOut';
@@ -28,11 +30,12 @@ export interface AzureSession {
     readonly environment: Environment;
     readonly userId: string;
     readonly tenantId: string;
+    readonly accountInfo?: AccountInfo;
 
-	/**
-	 * The credentials object for azure-sdk-for-js modules https://github.com/azure/azure-sdk-for-js
-	 */
-    readonly credentials2: TokenCredentialsBase;
+   /**
+    * The credentials object for azure-sdk-for-js modules https://github.com/azure/azure-sdk-for-js
+    */
+    readonly credentials2: TokenCredentialsBase | AzureIdentityCredentialAdapter;
 }
 
 export interface AzureSubscription {

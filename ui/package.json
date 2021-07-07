@@ -39,6 +39,7 @@
         "@azure/arm-subscriptions": "^2.0.0",
         "@azure/ms-rest-azure-env": "^2.0.0",
         "@azure/ms-rest-js": "^2.2.1",
+        "@azure/msal-common": "^4.4.0",
         "dayjs": "^1.9.3",
         "escape-string-regexp": "^2.0.0",
         "fs-extra": "^8.0.0",
