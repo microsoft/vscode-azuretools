@@ -7,7 +7,7 @@ import { ResourceManagementModels } from '@azure/arm-resources';
 import { StorageManagementModels } from '@azure/arm-storage';
 import { Environment } from '@azure/ms-rest-azure-env';
 import { HttpOperationResponse, RequestPrepareOptions, ServiceClient } from '@azure/ms-rest-js';
-import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, Memento, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
+import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 
@@ -559,7 +559,9 @@ export interface IActionContext {
     errorHandling: IErrorHandlingContext;
 
     /**
-     * Action-specific alternative to `ext.ui`
+     * Custom implementation of common methods that handle user input (as opposed to using `vscode.window`)
+     * Provides additional functionality to support wizards, grouping, 'recently used', telemetry, etc.
+     * For more information, see the docs on each method and on each `options` object
      */
     ui: IAzureUserInput;
 
@@ -704,11 +706,8 @@ export type PromptResult = {
 };
 
 /**
- * Wrapper interface of several `vscode.window` methods that handle user input. The main reason for this interface
- * is to facilitate unit testing in non-interactive mode with the `TestUserInput` class.
- * However, the `AzureUserInput` class does have a few minor differences from default vscode behavior:
- * 1. Automatically throws a `UserCancelledError` instead of returning undefined when a user cancels
- * 2. Persists 'recently used' items in quick picks and displays them at the top
+ * Wrapper interface of several methods that handle user input
+ * The implementations of this interface are accessed through `IActionContext.ui` or `TestActionContext.ui` (in the "vscode-azureextensiondev" package)
  */
 export interface IAzureUserInput {
     readonly onDidFinishPrompt: Event<PromptResult>;
@@ -776,25 +775,6 @@ export interface IAzureUserInput {
 }
 
 /**
- * Wrapper class of several `vscode.window` methods that handle user input.
- */
-export declare class AzureUserInput implements IAzureUserInput {
-    readonly onDidFinishPrompt: Event<PromptResult>;
-
-    /**
-     * @param persistence Used to persist previous selections in the QuickPick.
-     */
-    public constructor(persistence: Memento);
-
-    public showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions & { canPickMany: true }): Promise<T[]>;
-    public showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: QuickPickOptions): Promise<T>;
-    public showInputBox(options: InputBoxOptions): Promise<string>;
-    public showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
-    public showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Promise<MessageItem>;
-    public showOpenDialog(options: OpenDialogOptions): Promise<Uri[]>;
-}
-
-/**
  * Provides additional options for QuickPickItems used in Azure Extensions
  */
 export interface IAzureQuickPickItem<T = undefined> extends QuickPickItem {
@@ -808,14 +788,12 @@ export interface IAzureQuickPickItem<T = undefined> extends QuickPickItem {
 
     /**
      * Callback to use when this item is picked, instead of returning the pick
-     * Only applies when used as part of an `AzureWizard`
      * This is not compatible with `canPickMany`
      */
     onPicked?: () => void | Promise<void>;
 
     /**
      * The group that this pick belongs to. Set `IAzureQuickPickOptions.enableGrouping` for this property to take effect
-     * Only applies when used as part of an `AzureWizard`
      */
     group?: string;
 
@@ -847,20 +825,17 @@ export interface IAzureQuickPickOptions extends QuickPickOptions {
 
     /**
      * If true, you must specify a `group` property on each `IAzureQuickPickItem` and the picks will be grouped into collapsible sections
-     * Only applies when used as part of an `AzureWizard`
      * This is not compatible with `canPickMany`
      */
     enableGrouping?: boolean;
 
     /**
      * Optional message to display while the quick pick is loading instead of the normal placeHolder.
-     * Only applies when used as part of an `AzureWizard`
      */
     loadingPlaceHolder?: string;
 
     /**
      * Optional message to display when no picks are found
-     * Only applies when used as part of an `AzureWizard`
      */
     noPicksMessage?: string;
 }
@@ -1315,7 +1290,6 @@ export declare function createExperimentationService(ctx: ExtensionContext, targ
 export interface UIExtensionVariables {
     context: ExtensionContext;
     outputChannel: IAzExtOutputChannel;
-    ui: IAzureUserInput;
 
     /**
      * Set to true if not running under a webpacked 'dist' folder as defined in 'vscode-azureextensiondev'

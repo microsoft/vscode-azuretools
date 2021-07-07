@@ -13,8 +13,7 @@ function activate(context) {
     const extVars = {
         context,
         reporter: new DebugReporter(),
-        outputChannel: createAzExtOutputChannel('Extension Test Output', 'azureextensionui'),
-        ui: new ui_1.AzureUserInput()
+        outputChannel: createAzExtOutputChannel('Extension Test Output', 'azureextensionui')
     };
     ui_1.registerUIExtensionVariables(extVars)
 }

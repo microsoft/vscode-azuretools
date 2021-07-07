@@ -12,6 +12,7 @@ import { getRedactedLabel, maskUserInfo } from './masking';
 import { parseError } from './parseError';
 import { cacheIssueForCommand } from './registerReportIssueCommand';
 import { IReportableIssue, reportAnIssue } from './reportAnIssue';
+import { AzExtUserInput } from './userInput/AzExtUserInput';
 import { limitLines } from './utils/textStrings';
 
 const maxStackLines: number = 3;
@@ -39,9 +40,10 @@ function initContext(): [number, types.IActionContext] {
             rethrow: false,
             issueProperties: {}
         },
-        ui: ext.ui,
+        ui: <AzExtUserInput><unknown>undefined,
         valuesToMask: []
     };
+    context.ui = new AzExtUserInput(context);
     return [start, context];
 }
 

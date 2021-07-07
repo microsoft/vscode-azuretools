@@ -8,14 +8,9 @@ import * as vscode from 'vscode';
 import * as types from '../../index';
 import { GoBackError } from '../errors';
 import { parseError } from '../parseError';
+import { IInternalActionContext, IInternalAzureWizard } from '../userInput/IInternalActionContext';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
-import { AzureWizardUserInput, IInternalAzureWizard } from './AzureWizardUserInput';
-import { IWizardUserInput } from './IWizardUserInput';
-
-interface IInternalActionContext extends types.IActionContext {
-    ui: types.IAzureUserInput & { wizardUserInput?: IWizardUserInput };
-}
 
 export class AzureWizard<T extends IInternalActionContext> implements types.AzureWizard<T>, IInternalAzureWizard {
     public title: string | undefined;
@@ -54,9 +49,16 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
         return this._finishedPromptSteps.filter(s => s.prompted).length + this._promptSteps.filter(s => s.shouldPrompt(this._context)).length + 1;
     }
 
+    public get showBackButton(): boolean {
+        return this.currentStep > 1;
+    }
+
+    public get showTitle(): boolean {
+        return this.totalSteps > 1;
+    }
+
     public async prompt(): Promise<void> {
-        const wizardUi: AzureWizardUserInput = new AzureWizardUserInput(this);
-        this._context.ui.wizardUserInput = wizardUi;
+        this._context.ui.wizard = this;
 
         try {
             let step: AzureWizardPromptStep<T> | undefined = this._promptSteps.pop();
@@ -109,9 +111,7 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
                 step = this._promptSteps.pop();
             }
         } finally {
-            if (this._context.ui.wizardUserInput === wizardUi) { // don't reset if another wizard has already started
-                this._context.ui.wizardUserInput = undefined;
-            }
+            this._context.ui.wizard = undefined;
         }
     }
 
@@ -190,7 +190,7 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
     }
 }
 
-function getEffectiveStepId<T extends types.IActionContext>(step: types.AzureWizardPromptStep<T> | types.AzureWizardExecuteStep<T>): string {
+function getEffectiveStepId<T extends IInternalActionContext>(step: types.AzureWizardPromptStep<T> | types.AzureWizardExecuteStep<T>): string {
     return step.id || step.constructor.name;
 }
 
