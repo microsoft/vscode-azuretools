@@ -7,7 +7,7 @@ import * as types from '../index';
 import { TestUserInput } from './TestUserInput';
 
 export async function createTestActionContext(): Promise<types.TestActionContext> {
-    return { telemetry: { properties: {}, measurements: {} }, errorHandling: { issueProperties: {} }, valuesToMask: [], ui: new TestUserInput(await import('vscode')) };
+    return { telemetry: { properties: {}, measurements: {} }, errorHandling: { issueProperties: {} }, valuesToMask: [], ui: await TestUserInput.create() };
 }
 
 /**

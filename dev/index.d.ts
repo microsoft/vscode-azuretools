@@ -5,7 +5,7 @@
 
 import { Environment } from "@azure/ms-rest-azure-env";
 import * as cp from "child_process";
-import { Event, InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, Uri } from "vscode";
+import { Disposable, Event, InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, Uri } from "vscode";
 import * as webpack from 'webpack';
 
 /**
@@ -210,3 +210,15 @@ export declare function createTestActionContext(): Promise<TestActionContext>;
  * Similar to `createTestActionContext` but with some extra logging
  */
 export declare function runWithTestActionContext(callbackId: string, callback: (context: TestActionContext) => Promise<void>): Promise<void>;
+
+type registerOnActionStartHandlerType = (handler: (context: { callbackId: string; ui: Partial<TestUserInput>; }) => void) => Disposable;
+
+/**
+ * Alternative to `TestUserInput.runWithInputs` that can be used on the rare occasion when the `IActionContext` must be created inside `callback` instead of before `callback`
+ *
+ * @param callbackId The expected callbackId for the action to be run
+ * @param inputs An ordered array of inputs that will be used instead of interactively prompting in VS Code
+ * @param registerOnActionStartHandler The function defined in 'vscode-azureextensionui' for registering onActionStart handlers
+ * @param callback The callback to run
+ */
+export declare function runWithInputs<T>(callbackId: string, inputs: (string | RegExp | TestInput)[], registerOnActionStartHandler: registerOnActionStartHandlerType, callback: () => Promise<T>): Promise<T>;
