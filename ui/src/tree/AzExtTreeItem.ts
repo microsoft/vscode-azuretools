@@ -22,6 +22,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     public iconPath?: types.TreeItemIconPath;
     public tooltip?: string;
     public suppressMaskLabel?: boolean;
+    public hasBeenDeleted?: boolean;
     //#endregion
 
     /**
@@ -111,6 +112,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
                 if (this.parent) {
                     this.parent.removeChildFromCache(this);
                 }
+                this.hasBeenDeleted = true;
             } else {
                 throw new NotImplementedError('deleteTreeItemImpl', this);
             }
