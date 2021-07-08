@@ -10,8 +10,7 @@ const appservice_1 = require('../../out/src/index');
 function activate(context) {
     const extVars = {
         context,
-        outputChannel: vscode.window.createOutputChannel('azureappservice'),
-        ui: new ui_1.AzureUserInput()
+        outputChannel: vscode.window.createOutputChannel('azureappservice')
     };
     ui_1.registerUIExtensionVariables(extVars);
     appservice_1.registerAppServiceExtensionVariables(extVars);
