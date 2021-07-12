@@ -14,6 +14,7 @@ export function parseError(error: any): IParsedError {
     let errorType: string = '';
     let message: string = '';
     let stack: string | undefined;
+    let stepName: string | undefined;
 
     if (typeof (error) === 'object' && error !== null) {
         if (error.constructor !== Object) {
@@ -56,6 +57,10 @@ export function parseError(error: any): IParsedError {
         message = getMessage(parsedMessage, message);
 
         message = message || convertCodeToError(errorType) || JSON.stringify(error);
+
+        if ('stepName' in error && typeof error.stepName === 'string') {
+            stepName = error.stepName;
+        }
     } else if (error !== undefined && error !== null && error.toString && error.toString().trim() !== '') {
         errorType = typeof (error);
         message = error.toString();
@@ -78,6 +83,7 @@ export function parseError(error: any): IParsedError {
         errorType: errorType,
         message: message,
         stack: stack,
+        stepName,
         // NOTE: Intentionally not using 'error instanceof UserCancelledError' because that doesn't work if multiple versions of the UI package are used in one extension
         // See https://github.com/Microsoft/vscode-azuretools/issues/51 for more info
         isUserCancelledError: errorType === 'UserCancelledError'

@@ -12,6 +12,7 @@ export interface IInternalActionContext extends types.IActionContext {
 export interface IInternalAzureWizard {
     title: string | undefined;
     currentStep: number;
+    currentStepId: string | undefined;
     totalSteps: number;
     hideStepCount: boolean | undefined;
     showBackButton: boolean;

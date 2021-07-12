@@ -216,8 +216,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         // eslint-disable-next-line no-constant-condition
         outerLoop: while (true) {
             if (cancellationToken?.isCancellationRequested) {
-                context.telemetry.properties.cancelStep = 'findTreeItem';
-                throw new UserCancelledError();
+                throw new UserCancelledError('findTreeItem');
             }
 
             const children: AzExtTreeItem[] = await treeItem.getCachedChildren(context);

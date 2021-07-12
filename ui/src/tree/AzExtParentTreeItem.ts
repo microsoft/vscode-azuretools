@@ -112,18 +112,19 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         }
 
         const placeHolder: string = localize('selectTreeItem', 'Select {0}', this.childTypeLabel);
+        const stepName = `treeItemPicker|${this.contextValue}`;
 
         let getTreeItem: GetTreeItemFunction;
 
         try {
-            getTreeItem = (await context.ui.showQuickPick(this.getQuickPicks(expectedContextValues, context), { placeHolder, ignoreFocusOut: context.ignoreFocusOut })).data;
+            getTreeItem = (await context.ui.showQuickPick(this.getQuickPicks(expectedContextValues, context), { placeHolder, stepName, ignoreFocusOut: context.ignoreFocusOut })).data;
         } catch (error) {
             // We want the loading thing to show for `showQuickPick` but we also need to support autoSelect and canPickMany based on the value of the picks
             // hence throwing an error instead of just awaiting `getQuickPicks`
             if (error instanceof AutoSelectError) {
                 getTreeItem = error.data;
             } else if (error instanceof CanPickManyError) {
-                const result: types.IAzureQuickPickItem<GetTreeItemFunction>[] = (await context.ui.showQuickPick(error.picks, { placeHolder, canPickMany: true }));
+                const result: types.IAzureQuickPickItem<GetTreeItemFunction>[] = (await context.ui.showQuickPick(error.picks, { placeHolder, stepName, canPickMany: true }));
                 return await Promise.all(result.map(async pick => await pick.data()));
             } else {
                 throw error;
@@ -174,8 +175,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         await runWithLoadingNotification(context, async (cancellationToken) => {
             do {
                 if (cancellationToken.isCancellationRequested) {
-                    context.telemetry.properties.cancelStep = 'loadAllChildren';
-                    throw new UserCancelledError();
+                    throw new UserCancelledError('loadAllChildren');
                 }
 
                 await this.loadMoreChildren(context);

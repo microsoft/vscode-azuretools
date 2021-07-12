@@ -501,7 +501,9 @@ export declare abstract class AzureParentTreeItem<TRoot extends ISubscriptionCon
 */
 export declare function openInPortal(root: ISubscriptionContext | AzExtTreeItem, id: string, options?: OpenInPortalOptions): Promise<void>;
 
-export declare class UserCancelledError extends Error { }
+export declare class UserCancelledError extends Error {
+    constructor(stepName?: string);
+}
 
 export declare class NoResourceFoundError extends Error { }
 
@@ -648,7 +650,17 @@ export interface TelemetryProperties {
     result?: 'Succeeded' | 'Failed' | 'Canceled';
     error?: string;
     errorMessage?: string;
+
+    /**
+     * @deprecated Specify a stepName in the constructor of `UserCancelledError` or on `AzExtUserInputOptions` instead
+     */
     cancelStep?: string;
+
+    /**
+     * The last step attempted regardless of the result of the action. Will be automatically set in most cases
+     */
+    lastStep?: string;
+
     [key: string]: string | undefined;
 }
 
@@ -701,6 +713,7 @@ export interface IParsedError {
     errorType: string;
     message: string;
     stack?: string;
+    stepName?: string;
     isUserCancelledError: boolean;
 }
 
@@ -748,7 +761,7 @@ export interface IAzureUserInput {
      * @throws `UserCancelledError` if the user cancels.
      * @return A promise that resolves to a string the user provided.
      */
-    showInputBox(options: InputBoxOptions): Promise<string>;
+    showInputBox(options: AzExtInputBoxOptions): Promise<string>;
 
     /**
      * Show a warning message.
@@ -779,7 +792,17 @@ export interface IAzureUserInput {
      * @throws `UserCancelledError` if the user cancels.
      * @returns A promise that resolves to the selected resources.
      */
-    showOpenDialog(options: OpenDialogOptions): Promise<Uri[]>;
+    showOpenDialog(options: AzExtOpenDialogOptions): Promise<Uri[]>;
+}
+
+/**
+ * Common options used for all user input in Azure Extensions
+ */
+export interface AzExtUserInputOptions {
+    /**
+     * Optional step name to be used in telemetry
+     */
+    stepName?: string;
 }
 
 /**
@@ -814,7 +837,7 @@ export interface IAzureQuickPickItem<T = undefined> extends QuickPickItem {
 /**
  * Provides additional options for QuickPicks used in Azure Extensions
  */
-export interface IAzureQuickPickOptions extends QuickPickOptions {
+export interface IAzureQuickPickOptions extends QuickPickOptions, AzExtUserInputOptions {
     /**
      * An optional id to identify this QuickPick across sessions, used in persisting previous selections
      * If not specified, a hash of the placeHolder will be used
@@ -851,12 +874,22 @@ export interface IAzureQuickPickOptions extends QuickPickOptions {
 /**
  * Provides additional options for dialogs used in Azure Extensions
  */
-export interface IAzureMessageOptions extends MessageOptions {
+export interface IAzureMessageOptions extends MessageOptions, AzExtUserInputOptions {
     /**
      * If specified, a "Learn more" button will be added to the dialog and it will re-prompt every time the user clicks "Learn more"
      */
     learnMoreLink?: string;
 }
+
+/**
+ * Provides additional options for input boxes used in Azure Extensions
+ */
+export interface AzExtInputBoxOptions extends InputBoxOptions, AzExtUserInputOptions { }
+
+/**
+* Provides additional options for open dialogs used in Azure Extensions
+*/
+export interface AzExtOpenDialogOptions extends OpenDialogOptions, AzExtUserInputOptions { }
 
 export interface IWizardOptions<T extends IActionContext> {
     /**
