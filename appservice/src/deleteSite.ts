@@ -18,7 +18,7 @@ export async function deleteSite(context: IActionContext, client: SiteClient): P
             localize('confirmDeleteFunctionApp', 'Are you sure you want to delete function app "{0}"?', client.fullName) :
             localize('confirmDeleteWebApp', 'Are you sure you want to delete web app "{0}"?', client.fullName);
 
-    await context.ui.showWarningMessage(confirmMessage, { modal: true }, DialogResponses.deleteResponse);
+    await context.ui.showWarningMessage(confirmMessage, { modal: true, stepName: 'confirmDelete' }, DialogResponses.deleteResponse);
 
     let plan: WebSiteManagementModels.AppServicePlan | undefined;
     let deletePlan: boolean = false;
@@ -30,7 +30,7 @@ export async function deleteSite(context: IActionContext, client: SiteClient): P
 
     if (!client.isSlot && plan && !isNullOrUndefined(plan.numberOfSites) && plan.numberOfSites < 2) {
         const message: string = localize('deleteLastServicePlan', 'This is the last app in the App Service plan "{0}". Do you want to delete this App Service plan to prevent unexpected charges?', plan.name);
-        const input: vscode.MessageItem = await context.ui.showWarningMessage(message, { modal: true }, DialogResponses.yes, DialogResponses.no);
+        const input: vscode.MessageItem = await context.ui.showWarningMessage(message, { modal: true, stepName: 'lastAppOnPlan' }, DialogResponses.yes, DialogResponses.no);
         deletePlan = input === DialogResponses.yes;
     }
 

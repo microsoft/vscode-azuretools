@@ -12,7 +12,7 @@ import { SiteClient } from '../SiteClient';
 
 export function reportMessage(message: string, progress: vscode.Progress<{}>, token: vscode.CancellationToken): void {
     if (token.isCancellationRequested) {
-        throw new UserCancelledError();
+        throw new UserCancelledError('remoteDebugReportMessage');
     }
 
     ext.outputChannel.appendLog(message);

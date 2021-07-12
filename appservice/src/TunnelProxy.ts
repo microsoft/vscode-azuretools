@@ -245,7 +245,7 @@ export class TunnelProxy {
         const start: number = Date.now();
         while (Date.now() < start + timeoutMs) {
             if (token.isCancellationRequested) {
-                throw new UserCancelledError();
+                throw new UserCancelledError('checkTunnelStatus');
             }
 
             await this.pingApp();
@@ -266,7 +266,7 @@ export class TunnelProxy {
     private async setupTunnelServer(token: CancellationToken): Promise<void> {
         return new Promise<void>((resolve: () => void, reject: (err: Error) => void): void => {
             const listener: Disposable = token.onCancellationRequested(() => {
-                reject(new UserCancelledError());
+                reject(new UserCancelledError('setupTunnelServer'));
                 listener.dispose();
             });
 

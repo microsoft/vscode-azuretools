@@ -106,11 +106,13 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
         const settings: WebSiteManagementModels.StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings(context)));
         const newKey: string = await context.ui.showInputBox({
             prompt: 'Enter new app setting name',
+            stepName: 'appSettingName',
             validateInput: (v: string): string | undefined => validateAppSettingKey(settings, this.client, v)
         });
 
         const newValue: string = await context.ui.showInputBox({
-            prompt: `Enter value for "${newKey}"`
+            prompt: `Enter value for "${newKey}"`,
+            stepName: 'appSettingValue'
         });
 
         if (!settings.properties) {

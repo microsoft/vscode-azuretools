@@ -66,12 +66,13 @@ async function showScmPrompt(context: IActionContext, currentScmType: string): P
 
     const options: IAzureQuickPickOptions = {
         placeHolder: localize('scmPrompt', 'Select a new source.'),
-        suppressPersistence: true
+        suppressPersistence: true,
+        stepName: 'editScmType'
     };
     const newScmType: ScmType | undefined = (await context.ui.showQuickPick(scmQuickPicks, options)).data;
     if (newScmType === undefined) {
         // if the user clicks the current source, treat it as a cancel
-        throw new UserCancelledError();
+        throw new UserCancelledError('scmTypeAlreadyMatches');
     } else {
         return newScmType;
     }

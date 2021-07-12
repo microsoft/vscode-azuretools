@@ -66,9 +66,7 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
         const message: string = localize('aiForbidden', 'You do not have permission to create an app insights resource in subscription "{0}".', context.subscriptionDisplayName);
         const selectExisting: MessageItem = { title: localize('selectExisting', 'Select Existing') };
         const skipForNow: MessageItem = { title: localize('skipForNow', 'Skip for Now') };
-        context.telemetry.properties.cancelStep = 'AppInsightsNoPermissions';
-        const result = await context.ui.showWarningMessage(message, { modal: true }, selectExisting, skipForNow);
-        context.telemetry.properties.cancelStep = undefined;
+        const result = await context.ui.showWarningMessage(message, { modal: true, stepName: 'AppInsightsNoPermissions' }, selectExisting, skipForNow);
         if (result === skipForNow) {
             context.telemetry.properties.aiSkipForNow = 'true';
             context.appInsightsSkip = true;

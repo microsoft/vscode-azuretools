@@ -35,7 +35,7 @@ export async function swapSlot(context: IActionContext, sourceSlotNode: AzureTre
     }
 
     const placeHolder: string = localize('selectSlotToSwap', 'Select which slot to swap with "{0}".', sourceSlotClient.slotName);
-    const targetSlot: AzureTreeItem<ISiteTreeRoot> | undefined = (await context.ui.showQuickPick(otherSlots, { placeHolder })).data;
+    const targetSlot: AzureTreeItem<ISiteTreeRoot> | undefined = (await context.ui.showQuickPick(otherSlots, { placeHolder, stepName: 'swapSlot' })).data;
 
     const targetSlotLabel: string = targetSlot ? targetSlot.root.client.fullName : `${sourceSlotClient.siteName}-${productionSlotLabel}`;
     const swappingSlots: string = localize('swapping', 'Swapping "{0}" with "{1}"...', targetSlotLabel, sourceSlotClient.fullName);
