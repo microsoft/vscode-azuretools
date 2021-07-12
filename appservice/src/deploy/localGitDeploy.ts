@@ -40,11 +40,9 @@ export async function localGitDeploy(client: SiteClient, options: localGitOption
             try {
                 status = await localGit.status();
                 if (status.files.length > 0 && !options.commit) {
-                    context.telemetry.properties.cancelStep = 'pushWithUncommitChanges';
                     const message: string = localize('localGitUncommit', '{0} uncommitted change(s) in local repo "{1}"', status.files.length, options.fsPath);
                     const deployAnyway: vscode.MessageItem = { title: localize('deployAnyway', 'Deploy Anyway') };
-                    await context.ui.showWarningMessage(message, { modal: true }, deployAnyway);
-                    context.telemetry.properties.cancelStep = undefined;
+                    await context.ui.showWarningMessage(message, { modal: true, stepName: 'pushWithUncommitChanges' }, deployAnyway);
                     context.telemetry.properties.pushWithUncommitChanges = 'true';
                 }
                 await verifyNoRunFromPackageSetting(client);
@@ -66,9 +64,7 @@ export async function localGitDeploy(client: SiteClient, options: localGitOption
                     const forcePushMessage: vscode.MessageItem = { title: localize('forcePush', 'Force Push') };
                     const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging.');
 
-                    context.telemetry.properties.cancelStep = 'forcePush';
-                    await context.ui.showWarningMessage(pushReject, { modal: true }, forcePushMessage);
-                    context.telemetry.properties.cancelStep = undefined;
+                    await context.ui.showWarningMessage(pushReject, { modal: true, stepName: 'forcePush' }, forcePushMessage);
                     context.telemetry.properties.forcePush = 'true';
                     await tryPushAndWaitForDeploymentToComplete(true);
                 } else {

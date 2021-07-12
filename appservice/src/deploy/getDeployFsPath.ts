@@ -127,8 +127,7 @@ function getContainingWorkspace(context: IActionContext, fsPath: string): vscode
             });
         });
 
-        context.telemetry.properties.cancelStep = 'openInNewWindow';
-        throw new UserCancelledError();
+        throw new UserCancelledError('openInNewWindow');
     }
 
     context.telemetry.properties.deployingSubpathOfWorkspace = String(isSubpath(workspaceFolder.uri.fsPath, fsPath));

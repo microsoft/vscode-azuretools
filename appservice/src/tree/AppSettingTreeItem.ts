@@ -62,6 +62,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
     public async edit(context: IActionContext): Promise<void> {
         const newValue: string = await context.ui.showInputBox({
             prompt: `Enter setting value for "${this._key}"`,
+            stepName: 'appSettingValue',
             value: this._value
         });
 
@@ -76,6 +77,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
         const oldKey: string = this._key;
         const newKey: string = await context.ui.showInputBox({
             prompt: `Enter a new name for "${oldKey}"`,
+            stepName: 'appSettingName',
             value: this._key,
             validateInput: (v: string): string | undefined => validateAppSettingKey(settings, this._client, v, oldKey)
         });
@@ -86,7 +88,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
     }
 
     public async deleteTreeItemImpl(context: IActionContext): Promise<void> {
-        await context.ui.showWarningMessage(`Are you sure you want to delete setting "${this._key}"?`, { modal: true }, DialogResponses.deleteResponse);
+        await context.ui.showWarningMessage(`Are you sure you want to delete setting "${this._key}"?`, { modal: true, stepName: 'confirmDelete' }, DialogResponses.deleteResponse);
         await this.parent.deleteSettingItem(this._key, context);
     }
 

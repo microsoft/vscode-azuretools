@@ -14,6 +14,6 @@ export async function disconnectRepo(context: IActionContext, client: SiteClient
     const sourceControl: WebSiteManagementModels.SiteSourceControl = await client.getSourceControl();
     const disconnectButton: MessageItem = { title: localize('disconnect', 'Disconnect') };
     const disconnect: string = localize('disconnectFromRepo', 'Disconnect from "{0}"? This will not affect your app\'s active deployment. You may reconnect a repository at any time.', sourceControl.repoUrl);
-    await context.ui.showWarningMessage(disconnect, { modal: true }, disconnectButton);
+    await context.ui.showWarningMessage(disconnect, { modal: true, stepName: 'disconnectRepo' }, disconnectButton);
     await editScmType(context, client, subscriptionContext, ScmType.None);
 }

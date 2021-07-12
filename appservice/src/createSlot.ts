@@ -17,6 +17,7 @@ export async function createSlot(root: ISiteTreeRoot, existingSlots: AzureTreeIt
     const client: WebSiteManagementClient = await createWebSiteClient(root);
     const slotName: string = (await context.ui.showInputBox({
         prompt: localize('enterSlotName', 'Enter a unique name for the new deployment slot'),
+        stepName: 'slotName',
         validateInput: async (value: string): Promise<string | undefined> => validateSlotName(value, client, root)
     })).trim();
 
@@ -100,7 +101,7 @@ async function chooseConfigurationSource(context: IActionContext, root: ISiteTre
         }
 
         const placeHolder: string = localize('chooseSource', 'Choose a configuration source.');
-        return (await context.ui.showQuickPick(configurationSources, { placeHolder })).data;
+        return (await context.ui.showQuickPick(configurationSources, { placeHolder, stepName: 'slotConfigSource' })).data;
     }
 }
 
