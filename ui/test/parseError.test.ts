@@ -142,6 +142,7 @@ callWithTelemetryAndErrorHandling.js.__awaiter vscode-azureextensionui/extension
         assert.strictEqual(pe.errorType, 'Error');
         assert.strictEqual(pe.message, 'test');
         assert.strictEqual(pe.isUserCancelledError, false);
+        assert.strictEqual(pe.stepName, undefined);
     });
 
     test('Specific Error', () => {
@@ -152,10 +153,11 @@ callWithTelemetryAndErrorHandling.js.__awaiter vscode-azureextensionui/extension
     });
 
     test('UserCancelledError', () => {
-        const pe: IParsedError = parseError(new UserCancelledError());
+        const pe: IParsedError = parseError(new UserCancelledError('step1'));
         assert.strictEqual(pe.errorType, 'UserCancelledError');
         assert.strictEqual(pe.message, 'Operation cancelled.');
         assert.strictEqual(pe.isUserCancelledError, true);
+        assert.strictEqual(pe.stepName, 'step1');
     });
 
     test('Azure Error', () => {

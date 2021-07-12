@@ -51,10 +51,8 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
 
                 const message: string = localize('rgForbidden', 'You do not have permission to create a resource group in subscription "{0}".', wizardContext.subscriptionDisplayName);
                 const selectExisting: MessageItem = { title: localize('selectExisting', 'Select Existing') };
-                wizardContext.telemetry.properties.cancelStep = 'RgNoPermissions';
-                await wizardContext.ui.showWarningMessage(message, { modal: true }, selectExisting);
+                await wizardContext.ui.showWarningMessage(message, { modal: true, stepName: 'RgNoPermissions' }, selectExisting);
 
-                wizardContext.telemetry.properties.cancelStep = undefined;
                 wizardContext.telemetry.properties.forbiddenResponse = 'SelectExistingRg';
                 const step: ResourceGroupListStep<T> = new ResourceGroupListStep(true /* suppressCreate */);
                 await step.prompt(wizardContext);

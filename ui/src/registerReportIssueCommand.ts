@@ -53,7 +53,7 @@ export function registerReportIssueCommand(commandId: string): void {
                 data: undefined
             });
             const placeHolder: string = localize('selectError', 'Select the error you would like to report');
-            const issue: IReportableIssue | undefined = (await context.ui.showQuickPick(picks, { placeHolder, suppressPersistence: true })).data;
+            const issue: IReportableIssue | undefined = (await context.ui.showQuickPick(picks, { placeHolder, stepName: 'reportIssue', suppressPersistence: true })).data;
             await reportAnIssue(issue);
         }
     });

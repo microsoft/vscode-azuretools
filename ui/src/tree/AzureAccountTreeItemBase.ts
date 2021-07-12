@@ -237,20 +237,21 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
         const azureAccount: AzureAccountResult = await this._azureAccountTask;
         if (typeof azureAccount === 'string') {
             let message: string;
+            let stepName: string;
             if (azureAccount === 'notInstalled') {
-                context.telemetry.properties.cancelStep = 'requiresAzureAccount';
+                stepName = 'requiresAzureAccount';
                 message = localize('requiresAzureAccount', "This functionality requires installing the Azure Account extension.");
             } else {
-                context.telemetry.properties.cancelStep = 'requiresUpdateToAzureAccount';
+                stepName = 'requiresUpdateToAzureAccount';
                 message = localize('requiresUpdateToAzureAccount', 'This functionality requires updating the Azure Account extension to at least version "{0}".', minAccountExtensionVersion);
             }
 
             const viewInMarketplace: MessageItem = { title: localize('viewInMarketplace', "View in Marketplace") };
-            if (await context.ui.showWarningMessage(message, viewInMarketplace) === viewInMarketplace) {
+            if (await context.ui.showWarningMessage(message, { stepName }, viewInMarketplace) === viewInMarketplace) {
                 await commands.executeCommand(extensionOpenCommand, azureAccountExtensionId);
             }
 
-            throw new UserCancelledError();
+            throw new UserCancelledError(`${stepName}|viewInMarketplace`);
         }
 
         if (!this._subscriptionTreeItems) {

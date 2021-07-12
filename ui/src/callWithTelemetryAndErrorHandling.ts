@@ -23,7 +23,7 @@ function initContext(callbackId: string): [number, types.IActionContext] {
         telemetry: {
             properties: {
                 isActivationEvent: 'false',
-                cancelStep: '',
+                lastStep: '',
                 result: 'Succeeded',
                 stack: '',
                 error: '',
@@ -124,6 +124,10 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
     const errorData: types.IParsedError = parseError(errorContext.error);
     const unMaskedMessage: string = errorData.message;
     errorData.message = maskUserInfo(errorData.message, context.valuesToMask);
+    if (errorData.stepName) {
+        context.telemetry.properties.lastStep = errorData.stepName;
+    }
+
     if (errorData.isUserCancelledError) {
         context.telemetry.properties.result = 'Canceled';
         context.errorHandling.suppressDisplay = true;
