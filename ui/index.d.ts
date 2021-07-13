@@ -188,10 +188,15 @@ export declare abstract class AzExtTreeItem {
     /**
      * Additional information about a tree item that is appended to the label with the format `label (description)`
      */
-    public description?: string;
+    public set description(description: string | undefined);
+    public get description(): string | undefined;
+
     public set iconPath(iconPath: TreeItemIconPath | undefined);
     public get iconPath(): TreeItemIconPath | undefined;
-    public commandId?: string;
+
+    public set commandId(id: string | undefined);
+    public get commandId(): string | undefined;
+
     public tooltip?: string;
 
     /**

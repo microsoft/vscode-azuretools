@@ -15,8 +15,8 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     //#region Properties implemented by base class
     public abstract label: string;
     public abstract contextValue: string;
-    public description?: string;
-    public commandId?: string;
+    public description: string | undefined;
+    public commandId: string | undefined;
     public commandArgs?: unknown[];
     public tooltip?: string;
     public suppressMaskLabel?: boolean;
