@@ -16,10 +16,8 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     public abstract label: string;
     public abstract contextValue: string;
     public description?: string;
-    public id?: string;
     public commandId?: string;
     public commandArgs?: unknown[];
-    public iconPath?: types.TreeItemIconPath;
     public tooltip?: string;
     public suppressMaskLabel?: boolean;
     public hasBeenDeleted?: boolean;
@@ -44,6 +42,14 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
         return this._temporaryDescription || this.description;
     }
 
+    public get id(): string {
+        return this.id || this.label;
+    }
+
+    public set id(id: string | undefined) {
+        this.id = id;
+    }
+
     public get fullId(): string {
         if (this.parent === undefined) {
             return ''; // root tree item should not have an id since it's not actually displayed
@@ -60,6 +66,14 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
 
             return id;
         }
+    }
+
+    public set iconPath(iconPath: types.TreeItemIconPath | undefined) {
+        this.iconPath = iconPath;
+    }
+
+    public get iconPath(): types.TreeItemIconPath | undefined {
+        return this.iconPath;
     }
 
     public get effectiveIconPath(): types.TreeItemIconPath | undefined {

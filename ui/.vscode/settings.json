@@ -11,5 +11,13 @@
     },
     "editor.codeActionsOnSave": {
         "source.fixAll.eslint": true
-    }
+    },
+    "cSpell.words": [
+        "RAGRS",
+        "devs",
+        "dont",
+        "endregion",
+        "sdks",
+        "webpacked"
+    ]
 }
