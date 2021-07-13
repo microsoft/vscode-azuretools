@@ -13,7 +13,7 @@ const inputValidationTimeoutMs: number = 2000;
  */
 export async function validOnTimeoutOrException(inputValidation: () => Promise<string | null | undefined>, timeoutMs?: number): Promise<string | null | undefined> {
     try {
-        timeoutMs = timeoutMs || inputValidationTimeoutMs;
+        timeoutMs ||= inputValidationTimeoutMs;
         return await valueOnTimeout(timeoutMs, undefined, inputValidation);
     } catch (error) {
         return undefined;

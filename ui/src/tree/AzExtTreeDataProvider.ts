@@ -122,7 +122,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
     }
 
     public async refresh(context: types.IActionContext, treeItem?: AzExtTreeItem): Promise<void> {
-        treeItem = treeItem || this._rootTreeItem;
+        treeItem ||= this._rootTreeItem;
 
         if (treeItem.refreshImpl && !treeItem.hasBeenDeleted) {
             await treeItem.refreshImpl(context);

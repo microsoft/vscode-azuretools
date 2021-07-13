@@ -49,14 +49,12 @@ export function parseError(error: any): IParsedError {
         // For some reason, the message is sometimes serialized twice and we need to parse it again
         parsedMessage = parseIfJson(parsedMessage);
         // Extract out the "internal" error if it exists
-        if (parsedMessage && parsedMessage.error) {
-            parsedMessage = parsedMessage.error;
-        }
+        parsedMessage &&= parsedMessage.error;
 
         errorType = getCode(parsedMessage, errorType);
         message = getMessage(parsedMessage, message);
 
-        message = message || convertCodeToError(errorType) || JSON.stringify(error);
+        message ||= convertCodeToError(errorType) || JSON.stringify(error);
 
         if ('stepName' in error && typeof error.stepName === 'string') {
             stepName = error.stepName;
@@ -70,8 +68,8 @@ export function parseError(error: any): IParsedError {
 
     [message, errorType] = parseIfFileSystemError(message, errorType);
 
-    errorType = errorType || typeof (error);
-    message = message || localize('unknownError', 'Unknown Error');
+    errorType ||= typeof (error);
+    message ||= localize('unknownError', 'Unknown Error');
 
     message = parseIfHtml(message);
 

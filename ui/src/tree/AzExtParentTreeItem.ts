@@ -171,7 +171,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
     }
 
     public async loadAllChildren(context: types.ILoadingTreeContext): Promise<AzExtTreeItem[]> {
-        context.loadingMessage = context.loadingMessage || localize('loadingTreeItem', 'Loading "{0}"...', this.label);
+        context.loadingMessage ||= localize('loadingTreeItem', 'Loading "{0}"...', this.label);
         await runWithLoadingNotification(context, async (cancellationToken) => {
             do {
                 if (cancellationToken.isCancellationRequested) {
@@ -194,7 +194,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
 
         const treeItems: AzExtTreeItem[] = [];
         let lastUnknownItemError: unknown;
-        sourceArray = sourceArray || [];
+        sourceArray ||= [];
         await Promise.all(sourceArray.map(async (source: TSource) => {
             try {
                 const item: AzExtTreeItem | undefined = await createTreeItem(source);
