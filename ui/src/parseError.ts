@@ -49,7 +49,9 @@ export function parseError(error: any): IParsedError {
         // For some reason, the message is sometimes serialized twice and we need to parse it again
         parsedMessage = parseIfJson(parsedMessage);
         // Extract out the "internal" error if it exists
-        parsedMessage &&= parsedMessage.error;
+        if (parsedMessage && parsedMessage.error) {
+            parsedMessage = parsedMessage.error;
+        }
 
         errorType = getCode(parsedMessage, errorType);
         message = getMessage(parsedMessage, message);

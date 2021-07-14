@@ -31,8 +31,11 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     public readonly parent: IAzExtParentTreeItemInternal | undefined;
     public isLoadingMore: boolean;
     public readonly valuesToMask: string[] = [];
+
+    private _id?: string;
     private _temporaryDescription?: string;
     private _treeDataProvider: IAzExtTreeDataProviderInternal | undefined;
+    private _iconPath?: types.TreeItemIconPath;
 
     public constructor(parent: IAzExtParentTreeItemInternal | undefined) {
         this.parent = parent;
@@ -43,11 +46,11 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     }
 
     public get id(): string {
-        return this.id || this.label;
+        return this._id || this.label;
     }
 
     public set id(id: string | undefined) {
-        this.id = id;
+        this._id = id;
     }
 
     public get fullId(): string {
@@ -69,11 +72,11 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     }
 
     public set iconPath(iconPath: types.TreeItemIconPath | undefined) {
-        this.iconPath = iconPath;
+        this._iconPath = iconPath;
     }
 
     public get iconPath(): types.TreeItemIconPath | undefined {
-        return this.iconPath;
+        return this._iconPath;
     }
 
     public get effectiveIconPath(): types.TreeItemIconPath | undefined {
