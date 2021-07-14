@@ -34,6 +34,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
         this._key = key;
         this._value = value;
         this._hideValue = true;
+        this.commandId = ext.prefix + '.toggleAppSettingVisibility';
         this.valuesToMask.push(key, value);
     }
 
@@ -53,10 +54,6 @@ export class AppSettingTreeItem extends AzExtTreeItem {
 
     public get iconPath(): TreeItemIconPath {
         return new ThemeIcon('symbol-constant');
-    }
-
-    public get commandId(): string {
-        return ext.prefix + '.toggleAppSettingVisibility';
     }
 
     public async edit(context: IActionContext): Promise<void> {
