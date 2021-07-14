@@ -15,12 +15,15 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     //#region Properties implemented by base class
     public abstract label: string;
     public abstract contextValue: string;
-    public description: string | undefined;
     public commandId: string | undefined;
     public commandArgs?: unknown[];
-    public tooltip?: string;
     public suppressMaskLabel?: boolean;
     public hasBeenDeleted?: boolean;
+
+    private _id?: string;
+    private _description?: string;
+    private _iconPath?: types.TreeItemIconPath;
+    private _tooltip?: string;
     //#endregion
 
     /**
@@ -32,10 +35,8 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     public isLoadingMore: boolean;
     public readonly valuesToMask: string[] = [];
 
-    private _id?: string;
     private _temporaryDescription?: string;
     private _treeDataProvider: IAzExtTreeDataProviderInternal | undefined;
-    private _iconPath?: types.TreeItemIconPath;
 
     public constructor(parent: IAzExtParentTreeItemInternal | undefined) {
         this.parent = parent;
@@ -89,6 +90,22 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
 
     public set treeDataProvider(val: IAzExtTreeDataProviderInternal) {
         this._treeDataProvider = val;
+    }
+
+    public get description(): string | undefined {
+        return this._description;
+    }
+
+    public set description(desc: string | undefined) {
+        this._description = desc;
+    }
+
+    public get tooltip(): string | undefined {
+        return this._tooltip;
+    }
+
+    public set tooltip(tt: string | undefined) {
+        this._tooltip = tt;
     }
 
     //#region Methods implemented by base class

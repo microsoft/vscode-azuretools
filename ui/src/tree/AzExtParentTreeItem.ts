@@ -343,7 +343,6 @@ type GetTreeItemFunction = () => Promise<AzExtTreeItem>;
 export class InvalidTreeItem extends AzExtParentTreeItem implements types.InvalidTreeItem {
     public readonly contextValue: string;
     public readonly label: string;
-    public readonly description: string;
     public readonly data?: unknown;
 
     private _error: unknown;

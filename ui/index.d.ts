@@ -188,14 +188,17 @@ export declare abstract class AzExtTreeItem {
     /**
      * Additional information about a tree item that is appended to the label with the format `label (description)`
      */
+    public set description(desc: string | undefined)
+    public get description(): string | undefined;
 
-    public set iconPath(iconPath: TreeItemIconPath | undefined);
+    public set iconPath(ip: TreeItemIconPath | undefined);
     public get iconPath(): TreeItemIconPath | undefined;
 
     public set commandId(id: string | undefined);
     public get commandId(): string | undefined;
 
-    public tooltip?: string;
+    public set tooltip(tt: string | undefined);
+    public get tooltip(): string | undefined;
 
     /**
      * The arguments to pass in when executing `commandId`. If not specified, this tree item will be used.
@@ -476,7 +479,7 @@ export declare abstract class AzureTreeItem<TRoot extends ISubscriptionContext =
     /**
      * Contains subscription information specific to the root of this branch of the tree.
      */
-    public readonly root: TRoot;
+    public get root(): TRoot;
 
     /**
      * This method combines the environment.portalLink and AzureTreeItem.fullId to open the resource in the portal.
@@ -491,7 +494,7 @@ export declare abstract class AzureParentTreeItem<TRoot extends ISubscriptionCon
     /**
      * Contains subscription information specific to the root of this branch of the tree.
      */
-    public readonly root: TRoot;
+    public get root(): TRoot;
 
     /**
     * This method combines the environment.portalLink and AzureTreeItem.fullId to open the resource in the portal.
