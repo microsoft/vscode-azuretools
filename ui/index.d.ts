@@ -178,11 +178,9 @@ export declare abstract class AzExtTreeItem {
     /**
      * This is is used for the AzureTreeItem.openInPortal action. It is also used per the following documentation copied from VS Code:
      * Optional id for the treeItem that has to be unique across tree. The id is used to preserve the selection and expansion state of the treeItem.
-     *
-     * If not provided, an id is generated using the treeItem's label. **Note** that when labels change, ids will change and that selection and expansion state cannot be kept stable anymore.
      */
     public set id(id: string | undefined)
-    public get id(): string;
+    public get id(): string | undefined;
     public abstract label: string;
 
     /**

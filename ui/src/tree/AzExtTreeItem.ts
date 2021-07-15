@@ -46,8 +46,8 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
         return this._temporaryDescription || this.description;
     }
 
-    public get id(): string {
-        return this._id || this.label;
+    public get id(): string | undefined {
+        return this._id;
     }
 
     public set id(id: string | undefined) {
