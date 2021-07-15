@@ -166,6 +166,6 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
 }
 
 function convertFilterToPattern(values?: string[]): string {
-    values = values || [];
+    values ||= [];
     return `(${values.join('|')})`;
 }

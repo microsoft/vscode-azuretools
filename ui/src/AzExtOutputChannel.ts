@@ -37,7 +37,7 @@ class AzExtOutputChannel implements types.IAzExtOutputChannel {
         if (!result) {
             this.appendLine(value);
         } else {
-            options = options || {};
+            options ||= {};
             const date: Date = options.date || new Date();
             this.appendLine(`${date.toLocaleTimeString()}${options.resourceName ? ' '.concat(options.resourceName) : ''}: ${value}`);
         }

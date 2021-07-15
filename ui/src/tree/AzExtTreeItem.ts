@@ -15,14 +15,15 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     //#region Properties implemented by base class
     public abstract label: string;
     public abstract contextValue: string;
-    public description?: string;
-    public id?: string;
-    public commandId?: string;
     public commandArgs?: unknown[];
-    public iconPath?: types.TreeItemIconPath;
-    public tooltip?: string;
     public suppressMaskLabel?: boolean;
     public hasBeenDeleted?: boolean;
+
+    private _id?: string;
+    private _description?: string;
+    private _iconPath?: types.TreeItemIconPath;
+    private _tooltip?: string;
+    private _commandId?: string;
     //#endregion
 
     /**
@@ -33,6 +34,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     public readonly parent: IAzExtParentTreeItemInternal | undefined;
     public isLoadingMore: boolean;
     public readonly valuesToMask: string[] = [];
+
     private _temporaryDescription?: string;
     private _treeDataProvider: IAzExtTreeDataProviderInternal | undefined;
 
@@ -42,6 +44,14 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
 
     public get effectiveDescription(): string | undefined {
         return this._temporaryDescription || this.description;
+    }
+
+    public get id(): string | undefined {
+        return this._id;
+    }
+
+    public set id(id: string | undefined) {
+        this._id = id;
     }
 
     public get fullId(): string {
@@ -62,6 +72,14 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
         }
     }
 
+    public set iconPath(iconPath: types.TreeItemIconPath | undefined) {
+        this._iconPath = iconPath;
+    }
+
+    public get iconPath(): types.TreeItemIconPath | undefined {
+        return this._iconPath;
+    }
+
     public get effectiveIconPath(): types.TreeItemIconPath | undefined {
         return this._temporaryDescription || this.isLoadingMore ? getThemedIconPath('Loading') : this.iconPath;
     }
@@ -72,6 +90,30 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
 
     public set treeDataProvider(val: IAzExtTreeDataProviderInternal) {
         this._treeDataProvider = val;
+    }
+
+    public get description(): string | undefined {
+        return this._description;
+    }
+
+    public set description(desc: string | undefined) {
+        this._description = desc;
+    }
+
+    public get tooltip(): string | undefined {
+        return this._tooltip;
+    }
+
+    public set tooltip(tt: string | undefined) {
+        this._tooltip = tt;
+    }
+
+    public get commandId(): string | undefined {
+        return this._commandId;
+    }
+
+    public set commandId(id: string | undefined) {
+        this._commandId = id;
     }
 
     //#region Methods implemented by base class

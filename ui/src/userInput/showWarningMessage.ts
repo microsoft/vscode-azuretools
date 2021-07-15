@@ -15,6 +15,7 @@ export async function showWarningMessage<T extends MessageItem>(context: IIntern
 export async function showWarningMessage<T extends MessageItem>(context: IInternalActionContext, message: string, options: MessageOptions, ...items: T[]): Promise<T>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function showWarningMessage<T extends MessageItem>(context: IInternalActionContext, message: string, ...args: any[]): Promise<T> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const learnMoreLink: string | undefined = args[0] && (<types.IAzureMessageOptions>args[0]).learnMoreLink;
     if (learnMoreLink) {
         args.push(DialogResponses.learnMore);

@@ -178,19 +178,25 @@ export declare abstract class AzExtTreeItem {
     /**
      * This is is used for the AzureTreeItem.openInPortal action. It is also used per the following documentation copied from VS Code:
      * Optional id for the treeItem that has to be unique across tree. The id is used to preserve the selection and expansion state of the treeItem.
-     *
-     * If not provided, an id is generated using the treeItem's label. **Note** that when labels change, ids will change and that selection and expansion state cannot be kept stable anymore.
      */
-    public id?: string;
+    public set id(id: string | undefined)
+    public get id(): string | undefined;
     public abstract label: string;
 
     /**
      * Additional information about a tree item that is appended to the label with the format `label (description)`
      */
-    public description?: string;
-    public iconPath?: TreeItemIconPath;
-    public commandId?: string;
-    public tooltip?: string;
+    public set description(desc: string | undefined)
+    public get description(): string | undefined;
+
+    public set iconPath(ip: TreeItemIconPath | undefined);
+    public get iconPath(): TreeItemIconPath | undefined;
+
+    public set commandId(id: string | undefined);
+    public get commandId(): string | undefined;
+
+    public set tooltip(tt: string | undefined);
+    public get tooltip(): string | undefined;
 
     /**
      * The arguments to pass in when executing `commandId`. If not specified, this tree item will be used.
@@ -305,7 +311,7 @@ export interface IInvalidTreeItemOptions {
 export class InvalidTreeItem extends AzExtParentTreeItem {
     public contextValue: string;
     public label: string;
-    public iconPath: TreeItemIconPath;
+    public get iconPath(): TreeItemIconPath;
     public readonly data?: unknown;
 
     constructor(parent: AzExtParentTreeItem, error: unknown, options: IInvalidTreeItemOptions);
@@ -471,7 +477,7 @@ export declare abstract class AzureTreeItem<TRoot extends ISubscriptionContext =
     /**
      * Contains subscription information specific to the root of this branch of the tree.
      */
-    public readonly root: TRoot;
+    public get root(): TRoot;
 
     /**
      * This method combines the environment.portalLink and AzureTreeItem.fullId to open the resource in the portal.
@@ -486,7 +492,7 @@ export declare abstract class AzureParentTreeItem<TRoot extends ISubscriptionCon
     /**
      * Contains subscription information specific to the root of this branch of the tree.
      */
-    public readonly root: TRoot;
+    public get root(): TRoot;
 
     /**
     * This method combines the environment.portalLink and AzureTreeItem.fullId to open the resource in the portal.
@@ -540,7 +546,7 @@ export declare function callWithMaskHandling<T>(callback: () => Promise<T>, valu
 
 /**
  * Add an extension-wide value to mask for all commands
- * This will apply to telemetry and "Report Issue", but _not_ VS Code UI (i.e. the error notification or output channnel)
+ * This will apply to telemetry and "Report Issue", but _not_ VS Code UI (i.e. the error notification or output channel)
  * IMPORTANT: For the most sensitive information, `callWithMaskHandling` should be used instead
  */
 export function addExtensionValueToMask(...values: string[]): void;
@@ -569,7 +575,7 @@ export interface IActionContext {
 
     /**
      * Add a value to mask for this action
-     * This will apply to telemetry and "Report Issue", but _not_ VS Code UI (i.e. the error notification or output channnel)
+     * This will apply to telemetry and "Report Issue", but _not_ VS Code UI (i.e. the error notification or output channel)
      * IMPORTANT: For the most sensitive information, `callWithMaskHandling` should be used instead
      */
     valuesToMask: string[];
@@ -777,7 +783,7 @@ export interface IAzureUserInput {
      * Show a warning message.
      *
      * @param message The message to show.
-     * @param options Configures the behaviour of the message.
+     * @param options Configures the behavior of the message.
      * @param items A set of items that will be rendered as actions in the message.
      * @throws `UserCancelledError` if the user cancels.
      * @return A thenable that resolves to the selected item when being dismissed.
@@ -1005,7 +1011,7 @@ export type AzExtLocation = {
 }
 
 /**
- * Currently no location-specific properties on the wizard context, but keeping this interface for backwards compatability and ease of use
+ * Currently no location-specific properties on the wizard context, but keeping this interface for backwards compatibility and ease of use
  * Instead, use static methods on `LocationListStep` like `getLocation` and `setLocationSubset`
  */
 export interface ILocationWizardContext extends ISubscriptionWizardContext {
@@ -1594,12 +1600,12 @@ export declare abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> i
     //#endregion
 
     /**
-     * May be overriden, for example if you want to add additional query parameters to the uri
+     * May be overridden, for example if you want to add additional query parameters to the uri
      */
     protected getUriParts(item: TItem): AzExtItemUriParts;
 
     /**
-     * May be overriden if the default `findTreeItem` logic is not sufficient
+     * May be overridden if the default `findTreeItem` logic is not sufficient
      */
     protected findItem(context: IActionContext, query: AzExtItemQuery): Promise<TItem | undefined>;
 }

@@ -21,7 +21,7 @@ function getExtensionUserAgent(): string {
 export function appendExtensionUserAgent(existingUserAgent?: string): string {
     const extensionUserAgent: string = getExtensionUserAgent();
 
-    existingUserAgent = existingUserAgent || extensionUserAgent;
+    existingUserAgent ||= extensionUserAgent;
     if (existingUserAgent.includes(extensionUserAgent)) {
         return existingUserAgent;
     } else {
