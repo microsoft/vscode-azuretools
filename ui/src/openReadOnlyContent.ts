@@ -11,7 +11,7 @@ import { randomUtils } from "./utils/randomUtils";
 
 
 let _cachedScheme: string | undefined;
-function getScheme(): string {
+export function getOrGenerateContentScheme(): string {
     if (!_cachedScheme) {
         // Generate a unique scheme so that multiple extensions using this same code don't conflict with each other
         _cachedScheme = `azuretools${randomUtils.getRandomHexString(6)}`;
@@ -23,7 +23,7 @@ let _cachedContentProvider: ReadOnlyContentProvider | undefined;
 function getContentProvider(): ReadOnlyContentProvider {
     if (!_cachedContentProvider) {
         _cachedContentProvider = new ReadOnlyContentProvider();
-        ext.context.subscriptions.push(workspace.registerTextDocumentContentProvider(getScheme(), _cachedContentProvider));
+        ext.context.subscriptions.push(workspace.registerTextDocumentContentProvider(getOrGenerateContentScheme(), _cachedContentProvider));
     }
     return _cachedContentProvider;
 }
@@ -85,7 +85,7 @@ class ReadOnlyContentProvider implements TextDocumentContentProvider {
     }
 
     public async openReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string, options?: TextDocumentShowOptions): Promise<ReadOnlyContent> {
-        const scheme = getScheme();
+        const scheme = getOrGenerateContentScheme();
         const idHash: string = randomUtils.getPseudononymousStringHash(node.fullId, 'hex');
         // Remove special characters which may prove troublesome when parsing the uri. We'll allow the same set as `encodeUriComponent`
         const fileName = node.label.replace(/[^a-z0-9\-\_\.\!\~\*\'\(\)]/gi, '_');

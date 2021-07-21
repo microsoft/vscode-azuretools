@@ -1616,3 +1616,9 @@ export declare abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> i
  * Registers a command that will prompt users with a list of issues they can report from that session of VS Code
  */
 export function registerReportIssueCommand(commandId: string): void;
+
+/**
+ * Gets or generates a unique scheme so that multiple extensions using this same code don't conflict with each other
+ * Use to provide scheme for various TextDocument providers
+ */
+export function getOrGenerateContentScheme(): string;
