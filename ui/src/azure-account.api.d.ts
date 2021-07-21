@@ -30,7 +30,6 @@ export interface AzureSession {
     readonly environment: Environment;
     readonly userId: string;
     readonly tenantId: string;
-    readonly accountInfo?: AccountInfo;
 
    /**
     * The credentials object for azure-sdk-for-js modules https://github.com/azure/azure-sdk-for-js
