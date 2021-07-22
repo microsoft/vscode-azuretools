@@ -8,11 +8,11 @@ import { BasicAuthenticationCredentials, HttpOperationResponse, RestError, Servi
 import * as EventEmitter from 'events';
 import { createServer, Server, Socket } from 'net';
 import { CancellationToken, Disposable } from 'vscode';
-import { createGenericClient, IParsedError, parseError, UserCancelledError } from 'vscode-azureextensionui';
+import { createGenericClient, IActionContext, IParsedError, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import * as websocket from 'websocket';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
-import { SiteClient } from './SiteClient';
+import { ParsedSite } from './SiteClient';
 import { delay } from './utils/delay';
 import { nonNullProp } from './utils/nonNull';
 
@@ -22,15 +22,15 @@ import { nonNullProp } from './utils/nonNull';
  */
 class TunnelSocket extends EventEmitter {
     private _socket: Socket;
-    private _client: SiteClient;
+    private _site: ParsedSite;
     private _publishCredential: WebSiteManagementModels.User;
     private _wsConnection: websocket.connection | undefined;
     private _wsClient: websocket.client;
 
-    constructor(socket: Socket, client: SiteClient, publishCredential: WebSiteManagementModels.User) {
+    constructor(socket: Socket, site: ParsedSite, publishCredential: WebSiteManagementModels.User) {
         super();
         this._socket = socket;
-        this._client = client;
+        this._site = site;
         this._publishCredential = publishCredential;
         this._wsClient = new websocket.client();
     }
@@ -93,7 +93,7 @@ class TunnelSocket extends EventEmitter {
         });
 
         this._wsClient.connect(
-            `wss://${this._client.kuduHostName}/AppServiceTunnel/Tunnel.ashx`,
+            `wss://${this._site.kuduHostName}/AppServiceTunnel/Tunnel.ashx`,
             undefined,
             undefined,
             {
@@ -147,24 +147,24 @@ class RetryableTunnelStatusError extends Error { }
  */
 export class TunnelProxy {
     private _port: number;
-    private _client: SiteClient;
+    private _site: ParsedSite;
     private _publishCredential: WebSiteManagementModels.User;
     private _server: Server;
     private _openSockets: TunnelSocket[];
     private _isSsh: boolean;
 
-    constructor(port: number, client: SiteClient, publishCredential: WebSiteManagementModels.User, isSsh: boolean = false) {
+    constructor(port: number, site: ParsedSite, publishCredential: WebSiteManagementModels.User, isSsh: boolean = false) {
         this._port = port;
-        this._client = client;
+        this._site = site;
         this._publishCredential = publishCredential;
         this._server = createServer();
         this._openSockets = [];
         this._isSsh = isSsh;
     }
 
-    public async startProxy(token: CancellationToken): Promise<void> {
+    public async startProxy(context: IActionContext, token: CancellationToken): Promise<void> {
         try {
-            await this.checkTunnelStatusWithRetry(token);
+            await this.checkTunnelStatusWithRetry(context, token);
             await this.setupTunnelServer(token);
         } catch (error) {
             this.dispose();
@@ -183,12 +183,12 @@ export class TunnelProxy {
     /**
      * Ensures the site is up and running (Even if the state is technically "Running", Azure doesn't always keep a site fully "up" if no one has hit the url in a while)
      */
-    private async pingApp(): Promise<void> {
+    private async pingApp(context: IActionContext): Promise<void> {
         ext.outputChannel.appendLog('[Tunnel] Pinging app default url...');
-        const client: ServiceClient = await createGenericClient();
+        const client: ServiceClient = await createGenericClient(context, undefined);
         let statusCode: number | undefined;
         try {
-            const response: HttpOperationResponse = await client.sendRequest({ method: 'GET', url: this._client.defaultHostUrl });
+            const response: HttpOperationResponse = await client.sendRequest({ method: 'GET', url: this._site.defaultHostUrl });
             statusCode = response.status;
         } catch (error) {
             if (error instanceof RestError) {
@@ -200,15 +200,15 @@ export class TunnelProxy {
         ext.outputChannel.appendLog(`[Tunnel] Ping responded with status code: ${statusCode}`);
     }
 
-    private async checkTunnelStatus(): Promise<void> {
+    private async checkTunnelStatus(context: IActionContext): Promise<void> {
         const password: string = nonNullProp(this._publishCredential, 'publishingPassword');
-        const client: ServiceClient = await createGenericClient(new BasicAuthenticationCredentials(this._publishCredential.publishingUserName, password));
+        const client: ServiceClient = await createGenericClient(context, new BasicAuthenticationCredentials(this._publishCredential.publishingUserName, password));
 
         let tunnelStatus: ITunnelStatus;
         try {
             const response: HttpOperationResponse = await client.sendRequest({
                 method: 'GET',
-                url: `https://${this._client.kuduHostName}/AppServiceTunnel/Tunnel.ashx?GetStatus&GetStatusAPIVer=2`
+                url: `https://${this._site.kuduHostName}/AppServiceTunnel/Tunnel.ashx?GetStatus&GetStatusAPIVer=2`
             });
             ext.outputChannel.appendLog(`[Tunnel] Checking status, body: ${response.bodyAsText}`);
             tunnelStatus = <ITunnelStatus>response.parsedBody;
@@ -230,14 +230,14 @@ export class TunnelProxy {
         } else if (tunnelStatus.state === AppState.STARTING) {
             throw new RetryableTunnelStatusError();
         } else if (tunnelStatus.state === AppState.STOPPED) {
-            await this.pingApp();
+            await this.pingApp(context);
             throw new RetryableTunnelStatusError();
         } else {
             throw new Error(localize('tunnelStatusError', 'Unexpected app state: {0}', tunnelStatus.state));
         }
     }
 
-    private async checkTunnelStatusWithRetry(token: CancellationToken): Promise<void> {
+    private async checkTunnelStatusWithRetry(context: IActionContext, token: CancellationToken): Promise<void> {
         const timeoutSeconds: number = 240; // 4 minutes, matches App Service internal timeout for starting up an app
         const timeoutMs: number = timeoutSeconds * 1000;
         const pollingIntervalMs: number = 5000;
@@ -248,9 +248,9 @@ export class TunnelProxy {
                 throw new UserCancelledError('checkTunnelStatus');
             }
 
-            await this.pingApp();
+            await this.pingApp(context);
             try {
-                await this.checkTunnelStatus();
+                await this.checkTunnelStatus(context);
                 return;
             } catch (error) {
                 if (!(error instanceof RetryableTunnelStatusError)) {
@@ -271,7 +271,7 @@ export class TunnelProxy {
             });
 
             this._server.on('connection', (socket: Socket) => {
-                const tunnelSocket: TunnelSocket = new TunnelSocket(socket, this._client, this._publishCredential);
+                const tunnelSocket: TunnelSocket = new TunnelSocket(socket, this._site, this._publishCredential);
 
                 this._openSockets.push(tunnelSocket);
                 tunnelSocket.on('close', () => {

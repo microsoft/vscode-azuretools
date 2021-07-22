@@ -5,13 +5,13 @@
 
 import { ServiceClient } from '@azure/ms-rest-js';
 import { IActionContext, ISubscriptionContext } from 'vscode-azureextensionui';
-import { SiteClient } from '../SiteClient';
+import { ParsedSite } from '../SiteClient';
 import { gitHubBranchData, gitHubOrgData, gitHubRepoData } from './connectToGitHub';
 
 export interface IConnectToGitHubWizardContext extends IActionContext, ISubscriptionContext {
     orgData?: gitHubOrgData;
     repoData?: gitHubRepoData;
     branchData?: gitHubBranchData;
-    client?: SiteClient;
+    site?: ParsedSite;
     gitHubClient?: ServiceClient;
 }

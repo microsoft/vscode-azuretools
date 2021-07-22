@@ -11,7 +11,7 @@ import { createKuduClient } from '../createKuduClient';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { ScmType } from '../ScmType';
-import { SiteClient } from '../SiteClient';
+import { ParsedSite } from '../SiteClient';
 import { retryKuduCall } from '../utils/kuduUtils';
 import { DeploymentTreeItem } from './DeploymentTreeItem';
 
@@ -23,15 +23,15 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
     public static contextValueUnconnected: string = 'deploymentsUnconnected';
     public readonly label: string = localize('Deployments', 'Deployments');
     public readonly childTypeLabel: string = localize('Deployment', 'Deployment');
-    public readonly client: SiteClient;
+    public readonly site: ParsedSite;
     public suppressMaskLabel: boolean = true;
 
     private _scmType?: string;
     private _repoUrl?: string;
 
-    public constructor(parent: AzExtParentTreeItem, client: SiteClient, siteConfig: WebSiteManagementModels.SiteConfig, sourceControl: WebSiteManagementModels.SiteSourceControl) {
+    public constructor(parent: AzExtParentTreeItem, site: ParsedSite, siteConfig: WebSiteManagementModels.SiteConfig, sourceControl: WebSiteManagementModels.SiteSourceControl) {
         super(parent);
-        this.client = client;
+        this.site = site;
         this._scmType = siteConfig.scmType;
         this._repoUrl = sourceControl.repoUrl;
     }
@@ -62,8 +62,9 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
     }
 
     public async loadMoreChildrenImpl(_clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {
-        const siteConfig: WebSiteManagementModels.SiteConfig = await this.client.getSiteConfig();
-        const kuduClient = await createKuduClient(context, this.client);
+        const client = await this.site.createClient(context);
+        const siteConfig: WebSiteManagementModels.SiteConfig = await client.getSiteConfig();
+        const kuduClient = await createKuduClient(context, this.site);
         const deployments: KuduModels.DeployResult[] = await retryKuduCall(context, 'getDeployResults', async () => {
             return kuduClient.deployment.getDeployResults();
         });
@@ -100,9 +101,10 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
         return ti2.receivedTime.valueOf() - ti1.receivedTime.valueOf();
     }
 
-    public async refreshImpl(): Promise<void> {
-        const siteConfig: WebSiteManagementModels.SiteConfig = await this.client.getSiteConfig();
-        const sourceControl: WebSiteManagementModels.SiteSourceControl = await this.client.getSourceControl();
+    public async refreshImpl(context: IActionContext): Promise<void> {
+        const client = await this.site.createClient(context);
+        const siteConfig: WebSiteManagementModels.SiteConfig = await client.getSiteConfig();
+        const sourceControl: WebSiteManagementModels.SiteSourceControl = await client.getSourceControl();
         this._scmType = siteConfig.scmType;
         this._repoUrl = sourceControl.repoUrl;
     }

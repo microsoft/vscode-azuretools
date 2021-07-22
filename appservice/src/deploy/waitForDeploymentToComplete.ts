@@ -9,13 +9,13 @@ import { KuduClient, KuduModels } from 'vscode-azurekudu';
 import { createKuduClient } from '../createKuduClient';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { SiteClient } from '../SiteClient';
+import { ParsedSite } from '../SiteClient';
 import { delay } from '../utils/delay';
 import { ignore404Error, retryKuduCall } from '../utils/kuduUtils';
 import { nonNullProp } from '../utils/nonNull';
 import { IDeployContext } from './IDeployContext';
 
-export async function waitForDeploymentToComplete(context: IActionContext & Partial<IDeployContext>, client: SiteClient, expectedId?: string, token?: CancellationToken, pollingInterval: number = 5000): Promise<void> {
+export async function waitForDeploymentToComplete(context: IActionContext & Partial<IDeployContext>, site: ParsedSite, expectedId?: string, token?: CancellationToken, pollingInterval: number = 5000): Promise<void> {
     let fullLog: string = '';
 
     let lastLogTime: Date = new Date(0);
@@ -25,7 +25,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
     let permanentId: string | undefined;
     // a 60 second timeout period to let Kudu initialize the deployment
     const maxTimeToWaitForExpectedId: number = Date.now() + 60 * 1000;
-    const kuduClient = await createKuduClient(context, client);
+    const kuduClient = await createKuduClient(context, site);
 
     while (!token?.isCancellationRequested) {
         [deployment, permanentId, initialStartTime] = await tryGetLatestDeployment(context, kuduClient, permanentId, initialStartTime, expectedId);
@@ -56,7 +56,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
 
             if (newEntry.message && newEntry.logTime && newEntry.logTime > lastLogTime) {
                 fullLog = fullLog.concat(newEntry.message);
-                ext.outputChannel.appendLog(newEntry.message, { date: newEntry.logTime, resourceName: client.fullName });
+                ext.outputChannel.appendLog(newEntry.message, { date: newEntry.logTime, resourceName: site.fullName });
                 lastLogTimeForThisPoll = newEntry.logTime;
                 if (/error/i.test(newEntry.message)) {
                     lastErrorLine = newEntry.message;
@@ -79,7 +79,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
 
         if (deployment.complete) {
             if (deployment.status === 3 /* Failed */ || deployment.isTemp) { // If the deployment completed without making it to the "permanent" phase, it must have failed
-                const message: string = localize('deploymentFailed', 'Deployment to "{0}" failed.', client.fullName);
+                const message: string = localize('deploymentFailed', 'Deployment to "{0}" failed.', site.fullName);
                 const viewOutput: string = localize('viewOutput', 'View Output');
                 // don't wait
                 void window.showErrorMessage(message, viewOutput).then(result => {
@@ -89,13 +89,13 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
                 });
 
                 const messageWithoutName: string = localize('deploymentFailedWithoutName', 'Deployment failed.');
-                ext.outputChannel.appendLog(messageWithoutName, { resourceName: client.fullName });
+                ext.outputChannel.appendLog(messageWithoutName, { resourceName: site.fullName });
                 context.errorHandling.suppressDisplay = true;
                 // Hopefully the last line is enough to give us an idea why deployments are failing without excessively tracking everything
                 context.telemetry.properties.deployErrorLastLine = lastErrorLine;
                 throw new Error(messageWithoutName);
             } else {
-                context.syncTriggersPostDeploy = client.isFunctionApp && !/syncing/i.test(fullLog) && !client.isKubernetesApp && !client.isWorkflowApp;
+                context.syncTriggersPostDeploy = site.isFunctionApp && !/syncing/i.test(fullLog) && !site.isKubernetesApp && !site.isWorkflowApp;
                 return;
             }
         } else {

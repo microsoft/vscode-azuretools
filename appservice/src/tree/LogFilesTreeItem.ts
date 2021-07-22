@@ -7,7 +7,7 @@ import { ThemeIcon } from 'vscode';
 import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { SiteClient } from '../SiteClient';
+import { ParsedSite } from '../SiteClient';
 import { FolderTreeItem } from './FolderTreeItem';
 
 /**
@@ -20,8 +20,8 @@ export class LogFilesTreeItem extends FolderTreeItem {
 
     protected readonly _isRoot: boolean = true;
 
-    constructor(parent: AzExtParentTreeItem, client: SiteClient) {
-        super(parent, client, localize('logFiles', 'Logs'), '/LogFiles', true);
+    constructor(parent: AzExtParentTreeItem, site: ParsedSite) {
+        super(parent, site, localize('logFiles', 'Logs'), '/LogFiles', true);
     }
 
     public async loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {

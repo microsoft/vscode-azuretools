@@ -6,7 +6,7 @@
 import { ThemeIcon } from 'vscode';
 import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
 import { localize } from '../localize';
-import { SiteClient } from '../SiteClient';
+import { ParsedSite } from '../SiteClient';
 import { ISiteFileMetadata, listFiles } from '../siteFiles';
 import { FileTreeItem } from './FileTreeItem';
 
@@ -18,12 +18,12 @@ export class FolderTreeItem extends AzExtParentTreeItem {
     public readonly path: string;
     public readonly isReadOnly: boolean;
 
-    public readonly client: SiteClient;
+    public readonly site: ParsedSite;
     protected readonly _isRoot: boolean = false;
 
-    constructor(parent: AzExtParentTreeItem, client: SiteClient, label: string, path: string, isReadOnly: boolean) {
+    constructor(parent: AzExtParentTreeItem, site: ParsedSite, label: string, path: string, isReadOnly: boolean) {
         super(parent);
-        this.client = client;
+        this.site = site;
         this.label = label;
         this.path = path;
         this.isReadOnly = isReadOnly;
@@ -42,7 +42,7 @@ export class FolderTreeItem extends AzExtParentTreeItem {
     }
 
     public async loadMoreChildrenImpl(_clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {
-        let files: ISiteFileMetadata[] = await listFiles(context, this.client, this.path);
+        let files: ISiteFileMetadata[] = await listFiles(context, this.site, this.path);
 
         // this file is being accessed by Kudu and is not viewable
         files = files.filter(f => f.mime !== 'text/xml' || !f.name.includes('LogFiles-kudu-trace_pending.xml'));
@@ -53,7 +53,7 @@ export class FolderTreeItem extends AzExtParentTreeItem {
             // the substring starts at file.path.indexOf(home) because the path sometimes includes site/ or D:\
             // the home.length + 1 is to account for the trailing slash, Linux uses / and Window uses \
             const fsPath: string = file.path.substring(file.path.indexOf(home) + home.length + 1);
-            return file.mime === 'inode/directory' ? new FolderTreeItem(this, this.client, file.name, fsPath, this.isReadOnly) : new FileTreeItem(this, this.client, file.name, fsPath, this.isReadOnly);
+            return file.mime === 'inode/directory' ? new FolderTreeItem(this, this.site, file.name, fsPath, this.isReadOnly) : new FileTreeItem(this, this.site, file.name, fsPath, this.isReadOnly);
         });
     }
 

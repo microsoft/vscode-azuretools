@@ -44,7 +44,6 @@ export * from './tree/DeploymentsTreeItem';
 export * from './tree/DeploymentTreeItem';
 export * from './tree/FileTreeItem';
 export * from './tree/FolderTreeItem';
-export * from './tree/ISiteTreeRoot';
 export * from './tree/LogFilesTreeItem';
 export * from './tree/SiteFilesTreeItem';
 export * from './tryGetSiteResource';
