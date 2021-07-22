@@ -4,25 +4,19 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as types from '../../index';
-import { AzureParentTreeItem } from './AzureParentTreeItem';
+import { AzExtParentTreeItem } from './AzExtParentTreeItem';
 import { getIconPath } from './IconPath';
 
-export abstract class SubscriptionTreeItemBase extends AzureParentTreeItem implements types.SubscriptionTreeItemBase {
+export abstract class SubscriptionTreeItemBase extends AzExtParentTreeItem implements types.SubscriptionTreeItemBase {
     public static readonly contextValue: string = 'azureextensionui.azureSubscription';
     public readonly contextValue: string = SubscriptionTreeItemBase.contextValue;
     public readonly label: string;
 
-    private _root: types.ISubscriptionContext;
-
-    public constructor(parent: AzureParentTreeItem | undefined, root: types.ISubscriptionContext) {
+    public constructor(parent: AzExtParentTreeItem | undefined, subscription: types.ISubscriptionContext) {
         super(parent);
-        this._root = root;
-        this.label = root.subscriptionDisplayName;
-        this.id = root.subscriptionPath;
+        this._subscription = subscription;
+        this.label = subscription.subscriptionDisplayName;
+        this.id = subscription.subscriptionPath;
         this.iconPath = getIconPath('azureSubscription');
-    }
-
-    public get root(): types.ISubscriptionContext {
-        return this._root;
     }
 }

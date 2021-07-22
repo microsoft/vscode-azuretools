@@ -167,9 +167,9 @@ function generalizeLocationName(name: string | undefined): string {
     return (name || '').toLowerCase().replace(/[^a-z0-9]/gi, '');
 }
 
-async function getAllLocations(wizardContext: types.ISubscriptionContext): Promise<types.AzExtLocation[]> {
+async function getAllLocations(wizardContext: types.ISubscriptionActionContext): Promise<types.AzExtLocation[]> {
     // NOTE: Using a generic client because the subscriptions sdk is pretty far behind on api-version
-    const client = await createGenericClient(wizardContext);
+    const client = await createGenericClient(wizardContext, wizardContext);
     const response = await client.sendRequest({
         method: 'GET',
         url: `/subscriptions/${wizardContext.subscriptionId}/locations?api-version=2019-11-01`
@@ -178,7 +178,7 @@ async function getAllLocations(wizardContext: types.ISubscriptionContext): Promi
     return <types.AzExtLocation[]>response.parsedBody.value;
 }
 
-async function getProviderLocations(wizardContext: types.ISubscriptionContext, provider: string, resourceType: string): Promise<string[]> {
+async function getProviderLocations(wizardContext: types.ISubscriptionActionContext, provider: string, resourceType: string): Promise<string[]> {
     const rgClient = await createResourcesClient(wizardContext);
     const providerData = await rgClient.providers.get(provider);
     const resourceTypeData = providerData.resourceTypes?.find(rt => rt.resourceType?.toLowerCase() === resourceType.toLowerCase());

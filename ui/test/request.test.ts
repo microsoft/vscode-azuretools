@@ -6,6 +6,7 @@
 import { BasicAuthenticationCredentials, HttpOperationResponse, Serializer, TokenCredentials, WebResource } from '@azure/ms-rest-js';
 import * as assert from 'assert';
 import * as http from 'http';
+import { createTestActionContext } from 'vscode-azureextensiondev';
 import { createGenericClient, sendRequestWithTimeout } from '../src/createAzureClient';
 import { assertThrowsAsync } from './assertThrowsAsync';
 
@@ -18,7 +19,7 @@ suite('request', () => {
 
     async function sendTestRequest(...responses: ResponseData[]): Promise<HttpOperationResponse> {
         testResponses = responses;
-        return await sendRequestWithTimeout({ method: 'GET', url }, 2000);
+        return await sendRequestWithTimeout(await createTestActionContext(), { method: 'GET', url }, 2000, undefined);
     }
 
     suiteSetup(() => {
@@ -119,7 +120,7 @@ suite('request', () => {
 
         const request = new WebResource(url);
         request.operationSpec = { httpMethod: "GET", responses: { 200: {}, default: {} }, serializer: new Serializer() };
-        const client = await createGenericClient();
+        const client = await createGenericClient(await createTestActionContext(), undefined);
         await assertThrowsAsync(async () => await client.sendRequest(request), /oops/);
     });
 
@@ -128,7 +129,7 @@ suite('request', () => {
 
         const request = new WebResource(url);
         request.operationSpec = { httpMethod: "GET", responses: { 200: {}, 404: {}, default: {} }, serializer: new Serializer() };
-        const client = await createGenericClient();
+        const client = await createGenericClient(await createTestActionContext(), undefined);
         const response = await client.sendRequest(request);
         assert.strictEqual(response.parsedBody, undefined);
     });
@@ -137,7 +138,7 @@ suite('request', () => {
         const password: string = 'notActuallyCredentials';
         testResponses = [{ status: 404, body: password }];
 
-        const client = await createGenericClient(new BasicAuthenticationCredentials('userName', password));
+        const client = await createGenericClient(await createTestActionContext(), new BasicAuthenticationCredentials('userName', password));
         await assertThrowsAsync(async () => await client.sendRequest({ method: 'GET', url }), (err: Error) => err.message === '---');
     });
 
@@ -145,7 +146,7 @@ suite('request', () => {
         const token: string = 'notActuallyCredentials';
         testResponses = [{ status: 404, body: token }];
 
-        const client = await createGenericClient(new TokenCredentials(token));
+        const client = await createGenericClient(await createTestActionContext(), new TokenCredentials(token));
         await assertThrowsAsync(async () => await client.sendRequest({ method: 'GET', url }), (err: Error) => err.message === '---');
     });
 });

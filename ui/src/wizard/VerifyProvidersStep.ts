@@ -12,7 +12,7 @@ import { parseError } from '../parseError';
 import { delay } from '../utils/delay';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 
-export class VerifyProvidersStep<T extends types.ISubscriptionWizardContext> extends AzureWizardExecuteStep<T> implements types.VerifyProvidersStep<T> {
+export class VerifyProvidersStep<T extends types.ISubscriptionActionContext> extends AzureWizardExecuteStep<T> implements types.VerifyProvidersStep<T> {
     public priority: number = 90;
     private _providers: string[];
 
