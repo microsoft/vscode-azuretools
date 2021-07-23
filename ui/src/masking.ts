@@ -95,5 +95,5 @@ export function maskValue(data: string, valueToMask: string | undefined): string
 }
 
 export function getRedactedLabel(reason: string): string {
-    return `<redacted:${reason}>`;
+    return `redacted:${reason}`;
 }
