@@ -667,11 +667,11 @@ interface IErrorHandlerContext extends IHandlerContext {
     error: unknown;
 }
 
-type ErrorHandler = (context: IErrorHandlerContext) => void;
+export type ErrorHandler = (context: IErrorHandlerContext) => void;
 
-type TelemetryHandler = (context: IHandlerContext) => void;
+export type TelemetryHandler = (context: IHandlerContext) => void;
 
-type OnActionStartHandler = (context: IHandlerContext) => void;
+export type OnActionStartHandler = (context: IHandlerContext) => void;
 
 /**
  * Register a handler to run right after an `IActionContext` is created and before the action starts
@@ -1395,12 +1395,12 @@ export function createGenericClient(context: IActionContext, clientInfo: AzExtGe
  */
 export function sendRequestWithTimeout(context: IActionContext, options: RequestPrepareOptions, timeout: number, clientInfo: AzExtGenericClientInfo): Promise<HttpOperationResponse>;
 
-type AzExtClientType<T> = new (credentials: AzExtServiceClientCredentials, subscriptionId: string, options?: IMinimumServiceClientOptions) => T;
+export type AzExtClientType<T> = new (credentials: AzExtServiceClientCredentials, subscriptionId: string, options?: IMinimumServiceClientOptions) => T;
 
 /**
  * Convenience type to give us multiple ways to specify subscription info and action context depending on the scenario
  */
-type AzExtClientContext = ISubscriptionActionContext | [IActionContext, ISubscriptionContext | AzExtTreeItem];
+export type AzExtClientContext = ISubscriptionActionContext | [IActionContext, ISubscriptionContext | AzExtTreeItem];
 
 /**
  * Converts `AzExtClientContext` into a single object: `ISubscriptionActionContext`
@@ -1414,7 +1414,7 @@ export function parseClientContext(clientContext: AzExtClientContext): ISubscrip
  */
 export function createAzureClient<T>(context: AzExtClientContext, clientType: AzExtClientType<T>): T;
 
-type AzExtSubscriptionClientType<T> = new (credentials: AzExtServiceClientCredentials, options?: IMinimumServiceClientOptions) => T;
+export type AzExtSubscriptionClientType<T> = new (credentials: AzExtServiceClientCredentials, options?: IMinimumServiceClientOptions) => T;
 
 /**
  * Creates an Azure subscription client, ensuring best practices are followed. For example:

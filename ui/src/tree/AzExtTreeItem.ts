@@ -120,7 +120,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     public get subscription(): types.ISubscriptionContext {
         const result = this._subscription || this.parent?.subscription;
         if (!result) {
-            throw Error(localize('noSubscriptionFound', 'No subscription found for this tree item.'));
+            throw Error(localize('noSubscriptionFound', 'No Azure subscription found for this tree item.'));
         } else {
             return result;
         }
