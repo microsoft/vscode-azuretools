@@ -82,7 +82,8 @@ export class TestAzureAccount implements AzureAccount, types.TestAzureAccount {
             subscriptionPath: nonNullProp(info.subscription, 'id'),
             tenantId: info.session.tenantId,
             userId: info.session.userId,
-            environment: info.session.environment
+            environment: info.session.environment,
+            isCustomCloud: false
         };
     }
 
