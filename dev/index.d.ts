@@ -130,6 +130,7 @@ export interface ISubscriptionContext {
     tenantId: string;
     userId: string;
     environment: Environment;
+    isCustomCloud: boolean;
 }
 
 /**
