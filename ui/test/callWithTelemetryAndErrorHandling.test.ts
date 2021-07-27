@@ -26,8 +26,8 @@ async function testFuncErrorAsync(): Promise<string> {
 
 suite('callWithTelemetryAndErrorHandling tests', () => {
     test('sync', async () => {
-        assert.equal(callWithTelemetryAndErrorHandlingSync('callbackId', testFunc), testFunc());
-        assert.equal(callWithTelemetryAndErrorHandlingSync('callbackId', testFuncError), undefined);
+        assert.strictEqual(callWithTelemetryAndErrorHandlingSync('callbackId', testFunc), testFunc());
+        assert.strictEqual(callWithTelemetryAndErrorHandlingSync('callbackId', testFuncError), undefined);
 
         assert.throws(
             () => callWithTelemetryAndErrorHandlingSync('callbackId', (context: IActionContext) => {
@@ -44,10 +44,10 @@ suite('callWithTelemetryAndErrorHandling tests', () => {
     });
 
     test('async', async () => {
-        assert.equal(await callWithTelemetryAndErrorHandling('callbackId', testFunc), testFunc());
-        assert.equal(await callWithTelemetryAndErrorHandling('callbackId', testFuncAsync), await testFuncAsync());
-        assert.equal(await callWithTelemetryAndErrorHandling('callbackId', testFuncError), undefined);
-        assert.equal(await callWithTelemetryAndErrorHandling('callbackId', testFuncErrorAsync), undefined);
+        assert.strictEqual(await callWithTelemetryAndErrorHandling('callbackId', testFunc), testFunc());
+        assert.strictEqual(await callWithTelemetryAndErrorHandling('callbackId', testFuncAsync), await testFuncAsync());
+        assert.strictEqual(await callWithTelemetryAndErrorHandling('callbackId', testFuncError), undefined);
+        assert.strictEqual(await callWithTelemetryAndErrorHandling('callbackId', testFuncErrorAsync), undefined);
 
         await assertThrowsAsync(
             async () => await callWithTelemetryAndErrorHandling('callbackId', async (context: IActionContext) => {
@@ -62,5 +62,33 @@ suite('callWithTelemetryAndErrorHandling tests', () => {
                 return testFuncErrorAsync();
             }),
             /testFuncErrorAsync/);
+    });
+
+    // https://github.com/microsoft/vscode-azuretools/issues/967
+    test('Unexpected error during masking', async () => {
+        const func = (context: IActionContext) => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            context.telemetry.properties.prop1 = <any>3;
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            context.telemetry.measurements.meas1 = <any>'fdafs';
+        }
+        assert.strictEqual(await callWithTelemetryAndErrorHandling('callbackId', func), undefined);
+    });
+
+    test('Unexpected error during telemetry handling', async () => {
+        const func = (context: IActionContext) => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            context.telemetry = <any>undefined;
+        }
+        assert.strictEqual(await callWithTelemetryAndErrorHandling('callbackId', func), undefined);
+    });
+
+    test('Unexpected error during error handling', async () => {
+        const func = (context: IActionContext) => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            context.errorHandling = <any>undefined;
+            throw new Error('test');
+        }
+        assert.strictEqual(await callWithTelemetryAndErrorHandling('callbackId', func), undefined);
     });
 });
