@@ -7,7 +7,7 @@ import { BasicAuthenticationCredentials, ServiceClientCredentials } from '@azure
 import { appendExtensionUserAgent, createGenericClient, IActionContext, parseError } from 'vscode-azureextensionui';
 import { KuduClient } from 'vscode-azurekudu';
 import { localize } from './localize';
-import { SiteClient } from './SiteClient';
+import { ParsedSite } from './SiteClient';
 import { nonNullProp } from './utils/nonNull';
 
 interface IInternalKuduActionContext extends IActionContext {
@@ -19,24 +19,25 @@ interface IInternalKuduActionContext extends IActionContext {
  * We'll ping the site, catch an 'Unauthorized' error, get the publishing creds, ping with those creds, and use them going forward if they work
  * Finally, we'll cache the client on the action context to avoid re-doing these requests multiple times for one action
  */
-export async function createKuduClient(context: IInternalKuduActionContext, siteClient: SiteClient): Promise<KuduClient> {
+export async function createKuduClient(context: IInternalKuduActionContext, site: ParsedSite): Promise<KuduClient> {
     if (!context._cachedKuduClient) {
-        if (!siteClient.kuduHostName) {
+        if (!site.kuduHostName) {
             throw new Error(localize('notSupportedLinux', 'This operation is not supported by this app service plan.'));
         }
 
-        const clientOptions = { baseUri: siteClient.kuduUrl, userAgent: appendExtensionUserAgent };
+        const clientOptions = { baseUri: site.kuduUrl, userAgent: appendExtensionUserAgent };
 
-        let credentials = siteClient.subscription.credentials;
+        let credentials = site.subscription.credentials;
 
         try {
-            await pingKuduSite(siteClient, siteClient.subscription.credentials);
+            await pingKuduSite(context, site, site.subscription.credentials);
         } catch (error) {
             if (parseError(error).errorType.toLowerCase() === '401') {
                 try {
-                    const user = await siteClient.getWebAppPublishCredential();
+                    const client = await site.createClient(context);
+                    const user = await client.getWebAppPublishCredential();
                     const basicCreds = new BasicAuthenticationCredentials(nonNullProp(user, 'publishingUserName'), nonNullProp(user, 'publishingPassword'));
-                    await pingKuduSite(siteClient, basicCreds);
+                    await pingKuduSite(context, site, basicCreds);
                     credentials = basicCreds;
                     context.telemetry.properties.usedPublishCreds = 'true';
                 } catch (pubCredError) {
@@ -52,7 +53,7 @@ export async function createKuduClient(context: IInternalKuduActionContext, site
     return context._cachedKuduClient;
 }
 
-async function pingKuduSite(siteClient: SiteClient, credentials: ServiceClientCredentials): Promise<void> {
-    const client = await createGenericClient(credentials);
-    await client.sendRequest({ method: 'HEAD', url: siteClient.kuduUrl })
+async function pingKuduSite(context: IActionContext, site: ParsedSite, credentials: ServiceClientCredentials): Promise<void> {
+    const client = await createGenericClient(context, credentials);
+    await client.sendRequest({ method: 'HEAD', url: site.kuduUrl })
 }

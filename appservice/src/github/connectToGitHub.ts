@@ -10,7 +10,7 @@ import * as vscode from 'vscode';
 import { AzureWizard, createGenericClient, DialogResponses, IAzureQuickPickItem, IParsedError, openInPortal, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { SiteClient } from '../SiteClient';
+import { ParsedSite } from '../SiteClient';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
 import { verifyNoRunFromPackageSetting } from '../verifyNoRunFromPackageSetting';
@@ -24,9 +24,9 @@ export type gitHubRepoData = { name: string, repos_url: string, url: string, htm
 export type gitHubBranchData = { name: string };
 export type gitHubLink = { prev?: string, next?: string, last?: string, first?: string };
 
-export async function connectToGitHub(client: SiteClient, context: IConnectToGitHubWizardContext): Promise<void> {
+export async function connectToGitHub(site: ParsedSite, context: IConnectToGitHubWizardContext): Promise<void> {
     const title: string = localize('connectGitHubRepo', 'Connect GitHub repository');
-    context.client = client;
+    context.site = site;
 
     const wizard: AzureWizard<IConnectToGitHubWizardContext> = new AzureWizard(context, {
         title,
@@ -49,12 +49,13 @@ export async function connectToGitHub(client: SiteClient, context: IConnectToGit
 
     const repoName: string = `${nonNullProp(context, 'orgData').login}/${nonNullProp(context, 'repoData').name}`;
 
+    const client = await site.createClient(context);
     try {
-        const connectingToGithub: string = localize('ConnectingToGithub', '"{0}" is being connected to repo "{1}". This may take several minutes...', client.fullName, repoName);
-        const connectedToGithub: string = localize('ConnectedToGithub', 'Repo "{0}" is connected and deployed to "{1}".', repoName, client.fullName);
+        const connectingToGithub: string = localize('ConnectingToGithub', '"{0}" is being connected to repo "{1}". This may take several minutes...', site.fullName, repoName);
+        const connectedToGithub: string = localize('ConnectedToGithub', 'Repo "{0}" is connected and deployed to "{1}".', repoName, site.fullName);
         await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: connectingToGithub }, async (): Promise<void> => {
             ext.outputChannel.appendLog(connectingToGithub);
-            await verifyNoRunFromPackageSetting(client);
+            await verifyNoRunFromPackageSetting(context, site);
             await client.updateSourceControl(siteSourceControl);
             void vscode.window.showInformationMessage(connectedToGithub);
             ext.outputChannel.appendLog(connectedToGithub);
@@ -74,7 +75,7 @@ export async function connectToGitHub(client: SiteClient, context: IConnectToGit
     }
 }
 
-async function showGitHubAuthPrompt(client: SiteClient, context: IConnectToGitHubWizardContext): Promise<void> {
+async function showGitHubAuthPrompt(context: IConnectToGitHubWizardContext, site: ParsedSite): Promise<void> {
     const invalidToken: string = localize('tokenExpired', 'Azure\'s GitHub token is invalid.  Authorize in the "Deployment Center"');
     const goToPortal: vscode.MessageItem = { title: localize('goToPortal', 'Go to Portal') };
     let input: vscode.MessageItem | undefined = DialogResponses.learnMore;
@@ -90,7 +91,7 @@ async function showGitHubAuthPrompt(client: SiteClient, context: IConnectToGitHu
 
     if (input === goToPortal) {
         context.telemetry.properties.githubGoToPortal = 'true';
-        await openInPortal(context, `${client.id}/vstscd`);
+        await openInPortal(context, `${site.id}/vstscd`);
     }
 }
 
@@ -109,7 +110,7 @@ export async function getGitHubJsonResponse<T>(context: IConnectToGitHubWizardCo
         const parsedError: IParsedError = parseError(error);
         if (parsedError.message.indexOf('Bad credentials') > -1) {
             // the default error is just "Bad credentials," which is an unhelpful error message
-            await showGitHubAuthPrompt(nonNullProp(context, 'client'), context);
+            await showGitHubAuthPrompt(context, nonNullProp(context, 'site'));
             context.errorHandling.suppressDisplay = true;
         }
         throw error;
@@ -185,14 +186,15 @@ export async function getGitHubQuickPicksWithLoadMore<T>(context: IConnectToGitH
 }
 
 export async function createGitHubClient(context: IConnectToGitHubWizardContext): Promise<ServiceClient> {
-    const client: SiteClient = nonNullProp(context, 'client');
+    const site = nonNullProp(context, 'site');
+    const client = await site.createClient(context);
     const oAuth2Token: string | undefined = (await client.listSourceControls())[0].token;
     if (!oAuth2Token) {
-        await showGitHubAuthPrompt(client, context);
+        await showGitHubAuthPrompt(context, site);
         context.errorHandling.suppressDisplay = true;
         const noToken: string = localize('noToken', 'No oAuth2 Token.');
         throw new Error(noToken);
     }
 
-    return createGenericClient(new TokenCredentials(oAuth2Token));
+    return createGenericClient(context, new TokenCredentials(oAuth2Token));
 }

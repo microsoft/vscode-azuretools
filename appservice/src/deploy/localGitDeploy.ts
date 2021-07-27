@@ -9,7 +9,7 @@ import * as vscode from 'vscode';
 import { callWithMaskHandling, IActionContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { SiteClient } from '../SiteClient';
+import { ParsedSite } from '../SiteClient';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
 import { verifyNoRunFromPackageSetting } from '../verifyNoRunFromPackageSetting';
@@ -27,14 +27,15 @@ type localGitOptions = {
     commit?: boolean;
 };
 
-export async function localGitDeploy(client: SiteClient, options: localGitOptions, context: IActionContext): Promise<void> {
+export async function localGitDeploy(site: ParsedSite, options: localGitOptions, context: IActionContext): Promise<void> {
+    const client = await site.createClient(context);
     const publishCredentials: WebSiteManagementModels.User = await client.getWebAppPublishCredential();
     const publishingPassword: string = nonNullProp(publishCredentials, 'publishingPassword');
     const publishingUserName: string = nonNullProp(publishCredentials, 'publishingUserName');
 
     await callWithMaskHandling(
         async (): Promise<void> => {
-            const remote: string = `https://${encodeURIComponent(publishingUserName)}:${encodeURIComponent(publishingPassword)}@${client.gitUrl}`;
+            const remote: string = `https://${encodeURIComponent(publishingUserName)}:${encodeURIComponent(publishingPassword)}@${site.gitUrl}`;
             const localGit: git.SimpleGit = git(options.fsPath);
             let status: git.StatusResult;
             try {
@@ -45,8 +46,8 @@ export async function localGitDeploy(client: SiteClient, options: localGitOption
                     await context.ui.showWarningMessage(message, { modal: true, stepName: 'pushWithUncommitChanges' }, deployAnyway);
                     context.telemetry.properties.pushWithUncommitChanges = 'true';
                 }
-                await verifyNoRunFromPackageSetting(client);
-                ext.outputChannel.appendLog(localize('localGitDeploy', `Deploying Local Git repository to "${client.fullName}"...`), { resourceName: client.fullName });
+                await verifyNoRunFromPackageSetting(context, site);
+                ext.outputChannel.appendLog(localize('localGitDeploy', `Deploying Local Git repository to "${site.fullName}"...`), { resourceName: site.fullName });
                 await tryPushAndWaitForDeploymentToComplete();
 
             } catch (err) {
@@ -91,7 +92,7 @@ export async function localGitDeploy(client: SiteClient, options: localGitOption
                             tokenSource.cancel();
                         });
 
-                        waitForDeploymentToComplete(context, client, commitId, token).then(resolve).catch(reject);
+                        waitForDeploymentToComplete(context, site, commitId, token).then(resolve).catch(reject);
                     });
                 } finally {
                     tokenSource.dispose();

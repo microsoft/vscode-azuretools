@@ -4,6 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { WebSiteManagementModels } from '@azure/arm-appservice';
+import { IActionContext } from 'vscode-azureextensionui';
+
+export interface AppSettingsClientProvider {
+    createClient(context: IActionContext): Promise<IAppSettingsClient>;
+}
 
 export interface IAppSettingsClient {
 

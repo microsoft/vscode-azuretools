@@ -5,14 +5,12 @@
 
 import { WebSiteManagementModels } from '@azure/arm-appservice';
 import { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
-import { createGenericClient, ISubscriptionContext } from 'vscode-azureextensionui';
 
 /**
  * Temporary workaround because this isn't in azure sdk yet
  */
-export async function listFunctionsSlot(subscription: ISubscriptionContext, id: string): Promise<WebSiteManagementModels.FunctionEnvelopeCollection> {
-    const client: ServiceClient = await createGenericClient(subscription);
-    const response: HttpOperationResponse = await client.sendRequest({ method: 'GET', url: getUrlPath(id) });
+export async function listFunctionsSlot(genericClient: ServiceClient, id: string): Promise<WebSiteManagementModels.FunctionEnvelopeCollection> {
+    const response: HttpOperationResponse = await genericClient.sendRequest({ method: 'GET', url: getUrlPath(id) });
     const rawResult: IRawFunctionEnvelopeCollection = <IRawFunctionEnvelopeCollection>response.parsedBody;
     const result: {}[] = rawResult.value.map(convertRawResource);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
@@ -23,18 +21,16 @@ export async function listFunctionsSlot(subscription: ISubscriptionContext, id: 
 /**
  * Temporary workaround because this isn't in azure sdk yet
  */
-export async function getFunctionSlot(subscription: ISubscriptionContext, id: string, functionName: string): Promise<WebSiteManagementModels.FunctionEnvelope> {
-    const client: ServiceClient = await createGenericClient(subscription);
-    const response: HttpOperationResponse = await client.sendRequest({ method: 'GET', url: getUrlPath(id, functionName) });
+export async function getFunctionSlot(genericClient: ServiceClient, id: string, functionName: string): Promise<WebSiteManagementModels.FunctionEnvelope> {
+    const response: HttpOperationResponse = await genericClient.sendRequest({ method: 'GET', url: getUrlPath(id, functionName) });
     return convertRawResource(<IRawAzureResource>response.parsedBody);
 }
 
 /**
  * Temporary workaround because this isn't in azure sdk yet
  */
-export async function deleteFunctionSlot(subscription: ISubscriptionContext, id: string, functionName: string): Promise<void> {
-    const client: ServiceClient = await createGenericClient(subscription);
-    await client.sendRequest({ method: 'DELETE', url: getUrlPath(id, functionName) });
+export async function deleteFunctionSlot(genericClient: ServiceClient, id: string, functionName: string): Promise<void> {
+    await genericClient.sendRequest({ method: 'DELETE', url: getUrlPath(id, functionName) });
 }
 
 function getUrlPath(id: string, functionName?: string): string {

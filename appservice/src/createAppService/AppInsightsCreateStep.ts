@@ -7,7 +7,7 @@ import { ApplicationInsightsManagementClient } from '@azure/arm-appinsights';
 import { ResourceManagementClient, ResourceManagementModels } from '@azure/arm-resources';
 import { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
 import { MessageItem, Progress } from 'vscode';
-import { AzExtLocation, AzureWizardExecuteStep, createGenericClient, IParsedError, LocationListStep, parseError } from 'vscode-azureextensionui';
+import { AzExtLocation, AzureWizardExecuteStep, createGenericClient, IActionContext, IParsedError, LocationListStep, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { createAppInsightsClient, createResourceClient } from '../utils/azureClients';
@@ -93,7 +93,7 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
             return locationName;
         } else {
             // If there is no exact match, then query the regionMapping.json
-            const pairedRegions: string[] | undefined = await this.getPairedRegions(locationName);
+            const pairedRegions: string[] | undefined = await this.getPairedRegions(context, locationName);
             if (pairedRegions.length > 0) {
                 // if there is at least one region listed, return the first
                 context.telemetry.properties.aiLocationSupported = 'pairedRegion';
@@ -105,9 +105,9 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
         }
     }
 
-    private async getPairedRegions(locationName: string): Promise<string[]> {
+    private async getPairedRegions(context: IActionContext, locationName: string): Promise<string[]> {
         try {
-            const client: ServiceClient = await createGenericClient();
+            const client: ServiceClient = await createGenericClient(context, undefined);
             const response: HttpOperationResponse = await client.sendRequest({
                 method: 'GET',
                 url: 'https://appinsights.azureedge.net/portal/regionMapping.json'

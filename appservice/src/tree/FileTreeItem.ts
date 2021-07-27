@@ -7,7 +7,7 @@ import { ThemeIcon } from 'vscode';
 import { AzExtParentTreeItem, AzExtTreeItem, IActionContext, openReadOnlyContent, TreeItemIconPath } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { SiteClient } from '../SiteClient';
+import { ParsedSite } from '../SiteClient';
 import { getFile, ISiteFile } from '../siteFiles';
 
 /**
@@ -20,11 +20,11 @@ export class FileTreeItem extends AzExtTreeItem {
     public readonly path: string;
     public readonly isReadOnly: boolean;
 
-    public readonly client: SiteClient;
+    public readonly site: ParsedSite;
 
-    constructor(parent: AzExtParentTreeItem, client: SiteClient, label: string, path: string, isReadOnly: boolean) {
+    constructor(parent: AzExtParentTreeItem, site: ParsedSite, label: string, path: string, isReadOnly: boolean) {
         super(parent);
-        this.client = client;
+        this.site = site;
         this.label = label;
         this.path = path;
         this.isReadOnly = isReadOnly;
@@ -40,7 +40,7 @@ export class FileTreeItem extends AzExtTreeItem {
 
     public async openReadOnly(context: IActionContext): Promise<void> {
         await this.runWithTemporaryDescription(context, localize('opening', 'Opening...'), async () => {
-            const file: ISiteFile = await getFile(context, this.client, this.path);
+            const file: ISiteFile = await getFile(context, this.site, this.path);
             await openReadOnlyContent(this, file.data, '');
         });
     }

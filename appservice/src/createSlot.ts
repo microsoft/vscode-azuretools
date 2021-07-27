@@ -5,35 +5,34 @@
 
 import { WebSiteManagementClient, WebSiteManagementModels } from "@azure/arm-appservice";
 import { ProgressLocation, window } from "vscode";
-import { AzureTreeItem, IActionContext, IAzureNamingRules, IAzureQuickPickItem, ICreateChildImplContext } from "vscode-azureextensionui";
+import { IActionContext, IAzureNamingRules, IAzureQuickPickItem, ICreateChildImplContext } from "vscode-azureextensionui";
 import { getNewFileShareName } from "./createAppService/getNewFileShareName";
 import { ext } from "./extensionVariables";
 import { localize } from "./localize";
-import { SiteClient } from './SiteClient';
-import { ISiteTreeRoot } from "./tree/ISiteTreeRoot";
+import { ParsedSite } from './SiteClient';
 import { createWebSiteClient } from "./utils/azureClients";
 
-export async function createSlot(root: ISiteTreeRoot, existingSlots: AzureTreeItem<ISiteTreeRoot>[], context: ICreateChildImplContext): Promise<WebSiteManagementModels.Site> {
-    const client: WebSiteManagementClient = await createWebSiteClient(root);
+export async function createSlot(site: ParsedSite, existingSlots: ParsedSite[], context: ICreateChildImplContext): Promise<WebSiteManagementModels.Site> {
+    const client: WebSiteManagementClient = await createWebSiteClient([context, site.subscription]);
     const slotName: string = (await context.ui.showInputBox({
         prompt: localize('enterSlotName', 'Enter a unique name for the new deployment slot'),
         stepName: 'slotName',
-        validateInput: async (value: string): Promise<string | undefined> => validateSlotName(value, client, root)
+        validateInput: async (value: string): Promise<string | undefined> => validateSlotName(value, client, site)
     })).trim();
 
     const newDeploymentSlot: WebSiteManagementModels.Site = {
         name: slotName,
-        kind: root.client.kind,
-        location: root.client.location,
-        serverFarmId: root.client.serverFarmId,
+        kind: site.kind,
+        location: site.location,
+        serverFarmId: site.serverFarmId,
         siteConfig: {
             appSettings: [] // neccesary to have clean appSettings; by default it copies the production's slot
         }
     };
 
-    const configurationSource: SiteClient | undefined = await chooseConfigurationSource(context, root, existingSlots);
+    const configurationSource = await chooseConfigurationSource(context, site, existingSlots);
     if (configurationSource) {
-        const appSettings: WebSiteManagementModels.NameValuePair[] = await parseAppSettings(configurationSource);
+        const appSettings: WebSiteManagementModels.NameValuePair[] = await parseAppSettings(context, configurationSource);
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         newDeploymentSlot.siteConfig!.appSettings = appSettings;
     }
@@ -43,7 +42,7 @@ export async function createSlot(root: ISiteTreeRoot, existingSlots: AzureTreeIt
     const creatingSlot: string = localize('creatingSlot', 'Creating slot "{0}"...', slotName);
     ext.outputChannel.appendLog(creatingSlot);
     return await window.withProgress({ location: ProgressLocation.Notification, title: creatingSlot }, async () => {
-        return await client.webApps.createOrUpdateSlot(root.client.resourceGroup, root.client.siteName, newDeploymentSlot, slotName);
+        return await client.webApps.createOrUpdateSlot(site.resourceGroup, site.siteName, newDeploymentSlot, slotName);
     });
 }
 
@@ -53,19 +52,19 @@ const slotNamingRules: IAzureNamingRules = {
     invalidCharsRegExp: /[^a-zA-Z0-9\-]/
 };
 
-async function validateSlotName(value: string, client: WebSiteManagementClient, root: ISiteTreeRoot): Promise<string | undefined> {
+async function validateSlotName(value: string, client: WebSiteManagementClient, site: ParsedSite): Promise<string | undefined> {
     value = value.trim();
     // Can not have "production" as a slot name, but checkNameAvailability doesn't validate that
     if (value === 'production') {
         return localize('slotNotAvailable', 'The slot name "{0}" is not available.', value);
     } else if (value.length < slotNamingRules.minLength) {
         return localize('nameTooShort', 'The slot name must be at least {0} characters.', slotNamingRules.minLength);
-    } else if (value.length + root.client.siteName.length > slotNamingRules.maxLength) {
+    } else if (value.length + site.siteName.length > slotNamingRules.maxLength) {
         return localize('nameTooLong', 'The combined site name and slot name must be fewer than {0} characters.', slotNamingRules.maxLength);
     } else if (slotNamingRules.invalidCharsRegExp.test(value)) {
         return localize('invalidChars', "The name can only contain letters, numbers, or hyphens.");
     } else {
-        const nameAvailability: WebSiteManagementModels.ResourceNameAvailability = await client.checkNameAvailability(`${root.client.siteName}-${value}`, 'Slot');
+        const nameAvailability: WebSiteManagementModels.ResourceNameAvailability = await client.checkNameAvailability(`${site.siteName}-${value}`, 'Slot');
         if (!nameAvailability.nameAvailable) {
             return nameAvailability.message;
         } else {
@@ -74,29 +73,27 @@ async function validateSlotName(value: string, client: WebSiteManagementClient, 
     }
 }
 
-async function chooseConfigurationSource(context: IActionContext, root: ISiteTreeRoot, existingSlots: AzureTreeItem<ISiteTreeRoot>[]): Promise<SiteClient | undefined> {
-    if (root.client.isFunctionApp) {
+async function chooseConfigurationSource(context: IActionContext, site: ParsedSite, existingSlots: ParsedSite[]): Promise<ParsedSite | undefined> {
+    if (site.isFunctionApp) {
         // Function apps always clone from production slot without prompting
-        return root.client;
+        return site;
     } else {
-        const configurationSources: IAzureQuickPickItem<SiteClient | undefined>[] = [{
+        const configurationSources: IAzureQuickPickItem<ParsedSite | undefined>[] = [{
             label: localize('dontClone', "Don't clone configuration from an existing slot"),
             data: undefined
         }];
 
-        const prodSiteClient: SiteClient = root.client;
         // add the production slot itself
         configurationSources.push({
-            label: prodSiteClient.fullName,
-            data: prodSiteClient
+            label: site.fullName,
+            data: site
         });
 
         // add the web app's current deployment slots
         for (const slot of existingSlots) {
-            const slotSiteClient: SiteClient = slot.root.client;
             configurationSources.push({
-                label: slotSiteClient.fullName,
-                data: slotSiteClient
+                label: slot.fullName,
+                data: slot
             });
         }
 
@@ -105,16 +102,17 @@ async function chooseConfigurationSource(context: IActionContext, root: ISiteTre
     }
 }
 
-async function parseAppSettings(siteClient: SiteClient): Promise<WebSiteManagementModels.NameValuePair[]> {
-    const appSettings: WebSiteManagementModels.StringDictionary = await siteClient.listApplicationSettings();
+async function parseAppSettings(context: IActionContext, site: ParsedSite): Promise<WebSiteManagementModels.NameValuePair[]> {
+    const client = await site.createClient(context);
+    const appSettings: WebSiteManagementModels.StringDictionary = await client.listApplicationSettings();
     const appSettingPairs: WebSiteManagementModels.NameValuePair[] = [];
     if (appSettings.properties) {
         // iterate String Dictionary to parse into NameValuePair[]
         for (const key of Object.keys(appSettings.properties)) {
             let value: string = appSettings.properties[key];
             // This has to be different when cloning configuration for a function app slot
-            if (siteClient.isFunctionApp && key === 'WEBSITE_CONTENTSHARE') {
-                value = getNewFileShareName(siteClient.fullName);
+            if (site.isFunctionApp && key === 'WEBSITE_CONTENTSHARE') {
+                value = getNewFileShareName(site.fullName);
             }
             appSettingPairs.push({ name: key, value });
         }

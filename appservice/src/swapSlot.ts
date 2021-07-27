@@ -5,28 +5,25 @@
 
 import { WebSiteManagementClient } from '@azure/arm-appservice';
 import { ProgressLocation, window } from 'vscode';
-import { AzureTreeItem, IActionContext, IAzureQuickPickItem } from 'vscode-azureextensionui';
+import { IActionContext, IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
-import { SiteClient } from './SiteClient';
-import { ISiteTreeRoot } from './tree/ISiteTreeRoot';
+import { ParsedSite } from './SiteClient';
 import { createWebSiteClient } from './utils/azureClients';
 
-export async function swapSlot(context: IActionContext, sourceSlotNode: AzureTreeItem<ISiteTreeRoot>, existingSlots: AzureTreeItem<ISiteTreeRoot>[]): Promise<void> {
-    const sourceSlotClient: SiteClient = sourceSlotNode.root.client;
-
+export async function swapSlot(context: IActionContext, sourceSlot: ParsedSite, existingSlots: ParsedSite[]): Promise<void> {
     const productionSlotLabel: string = 'production';
-    const otherSlots: IAzureQuickPickItem<AzureTreeItem<ISiteTreeRoot> | undefined>[] = [{
+    const otherSlots: IAzureQuickPickItem<ParsedSite | undefined>[] = [{
         label: productionSlotLabel,
         data: undefined
     }];
 
     for (const slot of existingSlots) {
-        if (sourceSlotClient.slotName !== slot.root.client.slotName) {
+        if (sourceSlot.slotName !== slot.slotName) {
             // Deployment slots must have an unique name
-            const otherSlot: IAzureQuickPickItem<AzureTreeItem<ISiteTreeRoot> | undefined> = {
+            const otherSlot: IAzureQuickPickItem<ParsedSite | undefined> = {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                label: slot.root.client.slotName!,
+                label: slot.slotName!,
                 data: slot
             };
 
@@ -34,22 +31,22 @@ export async function swapSlot(context: IActionContext, sourceSlotNode: AzureTre
         }
     }
 
-    const placeHolder: string = localize('selectSlotToSwap', 'Select which slot to swap with "{0}".', sourceSlotClient.slotName);
-    const targetSlot: AzureTreeItem<ISiteTreeRoot> | undefined = (await context.ui.showQuickPick(otherSlots, { placeHolder, stepName: 'swapSlot' })).data;
+    const placeHolder: string = localize('selectSlotToSwap', 'Select which slot to swap with "{0}".', sourceSlot.slotName);
+    const targetSlot = (await context.ui.showQuickPick(otherSlots, { placeHolder, stepName: 'swapSlot' })).data;
 
-    const targetSlotLabel: string = targetSlot ? targetSlot.root.client.fullName : `${sourceSlotClient.siteName}-${productionSlotLabel}`;
-    const swappingSlots: string = localize('swapping', 'Swapping "{0}" with "{1}"...', targetSlotLabel, sourceSlotClient.fullName);
-    const successfullySwapped: string = localize('swapped', 'Successfully swapped "{0}" with "{1}".', targetSlotLabel, sourceSlotClient.fullName);
+    const targetSlotLabel: string = targetSlot ? targetSlot.fullName : `${sourceSlot.siteName}-${productionSlotLabel}`;
+    const swappingSlots: string = localize('swapping', 'Swapping "{0}" with "{1}"...', targetSlotLabel, sourceSlot.fullName);
+    const successfullySwapped: string = localize('swapped', 'Successfully swapped "{0}" with "{1}".', targetSlotLabel, sourceSlot.fullName);
     ext.outputChannel.appendLog(swappingSlots);
-    const client: WebSiteManagementClient = await createWebSiteClient(sourceSlotNode.root);
+    const client: WebSiteManagementClient = await createWebSiteClient([context, sourceSlot.subscription]);
     await window.withProgress({ location: ProgressLocation.Notification, title: swappingSlots }, async () => {
         // if targetSlot was assigned undefined, the user selected 'production'
         if (!targetSlot) {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            await client.webApps.swapSlotWithProduction(sourceSlotClient.resourceGroup, sourceSlotClient.siteName, { targetSlot: sourceSlotClient.slotName!, preserveVnet: true });
+            await client.webApps.swapSlotWithProduction(sourceSlot.resourceGroup, sourceSlot.siteName, { targetSlot: sourceSlot.slotName!, preserveVnet: true });
         } else {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            await client.webApps.swapSlotSlot(sourceSlotClient.resourceGroup, sourceSlotClient.siteName, { targetSlot: targetSlot.root.client.slotName!, preserveVnet: true }, sourceSlotClient.slotName!);
+            await client.webApps.swapSlotSlot(sourceSlot.resourceGroup, sourceSlot.siteName, { targetSlot: targetSlot.slotName!, preserveVnet: true }, sourceSlot.slotName!);
         }
         void window.showInformationMessage(successfullySwapped);
         ext.outputChannel.appendLog(successfullySwapped);
