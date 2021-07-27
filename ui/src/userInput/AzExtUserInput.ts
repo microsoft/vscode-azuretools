@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event, EventEmitter, MessageItem, QuickPickItem, Uri } from 'vscode';
+import { Event, EventEmitter, MessageItem, Uri } from 'vscode';
 import * as types from '../../index';
 import { IInternalActionContext, IInternalAzureWizard } from './IInternalActionContext';
 import { showInputBox } from './showInputBox';
@@ -24,7 +24,7 @@ export class AzExtUserInput implements types.IAzureUserInput {
         return this._onDidFinishPromptEmitter.event;
     }
 
-    public async showQuickPick<TPick extends QuickPickItem>(picks: TPick[] | Promise<TPick[]>, options: types.IAzureQuickPickOptions): Promise<TPick | TPick[]> {
+    public async showQuickPick<TPick extends types.IAzureQuickPickItem<unknown>>(picks: TPick[] | Promise<TPick[]>, options: types.IAzureQuickPickOptions): Promise<TPick | TPick[]> {
         addStepTelemetry(this._context, options.stepName, 'quickPick', options.placeHolder);
         const result = await showQuickPick(this._context, picks, options);
         this._onDidFinishPromptEmitter.fire({ value: result });
