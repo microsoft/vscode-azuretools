@@ -34,6 +34,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     public readonly parent: IAzExtParentTreeItemInternal | undefined;
     public isLoadingMore: boolean;
     public readonly valuesToMask: string[] = [];
+    protected _subscription: types.ISubscriptionContext | undefined;
 
     private _temporaryDescription?: string;
     private _treeDataProvider: IAzExtTreeDataProviderInternal | undefined;
@@ -114,6 +115,15 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
 
     public set commandId(id: string | undefined) {
         this._commandId = id;
+    }
+
+    public get subscription(): types.ISubscriptionContext {
+        const result = this._subscription || this.parent?.subscription;
+        if (!result) {
+            throw Error(localize('noSubscriptionFound', 'No Azure subscription found for this tree item.'));
+        } else {
+            return result;
+        }
     }
 
     //#region Methods implemented by base class

@@ -152,20 +152,20 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
         return typeof azureAccount !== 'string' && azureAccount.status === 'LoggedIn';
     }
 
-    public async getSubscriptionPromptStep(context: Partial<types.ISubscriptionWizardContext> & types.IActionContext): Promise<types.AzureWizardPromptStep<types.ISubscriptionWizardContext> | undefined> {
-        const subscriptions: SubscriptionTreeItemBase[] = await this.ensureSubscriptionTreeItems(context);
-        if (subscriptions.length === 1) {
-            Object.assign(context, subscriptions[0].root);
+    public async getSubscriptionPromptStep(context: Partial<types.ISubscriptionActionContext> & types.IActionContext): Promise<types.AzureWizardPromptStep<types.ISubscriptionActionContext> | undefined> {
+        const subscriptionNodes: SubscriptionTreeItemBase[] = await this.ensureSubscriptionTreeItems(context);
+        if (subscriptionNodes.length === 1) {
+            Object.assign(context, subscriptionNodes[0].subscription);
             return undefined;
         } else {
             // eslint-disable-next-line @typescript-eslint/no-this-alias
             const me: AzureAccountTreeItemBase = this;
-            class SubscriptionPromptStep extends AzureWizardPromptStep<types.ISubscriptionWizardContext> {
+            class SubscriptionPromptStep extends AzureWizardPromptStep<types.ISubscriptionActionContext> {
                 public async prompt(): Promise<void> {
                     const ti: SubscriptionTreeItemBase = <SubscriptionTreeItemBase>await me.treeDataProvider.showTreeItemPicker(SubscriptionTreeItemBase.contextValue, context, me);
-                    Object.assign(context, ti.root);
+                    Object.assign(context, ti.subscription);
                 }
-                public shouldPrompt(): boolean { return !(<types.ISubscriptionWizardContext>context).subscriptionId; }
+                public shouldPrompt(): boolean { return !(<types.ISubscriptionActionContext>context).subscriptionId; }
             }
             return new SubscriptionPromptStep();
         }

@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Environment } from '@azure/ms-rest-azure-env';
 import { BaseRequestPolicy, BasicAuthenticationCredentials, HttpOperationResponse, RequestPolicy, RequestPolicyFactory, RequestPolicyOptions, RequestPrepareOptions, RestError, ServiceClient, TokenCredentials, WebResource, WebResourceLike } from '@azure/ms-rest-js';
+import { v4 as uuid } from 'uuid';
 import * as vscode from "vscode";
 import * as types from '../index';
 import { appendExtensionUserAgent } from "./extensionUserAgent";
@@ -12,35 +12,45 @@ import { GenericServiceClient } from './GenericServiceClient';
 import { localize } from './localize';
 import { maskValue } from './masking';
 import { parseError } from './parseError';
+import { AzExtTreeItem } from './tree/AzExtTreeItem';
 import { parseJson, removeBom } from './utils/parseJson';
 
-export function createAzureClient<T>(
-    clientInfo: { credentials: types.AzExtServiceClientCredentials; subscriptionId: string; environment: Environment; },
-    clientType: new (credentials: types.AzExtServiceClientCredentials, subscriptionId: string, options?: types.IMinimumServiceClientOptions) => T): T {
-    return new clientType(clientInfo.credentials, clientInfo.subscriptionId, {
+export type InternalAzExtClientContext = types.ISubscriptionActionContext | [types.IActionContext, types.ISubscriptionContext | AzExtTreeItem];
+
+export function parseClientContext(clientContext: InternalAzExtClientContext): types.ISubscriptionActionContext {
+    if (Array.isArray(clientContext)) {
+        const subscription = clientContext[1] instanceof AzExtTreeItem ? clientContext[1].subscription : clientContext[1];
+        return Object.assign(clientContext[0], subscription);
+    } else {
+        return clientContext;
+    }
+}
+
+export function createAzureClient<T>(clientContext: InternalAzExtClientContext, clientType: types.AzExtClientType<T>): T {
+    const context = parseClientContext(clientContext);
+    return new clientType(context.credentials, context.subscriptionId, {
         acceptLanguage: vscode.env.language,
-        baseUri: clientInfo.environment.resourceManagerEndpointUrl,
+        baseUri: context.environment.resourceManagerEndpointUrl,
         userAgent: appendExtensionUserAgent,
-        requestPolicyFactories: (defaultFactories: RequestPolicyFactory[]) => addAzExtFactories(clientInfo.credentials, defaultFactories),
+        requestPolicyFactories: (defaultFactories: RequestPolicyFactory[]) => addAzExtFactories(context, context.credentials, defaultFactories),
     });
 }
 
-export function createAzureSubscriptionClient<T>(
-    clientInfo: { credentials: types.AzExtServiceClientCredentials; environment: Environment; },
-    clientType: new (credentials: types.AzExtServiceClientCredentials, options?: types.IMinimumServiceClientOptions) => T): T {
-    return new clientType(clientInfo.credentials, {
+export function createAzureSubscriptionClient<T>(clientContext: InternalAzExtClientContext, clientType: types.AzExtSubscriptionClientType<T>): T {
+    const context = parseClientContext(clientContext);
+    return new clientType(context.credentials, {
         acceptLanguage: vscode.env.language,
-        baseUri: clientInfo.environment.resourceManagerEndpointUrl,
+        baseUri: context.environment.resourceManagerEndpointUrl,
         userAgent: appendExtensionUserAgent,
-        requestPolicyFactories: (defaultFactories: RequestPolicyFactory[]) => addAzExtFactories(clientInfo.credentials, defaultFactories),
+        requestPolicyFactories: (defaultFactories: RequestPolicyFactory[]) => addAzExtFactories(context, context.credentials, defaultFactories),
     });
 }
 
-export async function sendRequestWithTimeout(options: RequestPrepareOptions, timeout: number, clientInfo?: types.AzExtGenericClientInfo): Promise<HttpOperationResponse> {
+export async function sendRequestWithTimeout(context: types.IActionContext, options: RequestPrepareOptions, timeout: number, clientInfo: types.AzExtGenericClientInfo): Promise<HttpOperationResponse> {
     let request: WebResource = new WebResource();
     request = request.prepare(options);
     request.timeout = timeout;
-    const client: GenericServiceClient = await createGenericClient(clientInfo, { noRetryPolicy: true });
+    const client: GenericServiceClient = await createGenericClient(context, clientInfo, { noRetryPolicy: true });
     return await client.sendRequest(options);
 }
 
@@ -48,7 +58,7 @@ interface IGenericClientOptions {
     noRetryPolicy?: boolean;
 }
 
-export async function createGenericClient(clientInfo?: types.AzExtGenericClientInfo, options?: IGenericClientOptions): Promise<ServiceClient> {
+export async function createGenericClient(context: types.IActionContext, clientInfo: types.AzExtGenericClientInfo, options?: IGenericClientOptions): Promise<ServiceClient> {
     let credentials: types.AzExtServiceClientCredentials | undefined;
     let baseUri: string | undefined;
     if (clientInfo && 'credentials' in clientInfo) {
@@ -63,12 +73,12 @@ export async function createGenericClient(clientInfo?: types.AzExtGenericClientI
     return new gsc.GenericServiceClient(credentials, <types.IMinimumServiceClientOptions>{
         baseUri,
         userAgent: appendExtensionUserAgent,
-        requestPolicyFactories: (defaultFactories: RequestPolicyFactory[]) => addAzExtFactories(credentials, defaultFactories),
+        requestPolicyFactories: (defaultFactories: RequestPolicyFactory[]) => addAzExtFactories(context, credentials, defaultFactories),
         noRetryPolicy: options?.noRetryPolicy
     });
 }
 
-function addAzExtFactories(credentials: types.AzExtServiceClientCredentials | undefined, defaultFactories: RequestPolicyFactory[]): RequestPolicyFactory[] {
+function addAzExtFactories(context: types.IActionContext, credentials: types.AzExtServiceClientCredentials | undefined, defaultFactories: RequestPolicyFactory[]): RequestPolicyFactory[] {
     // NOTE: Factories at the end of the array are executed first, and we want these to happen before the deserialization factory
     defaultFactories.push(
         {
@@ -76,6 +86,9 @@ function addAzExtFactories(credentials: types.AzExtServiceClientCredentials | un
         },
         {
             create: (nextPolicy, options): RequestPolicy => new MissingContentTypePolicy(nextPolicy, options)
+        },
+        {
+            create: (nextPolicy, options): RequestPolicy => new CorrelationIdPolicy(nextPolicy, options, context)
         }
     );
 
@@ -93,6 +106,24 @@ function addAzExtFactories(credentials: types.AzExtServiceClientCredentials | un
 }
 
 const contentTypeName: string = 'Content-Type';
+
+/**
+ * Automatically add id to correlate our telemetry with the platform team's telemetry
+ */
+class CorrelationIdPolicy extends BaseRequestPolicy {
+    private _context: types.IActionContext;
+    constructor(nextPolicy: RequestPolicy, requestPolicyOptions: RequestPolicyOptions, context: types.IActionContext) {
+        super(nextPolicy, requestPolicyOptions);
+        this._context = context;
+    }
+
+    public async sendRequest(request: WebResourceLike): Promise<HttpOperationResponse> {
+        const headerName = 'x-ms-correlation-request-id';
+        const id: string = this._context.telemetry.properties[headerName] ||= uuid();
+        request.headers.set(headerName, id);
+        return await this._nextPolicy.sendRequest(request);
+    }
+}
 
 /**
  * Removes the BOM character if it exists in bodyAsText for a json response, to prevent a parse error

@@ -130,11 +130,11 @@ export interface ITreeItemPickerContext extends IActionContext {
 /**
  * Implement this class to display resources under a standard subscription tree item
  */
-export abstract class SubscriptionTreeItemBase extends AzureParentTreeItem {
+export abstract class SubscriptionTreeItemBase extends AzExtParentTreeItem {
     public static readonly contextValue: string;
     public readonly contextValue: string;
     public readonly label: string;
-    constructor(parent: AzExtParentTreeItem, root: ISubscriptionContext);
+    constructor(parent: AzExtParentTreeItem, subscription: ISubscriptionContext);
 }
 
 /**
@@ -170,13 +170,13 @@ export type TreeItemIconPath = string | Uri | { light: string | Uri; dark: strin
 
 /**
  * Base class for all tree items in an *Az*ure *ext*ension, even if those resources aren't actually in Azure.
- * This provides more value than `TreeItem` (provided by `vscode`), but is more generic than `AzureTreeItem` (which is specific to Azure resources)
+ * This provides more value than `TreeItem` (provided by `vscode`)
  * NOTE: *Impl methods are not meant to be called directly - just implemented.
  */
 export declare abstract class AzExtTreeItem {
     //#region Properties implemented by base class
     /**
-     * This is is used for the AzureTreeItem.openInPortal action. It is also used per the following documentation copied from VS Code:
+     * This is is used for the openInPortal action. It is also used per the following documentation copied from VS Code:
      * Optional id for the treeItem that has to be unique across tree. The id is used to preserve the selection and expansion state of the treeItem.
      *
      * If not provided, an id is generated using the treeItem's label. **Note** that when labels change, ids will change and that selection and expansion state cannot be kept stable anymore.
@@ -209,11 +209,17 @@ export declare abstract class AzExtTreeItem {
 
     /**
      * This id represents the effective/serializable full id of the item in the tree. It always starts with the parent's fullId and ends with either the AzExtTreeItem.id property (if implemented) or AzExtTreeItem.label property
-     * This is used for AzureTreeDataProvider.findTreeItem and AzureTreeItem.openInPortal
+     * This is used for AzureTreeDataProvider.findTreeItem and openInPortal
      */
     public readonly fullId: string;
     public readonly parent?: AzExtParentTreeItem;
     public readonly treeDataProvider: AzExtTreeDataProvider;
+
+    /**
+     * The subscription information for this branch of the tree
+     * Throws an error if this branch of the tree is not actually for Azure resources
+     */
+    public get subscription(): ISubscriptionContext;
 
     /**
      * Values to mask in error messages whenever an action uses this tree item
@@ -324,7 +330,7 @@ export class InvalidTreeItem extends AzExtParentTreeItem {
 
 /**
  * Base class for all parent tree items in an *Az*ure *ext*ension, even if those resources aren't actually in Azure.
- * This provides more value than `TreeItem` (provided by `vscode`), but is more generic than `AzureParentTreeItem` (which is specific to Azure resources)
+ * This provides more value than `TreeItem` (provided by `vscode`)
  * NOTE: *Impl methods are not meant to be called directly - just implemented.
  */
 export declare abstract class AzExtParentTreeItem extends AzExtTreeItem {
@@ -464,42 +470,12 @@ export declare abstract class AzureAccountTreeItemBase extends AzExtParentTreeIt
      * If user is logged in and only has one subscription selected, adds that to the wizardContext and returns undefined
      * Else, returns a prompt step for a subscription
      */
-    public getSubscriptionPromptStep(wizardContext: Partial<ISubscriptionWizardContext>): Promise<AzureWizardPromptStep<ISubscriptionWizardContext> | undefined>;
+    public getSubscriptionPromptStep(wizardContext: Partial<ISubscriptionActionContext>): Promise<AzureWizardPromptStep<ISubscriptionActionContext> | undefined>;
 
     public hasMoreChildrenImpl(): boolean;
     public loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]>;
     public pickTreeItemImpl(expectedContextValues: (string | RegExp)[]): Promise<AzExtTreeItem | undefined>;
     public getIsLoggedIn(): Promise<boolean>;
-}
-
-/**
- * Base class for all tree items representing resources in Azure.
- */
-export declare abstract class AzureTreeItem<TRoot extends ISubscriptionContext = ISubscriptionContext> extends AzExtTreeItem {
-    /**
-     * Contains subscription information specific to the root of this branch of the tree.
-     */
-    public get root(): TRoot;
-
-    /**
-     * This method combines the environment.portalLink and AzureTreeItem.fullId to open the resource in the portal.
-     */
-    public openInPortal(options?: OpenInPortalOptions): Promise<void>;
-}
-
-/**
- * Base class for all parent tree items representing resources in Azure.
- */
-export declare abstract class AzureParentTreeItem<TRoot extends ISubscriptionContext = ISubscriptionContext> extends AzExtParentTreeItem {
-    /**
-     * Contains subscription information specific to the root of this branch of the tree.
-     */
-    public get root(): TRoot;
-
-    /**
-    * This method combines the environment.portalLink and AzureTreeItem.fullId to open the resource in the portal.
-    */
-    public openInPortal(options?: OpenInPortalOptions): Promise<void>;
 }
 
 /**
@@ -691,11 +667,11 @@ interface IErrorHandlerContext extends IHandlerContext {
     error: unknown;
 }
 
-type ErrorHandler = (context: IErrorHandlerContext) => void;
+export type ErrorHandler = (context: IErrorHandlerContext) => void;
 
-type TelemetryHandler = (context: IHandlerContext) => void;
+export type TelemetryHandler = (context: IHandlerContext) => void;
 
-type OnActionStartHandler = (context: IHandlerContext) => void;
+export type OnActionStartHandler = (context: IHandlerContext) => void;
 
 /**
  * Register a handler to run right after an `IActionContext` is created and before the action starts
@@ -994,7 +970,7 @@ export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
     public abstract shouldPrompt(wizardContext: T): boolean;
 }
 
-export type ISubscriptionWizardContext = ISubscriptionContext & IActionContext;
+export type ISubscriptionActionContext = ISubscriptionContext & IActionContext;
 
 /**
  * Replacement for `SubscriptionModels.Location` because the sdk is pretty far behind in terms of api-version
@@ -1016,7 +992,7 @@ export type AzExtLocation = {
  * Currently no location-specific properties on the wizard context, but keeping this interface for backwards compatibility and ease of use
  * Instead, use static methods on `LocationListStep` like `getLocation` and `setLocationSubset`
  */
-export interface ILocationWizardContext extends ISubscriptionWizardContext {
+export interface ILocationWizardContext extends ISubscriptionActionContext {
 }
 
 export declare class LocationListStep<T extends ILocationWizardContext> extends AzureWizardPromptStep<T> {
@@ -1135,7 +1111,7 @@ export declare abstract class AzureNameStep<T extends IRelatedNameWizardContext>
 /**
  * Checks to see if providers (i.e. 'Microsoft.Web') are registered and registers them if they're not
  */
-export declare class VerifyProvidersStep<T extends ISubscriptionWizardContext> extends AzureWizardExecuteStep<T> {
+export declare class VerifyProvidersStep<T extends ISubscriptionActionContext> extends AzureWizardExecuteStep<T> {
     /**
      * 90
      */
@@ -1402,38 +1378,50 @@ export interface IMinimumServiceClientOptions {
     requestPolicyFactories?: any[] | ((defaultRequestPolicyFactories: any[]) => (void | any[]));
 }
 
-export type AzExtGenericClientInfo = AzExtServiceClientCredentials | { credentials: AzExtServiceClientCredentials; environment: Environment; };
+export type AzExtGenericClientInfo = AzExtServiceClientCredentials | { credentials: AzExtServiceClientCredentials; environment: Environment; } | undefined;
 
 /**
  * Creates a generic http rest client (i.e. for non-Azure calls or for Azure calls that the available sdks don't support), ensuring best practices are followed. For example:
  * 1. Adds extension-specific user agent
  * 2. Uses resourceManagerEndpointUrl to support sovereigns (if clientInfo corresponds to an Azure environment)
+ * @param clientInfo The client/credentials info or `undefined` if no credentials are needed
  */
-export function createGenericClient(clientInfo?: AzExtGenericClientInfo): Promise<ServiceClient>;
+export function createGenericClient(context: IActionContext, clientInfo: AzExtGenericClientInfo): Promise<ServiceClient>;
 
 /**
  * Send request with a timeout specified and turn off retry policy (because retrying could take a lot longer)
  * @param timeout The timeout in milliseconds
+ * @param clientInfo The client/credentials info or `undefined` if no credentials are needed
  */
-export function sendRequestWithTimeout(options: RequestPrepareOptions, timeout: number, clientInfo?: AzExtGenericClientInfo): Promise<HttpOperationResponse>;
+export function sendRequestWithTimeout(context: IActionContext, options: RequestPrepareOptions, timeout: number, clientInfo: AzExtGenericClientInfo): Promise<HttpOperationResponse>;
+
+export type AzExtClientType<T> = new (credentials: AzExtServiceClientCredentials, subscriptionId: string, options?: IMinimumServiceClientOptions) => T;
+
+/**
+ * Convenience type to give us multiple ways to specify subscription info and action context depending on the scenario
+ */
+export type AzExtClientContext = ISubscriptionActionContext | [IActionContext, ISubscriptionContext | AzExtTreeItem];
+
+/**
+ * Converts `AzExtClientContext` into a single object: `ISubscriptionActionContext`
+ */
+export function parseClientContext(clientContext: AzExtClientContext): ISubscriptionActionContext;
 
 /**
  * Creates an Azure client, ensuring best practices are followed. For example:
  * 1. Adds extension-specific user agent
  * 2. Uses resourceManagerEndpointUrl to support sovereigns
  */
-export function createAzureClient<T>(
-    clientInfo: { credentials: AzExtServiceClientCredentials; subscriptionId: string; environment: Environment; },
-    clientType: new (credentials: AzExtServiceClientCredentials, subscriptionId: string, options?: IMinimumServiceClientOptions) => T): T;
+export function createAzureClient<T>(context: AzExtClientContext, clientType: AzExtClientType<T>): T;
+
+export type AzExtSubscriptionClientType<T> = new (credentials: AzExtServiceClientCredentials, options?: IMinimumServiceClientOptions) => T;
 
 /**
  * Creates an Azure subscription client, ensuring best practices are followed. For example:
  * 1. Adds extension-specific user agent
  * 2. Uses resourceManagerEndpointUrl to support sovereigns
  */
-export function createAzureSubscriptionClient<T>(
-    clientInfo: { credentials: AzExtServiceClientCredentials; environment: Environment; },
-    clientType: new (credentials: AzExtServiceClientCredentials, options?: IMinimumServiceClientOptions) => T): T;
+export function createAzureSubscriptionClient<T>(context: AzExtClientContext, clientType: AzExtSubscriptionClientType<T>): T;
 
 /**
  * Wraps an Azure Extension's API in a very basic provider that adds versioning.

@@ -24,8 +24,6 @@ export * from './tree/AzExtParentTreeItem';
 export * from './tree/AzExtTreeDataProvider';
 export * from './tree/AzExtTreeItem';
 export * from './tree/AzureAccountTreeItemBase';
-export * from './tree/AzureParentTreeItem';
-export * from './tree/AzureTreeItem';
 export * from './tree/GenericTreeItem';
 export * from './tree/SubscriptionTreeItemBase';
 export * from './wizard/AzureNameStep';
