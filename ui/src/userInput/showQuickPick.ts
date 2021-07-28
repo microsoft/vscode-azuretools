@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, QuickInputButtons, QuickPick, QuickPickItem, window } from 'vscode';
+import { Disposable, QuickInputButtons, QuickPick, window } from 'vscode';
 import * as types from '../../index';
 import { GoBackError, UserCancelledError } from '../errors';
 import { ext } from '../extensionVariables';
@@ -11,7 +11,7 @@ import { localize } from '../localize';
 import { randomUtils } from '../utils/randomUtils';
 import { IInternalActionContext } from './IInternalActionContext';
 
-export async function showQuickPick<TPick extends QuickPickItem>(context: IInternalActionContext, picks: TPick[] | Promise<TPick[]>, options: types.IAzureQuickPickOptions): Promise<TPick | TPick[]> {
+export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unknown>>(context: IInternalActionContext, picks: TPick[] | Promise<TPick[]>, options: types.IAzureQuickPickOptions): Promise<TPick | TPick[]> {
     const disposables: Disposable[] = [];
     try {
         const quickPick: QuickPick<TPick> = createQuickPick(context, options);
@@ -28,7 +28,7 @@ export async function showQuickPick<TPick extends QuickPickItem>(context: IInter
                         if (options.canPickMany) {
                             resolve(Array.from(quickPick.selectedItems));
                         } else {
-                            const selectedItem = <TPick & Partial<types.IAzureQuickPickItem<unknown>> | undefined>quickPick.selectedItems[0];
+                            const selectedItem: TPick | undefined = quickPick.selectedItems[0];
                             if (selectedItem) {
                                 const group = groups.find(g => selectedItem.data === g);
                                 if (group) {
@@ -36,7 +36,7 @@ export async function showQuickPick<TPick extends QuickPickItem>(context: IInter
                                     quickPick.items = getGroupedPicks(groups);
 
                                     // The active pick gets reset when we change the items, but we can explicitly set it here to persist the active state
-                                    const newGroupPick = quickPick.items.find((i: Partial<types.IAzureQuickPickItem<unknown>>) => i.data === group);
+                                    const newGroupPick = quickPick.items.find(i => i.data === group);
                                     if (newGroupPick) {
                                         quickPick.activeItems = [newGroupPick];
                                     }
@@ -84,7 +84,7 @@ export async function showQuickPick<TPick extends QuickPickItem>(context: IInter
             }
         });
 
-        if (recentlyUsedKey && !Array.isArray(result) && !(<Partial<types.IAzureQuickPickItem>>result).suppressPersistence) {
+        if (recentlyUsedKey && !Array.isArray(result) && !result.suppressPersistence) {
             await ext.context.globalState.update(recentlyUsedKey, getRecentlyUsedValue(result));
         }
 
@@ -94,7 +94,7 @@ export async function showQuickPick<TPick extends QuickPickItem>(context: IInter
     }
 }
 
-function createQuickPick<TPick extends QuickPickItem>(context: IInternalActionContext, options: types.IAzureQuickPickOptions): QuickPick<TPick> {
+function createQuickPick<TPick extends types.IAzureQuickPickItem<unknown>>(context: IInternalActionContext, options: types.IAzureQuickPickOptions): QuickPick<TPick> {
     const quickPick: QuickPick<TPick> = window.createQuickPick<TPick>();
 
     const wizard = context.ui.wizard;
@@ -134,7 +134,7 @@ function getRecentlyUsedKey(options: types.IAzureQuickPickOptions): string | und
     return recentlyUsedKey;
 }
 
-async function initializePicks<TPick extends QuickPickItem>(picks: TPick[] | Promise<TPick[]>, options: types.IAzureQuickPickOptions, groups: QuickPickGroup[], recentlyUsedKey: string | undefined): Promise<TPick[]> {
+async function initializePicks<TPick extends types.IAzureQuickPickItem<unknown>>(picks: TPick[] | Promise<TPick[]>, options: types.IAzureQuickPickOptions, groups: QuickPickGroup[], recentlyUsedKey: string | undefined): Promise<TPick[]> {
     picks = await picks;
 
     if (recentlyUsedKey && !options.suppressPersistence) {
@@ -154,7 +154,7 @@ async function initializePicks<TPick extends QuickPickItem>(picks: TPick[] | Pro
         }
 
         for (const pick of picks) {
-            const groupName: string | undefined = (<Partial<types.IAzureQuickPickItem<unknown>>>pick).group;
+            const groupName: string | undefined = pick.group;
             const group = groups.find(g => g.name === groupName);
             if (group) {
                 group.picks.push(pick);
@@ -166,34 +166,35 @@ async function initializePicks<TPick extends QuickPickItem>(picks: TPick[] | Pro
     }
 }
 
-function bumpRecentlyUsedPick<T extends QuickPickItem>(picks: T[], recentlyUsedKey: string): void {
+function bumpRecentlyUsedPick<T extends types.IAzureQuickPickItem<unknown>>(picks: T[], recentlyUsedKey: string): void {
     const recentlyUsedValue: string | undefined = ext.context.globalState.get(recentlyUsedKey);
     if (recentlyUsedValue) {
         const index = picks.findIndex(p => getRecentlyUsedValue(p) === recentlyUsedValue);
         // No need to do anything if "recently used" item is not found or already the first item
         if (index > 0) {
             const previousItem: T = picks.splice(index, 1)[0];
+            if (!previousItem.suppressPersistence) {
+                const recentlyUsed: string = localize('recentlyUsed', '(recently used)');
+                if (!previousItem.description) {
+                    previousItem.description = recentlyUsed;
+                } else if (!previousItem.description.includes(recentlyUsed)) {
+                    previousItem.description = `${previousItem.description} ${recentlyUsed}`;
+                }
 
-            const recentlyUsed: string = localize('recentlyUsed', '(recently used)');
-            if (!previousItem.description) {
-                previousItem.description = recentlyUsed;
-            } else if (!previousItem.description.includes(recentlyUsed)) {
-                previousItem.description = `${previousItem.description} ${recentlyUsed}`;
+                picks.unshift(previousItem);
             }
-
-            picks.unshift(previousItem);
         }
     }
 }
 
-function getGroupedPicks<TPick extends QuickPickItem>(groups: QuickPickGroup[]): TPick[] {
-    let picks: QuickPickItem[] = [];
+function getGroupedPicks<TPick extends types.IAzureQuickPickItem<unknown>>(groups: QuickPickGroup[]): TPick[] {
+    let picks: types.IAzureQuickPickItem<unknown>[] = [];
     if (shouldDisplayGroups(groups)) {
         for (const group of groups) {
             if (!group.name) {
                 picks.push(...group.picks);
             } else {
-                picks.push(<types.IAzureQuickPickItem<QuickPickGroup>>{
+                picks.push({
                     label: `$(chevron-${group.isCollapsed ? 'right' : 'down'}) ${group.name}`,
                     data: group
                 });
@@ -215,9 +216,9 @@ function shouldDisplayGroups(groups: QuickPickGroup[]): boolean {
 type QuickPickGroup = {
     name?: string;
     isCollapsed?: boolean;
-    picks: QuickPickItem[]
+    picks: types.IAzureQuickPickItem<unknown>[]
 }
 
-function getRecentlyUsedValue(item: QuickPickItem): string {
-    return randomUtils.getPseudononymousStringHash((<types.IAzureQuickPickItem>item).id || item.label);
+function getRecentlyUsedValue(item: types.IAzureQuickPickItem<unknown>): string {
+    return randomUtils.getPseudononymousStringHash(item.id || item.label);
 }
