@@ -184,6 +184,16 @@ suite("masking", () => {
             const valueToMask = 'valueToMask';
             assert.strictEqual(maskUserInfo('https://microsoft.com c35d6342-5917-46f8-953e-9d3faffd1c72 hello@world accountkey=1234 valueToMask', [valueToMask], true /* lessAggressive */), 'redacted:url c35d6342-5917-46f8-953e-9d3faffd1c72 hello@world redacted:key ---');
         });
+
+        // https://github.com/microsoft/vscode-azuretools/issues/967
+        test('non-strings', async () => {
+            assert.strictEqual(maskUserInfo(4, []), '4');
+            assert.strictEqual(maskUserInfo(true, []), 'true');
+            assert.strictEqual(maskUserInfo(undefined, []), 'undefined');
+            assert.strictEqual(maskUserInfo(null, []), 'null');
+            assert.strictEqual(maskUserInfo({}, []), '[object Object]');
+            assert.strictEqual(maskUserInfo([], []), '');
+        });
     });
 });
 

@@ -62,7 +62,9 @@ export async function callWithMaskHandling<T>(callback: () => Promise<T>, valueT
  * Best effort to mask all data that could potentially identify a user
  * @param lessAggressive If set to true, the most aggressive masking will be skipped
  */
-export function maskUserInfo(data: string, actionValuesToMask: string[], lessAggressive: boolean = false): string {
+export function maskUserInfo(unkonwnArg: unknown, actionValuesToMask: string[], lessAggressive: boolean = false): string {
+    let data = String(unkonwnArg);
+
     // Mask longest values first just in case one is a substring of another
     const valuesToMask = actionValuesToMask.concat(getExtValuesToMask()).sort((a, b) => b.length - a.length);
     for (const value of valuesToMask) {
