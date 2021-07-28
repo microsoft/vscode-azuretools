@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { AzExtTreeItem, callWithTelemetryAndErrorHandling, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
@@ -53,8 +54,35 @@ export async function getDeployFsPath(context: IActionContext, target: vscode.Ur
         effectiveDeployFsPath = await appendDeploySubpathSetting(context, originalDeployFsPath);
     }
 
+    void addRuntimeFileTelemetry(context, effectiveDeployFsPath);
+
     const workspaceFolder: vscode.WorkspaceFolder = getContainingWorkspace(context, effectiveDeployFsPath);
     return { originalDeployFsPath, effectiveDeployFsPath, workspaceFolder };
+}
+
+async function addRuntimeFileTelemetry(context: IActionContext, effectiveDeployFsPath: string): Promise<void> {
+    const runtimeFiles: string[] = [];
+
+    const tasks: Promise<void>[] = [
+        ...['package.json', 'requirements.txt', 'pom.xml'].map(f => checkRuntimeFile(runtimeFiles, effectiveDeployFsPath, f)),
+        ...['dll', 'jar', 'war', 'csproj', 'fsproj'].map(e => checkRuntimeExtension(runtimeFiles, effectiveDeployFsPath, e))
+    ];
+    await Promise.all(tasks);
+
+    context.telemetry.properties.runtimeFiles = runtimeFiles.sort().join('|');
+}
+
+async function checkRuntimeFile(runtimeFiles: string[], effectiveDeployFsPath: string, fileName: string): Promise<void> {
+    if (await fse.pathExists(path.join(effectiveDeployFsPath, fileName))) {
+        runtimeFiles.push(fileName);
+    }
+}
+
+async function checkRuntimeExtension(runtimeFiles: string[], effectiveDeployFsPath: string, extension: string): Promise<void> {
+    const files = await vscode.workspace.findFiles(new vscode.RelativePattern(effectiveDeployFsPath, `*.${extension}`), undefined, 1 /* maxResults */);
+    if (files.length > 0) {
+        runtimeFiles.push(extension);
+    }
 }
 
 /**
