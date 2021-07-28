@@ -1,0 +1,20 @@
+{
+    "folders": [
+        {
+            "path": "../testWorkspace/deploy"
+        },
+        {
+            "path": "../testWorkspace/deploy1"
+        },
+        {
+            "path": "../testWorkspace/deploy1/sub1"
+        },
+        {
+            "path": "../testWorkspace/deploy2/sub2"
+        },
+        {
+            "path": "../testWorkspace/deploy2"
+        }
+    ],
+    "settings": {}
+}

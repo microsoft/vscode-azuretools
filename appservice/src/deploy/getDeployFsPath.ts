@@ -23,20 +23,24 @@ const deploySubpathSetting: string = 'deploySubpath';
 export async function getDeployFsPath(context: IActionContext, target: vscode.Uri | string | AzExtTreeItem | undefined, fileExtensions?: string | string[]): Promise<IDeployPaths> {
     let originalDeployFsPath: string | undefined;
     let effectiveDeployFsPath: string | undefined;
+    let workspaceFolder: vscode.WorkspaceFolder | undefined;
     if (target instanceof vscode.Uri) {
         originalDeployFsPath = target.fsPath;
-        effectiveDeployFsPath = await appendDeploySubpathSetting(context, target.fsPath);
+        workspaceFolder = vscode.workspace.getWorkspaceFolder(target);
+        effectiveDeployFsPath = await appendDeploySubpathSetting(context, workspaceFolder, target.fsPath);
     } else if (typeof target === 'string') {
         originalDeployFsPath = target;
-        effectiveDeployFsPath = await appendDeploySubpathSetting(context, target);
+        workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(target));
+        effectiveDeployFsPath = await appendDeploySubpathSetting(context, workspaceFolder, target);
     } else if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length === 1) {
         // If there is only one workspace and it has 'deploySubPath' set - return that value without prompting
-        const folderPath: string = vscode.workspace.workspaceFolders[0].uri.fsPath;
-        const deploySubpath: string | undefined = getWorkspaceSetting(deploySubpathSetting, ext.prefix, folderPath);
+        const singleWorkspace = vscode.workspace.workspaceFolders[0];
+        const deploySubpath: string | undefined = getWorkspaceSetting(deploySubpathSetting, ext.prefix, singleWorkspace);
         if (deploySubpath) {
             context.telemetry.properties.hasDeploySubpathSetting = 'true';
-            originalDeployFsPath = folderPath;
-            effectiveDeployFsPath = path.join(folderPath, deploySubpath);
+            originalDeployFsPath = singleWorkspace.uri.fsPath;
+            effectiveDeployFsPath = path.join(singleWorkspace.uri.fsPath, deploySubpath);
+            workspaceFolder = singleWorkspace;
         }
     }
 
@@ -48,15 +52,27 @@ export async function getDeployFsPath(context: IActionContext, target: vscode.Ur
         const selectFile: string = localize('selectDeployFile', 'Select the {0} file to deploy', fileExtensions ? fileExtensions.join('/') : '');
         const selectFolder: string = localize('selectDeployFolder', 'Select the folder to deploy');
 
-        originalDeployFsPath = fileExtensions ?
+        const selectedItem = fileExtensions ?
             await workspaceUtil.selectWorkspaceFile(context, selectFile, fileExtensions) :
             await workspaceUtil.selectWorkspaceFolder(context, selectFolder);
-        effectiveDeployFsPath = await appendDeploySubpathSetting(context, originalDeployFsPath);
+        if (selectedItem instanceof vscode.Uri) {
+            originalDeployFsPath = selectedItem.fsPath;
+            workspaceFolder = vscode.workspace.getWorkspaceFolder(selectedItem);
+        } else {
+            originalDeployFsPath = selectedItem.uri.fsPath;
+            workspaceFolder = selectedItem;
+        }
+
+        effectiveDeployFsPath = await appendDeploySubpathSetting(context, workspaceFolder, originalDeployFsPath);
     }
 
     void addRuntimeFileTelemetry(context, effectiveDeployFsPath);
 
-    const workspaceFolder: vscode.WorkspaceFolder = getContainingWorkspace(context, effectiveDeployFsPath);
+    if (!workspaceFolder) {
+        promptToOpenWorkspace(context, originalDeployFsPath);
+    }
+
+    context.telemetry.properties.deployingSubpathOfWorkspace = String(isSubpath(workspaceFolder.uri.fsPath, effectiveDeployFsPath));
     return { originalDeployFsPath, effectiveDeployFsPath, workspaceFolder };
 }
 
@@ -89,36 +105,33 @@ async function checkRuntimeExtension(runtimeFiles: string[], effectiveDeployFsPa
  * Appends the deploySubpath setting if the target path matches the root of a workspace folder
  * If the targetPath is a sub folder instead of the root, overwrites with the subpath setting and warns the user
  */
-async function appendDeploySubpathSetting(context: IActionContext, targetPath: string): Promise<string> {
-    if (vscode.workspace.workspaceFolders) {
-        const deploySubPath: string | undefined = getWorkspaceSetting(deploySubpathSetting, ext.prefix, targetPath);
+async function appendDeploySubpathSetting(context: IActionContext, workspaceFolder: vscode.WorkspaceFolder | undefined, targetPath: string): Promise<string> {
+    if (workspaceFolder) {
+        const deploySubPath: string | undefined = getWorkspaceSetting(deploySubpathSetting, ext.prefix, workspaceFolder);
         if (deploySubPath) {
             context.telemetry.properties.hasDeploySubpathSetting = 'true';
 
-            if (vscode.workspace.workspaceFolders.some(f => isPathEqual(f.uri.fsPath, targetPath))) {
+            if (isPathEqual(workspaceFolder.uri.fsPath, targetPath)) {
                 return path.join(targetPath, deploySubPath);
             } else {
-                const folder: vscode.WorkspaceFolder | undefined = vscode.workspace.workspaceFolders.find(f => isSubpath(f.uri.fsPath, targetPath));
-                if (folder) {
-                    const fsPathWithSetting: string = path.join(folder.uri.fsPath, deploySubPath);
-                    if (!isPathEqual(fsPathWithSetting, targetPath)) {
-                        context.telemetry.properties.overwriteTargetWithSubpathSetting = 'true';
+                const fsPathWithSetting: string = path.join(workspaceFolder.uri.fsPath, deploySubPath);
+                if (!isPathEqual(fsPathWithSetting, targetPath)) {
+                    context.telemetry.properties.overwriteTargetWithSubpathSetting = 'true';
 
-                        const settingKey: string = 'showDeploySubpathWarning';
-                        if (getWorkspaceSetting(settingKey, ext.prefix)) {
-                            const selectedFolder: string = path.relative(folder.uri.fsPath, targetPath);
-                            const message: string = localize('mismatchDeployPath', 'Deploying "{0}" instead of selected folder "{1}". Use "{2}.{3}" to change this behavior.', deploySubPath, selectedFolder, ext.prefix, deploySubpathSetting);
-                            // don't wait
-                            void context.ui.showWarningMessage(message, { title: localize('ok', 'OK') }, DialogResponses.dontWarnAgain).then(async (result: vscode.MessageItem) => {
-                                if (result === DialogResponses.dontWarnAgain) {
-                                    await updateGlobalSetting(settingKey, false, ext.prefix);
-                                }
-                            });
-                        }
+                    const settingKey: string = 'showDeploySubpathWarning';
+                    if (getWorkspaceSetting(settingKey, ext.prefix)) {
+                        const selectedFolder: string = path.relative(workspaceFolder.uri.fsPath, targetPath);
+                        const message: string = localize('mismatchDeployPath', 'Deploying "{0}" instead of selected folder "{1}". Use "{2}.{3}" to change this behavior.', deploySubPath, selectedFolder, ext.prefix, deploySubpathSetting);
+                        // don't wait
+                        void context.ui.showWarningMessage(message, { title: localize('ok', 'OK') }, DialogResponses.dontWarnAgain).then(async (result: vscode.MessageItem) => {
+                            if (result === DialogResponses.dontWarnAgain) {
+                                await updateGlobalSetting(settingKey, false, ext.prefix);
+                            }
+                        });
                     }
-
-                    return fsPathWithSetting;
                 }
+
+                return fsPathWithSetting;
             }
         }
     }
@@ -135,29 +148,19 @@ export type IDeployPaths = {
     workspaceFolder: vscode.WorkspaceFolder
 };
 
-function getContainingWorkspace(context: IActionContext, fsPath: string): vscode.WorkspaceFolder {
-    const openFolders: readonly vscode.WorkspaceFolder[] = vscode.workspace.workspaceFolders || [];
-    const workspaceFolder: vscode.WorkspaceFolder | undefined = openFolders.find((f: vscode.WorkspaceFolder): boolean => {
-        return isPathEqual(f.uri.fsPath, fsPath) || isSubpath(f.uri.fsPath, fsPath);
+function promptToOpenWorkspace(context: IActionContext, originalDeployFsPath: string): never {
+    const openInNewWindow: vscode.MessageItem = { title: localize('openInNewWindow', 'Open in new window') };
+    const message: string = localize('folderOpenWarning', 'Failed to deploy because "{0}" is not part of an open workspace.', path.basename(originalDeployFsPath));
+
+    // don't wait
+    void context.ui.showWarningMessage(message, openInNewWindow).then(async result => {
+        await callWithTelemetryAndErrorHandling('deployWarning.openInNewWindow', async (postDeployContext: IActionContext) => {
+            postDeployContext.telemetry.properties.dialogResult = result?.title;
+            if (result === openInNewWindow) {
+                await vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(originalDeployFsPath), true /* forceNewWindow */);
+            }
+        });
     });
 
-    if (!workspaceFolder) {
-        const openInNewWindow: vscode.MessageItem = { title: localize('openInNewWindow', 'Open in new window') };
-        const message: string = localize('folderOpenWarning', 'Failed to deploy because "{0}" is not part of an open workspace.', path.basename(fsPath));
-
-        // don't wait
-        void context.ui.showWarningMessage(message, openInNewWindow).then(async result => {
-            await callWithTelemetryAndErrorHandling('deployWarning.openInNewWindow', async (postDeployContext: IActionContext) => {
-                postDeployContext.telemetry.properties.dialogResult = result?.title;
-                if (result === openInNewWindow) {
-                    await vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(fsPath), true /* forceNewWindow */);
-                }
-            });
-        });
-
-        throw new UserCancelledError('openInNewWindow');
-    }
-
-    context.telemetry.properties.deployingSubpathOfWorkspace = String(isSubpath(workspaceFolder.uri.fsPath, fsPath));
-    return workspaceFolder;
+    throw new UserCancelledError('openInNewWindow');
 }

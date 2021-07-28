@@ -293,6 +293,7 @@ lib
 out
 **/.vscode-test/
 **/test-results.xml
+**/testWorkspace/
 dist
 esm
 code-model-*

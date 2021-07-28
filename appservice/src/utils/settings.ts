@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ConfigurationTarget, Uri, workspace, WorkspaceConfiguration } from "vscode";
+import { ConfigurationTarget, Uri, workspace, WorkspaceConfiguration, WorkspaceFolder } from "vscode";
 
 export async function updateGlobalSetting<T = string>(section: string, value: T, prefix: string): Promise<void> {
     const projectConfiguration: WorkspaceConfiguration = workspace.getConfiguration(prefix);
     await projectConfiguration.update(section, value, ConfigurationTarget.Global);
 }
 
-export async function updateWorkspaceSetting<T = string>(section: string, value: T, fsPath: string, prefix: string): Promise<void> {
-    const projectConfiguration: WorkspaceConfiguration = workspace.getConfiguration(prefix, Uri.file(fsPath));
+export async function updateWorkspaceSetting<T = string>(section: string, value: T, fsPath: string | WorkspaceFolder, prefix: string): Promise<void> {
+    const projectConfiguration: WorkspaceConfiguration = workspace.getConfiguration(prefix, getScope(fsPath));
     await projectConfiguration.update(section, value);
 }
 
@@ -21,9 +21,13 @@ export function getGlobalSetting<T>(key: string, prefix: string): T | undefined 
     return result && result.globalValue;
 }
 
-export function getWorkspaceSetting<T>(key: string, prefix: string, fsPath?: string): T | undefined {
-    const projectConfiguration: WorkspaceConfiguration = workspace.getConfiguration(prefix, fsPath ? Uri.file(fsPath) : undefined);
+export function getWorkspaceSetting<T>(key: string, prefix: string, fsPath?: string | WorkspaceFolder): T | undefined {
+    const projectConfiguration: WorkspaceConfiguration = workspace.getConfiguration(prefix, getScope(fsPath));
     return projectConfiguration.get<T>(key);
+}
+
+function getScope(fsPath: WorkspaceFolder | string | undefined): Uri | WorkspaceFolder | undefined {
+    return typeof fsPath === 'string' ? Uri.file(fsPath) : fsPath;
 }
 
 export function getWorkspaceSettingFromAnyFolder(key: string, prefix: string): string | undefined {
