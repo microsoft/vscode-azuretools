@@ -28,7 +28,7 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
                         if (options.canPickMany) {
                             resolve(Array.from(quickPick.selectedItems));
                         } else {
-                            const selectedItem = <TPick & Partial<types.IAzureQuickPickItem<unknown>> | undefined>quickPick.selectedItems[0];
+                            const selectedItem: TPick | undefined = quickPick.selectedItems[0];
                             if (selectedItem) {
                                 const group = groups.find(g => selectedItem.data === g);
                                 if (group) {
@@ -36,7 +36,7 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
                                     quickPick.items = getGroupedPicks(groups);
 
                                     // The active pick gets reset when we change the items, but we can explicitly set it here to persist the active state
-                                    const newGroupPick = quickPick.items.find((i: Partial<types.IAzureQuickPickItem<unknown>>) => i.data === group);
+                                    const newGroupPick = quickPick.items.find(i => i.data === group);
                                     if (newGroupPick) {
                                         quickPick.activeItems = [newGroupPick];
                                     }
@@ -84,7 +84,7 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
             }
         });
 
-        if (recentlyUsedKey && !Array.isArray(result) && !(<Partial<types.IAzureQuickPickItem<unknown>>>result).suppressPersistence) {
+        if (recentlyUsedKey && !Array.isArray(result) && !result.suppressPersistence) {
             await ext.context.globalState.update(recentlyUsedKey, getRecentlyUsedValue(result));
         }
 
@@ -154,7 +154,7 @@ async function initializePicks<TPick extends types.IAzureQuickPickItem<unknown>>
         }
 
         for (const pick of picks) {
-            const groupName: string | undefined = (<Partial<types.IAzureQuickPickItem<unknown>>>pick).group;
+            const groupName: string | undefined = pick.group;
             const group = groups.find(g => g.name === groupName);
             if (group) {
                 group.picks.push(pick);
@@ -194,7 +194,7 @@ function getGroupedPicks<TPick extends types.IAzureQuickPickItem<unknown>>(group
             if (!group.name) {
                 picks.push(...group.picks);
             } else {
-                picks.push(<types.IAzureQuickPickItem<QuickPickGroup>>{
+                picks.push({
                     label: `$(chevron-${group.isCollapsed ? 'right' : 'down'}) ${group.name}`,
                     data: group
                 });
@@ -220,5 +220,5 @@ type QuickPickGroup = {
 }
 
 function getRecentlyUsedValue(item: types.IAzureQuickPickItem<unknown>): string {
-    return randomUtils.getPseudononymousStringHash((<types.IAzureQuickPickItem<unknown>>item).id || item.label);
+    return randomUtils.getPseudononymousStringHash(item.id || item.label);
 }
