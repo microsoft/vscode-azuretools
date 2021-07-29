@@ -71,6 +71,7 @@
         "mocha-junit-reporter": "^1.23.3",
         "mocha-multi-reporters": "^1.1.7",
         "typescript": "^4.3.5",
-        "vscode-test": "^1.3.0"
+        "vscode-test": "^1.3.0",
+        "vscode-azureextensiondev": "^0.9.6"
     }
 }

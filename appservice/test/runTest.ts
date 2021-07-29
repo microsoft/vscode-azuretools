@@ -8,9 +8,11 @@ import { runTests } from 'vscode-test';
 
 async function main(): Promise<void> {
     try {
+        const repoRoot: string = path.resolve(__dirname, '..', '..');
         await runTests({
-            extensionDevelopmentPath: path.resolve(__dirname, '..', '..', 'test', 'extension'),
+            extensionDevelopmentPath: path.join(repoRoot, 'test', 'extension'),
             launchArgs: [
+                path.resolve(repoRoot, 'test', 'test.code-workspace'),
                 '--disable-workspace-trust'
             ],
             extensionTestsPath: path.resolve(__dirname, './index'),
