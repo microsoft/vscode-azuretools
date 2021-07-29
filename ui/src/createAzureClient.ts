@@ -20,7 +20,17 @@ export type InternalAzExtClientContext = types.ISubscriptionActionContext | [typ
 export function parseClientContext(clientContext: InternalAzExtClientContext): types.ISubscriptionActionContext {
     if (Array.isArray(clientContext)) {
         const subscription = clientContext[1] instanceof AzExtTreeItem ? clientContext[1].subscription : clientContext[1];
-        return Object.assign(clientContext[0], subscription);
+        // Make sure to copy over just the subscription info and not any other extraneous properties
+        return Object.assign(clientContext[0], {
+            credentials: subscription.credentials,
+            subscriptionDisplayName: subscription.subscriptionDisplayName,
+            subscriptionId: subscription.subscriptionId,
+            subscriptionPath: subscription.subscriptionPath,
+            tenantId: subscription.tenantId,
+            userId: subscription.userId,
+            environment: subscription.environment,
+            isCustomCloud: subscription.isCustomCloud
+        });
     } else {
         return clientContext;
     }
