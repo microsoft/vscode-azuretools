@@ -23,10 +23,7 @@ module.exports = {
         "no-inner-declarations": "off",
         "no-case-declarations": "off",
         "@typescript-eslint/prefer-regexp-exec": "off",
-        "@typescript-eslint/no-unused-vars": [
-            "error",
-            { "argsIgnorePattern": "^_" }
-        ],
+        "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
         "@typescript-eslint/no-inferrable-types": "off",
         "@typescript-eslint/unbound-method": "off",
         "@typescript-eslint/no-unnecessary-type-assertion": "off",
@@ -37,8 +34,6 @@ module.exports = {
         "no-constant-condition": ["error", { "checkLoops": false }],
         "eqeqeq": ["error", "always"],
         "no-restricted-imports": ["error", { "patterns": ["**/*/extension.bundle"] }],
-        "import/no-internal-modules": ["error", {
-            "allow": ["yaml/types"],
-        }],
+        "import/no-internal-modules": ["error", { "allow": ["yaml/types"] }],
     }
 };
