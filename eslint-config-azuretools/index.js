@@ -35,6 +35,10 @@ module.exports = {
         "@typescript-eslint/ban-types": "off",
         "@typescript-eslint/require-await": "off",
         "no-constant-condition": ["error", { "checkLoops": false }],
-        "eqeqeq": ["error", "always"]
+        "eqeqeq": ["error", "always"],
+        "no-restricted-imports": ["error", { "patterns": ["**/*/extension.bundle"] }],
+        "import/no-internal-modules": ["error", {
+            "allow": ["yaml/types"],
+        }],
     }
 };
