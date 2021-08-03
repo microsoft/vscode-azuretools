@@ -87,7 +87,7 @@ export async function deploy(site: ParsedSite, fsPath: string, context: IDeployC
                 const javaRuntime = site.isLinux ? config.linuxFxVersion : config.javaContainer;
                 if (javaRuntime && /^(tomcat|wildfly|jboss)/i.test(javaRuntime)) {
                     await deployWar(context, site, fsPath);
-                } else if (javaRuntime && /^java/i.test(javaRuntime)) {
+                } else if (javaRuntime && /^java/i.test(javaRuntime) && !site.isFunctionApp) {
                     const pathFileMap = new Map<string, string>([
                         [path.basename(fsPath), 'app.jar']
                     ]);
