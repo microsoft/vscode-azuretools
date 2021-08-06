@@ -83,35 +83,21 @@ async function startRemoteDebugInternal(context: IActionContext, site: ParsedSit
     });
 }
 
-const baseConfigs: { [key in RemoteDebugLanguage]: Object } = {
-    [RemoteDebugLanguage.Node]: {
+function getNodeDebugConfiguration(context: IActionContext, sessionId: string, portNumber: number, host: string): vscode.DebugConfiguration {
+    const config: vscode.DebugConfiguration = {
+        name: sessionId,
         type: 'node',
-        protocol: 'inspector'
-    },
-    [RemoteDebugLanguage.Python]: {
-        type: 'python'
+        protocol: 'inspector',
+        remoteRoot: '/home/site/wwwroot',
+        request: 'attach',
+        address: host,
+        port: portNumber,
     }
-};
-
-async function getDebugConfiguration(context: IActionContext, language: RemoteDebugLanguage): Promise<vscode.DebugConfiguration> {
-    if (!(language in baseConfigs)) {
-        throw new Error(localize('remoteDebugLanguageNotSupported', 'The language "{0}" is not supported for remote debugging.', language));
-    }
-
-    const sessionId: string = Date.now().toString();
-    const portNumber: number = await portfinder.getPortPromise();
-
-    const config: vscode.DebugConfiguration = <vscode.DebugConfiguration>baseConfigs[language];
-    config.name = sessionId;
-    config.request = 'attach';
-    config.address = 'localhost';
-    config.port = portNumber;
 
     // Try to map workspace folder source files to the remote instance
     if (vscode.workspace.workspaceFolders) {
         if (vscode.workspace.workspaceFolders.length === 1) {
             config.localRoot = vscode.workspace.workspaceFolders[0].uri.fsPath;
-            config.remoteRoot = '/home/site/wwwroot';
         } else {
             // In this case we don't know which folder to use. Show a warning and proceed.
             // In the future we should allow users to choose a workspace folder to map sources from.
@@ -123,4 +109,39 @@ async function getDebugConfiguration(context: IActionContext, language: RemoteDe
     }
 
     return config;
+}
+
+function getPythonDebugConfiguration(sessionId: string, portNumber: number, host: string): vscode.DebugConfiguration {
+    const config: vscode.DebugConfiguration = {
+        name: sessionId,
+        type: 'python',
+        request: 'attach',
+        connect: {
+            host: host,
+            port: portNumber,
+        },
+        pathMappings: [
+            {
+                localRoot: '${workspaceFolder}',
+                remoteRoot: '.',
+            },
+        ],
+    };
+
+    return config;
+}
+
+async function getDebugConfiguration(context: IActionContext, language: RemoteDebugLanguage): Promise<vscode.DebugConfiguration> {
+    const sessionId: string = Date.now().toString();
+    const portNumber: number = await portfinder.getPortPromise();
+    const host: string = 'localhost';
+
+    switch (language){
+        case RemoteDebugLanguage.Node:
+            return getNodeDebugConfiguration(context, sessionId, portNumber, host);
+        case RemoteDebugLanguage.Python:
+            return getPythonDebugConfiguration(sessionId, portNumber, host);
+        default:
+            throw new Error(localize('remoteDebugLanguageNotSupported', 'The language "{0}" is not supported for remote debugging.', language));
+    }
 }
