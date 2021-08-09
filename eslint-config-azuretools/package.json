@@ -16,7 +16,7 @@
   "bugs": {
     "url": "https://github.com/Microsoft/vscode-azuretools/issues"
   },
-  "homepage": "https://github.com/Microsoft/vscode-azuretools/eslint-config-azuretools",
+  "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/eslint-config-azuretools/README.md",
   "peerDependencies": {
     "@typescript-eslint/eslint-plugin": ">=4",
     "eslint": ">=7",
