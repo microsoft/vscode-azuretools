@@ -1,7 +1,7 @@
 {
     "name": "vscode-azureextensiondev",
     "author": "Microsoft Corporation",
-    "version": "0.9.6",
+    "version": "0.9.7",
     "description": "Common dev dependency tools for developing Azure extensions for VS Code",
     "tags": [
         "azure",
