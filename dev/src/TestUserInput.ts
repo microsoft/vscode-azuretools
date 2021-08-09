@@ -67,7 +67,9 @@ export class TestUserInput implements types.TestUserInput {
                 result = resolvedItems[0];
             } else {
                 function qpiMatchesInput(qpi: vscodeTypes.QuickPickItem): boolean {
-                    return (input instanceof RegExp && (input.test(qpi.label) || (qpi.description && input.test(qpi.description)))) || qpi.label === input || qpi.description === input;
+                    const description = qpi.description || '';
+                    const valuesToTest = [qpi.label, description, `${qpi.label} ${description}`];
+                    return valuesToTest.some(v => input instanceof RegExp ? input.test(v) : input === v);
                 }
 
                 if (options.canPickMany) {
