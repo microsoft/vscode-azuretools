@@ -45,7 +45,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
                     if (rgs.length === 1 && rgs[0].name && /^learn/i.test(rgs[0].name)) {
                         wizardContext.resourceGroup = rgs[0];
                         wizardContext.telemetry.properties.forbiddenResponse = 'SelectLearnRg';
-                        ext.outputChannel.appendLog(localize('usedLearnResourceGroup', 'Cannot create resource group "{0}" because the selected subscription is a concierge subscription. Using resource group "{1}" instead.', newName, wizardContext.resourceGroup?.name))
+                        ext.outputChannel.appendLog(localize('usedLearnResourceGroup', 'WARNING: Cannot create resource group "{0}" because the selected subscription is a concierge subscription. Using resource group "{1}" instead.', newName, wizardContext.resourceGroup?.name))
                         return undefined;
                     }
                 }
