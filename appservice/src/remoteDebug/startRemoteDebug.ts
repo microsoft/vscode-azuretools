@@ -6,6 +6,7 @@
 import { WebSiteManagementModels } from '@azure/arm-appservice';
 import * as portfinder from 'portfinder';
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { callWithTelemetryAndErrorHandling, IActionContext } from 'vscode-azureextensionui';
 import { localize } from '../localize';
 import { ParsedSite } from '../SiteClient';
@@ -37,7 +38,7 @@ export async function startRemoteDebug(context: IActionContext, site: ParsedSite
 
 async function startRemoteDebugInternal(context: IActionContext, site: ParsedSite, siteConfig: WebSiteManagementModels.SiteConfigResource, language: RemoteDebugLanguage): Promise<void> {
     await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, cancellable: true }, async (progress, token): Promise<void> => {
-        const debugConfig: vscode.DebugConfiguration = await getDebugConfiguration(context, language);
+        const debugConfig: vscode.DebugConfiguration = await getDebugConfiguration(language);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const localHostPortNumber: number = debugConfig.port;
 
@@ -83,7 +84,47 @@ async function startRemoteDebugInternal(context: IActionContext, site: ParsedSit
     });
 }
 
-function getNodeDebugConfiguration(context: IActionContext, sessionId: string, portNumber: number, host: string): vscode.DebugConfiguration {
+async function selectMultirootWorkspaceTarget(): Promise<vscode.Uri | undefined> {
+        if (vscode.workspace.workspaceFolders === undefined)
+            return undefined;
+        type WorkspaceSelectionQuickPickItem = vscode.QuickPickItem & { uri: vscode.Uri };
+        const quickPickItems: WorkspaceSelectionQuickPickItem[] = [
+            ...vscode.workspace.workspaceFolders.map((w) => ({
+                label: w.name,
+                description: path.dirname(w.uri.fsPath),
+                uri: w.uri,
+            }))
+        ];
+
+        const selection = await vscode.window.showQuickPick(quickPickItems, {
+            placeHolder: 'Select the workspace to debug',
+        });
+        if (selection === undefined)
+            return undefined;
+        return selection.uri;
+    }
+
+async function getDebugPath() : Promise<string> {
+        // Try to map workspace folder source files to the remote instance
+        if (vscode.workspace.workspaceFolders) {
+            if (vscode.workspace.workspaceFolders.length === 1) {
+                return vscode.workspace.workspaceFolders[0].uri.fsPath;
+            } else {
+                // In this case we don't know which folder to use. Show a warning and proceed.
+                // In the future we should allow users to choose a workspace folder to map sources from.
+                var root = await selectMultirootWorkspaceTarget();
+                if (root)
+                    return root.fsPath;
+                else
+                    throw new Error(localize('remoteDebugNoFolders', 'Please select a workspace folder before attaching a debugger.'));
+            }
+        } else {
+            // vscode will throw an error if you try to start debugging without any workspace folder open
+            throw new Error(localize('remoteDebugNoFolders', 'Please open a workspace folder before attaching a debugger.'));
+        }
+    }
+
+async function getNodeDebugConfiguration(sessionId: string, portNumber: number, host: string): Promise<vscode.DebugConfiguration> {
     const config: vscode.DebugConfiguration = {
         name: sessionId,
         type: 'node',
@@ -93,25 +134,12 @@ function getNodeDebugConfiguration(context: IActionContext, sessionId: string, p
         address: host,
         port: portNumber,
     }
-
-    // Try to map workspace folder source files to the remote instance
-    if (vscode.workspace.workspaceFolders) {
-        if (vscode.workspace.workspaceFolders.length === 1) {
-            config.localRoot = vscode.workspace.workspaceFolders[0].uri.fsPath;
-        } else {
-            // In this case we don't know which folder to use. Show a warning and proceed.
-            // In the future we should allow users to choose a workspace folder to map sources from.
-            void context.ui.showWarningMessage(localize('remoteDebugMultipleFolders', 'Unable to bind breakpoints from workspace when multiple folders are open. Use "loaded scripts" instead.'));
-        }
-    } else {
-        // vscode will throw an error if you try to start debugging without any workspace folder open
-        throw new Error(localize('remoteDebugNoFolders', 'Please open a workspace folder before attaching a debugger.'));
-    }
-
+    config.localRoot = await getDebugPath();
     return config;
 }
 
-function getPythonDebugConfiguration(sessionId: string, portNumber: number, host: string): vscode.DebugConfiguration {
+async function getPythonDebugConfiguration(sessionId: string, portNumber: number, host: string): Promise<vscode.DebugConfiguration> {
+    const localRoot = await getDebugPath();
     const config: vscode.DebugConfiguration = {
         name: sessionId,
         type: 'python',
@@ -122,7 +150,7 @@ function getPythonDebugConfiguration(sessionId: string, portNumber: number, host
         },
         pathMappings: [
             {
-                localRoot: '${workspaceFolder}',
+                localRoot: localRoot,
                 remoteRoot: '.',
             },
         ],
@@ -131,16 +159,16 @@ function getPythonDebugConfiguration(sessionId: string, portNumber: number, host
     return config;
 }
 
-async function getDebugConfiguration(context: IActionContext, language: RemoteDebugLanguage): Promise<vscode.DebugConfiguration> {
+async function getDebugConfiguration(language: RemoteDebugLanguage): Promise<vscode.DebugConfiguration> {
     const sessionId: string = Date.now().toString();
     const portNumber: number = await portfinder.getPortPromise();
     const host: string = 'localhost';
 
     switch (language){
         case RemoteDebugLanguage.Node:
-            return getNodeDebugConfiguration(context, sessionId, portNumber, host);
+            return await getNodeDebugConfiguration(sessionId, portNumber, host);
         case RemoteDebugLanguage.Python:
-            return getPythonDebugConfiguration(sessionId, portNumber, host);
+            return await getPythonDebugConfiguration(sessionId, portNumber, host);
         default:
             throw new Error(localize('remoteDebugLanguageNotSupported', 'The language "{0}" is not supported for remote debugging.', language));
     }
