@@ -3,12 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, InputBox, InputBoxOptions, QuickInputButtons, window } from 'vscode';
+import { Disposable, InputBox, QuickInputButton, QuickInputButtons, window } from 'vscode';
+import * as types from '../../index';
+import { AzExtQuickInputButtons } from '../constants';
 import { GoBackError, UserCancelledError } from '../errors';
 import { validOnTimeoutOrException } from '../utils/inputValidation';
+import { nonNullProp } from '../utils/nonNull';
+import { openUrl } from '../utils/openUrl';
 import { IInternalActionContext } from './IInternalActionContext';
 
-export async function showInputBox(context: IInternalActionContext, options: InputBoxOptions): Promise<string> {
+export async function showInputBox(context: IInternalActionContext, options: types.AzExtInputBoxOptions): Promise<string> {
     const disposables: Disposable[] = [];
     try {
         const inputBox: InputBox = createInputBox(context, options);
@@ -40,9 +44,14 @@ export async function showInputBox(context: IInternalActionContext, options: Inp
                     inputBox.enabled = true;
                     inputBox.busy = false;
                 }),
-                inputBox.onDidTriggerButton(_btn => {
-                    // Only back button is supported for now
-                    reject(new GoBackError());
+                inputBox.onDidTriggerButton(async btn => {
+                    if (btn === QuickInputButtons.Back) {
+                        reject(new GoBackError());
+                    } else if (btn === AzExtQuickInputButtons.LearnMore) {
+                        await openUrl(nonNullProp(options, 'learnMoreLink'));
+                        context.telemetry.properties.learnMoreStep = context.telemetry.properties.lastStep;
+                        context.telemetry.properties.clickedLearnMore = 'true';
+                    }
                 }),
                 inputBox.onDidHide(() => {
                     reject(new UserCancelledError());
@@ -55,10 +64,8 @@ export async function showInputBox(context: IInternalActionContext, options: Inp
     }
 }
 
-function createInputBox(context: IInternalActionContext, options: InputBoxOptions): InputBox {
-    const inputBox: InputBox = window.createInputBox();
-
-    const wizard = context.ui.wizard;
+function createInputBox(context: IInternalActionContext, options: types.AzExtInputBoxOptions): InputBox {
+    const inputBox: InputBox = window.createInputBox(); const wizard = context.ui.wizard;
     if (wizard && wizard.showTitle) {
         inputBox.title = wizard.title;
         if (!wizard.hideStepCount && wizard.title) {
@@ -67,7 +74,16 @@ function createInputBox(context: IInternalActionContext, options: InputBoxOption
         }
     }
 
-    inputBox.buttons = wizard?.showBackButton ? [QuickInputButtons.Back] : [];
+    const buttons: QuickInputButton[] = [];
+    if (wizard?.showBackButton) {
+        buttons.push(QuickInputButtons.Back);
+    }
+
+    if (options.learnMoreLink) {
+        buttons.push(AzExtQuickInputButtons.LearnMore);
+    }
+
+    inputBox.buttons = buttons;
 
     if (options.ignoreFocusOut === undefined) {
         options.ignoreFocusOut = true;

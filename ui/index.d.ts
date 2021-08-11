@@ -853,6 +853,11 @@ export interface IAzureQuickPickOptions extends QuickPickOptions, AzExtUserInput
      * Optional message to display when no picks are found
      */
     noPicksMessage?: string;
+
+    /**
+     * Optional property that will display a ? button in the quickpick window that opens a url when clicked
+     */
+    learnMoreLink?: string;
 }
 
 /**
@@ -868,7 +873,12 @@ export interface IAzureMessageOptions extends MessageOptions, AzExtUserInputOpti
 /**
  * Provides additional options for input boxes used in Azure Extensions
  */
-export interface AzExtInputBoxOptions extends InputBoxOptions, AzExtUserInputOptions { }
+export interface AzExtInputBoxOptions extends InputBoxOptions, AzExtUserInputOptions {
+    /**
+     * Optional property that will display a ? button in the input window that opens a url when clicked
+     */
+    learnMoreLink?: string;
+}
 
 /**
 * Provides additional options for open dialogs used in Azure Extensions
