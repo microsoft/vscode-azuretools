@@ -65,7 +65,9 @@ export async function showInputBox(context: IInternalActionContext, options: typ
 }
 
 function createInputBox(context: IInternalActionContext, options: types.AzExtInputBoxOptions): InputBox {
-    const inputBox: InputBox = window.createInputBox(); const wizard = context.ui.wizard;
+    const inputBox: InputBox = window.createInputBox();
+
+    const wizard = context.ui.wizard;
     if (wizard && wizard.showTitle) {
         inputBox.title = wizard.title;
         if (!wizard.hideStepCount && wizard.title) {
