@@ -11,7 +11,6 @@ import { localize } from '../localize';
 import { randomUtils } from '../utils/randomUtils';
 import { AzExtTreeItem } from './AzExtTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';
-import { getThemedIconPath } from './IconPath';
 import { IAzExtParentTreeItemInternal, isAzExtParentTreeItem } from './InternalInterfaces';
 import { runWithLoadingNotification } from './runWithLoadingNotification';
 import { loadMoreLabel } from './treeConstants';
@@ -73,7 +72,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
                             creatingTreeItem = new GenericTreeItem(this, {
                                 label: localize('creatingLabel', 'Creating {0}...', label),
                                 contextValue: `azureextensionui.creating${label}`,
-                                iconPath: getThemedIconPath('Loading')
+                                iconPath: new ThemeIcon('loading~spin')
                             });
                             this._creatingTreeItems.push(creatingTreeItem);
                             this.treeDataProvider.refreshUIOnly(this);

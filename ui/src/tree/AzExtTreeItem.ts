@@ -3,12 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { TreeItemCollapsibleState } from 'vscode';
+import { ThemeIcon, TreeItemCollapsibleState } from 'vscode';
 import * as types from '../../index';
 import { NotImplementedError } from '../errors';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
-import { getThemedIconPath } from './IconPath';
 import { IAzExtParentTreeItemInternal, IAzExtTreeDataProviderInternal, isAzExtParentTreeItem } from "./InternalInterfaces";
 
 export abstract class AzExtTreeItem implements types.AzExtTreeItem {
@@ -82,7 +81,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     }
 
     public get effectiveIconPath(): types.TreeItemIconPath | undefined {
-        return this._temporaryDescription || this.isLoadingMore ? getThemedIconPath('Loading') : this.iconPath;
+        return this._temporaryDescription || this.isLoadingMore ? new ThemeIcon('loading~spin') : this.iconPath;
     }
 
     public get treeDataProvider(): IAzExtTreeDataProviderInternal {
