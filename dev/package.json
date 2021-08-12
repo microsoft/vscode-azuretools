@@ -32,6 +32,7 @@
         "test": "node ./out/test/runTest.js"
     },
     "devDependencies": {
+        "@microsoft/eslint-config-azuretools": "^0.1.0",
         "@types/copy-webpack-plugin": "^6.0.0",
         "@types/fs-extra": "^8.0.0",
         "@types/mocha": "^7.0.2",
@@ -39,7 +40,6 @@
         "@types/terser-webpack-plugin": "^5.0.0",
         "@types/vscode": "1.48.0",
         "@typescript-eslint/eslint-plugin": "^4.14.2",
-        "@typescript-eslint/parser": "^4.14.2",
         "eslint": "^7.19.0",
         "eslint-plugin-import": "^2.22.1",
         "glob": "^7.1.6",
