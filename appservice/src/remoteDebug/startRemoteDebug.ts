@@ -106,7 +106,7 @@ async function getDebugPath() : Promise<string> {
             } else {
                 // In this case we don't know which folder to use. Show a warning and proceed.
                 // In the future we should allow users to choose a workspace folder to map sources from.
-                var root = await vscode.window.showWorkspaceFolderPick();
+                const root = await vscode.window.showWorkspaceFolderPick();
                 if (root)
                     return root.uri.fsPath;
                 else
