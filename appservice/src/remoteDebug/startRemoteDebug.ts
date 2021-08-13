@@ -37,7 +37,7 @@ export async function startRemoteDebug(context: IActionContext, site: ParsedSite
 
 async function startRemoteDebugInternal(context: IActionContext, site: ParsedSite, siteConfig: WebSiteManagementModels.SiteConfigResource, language: RemoteDebugLanguage): Promise<void> {
     await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, cancellable: true }, async (progress, token): Promise<void> => {
-        const debugConfig: vscode.DebugConfiguration = await getDebugConfiguration(context, language);
+        const debugConfig: vscode.DebugConfiguration = await getDebugConfiguration(language);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const localHostPortNumber: number = debugConfig.port;
 
@@ -83,44 +83,72 @@ async function startRemoteDebugInternal(context: IActionContext, site: ParsedSit
     });
 }
 
-const baseConfigs: { [key in RemoteDebugLanguage]: Object } = {
-    [RemoteDebugLanguage.Node]: {
-        type: 'node',
-        protocol: 'inspector'
-    },
-    [RemoteDebugLanguage.Python]: {
-        type: 'python'
-    }
-};
-
-async function getDebugConfiguration(context: IActionContext, language: RemoteDebugLanguage): Promise<vscode.DebugConfiguration> {
-    if (!(language in baseConfigs)) {
-        throw new Error(localize('remoteDebugLanguageNotSupported', 'The language "{0}" is not supported for remote debugging.', language));
-    }
-
+async function getDebugConfiguration(language: RemoteDebugLanguage): Promise<vscode.DebugConfiguration> {
     const sessionId: string = Date.now().toString();
     const portNumber: number = await portfinder.getPortPromise();
+    const host: string = 'localhost';
 
-    const config: vscode.DebugConfiguration = <vscode.DebugConfiguration>baseConfigs[language];
-    config.name = sessionId;
-    config.request = 'attach';
-    config.address = 'localhost';
-    config.port = portNumber;
-
-    // Try to map workspace folder source files to the remote instance
-    if (vscode.workspace.workspaceFolders) {
-        if (vscode.workspace.workspaceFolders.length === 1) {
-            config.localRoot = vscode.workspace.workspaceFolders[0].uri.fsPath;
-            config.remoteRoot = '/home/site/wwwroot';
-        } else {
-            // In this case we don't know which folder to use. Show a warning and proceed.
-            // In the future we should allow users to choose a workspace folder to map sources from.
-            void context.ui.showWarningMessage(localize('remoteDebugMultipleFolders', 'Unable to bind breakpoints from workspace when multiple folders are open. Use "loaded scripts" instead.'));
-        }
-    } else {
-        // vscode will throw an error if you try to start debugging without any workspace folder open
-        throw new Error(localize('remoteDebugNoFolders', 'Please open a workspace folder before attaching a debugger.'));
+    switch (language){
+        case RemoteDebugLanguage.Node:
+            return await getNodeDebugConfiguration(sessionId, portNumber, host);
+        case RemoteDebugLanguage.Python:
+            return await getPythonDebugConfiguration(sessionId, portNumber, host);
+        default:
+            throw new Error(localize('remoteDebugLanguageNotSupported', 'The language "{0}" is not supported for remote debugging.', language));
     }
+}
+
+async function getDebugPath() : Promise<string> {
+        // Try to map workspace folder source files to the remote instance
+        if (vscode.workspace.workspaceFolders) {
+            if (vscode.workspace.workspaceFolders.length === 1) {
+                return vscode.workspace.workspaceFolders[0].uri.fsPath;
+            } else {
+                // In this case we don't know which folder to use. Show a warning and proceed.
+                // In the future we should allow users to choose a workspace folder to map sources from.
+                const root = await vscode.window.showWorkspaceFolderPick();
+                if (root)
+                    return root.uri.fsPath;
+                else
+                    throw new Error(localize('remoteDebugNoFolders', 'Please select a workspace folder before attaching a debugger.'));
+            }
+        } else {
+            // vscode will throw an error if you try to start debugging without any workspace folder open
+            throw new Error(localize('remoteDebugNoFolders', 'Please open a workspace folder before attaching a debugger.'));
+        }
+    }
+
+async function getNodeDebugConfiguration(sessionId: string, portNumber: number, host: string): Promise<vscode.DebugConfiguration> {
+    const config: vscode.DebugConfiguration = {
+        name: sessionId,
+        type: 'node',
+        protocol: 'inspector',
+        remoteRoot: '/home/site/wwwroot',
+        request: 'attach',
+        address: host,
+        port: portNumber,
+    }
+    config.localRoot = await getDebugPath();
+    return config;
+}
+
+async function getPythonDebugConfiguration(sessionId: string, portNumber: number, host: string): Promise<vscode.DebugConfiguration> {
+    const localRoot = await getDebugPath();
+    const config: vscode.DebugConfiguration = {
+        name: sessionId,
+        type: 'python',
+        request: 'attach',
+        connect: {
+            host: host,
+            port: portNumber,
+        },
+        pathMappings: [
+            {
+                localRoot: localRoot,
+                remoteRoot: '.',
+            },
+        ],
+    };
 
     return config;
 }

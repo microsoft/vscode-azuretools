@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { WebSiteManagementModels } from '@azure/arm-appservice';
+// eslint-disable-next-line import/no-internal-modules
 import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
 import { callWithMaskHandling, IActionContext } from 'vscode-azureextensionui';

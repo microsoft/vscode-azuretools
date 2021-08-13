@@ -87,14 +87,18 @@ export class ParsedSite implements AppSettingsClientProvider {
         this.subscription = subscription;
     }
 
-    public async createClient(context: IActionContext & { _parsedSiteClient?: SiteClient }): Promise<SiteClient> {
-        if (!context._parsedSiteClient) {
+    public async createClient(context: IActionContext & { _parsedSiteClients?: { [id: string]: SiteClient | undefined } }): Promise<SiteClient> {
+        let client = context._parsedSiteClients?.[this.id];
+        if (!client) {
             const internalClient = await createWebSiteClient([context, this.subscription]);
             const internalGenericClient = await createGenericClient(context, this.subscription);
-            context._parsedSiteClient = new SiteClient(internalClient, internalGenericClient, this);
+            client = new SiteClient(internalClient, internalGenericClient, this);
+
+            context._parsedSiteClients ||= {};
+            context._parsedSiteClients[this.id] = client;
         }
 
-        return context._parsedSiteClient;
+        return client;
     }
 }
 
