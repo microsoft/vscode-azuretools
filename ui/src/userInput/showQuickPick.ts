@@ -3,11 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, QuickInputButtons, QuickPick, window } from 'vscode';
+import { Disposable, QuickInputButton, QuickInputButtons, QuickPick, window } from 'vscode';
 import * as types from '../../index';
+import { AzExtQuickInputButtons } from '../constants';
 import { GoBackError, UserCancelledError } from '../errors';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
+import { nonNullProp } from '../utils/nonNull';
+import { openUrl } from '../utils/openUrl';
 import { randomUtils } from '../utils/randomUtils';
 import { IInternalActionContext } from './IInternalActionContext';
 
@@ -51,9 +54,13 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
                         reject(error);
                     }
                 }),
-                quickPick.onDidTriggerButton(_btn => {
-                    // Only back button is supported for now
-                    reject(new GoBackError());
+                quickPick.onDidTriggerButton(async btn => {
+                    if (btn === QuickInputButtons.Back) {
+                        reject(new GoBackError());
+                    } else if (btn === AzExtQuickInputButtons.LearnMore) {
+                        await openUrl(nonNullProp(options, 'learnMoreLink'));
+                        context.telemetry.properties.learnMoreStep = context.telemetry.properties.lastStep;
+                    }
                 }),
                 quickPick.onDidHide(() => {
                     reject(new UserCancelledError());
@@ -105,8 +112,16 @@ function createQuickPick<TPick extends types.IAzureQuickPickItem<unknown>>(conte
             quickPick.totalSteps = wizard.totalSteps;
         }
     }
+    const buttons: QuickInputButton[] = [];
+    if (wizard?.showBackButton) {
+        buttons.push(QuickInputButtons.Back);
+    }
 
-    quickPick.buttons = wizard?.showBackButton ? [QuickInputButtons.Back] : [];
+    if (options.learnMoreLink) {
+        buttons.push(AzExtQuickInputButtons.LearnMore);
+    }
+
+    quickPick.buttons = buttons;
 
     if (options.ignoreFocusOut === undefined) {
         options.ignoreFocusOut = true;
