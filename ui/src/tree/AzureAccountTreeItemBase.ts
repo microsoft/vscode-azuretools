@@ -16,7 +16,7 @@ import { AzureWizardPromptStep } from '../wizard/AzureWizardPromptStep';
 import { AzExtParentTreeItem } from './AzExtParentTreeItem';
 import { AzExtTreeItem } from './AzExtTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';
-import { getIconPath, getThemedIconPath } from './IconPath';
+import { getIconPath } from './IconPath';
 import { SubscriptionTreeItemBase } from './SubscriptionTreeItemBase';
 
 const signInLabel: string = localize('signInLabel', 'Sign in to Azure...');
@@ -96,7 +96,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
                 commandId: signInCommandId,
                 contextValue,
                 id: signInCommandId,
-                iconPath: getThemedIconPath('Loading')
+                iconPath: new ThemeIcon('loading~spin')
             })];
         } else if (azureAccount.status === 'LoggedOut') {
             return [
