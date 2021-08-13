@@ -31,6 +31,7 @@ export async function showWarningMessage<T extends MessageItem>(context: IIntern
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const result: T = await window.showWarningMessage(message, ...args);
         if (learnMoreLink && result === DialogResponses.learnMore) {
+            context.telemetry.properties.learnMoreStep = context.telemetry.properties.lastStep;
             await openUrl(learnMoreLink);
         } else if (result === undefined || result === DialogResponses.cancel) {
             throw new UserCancelledError();

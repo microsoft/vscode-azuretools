@@ -50,7 +50,6 @@ export async function showInputBox(context: IInternalActionContext, options: typ
                     } else if (btn === AzExtQuickInputButtons.LearnMore) {
                         await openUrl(nonNullProp(options, 'learnMoreLink'));
                         context.telemetry.properties.learnMoreStep = context.telemetry.properties.lastStep;
-                        context.telemetry.properties.clickedLearnMore = 'true';
                     }
                 }),
                 inputBox.onDidHide(() => {

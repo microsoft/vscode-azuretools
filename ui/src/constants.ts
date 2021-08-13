@@ -4,11 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { QuickInputButton, ThemeIcon } from "vscode";
-import { localize } from "./localize";
+import { DialogResponses } from "..";
 
 export const resourcesProvider: string = 'Microsoft.Resources';
 export const storageProvider: string = 'Microsoft.Storage';
 
 export namespace AzExtQuickInputButtons {
-    export const LearnMore: QuickInputButton = { iconPath: new ThemeIcon('question'), tooltip: localize('clickHere', 'Click here to learn more about this step.') }
+    export const LearnMore: QuickInputButton = { iconPath: new ThemeIcon('question'), tooltip: DialogResponses.learnMore.title }
 }

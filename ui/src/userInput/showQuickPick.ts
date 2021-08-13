@@ -60,7 +60,6 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
                     } else if (btn === AzExtQuickInputButtons.LearnMore) {
                         await openUrl(nonNullProp(options, 'learnMoreLink'));
                         context.telemetry.properties.learnMoreStep = context.telemetry.properties.lastStep;
-                        context.telemetry.properties.clickedLearnMore = 'true';
                     }
                 }),
                 quickPick.onDidHide(() => {
