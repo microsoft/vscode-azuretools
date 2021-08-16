@@ -905,11 +905,6 @@ export interface IWizardOptions<T extends IActionContext> {
      * If true, step count will not be displayed for the entire wizard. Defaults to false.
      */
     hideStepCount?: boolean;
-
-    /**
-    * If true, a loading prompt will be displayed if there are long delays between wizard steps.
-    */
-    showLoadingPrompt?: boolean;
 }
 
 /**

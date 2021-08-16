@@ -21,7 +21,6 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
     private readonly _context: T;
     private _stepHideStepCount?: boolean;
     private _wizardHideStepCount?: boolean;
-    private _showLoadingPrompt?: boolean;
 
     private _cachedInputBoxValues: { [step: string]: string | undefined } = {};
     public currentStepId: string | undefined;
@@ -33,7 +32,6 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
         this._executeSteps = options.executeSteps || [];
         this._context = context;
         this._wizardHideStepCount = options.hideStepCount;
-        this._showLoadingPrompt = options.showLoadingPrompt;
     }
 
     public getCachedInputBoxValue(): string | undefined {
@@ -83,16 +81,16 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
                         }
                     });
 
-                    const loadingQuickPick = this._showLoadingPrompt ? createQuickPick(this._context, {
+                    const loadingQuickPick = createQuickPick(this._context, {
                         loadingPlaceHolder: 'Loading...'
-                    }) : undefined;
+                    });
                     try {
                         this.currentStepId = getEffectiveStepId(step);
-                        loadingQuickPick?.show();
+                        loadingQuickPick.show();
                         await step.prompt(this._context);
-                        loadingQuickPick?.hide();
+                        loadingQuickPick.hide();
                     } catch (err) {
-                        loadingQuickPick?.hide();
+                        loadingQuickPick.hide();
                         const pe: types.IParsedError = parseError(err);
                         if (pe.errorType === 'GoBackError') { // Use `errorType` instead of `instanceof` so that tests can also hit this case
                             step = this.goBack(step);
