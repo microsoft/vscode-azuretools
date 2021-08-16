@@ -7,7 +7,7 @@ import { ResourceManagementModels } from '@azure/arm-resources';
 import { StorageManagementModels } from '@azure/arm-storage';
 import { Environment } from '@azure/ms-rest-azure-env';
 import { HttpOperationResponse, RequestPrepareOptions, ServiceClient } from '@azure/ms-rest-js';
-import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
+import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 
@@ -273,7 +273,7 @@ export declare abstract class AzExtTreeItem {
     /**
      * If implemented, resolves the tooltip at the time of hovering, and the value of the `tooltip` property is ignored. Otherwise, the `tooltip` property is used.
      */
-    public resolveTooltip?(): Promise<string>;
+    public resolveTooltip?(): Promise<string | MarkdownString>;
 }
 
 export interface IGenericTreeItemOptions {
