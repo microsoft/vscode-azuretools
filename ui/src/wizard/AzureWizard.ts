@@ -9,6 +9,7 @@ import * as types from '../../index';
 import { GoBackError } from '../errors';
 import { parseError } from '../parseError';
 import { IInternalActionContext, IInternalAzureWizard } from '../userInput/IInternalActionContext';
+import { createQuickPick } from '../userInput/showQuickPick';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 
@@ -20,6 +21,7 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
     private readonly _context: T;
     private _stepHideStepCount?: boolean;
     private _wizardHideStepCount?: boolean;
+    private _showLoadingPrompt?: boolean;
 
     private _cachedInputBoxValues: { [step: string]: string | undefined } = {};
     public currentStepId: string | undefined;
@@ -31,6 +33,7 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
         this._executeSteps = options.executeSteps || [];
         this._context = context;
         this._wizardHideStepCount = options.hideStepCount;
+        this._showLoadingPrompt = options.showLoadingPrompt;
     }
 
     public getCachedInputBoxValue(): string | undefined {
@@ -80,10 +83,16 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
                         }
                     });
 
+                    const loadingQuickPick = this._showLoadingPrompt ? createQuickPick(this._context, {
+                        loadingPlaceHolder: 'Loading...'
+                    }) : undefined;
                     try {
                         this.currentStepId = getEffectiveStepId(step);
+                        loadingQuickPick?.show();
                         await step.prompt(this._context);
+                        loadingQuickPick?.hide();
                     } catch (err) {
+                        loadingQuickPick?.hide();
                         const pe: types.IParsedError = parseError(err);
                         if (pe.errorType === 'GoBackError') { // Use `errorType` instead of `instanceof` so that tests can also hit this case
                             step = this.goBack(step);

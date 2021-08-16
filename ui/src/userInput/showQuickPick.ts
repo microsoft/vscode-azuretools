@@ -101,7 +101,7 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
     }
 }
 
-function createQuickPick<TPick extends types.IAzureQuickPickItem<unknown>>(context: IInternalActionContext, options: types.IAzureQuickPickOptions): QuickPick<TPick> {
+export function createQuickPick<TPick extends types.IAzureQuickPickItem<unknown>>(context: IInternalActionContext, options: types.IAzureQuickPickOptions): QuickPick<TPick> {
     const quickPick: QuickPick<TPick> = window.createQuickPick<TPick>();
 
     const wizard = context.ui.wizard;
