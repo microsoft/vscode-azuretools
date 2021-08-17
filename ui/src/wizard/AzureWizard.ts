@@ -75,17 +75,19 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
                 if (step.shouldPrompt(this._context)) {
                     step.propertiesBeforePrompt = Object.keys(this._context).filter(k => !isNullOrUndefined(this._context[k]));
 
+                    const loadingQuickPick = this._showLoadingPrompt ? createQuickPick(this._context, {
+                        loadingPlaceHolder: 'Loading...'
+                    }) : undefined;
+
                     const disposable: vscode.Disposable = this._context.ui.onDidFinishPrompt((result) => {
                         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                         step!.prompted = true;
+                        loadingQuickPick?.show();
                         if (typeof result.value === 'string' && !result.matchesDefault && this.currentStepId && !step?.supportsDuplicateSteps) {
                             this._cachedInputBoxValues[this.currentStepId] = result.value;
                         }
                     });
 
-                    const loadingQuickPick = this._showLoadingPrompt ? createQuickPick(this._context, {
-                        loadingPlaceHolder: 'Loading...'
-                    }) : undefined;
                     try {
                         this.currentStepId = getEffectiveStepId(step);
                         loadingQuickPick?.show();
