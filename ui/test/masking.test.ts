@@ -173,6 +173,12 @@ suite("masking", () => {
             assert.strictEqual(maskUserInfo('microsoft.com microsoft.org?queryParam=test1 microsoft.net', []), 'redacted:url redacted:url redacted:url');
         });
 
+        test('Url masking exclusions', async () => {
+            // ".NET" and "ASP.NET" with no scheme should not be masked, but something like "microsoft-asp.net" *should* be masked.
+            assert.strictEqual(maskUserInfo('.NET ASP.NET microsoft-asp.net', []), '.NET ASP.NET redacted:url');
+            assert.strictEqual(maskUserInfo('http://.NET http://ASP.NET http://microsoft-asp.net', []), 'redacted:url redacted:url redacted:url');
+        });
+
         test('key', async () => {
             assert.strictEqual(maskUserInfo('sv=2012-02-12&st=2009-02-09&se=2009-02-10&sr=c&sp=r&si=YWJjZGVmZw%3d%3d&sig=dddddddddddddddddddddddddddddddddddddddddddddddd', []), 'redacted:key');
             assert.strictEqual(maskUserInfo('DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=dddddddddddddddddddddddddddddddddddddddddddddddd/dddddddd/dddddddd==;', []), 'redacted:key');
