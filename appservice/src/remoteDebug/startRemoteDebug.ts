@@ -37,9 +37,8 @@ export async function startRemoteDebug(context: IActionContext, site: ParsedSite
 
 async function startRemoteDebugInternal(context: IActionContext, site: ParsedSite, siteConfig: WebSiteManagementModels.SiteConfigResource, language: RemoteDebugLanguage): Promise<void> {
     await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, cancellable: true }, async (progress, token): Promise<void> => {
-        const debugConfig: vscode.DebugConfiguration = await getDebugConfiguration(language);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const localHostPortNumber: number = debugConfig.port;
+        const localHostPortNumber: number = await portfinder.getPortPromise();
+        const debugConfig: vscode.DebugConfiguration = await getDebugConfiguration(language, localHostPortNumber);
 
         const confirmEnableMessage: string = localize('remoteDebugEnablePrompt', 'The configuration will be updated to enable remote debugging. Would you like to continue? This will restart the app.');
         await setRemoteDebug(context, true, confirmEnableMessage, undefined, site, siteConfig, progress, token, remoteDebugLink);
@@ -83,9 +82,8 @@ async function startRemoteDebugInternal(context: IActionContext, site: ParsedSit
     });
 }
 
-async function getDebugConfiguration(language: RemoteDebugLanguage): Promise<vscode.DebugConfiguration> {
+async function getDebugConfiguration(language: RemoteDebugLanguage, portNumber: number): Promise<vscode.DebugConfiguration> {
     const sessionId: string = Date.now().toString();
-    const portNumber: number = await portfinder.getPortPromise();
     const host: string = 'localhost';
 
     switch (language){
