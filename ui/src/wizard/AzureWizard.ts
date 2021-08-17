@@ -7,6 +7,7 @@ import { isNullOrUndefined } from 'util';
 import * as vscode from 'vscode';
 import * as types from '../../index';
 import { GoBackError } from '../errors';
+import { localize } from '../localize';
 import { parseError } from '../parseError';
 import { IInternalActionContext, IInternalAzureWizard } from '../userInput/IInternalActionContext';
 import { createQuickPick } from '../userInput/showQuickPick';
@@ -76,7 +77,7 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
                     step.propertiesBeforePrompt = Object.keys(this._context).filter(k => !isNullOrUndefined(this._context[k]));
 
                     const loadingQuickPick = this._showLoadingPrompt ? createQuickPick(this._context, {
-                        loadingPlaceHolder: 'Loading...'
+                        loadingPlaceHolder: localize('loading', 'Loading...')
                     }) : undefined;
 
                     const disposable: vscode.Disposable = this._context.ui.onDidFinishPrompt((result) => {
@@ -92,9 +93,7 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
                         this.currentStepId = getEffectiveStepId(step);
                         loadingQuickPick?.show();
                         await step.prompt(this._context);
-                        loadingQuickPick?.hide();
                     } catch (err) {
-                        loadingQuickPick?.hide();
                         const pe: types.IParsedError = parseError(err);
                         if (pe.errorType === 'GoBackError') { // Use `errorType` instead of `instanceof` so that tests can also hit this case
                             step = this.goBack(step);
