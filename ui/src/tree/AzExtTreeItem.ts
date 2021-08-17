@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ThemeIcon, TreeItemCollapsibleState } from 'vscode';
+import { MarkdownString, ThemeIcon, TreeItemCollapsibleState } from 'vscode';
 import * as types from '../../index';
 import { NotImplementedError } from '../errors';
 import { localize } from '../localize';
@@ -129,7 +129,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     public refreshImpl?(context: types.IActionContext): Promise<void>;
     public isAncestorOfImpl?(contextValue: string | RegExp): boolean;
     public deleteTreeItemImpl?(deleteTreeItemImpl: types.IActionContext): Promise<void>;
-    public resolveTooltip?(): Promise<string>;
+    public resolveTooltip?(): Promise<string | MarkdownString>;
     //#endregion
 
     public async refresh(context: types.IActionContext): Promise<void> {
