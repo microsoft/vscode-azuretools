@@ -174,9 +174,9 @@ suite("masking", () => {
         });
 
         test('Url masking exclusions', async () => {
-            // ".NET" and "ASP.NET" with no scheme should not be masked, but something like "microsoft-asp.net" *should* be masked.
-            assert.strictEqual(maskUserInfo('.NET ASP.NET microsoft-asp.net', []), '.NET ASP.NET redacted:url');
-            assert.strictEqual(maskUserInfo('http://.NET http://ASP.NET http://microsoft-asp.net', []), 'redacted:url redacted:url redacted:url');
+            // ".NET" and "ASP.NET" with no scheme should not be masked, but something like "microsoft-asp.net" or "microsoftasp.net" *should* be masked.
+            assert.strictEqual(maskUserInfo('microsoft.NET .NET ASP.NET microsoft-asp.net microsoftasp.net', []), 'redacted:url .NET ASP.NET redacted:url redacted:url');
+            assert.strictEqual(maskUserInfo('http://microsoft.NET http://.NET http://ASP.NET http://microsoft-asp.net http://microsoftasp.net', []), 'redacted:url redacted:url redacted:url redacted:url redacted:url');
         });
 
         test('key', async () => {
