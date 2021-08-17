@@ -104,6 +104,7 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
                     } finally {
                         this.currentStepId = undefined;
                         disposable.dispose();
+                        loadingQuickPick?.hide();
                     }
                 }
 
