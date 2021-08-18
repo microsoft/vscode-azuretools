@@ -67,6 +67,11 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
                 })
             );
 
+            // If user cancels during a loading prompt
+            if (context.ui.wizard?.cancellationToken.isCancellationRequested) {
+                reject(new UserCancelledError())
+            }
+
             // Show progress bar while loading quick picks
             quickPick.busy = true;
             quickPick.enabled = false;

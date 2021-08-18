@@ -23,6 +23,7 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
     private _stepHideStepCount?: boolean;
     private _wizardHideStepCount?: boolean;
     private _showLoadingPrompt?: boolean;
+    private _cancellationTokenSource: vscode.CancellationTokenSource;
 
     private _cachedInputBoxValues: { [step: string]: string | undefined } = {};
     public currentStepId: string | undefined;
@@ -35,6 +36,7 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
         this._context = context;
         this._wizardHideStepCount = options.hideStepCount;
         this._showLoadingPrompt = options.showLoadingPrompt;
+        this._cancellationTokenSource = new vscode.CancellationTokenSource();
     }
 
     public getCachedInputBoxValue(): string | undefined {
@@ -61,6 +63,10 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
         return this.totalSteps > 1;
     }
 
+    public get cancellationToken(): vscode.CancellationToken {
+        return this._cancellationTokenSource.token;
+    }
+
     public async prompt(): Promise<void> {
         this._context.ui.wizard = this;
 
@@ -79,6 +85,10 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
                     const loadingQuickPick = this._showLoadingPrompt ? createQuickPick(this._context, {
                         loadingPlaceHolder: localize('loading', 'Loading...')
                     }) : undefined;
+
+                    loadingQuickPick?.onDidHide(() => {
+                        this._cancellationTokenSource.cancel();
+                    });
 
                     const disposable: vscode.Disposable = this._context.ui.onDidFinishPrompt((result) => {
                         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

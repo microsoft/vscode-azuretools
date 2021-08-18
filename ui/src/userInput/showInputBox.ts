@@ -56,6 +56,12 @@ export async function showInputBox(context: IInternalActionContext, options: typ
                     reject(new UserCancelledError());
                 })
             );
+
+            // If user cancels during a loading prompt
+            if (context.ui.wizard?.cancellationToken.isCancellationRequested) {
+                reject(new UserCancelledError())
+            }
+
             inputBox.show();
         });
     } finally {
