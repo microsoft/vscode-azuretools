@@ -102,6 +102,7 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
                         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                         step!.prompted = true;
                         loadingQuickPick?.show();
+                        this._cancellationTokenSource = new vscode.CancellationTokenSource();
                         if (typeof result.value === 'string' && !result.matchesDefault && this.currentStepId && !step?.supportsDuplicateSteps) {
                             this._cachedInputBoxValues[this.currentStepId] = result.value;
                         }
