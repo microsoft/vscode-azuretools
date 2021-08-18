@@ -5,6 +5,7 @@
 
 import { Event, EventEmitter, MessageItem, Uri } from 'vscode';
 import * as types from '../../index';
+import { UserCancelledError } from '../errors';
 import { IInternalActionContext, IInternalAzureWizard } from './IInternalActionContext';
 import { showInputBox } from './showInputBox';
 import { showOpenDialog } from './showOpenDialog';
@@ -26,6 +27,9 @@ export class AzExtUserInput implements types.IAzureUserInput {
 
     public async showQuickPick<TPick extends types.IAzureQuickPickItem<unknown>>(picks: TPick[] | Promise<TPick[]>, options: types.IAzureQuickPickOptions): Promise<TPick | TPick[]> {
         addStepTelemetry(this._context, options.stepName, 'quickPick', options.placeHolder);
+        if (this._context.ui.wizard?.cancellationToken.isCancellationRequested) {
+            throw new UserCancelledError();
+        }
         const result = await showQuickPick(this._context, picks, options);
         this._onDidFinishPromptEmitter.fire({ value: result });
         return result;
@@ -33,6 +37,9 @@ export class AzExtUserInput implements types.IAzureUserInput {
 
     public async showInputBox(options: types.AzExtInputBoxOptions): Promise<string> {
         addStepTelemetry(this._context, options.stepName, 'inputBox', options.prompt);
+        if (this._context.ui.wizard?.cancellationToken.isCancellationRequested) {
+            throw new UserCancelledError();
+        }
         const result = await showInputBox(this._context, options);
         this._onDidFinishPromptEmitter.fire({
             value: result,

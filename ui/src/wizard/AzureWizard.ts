@@ -6,7 +6,7 @@
 import { isNullOrUndefined } from 'util';
 import * as vscode from 'vscode';
 import * as types from '../../index';
-import { GoBackError } from '../errors';
+import { GoBackError, UserCancelledError } from '../errors';
 import { localize } from '../localize';
 import { parseError } from '../parseError';
 import { IInternalActionContext, IInternalAzureWizard } from '../userInput/IInternalActionContext';
@@ -73,6 +73,10 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
         try {
             let step: AzureWizardPromptStep<T> | undefined = this._promptSteps.pop();
             while (step) {
+                if (this._context.ui.wizard?.cancellationToken.isCancellationRequested) {
+                    throw new UserCancelledError();
+                }
+
                 step.reset();
 
                 this._context.telemetry.properties.lastStep = `prompt-${getEffectiveStepId(step)}`;
@@ -86,18 +90,22 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
                         loadingPlaceHolder: localize('loading', 'Loading...')
                     }) : undefined;
 
-                    loadingQuickPick?.onDidHide(() => {
-                        this._cancellationTokenSource.cancel();
-                    });
+                    const disposables: vscode.Disposable[] = [];
 
-                    const disposable: vscode.Disposable = this._context.ui.onDidFinishPrompt((result) => {
+                    if (loadingQuickPick) {
+                        disposables.push(loadingQuickPick?.onDidHide(() => {
+                            this._cancellationTokenSource.cancel();
+                        }));
+                    }
+
+                    disposables.push(this._context.ui.onDidFinishPrompt((result) => {
                         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                         step!.prompted = true;
                         loadingQuickPick?.show();
                         if (typeof result.value === 'string' && !result.matchesDefault && this.currentStepId && !step?.supportsDuplicateSteps) {
                             this._cachedInputBoxValues[this.currentStepId] = result.value;
                         }
-                    });
+                    }));
 
                     try {
                         this.currentStepId = getEffectiveStepId(step);
@@ -113,12 +121,15 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
                         }
                     } finally {
                         this.currentStepId = undefined;
-                        disposable.dispose();
+                        vscode.Disposable.from(...disposables).dispose();
                         loadingQuickPick?.hide();
                     }
                 }
 
                 if (step.getSubWizard) {
+                    if (this._context.ui.wizard?.cancellationToken.isCancellationRequested) {
+                        throw new UserCancelledError();
+                    }
                     const subWizard: types.IWizardOptions<T> | void = await step.getSubWizard(this._context);
                     if (subWizard) {
                         this.addSubWizard(step, subWizard);
