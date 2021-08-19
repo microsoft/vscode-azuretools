@@ -16,6 +16,7 @@ export class AzExtUserInput implements types.IAzureUserInput {
     public wizard?: IInternalAzureWizard;
     private _onDidFinishPromptEmitter: EventEmitter<types.PromptResult> = new EventEmitter<types.PromptResult>();
     private _context: IInternalActionContext;
+    private _isPrompting: boolean = false;
 
     public constructor(context: IInternalActionContext) {
         this._context = context;
@@ -25,14 +26,23 @@ export class AzExtUserInput implements types.IAzureUserInput {
         return this._onDidFinishPromptEmitter.event;
     }
 
+    public get isPrompting(): boolean {
+        return this._isPrompting;
+    }
+
     public async showQuickPick<TPick extends types.IAzureQuickPickItem<unknown>>(picks: TPick[] | Promise<TPick[]>, options: types.IAzureQuickPickOptions): Promise<TPick | TPick[]> {
         addStepTelemetry(this._context, options.stepName, 'quickPick', options.placeHolder);
         if (this._context.ui.wizard?.cancellationToken.isCancellationRequested) {
             throw new UserCancelledError();
         }
-        const result = await showQuickPick(this._context, picks, options);
-        this._onDidFinishPromptEmitter.fire({ value: result });
-        return result;
+        try {
+            this._isPrompting = true;
+            const result = await showQuickPick(this._context, picks, options);
+            this._onDidFinishPromptEmitter.fire({ value: result });
+            return result;
+        } finally {
+            this._isPrompting = false;
+        }
     }
 
     public async showInputBox(options: types.AzExtInputBoxOptions): Promise<string> {
@@ -40,19 +50,30 @@ export class AzExtUserInput implements types.IAzureUserInput {
         if (this._context.ui.wizard?.cancellationToken.isCancellationRequested) {
             throw new UserCancelledError();
         }
-        const result = await showInputBox(this._context, options);
-        this._onDidFinishPromptEmitter.fire({
-            value: result,
-            matchesDefault: result === options.value
-        });
-        return result;
+        try {
+            this._isPrompting = true;
+            const result = await showInputBox(this._context, options);
+            this._onDidFinishPromptEmitter.fire({
+                value: result,
+                matchesDefault: result === options.value
+            });
+            return result;
+        } finally {
+            this._isPrompting = false;
+        }
     }
 
     public async showOpenDialog(options: types.AzExtOpenDialogOptions): Promise<Uri[]> {
         addStepTelemetry(this._context, options.stepName, 'openDialog', options.title);
-        const result = await showOpenDialog(options);
-        this._onDidFinishPromptEmitter.fire({ value: result });
-        return result;
+
+        try {
+            this._isPrompting = true;
+            const result = await showOpenDialog(options);
+            this._onDidFinishPromptEmitter.fire({ value: result });
+            return result;
+        } finally {
+            this._isPrompting = false;
+        }
     }
 
     public async showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
@@ -66,9 +87,15 @@ export class AzExtUserInput implements types.IAzureUserInput {
         }
 
         addStepTelemetry(this._context, stepName, 'warningMessage', message);
-        const result = await showWarningMessage<T>(this._context, message, ...args);
-        this._onDidFinishPromptEmitter.fire({ value: result });
-        return result;
+
+        try {
+            this._isPrompting = true;
+            const result = await showWarningMessage<T>(this._context, message, ...args);
+            this._onDidFinishPromptEmitter.fire({ value: result });
+            return result;
+        } finally {
+            this._isPrompting = false;
+        }
     }
 }
 

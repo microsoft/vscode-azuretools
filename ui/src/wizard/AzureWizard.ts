@@ -14,7 +14,7 @@ import { createQuickPick } from '../userInput/showQuickPick';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 
-export class AzureWizard<T extends IInternalActionContext> implements types.AzureWizard<T>, IInternalAzureWizard {
+export class AzureWizard<T extends IInternalActionContext> implements types.AzureWizard<T>, IInternalAzureWizard, vscode.Disposable {
     public title: string | undefined;
     private readonly _promptSteps: AzureWizardPromptStep<T>[];
     private readonly _executeSteps: AzureWizardExecuteStep<T>[];
@@ -94,7 +94,9 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
 
                     if (loadingQuickPick) {
                         disposables.push(loadingQuickPick?.onDidHide(() => {
-                            this._cancellationTokenSource.cancel();
+                            if (!this._context.ui.isPrompting) {
+                                this._cancellationTokenSource.cancel();
+                            }
                         }));
                     }
 
@@ -102,7 +104,6 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
                         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                         step!.prompted = true;
                         loadingQuickPick?.show();
-                        this._cancellationTokenSource = new vscode.CancellationTokenSource();
                         if (typeof result.value === 'string' && !result.matchesDefault && this.currentStepId && !step?.supportsDuplicateSteps) {
                             this._cachedInputBoxValues[this.currentStepId] = result.value;
                         }
@@ -174,6 +175,10 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
                 step = steps.pop();
             }
         });
+    }
+
+    public dispose(): void {
+        this._cancellationTokenSource.dispose();
     }
 
     private goBack(currentStep: AzureWizardPromptStep<T>): AzureWizardPromptStep<T> {

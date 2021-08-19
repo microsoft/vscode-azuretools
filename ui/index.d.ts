@@ -718,6 +718,11 @@ export interface IAzureUserInput {
     readonly onDidFinishPrompt: Event<PromptResult>;
 
     /**
+    * If true, a prompt is currently being shown. Excludes loading prompts.
+    */
+    readonly isPrompting: boolean;
+
+    /**
     * Shows a multi-selection list.
     *
     * @param items An array of items, or a promise that resolves to an array of items.
