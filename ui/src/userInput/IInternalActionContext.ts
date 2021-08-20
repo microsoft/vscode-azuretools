@@ -3,10 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { CancellationToken } from 'vscode';
 import * as types from '../../index';
 
 export interface IInternalActionContext extends types.IActionContext {
-    ui: types.IAzureUserInput & { wizard?: IInternalAzureWizard }
+    ui: types.IAzureUserInput & { wizard?: IInternalAzureWizard, isPrompting?: boolean }
 }
 
 export interface IInternalAzureWizard {
@@ -17,5 +18,6 @@ export interface IInternalAzureWizard {
     hideStepCount: boolean | undefined;
     showBackButton: boolean;
     showTitle: boolean;
+    cancellationToken: CancellationToken;
     getCachedInputBoxValue(): string | undefined;
 }
