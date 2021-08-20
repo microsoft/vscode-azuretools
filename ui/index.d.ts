@@ -10,7 +10,6 @@ import { HttpOperationResponse, RequestPrepareOptions, ServiceClient } from '@az
 import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
-import { AzExtFsExtra } from './src/utils/AzExtFsExtra';
 
 export type OpenInPortalOptions = {
     /**

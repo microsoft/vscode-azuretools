@@ -17,7 +17,7 @@ interface IPackageInfo {
 
 let packageInfo: IPackageInfo | undefined;
 
-export async function getPackageInfo(ctx?: ExtensionContext): Promise<IPackageInfo> {
+export function getPackageInfo(ctx?: ExtensionContext): IPackageInfo {
     if (!packageInfo) {
         if (!ctx) {
             ctx = ext.context;
