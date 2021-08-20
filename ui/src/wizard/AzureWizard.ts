@@ -14,7 +14,7 @@ import { createQuickPick } from '../userInput/showQuickPick';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 
-export class AzureWizard<T extends IInternalActionContext> implements types.AzureWizard<T>, IInternalAzureWizard, vscode.Disposable {
+export class AzureWizard<T extends IInternalActionContext> implements types.AzureWizard<T>, IInternalAzureWizard {
     public title: string | undefined;
     private readonly _promptSteps: AzureWizardPromptStep<T>[];
     private readonly _executeSteps: AzureWizardExecuteStep<T>[];
@@ -143,6 +143,7 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
             }
         } finally {
             this._context.ui.wizard = undefined;
+            this._cancellationTokenSource.dispose();
         }
     }
 
@@ -175,10 +176,6 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
                 step = steps.pop();
             }
         });
-    }
-
-    public dispose(): void {
-        this._cancellationTokenSource.dispose();
     }
 
     private goBack(currentStep: AzureWizardPromptStep<T>): AzureWizardPromptStep<T> {
