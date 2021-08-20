@@ -65,7 +65,9 @@ export class AzExtUserInput implements types.IAzureUserInput {
 
     public async showOpenDialog(options: types.AzExtOpenDialogOptions): Promise<Uri[]> {
         addStepTelemetry(this._context, options.stepName, 'openDialog', options.title);
-
+        if (this._context.ui.wizard?.cancellationToken.isCancellationRequested) {
+            throw new UserCancelledError();
+        }
         try {
             this._isPrompting = true;
             const result = await showOpenDialog(options);
@@ -87,7 +89,9 @@ export class AzExtUserInput implements types.IAzureUserInput {
         }
 
         addStepTelemetry(this._context, stepName, 'warningMessage', message);
-
+        if (this._context.ui.wizard?.cancellationToken.isCancellationRequested) {
+            throw new UserCancelledError();
+        }
         try {
             this._isPrompting = true;
             const result = await showWarningMessage<T>(this._context, message, ...args);
