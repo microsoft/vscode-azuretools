@@ -10,6 +10,7 @@ import { HttpOperationResponse, RequestPrepareOptions, ServiceClient } from '@az
 import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
+import { AzExtFsExtra } from './src/utils/AzExtFsExtra';
 
 export type OpenInPortalOptions = {
     /**
@@ -1619,3 +1620,16 @@ export declare abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> i
  * Registers a command that will prompt users with a list of issues they can report from that session of VS Code
  */
 export function registerReportIssueCommand(commandId: string): void;
+
+/**
+ * Registers a namespace that leverages vscode.workspace.fs API to access the file system
+ */
+export declare namespace AzExtFsExtra {
+    export function isDirectory(): Promise<boolean>;
+    export function isFile(): Promise<boolean>;
+    export function ensureDir(resource: Uri | string): Promise<void>;
+    export function ensureFile(resource: Uri | string): Promise<void>;
+    export function readFile(resource: Uri | string): Promise<string>;
+    export function writeFile(resource: Uri | string, contents: string): Promise<void>;
+    export function pathExists(resource: Uri | string): Promise<boolean>;
+}
