@@ -29,8 +29,12 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
         }
 
         workspacePath = workspaceFolders[0].uri.fsPath;
+
         workspaceFilePath = path.join(workspacePath, indexHtml);
+        ensureFile(workspaceFilePath);
+
         testFolderPath = path.join(workspacePath, `azExtFsExtra${randomUtils.getRandomHexString()}`)
+        ensureDir(testFolderPath);
     });
 
     suiteTeardown(async function (this: Mocha.Context): Promise<void> {
