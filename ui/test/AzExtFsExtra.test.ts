@@ -29,6 +29,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
         }
 
         workspacePath = workspaceFolders[0].uri.fsPath;
+        ensureDir(workspacePath);
 
         workspaceFilePath = path.join(workspacePath, indexHtml);
         ensureFile(workspaceFilePath);
