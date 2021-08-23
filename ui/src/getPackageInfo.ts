@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as fse from 'fs-extra';
 import { ExtensionContext } from "vscode";
+import { AzExtFsExtra } from "./utils/AzExtFsExtra";
 import { ext } from "./extensionVariables";
 
 interface IPackageInfo {
@@ -23,7 +23,7 @@ export function getPackageInfo(ctx?: ExtensionContext): IPackageInfo {
             ctx = ext.context;
         }
 
-        const packageJson: IPackageJson = <IPackageJson>fse.readJsonSync(ctx.asAbsolutePath('package.json'));
+        const packageJson: IPackageJson = <IPackageJson>JSON.parse(AzExtFsExtra.readFileSync(ctx.asAbsolutePath('package.json')));
 
         const extensionName: string | undefined = packageJson.name;
         const extensionVersion: string | undefined = packageJson.version;

@@ -122,6 +122,13 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
         assert.strictEqual(fileContents, fsFileContents);
     });
 
+    test('readFileSync', async () => {
+        const fileContents = AzExtFsExtra.readFileSync(workspaceFilePath);
+        const fsFileContents = fs.readFileSync(workspaceFilePath).toString();
+
+        assert.strictEqual(fileContents, fsFileContents);
+    });
+
     test('writeFile', async () => {
         const fsPath = path.join(testFolderPath, randomUtils.getRandomHexString());
         const filePath = path.join(fsPath, indexHtml);
