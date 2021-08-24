@@ -62,19 +62,6 @@ export namespace AzExtFsExtra {
         return (await workspace.fs.readFile(uri)).toString();
     }
 
-    export function readFileSync(resource: Uri | string): string {
-        let data: string | undefined;
-
-        void readFile(resource).then((string) => {
-            data = string;
-        });
-
-        while (data === undefined) {
-            // wait for readFile to resolve
-        }
-
-        return data;
-    }
 
     export async function writeFile(resource: Uri | string, contents: string): Promise<void> {
         const uri = convertToUri(resource);

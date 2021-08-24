@@ -1629,7 +1629,6 @@ export declare namespace AzExtFsExtra {
     export function ensureDir(resource: Uri | string): Promise<void>;
     export function ensureFile(resource: Uri | string): Promise<void>;
     export function readFile(resource: Uri | string): Promise<string>;
-    export function readFileSync(resource: Uri | string): string;
     export function writeFile(resource: Uri | string, contents: string): Promise<void>;
     export function pathExists(resource: Uri | string): Promise<boolean>;
 }
