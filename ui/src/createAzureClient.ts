@@ -3,7 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { BaseRequestPolicy, BasicAuthenticationCredentials, HttpOperationResponse, RequestPolicy, RequestPolicyFactory, RequestPolicyOptions, RequestPrepareOptions, RestError, ServiceClient, TokenCredentials, WebResource, WebResourceLike } from '@azure/ms-rest-js';
+import { BaseRequestPolicy, BasicAuthenticationCredentials, HttpOperationResponse, RequestPolicy, RequestPolicyFactory, RequestPolicyOptions, RestError, ServiceClient, TokenCredentials, WebResource, WebResourceLike } from '@azure/ms-rest-js';
+import { Agent } from 'http';
+import { Agent as HttpsAgent } from 'https';
 import { v4 as uuid } from 'uuid';
 import * as vscode from "vscode";
 import * as types from '../index';
@@ -56,12 +58,20 @@ export function createAzureSubscriptionClient<T>(clientContext: InternalAzExtCli
     });
 }
 
-export async function sendRequestWithTimeout(context: types.IActionContext, options: RequestPrepareOptions, timeout: number, clientInfo: types.AzExtGenericClientInfo): Promise<HttpOperationResponse> {
+export async function sendRequestWithTimeout(context: types.IActionContext, options: types.AzExtRequestPrepareOptions, timeout: number, clientInfo: types.AzExtGenericClientInfo): Promise<HttpOperationResponse> {
     let request: WebResource = new WebResource();
     request = request.prepare(options);
     request.timeout = timeout;
+
+    if (options.rejectUnauthorized !== undefined) {
+        request.agentSettings = {
+            http: new Agent(),
+            https: new HttpsAgent({ rejectUnauthorized: options.rejectUnauthorized })
+        }
+    }
+
     const client: GenericServiceClient = await createGenericClient(context, clientInfo, { noRetryPolicy: true });
-    return await client.sendRequest(options);
+    return await client.sendRequest(request);
 }
 
 interface IGenericClientOptions {
