@@ -1403,12 +1403,14 @@ export type AzExtGenericClientInfo = AzExtServiceClientCredentials | { credentia
  */
 export function createGenericClient(context: IActionContext, clientInfo: AzExtGenericClientInfo): Promise<ServiceClient>;
 
+export type AzExtRequestPrepareOptions = RequestPrepareOptions & { rejectUnauthorized?: boolean }
+
 /**
  * Send request with a timeout specified and turn off retry policy (because retrying could take a lot longer)
  * @param timeout The timeout in milliseconds
  * @param clientInfo The client/credentials info or `undefined` if no credentials are needed
  */
-export function sendRequestWithTimeout(context: IActionContext, options: RequestPrepareOptions, timeout: number, clientInfo: AzExtGenericClientInfo): Promise<HttpOperationResponse>;
+export function sendRequestWithTimeout(context: IActionContext, options: AzExtRequestPrepareOptions, timeout: number, clientInfo: AzExtGenericClientInfo): Promise<HttpOperationResponse>;
 
 export type AzExtClientType<T> = new (credentials: AzExtServiceClientCredentials, subscriptionId: string, options?: IMinimumServiceClientOptions) => T;
 
