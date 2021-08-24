@@ -63,8 +63,13 @@ export namespace AzExtFsExtra {
     }
 
     export function readFileSync(resource: Uri | string): string {
-        const data = void readFile(resource)
-        while (!data) {
+        let data: string | undefined;
+
+        void readFile(resource).then((string) => {
+            data = string;
+        });
+
+        while (data === undefined) {
             // wait for readFile to resolve
         }
 
