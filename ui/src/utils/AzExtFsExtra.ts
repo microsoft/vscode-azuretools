@@ -62,7 +62,6 @@ export namespace AzExtFsExtra {
         return (await workspace.fs.readFile(uri)).toString();
     }
 
-
     export async function writeFile(resource: Uri | string, contents: string): Promise<void> {
         const uri = convertToUri(resource);
         await workspace.fs.writeFile(uri, Buffer.from(contents));
