@@ -7,7 +7,7 @@ import * as vscode from 'vscode';
 import { AzExtTreeDataProvider, AzExtTreeItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { getWorkspaceSetting, updateWorkspaceSetting } from '../utils/settings';
+import { getWorkspaceSetting } from '../utils/settings';
 import { AppSource, IDeployContext } from './IDeployContext';
 
 /**
@@ -35,8 +35,7 @@ export async function getDeployNode<T extends AzExtTreeItem>(context: IDeployCon
             if (node) {
                 context.appSource = AppSource.setting;
             } else {
-                // if defaultPath or defaultNode cannot be found or there was a mismatch, delete old setting and prompt to save next deployment
-                await updateWorkspaceSetting(context.defaultAppSetting, undefined, context.workspaceFolder.uri.fsPath, ext.prefix);
+                ext.outputChannel.appendLog(localize('appFromSettingNotFound', 'WARNING: Failed to find app matching setting "{0}.{1}" with id "{2}"', ext.prefix, context.defaultAppSetting, defaultAppId));
             }
         }
 
