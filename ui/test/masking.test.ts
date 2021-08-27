@@ -184,6 +184,10 @@ suite("masking", () => {
             assert.strictEqual(maskUserInfo('DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=dddddddddddddddddddddddddddddddddddddddddddddddd/dddddddd/dddddddd==;', []), 'redacted:key');
             assert.strictEqual(maskUserInfo('AccountEndpoint=accountname.documents.azure:443;AccountKey=accountkey==;', []), 'redacted:key');
             assert.strictEqual(maskUserInfo('microsoft.co?token=dddd', []), 'redacted:key');
+            assert.strictEqual(maskUserInfo('--password ddddddd', []), 'redacted:key');
+            assert.strictEqual(maskUserInfo('"POSTGRES_PASSWORD": "ddddddd"', []), 'redacted:key');
+            assert.strictEqual(maskUserInfo('PGPASSWORD=ddddddd', []), 'redacted:key');
+            assert.strictEqual(maskUserInfo('pwd: "ddddddd!@#$%^&*()_+"', []), 'redacted:key');
         });
 
         test('lessAggressive', async () => {
