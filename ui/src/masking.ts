@@ -78,7 +78,7 @@ export function maskUserInfo(unkonwnArg: unknown, actionValuesToMask: string[], 
 
     data = data.replace(/[a-z]+:\/\/\S*/gi, getRedactedLabel('url'));
     data = data.replace(/\S+(?<!(?<!\-)\basp)\.(com|org|net)\S*/gi, getRedactedLabel('url'));
-    data = data.replace(/\S*(key|token|sig|password)=\S*/gi, getRedactedLabel('key'));
+    data = data.replace(/\S*(key|token|sig|password|passwd|pwd)[="':\s]+\S*/gi, getRedactedLabel('key'));
 
     return data;
 }
