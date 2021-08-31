@@ -59,6 +59,7 @@ export abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> implement
         return await callWithTelemetryAndErrorHandling('readFile', async (context) => {
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
+            context.telemetry.eventVersion = 2;
 
             const item: TItem = await this.lookup(context, uri);
             return await this.readFileImpl(context, item, uri);
