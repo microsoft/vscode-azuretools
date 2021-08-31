@@ -113,8 +113,8 @@ function registerHandler<T>(handler: T, handlers: { [id: string]: T }): Disposab
 
 function handleError(context: types.IActionContext, callbackId: string, error: unknown): void {
     let rethrow: boolean = false;
+    const errorContext: types.IErrorHandlerContext = Object.assign(context, { error, callbackId });
     try {
-        const errorContext: types.IErrorHandlerContext = Object.assign(context, { error, callbackId });
         for (const handler of Object.values(errorHandlers)) {
             try {
                 handler(errorContext);
@@ -195,14 +195,14 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
             // Only time an error is expected is in the `rethrow` case
             throw internalError;
         } else {
-            sendHandlerFailedEvent(context, callbackId, 'error');
+            sendHandlerFailedEvent(errorContext, 'error');
         }
     }
 }
 
 function handleTelemetry(context: types.IActionContext, callbackId: string, start: number): void {
+    const handlerContext: types.IHandlerContext = Object.assign(context, { callbackId });
     try {
-        const handlerContext: types.IHandlerContext = Object.assign(context, { callbackId });
         for (const handler of Object.values(telemetryHandlers)) {
             try {
                 handler(handlerContext);
@@ -228,10 +228,10 @@ function handleTelemetry(context: types.IActionContext, callbackId: string, star
 
             const errorProps: string[] = Object.keys(context.telemetry.properties).filter(key => /(error|exception|stack)/i.test(key));
             // Note: The id of the extension is automatically prepended to the given callbackId (e.g. "vscode-cosmosdb/")
-            ext._internalReporter.sendTelemetryErrorEvent(handlerContext.callbackId, context.telemetry.properties, context.telemetry.measurements, errorProps);
+            ext._internalReporter.sendTelemetryErrorEvent(getTelemetryEventName(handlerContext), context.telemetry.properties, context.telemetry.measurements, errorProps);
         }
     } catch {
-        sendHandlerFailedEvent(context, callbackId, 'telemetry');
+        sendHandlerFailedEvent(handlerContext, 'telemetry');
     }
 }
 
@@ -239,14 +239,22 @@ function shouldSendTelemtry(context: types.IActionContext): boolean {
     return !context.telemetry.suppressAll && !(context.telemetry.suppressIfSuccessful && context.telemetry.properties.result === 'Succeeded');
 }
 
-function sendHandlerFailedEvent(context: types.IActionContext, callbackId: string, handlerName: string) {
+function sendHandlerFailedEvent(context: types.IHandlerContext, handlerName: string) {
     // Errors in our handler logic should not be shown to the user
     try {
         if (shouldSendTelemtry(context)) {
             // Try to send a simple event that should at least alert us that there's a problem
-            ext._internalReporter.sendTelemetryErrorEvent(callbackId, { handlerFailed: handlerName });
+            ext._internalReporter.sendTelemetryErrorEvent(getTelemetryEventName(context), { handlerFailed: handlerName });
         }
     } catch {
         // something must be really wrong with telemetry. just give up
     }
+}
+
+function getTelemetryEventName(context: types.IHandlerContext): string {
+    let suffix: string = '';
+    if (context.telemetry.eventVersion) {
+        suffix = `V${context.telemetry.eventVersion}`;
+    }
+    return context.callbackId + suffix;
 }

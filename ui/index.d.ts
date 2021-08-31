@@ -584,6 +584,11 @@ export interface ITelemetryContext {
      * If true, any error message for this event will not be tracked in telemetry
      */
     maskEntireErrorMessage?: boolean;
+
+    /**
+     * Will be appended to the end of the telemetry event name if specified. This is typically used when the original event has been suppressed/retired for some reason
+     */
+    eventVersion?: number;
 }
 
 export interface AzExtErrorButton extends MessageItem {
