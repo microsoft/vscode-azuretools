@@ -5,8 +5,8 @@
 This package provides common Azure UI elements for VS Code extensions:
 
 - [Telemetry and Error Handling](#telemetry-and-error-handling): Displays error messages and adds telemetry to commands/events.
-- [AzureTreeDataProvider](#azure-tree-data-provider): Displays an Azure Explorer with Azure Subscriptions and child nodes of your implementation.
-- [AzureBaseEditor](#azure-base-editor): Displays a text editor with upload support to Azure.
+- [AzExtTreeDataProvider](#azure-extension-tree-data-provider): Displays an Azure Explorer with Azure Subscriptions and child nodes of your implementation.
+- [AzExtTreeFileSystem](#azure-extension-tree-file-system): A virtual file system that supports viewing and editing single files in Azure.
 
 > NOTE: This package throws a `UserCancelledError` if the user cancels an operation. If you do not use `registerCommand`, you must handle this exception in your extension.
 
@@ -56,14 +56,14 @@ registerEvent(
 
 Follow these steps to create your basic Azure Tree:
 
-1. Create an `AzureTreeItem` (or `AzureParentTreeItem`) describing the items to be displayed under your subscription:
+1. Create an `AzExtTreeItem` (or `AzExtParentTreeItem`) describing the items to be displayed under your subscription:
 
    ```typescript
-   export class WebAppTreeItem extends AzureTreeItem {
+   export class WebAppTreeItem extends AzExtTreeItem {
      public static contextValue: string = "azureWebApp";
      public readonly contextValue: string = WebAppTreeItem.contextValue;
      private readonly _site: Site;
-     constructor(parent: AzureParentTreeItem, site: Site) {
+     constructor(parent: AzExtParentTreeItem, site: Site) {
        super(parent);
        this._site = site;
      }
@@ -108,7 +108,7 @@ Follow these steps to create your basic Azure Tree:
 1. Create an `AzureAccountTreeItemBase` that provides the subscriptions you just implemented. It must implement at least `createSubscriptionTreeItem`:
    ```typescript
    export class AzureAccountTreeItem extends AzureAccountTreeItemBase {
-     public createSubscriptionTreeItem(root: ISubscriptionRoot): SubscriptionTreeItemBase {
+     public createSubscriptionTreeItem(root: ISubscriptionContext): SubscriptionTreeItemBase {
        return new SubscriptionTreeItem(this, root);
      }
    }
