@@ -16,16 +16,16 @@
  * package.nls.json
  */
 
-const path = require('path');
-const existsSync = require('fs').existsSync;
-const fs = require('fs/promises');
+import path from 'path';
+import fs from 'fs';
+import fsPromises from 'fs/promises';
 
 async function sortPackageJson(path) {
-    if (!existsSync(path)) {
+    if (!fs.existsSync(path)) {
         return;
     }
 
-    const packageJson = JSON.parse((await fs.readFile(path)).toString());
+    const packageJson = JSON.parse((await fsPromises.readFile(path)).toString());
 
     packageJson.activationEvents = packageJson.activationEvents.sort();
 
@@ -42,22 +42,25 @@ function sortCommands(commands) {
 }
 
 function sortMenus(menus) {
+    const excludedKeys = ['view/item/context'];
     Object.keys(menus).forEach((key) => {
-        menus[key] = menus[key].sort(sortCommand);
+        if (!excludedKeys.includes(key)) {
+            menus[key] = menus[key].sort(sortCommand);
+        }
     });
 }
 
 async function sortPackageNls(path) {
-    if (!existsSync(path)) {
+    if (!fs.existsSync(path)) {
         return;
     }
-    let packageNls = JSON.parse((await fs.readFile(path)).toString());
+    let packageNls = JSON.parse((await fsPromises.readFile(path)).toString());
     packageNls = sortObject(packageNls);
     await writeJson(path, packageNls);
 }
 
 async function writeJson(path, object) {
-    await fs.writeFile(path, `${JSON.stringify(object, null, 4)}\n`);
+    await fsPromises.writeFile(path, `${JSON.stringify(object, null, 4)}\n`);
 }
 
 function sortObject(object) {
