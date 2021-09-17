@@ -57,7 +57,7 @@ async function sortPackageNls(path) {
 }
 
 async function writeJson(path, object) {
-    await fs.writeFile(path, JSON.stringify(object, null, 4));
+    await fs.writeFile(path, `${JSON.stringify(object, null, 4)}\n`);
 }
 
 function sortObject(object) {
