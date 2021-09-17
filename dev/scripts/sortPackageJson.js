@@ -17,9 +17,14 @@
  */
 
 const path = require('path');
+const existsSync = require('fs').existsSync;
 const fs = require('fs/promises');
 
 async function sortPackageJson(path) {
+    if (!existsSync(path)) {
+        return;
+    }
+
     const packageJson = JSON.parse((await fs.readFile(path)).toString());
 
     packageJson.activationEvents = packageJson.activationEvents.sort();
@@ -43,6 +48,9 @@ function sortMenus(menus) {
 }
 
 async function sortPackageNls(path) {
+    if (!existsSync(path)) {
+        return;
+    }
     let packageNls = JSON.parse((await fs.readFile(path)).toString());
     packageNls = sortObject(packageNls);
     await writeJson(path, packageNls);
