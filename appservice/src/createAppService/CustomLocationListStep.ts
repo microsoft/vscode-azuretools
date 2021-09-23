@@ -58,7 +58,7 @@ export class CustomLocationListStep<T extends IAppServiceWizardContext> extends 
 const customLocationQuery: string = `
 Resources
 | where type contains 'Microsoft.Web/kubeEnvironments'
-| project kubeEnvironment=pack('id', id, 'name', name, 'location', location, 'properties', properties), customLocationId=tolower(tostring(properties.extendedLocation.customLocation))
+| project kubeEnvironment=pack('id', id, 'name', name, 'location', location, 'properties', properties, 'extendedLocation', extendedLocation), customLocationId=tolower(tostring(extendedLocation.name))
 | where isnotnull(customLocationId)
 | join (Resources
     | where type contains 'Microsoft.ExtendedLocation/customLocations'
