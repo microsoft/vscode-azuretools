@@ -11,6 +11,9 @@
         "azure",
         "vscode"
     ],
+    "bin": {
+        "vscode-sort-package-json": "scripts/sortPackageJson.mjs"
+    },
     "main": "out/src/index.js",
     "types": "index.d.ts",
     "license": "MIT",
