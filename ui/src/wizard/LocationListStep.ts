@@ -4,9 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as types from '../../index';
-import { createResourcesClient } from '../clients';
+import { createResourcesClient, createSubscriptionsClient } from '../clients';
 import { resourcesProvider } from '../constants';
-import { createGenericClient } from '../createAzureClient';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { nonNullProp, nonNullValue } from '../utils/nonNull';
@@ -60,6 +59,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
     public static async setLocation<T extends ILocationWizardContextInternal>(wizardContext: T, name: string): Promise<void> {
         const [allLocationsTask] = this.getInternalVariables(wizardContext);
         wizardContext._location = (await allLocationsTask).find(l => LocationListStep.locationMatchesName(l, name));
+        wizardContext.telemetry.properties.locationType = wizardContext._location?.type;
     }
 
     public static setLocationSubset<T extends ILocationWizardContextInternal>(wizardContext: T, task: Promise<string[]>, provider: string): void {
@@ -75,8 +75,27 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
         return !!wizardContext._location;
     }
 
-    public static async getLocation<T extends ILocationWizardContextInternal>(wizardContext: T, provider?: string): Promise<types.AzExtLocation> {
-        const location = nonNullProp(wizardContext, '_location');
+    public static async getLocation<T extends ILocationWizardContextInternal>(wizardContext: T, provider?: string, supportsExtendedLocations?: boolean): Promise<types.AzExtLocation> {
+        let location: types.AzExtLocation = nonNullProp(wizardContext, '_location');
+
+        function warnAboutRelatedLocation(loc: types.AzExtLocation): void {
+            ext.outputChannel.appendLog(localize('relatedLocWarning', 'WARNING: Provider "{0}" does not support location "{1}". Using "{2}" instead.', provider, location.displayName, loc.displayName));
+        }
+
+        if (location.type === 'EdgeZone') {
+            if (supportsExtendedLocations) {
+                // The `providerLocations` list doesn't seem to include EdgeZones, so there's no point in falling through to provider checks below
+                return location;
+            } else {
+                const homeLocName = nonNullProp(nonNullProp(location, 'metadata'), 'homeLocation');
+                const [allLocationsTask,] = this.getInternalVariables(wizardContext);
+                const allLocations = await allLocationsTask;
+                location = nonNullValue(allLocations.find(l => LocationListStep.locationMatchesName(l, homeLocName)), 'homeLocation');
+                wizardContext.telemetry.properties.relatedLocationSource = 'home';
+                warnAboutRelatedLocation(location);
+            }
+        }
+
         if (provider) {
             const [allLocationsTask, providerLocationsMap] = this.getInternalVariables(wizardContext);
             const providerLocations = await providerLocationsMap.get(provider.toLowerCase());
@@ -87,9 +106,6 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
                 function useProviderName(loc: types.AzExtLocation): types.AzExtLocation {
                     // Some providers prefer their version of the name over the standard one, so we'll create a shallow clone using theirs
                     return { ...loc, name: nonNullValue(providerLocations?.find(name => LocationListStep.locationMatchesName(loc, name), 'providerName')) };
-                }
-                function warnAboutRelatedLocation(loc: types.AzExtLocation): void {
-                    ext.outputChannel.appendLog(localize('relatedLocWarning', 'WARNING: Provider "{0}" does not support location "{1}". Using "{2}" instead.', provider, location.displayName, loc.displayName));
                 }
 
                 if (isSupportedByProvider(location)) {
@@ -130,7 +146,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
         const [allLocationsTask, providerLocationsMap] = this.getInternalVariables(wizardContext);
         const locationSubsets: string[][] = await Promise.all(providerLocationsMap.values());
         // Filter to locations supported by every provider
-        return (await allLocationsTask).filter(l1 => locationSubsets.every(subset =>
+        return (await allLocationsTask).filter(l1 => (l1.type === 'EdgeZone' && wizardContext.includeExtendedLocations) || locationSubsets.every(subset =>
             subset.find(l2 => generalizeLocationName(l1.name) === generalizeLocationName(l2))
         ));
     }
@@ -143,6 +159,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
     public async prompt(wizardContext: T): Promise<void> {
         const options: types.IAzureQuickPickOptions = { placeHolder: localize('selectLocation', 'Select a location for new resources.'), enableGrouping: true };
         wizardContext._location = (await wizardContext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
+        wizardContext.telemetry.properties.locationType = wizardContext._location.type;
     }
 
     public shouldPrompt(wizardContext: T): boolean {
@@ -167,18 +184,13 @@ function generalizeLocationName(name: string | undefined): string {
     return (name || '').toLowerCase().replace(/[^a-z0-9]/gi, '');
 }
 
-async function getAllLocations(wizardContext: types.ISubscriptionActionContext): Promise<types.AzExtLocation[]> {
-    // NOTE: Using a generic client because the subscriptions sdk is pretty far behind on api-version
-    const client = await createGenericClient(wizardContext, wizardContext);
-    const response = await client.sendRequest({
-        method: 'GET',
-        url: `/subscriptions/${wizardContext.subscriptionId}/locations?api-version=2019-11-01`
-    });
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    return <types.AzExtLocation[]>response.parsedBody.value;
+async function getAllLocations(wizardContext: types.ILocationWizardContext): Promise<types.AzExtLocation[]> {
+    const client = await createSubscriptionsClient(wizardContext);
+    const locations = await client.subscriptions.listLocations(wizardContext.subscriptionId, { includeExtendedLocations: wizardContext.includeExtendedLocations });
+    return locations.filter((l): l is types.AzExtLocation => !!(l.id && l.name && l.displayName));
 }
 
-async function getProviderLocations(wizardContext: types.ISubscriptionActionContext, provider: string, resourceType: string): Promise<string[]> {
+async function getProviderLocations(wizardContext: types.ILocationWizardContext, provider: string, resourceType: string): Promise<string[]> {
     const rgClient = await createResourcesClient(wizardContext);
     const providerData = await rgClient.providers.get(provider);
     const resourceTypeData = providerData.resourceTypes?.find(rt => rt.resourceType?.toLowerCase() === resourceType.toLowerCase());

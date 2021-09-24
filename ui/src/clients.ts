@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ResourceManagementClient } from '@azure/arm-resources';
+import { SubscriptionClient } from '@azure/arm-resources-subscriptions';
 import { StorageManagementClient } from '@azure/arm-storage';
-import { SubscriptionClient } from '@azure/arm-subscriptions';
 import { createAzureClient, createAzureSubscriptionClient, InternalAzExtClientContext, parseClientContext } from './createAzureClient';
 
 // Lazy-load @azure packages to improve startup performance.
@@ -28,5 +28,5 @@ export async function createResourcesClient(context: InternalAzExtClientContext)
 }
 
 export async function createSubscriptionsClient(context: InternalAzExtClientContext): Promise<SubscriptionClient> {
-    return createAzureSubscriptionClient(context, (await import('@azure/arm-subscriptions')).SubscriptionClient);
+    return createAzureSubscriptionClient(context, (await import('@azure/arm-resources-subscriptions')).SubscriptionClient);
 }

@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SubscriptionModels } from '@azure/arm-subscriptions';
+import { SubscriptionModels } from '@azure/arm-resources-subscriptions';
 import { Environment } from '@azure/ms-rest-azure-env';
 import { TokenCredentialsBase } from '@azure/ms-rest-nodeauth';
 import { Event } from 'vscode';
@@ -29,9 +29,9 @@ export interface AzureSession {
     readonly userId: string;
     readonly tenantId: string;
 
-	/**
-	 * The credentials object for azure-sdk-for-js modules https://github.com/azure/azure-sdk-for-js
-	 */
+    /**
+     * The credentials object for azure-sdk-for-js modules https://github.com/azure/azure-sdk-for-js
+     */
     readonly credentials2: TokenCredentialsBase;
 }
 

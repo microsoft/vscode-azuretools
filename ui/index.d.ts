@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ResourceManagementModels } from '@azure/arm-resources';
+import { SubscriptionModels } from '@azure/arm-resources-subscriptions';
 import { StorageManagementModels } from '@azure/arm-storage';
 import { Environment } from '@azure/ms-rest-azure-env';
 import { HttpOperationResponse, RequestPrepareOptions, ServiceClient } from '@azure/ms-rest-js';
@@ -994,18 +995,13 @@ export type ISubscriptionActionContext = ISubscriptionContext & IActionContext;
 
 /**
  * Replacement for `SubscriptionModels.Location` because the sdk is pretty far behind in terms of api-version
+ * TODO update doc now that we're using '@azure/arm-resources-subscriptions' which seems caught up on api-version
+ * Not sure why they renamed the npm package...
  */
-export type AzExtLocation = {
+export type AzExtLocation = SubscriptionModels.Location & {
     id: string;
     name: string;
     displayName: string;
-    regionalDisplayName?: string;
-    metadata?: {
-        regionCategory?: string;
-        geographyGroup?: string;
-        regionType?: string;
-        pairedRegion?: { name?: string }[]
-    }
 }
 
 /**
@@ -1013,6 +1009,7 @@ export type AzExtLocation = {
  * Instead, use static methods on `LocationListStep` like `getLocation` and `setLocationSubset`
  */
 export interface ILocationWizardContext extends ISubscriptionActionContext {
+    includeExtendedLocations?: boolean;
 }
 
 export declare class LocationListStep<T extends ILocationWizardContext> extends AzureWizardPromptStep<T> {
@@ -1055,8 +1052,9 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
      * Gets the selected location for this wizard.
      * @param wizardContext The context of the wizard
      * @param provider If specified, this will check against that provider's supported locations and attempt to find a "related" location if the selected location is not supported.
+     * @param supportsExtendedLocations If set to true, the location returned may be an extended location, in which case the `extendedLocation` property should be added when creating a resource
      */
-    public static getLocation<T extends ILocationWizardContext>(wizardContext: T, provider?: string): Promise<AzExtLocation>;
+    public static getLocation<T extends ILocationWizardContext>(wizardContext: T, provider?: string, supportsExtendedLocations?: boolean): Promise<AzExtLocation>;
 
     /**
      * Returns true if a location has been set on the context
