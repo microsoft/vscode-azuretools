@@ -26,31 +26,34 @@ export class ConnectDatabaseAccountPromptStep extends AzureWizardPromptStep<ICon
         this._suppressCreate = suppressCreate;
     }
 
-    public static async getPostgresDatabases(wizardContext: IConnectDBWizardContext): Promise<(DBTreeItem)[]> {
+    public static async getPostgresDatabases(wizardContext: IConnectDBWizardContext, api: API): Promise<(DBTreeItem)[]> {
 
         const databaseItems: (DBTreeItem)[] = [];
-        const postgresSingleClient = await createPostgreSQLClient(wizardContext);
-        const postgresSingleServers = [
-            ...(await postgresSingleClient.servers.list()).map(s => Object.assign(s, { serverType: PostgresServerType.Single })),
-        ];
-        databaseItems.push(...postgresSingleServers.map(server => <DBTreeItem>{ hostName: nonNullProp(server, 'fullyQualifiedDomainName'), port: '5432', azureData: { accountId: nonNullProp(server, 'id'), accountName: nonNullProp(server, 'name'), resourceGroup: azureUtils.azureUtils.getResourceGroupFromId(nonNullProp(server, 'id')), accountKind: API.PostgresSingle }, postgresData: { serverType: nonNullProp(server, 'serverType') } }));
-        const postgresFlexibleClient = await createPostgreSQLFlexibleClient(wizardContext);
-        const postgresFlexibleServers = [
-            ...(await postgresFlexibleClient.servers.list()).map(s => Object.assign(s, { serverType: PostgresServerType.Flexible })),
-        ];
-        databaseItems.push(...postgresFlexibleServers.map(server => <DBTreeItem>{ hostName: nonNullProp(server, 'fullyQualifiedDomainName'), port: '5432', azureData: { accountId: nonNullProp(server, 'id'), accountName: nonNullProp(server, 'name'), resourceGroup: azureUtils.azureUtils.getResourceGroupFromId(nonNullProp(server, 'id')), accountKind: API.PostgresFlexible }, postgresData: { serverType: nonNullProp(server, 'serverType') } }));
+        if (api === API.PostgresSingle) {
+            const postgresSingleClient = await createPostgreSQLClient(wizardContext);
+            const postgresSingleServers = [
+                ...(await postgresSingleClient.servers.list()).map(s => Object.assign(s, { serverType: PostgresServerType.Single })),
+            ];
+            databaseItems.push(...postgresSingleServers.map(server => <DBTreeItem>{ hostName: nonNullProp(server, 'fullyQualifiedDomainName'), port: '5432', azureData: { accountId: nonNullProp(server, 'id'), accountName: nonNullProp(server, 'name'), resourceGroup: azureUtils.azureUtils.getResourceGroupFromId(nonNullProp(server, 'id')), accountKind: API.PostgresSingle }, postgresData: { serverType: nonNullProp(server, 'serverType') } }));
+        } else {
+            const postgresFlexibleClient = await createPostgreSQLFlexibleClient(wizardContext);
+            const postgresFlexibleServers = [
+                ...(await postgresFlexibleClient.servers.list()).map(s => Object.assign(s, { serverType: PostgresServerType.Flexible })),
+            ];
+            databaseItems.push(...postgresFlexibleServers.map(server => <DBTreeItem>{ hostName: nonNullProp(server, 'fullyQualifiedDomainName'), port: '5432', azureData: { accountId: nonNullProp(server, 'id'), accountName: nonNullProp(server, 'name'), resourceGroup: azureUtils.azureUtils.getResourceGroupFromId(nonNullProp(server, 'id')), accountKind: API.PostgresFlexible }, postgresData: { serverType: nonNullProp(server, 'serverType') } }));
+        }
+
         return databaseItems;
     }
 
-    public static async getCosmosDatabases(wizardContext: IConnectDBWizardContext): Promise<DBTreeItem[]> {
+    public static async getCosmosDatabases(wizardContext: IConnectDBWizardContext, api: API): Promise<DBTreeItem[]> {
 
         const cosmosClient = await createCosmosDBClient(wizardContext);
         const cosmosAccounts: DatabaseAccountsListResult = (await cosmosClient.databaseAccounts.list())._response.parsedBody;
         const databaseTreeItems: DBTreeItem[] = [];
         for (const account of cosmosAccounts) {
             const experience = tryGetExperience(account);
-            if (experience?.api !== (API.Graph || API.Table)) {
-
+            if (experience?.api === api) {
                 const accountName = nonNullProp(account, 'name');
                 const accountId = nonNullProp(account, 'id');
                 const result = (await cosmosClient.databaseAccounts.listConnectionStrings(azureUtils.azureUtils.getResourceGroupFromId(accountId), accountName))._response.parsedBody;
@@ -78,6 +81,7 @@ export class ConnectDatabaseAccountPromptStep extends AzureWizardPromptStep<ICon
                 }
 
             }
+
         }
 
         return databaseTreeItems;
@@ -122,8 +126,23 @@ export class ConnectDatabaseAccountPromptStep extends AzureWizardPromptStep<ICon
             data: undefined
         });
 
-        const componentsPostgres = await ConnectDatabaseAccountPromptStep.getPostgresDatabases(context);
-        const itemsPostgres: IAzureQuickPickItem<DBTreeItem>[] = componentsPostgres.map((c: DBTreeItem) => {
+        let components: DBTreeItem[] = [];
+        const api: API = nonNullProp(context, 'defaultExperience').api;
+        switch (api) {
+            case API.Core:
+                components.push(...await ConnectDatabaseAccountPromptStep.getCosmosDatabases(context, api));
+                break;
+            case API.MongoDB:
+                components.push(...await ConnectDatabaseAccountPromptStep.getCosmosDatabases(context, api));
+                break;
+            case API.PostgresSingle:
+                components.push(...await ConnectDatabaseAccountPromptStep.getPostgresDatabases(context, api));
+                break;
+            default:
+                components.push(...await ConnectDatabaseAccountPromptStep.getPostgresDatabases(context, api));
+                break;
+        }
+        const items: IAzureQuickPickItem<DBTreeItem>[] = components.map((c: DBTreeItem) => {
             const item: IAzureQuickPickItem<DBTreeItem> = {
                 label: `${c.azureData?.accountName} (${c.azureData?.accountKind})`,
                 data: c
@@ -131,18 +150,7 @@ export class ConnectDatabaseAccountPromptStep extends AzureWizardPromptStep<ICon
             return item;
         });
 
-        picks.push(...itemsPostgres);
-
-        const componentsCosmosDB = await ConnectDatabaseAccountPromptStep.getCosmosDatabases(context);
-        const itemsCosmosDB: IAzureQuickPickItem<DBTreeItem>[] = componentsCosmosDB.map((c: DBTreeItem) => {
-            const item: IAzureQuickPickItem<DBTreeItem> = {
-                label: `${c.azureData?.accountName} (${c.azureData?.accountKind})`,
-                data: c
-            };
-            return item;
-        });
-
-        picks.push(...itemsCosmosDB);
+        picks.push(...items);
 
         return picks;
     }
