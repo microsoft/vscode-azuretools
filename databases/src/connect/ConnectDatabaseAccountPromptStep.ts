@@ -20,10 +20,12 @@ const skipForNowLabel: string = '$(clock) Skip for now';
 
 export class ConnectDatabaseAccountPromptStep extends AzureWizardPromptStep<IConnectDBWizardContext> {
     private _suppressCreate: boolean | undefined;
+    private _suppressSkip: boolean | undefined;
 
-    public constructor(suppressCreate: boolean | undefined) {
+    public constructor(suppressCreate: boolean | undefined, suppressSkip: boolean | undefined) {
         super();
         this._suppressCreate = suppressCreate;
+        this._suppressSkip = suppressSkip;
     }
 
     public static async getPostgresDatabases(wizardContext: IConnectDBWizardContext, api: API): Promise<(DBTreeItem)[]> {
@@ -121,10 +123,12 @@ export class ConnectDatabaseAccountPromptStep extends AzureWizardPromptStep<ICon
             label: localize('newDBConnection', '$(plus) Create new Azure Database'),
             data: undefined
         }] : [];
-        picks.push({
-            label: localize('skipForNow', skipForNowLabel),
-            data: undefined
-        });
+        if (!this._suppressSkip) {
+            picks.push({
+                label: localize('skipForNow', skipForNowLabel),
+                data: undefined
+            });
+        }
 
         let components: DBTreeItem[] = [];
         const api: API = nonNullProp(context, 'defaultExperience').api;
