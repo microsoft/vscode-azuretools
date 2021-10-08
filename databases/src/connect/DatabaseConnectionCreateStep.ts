@@ -59,7 +59,7 @@ export class DatabaseConnectionCreateStep extends AzureWizardExecuteStep<IConnec
     }
 
     public shouldExecute(context: IConnectDBWizardContext): boolean {
-        return (!!context.server || !!context.databaseAccount) && !context.databaseAccountName;
+        return !!context.server || !!context.databaseAccount || !!context.databaseAccountName;
     }
 }
 
