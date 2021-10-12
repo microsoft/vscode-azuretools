@@ -123,9 +123,9 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
                         filter.subscription.subscriptionId,
                         filter.subscription.displayName,
                         filter.session.userId,
-                        filter.session.tenantId,
-                        filter.session.credentials2.clientId,
-                        filter.session.credentials2.domain
+                        filter.session.tenantId
+                        // filter.session.credentials2.clientId,
+                        // filter.session.credentials2.domain
                     );
 
                     // filter.subscription.id is the The fully qualified ID of the subscription (For example, /subscriptions/00000000-0000-0000-0000-000000000000) and should be used as the tree item's id for the purposes of OpenInPortal

@@ -5,12 +5,14 @@
 
 import { SubscriptionModels } from '@azure/arm-subscriptions';
 import { Environment } from '@azure/ms-rest-azure-env';
+import { AzureIdentityCredentialAdapter } from '@azure/ms-rest-js';
 import { TokenCredentialsBase } from '@azure/ms-rest-nodeauth';
 import { Event } from 'vscode';
 
 export type AzureLoginStatus = 'Initializing' | 'LoggingIn' | 'LoggedIn' | 'LoggedOut';
 
 export interface AzureAccount {
+    readonly apiVersion: string;
     readonly status: AzureLoginStatus;
     readonly onStatusChanged: Event<AzureLoginStatus>;
     readonly waitForLogin: () => Promise<boolean>;
@@ -32,7 +34,7 @@ export interface AzureSession {
 	/**
 	 * The credentials object for azure-sdk-for-js modules https://github.com/azure/azure-sdk-for-js
 	 */
-    readonly credentials2: TokenCredentialsBase;
+    readonly credentials2: TokenCredentialsBase | AzureIdentityCredentialAdapter;
 }
 
 export interface AzureSubscription {
