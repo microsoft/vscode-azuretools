@@ -5,7 +5,6 @@
 
 import { PostgresServerType } from "../create/PostgresAccountWizard/abstract/models";
 
-
 export interface DBAccountTreeItem {
     hostName?: string;
     port?: string;

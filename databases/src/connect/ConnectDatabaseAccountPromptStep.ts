@@ -15,6 +15,7 @@ import { localize } from "../utils/localize";
 import { nonNullProp } from "../utils/nonNull";
 import { DBTreeItem } from "./DBTreeItem";
 import { IConnectDBWizardContext } from "./IConnectDBWizardContext";
+import { postgresPort } from "../constants";
 
 const skipForNowLabel: string = '$(clock) Skip for now';
 
@@ -37,25 +38,77 @@ export class ConnectDatabaseAccountPromptStep extends AzureWizardPromptStep<ICon
                 const postgresSingleServers = [
                     ...(await postgresSingleClient.servers.list()).map(s => Object.assign(s, { serverType: PostgresServerType.Single })),
                 ];
-                databaseItems.push(...postgresSingleServers.map(server => <DBTreeItem>{ hostName: nonNullProp(server, 'fullyQualifiedDomainName'), port: '5432', azureData: { accountId: nonNullProp(server, 'id'), accountName: nonNullProp(server, 'name'), resourceGroup: azureUtils.azureUtils.getResourceGroupFromId(nonNullProp(server, 'id')), accountKind: API.PostgresSingle }, postgresData: { serverType: nonNullProp(server, 'serverType') } }));
+                databaseItems.push(...postgresSingleServers.map(server =>
+                    <DBTreeItem>{
+                        hostName: nonNullProp(server, 'fullyQualifiedDomainName'),
+                        port: postgresPort,
+                        azureData: {
+                            accountId: nonNullProp(server, 'id'),
+                            accountName: nonNullProp(server, 'name'),
+                            resourceGroup: azureUtils.azureUtils.getResourceGroupFromId(nonNullProp(server, 'id')),
+                            accountKind: API.PostgresSingle
+                        },
+                        postgresData: {
+                            serverType: nonNullProp(server, 'serverType')
+                        }
+                    }));
             } else {
                 const postgresFlexibleClient = await createPostgreSQLFlexibleClient(wizardContext);
                 const postgresFlexibleServers = [
                     ...(await postgresFlexibleClient.servers.list()).map(s => Object.assign(s, { serverType: PostgresServerType.Flexible })),
                 ];
-                databaseItems.push(...postgresFlexibleServers.map(server => <DBTreeItem>{ hostName: nonNullProp(server, 'fullyQualifiedDomainName'), port: '5432', azureData: { accountId: nonNullProp(server, 'id'), accountName: nonNullProp(server, 'name'), resourceGroup: azureUtils.azureUtils.getResourceGroupFromId(nonNullProp(server, 'id')), accountKind: API.PostgresFlexible }, postgresData: { serverType: nonNullProp(server, 'serverType') } }));
+                databaseItems.push(...postgresFlexibleServers.map(server =>
+                    <DBTreeItem>{
+                        hostName: nonNullProp(server, 'fullyQualifiedDomainName'),
+                        port: postgresPort,
+                        azureData: {
+                            accountId: nonNullProp(server, 'id'),
+                            accountName: nonNullProp(server, 'name'),
+                            resourceGroup: azureUtils.azureUtils.getResourceGroupFromId(nonNullProp(server, 'id')),
+                            accountKind: API.PostgresFlexible
+                        },
+                        postgresData: {
+                            serverType: nonNullProp(server, 'serverType')
+                        }
+                    }));
             }
         } else {
             const postgresSingleClient = await createPostgreSQLClient(wizardContext);
             const postgresSingleServers = [
                 ...(await postgresSingleClient.servers.list()).map(s => Object.assign(s, { serverType: PostgresServerType.Single })),
             ];
-            databaseItems.push(...postgresSingleServers.map(server => <DBTreeItem>{ hostName: nonNullProp(server, 'fullyQualifiedDomainName'), port: '5432', azureData: { accountId: nonNullProp(server, 'id'), accountName: nonNullProp(server, 'name'), resourceGroup: azureUtils.azureUtils.getResourceGroupFromId(nonNullProp(server, 'id')), accountKind: API.PostgresSingle }, postgresData: { serverType: nonNullProp(server, 'serverType') } }));
+            databaseItems.push(...postgresSingleServers.map(server =>
+                <DBTreeItem>{
+                    hostName: nonNullProp(server, 'fullyQualifiedDomainName'),
+                    port: postgresPort,
+                    azureData: {
+                        accountId: nonNullProp(server, 'id'),
+                        accountName: nonNullProp(server, 'name'),
+                        resourceGroup: azureUtils.azureUtils.getResourceGroupFromId(nonNullProp(server, 'id')),
+                        accountKind: API.PostgresSingle
+                    },
+                    postgresData: {
+                        serverType: nonNullProp(server, 'serverType')
+                    }
+                }));
             const postgresFlexibleClient = await createPostgreSQLFlexibleClient(wizardContext);
             const postgresFlexibleServers = [
                 ...(await postgresFlexibleClient.servers.list()).map(s => Object.assign(s, { serverType: PostgresServerType.Flexible })),
             ];
-            databaseItems.push(...postgresFlexibleServers.map(server => <DBTreeItem>{ hostName: nonNullProp(server, 'fullyQualifiedDomainName'), port: '5432', azureData: { accountId: nonNullProp(server, 'id'), accountName: nonNullProp(server, 'name'), resourceGroup: azureUtils.azureUtils.getResourceGroupFromId(nonNullProp(server, 'id')), accountKind: API.PostgresFlexible }, postgresData: { serverType: nonNullProp(server, 'serverType') } }));
+            databaseItems.push(...postgresFlexibleServers.map(server =>
+                <DBTreeItem>{
+                    hostName: nonNullProp(server, 'fullyQualifiedDomainName'),
+                    port: postgresPort,
+                    azureData: {
+                        accountId: nonNullProp(server, 'id'),
+                        accountName: nonNullProp(server, 'name'),
+                        resourceGroup: azureUtils.azureUtils.getResourceGroupFromId(nonNullProp(server, 'id')),
+                        accountKind: API.PostgresFlexible
+                    },
+                    postgresData: {
+                        serverType: nonNullProp(server, 'serverType')
+                    }
+                }));
         }
 
 
@@ -82,7 +135,16 @@ export class ConnectDatabaseAccountPromptStep extends AzureWizardPromptStep<ICon
                     connectionStringURL.searchParams.set(searchParam, 'false');
                 }
                 connectionString = connectionStringURL.toString();
-                const databaseItem: DBTreeItem = { hostName: accountName, port: '5432', connectionString, azureData: { accountId: accountId, accountName: accountName, resourceGroup: azureUtils.azureUtils.getResourceGroupFromId(accountId), accountKind: getExperienceLabel(account) } };
+                const databaseItem: DBTreeItem = {
+                    hostName: accountName,
+                    port: postgresPort, connectionString,
+                    azureData: {
+                        accountId: accountId,
+                        accountName: accountName,
+                        resourceGroup: azureUtils.azureUtils.getResourceGroupFromId(accountId),
+                        accountKind: getExperienceLabel(account)
+                    }
+                };
                 databaseTreeItems.push(databaseItem);
 
             } else {
@@ -90,7 +152,7 @@ export class ConnectDatabaseAccountPromptStep extends AzureWizardPromptStep<ICon
 
                 const endpoint = nonNullProp(account, 'documentEndpoint');
                 const masterKey = nonNullProp(masterKeyResult, 'primaryMasterKey');
-                const databaseItem: DBTreeItem = { hostName: accountName, port: '5432', connectionString, azureData: { accountId: accountId, accountName: accountName, resourceGroup: azureUtils.azureUtils.getResourceGroupFromId(accountId), accountKind: getExperienceLabel(account) }, docDBData: { masterKey, documentEndpoint: endpoint } };
+                const databaseItem: DBTreeItem = { hostName: accountName, port: postgresPort, connectionString, azureData: { accountId: accountId, accountName: accountName, resourceGroup: azureUtils.azureUtils.getResourceGroupFromId(accountId), accountKind: getExperienceLabel(account) }, docDBData: { masterKey, documentEndpoint: endpoint } };
                 databaseTreeItems.push(databaseItem);
             }
 
@@ -102,7 +164,7 @@ export class ConnectDatabaseAccountPromptStep extends AzureWizardPromptStep<ICon
     }
 
     public async prompt(context: IConnectDBWizardContext): Promise<void> {
-        const options: IAzureQuickPickOptions = { placeHolder: 'Add Azure Database Connection' };
+        const options: IAzureQuickPickOptions = { placeHolder: localize('addDBConnectionPlaceHolder', 'Add Azure Database Connection') };
         const input: IAzureQuickPickItem<DBTreeItem | undefined> = await context.ui.showQuickPick(this.getQuickPickItems(context), options);
         if (input.label === skipForNowLabel) {
             context.addDBConnectionSkip = true;
@@ -142,19 +204,15 @@ export class ConnectDatabaseAccountPromptStep extends AzureWizardPromptStep<ICon
             });
         }
 
-        let components: DBTreeItem[] = [];
+        const components: DBTreeItem[] = [];
         if (context.defaultExperience) {
             const api: API = context.defaultExperience.api;
             switch (api) {
                 case API.Core:
-                    components.push(...await ConnectDatabaseAccountPromptStep.getCosmosDatabases(context, api));
-                    break;
                 case API.MongoDB:
                     components.push(...await ConnectDatabaseAccountPromptStep.getCosmosDatabases(context, api));
                     break;
                 case API.PostgresSingle:
-                    components.push(...await ConnectDatabaseAccountPromptStep.getPostgresDatabases(context, api));
-                    break;
                 default:
                     components.push(...await ConnectDatabaseAccountPromptStep.getPostgresDatabases(context, api));
                     break;

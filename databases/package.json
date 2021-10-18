@@ -1,8 +1,8 @@
 {
   "name": "vscode-azuredatabases",
   "author": "Microsoft Corporation",
-  "version": "0.0.1",
-  "description": "Common tools for developing Azure Databases support in Azure App Service extension for VS Code",
+  "version": "0.1.0",
+  "description": "Common tools for developing support for Azure Databases in VS Code",
   "tags": [
     "azure",
     "vscode"
@@ -31,8 +31,7 @@
     "compile": "tsc -watch -p ./",
     "lint": "eslint --ext .ts .",
     "lint-fix": "eslint --ext .ts . --fix",
-    "pretest": "npm run build",
-    "test": "node ./out/test/runTest.js"
+    "pretest": "npm run build"
   },
   "devDependencies": {
     "@microsoft/eslint-config-azuretools": "^0.1.0",
@@ -54,7 +53,6 @@
     "typescript": "^4.3.5",
     "vsce": "^1.87.0",
     "vscode-azureextensiondev": "^0.10.0",
-    "vscode-test": "^1.5.2",
     "webpack": "^5.28.0",
     "webpack-cli": "^4.6.0"
   },
@@ -68,8 +66,6 @@
     "dotenv": "^6.2.0",
     "fast-xml-parser": "^3.19.0",
     "fs-extra": "^8.0.0",
-    "keytar": "^7.7.0",
-    "moment": "^2.24.0",
     "open": "^8.0.4",
     "portfinder": "^1.0.25",
     "tslib": "^1.14.1",

@@ -4,3 +4,4 @@
  *--------------------------------------------------------------------------------------------*/
 
 export const SERVERLESS_CAPABILITY_NAME = 'EnableServerless';
+export const postgresPort = '5432';

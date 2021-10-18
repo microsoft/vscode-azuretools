@@ -9,7 +9,6 @@ import { nonNullProp } from '../utils/nonNull';
 import { createCosmosDBClient, createPostgreSQLClient, createPostgreSQLFlexibleClient } from "../utils/azureClients";
 import { localize } from '../utils/localize';
 
-
 export class DatabaseNameStep extends AzureWizardPromptStep<IConnectDBWizardContext> {
 
     public async prompt(context: IConnectDBWizardContext): Promise<void> {
