@@ -8,7 +8,7 @@ import { IAzExtOutputChannel, IAzureUserInput, registerUIExtensionVariables, UIE
 import { localize } from "./utils/localize";
 
 class UninitializedExtensionVariables implements UIExtensionVariables {
-    private _error: Error = new Error(localize('uninitializedError', '"registerUIExtensionVariables" must be called before using the vscode-azureappservice package.'));
+    private _error: Error = new Error(localize('uninitializedError', '"registerUIExtensionVariables" must be called before using the vscode-azuredatabases package.'));
 
     public get context(): ExtensionContext {
         throw this._error;
