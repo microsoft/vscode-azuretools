@@ -7,3 +7,4 @@ export * from '../src/connect/DatabaseNameStep';
 export * from '../src/connect/IConnectDBWizardContext';
 export * from '../src/connect/DatabaseApiStep';
 export { registerDatabasesExtensionVariables } from './extensionVariables';
+export * from '../src/connect/enterPostgresCredentials';

@@ -142,7 +142,7 @@ export class ConnectDatabaseAccountPromptStep extends AzureWizardPromptStep<ICon
             });
         }
 
-        let components: DBTreeItem[] = [];
+        const components: DBTreeItem[] = [];
         if (context.defaultExperience) {
             const api: API = context.defaultExperience.api;
             switch (api) {

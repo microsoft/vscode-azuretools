@@ -32,12 +32,12 @@ interface IDatabasesExtensionVariables extends UIExtensionVariables {
 }
 
 /**
- * Container for common extension variables used throughout the AppService package. They must be initialized with registerAppServiceExtensionVariables
+ * Container for common extension variables used throughout the Databases package. They must be initialized with registerDatabasesExtensionVariables
  */
 export let ext: IDatabasesExtensionVariables = new UninitializedExtensionVariables();
 
 /**
- * Call this to register common variables used throughout the AppService package.
+ * Call this to register common variables used throughout the Databases package.
  */
 export function registerDatabasesExtensionVariables(extVars: IDatabasesExtensionVariables): void {
     if (ext === extVars) {
