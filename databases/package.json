@@ -1,8 +1,8 @@
 {
   "name": "vscode-azuredatabases",
   "author": "Microsoft Corporation",
-  "version": "0.0.1",
-  "description": "Common tools for developing Azure Databases support in Azure App Service extension for VS Code",
+  "version": "0.1.0",
+  "description": "Common tools for developing support for Azure Databases in VS Code",
   "tags": [
     "azure",
     "vscode"

@@ -6,6 +6,7 @@
 import { DatabaseAccountCreateUpdateParameters, DatabaseAccountsCreateOrUpdateResponse } from '@azure/arm-cosmosdb/src/models';
 import { Progress } from 'vscode';
 import { AzureWizardExecuteStep, LocationListStep } from 'vscode-azureextensionui';
+import { IConnectDBWizardContext } from '../../connect/IConnectDBWizardContext';
 import { SERVERLESS_CAPABILITY_NAME } from '../../constants';
 import { ext } from '../../extensionVariables';
 import { createCosmosDBClient } from '../../utils/azureClients';
@@ -13,10 +14,10 @@ import { localize } from '../../utils/localize';
 import { nonNullProp } from '../../utils/nonNull';
 import { ICosmosDBWizardContext } from './ICosmosDBWizardContext';
 
-export class CosmosDBAccountCreateStep extends AzureWizardExecuteStep<ICosmosDBWizardContext> {
+export class CosmosDBAccountCreateStep extends AzureWizardExecuteStep<IConnectDBWizardContext> {
     public priority: number = 130;
 
-    public async execute(context: ICosmosDBWizardContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
+    public async execute(context: IConnectDBWizardContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         const locationName: string = (await LocationListStep.getLocation(context)).name;
         const defaultExperience = nonNullProp(context, 'defaultExperience');
         const rgName: string = nonNullProp(nonNullProp(context, 'resourceGroup'), 'name');
