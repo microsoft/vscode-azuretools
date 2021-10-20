@@ -14,13 +14,15 @@ export class DatabaseNameStep extends AzureWizardPromptStep<IConnectDBWizardCont
     public async prompt(context: IConnectDBWizardContext): Promise<void> {
         const databaseTreeItem = nonNullProp(context, 'databaseConnectionTreeItem');
         const azureData = nonNullProp(databaseTreeItem, 'azureData');
+        const databaseNamePlaceholder = localize('databaseNamePlaceholder', 'Database Name');
+        const databaseNamePrompt = localize('databaseNamePrompt', 'Provide a database name');
         if (azureData.accountKind?.includes('SQL')) {
             const client = await createCosmosDBClient(context);
             const listOfDatabases: string[] = [];
             (await client.sqlResources.listSqlDatabases(nonNullProp(azureData, 'resourceGroup'), azureData.accountName))._response.parsedBody.forEach(db => { if (db) { listOfDatabases.push(nonNullProp(db, 'name')) } });
             context.databaseName = (await context.ui.showInputBox({
-                placeHolder: "Database Name",
-                prompt: "Provide a database name",
+                placeHolder: databaseNamePlaceholder,
+                prompt: databaseNamePrompt,
                 validateInput: (name: string) => validateCoreDatabaseName(name, listOfDatabases)
             })).trim();
         } else if (azureData.accountKind === 'MongoDB') {
@@ -28,8 +30,8 @@ export class DatabaseNameStep extends AzureWizardPromptStep<IConnectDBWizardCont
             const listOfDatabases: string[] = [];
             (await client.mongoDBResources.listMongoDBDatabases(nonNullProp(azureData, 'resourceGroup'), azureData.accountName))._response.parsedBody.forEach(db => { if (db) { listOfDatabases.push(nonNullProp(db, 'name')) } });
             context.databaseName = (await context.ui.showInputBox({
-                placeHolder: "Database Name",
-                prompt: "Provide a database name",
+                placeHolder: databaseNamePlaceholder,
+                prompt: databaseNamePrompt,
                 validateInput: (name: string) => validateMongoDatabaseName(name, listOfDatabases)
             })).trim();
         } else if (databaseTreeItem.postgresData?.serverType === 'Flexible') {
@@ -37,8 +39,8 @@ export class DatabaseNameStep extends AzureWizardPromptStep<IConnectDBWizardCont
             const listOfDatabases: string[] = [];
             (await postgresFlexibleClient.databases.listByServer(nonNullProp(azureData, 'resourceGroup'), azureData.accountName))._response.parsedBody.forEach(db => { if (db) { listOfDatabases.push(nonNullProp(db, 'name')) } });
             context.databaseName = (await context.ui.showInputBox({
-                placeHolder: "Database Name",
-                prompt: "Provide a database name",
+                placeHolder: databaseNamePlaceholder,
+                prompt: databaseNamePrompt,
                 validateInput: (name: string) => validatePostgresDatabaseName(name, listOfDatabases)
             })).trim();
         } else {
@@ -46,8 +48,8 @@ export class DatabaseNameStep extends AzureWizardPromptStep<IConnectDBWizardCont
             const listOfDatabases: string[] = [];
             (await postgresSingleClient.databases.listByServer(nonNullProp(azureData, 'resourceGroup'), azureData.accountName))._response.parsedBody.forEach(db => { if (db) { listOfDatabases.push(nonNullProp(db, 'name')) } });
             context.databaseName = (await context.ui.showInputBox({
-                placeHolder: "Database Name",
-                prompt: "Provide a database name",
+                placeHolder: databaseNamePlaceholder,
+                prompt: databaseNamePrompt,
                 validateInput: (name: string) => validatePostgresDatabaseName(name, listOfDatabases)
             })).trim();
         }
