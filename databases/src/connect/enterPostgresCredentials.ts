@@ -7,65 +7,67 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { IActionContext } from "vscode-azureextensionui";
+import { IActionContext, ISubscriptionContext, UserCancelledError } from "vscode-azureextensionui";
 import { DBTreeItem } from './DBTreeItem';
-import { enterCredentialsAttempts, postgresDefaultPort } from '../constants';
+import { postgresDefaultPort } from '../constants';
 import { PostgresServerType } from '../create/PostgresAccountWizard/abstract/models';
-import { ext } from '../extensionVariables';
 import { localize } from '../utils/localize';
-import { nonNullProp, nonNullValue } from '../utils/nonNull';
+import { nonNullProp } from '../utils/nonNull';
 import { Client, ClientConfig } from "pg";
 import { ConnectionOptions } from 'tls';
+import { ext } from '../extensionVariables';
+import { createAbstractPostgresClient } from '../create/PostgresAccountWizard/abstract/AbstractPostgresClient';
+import { configurePostgresFirewall, getPublicIp } from './configurePostgresFirewall';
 
-export async function enterPostgresCredentials(context: IActionContext, databaseTreeItem: DBTreeItem): Promise<string[] | undefined> {
+export async function enterPostgresCredentials(context: ISubscriptionContext & IActionContext, databaseTreeItem: DBTreeItem): Promise<string[] | undefined> {
+    return await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, cancellable: true }, async (progress, token): Promise<string[] | undefined> => {
+        while (true) {
+            const hostName = nonNullProp(databaseTreeItem, 'hostName');
+            const serverName: string = nonNullProp(nonNullProp(databaseTreeItem, 'azureData'), 'accountName');
+            const postgresData = nonNullProp(databaseTreeItem, 'postgresData');
+            const serverType = nonNullProp(postgresData, 'serverType');
 
-    for (let tries = 1; tries <= enterCredentialsAttempts; tries++) {
+            if (!(await isFirewallRuleSet(context, databaseTreeItem))) {
+                await configurePostgresFirewall(context, databaseTreeItem);
+            }
 
-        const hostName = nonNullProp(databaseTreeItem, 'hostName');
-        let username = await context.ui.showInputBox({
-            prompt: localize('enterUsername', 'Enter username for server "{0}"', hostName),
-            stepName: 'enterPostgresUsername',
-            validateInput: (value: string) => { return (value && value.length) ? undefined : localize('usernameCannotBeEmpty', 'Username cannot be empty.'); }
-        });
+            const setupMessage = localize('settingUpCredentials', 'Setting up Postgres Database Credentials...');
+            reportMessage(setupMessage, progress, token);
+            let username = await context.ui.showInputBox({
+                prompt: localize('enterUsername', 'Enter username for server "{0}"', hostName),
+                stepName: 'enterPostgresUsername',
+                validateInput: (value: string) => { return (value && value.length) ? undefined : localize('usernameCannotBeEmpty', 'Username cannot be empty.'); }
+            });
+            // Username doesn't contain servername prefix for Postgres Flexible Servers only
+            // As present on the portal for any Flexbile Server instance
+            const usernameSuffix: string = `@${serverName}`;
+            if (serverType === PostgresServerType.Single && !username.includes(usernameSuffix)) {
+                username += usernameSuffix;
+            }
 
-        const serverName: string = nonNullProp(nonNullProp(databaseTreeItem, 'azureData'), 'accountName');
-        // Username doesn't contain servername prefix for Postgres Flexible Servers only
-        // As present on the portal for any Flexbile Server instance
-        const usernameSuffix: string = `@${serverName}`;
-        const postgresData = nonNullProp(databaseTreeItem, 'postgresData');
-        const serverType = nonNullProp(postgresData, 'serverType');
-        if (serverType === PostgresServerType.Single && !username.includes(usernameSuffix)) {
-            username += usernameSuffix;
-        }
-
-        const password = await context.ui.showInputBox({
-            prompt: localize('enterPassword', 'Enter password for server "{0}"', hostName),
-            stepName: 'enterPostgresPassword',
-            password: true,
-            validateInput: (value: string) => { return (value && value.length) ? undefined : localize('passwordCannotBeEmpty', 'Password cannot be empty.'); }
-        });
-        if (await verifyPostgresCreds(databaseTreeItem, username, password)) {
-            console.log(`Successfully verified Postgres credentials for ${hostName}`);
-            const progressMessage: string = localize('setupCredentialsMessage', 'Setting up credentials for server "{0}"...', serverName);
-            const options: vscode.ProgressOptions = {
-                location: vscode.ProgressLocation.Notification,
-                title: progressMessage
-            };
-
-            await vscode.window.withProgress(options, async () => {
-                await verifyPostgresCreds(databaseTreeItem, nonNullValue(username), nonNullValue(password));
+            const password = await context.ui.showInputBox({
+                prompt: localize('enterPassword', 'Enter password for server "{0}"', hostName),
+                stepName: 'enterPostgresPassword',
+                password: true,
+                validateInput: (value: string) => { return (value && value.length) ? undefined : localize('passwordCannotBeEmpty', 'Password cannot be empty.'); }
             });
 
-            const completedMessage: string = localize('setupCredentialsMessage', 'Successfully added credentials to server "{0}".', serverName);
-            void vscode.window.showInformationMessage(completedMessage);
-            ext.outputChannel.appendLog(completedMessage);
 
-            return [username, password];
-        } else {
-            void vscode.window.showErrorMessage(localize('invalidCredentialsErrorType', 'Your username or password is incorrect. Please try again. Attempt: {0} of {1}', tries, enterCredentialsAttempts));
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            const client: Client | undefined = await verifyPostgresCreds(databaseTreeItem, username, password);
+
+            if (client) {
+                const completedMessage: string = localize('setupCredentialsMessage', 'Successfully added credentials to server "{0}".', serverName);
+                void vscode.window.showInformationMessage(completedMessage);
+                reportMessage(completedMessage, progress, token);
+                return [username, password];
+            } else {
+                const invalidMessage: string = localize('invalidCredentialsErrorType', 'Your username or password is incorrect. Please try again.');
+                void vscode.window.showErrorMessage(invalidMessage);
+                reportMessage(invalidMessage, progress, token);
+            }
         }
-    }
-    return undefined;
+    });
 }
 
 export async function verifyPostgresCreds(databaseTreeItem: DBTreeItem, username: string, password: string): Promise<Client | undefined> {
@@ -81,7 +83,6 @@ export async function verifyPostgresCreds(databaseTreeItem: DBTreeItem, username
     const host = databaseTreeItem.hostName;
     const port: number = databaseTreeItem.port ? parseInt(databaseTreeItem.port) : parseInt(postgresDefaultPort);
     const clientConfig: ClientConfig = { user: username, password: password, ssl: sslAzure, host, port, database: databaseTreeItem.databaseName };
-
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const client: Client = new Client(clientConfig);
     // Ensure the client config is valid before returning
@@ -93,6 +94,25 @@ export async function verifyPostgresCreds(databaseTreeItem: DBTreeItem, username
     } finally {
         await client.end();
     }
+}
+
+export async function isFirewallRuleSet(context: ISubscriptionContext & IActionContext, databaseTreeItem: DBTreeItem): Promise<boolean> {
+    const postgresData = nonNullProp(databaseTreeItem, 'postgresData');
+    const azureData = nonNullProp(databaseTreeItem, 'azureData');
+    const serverType: PostgresServerType = nonNullProp(postgresData, 'serverType');
+    const client = await createAbstractPostgresClient(serverType, context);
+    const result = (await client.firewallRules.listByServer(nonNullProp(azureData, 'resourceGroup'), nonNullProp(azureData, 'accountName')))._response.parsedBody;
+    const publicIp: string = await getPublicIp();
+    return (Object.values(result).some(value => value.startIpAddress === publicIp));
+}
+
+export function reportMessage(message: string, progress: vscode.Progress<{}>, token: vscode.CancellationToken): void {
+    if (token.isCancellationRequested) {
+        throw new UserCancelledError('remoteDebugReportMessage');
+    }
+
+    ext.outputChannel.appendLog(message);
+    progress.report({ message: message });
 }
 
 // Postgres Single Server Root Cert, https://aka.ms/AA7wnvl
