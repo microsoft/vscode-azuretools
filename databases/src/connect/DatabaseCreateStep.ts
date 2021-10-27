@@ -45,6 +45,5 @@ export class DatabaseCreateStep extends AzureWizardExecuteStep<IConnectDBWizardC
         const completedMessage: string = localize('createdConnection', 'Successfully created new Database {0}', context.databaseName);
         ext.outputChannel.appendLog(completedMessage);
     }
-
 }
 

@@ -1,26 +1,3 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Launch Tests",
-            "type": "extensionHost",
-            "request": "launch",
-            "runtimeExecutable": "${execPath}",
-            "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}/test/extension",
-                "--extensionTestsPath=${workspaceFolder}/out/test/index",
-                "${workspaceFolder}/test/test.code-workspace"
-            ],
-            "outFiles": [
-                "${workspaceFolder}/out/test/**/*.js"
-            ],
-            "preLaunchTask": "${defaultBuildTask}",
-            "env": {
-                "MOCHA_grep": "", // RegExp of tests to run (empty for all)
-                "MOCHA_timeout": "0", // Disable time-outs
-                "DEBUGTELEMETRY": "v",
-                "NODE_DEBUG": ""
-            }
-        }
-    ]
+    "version": "0.2.0"
 }
