@@ -1022,8 +1022,9 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
      * Adds a LocationListStep to the wizard.  This function will ensure there is only one LocationListStep per wizard context.
      * @param wizardContext The context of the wizard
      * @param promptSteps The array of steps to include the LocationListStep to
+     * @param options Options to pass to ui.showQuickPick. Options are spread onto the defaults.
      */
-    public static addStep<T extends ILocationWizardContext>(wizardContext: IActionContext & Partial<ILocationWizardContext>, promptSteps: AzureWizardPromptStep<T>[]): void;
+    public static addStep<T extends ILocationWizardContext>(wizardContext: IActionContext & Partial<ILocationWizardContext>, promptSteps: AzureWizardPromptStep<T>[], options?: IAzureQuickPickOptions): void;
 
     /**
      * This will set the wizard context's location (in which case the user will _not_ be prompted for location)
