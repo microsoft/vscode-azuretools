@@ -12,6 +12,7 @@ import { localize } from "../utils/localize";
 import { nonNullProp } from "../utils/nonNull";
 import { IConnectDBWizardContext } from "./IConnectDBWizardContext";
 import * as azureUtils from "../utils/azureUtils";
+import { postgresDefaultPort } from "../constants";
 
 
 export class DatabaseConnectionCreateStep extends AzureWizardExecuteStep<IConnectDBWizardContext> {
@@ -22,15 +23,14 @@ export class DatabaseConnectionCreateStep extends AzureWizardExecuteStep<IConnec
         progress.report({ message: creatingMessage });
         if (context.server) {
             const hostName = nonNullProp(context.server, 'name');
-            const port = '5432';
             const serverType = nonNullProp(context.server, 'serverType');
             const username = serverType === 'Flexible' ? nonNullProp(context, 'shortUserName') : nonNullProp(context, 'longUserName');
             const password = nonNullProp(context, 'adminPassword');
             const serverId = nonNullProp(context.server, 'id');
-            const connectionString = `postgresql://${hostName}:${username}@${hostName}:${port}`;
+            const connectionString = `postgresql://${hostName}:${username}@${hostName}:${postgresDefaultPort}`;
             const postgresData = { username: username, password: password, serverType: serverType };
             const azureData = { accountName: hostName, accountId: serverId, resourceGroup: context.resourceGroup?.name };
-            context.databaseConnectionTreeItem = { hostName, port, connectionString, azureData, postgresData };
+            context.databaseConnectionTreeItem = { hostName, port: postgresDefaultPort, connectionString, azureData, postgresData };
         } else if (context.databaseAccount) {
             const hostName = nonNullProp(context.databaseAccount, 'name');
             const accountId = nonNullProp(context.databaseAccount, 'id');

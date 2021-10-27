@@ -297,3 +297,5 @@ out
 dist
 esm
 code-model-*
+
+.DS_Store
