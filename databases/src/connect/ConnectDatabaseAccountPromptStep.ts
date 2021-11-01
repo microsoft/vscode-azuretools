@@ -182,7 +182,17 @@ export class ConnectDatabaseAccountPromptStep extends AzureWizardPromptStep<ICon
     public async getSubWizard(context: IConnectDBWizardContext): Promise<IWizardOptions<IConnectDBWizardContext> | undefined> {
         if (context.createDBAccount) {
             const promptSteps: AzureWizardPromptStep<ILocationWizardContext>[] = [new AzureDBAPIStep(), new ResourceGroupListStep()];
-
+            // The location is set to AppService site location by default
+            // This is to check if that location is valid for the given database providers
+            if (context.defaultExperience) {
+                let location: string;
+                if (context.defaultExperience.api === API.PostgresSingle || API.PostgresFlexible) {
+                    location = (await LocationListStep.getLocation(context, 'Microsoft.DBforPostgreSQL')).name;
+                } else {
+                    location = (await LocationListStep.getLocation(context, 'Microsoft.DocumentDB')).name;
+                }
+                await LocationListStep.setLocation(context, location);
+            }
             LocationListStep.addStep(context, promptSteps);
             return {
                 promptSteps: promptSteps,
