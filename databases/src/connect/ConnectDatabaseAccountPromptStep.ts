@@ -186,7 +186,7 @@ export class ConnectDatabaseAccountPromptStep extends AzureWizardPromptStep<ICon
             // This is to check if that location is valid for the given database providers
             if (context.defaultExperience) {
                 let location: string;
-                if (context.defaultExperience.api === API.PostgresSingle || API.PostgresFlexible) {
+                if (context.defaultExperience.api === API.PostgresSingle || context.defaultExperience.api === API.PostgresFlexible) {
                     location = (await LocationListStep.getLocation(context, 'Microsoft.DBforPostgreSQL')).name;
                 } else {
                     location = (await LocationListStep.getLocation(context, 'Microsoft.DocumentDB')).name;
