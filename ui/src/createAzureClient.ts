@@ -10,7 +10,7 @@ import { v4 as uuid } from 'uuid';
 import * as vscode from "vscode";
 import * as types from '../index';
 import { appendExtensionUserAgent } from "./extensionUserAgent";
-import { GenericServiceClient } from './GenericServiceClient';
+import type { GenericServiceClient } from './GenericServiceClient';
 import { localize } from './localize';
 import { maskValue } from './masking';
 import { parseError } from './parseError';

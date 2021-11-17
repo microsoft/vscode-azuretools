@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
+import type { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
 import * as types from '../../index';
 import { createStorageClient } from '../clients';
 import { storageProvider } from '../constants';

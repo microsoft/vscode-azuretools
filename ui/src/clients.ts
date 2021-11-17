@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ResourceManagementClient } from '@azure/arm-resources';
-import { StorageManagementClient } from '@azure/arm-storage';
-import { SubscriptionClient } from '@azure/arm-subscriptions';
+import type { ResourceManagementClient } from '@azure/arm-resources';
+import type { StorageManagementClient } from '@azure/arm-storage';
+import type { SubscriptionClient } from '@azure/arm-subscriptions';
 import { createAzureClient, createAzureSubscriptionClient, InternalAzExtClientContext, parseClientContext } from './createAzureClient';
 
 // Lazy-load @azure packages to improve startup performance.
