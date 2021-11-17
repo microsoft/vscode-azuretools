@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { DatabaseAccountCreateUpdateParameters, DatabaseAccountsCreateOrUpdateResponse } from '@azure/arm-cosmosdb/src/models';
+import type { DatabaseAccountCreateUpdateParameters, DatabaseAccountsCreateOrUpdateResponse } from '@azure/arm-cosmosdb/src/models';
 import { Progress } from 'vscode';
 import { AzureWizardExecuteStep, LocationListStep } from 'vscode-azureextensionui';
 import { IConnectDBWizardContext } from '../../connect/IConnectDBWizardContext';
