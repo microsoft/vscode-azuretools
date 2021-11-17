@@ -12,7 +12,14 @@ let _extValuesToMask: string[] | undefined;
 function getExtValuesToMask(): string[] {
     if (!_extValuesToMask) {
         try {
-            _extValuesToMask = [os.userInfo().username];
+            const username = os.userInfo().username;
+
+            if (username?.length > 4) {
+                _extValuesToMask = [username];
+            } else {
+                // Don't mask, too short
+                _extValuesToMask = [];
+            }
         } catch {
             _extValuesToMask = [];
         }
