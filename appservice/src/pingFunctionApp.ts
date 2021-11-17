@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ServiceClient } from '@azure/ms-rest-js';
+import type { ServiceClient } from '@azure/ms-rest-js';
 import { createGenericClient, IActionContext } from 'vscode-azureextensionui';
 import { ParsedSite } from './SiteClient';
 

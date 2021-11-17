@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ApplicationInsightsManagementClient } from '@azure/arm-appinsights';
-import { ResourceManagementClient, ResourceManagementModels } from '@azure/arm-resources';
-import { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
+import type { ApplicationInsightsManagementClient } from '@azure/arm-appinsights';
+import type { ResourceManagementClient, ResourceManagementModels } from '@azure/arm-resources';
+import type { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
 import { MessageItem, Progress } from 'vscode';
 import { AzExtLocation, AzureWizardExecuteStep, createGenericClient, IActionContext, IParsedError, LocationListStep, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';

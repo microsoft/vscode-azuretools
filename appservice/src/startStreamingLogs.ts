@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AbortController } from '@azure/abort-controller';
-import { WebSiteManagementModels } from '@azure/arm-appservice';
+import type { WebSiteManagementModels } from '@azure/arm-appservice';
 import { BasicAuthenticationCredentials, HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
 import { setInterval } from 'timers';
 import * as vscode from 'vscode';

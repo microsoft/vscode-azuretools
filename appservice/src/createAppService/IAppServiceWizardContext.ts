@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ApplicationInsightsManagementModels } from '@azure/arm-appinsights';
-import { WebSiteManagementModels } from '@azure/arm-appservice';
+import type { ApplicationInsightsManagementModels } from '@azure/arm-appinsights';
+import type { WebSiteManagementModels } from '@azure/arm-appservice';
 import { IResourceGroupWizardContext, IStorageAccountWizardContext } from 'vscode-azureextensionui';
 import { AppKind, WebsiteOS } from './AppKind';
 

@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { WebSiteManagementModels } from '@azure/arm-appservice';
+import type { WebSiteManagementModels } from '@azure/arm-appservice';
 // eslint-disable-next-line import/no-internal-modules
 import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';

@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ApplicationInsightsManagementClient } from "@azure/arm-appinsights";
+import type { ApplicationInsightsManagementClient } from "@azure/arm-appinsights";
 // eslint-disable-next-line import/no-internal-modules
-import { ApplicationInsightsComponent, ApplicationInsightsComponentListResult } from "@azure/arm-appinsights/esm/models";
+import type { ApplicationInsightsComponent, ApplicationInsightsComponentListResult } from "@azure/arm-appinsights/esm/models";
 import { AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, LocationListStep } from "vscode-azureextensionui";
 import { localize } from "../localize";
 import { createAppInsightsClient } from "../utils/azureClients";
