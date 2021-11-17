@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { PostgreSQLManagementModels as SingleModels } from "@azure/arm-postgresql";
-import { PostgreSQLManagementModels as FlexibleModels } from "@azure/arm-postgresql-flexible";
+import type { PostgreSQLManagementModels as SingleModels } from "@azure/arm-postgresql";
+import type { PostgreSQLManagementModels as FlexibleModels } from "@azure/arm-postgresql-flexible";
 import { Progress } from 'vscode';
 import { AzureWizardExecuteStep, callWithMaskHandling, LocationListStep } from 'vscode-azureextensionui';
 import { ext } from "../../../extensionVariables";

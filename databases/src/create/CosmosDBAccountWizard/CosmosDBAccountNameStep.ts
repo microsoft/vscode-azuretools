@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CosmosDBManagementClient } from '@azure/arm-cosmosdb';
+import type { CosmosDBManagementClient } from '@azure/arm-cosmosdb';
 import { AzureNameStep, ResourceGroupListStep, resourceGroupNamingRules } from 'vscode-azureextensionui';
 import { createCosmosDBClient } from '../../utils/azureClients';
 import { ICosmosDBWizardContext } from './ICosmosDBWizardContext';

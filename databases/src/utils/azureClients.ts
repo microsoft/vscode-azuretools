@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CosmosDBManagementClient } from '@azure/arm-cosmosdb';
-import { PostgreSQLManagementClient } from '@azure/arm-postgresql';
-import { PostgreSQLManagementClient as PostgreSQLFlexibleManagementClient } from '@azure/arm-postgresql-flexible';
+import type { CosmosDBManagementClient } from '@azure/arm-cosmosdb';
+import type { PostgreSQLManagementClient } from '@azure/arm-postgresql';
+import type { PostgreSQLManagementClient as PostgreSQLFlexibleManagementClient } from '@azure/arm-postgresql-flexible';
 import { AzExtClientContext, createAzureClient } from 'vscode-azureextensionui';
 
 // Lazy-load @azure packages to improve startup performance.

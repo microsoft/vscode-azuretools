@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { DatabaseAccountsListResult } from "@azure/arm-cosmosdb/src/models";
+import type { DatabaseAccountsListResult } from "@azure/arm-cosmosdb/src/models";
 import { URL } from "url";
 import { AzureWizardPromptStep, IAzureQuickPickItem, IAzureQuickPickOptions, ILocationWizardContext, IWizardOptions, LocationListStep, ResourceGroupListStep } from "vscode-azureextensionui";
 import * as azureUtils from "../utils/azureUtils";

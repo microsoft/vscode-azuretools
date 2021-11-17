@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { PostgreSQLManagementClient } from "@azure/arm-postgresql";
-import { PostgreSQLManagementClient as PostgreSQLFlexibleManagementClient } from "@azure/arm-postgresql-flexible";
+import type { PostgreSQLManagementClient } from "@azure/arm-postgresql";
+import type { PostgreSQLManagementClient as PostgreSQLFlexibleManagementClient } from "@azure/arm-postgresql-flexible";
 import { AzExtClientContext } from "vscode-azureextensionui";
 import { createPostgreSQLClient, createPostgreSQLFlexibleClient } from "../../../utils/azureClients";
 import { PostgresServerType } from "./models";
