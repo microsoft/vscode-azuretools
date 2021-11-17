@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { WebSiteManagementModels } from '@azure/arm-appservice';
-import { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
+import type { WebSiteManagementModels } from '@azure/arm-appservice';
+import type { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
 
 /**
  * Temporary workaround because this isn't in azure sdk yet

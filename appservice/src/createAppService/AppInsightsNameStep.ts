@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 // eslint-disable-next-line import/no-internal-modules
-import { ApplicationInsightsComponent, ApplicationInsightsComponentListResult } from '@azure/arm-appinsights/esm/models';
+import type { ApplicationInsightsComponent, ApplicationInsightsComponentListResult } from '@azure/arm-appinsights/esm/models';
 import { AzureWizardPromptStep } from 'vscode-azureextensionui';
 import { localize } from '../localize';
 import { AppInsightsListStep, appInsightsNamingRules } from './AppInsightsListStep';
