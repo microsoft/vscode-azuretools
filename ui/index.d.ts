@@ -5,6 +5,7 @@
 
 import { ResourceManagementModels } from '@azure/arm-resources';
 import { SubscriptionModels } from '@azure/arm-resources-subscriptions';
+import { ExtendedLocation } from '@azure/arm-resources/esm/models';
 import { StorageManagementModels } from '@azure/arm-storage';
 import { Environment } from '@azure/ms-rest-azure-env';
 import { HttpOperationResponse, RequestPrepareOptions, ServiceClient } from '@azure/ms-rest-js';
@@ -1047,6 +1048,13 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
      * @param resourceType The resource type (i.e. 'storageAccounts')
      */
     public static addProviderForFiltering<T extends ILocationWizardContext>(wizardContext: T, provider: string, resourceType: string): void;
+
+    /**
+     * Used to convert a location into a home location and an extended location if the location passed in is an extended location.
+     * If the location passed in is not extended, then extendedLocation will be `undefined`.
+     * @param location location or extended location
+     */
+    public static getExtendedLocation(location: AzExtLocation): { location: string, extendedLocation?: ExtendedLocation };
 
     /**
      * Gets the selected location for this wizard.

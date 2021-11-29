@@ -3,6 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+// eslint-disable-next-line import/no-internal-modules
+import { ExtendedLocation } from '@azure/arm-resources/esm/models';
 import * as types from '../../index';
 import { createResourcesClient, createSubscriptionsClient } from '../clients';
 import { resourcesProvider } from '../constants';
@@ -73,6 +75,20 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
 
     public static hasLocation<T extends ILocationWizardContextInternal>(wizardContext: T): boolean {
         return !!wizardContext._location;
+    }
+
+    public static getExtendedLocation(location: types.AzExtLocation): { location: string, extendedLocation?: ExtendedLocation } {
+        let locationName: string = location.name;
+        let extendedLocation: ExtendedLocation | undefined;
+        if (location.type === 'EdgeZone') {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            locationName = location.metadata!.homeLocation!;
+            extendedLocation = <ExtendedLocation>location;
+        }
+        return {
+            location: locationName,
+            extendedLocation
+        }
     }
 
     public static async getLocation<T extends ILocationWizardContextInternal>(wizardContext: T, provider?: string, supportsExtendedLocations?: boolean): Promise<types.AzExtLocation> {
