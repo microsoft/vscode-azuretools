@@ -8,16 +8,34 @@ import * as os from 'os';
 import { IActionContext, IParsedError } from "../index";
 import { parseError } from "./parseError";
 
+const UnmaskedUsernameMaxLength: number = 3;
+
 let _extValuesToMask: string[] | undefined;
 function getExtValuesToMask(): string[] {
     if (!_extValuesToMask) {
-        try {
-            _extValuesToMask = [os.userInfo().username];
-        } catch {
-            _extValuesToMask = [];
-        }
+        _extValuesToMask = [];
     }
     return _extValuesToMask;
+}
+
+let _usernameMask: RegExp | undefined | null;
+function getUsernameMask(): RegExp | undefined | null {
+    if (_usernameMask === undefined) {
+        try {
+            const username = os.userInfo().username;
+
+            if (username.length <= UnmaskedUsernameMaxLength) {
+                // Too short to mask
+                _usernameMask = null;
+            } else {
+                _usernameMask = new RegExp(`\\b${username}\\b`, 'gi');
+            }
+        } catch {
+            _usernameMask = null;
+        }
+    }
+
+    return _usernameMask;
 }
 
 export function addExtensionValueToMask(...values: (string | undefined)[]): void {
@@ -79,6 +97,11 @@ export function maskUserInfo(unkonwnArg: unknown, actionValuesToMask: string[], 
     data = data.replace(/[a-z]+:\/\/\S*/gi, getRedactedLabel('url'));
     data = data.replace(/\S+(?<!(?<!\-)\basp)\.(com|org|net)\S*/gi, getRedactedLabel('url'));
     data = data.replace(/\S*(key|token|sig|password|passwd|pwd)[="':\s]+\S*/gi, getRedactedLabel('key'));
+
+    const usernameMask = getUsernameMask();
+    if (usernameMask) {
+        data = data.replace(usernameMask, getRedactedLabel('username'));
+    }
 
     return data;
 }
