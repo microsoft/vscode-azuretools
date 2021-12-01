@@ -19,8 +19,10 @@ function getExtValuesToMask(): string[] {
     return _extValuesToMask;
 }
 
-let _usernameMask: RegExp | undefined | null;
+let _usernameMask: RegExp | undefined | null = undefined;
 function getUsernameMask(): RegExp | undefined | null {
+    // _usernameMask starts out as undefined, and is set to null if building it fails or it is too short
+    // Specifically checking for undefined here ensures we will only run the code once
     if (_usernameMask === undefined) {
         try {
             const username = os.userInfo().username;
