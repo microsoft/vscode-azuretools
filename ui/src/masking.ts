@@ -8,14 +8,16 @@ import * as os from 'os';
 import { IActionContext, IParsedError } from "../index";
 import { parseError } from "./parseError";
 
-let _extValuesToMask: string[] | undefined;
-function getExtValuesToMask(): string[] {
+type MaskMatcher = string | RegExp;
+
+let _extValuesToMask: MaskMatcher[] | undefined;
+function getExtValuesToMask(): MaskMatcher[] {
     if (!_extValuesToMask) {
         try {
             const username = os.userInfo().username;
 
-            if (username?.length > 4) {
-                _extValuesToMask = [username];
+            if (username?.length > 3) {
+                _extValuesToMask = [new RegExp(`\b${username}\b`, 'gi')];
             } else {
                 // Don't mask, too short
                 _extValuesToMask = [];
@@ -28,7 +30,7 @@ function getExtValuesToMask(): string[] {
 }
 
 export function addExtensionValueToMask(...values: (string | undefined)[]): void {
-    const extValuesToMask: string[] = getExtValuesToMask();
+    const extValuesToMask: MaskMatcher[] = getExtValuesToMask();
     for (const v of values) {
         if (v && !extValuesToMask.includes(v)) {
             extValuesToMask.push(v);
@@ -73,7 +75,7 @@ export function maskUserInfo(unkonwnArg: unknown, actionValuesToMask: string[], 
     let data = String(unkonwnArg);
 
     // Mask longest values first just in case one is a substring of another
-    const valuesToMask = actionValuesToMask.concat(getExtValuesToMask()).sort((a, b) => b.length - a.length);
+    const valuesToMask = getExtValuesToMask().concat(actionValuesToMask).sort(sortMaskMatcher);
     for (const value of valuesToMask) {
         data = maskValue(data, value);
     }
@@ -93,11 +95,15 @@ export function maskUserInfo(unkonwnArg: unknown, actionValuesToMask: string[], 
 /**
  * Mask a single specific value
  */
-export function maskValue(data: string, valueToMask: string | undefined): string {
+export function maskValue(data: string, valueToMask: MaskMatcher | undefined): string {
     if (valueToMask) {
-        const formsOfValue: string[] = [valueToMask, encodeURIComponent(valueToMask)];
-        for (const v of formsOfValue) {
-            data = data.replace(new RegExp(escape(v), 'gi'), '---');
+        if (typeof valueToMask === 'string') {
+            const formsOfValue: string[] = [valueToMask, encodeURIComponent(valueToMask)];
+            for (const v of formsOfValue) {
+                data = data.replace(new RegExp(escape(v), 'gi'), '---');
+            }
+        } else if (valueToMask instanceof RegExp) {
+            data = data.replace(valueToMask, '---');
         }
     }
     return data;
@@ -105,4 +111,23 @@ export function maskValue(data: string, valueToMask: string | undefined): string
 
 export function getRedactedLabel(reason: string): string {
     return `redacted:${reason}`;
+}
+
+function sortMaskMatcher(a: MaskMatcher, b: MaskMatcher): number {
+    let aLength: number;
+    let bLength: number;
+
+    if (typeof a === 'string') {
+        aLength = a.length;
+    } else {
+        aLength = a.source.length;
+    }
+
+    if (typeof b === 'string') {
+        bLength = b.length;
+    } else {
+        bLength = b.source.length;
+    }
+
+    return bLength - aLength;
 }
