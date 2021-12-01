@@ -8,6 +8,7 @@ import * as os from 'os';
 import { IActionContext, IParsedError } from "../index";
 import { parseError } from "./parseError";
 
+// No attempt will be made to mask usernames that are this length or less
 const UnmaskedUsernameMaxLength: number = 3;
 
 let _extValuesToMask: string[] | undefined;
