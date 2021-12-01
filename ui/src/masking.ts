@@ -20,12 +20,12 @@ function getExtValuesToMask(): string[] {
 }
 
 let _usernameMask: RegExp | undefined | null = undefined;
-function getUsernameMask(): RegExp | undefined | null {
+function getUsernameMask(getUsername: () => string): RegExp | undefined | null {
     // _usernameMask starts out as undefined, and is set to null if building it fails or it is too short
     // Specifically checking for undefined here ensures we will only run the code once
     if (_usernameMask === undefined) {
         try {
-            const username = os.userInfo().username;
+            const username = getUsername();
 
             if (username.length <= UnmaskedUsernameMaxLength) {
                 // Too short to mask
@@ -39,6 +39,13 @@ function getUsernameMask(): RegExp | undefined | null {
     }
 
     return _usernameMask;
+}
+
+/**
+ * To be used ONLY by test code.
+ */
+export function resetUsernameMask(): void {
+    _usernameMask = undefined;
 }
 
 export function addExtensionValueToMask(...values: (string | undefined)[]): void {
@@ -82,9 +89,10 @@ export async function callWithMaskHandling<T>(callback: () => Promise<T>, valueT
 /**
  * Best effort to mask all data that could potentially identify a user
  * @param lessAggressive If set to true, the most aggressive masking will be skipped
+ * @param getUsername To be used ONLY by test code. Function used to get the username.
  */
-export function maskUserInfo(unkonwnArg: unknown, actionValuesToMask: string[], lessAggressive: boolean = false): string {
-    let data = String(unkonwnArg);
+export function maskUserInfo(unknownArg: unknown, actionValuesToMask: string[], lessAggressive: boolean = false, getUsername = () => os.userInfo().username): string {
+    let data = String(unknownArg);
 
     // Mask longest values first just in case one is a substring of another
     const valuesToMask = actionValuesToMask.concat(getExtValuesToMask()).sort((a, b) => b.length - a.length);
@@ -101,7 +109,7 @@ export function maskUserInfo(unkonwnArg: unknown, actionValuesToMask: string[], 
     data = data.replace(/\S+(?<!(?<!\-)\basp)\.(com|org|net)\S*/gi, getRedactedLabel('url'));
     data = data.replace(/\S*(key|token|sig|password|passwd|pwd)[="':\s]+\S*/gi, getRedactedLabel('key'));
 
-    const usernameMask = getUsernameMask();
+    const usernameMask = getUsernameMask(getUsername);
     if (usernameMask) {
         data = data.replace(usernameMask, getRedactedLabel('username'));
     }

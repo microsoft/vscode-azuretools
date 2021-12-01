@@ -5,7 +5,7 @@
 
 import * as assert from 'assert';
 import * as types from '../index';
-import { addExtensionValueToMask, addValuesToMaskFromAzureId, callWithMaskHandling, maskUserInfo } from '../src/masking';
+import { addExtensionValueToMask, addValuesToMaskFromAzureId, callWithMaskHandling, maskUserInfo, resetUsernameMask } from '../src/masking';
 import { parseError } from '../src/parseError';
 import { randomUtils } from '../src/utils/randomUtils';
 import { assertThrowsAsync } from './assertThrowsAsync';
@@ -147,6 +147,26 @@ suite("masking", () => {
 
         test('Email', async () => {
             assert.strictEqual(maskUserInfo('user@microsoft.com user2@microsoft.com us---Er@mic.rosoft.com', []), 'redacted:email redacted:email redacted:email');
+        });
+
+        test('Username', async () => {
+            resetUsernameMask();
+            const getUsername = () => 'dave';
+            assert.strictEqual(maskUserInfo('User dave cannot do that', [], false, getUsername), 'User redacted:username cannot do that');
+            assert.strictEqual(maskUserInfo('User davecan do that', [], false, getUsername), 'User davecan do that');
+            assert.strictEqual(maskUserInfo('Userdave can do that', [], false, getUsername), 'Userdave can do that');
+            assert.strictEqual(maskUserInfo('User/dave cannot do that', [], false, getUsername), 'User/redacted:username cannot do that');
+            assert.strictEqual(maskUserInfo('User dave/cannot do that', [], false, getUsername), 'User redacted:username/cannot do that');
+            assert.strictEqual(maskUserInfo('Dave cannot do that', [], false, getUsername), 'redacted:username cannot do that');
+            assert.strictEqual(maskUserInfo('Cannot do that, Dave', [], false, getUsername), 'Cannot do that, redacted:username');
+        });
+
+        test('Short Username', async () => {
+            resetUsernameMask();
+            const getUsername = () => 'dav';
+            assert.strictEqual(maskUserInfo('User dav can do that', [], false, getUsername), 'User dav can do that');
+            assert.strictEqual(maskUserInfo('Userdav can do that', [], false, getUsername), 'Userdav can do that');
+            assert.strictEqual(maskUserInfo('Davuser can do that', [], false, getUsername), 'Davuser can do that');
         });
 
         test('Guid', async () => {
