@@ -78,9 +78,10 @@ steps:
 
 - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
   displayName: "SBoM Generation Task"
+  env:
+    DeleteManifestDirIfPresent: true
   inputs:
     BuildDropPath: "$(Build.ArtifactStagingDirectory)"
-    DeleteManifestDirIfPresent: true
   condition: and(eq(variables['Agent.OS'], 'Linux'), ne(variables['System.PullRequest.IsFork'], 'True'))
 
 - task: PublishBuildArtifacts@1
