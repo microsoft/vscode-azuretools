@@ -16,6 +16,7 @@ jobs:
     vmImage: ubuntu-latest
   steps:
   - template: job-steps.yml
+  - template: sbom.yml # only generate on linux
 
 - job: macOS
   pool:
