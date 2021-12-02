@@ -81,7 +81,7 @@ steps:
   env:
     DeleteManifestDirIfPresent: true
   inputs:
-    BuildDropPath: "$(Build.ArtifactStagingDirectory)/${{ parameters.package }}"
+    BuildDropPath: "$(Build.ArtifactStagingDirectory)"
   condition: and(eq(variables['Agent.OS'], 'Linux'), ne(variables['System.PullRequest.IsFork'], 'True'))
 
 - task: PublishBuildArtifacts@1
