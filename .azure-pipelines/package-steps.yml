@@ -80,11 +80,11 @@ steps:
   displayName: "SBoM Generation Task"
   inputs:
     BuildDropPath: "$(Build.ArtifactStagingDirectory)"
-  condition: and(not(variables['skipPackage']), eq(variables['Agent.OS'], 'Linux'), ne(variables['System.PullRequest.IsFork'], 'True'))
+  condition: and(eq(variables['Agent.OS'], 'Linux'), ne(variables['System.PullRequest.IsFork'], 'True'))
 
 - task: PublishBuildArtifacts@1
   displayName: "Publish artifacts: sbom"
   inputs:
     PathtoPublish: "$(Build.ArtifactStagingDirectory)/_manifest"
     ArtifactName: "${{ parameters.package }}/_manifest"
-  condition: and(not(variables['skipPackage']), eq(variables['Agent.OS'], 'Linux'), ne(variables['System.PullRequest.IsFork'], 'True'))
+  condition: and(eq(variables['Agent.OS'], 'Linux'), ne(variables['System.PullRequest.IsFork'], 'True'))
