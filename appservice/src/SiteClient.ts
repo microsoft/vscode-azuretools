@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { WebSiteManagementClient, WebSiteManagementModels as Models } from '@azure/arm-appservice';
-import { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
+import type { WebSiteManagementClient, WebSiteManagementModels as Models } from '@azure/arm-appservice';
+import type { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
 import { createGenericClient, IActionContext, ISubscriptionContext, parseError } from 'vscode-azureextensionui';
 import { AppKind } from './createAppService/AppKind';
 import { AppSettingsClientProvider, IAppSettingsClient } from './IAppSettingsClient';

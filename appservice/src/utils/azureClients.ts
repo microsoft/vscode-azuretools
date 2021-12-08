@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ApplicationInsightsManagementClient } from '@azure/arm-appinsights';
-import { WebSiteManagementClient } from '@azure/arm-appservice';
-import { ResourceGraphClient } from '@azure/arm-resourcegraph';
-import { ResourceManagementClient } from '@azure/arm-resources';
+import type { ApplicationInsightsManagementClient } from '@azure/arm-appinsights';
+import type { WebSiteManagementClient } from '@azure/arm-appservice';
+import type { ResourceGraphClient } from '@azure/arm-resourcegraph';
+import type { ResourceManagementClient } from '@azure/arm-resources';
 import { AzExtClientContext, createAzureClient, createAzureSubscriptionClient } from 'vscode-azureextensionui';
 
 // Lazy-load @azure packages to improve startup performance.

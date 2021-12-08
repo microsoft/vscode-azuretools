@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ResourceManagementModels } from '@azure/arm-resources';
-import { SubscriptionModels } from '@azure/arm-resources-subscriptions';
-import { ExtendedLocation } from '@azure/arm-resources/esm/models';
-import { StorageManagementModels } from '@azure/arm-storage';
-import { Environment } from '@azure/ms-rest-azure-env';
-import { HttpOperationResponse, RequestPrepareOptions, ServiceClient } from '@azure/ms-rest-js';
+import type { SubscriptionModels } from '@azure/arm-resources-subscriptions';
+import type { ExtendedLocation } from '@azure/arm-resources/esm/models';
+import type { ResourceManagementModels } from '@azure/arm-resources';
+import type { StorageManagementModels } from '@azure/arm-storage';
+import type { Environment } from '@azure/ms-rest-azure-env';
+import type { HttpOperationResponse, RequestPrepareOptions, ServiceClient } from '@azure/ms-rest-js';
 import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
@@ -1015,8 +1015,9 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
      * Adds a LocationListStep to the wizard.  This function will ensure there is only one LocationListStep per wizard context.
      * @param wizardContext The context of the wizard
      * @param promptSteps The array of steps to include the LocationListStep to
+     * @param options Options to pass to ui.showQuickPick. Options are spread onto the defaults.
      */
-    public static addStep<T extends ILocationWizardContext>(wizardContext: IActionContext & Partial<ILocationWizardContext>, promptSteps: AzureWizardPromptStep<T>[]): void;
+    public static addStep<T extends ILocationWizardContext>(wizardContext: IActionContext & Partial<ILocationWizardContext>, promptSteps: AzureWizardPromptStep<T>[], options?: IAzureQuickPickOptions): void;
 
     /**
      * This will set the wizard context's location (in which case the user will _not_ be prompted for location)

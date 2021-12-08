@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { WebSiteManagementClient } from '@azure/arm-appservice';
+import type { WebSiteManagementClient } from '@azure/arm-appservice';
 import { ProgressLocation, window } from 'vscode';
 import { IActionContext, IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from './extensionVariables';

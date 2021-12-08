@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ResourceManagementClient } from '@azure/arm-resources';
+import type { ResourceManagementClient } from '@azure/arm-resources';
 import { MessageItem, Progress } from 'vscode';
 import * as types from '../../index';
 import { createResourcesClient } from '../clients';

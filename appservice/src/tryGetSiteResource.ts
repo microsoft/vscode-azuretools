@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { WebSiteManagementClient, WebSiteManagementModels } from '@azure/arm-appservice';
+import type { WebSiteManagementClient, WebSiteManagementModels } from '@azure/arm-appservice';
 import { parseError } from "vscode-azureextensionui";
 
 export async function tryGetAppServicePlan(client: WebSiteManagementClient, resourceGroupName: string, name: string): Promise<WebSiteManagementModels.AppServicePlansGetResponse | undefined> {

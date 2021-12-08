@@ -8,16 +8,44 @@ import * as os from 'os';
 import { IActionContext, IParsedError } from "../index";
 import { parseError } from "./parseError";
 
+// No attempt will be made to mask usernames that are this length or less
+const UnmaskedUsernameMaxLength: number = 3;
+
 let _extValuesToMask: string[] | undefined;
 function getExtValuesToMask(): string[] {
     if (!_extValuesToMask) {
-        try {
-            _extValuesToMask = [os.userInfo().username];
-        } catch {
-            _extValuesToMask = [];
-        }
+        _extValuesToMask = [];
     }
     return _extValuesToMask;
+}
+
+let _usernameMask: RegExp | undefined | null = undefined;
+function getUsernameMask(getUsername: () => string): RegExp | undefined | null {
+    // _usernameMask starts out as undefined, and is set to null if building it fails or it is too short
+    // Specifically checking for undefined here ensures we will only run the code once
+    if (_usernameMask === undefined) {
+        try {
+            const username = getUsername();
+
+            if (username.length <= UnmaskedUsernameMaxLength) {
+                // Too short to mask
+                _usernameMask = null;
+            } else {
+                _usernameMask = new RegExp(`\\b${username}\\b`, 'gi');
+            }
+        } catch {
+            _usernameMask = null;
+        }
+    }
+
+    return _usernameMask;
+}
+
+/**
+ * To be used ONLY by test code.
+ */
+export function resetUsernameMask(): void {
+    _usernameMask = undefined;
 }
 
 export function addExtensionValueToMask(...values: (string | undefined)[]): void {
@@ -61,9 +89,10 @@ export async function callWithMaskHandling<T>(callback: () => Promise<T>, valueT
 /**
  * Best effort to mask all data that could potentially identify a user
  * @param lessAggressive If set to true, the most aggressive masking will be skipped
+ * @param getUsername To be used ONLY by test code. Function used to get the username.
  */
-export function maskUserInfo(unkonwnArg: unknown, actionValuesToMask: string[], lessAggressive: boolean = false): string {
-    let data = String(unkonwnArg);
+export function maskUserInfo(unknownArg: unknown, actionValuesToMask: string[], lessAggressive: boolean = false, getUsername = () => os.userInfo().username): string {
+    let data = String(unknownArg);
 
     // Mask longest values first just in case one is a substring of another
     const valuesToMask = actionValuesToMask.concat(getExtValuesToMask()).sort((a, b) => b.length - a.length);
@@ -79,6 +108,11 @@ export function maskUserInfo(unkonwnArg: unknown, actionValuesToMask: string[], 
     data = data.replace(/[a-z]+:\/\/\S*/gi, getRedactedLabel('url'));
     data = data.replace(/\S+(?<!(?<!\-)\basp)\.(com|org|net)\S*/gi, getRedactedLabel('url'));
     data = data.replace(/\S*(key|token|sig|password|passwd|pwd)[="':\s]+\S*/gi, getRedactedLabel('key'));
+
+    const usernameMask = getUsernameMask(getUsername);
+    if (usernameMask) {
+        data = data.replace(usernameMask, getRedactedLabel('username'));
+    }
 
     return data;
 }

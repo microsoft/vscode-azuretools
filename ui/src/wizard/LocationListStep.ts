@@ -34,13 +34,13 @@ interface ILocationWizardContextInternal extends types.ILocationWizardContext {
 }
 
 export class LocationListStep<T extends ILocationWizardContextInternal> extends AzureWizardPromptStep<T> {
-    protected constructor() {
+    protected constructor(private options?: types.IAzureQuickPickOptions) {
         super();
     }
 
-    public static addStep<T extends ILocationWizardContextInternal>(wizardContext: types.IActionContext & Partial<ILocationWizardContextInternal>, promptSteps: AzureWizardPromptStep<T>[]): void {
+    public static addStep<T extends ILocationWizardContextInternal>(wizardContext: types.IActionContext & Partial<ILocationWizardContextInternal>, promptSteps: AzureWizardPromptStep<T>[], options?: types.IAzureQuickPickOptions): void {
         if (!wizardContext._alreadyHasLocationStep) {
-            promptSteps.push(new this());
+            promptSteps.push(new this(options));
             wizardContext._alreadyHasLocationStep = true;
         }
     }
@@ -173,7 +173,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
     }
 
     public async prompt(wizardContext: T): Promise<void> {
-        const options: types.IAzureQuickPickOptions = { placeHolder: localize('selectLocation', 'Select a location for new resources.'), enableGrouping: true };
+        const options: types.IAzureQuickPickOptions = { placeHolder: localize('selectLocation', 'Select a location for new resources.'), enableGrouping: true, ...this.options };
         wizardContext._location = (await wizardContext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
         wizardContext.telemetry.properties.locationType = wizardContext._location.type;
     }

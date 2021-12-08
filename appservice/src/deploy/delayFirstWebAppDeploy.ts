@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { WebSiteManagementModels } from '@azure/arm-appservice';
+import type { WebSiteManagementModels } from '@azure/arm-appservice';
 import { IActionContext } from 'vscode-azureextensionui';
 import { createKuduClient } from '../createKuduClient';
 import { ParsedSite } from '../SiteClient';

@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SubscriptionModels } from '@azure/arm-resources-subscriptions';
-import { Environment } from '@azure/ms-rest-azure-env';
-import { TokenCredentialsBase } from '@azure/ms-rest-nodeauth';
+import type { SubscriptionModels } from '@azure/arm-resources-subscriptions';
+import type { Environment } from '@azure/ms-rest-azure-env';
+import type { TokenCredentialsBase } from '@azure/ms-rest-nodeauth';
 import { Event } from 'vscode';
 
 export type AzureLoginStatus = 'Initializing' | 'LoggingIn' | 'LoggedIn' | 'LoggedOut';
