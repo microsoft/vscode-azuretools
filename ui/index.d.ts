@@ -994,11 +994,6 @@ export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
 
 export type ISubscriptionActionContext = ISubscriptionContext & IActionContext;
 
-/**
- * Replacement for `SubscriptionModels.Location` because the sdk is pretty far behind in terms of api-version
- * TODO update doc now that we're using '@azure/arm-resources-subscriptions' which seems caught up on api-version
- * Not sure why they renamed the npm package...
- */
 export type AzExtLocation = SubscriptionModels.Location & {
     id: string;
     name: string;
@@ -1084,6 +1079,11 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
     public shouldPrompt(wizardContext: T): boolean;
 
     protected getQuickPicks(wizardContext: T): Promise<IAzureQuickPickItem<AzExtLocation>[]>;
+
+    /**
+     * Implement this to set descriptions on location quick pick items.
+     */
+    public static getQuickPickDescription?: (location: AzExtLocation) => string | undefined;
 }
 
 export interface IAzureNamingRules {

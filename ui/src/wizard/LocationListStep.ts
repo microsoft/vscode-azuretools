@@ -190,10 +190,13 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
             return {
                 label: nonNullProp(l, 'displayName'),
                 group: l.metadata?.regionCategory,
-                data: l
+                data: l,
+                description: LocationListStep.getQuickPickDescription?.(l)
             };
         });
     }
+
+    public static getQuickPickDescription?: (location: types.AzExtLocation) => string | undefined;
 }
 
 function generalizeLocationName(name: string | undefined): string {
