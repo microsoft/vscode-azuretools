@@ -21,7 +21,8 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
     public async execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const newName: string = wizardContext.newResourceGroupName!;
-        const newLocation: string = (await LocationListStep.getLocation(wizardContext, resourcesProvider)).name;
+        const newLocation = await LocationListStep.getLocation(wizardContext, resourcesProvider, false);
+        const newLocationName: string = newLocation.name;
         const resourceClient: ResourceManagementClient = await createResourcesClient(wizardContext);
         try {
             const rgExists: boolean = (await resourceClient.resourceGroups.checkExistence(newName)).body;
@@ -29,10 +30,10 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
                 ext.outputChannel.appendLog(localize('existingResourceGroup', 'Using existing resource group "{0}".', newName));
                 wizardContext.resourceGroup = await resourceClient.resourceGroups.get(newName);
             } else {
-                const creatingMessage: string = localize('creatingResourceGroup', 'Creating resource group "{0}" in location "{1}"...', newName, newLocation);
+                const creatingMessage: string = localize('creatingResourceGroup', 'Creating resource group "{0}" in location "{1}"...', newName, newLocationName);
                 ext.outputChannel.appendLog(creatingMessage);
                 progress.report({ message: creatingMessage });
-                wizardContext.resourceGroup = await resourceClient.resourceGroups.createOrUpdate(newName, { location: newLocation });
+                wizardContext.resourceGroup = await resourceClient.resourceGroups.createOrUpdate(newName, { location: newLocationName });
                 ext.outputChannel.appendLog(localize('createdResourceGroup', 'Successfully created resource group "{0}".', newName));
             }
         } catch (error) {

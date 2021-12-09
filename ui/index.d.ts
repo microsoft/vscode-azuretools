@@ -3,6 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import type { SubscriptionModels } from '@azure/arm-resources-subscriptions';
+import type { ExtendedLocation } from '@azure/arm-resources/esm/models';
 import type { ResourceManagementModels } from '@azure/arm-resources';
 import type { StorageManagementModels } from '@azure/arm-storage';
 import type { Environment } from '@azure/ms-rest-azure-env';
@@ -992,20 +994,10 @@ export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
 
 export type ISubscriptionActionContext = ISubscriptionContext & IActionContext;
 
-/**
- * Replacement for `SubscriptionModels.Location` because the sdk is pretty far behind in terms of api-version
- */
-export type AzExtLocation = {
+export type AzExtLocation = SubscriptionModels.Location & {
     id: string;
     name: string;
     displayName: string;
-    regionalDisplayName?: string;
-    metadata?: {
-        regionCategory?: string;
-        geographyGroup?: string;
-        regionType?: string;
-        pairedRegion?: { name?: string }[]
-    }
 }
 
 /**
@@ -1013,6 +1005,7 @@ export type AzExtLocation = {
  * Instead, use static methods on `LocationListStep` like `getLocation` and `setLocationSubset`
  */
 export interface ILocationWizardContext extends ISubscriptionActionContext {
+    includeExtendedLocations?: boolean;
 }
 
 export declare class LocationListStep<T extends ILocationWizardContext> extends AzureWizardPromptStep<T> {
@@ -1053,11 +1046,19 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
     public static addProviderForFiltering<T extends ILocationWizardContext>(wizardContext: T, provider: string, resourceType: string): void;
 
     /**
+     * Used to convert a location into a home location and an extended location if the location passed in is an extended location.
+     * If the location passed in is not extended, then extendedLocation will be `undefined`.
+     * @param location location or extended location
+     */
+    public static getExtendedLocation(location: AzExtLocation): { location: string, extendedLocation?: ExtendedLocation };
+
+    /**
      * Gets the selected location for this wizard.
      * @param wizardContext The context of the wizard
      * @param provider If specified, this will check against that provider's supported locations and attempt to find a "related" location if the selected location is not supported.
+     * @param supportsExtendedLocations If set to true, the location returned may be an extended location, in which case the `extendedLocation` property should be added when creating a resource
      */
-    public static getLocation<T extends ILocationWizardContext>(wizardContext: T, provider?: string): Promise<AzExtLocation>;
+    public static getLocation<T extends ILocationWizardContext>(wizardContext: T, provider?: string, supportsExtendedLocations?: boolean): Promise<AzExtLocation>;
 
     /**
      * Returns true if a location has been set on the context
@@ -1079,6 +1080,11 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
     public shouldPrompt(wizardContext: T): boolean;
 
     protected getQuickPicks(wizardContext: T): Promise<IAzureQuickPickItem<AzExtLocation>[]>;
+
+    /**
+     * Implement this to set descriptions on location quick pick items.
+     */
+    public static getQuickPickDescription?: (location: AzExtLocation) => string | undefined;
 }
 
 export interface IAzureNamingRules {
