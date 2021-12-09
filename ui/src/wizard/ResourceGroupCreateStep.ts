@@ -21,7 +21,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
     public async execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const newName: string = wizardContext.newResourceGroupName!;
-        const newLocation = (await LocationListStep.getLocation(wizardContext, resourcesProvider, false));
+        const newLocation = await LocationListStep.getLocation(wizardContext, resourcesProvider, false);
         const newLocationName: string = newLocation.name;
         const resourceClient: ResourceManagementClient = await createResourcesClient(wizardContext);
         try {
