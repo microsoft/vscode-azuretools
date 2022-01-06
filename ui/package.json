@@ -42,7 +42,6 @@
         "dayjs": "^1.9.3",
         "escape-string-regexp": "^2.0.0",
         "html-to-text": "^5.1.1",
-        "open": "^8.0.4",
         "semver": "^5.7.1",
         "uuid": "^8.3.2",
         "vscode-extension-telemetry": "^0.4.3",
