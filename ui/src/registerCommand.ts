@@ -10,11 +10,9 @@ import { ext } from './extensionVariables';
 import { addTreeItemValuesToMask } from './tree/addTreeItemValuesToMask';
 import { AzExtTreeItem } from './tree/AzExtTreeItem';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function registerCommand(commandId: string, callback: (context: types.IActionContext, ...args: any[]) => any, debounce?: number): void {
+export function registerCommand(commandId: string, callback: (context: types.IActionContext, ...args: unknown[]) => unknown, debounce?: number, telemetryId?: string): void {
     let lastClickTime: number | undefined; /* Used for debounce */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ext.context.subscriptions.push(commands.registerCommand(commandId, async (...args: any[]): Promise<any> => {
+    ext.context.subscriptions.push(commands.registerCommand(commandId, async (...args: unknown[]): Promise<unknown> => {
         if (debounce) { /* Only check for debounce if registered command specifies */
             if (debounceCommand(debounce, lastClickTime)) {
                 return;
@@ -23,7 +21,7 @@ export function registerCommand(commandId: string, callback: (context: types.IAc
         }
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return await callWithTelemetryAndErrorHandling(
-            commandId,
+            telemetryId || commandId,
             (context: types.IActionContext) => {
                 if (args.length > 0) {
                     const firstArg: unknown = args[0];
