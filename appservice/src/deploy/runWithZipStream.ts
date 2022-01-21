@@ -5,7 +5,7 @@
 
 import * as fse from 'fs-extra';
 import { glob as globGitignore } from 'glob-gitignore';
-import * as globby from 'globby';
+import { globby } from 'globby';
 import * as path from 'path';
 import * as prettybytes from 'pretty-bytes';
 import { Readable } from 'stream';

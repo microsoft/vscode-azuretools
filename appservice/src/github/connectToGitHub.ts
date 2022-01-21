@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { WebSiteManagementModels } from '@azure/arm-appservice';
+import type { SiteSourceControl } from '@azure/arm-appservice';
 import { HttpOperationResponse, ServiceClient, TokenCredentials } from '@azure/ms-rest-js';
 import { isArray } from 'util';
 import * as vscode from 'vscode';
@@ -39,7 +39,7 @@ export async function connectToGitHub(site: ParsedSite, context: IConnectToGitHu
 
     await wizard.prompt();
 
-    const siteSourceControl: WebSiteManagementModels.SiteSourceControl = {
+    const siteSourceControl: SiteSourceControl = {
         repoUrl: nonNullProp(context, 'repoData').html_url,
         branch: nonNullProp(context, 'branchData').name,
         isManualIntegration: false,

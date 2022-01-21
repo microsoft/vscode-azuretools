@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { WebSiteManagementModels } from '@azure/arm-appservice';
+import type { AppServicePlan } from '@azure/arm-appservice';
 import { IActionContext } from 'vscode-azureextensionui';
 import { createKuduClient } from '../createKuduClient';
 import { ParsedSite } from '../SiteClient';
 
-export async function delayFirstWebAppDeploy(context: IActionContext, site: ParsedSite, aspPromise: Promise<WebSiteManagementModels.AppServicePlan | undefined>): Promise<void> {
+export async function delayFirstWebAppDeploy(context: IActionContext, site: ParsedSite, aspPromise: Promise<AppServicePlan | undefined>): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises, no-async-promise-executor
     await new Promise<void>(async (resolve: () => void): Promise<void> => {
         setTimeout(resolve, 10000);
@@ -18,7 +18,7 @@ export async function delayFirstWebAppDeploy(context: IActionContext, site: Pars
                 resolve();
             }
 
-            const asp: WebSiteManagementModels.AppServicePlan | undefined = await aspPromise;
+            const asp: AppServicePlan | undefined = await aspPromise;
             if (!asp || !asp.sku || !asp.sku.tier || asp.sku.tier.toLowerCase() !== 'basic') {
                 resolve();
             }

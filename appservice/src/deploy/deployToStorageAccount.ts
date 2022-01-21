@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { WebSiteManagementModels } from '@azure/arm-appservice';
+import type { StringDictionary } from '@azure/arm-appservice';
 import { Environment } from '@azure/ms-rest-azure-env';
 import { BlobSASPermissions, BlobServiceClient, BlockBlobClient, ContainerClient, generateBlobSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
 import * as dayjs from 'dayjs';
@@ -38,7 +38,7 @@ export async function deployToStorageAccount(context: IDeployContext, fsPath: st
     const blobService: BlobServiceClient = await createBlobServiceClient(context, site);
     const blobUrl: string = await createBlobFromZip(context, fsPath, site, blobService, blobName);
     const client = await site.createClient(context);
-    const appSettings: WebSiteManagementModels.StringDictionary = await client.listApplicationSettings();
+    const appSettings: StringDictionary = await client.listApplicationSettings();
     appSettings.properties = appSettings.properties || {};
     delete appSettings.properties.WEBSITE_RUN_FROM_ZIP; // delete old app setting name if it exists
     appSettings.properties.WEBSITE_RUN_FROM_PACKAGE = blobUrl;
@@ -52,7 +52,7 @@ async function createBlobServiceClient(context: IActionContext, site: ParsedSite
     const client = await site.createClient(context);
     // Use same storage account as AzureWebJobsStorage for deployments
     const azureWebJobsStorageKey: string = 'AzureWebJobsStorage';
-    const settings: WebSiteManagementModels.StringDictionary = await client.listApplicationSettings();
+    const settings: StringDictionary = await client.listApplicationSettings();
     let connectionString: string | undefined = settings.properties && settings.properties[azureWebJobsStorageKey];
     if (connectionString) {
         try {

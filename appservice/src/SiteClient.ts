@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { WebSiteManagementClient, WebSiteManagementModels as Models } from '@azure/arm-appservice';
+import type { AppServicePlan, SiteLogsConfig, Site, HostNameSslState, WebSiteManagementClient, User, SiteConfigResource, FunctionSecrets, FunctionEnvelope, FunctionEnvelopeCollection, SourceControlCollection, SlotConfigNamesResource, StringDictionary, SiteSourceControl, WebJobCollection, HostKeys, WebAppsListFunctionKeysResponse } from '@azure/arm-appservice';
 import type { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
 import { createGenericClient, IActionContext, ISubscriptionContext, parseError } from 'vscode-azureextensionui';
 import { AppKind } from './createAppService/AppKind';
@@ -47,9 +47,9 @@ export class ParsedSite implements AppSettingsClientProvider {
 
     public readonly subscription: ISubscriptionContext;
 
-    public readonly rawSite: Models.Site;
+    public readonly rawSite: Site;
 
-    constructor(site: Models.Site, subscription: ISubscriptionContext) {
+    constructor(site: Site, subscription: ISubscriptionContext) {
         this.rawSite = site;
 
         let matches: RegExpMatchArray | null = nonNullProp(site, 'serverFarmId').match(/\/subscriptions\/(.*)\/resourceGroups\/(.*)\/providers\/Microsoft.Web\/serverfarms\/(.*)/);
@@ -77,7 +77,7 @@ export class ParsedSite implements AppSettingsClientProvider {
 
         this.defaultHostName = nonNullProp(site, 'defaultHostName');
         this.defaultHostUrl = `https://${this.defaultHostName}`;
-        const kuduRepositoryUrl: Models.HostNameSslState | undefined = nonNullProp(site, 'hostNameSslStates').find(h => !!h.hostType && h.hostType.toLowerCase() === 'repository');
+        const kuduRepositoryUrl: HostNameSslState | undefined = nonNullProp(site, 'hostNameSslStates').find(h => !!h.hostType && h.hostType.toLowerCase() === 'repository');
         if (kuduRepositoryUrl) {
             this.kuduHostName = kuduRepositoryUrl.name;
             this.kuduUrl = `https://${this.kuduHostName}`;
@@ -147,7 +147,7 @@ export class SiteClient implements IAppSettingsClient {
             await this._client.webApps.start(this._site.resourceGroup, this._site.siteName);
     }
 
-    public async getSite(): Promise<Models.Site | undefined> {
+    public async getSite(): Promise<Site | undefined> {
         return (this._site.slotName ?
             await tryGetWebAppSlot(this._client, this._site.resourceGroup, this._site.siteName, this._site.slotName) :
             await tryGetWebApp(this._client, this._site.resourceGroup, this._site.siteName));
@@ -157,47 +157,47 @@ export class SiteClient implements IAppSettingsClient {
         return (await this.getSite())?.state;
     }
 
-    public async getWebAppPublishCredential(): Promise<Models.User> {
+    public async getWebAppPublishCredential(): Promise<User> {
         return this._site.slotName ?
             await this._client.webApps.listPublishingCredentialsSlot(this._site.resourceGroup, this._site.siteName, this._site.slotName) :
             await this._client.webApps.listPublishingCredentials(this._site.resourceGroup, this._site.siteName);
     }
 
-    public async getSiteConfig(): Promise<Models.SiteConfigResource> {
+    public async getSiteConfig(): Promise<SiteConfigResource> {
         return this._site.slotName ?
             await this._client.webApps.getConfigurationSlot(this._site.resourceGroup, this._site.siteName, this._site.slotName) :
             await this._client.webApps.getConfiguration(this._site.resourceGroup, this._site.siteName);
     }
 
-    public async updateConfiguration(config: Models.SiteConfigResource): Promise<Models.SiteConfigResource> {
+    public async updateConfiguration(config: SiteConfigResource): Promise<SiteConfigResource> {
         return this._site.slotName ?
             await this._client.webApps.updateConfigurationSlot(this._site.resourceGroup, this._site.siteName, config, this._site.slotName) :
             await this._client.webApps.updateConfiguration(this._site.resourceGroup, this._site.siteName, config);
     }
 
-    public async getLogsConfig(): Promise<Models.SiteLogsConfig> {
+    public async getLogsConfig(): Promise<SiteLogsConfig> {
         return this._site.slotName ?
             await this._client.webApps.getDiagnosticLogsConfigurationSlot(this._site.resourceGroup, this._site.siteName, this._site.slotName) :
             await this._client.webApps.getDiagnosticLogsConfiguration(this._site.resourceGroup, this._site.siteName);
     }
 
-    public async updateLogsConfig(config: Models.SiteLogsConfig): Promise<Models.SiteLogsConfig> {
+    public async updateLogsConfig(config: SiteLogsConfig): Promise<SiteLogsConfig> {
         return this._site.slotName ?
             await this._client.webApps.updateDiagnosticLogsConfigSlot(this._site.resourceGroup, this._site.siteName, config, this._site.slotName) :
             await this._client.webApps.updateDiagnosticLogsConfig(this._site.resourceGroup, this._site.siteName, config);
     }
 
-    public async getAppServicePlan(): Promise<Models.AppServicePlan | undefined> {
+    public async getAppServicePlan(): Promise<AppServicePlan | undefined> {
         return await tryGetAppServicePlan(this._client, this._site.planResourceGroup, this._site.planName);
     }
 
-    public async getSourceControl(): Promise<Models.SiteSourceControl> {
+    public async getSourceControl(): Promise<SiteSourceControl> {
         return this._site.slotName ?
             await this._client.webApps.getSourceControlSlot(this._site.resourceGroup, this._site.siteName, this._site.slotName) :
             await this._client.webApps.getSourceControl(this._site.resourceGroup, this._site.siteName);
     }
 
-    public async updateSourceControl(siteSourceControl: Models.SiteSourceControl): Promise<Models.SiteSourceControl> {
+    public async updateSourceControl(siteSourceControl: SiteSourceControl): Promise<SiteSourceControl> {
         return this._site.slotName ?
             await this._client.webApps.createOrUpdateSourceControlSlot(this._site.resourceGroup, this._site.siteName, siteSourceControl, this._site.slotName) :
             await this._client.webApps.createOrUpdateSourceControl(this._site.resourceGroup, this._site.siteName, siteSourceControl);
@@ -209,23 +209,23 @@ export class SiteClient implements IAppSettingsClient {
             await this._client.webApps.syncRepository(this._site.resourceGroup, this._site.siteName);
     }
 
-    public async listApplicationSettings(): Promise<Models.StringDictionary> {
+    public async listApplicationSettings(): Promise<StringDictionary> {
         return this._site.slotName ?
             await this._client.webApps.listApplicationSettingsSlot(this._site.resourceGroup, this._site.siteName, this._site.slotName) :
             await this._client.webApps.listApplicationSettings(this._site.resourceGroup, this._site.siteName);
     }
 
-    public async updateApplicationSettings(appSettings: Models.StringDictionary): Promise<Models.StringDictionary> {
+    public async updateApplicationSettings(appSettings: StringDictionary): Promise<StringDictionary> {
         return this._site.slotName ?
             await this._client.webApps.updateApplicationSettingsSlot(this._site.resourceGroup, this._site.siteName, appSettings, this._site.slotName) :
             await this._client.webApps.updateApplicationSettings(this._site.resourceGroup, this._site.siteName, appSettings);
     }
 
-    public async listSlotConfigurationNames(): Promise<Models.SlotConfigNamesResource> {
+    public async listSlotConfigurationNames(): Promise<SlotConfigNamesResource> {
         return await this._client.webApps.listSlotConfigurationNames(this._site.resourceGroup, this._site.siteName);
     }
 
-    public async updateSlotConfigurationNames(appSettings: Models.SlotConfigNamesResource): Promise<Models.SlotConfigNamesResource> {
+    public async updateSlotConfigurationNames(appSettings: SlotConfigNamesResource): Promise<SlotConfigNamesResource> {
         return await this._client.webApps.updateSlotConfigurationNames(this._site.resourceGroup, this._site.siteName, appSettings);
     }
 
@@ -235,17 +235,17 @@ export class SiteClient implements IAppSettingsClient {
             await this._client.webApps.deleteMethod(this._site.resourceGroup, this._site.siteName, options);
     }
 
-    public async listInstanceIdentifiers(): Promise<Models.WebAppInstanceCollection> {
+    public async listInstanceIdentifiers(): Promise<WebAppInstanceCollection> {
         return this._site.slotName ?
             await this._client.webApps.listInstanceIdentifiersSlot(this._site.resourceGroup, this._site.siteName, this._site.slotName) :
             await this._client.webApps.listInstanceIdentifiers(this._site.resourceGroup, this._site.siteName);
     }
 
-    public async listSourceControls(): Promise<Models.SourceControlCollection> {
+    public async listSourceControls(): Promise<SourceControlCollection> {
         return await this._client.listSourceControls();
     }
 
-    public async listFunctions(): Promise<Models.FunctionEnvelopeCollection> {
+    public async listFunctions(): Promise<FunctionEnvelopeCollection> {
         if (this._site.slotName) {
             return await listFunctionsSlot(this._genericClient, this._site.id);
         } else {
@@ -253,11 +253,11 @@ export class SiteClient implements IAppSettingsClient {
         }
     }
 
-    public async listFunctionsNext(nextPageLink: string): Promise<Models.FunctionEnvelopeCollection> {
+    public async listFunctionsNext(nextPageLink: string): Promise<FunctionEnvelopeCollection> {
         return await this._client.webApps.listFunctionsNext(nextPageLink);
     }
 
-    public async getFunction(functionName: string): Promise<Models.FunctionEnvelope> {
+    public async getFunction(functionName: string): Promise<FunctionEnvelope> {
         if (this._site.slotName) {
             return await getFunctionSlot(this._genericClient, this._site.id, functionName);
         } else {
@@ -273,7 +273,7 @@ export class SiteClient implements IAppSettingsClient {
         }
     }
 
-    public async listFunctionSecrets(functionName: string): Promise<Models.FunctionSecrets> {
+    public async listFunctionSecrets(functionName: string): Promise<FunctionSecrets> {
         return this._site.slotName ?
             await this._client.webApps.listFunctionSecretsSlot(this._site.resourceGroup, this._site.siteName, functionName, this._site.slotName) :
             await this._client.webApps.listFunctionSecrets(this._site.resourceGroup, this._site.siteName, functionName);
@@ -292,17 +292,17 @@ export class SiteClient implements IAppSettingsClient {
         }
     }
 
-    public async getPublishingUser(): Promise<Models.User> {
+    public async getPublishingUser(): Promise<User> {
         return await this._client.getPublishingUser({});
     }
 
-    public async listWebJobs(): Promise<Models.WebJobCollection> {
+    public async listWebJobs(): Promise<WebJobCollection> {
         return this._site.slotName ?
             await this._client.webApps.listWebJobsSlot(this._site.resourceGroup, this._site.siteName, this._site.slotName) :
             await this._client.webApps.listWebJobs(this._site.resourceGroup, this._site.siteName);
     }
 
-    public async listHostKeys(): Promise<Models.HostKeys> {
+    public async listHostKeys(): Promise<HostKeys> {
         return this._site.slotName ?
             await this._client.webApps.listHostKeysSlot(this._site.resourceGroup, this._site.siteName, this._site.slotName) :
             await this._client.webApps.listHostKeys(this._site.resourceGroup, this._site.siteName);
@@ -332,6 +332,6 @@ export class SiteClient implements IAppSettingsClient {
 /**
  * The type in the sdk doesn't seem to be accurate
  */
-export interface IFunctionKeys extends Models.WebAppsListFunctionKeysResponse {
+export interface IFunctionKeys extends WebAppsListFunctionKeysResponse {
     default?: string;
 }

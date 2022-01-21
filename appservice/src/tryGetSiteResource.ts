@@ -3,18 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { WebSiteManagementClient, WebSiteManagementModels } from '@azure/arm-appservice';
+import type { AppServicePlansGetResponse, DefaultErrorResponse, WebAppsGetResponse, WebAppsGetSlotResponse, WebSiteManagementClient } from '@azure/arm-appservice';
 import { parseError } from "vscode-azureextensionui";
 
-export async function tryGetAppServicePlan(client: WebSiteManagementClient, resourceGroupName: string, name: string): Promise<WebSiteManagementModels.AppServicePlansGetResponse | undefined> {
+export async function tryGetAppServicePlan(client: WebSiteManagementClient, resourceGroupName: string, name: string): Promise<AppServicePlansGetResponse | undefined> {
     return await tryGetSiteResource(async () => await client.appServicePlans.get(resourceGroupName, name));
 }
 
-export async function tryGetWebApp(client: WebSiteManagementClient, resourceGroupName: string, name: string): Promise<WebSiteManagementModels.WebAppsGetResponse | undefined> {
+export async function tryGetWebApp(client: WebSiteManagementClient, resourceGroupName: string, name: string): Promise<WebAppsGetResponse | undefined> {
     return await tryGetSiteResource(async () => await client.webApps.get(resourceGroupName, name));
 }
 
-export async function tryGetWebAppSlot(client: WebSiteManagementClient, resourceGroupName: string, name: string, slot: string): Promise<WebSiteManagementModels.WebAppsGetSlotResponse | undefined> {
+export async function tryGetWebAppSlot(client: WebSiteManagementClient, resourceGroupName: string, name: string, slot: string): Promise<WebAppsGetSlotResponse | undefined> {
     return await tryGetSiteResource(async () => await client.webApps.getSlot(resourceGroupName, name, slot));
 }
 
@@ -27,8 +27,8 @@ export async function tryGetWebAppSlot(client: WebSiteManagementClient, resource
  * 2. { "error": { "code": "ResourceNotFound", "message": "The Resource 'Microsoft.Web/serverFarms/appsvc_linux_centralus' under resource group 'appsvc_linux_centralus' was not found. For more details please go to https://aka.ms/ARMResourceNotFoundFix" }}
  * 3. { "Code": "NotFound", "Message": "Server farm with name appsvc_linux_centralus not found." }
  */
-async function tryGetSiteResource<T>(callback: () => Promise<T | WebSiteManagementModels.DefaultErrorResponse>): Promise<T | undefined> {
-    const result: T | WebSiteManagementModels.DefaultErrorResponse = await callback();
+async function tryGetSiteResource<T>(callback: () => Promise<T | DefaultErrorResponse>): Promise<T | undefined> {
+    const result: T | DefaultErrorResponse = await callback();
     const regExp: RegExp = /NotFound/i;
     if (regExp.test(parseError(result).errorType) || ('error' in result && regExp.test(parseError(result.error).errorType))) {
         return undefined;

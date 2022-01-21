@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AbortController } from '@azure/abort-controller';
-import type { WebSiteManagementModels } from '@azure/arm-appservice';
+import type { User } from '@azure/arm-appservice';
 import { BasicAuthenticationCredentials, HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
 import { setInterval } from 'timers';
 import * as vscode from 'vscode';
@@ -42,7 +42,7 @@ export async function startStreamingLogs(context: IActionContext, site: ParsedSi
         outputChannel.appendLine(localize('connectingToLogStream', 'Connecting to log stream...'));
 
         const client = await site.createClient(context);
-        const creds: WebSiteManagementModels.User = await client.getWebAppPublishCredential();
+        const creds: User = await client.getWebAppPublishCredential();
 
         return await new Promise((onLogStreamCreated: (ls: ILogStream) => void): void => {
             // Intentionally setting up a separate telemetry event and not awaiting the result here since log stream is a long-running action

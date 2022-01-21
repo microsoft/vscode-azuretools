@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { WebSiteManagementModels } from "@azure/arm-appservice";
+import type { StringDictionary } from "@azure/arm-appservice";
 import { IActionContext } from "vscode-azureextensionui";
 import { ext } from "./extensionVariables";
 import { localize } from "./localize";
@@ -14,7 +14,7 @@ export async function verifyNoRunFromPackageSetting(context: IActionContext, sit
     let updateSettings: boolean = false;
     const runFromPackageSettings: string[] = ['WEBSITE_RUN_FROM_PACKAGE', 'WEBSITE_RUN_FROM_ZIP'];
     const client = await site.createClient(context);
-    const applicationSettings: WebSiteManagementModels.StringDictionary = await client.listApplicationSettings();
+    const applicationSettings: StringDictionary = await client.listApplicationSettings();
     for (const settingName of runFromPackageSettings) {
         if (applicationSettings.properties && applicationSettings.properties[settingName]) {
             delete applicationSettings.properties[settingName];

@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { WebSiteManagementModels } from '@azure/arm-appservice';
+import type { SlotConfigNamesResource, StringDictionary } from '@azure/arm-appservice';
 import { IActionContext } from 'vscode-azureextensionui';
 
 export interface AppSettingsClientProvider {
@@ -16,11 +16,11 @@ export interface IAppSettingsClient {
 
     isLinux: boolean;
 
-    listApplicationSettings(): Promise<WebSiteManagementModels.StringDictionary>;
+    listApplicationSettings(): Promise<StringDictionary>;
 
-    updateApplicationSettings(appSettings: WebSiteManagementModels.StringDictionary): Promise<WebSiteManagementModels.StringDictionary>;
+    updateApplicationSettings(appSettings: StringDictionary): Promise<StringDictionary>;
 
-    listSlotConfigurationNames?(): Promise<WebSiteManagementModels.SlotConfigNamesResource>;
+    listSlotConfigurationNames?(): Promise<SlotConfigNamesResource>;
 
-    updateSlotConfigurationNames?(appSettings: WebSiteManagementModels.SlotConfigNamesResource): Promise<WebSiteManagementModels.SlotConfigNamesResource>;
+    updateSlotConfigurationNames?(appSettings: SlotConfigNamesResource): Promise<SlotConfigNamesResource>;
 }

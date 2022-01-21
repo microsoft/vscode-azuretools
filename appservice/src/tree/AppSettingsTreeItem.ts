@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { WebSiteManagementModels } from '@azure/arm-appservice';
+import type { StringDictionary } from '@azure/arm-appservice';
 import { ThemeIcon } from 'vscode';
 import { AzExtParentTreeItem, AzExtTreeItem, IActionContext, ICreateChildImplContext, TreeItemIconPath } from 'vscode-azureextensionui';
 import { AppSettingsClientProvider, IAppSettingsClient } from '../IAppSettingsClient';
 import { AppSettingTreeItem } from './AppSettingTreeItem';
 
-export function validateAppSettingKey(settings: WebSiteManagementModels.StringDictionary, client: IAppSettingsClient, newKey: string, oldKey?: string): string | undefined {
+export function validateAppSettingKey(settings: StringDictionary, client: IAppSettingsClient, newKey: string, oldKey?: string): string | undefined {
     if (client.isLinux && /[^\w\.]+/.test(newKey)) {
         return 'App setting names can only contain letters, numbers (0-9), periods ("."), and underscores ("_")';
     }
@@ -39,7 +39,7 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
     public readonly clientProvider: AppSettingsClientProvider;
     public readonly supportsSlots: boolean;
     public suppressMaskLabel: boolean = true;
-    private _settings: WebSiteManagementModels.StringDictionary | undefined;
+    private _settings: StringDictionary | undefined;
     private readonly _settingsToHide: string[] | undefined;
 
     constructor(parent: AzExtParentTreeItem, clientProvider: AppSettingsClientProvider, supportsSlots: boolean = true, settingsToHide?: string[]) {
@@ -78,7 +78,7 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
     public async editSettingItem(oldKey: string, newKey: string, value: string, context: IActionContext): Promise<void> {
         // make a deep copy so settings are not cached if there's a failure
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const settings: WebSiteManagementModels.StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings(context)));
+        const settings: StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings(context)));
         if (settings.properties) {
             if (oldKey !== newKey) {
                 delete settings.properties[oldKey];
@@ -93,7 +93,7 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
     public async deleteSettingItem(key: string, context: IActionContext): Promise<void> {
         // make a deep copy so settings are not cached if there's a failure
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const settings: WebSiteManagementModels.StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings(context)));
+        const settings: StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings(context)));
 
         if (settings.properties) {
             delete settings.properties[key];
@@ -107,7 +107,7 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
         const client = await this.clientProvider.createClient(context);
         // make a deep copy so settings are not cached if there's a failure
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const settings: WebSiteManagementModels.StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings(context)));
+        const settings: StringDictionary = JSON.parse(JSON.stringify(await this.ensureSettings(context)));
         const newKey: string = await context.ui.showInputBox({
             prompt: 'Enter new app setting name',
             stepName: 'appSettingName',
@@ -131,11 +131,11 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
         return await AppSettingTreeItem.createAppSettingTreeItem(context, this, newKey, newValue);
     }
 
-    public async ensureSettings(context: IActionContext): Promise<WebSiteManagementModels.StringDictionary> {
+    public async ensureSettings(context: IActionContext): Promise<StringDictionary> {
         if (!this._settings) {
             await this.getCachedChildren(context);
         }
 
-        return <WebSiteManagementModels.StringDictionary>this._settings;
+        return <StringDictionary>this._settings;
     }
 }

@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { WebSiteManagementModels } from '@azure/arm-appservice';
+import type { SiteConfigResource } from '@azure/arm-appservice';
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
@@ -19,7 +19,7 @@ export function reportMessage(message: string, progress: vscode.Progress<{}>, to
     progress.report({ message: message });
 }
 
-export async function setRemoteDebug(context: IActionContext, isRemoteDebuggingToBeEnabled: boolean, confirmMessage: string, noopMessage: string | undefined, site: ParsedSite, siteConfig: WebSiteManagementModels.SiteConfigResource, progress: vscode.Progress<{}>, token: vscode.CancellationToken, learnMoreLink?: string): Promise<void> {
+export async function setRemoteDebug(context: IActionContext, isRemoteDebuggingToBeEnabled: boolean, confirmMessage: string, noopMessage: string | undefined, site: ParsedSite, siteConfig: SiteConfigResource, progress: vscode.Progress<{}>, token: vscode.CancellationToken, learnMoreLink?: string): Promise<void> {
     const client = await site.createClient(context);
     const state: string | undefined = await client.getState();
     if (state && state.toLowerCase() === 'stopped') {

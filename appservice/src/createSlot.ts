@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { WebSiteManagementClient, WebSiteManagementModels } from "@azure/arm-appservice";
+import type { NameValuePair, ResourceNameAvailability, Site, StringDictionary, WebSiteManagementClient } from "@azure/arm-appservice";
 import { ProgressLocation, window } from "vscode";
 import { IActionContext, IAzureNamingRules, IAzureQuickPickItem, ICreateChildImplContext } from "vscode-azureextensionui";
 import { getNewFileShareName } from "./createAppService/getNewFileShareName";
@@ -12,7 +12,7 @@ import { localize } from "./localize";
 import { ParsedSite } from './SiteClient';
 import { createWebSiteClient } from "./utils/azureClients";
 
-export async function createSlot(site: ParsedSite, existingSlots: ParsedSite[], context: ICreateChildImplContext): Promise<WebSiteManagementModels.Site> {
+export async function createSlot(site: ParsedSite, existingSlots: ParsedSite[], context: ICreateChildImplContext): Promise<Site> {
     const client: WebSiteManagementClient = await createWebSiteClient([context, site.subscription]);
     const slotName: string = (await context.ui.showInputBox({
         prompt: localize('enterSlotName', 'Enter a unique name for the new deployment slot'),
@@ -20,7 +20,7 @@ export async function createSlot(site: ParsedSite, existingSlots: ParsedSite[], 
         validateInput: async (value: string): Promise<string | undefined> => validateSlotName(value, client, site)
     })).trim();
 
-    const newDeploymentSlot: WebSiteManagementModels.Site = {
+    const newDeploymentSlot: Site = {
         name: slotName,
         kind: site.kind,
         location: site.location,
@@ -32,7 +32,7 @@ export async function createSlot(site: ParsedSite, existingSlots: ParsedSite[], 
 
     const configurationSource = await chooseConfigurationSource(context, site, existingSlots);
     if (configurationSource) {
-        const appSettings: WebSiteManagementModels.NameValuePair[] = await parseAppSettings(context, configurationSource);
+        const appSettings: NameValuePair[] = await parseAppSettings(context, configurationSource);
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         newDeploymentSlot.siteConfig!.appSettings = appSettings;
     }
@@ -64,7 +64,7 @@ async function validateSlotName(value: string, client: WebSiteManagementClient, 
     } else if (slotNamingRules.invalidCharsRegExp.test(value)) {
         return localize('invalidChars', "The name can only contain letters, numbers, or hyphens.");
     } else {
-        const nameAvailability: WebSiteManagementModels.ResourceNameAvailability = await client.checkNameAvailability(`${site.siteName}-${value}`, 'Slot');
+        const nameAvailability: ResourceNameAvailability = await client.checkNameAvailability(`${site.siteName}-${value}`, 'Slot');
         if (!nameAvailability.nameAvailable) {
             return nameAvailability.message;
         } else {
@@ -102,10 +102,10 @@ async function chooseConfigurationSource(context: IActionContext, site: ParsedSi
     }
 }
 
-async function parseAppSettings(context: IActionContext, site: ParsedSite): Promise<WebSiteManagementModels.NameValuePair[]> {
+async function parseAppSettings(context: IActionContext, site: ParsedSite): Promise<NameValuePair[]> {
     const client = await site.createClient(context);
-    const appSettings: WebSiteManagementModels.StringDictionary = await client.listApplicationSettings();
-    const appSettingPairs: WebSiteManagementModels.NameValuePair[] = [];
+    const appSettings: StringDictionary = await client.listApplicationSettings();
+    const appSettingPairs: NameValuePair[] = [];
     if (appSettings.properties) {
         // iterate String Dictionary to parse into NameValuePair[]
         for (const key of Object.keys(appSettings.properties)) {

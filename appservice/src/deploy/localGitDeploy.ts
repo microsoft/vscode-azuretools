@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { WebSiteManagementModels } from '@azure/arm-appservice';
+import type { User } from '@azure/arm-appservice';
 // eslint-disable-next-line import/no-internal-modules
 import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
@@ -30,7 +30,7 @@ type localGitOptions = {
 
 export async function localGitDeploy(site: ParsedSite, options: localGitOptions, context: IActionContext): Promise<void> {
     const client = await site.createClient(context);
-    const publishCredentials: WebSiteManagementModels.User = await client.getWebAppPublishCredential();
+    const publishCredentials: User = await client.getWebAppPublishCredential();
     const publishingPassword: string = nonNullProp(publishCredentials, 'publishingPassword');
     const publishingUserName: string = nonNullProp(publishCredentials, 'publishingUserName');
 

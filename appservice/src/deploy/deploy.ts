@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { WebSiteManagementModels } from '@azure/arm-appservice';
+import type { AppServicePlan, SiteConfigResource } from '@azure/arm-appservice';
 import * as fse from 'fs-extra';
 import * as path from 'path';
 import { ProgressLocation, window } from 'vscode';
@@ -25,9 +25,9 @@ import { syncTriggersPostDeploy } from './syncTriggersPostDeploy';
  */
 export async function deploy(site: ParsedSite, fsPath: string, context: IDeployContext): Promise<void> {
     const client = await site.createClient(context);
-    const config: WebSiteManagementModels.SiteConfigResource = await client.getSiteConfig();
+    const config: SiteConfigResource = await client.getSiteConfig();
     // We use the AppServicePlan in a few places, but we don't want to delay deployment, so start the promise now and save as a const
-    const aspPromise: Promise<WebSiteManagementModels.AppServicePlan | undefined> = client.getAppServicePlan();
+    const aspPromise: Promise<AppServicePlan | undefined> = client.getAppServicePlan();
     try {
         context.telemetry.properties.sourceHash = randomUtils.getPseudononymousStringHash(fsPath);
         context.telemetry.properties.destHash = randomUtils.getPseudononymousStringHash(site.fullName);
@@ -49,7 +49,7 @@ export async function deploy(site: ParsedSite, fsPath: string, context: IDeployC
                 // ignore
             });
         aspPromise.then(
-            (plan: WebSiteManagementModels.AppServicePlan | undefined) => {
+            (plan: AppServicePlan | undefined) => {
                 if (plan) {
                     context.telemetry.properties.planStatus = String(plan.status);
                     context.telemetry.properties.planKind = String(plan.kind);
@@ -117,7 +117,7 @@ export async function deploy(site: ParsedSite, fsPath: string, context: IDeployC
     });
 }
 
-function getLinuxFxVersionForTelemetry(config: WebSiteManagementModels.SiteConfigResource): string {
+function getLinuxFxVersionForTelemetry(config: SiteConfigResource): string {
     const linuxFxVersion = config.linuxFxVersion || '';
     // Docker values point to the user's specific image, which we don't want to track
     return /^docker/i.test(linuxFxVersion) ? 'docker' : linuxFxVersion;

@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { WebSiteManagementModels } from '@azure/arm-appservice';
+import type { FunctionEnvelope, FunctionEnvelopeCollection } from '@azure/arm-appservice';
 import type { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
 
 /**
  * Temporary workaround because this isn't in azure sdk yet
  */
-export async function listFunctionsSlot(genericClient: ServiceClient, id: string): Promise<WebSiteManagementModels.FunctionEnvelopeCollection> {
+export async function listFunctionsSlot(genericClient: ServiceClient, id: string): Promise<FunctionEnvelopeCollection> {
     const response: HttpOperationResponse = await genericClient.sendRequest({ method: 'GET', url: getUrlPath(id) });
     const rawResult: IRawFunctionEnvelopeCollection = <IRawFunctionEnvelopeCollection>response.parsedBody;
     const result: {}[] = rawResult.value.map(convertRawResource);
@@ -21,7 +21,7 @@ export async function listFunctionsSlot(genericClient: ServiceClient, id: string
 /**
  * Temporary workaround because this isn't in azure sdk yet
  */
-export async function getFunctionSlot(genericClient: ServiceClient, id: string, functionName: string): Promise<WebSiteManagementModels.FunctionEnvelope> {
+export async function getFunctionSlot(genericClient: ServiceClient, id: string, functionName: string): Promise<FunctionEnvelope> {
     const response: HttpOperationResponse = await genericClient.sendRequest({ method: 'GET', url: getUrlPath(id, functionName) });
     return convertRawResource(<IRawAzureResource>response.parsedBody);
 }

@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as retry from 'p-retry';
+import { default as retry } from 'p-retry';
 import { IActionContext, parseError } from 'vscode-azureextensionui';
 
 /**

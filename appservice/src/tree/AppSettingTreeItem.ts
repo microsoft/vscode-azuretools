@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { WebSiteManagementModels } from '@azure/arm-appservice';
+import type { SlotConfigNamesResource, StringDictionary } from '@azure/arm-appservice';
 import { ThemeIcon } from 'vscode';
 import { AzExtTreeItem, DialogResponses, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
@@ -68,7 +68,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
     }
 
     public async rename(context: IActionContext): Promise<void> {
-        const settings: WebSiteManagementModels.StringDictionary = await this.parent.ensureSettings(context);
+        const settings: StringDictionary = await this.parent.ensureSettings(context);
 
         const client = await this.parent.clientProvider.createClient(context);
         const oldKey: string = this._key;
@@ -97,7 +97,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
     public async toggleSlotSetting(context: IActionContext): Promise<void> {
         const client = await this.parent.clientProvider.createClient(context);
         if (client.updateSlotConfigurationNames && client.listSlotConfigurationNames) {
-            const slotSettings: WebSiteManagementModels.SlotConfigNamesResource = await client.listSlotConfigurationNames();
+            const slotSettings: SlotConfigNamesResource = await client.listSlotConfigurationNames();
             if (!slotSettings.appSettingNames) {
                 slotSettings.appSettingNames = [];
             }
@@ -119,7 +119,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
     public async refreshImpl(context: IActionContext): Promise<void> {
         const client = await this.parent.clientProvider.createClient(context);
         if (client.listSlotConfigurationNames) {
-            const slotSettings: WebSiteManagementModels.SlotConfigNamesResource = await client.listSlotConfigurationNames();
+            const slotSettings: SlotConfigNamesResource = await client.listSlotConfigurationNames();
             if (slotSettings.appSettingNames && slotSettings.appSettingNames.find((value: string) => { return value === this._key; })) {
                 this.description = localize('slotSetting', 'Slot Setting');
             } else {

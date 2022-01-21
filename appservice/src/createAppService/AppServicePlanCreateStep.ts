@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { WebSiteManagementClient, WebSiteManagementMappers, WebSiteManagementModels } from '@azure/arm-appservice';
+import { AppServicePlan, WebSiteManagementClient, WebSiteManagementMappers } from '@azure/arm-appservice';
 import { MessageItem, Progress } from 'vscode';
 import { AzExtLocation, AzureWizardExecuteStep, LocationListStep, parseError } from 'vscode-azureextensionui';
 import { webProvider } from '../constants';
@@ -31,7 +31,7 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
 
         try {
             const client: WebSiteManagementClient = await createWebSiteClient(context);
-            const existingPlan: WebSiteManagementModels.AppServicePlan | undefined = await tryGetAppServicePlan(client, rgName, newPlanName);
+            const existingPlan: AppServicePlan | undefined = await tryGetAppServicePlan(client, rgName, newPlanName);
 
             if (existingPlan) {
                 context.plan = existingPlan;
@@ -67,9 +67,9 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
     }
 }
 
-async function getNewPlan(context: IAppServiceWizardContext): Promise<WebSiteManagementModels.AppServicePlan> {
+async function getNewPlan(context: IAppServiceWizardContext): Promise<AppServicePlan> {
     const location: AzExtLocation = await LocationListStep.getLocation(context, webProvider);
-    const plan: WebSiteManagementModels.AppServicePlan = {
+    const plan: AppServicePlan = {
         kind: getPlanKind(context),
         sku: nonNullProp(context, 'newPlanSku'),
         location: location.name,
@@ -91,11 +91,11 @@ async function getNewPlan(context: IAppServiceWizardContext): Promise<WebSiteMan
 /**
  * Has a few temporary workarounds so that the sdk allows some newer properties on the plan
  */
-function addCustomLocationProperties(plan: WebSiteManagementModels.AppServicePlan, customLocation: CustomLocation): void {
+function addCustomLocationProperties(plan: AppServicePlan, customLocation: CustomLocation): void {
     plan.perSiteScaling = true;
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    WebSiteManagementMappers.AppServicePlan.type.modelProperties!.kubeEnvironmentProfile = {
+    AppServicePlanMapper.type.modelProperties!.kubeEnvironmentProfile = {
         serializedName: 'properties.kubeEnvironmentProfile',
         type: {
             name: "Composite",

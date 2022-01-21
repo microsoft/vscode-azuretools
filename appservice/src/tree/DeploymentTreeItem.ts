@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { WebSiteManagementModels } from '@azure/arm-appservice';
+import type { SiteSourceControl } from '@azure/arm-appservice';
 import * as os from 'os';
 import { ProgressLocation, ThemeIcon, window } from 'vscode';
 import { AzExtTreeItem, IActionContext, openReadOnlyContent, TreeItemIconPath } from 'vscode-azureextensionui';
@@ -146,7 +146,7 @@ export class DeploymentTreeItem extends AzExtTreeItem {
 
     public async viewCommitInGitHub(context: IActionContext): Promise<void> {
         const client = await this.parent.site.createClient(context);
-        const sourceControl: WebSiteManagementModels.SiteSourceControl = await client.getSourceControl();
+        const sourceControl: SiteSourceControl = await client.getSourceControl();
         if (sourceControl.repoUrl) {
             const gitHubCommitUrl: string = `${sourceControl.repoUrl}/commit/${this._deployResult.id}`;
             await openUrl(gitHubCommitUrl);

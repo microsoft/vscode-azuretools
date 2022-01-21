@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as globby from 'globby';
+import { globby } from 'globby';
 import * as Mocha from 'mocha';
 import * as path from 'path';
 

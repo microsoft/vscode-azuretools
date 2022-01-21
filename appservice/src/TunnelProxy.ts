@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { WebSiteManagementModels } from '@azure/arm-appservice';
+import type { User } from '@azure/arm-appservice';
 import { BasicAuthenticationCredentials, HttpOperationResponse, RestError, ServiceClient } from '@azure/ms-rest-js';
 import * as EventEmitter from 'events';
 import { createServer, Server, Socket } from 'net';
@@ -23,11 +23,11 @@ import { nonNullProp } from './utils/nonNull';
 class TunnelSocket extends EventEmitter {
     private _socket: Socket;
     private _site: ParsedSite;
-    private _publishCredential: WebSiteManagementModels.User;
+    private _publishCredential: User;
     private _wsConnection: websocket.connection | undefined;
     private _wsClient: websocket.client;
 
-    constructor(socket: Socket, site: ParsedSite, publishCredential: WebSiteManagementModels.User) {
+    constructor(socket: Socket, site: ParsedSite, publishCredential: User) {
         super();
         this._socket = socket;
         this._site = site;
@@ -148,12 +148,12 @@ class RetryableTunnelStatusError extends Error { }
 export class TunnelProxy {
     private _port: number;
     private _site: ParsedSite;
-    private _publishCredential: WebSiteManagementModels.User;
+    private _publishCredential: User;
     private _server: Server;
     private _openSockets: TunnelSocket[];
     private _isSsh: boolean;
 
-    constructor(port: number, site: ParsedSite, publishCredential: WebSiteManagementModels.User, isSsh: boolean = false) {
+    constructor(port: number, site: ParsedSite, publishCredential: User, isSsh: boolean = false) {
         this._port = port;
         this._site = site;
         this._publishCredential = publishCredential;
