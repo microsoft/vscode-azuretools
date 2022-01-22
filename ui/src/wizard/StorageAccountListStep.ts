@@ -26,7 +26,8 @@ export const storageAccountNamingRules: types.IAzureNamingRules = {
 export enum StorageAccountKind {
     Storage = 'Storage',
     StorageV2 = 'StorageV2',
-    BlobStorage = 'BlobStorage'
+    BlobStorage = 'BlobStorage',
+    BlockBlobStorage = 'BlockBlobStorage'
 }
 
 export enum StorageAccountPerformance {
