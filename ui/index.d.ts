@@ -1227,6 +1227,7 @@ export declare enum StorageAccountKind {
     Storage = "Storage",
     StorageV2 = "StorageV2",
     BlobStorage = "BlobStorage",
+    BlockBlobStorage = "BlockBlobStorage",
 }
 
 export declare enum StorageAccountPerformance {
