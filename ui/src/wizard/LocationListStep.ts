@@ -106,9 +106,10 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
                 const homeLocName = nonNullProp(nonNullProp(location, 'metadata'), 'homeLocation');
                 const [allLocationsTask,] = this.getInternalVariables(wizardContext);
                 const allLocations = await allLocationsTask;
-                location = nonNullValue(allLocations.find(l => LocationListStep.locationMatchesName(l, homeLocName)), 'homeLocation');
+                const homeLocation = nonNullValue(allLocations.find(l => LocationListStep.locationMatchesName(l, homeLocName)), 'homeLocation');
                 wizardContext.telemetry.properties.relatedLocationSource = 'home';
-                warnAboutRelatedLocation(location);
+                ext.outputChannel.appendLog(localize('homeLocationWarning', 'WARNING: Resource does not support extended location "{0}". Using "{1}" instead.', location.displayName, homeLocation.displayName));
+                location = homeLocation;
             }
         }
 
