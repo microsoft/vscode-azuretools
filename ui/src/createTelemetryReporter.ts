@@ -5,7 +5,7 @@
 
 import * as process from 'process';
 import * as vscode from 'vscode';
-import TelemetryReporter from 'vscode-extension-telemetry';
+import TelemetryReporter from '@vscode/extension-telemetry';
 import { DebugReporter } from './DebugReporter';
 import { getPackageInfo } from './getPackageInfo';
 
