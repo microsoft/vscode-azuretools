@@ -6,7 +6,7 @@
 import type { StorageAccount, StorageManagementClient } from '@azure/arm-storage';
 import * as types from '../../index';
 import { createStorageClient } from '../clients';
-import { storageProvider } from '../constants';
+import { storageProvider, storageProviderType } from '../constants';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
@@ -70,8 +70,7 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
 
     public static async isNameAvailable<T extends types.IStorageAccountWizardContext>(wizardContext: T, name: string): Promise<boolean> {
         const storageClient: StorageManagementClient = await createStorageClient(wizardContext);
-        const type = "Microsoft.Storage/storageAccounts";
-        return !!(await storageClient.storageAccounts.checkNameAvailability({name, type})).nameAvailable;
+        return !!(await storageClient.storageAccounts.checkNameAvailability({name, type: storageProviderType})).nameAvailable;
     }
 
     public async prompt(wizardContext: T): Promise<void> {

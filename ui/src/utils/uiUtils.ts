@@ -24,9 +24,9 @@ export namespace uiUtils {
         return all;
     }
 
-    export async function listAllIterator<T>(list: (options?: coreClient.OperationOptions) => PagedAsyncIterableIterator<T>): Promise<T[]> {
+    export async function listAllIterator<T>(list: (options?: coreClient.OperationOptions) => PagedAsyncIterableIterator<T>, options?: coreClient.OperationOptions): Promise<T[]> {
         const resources: T[] = [];
-        for await (const r of list()) {
+        for await (const r of list(options)) {
             resources.push(r);
         }
 
