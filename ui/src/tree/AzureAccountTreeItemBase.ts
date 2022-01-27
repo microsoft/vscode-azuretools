@@ -133,6 +133,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
                     const subscriptionId: string = nonNullProp(filter.subscription, 'subscriptionId');
                     return await this.createSubscriptionTreeItem({
                         credentials: filter.session.credentials2,
+                        credentials2: filter.session.credentials2,
                         subscriptionDisplayName: nonNullProp(filter.subscription, 'displayName'),
                         subscriptionId,
                         subscriptionPath: nonNullProp(filter.subscription, 'id'),

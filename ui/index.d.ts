@@ -180,7 +180,8 @@ export type AzExtServiceClientCredentials = AzExtServiceClientCredentialsT1 | Az
  * Information specific to the Subscription
  */
 export interface ISubscriptionContext {
-    credentials: AzExtServiceClientCredentials;
+    credentials: AzExtServiceClientCredentialsT1;
+    credentials2: AzExtServiceClientCredentialsT2;
     subscriptionDisplayName: string;
     subscriptionId: string;
     subscriptionPath: string;

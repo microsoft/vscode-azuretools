@@ -25,6 +25,7 @@ export function parseClientContext(clientContext: InternalAzExtClientContext): t
         // Make sure to copy over just the subscription info and not any other extraneous properties
         return Object.assign(clientContext[0], {
             credentials: subscription.credentials,
+            credentials2: subscription.credentials2,
             subscriptionDisplayName: subscription.subscriptionDisplayName,
             subscriptionId: subscription.subscriptionId,
             subscriptionPath: subscription.subscriptionPath,
