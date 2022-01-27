@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
+import type { SkuName, StorageManagementClient } from '@azure/arm-storage';
 import { Progress } from 'vscode';
 import * as types from '../../index';
 import { createStorageClient } from '../clients';
@@ -27,12 +27,12 @@ export class StorageAccountCreateStep<T extends types.IStorageAccountWizardConte
         const newLocation: string = (await LocationListStep.getLocation(wizardContext, storageProvider)).name;
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const newName: string = wizardContext.newStorageAccountName!;
-        const newSkuName: StorageManagementModels.SkuName = <StorageManagementModels.SkuName>`${this._defaults.performance}_${this._defaults.replication}`;
+        const newSkuName: SkuName = <SkuName>`${this._defaults.performance}_${this._defaults.replication}`;
         const creatingStorageAccount: string = localize('CreatingStorageAccount', 'Creating storage account "{0}" in location "{1}" with sku "{2}"...', newName, newLocation, newSkuName);
         ext.outputChannel.appendLog(creatingStorageAccount);
         progress.report({ message: creatingStorageAccount });
         const storageClient: StorageManagementClient = await createStorageClient(wizardContext);
-        wizardContext.storageAccount = await storageClient.storageAccounts.create(
+        wizardContext.storageAccount = await storageClient.storageAccounts.beginCreateAndWait(
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             wizardContext.resourceGroup!.name!,
             newName,

@@ -4,14 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { SubscriptionModels } from '@azure/arm-resources-subscriptions';
-import type { ExtendedLocation } from '@azure/arm-resources/esm/models';
-import type { ResourceManagementModels } from '@azure/arm-resources';
-import type { StorageManagementModels } from '@azure/arm-storage';
+import type { ExtendedLocation, ResourceGroup } from '@azure/arm-resources';
 import type { Environment } from '@azure/ms-rest-azure-env';
-import type { HttpOperationResponse, RequestPrepareOptions, ServiceClient } from '@azure/ms-rest-js';
+import type { HttpOperationResponse, RequestPrepareOptions, ServiceClient, TokenCredentials } from '@azure/ms-rest-js';
 import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
+import { StorageAccount } from '@azure/arm-storage';
 
 export type OpenInPortalOptions = {
     /**
@@ -144,7 +143,7 @@ export abstract class SubscriptionTreeItemBase extends AzExtParentTreeItem {
  * There's several cases where we don't control which "credentials" interface gets used, causing build errors even though the functionality itself seems to be compatible
  * For example: https://github.com/Azure/azure-sdk-for-js/issues/10045
  */
-export interface AzExtServiceClientCredentials {
+export interface AzExtServiceClientCredentialsT1 {
     /**
      * Signs a request with the Authentication header.
      *
@@ -153,6 +152,29 @@ export interface AzExtServiceClientCredentials {
      */
     signRequest(webResource: any): Promise<any>;
 }
+
+/**
+ * New T2 Azure SDKs use coreAuth.TokenCredential that have `getToken` rather than
+ * `signRequest`.
+ */
+export interface AzExtServiceClientCredentialsT2 {
+    /**
+     * Gets the token provided by this credential.
+     *
+     * This method is called automatically by Azure SDK client libraries. You may call this method
+     * directly, but you must also handle token caching and token refreshing.
+     *
+     * @param scopes - The list of scopes for which the token will have access.
+     * @param options - The options used to configure any requests this
+     *                TokenCredential implementation might make.
+     */
+     getToken(scopes: string | string[], options?: any): Promise<any | null>;
+}
+
+/**
+ * Loose type to allow for the use of T1 and T2 Azure ARM SDKs
+ */
+export type AzExtServiceClientCredentials = AzExtServiceClientCredentialsT1 | AzExtServiceClientCredentialsT2
 
 /**
  * Information specific to the Subscription
@@ -1162,13 +1184,13 @@ export interface IResourceGroupWizardContext extends ILocationWizardContext, IRe
      * If an existing resource group is picked, this value will be defined after `ResourceGroupListStep.prompt` occurs
      * If a new resource group is picked, this value will be defined after the `execute` phase of the 'create' subwizard
      */
-    resourceGroup?: ResourceManagementModels.ResourceGroup;
+    resourceGroup?: ResourceGroup;
 
     /**
      * The task used to get existing resource groups.
      * By specifying this in the context, we can ensure that Azure is only queried once for the entire wizard
      */
-    resourceGroupsTask?: Promise<ResourceManagementModels.ResourceGroup[]>;
+    resourceGroupsTask?: Promise<ResourceGroup[]>;
 
     newResourceGroupName?: string;
 
@@ -1185,7 +1207,7 @@ export declare class ResourceGroupListStep<T extends IResourceGroupWizardContext
      * Used to get existing resource groups. By passing in the context, we can ensure that Azure is only queried once for the entire wizard
      * @param wizardContext The context of the wizard.
      */
-    public static getResourceGroups<T extends IResourceGroupWizardContext>(wizardContext: T): Promise<ResourceManagementModels.ResourceGroup[]>;
+    public static getResourceGroups<T extends IResourceGroupWizardContext>(wizardContext: T): Promise<ResourceGroup[]>;
 
     /**
      * Checks existing resource groups in the wizard's subscription to see if the name is available.
@@ -1218,7 +1240,7 @@ export interface IStorageAccountWizardContext extends IResourceGroupWizardContex
      * If an existing storage account is picked, this value will be defined after `StorageAccountListStep.prompt` occurs
      * If a new storage account is picked, this value will be defined after the `execute` phase of the 'create' subwizard
      */
-    storageAccount?: StorageManagementModels.StorageAccount;
+    storageAccount?: StorageAccount;
 
     newStorageAccountName?: string;
 }

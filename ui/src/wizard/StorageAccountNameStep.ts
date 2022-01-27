@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
+import type { CheckNameAvailabilityResult, StorageManagementClient,  } from '@azure/arm-storage';
 import * as types from '../../index';
 import { createStorageClient } from '../clients';
 import { localize } from '../localize';
@@ -38,13 +38,14 @@ export class StorageAccountNameStep<T extends types.IStorageAccountWizardContext
 
     private async validateStorageAccountName(client: StorageManagementClient, name: string): Promise<string | undefined> {
         name = name.trim();
-
+        
         if (!name || name.length < storageAccountNamingRules.minLength || name.length > storageAccountNamingRules.maxLength) {
             return localize('invalidLength', 'The name must be between {0} and {1} characters.', storageAccountNamingRules.minLength, storageAccountNamingRules.maxLength);
         } else if (name.match(storageAccountNamingRules.invalidCharsRegExp) !== null) {
             return localize('invalidChars', "The name can only contain lowercase letters and numbers.");
         } else {
-            const nameAvailabilityResult: StorageManagementModels.CheckNameAvailabilityResult = await client.storageAccounts.checkNameAvailability(name);
+            const type = "Microsoft.Storage/storageAccounts";
+            const nameAvailabilityResult: CheckNameAvailabilityResult = await client.storageAccounts.checkNameAvailability({name, type});
             if (!nameAvailabilityResult.nameAvailable) {
                 return nameAvailabilityResult.message;
             } else {
