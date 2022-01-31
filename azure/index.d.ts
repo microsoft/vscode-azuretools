@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-*  Copyright (c) Microsoft Corporation. All rights reserved.
-*  Licensed under the MIT License. See License.txt in the project root for license information.
-*--------------------------------------------------------------------------------------------*/
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -535,7 +535,7 @@ export declare function callWithMaskHandling<T>(callback: () => Promise<T>, valu
  * This will apply to telemetry and "Report Issue", but _not_ VS Code UI (i.e. the error notification or output channel)
  * IMPORTANT: For the most sensitive information, `callWithMaskHandling` should be used instead
  */
-export function addExtensionValueToMask(...values: (string | undefined)[]): void;
+export function addExtensionValueToMask(...values: string[]): void;
 
 /**
  * A generic context object that describes the behavior of an action and allows for specifying custom telemetry properties and measurements
@@ -1653,16 +1653,3 @@ export declare namespace AzExtFsExtra {
     export function writeFile(resource: Uri | string, contents: string): Promise<void>;
     export function pathExists(resource: Uri | string): Promise<boolean>;
 }
-
-export function maskValue(data: string, valueToMask: string | undefined): string;
-
-export interface IReportableIssue {
-    callbackId: string;
-    error: IParsedError;
-    issueProperties: { [key: string]: string | undefined };
-    time: number;
-}
-
-export function getReportAnIssueLink(issue: IReportableIssue | undefined): Promise<string>;
-export const maxUrlLength: number;
-export function openUrl(url: string): Promise<void>;

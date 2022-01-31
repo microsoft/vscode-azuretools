@@ -13,7 +13,7 @@ export * from './DialogResponses';
 export * from './errors';
 export * from './extensionUserAgent';
 export { registerUIExtensionVariables } from './extensionVariables';
-export { addExtensionValueToMask, callWithMaskHandling } from './masking';
+export { addExtensionValueToMask, callWithMaskHandling, maskValue } from './masking';
 export * from './openInPortal';
 export * from './openReadOnlyContent';
 export * from './parseError';
@@ -39,5 +39,7 @@ export * from './wizard/StorageAccountCreateStep';
 export * from './wizard/StorageAccountListStep';
 export * from './wizard/StorageAccountNameStep';
 export * from './wizard/VerifyProvidersStep';
-
+export * from './utils/nonNull';
+export { getReportAnIssueLink, maxUrlLength } from './reportAnIssue';
+export { openUrl } from './utils/openUrl';
 // NOTE: The auto-fix action "source.organizeImports" does weird things with this file, but there doesn't seem to be a way to disable it on a per-file basis so we'll just let it happen
