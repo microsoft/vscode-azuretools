@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as path from 'path';
-import * as types from '../../index';
+import type { TreeItemIconPath } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 
-export function getIconPath(iconName: string): types.TreeItemIconPath {
+export function getIconPath(iconName: string): TreeItemIconPath {
     return path.join(getResourcesPath(), `${iconName}.svg`);
 }
 

@@ -8,7 +8,7 @@ import { ExtendedLocation } from '@azure/arm-resources/esm/models';
 import * as types from '../../index';
 import { createResourcesClient, createSubscriptionsClient } from '../clients';
 import { resourcesProvider } from '../constants';
-import { AzureWizardPromptStep } from 'vscode-azureextensionui';
+import { AzureWizardPromptStep, IActionContext, IAzureQuickPickItem, IAzureQuickPickOptions } from 'vscode-azureextensionui';
 import { localize } from '../localize';
 import { nonNullProp, nonNullValue } from '../utils/nonNull';
 import { ext } from '../extensionVariables';
@@ -34,11 +34,11 @@ interface ILocationWizardContextInternal extends types.ILocationWizardContext {
 }
 
 export class LocationListStep<T extends ILocationWizardContextInternal> extends AzureWizardPromptStep<T> {
-    protected constructor(private options?: types.IAzureQuickPickOptions) {
+    protected constructor(private options?: IAzureQuickPickOptions) {
         super();
     }
 
-    public static addStep<T extends ILocationWizardContextInternal>(wizardContext: types.IActionContext & Partial<ILocationWizardContextInternal>, promptSteps: AzureWizardPromptStep<T>[], options?: types.IAzureQuickPickOptions): void {
+    public static addStep<T extends ILocationWizardContextInternal>(wizardContext: IActionContext & Partial<ILocationWizardContextInternal>, promptSteps: AzureWizardPromptStep<T>[], options?: IAzureQuickPickOptions): void {
         if (!wizardContext._alreadyHasLocationStep) {
             promptSteps.push(new this(options));
             wizardContext._alreadyHasLocationStep = true;
@@ -174,7 +174,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
     }
 
     public async prompt(wizardContext: T): Promise<void> {
-        const options: types.IAzureQuickPickOptions = { placeHolder: localize('selectLocation', 'Select a location for new resources.'), enableGrouping: true, ...this.options };
+        const options: IAzureQuickPickOptions = { placeHolder: localize('selectLocation', 'Select a location for new resources.'), enableGrouping: true, ...this.options };
         wizardContext._location = (await wizardContext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
         wizardContext.telemetry.properties.locationType = wizardContext._location.type;
     }
@@ -183,7 +183,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
         return !wizardContext._location;
     }
 
-    protected async getQuickPicks(wizardContext: T): Promise<types.IAzureQuickPickItem<types.AzExtLocation>[]> {
+    protected async getQuickPicks(wizardContext: T): Promise<IAzureQuickPickItem<types.AzExtLocation>[]> {
         let locations: types.AzExtLocation[] = await LocationListStep.getLocations(wizardContext);
         locations = locations.sort(compareLocation);
 

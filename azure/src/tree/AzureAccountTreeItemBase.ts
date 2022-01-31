@@ -7,7 +7,7 @@ import * as semver from 'semver';
 import { commands, Disposable, Extension, extensions, MessageItem, ProgressLocation, ThemeIcon, window } from 'vscode';
 import * as types from '../../index';
 import { AzureAccount, AzureLoginStatus, AzureResourceFilter } from '../azure-account.api';
-import { UserCancelledError, registerEvent, AzureWizardPromptStep, AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, addExtensionValueToMask } from 'vscode-azureextensionui';
+import { UserCancelledError, registerEvent, AzureWizardPromptStep, AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, addExtensionValueToMask, IActionContext, ISubscriptionActionContext, TreeItemIconPath, ISubscriptionContext } from 'vscode-azureextensionui';
 import { localize } from '../localize';
 import { nonNullProp, nonNullValue } from '../utils/nonNull';
 import { getIconPath } from './IconPath';
@@ -45,10 +45,10 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
     }
 
     //#region Methods implemented by base class
-    public abstract createSubscriptionTreeItem(root: types.ISubscriptionContext): SubscriptionTreeItemBase | Promise<SubscriptionTreeItemBase>;
+    public abstract createSubscriptionTreeItem(root: ISubscriptionContext): SubscriptionTreeItemBase | Promise<SubscriptionTreeItemBase>;
     //#endregion
 
-    public get iconPath(): types.TreeItemIconPath {
+    public get iconPath(): TreeItemIconPath {
         return getIconPath('azure');
     }
 
@@ -60,7 +60,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
         return false;
     }
 
-    public async loadMoreChildrenImpl(_clearCache: boolean, context: types.IActionContext): Promise<AzExtTreeItem[]> {
+    public async loadMoreChildrenImpl(_clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {
         let azureAccount: AzureAccountResult = await this._azureAccountTask;
         if (typeof azureAccount === 'string') {
             // Refresh the AzureAccount, to handle Azure account extension installation after the previous refresh
@@ -73,7 +73,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
             const label: string = azureAccount === 'notInstalled' ?
                 localize('installAzureAccount', 'Install Azure Account Extension...') :
                 localize('updateAzureAccount', 'Update Azure Account Extension to at least version "{0}"...', minAccountExtensionVersion);
-            const iconPath: types.TreeItemIconPath = new ThemeIcon('warning');
+            const iconPath: TreeItemIconPath = new ThemeIcon('warning');
             const result: AzExtTreeItem = new GenericTreeItem(this, { label, commandId: extensionOpenCommand, contextValue: 'azureAccount' + azureAccount, includeInTreeItemPicker: true, iconPath });
             result.commandArgs = [azureAccountExtensionId];
             return [result];
@@ -146,7 +146,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
         return typeof azureAccount !== 'string' && azureAccount.status === 'LoggedIn';
     }
 
-    public async getSubscriptionPromptStep(context: Partial<types.ISubscriptionActionContext> & types.IActionContext): Promise<types.AzureWizardPromptStep<types.ISubscriptionActionContext> | undefined> {
+    public async getSubscriptionPromptStep(context: Partial<ISubscriptionActionContext> & IActionContext): Promise<AzureWizardPromptStep<ISubscriptionActionContext> | undefined> {
         const subscriptionNodes: SubscriptionTreeItemBase[] = await this.ensureSubscriptionTreeItems(context);
         if (subscriptionNodes.length === 1) {
             Object.assign(context, subscriptionNodes[0].subscription);
@@ -154,12 +154,12 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
         } else {
             // eslint-disable-next-line @typescript-eslint/no-this-alias
             const me: AzureAccountTreeItemBase = this;
-            class SubscriptionPromptStep extends AzureWizardPromptStep<types.ISubscriptionActionContext> {
+            class SubscriptionPromptStep extends AzureWizardPromptStep<ISubscriptionActionContext> {
                 public async prompt(): Promise<void> {
                     const ti: SubscriptionTreeItemBase = <SubscriptionTreeItemBase>await me.treeDataProvider.showTreeItemPicker(SubscriptionTreeItemBase.contextValue, context, me);
                     Object.assign(context, ti.subscription);
                 }
-                public shouldPrompt(): boolean { return !(<types.ISubscriptionActionContext>context).subscriptionId; }
+                public shouldPrompt(): boolean { return !(<ISubscriptionActionContext>context).subscriptionId; }
             }
             return new SubscriptionPromptStep();
         }
@@ -211,7 +211,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
                 context.telemetry.suppressIfSuccessful = true;
                 await this.refresh(context);
             });
-            registerEvent('azureAccount.onStatusChanged', azureAccount.onStatusChanged, async (context: types.IActionContext, status: AzureLoginStatus) => {
+            registerEvent('azureAccount.onStatusChanged', azureAccount.onStatusChanged, async (context: IActionContext, status: AzureLoginStatus) => {
                 context.errorHandling.suppressDisplay = true;
                 context.telemetry.suppressIfSuccessful = true;
                 // Ignore status change to 'LoggedIn' and wait for the 'onFiltersChanged' event to fire instead
@@ -227,7 +227,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
         }
     }
 
-    private async ensureSubscriptionTreeItems(context: types.IActionContext): Promise<SubscriptionTreeItemBase[]> {
+    private async ensureSubscriptionTreeItems(context: IActionContext): Promise<SubscriptionTreeItemBase[]> {
         const azureAccount: AzureAccountResult = await this._azureAccountTask;
         if (typeof azureAccount === 'string') {
             let message: string;

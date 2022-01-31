@@ -9,9 +9,9 @@ import * as types from '../../index';
 import { createResourcesClient } from '../clients';
 import { localize } from '../localize';
 import { delay } from '../utils/delay';
-import { parseError, AzureWizardExecuteStep } from 'vscode-azureextensionui';
+import { parseError, AzureWizardExecuteStep, ISubscriptionActionContext } from 'vscode-azureextensionui';
 
-export class VerifyProvidersStep<T extends types.ISubscriptionActionContext> extends AzureWizardExecuteStep<T> implements types.VerifyProvidersStep<T> {
+export class VerifyProvidersStep<T extends ISubscriptionActionContext> extends AzureWizardExecuteStep<T> implements types.VerifyProvidersStep<T> {
     public priority: number = 90;
     private _providers: string[];
 

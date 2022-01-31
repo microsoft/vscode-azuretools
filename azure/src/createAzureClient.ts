@@ -9,14 +9,14 @@ import { Agent as HttpsAgent } from 'https';
 import { v4 as uuid } from 'uuid';
 import * as vscode from "vscode";
 import * as types from '../index';
-import { appendExtensionUserAgent, parseError, maskValue, AzExtTreeItem } from "vscode-azureextensionui";
+import { appendExtensionUserAgent, parseError, maskValue, AzExtTreeItem, IActionContext, ISubscriptionContext, ISubscriptionActionContext, AzExtServiceClientCredentials } from "vscode-azureextensionui";
 import type { GenericServiceClient } from './GenericServiceClient';
 import { localize } from './localize';
 import { parseJson, removeBom } from './utils/parseJson';
 
-export type InternalAzExtClientContext = types.ISubscriptionActionContext | [types.IActionContext, types.ISubscriptionContext | AzExtTreeItem];
+export type InternalAzExtClientContext = ISubscriptionActionContext | [IActionContext, ISubscriptionContext | AzExtTreeItem];
 
-export function parseClientContext(clientContext: InternalAzExtClientContext): types.ISubscriptionActionContext {
+export function parseClientContext(clientContext: InternalAzExtClientContext): ISubscriptionActionContext {
     if (Array.isArray(clientContext)) {
         const subscription = clientContext[1] instanceof AzExtTreeItem ? clientContext[1].subscription : clientContext[1];
         // Make sure to copy over just the subscription info and not any other extraneous properties
@@ -55,7 +55,7 @@ export function createAzureSubscriptionClient<T>(clientContext: InternalAzExtCli
     });
 }
 
-export async function sendRequestWithTimeout(context: types.IActionContext, options: types.AzExtRequestPrepareOptions, timeout: number, clientInfo: types.AzExtGenericClientInfo): Promise<HttpOperationResponse> {
+export async function sendRequestWithTimeout(context: IActionContext, options: types.AzExtRequestPrepareOptions, timeout: number, clientInfo: types.AzExtGenericClientInfo): Promise<HttpOperationResponse> {
     let request: WebResource = new WebResource();
     request = request.prepare(options);
     request.timeout = timeout;
@@ -75,8 +75,8 @@ interface IGenericClientOptions {
     noRetryPolicy?: boolean;
 }
 
-export async function createGenericClient(context: types.IActionContext, clientInfo: types.AzExtGenericClientInfo, options?: IGenericClientOptions): Promise<ServiceClient> {
-    let credentials: types.AzExtServiceClientCredentials | undefined;
+export async function createGenericClient(context: IActionContext, clientInfo: types.AzExtGenericClientInfo, options?: IGenericClientOptions): Promise<ServiceClient> {
+    let credentials: AzExtServiceClientCredentials | undefined;
     let baseUri: string | undefined;
     if (clientInfo && 'credentials' in clientInfo) {
         credentials = clientInfo.credentials;
@@ -95,7 +95,7 @@ export async function createGenericClient(context: types.IActionContext, clientI
     });
 }
 
-function addAzExtFactories(context: types.IActionContext, credentials: types.AzExtServiceClientCredentials | undefined, defaultFactories: RequestPolicyFactory[]): RequestPolicyFactory[] {
+function addAzExtFactories(context: IActionContext, credentials: AzExtServiceClientCredentials | undefined, defaultFactories: RequestPolicyFactory[]): RequestPolicyFactory[] {
     // NOTE: Factories at the end of the array are executed first, and we want these to happen before the deserialization factory
     defaultFactories.push(
         {
@@ -128,8 +128,8 @@ const contentTypeName: string = 'Content-Type';
  * Automatically add id to correlate our telemetry with the platform team's telemetry
  */
 class CorrelationIdPolicy extends BaseRequestPolicy {
-    private _context: types.IActionContext;
-    constructor(nextPolicy: RequestPolicy, requestPolicyOptions: RequestPolicyOptions, context: types.IActionContext) {
+    private _context: IActionContext;
+    constructor(nextPolicy: RequestPolicy, requestPolicyOptions: RequestPolicyOptions, context: IActionContext) {
         super(nextPolicy, requestPolicyOptions);
         this._context = context;
     }
@@ -209,8 +209,8 @@ class StatusCodePolicy extends BaseRequestPolicy {
  * this policy will make sure those credentials get masked in the error message
  */
 class MaskCredentialsPolicy extends BaseRequestPolicy {
-    private _credentials: types.AzExtServiceClientCredentials | undefined;
-    constructor(nextPolicy: RequestPolicy, requestPolicyOptions: RequestPolicyOptions, credentials: types.AzExtServiceClientCredentials | undefined,) {
+    private _credentials: AzExtServiceClientCredentials | undefined;
+    constructor(nextPolicy: RequestPolicy, requestPolicyOptions: RequestPolicyOptions, credentials: AzExtServiceClientCredentials | undefined,) {
         super(nextPolicy, requestPolicyOptions);
         this._credentials = credentials;
     }

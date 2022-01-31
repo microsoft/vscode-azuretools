@@ -32,13 +32,6 @@
         "test": "node ./out/test/runTest.js"
     },
     "dependencies": {
-        "@azure/arm-resources": "^4.0.0",
-        "@azure/arm-resources-profile-2020-09-01-hybrid": "^1.0.0",
-        "@azure/arm-resources-subscriptions": "^1.0.0",
-        "@azure/arm-storage": "^15.0.0",
-        "@azure/arm-storage-profile-2020-09-01-hybrid": "^1.0.0",
-        "@azure/ms-rest-azure-env": "^2.0.0",
-        "@azure/ms-rest-js": "^2.2.1",
         "@vscode/extension-telemetry": "^0.4.7",
         "dayjs": "^1.9.3",
         "escape-string-regexp": "^2.0.0",

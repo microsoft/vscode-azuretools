@@ -6,8 +6,6 @@
 import { QuickInputButton, ThemeIcon } from "vscode";
 import { localize } from "./localize";
 
-export const resourcesProvider: string = 'Microsoft.Resources';
-export const storageProvider: string = 'Microsoft.Storage';
 export const learnMore: string = localize('learnMore', "Learn more");
 
 export namespace AzExtQuickInputButtons {

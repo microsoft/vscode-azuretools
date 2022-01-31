@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
+import { AzureNameStep } from 'vscode-azureextensionui';
 import * as types from '../../index';
 import { createStorageClient } from '../clients';
 import { localize } from '../localize';
-import { AzureNameStep } from './AzureNameStep';
 import { ResourceGroupListStep, resourceGroupNamingRules } from './ResourceGroupListStep';
 import { storageAccountNamingRules } from './StorageAccountListStep';
 

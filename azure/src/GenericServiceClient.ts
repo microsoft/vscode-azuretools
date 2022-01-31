@@ -5,10 +5,11 @@
 
 import { HttpOperationResponse, RequestPrepareOptions, ServiceClient, WebResourceLike } from '@azure/ms-rest-js';
 import * as vscode from 'vscode';
+import { AzExtServiceClientCredentials } from 'vscode-azureextensionui';
 import * as types from '../index';
 
 export class GenericServiceClient extends ServiceClient {
-    constructor(credentials: types.AzExtServiceClientCredentials | undefined, options: types.IMinimumServiceClientOptions) {
+    constructor(credentials: AzExtServiceClientCredentials | undefined, options: types.IMinimumServiceClientOptions) {
         super(credentials, options);
         this.baseUri = options.baseUri?.endsWith('/') ? options.baseUri.slice(0, -1) : options.baseUri;
     }

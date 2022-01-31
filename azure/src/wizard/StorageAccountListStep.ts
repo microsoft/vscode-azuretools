@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
-import { AzureWizardPromptStep, openUrl } from 'vscode-azureextensionui';
+import { AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, openUrl } from 'vscode-azureextensionui';
 import * as types from '../../index';
 import { createStorageClient } from '../clients';
 import { storageProvider } from '../constants';
@@ -15,7 +15,7 @@ import { ResourceGroupListStep } from './ResourceGroupListStep';
 import { StorageAccountCreateStep } from './StorageAccountCreateStep';
 import { StorageAccountNameStep } from './StorageAccountNameStep';
 
-export const storageAccountNamingRules: types.IAzureNamingRules = {
+export const storageAccountNamingRules: IAzureNamingRules = {
     minLength: 3,
     maxLength: 24,
     invalidCharsRegExp: /[^a-z0-9]/,
@@ -74,8 +74,8 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
     public async prompt(wizardContext: T): Promise<void> {
         const client: StorageManagementClient = await createStorageClient(wizardContext);
 
-        const quickPickOptions: types.IAzureQuickPickOptions = { placeHolder: 'Select a storage account.', id: `StorageAccountListStep/${wizardContext.subscriptionId}` };
-        const picksTask: Promise<types.IAzureQuickPickItem<StorageManagementModels.StorageAccount | undefined>[]> = this.getQuickPicks(wizardContext, client.storageAccounts.list());
+        const quickPickOptions: IAzureQuickPickOptions = { placeHolder: 'Select a storage account.', id: `StorageAccountListStep/${wizardContext.subscriptionId}` };
+        const picksTask: Promise<IAzureQuickPickItem<StorageManagementModels.StorageAccount | undefined>[]> = this.getQuickPicks(wizardContext, client.storageAccounts.list());
 
         const result: StorageManagementModels.StorageAccount | undefined = (await wizardContext.ui.showQuickPick(picksTask, quickPickOptions)).data;
         wizardContext.storageAccount = result;
@@ -85,7 +85,7 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
         }
     }
 
-    public async getSubWizard(wizardContext: T): Promise<types.IWizardOptions<T> | undefined> {
+    public async getSubWizard(wizardContext: T): Promise<IWizardOptions<T> | undefined> {
         if (!wizardContext.storageAccount) {
             const promptSteps: AzureWizardPromptStep<T>[] = [new StorageAccountNameStep(), new ResourceGroupListStep()];
             LocationListStep.addStep(wizardContext, promptSteps);
@@ -103,8 +103,8 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
         return !wizardContext.storageAccount && !wizardContext.newStorageAccountName;
     }
 
-    private async getQuickPicks(wizardContext: T, storageAccountsTask: Promise<StorageManagementModels.StorageAccount[]>): Promise<types.IAzureQuickPickItem<StorageManagementModels.StorageAccount | undefined>[]> {
-        const picks: types.IAzureQuickPickItem<StorageManagementModels.StorageAccount | undefined>[] = [{
+    private async getQuickPicks(wizardContext: T, storageAccountsTask: Promise<StorageManagementModels.StorageAccount[]>): Promise<IAzureQuickPickItem<StorageManagementModels.StorageAccount | undefined>[]> {
+        const picks: IAzureQuickPickItem<StorageManagementModels.StorageAccount | undefined>[] = [{
             label: localize('NewStorageAccount', '$(plus) Create new storage account'),
             description: '',
             data: undefined

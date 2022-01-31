@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as types from '../../index';
-import { AzExtParentTreeItem } from 'vscode-azureextensionui';
+import { AzExtParentTreeItem, ISubscriptionContext } from 'vscode-azureextensionui';
 import { getIconPath } from './IconPath';
 
 export abstract class SubscriptionTreeItemBase extends AzExtParentTreeItem implements types.SubscriptionTreeItemBase {
@@ -12,8 +12,10 @@ export abstract class SubscriptionTreeItemBase extends AzExtParentTreeItem imple
     public readonly contextValue: string = SubscriptionTreeItemBase.contextValue;
     public readonly label: string;
 
-    public constructor(parent: AzExtParentTreeItem | undefined, subscription: types.ISubscriptionContext) {
+    public constructor(parent: AzExtParentTreeItem | undefined, subscription: ISubscriptionContext) {
         super(parent);
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         this._subscription = subscription;
         this.label = subscription.subscriptionDisplayName;
         this.id = subscription.subscriptionPath;

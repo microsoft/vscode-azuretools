@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as types from '../index';
-import { AzExtTreeItem, openUrl } from 'vscode-azureextensionui';
+import { AzExtTreeItem, ISubscriptionContext, openUrl } from 'vscode-azureextensionui';
 
-export async function openInPortal(root: types.ISubscriptionContext | AzExtTreeItem, id: string, options?: types.OpenInPortalOptions): Promise<void> {
+export async function openInPortal(root: ISubscriptionContext | AzExtTreeItem, id: string, options?: types.OpenInPortalOptions): Promise<void> {
     root = root instanceof AzExtTreeItem ? root.subscription : root;
 
     const queryPrefix: string = (options && options.queryPrefix) ? `?${options.queryPrefix}` : '';
