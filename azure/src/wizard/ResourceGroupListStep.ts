@@ -7,12 +7,12 @@ import type { ResourceManagementClient, ResourceManagementModels } from '@azure/
 import * as types from '../../index';
 import { createResourcesClient } from '../clients';
 import { localize } from '../localize';
-import { nonNullProp } from '../utils/nonNull';
 import { uiUtils } from '../utils/uiUtils';
 import { AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions } from 'vscode-azureextensionui';
 import { LocationListStep } from './LocationListStep';
 import { ResourceGroupCreateStep } from './ResourceGroupCreateStep';
 import { ResourceGroupNameStep } from './ResourceGroupNameStep';
+import { nonNullProp } from '@microsoft/vscode-azext-utils';
 
 export const resourceGroupNamingRules: IAzureNamingRules = {
     minLength: 1,

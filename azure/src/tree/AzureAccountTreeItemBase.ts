@@ -9,9 +9,9 @@ import * as types from '../../index';
 import { AzureAccount, AzureLoginStatus, AzureResourceFilter } from '../azure-account.api';
 import { UserCancelledError, registerEvent, AzureWizardPromptStep, AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, addExtensionValueToMask, IActionContext, ISubscriptionActionContext, TreeItemIconPath, ISubscriptionContext } from 'vscode-azureextensionui';
 import { localize } from '../localize';
-import { nonNullProp, nonNullValue } from '../utils/nonNull';
 import { getIconPath } from './IconPath';
 import { SubscriptionTreeItemBase } from './SubscriptionTreeItemBase';
+import { nonNullProp, nonNullValue } from '@microsoft/vscode-azext-utils';
 
 const signInLabel: string = localize('signInLabel', 'Sign in to Azure...');
 const createAccountLabel: string = localize('createAccountLabel', 'Create a Free Azure Account...');

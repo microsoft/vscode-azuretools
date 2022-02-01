@@ -1263,3 +1263,19 @@ export declare namespace AzExtFsExtra {
 export function maskValue(data: string, valueToMask: string | undefined): string;
 
 export function openUrl(url: string): Promise<void>;
+
+/**
+ * Retrieves a property by name from an object and checks that it's not null and not undefined.  It is strongly typed
+ * for the property and will give a compile error if the given name is not a property of the source.
+ */
+export function nonNullProp<TSource, TKey extends keyof TSource>(source: TSource, name: TKey): NonNullable<TSource[TKey]>;
+
+/**
+ * Validates that a given value is not null and not undefined.
+ */
+export function nonNullValue<T>(value: T | undefined, propertyNameOrMessage?: string): T;
+
+/**
+ * Validates that a given string is not null, undefined, nor empty
+ */
+export function nonNullOrEmptyValue(value: string | undefined, propertyNameOrMessage?: string): string;

@@ -10,8 +10,8 @@ import { createResourcesClient, createSubscriptionsClient } from '../clients';
 import { resourcesProvider } from '../constants';
 import { AzureWizardPromptStep, IActionContext, IAzureQuickPickItem, IAzureQuickPickOptions } from 'vscode-azureextensionui';
 import { localize } from '../localize';
-import { nonNullProp, nonNullValue } from '../utils/nonNull';
 import { ext } from '../extensionVariables';
+import { nonNullProp, nonNullValue } from '@microsoft/vscode-azext-utils';
 
 interface ILocationWizardContextInternal extends types.ILocationWizardContext {
     /**

@@ -4,12 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
+import { nonNullProp } from '@microsoft/vscode-azext-utils';
 import { AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, openUrl } from 'vscode-azureextensionui';
 import * as types from '../../index';
 import { createStorageClient } from '../clients';
 import { storageProvider } from '../constants';
 import { localize } from '../localize';
-import { nonNullProp } from '../utils/nonNull';
 import { LocationListStep } from './LocationListStep';
 import { ResourceGroupListStep } from './ResourceGroupListStep';
 import { StorageAccountCreateStep } from './StorageAccountCreateStep';
