@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { SubscriptionModels } from '@azure/arm-resources-subscriptions';
-import { AccessToken, TokenCredential } from '@azure/core-auth';
+import { TokenCredential } from '@azure/core-auth';
 import { Environment } from '@azure/ms-rest-azure-env';
-import { DeviceTokenCredentials } from '@azure/ms-rest-nodeauth';
+import { TokenCredentialsBase } from '@azure/ms-rest-nodeauth';
 import { ReadStream } from 'fs';
 import { CancellationToken, Event, Progress, Terminal } from 'vscode';
 
@@ -36,7 +36,7 @@ export interface AzureSession {
 	/**
 	 * The credentials object for azure-sdk-for-js modules https://github.com/azure/azure-sdk-for-js
 	 */
-	readonly credentials2: DeviceTokenCredentials & TokenCredential;
+	readonly credentials2: TokenCredentialsBase & TokenCredential;
 }
 
 export interface AzureSubscription {
