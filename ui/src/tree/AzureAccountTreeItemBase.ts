@@ -6,7 +6,7 @@
 import * as semver from 'semver';
 import { commands, Disposable, Extension, extensions, MessageItem, ProgressLocation, ThemeIcon, window } from 'vscode';
 import * as types from '../../index';
-import { AzureAccount, AzureLoginStatus, AzureResourceFilter } from '../azure-account.api';
+import { AzureAccountExtensionApi, AzureLoginStatus, AzureResourceFilter } from '../azure-account.api';
 import { UserCancelledError } from '../errors';
 import { localize } from '../localize';
 import { addExtensionValueToMask } from '../masking';
@@ -28,7 +28,7 @@ const selectSubscriptionsCommandId: string = 'azure-account.selectSubscriptions'
 const azureAccountExtensionId: string = 'ms-vscode.azure-account';
 const extensionOpenCommand: string = 'extension.open';
 
-type AzureAccountResult = AzureAccount | 'notInstalled' | 'needsUpdate';
+type AzureAccountResult = AzureAccountExtensionApi | 'notInstalled' | 'needsUpdate';
 const minAccountExtensionVersion: string = '0.9.0';
 
 export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem implements types.AzureAccountTreeItemBase {
@@ -42,9 +42,9 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
 
     private _azureAccountTask: Promise<AzureAccountResult>;
     private _subscriptionTreeItems: SubscriptionTreeItemBase[] | undefined;
-    private _testAccount: AzureAccount | undefined;
+    private _testAccount: AzureAccountExtensionApi | undefined;
 
-    constructor(parent?: AzExtParentTreeItem, testAccount?: AzureAccount) {
+    constructor(parent?: AzExtParentTreeItem, testAccount?: AzureAccountExtensionApi) {
         super(parent);
         this._testAccount = testAccount;
         this._azureAccountTask = this.loadAzureAccount(testAccount);
@@ -133,7 +133,6 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
                     const subscriptionId: string = nonNullProp(filter.subscription, 'subscriptionId');
                     return await this.createSubscriptionTreeItem({
                         credentials: filter.session.credentials2,
-                        credentials2: filter.session.credentials2,
                         subscriptionDisplayName: nonNullProp(filter.subscription, 'displayName'),
                         subscriptionId,
                         subscriptionPath: nonNullProp(filter.subscription, 'id'),
@@ -191,9 +190,9 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
         }
     }
 
-    private async loadAzureAccount(azureAccount: AzureAccount | undefined): Promise<AzureAccountResult> {
+    private async loadAzureAccount(azureAccount: AzureAccountExtensionApi | undefined): Promise<AzureAccountResult> {
         if (!azureAccount) {
-            const extension: Extension<AzureAccount> | undefined = extensions.getExtension<AzureAccount>(azureAccountExtensionId);
+            const extension: Extension<AzureAccountExtensionApi> | undefined = extensions.getExtension<AzureAccountExtensionApi>(azureAccountExtensionId);
             if (extension) {
                 try {
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access

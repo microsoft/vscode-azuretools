@@ -25,7 +25,6 @@ export function parseClientContext(clientContext: InternalAzExtClientContext): t
         // Make sure to copy over just the subscription info and not any other extraneous properties
         return Object.assign(clientContext[0], {
             credentials: subscription.credentials,
-            credentials2: subscription.credentials2,
             subscriptionDisplayName: subscription.subscriptionDisplayName,
             subscriptionId: subscription.subscriptionId,
             subscriptionPath: subscription.subscriptionPath,
@@ -80,7 +79,7 @@ interface IGenericClientOptions {
 }
 
 export async function createGenericClient(context: types.IActionContext, clientInfo: types.AzExtGenericClientInfo, options?: IGenericClientOptions): Promise<ServiceClient> {
-    let credentials: types.AzExtServiceClientCredentials | undefined;
+    let credentials: types.AzExtGenericCredentials | undefined;
     let baseUri: string | undefined;
     if (clientInfo && 'credentials' in clientInfo) {
         credentials = clientInfo.credentials;
@@ -99,7 +98,7 @@ export async function createGenericClient(context: types.IActionContext, clientI
     });
 }
 
-function addAzExtFactories(context: types.IActionContext, credentials: types.AzExtServiceClientCredentials | undefined, defaultFactories: RequestPolicyFactory[]): RequestPolicyFactory[] {
+function addAzExtFactories(context: types.IActionContext, credentials: types.AzExtGenericCredentials | undefined, defaultFactories: RequestPolicyFactory[]): RequestPolicyFactory[] {
     // NOTE: Factories at the end of the array are executed first, and we want these to happen before the deserialization factory
     defaultFactories.push(
         {
@@ -213,8 +212,8 @@ class StatusCodePolicy extends BaseRequestPolicy {
  * this policy will make sure those credentials get masked in the error message
  */
 class MaskCredentialsPolicy extends BaseRequestPolicy {
-    private _credentials: types.AzExtServiceClientCredentials | undefined;
-    constructor(nextPolicy: RequestPolicy, requestPolicyOptions: RequestPolicyOptions, credentials: types.AzExtServiceClientCredentials | undefined,) {
+    private _credentials: types.AzExtGenericCredentials | undefined;
+    constructor(nextPolicy: RequestPolicy, requestPolicyOptions: RequestPolicyOptions, credentials: types.AzExtGenericCredentials | undefined,) {
         super(nextPolicy, requestPolicyOptions);
         this._credentials = credentials;
     }

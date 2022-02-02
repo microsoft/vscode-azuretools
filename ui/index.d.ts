@@ -6,7 +6,7 @@
 import type { SubscriptionModels } from '@azure/arm-resources-subscriptions';
 import type { ExtendedLocation, ResourceGroup } from '@azure/arm-resources';
 import type { Environment } from '@azure/ms-rest-azure-env';
-import type { HttpOperationResponse, RequestPrepareOptions, ServiceClient, TokenCredentials } from '@azure/ms-rest-js';
+import type { BasicAuthenticationCredentials, HttpOperationResponse, RequestPrepareOptions, ServiceClient, TokenCredentials } from '@azure/ms-rest-js';
 import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
@@ -143,7 +143,7 @@ export abstract class SubscriptionTreeItemBase extends AzExtParentTreeItem {
  * There's several cases where we don't control which "credentials" interface gets used, causing build errors even though the functionality itself seems to be compatible
  * For example: https://github.com/Azure/azure-sdk-for-js/issues/10045
  */
-export interface AzExtServiceClientCredentialsT1 {
+export interface AzExtServiceClientCredentials {
     /**
      * Signs a request with the Authentication header.
      *
@@ -151,13 +151,7 @@ export interface AzExtServiceClientCredentialsT1 {
      * @returns {Promise<WebResourceLike>} The signed request object;
      */
     signRequest(webResource: any): Promise<any>;
-}
-
-/**
- * New T2 Azure SDKs use coreAuth.TokenCredential that have `getToken` rather than
- * `signRequest`.
- */
-export interface AzExtServiceClientCredentialsT2 {
+    
     /**
      * Gets the token provided by this credential.
      *
@@ -168,20 +162,14 @@ export interface AzExtServiceClientCredentialsT2 {
      * @param options - The options used to configure any requests this
      *                TokenCredential implementation might make.
      */
-     getToken(scopes: string | string[], options?: any): Promise<any | null>;
+     getToken(scopes?: string | string[], options?: any): Promise<any | null>;
 }
-
-/**
- * Loose type to allow for the use of T1 and T2 Azure ARM SDKs
- */
-export type AzExtServiceClientCredentials = AzExtServiceClientCredentialsT1 | AzExtServiceClientCredentialsT2
 
 /**
  * Information specific to the Subscription
  */
 export interface ISubscriptionContext {
-    credentials: AzExtServiceClientCredentialsT1;
-    credentials2: AzExtServiceClientCredentialsT2;
+    credentials: AzExtServiceClientCredentials;
     subscriptionDisplayName: string;
     subscriptionId: string;
     subscriptionPath: string;
@@ -1432,7 +1420,8 @@ export interface IMinimumServiceClientOptions {
     requestPolicyFactories?: any[] | ((defaultRequestPolicyFactories: any[]) => (void | any[]));
 }
 
-export type AzExtGenericClientInfo = AzExtServiceClientCredentials | { credentials: AzExtServiceClientCredentials; environment: Environment; } | undefined;
+export type AzExtGenericCredentials = BasicAuthenticationCredentials | TokenCredentials | AzExtServiceClientCredentials;
+export type AzExtGenericClientInfo = AzExtGenericCredentials | { credentials: AzExtGenericCredentials; environment: Environment; } | undefined;
 
 /**
  * Creates a generic http rest client (i.e. for non-Azure calls or for Azure calls that the available sdks don't support), ensuring best practices are followed. For example:

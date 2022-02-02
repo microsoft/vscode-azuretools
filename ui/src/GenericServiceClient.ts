@@ -8,7 +8,7 @@ import * as vscode from 'vscode';
 import * as types from '../index';
 
 export class GenericServiceClient extends ServiceClient {
-    constructor(credentials: types.AzExtServiceClientCredentials | undefined, options: types.IMinimumServiceClientOptions) {
+    constructor(credentials: types.AzExtGenericCredentials | undefined, options: types.IMinimumServiceClientOptions) {
         super(credentials, options);
         this.baseUri = options.baseUri?.endsWith('/') ? options.baseUri.slice(0, -1) : options.baseUri;
     }
