@@ -5,11 +5,11 @@
 
 import type { SubscriptionModels } from '@azure/arm-resources-subscriptions';
 import type { ExtendedLocation, ResourceGroup } from '@azure/arm-resources';
-import * as coreClient from '@azure/core-client';
-import { PagedAsyncIterableIterator } from "@azure/core-paging";
+import type * as coreClient from '@azure/core-client';
+import type { PagedAsyncIterableIterator } from "@azure/core-paging";
 import type { Environment } from '@azure/ms-rest-azure-env';
 import type { BasicAuthenticationCredentials, HttpOperationResponse, RequestPrepareOptions, ServiceClient, TokenCredentials } from '@azure/ms-rest-js';
-import { StorageAccount } from '@azure/arm-storage';
+import type { StorageAccount } from '@azure/arm-storage';
 import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
