@@ -5,12 +5,14 @@
 
 import type { SubscriptionModels } from '@azure/arm-resources-subscriptions';
 import type { ExtendedLocation, ResourceGroup } from '@azure/arm-resources';
+import * as coreClient from '@azure/core-client';
+import { PagedAsyncIterableIterator } from "@azure/core-paging";
 import type { Environment } from '@azure/ms-rest-azure-env';
 import type { BasicAuthenticationCredentials, HttpOperationResponse, RequestPrepareOptions, ServiceClient, TokenCredentials } from '@azure/ms-rest-js';
+import { StorageAccount } from '@azure/arm-storage';
 import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
-import { StorageAccount } from '@azure/arm-storage';
 
 export type OpenInPortalOptions = {
     /**
@@ -1661,4 +1663,8 @@ export declare namespace AzExtFsExtra {
     export function readFile(resource: Uri | string): Promise<string>;
     export function writeFile(resource: Uri | string, contents: string): Promise<void>;
     export function pathExists(resource: Uri | string): Promise<boolean>;
+}
+
+export declare namespace uiUtils {
+    export function listAllIterator<T>(list: (options?: coreClient.OperationOptions) => PagedAsyncIterableIterator<T>, options?: coreClient.OperationOptions)
 }
