@@ -144,7 +144,7 @@ export abstract class SubscriptionTreeItemBase extends AzExtParentTreeItem {
  * Loose type to use for T1 and T2 versions of "@azure/ms-rest-js".  The Azure Account extension returns
  * credentials that will satisfy both T1 and T2 requirements
  */
-export type AzExtServiceClientCredentials = AzExtServiceClientCredentialsT1 | AzExtServiceClientCredentialsT2;
+export type AzExtServiceClientCredentials = AzExtServiceClientCredentialsT1 & AzExtServiceClientCredentialsT2;
 
 /**
  * Loose interface to allow for the use of different versions of "@azure/ms-rest-js"
