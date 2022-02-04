@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ResourceManagementClient, ResourceManagementModels } from '@azure/arm-resources';
+import type { Provider, ResourceManagementClient } from '@azure/arm-resources';
 import { Progress } from 'vscode';
 import * as types from '../../index';
 import { createResourcesClient } from '../clients';
@@ -27,7 +27,7 @@ export class VerifyProvidersStep<T extends types.ISubscriptionActionContext> ext
         const client: ResourceManagementClient = await createResourcesClient(context);
         await Promise.all(this._providers.map(async providerName => {
             try {
-                let provider: ResourceManagementModels.Provider = await client.providers.get(providerName);
+                let provider: Provider = await client.providers.get(providerName);
                 if (provider.registrationState?.toLowerCase() !== 'registered') {
                     await client.providers.register(providerName);
 

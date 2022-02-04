@@ -3,13 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
+import type { StorageAccount, StorageManagementClient } from '@azure/arm-storage';
 import * as types from '../../index';
 import { createStorageClient } from '../clients';
-import { storageProvider } from '../constants';
+import { storageProvider, storageProviderType } from '../constants';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
+import { uiUtils } from '../utils/uiUtils';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 import { LocationListStep } from './LocationListStep';
 import { ResourceGroupListStep } from './ResourceGroupListStep';
@@ -69,16 +70,16 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
 
     public static async isNameAvailable<T extends types.IStorageAccountWizardContext>(wizardContext: T, name: string): Promise<boolean> {
         const storageClient: StorageManagementClient = await createStorageClient(wizardContext);
-        return !!(await storageClient.storageAccounts.checkNameAvailability(name)).nameAvailable;
+        return !!(await storageClient.storageAccounts.checkNameAvailability({name, type: storageProviderType})).nameAvailable;
     }
 
     public async prompt(wizardContext: T): Promise<void> {
         const client: StorageManagementClient = await createStorageClient(wizardContext);
 
         const quickPickOptions: types.IAzureQuickPickOptions = { placeHolder: 'Select a storage account.', id: `StorageAccountListStep/${wizardContext.subscriptionId}` };
-        const picksTask: Promise<types.IAzureQuickPickItem<StorageManagementModels.StorageAccount | undefined>[]> = this.getQuickPicks(wizardContext, client.storageAccounts.list());
+        const picksTask: Promise<types.IAzureQuickPickItem<StorageAccount | undefined>[]> = this.getQuickPicks(wizardContext, uiUtils.listAllIterator(client.storageAccounts.list));
 
-        const result: StorageManagementModels.StorageAccount | undefined = (await wizardContext.ui.showQuickPick(picksTask, quickPickOptions)).data;
+        const result: StorageAccount | undefined = (await wizardContext.ui.showQuickPick(picksTask, quickPickOptions)).data;
         wizardContext.storageAccount = result;
         if (wizardContext.storageAccount) {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -104,8 +105,8 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
         return !wizardContext.storageAccount && !wizardContext.newStorageAccountName;
     }
 
-    private async getQuickPicks(wizardContext: T, storageAccountsTask: Promise<StorageManagementModels.StorageAccount[]>): Promise<types.IAzureQuickPickItem<StorageManagementModels.StorageAccount | undefined>[]> {
-        const picks: types.IAzureQuickPickItem<StorageManagementModels.StorageAccount | undefined>[] = [{
+    private async getQuickPicks(wizardContext: T, storageAccountsTask: Promise<StorageAccount[]>): Promise<types.IAzureQuickPickItem<StorageAccount | undefined>[]> {
+        const picks: types.IAzureQuickPickItem<StorageAccount | undefined>[] = [{
             label: localize('NewStorageAccount', '$(plus) Create new storage account'),
             description: '',
             data: undefined
@@ -122,7 +123,7 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
 
         let hasFilteredAccountsBySku: boolean = false;
         let hasFilteredAccountsByLocation: boolean = false;
-        const storageAccounts: StorageManagementModels.StorageAccount[] = await storageAccountsTask;
+        const storageAccounts: StorageAccount[] = await storageAccountsTask;
         for (const sa of storageAccounts) {
             if (!sa.kind || sa.kind.match(kindRegExp) || !sa.sku || sa.sku.name.match(performanceRegExp) || sa.sku.name.match(replicationRegExp)) {
                 hasFilteredAccountsBySku = true;
