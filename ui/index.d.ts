@@ -8,7 +8,7 @@ import type { ExtendedLocation, ResourceGroup } from '@azure/arm-resources';
 import type * as coreClient from '@azure/core-client';
 import type { PagedAsyncIterableIterator } from "@azure/core-paging";
 import type { Environment } from '@azure/ms-rest-azure-env';
-import type { BasicAuthenticationCredentials, HttpOperationResponse, RequestPrepareOptions, ServiceClient, TokenCredentials } from '@azure/ms-rest-js';
+import type { HttpOperationResponse, RequestPrepareOptions, ServiceClient } from '@azure/ms-rest-js';
 import type { StorageAccount } from '@azure/arm-storage';
 import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
@@ -141,11 +141,18 @@ export abstract class SubscriptionTreeItemBase extends AzExtParentTreeItem {
 }
 
 /**
+ * Loose type to use for T1 and T2 versions of "@azure/ms-rest-js".  The Azure Account extension returns
+ * credentials that will satisfy both T1 and T2 requirements
+ */
+export type AzExtServiceClientCredentials = AzExtServiceClientCredentialsT1 | AzExtServiceClientCredentialsT2;
+
+/**
  * Loose interface to allow for the use of different versions of "@azure/ms-rest-js"
  * There's several cases where we don't control which "credentials" interface gets used, causing build errors even though the functionality itself seems to be compatible
  * For example: https://github.com/Azure/azure-sdk-for-js/issues/10045
+ * Used specifically for T1 Azure SDKs
  */
-export interface AzExtServiceClientCredentials {
+export interface AzExtServiceClientCredentialsT1 {
     /**
      * Signs a request with the Authentication header.
      *
@@ -153,7 +160,14 @@ export interface AzExtServiceClientCredentials {
      * @returns {Promise<WebResourceLike>} The signed request object;
      */
     signRequest(webResource: any): Promise<any>;
-    
+}
+
+/**
+ * Loose interface to allow for the use of different versions of "@azure/ms-rest-js"
+ * Used specifically for T2 Azure SDKs
+ */
+export interface AzExtServiceClientCredentialsT2 {
+  
     /**
      * Gets the token provided by this credential.
      *
@@ -1422,7 +1436,10 @@ export interface IMinimumServiceClientOptions {
     requestPolicyFactories?: any[] | ((defaultRequestPolicyFactories: any[]) => (void | any[]));
 }
 
-export type AzExtGenericCredentials = BasicAuthenticationCredentials | TokenCredentials | AzExtServiceClientCredentials;
+/**
+ * Credential type to be used for creating generic http rest clients
+ */
+export type AzExtGenericCredentials =  AzExtServiceClientCredentialsT1 | AzExtServiceClientCredentialsT2 | AzExtServiceClientCredentials;
 export type AzExtGenericClientInfo = AzExtGenericCredentials | { credentials: AzExtGenericCredentials; environment: Environment; } | undefined;
 
 /**
