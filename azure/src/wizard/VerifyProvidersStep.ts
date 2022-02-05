@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ResourceManagementClient, ResourceManagementModels } from '@azure/arm-resources';
+import type { Provider, ResourceManagementClient } from '@azure/arm-resources';
+import { AzureWizardExecuteStep, ISubscriptionActionContext, parseError } from '@microsoft/vscode-azext-utils';
 import { Progress } from 'vscode';
 import * as types from '../../index';
 import { createResourcesClient } from '../clients';
 import { localize } from '../localize';
 import { delay } from '../utils/delay';
-import { parseError, AzureWizardExecuteStep, ISubscriptionActionContext } from 'vscode-azureextensionui';
 
 export class VerifyProvidersStep<T extends ISubscriptionActionContext> extends AzureWizardExecuteStep<T> implements types.VerifyProvidersStep<T> {
     public priority: number = 90;
@@ -26,7 +26,7 @@ export class VerifyProvidersStep<T extends ISubscriptionActionContext> extends A
         const client: ResourceManagementClient = await createResourcesClient(context);
         await Promise.all(this._providers.map(async providerName => {
             try {
-                let provider: ResourceManagementModels.Provider = await client.providers.get(providerName);
+                let provider: Provider = await client.providers.get(providerName);
                 if (provider.registrationState?.toLowerCase() !== 'registered') {
                     await client.providers.register(providerName);
 

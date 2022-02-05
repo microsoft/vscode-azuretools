@@ -6,14 +6,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { SubscriptionModels } from '@azure/arm-resources-subscriptions';
-// eslint-disable-next-line import/no-internal-modules
-import type { ExtendedLocation } from '@azure/arm-resources/esm/models';
-import type { ResourceManagementModels } from '@azure/arm-resources';
-import type { StorageManagementModels } from '@azure/arm-storage';
 import type { Environment } from '@azure/ms-rest-azure-env';
 import type { HttpOperationResponse, RequestPrepareOptions, ServiceClient } from '@azure/ms-rest-js';
 import { Disposable, Progress } from 'vscode';
-import type { AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, UIExtensionVariables } from 'vscode-azureextensionui';
+import type { AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
+import { ExtendedLocation, ResourceGroup } from '@azure/arm-resources';
+import { StorageAccount } from '@azure/arm-storage';
 
 export type OpenInPortalOptions = {
     /**
@@ -210,13 +208,13 @@ export interface IResourceGroupWizardContext extends ILocationWizardContext, IRe
      * If an existing resource group is picked, this value will be defined after `ResourceGroupListStep.prompt` occurs
      * If a new resource group is picked, this value will be defined after the `execute` phase of the 'create' subwizard
      */
-    resourceGroup?: ResourceManagementModels.ResourceGroup;
+    resourceGroup?: ResourceGroup;
 
     /**
      * The task used to get existing resource groups.
      * By specifying this in the context, we can ensure that Azure is only queried once for the entire wizard
      */
-    resourceGroupsTask?: Promise<ResourceManagementModels.ResourceGroup[]>;
+    resourceGroupsTask?: Promise<ResourceGroup[]>;
 
     newResourceGroupName?: string;
 
@@ -233,7 +231,7 @@ export declare class ResourceGroupListStep<T extends IResourceGroupWizardContext
      * Used to get existing resource groups. By passing in the context, we can ensure that Azure is only queried once for the entire wizard
      * @param wizardContext The context of the wizard.
      */
-    public static getResourceGroups<T extends IResourceGroupWizardContext>(wizardContext: T): Promise<ResourceManagementModels.ResourceGroup[]>;
+    public static getResourceGroups<T extends IResourceGroupWizardContext>(wizardContext: T): Promise<ResourceGroup[]>;
 
     /**
      * Checks existing resource groups in the wizard's subscription to see if the name is available.
@@ -266,7 +264,7 @@ export interface IStorageAccountWizardContext extends IResourceGroupWizardContex
      * If an existing storage account is picked, this value will be defined after `StorageAccountListStep.prompt` occurs
      * If a new storage account is picked, this value will be defined after the `execute` phase of the 'create' subwizard
      */
-    storageAccount?: StorageManagementModels.StorageAccount;
+    storageAccount?: StorageAccount;
 
     newStorageAccountName?: string;
 }

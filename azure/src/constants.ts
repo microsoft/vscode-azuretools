@@ -5,3 +5,4 @@
 
 export const resourcesProvider: string = 'Microsoft.Resources';
 export const storageProvider: string = 'Microsoft.Storage';
+export const storageProviderType = "Microsoft.Storage/storageAccounts";

@@ -5,7 +5,7 @@
 
 import * as types from '../../index';
 import { localize } from '../localize';
-import { AzureWizardPromptStep } from 'vscode-azureextensionui';
+import { AzureWizardPromptStep } from '@microsoft/vscode-azext-utils';
 import { ResourceGroupListStep, resourceGroupNamingRules } from './ResourceGroupListStep';
 
 export class ResourceGroupNameStep<T extends types.IResourceGroupWizardContext> extends AzureWizardPromptStep<T> implements types.ResourceGroupNameStep<T> {

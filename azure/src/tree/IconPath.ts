@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as path from 'path';
-import type { TreeItemIconPath } from 'vscode-azureextensionui';
+import type { TreeItemIconPath } from '@microsoft/vscode-azext-utils';
 import { ext } from '../extensionVariables';
 
 export function getIconPath(iconName: string): TreeItemIconPath {
@@ -14,5 +14,5 @@ export function getIconPath(iconName: string): TreeItemIconPath {
 function getResourcesPath(): string {
     return ext.ignoreBundle ?
         path.join(__dirname, '..', '..', '..', 'resources') :
-        path.join(__dirname, 'node_modules', 'vscode-azureextensionui', 'resources');
+        path.join(__dirname, 'node_modules', '@microsoft/vscode-azext-utils', 'resources');
 }

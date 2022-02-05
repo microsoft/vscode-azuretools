@@ -3,12 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// eslint-disable-next-line import/no-internal-modules
-import { ExtendedLocation } from '@azure/arm-resources/esm/models';
+import { ExtendedLocation } from '@azure/arm-resources';
 import * as types from '../../index';
 import { createResourcesClient, createSubscriptionsClient } from '../clients';
 import { resourcesProvider } from '../constants';
-import { AzureWizardPromptStep, IActionContext, IAzureQuickPickItem, IAzureQuickPickOptions } from 'vscode-azureextensionui';
+import { AzureWizardPromptStep, IActionContext, IAzureQuickPickItem, IAzureQuickPickOptions } from '@microsoft/vscode-azext-utils';
 import { localize } from '../localize';
 import { ext } from '../extensionVariables';
 import { nonNullProp, nonNullValue } from '@microsoft/vscode-azext-utils';

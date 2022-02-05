@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
-import { nonNullProp } from '@microsoft/vscode-azext-utils';
-import { AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, openUrl } from 'vscode-azureextensionui';
+import { nonNullProp, AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, openUrl } from '@microsoft/vscode-azext-utils';
+import type { StorageAccount, StorageManagementClient } from '@azure/arm-storage';
 import * as types from '../../index';
 import { createStorageClient } from '../clients';
-import { storageProvider } from '../constants';
+import { storageProvider, storageProviderType } from '../constants';
 import { localize } from '../localize';
 import { LocationListStep } from './LocationListStep';
 import { ResourceGroupListStep } from './ResourceGroupListStep';
 import { StorageAccountCreateStep } from './StorageAccountCreateStep';
 import { StorageAccountNameStep } from './StorageAccountNameStep';
+import { uiUtils } from '../utils/uiUtils';
 
 export const storageAccountNamingRules: IAzureNamingRules = {
     minLength: 3,
@@ -68,16 +68,16 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
 
     public static async isNameAvailable<T extends types.IStorageAccountWizardContext>(wizardContext: T, name: string): Promise<boolean> {
         const storageClient: StorageManagementClient = await createStorageClient(wizardContext);
-        return !!(await storageClient.storageAccounts.checkNameAvailability(name)).nameAvailable;
+        return !!(await storageClient.storageAccounts.checkNameAvailability({ name, type: storageProviderType })).nameAvailable;
     }
 
     public async prompt(wizardContext: T): Promise<void> {
         const client: StorageManagementClient = await createStorageClient(wizardContext);
 
         const quickPickOptions: IAzureQuickPickOptions = { placeHolder: 'Select a storage account.', id: `StorageAccountListStep/${wizardContext.subscriptionId}` };
-        const picksTask: Promise<IAzureQuickPickItem<StorageManagementModels.StorageAccount | undefined>[]> = this.getQuickPicks(wizardContext, client.storageAccounts.list());
+        const picksTask: Promise<IAzureQuickPickItem<StorageAccount | undefined>[]> = this.getQuickPicks(wizardContext, uiUtils.listAllIterator(client.storageAccounts.list));
 
-        const result: StorageManagementModels.StorageAccount | undefined = (await wizardContext.ui.showQuickPick(picksTask, quickPickOptions)).data;
+        const result: StorageAccount | undefined = (await wizardContext.ui.showQuickPick(picksTask, quickPickOptions)).data;
         wizardContext.storageAccount = result;
         if (wizardContext.storageAccount) {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -103,8 +103,8 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
         return !wizardContext.storageAccount && !wizardContext.newStorageAccountName;
     }
 
-    private async getQuickPicks(wizardContext: T, storageAccountsTask: Promise<StorageManagementModels.StorageAccount[]>): Promise<IAzureQuickPickItem<StorageManagementModels.StorageAccount | undefined>[]> {
-        const picks: IAzureQuickPickItem<StorageManagementModels.StorageAccount | undefined>[] = [{
+    private async getQuickPicks(wizardContext: T, storageAccountsTask: Promise<StorageAccount[]>): Promise<IAzureQuickPickItem<StorageAccount | undefined>[]> {
+        const picks: IAzureQuickPickItem<StorageAccount | undefined>[] = [{
             label: localize('NewStorageAccount', '$(plus) Create new storage account'),
             description: '',
             data: undefined
@@ -121,7 +121,7 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
 
         let hasFilteredAccountsBySku: boolean = false;
         let hasFilteredAccountsByLocation: boolean = false;
-        const storageAccounts: StorageManagementModels.StorageAccount[] = await storageAccountsTask;
+        const storageAccounts: StorageAccount[] = await storageAccountsTask;
         for (const sa of storageAccounts) {
             if (!sa.kind || sa.kind.match(kindRegExp) || !sa.sku || sa.sku.name.match(performanceRegExp) || sa.sku.name.match(replicationRegExp)) {
                 hasFilteredAccountsBySku = true;

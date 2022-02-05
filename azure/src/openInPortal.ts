@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as types from '../index';
-import { AzExtTreeItem, ISubscriptionContext, openUrl } from 'vscode-azureextensionui';
+import { AzExtTreeItem, ISubscriptionContext, openUrl } from '@microsoft/vscode-azext-utils';
 
 export async function openInPortal(root: ISubscriptionContext | AzExtTreeItem, id: string, options?: types.OpenInPortalOptions): Promise<void> {
     root = root instanceof AzExtTreeItem ? root.subscription : root;

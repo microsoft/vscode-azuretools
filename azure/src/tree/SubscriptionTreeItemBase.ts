@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as types from '../../index';
-import { AzExtParentTreeItem, ISubscriptionContext } from 'vscode-azureextensionui';
+import { AzExtParentTreeItem, ISubscriptionContext } from '@microsoft/vscode-azext-utils';
 import { getIconPath } from './IconPath';
 
 export abstract class SubscriptionTreeItemBase extends AzExtParentTreeItem implements types.SubscriptionTreeItemBase {
