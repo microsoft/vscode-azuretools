@@ -127,6 +127,13 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
                             filter.session.credentials2.domain);
                     }
 
+                    // these properties don't exist on TokenCredentials
+                    if (filter.session.credentials2 instanceof DeviceTokenCredentials) {
+                        addExtensionValueToMask(
+                            filter.session.credentials2.clientId,
+                            filter.session.credentials2.domain);
+                    }
+
                     // filter.subscription.id is the The fully qualified ID of the subscription (For example, /subscriptions/00000000-0000-0000-0000-000000000000) and should be used as the tree item's id for the purposes of OpenInPortal
                     // filter.subscription.subscriptionId is just the guid and is used in all other cases when creating clients for managing Azure resources
                     const subscriptionId: string = nonNullProp(filter.subscription, 'subscriptionId');

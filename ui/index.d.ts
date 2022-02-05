@@ -148,7 +148,6 @@ export interface AzExtServiceClientCredentialsT1 {
  * Used specifically for T2 Azure SDKs
  */
 export interface AzExtServiceClientCredentialsT2 {
-
     /**
      * Gets the token provided by this credential.
      *
@@ -1092,7 +1091,6 @@ export interface IAddUserAgent {
  * will return just the extension portion to use in a user agent.
  */
 export declare function appendExtensionUserAgent(existingUserAgent?: string): string;
-
 
 /**
  * Credential type to be used for creating generic http rest clients
