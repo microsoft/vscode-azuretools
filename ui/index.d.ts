@@ -1683,5 +1683,5 @@ export declare namespace AzExtFsExtra {
 }
 
 export declare namespace uiUtils {
-    export function listAllIterator<T>(list: (options?: coreClient.OperationOptions) => PagedAsyncIterableIterator<T>, options?: coreClient.OperationOptions): Promise<T[]>
+    export function listAllIterator<T>(iterator: PagedAsyncIterableIterator<T>): Promise<T[]>
 }

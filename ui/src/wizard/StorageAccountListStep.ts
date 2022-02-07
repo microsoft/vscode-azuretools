@@ -77,7 +77,7 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
         const client: StorageManagementClient = await createStorageClient(wizardContext);
 
         const quickPickOptions: types.IAzureQuickPickOptions = { placeHolder: 'Select a storage account.', id: `StorageAccountListStep/${wizardContext.subscriptionId}` };
-        const picksTask: Promise<types.IAzureQuickPickItem<StorageAccount | undefined>[]> = this.getQuickPicks(wizardContext, uiUtils.listAllIterator(client.storageAccounts.list));
+        const picksTask: Promise<types.IAzureQuickPickItem<StorageAccount | undefined>[]> = this.getQuickPicks(wizardContext, uiUtils.listAllIterator(client.storageAccounts.list()));
 
         const result: StorageAccount | undefined = (await wizardContext.ui.showQuickPick(picksTask, quickPickOptions)).data;
         wizardContext.storageAccount = result;
