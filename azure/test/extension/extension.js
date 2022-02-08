@@ -4,18 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 const vscode = require('vscode');
-const createAzExtOutputChannel = require('../../out/src/AzExtOutputChannel').createAzExtOutputChannel;
-
-const ui_1 = require('../../out/src/index');
-const DebugReporter = require('../../out/src/DebugReporter').DebugReporter;
+const azure = require('../../out/src/index');
 
 function activate(context) {
     const extVars = {
         context,
-        reporter: new DebugReporter(),
-        outputChannel: createAzExtOutputChannel('Extension Test Output', 'azureextensionui')
+        outputChannel: vscode.window.createOutputChannel('azure')
     };
-    ui_1.registerUIExtensionVariables(extVars)
+    azure.registerAzureUtilsExtensionVariables(extVars)
 }
 exports.activate = activate;
 
