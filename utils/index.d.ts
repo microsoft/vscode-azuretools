@@ -6,8 +6,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { Environment } from '@azure/ms-rest-azure-env';
-import type * as coreClient from '@azure/core-client';
-import type { PagedAsyncIterableIterator } from "@azure/core-paging";
 import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
@@ -1306,7 +1304,3 @@ export function nonNullValue<T>(value: T | undefined, propertyNameOrMessage?: st
  * Validates that a given string is not null, undefined, nor empty
  */
 export function nonNullOrEmptyValue(value: string | undefined, propertyNameOrMessage?: string): string;
-
-export declare namespace uiUtils {
-    export function listAllIterator<T>(list: (options?: coreClient.OperationOptions) => PagedAsyncIterableIterator<T>, options?: coreClient.OperationOptions)
-}

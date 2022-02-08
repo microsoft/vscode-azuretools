@@ -23,7 +23,6 @@ export * from './tree/AzExtTreeDataProvider';
 export * from './tree/AzExtTreeItem';
 export * from './tree/GenericTreeItem';
 export * from './utils/AzExtFsExtra';
-export * from './utils/uiUtils';
 export * from './wizard/AzureNameStep';
 export * from './wizard/AzureWizard';
 export * from './wizard/AzureWizardExecuteStep';
