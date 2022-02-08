@@ -45,7 +45,7 @@ steps:
 - task: CopyFiles@2
   displayName: '${{ parameters.package }}: copy package'
   inputs:
-    Contents: '${{ parameters.package }}/(microsoft|vscode)-*.tgz'
+    Contents: '${{ parameters.package }}/@(microsoft|vscode)-*.tgz'
     TargetFolder: '$(build.artifactstagingdirectory)'
   condition: and(not(variables['skipPackage']), eq(variables['Agent.OS'], 'Linux'), ne(variables['System.PullRequest.IsFork'], 'True'))
 
