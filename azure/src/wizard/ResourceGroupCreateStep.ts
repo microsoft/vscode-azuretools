@@ -42,7 +42,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
             } else {
                 // if we suspect that this is a Concierge account, only pick the rg if it begins with "learn" and there is only 1
                 if (/concierge/i.test(wizardContext.subscriptionDisplayName)) {
-                    const rgs: ResourceGroup[] = await uiUtils.listAllIterator(resourceClient.resourceGroups.list)
+                    const rgs: ResourceGroup[] = await uiUtils.listAllIterator(resourceClient.resourceGroups.list());
                     if (rgs.length === 1 && rgs[0].name && /^learn/i.test(rgs[0].name)) {
                         wizardContext.resourceGroup = rgs[0];
                         wizardContext.telemetry.properties.forbiddenResponse = 'SelectLearnRg';

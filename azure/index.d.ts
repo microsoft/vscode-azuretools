@@ -9,7 +9,6 @@ import type { SubscriptionModels } from '@azure/arm-resources-subscriptions';
 import type { Environment } from '@azure/ms-rest-azure-env';
 import type { HttpOperationResponse, RequestPrepareOptions, ServiceClient } from '@azure/ms-rest-js';
 import type { PagedAsyncIterableIterator } from '@azure/core-paging';
-import type { OperationOptions } from '@azure/core-client';
 import { Disposable, Progress } from 'vscode';
 import type { AzExtParentTreeItem, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
 import { ExtendedLocation, ResourceGroup } from '@azure/arm-resources';
@@ -466,5 +465,5 @@ export type AzExtSubscriptionClientType<T> = new (credentials: AzExtServiceClien
 export function createAzureSubscriptionClient<T>(context: AzExtClientContext, clientType: AzExtSubscriptionClientType<T>): T;
 
 export declare namespace uiUtils {
-    export function listAllIterator<T>(list: (options?: OperationOptions) => PagedAsyncIterableIterator<T>, options?: OperationOptions): Promise<T[]>
+    export function listAllIterator<T>(iterator: PagedAsyncIterableIterator<T>): Promise<T[]>
 }

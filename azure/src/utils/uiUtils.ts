@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { PagedAsyncIterableIterator } from "@azure/core-paging";
-import * as coreClient from '@azure/core-client';
 
 export namespace uiUtils {
     export interface IPartialList<T> extends Array<T> {
@@ -24,9 +23,9 @@ export namespace uiUtils {
         return all;
     }
 
-    export async function listAllIterator<T>(list: (options?: coreClient.OperationOptions) => PagedAsyncIterableIterator<T>, options?: coreClient.OperationOptions): Promise<T[]> {
+    export async function listAllIterator<T>(iterator: PagedAsyncIterableIterator<T>): Promise<T[]> {
         const resources: T[] = [];
-        for await (const r of list(options)) {
+        for await (const r of iterator) {
             resources.push(r);
         }
 

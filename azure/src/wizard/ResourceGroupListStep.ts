@@ -31,7 +31,7 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
     public static async getResourceGroups<T extends types.IResourceGroupWizardContext>(wizardContext: T): Promise<ResourceGroup[]> {
         if (wizardContext.resourceGroupsTask === undefined) {
             const client: ResourceManagementClient = await createResourcesClient(wizardContext);
-            wizardContext.resourceGroupsTask = uiUtils.listAllIterator(client.resourceGroups.list);
+            wizardContext.resourceGroupsTask = uiUtils.listAllIterator(client.resourceGroups.list());
         }
 
         return await wizardContext.resourceGroupsTask;
