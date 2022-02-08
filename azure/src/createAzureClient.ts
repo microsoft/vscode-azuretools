@@ -12,7 +12,7 @@ import * as types from '../index';
 import type { GenericServiceClient } from './GenericServiceClient';
 import { localize } from './localize';
 import { parseJson, removeBom } from './utils/parseJson';
-import { appendExtensionUserAgent, AzExtGenericClientInfo, AzExtGenericCredentials, AzExtTreeItem, IActionContext, ISubscriptionActionContext, ISubscriptionContext, maskValue, parseError } from '@microsoft/vscode-azext-utils';
+import { appendExtensionUserAgent, AzExtTreeItem, IActionContext, ISubscriptionActionContext, ISubscriptionContext, maskValue, parseError } from '@microsoft/vscode-azext-utils';
 
 export type InternalAzExtClientContext = ISubscriptionActionContext | [IActionContext, ISubscriptionContext | AzExtTreeItem];
 
@@ -75,8 +75,8 @@ interface IGenericClientOptions {
     noRetryPolicy?: boolean;
 }
 
-export async function createGenericClient(context: IActionContext, clientInfo: AzExtGenericClientInfo, options?: IGenericClientOptions): Promise<ServiceClient> {
-    let credentials: AzExtGenericCredentials | undefined;
+export async function createGenericClient(context: IActionContext, clientInfo: types.AzExtGenericClientInfo, options?: IGenericClientOptions): Promise<ServiceClient> {
+    let credentials: types.AzExtGenericCredentials | undefined;
     let baseUri: string | undefined;
     if (clientInfo && 'credentials' in clientInfo) {
         credentials = clientInfo.credentials;
@@ -95,7 +95,7 @@ export async function createGenericClient(context: IActionContext, clientInfo: A
     });
 }
 
-function addAzExtFactories(context: IActionContext, credentials: AzExtGenericCredentials | undefined, defaultFactories: RequestPolicyFactory[]): RequestPolicyFactory[] {
+function addAzExtFactories(context: IActionContext, credentials: types.AzExtGenericCredentials | undefined, defaultFactories: RequestPolicyFactory[]): RequestPolicyFactory[] {
     // NOTE: Factories at the end of the array are executed first, and we want these to happen before the deserialization factory
     defaultFactories.push(
         {
@@ -209,8 +209,8 @@ class StatusCodePolicy extends BaseRequestPolicy {
  * this policy will make sure those credentials get masked in the error message
  */
 class MaskCredentialsPolicy extends BaseRequestPolicy {
-    private _credentials: AzExtGenericCredentials | undefined;
-    constructor(nextPolicy: RequestPolicy, requestPolicyOptions: RequestPolicyOptions, credentials: AzExtGenericCredentials | undefined,) {
+    private _credentials: types.AzExtGenericCredentials | undefined;
+    constructor(nextPolicy: RequestPolicy, requestPolicyOptions: RequestPolicyOptions, credentials: types.AzExtGenericCredentials | undefined,) {
         super(nextPolicy, requestPolicyOptions);
         this._credentials = credentials;
     }

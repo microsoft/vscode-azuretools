@@ -1093,13 +1093,6 @@ export interface IAddUserAgent {
 export declare function appendExtensionUserAgent(existingUserAgent?: string): string;
 
 /**
- * Credential type to be used for creating generic http rest clients
- */
-export type AzExtGenericCredentials = AzExtServiceClientCredentialsT1 | AzExtServiceClientCredentialsT2 | AzExtServiceClientCredentials;
-export type AzExtGenericClientInfo = AzExtGenericCredentials | { credentials: AzExtGenericCredentials; environment: Environment; } | undefined;
-
-
-/**
  * Wraps an Azure Extension's API in a very basic provider that adds versioning.
  * Multiple APIs with different versions can be supplied, but ideally a single backwards-compatible API is all that's necessary.
  */

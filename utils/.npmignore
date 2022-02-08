@@ -11,4 +11,3 @@ gulpfile.js
 test-results.xml
 .eslintignore
 .eslintrc.js
-resources/*.png
