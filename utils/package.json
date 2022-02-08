@@ -21,7 +21,7 @@
     "bugs": {
         "url": "https://github.com/Microsoft/vscode-azuretools/issues"
     },
-    "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/ui/README.md",
+    "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/utils/README.md",
     "scripts": {
         "build": "tsc -p ./",
         "prepack": "tsc -p ./",
@@ -32,24 +32,19 @@
         "test": "node ./out/test/runTest.js"
     },
     "dependencies": {
-        "@azure/arm-resources": "^5.0.0",
-        "@azure/arm-resources-profile-2020-09-01-hybrid": "^1.0.0",
-        "@azure/arm-resources-subscriptions": "^1.0.0",
-        "@azure/arm-storage": "^17.0.0",
-        "@azure/arm-storage-profile-2020-09-01-hybrid": "^1.0.0",
-        "@azure/ms-rest-azure-env": "^2.0.0",
-        "@azure/ms-rest-js": "^2.2.1",
         "@vscode/extension-telemetry": "^0.4.7",
         "dayjs": "^1.9.3",
         "escape-string-regexp": "^2.0.0",
         "html-to-text": "^5.1.1",
         "open": "^8.0.4",
         "semver": "^5.7.1",
-        "uuid": "^8.3.2",
         "vscode-nls": "^4.1.1",
         "vscode-tas-client": "^0.1.22"
     },
     "devDependencies": {
+        "@azure/core-client": "^1.5.0",
+        "@azure/core-paging": "^1.2.1",
+        "@azure/ms-rest-azure-env": "^2.0.0",
         "@microsoft/eslint-config-azuretools": "^0.1.0",
         "@types/fs-extra": "^8.1.0",
         "@types/html-to-text": "^1.4.31",
