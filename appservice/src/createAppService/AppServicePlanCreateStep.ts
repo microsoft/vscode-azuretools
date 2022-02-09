@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AppServicePlan, WebSiteManagementClient, WebSiteManagementMappers } from '@azure/arm-appservice';
+import { AppServicePlan, WebSiteManagementClient } from '@azure/arm-appservice';
 import { AzExtLocation, LocationListStep } from '@microsoft/vscode-azext-azureutils';
 import { AzureWizardExecuteStep, nonNullProp, nonNullValue, parseError } from '@microsoft/vscode-azext-utils';
 import { MessageItem, Progress } from 'vscode';
@@ -88,55 +88,11 @@ async function getNewPlan(context: IAppServiceWizardContext): Promise<AppService
     return plan;
 }
 
-/**
- * Has a few temporary workarounds so that the sdk allows some newer properties on the plan
- */
 function addCustomLocationProperties(plan: AppServicePlan, customLocation: CustomLocation): void {
     plan.perSiteScaling = true;
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    AppServicePlanMapper.type.modelProperties!.kubeEnvironmentProfile = {
-        serializedName: 'properties.kubeEnvironmentProfile',
-        type: {
-            name: "Composite",
-            modelProperties: {
-                id: {
-                    serializedName: "id",
-                    type: {
-                        name: "String"
-                    }
-                }
-            }
-        }
-    };
-
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-    (<any>plan).kubeEnvironmentProfile = { id: customLocation.kubeEnvironment.id };
-
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    WebSiteManagementMappers.AppServicePlan.type.modelProperties!.extendedLocation = {
-        serializedName: 'extendedLocation',
-        type: {
-            name: "Composite",
-            modelProperties: {
-                name: {
-                    serializedName: "name",
-                    type: {
-                        name: "String"
-                    }
-                },
-                type: {
-                    serializedName: "type",
-                    type: {
-                        name: "String"
-                    }
-                }
-            }
-        }
-    };
-
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-    (<any>plan).extendedLocation = { name: customLocation.id, type: 'customLocation' };
+    plan.kubeEnvironmentProfile = { id: customLocation.kubeEnvironment.id };
+    plan.extendedLocation = { name: customLocation.id, type: 'customLocation' };
 }
 
 function getPlanKind(context: IAppServiceWizardContext): string {
