@@ -34,10 +34,10 @@
     "dependencies": {
         "@azure/abort-controller": "^1.0.4",
         "@azure/arm-appinsights": "^4.0.0",
-        "@azure/arm-appservice": "^10.0.0",
+        "@azure/arm-appservice": "^11.0.0",
         "@azure/arm-resourcegraph": "^4.0.0",
         "@azure/arm-resources": "^5.0.0",
-        "@azure/arm-subscriptions": "^4.0.0",
+        "@azure/arm-subscriptions": "^5.0.0",
         "@azure/ms-rest-azure-env": "^2.0.0",
         "@azure/ms-rest-js": "^2.3.0",
         "@azure/storage-blob": "^12.3.0",
