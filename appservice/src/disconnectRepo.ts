@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { SiteSourceControl } from '@azure/arm-appservice';
+import { IActionContext, ISubscriptionContext } from '@microsoft/vscode-azext-utils';
 import { MessageItem } from 'vscode';
-import { IActionContext, ISubscriptionContext } from 'vscode-azureextensionui';
 import { editScmType } from './editScmType';
 import { localize } from './localize';
 import { ScmType } from './ScmType';

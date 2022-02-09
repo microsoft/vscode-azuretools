@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { SlotConfigNamesResource, StringDictionary } from '@azure/arm-appservice';
-import { IActionContext } from 'vscode-azureextensionui';
+import { IActionContext } from '@microsoft/vscode-azext-utils';
 
 export interface AppSettingsClientProvider {
     createClient(context: IActionContext): Promise<IAppSettingsClient>;

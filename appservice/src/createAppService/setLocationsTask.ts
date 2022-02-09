@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { ListGeoRegionsOptionalParams, SkuName, WebSiteManagementClient } from '@azure/arm-appservice';
-import { LocationListStep } from 'vscode-azureextensionui';
+import { LocationListStep } from '@microsoft/vscode-azext-azureutils';
 import { webProvider } from '../constants';
 import { createWebSiteClient } from '../utils/azureClients';
 import { nonNullProp } from '../utils/nonNull';

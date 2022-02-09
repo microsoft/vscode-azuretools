@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { BasicAuthenticationCredentials, ServiceClientCredentials } from '@azure/ms-rest-js';
-import { appendExtensionUserAgent, createGenericClient, IActionContext, parseError } from 'vscode-azureextensionui';
+import { createGenericClient } from '@microsoft/vscode-azext-azureutils';
+import { appendExtensionUserAgent, IActionContext, parseError } from '@microsoft/vscode-azext-utils';
 import type { KuduClient } from 'vscode-azurekudu';
 import { localize } from './localize';
 import { ParsedSite } from './SiteClient';

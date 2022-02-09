@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { NameValuePair, ResourceNameAvailability, Site, StringDictionary, WebSiteManagementClient } from "@azure/arm-appservice";
+import { IActionContext, IAzureNamingRules, IAzureQuickPickItem, ICreateChildImplContext } from "@microsoft/vscode-azext-utils";
 import { ProgressLocation, window } from "vscode";
-import { IActionContext, IAzureNamingRules, IAzureQuickPickItem, ICreateChildImplContext } from "vscode-azureextensionui";
 import { getNewFileShareName } from "./createAppService/getNewFileShareName";
 import { ext } from "./extensionVariables";
 import { localize } from "./localize";

@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { IActionContext, IParsedError, parseError } from '@microsoft/vscode-azext-utils';
 import { CancellationToken, window } from 'vscode';
-import { IActionContext, IParsedError, parseError } from 'vscode-azureextensionui';
 import { KuduClient, KuduModels } from 'vscode-azurekudu';
 import { createKuduClient } from '../createKuduClient';
 import { ext } from '../extensionVariables';

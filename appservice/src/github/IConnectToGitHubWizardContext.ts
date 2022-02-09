@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { ServiceClient } from '@azure/ms-rest-js';
-import { IActionContext, ISubscriptionContext } from 'vscode-azureextensionui';
+import { IActionContext, ISubscriptionContext } from '@microsoft/vscode-azext-utils';
 import { ParsedSite } from '../SiteClient';
 import { gitHubBranchData, gitHubOrgData, gitHubRepoData } from './connectToGitHub';
 

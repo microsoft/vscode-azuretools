@@ -4,13 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { AppServicePlan, WebSiteManagementClient } from '@azure/arm-appservice';
-import { AzExtLocation, AzureWizardPromptStep, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, LocationListStep, ResourceGroupListStep } from 'vscode-azureextensionui';
+import { AzExtLocation, LocationListStep, ResourceGroupListStep, uiUtils } from '@microsoft/vscode-azext-azureutils';
+import { AzureWizardPromptStep, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions } from '@microsoft/vscode-azext-utils';
 import { webProvider } from '../constants';
 import { localize } from '../localize';
 import { tryGetAppServicePlan } from '../tryGetSiteResource';
 import { createWebSiteClient } from '../utils/azureClients';
 import { nonNullProp } from '../utils/nonNull';
-import { uiUtils } from '../utils/uiUtils';
 import { AppKind, getWebsiteOSDisplayName, WebsiteOS } from './AppKind';
 import { AppServicePlanCreateStep } from './AppServicePlanCreateStep';
 import { AppServicePlanNameStep } from './AppServicePlanNameStep';
@@ -28,7 +28,7 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
     public static async getPlans(context: IAppServiceWizardContext): Promise<AppServicePlan[]> {
         if (context.plansTask === undefined) {
             const client: WebSiteManagementClient = await createWebSiteClient(context);
-            context.plansTask = uiUtils.listAll(client.appServicePlans, client.appServicePlans.list());
+            context.plansTask = uiUtils.listAllIterator(client.appServicePlans.list());
         }
 
         return await context.plansTask;

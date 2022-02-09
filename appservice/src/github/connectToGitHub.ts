@@ -5,9 +5,10 @@
 
 import type { SiteSourceControl } from '@azure/arm-appservice';
 import { HttpOperationResponse, ServiceClient, TokenCredentials } from '@azure/ms-rest-js';
+import { createGenericClient, openInPortal } from '@microsoft/vscode-azext-azureutils';
+import { AzureWizard, DialogResponses, IAzureQuickPickItem, IParsedError, parseError } from '@microsoft/vscode-azext-utils';
 import { isArray } from 'util';
 import * as vscode from 'vscode';
-import { AzureWizard, createGenericClient, DialogResponses, IAzureQuickPickItem, IParsedError, openInPortal, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { ParsedSite } from '../SiteClient';

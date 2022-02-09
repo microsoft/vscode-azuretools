@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AppServicePlan, WebSiteManagementClient, WebSiteManagementMappers } from '@azure/arm-appservice';
+import { AzExtLocation, LocationListStep } from '@microsoft/vscode-azext-azureutils';
+import { AzureWizardExecuteStep, parseError } from '@microsoft/vscode-azext-utils';
 import { MessageItem, Progress } from 'vscode';
-import { AzExtLocation, AzureWizardExecuteStep, LocationListStep, parseError } from 'vscode-azureextensionui';
 import { webProvider } from '../constants';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -40,7 +41,7 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
                 ext.outputChannel.appendLog(creatingAppServicePlan);
                 progress.report({ message: creatingAppServicePlan });
 
-                context.plan = await client.appServicePlans.createOrUpdate(rgName, newPlanName, await getNewPlan(context));
+                context.plan = await client.appServicePlans.beginCreateOrUpdateAndWait(rgName, newPlanName, await getNewPlan(context));
                 ext.outputChannel.appendLog(createdAppServicePlan);
             }
         } catch (e) {

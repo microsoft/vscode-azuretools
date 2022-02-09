@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { ServiceClient } from '@azure/ms-rest-js';
-import { createGenericClient, IActionContext } from 'vscode-azureextensionui';
+import { createGenericClient } from '@microsoft/vscode-azext-azureutils';
+import { IActionContext } from '@microsoft/vscode-azext-utils';
 import { ParsedSite } from './SiteClient';
 
 export async function pingFunctionApp(context: IActionContext, site: ParsedSite): Promise<void> {

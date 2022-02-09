@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { IActionContext, parseError } from '@microsoft/vscode-azext-utils';
 import { default as retry } from 'p-retry';
-import { IActionContext, parseError } from 'vscode-azureextensionui';
 
 /**
  * Kudu calls are not the most reliable - this will retry a few times with exponential backoff. Each "set" of retries will take a max of about 15 seconds

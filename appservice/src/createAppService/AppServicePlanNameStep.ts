@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureWizardPromptStep, IAzureNamingRules } from 'vscode-azureextensionui';
+import { AzureWizardPromptStep, IAzureNamingRules } from '@microsoft/vscode-azext-utils';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
 import { AppServicePlanListStep } from './AppServicePlanListStep';

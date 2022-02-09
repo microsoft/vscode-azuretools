@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { WebSiteManagementClient } from '@azure/arm-appservice';
+import { IActionContext, IAzureQuickPickItem } from '@microsoft/vscode-azext-utils';
 import { ProgressLocation, window } from 'vscode';
-import { IActionContext, IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { ParsedSite } from './SiteClient';

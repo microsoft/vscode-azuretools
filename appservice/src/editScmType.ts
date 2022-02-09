@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { SiteConfigResource, User } from '@azure/arm-appservice';
+import { IActionContext, IAzureQuickPickItem, IAzureQuickPickOptions, ISubscriptionContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import { window } from 'vscode';
-import { IActionContext, IAzureQuickPickItem, IAzureQuickPickOptions, ISubscriptionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { ext } from './extensionVariables';
 import { connectToGitHub } from './github/connectToGitHub';
 import { localize } from './localize';

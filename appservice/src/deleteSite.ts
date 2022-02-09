@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { AppServicePlan } from '@azure/arm-appservice';
+import { DialogResponses, IActionContext } from '@microsoft/vscode-azext-utils';
 import { isNullOrUndefined } from 'util';
 import * as vscode from 'vscode';
-import { DialogResponses, IActionContext } from 'vscode-azureextensionui';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { ParsedSite } from './SiteClient';

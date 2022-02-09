@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { AzExtTreeDataProvider, AzExtTreeItem } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
-import { AzExtTreeDataProvider, AzExtTreeItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { getWorkspaceSetting } from '../utils/settings';

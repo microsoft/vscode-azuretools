@@ -5,7 +5,8 @@
 
 import type { AppServicePlan, SiteLogsConfig, Site, HostNameSslState, WebSiteManagementClient, User, SiteConfigResource, FunctionSecrets, FunctionEnvelope, FunctionEnvelopeCollection, SourceControlCollection, SlotConfigNamesResource, StringDictionary, SiteSourceControl, WebJobCollection, HostKeys, WebAppsListFunctionKeysResponse } from '@azure/arm-appservice';
 import type { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
-import { createGenericClient, IActionContext, ISubscriptionContext, parseError } from 'vscode-azureextensionui';
+import { createGenericClient } from '@microsoft/vscode-azext-azureutils';
+import { IActionContext, ISubscriptionContext, parseError } from '@microsoft/vscode-azext-utils';
 import { AppKind } from './createAppService/AppKind';
 import { AppSettingsClientProvider, IAppSettingsClient } from './IAppSettingsClient';
 import { deleteFunctionSlot, getFunctionSlot, listFunctionsSlot } from './slotFunctionOperations';

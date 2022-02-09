@@ -5,10 +5,11 @@
 
 import type { User } from '@azure/arm-appservice';
 import { BasicAuthenticationCredentials, HttpOperationResponse, RestError, ServiceClient } from '@azure/ms-rest-js';
+import { createGenericClient } from '@microsoft/vscode-azext-azureutils';
+import { IActionContext, IParsedError, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as EventEmitter from 'events';
 import { createServer, Server, Socket } from 'net';
 import { CancellationToken, Disposable } from 'vscode';
-import { createGenericClient, IActionContext, IParsedError, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import * as websocket from 'websocket';
 import { ext } from './extensionVariables';
 import { localize } from './localize';

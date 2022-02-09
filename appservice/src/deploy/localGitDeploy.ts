@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { User } from '@azure/arm-appservice';
+import { callWithMaskHandling, IActionContext } from '@microsoft/vscode-azext-utils';
 // eslint-disable-next-line import/no-internal-modules
 import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
-import { callWithMaskHandling, IActionContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { ParsedSite } from '../SiteClient';

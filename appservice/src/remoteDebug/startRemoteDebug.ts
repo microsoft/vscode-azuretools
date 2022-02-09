@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { SiteConfigResource, User } from '@azure/arm-appservice';
+import { callWithTelemetryAndErrorHandling, IActionContext } from '@microsoft/vscode-azext-utils';
 import * as portfinder from 'portfinder';
 import * as vscode from 'vscode';
-import { callWithTelemetryAndErrorHandling, IActionContext } from 'vscode-azureextensionui';
 import { localize } from '../localize';
 import { ParsedSite } from '../SiteClient';
 import { TunnelProxy } from '../TunnelProxy';

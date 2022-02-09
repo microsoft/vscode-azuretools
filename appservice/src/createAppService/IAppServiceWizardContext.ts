@@ -5,7 +5,7 @@
 
 import type { ApplicationInsightsManagementModels } from '@azure/arm-appinsights';
 import type { AppServicePlan, Site, SkuDescription } from '@azure/arm-appservice';
-import { IResourceGroupWizardContext, IStorageAccountWizardContext } from 'vscode-azureextensionui';
+import { IResourceGroupWizardContext, IStorageAccountWizardContext } from '@microsoft/vscode-azext-azureutils';
 import { AppKind, WebsiteOS } from './AppKind';
 
 export interface IAppServiceWizardContext extends IResourceGroupWizardContext, IStorageAccountWizardContext {

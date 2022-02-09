@@ -6,9 +6,10 @@
 import { AbortController } from '@azure/abort-controller';
 import type { User } from '@azure/arm-appservice';
 import { BasicAuthenticationCredentials, HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
+import { createGenericClient } from '@microsoft/vscode-azext-azureutils';
+import { callWithTelemetryAndErrorHandling, IActionContext, parseError } from '@microsoft/vscode-azext-utils';
 import { setInterval } from 'timers';
 import * as vscode from 'vscode';
-import { callWithTelemetryAndErrorHandling, createGenericClient, IActionContext, parseError } from 'vscode-azureextensionui';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { pingFunctionApp } from './pingFunctionApp';

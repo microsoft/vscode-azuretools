@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { HttpOperationResponse, RestError, ServiceClient } from '@azure/ms-rest-js';
+import { createGenericClient } from '@microsoft/vscode-azext-azureutils';
+import { IActionContext } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
-import { createGenericClient, IActionContext } from 'vscode-azureextensionui';
 import { createKuduClient } from './createKuduClient';
 import { ParsedSite } from './SiteClient';
 
