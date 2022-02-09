@@ -5,11 +5,10 @@
 
 import { BasicAuthenticationCredentials, ServiceClientCredentials } from '@azure/ms-rest-js';
 import { createGenericClient } from '@microsoft/vscode-azext-azureutils';
-import { appendExtensionUserAgent, IActionContext, parseError } from '@microsoft/vscode-azext-utils';
+import { appendExtensionUserAgent, IActionContext, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
 import type { KuduClient } from 'vscode-azurekudu';
 import { localize } from './localize';
 import { ParsedSite } from './SiteClient';
-import { nonNullProp } from './utils/nonNull';
 
 interface IInternalKuduActionContext extends IActionContext {
     _cachedKuduClient?: KuduClient;

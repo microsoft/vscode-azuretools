@@ -6,13 +6,12 @@
 import type { SiteSourceControl } from '@azure/arm-appservice';
 import { HttpOperationResponse, ServiceClient, TokenCredentials } from '@azure/ms-rest-js';
 import { createGenericClient, openInPortal } from '@microsoft/vscode-azext-azureutils';
-import { AzureWizard, DialogResponses, IAzureQuickPickItem, IParsedError, parseError } from '@microsoft/vscode-azext-utils';
+import { AzureWizard, DialogResponses, IAzureQuickPickItem, IParsedError, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
 import { isArray } from 'util';
 import * as vscode from 'vscode';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { ParsedSite } from '../SiteClient';
-import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
 import { verifyNoRunFromPackageSetting } from '../verifyNoRunFromPackageSetting';
 import { GitHubBranchListStep } from './GitHubBranchListStep';

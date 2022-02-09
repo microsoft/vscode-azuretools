@@ -7,13 +7,12 @@ import type { ApplicationInsightsManagementClient } from '@azure/arm-appinsights
 import type { Provider, ProviderResourceType, ResourceGroup, ResourceManagementClient } from '@azure/arm-resources';
 import type { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
 import { AzExtLocation, createGenericClient, LocationListStep } from '@microsoft/vscode-azext-azureutils';
-import { AzureWizardExecuteStep, IActionContext, IParsedError, parseError } from '@microsoft/vscode-azext-utils';
+import { AzureWizardExecuteStep, IActionContext, IParsedError, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
 import { MessageItem, Progress } from 'vscode';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { createAppInsightsClient, createResourceClient } from '../utils/azureClients';
 import { areLocationNamesEqual } from '../utils/azureUtils';
-import { nonNullProp } from '../utils/nonNull';
 import { AppInsightsListStep } from './AppInsightsListStep';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 

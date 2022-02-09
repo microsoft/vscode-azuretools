@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { ResourceNameAvailability, WebSiteManagementClient } from '@azure/arm-appservice';
-import { ResourceGroupListStep, StorageAccountListStep } from '@microsoft/vscode-azext-azureutils';
+import { ResourceGroupListStep, StorageAccountListStep, resourceGroupNamingRules, storageAccountNamingRules } from '@microsoft/vscode-azext-azureutils';
 import { AzureNameStep, IAzureNamingRules } from '@microsoft/vscode-azext-utils';
 import { localize } from '../localize';
 import { createWebSiteClient } from '../utils/azureClients';

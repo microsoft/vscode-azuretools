@@ -5,14 +5,13 @@
 
 import { AppServicePlan, WebSiteManagementClient, WebSiteManagementMappers } from '@azure/arm-appservice';
 import { AzExtLocation, LocationListStep } from '@microsoft/vscode-azext-azureutils';
-import { AzureWizardExecuteStep, parseError } from '@microsoft/vscode-azext-utils';
+import { AzureWizardExecuteStep, nonNullProp, nonNullValue, parseError } from '@microsoft/vscode-azext-utils';
 import { MessageItem, Progress } from 'vscode';
 import { webProvider } from '../constants';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { tryGetAppServicePlan } from '../tryGetSiteResource';
 import { createWebSiteClient } from '../utils/azureClients';
-import { nonNullProp, nonNullValueAndProp } from '../utils/nonNull';
 import { AppKind, WebsiteOS } from './AppKind';
 import { AppServicePlanListStep } from './AppServicePlanListStep';
 import { CustomLocation, IAppServiceWizardContext } from './IAppServiceWizardContext';
@@ -22,7 +21,7 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
 
     public async execute(context: IAppServiceWizardContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         const newPlanName: string = nonNullProp(context, 'newPlanName');
-        const rgName: string = nonNullValueAndProp(context.resourceGroup, 'name');
+        const rgName: string = nonNullProp(nonNullValue(context.resourceGroup, 'name'), 'name');
 
         const findingAppServicePlan: string = localize('FindingAppServicePlan', 'Ensuring App Service plan "{0}" exists...', newPlanName);
         const creatingAppServicePlan: string = localize('CreatingAppServicePlan', 'Creating App Service plan "{0}"...', newPlanName);

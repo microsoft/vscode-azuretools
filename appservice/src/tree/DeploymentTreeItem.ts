@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { SiteSourceControl } from '@azure/arm-appservice';
-import { AzExtTreeItem, IActionContext, openReadOnlyContent, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
+import { AzExtTreeItem, IActionContext, nonNullProp, openReadOnlyContent, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
 import * as os from 'os';
 import { ProgressLocation, ThemeIcon, window } from 'vscode';
 import { KuduModels } from 'vscode-azurekudu';
@@ -13,7 +13,6 @@ import { waitForDeploymentToComplete } from '../deploy/waitForDeploymentToComple
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { ignore404Error, retryKuduCall } from '../utils/kuduUtils';
-import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
 import { DeploymentsTreeItem } from './DeploymentsTreeItem';
 

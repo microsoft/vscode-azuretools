@@ -7,10 +7,9 @@ import type { ApplicationInsightsManagementClient } from "@azure/arm-appinsights
 // eslint-disable-next-line import/no-internal-modules
 import type { ApplicationInsightsComponent, ApplicationInsightsComponentListResult } from "@azure/arm-appinsights/esm/models";
 import { LocationListStep } from "@microsoft/vscode-azext-azureutils";
-import { AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions } from "@microsoft/vscode-azext-utils";
+import { AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, nonNullProp } from "@microsoft/vscode-azext-utils";
 import { localize } from "../localize";
 import { createAppInsightsClient } from "../utils/azureClients";
-import { nonNullProp } from "../utils/nonNull";
 import { AppInsightsCreateStep } from "./AppInsightsCreateStep";
 import { AppInsightsNameStep } from "./AppInsightsNameStep";
 import { IAppServiceWizardContext } from "./IAppServiceWizardContext";

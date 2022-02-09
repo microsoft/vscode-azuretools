@@ -5,9 +5,9 @@
 
 import type { ListGeoRegionsOptionalParams, SkuName, WebSiteManagementClient } from '@azure/arm-appservice';
 import { LocationListStep, uiUtils } from '@microsoft/vscode-azext-azureutils';
+import { nonNullProp } from '@microsoft/vscode-azext-utils';
 import { webProvider } from '../constants';
 import { createWebSiteClient } from '../utils/azureClients';
-import { nonNullProp } from '../utils/nonNull';
 import { AppKind, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 

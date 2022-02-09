@@ -4,14 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { SiteConfigResource, User } from '@azure/arm-appservice';
-import { IActionContext, IAzureQuickPickItem, IAzureQuickPickOptions, ISubscriptionContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import { IActionContext, IAzureQuickPickItem, IAzureQuickPickOptions, ISubscriptionContext, nonNullProp, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import { window } from 'vscode';
 import { ext } from './extensionVariables';
 import { connectToGitHub } from './github/connectToGitHub';
 import { localize } from './localize';
 import { ScmType } from './ScmType';
 import { ParsedSite } from './SiteClient';
-import { nonNullProp } from './utils/nonNull';
 
 export async function editScmType(context: IActionContext, site: ParsedSite, subscriptionContext: ISubscriptionContext, newScmType?: ScmType, showToast: boolean = true): Promise<ScmType | undefined> {
     const client = await site.createClient(context);

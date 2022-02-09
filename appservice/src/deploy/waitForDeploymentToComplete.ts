@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IActionContext, IParsedError, parseError } from '@microsoft/vscode-azext-utils';
+import { IActionContext, IParsedError, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
 import { CancellationToken, window } from 'vscode';
 import { KuduClient, KuduModels } from 'vscode-azurekudu';
 import { createKuduClient } from '../createKuduClient';
@@ -12,7 +12,6 @@ import { localize } from '../localize';
 import { ParsedSite } from '../SiteClient';
 import { delay } from '../utils/delay';
 import { ignore404Error, retryKuduCall } from '../utils/kuduUtils';
-import { nonNullProp } from '../utils/nonNull';
 import { IDeployContext } from './IDeployContext';
 
 export async function waitForDeploymentToComplete(context: IActionContext & Partial<IDeployContext>, site: ParsedSite, expectedId?: string, token?: CancellationToken, pollingInterval: number = 5000): Promise<void> {

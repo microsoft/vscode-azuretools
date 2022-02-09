@@ -6,12 +6,11 @@
 import type { AppServicePlan, SiteLogsConfig, Site, HostNameSslState, WebSiteManagementClient, User, SiteConfigResource, FunctionSecrets, FunctionEnvelope, SlotConfigNamesResource, StringDictionary, SiteSourceControl, HostKeys, WebAppsListFunctionKeysResponse, SourceControl, WebJob, WebSiteInstanceStatus } from '@azure/arm-appservice';
 import type { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
 import { createGenericClient, uiUtils } from '@microsoft/vscode-azext-azureutils';
-import { IActionContext, ISubscriptionContext, parseError } from '@microsoft/vscode-azext-utils';
+import { IActionContext, ISubscriptionContext, nonNullProp, nonNullValue, parseError } from '@microsoft/vscode-azext-utils';
 import { AppKind } from './createAppService/AppKind';
 import { AppSettingsClientProvider, IAppSettingsClient } from './IAppSettingsClient';
 import { tryGetAppServicePlan, tryGetWebApp, tryGetWebAppSlot } from './tryGetSiteResource';
 import { createWebSiteClient } from './utils/azureClients';
-import { nonNullProp, nonNullValue } from './utils/nonNull';
 
 export class ParsedSite implements AppSettingsClientProvider {
     public readonly id: string;
@@ -72,8 +71,10 @@ export class ParsedSite implements AppSettingsClientProvider {
         this.isKubernetesApp = kind.includes('kubernetes');
         this.isLinux = kind.includes('linux');
 
-        this.planResourceGroup = matches[2];
-        this.planName = matches[3];
+        /* eslint-disable @typescript-eslint/no-non-null-assertion */
+        this.planResourceGroup = matches![2];
+        this.planName = matches![3];
+        /* eslint-enable @typescript-eslint/no-non-null-assertion */
 
         this.defaultHostName = nonNullProp(site, 'defaultHostName');
         this.defaultHostUrl = `https://${this.defaultHostName}`;

@@ -6,7 +6,7 @@
 import type { User } from '@azure/arm-appservice';
 import { BasicAuthenticationCredentials, HttpOperationResponse, RestError, ServiceClient } from '@azure/ms-rest-js';
 import { createGenericClient } from '@microsoft/vscode-azext-azureutils';
-import { IActionContext, IParsedError, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import { IActionContext, IParsedError, nonNullProp, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as EventEmitter from 'events';
 import { createServer, Server, Socket } from 'net';
 import { CancellationToken, Disposable } from 'vscode';
@@ -15,7 +15,6 @@ import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { ParsedSite } from './SiteClient';
 import { delay } from './utils/delay';
-import { nonNullProp } from './utils/nonNull';
 
 /**
  * Wrapper for net.Socket that forwards all traffic to the Kudu tunnel websocket endpoint.
@@ -202,8 +201,9 @@ export class TunnelProxy {
     }
 
     private async checkTunnelStatus(context: IActionContext): Promise<void> {
+        const publishingUserName: string = nonNullProp(this._publishCredential, 'publishingUserName');
         const password: string = nonNullProp(this._publishCredential, 'publishingPassword');
-        const client: ServiceClient = await createGenericClient(context, new BasicAuthenticationCredentials(this._publishCredential.publishingUserName, password));
+        const client: ServiceClient = await createGenericClient(context, new BasicAuthenticationCredentials(publishingUserName, password));
 
         let tunnelStatus: ITunnelStatus;
         try {
