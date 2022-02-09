@@ -116,6 +116,11 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                         noErrorOnMissing: true
                     },
                     {
+                        from: toGlobSafePath(path.join(options.projectRoot, 'node_modules', '@microsoft', 'vscode-azext-azureutils', 'resources', '**', '*.svg')),
+                        to: path.join(options.projectRoot, 'dist'),
+                        noErrorOnMissing: true
+                    },
+                    {
                         from: toGlobSafePath(path.join(options.projectRoot, 'node_modules', 'vscode-azureextensionui', 'resources', '**', '*.svg')),
                         to: path.join(options.projectRoot, 'dist'),
                         noErrorOnMissing: true

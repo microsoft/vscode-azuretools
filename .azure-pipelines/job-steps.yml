@@ -8,6 +8,12 @@ steps:
       package: 'ui'
   - template: package-steps.yml
     parameters:
+      package: 'utils'
+  - template: package-steps.yml
+    parameters:
+      package: 'azure'
+  - template: package-steps.yml
+    parameters:
       package: 'kudu'
   - template: package-steps.yml
     parameters:
