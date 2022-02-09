@@ -10,7 +10,7 @@ import type { Environment } from '@azure/ms-rest-azure-env';
 import type { HttpOperationResponse, RequestPrepareOptions, ServiceClient } from '@azure/ms-rest-js';
 import type { PagedAsyncIterableIterator } from '@azure/core-paging';
 import { Disposable, Progress } from 'vscode';
-import type { AzExtParentTreeItem, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
+import type { AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtServiceClientCredentialsT1, AzExtServiceClientCredentialsT2, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
 import { ExtendedLocation, ResourceGroup } from '@azure/arm-resources';
 import { StorageAccount } from '@azure/arm-storage';
 
@@ -371,46 +371,6 @@ export interface IMinimumServiceClientOptions {
      * NOTE: Using "any" to allow for the use of different versions of "@azure/ms-rest-js", which are largely compatible for our purposes
      */
     requestPolicyFactories?: any[] | ((defaultRequestPolicyFactories: any[]) => (void | any[]));
-}
-
-/**
- * Loose type to use for T1 and T2 versions of "@azure/ms-rest-js".  The Azure Account extension returns
- * credentials that will satisfy both T1 and T2 requirements
- */
-export type AzExtServiceClientCredentials = AzExtServiceClientCredentialsT1 & AzExtServiceClientCredentialsT2;
-
-/**
- * Loose interface to allow for the use of different versions of "@azure/ms-rest-js"
- * There's several cases where we don't control which "credentials" interface gets used, causing build errors even though the functionality itself seems to be compatible
- * For example: https://github.com/Azure/azure-sdk-for-js/issues/10045
- * Used specifically for T1 Azure SDKs
- */
-export interface AzExtServiceClientCredentialsT1 {
-    /**
-     * Signs a request with the Authentication header.
-     *
-     * @param {WebResourceLike} webResource The WebResourceLike/request to be signed.
-     * @returns {Promise<WebResourceLike>} The signed request object;
-     */
-    signRequest(webResource: any): Promise<any>;
-}
-
-/**
- * Loose interface to allow for the use of different versions of "@azure/ms-rest-js"
- * Used specifically for T2 Azure SDKs
- */
-export interface AzExtServiceClientCredentialsT2 {
-    /**
-     * Gets the token provided by this credential.
-     *
-     * This method is called automatically by Azure SDK client libraries. You may call this method
-     * directly, but you must also handle token caching and token refreshing.
-     *
-     * @param scopes - The list of scopes for which the token will have access.
-     * @param options - The options used to configure any requests this
-     *                TokenCredential implementation might make.
-     */
-    getToken(scopes?: string | string[], options?: any): Promise<any | null>;
 }
 
 /**
