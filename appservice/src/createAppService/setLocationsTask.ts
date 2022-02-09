@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { ListGeoRegionsOptionalParams, SkuName, WebSiteManagementClient } from '@azure/arm-appservice';
-import { LocationListStep } from '@microsoft/vscode-azext-azureutils';
+import { LocationListStep, uiUtils } from '@microsoft/vscode-azext-azureutils';
 import { webProvider } from '../constants';
 import { createWebSiteClient } from '../utils/azureClients';
 import { nonNullProp } from '../utils/nonNull';
@@ -33,6 +33,6 @@ export async function getWebLocations(context: IAppServiceWizardContext): Promis
     }
 
     const client: WebSiteManagementClient = await createWebSiteClient(context);
-    const locations = await client.listGeoRegions(options);
+    const locations = await uiUtils.listAllIterator(client.listGeoRegions(options));
     return locations.map(l => nonNullProp(l, 'name'));
 }

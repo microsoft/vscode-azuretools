@@ -43,10 +43,10 @@ export async function swapSlot(context: IActionContext, sourceSlot: ParsedSite, 
         // if targetSlot was assigned undefined, the user selected 'production'
         if (!targetSlot) {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            await client.webApps.swapSlotWithProduction(sourceSlot.resourceGroup, sourceSlot.siteName, { targetSlot: sourceSlot.slotName!, preserveVnet: true });
+            await client.webApps.beginSwapSlotWithProductionAndWait(sourceSlot.resourceGroup, sourceSlot.siteName, { targetSlot: sourceSlot.slotName!, preserveVnet: true });
         } else {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            await client.webApps.swapSlotSlot(sourceSlot.resourceGroup, sourceSlot.siteName, { targetSlot: targetSlot.slotName!, preserveVnet: true }, sourceSlot.slotName!);
+            await client.webApps.beginSwapSlotAndWait(sourceSlot.resourceGroup, sourceSlot.siteName, sourceSlot.slotName!, { targetSlot: targetSlot.slotName!, preserveVnet: true });
         }
         void window.showInformationMessage(successfullySwapped);
         ext.outputChannel.appendLog(successfullySwapped);

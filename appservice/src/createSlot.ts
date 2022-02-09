@@ -42,7 +42,7 @@ export async function createSlot(site: ParsedSite, existingSlots: ParsedSite[], 
     const creatingSlot: string = localize('creatingSlot', 'Creating slot "{0}"...', slotName);
     ext.outputChannel.appendLog(creatingSlot);
     return await window.withProgress({ location: ProgressLocation.Notification, title: creatingSlot }, async () => {
-        return await client.webApps.createOrUpdateSlot(site.resourceGroup, site.siteName, newDeploymentSlot, slotName);
+        return await client.webApps.beginCreateOrUpdateSlotAndWait(site.resourceGroup, site.siteName, slotName, newDeploymentSlot);
     });
 }
 
