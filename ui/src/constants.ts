@@ -8,6 +8,7 @@ import { localize } from "./localize";
 
 export const resourcesProvider: string = 'Microsoft.Resources';
 export const storageProvider: string = 'Microsoft.Storage';
+export const storageProviderType = "Microsoft.Storage/storageAccounts";
 export const learnMore: string = localize('learnMore', "Learn more");
 
 export namespace AzExtQuickInputButtons {

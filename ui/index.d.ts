@@ -4,11 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { SubscriptionModels } from '@azure/arm-resources-subscriptions';
-import type { ExtendedLocation } from '@azure/arm-resources/esm/models';
-import type { ResourceManagementModels } from '@azure/arm-resources';
-import type { StorageManagementModels } from '@azure/arm-storage';
+import type { ExtendedLocation, ResourceGroup } from '@azure/arm-resources';
+import type * as coreClient from '@azure/core-client';
+import type { PagedAsyncIterableIterator } from "@azure/core-paging";
 import type { Environment } from '@azure/ms-rest-azure-env';
 import type { HttpOperationResponse, RequestPrepareOptions, ServiceClient } from '@azure/ms-rest-js';
+import type { StorageAccount } from '@azure/arm-storage';
 import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
@@ -140,11 +141,18 @@ export abstract class SubscriptionTreeItemBase extends AzExtParentTreeItem {
 }
 
 /**
+ * Loose type to use for T1 and T2 versions of "@azure/ms-rest-js".  The Azure Account extension returns
+ * credentials that will satisfy both T1 and T2 requirements
+ */
+export type AzExtServiceClientCredentials = AzExtServiceClientCredentialsT1 & AzExtServiceClientCredentialsT2;
+
+/**
  * Loose interface to allow for the use of different versions of "@azure/ms-rest-js"
  * There's several cases where we don't control which "credentials" interface gets used, causing build errors even though the functionality itself seems to be compatible
  * For example: https://github.com/Azure/azure-sdk-for-js/issues/10045
+ * Used specifically for T1 Azure SDKs
  */
-export interface AzExtServiceClientCredentials {
+export interface AzExtServiceClientCredentialsT1 {
     /**
      * Signs a request with the Authentication header.
      *
@@ -152,6 +160,25 @@ export interface AzExtServiceClientCredentials {
      * @returns {Promise<WebResourceLike>} The signed request object;
      */
     signRequest(webResource: any): Promise<any>;
+}
+
+/**
+ * Loose interface to allow for the use of different versions of "@azure/ms-rest-js"
+ * Used specifically for T2 Azure SDKs
+ */
+export interface AzExtServiceClientCredentialsT2 {
+
+    /**
+     * Gets the token provided by this credential.
+     *
+     * This method is called automatically by Azure SDK client libraries. You may call this method
+     * directly, but you must also handle token caching and token refreshing.
+     *
+     * @param scopes - The list of scopes for which the token will have access.
+     * @param options - The options used to configure any requests this
+     *                TokenCredential implementation might make.
+     */
+    getToken(scopes?: string | string[], options?: any): Promise<any | null>;
 }
 
 /**
@@ -1162,13 +1189,13 @@ export interface IResourceGroupWizardContext extends ILocationWizardContext, IRe
      * If an existing resource group is picked, this value will be defined after `ResourceGroupListStep.prompt` occurs
      * If a new resource group is picked, this value will be defined after the `execute` phase of the 'create' subwizard
      */
-    resourceGroup?: ResourceManagementModels.ResourceGroup;
+    resourceGroup?: ResourceGroup;
 
     /**
      * The task used to get existing resource groups.
      * By specifying this in the context, we can ensure that Azure is only queried once for the entire wizard
      */
-    resourceGroupsTask?: Promise<ResourceManagementModels.ResourceGroup[]>;
+    resourceGroupsTask?: Promise<ResourceGroup[]>;
 
     newResourceGroupName?: string;
 
@@ -1185,7 +1212,7 @@ export declare class ResourceGroupListStep<T extends IResourceGroupWizardContext
      * Used to get existing resource groups. By passing in the context, we can ensure that Azure is only queried once for the entire wizard
      * @param wizardContext The context of the wizard.
      */
-    public static getResourceGroups<T extends IResourceGroupWizardContext>(wizardContext: T): Promise<ResourceManagementModels.ResourceGroup[]>;
+    public static getResourceGroups<T extends IResourceGroupWizardContext>(wizardContext: T): Promise<ResourceGroup[]>;
 
     /**
      * Checks existing resource groups in the wizard's subscription to see if the name is available.
@@ -1218,7 +1245,7 @@ export interface IStorageAccountWizardContext extends IResourceGroupWizardContex
      * If an existing storage account is picked, this value will be defined after `StorageAccountListStep.prompt` occurs
      * If a new storage account is picked, this value will be defined after the `execute` phase of the 'create' subwizard
      */
-    storageAccount?: StorageManagementModels.StorageAccount;
+    storageAccount?: StorageAccount;
 
     newStorageAccountName?: string;
 }
@@ -1227,6 +1254,7 @@ export declare enum StorageAccountKind {
     Storage = "Storage",
     StorageV2 = "StorageV2",
     BlobStorage = "BlobStorage",
+    BlockBlobStorage = "BlockBlobStorage",
 }
 
 export declare enum StorageAccountPerformance {
@@ -1408,7 +1436,11 @@ export interface IMinimumServiceClientOptions {
     requestPolicyFactories?: any[] | ((defaultRequestPolicyFactories: any[]) => (void | any[]));
 }
 
-export type AzExtGenericClientInfo = AzExtServiceClientCredentials | { credentials: AzExtServiceClientCredentials; environment: Environment; } | undefined;
+/**
+ * Credential type to be used for creating generic http rest clients
+ */
+export type AzExtGenericCredentials = AzExtServiceClientCredentialsT1 | AzExtServiceClientCredentialsT2 | AzExtServiceClientCredentials;
+export type AzExtGenericClientInfo = AzExtGenericCredentials | { credentials: AzExtGenericCredentials; environment: Environment; } | undefined;
 
 /**
  * Creates a generic http rest client (i.e. for non-Azure calls or for Azure calls that the available sdks don't support), ensuring best practices are followed. For example:
@@ -1648,4 +1680,8 @@ export declare namespace AzExtFsExtra {
     export function readFile(resource: Uri | string): Promise<string>;
     export function writeFile(resource: Uri | string, contents: string): Promise<void>;
     export function pathExists(resource: Uri | string): Promise<boolean>;
+}
+
+export declare namespace uiUtils {
+    export function listAllIterator<T>(iterator: PagedAsyncIterableIterator<T>): Promise<T[]>
 }

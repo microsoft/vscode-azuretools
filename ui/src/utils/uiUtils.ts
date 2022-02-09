@@ -3,6 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { PagedAsyncIterableIterator } from "@azure/core-paging";
+
 export namespace uiUtils {
     export interface IPartialList<T> extends Array<T> {
         nextLink?: string;
@@ -19,5 +21,14 @@ export namespace uiUtils {
         }
 
         return all;
+    }
+
+    export async function listAllIterator<T>(iterator: PagedAsyncIterableIterator<T>): Promise<T[]> {
+        const resources: T[] = [];
+        for await (const r of iterator) {
+            resources.push(r);
+        }
+
+        return resources;
     }
 }

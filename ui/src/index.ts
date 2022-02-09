@@ -27,6 +27,7 @@ export * from './tree/AzureAccountTreeItemBase';
 export * from './tree/GenericTreeItem';
 export * from './tree/SubscriptionTreeItemBase';
 export * from './utils/AzExtFsExtra';
+export * from './utils/uiUtils';
 export * from './wizard/AzureNameStep';
 export * from './wizard/AzureWizard';
 export * from './wizard/AzureWizardExecuteStep';
