@@ -6,7 +6,7 @@
 import { IActionContext } from '@microsoft/vscode-azext-utils';
 import * as fse from 'fs-extra';
 import { glob as globGitignore } from 'glob-gitignore';
-import { globby } from 'globby';
+import * as globby from 'globby';
 import * as path from 'path';
 import * as prettybytes from 'pretty-bytes';
 import { Readable } from 'stream';
