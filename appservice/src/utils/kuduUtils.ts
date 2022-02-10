@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IActionContext, parseError } from '@microsoft/vscode-azext-utils';
-import { default as retry } from 'p-retry';
+import * as retry from 'p-retry';
 
 /**
  * Kudu calls are not the most reliable - this will retry a few times with exponential backoff. Each "set" of retries will take a max of about 15 seconds

@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import * as retry from 'p-retry';
 import { IActionContext } from '@microsoft/vscode-azext-utils';
-import { default as retry } from 'p-retry';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { ParsedSite } from '../SiteClient';
