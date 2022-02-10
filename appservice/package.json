@@ -1,5 +1,5 @@
 {
-    "name": "vscode-azureappservice",
+    "name": "@microsoft/vscode-azext-azureappservice",
     "author": "Microsoft Corporation",
     "version": "0.87.0",
     "description": "Common tools for developing Azure App Service extensions for VS Code",
