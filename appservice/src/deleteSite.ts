@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { WebSiteManagementModels } from '@azure/arm-appservice';
+import type { AppServicePlan } from '@azure/arm-appservice';
+import { DialogResponses, IActionContext } from '@microsoft/vscode-azext-utils';
 import { isNullOrUndefined } from 'util';
 import * as vscode from 'vscode';
-import { DialogResponses, IActionContext } from 'vscode-azureextensionui';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { ParsedSite } from './SiteClient';
@@ -20,7 +20,7 @@ export async function deleteSite(context: IActionContext, site: ParsedSite): Pro
 
     await context.ui.showWarningMessage(confirmMessage, { modal: true, stepName: 'confirmDelete' }, DialogResponses.deleteResponse);
 
-    let plan: WebSiteManagementModels.AppServicePlan | undefined;
+    let plan: AppServicePlan | undefined;
     let deletePlan: boolean = false;
 
     const client = await site.createClient(context);

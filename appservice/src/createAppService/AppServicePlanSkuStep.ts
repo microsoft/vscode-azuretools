@@ -3,16 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { WebSiteManagementModels } from '@azure/arm-appservice';
-import { AzureWizardPromptStep, IAzureQuickPickItem } from 'vscode-azureextensionui';
+import type { SkuDescription } from '@azure/arm-appservice';
+import { AzureWizardPromptStep, IAzureQuickPickItem, nonNullProp } from '@microsoft/vscode-azext-utils';
 import { localize } from '../localize';
-import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
 import { AppKind, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 import { setLocationsTask } from './setLocationsTask';
 
-type ExtendedSkuDescription = WebSiteManagementModels.SkuDescription & { label?: string; description?: string; group?: string }
+type ExtendedSkuDescription = SkuDescription & { label?: string; description?: string; group?: string }
 
 export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(context: IAppServiceWizardContext): Promise<void> {
@@ -28,7 +27,7 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
             skus = skus.filter(s => !s.family || regExp.test(s.family));
         }
 
-        const pricingTiers: IAzureQuickPickItem<WebSiteManagementModels.SkuDescription | undefined>[] = skus.map(s => {
+        const pricingTiers: IAzureQuickPickItem<SkuDescription | undefined>[] = skus.map(s => {
             return {
                 label: s.label || nonNullProp(s, 'name'),
                 description: s.description || s.tier,
@@ -95,7 +94,7 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
         ];
     }
 
-    private getAdvancedSkus(): WebSiteManagementModels.SkuDescription[] {
+    private getAdvancedSkus(): SkuDescription[] {
         return [
             {
                 name: 'B2',
@@ -149,7 +148,7 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
         ];
     }
 
-    private getElasticPremiumSkus(): WebSiteManagementModels.SkuDescription[] {
+    private getElasticPremiumSkus(): SkuDescription[] {
         return [
             {
                 name: 'EP1',
@@ -175,7 +174,7 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
         ];
     }
 
-    private getWorkflowStandardSkus(): WebSiteManagementModels.SkuDescription[] {
+    private getWorkflowStandardSkus(): SkuDescription[] {
         return [
             {
                 name: 'WS1',

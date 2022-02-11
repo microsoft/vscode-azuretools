@@ -4,11 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { BasicAuthenticationCredentials, ServiceClientCredentials } from '@azure/ms-rest-js';
-import { appendExtensionUserAgent, createGenericClient, IActionContext, parseError } from 'vscode-azureextensionui';
+import { createGenericClient } from '@microsoft/vscode-azext-azureutils';
+import { appendExtensionUserAgent, IActionContext, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
 import type { KuduClient } from 'vscode-azurekudu';
 import { localize } from './localize';
 import { ParsedSite } from './SiteClient';
-import { nonNullProp } from './utils/nonNull';
 
 interface IInternalKuduActionContext extends IActionContext {
     _cachedKuduClient?: KuduClient;
@@ -27,7 +27,7 @@ export async function createKuduClient(context: IInternalKuduActionContext, site
 
         const clientOptions = { baseUri: site.kuduUrl, userAgent: appendExtensionUserAgent };
 
-        let credentials = site.subscription.credentials;
+        let serviceClientCredentials: ServiceClientCredentials = site.subscription.credentials;
 
         try {
             await pingKuduSite(context, site, site.subscription.credentials);
@@ -38,7 +38,7 @@ export async function createKuduClient(context: IInternalKuduActionContext, site
                     const user = await client.getWebAppPublishCredential();
                     const basicCreds = new BasicAuthenticationCredentials(nonNullProp(user, 'publishingUserName'), nonNullProp(user, 'publishingPassword'));
                     await pingKuduSite(context, site, basicCreds);
-                    credentials = basicCreds;
+                    serviceClientCredentials = basicCreds;
                     context.telemetry.properties.usedPublishCreds = 'true';
                 } catch (pubCredError) {
                     // Pub creds didn't work. Fall back to original credentials
@@ -47,7 +47,7 @@ export async function createKuduClient(context: IInternalKuduActionContext, site
             }
         }
 
-        context._cachedKuduClient = new (await import('vscode-azurekudu')).KuduClient(credentials, clientOptions);
+        context._cachedKuduClient = new (await import('vscode-azurekudu')).KuduClient(serviceClientCredentials, clientOptions);
     }
 
     return context._cachedKuduClient;

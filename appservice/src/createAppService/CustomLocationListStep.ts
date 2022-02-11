@@ -3,7 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzExtLocation, IAzureQuickPickItem, IAzureQuickPickOptions, LocationListStep, parseError } from 'vscode-azureextensionui';
+import { AzExtLocation, LocationListStep } from '@microsoft/vscode-azext-azureutils';
+import { IAzureQuickPickItem, IAzureQuickPickOptions, parseError } from '@microsoft/vscode-azext-utils';
 import { localize } from '../localize';
 import { createResourceGraphClient } from '../utils/azureClients';
 import { CustomLocation, IAppServiceWizardContext } from './IAppServiceWizardContext';

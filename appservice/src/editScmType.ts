@@ -3,15 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { WebSiteManagementModels } from '@azure/arm-appservice';
+import type { SiteConfigResource, User } from '@azure/arm-appservice';
+import { IActionContext, IAzureQuickPickItem, IAzureQuickPickOptions, ISubscriptionContext, nonNullProp, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import { window } from 'vscode';
-import { IActionContext, IAzureQuickPickItem, IAzureQuickPickOptions, ISubscriptionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { ext } from './extensionVariables';
 import { connectToGitHub } from './github/connectToGitHub';
 import { localize } from './localize';
 import { ScmType } from './ScmType';
 import { ParsedSite } from './SiteClient';
-import { nonNullProp } from './utils/nonNull';
 
 export async function editScmType(context: IActionContext, site: ParsedSite, subscriptionContext: ISubscriptionContext, newScmType?: ScmType, showToast: boolean = true): Promise<ScmType | undefined> {
     const client = await site.createClient(context);
@@ -20,7 +19,7 @@ export async function editScmType(context: IActionContext, site: ParsedSite, sub
         throw new Error(localize('noEditScmOnLinuxCons', 'Linux consumption plans only support zip deploy. See [here](https://aka.ms/AA7avjx) for more information.'));
     }
 
-    const config: WebSiteManagementModels.SiteConfigResource = await client.getSiteConfig();
+    const config: SiteConfigResource = await client.getSiteConfig();
     newScmType = newScmType ? newScmType : await showScmPrompt(context, nonNullProp(config, 'scmType'));
     if (newScmType === ScmType.GitHub) {
         if (config.scmType !== ScmType.None) {
@@ -40,7 +39,7 @@ export async function editScmType(context: IActionContext, site: ParsedSite, sub
     }
 
     if (newScmType === ScmType.LocalGit) {
-        const user: WebSiteManagementModels.User = await client.getPublishingUser();
+        const user: User = await client.getPublishingUser();
         if (user.publishingUserName) {
             // first time users must set up deployment credentials via the Portal or they will not have a UserName
             const gitCloneUri: string = `https://${user.publishingUserName}@${site.gitUrl}`;

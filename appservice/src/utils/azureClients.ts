@@ -7,7 +7,7 @@ import type { ApplicationInsightsManagementClient } from '@azure/arm-appinsights
 import type { WebSiteManagementClient } from '@azure/arm-appservice';
 import type { ResourceGraphClient } from '@azure/arm-resourcegraph';
 import type { ResourceManagementClient } from '@azure/arm-resources';
-import { AzExtClientContext, createAzureClient, createAzureSubscriptionClient } from 'vscode-azureextensionui';
+import { AzExtClientContext, createAzureClient, createAzureSubscriptionClient } from '@microsoft/vscode-azext-azureutils';
 
 // Lazy-load @azure packages to improve startup performance.
 // NOTE: The client is the only import that matters, the rest of the types disappear when compiled to JavaScript

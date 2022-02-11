@@ -3,15 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { WebSiteManagementModels } from '@azure/arm-appservice';
+import type { User } from '@azure/arm-appservice';
+import { callWithMaskHandling, IActionContext, nonNullProp } from '@microsoft/vscode-azext-utils';
 // eslint-disable-next-line import/no-internal-modules
 import * as git from 'simple-git/promise';
 import * as vscode from 'vscode';
-import { callWithMaskHandling, IActionContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { ParsedSite } from '../SiteClient';
-import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
 import { verifyNoRunFromPackageSetting } from '../verifyNoRunFromPackageSetting';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
@@ -30,7 +29,7 @@ type localGitOptions = {
 
 export async function localGitDeploy(site: ParsedSite, options: localGitOptions, context: IActionContext): Promise<void> {
     const client = await site.createClient(context);
-    const publishCredentials: WebSiteManagementModels.User = await client.getWebAppPublishCredential();
+    const publishCredentials: User = await client.getWebAppPublishCredential();
     const publishingPassword: string = nonNullProp(publishCredentials, 'publishingPassword');
     const publishingUserName: string = nonNullProp(publishCredentials, 'publishingUserName');
 

@@ -3,17 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { WebSiteManagementModels } from '@azure/arm-appservice';
+import type { SiteSourceControl } from '@azure/arm-appservice';
+import { AzExtTreeItem, IActionContext, nonNullProp, openReadOnlyContent, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
 import * as os from 'os';
 import { ProgressLocation, ThemeIcon, window } from 'vscode';
-import { AzExtTreeItem, IActionContext, openReadOnlyContent, TreeItemIconPath } from 'vscode-azureextensionui';
 import { KuduModels } from 'vscode-azurekudu';
 import { createKuduClient } from '../createKuduClient';
 import { waitForDeploymentToComplete } from '../deploy/waitForDeploymentToComplete';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { ignore404Error, retryKuduCall } from '../utils/kuduUtils';
-import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
 import { DeploymentsTreeItem } from './DeploymentsTreeItem';
 
@@ -146,7 +145,7 @@ export class DeploymentTreeItem extends AzExtTreeItem {
 
     public async viewCommitInGitHub(context: IActionContext): Promise<void> {
         const client = await this.parent.site.createClient(context);
-        const sourceControl: WebSiteManagementModels.SiteSourceControl = await client.getSourceControl();
+        const sourceControl: SiteSourceControl = await client.getSourceControl();
         if (sourceControl.repoUrl) {
             const gitHubCommitUrl: string = `${sourceControl.repoUrl}/commit/${this._deployResult.id}`;
             await openUrl(gitHubCommitUrl);

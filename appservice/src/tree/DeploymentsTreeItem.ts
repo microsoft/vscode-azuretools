@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { WebSiteManagementModels } from '@azure/arm-appservice';
+import type { SiteConfig, SiteSourceControl } from '@azure/arm-appservice';
+import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
 import { ThemeIcon } from 'vscode';
-import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
 import { KuduModels } from 'vscode-azurekudu';
 import { createKuduClient } from '../createKuduClient';
 import { ext } from '../extensionVariables';
@@ -29,7 +29,7 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
     private _scmType?: string;
     private _repoUrl?: string;
 
-    public constructor(parent: AzExtParentTreeItem, site: ParsedSite, siteConfig: WebSiteManagementModels.SiteConfig, sourceControl: WebSiteManagementModels.SiteSourceControl) {
+    public constructor(parent: AzExtParentTreeItem, site: ParsedSite, siteConfig: SiteConfig, sourceControl: SiteSourceControl) {
         super(parent);
         this.site = site;
         this._scmType = siteConfig.scmType;
@@ -63,7 +63,7 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
 
     public async loadMoreChildrenImpl(_clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {
         const client = await this.site.createClient(context);
-        const siteConfig: WebSiteManagementModels.SiteConfig = await client.getSiteConfig();
+        const siteConfig: SiteConfig = await client.getSiteConfig();
         const kuduClient = await createKuduClient(context, this.site);
         const deployments: KuduModels.DeployResult[] = await retryKuduCall(context, 'getDeployResults', async () => {
             return kuduClient.deployment.getDeployResults();
@@ -103,8 +103,8 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
 
     public async refreshImpl(context: IActionContext): Promise<void> {
         const client = await this.site.createClient(context);
-        const siteConfig: WebSiteManagementModels.SiteConfig = await client.getSiteConfig();
-        const sourceControl: WebSiteManagementModels.SiteSourceControl = await client.getSourceControl();
+        const siteConfig: SiteConfig = await client.getSiteConfig();
+        const sourceControl: SiteSourceControl = await client.getSourceControl();
         this._scmType = siteConfig.scmType;
         this._repoUrl = sourceControl.repoUrl;
     }

@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { WebSiteManagementModels } from '@azure/arm-appservice';
+import type { SiteConfigResource, User } from '@azure/arm-appservice';
+import { callWithTelemetryAndErrorHandling, IActionContext } from '@microsoft/vscode-azext-utils';
 import * as portfinder from 'portfinder';
 import * as vscode from 'vscode';
-import { callWithTelemetryAndErrorHandling, IActionContext } from 'vscode-azureextensionui';
 import { localize } from '../localize';
 import { ParsedSite } from '../SiteClient';
 import { TunnelProxy } from '../TunnelProxy';
@@ -21,7 +21,7 @@ export enum RemoteDebugLanguage {
     Python
 }
 
-export async function startRemoteDebug(context: IActionContext, site: ParsedSite, siteConfig: WebSiteManagementModels.SiteConfigResource, language: RemoteDebugLanguage): Promise<void> {
+export async function startRemoteDebug(context: IActionContext, site: ParsedSite, siteConfig: SiteConfigResource, language: RemoteDebugLanguage): Promise<void> {
     if (isRemoteDebugging) {
         throw new Error(localize('remoteDebugAlreadyStarted', 'Azure Remote Debugging is currently starting or already started.'));
     }
@@ -35,7 +35,7 @@ export async function startRemoteDebug(context: IActionContext, site: ParsedSite
     }
 }
 
-async function startRemoteDebugInternal(context: IActionContext, site: ParsedSite, siteConfig: WebSiteManagementModels.SiteConfigResource, language: RemoteDebugLanguage): Promise<void> {
+async function startRemoteDebugInternal(context: IActionContext, site: ParsedSite, siteConfig: SiteConfigResource, language: RemoteDebugLanguage): Promise<void> {
     await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, cancellable: true }, async (progress, token): Promise<void> => {
         const localHostPortNumber: number = await portfinder.getPortPromise();
         const debugConfig: vscode.DebugConfiguration = await getDebugConfiguration(language, localHostPortNumber);
@@ -46,7 +46,7 @@ async function startRemoteDebugInternal(context: IActionContext, site: ParsedSit
         reportMessage(localize('remoteDebugStartingTunnel', 'Starting tunnel proxy...'), progress, token);
 
         const client = await site.createClient(context);
-        const publishCredential: WebSiteManagementModels.User = await client.getWebAppPublishCredential();
+        const publishCredential: User = await client.getWebAppPublishCredential();
         const tunnelProxy: TunnelProxy = new TunnelProxy(localHostPortNumber, site, publishCredential);
         await callWithTelemetryAndErrorHandling('appService.remoteDebugStartProxy', async (startContext: IActionContext) => {
             startContext.errorHandling.suppressDisplay = true;
@@ -86,7 +86,7 @@ async function getDebugConfiguration(language: RemoteDebugLanguage, portNumber: 
     const sessionId: string = Date.now().toString();
     const host: string = 'localhost';
 
-    switch (language){
+    switch (language) {
         case RemoteDebugLanguage.Node:
             return await getNodeDebugConfiguration(sessionId, portNumber, host);
         case RemoteDebugLanguage.Python:
@@ -96,25 +96,25 @@ async function getDebugConfiguration(language: RemoteDebugLanguage, portNumber: 
     }
 }
 
-async function getDebugPath() : Promise<string> {
-        // Try to map workspace folder source files to the remote instance
-        if (vscode.workspace.workspaceFolders) {
-            if (vscode.workspace.workspaceFolders.length === 1) {
-                return vscode.workspace.workspaceFolders[0].uri.fsPath;
-            } else {
-                // In this case we don't know which folder to use. Show a warning and proceed.
-                // In the future we should allow users to choose a workspace folder to map sources from.
-                const root = await vscode.window.showWorkspaceFolderPick();
-                if (root)
-                    return root.uri.fsPath;
-                else
-                    throw new Error(localize('remoteDebugNoFolders', 'Please select a workspace folder before attaching a debugger.'));
-            }
+async function getDebugPath(): Promise<string> {
+    // Try to map workspace folder source files to the remote instance
+    if (vscode.workspace.workspaceFolders) {
+        if (vscode.workspace.workspaceFolders.length === 1) {
+            return vscode.workspace.workspaceFolders[0].uri.fsPath;
         } else {
-            // vscode will throw an error if you try to start debugging without any workspace folder open
-            throw new Error(localize('remoteDebugNoFolders', 'Please open a workspace folder before attaching a debugger.'));
+            // In this case we don't know which folder to use. Show a warning and proceed.
+            // In the future we should allow users to choose a workspace folder to map sources from.
+            const root = await vscode.window.showWorkspaceFolderPick();
+            if (root)
+                return root.uri.fsPath;
+            else
+                throw new Error(localize('remoteDebugNoFolders', 'Please select a workspace folder before attaching a debugger.'));
         }
+    } else {
+        // vscode will throw an error if you try to start debugging without any workspace folder open
+        throw new Error(localize('remoteDebugNoFolders', 'Please open a workspace folder before attaching a debugger.'));
     }
+}
 
 async function getNodeDebugConfiguration(sessionId: string, portNumber: number, host: string): Promise<vscode.DebugConfiguration> {
     const config: vscode.DebugConfiguration = {

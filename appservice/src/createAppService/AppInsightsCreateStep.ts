@@ -4,15 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { ApplicationInsightsManagementClient } from '@azure/arm-appinsights';
-import type { ResourceManagementClient, ResourceManagementModels } from '@azure/arm-resources';
+import type { Provider, ProviderResourceType, ResourceGroup, ResourceManagementClient } from '@azure/arm-resources';
 import type { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
+import { AzExtLocation, createGenericClient, LocationListStep } from '@microsoft/vscode-azext-azureutils';
+import { AzureWizardExecuteStep, IActionContext, IParsedError, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
 import { MessageItem, Progress } from 'vscode';
-import { AzExtLocation, AzureWizardExecuteStep, createGenericClient, IActionContext, IParsedError, LocationListStep, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { createAppInsightsClient, createResourceClient } from '../utils/azureClients';
 import { areLocationNamesEqual } from '../utils/azureUtils';
-import { nonNullProp } from '../utils/nonNull';
 import { AppInsightsListStep } from './AppInsightsListStep';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
@@ -27,7 +27,7 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
 
         if (appInsightsLocation) {
             const client: ApplicationInsightsManagementClient = await createAppInsightsClient(context);
-            const rg: ResourceManagementModels.ResourceGroup = nonNullProp(context, 'resourceGroup');
+            const rg: ResourceGroup = nonNullProp(context, 'resourceGroup');
             const rgName: string = nonNullProp(rg, 'name');
             const aiName: string = nonNullProp(context, 'newAppInsightsName');
 
@@ -125,8 +125,8 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
 
     private async getLocations(context: IAppServiceWizardContext): Promise<string[] | undefined> {
         const resourceClient: ResourceManagementClient = await createResourceClient(context);
-        const supportedRegions: ResourceManagementModels.Provider = await resourceClient.providers.get('microsoft.insights');
-        const componentsResourceType: ResourceManagementModels.ProviderResourceType | undefined = supportedRegions.resourceTypes && supportedRegions.resourceTypes.find(aiRt => aiRt.resourceType === 'components');
+        const supportedRegions: Provider = await resourceClient.providers.get('microsoft.insights');
+        const componentsResourceType: ProviderResourceType | undefined = supportedRegions.resourceTypes && supportedRegions.resourceTypes.find(aiRt => aiRt.resourceType === 'components');
         if (!!componentsResourceType && !!componentsResourceType.locations) {
             return componentsResourceType.locations;
         } else {
