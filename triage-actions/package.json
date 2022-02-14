@@ -44,10 +44,5 @@
     "ts-node": "^8.6.2",
     "typescript": "^3.8.3",
     "yargs": "^15.3.1"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "npm run build && git add \"**/*.js\""
-    }
   }
 }

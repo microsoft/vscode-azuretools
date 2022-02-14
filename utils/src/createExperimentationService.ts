@@ -17,8 +17,13 @@ export async function createExperimentationService(ctx: vscode.ExtensionContext,
 
     if (targetPopulation === undefined) {
         if (ctx.extensionMode !== vscode.ExtensionMode.Production) {
+            // Extension is being debugged
             targetPopulation = tas.TargetPopulation.Team;
         } else if (/alpha/ig.test(extensionVersion)) {
+            // Extension version has "alpha"
+            targetPopulation = tas.TargetPopulation.Insiders;
+        } else if (/Insiders/ig.test(vscode.env.appName)) {
+            // Running in VSCode Insiders
             targetPopulation = tas.TargetPopulation.Insiders;
         } else {
             targetPopulation = tas.TargetPopulation.Public;
