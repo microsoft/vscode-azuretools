@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-azureutils",
     "author": "Microsoft Corporation",
-    "version": "0.0.3",
+    "version": "0.1.0",
     "description": "Common Azure utils for developing Azure extensions for VS Code",
     "tags": [
         "azure",
@@ -39,7 +39,7 @@
         "@azure/arm-storage-profile-2020-09-01-hybrid": "^1.0.0",
         "@azure/ms-rest-js": "^2.2.1",
         "@azure/ms-rest-nodeauth": "^3.1.1",
-        "@microsoft/vscode-azext-utils": "^0.0.2",
+        "@microsoft/vscode-azext-utils": "^0.1.0",
         "semver": "^5.7.1",
         "uuid": "^8.3.2",
         "vscode-nls": "^4.1.1"
