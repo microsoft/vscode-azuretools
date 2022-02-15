@@ -53,7 +53,7 @@ export declare abstract class AzureAccountTreeItemBase extends AzExtParentTreeIt
     /**
      * Azure Account Tree Item
      * @param parent The parent of this node or undefined if it's the root of the tree.
-     * @param testAccount Unofficial api for testing - see `TestAzureAccount` in vscode-azureextensiondev package
+     * @param testAccount Unofficial api for testing - see `TestAzureAccount` in @microsoft/vscode-azext-dev package
      */
     public constructor(parent?: AzExtParentTreeItem, testAccount?: {});
 

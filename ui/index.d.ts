@@ -489,7 +489,7 @@ export declare abstract class AzureAccountTreeItemBase extends AzExtParentTreeIt
     /**
      * Azure Account Tree Item
      * @param parent The parent of this node or undefined if it's the root of the tree.
-     * @param testAccount Unofficial api for testing - see `TestAzureAccount` in vscode-azureextensiondev package
+     * @param testAccount Unofficial api for testing - see `TestAzureAccount` in @microsoft/vscode-azext-dev package
      */
     public constructor(parent?: AzExtParentTreeItem, testAccount?: {});
 
@@ -749,7 +749,7 @@ export type PromptResult = {
 
 /**
  * Wrapper interface of several methods that handle user input
- * The implementations of this interface are accessed through `IActionContext.ui` or `TestActionContext.ui` (in the "vscode-azureextensiondev" package)
+ * The implementations of this interface are accessed through `IActionContext.ui` or `TestActionContext.ui` (in the "@microsoft/vscode-azext-dev" package)
  */
 export interface IAzureUserInput {
     readonly onDidFinishPrompt: Event<PromptResult>;
@@ -1375,7 +1375,7 @@ export interface UIExtensionVariables {
     outputChannel: IAzExtOutputChannel;
 
     /**
-     * Set to true if not running under a webpacked 'dist' folder as defined in 'vscode-azureextensiondev'
+     * Set to true if not running under a webpacked 'dist' folder as defined in '@microsoft/vscode-azext-dev'
      */
     ignoreBundle?: boolean;
 }

@@ -6,7 +6,7 @@
 import { BasicAuthenticationCredentials, HttpOperationResponse, Serializer, TokenCredentials, WebResource } from '@azure/ms-rest-js';
 import * as assert from 'assert';
 import * as http from 'http';
-import { createTestActionContext } from 'vscode-azureextensiondev';
+import { createTestActionContext } from '@microsoft/vscode-azext-dev';
 import { createGenericClient, sendRequestWithTimeout } from '../src/createAzureClient';
 import { assertThrowsAsync } from './assertThrowsAsync';
 
