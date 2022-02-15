@@ -10,7 +10,7 @@ import type { Environment } from '@azure/ms-rest-azure-env';
 import type { HttpOperationResponse, RequestPrepareOptions, ServiceClient } from '@azure/ms-rest-js';
 import type { PagedAsyncIterableIterator } from '@azure/core-paging';
 import { Disposable, Progress } from 'vscode';
-import type { AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtServiceClientCredentialsT1, AzExtServiceClientCredentialsT2, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
+import type { AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtServiceClientCredentialsT1, AzExtServiceClientCredentialsT2, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IRelatedNameWizardContext, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
 import { ExtendedLocation, ResourceGroup } from '@azure/arm-resources';
 import { StorageAccount } from '@azure/arm-storage';
 
@@ -77,12 +77,6 @@ export declare abstract class AzureAccountTreeItemBase extends AzExtParentTreeIt
 * NOTE: If root is a tree item, it will find the subscription ancestor and get environment.portalLink from there
 */
 export declare function openInPortal(root: ISubscriptionContext | AzExtTreeItem, id: string, options?: OpenInPortalOptions): Promise<void>;
-
-export declare class UserCancelledError extends Error {
-    constructor(stepName?: string);
-}
-
-export declare class NoResourceFoundError extends Error { }
 
 export type AzExtLocation = SubscriptionModels.Location & {
     id: string;
@@ -175,14 +169,6 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
      * Implement this to set descriptions on location quick pick items.
      */
     public static getQuickPickDescription?: (location: AzExtLocation) => string | undefined;
-}
-
-export interface IRelatedNameWizardContext extends IActionContext {
-    /**
-     * A task that evaluates to the related name that should be used as the default for other new resources or undefined if a unique name could not be found
-     * The task will be defined after `AzureNameStep.prompt` occurs.
-     */
-    relatedNameTask?: Promise<string | undefined>;
 }
 
 /**
