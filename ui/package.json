@@ -51,6 +51,7 @@
     },
     "devDependencies": {
         "@microsoft/eslint-config-azuretools": "^0.1.0",
+        "@microsoft/vscode-azext-dev": "^0.1.1",
         "@types/fs-extra": "^8.1.0",
         "@types/html-to-text": "^1.4.31",
         "@types/mocha": "^7.0.2",
@@ -66,7 +67,6 @@
         "mocha-junit-reporter": "^2.0.2",
         "mocha-multi-reporters": "^1.1.7",
         "typescript": "^4.3.5",
-        "vscode-azureextensiondev": "^0.9.5",
         "vscode-test": "^1.3.0"
     }
 }
