@@ -11,7 +11,6 @@ import { localize } from '../localize';
 import { getIconPath } from './IconPath';
 import { SubscriptionTreeItemBase } from './SubscriptionTreeItemBase';
 import { AzExtServiceClientCredentials, nonNullProp, nonNullValue, UserCancelledError, registerEvent, AzureWizardPromptStep, AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, addExtensionValueToMask, IActionContext, ISubscriptionActionContext, TreeItemIconPath, ISubscriptionContext } from '@microsoft/vscode-azext-utils';
-import { DeviceTokenCredentials } from '@azure/ms-rest-nodeauth';
 
 const signInLabel: string = localize('signInLabel', 'Sign in to Azure...');
 const createAccountLabel: string = localize('createAccountLabel', 'Create a Free Azure Account...');
@@ -120,19 +119,12 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
                         filter.session.tenantId,
                     );
 
-                    // these properties don't exist on TokenCredentials
-                    if (filter.session.credentials2 instanceof DeviceTokenCredentials) {
-                        addExtensionValueToMask(
-                            filter.session.credentials2.clientId,
-                            filter.session.credentials2.domain);
-                    }
-
-                    // these properties don't exist on TokenCredentials
-                    if (filter.session.credentials2 instanceof DeviceTokenCredentials) {
-                        addExtensionValueToMask(
-                            filter.session.credentials2.clientId,
-                            filter.session.credentials2.domain);
-                    }
+                    // these properties don't exist on TokenCredentials, but do exist on DeviceTokenCredentials
+                    // addExtensionValueToMask gracefully handles `undefined` input by ignoring it
+                    addExtensionValueToMask(
+                        filter.session.credentials2.clientId,
+                        filter.session.credentials2.domain
+                    );
 
                     // filter.subscription.id is the The fully qualified ID of the subscription (For example, /subscriptions/00000000-0000-0000-0000-000000000000) and should be used as the tree item's id for the purposes of OpenInPortal
                     // filter.subscription.subscriptionId is just the guid and is used in all other cases when creating clients for managing Azure resources
