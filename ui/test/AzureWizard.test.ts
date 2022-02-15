@@ -5,7 +5,7 @@
 
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { TestInput, TestUserInput } from 'vscode-azureextensiondev';
+import { TestInput, TestUserInput } from '@microsoft/vscode-azext-dev';
 import * as types from '../index';
 import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep } from '../src';
 

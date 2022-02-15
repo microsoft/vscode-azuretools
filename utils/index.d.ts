@@ -680,7 +680,7 @@ export type PromptResult = {
 
 /**
  * Wrapper interface of several methods that handle user input
- * The implementations of this interface are accessed through `IActionContext.ui` or `TestActionContext.ui` (in the "vscode-azureextensiondev" package)
+ * The implementations of this interface are accessed through `IActionContext.ui` or `TestActionContext.ui` (in the "@microsoft/vscode-azext-dev" package)
  */
 export interface IAzureUserInput {
     readonly onDidFinishPrompt: Event<PromptResult>;
@@ -1045,7 +1045,7 @@ export interface UIExtensionVariables {
     outputChannel: IAzExtOutputChannel;
 
     /**
-     * Set to true if not running under a webpacked 'dist' folder as defined in 'vscode-azureextensiondev'
+     * Set to true if not running under a webpacked 'dist' folder as defined in '@microsoft/vscode-azext-dev'
      */
     ignoreBundle?: boolean;
 }

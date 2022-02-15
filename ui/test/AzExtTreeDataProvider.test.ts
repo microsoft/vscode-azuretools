@@ -5,7 +5,7 @@
 
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { TestUserInput } from 'vscode-azureextensiondev';
+import { TestUserInput } from '@microsoft/vscode-azext-dev';
 import * as types from '../index';
 import { AzExtParentTreeItem } from '../src/tree/AzExtParentTreeItem';
 import { AzExtTreeDataProvider } from '../src/tree/AzExtTreeDataProvider';
