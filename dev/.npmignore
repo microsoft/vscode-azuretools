@@ -6,6 +6,7 @@ tsconfig.json
 test/
 out/test/
 **/*.js.map
+.vscode-test/
 test-results.xml
 .eslintignore
 .eslintrc.js
