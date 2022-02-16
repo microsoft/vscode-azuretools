@@ -14,7 +14,11 @@
             "_justification": "No need to scan external node modules."
         },
         {
-            "folder": "ui\\node_modules\\",
+            "folder": "utils\\node_modules\\",
+            "_justification": "No need to scan external node modules."
+        },
+        {
+            "folder": "azure\\node_modules\\",
             "_justification": "No need to scan external node modules."
         },
         {
@@ -30,16 +34,20 @@
             "_justification": "No need to scan VS Code test folder."
         },
         {
-            "folder": "ui\\.vscode-test\\",
+            "folder": "utils\\.vscode-test\\",
             "_justification": "No need to scan VS Code test folder."
         },
         {
-            "file": "ui\\test\\masking.test.ts",
+            "file": "utils\\test\\masking.test.ts",
             "_justification": "Fake credentials used for unit tests."
         },
         {
-            "file": "ui\\out\\test\\masking.test.js",
+            "file": "utils\\out\\test\\masking.test.js",
             "_justification": "Fake credentials used for unit tests."
+        },
+        {
+            "folder": "azure\\.vscode-test\\",
+            "_justification": "No need to scan VS Code test folder."
         }
     ]
 }
