@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureWizardExecuteStep, AzureWizardPromptStep, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions } from "vscode-azureextensionui";
+import { uiUtils } from "@microsoft/vscode-azext-azureutils";
+import { AzureWizardExecuteStep, AzureWizardPromptStep, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, nonNullProp } from "@microsoft/vscode-azext-utils";
 import { API, CoreExperience } from "../create/AzureDBExperiences";
 import { createCosmosDBClient, createPostgreSQLClient, createPostgreSQLFlexibleClient } from "../utils/azureClients";
 import { localize } from "../utils/localize";
-import { nonNullProp } from "../utils/nonNull";
 import { DatabaseCreateStep } from "./DatabaseCreateStep";
 import { DatabaseNameStep } from "./DatabaseNameStep";
 import { IConnectDBWizardContext } from "./IConnectDBWizardContext";
@@ -30,9 +30,9 @@ export class ConnectDatabasePromptStep extends AzureWizardPromptStep<IConnectDBW
         const azureData = nonNullProp(databaseTreeItem, 'azureData');
         const resourceGroupName = nonNullProp(azureData, 'resourceGroup');
         if (databaseTreeItem.postgresData?.serverType === 'Single') {
-            (await postgresSingleClient.databases.listByServer(resourceGroupName, azureData.accountName))._response.parsedBody.forEach(database => { if (database.name && !adminDatabases.includes(database.name)) databases.push(database.name) });
+            (await uiUtils.listAllIterator(postgresSingleClient.databases.listByServer(resourceGroupName, azureData.accountName))).forEach(database => { if (database.name && !adminDatabases.includes(database.name)) databases.push(database.name) });
         } else if (databaseTreeItem.postgresData?.serverType === 'Flexible') {
-            (await postgresFlexibleClient.databases.listByServer(resourceGroupName, azureData.accountName))._response.parsedBody.forEach(database => { if (database.name && !adminDatabases.includes(database.name)) databases.push(database.name) });
+            (await uiUtils.listAllIterator(postgresFlexibleClient.databases.listByServer(resourceGroupName, azureData.accountName))).forEach(database => { if (database.name && !adminDatabases.includes(database.name)) databases.push(database.name) });
         }
         return databases;
 
@@ -46,12 +46,14 @@ export class ConnectDatabasePromptStep extends AzureWizardPromptStep<IConnectDBW
         const azureData = nonNullProp(databaseTreeItem, 'azureData');
         const resourceGroup = nonNullProp(azureData, 'resourceGroup');
         if (context.databaseConnectionTreeItem?.azureData?.accountKind === API.MongoDB) {
-            const mongoDBResult = await cosmosClient.mongoDBResources.listMongoDBDatabases(resourceGroup, azureData.accountName); mongoDBResult._response.parsedBody.forEach(mongoDB => {
+            const mongoDBResult = await uiUtils.listAllIterator(cosmosClient.mongoDBResources.listMongoDBDatabases(resourceGroup, azureData.accountName));
+            mongoDBResult.forEach(mongoDB => {
                 databases.push(nonNullProp(mongoDB, 'name'));
             });
         }
         if (context.databaseConnectionTreeItem?.azureData?.accountKind?.includes(CoreExperience.shortName)) {
-            const sqlDBResult = await cosmosClient.sqlResources.listSqlDatabases(resourceGroup, azureData.accountName); sqlDBResult._response.parsedBody.forEach(sqlDB => {
+            const sqlDBResult = await uiUtils.listAllIterator(cosmosClient.sqlResources.listSqlDatabases(resourceGroup, azureData.accountName));
+            sqlDBResult.forEach(sqlDB => {
                 databases.push(nonNullProp(sqlDB, 'name'));
             });
         }

@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureWizardPromptStep } from 'vscode-azureextensionui';
+import { uiUtils } from '@microsoft/vscode-azext-azureutils';
+import { AzureWizardPromptStep, nonNullProp } from '@microsoft/vscode-azext-utils';
 import { IConnectDBWizardContext } from './IConnectDBWizardContext';
-import { nonNullProp } from '../utils/nonNull';
 import { createCosmosDBClient, createPostgreSQLClient, createPostgreSQLFlexibleClient } from "../utils/azureClients";
 import { localize } from '../utils/localize';
 
@@ -19,7 +19,7 @@ export class DatabaseNameStep extends AzureWizardPromptStep<IConnectDBWizardCont
         if (azureData.accountKind?.includes('SQL')) {
             const client = await createCosmosDBClient(context);
             const listOfDatabases: string[] = [];
-            (await client.sqlResources.listSqlDatabases(nonNullProp(azureData, 'resourceGroup'), azureData.accountName))._response.parsedBody.forEach(db => { if (db) { listOfDatabases.push(nonNullProp(db, 'name')) } });
+            (await uiUtils.listAllIterator(client.sqlResources.listSqlDatabases(nonNullProp(azureData, 'resourceGroup'), azureData.accountName))).forEach(db => { if (db) { listOfDatabases.push(nonNullProp(db, 'name')) } });
             context.databaseName = (await context.ui.showInputBox({
                 placeHolder: databaseNamePlaceholder,
                 prompt: databaseNamePrompt,
@@ -28,7 +28,7 @@ export class DatabaseNameStep extends AzureWizardPromptStep<IConnectDBWizardCont
         } else if (azureData.accountKind === 'MongoDB') {
             const client = await createCosmosDBClient(context);
             const listOfDatabases: string[] = [];
-            (await client.mongoDBResources.listMongoDBDatabases(nonNullProp(azureData, 'resourceGroup'), azureData.accountName))._response.parsedBody.forEach(db => { if (db) { listOfDatabases.push(nonNullProp(db, 'name')) } });
+            (await uiUtils.listAllIterator(client.mongoDBResources.listMongoDBDatabases(nonNullProp(azureData, 'resourceGroup'), azureData.accountName))).forEach(db => { if (db) { listOfDatabases.push(nonNullProp(db, 'name')) } });
             context.databaseName = (await context.ui.showInputBox({
                 placeHolder: databaseNamePlaceholder,
                 prompt: databaseNamePrompt,
@@ -37,7 +37,7 @@ export class DatabaseNameStep extends AzureWizardPromptStep<IConnectDBWizardCont
         } else if (databaseTreeItem.postgresData?.serverType === 'Flexible') {
             const postgresFlexibleClient = await createPostgreSQLFlexibleClient(context);
             const listOfDatabases: string[] = [];
-            (await postgresFlexibleClient.databases.listByServer(nonNullProp(azureData, 'resourceGroup'), azureData.accountName))._response.parsedBody.forEach(db => { if (db) { listOfDatabases.push(nonNullProp(db, 'name')) } });
+            (await uiUtils.listAllIterator(postgresFlexibleClient.databases.listByServer(nonNullProp(azureData, 'resourceGroup'), azureData.accountName))).forEach(db => { if (db) { listOfDatabases.push(nonNullProp(db, 'name')) } });
             context.databaseName = (await context.ui.showInputBox({
                 placeHolder: databaseNamePlaceholder,
                 prompt: databaseNamePrompt,
@@ -46,7 +46,7 @@ export class DatabaseNameStep extends AzureWizardPromptStep<IConnectDBWizardCont
         } else {
             const postgresSingleClient = await createPostgreSQLClient(context);
             const listOfDatabases: string[] = [];
-            (await postgresSingleClient.databases.listByServer(nonNullProp(azureData, 'resourceGroup'), azureData.accountName))._response.parsedBody.forEach(db => { if (db) { listOfDatabases.push(nonNullProp(db, 'name')) } });
+            (await uiUtils.listAllIterator(postgresSingleClient.databases.listByServer(nonNullProp(azureData, 'resourceGroup'), azureData.accountName))).forEach(db => { if (db) { listOfDatabases.push(nonNullProp(db, 'name')) } });
             context.databaseName = (await context.ui.showInputBox({
                 placeHolder: databaseNamePlaceholder,
                 prompt: databaseNamePrompt,

@@ -3,13 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { AzureWizardExecuteStep, nonNullProp } from '@microsoft/vscode-azext-utils';
 import * as url from "url";
 import { Progress } from "vscode";
-import { AzureWizardExecuteStep } from "vscode-azureextensionui";
 import { ext } from "../extensionVariables";
 import { createCosmosDBClient } from "../utils/azureClients";
 import { localize } from "../utils/localize";
-import { nonNullProp } from "../utils/nonNull";
 import { IConnectDBWizardContext } from "./IConnectDBWizardContext";
 import * as azureUtils from "../utils/azureUtils";
 import { postgresPort } from "../constants";
@@ -36,11 +35,11 @@ export class DatabaseConnectionCreateStep extends AzureWizardExecuteStep<IConnec
             const accountId = nonNullProp(context.databaseAccount, 'id');
             const azureData = { accountName: hostName, accountId, resourceGroup: context.resourceGroup?.name };
             const cosmosClient = await createCosmosDBClient(context);
-            const masterKeyResult = (await cosmosClient.databaseAccounts.listKeys(azureUtils.azureUtils.getResourceGroupFromId(accountId), hostName))._response.parsedBody;
+            const masterKeyResult = await cosmosClient.databaseAccounts.listKeys(azureUtils.azureUtils.getResourceGroupFromId(accountId), hostName);
             const masterKey = nonNullProp(masterKeyResult, 'primaryMasterKey');
             const documentEndpoint = nonNullProp(context.databaseAccount, 'documentEndpoint');
             let connectionString: string | undefined;
-            const result = (await cosmosClient.databaseAccounts.listConnectionStrings(azureUtils.azureUtils.getResourceGroupFromId(accountId), hostName))._response.parsedBody;
+            const result = await cosmosClient.databaseAccounts.listConnectionStrings(azureUtils.azureUtils.getResourceGroupFromId(accountId), hostName);
             if (context.defaultExperience && context.defaultExperience.api === "MongoDB") {
                 const connectionStringURL: url.URL = new url.URL(nonNullProp(nonNullProp(result, 'connectionStrings')[0], 'connectionString'));
                 // for any Mongo connectionString, append this query param because the Cosmos Mongo API v3.6 doesn't support retrywrites

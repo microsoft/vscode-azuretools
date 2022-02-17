@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { DatabaseAccountsListResult } from "@azure/arm-cosmosdb/src/models";
+import type { DatabaseAccountGetResults } from "@azure/arm-cosmosdb/src/models";
+import { ILocationWizardContext, LocationListStep, ResourceGroupListStep, uiUtils } from "@microsoft/vscode-azext-azureutils";
+import { AzureWizardPromptStep, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, nonNullProp } from "@microsoft/vscode-azext-utils";
 import { URL } from "url";
-import { AzureWizardPromptStep, IAzureQuickPickItem, IAzureQuickPickOptions, ILocationWizardContext, IWizardOptions, LocationListStep, ResourceGroupListStep } from "vscode-azureextensionui";
 import * as azureUtils from "../utils/azureUtils";
 import { AzureDBAPIStep } from "../create/AzureDBAPIStep";
 import { API, getExperienceLabel, tryGetExperience } from "../create/AzureDBExperiences";
 import { PostgresServerType } from "../create/PostgresAccountWizard/abstract/models";
 import { createCosmosDBClient, createPostgreSQLClient, createPostgreSQLFlexibleClient } from "../utils/azureClients";
 import { localize } from "../utils/localize";
-import { nonNullProp } from "../utils/nonNull";
 import { DBTreeItem } from "./DBTreeItem";
 import { IConnectDBWizardContext } from "./IConnectDBWizardContext";
 import { postgresPort } from "../constants";
@@ -36,7 +36,7 @@ export class ConnectDatabaseAccountPromptStep extends AzureWizardPromptStep<ICon
             if (api === API.PostgresSingle) {
                 const postgresSingleClient = await createPostgreSQLClient(wizardContext);
                 const postgresSingleServers = [
-                    ...(await postgresSingleClient.servers.list()).map(s => Object.assign(s, { serverType: PostgresServerType.Single })),
+                    ...(await uiUtils.listAllIterator(postgresSingleClient.servers.list())).map(s => Object.assign(s, { serverType: PostgresServerType.Single })),
                 ];
                 databaseItems.push(...postgresSingleServers.map(server =>
                     <DBTreeItem>{
@@ -55,7 +55,7 @@ export class ConnectDatabaseAccountPromptStep extends AzureWizardPromptStep<ICon
             } else {
                 const postgresFlexibleClient = await createPostgreSQLFlexibleClient(wizardContext);
                 const postgresFlexibleServers = [
-                    ...(await postgresFlexibleClient.servers.list()).map(s => Object.assign(s, { serverType: PostgresServerType.Flexible })),
+                    ...(await uiUtils.listAllIterator(postgresFlexibleClient.servers.list())).map(s => Object.assign(s, { serverType: PostgresServerType.Flexible })),
                 ];
                 databaseItems.push(...postgresFlexibleServers.map(server =>
                     <DBTreeItem>{
@@ -75,7 +75,7 @@ export class ConnectDatabaseAccountPromptStep extends AzureWizardPromptStep<ICon
         } else {
             const postgresSingleClient = await createPostgreSQLClient(wizardContext);
             const postgresSingleServers = [
-                ...(await postgresSingleClient.servers.list()).map(s => Object.assign(s, { serverType: PostgresServerType.Single })),
+                ...(await uiUtils.listAllIterator(postgresSingleClient.servers.list())).map(s => Object.assign(s, { serverType: PostgresServerType.Single })),
             ];
             databaseItems.push(...postgresSingleServers.map(server =>
                 <DBTreeItem>{
@@ -93,7 +93,7 @@ export class ConnectDatabaseAccountPromptStep extends AzureWizardPromptStep<ICon
                 }));
             const postgresFlexibleClient = await createPostgreSQLFlexibleClient(wizardContext);
             const postgresFlexibleServers = [
-                ...(await postgresFlexibleClient.servers.list()).map(s => Object.assign(s, { serverType: PostgresServerType.Flexible })),
+                ...(await uiUtils.listAllIterator(postgresFlexibleClient.servers.list())).map(s => Object.assign(s, { serverType: PostgresServerType.Flexible })),
             ];
             databaseItems.push(...postgresFlexibleServers.map(server =>
                 <DBTreeItem>{
@@ -118,13 +118,13 @@ export class ConnectDatabaseAccountPromptStep extends AzureWizardPromptStep<ICon
     public static async getCosmosDatabases(wizardContext: IConnectDBWizardContext, api?: API): Promise<DBTreeItem[]> {
 
         const cosmosClient = await createCosmosDBClient(wizardContext);
-        const cosmosAccounts: DatabaseAccountsListResult = (await cosmosClient.databaseAccounts.list())._response.parsedBody;
+        const cosmosAccounts: DatabaseAccountGetResults[] = await uiUtils.listAllIterator(cosmosClient.databaseAccounts.list());
         let databaseTreeItems: DBTreeItem[] = [];
         for (const account of cosmosAccounts) {
             const experience = tryGetExperience(account);
             const accountName = nonNullProp(account, 'name');
             const accountId = nonNullProp(account, 'id');
-            const result = (await cosmosClient.databaseAccounts.listConnectionStrings(azureUtils.azureUtils.getResourceGroupFromId(accountId), accountName))._response.parsedBody;
+            const result = await cosmosClient.databaseAccounts.listConnectionStrings(azureUtils.azureUtils.getResourceGroupFromId(accountId), accountName);
             let connectionString: string | undefined;
             if (experience && experience.api === "MongoDB") {
                 const connectionStringURL: URL = new URL(nonNullProp(nonNullProp(result, 'connectionStrings')[0], 'connectionString'));
@@ -148,7 +148,7 @@ export class ConnectDatabaseAccountPromptStep extends AzureWizardPromptStep<ICon
                 databaseTreeItems.push(databaseItem);
 
             } else {
-                const masterKeyResult = (await cosmosClient.databaseAccounts.listKeys(azureUtils.azureUtils.getResourceGroupFromId(accountId), accountName))._response.parsedBody;
+                const masterKeyResult = await cosmosClient.databaseAccounts.listKeys(azureUtils.azureUtils.getResourceGroupFromId(accountId), accountName);
 
                 const endpoint = nonNullProp(account, 'documentEndpoint');
                 const masterKey = nonNullProp(masterKeyResult, 'primaryMasterKey');

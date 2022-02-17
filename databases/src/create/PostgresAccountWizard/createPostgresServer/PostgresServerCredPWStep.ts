@@ -3,9 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureWizardPromptStep } from 'vscode-azureextensionui';
+import { AzureWizardPromptStep, nonNullProp } from '@microsoft/vscode-azext-utils';
 import { localize } from '../../../utils/localize';
-import { nonNullProp } from '../../../utils/nonNull';
 import { IPostgresServerWizardContext } from '../IPostgresServerWizardContext';
 
 const pwConditionMsg = localize('passwordConditionMsg', 'Password must contain characters from three of the following categories - uppercase letters, lowercase letters, numbers (0-9), and non-alphanumeric characters (!, $, etc.).');

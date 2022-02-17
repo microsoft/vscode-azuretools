@@ -4,6 +4,5 @@ src/
 tsconfig.json
 *.tgz
 **/*.js.map
-gulpfile.js
 .eslintignore
 .eslintrc.js
