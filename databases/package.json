@@ -1,5 +1,5 @@
 {
-  "name": "vscode-azuredatabases",
+  "name": "@microsoft/vscode-azext-azuredatabases",
   "author": "Microsoft Corporation",
   "version": "0.1.0",
   "description": "Common tools for developing support for Azure Databases in VS Code",
