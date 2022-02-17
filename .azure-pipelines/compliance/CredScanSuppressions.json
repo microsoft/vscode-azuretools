@@ -34,20 +34,12 @@
             "_justification": "No need to scan VS Code test folder."
         },
         {
-            "folder": "utils\\.vscode-test\\",
-            "_justification": "No need to scan VS Code test folder."
-        },
-        {
             "file": "utils\\test\\masking.test.ts",
             "_justification": "Fake credentials used for unit tests."
         },
         {
             "file": "utils\\out\\test\\masking.test.js",
             "_justification": "Fake credentials used for unit tests."
-        },
-        {
-            "folder": "azure\\.vscode-test\\",
-            "_justification": "No need to scan VS Code test folder."
         }
     ]
 }
