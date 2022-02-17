@@ -5,9 +5,6 @@ steps:
       package: 'dev'
   - template: package-steps.yml
     parameters:
-      package: 'ui'
-  - template: package-steps.yml
-    parameters:
       package: 'utils'
   - template: package-steps.yml
     parameters:
