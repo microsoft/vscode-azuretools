@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { DatabaseAccountCreateUpdateParameters, DatabaseAccountsCreateOrUpdateResponse } from '@azure/arm-cosmosdb/src/models';
+import { LocationListStep } from '@microsoft/vscode-azext-azureutils';
+import { AzureWizardExecuteStep } from '@microsoft/vscode-azext-utils';
 import { Progress } from 'vscode';
-import { AzureWizardExecuteStep, LocationListStep } from 'vscode-azureextensionui';
 import { IConnectDBWizardContext } from '../../connect/IConnectDBWizardContext';
 import { SERVERLESS_CAPABILITY_NAME } from '../../constants';
 import { ext } from '../../extensionVariables';
@@ -29,6 +30,7 @@ export class CosmosDBAccountCreateStep extends AzureWizardExecuteStep<IConnectDB
         progress.report({ message: creatingMessage });
 
         const options: DatabaseAccountCreateUpdateParameters = {
+            databaseAccountOfferType: "Standard",
             location: locationName,
             locations: [{ locationName: locationName }],
             kind: defaultExperience.kind,
@@ -49,8 +51,8 @@ export class CosmosDBAccountCreateStep extends AzureWizardExecuteStep<IConnectDB
             options.capabilities?.push({ name: SERVERLESS_CAPABILITY_NAME });
         }
 
-        const response: DatabaseAccountsCreateOrUpdateResponse = await client.databaseAccounts.createOrUpdate(rgName, accountName, options);
-        context.databaseAccount = response._response.parsedBody;
+        const response: DatabaseAccountsCreateOrUpdateResponse = await client.databaseAccounts.beginCreateOrUpdateAndWait(rgName, accountName, options);
+        context.databaseAccount = response;
         ext.outputChannel.appendLog(`Successfully created Cosmos DB account "${accountName}".`);
     }
 

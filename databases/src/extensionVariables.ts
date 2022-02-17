@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { IAzExtOutputChannel, IAzureUserInput, registerUIExtensionVariables, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
 import { ExtensionContext } from "vscode";
-import { IAzExtOutputChannel, IAzureUserInput, registerUIExtensionVariables, UIExtensionVariables } from 'vscode-azureextensionui';
 import { localize } from "./utils/localize";
 
 class UninitializedExtensionVariables implements UIExtensionVariables {

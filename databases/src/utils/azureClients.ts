@@ -6,7 +6,7 @@
 import type { CosmosDBManagementClient } from '@azure/arm-cosmosdb';
 import type { PostgreSQLManagementClient } from '@azure/arm-postgresql';
 import type { PostgreSQLManagementClient as PostgreSQLFlexibleManagementClient } from '@azure/arm-postgresql-flexible';
-import { AzExtClientContext, createAzureClient } from 'vscode-azureextensionui';
+import { AzExtClientContext, createAzureClient } from '@microsoft/vscode-azext-azureutils';
 
 // Lazy-load @azure packages to improve startup performance.
 // NOTE: The client is the only import that matters, the rest of the types disappear when compiled to JavaScript

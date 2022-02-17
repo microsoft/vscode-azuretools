@@ -5,7 +5,7 @@
 
 import type { PostgreSQLManagementClient } from "@azure/arm-postgresql";
 import type { PostgreSQLManagementClient as PostgreSQLFlexibleManagementClient } from "@azure/arm-postgresql-flexible";
-import { AzExtClientContext } from "vscode-azureextensionui";
+import { AzExtClientContext } from "@microsoft/vscode-azext-azureutils";
 import { createPostgreSQLClient, createPostgreSQLFlexibleClient } from "../../../utils/azureClients";
 import { PostgresServerType } from "./models";
 

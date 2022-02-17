@@ -3,10 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { PostgreSQLManagementModels as SingleModels } from "@azure/arm-postgresql";
-import type { PostgreSQLManagementModels as FlexibleModels } from "@azure/arm-postgresql-flexible";
+import type * as SingleModels from "@azure/arm-postgresql";
+import type * as FlexibleModels from "@azure/arm-postgresql-flexible";
+import { LocationListStep } from '@microsoft/vscode-azext-azureutils';
+import { AzureWizardExecuteStep, callWithMaskHandling } from '@microsoft/vscode-azext-utils';
 import { Progress } from 'vscode';
-import { AzureWizardExecuteStep, callWithMaskHandling, LocationListStep } from 'vscode-azureextensionui';
 import { ext } from "../../../extensionVariables";
 import { createPostgreSQLClient, createPostgreSQLFlexibleClient } from "../../../utils/azureClients";
 import { localize } from "../../../utils/localize";
@@ -44,11 +45,11 @@ export class PostgresServerCreateStep extends AzureWizardExecuteStep<IPostgresSe
                     case PostgresServerType.Single:
                         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                         const singleClient = await createPostgreSQLClient(context);
-                        context.server = await singleClient.servers.create(rgName, newServerName, this.asSingleParameters(options));
+                        context.server = await singleClient.servers.beginCreateAndWait(rgName, newServerName, this.asSingleParameters(options));
                         break;
                     case PostgresServerType.Flexible:
                         const flexiClient = await createPostgreSQLFlexibleClient(context);
-                        context.server = await flexiClient.servers.create(rgName, newServerName, this.asFlexibleParameters(options));
+                        context.server = await flexiClient.servers.beginCreateAndWait(rgName, newServerName, this.asFlexibleParameters(options));
                         break;
                 }
                 context.server.serverType = serverType;
@@ -67,8 +68,8 @@ export class PostgresServerCreateStep extends AzureWizardExecuteStep<IPostgresSe
             version: "12",
             administratorLogin: parameters.administratorLogin,
             administratorLoginPassword: parameters.administratorLoginPassword,
-            storageProfile: {
-                storageMB: parameters.storageMB
+            storage: {
+                storageSizeGB: parameters.storageMB / 1024,
             },
             sku: {
                 name: parameters.sku.name,

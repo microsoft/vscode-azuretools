@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { AzureWizardExecuteStep } from '@microsoft/vscode-azext-utils';
 import { Progress } from 'vscode';
-import { AzureWizardExecuteStep } from 'vscode-azureextensionui';
 import { IConnectDBWizardContext } from './IConnectDBWizardContext';
 import { ext } from '../extensionVariables';
 import { createCosmosDBClient, createPostgreSQLClient, createPostgreSQLFlexibleClient } from '../utils/azureClients';
@@ -30,16 +30,16 @@ export class DatabaseCreateStep extends AzureWizardExecuteStep<IConnectDBWizardC
         progress.report({ message: creatingMessage });
         if (azureData?.accountKind?.includes(CoreExperience.shortName)) {
             const client = createCosmosDBClient(context);
-            await (await client).sqlResources.createUpdateSqlDatabase(resourceGroupName, azureData.accountName, databaseName, { resource: { id: databaseName }, options: {} });
+            await (await client).sqlResources.beginCreateUpdateSqlDatabaseAndWait(resourceGroupName, azureData.accountName, databaseName, { resource: { id: databaseName }, options: {} });
         } else if (azureData.accountKind === API.MongoDB) {
             const client = createCosmosDBClient(context);
-            await (await client).mongoDBResources.createUpdateMongoDBDatabase(resourceGroupName, azureData.accountName, databaseName, { resource: { id: databaseName }, options: {} });
+            await (await client).mongoDBResources.beginCreateUpdateMongoDBDatabaseAndWait(resourceGroupName, azureData.accountName, databaseName, { resource: { id: databaseName }, options: {} });
         } else if (databaseTreeItem.postgresData?.serverType === PostgresServerType.Single) {
             const client = createPostgreSQLClient(context);
-            await (await client).databases.createOrUpdate(resourceGroupName, azureData.accountName, databaseName, {});
+            await (await client).databases.beginCreateOrUpdateAndWait(resourceGroupName, azureData.accountName, databaseName, {});
         } else if (databaseTreeItem.postgresData?.serverType === PostgresServerType.Flexible) {
             const client = createPostgreSQLFlexibleClient(context);
-            await (await client).databases.create(resourceGroupName, azureData.accountName, databaseName, {});
+            await (await client).databases.beginCreateAndWait(resourceGroupName, azureData.accountName, databaseName, {});
         }
         databaseTreeItem.databaseName = context.databaseName;
         const completedMessage: string = localize('createdConnection', 'Successfully created new Database {0}', context.databaseName);

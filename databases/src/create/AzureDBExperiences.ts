@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { DatabaseAccountGetResults } from '@azure/arm-cosmosdb/src/models';
-import { IAzureQuickPickItem } from 'vscode-azureextensionui';
+import { IAzureQuickPickItem } from '@microsoft/vscode-azext-utils';
 import { nonNullProp } from '../utils/nonNull';
 
 export enum API {
