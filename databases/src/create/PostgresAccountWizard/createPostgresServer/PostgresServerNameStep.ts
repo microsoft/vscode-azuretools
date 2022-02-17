@@ -4,9 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ResourceGroupListStep, resourceGroupNamingRules } from '@microsoft/vscode-azext-azureutils';
-import { AzureNameStep } from '@microsoft/vscode-azext-utils';
+import { AzureNameStep, nonNullProp } from '@microsoft/vscode-azext-utils';
 import { localize } from '../../../utils/localize';
-import { nonNullProp } from '../../../utils/nonNull';
 import { AbstractPostgresClient, createAbstractPostgresClient } from '../abstract/AbstractPostgresClient';
 import { AbstractNameAvailability, PostgresServerType } from '../abstract/models';
 import { IPostgresServerWizardContext } from '../IPostgresServerWizardContext';

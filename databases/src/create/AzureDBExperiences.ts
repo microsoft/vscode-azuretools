@@ -4,8 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { DatabaseAccountGetResults } from '@azure/arm-cosmosdb/src/models';
-import { IAzureQuickPickItem } from '@microsoft/vscode-azext-utils';
-import { nonNullProp } from '../utils/nonNull';
+import { IAzureQuickPickItem, nonNullProp } from '@microsoft/vscode-azext-utils';
 
 export enum API {
     MongoDB = 'MongoDB',

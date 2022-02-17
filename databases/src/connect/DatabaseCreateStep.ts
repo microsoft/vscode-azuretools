@@ -3,13 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureWizardExecuteStep } from '@microsoft/vscode-azext-utils';
+import { AzureWizardExecuteStep, nonNullProp } from '@microsoft/vscode-azext-utils';
 import { Progress } from 'vscode';
 import { IConnectDBWizardContext } from './IConnectDBWizardContext';
 import { ext } from '../extensionVariables';
 import { createCosmosDBClient, createPostgreSQLClient, createPostgreSQLFlexibleClient } from '../utils/azureClients';
 import { localize } from '../utils/localize';
-import { nonNullProp } from '../utils/nonNull';
 import { API, CoreExperience } from '../create/AzureDBExperiences';
 import { PostgresServerType } from '../create/PostgresAccountWizard/abstract/models';
 

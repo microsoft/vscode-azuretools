@@ -6,12 +6,11 @@
 import type * as SingleModels from "@azure/arm-postgresql";
 import type * as FlexibleModels from "@azure/arm-postgresql-flexible";
 import { LocationListStep } from '@microsoft/vscode-azext-azureutils';
-import { AzureWizardExecuteStep, callWithMaskHandling } from '@microsoft/vscode-azext-utils';
+import { AzureWizardExecuteStep, callWithMaskHandling, nonNullProp } from '@microsoft/vscode-azext-utils';
 import { Progress } from 'vscode';
 import { ext } from "../../../extensionVariables";
 import { createPostgreSQLClient, createPostgreSQLFlexibleClient } from "../../../utils/azureClients";
 import { localize } from "../../../utils/localize";
-import { nonNullProp } from "../../../utils/nonNull";
 import { AbstractServerCreate, PostgresServerType } from "../abstract/models";
 import { IPostgresServerWizardContext } from '../IPostgresServerWizardContext';
 

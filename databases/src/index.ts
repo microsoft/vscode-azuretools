@@ -30,7 +30,5 @@ export * from './create/IAzureDBWizardContext';
 export * from './utils/azureClients';
 export * from './utils/azureUtils';
 export * from './utils/localize';
-export * from './utils/nonNull';
-export * from './utils/openUrl';
 export * from './constants';
 export { registerDatabasesExtensionVariables } from './extensionVariables';

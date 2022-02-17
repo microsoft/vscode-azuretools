@@ -4,11 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { uiUtils } from "@microsoft/vscode-azext-azureutils";
-import { AzureWizardExecuteStep, AzureWizardPromptStep, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions } from "@microsoft/vscode-azext-utils";
+import { AzureWizardExecuteStep, AzureWizardPromptStep, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, nonNullProp } from "@microsoft/vscode-azext-utils";
 import { API, CoreExperience } from "../create/AzureDBExperiences";
 import { createCosmosDBClient, createPostgreSQLClient, createPostgreSQLFlexibleClient } from "../utils/azureClients";
 import { localize } from "../utils/localize";
-import { nonNullProp } from "../utils/nonNull";
 import { DatabaseCreateStep } from "./DatabaseCreateStep";
 import { DatabaseNameStep } from "./DatabaseNameStep";
 import { IConnectDBWizardContext } from "./IConnectDBWizardContext";

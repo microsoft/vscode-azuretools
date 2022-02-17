@@ -5,7 +5,7 @@
 
 import type { DatabaseAccountGetResults } from "@azure/arm-cosmosdb/src/models";
 import { ILocationWizardContext, LocationListStep, ResourceGroupListStep, uiUtils } from "@microsoft/vscode-azext-azureutils";
-import { AzureWizardPromptStep, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions } from "@microsoft/vscode-azext-utils";
+import { AzureWizardPromptStep, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, nonNullProp } from "@microsoft/vscode-azext-utils";
 import { URL } from "url";
 import * as azureUtils from "../utils/azureUtils";
 import { AzureDBAPIStep } from "../create/AzureDBAPIStep";
@@ -13,7 +13,6 @@ import { API, getExperienceLabel, tryGetExperience } from "../create/AzureDBExpe
 import { PostgresServerType } from "../create/PostgresAccountWizard/abstract/models";
 import { createCosmosDBClient, createPostgreSQLClient, createPostgreSQLFlexibleClient } from "../utils/azureClients";
 import { localize } from "../utils/localize";
-import { nonNullProp } from "../utils/nonNull";
 import { DBTreeItem } from "./DBTreeItem";
 import { IConnectDBWizardContext } from "./IConnectDBWizardContext";
 import { postgresPort } from "../constants";
