@@ -103,11 +103,16 @@ function addAzExtFactories(context: IActionContext, credentials: types.AzExtGene
         },
         {
             create: (nextPolicy, options): RequestPolicy => new MissingContentTypePolicy(nextPolicy, options)
-        },
-        {
-            create: (nextPolicy, options): RequestPolicy => new CorrelationIdPolicy(nextPolicy, options, context)
         }
     );
+
+    if (vscode.env.isTelemetryEnabled) {
+        defaultFactories.push(
+            {
+                create: (nextPolicy, options): RequestPolicy => new CorrelationIdPolicy(nextPolicy, options, context)
+            }
+        )
+    }
 
     // We want these to execute last
     defaultFactories.unshift(
