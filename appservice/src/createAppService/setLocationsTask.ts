@@ -3,13 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ListGeoRegionsOptionalParams, SkuName, WebSiteManagementClient } from '@azure/arm-appservice';
-import { LocationListStep, uiUtils } from '@microsoft/vscode-azext-azureutils';
+import type { GeoRegion, ListGeoRegionsOptionalParams, SkuName } from '@azure/arm-appservice';
+import { HttpOperationResponse } from '@azure/ms-rest-js';
+import { createGenericClient, LocationListStep } from '@microsoft/vscode-azext-azureutils';
 import { nonNullProp } from '@microsoft/vscode-azext-utils';
 import { webProvider } from '../constants';
-import { createWebSiteClient } from '../utils/azureClients';
 import { AppKind, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
+
+type GeoRegionJsonResponse = {
+    value: GeoRegion[];
+};
 
 /**
  * Overwrite the generic 'locationsTask' with a list of locations specific to provider "Microsoft.Web", based on OS and sku
@@ -32,7 +36,15 @@ export async function getWebLocations(context: IAppServiceWizardContext): Promis
         options.sku = <SkuName>context.newPlanSku.tier.replace(/\s/g, '');
     }
 
-    const client: WebSiteManagementClient = await createWebSiteClient(context);
-    const locations = await uiUtils.listAllIterator(client.listGeoRegions(options));
-    return locations.map(l => nonNullProp(l, 'name'));
+    const genericClient = await createGenericClient(context, context);
+    const result: HttpOperationResponse = await genericClient.sendRequest({
+        method: 'GET',
+        pathTemplate: `/providers/Microsoft.Web/geoRegions`,
+        queryParameters: {
+            'api-version': '2020-09-01',
+            ...options,
+        }
+    });
+
+    return (<GeoRegionJsonResponse>result.parsedBody).value.map((l: GeoRegion) => nonNullProp(l, 'name')) as string[];
 }
