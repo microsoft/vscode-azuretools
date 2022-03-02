@@ -47,5 +47,5 @@ export async function getWebLocations(context: IAppServiceWizardContext): Promis
         }
     });
 
-    return (<GeoRegionJsonResponse>result.parsedBody).value.map((l: GeoRegion) => nonNullProp(l, 'name')) as string[];
+    return (<GeoRegionJsonResponse>result.parsedBody).value.map((l: GeoRegion) => nonNullProp(l, 'name'));
 }
