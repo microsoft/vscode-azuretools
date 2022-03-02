@@ -36,6 +36,7 @@ export async function getWebLocations(context: IAppServiceWizardContext): Promis
         options.sku = <SkuName>context.newPlanSku.tier.replace(/\s/g, '');
     }
 
+    // Temporary fix for https://github.com/Azure/azure-rest-api-specs/issues/18071
     const genericClient = await createGenericClient(context, context);
     const result: HttpOperationResponse = await genericClient.sendRequest({
         method: 'GET',
