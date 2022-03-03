@@ -40,10 +40,13 @@ export async function getWebLocations(context: IAppServiceWizardContext): Promis
     const genericClient = await createGenericClient(context, context);
     const result: HttpOperationResponse = await genericClient.sendRequest({
         method: 'GET',
-        pathTemplate: `/providers/Microsoft.Web/geoRegions`,
+        pathTemplate: `/subscriptions/{subscriptionId}/providers/Microsoft.Web/geoRegions`,
         queryParameters: {
             'api-version': '2020-09-01',
             ...options,
+        },
+        pathParameters: {
+            subscriptionId: context.subscriptionId,
         }
     });
 
