@@ -8,10 +8,11 @@ import { Environment } from '@azure/ms-rest-azure-env';
 import { ApplicationTokenCredentials, loginWithServicePrincipalSecret } from '@azure/ms-rest-nodeauth';
 import { Event, EventEmitter } from 'vscode';
 import * as types from '../index';
-import { AzureAccount, AzureLoginStatus, AzureResourceFilter, AzureSession, AzureSubscription } from './@types/azure-account.api';
+import { AzureAccountExtensionApi, AzureLoginStatus, AzureResourceFilter, AzureSession, AzureSubscription } from './@types/azure-account.api';
 import { nonNullProp, nonNullValue } from './utils/nonNull';
+import { TestCredentials } from './TestCredentials';
 
-export class TestAzureAccount implements AzureAccount, types.TestAzureAccount {
+export class TestAzureAccount implements AzureAccountExtensionApi, types.TestAzureAccount {
     public status: AzureLoginStatus = 'LoggedOut';
     public onStatusChanged: Event<AzureLoginStatus>;
     public sessions: AzureSession[] = [];
@@ -46,7 +47,9 @@ export class TestAzureAccount implements AzureAccount, types.TestAzureAccount {
             throw new Error('TestAzureAccount cannot be used without the following environment variables: SERVICE_PRINCIPAL_CLIENT_ID, SERVICE_PRINCIPAL_SECRET, SERVICE_PRINCIPAL_DOMAIN');
         }
         this.changeStatus('LoggingIn');
-        const credentials: servicePrincipalCredentials = <servicePrincipalCredentials>(await loginWithServicePrincipalSecret(clientId, secret, domain));
+        const servicePrincipalResponse: servicePrincipalCredentials = <servicePrincipalCredentials>(await loginWithServicePrincipalSecret(clientId, secret, domain));
+        const credentials = new TestCredentials(servicePrincipalResponse);
+    
         const subscriptionClient: SubscriptionClient = new SubscriptionClient(credentials);
         const subscriptions: SubscriptionModels.SubscriptionListResult = await subscriptionClient.subscriptions.list();
         // returns an array with id, subscriptionId, displayName
