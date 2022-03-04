@@ -351,6 +351,11 @@ export declare function registerAzureUtilsExtensionVariables(extVars: IAzureUtil
 export interface IMinimumServiceClientOptions {
     acceptLanguage?: string,
     baseUri?: string;
+    /**
+     * Pass in endpoint as a workaround for https://github.com/Azure/azure-sdk-for-js/issues/20651.
+     * Value should be the same as `baseUri`.
+     */
+    endpoint?: string;
     userAgent?: string | ((defaultUserAgent: string) => string);
 
     /**
