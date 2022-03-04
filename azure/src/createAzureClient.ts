@@ -40,6 +40,7 @@ export function createAzureClient<T>(clientContext: InternalAzExtClientContext, 
     return new clientType(context.credentials, context.subscriptionId, {
         acceptLanguage: vscode.env.language,
         baseUri: context.environment.resourceManagerEndpointUrl,
+        endpoint: context.environment.resourceManagerEndpointUrl,
         userAgent: appendExtensionUserAgent,
         requestPolicyFactories: (defaultFactories: RequestPolicyFactory[]) => addAzExtFactories(context, context.credentials, defaultFactories),
     });
@@ -50,6 +51,7 @@ export function createAzureSubscriptionClient<T>(clientContext: InternalAzExtCli
     return new clientType(context.credentials, {
         acceptLanguage: vscode.env.language,
         baseUri: context.environment.resourceManagerEndpointUrl,
+        endpoint: context.environment.resourceManagerEndpointUrl,
         userAgent: appendExtensionUserAgent,
         requestPolicyFactories: (defaultFactories: RequestPolicyFactory[]) => addAzExtFactories(context, context.credentials, defaultFactories),
     });
@@ -89,6 +91,7 @@ export async function createGenericClient(context: IActionContext, clientInfo: t
 
     return new gsc.GenericServiceClient(credentials, <types.IMinimumServiceClientOptions>{
         baseUri,
+        endpoint: baseUri,
         userAgent: appendExtensionUserAgent,
         requestPolicyFactories: (defaultFactories: RequestPolicyFactory[]) => addAzExtFactories(context, credentials, defaultFactories),
         noRetryPolicy: options?.noRetryPolicy

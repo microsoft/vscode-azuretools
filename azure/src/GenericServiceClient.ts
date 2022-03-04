@@ -22,6 +22,7 @@ export class GenericServiceClient extends ServiceClient {
             options.url = this.baseUri + options.url;
         }
 
+        options['baseUrl'] = this.baseUri;
         options.headers ||= {};
         options.headers['accept-language'] = vscode.env.language;
 
