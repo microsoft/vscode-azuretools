@@ -48,7 +48,7 @@ export class TestAzureAccount implements AzureAccountExtensionApi, types.TestAzu
         }
         this.changeStatus('LoggingIn');
         const servicePrincipalToken: servicePrincipalCredentials = <servicePrincipalCredentials>(await loginWithServicePrincipalSecret(clientId, secret, domain));
-        const credentials = new TestCredentials({ servicePrincipalToken });
+        const credentials = new TestCredentials(servicePrincipalToken);
     
         const subscriptionClient: SubscriptionClient = new SubscriptionClient(credentials);
         const subscriptions: SubscriptionModels.SubscriptionListResult = await subscriptionClient.subscriptions.list();

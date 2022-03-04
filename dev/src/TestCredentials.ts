@@ -14,7 +14,7 @@ import { TokenResponse } from "adal-node";
  * `DeviceTokenCredentials` requires `getToken` to return `TokenResponse` so this overwrites that
  */
 export class TestCredentials extends ApplicationTokenCredentials implements TokenCredential {
-    public constructor({ servicePrincipalToken }: { servicePrincipalToken: ApplicationTokenCredentials; }) {
+    public constructor( servicePrincipalToken: ApplicationTokenCredentials) {
         const { clientId, domain, secret, tokenAudience, environment, tokenCache } = servicePrincipalToken;
         super(clientId, domain, secret, tokenAudience, environment, tokenCache);
     }
