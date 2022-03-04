@@ -14,7 +14,7 @@ import { TestCredentials } from '../TestCredentials';
 export type AzureLoginStatus = 'Initializing' | 'LoggingIn' | 'LoggedIn' | 'LoggedOut';
 
 export interface AzureAccountExtensionApi {
-	readonly status: AzureLoginStatus;
+    readonly status: AzureLoginStatus;
     readonly onStatusChanged: Event<AzureLoginStatus>;
     readonly waitForLogin: () => Promise<boolean>;
     readonly sessions: AzureSession[];
@@ -28,19 +28,19 @@ export interface AzureAccountExtensionApi {
 }
 
 export interface AzureSession {
-	readonly environment: Environment;
-	readonly userId: string;
-	readonly tenantId: string;
+    readonly environment: Environment;
+    readonly userId: string;
+    readonly tenantId: string;
 
-	/**
-	 * The credentials object for azure-sdk-for-js modules https://github.com/azure/azure-sdk-for-js
-	 */
-	readonly credentials2: TestCredentials;
+    /**
+     * The credentials object for azure-sdk-for-js modules https://github.com/azure/azure-sdk-for-js
+     */
+    readonly credentials2: TestCredentials;
 }
 
 export interface AzureSubscription {
-	readonly session: AzureSession;
-	readonly subscription: SubscriptionModels.Subscription;
+    readonly session: AzureSession;
+    readonly subscription: SubscriptionModels.Subscription;
 }
 
 export type AzureResourceFilter = AzureSubscription;
@@ -48,16 +48,16 @@ export type AzureResourceFilter = AzureSubscription;
 export type CloudShellStatus = 'Connecting' | 'Connected' | 'Disconnected';
 
 export interface UploadOptions {
-	contentLength?: number;
-	progress?: Progress<{ message?: string; increment?: number }>;
-	token?: CancellationToken;
+    contentLength?: number;
+    progress?: Progress<{ message?: string; increment?: number }>;
+    token?: CancellationToken;
 }
 
 export interface CloudShell {
-	readonly status: CloudShellStatus;
-	readonly onStatusChanged: Event<CloudShellStatus>;
-	readonly waitForConnection: () => Promise<boolean>;
-	readonly terminal: Promise<Terminal>;
-	readonly session: Promise<AzureSession>;
-	readonly uploadFile: (filename: string, stream: ReadStream, options?: UploadOptions) => Promise<void>;
+    readonly status: CloudShellStatus;
+    readonly onStatusChanged: Event<CloudShellStatus>;
+    readonly waitForConnection: () => Promise<boolean>;
+    readonly terminal: Promise<Terminal>;
+    readonly session: Promise<AzureSession>;
+    readonly uploadFile: (filename: string, stream: ReadStream, options?: UploadOptions) => Promise<void>;
 }
