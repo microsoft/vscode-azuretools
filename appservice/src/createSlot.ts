@@ -3,7 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { NameValuePair, ResourceNameAvailability, Site, StringDictionary, WebSiteManagementClient } from "@azure/arm-appservice";
+import type { CheckNameAvailabilityResponse, NameValuePair, Site, StringDictionary, WebSiteManagementClient } from "@azure/arm-appservice";
+import { ServiceClient } from "@azure/ms-rest-js";
+import { createGenericClient } from "@microsoft/vscode-azext-azureutils";
 import { IActionContext, IAzureNamingRules, IAzureQuickPickItem, ICreateChildImplContext } from "@microsoft/vscode-azext-utils";
 import { ProgressLocation, window } from "vscode";
 import { getNewFileShareName } from "./createAppService/getNewFileShareName";
@@ -11,13 +13,15 @@ import { ext } from "./extensionVariables";
 import { localize } from "./localize";
 import { ParsedSite } from './SiteClient';
 import { createWebSiteClient } from "./utils/azureClients";
+import { checkNameAvailability } from "./utils/azureUtils";
 
 export async function createSlot(site: ParsedSite, existingSlots: ParsedSite[], context: ICreateChildImplContext): Promise<Site> {
     const client: WebSiteManagementClient = await createWebSiteClient([context, site.subscription]);
+    const gClient = await createGenericClient(context, site.subscription);
     const slotName: string = (await context.ui.showInputBox({
         prompt: localize('enterSlotName', 'Enter a unique name for the new deployment slot'),
         stepName: 'slotName',
-        validateInput: async (value: string): Promise<string | undefined> => validateSlotName(value, client, site)
+        validateInput: async (value: string): Promise<string | undefined> => validateSlotName(value, gClient, site)
     })).trim();
 
     const newDeploymentSlot: Site = {
@@ -52,7 +56,7 @@ const slotNamingRules: IAzureNamingRules = {
     invalidCharsRegExp: /[^a-zA-Z0-9\-]/
 };
 
-async function validateSlotName(value: string, client: WebSiteManagementClient, site: ParsedSite): Promise<string | undefined> {
+async function validateSlotName(value: string, client: ServiceClient, site: ParsedSite): Promise<string | undefined> {
     value = value.trim();
     // Can not have "production" as a slot name, but checkNameAvailability doesn't validate that
     if (value === 'production') {
@@ -64,7 +68,7 @@ async function validateSlotName(value: string, client: WebSiteManagementClient, 
     } else if (slotNamingRules.invalidCharsRegExp.test(value)) {
         return localize('invalidChars', "The name can only contain letters, numbers, or hyphens.");
     } else {
-        const nameAvailability: ResourceNameAvailability = await client.checkNameAvailability(`${site.siteName}-${value}`, 'Slot');
+        const nameAvailability: CheckNameAvailabilityResponse = await checkNameAvailability(client, site.subscription.subscriptionId, `${site.siteName}-${value}`, 'Slot');
         if (!nameAvailability.nameAvailable) {
             return nameAvailability.message;
         } else {

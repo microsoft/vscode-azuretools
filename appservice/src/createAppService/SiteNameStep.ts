@@ -3,11 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ResourceNameAvailability, WebSiteManagementClient } from '@azure/arm-appservice';
-import { ResourceGroupListStep, StorageAccountListStep, resourceGroupNamingRules, storageAccountNamingRules } from '@microsoft/vscode-azext-azureutils';
+import type { ResourceNameAvailability } from '@azure/arm-appservice';
+import { ServiceClient } from '@azure/ms-rest-js';
+import { ResourceGroupListStep, StorageAccountListStep, resourceGroupNamingRules, storageAccountNamingRules, createGenericClient } from '@microsoft/vscode-azext-azureutils';
 import { AzureNameStep, IAzureNamingRules } from '@microsoft/vscode-azext-utils';
 import { localize } from '../localize';
-import { createWebSiteClient } from '../utils/azureClients';
+import { checkNameAvailability } from '../utils/azureUtils';
 import { appInsightsNamingRules } from './AppInsightsListStep';
 import { AppKind } from './AppKind';
 import { AppServicePlanListStep } from './AppServicePlanListStep';
@@ -22,7 +23,7 @@ const siteNamingRules: IAzureNamingRules = {
 
 export class SiteNameStep extends AzureNameStep<IAppServiceWizardContext> {
     public async prompt(context: IAppServiceWizardContext): Promise<void> {
-        const client: WebSiteManagementClient = await createWebSiteClient(context);
+        const client = await createGenericClient(context, context);
 
         let placeHolder: string | undefined;
         if (context.environment.name === 'Azure') {
@@ -51,7 +52,7 @@ export class SiteNameStep extends AzureNameStep<IAppServiceWizardContext> {
         context.newSiteName = (await context.ui.showInputBox({
             prompt,
             placeHolder,
-            validateInput: async (name: string): Promise<string | undefined> => await this.validateSiteName(client, name)
+            validateInput: async (name: string): Promise<string | undefined> => await this.validateSiteName(client, name, context.subscriptionId)
         })).trim();
         context.valuesToMask.push(context.newSiteName);
 
@@ -85,7 +86,7 @@ export class SiteNameStep extends AzureNameStep<IAppServiceWizardContext> {
         return (await Promise.all(tasks)).every((v: boolean) => v);
     }
 
-    private async validateSiteName(client: WebSiteManagementClient, name: string): Promise<string | undefined> {
+    private async validateSiteName(client: ServiceClient, name: string, subscriptionId: string): Promise<string | undefined> {
         name = name.trim();
 
         if (name.length < siteNamingRules.minLength || name.length > siteNamingRules.maxLength) {
@@ -93,7 +94,7 @@ export class SiteNameStep extends AzureNameStep<IAppServiceWizardContext> {
         } else if (siteNamingRules.invalidCharsRegExp.test(name)) {
             return localize('invalidChars', "The name can only contain letters, numbers, or hyphens.");
         } else {
-            const nameAvailability: ResourceNameAvailability = await client.checkNameAvailability(name, 'Site');
+            const nameAvailability: ResourceNameAvailability = await checkNameAvailability(client, subscriptionId, name, 'Site');
             if (!nameAvailability.nameAvailable) {
                 return nameAvailability.message;
             } else {
