@@ -380,6 +380,12 @@ export declare abstract class AzExtParentTreeItem extends AzExtTreeItem {
     public abstract hasMoreChildrenImpl(): boolean;
 
     /**
+     * Implement this if you need the tree picker to show a quickpick of tree items other than
+     * the tree item's cachedChildren
+     */
+    resolveChildrenForTreePicker?(): Promise<AzExtTreeItem[]>;
+
+    /**
      * Implement this if you want the 'create' option to show up in the tree picker. Should not be called directly
      * @param context The action context and any additional user-defined options that are passed to the `AzExtParentTreeItem.createChild` or `AzExtTreeDataProvider.showTreeItemPicker`
      */

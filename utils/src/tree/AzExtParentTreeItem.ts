@@ -25,7 +25,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
 
     public readonly collapsibleState: TreeItemCollapsibleState | undefined = TreeItemCollapsibleState.Collapsed;
     public readonly _isAzExtParentTreeItem: boolean = true;
-
+    
     private _cachedChildren: AzExtTreeItem[] = [];
     private _creatingTreeItems: AzExtTreeItem[] = [];
     private _clearCache: boolean = true;
@@ -54,6 +54,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
     public abstract hasMoreChildrenImpl(): boolean;
     public createChildImpl?(context: types.ICreateChildImplContext): Promise<AzExtTreeItem>;
     public pickTreeItemImpl?(expectedContextValues: (string | RegExp)[]): AzExtTreeItem | undefined | Promise<AzExtTreeItem | undefined>;
+    public resolveChildrenForTreePicker?(): Promise<AzExtTreeItem[]>;
     //#endregion
 
     public clearCache(): void {
@@ -263,7 +264,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
     }
 
     private async getQuickPicks(expectedContextValues: (string | RegExp)[], context: types.ITreeItemPickerContext & Partial<types.ICreateChildImplContext>): Promise<types.IAzureQuickPickItem<GetTreeItemFunction>[]> {
-        let children: AzExtTreeItem[] = await this.getCachedChildren(context);
+        let children: AzExtTreeItem[] = !!this.resolveChildrenForTreePicker ? await this.resolveChildrenForTreePicker() : await this.getCachedChildren(context);
         children = children.filter((ti: AzExtTreeItem) => ti.includeInTreePicker(expectedContextValues));
 
         let autoSelectInTreeItemPicker: boolean | undefined = this.autoSelectInTreeItemPicker;
