@@ -1,15 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-azureappservice",
     "author": "Microsoft Corporation",
-<<<<<<< HEAD
-<<<<<<< HEAD
-    "version": "0.1.6",
-=======
     "version": "0.1.7",
->>>>>>> 8cf073e43b1ad59c644e29352b14f83950123f8a
-=======
-    "version": "0.1.7",
->>>>>>> 8cf073e43b1ad59c644e29352b14f83950123f8a
     "description": "Common tools for developing Azure App Service extensions for VS Code",
     "tags": [
         "azure",
