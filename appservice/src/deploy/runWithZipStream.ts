@@ -53,7 +53,10 @@ export async function runWithZipStream(context: IActionContext, options: {
             }
         });
 
-        zipFile.outputStream.on('finish', () => onFileSize(sizeOfZipFile));
+        zipFile.outputStream.on('finish', () => {
+            onFileSize(sizeOfZipFile);
+            void callback(zipStream);
+        });
 
         if ((await fse.lstat(fsPath)).isDirectory()) {
             if (!fsPath.endsWith(path.sep)) {
@@ -76,8 +79,6 @@ export async function runWithZipStream(context: IActionContext, options: {
         zipFile.end();
         zipStream = new Readable().wrap(zipFile.outputStream);
     }
-
-    await callback(zipStream);
 }
 
 function getPathFromMap(realPath: string, pathfileMap?: Map<string, string>): string {
