@@ -10,7 +10,7 @@ import { IActionContext, IParsedError, nonNullProp, parseError, UserCancelledErr
 import * as EventEmitter from 'events';
 import { createServer, Server, Socket } from 'net';
 import { CancellationToken, Disposable } from 'vscode';
-import * as websocket from 'websocket';
+import * as ws from 'ws';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { ParsedSite } from './SiteClient';
@@ -24,15 +24,13 @@ class TunnelSocket extends EventEmitter {
     private _socket: Socket;
     private _site: ParsedSite;
     private _publishCredential: User;
-    private _wsConnection: websocket.connection | undefined;
-    private _wsClient: websocket.client;
+    private _websocket: ws.WebSocket | undefined;
 
     constructor(socket: Socket, site: ParsedSite, publishCredential: User) {
         super();
         this._socket = socket;
         this._site = site;
         this._publishCredential = publishCredential;
-        this._wsClient = new websocket.client();
     }
 
     public connect(): void {
@@ -42,8 +40,8 @@ class TunnelSocket extends EventEmitter {
         this._socket.pause();
 
         this._socket.on('data', (data: Buffer) => {
-            if (this._wsConnection) {
-                this._wsConnection.send(data);
+            if (this._websocket) {
+                this._websocket.send(data);
             }
         });
 
@@ -59,63 +57,58 @@ class TunnelSocket extends EventEmitter {
             this.emit('error', err);
         });
 
-        this._wsClient.on('connect', (connection: websocket.connection) => {
+        this._websocket = new ws.WebSocket(
+            `wss://${this._site.kuduHostName}/AppServiceTunnel/Tunnel.ashx`,
+            {
+                headers: {
+                    'User-Agent': 'vscode-azuretools',
+                    'Cache-Control': 'no-cache',
+                    Pragma: 'no-cache'
+                },
+                auth: `${this._publishCredential.publishingUserName}:${this._publishCredential.publishingPassword}`
+            }
+        );
+
+        this._websocket.on('open', () => {
             ext.outputChannel.appendLog('[WebSocket] client connected');
-            this._wsConnection = connection;
 
             // Resume socket after connection
             this._socket.resume();
-
-            connection.on('close', () => {
-                ext.outputChannel.appendLog('[WebSocket] client closed');
-                this.dispose();
-                this.emit('close');
-            });
-
-            connection.on('error', (err: Error) => {
-                ext.outputChannel.appendLog(`[WebSocket] error: ${err}`);
-                this.dispose();
-                this.emit('error', err);
-            });
-
-            connection.on('message', (data: websocket.IBinaryMessage) => {
-                if (data.binaryData) {
-                    this._socket.write(data.binaryData);
-                }
-            });
-
         });
 
-        this._wsClient.on('connectFailed', (err: Error) => {
-            ext.outputChannel.appendLog(`[WebSocket] connectFailed: ${err}`);
+        this._websocket.on('close', () => {
+            ext.outputChannel.appendLog('[WebSocket] client closed');
+            this.dispose();
+            this.emit('close');
+        });
+
+        this._websocket.on('error', (_: ws, err: Error) => {
+            ext.outputChannel.appendLog(`[WebSocket] error: ${err}`);
             this.dispose();
             this.emit('error', err);
         });
 
-        this._wsClient.connect(
-            `wss://${this._site.kuduHostName}/AppServiceTunnel/Tunnel.ashx`,
-            undefined,
-            undefined,
-            {
-                'User-Agent': 'vscode-azuretools',
-                'Cache-Control': 'no-cache',
-                Pragma: 'no-cache'
-            },
-            {
-                auth: `${this._publishCredential.publishingUserName}:${this._publishCredential.publishingPassword}`
+        this._websocket.on('message', (_: ws, data: ws.RawData, isBinary: boolean) => {
+            if (isBinary) {
+                if (data instanceof Buffer) { // Data is `Buffer`
+                    this._socket.write(data);
+                } else if (data instanceof ArrayBuffer) { // Data is `ArrayBuffer`
+                    const buffer = Buffer.from(data);
+                    this._socket.write(buffer);
+                } else if (Array.isArray(data)) { // Data is `Buffer[]`
+                    data.forEach(d => this._socket.write(d));
+                }
             }
-        );
+        });
     }
 
     public dispose(): void {
         ext.outputChannel.appendLog('[Proxy Server] socket dispose');
 
-        if (this._wsConnection) {
-            this._wsConnection.close();
-            this._wsConnection = undefined;
+        if (this._websocket) {
+            this._websocket.close();
+            this._websocket = undefined;
         }
-
-        this._wsClient.abort();
 
         this._socket.destroy();
     }
