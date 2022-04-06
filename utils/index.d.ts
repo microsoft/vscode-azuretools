@@ -6,7 +6,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { Environment } from '@azure/ms-rest-azure-env';
-import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, Uri } from 'vscode';
+import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 
@@ -853,6 +853,8 @@ export interface AzExtInputBoxOptions extends InputBoxOptions, AzExtUserInputOpt
 */
 export interface AzExtOpenDialogOptions extends OpenDialogOptions, AzExtUserInputOptions { }
 
+export type RunWithActivity = (activity: ActivityBase) => Promise<void>;
+
 export interface IWizardOptions<T extends IActionContext> {
     /**
      * The steps to prompt for user input, in order
@@ -878,6 +880,50 @@ export interface IWizardOptions<T extends IActionContext> {
     * If true, a loading prompt will be displayed if there are long delays between wizard steps.
     */
     showLoadingPrompt?: boolean;
+
+    runWithActivity?: RunWithActivity;
+}
+
+export interface ActivityTreeItemOptions {
+    label: string;
+    contextValuePostfix?: string;
+    collapsibleState?: TreeItemCollapsibleState;
+    children?: (parent: AzExtParentTreeItem) => AzExtTreeItem[];
+}
+
+interface ActivityType {
+    inital(progress?: Progress<{ message?: string; increment?: number }>): ActivityTreeItemOptions;
+    onSuccess(): ActivityTreeItemOptions;
+    onError(error: IParsedError): ActivityTreeItemOptions;
+}
+
+export type ActivityTask = (progress: Progress<{ message?: string, increment?: number }>) => Promise<void>;
+
+export declare abstract class ActivityBase implements ActivityType {
+
+    abstract inital(progress?: Progress<{ message?: string; increment?: number }>): ActivityTreeItemOptions;
+    abstract onSuccess(): ActivityTreeItemOptions;
+    abstract onError(error: IParsedError): ActivityTreeItemOptions;
+
+    public done: boolean;
+    public error?: IParsedError;
+    public readonly task: ActivityTask;
+    public startedAtMs: number;
+
+    public constructor(task: ActivityTask);
+
+    public run(): Promise<void>;
+
+    public get state(): ActivityTreeItemOptions;
+}
+
+export declare class ActivityTreeItem extends AzExtParentTreeItem {
+    public loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]>;
+    public hasMoreChildrenImpl(): boolean;
+    public label: string;
+    public contextValue: string;
+    public activity: ActivityBase;
+    public constructor(parent: AzExtParentTreeItem, activity: ActivityBase);
 }
 
 /**
