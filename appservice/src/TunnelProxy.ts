@@ -7,7 +7,6 @@ import type { User } from '@azure/arm-appservice';
 import { BasicAuthenticationCredentials, HttpOperationResponse, RestError, ServiceClient } from '@azure/ms-rest-js';
 import { createGenericClient } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, IParsedError, nonNullProp, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
-import * as EventEmitter from 'events';
 import { createServer, Server, Socket } from 'net';
 import { CancellationToken, Disposable } from 'vscode';
 import * as ws from 'ws';
@@ -15,104 +14,6 @@ import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { ParsedSite } from './SiteClient';
 import { delay } from './utils/delay';
-
-/**
- * Wrapper for net.Socket that forwards all traffic to the Kudu tunnel websocket endpoint.
- * Used internally by the TunnelProxy server.
- */
-class TunnelSocket extends EventEmitter {
-    private _socket: Socket;
-    private _site: ParsedSite;
-    private _publishCredential: User;
-    private _websocket: ws.WebSocket | undefined;
-
-    constructor(socket: Socket, site: ParsedSite, publishCredential: User) {
-        super();
-        this._socket = socket;
-        this._site = site;
-        this._publishCredential = publishCredential;
-    }
-
-    public connect(): void {
-        ext.outputChannel.appendLog('[Proxy Server] socket init');
-
-        // Pause socket until tunnel connection has been established to make sure we don't lose data
-        this._socket.pause();
-
-        this._socket.on('data', (data: Buffer) => {
-            if (this._websocket) {
-                this._websocket.send(data);
-            }
-        });
-
-        this._socket.on('close', () => {
-            ext.outputChannel.appendLog(`[Proxy Server] client disconnected ${this._socket.remoteAddress}:${this._socket.remotePort}`);
-            this.dispose();
-            this.emit('close');
-        });
-
-        this._socket.on('error', (err: Error) => {
-            ext.outputChannel.appendLog(`[Proxy Server] socket error: ${err}`);
-            this.dispose();
-            this.emit('error', err);
-        });
-
-        this._websocket = new ws.WebSocket(
-            `wss://${this._site.kuduHostName}/AppServiceTunnel/Tunnel.ashx`,
-            {
-                headers: {
-                    'User-Agent': 'vscode-azuretools',
-                    'Cache-Control': 'no-cache',
-                    Pragma: 'no-cache'
-                },
-                auth: `${this._publishCredential.publishingUserName}:${this._publishCredential.publishingPassword}`
-            }
-        );
-
-        this._websocket.on('open', () => {
-            ext.outputChannel.appendLog('[WebSocket] client connected');
-
-            // Resume socket after connection
-            this._socket.resume();
-        });
-
-        this._websocket.on('close', () => {
-            ext.outputChannel.appendLog('[WebSocket] client closed');
-            this.dispose();
-            this.emit('close');
-        });
-
-        this._websocket.on('error', (_: ws, err: Error) => {
-            ext.outputChannel.appendLog(`[WebSocket] error: ${err}`);
-            this.dispose();
-            this.emit('error', err);
-        });
-
-        this._websocket.on('message', (_: ws, data: ws.RawData, isBinary: boolean) => {
-            if (isBinary) {
-                if (data instanceof Buffer) { // Data is `Buffer`
-                    this._socket.write(data);
-                } else if (data instanceof ArrayBuffer) { // Data is `ArrayBuffer`
-                    const buffer = Buffer.from(data);
-                    this._socket.write(buffer);
-                } else if (Array.isArray(data)) { // Data is `Buffer[]`
-                    data.forEach(d => this._socket.write(d));
-                }
-            }
-        });
-    }
-
-    public dispose(): void {
-        ext.outputChannel.appendLog('[Proxy Server] socket dispose');
-
-        if (this._websocket) {
-            this._websocket.close();
-            this._websocket = undefined;
-        }
-
-        this._socket.destroy();
-    }
-}
 
 /**
  * Interface for tunnel GetStatus API
@@ -143,7 +44,7 @@ export class TunnelProxy {
     private _site: ParsedSite;
     private _publishCredential: User;
     private _server: Server;
-    private _openSockets: TunnelSocket[];
+    private _openSockets: ws.WebSocket[];
     private _isSsh: boolean;
 
     constructor(port: number, site: ParsedSite, publishCredential: User, isSsh: boolean = false) {
@@ -166,8 +67,8 @@ export class TunnelProxy {
     }
 
     public dispose(): void {
-        this._openSockets.forEach((tunnelSocket: TunnelSocket) => {
-            tunnelSocket.dispose();
+        this._openSockets.forEach((tunnelSocket: ws.WebSocket) => {
+            tunnelSocket.close();
         });
         this._server.close();
         this._server.unref();
@@ -265,9 +166,24 @@ export class TunnelProxy {
             });
 
             this._server.on('connection', (socket: Socket) => {
-                const tunnelSocket: TunnelSocket = new TunnelSocket(socket, this._site, this._publishCredential);
-
+                socket.pause(); // Pause while making the connection
+                const tunnelSocket: ws.WebSocket = new ws.WebSocket(
+                    `wss://${this._site.kuduHostName}/AppServiceTunnel/Tunnel.ashx`,
+                    {
+                        headers: {
+                            'User-Agent': 'vscode-azuretools',
+                            'Cache-Control': 'no-cache',
+                            Pragma: 'no-cache'
+                        },
+                        auth: `${this._publishCredential.publishingUserName}:${this._publishCredential.publishingPassword}`,
+                    }
+                );
                 this._openSockets.push(tunnelSocket);
+
+                tunnelSocket.on('open', () => {
+                    socket.resume(); // Resume, now that connection is made
+                });
+
                 tunnelSocket.on('close', () => {
                     const index: number = this._openSockets.indexOf(tunnelSocket);
                     if (index >= 0) {
@@ -276,7 +192,11 @@ export class TunnelProxy {
                     }
                 });
 
-                tunnelSocket.connect();
+                // Tie up the input/output streams
+                const duplexStream = ws.createWebSocketStream(tunnelSocket);
+                duplexStream.pipe(socket);
+                socket.pipe(duplexStream);
+
                 ext.outputChannel.appendLog(`[Proxy Server] client connected ${socket.remoteAddress}:${socket.remotePort}, connection count: ${this._openSockets.length}`);
             });
 
