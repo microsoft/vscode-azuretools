@@ -60,12 +60,12 @@ export abstract class ActivityBase implements ActivityType {
     public async run(): Promise<void> {
         try {
             await this.task({ report: (progress) => this.report(progress) });
+            this.done = true;
         } catch (e) {
             this.error = parseError(e);
-        } finally {
             this.done = true;
+            throw e;
         }
-        return undefined;
     }
 
     public get state(): ActivityTreeItemOptions {

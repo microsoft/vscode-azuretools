@@ -3,14 +3,11 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-
 import { ThemeColor, ThemeIcon, TreeItemCollapsibleState } from "vscode";
 import * as types from "../../index";
-import { callWithTelemetryAndErrorHandling } from "../callWithTelemetryAndErrorHandling";
 import { localize } from "../localize";
 import { AzExtParentTreeItem } from "../tree/AzExtParentTreeItem";
 import { AzExtTreeItem } from "../tree/AzExtTreeItem";
-
 import { ActivityBase } from "./Activity";
 
 export class ActivityTreeItem extends AzExtParentTreeItem {
@@ -19,13 +16,11 @@ export class ActivityTreeItem extends AzExtParentTreeItem {
 
     public constructor(parent: AzExtParentTreeItem, public readonly activity: ActivityBase) {
         super(parent);
-
+        this.latestProgress = this.activity.progress[0];
         activity.onReportProgress((progress) => {
-            void callWithTelemetryAndErrorHandling('reportProgress', async (context) => {
-                this.latestProgress = progress;
-                await this.refresh(context);
-            });
-        })
+            this.latestProgress = progress;
+            this.treeDataProvider.refreshUIOnly(this);
+        });
     }
 
     public get id(): string {
@@ -50,7 +45,7 @@ export class ActivityTreeItem extends AzExtParentTreeItem {
         }
 
         return this.stateValue({
-            running: undefined,
+            running: this.latestProgress?.message,
             succeeded: localize('succeded', 'Succeeded'),
             failed: localize('failed', 'Failed'),
         });

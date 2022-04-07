@@ -5,8 +5,10 @@
 
 import { TreeItemCollapsibleState } from "vscode";
 import * as types from '../../../index';
+import { AppResource } from "../../../unified";
 import { AzExtParentTreeItem } from "../../tree/AzExtParentTreeItem";
 import { GenericTreeItem } from "../../tree/GenericTreeItem";
+import { nonNullProp } from "../../utils/nonNull";
 
 import { ActivityBase, ActivityTask, ActivityTreeItemOptions } from "../Activity";
 
@@ -24,31 +26,35 @@ export class ExecuteActivity<C extends types.IActionContext> extends ActivityBas
     public inital(): ActivityTreeItemOptions {
         return {
             label: this.data.title,
-            collapsibleState: this.progress.length ? TreeItemCollapsibleState.Expanded : TreeItemCollapsibleState.None,
-            children: (parent: AzExtParentTreeItem) => {
-                return this.progress.map((step) => {
-                    const ti = new GenericTreeItem(parent, {
-                        contextValue: 'executeStep',
-                        label: step.message ?? ''
-                    });
-                    return ti;
-                });
-            }
+            collapsibleState: TreeItemCollapsibleState.None,
         }
     }
 
     public onSuccess(): ActivityTreeItemOptions {
         return {
             label: this.labelOnDone,
-            collapsibleState: this.progress.length ? TreeItemCollapsibleState.Expanded : TreeItemCollapsibleState.None,
+            collapsibleState: this.data.context['activityResult'] ? TreeItemCollapsibleState.Expanded : TreeItemCollapsibleState.None,
             children: (parent: AzExtParentTreeItem) => {
-                return this.progress.map((step) => {
+                if (this.data.context['activityResult']) {
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                    const result = this.data.context['activityResult'];
+                    const appResource: AppResource = {
+                        id: nonNullProp(result, 'id') as string,
+                        name: nonNullProp(result, 'name') as string,
+                        type: nonNullProp(result, 'type') as string,
+                    }
+
                     const ti = new GenericTreeItem(parent, {
-                        contextValue: 'executeStep',
-                        label: step.message ?? ''
+                        contextValue: 'executeResult',
+                        label: "Click to view resource",
+                        commandId: 'azureResourceGroups.revealResource',
                     });
-                    return ti;
-                });
+
+                    ti.commandArgs = [appResource];
+
+                    return [ti];
+                }
+                return [];
             }
         }
     }
@@ -56,6 +62,7 @@ export class ExecuteActivity<C extends types.IActionContext> extends ActivityBas
     public onError(error: types.IParsedError): ActivityTreeItemOptions {
         return {
             label: this.labelOnDone,
+            collapsibleState: TreeItemCollapsibleState.Expanded,
             children: (parent: AzExtParentTreeItem) => {
                 return [
                     new GenericTreeItem(parent, {

@@ -880,8 +880,6 @@ export interface IWizardOptions<T extends IActionContext> {
     * If true, a loading prompt will be displayed if there are long delays between wizard steps.
     */
     showLoadingPrompt?: boolean;
-
-    runWithActivity?: RunWithActivity;
 }
 
 export interface ActivityTreeItemOptions {
@@ -937,7 +935,14 @@ export declare class AzureWizard<T extends IActionContext> {
     public constructor(wizardContext: T, options: IWizardOptions<T>);
 
     public prompt(): Promise<void>;
-    public execute(): Promise<void>;
+    public execute(options?: AzureWizardExecuteOptions): Promise<void>;
+}
+
+export declare interface AzureWizardExecuteOptions {
+    activity?: {
+        name?: string,
+        runWithActivity: RunWithActivity
+    }
 }
 
 export declare abstract class AzureWizardExecuteStep<T extends IActionContext> {
