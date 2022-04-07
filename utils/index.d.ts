@@ -6,7 +6,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { Environment } from '@azure/ms-rest-azure-env';
-import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
+import { Disposable, Event, EventEmitter, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 
@@ -889,26 +889,51 @@ export interface ActivityTreeItemOptions {
     children?: (parent: AzExtParentTreeItem) => AzExtTreeItem[];
 }
 
-interface ActivityType {
-    inital(progress?: Progress<{ message?: string; increment?: number }>): ActivityTreeItemOptions;
-    onSuccess(): ActivityTreeItemOptions;
-    onError(error: IParsedError): ActivityTreeItemOptions;
+type ActivityEventData<T> = ActivityTreeItemOptions & T;
+
+export interface ActivityProgressEventData extends ActivityTreeItemOptions {
+    message: string;
+}
+
+export type OnStartActivityData = ActivityEventData<{}>;
+export type OnProgressActivityData = ActivityEventData<{}>;
+export type OnSuccessActivityData = ActivityEventData<{}>;
+export type OnErrorActivityData = ActivityEventData<{}>;
+
+export declare interface Activity {
+    id: string;
+    onStart: Event<OnStartActivityData>;
+    onProgress: Event<OnProgressActivityData>;
+    onSuccess: Event<OnSuccessActivityData>;
+    onError: Event<OnErrorActivityData>;
+}
+
+export interface ActivityType {
+    initialState(): ActivityTreeItemOptions;
+    successState(): ActivityTreeItemOptions;
+    errorState(error: IParsedError): ActivityTreeItemOptions;
 }
 
 export type ActivityTask = (progress: Progress<{ message?: string, increment?: number }>) => Promise<void>;
 
-export declare abstract class ActivityBase implements ActivityType {
+export declare abstract class ActivityBase implements Activity, ActivityType {
 
-    abstract inital(progress?: Progress<{ message?: string; increment?: number }>): ActivityTreeItemOptions;
-    abstract onSuccess(): ActivityTreeItemOptions;
-    abstract onError(error: IParsedError): ActivityTreeItemOptions;
+    public readonly onStart: Event<OnStartActivityData>;
+    public readonly onProgress: Event<OnProgressActivityData>;
+    public readonly onSuccess: Event<OnSuccessActivityData>;
+    public readonly onError: Event<OnErrorActivityData>;
 
-    public done: boolean;
-    public error?: IParsedError;
-    public readonly task: ActivityTask;
-    public startedAtMs: number;
+    public readonly id: string;
+
+    public progress: { message?: string, increment?: number }[];
+
+    abstract initialState(): ActivityTreeItemOptions;
+    abstract successState(): ActivityTreeItemOptions;
+    abstract errorState(error: IParsedError): ActivityTreeItemOptions;
 
     public constructor(task: ActivityTask);
+
+    public report(progress: { message?: string; increment?: number }): void;
 
     public run(): Promise<void>;
 

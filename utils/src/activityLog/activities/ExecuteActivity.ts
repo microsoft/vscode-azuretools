@@ -23,14 +23,14 @@ export class ExecuteActivity<C extends types.IActionContext> extends ActivityBas
         super(task);
     }
 
-    public inital(): ActivityTreeItemOptions {
+    public initialState(): ActivityTreeItemOptions {
         return {
             label: this.data.title,
             collapsibleState: TreeItemCollapsibleState.None,
         }
     }
 
-    public onSuccess(): ActivityTreeItemOptions {
+    public successState(): ActivityTreeItemOptions {
         return {
             label: this.labelOnDone,
             collapsibleState: this.data.context['activityResult'] ? TreeItemCollapsibleState.Expanded : TreeItemCollapsibleState.None,
@@ -59,7 +59,7 @@ export class ExecuteActivity<C extends types.IActionContext> extends ActivityBas
         }
     }
 
-    public onError(error: types.IParsedError): ActivityTreeItemOptions {
+    public errorState(error: types.IParsedError): ActivityTreeItemOptions {
         return {
             label: this.labelOnDone,
             collapsibleState: TreeItemCollapsibleState.Expanded,

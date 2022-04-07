@@ -3,44 +3,83 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { ThemeColor, ThemeIcon, TreeItemCollapsibleState } from "vscode";
+import { Event, ThemeColor, ThemeIcon, TreeItemCollapsibleState } from "vscode";
 import * as types from "../../index";
+import { callWithTelemetryAndErrorHandling } from "../callWithTelemetryAndErrorHandling";
 import { localize } from "../localize";
 import { AzExtParentTreeItem } from "../tree/AzExtParentTreeItem";
 import { AzExtTreeItem } from "../tree/AzExtTreeItem";
-import { ActivityBase } from "./Activity";
+import { Activity, ActivityTreeItemOptions } from "./Activity";
+
+type ExtractEventData<E> = E extends Event<infer T> ? T : never;
 
 export class ActivityTreeItem extends AzExtParentTreeItem {
 
     private latestProgress?: { message?: string, increment?: number } | undefined;
 
-    public constructor(parent: AzExtParentTreeItem, public readonly activity: ActivityBase) {
+    private state: ActivityTreeItemOptions = {
+        label: 'Waiting for init'
+    };
+
+    private done: boolean = false;
+    private error: boolean = false;
+
+    public constructor(parent: AzExtParentTreeItem, activity: Activity) {
         super(parent);
-        this.latestProgress = this.activity.progress[0];
-        activity.onReportProgress((progress) => {
-            this.latestProgress = progress;
-            this.treeDataProvider.refreshUIOnly(this);
+        this.id = activity.id;
+        this.setupListeners(activity)
+    }
+
+    private setupListeners(activity: Activity): void {
+        activity.onProgress(this.onProgress);
+        activity.onStart(this.onStart);
+        activity.onSuccess(this.onSuccess);
+        activity.onError(this.onError);
+    }
+
+    private async onProgress(data: ExtractEventData<Activity['onProgress']>): Promise<void> {
+        this.state = data;
+        await this.refreshInternal();
+    }
+
+    private async onStart(data: ExtractEventData<Activity['onStart']>): Promise<void> {
+        this.state = data;
+        await this.refreshInternal();
+    }
+
+    private async onSuccess(data: ExtractEventData<Activity['onSuccess']>): Promise<void> {
+        this.state = data;
+        this.done = true;
+        await this.refreshInternal();
+    }
+
+    private async onError(data: ExtractEventData<Activity['onError']>): Promise<void> {
+        this.state = data;
+        this.done = true;
+        this.error = true;
+        await this.refreshInternal();
+    }
+
+    private async refreshInternal(): Promise<void> {
+        await callWithTelemetryAndErrorHandling('refreshActivity', async (context) => {
+            await this.refresh(context);
         });
     }
 
-    public get id(): string {
-        return this.activity.id;
-    }
-
     public get contextValue(): string {
-        const postfix = this.activity.state.contextValuePostfix ? `.${this.activity.state.contextValuePostfix}` : '';
-        return `azureOperation.${this.activity.done ? this.activity.error ? 'failed' : 'succeeded' : 'running'}${postfix}`;
+        const postfix = this.state.contextValuePostfix ? `.${this.state.contextValuePostfix}` : '';
+        return `azureOperation.${postfix}`;
     }
 
-    public collapsibleState: TreeItemCollapsibleState = this.activity.state.collapsibleState ?? this.activity.done ? TreeItemCollapsibleState.Expanded : TreeItemCollapsibleState.None;
+    public collapsibleState: TreeItemCollapsibleState = this.state.collapsibleState ?? TreeItemCollapsibleState.None;
 
     public get label(): string {
-        return this.activity.state.label;
+        return this.state.label;
     }
 
     public get description(): string | undefined {
 
-        if (this.latestProgress && this.latestProgress.message && !this.activity.done) {
+        if (this.latestProgress && this.latestProgress.message && !this.done) {
             return this.latestProgress.message;
         }
 
@@ -60,8 +99,8 @@ export class ActivityTreeItem extends AzExtParentTreeItem {
     }
 
     public async loadMoreChildrenImpl(_clearCache: boolean, _context: types.IActionContext): Promise<AzExtTreeItem[]> {
-        if (this.activity.state.children) {
-            return this.activity.state.children(this);
+        if (this.state.children) {
+            return this.state.children(this);
         }
         return [];
     }
@@ -71,8 +110,8 @@ export class ActivityTreeItem extends AzExtParentTreeItem {
     }
 
     private stateValue<T>(values: { running: T, succeeded: T, failed: T }): T {
-        if (this.activity.done) {
-            return this.activity.error ? values.failed : values.succeeded;
+        if (this.done) {
+            return this.error ? values.failed : values.succeeded;
         }
         return values.running;
     }
