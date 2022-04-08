@@ -29,9 +29,7 @@ export class ActivityTreeItem extends AzExtParentTreeItem {
         return this.activity.contextValue;
     }
 
-    public get collapsibleState(): TreeItemCollapsibleState {
-        return this.activity.collapsibleState;
-    }
+    public collapsibleState: TreeItemCollapsibleState = this.activity.collapsibleState;
 
     public get label(): string {
         return this.activity.label;
