@@ -8,7 +8,7 @@ import { randomUUID } from "crypto";
 import { Event, EventEmitter, Progress, TreeItemCollapsibleState } from "vscode";
 import * as types from '../../index';
 import { parseError } from "../parseError";
-import { AzExtTreeItem } from "../tree/AzExtTreeItem";
+import { AzExtTreeItem } from "../tree/AzExtTreeItem"
 
 export interface ActivityTreeItemOptions {
     label: string;
@@ -24,9 +24,9 @@ export interface ActivityProgressEventData extends ActivityTreeItemOptions {
 }
 
 export type OnStartActivityData = ActivityEventData<{}>;
-export type OnProgressActivityData = ActivityEventData<{}>;
+export type OnProgressActivityData = ActivityEventData<{ message?: string }>;
 export type OnSuccessActivityData = ActivityEventData<{}>;
-export type OnErrorActivityData = ActivityEventData<{}>;
+export type OnErrorActivityData = ActivityEventData<{ error: unknown }>;
 
 export interface Activity {
     id: string;
@@ -34,6 +34,15 @@ export interface Activity {
     onProgress: Event<OnProgressActivityData>;
     onSuccess: Event<OnSuccessActivityData>;
     onError: Event<OnErrorActivityData>;
+}
+
+// use functions instead of events for easier error
+export interface ActivityFuncs {
+    id: string;
+    onStart: (data: OnStartActivityData) => Promise<void>;
+    onProgress: (data: OnProgressActivityData) => Promise<void>;
+    onSuccess: (data: OnSuccessActivityData) => Promise<void>;
+    onError: (data: OnErrorActivityData) => Promise<void>;
 }
 
 export interface ActivityType {
@@ -88,24 +97,25 @@ export abstract class ActivityBase implements Activity, ActivityType {
 
     public report(progress: { message?: string; increment?: number }): void {
         this.progress.unshift(progress);
-        this._onProgressEmitter.fire(this.state);
+        this._onProgressEmitter.fire({ ...this.getState(), message: progress.message });
     }
 
-    public async run(): Promise<void> {
+    public async run(activityFuncs: ActivityFuncs): Promise<void> {
         try {
-            this._onStartEmitter.fire(this.state);
+            activityFuncs.onStart(this.getState());
+            this._onStartEmitter.fire(this.getState());
             await this.task({ report: (progress) => this.report(progress) });
             this.done = true;
-            this._onSuccessEmitter.fire(this.state);
+            this._onSuccessEmitter.fire(this.getState());
         } catch (e) {
             this.error = parseError(e);
             this.done = true;
-            this._onErrorEmitter.fire(this.state);
+            this._onErrorEmitter.fire({ ...this.getState(), error: e });
             throw e;
         }
     }
 
-    public get state(): ActivityTreeItemOptions {
+    public getState(): ActivityTreeItemOptions {
         if (this.done) {
             return this.error ? this.errorState(this.error) : this.successState();
         }
