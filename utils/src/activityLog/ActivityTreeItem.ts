@@ -20,20 +20,18 @@ export class ActivityTreeItem extends AzExtParentTreeItem {
 
     private async refreshInternal(): Promise<void> {
         await callWithTelemetryAndErrorHandling('refreshActivity', async (context) => {
-            this.clearCache();
             await this.refresh(context);
+            this.treeDataProvider.refreshUIOnly(this.parent);
         });
-
-        if (this.activity.error) {
-            throw this.activity.error;
-        }
     }
 
-    public get contextValue(): string {
+    public override get contextValue(): string {
         return this.activity.contextValue;
     }
 
-    public collapsibleState: TreeItemCollapsibleState = this.activity.collapsibleState;
+    public get collapsibleState(): TreeItemCollapsibleState {
+        return this.activity.collapsibleState;
+    }
 
     public get label(): string {
         return this.activity.label;

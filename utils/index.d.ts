@@ -6,7 +6,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { Environment } from '@azure/ms-rest-azure-env';
-import { Disposable, Event, EventEmitter, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
+import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 
@@ -882,7 +882,7 @@ export interface IWizardOptions<T extends IActionContext> {
     showLoadingPrompt?: boolean;
 }
 
-export interface ActivityTreeItemOptions {
+export declare interface ActivityTreeItemOptions {
     label: string;
     contextValuePostfix?: string;
     collapsibleState?: TreeItemCollapsibleState;
@@ -891,14 +891,10 @@ export interface ActivityTreeItemOptions {
 
 type ActivityEventData<T> = ActivityTreeItemOptions & T;
 
-export interface ActivityProgressEventData extends ActivityTreeItemOptions {
-    message: string;
-}
-
-export type OnStartActivityData = ActivityEventData<{}>;
-export type OnProgressActivityData = ActivityEventData<{}>;
-export type OnSuccessActivityData = ActivityEventData<{}>;
-export type OnErrorActivityData = ActivityEventData<{}>;
+export declare type OnStartActivityData = ActivityEventData<{}>;
+export declare type OnProgressActivityData = ActivityEventData<{ message?: string }>;
+export declare type OnSuccessActivityData = ActivityEventData<{}>;
+export declare type OnErrorActivityData = ActivityEventData<{ error: unknown }>;
 
 export declare interface Activity {
     id: string;
@@ -908,16 +904,16 @@ export declare interface Activity {
     onError: Event<OnErrorActivityData>;
 }
 
-export interface ActivityType {
+export declare interface ActivityType {
     initialState(): ActivityTreeItemOptions;
     successState(): ActivityTreeItemOptions;
     errorState(error: IParsedError): ActivityTreeItemOptions;
 }
 
-export type ActivityTask = (progress: Progress<{ message?: string, increment?: number }>) => Promise<void>;
+export declare type ActivityTask = (progress: Progress<{ message?: string, increment?: number }>) => Promise<void>;
 
 
-export interface TreeItemState {
+export declare interface TreeItemState {
     id: string;
     label: string;
     contextValuePostfix?: string;
@@ -928,6 +924,7 @@ export interface TreeItemState {
 }
 
 export declare class ActivityState implements TreeItemState {
+    public getActivityFuncs(): ActivityFuncs;
     id: string;
     label: string;
     contextValuePostfix?: string | undefined;
@@ -937,24 +934,35 @@ export declare class ActivityState implements TreeItemState {
     description?: string | undefined;
 }
 
-export abstract class ActivityBase implements Activity, ActivityType {
-    public readonly onStart: Event<OnStartActivityData>;
-    public readonly onProgress: Event<OnProgressActivityData>;
-    public readonly onSuccess: Event<OnSuccessActivityData>;
-    public readonly onError: Event<OnErrorActivityData>;
 
+// use functions instead of events for easier async, and error handling
+export declare interface ActivityFuncs {
+    onStart: (data: OnStartActivityData) => Promise<void>;
+    onProgress: (data: OnProgressActivityData) => Promise<void>;
+    onSuccess: (data: OnSuccessActivityData) => Promise<void>;
+    onError: (data: OnErrorActivityData) => Promise<void>;
+}
+
+export abstract class ActivityBase implements ActivityType {
+
+    public done: boolean;
+    public error?: IParsedError;
     public readonly task: ActivityTask;
     public startedAtMs: number;
     public readonly id: string;
+
+    public progress: { message?: string, increment?: number }[];
 
     abstract initialState(): ActivityTreeItemOptions;
     abstract successState(): ActivityTreeItemOptions;
     abstract errorState(error: IParsedError): ActivityTreeItemOptions;
 
     public constructor(task: ActivityTask);
-    public report(progress: { message?: string; increment?: number }): void;
-    public run(): Promise<void>;
+
+    public run({ onStart, onProgress, onSuccess, onError }: ActivityFuncs): Promise<void>;
+    public getState(): ActivityTreeItemOptions;
 }
+
 
 export declare class ActivityTreeItem extends AzExtParentTreeItem {
     public loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]>;

@@ -23,13 +23,22 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     private _iconPath?: types.TreeItemIconPath;
     private _tooltip?: string;
     private _commandId?: string;
+    private _collapsibleState?: TreeItemCollapsibleState = TreeItemCollapsibleState.None;
     //#endregion
 
     /**
      * Used to prevent VS Code from erroring out on nodes with the same label, but different context values (i.e. a folder and file with the same name)
      */
     public fullIdWithContext?: string;
-    public readonly collapsibleState: TreeItemCollapsibleState | undefined;
+
+    public get collapsibleState(): TreeItemCollapsibleState | undefined {
+        return this._collapsibleState;
+    }
+
+    public set collapsibleState(collapsibleState: TreeItemCollapsibleState | undefined) {
+        this._collapsibleState = collapsibleState;
+    }
+
     public readonly parent: IAzExtParentTreeItemInternal | undefined;
     public isLoadingMore: boolean;
     public readonly valuesToMask: string[] = [];

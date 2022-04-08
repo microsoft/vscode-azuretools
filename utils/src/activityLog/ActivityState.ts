@@ -3,21 +3,19 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { Event, EventEmitter, ThemeColor, ThemeIcon, TreeItemCollapsibleState } from "vscode";
+import { ThemeColor, ThemeIcon, TreeItemCollapsibleState } from "vscode";
 import * as types from "../../index";
 import { localize } from "../localize";
 import { AzExtParentTreeItem } from "../tree/AzExtParentTreeItem";
 import { AzExtTreeItem } from "../tree/AzExtTreeItem";
-import { Activity, ActivityTreeItemOptions } from "./Activity";
-
-type ExtractEventData<E> = E extends Event<infer T> ? T : never;
+import { ActivityBase, ActivityTreeItemOptions, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from "./Activity";
 
 export interface TreeItemState {
     id: string;
     label: string;
     contextValuePostfix?: string;
     collapsibleState?: TreeItemCollapsibleState;
-    children?: (parent: types.AzExtParentTreeItem) => AzExtTreeItem[];
+    children?: (parent: AzExtParentTreeItem) => AzExtTreeItem[];
     iconPath?: types.TreeItemIconPath;
     description?: string;
 }
@@ -32,44 +30,40 @@ export class ActivityState implements TreeItemState {
         label: 'undefined'
     }
 
-    public onChange: Event<void>;
-    private readonly _onDidChange: EventEmitter<void>;
-
     private done: boolean = false;
     public error: unknown;
 
-    public constructor(activity: Activity) {
+    public constructor(activity: ActivityBase) {
         this.id = activity.id;
-        this.setupListeners(activity);
-        this._onDidChange = new EventEmitter();
-        this.onChange = this._onDidChange.event;
     }
 
-    private setupListeners(activity: Activity): void {
-        activity.onProgress(this.onProgress.bind(this));
-        activity.onStart(this.onStart.bind(this));
-        activity.onSuccess(this.onSuccess.bind(this));
-        activity.onError(this.onError.bind(this));
+    public getActivityFuncs(): types.ActivityFuncs {
+        return {
+            onProgress: this.onProgress.bind(this) as typeof this.onProgress,
+            onStart: this.onStart.bind(this) as typeof this.onStart,
+            onSuccess: this.onSuccess.bind(this) as typeof this.onSuccess,
+            onError: this.onError.bind(this) as typeof this.onError,
+        }
     }
 
-    private async onProgress(data: ExtractEventData<Activity['onProgress']>): Promise<void> {
+    private async onProgress(data: OnProgressActivityData): Promise<void> {
         this.latestProgress = data.message ? { message: data?.message } : this.latestProgress;
         this.state = data;
         await this.refreshInternal();
     }
 
-    private async onStart(data: ExtractEventData<Activity['onStart']>): Promise<void> {
+    private async onStart(data: OnStartActivityData): Promise<void> {
         this.state = data;
         await this.refreshInternal();
     }
 
-    private async onSuccess(data: ExtractEventData<Activity['onSuccess']>): Promise<void> {
+    private async onSuccess(data: OnSuccessActivityData): Promise<void> {
         this.state = data;
         this.done = true;
         await this.refreshInternal();
     }
 
-    private async onError(data: ExtractEventData<Activity['onError']>): Promise<void> {
+    private async onError(data: OnErrorActivityData): Promise<void> {
         this.state = data;
         this.done = true;
         this.error = data.error;
