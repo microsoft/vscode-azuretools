@@ -74,7 +74,7 @@ export async function runWithZipStream(context: IActionContext, options: {
         }
 
         zipFile.end();
-        zipStream = new Readable().wrap(zipFile.outputStream);
+        zipStream = zipFile.outputStream as Readable;
     }
 
     await callback(zipStream);
