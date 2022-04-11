@@ -4,14 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { SubscriptionClient, SubscriptionModels } from '@azure/arm-subscriptions';
+import { ClientSecretCredential } from '@azure/identity';
 import { Environment } from '@azure/ms-rest-azure-env';
-import { ApplicationTokenCredentials, loginWithServicePrincipalSecret } from '@azure/ms-rest-nodeauth';
 import { Event, EventEmitter } from 'vscode';
 import * as types from '../index';
-import { AzureAccount, AzureLoginStatus, AzureResourceFilter, AzureSession, AzureSubscription } from './@types/azure-account.api';
+import { AzureAccountExtensionApi, AzureLoginStatus, AzureResourceFilter, AzureSession, AzureSubscription } from './@types/azure-account.api';
 import { nonNullProp, nonNullValue } from './utils/nonNull';
 
-export class TestAzureAccount implements AzureAccount, types.TestAzureAccount {
+export class TestAzureAccount implements AzureAccountExtensionApi, types.TestAzureAccount {
+    readonly apiVersion: string = '1.0.0';
     public status: AzureLoginStatus = 'LoggedOut';
     public onStatusChanged: Event<AzureLoginStatus>;
     public sessions: AzureSession[] = [];
@@ -38,15 +39,15 @@ export class TestAzureAccount implements AzureAccount, types.TestAzureAccount {
     }
 
     public async signIn(): Promise<void> {
-        type servicePrincipalCredentials = ApplicationTokenCredentials & { environment: Environment };
+        type servicePrincipalCredentials = ClientSecretCredential & { environment: Environment };
         const clientId: string | undefined = process.env.SERVICE_PRINCIPAL_CLIENT_ID;
-        const secret: string | undefined = process.env.SERVICE_PRINCIPAL_SECRET;
-        const domain: string | undefined = process.env.SERVICE_PRINCIPAL_DOMAIN;
-        if (!clientId || !secret || !domain) {
+        const clientSecret: string | undefined = process.env.SERVICE_PRINCIPAL_SECRET;
+        const domainId: string | undefined = process.env.SERVICE_PRINCIPAL_DOMAIN;
+        if (!clientId || !clientSecret || !domainId) {
             throw new Error('TestAzureAccount cannot be used without the following environment variables: SERVICE_PRINCIPAL_CLIENT_ID, SERVICE_PRINCIPAL_SECRET, SERVICE_PRINCIPAL_DOMAIN');
         }
         this.changeStatus('LoggingIn');
-        const credentials: servicePrincipalCredentials = <servicePrincipalCredentials>(await loginWithServicePrincipalSecret(clientId, secret, domain));
+        const credentials: servicePrincipalCredentials = <servicePrincipalCredentials>new ClientSecretCredential(domainId, clientId, clientSecret);
         const subscriptionClient: SubscriptionClient = new SubscriptionClient(credentials);
         const subscriptions: SubscriptionModels.SubscriptionListResult = await subscriptionClient.subscriptions.list();
         // returns an array with id, subscriptionId, displayName
@@ -97,6 +98,10 @@ export class TestAzureAccount implements AzureAccount, types.TestAzureAccount {
 
     public async waitForFilters(): Promise<boolean> {
         return true;
+    }
+
+    public createCloudShell(_os: 'Linux' | 'Windows'): void {
+        throw new Error('Creating a Cloud Shell instance is not supported in TestAzureAccount.');
     }
 
     private changeStatus(newStatus: AzureLoginStatus): void {

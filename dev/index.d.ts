@@ -111,12 +111,16 @@ export declare function gulp_webpack(mode: string): cp.ChildProcess;
  */
 export interface AzExtServiceClientCredentials {
     /**
-     * Signs a request with the Authentication header.
+     * Gets the token provided by this credential.
      *
-     * @param {WebResourceLike} webResource The WebResourceLike/request to be signed.
-     * @returns {Promise<WebResourceLike>} The signed request object;
+     * This method is called automatically by Azure SDK client libraries. You may call this method
+     * directly, but you must also handle token caching and token refreshing.
+     *
+     * @param scopes - The list of scopes for which the token will have access.
+     * @param options - The options used to configure any requests this
+     *                TokenCredential implementation might make.
      */
-    signRequest(webResource: any): Promise<any>;
+    getToken(scopes: string | string[], options?: GetTokenOptions): Promise<AccessToken | null>;
 }
 
 /**
