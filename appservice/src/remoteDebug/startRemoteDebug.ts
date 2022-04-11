@@ -5,7 +5,7 @@
 
 import type { SiteConfigResource, User } from '@azure/arm-appservice';
 import { callWithTelemetryAndErrorHandling, IActionContext } from '@microsoft/vscode-azext-utils';
-import * as portfinder from 'portfinder';
+import { default as getPort } from 'get-port';
 import * as vscode from 'vscode';
 import { localize } from '../localize';
 import { ParsedSite } from '../SiteClient';
@@ -37,7 +37,7 @@ export async function startRemoteDebug(context: IActionContext, site: ParsedSite
 
 async function startRemoteDebugInternal(context: IActionContext, site: ParsedSite, siteConfig: SiteConfigResource, language: RemoteDebugLanguage): Promise<void> {
     await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, cancellable: true }, async (progress, token): Promise<void> => {
-        const localHostPortNumber: number = await portfinder.getPortPromise();
+        const localHostPortNumber: number = await getPort();
         const debugConfig: vscode.DebugConfiguration = await getDebugConfiguration(language, localHostPortNumber);
 
         const confirmEnableMessage: string = localize('remoteDebugEnablePrompt', 'The configuration will be updated to enable remote debugging. Would you like to continue? This will restart the app.');
