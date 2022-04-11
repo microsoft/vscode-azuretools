@@ -916,28 +916,44 @@ export interface ActivityType {
 
 export type ActivityTask = (progress: Progress<{ message?: string, increment?: number }>) => Promise<void>;
 
-export declare abstract class ActivityBase implements Activity, ActivityType {
 
+export interface TreeItemState {
+    id: string;
+    label: string;
+    contextValuePostfix?: string;
+    collapsibleState?: TreeItemCollapsibleState;
+    children?: (parent: AzExtParentTreeItem) => AzExtTreeItem[];
+    iconPath?: TreeItemIconPath;
+    description?: string;
+}
+
+export declare class ActivityState implements TreeItemState {
+    id: string;
+    label: string;
+    contextValuePostfix?: string | undefined;
+    collapsibleState?: TreeItemCollapsibleState | undefined;
+    children?: ((parent: AzExtParentTreeItem) => AzExtTreeItem[]) | undefined;
+    iconPath?: TreeItemIconPath | undefined;
+    description?: string | undefined;
+}
+
+export abstract class ActivityBase implements Activity, ActivityType {
     public readonly onStart: Event<OnStartActivityData>;
     public readonly onProgress: Event<OnProgressActivityData>;
     public readonly onSuccess: Event<OnSuccessActivityData>;
     public readonly onError: Event<OnErrorActivityData>;
 
+    public readonly task: ActivityTask;
+    public startedAtMs: number;
     public readonly id: string;
-
-    public progress: { message?: string, increment?: number }[];
 
     abstract initialState(): ActivityTreeItemOptions;
     abstract successState(): ActivityTreeItemOptions;
     abstract errorState(error: IParsedError): ActivityTreeItemOptions;
 
     public constructor(task: ActivityTask);
-
     public report(progress: { message?: string; increment?: number }): void;
-
     public run(): Promise<void>;
-
-    public get state(): ActivityTreeItemOptions;
 }
 
 export declare class ActivityTreeItem extends AzExtParentTreeItem {
@@ -945,8 +961,7 @@ export declare class ActivityTreeItem extends AzExtParentTreeItem {
     public hasMoreChildrenImpl(): boolean;
     public label: string;
     public contextValue: string;
-    public activity: ActivityBase;
-    public constructor(parent: AzExtParentTreeItem, activity: ActivityBase);
+    public constructor(parent: AzExtParentTreeItem, activity: ActivityState);
 }
 
 /**
