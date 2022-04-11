@@ -1362,3 +1362,12 @@ export function nonNullValue<T>(value: T | undefined, propertyNameOrMessage?: st
  * Validates that a given string is not null, undefined, nor empty
  */
 export function nonNullOrEmptyValue(value: string | undefined, propertyNameOrMessage?: string): string;
+
+/**
+ * Finds an available port.
+ * NOTE: If another listener is on '0.0.0.0', this will take the '127.0.0.1' allocation from them!
+ * @param startPort (Optional) The first port to try. By default, a random port from 10000 (inclusive) to 64000 (exclusive)
+ * @param maxAttempts (Optional) The maximum number of attempts. 25, by default.
+ * @param timeout (Optional) The maximum time to spend. 500 ms, by default.
+ */
+export function findFreePort(startPort?: number, maxAttempts?: number, timeout?: number): Promise<number>;
