@@ -18,7 +18,8 @@ const MaxRandomPort = 64000;
  * @param startPort (Optional) The first port to try. By default, a random port from 10000 (inclusive) to 64000 (exclusive)
  * @param maxAttempts (Optional) The maximum number of attempts. 25, by default.
  * @param timeout (Optional) The maximum time to spend. 500 ms, by default.
- * Adapted from https://github.com/microsoft/vscode/blob/0bf30719729d76dc3db934ac2e04eed892a9ae7e/src/vs/base/node/ports.ts#L150-L191
+ * Adapted from https://github.com/microsoft/vscode/blob/0bf30719729d76dc3db934ac2e04eed892a9ae7e/src/vs/base/node/ports.ts#L150-L191.
+ * Notable differences: Arguments are optional; if a port attempted is taken, the attempt count is added to it for the next try, this will scan out of a range of taken ports faster
  */
 export async function findFreePort(startPort: number = 0, maxAttempts: number = DefaultMaxAttempts, timeout: number = DefaultTimeout): Promise<number> {
     // If a start port isn't given, the default is set to 0, and the `||=` will overwrite it with a random value
