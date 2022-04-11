@@ -29,8 +29,6 @@ export * from './wizard/AzureWizardExecuteStep';
 export * from './wizard/AzureWizardPromptStep';
 export * from './utils/openUrl';
 export * from './utils/nonNull';
-export * from './activityLog/ActivityTreeItem';
 export * from './activityLog/Activity';
-export * from './activityLog/ActivityState';
 
 // NOTE: The auto-fix action "source.organizeImports" does weird things with this file, but there doesn't seem to be a way to disable it on a per-file basis so we'll just let it happen

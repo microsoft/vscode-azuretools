@@ -19,10 +19,6 @@ export interface ActivityTreeItemOptions {
 
 type ActivityEventData<T> = ActivityTreeItemOptions & T;
 
-export interface ActivityProgressEventData extends ActivityTreeItemOptions {
-    message: string;
-}
-
 export type OnStartActivityData = ActivityEventData<{}>;
 export type OnProgressActivityData = ActivityEventData<{ message?: string }>;
 export type OnSuccessActivityData = ActivityEventData<{}>;
@@ -36,24 +32,9 @@ export interface Activity {
     onError: Event<OnErrorActivityData>;
 }
 
-// use functions instead of events for easier error
-export interface ActivityFuncs {
-    id: string;
-    onStart: (data: OnStartActivityData) => Promise<void>;
-    onProgress: (data: OnProgressActivityData) => Promise<void>;
-    onSuccess: (data: OnSuccessActivityData) => Promise<void>;
-    onError: (data: OnErrorActivityData) => Promise<void>;
-}
-
-export interface ActivityType {
-    initialState(): ActivityTreeItemOptions;
-    successState(): ActivityTreeItemOptions;
-    errorState(error: types.IParsedError): ActivityTreeItemOptions;
-}
-
 export type ActivityTask = (progress: Progress<{ message?: string, increment?: number }>) => Promise<void>;
 
-export abstract class ActivityBase implements Activity, ActivityType {
+export abstract class ActivityBase implements Activity {
 
     public readonly onStart: typeof this._onStartEmitter.event;
     public readonly onProgress: typeof this._onProgressEmitter.event;
@@ -65,6 +46,7 @@ export abstract class ActivityBase implements Activity, ActivityType {
     private readonly _onSuccessEmitter: EventEmitter<OnSuccessActivityData>;
     private readonly _onErrorEmitter: EventEmitter<OnErrorActivityData>;
 
+    public running: boolean;
     public done: boolean;
     public error?: types.IParsedError;
     public readonly task: ActivityTask;

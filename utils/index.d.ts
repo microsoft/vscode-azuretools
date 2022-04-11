@@ -853,7 +853,7 @@ export interface AzExtInputBoxOptions extends InputBoxOptions, AzExtUserInputOpt
 */
 export interface AzExtOpenDialogOptions extends OpenDialogOptions, AzExtUserInputOptions { }
 
-export type RunWithActivity = (activity: ActivityBase) => Promise<void>;
+export type RegisterActivity = (activity: ActivityBase) => Promise<void>;
 
 export interface IWizardOptions<T extends IActionContext> {
     /**
@@ -891,14 +891,10 @@ export interface ActivityTreeItemOptions {
 
 type ActivityEventData<T> = ActivityTreeItemOptions & T;
 
-export interface ActivityProgressEventData extends ActivityTreeItemOptions {
-    message: string;
-}
-
 export type OnStartActivityData = ActivityEventData<{}>;
-export type OnProgressActivityData = ActivityEventData<{}>;
+export type OnProgressActivityData = ActivityEventData<{ message?: string }>;
 export type OnSuccessActivityData = ActivityEventData<{}>;
-export type OnErrorActivityData = ActivityEventData<{}>;
+export type OnErrorActivityData = ActivityEventData<{ error: unknown }>;
 
 export declare interface Activity {
     id: string;
@@ -908,34 +904,13 @@ export declare interface Activity {
     onError: Event<OnErrorActivityData>;
 }
 
-export interface ActivityType {
+interface ActivityType {
     initialState(): ActivityTreeItemOptions;
     successState(): ActivityTreeItemOptions;
     errorState(error: IParsedError): ActivityTreeItemOptions;
 }
 
 export type ActivityTask = (progress: Progress<{ message?: string, increment?: number }>) => Promise<void>;
-
-
-export interface TreeItemState {
-    id: string;
-    label: string;
-    contextValuePostfix?: string;
-    collapsibleState?: TreeItemCollapsibleState;
-    children?: (parent: AzExtParentTreeItem) => AzExtTreeItem[];
-    iconPath?: TreeItemIconPath;
-    description?: string;
-}
-
-export declare class ActivityState implements TreeItemState {
-    id: string;
-    label: string;
-    contextValuePostfix?: string | undefined;
-    collapsibleState?: TreeItemCollapsibleState | undefined;
-    children?: ((parent: AzExtParentTreeItem) => AzExtTreeItem[]) | undefined;
-    iconPath?: TreeItemIconPath | undefined;
-    description?: string | undefined;
-}
 
 export abstract class ActivityBase implements Activity, ActivityType {
     public readonly onStart: Event<OnStartActivityData>;
@@ -956,14 +931,6 @@ export abstract class ActivityBase implements Activity, ActivityType {
     public run(): Promise<void>;
 }
 
-export declare class ActivityTreeItem extends AzExtParentTreeItem {
-    public loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]>;
-    public hasMoreChildrenImpl(): boolean;
-    public label: string;
-    public contextValue: string;
-    public constructor(parent: AzExtParentTreeItem, activity: ActivityState);
-}
-
 /**
  * A wizard that links several user input steps together
  */
@@ -981,7 +948,7 @@ export declare class AzureWizard<T extends IActionContext> {
 export declare interface AzureWizardExecuteOptions {
     activity?: {
         name?: string,
-        runWithActivity: RunWithActivity
+        registerActivity: RegisterActivity
     }
 }
 

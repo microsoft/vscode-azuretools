@@ -199,7 +199,8 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
                 });
             });
 
-            await executeOptions.activity.runWithActivity(activity);
+            await executeOptions.activity.registerActivity(activity);
+            await activity.run();
 
         } else {
             await vscode.window.withProgress(options, task);
