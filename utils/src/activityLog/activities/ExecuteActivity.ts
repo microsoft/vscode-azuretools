@@ -9,8 +9,8 @@ import { AppResource } from "../../../unified";
 import { AzExtParentTreeItem } from "../../tree/AzExtParentTreeItem";
 import { GenericTreeItem } from "../../tree/GenericTreeItem";
 import { nonNullProp } from "../../utils/nonNull";
+import { ActivityBase, ActivityTreeItemOptions } from "../Activity";
 
-import { ActivityBase, ActivityTask, ActivityTreeItemOptions } from "../Activity";
 
 interface ExecuteActivityData<C extends types.IActionContext> {
     title: string;
@@ -19,7 +19,7 @@ interface ExecuteActivityData<C extends types.IActionContext> {
 
 export class ExecuteActivity<C extends types.IActionContext> extends ActivityBase {
 
-    public constructor(private readonly data: ExecuteActivityData<C>, task: ActivityTask) {
+    public constructor(private readonly data: ExecuteActivityData<C>, task: types.ActivityTask) {
         super(task);
     }
 

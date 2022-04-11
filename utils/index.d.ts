@@ -6,7 +6,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { Environment } from '@azure/ms-rest-azure-env';
-import { Disposable, Event, EventEmitter, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
+import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 
@@ -853,8 +853,6 @@ export interface AzExtInputBoxOptions extends InputBoxOptions, AzExtUserInputOpt
 */
 export interface AzExtOpenDialogOptions extends OpenDialogOptions, AzExtUserInputOptions { }
 
-export type RegisterActivity = (activity: ActivityBase) => Promise<void>;
-
 export interface IWizardOptions<T extends IActionContext> {
     /**
      * The steps to prompt for user input, in order
@@ -948,7 +946,7 @@ export declare class AzureWizard<T extends IActionContext> {
 export declare interface AzureWizardExecuteOptions {
     activity?: {
         name?: string,
-        registerActivity: RegisterActivity
+        registerActivity: (activity: Activity) => Promise<void>
     }
 }
 

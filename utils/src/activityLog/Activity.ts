@@ -3,9 +3,8 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-
 import { randomUUID } from "crypto";
-import { Event, EventEmitter, Progress, TreeItemCollapsibleState } from "vscode";
+import { EventEmitter, TreeItemCollapsibleState } from "vscode";
 import * as types from '../../index';
 import { parseError } from "../parseError";
 import { AzExtTreeItem } from "../tree/AzExtTreeItem"
@@ -17,39 +16,22 @@ export interface ActivityTreeItemOptions {
     children?: (parent: types.AzExtParentTreeItem) => AzExtTreeItem[];
 }
 
-type ActivityEventData<T> = ActivityTreeItemOptions & T;
-
-export type OnStartActivityData = ActivityEventData<{}>;
-export type OnProgressActivityData = ActivityEventData<{ message?: string }>;
-export type OnSuccessActivityData = ActivityEventData<{}>;
-export type OnErrorActivityData = ActivityEventData<{ error: unknown }>;
-
-export interface Activity {
-    id: string;
-    onStart: Event<OnStartActivityData>;
-    onProgress: Event<OnProgressActivityData>;
-    onSuccess: Event<OnSuccessActivityData>;
-    onError: Event<OnErrorActivityData>;
-}
-
-export type ActivityTask = (progress: Progress<{ message?: string, increment?: number }>) => Promise<void>;
-
-export abstract class ActivityBase implements Activity {
+export abstract class ActivityBase implements types.Activity {
 
     public readonly onStart: typeof this._onStartEmitter.event;
     public readonly onProgress: typeof this._onProgressEmitter.event;
     public readonly onSuccess: typeof this._onSuccessEmitter.event;
     public readonly onError: typeof this._onErrorEmitter.event;
 
-    private readonly _onStartEmitter: EventEmitter<OnStartActivityData>;
-    private readonly _onProgressEmitter: EventEmitter<OnProgressActivityData>;
-    private readonly _onSuccessEmitter: EventEmitter<OnSuccessActivityData>;
-    private readonly _onErrorEmitter: EventEmitter<OnErrorActivityData>;
+    private readonly _onStartEmitter: EventEmitter<types.OnStartActivityData>;
+    private readonly _onProgressEmitter: EventEmitter<types.OnProgressActivityData>;
+    private readonly _onSuccessEmitter: EventEmitter<types.OnSuccessActivityData>;
+    private readonly _onErrorEmitter: EventEmitter<types.OnErrorActivityData>;
 
     public running: boolean;
     public done: boolean;
     public error?: types.IParsedError;
-    public readonly task: ActivityTask;
+    public readonly task: types.ActivityTask;
     public startedAtMs: number;
     public readonly id: string;
 
@@ -59,7 +41,7 @@ export abstract class ActivityBase implements Activity {
     abstract successState(): ActivityTreeItemOptions;
     abstract errorState(error: types.IParsedError): ActivityTreeItemOptions;
 
-    public constructor(task: ActivityTask) {
+    public constructor(task: types.ActivityTask) {
         this.id = randomUUID();
         this.done = false;
         this.startedAtMs = Date.now();
