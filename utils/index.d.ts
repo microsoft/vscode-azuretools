@@ -6,7 +6,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { Environment } from '@azure/ms-rest-azure-env';
-import { Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 
@@ -884,7 +884,7 @@ export interface ActivityTreeItemOptions {
     label: string;
     contextValuePostfix?: string;
     collapsibleState?: TreeItemCollapsibleState;
-    children?: (parent: AzExtParentTreeItem) => AzExtTreeItem[];
+    getChildren?: (parent: AzExtParentTreeItem) => AzExtTreeItem[] | Promise<AzExtTreeItem[]>;
 }
 
 type ActivityEventData<T> = ActivityTreeItemOptions & T;
@@ -896,6 +896,7 @@ export type OnErrorActivityData = ActivityEventData<{ error: unknown }>;
 
 export declare interface Activity {
     id: string;
+    cancellationTokenSource?: CancellationTokenSource;
     onStart: Event<OnStartActivityData>;
     onProgress: Event<OnProgressActivityData>;
     onSuccess: Event<OnSuccessActivityData>;
@@ -908,23 +909,23 @@ interface ActivityType {
     errorState(error: IParsedError): ActivityTreeItemOptions;
 }
 
-export type ActivityTask = (progress: Progress<{ message?: string, increment?: number }>) => Promise<void>;
+export type ActivityTask<R> = (progress: Progress<{ message?: string, increment?: number }>, cancellationToken: CancellationToken) => Promise<R>;
 
-export abstract class ActivityBase implements Activity, ActivityType {
+export abstract class ActivityBase<R> implements Activity, ActivityType {
     public readonly onStart: Event<OnStartActivityData>;
     public readonly onProgress: Event<OnProgressActivityData>;
     public readonly onSuccess: Event<OnSuccessActivityData>;
     public readonly onError: Event<OnErrorActivityData>;
 
-    public readonly task: ActivityTask;
-    public startedAtMs: number;
+    public readonly task: ActivityTask<R>;
     public readonly id: string;
+    public readonly cancellationTokenSource: CancellationTokenSource;
 
     abstract initialState(): ActivityTreeItemOptions;
     abstract successState(): ActivityTreeItemOptions;
     abstract errorState(error: IParsedError): ActivityTreeItemOptions;
 
-    public constructor(task: ActivityTask);
+    public constructor(task: ActivityTask<R>);
     public report(progress: { message?: string; increment?: number }): void;
     public run(): Promise<void>;
 }

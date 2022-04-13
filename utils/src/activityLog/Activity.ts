@@ -4,54 +4,46 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { randomUUID } from "crypto";
-import { EventEmitter, TreeItemCollapsibleState } from "vscode";
+import { CancellationTokenSource, EventEmitter } from "vscode";
 import * as types from '../../index';
 import { parseError } from "../parseError";
-import { AzExtTreeItem } from "../tree/AzExtTreeItem"
 
-export interface ActivityTreeItemOptions {
-    label: string;
-    contextValuePostfix?: string;
-    collapsibleState?: TreeItemCollapsibleState;
-    children?: (parent: types.AzExtParentTreeItem) => AzExtTreeItem[];
+export enum ActivityStatus {
+    NotStarted = 'NotStarted',
+    Running = 'Running',
+    Succeeded = 'Succeeded',
+    Failed = 'Failed',
+    Cancelled = 'Cancelled',
 }
 
-export abstract class ActivityBase implements types.Activity {
+export abstract class ActivityBase<R> implements types.Activity {
 
     public readonly onStart: typeof this._onStartEmitter.event;
     public readonly onProgress: typeof this._onProgressEmitter.event;
     public readonly onSuccess: typeof this._onSuccessEmitter.event;
     public readonly onError: typeof this._onErrorEmitter.event;
 
-    private readonly _onStartEmitter: EventEmitter<types.OnStartActivityData>;
-    private readonly _onProgressEmitter: EventEmitter<types.OnProgressActivityData>;
-    private readonly _onSuccessEmitter: EventEmitter<types.OnSuccessActivityData>;
-    private readonly _onErrorEmitter: EventEmitter<types.OnErrorActivityData>;
+    private readonly _onStartEmitter = new EventEmitter<types.OnStartActivityData>();
+    private readonly _onProgressEmitter = new EventEmitter<types.OnProgressActivityData>();
+    private readonly _onSuccessEmitter = new EventEmitter<types.OnSuccessActivityData>();
+    private readonly _onErrorEmitter = new EventEmitter<types.OnErrorActivityData>();
 
-    public running: boolean;
-    public done: boolean;
+    private status: ActivityStatus = ActivityStatus.NotStarted;
     public error?: types.IParsedError;
-    public readonly task: types.ActivityTask;
-    public startedAtMs: number;
+    public readonly task: types.ActivityTask<R>;
     public readonly id: string;
+    public readonly cancellationTokenSource: CancellationTokenSource = new CancellationTokenSource();
 
-    public progress: { message?: string, increment?: number }[];
+    private readonly progress: { message?: string, increment?: number }[];
 
-    abstract initialState(): ActivityTreeItemOptions;
-    abstract successState(): ActivityTreeItemOptions;
-    abstract errorState(error: types.IParsedError): ActivityTreeItemOptions;
+    abstract initialState(): types.ActivityTreeItemOptions;
+    abstract successState(): types.ActivityTreeItemOptions;
+    abstract errorState(error?: types.IParsedError): types.ActivityTreeItemOptions;
 
-    public constructor(task: types.ActivityTask) {
+    public constructor(task: types.ActivityTask<R>) {
         this.id = randomUUID();
-        this.done = false;
-        this.startedAtMs = Date.now();
         this.task = task;
         this.progress = [];
-
-        this._onStartEmitter = new EventEmitter();
-        this._onProgressEmitter = new EventEmitter();
-        this._onSuccessEmitter = new EventEmitter();
-        this._onErrorEmitter = new EventEmitter();
 
         this.onStart = this._onStartEmitter.event;
         this.onProgress = this._onProgressEmitter.event;
@@ -59,29 +51,34 @@ export abstract class ActivityBase implements types.Activity {
         this.onError = this._onErrorEmitter.event;
     }
 
-    public report(progress: { message?: string; increment?: number }): void {
+    private report(progress: { message?: string; increment?: number }): void {
         this.progress.unshift(progress);
         this._onProgressEmitter.fire({ ...this.getState(), message: progress.message });
     }
 
-    public async run(): Promise<void> {
+    public async run(): Promise<R> {
         try {
             this._onStartEmitter.fire(this.getState());
-            await this.task({ report: (progress) => this.report(progress) });
-            this.done = true;
+            const result = await this.task({ report: this.report.bind(this) as typeof this.report }, this.cancellationTokenSource.token);
+            this.status = ActivityStatus.Succeeded;
             this._onSuccessEmitter.fire(this.getState());
+            return result as R;
         } catch (e) {
             this.error = parseError(e);
-            this.done = true;
+            this.status = ActivityStatus.Failed;
             this._onErrorEmitter.fire({ ...this.getState(), error: e });
             throw e;
         }
     }
 
-    public getState(): ActivityTreeItemOptions {
-        if (this.done) {
-            return this.error ? this.errorState(this.error) : this.successState();
+    public getState(): types.ActivityTreeItemOptions {
+        switch (this.status) {
+            case ActivityStatus.Failed:
+                return this.errorState(this.error);
+            case ActivityStatus.Succeeded:
+                return this.successState();
+            default:
+                return this.initialState();
         }
-        return this.initialState();
     }
 }
