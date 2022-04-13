@@ -941,7 +941,14 @@ export declare class AzureWizard<T extends IActionContext> {
     public constructor(wizardContext: T, options: IWizardOptions<T>);
 
     public prompt(): Promise<void>;
-    public execute(): Promise<void>;
+    public execute(options?: AzureWizardExecuteOptions): Promise<void>;
+}
+
+export declare interface AzureWizardExecuteOptions {
+    activity?: {
+        name?: string,
+        registerActivity: (activity: Activity) => Promise<void>
+    }
 }
 
 export declare abstract class AzureWizardExecuteStep<T extends IActionContext> {
