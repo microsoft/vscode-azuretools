@@ -946,7 +946,7 @@ export declare interface ExecuteActivityContext {
      */
     activityTitle?: string;
     /**
-     * Set to show a "Click to view resource" child on succcess.
+     * Set to show a "Click to view resource" child on success.
      */
     activityResult?: AppResource;
 }
