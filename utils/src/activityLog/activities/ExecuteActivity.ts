@@ -12,13 +12,11 @@ import { GenericTreeItem } from "../../tree/GenericTreeItem";
 import { nonNullProp } from "../../utils/nonNull";
 import { ActivityBase } from "../Activity";
 
-
-interface ExecuteActivityData<C extends types.IActionContext> {
-    title: string;
+interface ExecuteActivityData<C extends types.ExecuteActivityContext> {
     context: C;
 }
 
-export class ExecuteActivity<C extends types.IActionContext> extends ActivityBase<void> {
+export class ExecuteActivity<C extends types.ExecuteActivityContext> extends ActivityBase<void> {
 
     public constructor(private readonly data: ExecuteActivityData<C>, task: types.ActivityTask<void>) {
         super(task);
@@ -26,14 +24,14 @@ export class ExecuteActivity<C extends types.IActionContext> extends ActivityBas
 
     public initialState(): types.ActivityTreeItemOptions {
         return {
-            label: this.data.title,
+            label: this.label,
             collapsibleState: TreeItemCollapsibleState.None,
         }
     }
 
     public successState(): types.ActivityTreeItemOptions {
         return {
-            label: this.labelOnDone,
+            label: this.label,
             collapsibleState: this.data.context['activityResult'] ? TreeItemCollapsibleState.Expanded : TreeItemCollapsibleState.None,
             getChildren: (parent: AzExtParentTreeItem) => {
                 if (this.data.context['activityResult']) {
@@ -62,7 +60,7 @@ export class ExecuteActivity<C extends types.IActionContext> extends ActivityBas
 
     public errorState(error: types.IParsedError): types.ActivityTreeItemOptions {
         return {
-            label: this.labelOnDone,
+            label: this.label,
             collapsibleState: TreeItemCollapsibleState.Expanded,
             getChildren: (parent: AzExtParentTreeItem) => {
                 return [
@@ -75,7 +73,7 @@ export class ExecuteActivity<C extends types.IActionContext> extends ActivityBas
         }
     }
 
-    private get labelOnDone(): string {
-        return this.data.title;
+    private get label(): string {
+        return this.data.context.activityTitle ?? localize('azureActivity', "Azure Activity");
     }
 }

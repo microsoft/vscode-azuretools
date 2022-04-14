@@ -16,7 +16,7 @@ import { createQuickPick } from '../userInput/showQuickPick';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 
-export class AzureWizard<T extends IInternalActionContext> implements types.AzureWizard<T>, IInternalAzureWizard {
+export class AzureWizard<T extends (IInternalActionContext & Partial<types.ExecuteActivityContext>)> implements types.AzureWizard<T>, IInternalAzureWizard {
     public title: string | undefined;
     private readonly _promptSteps: AzureWizardPromptStep<T>[];
     private readonly _executeSteps: AzureWizardExecuteStep<T>[];
@@ -149,8 +149,8 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
         }
     }
 
-    public async execute(options: types.AzureWizardExecuteOptions = {}): Promise<void> {
-        await this.withProgress(options, { location: ProgressLocation.Notification }, async progress => {
+    public async execute(): Promise<void> {
+        await this.withProgress({ location: ProgressLocation.Notification }, async progress => {
             let currentStep: number = 1;
 
             const steps: AzureWizardExecuteStep<T>[] = this._executeSteps.sort((a, b) => b.priority - a.priority);
@@ -179,11 +179,11 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
         });
     }
 
-    private async withProgress(executeOptions: types.AzureWizardExecuteOptions, options: vscode.ProgressOptions, task: (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) => Promise<void>): Promise<void> {
-        if (executeOptions.activity) {
+    private async withProgress(options: vscode.ProgressOptions, task: (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) => Promise<void>): Promise<void> {
+        if (this._context.registerActivity) {
+            this._context.activityTitle ??= this.title;
             const activity = new ExecuteActivity({
-                title: executeOptions.activity.name ?? this.title ?? 'Azure operation',
-                context: this._context,
+                context: this._context as types.ExecuteActivityContext,
             }, async (activityProgress) => {
 
                 await vscode.window.withProgress(options, async (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken): Promise<void> => {
@@ -199,14 +199,13 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
                 });
             });
 
-            await executeOptions.activity.registerActivity(activity);
+            await this._context.registerActivity(activity);
             await activity.run();
 
         } else {
             await vscode.window.withProgress(options, task);
         }
     }
-
 
     private goBack(currentStep: AzureWizardPromptStep<T>): AzureWizardPromptStep<T> {
         let step: AzureWizardPromptStep<T> | undefined = currentStep;

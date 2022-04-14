@@ -9,6 +9,7 @@ import type { Environment } from '@azure/ms-rest-azure-env';
 import { CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
+import { AppResource } from './unified';
 
 /**
  * Tree Data Provider for an *Az*ure *Ext*ension
@@ -927,7 +928,7 @@ export abstract class ActivityBase<R> implements Activity {
 /**
  * A wizard that links several user input steps together
  */
-export declare class AzureWizard<T extends IActionContext> {
+export declare class AzureWizard<T extends IActionContext & Partial<ExecuteActivityContext>> {
     /**
      * @param wizardContext  A context object that should be used to pass information between steps
      * @param options Options describing this wizard
@@ -935,14 +936,19 @@ export declare class AzureWizard<T extends IActionContext> {
     public constructor(wizardContext: T, options: IWizardOptions<T>);
 
     public prompt(): Promise<void>;
-    public execute(options?: AzureWizardExecuteOptions): Promise<void>;
+    public execute(): Promise<void>;
 }
 
-export declare interface AzureWizardExecuteOptions {
-    activity?: {
-        name?: string,
-        registerActivity: (activity: Activity) => Promise<void>
-    }
+export declare interface ExecuteActivityContext {
+    registerActivity: (activity: Activity) => Promise<void>;
+    /**
+     * Becomes label of activity tree item, defaults to wizard title or "Azure Activity"
+     */
+    activityTitle?: string;
+    /**
+     * Set to show a "Click to view resource" child on succcess.
+     */
+    activityResult?: AppResource;
 }
 
 export declare abstract class AzureWizardExecuteStep<T extends IActionContext> {
