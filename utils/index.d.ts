@@ -882,7 +882,7 @@ export interface IWizardOptions<T extends IActionContext> {
 
 export interface ActivityTreeItemOptions {
     label: string;
-    contextValuePostfix?: string;
+    contextValuesToAdd?: string;
     collapsibleState?: TreeItemCollapsibleState;
     getChildren?: (parent: AzExtParentTreeItem) => AzExtTreeItem[] | Promise<AzExtTreeItem[]>;
 }

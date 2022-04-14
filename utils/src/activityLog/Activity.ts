@@ -34,8 +34,6 @@ export abstract class ActivityBase<R> implements types.Activity {
     public readonly id: string;
     public readonly cancellationTokenSource: CancellationTokenSource = new CancellationTokenSource();
 
-    private readonly progress: { message?: string, increment?: number }[];
-
     abstract initialState(): types.ActivityTreeItemOptions;
     abstract successState(): types.ActivityTreeItemOptions;
     abstract errorState(error?: types.IParsedError): types.ActivityTreeItemOptions;
@@ -43,7 +41,6 @@ export abstract class ActivityBase<R> implements types.Activity {
     public constructor(task: types.ActivityTask<R>) {
         this.id = randomUUID();
         this.task = task;
-        this.progress = [];
 
         this.onStart = this._onStartEmitter.event;
         this.onProgress = this._onProgressEmitter.event;
@@ -52,7 +49,6 @@ export abstract class ActivityBase<R> implements types.Activity {
     }
 
     private report(progress: { message?: string; increment?: number }): void {
-        this.progress.unshift(progress);
         this._onProgressEmitter.fire({ ...this.getState(), message: progress.message });
     }
 
