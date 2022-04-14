@@ -37,9 +37,9 @@ export class ExecuteActivity<C extends types.ExecuteActivityContext> extends Act
                 if (this.data.context.activityResult) {
                     const result = this.data.context.activityResult;
                     const appResource: AppResource = {
-                        id: nonNullProp(result, 'id') as string,
-                        name: nonNullProp(result, 'name') as string,
-                        type: nonNullProp(result, 'type') as string,
+                        id: nonNullProp(result, 'id'),
+                        name: nonNullProp(result, 'name'),
+                        type: nonNullProp(result, 'type'),
                     }
 
                     const ti = new GenericTreeItem(parent, {
