@@ -32,10 +32,9 @@ export class ExecuteActivity<C extends types.ExecuteActivityContext> extends Act
     public successState(): types.ActivityTreeItemOptions {
         return {
             label: this.label,
-            collapsibleState: this.data.context['activityResult'] ? TreeItemCollapsibleState.Expanded : TreeItemCollapsibleState.None,
+            collapsibleState: this.data.context.activityResult ? TreeItemCollapsibleState.Expanded : TreeItemCollapsibleState.None,
             getChildren: (parent: AzExtParentTreeItem) => {
                 if (this.data.context.activityResult) {
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                     const result = this.data.context.activityResult;
                     const appResource: AppResource = {
                         id: nonNullProp(result, 'id') as string,
