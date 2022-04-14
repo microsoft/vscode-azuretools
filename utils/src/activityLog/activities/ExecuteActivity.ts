@@ -36,7 +36,7 @@ export class ExecuteActivity<C extends types.ExecuteActivityContext> extends Act
             getChildren: (parent: AzExtParentTreeItem) => {
                 if (this.data.context['activityResult']) {
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                    const result = this.data.context['activityResult'];
+                    const result = this.data.context.activityResult;
                     const appResource: AppResource = {
                         id: nonNullProp(result, 'id') as string,
                         name: nonNullProp(result, 'name') as string,
