@@ -6,6 +6,7 @@
 import { TreeItemCollapsibleState } from "vscode";
 import * as types from '../../../index';
 import { AppResource } from "../../../unified";
+import { localize } from "../../localize";
 import { AzExtParentTreeItem } from "../../tree/AzExtParentTreeItem";
 import { GenericTreeItem } from "../../tree/GenericTreeItem";
 import { nonNullProp } from "../../utils/nonNull";
@@ -46,7 +47,7 @@ export class ExecuteActivity<C extends types.IActionContext> extends ActivityBas
 
                     const ti = new GenericTreeItem(parent, {
                         contextValue: 'executeResult',
-                        label: "Click to view resource",
+                        label: localize("clickToView", "Click to view resource"),
                         commandId: 'azureResourceGroups.revealResource',
                     });
 
