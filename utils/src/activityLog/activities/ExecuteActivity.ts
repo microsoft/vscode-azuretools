@@ -30,30 +30,28 @@ export class ExecuteActivity<C extends types.ExecuteActivityContext> extends Act
     }
 
     public successState(): types.ActivityTreeItemOptions {
+        const activityResult = this.data.context.activityResult;
         return {
             label: this.label,
-            collapsibleState: this.data.context.activityResult ? TreeItemCollapsibleState.Expanded : TreeItemCollapsibleState.None,
-            getChildren: (parent: AzExtParentTreeItem) => {
-                if (this.data.context.activityResult) {
-                    const result = this.data.context.activityResult;
-                    const appResource: AppResource = {
-                        id: nonNullProp(result, 'id'),
-                        name: nonNullProp(result, 'name'),
-                        type: nonNullProp(result, 'type'),
-                    }
-
-                    const ti = new GenericTreeItem(parent, {
-                        contextValue: 'executeResult',
-                        label: localize("clickToView", "Click to view resource"),
-                        commandId: 'azureResourceGroups.revealResource',
-                    });
-
-                    ti.commandArgs = [appResource];
-
-                    return [ti];
+            collapsibleState: activityResult ? TreeItemCollapsibleState.Expanded : TreeItemCollapsibleState.None,
+            getChildren: activityResult ? ((parent: AzExtParentTreeItem) => {
+                const appResource: AppResource = {
+                    id: nonNullProp(activityResult, 'id'),
+                    name: nonNullProp(activityResult, 'name'),
+                    type: nonNullProp(activityResult, 'type'),
                 }
-                return [];
-            }
+
+                const ti = new GenericTreeItem(parent, {
+                    contextValue: 'executeResult',
+                    label: localize("clickToView", "Click to view resource"),
+                    commandId: 'azureResourceGroups.revealResource',
+                });
+
+                ti.commandArgs = [appResource];
+
+                return [ti];
+
+            }) : undefined
         }
     }
 
