@@ -882,7 +882,7 @@ export interface IWizardOptions<T extends IActionContext> {
 
 export interface ActivityTreeItemOptions {
     label: string;
-    contextValuesToAdd?: string;
+    contextValuesToAdd?: string[];
     collapsibleState?: TreeItemCollapsibleState;
     getChildren?: (parent: AzExtParentTreeItem) => AzExtTreeItem[] | Promise<AzExtTreeItem[]>;
 }
@@ -903,15 +903,9 @@ export declare interface Activity {
     onError: Event<OnErrorActivityData>;
 }
 
-interface ActivityType {
-    initialState(): ActivityTreeItemOptions;
-    successState(): ActivityTreeItemOptions;
-    errorState(error: IParsedError): ActivityTreeItemOptions;
-}
-
 export type ActivityTask<R> = (progress: Progress<{ message?: string, increment?: number }>, cancellationToken: CancellationToken) => Promise<R>;
 
-export abstract class ActivityBase<R> implements Activity, ActivityType {
+export abstract class ActivityBase<R> implements Activity {
     public readonly onStart: Event<OnStartActivityData>;
     public readonly onProgress: Event<OnProgressActivityData>;
     public readonly onSuccess: Event<OnSuccessActivityData>;
