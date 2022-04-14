@@ -9,7 +9,7 @@ import { AppResource } from "../../../unified";
 import { AzExtParentTreeItem } from "../../tree/AzExtParentTreeItem";
 import { GenericTreeItem } from "../../tree/GenericTreeItem";
 import { nonNullProp } from "../../utils/nonNull";
-import { ActivityBase, ActivityTreeItemOptions } from "../Activity";
+import { ActivityBase } from "../Activity";
 
 
 interface ExecuteActivityData<C extends types.IActionContext> {
@@ -17,24 +17,24 @@ interface ExecuteActivityData<C extends types.IActionContext> {
     context: C;
 }
 
-export class ExecuteActivity<C extends types.IActionContext> extends ActivityBase {
+export class ExecuteActivity<C extends types.IActionContext> extends ActivityBase<void> {
 
-    public constructor(private readonly data: ExecuteActivityData<C>, task: types.ActivityTask) {
+    public constructor(private readonly data: ExecuteActivityData<C>, task: types.ActivityTask<void>) {
         super(task);
     }
 
-    public initialState(): ActivityTreeItemOptions {
+    public initialState(): types.ActivityTreeItemOptions {
         return {
             label: this.data.title,
             collapsibleState: TreeItemCollapsibleState.None,
         }
     }
 
-    public successState(): ActivityTreeItemOptions {
+    public successState(): types.ActivityTreeItemOptions {
         return {
             label: this.labelOnDone,
             collapsibleState: this.data.context['activityResult'] ? TreeItemCollapsibleState.Expanded : TreeItemCollapsibleState.None,
-            children: (parent: AzExtParentTreeItem) => {
+            getChildren: (parent: AzExtParentTreeItem) => {
                 if (this.data.context['activityResult']) {
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                     const result = this.data.context['activityResult'];
@@ -59,11 +59,11 @@ export class ExecuteActivity<C extends types.IActionContext> extends ActivityBas
         }
     }
 
-    public errorState(error: types.IParsedError): ActivityTreeItemOptions {
+    public errorState(error: types.IParsedError): types.ActivityTreeItemOptions {
         return {
             label: this.labelOnDone,
             collapsibleState: TreeItemCollapsibleState.Expanded,
-            children: (parent: AzExtParentTreeItem) => {
+            getChildren: (parent: AzExtParentTreeItem) => {
                 return [
                     new GenericTreeItem(parent, {
                         contextValue: 'executeError',
