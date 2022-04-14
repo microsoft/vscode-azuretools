@@ -185,18 +185,24 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
             const activity = new ExecuteActivity({
                 context: this._context as types.ExecuteActivityContext,
             }, async (activityProgress) => {
+                if (this._context.suppressNotification) {
+                    await task(activityProgress, activity.cancellationTokenSource.token);
+                } else {
+                    await vscode.window.withProgress(options, async (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken): Promise<void> => {
+                        token.onCancellationRequested(() => {
+                            activity.cancellationTokenSource.cancel();
+                        });
 
-                await vscode.window.withProgress(options, async (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken): Promise<void> => {
+                        const internalProgress: vscode.Progress<{ message?: string; increment?: number }> = {
+                            report: (value: { message?: string; increment?: number }): void => {
+                                progress.report(value);
+                                activityProgress.report(value);
+                            }
+                        };
 
-                    const internalProgress: vscode.Progress<{ message?: string; increment?: number }> = {
-                        report: (value: { message?: string; increment?: number }): void => {
-                            progress.report(value);
-                            activityProgress.report(value);
-                        }
-                    };
-
-                    await task(internalProgress, token);
-                });
+                        await task(internalProgress, token);
+                    });
+                }
             });
 
             await this._context.registerActivity(activity);

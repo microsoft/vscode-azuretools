@@ -949,6 +949,10 @@ export declare interface ExecuteActivityContext {
      * Set to show a "Click to view resource" child on success.
      */
     activityResult?: AppResource;
+    /**
+     * Hide activity notifications
+     */
+    suppressNotification?: boolean;
 }
 
 export declare abstract class AzureWizardExecuteStep<T extends IActionContext> {
