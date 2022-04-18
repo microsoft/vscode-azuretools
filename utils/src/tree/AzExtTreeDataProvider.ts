@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken, Event, EventEmitter, ThemeIcon, TreeItem } from 'vscode';
+import { CancellationToken, Disposable, Event, EventEmitter, ThemeIcon, TreeItem, TreeItemCollapsibleState, TreeView } from 'vscode';
 import * as types from '../../index';
 import { callWithTelemetryAndErrorHandling } from '../callWithTelemetryAndErrorHandling';
 import { NoResourceFoundError, UserCancelledError } from '../errors';
@@ -29,6 +29,26 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         this._loadMoreCommandId = loadMoreCommandId;
         this._rootTreeItem = rootTreeItem;
         rootTreeItem.treeDataProvider = <IAzExtTreeDataProviderInternal>this;
+    }
+
+    public setupCollapsibleStateListeners(treeView: TreeView<AzExtTreeItem>): Disposable {
+        const disposables: Disposable[] = [];
+
+        disposables.push(treeView.onDidExpandElement((e) => {
+            if (e.element instanceof AzExtParentTreeItem) {
+                e.element.collapsibleState = TreeItemCollapsibleState.Expanded;
+            }
+        }, disposables));
+
+        disposables.push(treeView.onDidCollapseElement((e) => {
+            if (e.element instanceof AzExtParentTreeItem) {
+                e.element.collapsibleState = TreeItemCollapsibleState.Collapsed;
+            }
+        }, disposables));
+
+        return new Disposable(() => {
+            disposables.forEach((d) => { d.dispose() });
+        });
     }
 
     public get onDidChangeTreeData(): Event<AzExtTreeItem | undefined> {

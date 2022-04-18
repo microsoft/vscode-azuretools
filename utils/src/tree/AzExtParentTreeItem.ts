@@ -23,7 +23,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
     public createNewLabel?: string;
     //#endregion
 
-    public readonly collapsibleState: TreeItemCollapsibleState | undefined = TreeItemCollapsibleState.Collapsed;
+    public collapsibleState: TreeItemCollapsibleState = TreeItemCollapsibleState.Collapsed;
     public readonly _isAzExtParentTreeItem: boolean = true;
 
     private _cachedChildren: AzExtTreeItem[] = [];

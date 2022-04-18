@@ -6,7 +6,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { Environment } from '@azure/ms-rest-azure-env';
-import { CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 import { AppResource } from './unified';
@@ -24,6 +24,14 @@ export declare class AzExtTreeDataProvider implements TreeDataProvider<AzExtTree
      * @param loadMoreCommandId The command your extension will register for the 'Load More...' tree item
      */
     public constructor(rootTreeItem: AzExtParentTreeItem, loadMoreCommandId: string);
+
+    /**
+     * Allows the data provider to listen to the {@link TreeView.onDidExpandElement} and {@link TreeView.onDidCollapseElement} events.
+     *
+     * This will ensure that the {@link AzExtParentTreeItem.collapsibleState} property is updated for the element.
+     * @param treeView The {@link TreeView} associated with this data provider
+     */
+    public setupCollapsibleStateListeners(treeView: TreeView<AzExtTreeItem>): Disposable;
 
     /**
      * Should not be called directly
@@ -222,6 +230,8 @@ export declare abstract class AzExtTreeItem {
     public readonly fullId: string;
     public readonly parent?: AzExtParentTreeItem;
     public readonly treeDataProvider: AzExtTreeDataProvider;
+
+    public readonly collapsibleState: TreeItemCollapsibleState;
 
     /**
      * The subscription information for this branch of the tree
