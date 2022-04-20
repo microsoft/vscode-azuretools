@@ -3,9 +3,8 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { TreeItemCollapsibleState } from "vscode";
 import * as types from '../../../index';
-import { AppResource } from "../../../unified";
+import * as rgTypes from '../../../rgapi';
 import { localize } from "../../localize";
 import { AzExtParentTreeItem } from "../../tree/AzExtParentTreeItem";
 import { GenericTreeItem } from "../../tree/GenericTreeItem";
@@ -22,20 +21,18 @@ export class ExecuteActivity<C extends types.ExecuteActivityContext> extends Act
         super(task);
     }
 
-    public initialState(): types.ActivityTreeItemOptions {
+    public initialState(): rgTypes.ActivityTreeItemOptions {
         return {
             label: this.label,
-            collapsibleState: TreeItemCollapsibleState.None,
         }
     }
 
-    public successState(): types.ActivityTreeItemOptions {
+    public successState(): rgTypes.ActivityTreeItemOptions {
         const activityResult = this.data.context.activityResult;
         return {
             label: this.label,
-            collapsibleState: activityResult ? TreeItemCollapsibleState.Expanded : TreeItemCollapsibleState.None,
             getChildren: activityResult ? ((parent: AzExtParentTreeItem) => {
-                const appResource: AppResource = {
+                const appResource: rgTypes.AppResource = {
                     id: nonNullProp(activityResult, 'id'),
                     name: nonNullProp(activityResult, 'name'),
                     type: nonNullProp(activityResult, 'type'),
@@ -55,10 +52,9 @@ export class ExecuteActivity<C extends types.ExecuteActivityContext> extends Act
         }
     }
 
-    public errorState(error: types.IParsedError): types.ActivityTreeItemOptions {
+    public errorState(error: types.IParsedError): rgTypes.ActivityTreeItemOptions {
         return {
             label: this.label,
-            collapsibleState: TreeItemCollapsibleState.Expanded,
             getChildren: (parent: AzExtParentTreeItem) => {
                 return [
                     new GenericTreeItem(parent, {

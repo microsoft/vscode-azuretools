@@ -9,7 +9,7 @@ import type { Environment } from '@azure/ms-rest-azure-env';
 import { CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
-import { AppResource } from './unified';
+import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './rgapi'; // This must remain `import type` or else a circular reference will result
 
 /**
  * Tree Data Provider for an *Az*ure *Ext*ension
@@ -176,12 +176,157 @@ export interface ISubscriptionContext {
 
 export type TreeItemIconPath = string | Uri | { light: string | Uri; dark: string | Uri } | ThemeIcon;
 
+
+/**
+ * AzExtTreeItem properties that can be called but should not be overridden
+ */
+export interface SealedAzExtTreeItem {
+    /**
+     * This id represents the effective/serializable full id of the item in the tree. It always starts with the parent's fullId and ends with either the AzExtTreeItem.id property (if implemented) or AzExtTreeItem.label property
+     * This is used for AzureTreeDataProvider.findTreeItem and openInPortal
+     */
+    readonly fullId: string;
+    readonly parent?: AzExtParentTreeItem;
+    readonly treeDataProvider: AzExtTreeDataProvider;
+
+    /**
+     * The subscription information for this branch of the tree
+     * Throws an error if this branch of the tree is not actually for Azure resources
+     */
+    readonly subscription: ISubscriptionContext;
+
+    /**
+     * Values to mask in error messages whenever an action uses this tree item
+     * NOTE: Some values are automatically masked without the need to add anything here, like the label and parts of the id if it's an Azure id
+     */
+    readonly valuesToMask: string[];
+
+    /**
+     * Set to true if the label of this tree item does not need to be masked
+     */
+    suppressMaskLabel?: boolean;
+
+    /**
+     * Refresh this node in the tree
+     */
+    refresh(context: IActionContext): Promise<void>;
+
+    /**
+     * This class wraps deleteTreeItemImpl and ensures the tree is updated correctly when an item is deleted
+     */
+    deleteTreeItem(context: IActionContext): Promise<void>;
+
+    /**
+     * Displays a 'Loading...' icon and temporarily changes the item's description while `callback` is being run
+     */
+    runWithTemporaryDescription(context: IActionContext, description: string, callback: () => Promise<void>): Promise<void>;
+}
+
+// AzExtTreeItem stuff we need them to implement
+
+/**
+ * AzExtTreeItem properties that can be overridden
+ */
+export interface AbstractAzExtTreeItem {
+
+    id?: string;
+    label: string;
+
+    /**
+     * Additional information about a tree item that is appended to the label with the format `label (description)`
+     */
+    description?: string;
+
+    iconPath?: TreeItemIconPath;
+    commandId?: string;
+    tooltip?: string;
+
+    collapsibleState?: TreeItemCollapsibleState;
+
+    /**
+     * The arguments to pass in when executing `commandId`. If not specified, this tree item will be used.
+     */
+    commandArgs?: unknown[];
+    contextValue: string;
+
+    /**
+      * Implement this to display child resources. Should not be called directly
+      * @param clearCache If true, you should start the "Load more..." process over
+      * @param context The action context
+      */
+    loadMoreChildrenImpl?(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]>;
+
+    /**
+    * Implement this as a part of the "Load more..." action. Should not be called directly
+    * @returns 'true' if there are more children and a "Load more..." node should be displayed
+    */
+    hasMoreChildrenImpl?(): boolean;
+
+    /**
+     * Implement this if you want the 'create' option to show up in the tree picker. Should not be called directly
+     * @param context The action context and any additional user-defined options that are passed to the `AzExtParentTreeItem.createChild` or `AzExtTreeDataProvider.showTreeItemPicker`
+     */
+    createChildImpl?(context: ICreateChildImplContext): Promise<AzExtTreeItem>;
+
+    /**
+     * Override this if you want non-default (i.e. non-alphabetical) sorting of children. Should not be called directly
+     * @param item1 The first item to compare
+     * @param item2 The second item to compare
+     * @returns A negative number if the item1 occurs before item2; positive if item1 occurs after item2; 0 if they are equivalent
+     */
+    compareChildrenImpl?(item1: AzExtTreeItem, item2: AzExtTreeItem): number;
+
+    /**
+    * If this treeItem should not show up in the tree picker or you want custom logic to show quick picks, implement this to provide a child that corresponds to the expectedContextValue. Should not be called directly
+    * Otherwise, all children will be shown in the tree picker
+    */
+    pickTreeItemImpl?(expectedContextValues: (string | RegExp)[], context: IActionContext): AzExtTreeItem | undefined | Promise<AzExtTreeItem | undefined>;
+
+    /**
+     * Implement this to support the 'delete' action in the tree. Should not be called directly
+     */
+    deleteTreeItemImpl?(context: IActionContext): Promise<void>;
+
+    /**
+     * Implement this to execute any async code when this node is refreshed. Should not be called directly
+     */
+    refreshImpl?(context: IActionContext): Promise<void>;
+
+    /**
+     * Optional function to filter items displayed in the tree picker. Should not be called directly
+     * If not implemented, it's assumed that 'isAncestorOf' evaluates to true
+     */
+    isAncestorOfImpl?(contextValue: string | RegExp): boolean;
+
+    /**
+     * If implemented, resolves the tooltip at the time of hovering, and the value of the `tooltip` property is ignored. Otherwise, the `tooltip` property is used.
+     */
+    resolveTooltip?(): Promise<string | MarkdownString>;
+}
+
+export type IAzExtTreeItem = AbstractAzExtTreeItem & SealedAzExtTreeItem;
+
+export interface IAzExtParentTreeItem extends IAzExtTreeItem {
+    /**
+      * Implement this to display child resources. Should not be called directly
+      * @param clearCache If true, you should start the "Load more..." process over
+      * @param context The action context
+      */
+    loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]>;
+
+    /**
+    * Implement this as a part of the "Load more..." action. Should not be called directly
+    * @returns 'true' if there are more children and a "Load more..." node should be displayed
+    */
+    hasMoreChildrenImpl(): boolean;
+}
+
 /**
  * Base class for all tree items in an *Az*ure *ext*ension, even if those resources aren't actually in Azure.
  * This provides more value than `TreeItem` (provided by `vscode`)
  * NOTE: *Impl methods are not meant to be called directly - just implemented.
  */
-export declare abstract class AzExtTreeItem {
+export declare abstract class AzExtTreeItem implements IAzExtTreeItem {
     //#region Properties implemented by base class
     /**
      * This is is used for the openInPortal action. It is also used per the following documentation copied from VS Code:
@@ -324,7 +469,7 @@ export interface IInvalidTreeItemOptions {
     data?: unknown;
 }
 
-export class InvalidTreeItem extends AzExtParentTreeItem {
+export declare class InvalidTreeItem extends AzExtParentTreeItem {
     public contextValue: string;
     public label: string;
     public get iconPath(): TreeItemIconPath;
@@ -341,7 +486,7 @@ export class InvalidTreeItem extends AzExtParentTreeItem {
  * This provides more value than `TreeItem` (provided by `vscode`)
  * NOTE: *Impl methods are not meant to be called directly - just implemented.
  */
-export declare abstract class AzExtParentTreeItem extends AzExtTreeItem {
+export declare abstract class AzExtParentTreeItem extends AzExtTreeItem implements IAzExtParentTreeItem {
     //#region Properties implemented by base class
     /**
      * This will be used in the tree picker prompt when selecting children
@@ -491,7 +636,7 @@ export declare function callWithMaskHandling<T>(callback: () => Promise<T>, valu
  * This will apply to telemetry and "Report Issue", but _not_ VS Code UI (i.e. the error notification or output channel)
  * IMPORTANT: For the most sensitive information, `callWithMaskHandling` should be used instead
  */
-export function addExtensionValueToMask(...values: (string | undefined)[]): void;
+export declare function addExtensionValueToMask(...values: (string | undefined)[]): void;
 
 /**
  * A generic context object that describes the behavior of an action and allows for specifying custom telemetry properties and measurements
@@ -622,14 +767,14 @@ export interface TelemetryMeasurements {
     [key: string]: number | undefined;
 }
 
-interface IHandlerContext extends IActionContext {
+export interface IHandlerContext extends IActionContext {
     /**
      * The id for the callback, used as the id for the telemetry event. This may be modified by any handler
      */
     callbackId: string;
 }
 
-interface IErrorHandlerContext extends IHandlerContext {
+export interface IErrorHandlerContext extends IHandlerContext {
     /**
      * The error to be handled. This may be modified by any handler
      */
@@ -646,19 +791,19 @@ export type OnActionStartHandler = (context: IHandlerContext) => void;
  * Register a handler to run right after an `IActionContext` is created and before the action starts
  * NOTE: If more than one handler is registered, they are run in an arbitrary order.
  */
-export function registerOnActionStartHandler(handler: OnActionStartHandler): Disposable;
+export declare function registerOnActionStartHandler(handler: OnActionStartHandler): Disposable;
 
 /**
  * Register a handler to run after a callback errors out, but before the default error handling.
  * NOTE: If more than one handler is registered, they are run in an arbitrary order.
  */
-export function registerErrorHandler(handler: ErrorHandler): Disposable;
+export declare function registerErrorHandler(handler: ErrorHandler): Disposable;
 
 /**
  * Register a handler to run after a callback finishes, but before the default telemetry handling.
  * NOTE: If more than one handler is registered, they are run in an arbitrary order.
  */
-export function registerTelemetryHandler(handler: TelemetryHandler): Disposable;
+export declare function registerTelemetryHandler(handler: TelemetryHandler): Disposable;
 
 export declare function parseError(error: any): IParsedError;
 
@@ -881,32 +1026,9 @@ export interface IWizardOptions<T extends IActionContext> {
     showLoadingPrompt?: boolean;
 }
 
-export interface ActivityTreeItemOptions {
-    label: string;
-    contextValuesToAdd?: string[];
-    collapsibleState?: TreeItemCollapsibleState;
-    getChildren?: (parent: AzExtParentTreeItem) => AzExtTreeItem[] | Promise<AzExtTreeItem[]>;
-}
-
-type ActivityEventData<T> = ActivityTreeItemOptions & T;
-
-export type OnStartActivityData = ActivityEventData<{}>;
-export type OnProgressActivityData = ActivityEventData<{ message?: string }>;
-export type OnSuccessActivityData = ActivityEventData<{}>;
-export type OnErrorActivityData = ActivityEventData<{ error: unknown }>;
-
-export declare interface Activity {
-    id: string;
-    cancellationTokenSource?: CancellationTokenSource;
-    onStart: Event<OnStartActivityData>;
-    onProgress: Event<OnProgressActivityData>;
-    onSuccess: Event<OnSuccessActivityData>;
-    onError: Event<OnErrorActivityData>;
-}
-
 export type ActivityTask<R> = (progress: Progress<{ message?: string, increment?: number }>, cancellationToken: CancellationToken) => Promise<R>;
 
-export abstract class ActivityBase<R> implements Activity {
+export declare abstract class ActivityBase<R> implements Activity {
     public readonly onStart: Event<OnStartActivityData>;
     public readonly onProgress: Event<OnProgressActivityData>;
     public readonly onSuccess: Event<OnSuccessActivityData>;
@@ -1155,7 +1277,7 @@ export declare function appendExtensionUserAgent(existingUserAgent?: string): st
  * Wraps an Azure Extension's API in a very basic provider that adds versioning.
  * Multiple APIs with different versions can be supplied, but ideally a single backwards-compatible API is all that's necessary.
  */
-export function createApiProvider(azExts: AzureExtensionApi[]): AzureExtensionApiProvider;
+export declare function createApiProvider(azExts: AzureExtensionApi[]): AzureExtensionApiProvider;
 
 /**
  * Wrapper for vscode.OutputChannel that handles AzureExtension behavior for outputting messages
@@ -1177,16 +1299,16 @@ export interface IAzExtOutputChannel extends OutputChannel {
  * @param name Human-readable string which will be used to represent the channel in the UI.
  * @param extensionPrefix The configuration prefix for the extension, used to access the enableOutputTimestamps setting
  */
-export function createAzExtOutputChannel(name: string, extensionPrefix: string): IAzExtOutputChannel;
+export declare function createAzExtOutputChannel(name: string, extensionPrefix: string): IAzExtOutputChannel;
 
 /**
  * Opens a read-only editor to display json content
  * @param node Typically (but not strictly) an `AzExtTreeItem`. `label` is used for the file name displayed in VS Code and `fullId` is used to uniquely identify this file
  * @param data The data to stringify and display
  */
-export function openReadOnlyJson(node: { label: string, fullId: string }, data: {}): Promise<void>;
+export declare function openReadOnlyJson(node: { label: string, fullId: string }, data: {}): Promise<void>;
 
-export class ReadOnlyContent {
+export declare class ReadOnlyContent {
     public append(content: string): Promise<void>;
     public clear(): void;
 }
@@ -1198,7 +1320,7 @@ export class ReadOnlyContent {
  * @param fileExtension The file extension
  * @param options Options for showing the text document
  */
-export function openReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string, options?: TextDocumentShowOptions): Promise<ReadOnlyContent>;
+export declare function openReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string, options?: TextDocumentShowOptions): Promise<ReadOnlyContent>;
 
 /**
  * The event used to signal an item change for `AzExtTreeFileSystem`
@@ -1331,7 +1453,7 @@ export declare abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> i
 /**
  * Registers a command that will prompt users with a list of issues they can report from that session of VS Code
  */
-export function registerReportIssueCommand(commandId: string): void;
+export declare function registerReportIssueCommand(commandId: string): void;
 
 /**
  * Registers a namespace that leverages vscode.workspace.fs API to access the file system
@@ -1346,25 +1468,25 @@ export declare namespace AzExtFsExtra {
     export function pathExists(resource: Uri | string): Promise<boolean>;
 }
 
-export function maskValue(data: string, valueToMask: string | undefined): string;
+export declare function maskValue(data: string, valueToMask: string | undefined): string;
 
-export function openUrl(url: string): Promise<void>;
+export declare function openUrl(url: string): Promise<void>;
 
 /**
  * Retrieves a property by name from an object and checks that it's not null and not undefined.  It is strongly typed
  * for the property and will give a compile error if the given name is not a property of the source.
  */
-export function nonNullProp<TSource, TKey extends keyof TSource>(source: TSource, name: TKey): NonNullable<TSource[TKey]>;
+export declare function nonNullProp<TSource, TKey extends keyof TSource>(source: TSource, name: TKey): NonNullable<TSource[TKey]>;
 
 /**
  * Validates that a given value is not null and not undefined.
  */
-export function nonNullValue<T>(value: T | undefined, propertyNameOrMessage?: string): T;
+export declare function nonNullValue<T>(value: T | undefined, propertyNameOrMessage?: string): T;
 
 /**
  * Validates that a given string is not null, undefined, nor empty
  */
-export function nonNullOrEmptyValue(value: string | undefined, propertyNameOrMessage?: string): string;
+export declare function nonNullOrEmptyValue(value: string | undefined, propertyNameOrMessage?: string): string;
 
 /**
  * Finds an available port.
@@ -1373,7 +1495,7 @@ export function nonNullOrEmptyValue(value: string | undefined, propertyNameOrMes
  * @param maxAttempts (Optional) The maximum number of attempts. 25, by default.
  * @param timeout (Optional) The maximum time to spend. 500 ms, by default.
  */
-export function findFreePort(startPort?: number, maxAttempts?: number, timeout?: number): Promise<number>;
+export declare function findFreePort(startPort?: number, maxAttempts?: number, timeout?: number): Promise<number>;
 
 /**
  * @param message Message to display in the confirmation modal
