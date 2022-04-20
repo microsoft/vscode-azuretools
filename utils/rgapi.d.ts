@@ -232,12 +232,6 @@ export interface ActivityTreeItemOptions {
     contextValuesToAdd?: string[];
 
     /**
-     * The collapsibleState of the tree item
-     * TODO: is this needed?
-     */
-    collapsibleState?: vscode.TreeItemCollapsibleState;
-
-    /**
      * If the activity should have child tree items, implement this
      */
     getChildren?: (parent: AzExtParentTreeItem) => AzExtTreeItem[] | Promise<AzExtTreeItem[]>;

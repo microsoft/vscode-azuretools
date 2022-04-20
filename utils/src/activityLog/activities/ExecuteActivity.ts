@@ -3,7 +3,6 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { TreeItemCollapsibleState } from "vscode";
 import * as types from '../../../index';
 import * as rgTypes from '../../../rgapi';
 import { AppResource } from "../../../unified";
@@ -26,7 +25,6 @@ export class ExecuteActivity<C extends types.ExecuteActivityContext> extends Act
     public initialState(): rgTypes.ActivityTreeItemOptions {
         return {
             label: this.label,
-            collapsibleState: TreeItemCollapsibleState.None,
         }
     }
 
@@ -34,7 +32,6 @@ export class ExecuteActivity<C extends types.ExecuteActivityContext> extends Act
         const activityResult = this.data.context.activityResult;
         return {
             label: this.label,
-            collapsibleState: activityResult ? TreeItemCollapsibleState.Expanded : TreeItemCollapsibleState.None,
             getChildren: activityResult ? ((parent: AzExtParentTreeItem) => {
                 const appResource: AppResource = {
                     id: nonNullProp(activityResult, 'id'),
@@ -59,7 +56,6 @@ export class ExecuteActivity<C extends types.ExecuteActivityContext> extends Act
     public errorState(error: types.IParsedError): rgTypes.ActivityTreeItemOptions {
         return {
             label: this.label,
-            collapsibleState: TreeItemCollapsibleState.Expanded,
             getChildren: (parent: AzExtParentTreeItem) => {
                 return [
                     new GenericTreeItem(parent, {
