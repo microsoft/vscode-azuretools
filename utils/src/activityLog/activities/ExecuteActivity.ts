@@ -5,7 +5,6 @@
 
 import * as types from '../../../index';
 import * as rgTypes from '../../../rgapi';
-import { AppResource } from "../../../unified";
 import { localize } from "../../localize";
 import { AzExtParentTreeItem } from "../../tree/AzExtParentTreeItem";
 import { GenericTreeItem } from "../../tree/GenericTreeItem";
@@ -33,7 +32,7 @@ export class ExecuteActivity<C extends types.ExecuteActivityContext> extends Act
         return {
             label: this.label,
             getChildren: activityResult ? ((parent: AzExtParentTreeItem) => {
-                const appResource: AppResource = {
+                const appResource: rgTypes.AppResource = {
                     id: nonNullProp(activityResult, 'id'),
                     name: nonNullProp(activityResult, 'name'),
                     type: nonNullProp(activityResult, 'type'),
