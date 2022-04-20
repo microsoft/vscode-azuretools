@@ -17,7 +17,6 @@ export * from './createAppService/SiteNameStep';
 export * from './createAppService/SiteOSStep';
 export * from './createKuduClient';
 export * from './createSlot';
-export * from './deleteSite';
 export * from './deploy/deploy';
 export * from './deploy/getDeployFsPath';
 export * from './deploy/getDeployNode';
@@ -48,4 +47,6 @@ export * from './tree/LogFilesTreeItem';
 export * from './tree/SiteFilesTreeItem';
 export * from './tryGetSiteResource';
 export * from './TunnelProxy';
-
+export * from './deleteSite/IDeleteSiteWizardContext';
+export * from './deleteSite/DeleteLastServicePlanStep';
+export * from './deleteSite/DeleteSiteStep';
