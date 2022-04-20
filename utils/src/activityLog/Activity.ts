@@ -6,6 +6,7 @@
 import { randomUUID } from "crypto";
 import { CancellationTokenSource, EventEmitter } from "vscode";
 import * as types from '../../index';
+import * as rgTypes from '../../rgapi';
 import { parseError } from "../parseError";
 
 export enum ActivityStatus {
@@ -16,17 +17,17 @@ export enum ActivityStatus {
     Cancelled = 'Cancelled',
 }
 
-export abstract class ActivityBase<R> implements types.Activity {
+export abstract class ActivityBase<R> implements rgTypes.Activity {
 
     public readonly onStart: typeof this._onStartEmitter.event;
     public readonly onProgress: typeof this._onProgressEmitter.event;
     public readonly onSuccess: typeof this._onSuccessEmitter.event;
     public readonly onError: typeof this._onErrorEmitter.event;
 
-    private readonly _onStartEmitter = new EventEmitter<types.OnStartActivityData>();
-    private readonly _onProgressEmitter = new EventEmitter<types.OnProgressActivityData>();
-    private readonly _onSuccessEmitter = new EventEmitter<types.OnSuccessActivityData>();
-    private readonly _onErrorEmitter = new EventEmitter<types.OnErrorActivityData>();
+    private readonly _onStartEmitter = new EventEmitter<rgTypes.OnStartActivityData>();
+    private readonly _onProgressEmitter = new EventEmitter<rgTypes.OnProgressActivityData>();
+    private readonly _onSuccessEmitter = new EventEmitter<rgTypes.OnSuccessActivityData>();
+    private readonly _onErrorEmitter = new EventEmitter<rgTypes.OnErrorActivityData>();
 
     private status: ActivityStatus = ActivityStatus.NotStarted;
     public error?: types.IParsedError;
@@ -34,9 +35,9 @@ export abstract class ActivityBase<R> implements types.Activity {
     public readonly id: string;
     public readonly cancellationTokenSource: CancellationTokenSource = new CancellationTokenSource();
 
-    abstract initialState(): types.ActivityTreeItemOptions;
-    abstract successState(): types.ActivityTreeItemOptions;
-    abstract errorState(error?: types.IParsedError): types.ActivityTreeItemOptions;
+    abstract initialState(): rgTypes.ActivityTreeItemOptions;
+    abstract successState(): rgTypes.ActivityTreeItemOptions;
+    abstract errorState(error?: types.IParsedError): rgTypes.ActivityTreeItemOptions;
 
     public constructor(task: types.ActivityTask<R>) {
         this.id = randomUUID();
@@ -67,7 +68,7 @@ export abstract class ActivityBase<R> implements types.Activity {
         }
     }
 
-    public getState(): types.ActivityTreeItemOptions {
+    public getState(): rgTypes.ActivityTreeItemOptions {
         switch (this.status) {
             case ActivityStatus.Failed:
                 return this.errorState(this.error);

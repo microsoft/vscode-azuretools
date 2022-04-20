@@ -3,21 +3,74 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import * as vscode from 'vscode';
-import { Disposable } from 'vscode';
-import { AbstractAzExtTreeItem, Activity, ISubscriptionContext, SealedAzExtTreeItem } from './index';
-import { AzExtParentTreeItem } from './src/tree/AzExtParentTreeItem';
-import { AzExtTreeDataProvider } from './src/tree/AzExtTreeDataProvider';
-import { AzExtTreeItem } from './src/tree/AzExtTreeItem';
+import type * as vscode from 'vscode';
+import type { AbstractAzExtTreeItem, AzExtParentTreeItem, AzExtTreeDataProvider, AzExtTreeItem, ISubscriptionContext, SealedAzExtTreeItem } from './index'; // This must remain `import type` or else a circular reference will result
 
+/**
+ * The API implemented by the Azure Resource Groups extension
+ */
 export interface AzureResourceGroupsExtensionApi {
+    /**
+     * The `AzExtTreeDataProvider` for the shared app resource view
+     * @deprecated Use `appResourceTree` instead
+     */
     readonly tree: AzExtTreeDataProvider;
+
+    /**
+     * The `AzExtTreeDataProvider` for the shared app resource view
+     */
+    readonly appResourceTree: AzExtTreeDataProvider;
+
+    /**
+     * The VSCode TreeView for the shared app resource view
+     * @deprecated Use `appResourceTreeView` instead
+     */
     readonly treeView: vscode.TreeView<AzExtTreeItem>;
 
+    /**
+     * The VSCode TreeView for the shared app resource view
+     */
+    readonly appResourceTreeView: vscode.TreeView<AzExtTreeItem>;
+
+    /**
+     * The `AzExtTreeDataProvider` for the shared local resource view
+     */
+    readonly localResourceTree: AzExtTreeDataProvider;
+
+    /**
+     * The VSCode TreeView for the shared local resource view
+     */
+    readonly localResourceTreeView: vscode.TreeView<AzExtTreeItem>;
+
+    /**
+     * Version of the API
+     */
     readonly apiVersion: string;
+
+    /**
+     * Reveals an item in the shared app resource tree
+     * @param resourceId The ARM resource ID to reveal
+     */
     revealTreeItem(resourceId: string): Promise<void>;
-    registerApplicationResourceResolver(id: string, resolver: AppResourceResolver): Disposable;
-    registerLocalResourceProvider(id: string, provider: LocalResourceProvider): Disposable;
+
+    /**
+     * Registers an app resource resolver
+     * @param id The resolver ID. Must be unique.
+     * @param resolver The resolver
+     */
+    registerApplicationResourceResolver(id: string, resolver: AppResourceResolver): vscode.Disposable;
+
+    /**
+     * Registers a local resource provider
+     * @param id The provider ID. Must be unique.
+     * @param provider The provider
+     */
+    registerLocalResourceProvider(id: string, provider: LocalResourceProvider): vscode.Disposable;
+
+    /**
+     * Registers an activity to appear in the activity window
+     * @param activity The activity information to show
+     */
     registerActivity(activity: Activity): Promise<void>;
 }
 
@@ -72,29 +125,38 @@ interface ContextValuesToAdd {
     contextValue?: never;
 
     /**
-     * These will be added to a Set<string> of context values. The array is *not* pre-initialized as an empty array.
+     * Optionally, context values to add to the tree item. The overall context value string is a deduped, alphabetized, semicolon-separated list of individual context values.
      */
     contextValuesToAdd?: string[];
 }
 
+/**
+ * The base of the type that resolvers must return as their resolve result
+ */
 export type ResolvedAppResourceBase = Partial<{ [P in keyof SealedAzExtTreeItem]: never }> & Partial<AbstractAzExtTreeItem> & ContextValuesToAdd;
 
+/**
+ * A generic that describes the tree item that would be given as an argument to commands called on tree items in the shared resource tree
+ */
 export type ResolvedAppResourceTreeItem<T extends ResolvedAppResourceBase> = SealedAzExtTreeItem & AbstractAzExtTreeItem & Omit<T, keyof ResolvedAppResourceBase>;
 
-export type LocalResource = AzExtTreeItem;
-
+/**
+ * The interface that resource resolvers must implement
+ */
 export interface AppResourceResolver {
+    /**
+     * Resolves more information about an AppResource, filling in the remaining functionality of the tree item
+     * @param subContext The Azure subscription context for the AppResource
+     * @param resource The AppResource
+     */
     resolveResource(subContext: ISubscriptionContext, resource: AppResource): vscode.ProviderResult<ResolvedAppResourceBase>;
+
+    /**
+     * Checks if this resolver is a match for a given AppResource. This should be designed to be as fast as possible.
+     * @param resource The AppResource to check if this resolver matches
+     */
     matchesResource(resource: AppResource): boolean;
 }
-
-/**
- * Resource extensions call this to register app resource resolvers.
- *
- * @param id
- * @param resolver
- */
-export declare function registerApplicationResourceResolver(id: string, resolver: AppResourceResolver): vscode.Disposable;
 
 // Not part of public interface to start with--only Resource Groups extension will call it (for now)
 // currently implemented as AzureResourceProvider
@@ -104,16 +166,101 @@ export interface AppResourceProvider {
     ): vscode.ProviderResult<AppResource[]>;
 }
 
+/**
+ * A type to describe the LocalResource objects that providers should give
+ */
+export type LocalResource = AzExtTreeItem;
+
+/**
+ * A provider for supplying items for the local resources tree (e.g., storage emulator, function apps in workspace, etc.)
+ */
 export interface LocalResourceProvider {
+    /**
+     * Called to supply the tree nodes to the LocalResource tree
+     * @param parent The parent tree item (which will be the root of the local resource tree)
+     */
     provideResources(parent: AzExtParentTreeItem): vscode.ProviderResult<LocalResource[] | undefined>;
 }
 
-// Resource Groups can have a default resolve() method that it supplies, that will activate the appropriate extension and give it a chance to replace the resolve() method
-// ALSO, it will eliminate that default resolver from future calls for that resource type
+/**
+ * Represents an Activity to display in the Activity Log
+ */
+export interface Activity {
+    /**
+     * An ID for the activity. Must be unique.
+     */
+    id: string;
 
-// called from host extension (Resource Groups)
-// Will need a manifest of extensions mapping type => extension ID
-// export declare function registerApplicationResourceProvider(id: string, provider: AppResourceProvider): vscode.Disposable;
+    /**
+     * If the activity supports cancellation, provide this `CancellationTokenSource`. The Activity Log will add a cancel button that will trigger this CTS.
+     */
+    cancellationTokenSource?: vscode.CancellationTokenSource;
 
-// resource extensions need to activate onView:localResourceView and call this
-export declare function registerLocalResourceProvider(id: string, provider: LocalResourceProvider): vscode.Disposable;
+    /**
+     * Fire this event to start the activity
+     */
+    onStart: vscode.Event<OnStartActivityData>;
+
+    /**
+     * Fire this event to report progress on the activity
+     */
+    onProgress: vscode.Event<OnProgressActivityData>;
+
+    /**
+     * Fire this event when the activity succeeds
+     */
+    onSuccess: vscode.Event<OnSuccessActivityData>;
+
+    /**
+     * Fire this event when the activity fails
+     */
+    onError: vscode.Event<OnErrorActivityData>;
+}
+
+/**
+ * Options to set on the Activity log tree item
+ */
+export interface ActivityTreeItemOptions {
+    /**
+     * The label of the item
+     */
+    label: string;
+
+    /**
+     * Optionally, context values to add to the tree item. The overall context value string is a deduped, alphabetized, semicolon-separated list of individual context values.
+     */
+    contextValuesToAdd?: string[];
+
+    /**
+     * The collapsibleState of the tree item
+     * TODO: is this needed?
+     */
+    collapsibleState?: vscode.TreeItemCollapsibleState;
+
+    /**
+     * If the activity should have child tree items, implement this
+     */
+    getChildren?: (parent: AzExtParentTreeItem) => AzExtTreeItem[] | Promise<AzExtTreeItem[]>;
+}
+
+type ActivityEventData<T> = ActivityTreeItemOptions & T;
+
+/**
+ * Event data for activity start
+ */
+export type OnStartActivityData = ActivityEventData<{}>;
+
+/**
+ * Event data for activity progress
+ */
+export type OnProgressActivityData = ActivityEventData<{ message?: string }>;
+
+/**
+ * Event data for activity success
+ */
+export type OnSuccessActivityData = ActivityEventData<{}>;
+
+/**
+ * Event data for activity failure
+ */
+export type OnErrorActivityData = ActivityEventData<{ error: unknown }>;

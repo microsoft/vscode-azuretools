@@ -9,6 +9,7 @@ import type { Environment } from '@azure/ms-rest-azure-env';
 import { CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
+import type { Activity, ActivityTreeItemOptions, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './rgapi'; // This must remain `import type` or else a circular reference will result
 import { AppResource } from './unified';
 
 /**
@@ -767,14 +768,14 @@ export interface TelemetryMeasurements {
     [key: string]: number | undefined;
 }
 
-interface IHandlerContext extends IActionContext {
+export interface IHandlerContext extends IActionContext {
     /**
      * The id for the callback, used as the id for the telemetry event. This may be modified by any handler
      */
     callbackId: string;
 }
 
-interface IErrorHandlerContext extends IHandlerContext {
+export interface IErrorHandlerContext extends IHandlerContext {
     /**
      * The error to be handled. This may be modified by any handler
      */
@@ -1024,29 +1025,6 @@ export interface IWizardOptions<T extends IActionContext> {
     * If true, a loading prompt will be displayed if there are long delays between wizard steps.
     */
     showLoadingPrompt?: boolean;
-}
-
-export interface ActivityTreeItemOptions {
-    label: string;
-    contextValuesToAdd?: string[];
-    collapsibleState?: TreeItemCollapsibleState;
-    getChildren?: (parent: AzExtParentTreeItem) => AzExtTreeItem[] | Promise<AzExtTreeItem[]>;
-}
-
-type ActivityEventData<T> = ActivityTreeItemOptions & T;
-
-export type OnStartActivityData = ActivityEventData<{}>;
-export type OnProgressActivityData = ActivityEventData<{ message?: string }>;
-export type OnSuccessActivityData = ActivityEventData<{}>;
-export type OnErrorActivityData = ActivityEventData<{ error: unknown }>;
-
-export declare interface Activity {
-    id: string;
-    cancellationTokenSource?: CancellationTokenSource;
-    onStart: Event<OnStartActivityData>;
-    onProgress: Event<OnProgressActivityData>;
-    onSuccess: Event<OnSuccessActivityData>;
-    onError: Event<OnErrorActivityData>;
 }
 
 export type ActivityTask<R> = (progress: Progress<{ message?: string, increment?: number }>, cancellationToken: CancellationToken) => Promise<R>;

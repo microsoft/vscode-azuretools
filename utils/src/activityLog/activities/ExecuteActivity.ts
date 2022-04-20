@@ -5,6 +5,7 @@
 
 import { TreeItemCollapsibleState } from "vscode";
 import * as types from '../../../index';
+import * as rgTypes from '../../../rgapi';
 import { AppResource } from "../../../unified";
 import { localize } from "../../localize";
 import { AzExtParentTreeItem } from "../../tree/AzExtParentTreeItem";
@@ -22,14 +23,14 @@ export class ExecuteActivity<C extends types.ExecuteActivityContext> extends Act
         super(task);
     }
 
-    public initialState(): types.ActivityTreeItemOptions {
+    public initialState(): rgTypes.ActivityTreeItemOptions {
         return {
             label: this.label,
             collapsibleState: TreeItemCollapsibleState.None,
         }
     }
 
-    public successState(): types.ActivityTreeItemOptions {
+    public successState(): rgTypes.ActivityTreeItemOptions {
         const activityResult = this.data.context.activityResult;
         return {
             label: this.label,
@@ -55,7 +56,7 @@ export class ExecuteActivity<C extends types.ExecuteActivityContext> extends Act
         }
     }
 
-    public errorState(error: types.IParsedError): types.ActivityTreeItemOptions {
+    public errorState(error: types.IParsedError): rgTypes.ActivityTreeItemOptions {
         return {
             label: this.label,
             collapsibleState: TreeItemCollapsibleState.Expanded,
