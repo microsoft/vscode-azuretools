@@ -106,7 +106,7 @@ export interface GroupNodeConfiguration {
     readonly description?: string;
     readonly icon?: vscode.ThemeIcon;
     readonly iconPath?: string | vscode.Uri | { light: string | vscode.Uri; dark: string | vscode.Uri } | vscode.ThemeIcon;
-    readonly contextValue?: string;
+    readonly contextValuesToAdd?: string[];
 }
 
 /**
