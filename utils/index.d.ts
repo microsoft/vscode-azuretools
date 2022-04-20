@@ -1374,3 +1374,23 @@ export function nonNullOrEmptyValue(value: string | undefined, propertyNameOrMes
  * @param timeout (Optional) The maximum time to spend. 500 ms, by default.
  */
 export function findFreePort(startPort?: number, maxAttempts?: number, timeout?: number): Promise<number>;
+
+/**
+ * @param message Message to display in the confirmation modal
+ * ex: `Overwrite "{0}" with the contents of "{1}"?`
+ */
+export declare class ConfirmationStep extends AzureWizardPromptStep<IActionContext> {
+    public constructor(message: string);
+    public prompt(wizardContext: IActionContext): Promise<void>;
+    public shouldPrompt(wizardContext: IActionContext): boolean;
+}
+
+/**
+ * @param message Message to display in the confirmation modal
+ * ex: `Are you sure you want to delete function app "{0}"?`
+ */
+export declare class DeleteConfirmationStep extends AzureWizardPromptStep<IActionContext> {
+    public constructor(message: string);
+    public prompt(wizardContext: IActionContext): Promise<void>;
+    public shouldPrompt(wizardContext: IActionContext): boolean;
+}
