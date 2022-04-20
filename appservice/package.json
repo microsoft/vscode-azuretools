@@ -42,7 +42,7 @@
         "@azure/ms-rest-js": "^2.3.0",
         "@azure/storage-blob": "^12.3.0",
         "@microsoft/vscode-azext-azureutils": "^0.1.1",
-        "@microsoft/vscode-azext-utils": "^0.1.1",
+        "@microsoft/vscode-azext-utils": "^0.1.2",
         "dayjs": "^1.9.1",
         "fs-extra": "^10.0.0",
         "glob-gitignore": "^1.0.14",
