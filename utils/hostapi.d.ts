@@ -7,9 +7,9 @@ import type * as vscode from 'vscode';
 import type { AbstractAzExtTreeItem, AzExtParentTreeItem, AzExtTreeDataProvider, AzExtTreeItem, ISubscriptionContext, SealedAzExtTreeItem } from './index'; // This must remain `import type` or else a circular reference will result
 
 /**
- * The API implemented by the Azure Resource Groups extension
+ * The API implemented by the Azure Resource Groups host extension
  */
-export interface AzureResourceGroupsExtensionApi {
+export interface AzureHostExtensionApi {
     /**
      * The `AzExtTreeDataProvider` for the shared app resource view
      */
@@ -190,6 +190,11 @@ export interface WorkspaceResourceProvider {
 }
 
 //#region Deprecated things that will be removed soon
+
+/**
+ * @deprecated use `AzureHostExtensionApi` instead
+ */
+export type AzureResourceGroupsExtensionApi = AzureHostExtensionApi;
 
 /**
  * @deprecated Use `WorkspaceResource` instead

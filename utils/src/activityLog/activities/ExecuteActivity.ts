@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import * as types from '../../../index';
-import * as rgTypes from '../../../rgapi';
+import * as hTypes from '../../../hostapi';
 import { localize } from "../../localize";
 import { AzExtParentTreeItem } from "../../tree/AzExtParentTreeItem";
 import { GenericTreeItem } from "../../tree/GenericTreeItem";
@@ -21,18 +21,18 @@ export class ExecuteActivity<C extends types.ExecuteActivityContext> extends Act
         super(task);
     }
 
-    public initialState(): rgTypes.ActivityTreeItemOptions {
+    public initialState(): hTypes.ActivityTreeItemOptions {
         return {
             label: this.label,
         }
     }
 
-    public successState(): rgTypes.ActivityTreeItemOptions {
+    public successState(): hTypes.ActivityTreeItemOptions {
         const activityResult = this.data.context.activityResult;
         return {
             label: this.label,
             getChildren: activityResult ? ((parent: AzExtParentTreeItem) => {
-                const appResource: rgTypes.AppResource = {
+                const appResource: hTypes.AppResource = {
                     id: nonNullProp(activityResult, 'id'),
                     name: nonNullProp(activityResult, 'name'),
                     type: nonNullProp(activityResult, 'type'),
@@ -52,7 +52,7 @@ export class ExecuteActivity<C extends types.ExecuteActivityContext> extends Act
         }
     }
 
-    public errorState(error: types.IParsedError): rgTypes.ActivityTreeItemOptions {
+    public errorState(error: types.IParsedError): hTypes.ActivityTreeItemOptions {
         return {
             label: this.label,
             getChildren: (parent: AzExtParentTreeItem) => {
