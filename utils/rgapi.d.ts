@@ -12,20 +12,8 @@ import type { AbstractAzExtTreeItem, AzExtParentTreeItem, AzExtTreeDataProvider,
 export interface AzureResourceGroupsExtensionApi {
     /**
      * The `AzExtTreeDataProvider` for the shared app resource view
-     * @deprecated Use `appResourceTree` instead
-     */
-    readonly tree: AzExtTreeDataProvider;
-
-    /**
-     * The `AzExtTreeDataProvider` for the shared app resource view
      */
     readonly appResourceTree: AzExtTreeDataProvider;
-
-    /**
-     * The VSCode TreeView for the shared app resource view
-     * @deprecated Use `appResourceTreeView` instead
-     */
-    readonly treeView: vscode.TreeView<AzExtTreeItem>;
 
     /**
      * The VSCode TreeView for the shared app resource view
@@ -33,14 +21,14 @@ export interface AzureResourceGroupsExtensionApi {
     readonly appResourceTreeView: vscode.TreeView<AzExtTreeItem>;
 
     /**
-     * The `AzExtTreeDataProvider` for the shared local resource view
+     * The `AzExtTreeDataProvider` for the shared workspace resource view
      */
-    readonly localResourceTree: AzExtTreeDataProvider;
+    readonly workspaceResourceTree: AzExtTreeDataProvider;
 
     /**
-     * The VSCode TreeView for the shared local resource view
+     * The VSCode TreeView for the shared workspace resource view
      */
-    readonly localResourceTreeView: vscode.TreeView<AzExtTreeItem>;
+    readonly workspaceResourceTreeView: vscode.TreeView<AzExtTreeItem>;
 
     /**
      * Version of the API
@@ -61,17 +49,36 @@ export interface AzureResourceGroupsExtensionApi {
     registerApplicationResourceResolver(id: string, resolver: AppResourceResolver): vscode.Disposable;
 
     /**
-     * Registers a local resource provider
+     * Registers a workspace resource provider
      * @param id The provider ID. Must be unique.
      * @param provider The provider
      */
-    registerLocalResourceProvider(id: string, provider: LocalResourceProvider): vscode.Disposable;
+    registerWorkspaceResourceProvider(id: string, provider: WorkspaceResourceProvider): vscode.Disposable;
 
     /**
      * Registers an activity to appear in the activity window
      * @param activity The activity information to show
      */
     registerActivity(activity: Activity): Promise<void>;
+
+    //#region Deprecated things that will be removed soon
+
+    /**
+     * @deprecated Use `appResourceTree` instead
+     */
+    readonly tree: AzExtTreeDataProvider;
+
+    /**
+     * @deprecated Use `appResourceTreeView` instead
+     */
+    readonly treeView: vscode.TreeView<AzExtTreeItem>;
+
+    /**
+     * @deprecated Use `registerWorkspaceResourceProvider` instead
+     */
+    registerLocalResourceProvider(id: string, provider: LocalResourceProvider): vscode.Disposable;
+
+    //#endregion
 }
 
 /**
@@ -169,18 +176,32 @@ export interface AppResourceProvider {
 /**
  * A type to describe the LocalResource objects that providers should give
  */
-export type LocalResource = AzExtTreeItem;
+export type WorkspaceResource = AzExtTreeItem;
 
 /**
  * A provider for supplying items for the local resources tree (e.g., storage emulator, function apps in workspace, etc.)
  */
-export interface LocalResourceProvider {
+export interface WorkspaceResourceProvider {
     /**
      * Called to supply the tree nodes to the LocalResource tree
      * @param parent The parent tree item (which will be the root of the local resource tree)
      */
     provideResources(parent: AzExtParentTreeItem): vscode.ProviderResult<LocalResource[] | undefined>;
 }
+
+//#region Deprecated things that will be removed soon
+
+/**
+ * @deprecated Use `WorkspaceResource` instead
+ */
+export type LocalResource = WorkspaceResource;
+
+/**
+ * @deprecated Use `WorkspaceResourceProvider` instead
+ */
+export type LocalResourceProvider = WorkspaceResourceProvider;
+
+//#endregion
 
 /**
  * Represents an Activity to display in the Activity Log
