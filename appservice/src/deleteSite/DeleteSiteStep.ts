@@ -16,17 +16,19 @@ export class DeleteSiteStep extends AzureWizardExecuteStep<IDeleteSiteWizardCont
 
         const site = nonNullProp(context, "site");
 
-        const deleting: string = site.isSlot ?
-            localize('DeletingSlot', 'Deleting slot "{0}"...', site.fullName) :
-            site.isFunctionApp ?
-                localize('DeletingFunctionApp', 'Deleting function app "{0}"...', site.fullName) :
-                localize('DeletingWebApp', 'Deleting web app "{0}"...', site.fullName);
+        let deleting: string;
+        let deleteSucceeded: string;
 
-        const deleteSucceeded: string = site.isSlot ?
-            localize('deletedSlot', 'Successfully deleted slot "{0}".', site.fullName) :
-            site.isFunctionApp ?
-                localize('deletedFunctionApp', 'Successfully deleted function app "{0}".', site.fullName) :
-                localize('deletedWebApp', 'Successfully deleted web app "{0}".', site.fullName);
+        if (site.isSlot) {
+            deleting = localize('DeletingSlot', 'Deleting slot "{0}"...', site.fullName);
+            deleteSucceeded = localize('deletedSlot', 'Successfully deleted slot "{0}".', site.fullName);
+        } else if (site.isFunctionApp) {
+            deleting = localize('DeletingFunctionApp', 'Deleting function app "{0}"...', site.fullName);
+            deleteSucceeded = localize('deletedFunctionApp', 'Successfully deleted function app "{0}".', site.fullName);
+        } else {
+            deleting = localize('DeletingWebApp', 'Deleting web app "{0}"...', site.fullName);
+            deleteSucceeded = localize('deletedWebApp', 'Successfully deleted web app "{0}".', site.fullName);
+        }
 
         ext.outputChannel.appendLog(deleting);
         progress.report({ message: deleting });
