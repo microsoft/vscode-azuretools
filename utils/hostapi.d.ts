@@ -186,7 +186,7 @@ export interface WorkspaceResourceProvider {
      * Called to supply the tree nodes to the LocalResource tree
      * @param parent The parent tree item (which will be the root of the local resource tree)
      */
-    provideResources(parent: AzExtParentTreeItem): vscode.ProviderResult<LocalResource[] | undefined>;
+    provideResources(parent: AzExtParentTreeItem): vscode.ProviderResult<WorkspaceResource[] | undefined>;
 }
 
 //#region Deprecated things that will be removed soon
