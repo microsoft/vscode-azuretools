@@ -174,17 +174,17 @@ export interface AppResourceProvider {
 }
 
 /**
- * A type to describe the LocalResource objects that providers should give
+ * A type to describe the WorkspaceResource objects that providers should give to show in the workspace resource tree
  */
 export type WorkspaceResource = AzExtTreeItem;
 
 /**
- * A provider for supplying items for the local resources tree (e.g., storage emulator, function apps in workspace, etc.)
+ * A provider for supplying items for the workspace resource tree (e.g., storage emulator, function apps in workspace, etc.)
  */
 export interface WorkspaceResourceProvider {
     /**
-     * Called to supply the tree nodes to the LocalResource tree
-     * @param parent The parent tree item (which will be the root of the local resource tree)
+     * Called to supply the tree nodes to the workspace resource tree
+     * @param parent The parent tree item (which will be the root of the workspace resource tree)
      */
     provideResources(parent: AzExtParentTreeItem): vscode.ProviderResult<WorkspaceResource[] | undefined>;
 }
