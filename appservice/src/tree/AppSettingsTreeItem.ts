@@ -31,26 +31,37 @@ export function validateAppSettingKey(settings: StringDictionary, client: IAppSe
     return undefined;
 }
 
+interface AppSettingsTreeItemOptions {
+    supportsSlots?: boolean;
+    settingsToHide?: string[];
+    contextValuesToAdd?: string[];
+}
+
 export class AppSettingsTreeItem extends AzExtParentTreeItem {
     public static contextValue: string = 'applicationSettings';
     public readonly label: string = 'Application Settings';
     public readonly childTypeLabel: string = 'App Setting';
-    public readonly contextValue: string = AppSettingsTreeItem.contextValue;
     public readonly clientProvider: AppSettingsClientProvider;
     public readonly supportsSlots: boolean;
     public suppressMaskLabel: boolean = true;
     private _settings: StringDictionary | undefined;
     private readonly _settingsToHide: string[] | undefined;
+    public readonly contextValuesToAdd: string[];
 
-    constructor(parent: AzExtParentTreeItem, clientProvider: AppSettingsClientProvider, supportsSlots: boolean = true, settingsToHide?: string[]) {
+    constructor(parent: AzExtParentTreeItem, clientProvider: AppSettingsClientProvider, options?: AppSettingsTreeItemOptions) {
         super(parent);
         this.clientProvider = clientProvider;
-        this.supportsSlots = supportsSlots;
-        this._settingsToHide = settingsToHide;
+        this.supportsSlots = options?.supportsSlots ?? true;
+        this._settingsToHide = options?.settingsToHide;
+        this.contextValuesToAdd = options?.contextValuesToAdd ?? [];
     }
 
     public get id(): string {
         return 'configuration';
+    }
+
+    public get contextValue(): string {
+        return Array.from(new Set([AppSettingsTreeItem.contextValue, ...(this.contextValuesToAdd ?? [])])).sort().join(';');
     }
 
     public get iconPath(): TreeItemIconPath {
