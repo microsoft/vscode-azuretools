@@ -31,6 +31,12 @@ export function validateAppSettingKey(settings: StringDictionary, client: IAppSe
     return undefined;
 }
 
+interface AppSettingsTreeItemOptions {
+    supportsSlots?: boolean;
+    settingsToHide?: string[];
+    contextValuesToAdd?: string[];
+}
+
 export class AppSettingsTreeItem extends AzExtParentTreeItem {
     public static contextValue: string = 'applicationSettings';
     public readonly label: string = 'Application Settings';
@@ -41,12 +47,15 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
     public suppressMaskLabel: boolean = true;
     private _settings: StringDictionary | undefined;
     private readonly _settingsToHide: string[] | undefined;
+    public readonly contextValuesToAdd: string[];
 
-    constructor(parent: AzExtParentTreeItem, clientProvider: AppSettingsClientProvider, supportsSlots: boolean = true, settingsToHide?: string[]) {
+    constructor(parent: AzExtParentTreeItem, clientProvider: AppSettingsClientProvider, options?: AppSettingsTreeItemOptions) {
         super(parent);
         this.clientProvider = clientProvider;
-        this.supportsSlots = supportsSlots;
-        this._settingsToHide = settingsToHide;
+        this.supportsSlots = options?.supportsSlots ?? true;
+        this._settingsToHide = options?.settingsToHide;
+        this.contextValuesToAdd = options?.contextValuesToAdd ?? [];
+        this.contextValue = Array.from(new Set([AppSettingsTreeItem.contextValue, ...(options?.contextValuesToAdd ?? [])])).sort().join(';');
     }
 
     public get id(): string {
