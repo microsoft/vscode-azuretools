@@ -41,7 +41,6 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
     public static contextValue: string = 'applicationSettings';
     public readonly label: string = 'Application Settings';
     public readonly childTypeLabel: string = 'App Setting';
-    public readonly contextValue: string = AppSettingsTreeItem.contextValue;
     public readonly clientProvider: AppSettingsClientProvider;
     public readonly supportsSlots: boolean;
     public suppressMaskLabel: boolean = true;
@@ -55,11 +54,14 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
         this.supportsSlots = options?.supportsSlots ?? true;
         this._settingsToHide = options?.settingsToHide;
         this.contextValuesToAdd = options?.contextValuesToAdd ?? [];
-        this.contextValue = Array.from(new Set([AppSettingsTreeItem.contextValue, ...(options?.contextValuesToAdd ?? [])])).sort().join(';');
     }
 
     public get id(): string {
         return 'configuration';
+    }
+
+    public get contextValue(): string {
+        return Array.from(new Set([AppSettingsTreeItem.contextValue, ...(this.contextValuesToAdd ?? [])])).sort().join(';');
     }
 
     public get iconPath(): TreeItemIconPath {
