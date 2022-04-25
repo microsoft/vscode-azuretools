@@ -1506,3 +1506,9 @@ export declare class DeleteConfirmationStep extends AzureWizardPromptStep<IActio
     public prompt(wizardContext: IActionContext): Promise<void>;
     public shouldPrompt(wizardContext: IActionContext): boolean;
 }
+
+/**
+ * @param values
+ * @returns a sorted, unique string of values separated by `;`
+ */
+export function createContextValue(values: string[]): string;
