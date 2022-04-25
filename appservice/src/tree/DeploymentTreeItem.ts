@@ -30,19 +30,23 @@ enum DeployStatus {
  */
 export class DeploymentTreeItem extends AzExtTreeItem {
     public static contextValue: RegExp = new RegExp('deployment\/.*');
-    public readonly contextValue: string;
     public label: string;
     public receivedTime: Date;
     public parent: DeploymentsTreeItem;
     private _deployResult: KuduModels.DeployResult;
+    private _scmType?: string;
 
     constructor(parent: DeploymentsTreeItem, deployResult: KuduModels.DeployResult, scmType: string | undefined) {
         super(parent);
-        this.contextValue = `deployment/${scmType}`.toLocaleLowerCase();
+        this._scmType = scmType;
         this._deployResult = deployResult;
         this.receivedTime = nonNullProp(deployResult, 'receivedTime');
         const message: string = this.getDeploymentMessage(deployResult);
         this.label = `${this.id.substring(0, 7)} - ${message}`;
+    }
+
+    public get contextValue(): string {
+        return Array.from(new Set([`deployment/${this._scmType}`.toLocaleLowerCase(), ...(this.parent.contextValuesToAdd ?? [])])).sort().join(';');
     }
 
     public get iconPath(): TreeItemIconPath {

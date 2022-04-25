@@ -10,18 +10,33 @@ import { localize } from '../localize';
 import { ParsedSite } from '../SiteClient';
 import { FolderTreeItem } from './FolderTreeItem';
 
+interface LogFilesTreeItemOptions {
+    site: ParsedSite;
+    contextValuesToAdd?: string[];
+}
+
 /**
  * NOTE: This leverages a command with id `ext.prefix + '.startStreamingLogs'` that should be registered by each extension
  */
 export class LogFilesTreeItem extends FolderTreeItem {
     public static contextValue: string = 'logFiles';
-    public readonly contextValue: string = LogFilesTreeItem.contextValue;
     public suppressMaskLabel: boolean = true;
+    public readonly contextValuesToAdd: string[];
 
     protected readonly _isRoot: boolean = true;
 
-    constructor(parent: AzExtParentTreeItem, site: ParsedSite) {
-        super(parent, site, localize('logFiles', 'Logs'), '/LogFiles', true);
+    constructor(parent: AzExtParentTreeItem, options: LogFilesTreeItemOptions) {
+        super(parent, {
+            site: options.site,
+            label: localize('logFiles', 'Logs'),
+            path: '/LogFiles',
+            isReadOnly: true,
+            contextValuesToAdd: options.contextValuesToAdd ?? []
+        });
+    }
+
+    public get contextValue(): string {
+        return Array.from(new Set([LogFilesTreeItem.contextValue, ...(this.contextValuesToAdd ?? [])])).sort().join(';');
     }
 
     public async loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {
