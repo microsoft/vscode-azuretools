@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { SiteSourceControl } from '@azure/arm-appservice';
-import { AzExtTreeItem, IActionContext, nonNullProp, openReadOnlyContent, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
+import { AzExtTreeItem, createContextValue, IActionContext, nonNullProp, openReadOnlyContent, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
 import * as os from 'os';
 import { ProgressLocation, ThemeIcon, window } from 'vscode';
 import { KuduModels } from 'vscode-azurekudu';
@@ -30,19 +30,23 @@ enum DeployStatus {
  */
 export class DeploymentTreeItem extends AzExtTreeItem {
     public static contextValue: RegExp = new RegExp('deployment\/.*');
-    public readonly contextValue: string;
     public label: string;
     public receivedTime: Date;
     public parent: DeploymentsTreeItem;
     private _deployResult: KuduModels.DeployResult;
+    private _scmType?: string;
 
     constructor(parent: DeploymentsTreeItem, deployResult: KuduModels.DeployResult, scmType: string | undefined) {
         super(parent);
-        this.contextValue = `deployment/${scmType}`.toLocaleLowerCase();
+        this._scmType = scmType;
         this._deployResult = deployResult;
         this.receivedTime = nonNullProp(deployResult, 'receivedTime');
         const message: string = this.getDeploymentMessage(deployResult);
         this.label = `${this.id.substring(0, 7)} - ${message}`;
+    }
+
+    public get contextValue(): string {
+        return createContextValue([`deployment/${this._scmType}`.toLocaleLowerCase(), ...this.parent.contextValuesToAdd]);
     }
 
     public get iconPath(): TreeItemIconPath {

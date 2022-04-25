@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { SiteConfig, SiteSourceControl } from '@azure/arm-appservice';
-import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
+import { AzExtParentTreeItem, AzExtTreeItem, createContextValue, GenericTreeItem, IActionContext, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
 import { ThemeIcon } from 'vscode';
 import { KuduModels } from 'vscode-azurekudu';
 import { createKuduClient } from '../createKuduClient';
@@ -14,6 +14,13 @@ import { ScmType } from '../ScmType';
 import { ParsedSite } from '../SiteClient';
 import { retryKuduCall } from '../utils/kuduUtils';
 import { DeploymentTreeItem } from './DeploymentTreeItem';
+
+interface DeploymentsTreeItemOptions {
+    site: ParsedSite;
+    siteConfig: SiteConfig;
+    sourceControl: SiteSourceControl;
+    contextValuesToAdd?: string[];
+}
 
 /**
  * NOTE: This leverages a command with id `ext.prefix + '.connectToGitHub'` that should be registered by each extension
@@ -25,15 +32,17 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
     public readonly childTypeLabel: string = localize('Deployment', 'Deployment');
     public readonly site: ParsedSite;
     public suppressMaskLabel: boolean = true;
+    public readonly contextValuesToAdd: string[];
 
     private _scmType?: string;
     private _repoUrl?: string;
 
-    public constructor(parent: AzExtParentTreeItem, site: ParsedSite, siteConfig: SiteConfig, sourceControl: SiteSourceControl) {
+    public constructor(parent: AzExtParentTreeItem, options: DeploymentsTreeItemOptions) {
         super(parent);
-        this.site = site;
-        this._scmType = siteConfig.scmType;
-        this._repoUrl = sourceControl.repoUrl;
+        this.site = options.site;
+        this._scmType = options.siteConfig.scmType;
+        this._repoUrl = options.sourceControl.repoUrl;
+        this.contextValuesToAdd = options?.contextValuesToAdd || [];
     }
 
     public get iconPath(): TreeItemIconPath {
@@ -54,7 +63,7 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
     }
 
     public get contextValue(): string {
-        return this._scmType === ScmType.None ? DeploymentsTreeItem.contextValueUnconnected : DeploymentsTreeItem.contextValueConnected;
+        return createContextValue([ScmType.None ? DeploymentsTreeItem.contextValueUnconnected : DeploymentsTreeItem.contextValueConnected, ...this.contextValuesToAdd]);
     }
 
     public hasMoreChildrenImpl(): boolean {

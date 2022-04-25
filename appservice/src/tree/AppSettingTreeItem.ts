@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { SlotConfigNamesResource, StringDictionary } from '@azure/arm-appservice';
-import { AzExtTreeItem, DialogResponses, IActionContext, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
+import { AzExtTreeItem, createContextValue, DialogResponses, IActionContext, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
 import { ThemeIcon } from 'vscode';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -18,7 +18,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
     public static contextValueNoSlots: string = 'applicationSettingItemNoSlots';
     public get contextValue(): string {
         const contextValue = this.parent.supportsSlots ? AppSettingTreeItem.contextValue : AppSettingTreeItem.contextValueNoSlots;
-        return Array.from(new Set([contextValue, ...(this.parent.contextValuesToAdd ?? [])])).sort().join(';');
+        return createContextValue([contextValue, ...this.parent.contextValuesToAdd]);
     }
     public readonly parent: AppSettingsTreeItem;
 

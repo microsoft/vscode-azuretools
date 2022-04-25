@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { StringDictionary } from '@azure/arm-appservice';
-import { AzExtParentTreeItem, AzExtTreeItem, IActionContext, ICreateChildImplContext, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
+import { AzExtParentTreeItem, AzExtTreeItem, createContextValue, IActionContext, ICreateChildImplContext, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
 import { ThemeIcon } from 'vscode';
 import { AppSettingsClientProvider, IAppSettingsClient } from '../IAppSettingsClient';
 import { AppSettingTreeItem } from './AppSettingTreeItem';
@@ -53,7 +53,7 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
         this.clientProvider = clientProvider;
         this.supportsSlots = options?.supportsSlots ?? true;
         this._settingsToHide = options?.settingsToHide;
-        this.contextValuesToAdd = options?.contextValuesToAdd ?? [];
+        this.contextValuesToAdd = options?.contextValuesToAdd || [];
     }
 
     public get id(): string {
@@ -61,7 +61,7 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
     }
 
     public get contextValue(): string {
-        return Array.from(new Set([AppSettingsTreeItem.contextValue, ...(this.contextValuesToAdd ?? [])])).sort().join(';');
+        return createContextValue([AppSettingsTreeItem.contextValue, ...this.contextValuesToAdd]);
     }
 
     public get iconPath(): TreeItemIconPath {

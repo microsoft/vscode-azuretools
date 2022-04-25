@@ -3,31 +3,35 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzExtParentTreeItem, AzExtTreeItem, IActionContext, openReadOnlyContent, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
+import { AzExtTreeItem, createContextValue, IActionContext, openReadOnlyContent, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
 import { ThemeIcon } from 'vscode';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { ParsedSite } from '../SiteClient';
 import { getFile, ISiteFile } from '../siteFiles';
+import { FolderTreeItem } from './FolderTreeItem';
 
 /**
  * NOTE: This leverages a command with id `ext.prefix + '.openFile'` that should be registered by each extension
  */
 export class FileTreeItem extends AzExtTreeItem {
     public static contextValue: string = 'file';
-    public readonly contextValue: string = FileTreeItem.contextValue;
     public readonly label: string;
     public readonly path: string;
     public readonly isReadOnly: boolean;
-
     public readonly site: ParsedSite;
+    public readonly parent: FolderTreeItem;
 
-    constructor(parent: AzExtParentTreeItem, site: ParsedSite, label: string, path: string, isReadOnly: boolean) {
+    constructor(parent: FolderTreeItem, site: ParsedSite, label: string, path: string, isReadOnly: boolean) {
         super(parent);
         this.site = site;
         this.label = label;
         this.path = path;
         this.isReadOnly = isReadOnly;
+    }
+
+    public get contextValue(): string {
+        return createContextValue([FileTreeItem.contextValue, ...this.parent.contextValuesToAdd])
     }
 
     public get iconPath(): TreeItemIconPath {
