@@ -14,4 +14,12 @@ export namespace randomUtils {
         const buffer: Buffer = crypto.randomBytes(Math.ceil(length / 2));
         return buffer.toString('hex').slice(0, length);
     }
+
+    export function getRandomInteger(minimumInclusive: number, maximumExclusive: number): number {
+        if (maximumExclusive <= minimumInclusive) {
+            throw new Error(`Maximum must be strictly greater than minimum`);
+        }
+
+        return Math.floor(Math.random() * (maximumExclusive - minimumInclusive)) + minimumInclusive;
+    }
 }

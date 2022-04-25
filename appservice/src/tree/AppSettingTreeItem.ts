@@ -17,7 +17,8 @@ export class AppSettingTreeItem extends AzExtTreeItem {
     public static contextValue: string = 'applicationSettingItem';
     public static contextValueNoSlots: string = 'applicationSettingItemNoSlots';
     public get contextValue(): string {
-        return this.parent.supportsSlots ? AppSettingTreeItem.contextValue : AppSettingTreeItem.contextValueNoSlots;
+        const contextValue = this.parent.supportsSlots ? AppSettingTreeItem.contextValue : AppSettingTreeItem.contextValueNoSlots;
+        return Array.from(new Set([contextValue, ...(this.parent.contextValuesToAdd ?? [])])).sort().join(';');
     }
     public readonly parent: AppSettingsTreeItem;
 

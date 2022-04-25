@@ -5,7 +5,9 @@
 
 import { isNullOrUndefined } from 'util';
 import * as vscode from 'vscode';
+import { ProgressLocation } from 'vscode';
 import * as types from '../../index';
+import { ExecuteActivity } from '../activityLog/activities/ExecuteActivity';
 import { GoBackError, UserCancelledError } from '../errors';
 import { localize } from '../localize';
 import { parseError } from '../parseError';
@@ -14,7 +16,7 @@ import { createQuickPick } from '../userInput/showQuickPick';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 
-export class AzureWizard<T extends IInternalActionContext> implements types.AzureWizard<T>, IInternalAzureWizard {
+export class AzureWizard<T extends (IInternalActionContext & Partial<types.ExecuteActivityContext>)> implements types.AzureWizard<T>, IInternalAzureWizard {
     public title: string | undefined;
     private readonly _promptSteps: AzureWizardPromptStep<T>[];
     private readonly _executeSteps: AzureWizardExecuteStep<T>[];
@@ -148,7 +150,7 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
     }
 
     public async execute(): Promise<void> {
-        await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async progress => {
+        await this.withProgress({ location: ProgressLocation.Notification }, async progress => {
             let currentStep: number = 1;
 
             const steps: AzureWizardExecuteStep<T>[] = this._executeSteps.sort((a, b) => b.priority - a.priority);
@@ -172,10 +174,43 @@ export class AzureWizard<T extends IInternalActionContext> implements types.Azur
                     await step.execute(this._context, internalProgress);
                     currentStep += 1;
                 }
-
                 step = steps.pop();
             }
         });
+    }
+
+    private async withProgress(options: vscode.ProgressOptions, task: (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) => Promise<void>): Promise<void> {
+        if (this._context.registerActivity) {
+            this._context.activityTitle ??= this.title;
+            const activity = new ExecuteActivity({
+                context: this._context as types.ExecuteActivityContext,
+            }, async (activityProgress) => {
+                if (this._context.suppressNotification) {
+                    await task(activityProgress, activity.cancellationTokenSource.token);
+                } else {
+                    await vscode.window.withProgress(options, async (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken): Promise<void> => {
+                        token.onCancellationRequested(() => {
+                            activity.cancellationTokenSource.cancel();
+                        });
+
+                        const internalProgress: vscode.Progress<{ message?: string; increment?: number }> = {
+                            report: (value: { message?: string; increment?: number }): void => {
+                                progress.report(value);
+                                activityProgress.report(value);
+                            }
+                        };
+
+                        await task(internalProgress, token);
+                    });
+                }
+            });
+
+            await this._context.registerActivity(activity);
+            await activity.run();
+
+        } else {
+            await vscode.window.withProgress(options, task);
+        }
     }
 
     private goBack(currentStep: AzureWizardPromptStep<T>): AzureWizardPromptStep<T> {

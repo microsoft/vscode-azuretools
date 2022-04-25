@@ -8,7 +8,8 @@ This project provides Node.js packages that make it easy to consume and manage A
 
 * [Azure Kudu](kudu/)
 * [Azure App Service](appservice/)
-* [Azure UI](ui/)
+* [Azure Extension UI++ utilities (no Azure dependencies)](utils/)
+* [Azure Extension UI++ utilities (Azure dependencies)](azure/)
 * [Azure Dev](dev/)
 
 ## Developing locally

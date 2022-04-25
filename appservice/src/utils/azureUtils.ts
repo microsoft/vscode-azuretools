@@ -15,7 +15,7 @@ function normalizeLocationName(name: string | undefined): string {
     return (name || '').toLowerCase().replace(/\s/g, '');
 }
 
-// temproray workaround for https://github.com/Azure/azure-sdk-for-js/issues/20728
+// temporary workaround for https://github.com/Azure/azure-sdk-for-js/issues/20728
 export async function checkNameAvailability(client: ServiceClient, subscriptionId: string, name: string, type: 'Site' | 'Slot' ): Promise<CheckNameAvailabilityResponse> {
     const result: HttpOperationResponse = await client.sendRequest({
         method: 'POST',
