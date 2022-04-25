@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { SiteSourceControl } from '@azure/arm-appservice';
-import { AzExtTreeItem, IActionContext, nonNullProp, openReadOnlyContent, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
+import { AzExtTreeItem, createContextValue, IActionContext, nonNullProp, openReadOnlyContent, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
 import * as os from 'os';
 import { ProgressLocation, ThemeIcon, window } from 'vscode';
 import { KuduModels } from 'vscode-azurekudu';
@@ -46,7 +46,7 @@ export class DeploymentTreeItem extends AzExtTreeItem {
     }
 
     public get contextValue(): string {
-        return Array.from(new Set([`deployment/${this._scmType}`.toLocaleLowerCase(), ...(this.parent.contextValuesToAdd ?? [])])).sort().join(';');
+        return createContextValue([`deployment/${this._scmType}`.toLocaleLowerCase(), ...this.parent.contextValuesToAdd]);
     }
 
     public get iconPath(): TreeItemIconPath {

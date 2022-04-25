@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzExtTreeItem, IActionContext, openReadOnlyContent, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
+import { AzExtTreeItem, createContextValue, IActionContext, openReadOnlyContent, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
 import { ThemeIcon } from 'vscode';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -31,7 +31,7 @@ export class FileTreeItem extends AzExtTreeItem {
     }
 
     public get contextValue(): string {
-        return Array.from(new Set([FileTreeItem.contextValue, ...(this.parent.contextValuesToAdd ?? [])])).sort().join(';');
+        return createContextValue([FileTreeItem.contextValue, ...this.parent.contextValuesToAdd])
     }
 
     public get iconPath(): TreeItemIconPath {

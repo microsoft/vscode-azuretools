@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, parseError } from '@microsoft/vscode-azext-utils';
+import { AzExtParentTreeItem, AzExtTreeItem, createContextValue, GenericTreeItem, IActionContext, parseError } from '@microsoft/vscode-azext-utils';
 import { ThemeIcon } from 'vscode';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -31,12 +31,12 @@ export class LogFilesTreeItem extends FolderTreeItem {
             label: localize('logFiles', 'Logs'),
             path: '/LogFiles',
             isReadOnly: true,
-            contextValuesToAdd: options.contextValuesToAdd ?? []
+            contextValuesToAdd: options.contextValuesToAdd || []
         });
     }
 
     public get contextValue(): string {
-        return Array.from(new Set([LogFilesTreeItem.contextValue, ...(this.contextValuesToAdd ?? [])])).sort().join(';');
+        return createContextValue([LogFilesTreeItem.contextValue, ...this.contextValuesToAdd]);
     }
 
     public async loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {

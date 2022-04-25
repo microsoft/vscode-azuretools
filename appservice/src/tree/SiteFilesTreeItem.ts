@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzExtParentTreeItem } from '@microsoft/vscode-azext-utils';
+import { AzExtParentTreeItem, createContextValue } from '@microsoft/vscode-azext-utils';
 import { localize } from '../localize';
 import { ParsedSite } from '../SiteClient';
 import { FolderTreeItem } from './FolderTreeItem';
@@ -29,10 +29,10 @@ export class SiteFilesTreeItem extends FolderTreeItem {
             path: '/site/wwwroot',
             isReadOnly: options.isReadOnly
         });
-        this.contextValuesToAdd = options.contextValuesToAdd ?? [];
+        this.contextValuesToAdd = options.contextValuesToAdd || [];
     }
 
     public get contextValue(): string {
-        return Array.from(new Set([SiteFilesTreeItem.contextValue, ...(this.contextValuesToAdd ?? [])])).sort().join(';');
+        return createContextValue([SiteFilesTreeItem.contextValue, ...this.contextValuesToAdd]);
     }
 }

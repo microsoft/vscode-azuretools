@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { SiteConfig, SiteSourceControl } from '@azure/arm-appservice';
-import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
+import { AzExtParentTreeItem, AzExtTreeItem, createContextValue, GenericTreeItem, IActionContext, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
 import { ThemeIcon } from 'vscode';
 import { KuduModels } from 'vscode-azurekudu';
 import { createKuduClient } from '../createKuduClient';
@@ -42,7 +42,7 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
         this.site = options.site;
         this._scmType = options.siteConfig.scmType;
         this._repoUrl = options.sourceControl.repoUrl;
-        this.contextValuesToAdd = options?.contextValuesToAdd ?? [];
+        this.contextValuesToAdd = options?.contextValuesToAdd || [];
     }
 
     public get iconPath(): TreeItemIconPath {
@@ -63,7 +63,7 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
     }
 
     public get contextValue(): string {
-        return Array.from(new Set([ScmType.None ? DeploymentsTreeItem.contextValueUnconnected : DeploymentsTreeItem.contextValueConnected, ...(this.contextValuesToAdd ?? [])])).sort().join(';');
+        return createContextValue([ScmType.None ? DeploymentsTreeItem.contextValueUnconnected : DeploymentsTreeItem.contextValueConnected, ...this.contextValuesToAdd]);
     }
 
     public hasMoreChildrenImpl(): boolean {
