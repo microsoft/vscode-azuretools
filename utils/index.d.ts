@@ -930,6 +930,11 @@ export interface IAzureQuickPickItem<T = undefined> extends QuickPickItem {
      * Optionally used to suppress persistence for this item, defaults to `false`
      */
     suppressPersistence?: boolean;
+
+    /**
+     * Optionally allows some items to be automatically sorted at the top of the list
+     */
+    priority?: 'highest' | 'normal'; // 'highest' items come before the recently used item
 }
 
 /**

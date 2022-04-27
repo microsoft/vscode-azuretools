@@ -183,23 +183,47 @@ async function initializePicks<TPick extends types.IAzureQuickPickItem<unknown>>
 
 function bumpRecentlyUsedPick<T extends types.IAzureQuickPickItem<unknown>>(picks: T[], recentlyUsedKey: string): void {
     const recentlyUsedValue: string | undefined = ext.context.globalState.get(recentlyUsedKey);
+    let recentlyUsedIndex: number = -1;
     if (recentlyUsedValue) {
-        const index = picks.findIndex(p => getRecentlyUsedValue(p) === recentlyUsedValue);
-        // No need to do anything if "recently used" item is not found or already the first item
-        if (index > 0) {
-            const previousItem: T = picks.splice(index, 1)[0];
-            if (!previousItem.suppressPersistence) {
-                const recentlyUsed: string = localize('recentlyUsed', '(recently used)');
-                if (!previousItem.description) {
-                    previousItem.description = recentlyUsed;
-                } else if (!previousItem.description.includes(recentlyUsed)) {
-                    previousItem.description = `${previousItem.description} ${recentlyUsed}`;
-                }
+        recentlyUsedIndex = picks.findIndex(p => getRecentlyUsedValue(p) === recentlyUsedValue);
 
-                picks.unshift(previousItem);
+        // Update recently used item's description
+        if (recentlyUsedIndex >= 0) {
+            const recentlyUsedItem: T = picks[recentlyUsedIndex];
+            if (!recentlyUsedItem.suppressPersistence) {
+                const recentlyUsed: string = localize('recentlyUsed', '(recently used)');
+                if (!recentlyUsedItem.description) {
+                    recentlyUsedItem.description = recentlyUsed;
+                } else if (!recentlyUsedItem.description.includes(recentlyUsed)) {
+                    recentlyUsedItem.description = `${recentlyUsedItem.description} ${recentlyUsed}`;
+                }
+            } else {
+                recentlyUsedIndex = -1;
             }
         }
     }
+
+    picks = stableSortPicks(picks, recentlyUsedIndex);
+}
+
+function stableSortPicks<T extends types.IAzureQuickPickItem<unknown>>(picks: T[], recentlyUsedIndex: number): T[] {
+    function getPriorityAsNumber(pick: types.IAzureQuickPickItem<unknown>, index: number): number {
+        switch (pick.priority) {
+            case 'highest':
+                return recentlyUsedIndex === index ? 0 : 1;
+            case 'normal':
+            default:
+                return recentlyUsedIndex === index ? 2 : 3;
+        }
+    }
+
+    const sortableFacade: [index: number, priority: number][] = picks.map((pick, index) => [index, getPriorityAsNumber(pick, index)]);
+
+    // Note that since ES10, Array.sort is stable
+    sortableFacade.sort((a, b) => b[1] - a[1]);
+
+    const sortedPicks = sortableFacade.map(item => picks[item[0]]);
+    return sortedPicks;
 }
 
 function getGroupedPicks<TPick extends types.IAzureQuickPickItem<unknown>>(groups: QuickPickGroup[]): TPick[] {
