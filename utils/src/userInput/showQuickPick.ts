@@ -219,9 +219,11 @@ function stableSortPicks<T extends types.IAzureQuickPickItem<unknown>>(picks: T[
 
     const sortableFacade: [index: number, priority: number][] = picks.map((pick, index) => [index, getPriorityAsNumber(pick, index)]);
 
+    // Sort by priority
     // Note that since ES10, Array.sort is stable
     sortableFacade.sort((a, b) => b[1] - a[1]);
 
+    // Reconstitute array by pulling out items by index
     const sortedPicks = sortableFacade.map(item => picks[item[0]]);
     return sortedPicks;
 }
