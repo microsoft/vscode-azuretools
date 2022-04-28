@@ -16,7 +16,7 @@ import { AppSource, IDeployContext } from './IDeployContext';
  * @param arg1 The first arg passed in by VS Code to the deploy command. Typically the node or uri
  * @param arg2 The second arg passed in by VS Code to the deploy command. Usually this is ignored, but can be the appId if called programatically from an API
  */
-export async function getDeployNode<T extends AzExtTreeItem>(context: IDeployContext, tree: AzExtTreeDataProvider, arg1: unknown, arg2: unknown, expectedContextValue: string | string[]): Promise<T> {
+export async function getDeployNode<T extends AzExtTreeItem>(context: IDeployContext, tree: AzExtTreeDataProvider, arg1: unknown, arg2: unknown, expectedContextValue: string | RegExp | string[]): Promise<T> {
     let node: AzExtTreeItem | undefined;
 
     if (arg1 instanceof AzExtTreeItem) {
