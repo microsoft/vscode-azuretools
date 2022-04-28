@@ -53,7 +53,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
     public abstract loadMoreChildrenImpl(clearCache: boolean, context: types.IActionContext): Promise<AzExtTreeItem[]>;
     public abstract hasMoreChildrenImpl(): boolean;
     public createChildImpl?(context: types.ICreateChildImplContext): Promise<AzExtTreeItem>;
-    public pickTreeItemImpl?(expectedContextValues: (string | RegExp)[]): AzExtTreeItem | undefined | Promise<AzExtTreeItem | undefined>;
+    public pickTreeItemImpl?(expectedContextValues: (string | RegExp)[], context: types.IActionContext): AzExtTreeItem | undefined | Promise<AzExtTreeItem | undefined>;
     //#endregion
 
     public clearCache(): void {
@@ -101,7 +101,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
     public async pickChildTreeItem(expectedContextValues: (string | RegExp)[], context: types.ITreeItemPickerContext): Promise<AzExtTreeItem | AzExtTreeItem[]> {
         if (this.pickTreeItemImpl) {
             const children: AzExtTreeItem[] = await this.getCachedChildren(context);
-            const pickedItem: AzExtTreeItem | undefined = await this.pickTreeItemImpl(expectedContextValues);
+            const pickedItem: AzExtTreeItem | undefined = await this.pickTreeItemImpl(expectedContextValues, context);
             if (pickedItem) {
                 const child: AzExtTreeItem | undefined = children.find((ti: AzExtTreeItem) => ti.fullId === pickedItem.fullId);
                 if (child) {
