@@ -88,9 +88,18 @@ export interface AzureHostExtensionApi {
 
 export interface PickAppResourceOptions extends IAzureQuickPickOptions {
     /**
-     * App resource type to filter the app resource picks
+     * Options to filter the picks
      */
-    type?: string;
+    filter?: {
+        /**
+         * App resource type to filter the app resource picks
+         */
+        type: string;
+        /**
+         * App resource kind to filter the app resource picks
+         */
+        kind?: string;
+    }
 
     /**
      * Set this to pick a child of the selected app resource
