@@ -577,7 +577,7 @@ export declare abstract class AzExtParentTreeItem extends AzExtTreeItem implemen
      * to grouping or filtering settings.
      * @param childrenToSet Cached children to display in the tree view UI
      */
-     protected setCachedChildren(childrenToSet: AzExtTreeItem[]): void;
+    setCachedChildren(childrenToSet: AzExtTreeItem[]): void;
 
     /**
      * Loads all children and displays a progress notification allowing the user to cancel.

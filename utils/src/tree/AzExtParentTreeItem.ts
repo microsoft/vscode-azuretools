@@ -133,7 +133,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         return await getTreeItem();
     }
 
-    protected setCachedChildren(childrenToSet: AzExtTreeItem[]): void {
+    setCachedChildren(childrenToSet: AzExtTreeItem[]): void {
         this._cachedChildren = childrenToSet;
         this.treeDataProvider.refreshUIOnly(this);
     }
