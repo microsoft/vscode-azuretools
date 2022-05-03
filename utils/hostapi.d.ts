@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import type * as vscode from 'vscode';
-import type { AbstractAzExtTreeItem, AzExtParentTreeItem, AzExtTreeDataProvider, AzExtTreeItem, ISubscriptionContext, SealedAzExtTreeItem } from './index'; // This must remain `import type` or else a circular reference will result
+import type { AbstractAzExtTreeItem, AzExtParentTreeItem, AzExtTreeDataProvider, AzExtTreeItem, IActionContext, IAzureQuickPickOptions, ISubscriptionContext, ITreeItemPickerContext, SealedAzExtTreeItem } from './index'; // This must remain `import type` or else a circular reference will result
 
 /**
  * The API implemented by the Azure Resource Groups host extension
@@ -40,6 +40,11 @@ export interface AzureHostExtensionApi {
      * @param resourceId The ARM resource ID to reveal
      */
     revealTreeItem(resourceId: string): Promise<void>;
+
+    /**
+     * Show a quick picker of app resources. Set `options.type` to filter the picks.
+     */
+    pickAppResource<T extends AzExtTreeItem>(context: ITreeItemPickerContext, options?: PickAppResourceOptions): Promise<T>
 
     /**
      * Registers an app resource resolver
@@ -79,6 +84,27 @@ export interface AzureHostExtensionApi {
     registerLocalResourceProvider(id: string, provider: LocalResourceProvider): vscode.Disposable;
 
     //#endregion
+}
+
+export interface PickAppResourceOptions extends IAzureQuickPickOptions {
+    /**
+     * Options to filter the picks
+     */
+    filter?: {
+        /**
+         * App resource type to filter the app resource picks
+         */
+        type: string;
+        /**
+         * App resource kind to filter the app resource picks
+         */
+        kind?: string;
+    }
+
+    /**
+     * Set this to pick a child of the selected app resource
+     */
+    expectedChildContextValue?: string | RegExp | (string | RegExp)[];
 }
 
 /**
