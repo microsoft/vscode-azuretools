@@ -133,6 +133,11 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         return await getTreeItem();
     }
 
+    protected setCachedChildren(childrenToSet: AzExtTreeItem[]): void {
+        this._cachedChildren = childrenToSet;
+        this.treeDataProvider.refreshUIOnly(this);
+    }
+
     public addChildToCache(childToAdd: AzExtTreeItem): void {
         if (!this._cachedChildren.find((ti) => ti.fullId === childToAdd.fullId)) {
             // set index to the last element by default

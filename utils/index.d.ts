@@ -573,6 +573,13 @@ export declare abstract class AzExtParentTreeItem extends AzExtTreeItem implemen
     getCachedChildren(context: IActionContext): Promise<AzExtTreeItem[]>;
 
     /**
+     * Set the cached children for this tree item.  This should only be used to change cached children to display due
+     * to grouping or filtering settings.
+     * @param childrenToSet Cached children to display in the tree view UI
+     */
+     protected setCachedChildren(childrenToSet: AzExtTreeItem[]): void;
+
+    /**
      * Loads all children and displays a progress notification allowing the user to cancel.
      * @throws `UserCancelledError` if the user cancels.
      */
