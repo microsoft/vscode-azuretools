@@ -135,10 +135,8 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         this.refreshUIOnly(treeItem);
     }
 
-    public refreshUIOnly(_treeItem: AzExtTreeItem | undefined): void {
-        // Pass undefined as temporary workaround for https://github.com/microsoft/vscode/issues/71698
-        this._onDidChangeTreeDataEmitter.fire(undefined);
-        // this._onDidChangeTreeDataEmitter.fire(treeItem === this._rootTreeItem ? undefined : treeItem);
+    public refreshUIOnly(treeItem: AzExtTreeItem | undefined): void {
+        this._onDidChangeTreeDataEmitter.fire(treeItem === this._rootTreeItem ? undefined : treeItem);
     }
 
     public async loadMore(treeItem: AzExtParentTreeItem, context: types.IActionContext): Promise<void> {
