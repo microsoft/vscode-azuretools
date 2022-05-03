@@ -135,6 +135,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
 
     setCachedChildren(childrenToSet: AzExtTreeItem[]): void {
         this._cachedChildren = childrenToSet;
+        this._cachedChildren = childrenToSet.sort((ti1, ti2) => this.compareChildrenImpl(ti1, ti2));
         this.treeDataProvider.refreshUIOnly(this);
     }
 
