@@ -86,20 +86,21 @@ export interface AzureHostExtensionApi {
     //#endregion
 }
 
+export interface AppResourceFilter {
+    type: string;
+    kind?: string;
+    /**
+     * ARM tags that must be present on the resource. Resource must match all provided tags.
+
+     */
+    tags?: Record<string, string>;
+}
+
 export interface PickAppResourceOptions extends IAzureQuickPickOptions {
     /**
-     * Options to filter the picks
+     * Options to filter the picks to resources that match any of the provided filters
      */
-    filter?: {
-        /**
-         * App resource type to filter the app resource picks
-         */
-        type: string;
-        /**
-         * App resource kind to filter the app resource picks
-         */
-        kind?: string;
-    }
+    filter?: AppResourceFilter | AppResourceFilter[];
 
     /**
      * Set this to pick a child of the selected app resource
