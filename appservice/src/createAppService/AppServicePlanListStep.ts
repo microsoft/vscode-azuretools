@@ -14,6 +14,7 @@ import { uiUtils } from '../utils/uiUtils';
 import { AppKind, getWebsiteOSDisplayName, WebsiteOS } from './AppKind';
 import { AppServicePlanCreateStep } from './AppServicePlanCreateStep';
 import { AppServicePlanNameStep } from './AppServicePlanNameStep';
+import { AppServicePlanRedundancyStep } from './AppServicePlanRedundancyStep';
 import { AppServicePlanSkuStep } from './AppServicePlanSkuStep';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
@@ -62,7 +63,7 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
 
     public async getSubWizard(wizardContext: IAppServiceWizardContext): Promise<IWizardOptions<IAppServiceWizardContext> | undefined> {
         if (!wizardContext.plan) {
-            const promptSteps: AzureWizardPromptStep<IAppServiceWizardContext>[] = [new AppServicePlanNameStep(), new AppServicePlanSkuStep(), new ResourceGroupListStep()];
+            const promptSteps: AzureWizardPromptStep<IAppServiceWizardContext>[] = [new AppServicePlanNameStep(), new AppServicePlanSkuStep(), new AppServicePlanRedundancyStep(), new ResourceGroupListStep()];
             LocationListStep.addStep(wizardContext, promptSteps);
             return {
                 promptSteps: promptSteps,

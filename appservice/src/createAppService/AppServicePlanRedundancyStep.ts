@@ -9,7 +9,7 @@ import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 interface AppServiceWizardContext extends IAppServiceWizardContext {
     _location: AzExtLocation;
-    zoneRedundancy: boolean;
+    zoneRedundant: boolean;
 }
 
 export class AppServicePlanRedundancyStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
@@ -20,7 +20,7 @@ export class AppServicePlanRedundancyStep extends AzureWizardPromptStep<IAppServ
             { label: localize('disabled', 'Disabled'), data: false }
         ];
 
-        context.zoneRedundancy = (await context.ui.showQuickPick(picks, { placeHolder })).data;
+        context.zoneRedundant = (await context.ui.showQuickPick(picks, { placeHolder })).data;
     }
 
     // TODO(ccastrotrejo): This will be changed to use orgdomain with WI 12845265 once georegions API is updated with ANT78.

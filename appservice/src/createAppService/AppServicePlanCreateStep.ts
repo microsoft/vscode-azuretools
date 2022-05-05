@@ -16,6 +16,10 @@ import { AppKind, WebsiteOS } from './AppKind';
 import { AppServicePlanListStep } from './AppServicePlanListStep';
 import { CustomLocation, IAppServiceWizardContext } from './IAppServiceWizardContext';
 
+interface IAppServicePlan extends WebSiteManagementModels.AppServicePlan {
+    properties: object;
+}
+
 export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
     public priority: number = 120;
 
@@ -71,11 +75,14 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
 
 async function getNewPlan(wizardContext: IAppServiceWizardContext): Promise<WebSiteManagementModels.AppServicePlan> {
     const location: AzExtLocation = await LocationListStep.getLocation(wizardContext, webProvider);
-    const plan: WebSiteManagementModels.AppServicePlan = {
+    const plan: IAppServicePlan = {
         kind: getPlanKind(wizardContext),
         sku: nonNullProp(wizardContext, 'newPlanSku'),
         location: location.name,
-        reserved: wizardContext.newSiteOS === WebsiteOS.linux  // The secret property - must be set to true to make it a Linux plan. Confirmed by the team who owns this API.
+        reserved: wizardContext.newSiteOS === WebsiteOS.linux,  // The secret property - must be set to true to make it a Linux plan. Confirmed by the team who owns this API.
+        properties: {
+            zoneRedundant: wizardContext.zoneRedundant
+        }
     };
 
     const skuFamily = wizardContext.newPlanSku?.family ? wizardContext.newPlanSku?.family.toLowerCase() : '';

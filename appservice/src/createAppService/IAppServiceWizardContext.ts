@@ -95,6 +95,12 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
     advancedCreation?: boolean;
 
     customLocation?: CustomLocation;
+
+    /**
+     * The zone redundancy availability of the new plan
+     * Specifies wheter the ASP will be zone redundant
+     */
+    zoneRedundant?: boolean;
 }
 
 export type CustomLocation = {
