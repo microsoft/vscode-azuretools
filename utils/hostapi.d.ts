@@ -89,6 +89,9 @@ export interface AzureHostExtensionApi {
 export interface AppResourceFilter {
     type: string;
     kind?: string;
+    /**
+     * ARM tags that must be present on the resource. Resouce must match all provided tags.
+     */
     tags?: Record<string, string>;
 }
 
