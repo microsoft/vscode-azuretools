@@ -132,7 +132,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     public isAncestorOfImpl?(contextValue: string | RegExp): boolean;
     public deleteTreeItemImpl?(deleteTreeItemImpl: types.IActionContext): Promise<void>;
     public resolveTooltip?(): Promise<string | MarkdownString>;
-    public resolve?(): Promise<void>
+    public resolve?(clearCache: boolean, context?: types.IActionContext): Promise<void>
     //#endregion
 
     public async refresh(context: types.IActionContext): Promise<void> {
