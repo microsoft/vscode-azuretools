@@ -42,6 +42,12 @@ export declare class AzExtTreeDataProvider implements TreeDataProvider<AzExtTree
     public refresh(context: IActionContext, treeItem?: AzExtTreeItem): Promise<void>;
 
     /**
+     * Refreshes only the tree UI so `refreshImpl` is not called and setCache is not set to true
+     * @param treeItem The treeItem to refresh or 'undefined' to refresh the whole tree
+     */
+    public refreshUIOnly(treeItem: AzExtTreeItem | undefined): void
+
+    /**
      * Loads more children for a specific tree item
      * @param treeItem the load more tree item
      * @param context The action context
