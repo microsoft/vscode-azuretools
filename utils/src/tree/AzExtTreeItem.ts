@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { MarkdownString, ThemeIcon, TreeItemCollapsibleState } from 'vscode';
+import { ResolvedAppResourceBase } from '../../hostapi';
 import * as types from '../../index';
 import { NotImplementedError } from '../errors';
 import { localize } from '../localize';
@@ -17,6 +18,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     public commandArgs?: unknown[];
     public suppressMaskLabel?: boolean;
     public hasBeenDeleted?: boolean;
+    public resolveResult: ResolvedAppResourceBase | undefined | null;
 
     private _id?: string;
     private _description?: string;
@@ -130,6 +132,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     public isAncestorOfImpl?(contextValue: string | RegExp): boolean;
     public deleteTreeItemImpl?(deleteTreeItemImpl: types.IActionContext): Promise<void>;
     public resolveTooltip?(): Promise<string | MarkdownString>;
+    public resolve?(): Promise<void>
     //#endregion
 
     public async refresh(context: types.IActionContext): Promise<void> {

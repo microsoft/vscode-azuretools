@@ -61,6 +61,10 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
             ti.tooltip = await treeItem.resolveTooltip();
         }
 
+        if (treeItem.resolve && treeItem.resolveResult === undefined) {
+            await treeItem.resolve();
+        }
+
         return ti;
     }
 
