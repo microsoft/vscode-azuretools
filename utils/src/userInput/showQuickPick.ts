@@ -150,7 +150,8 @@ function getRecentlyUsedKey(options: types.IAzureQuickPickOptions): string | und
     return recentlyUsedKey;
 }
 
-export async function createQuickPickItems<TPick extends types.IAzureQuickPickItem<unknown>>(picks: TPick[] | Promise<TPick[]>, options: types.IAzureQuickPickOptions, groups: QuickPickGroup[], recentlyUsedKey: string | undefined, globalState?: Memento): Promise<TPick[]> {
+// Exported for testing. globalState should be undefined except for testing.
+export async function createQuickPickItems<TPick extends types.IAzureQuickPickItem<unknown>>(picks: TPick[] | Promise<TPick[]>, options: types.IAzureQuickPickOptions, groups: QuickPickGroup[], recentlyUsedKey: string | undefined, globalState: Memento | undefined = undefined): Promise<TPick[]> {
     picks = await picks;
     globalState ??= ext.context.globalState;
 
