@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken, Event, EventEmitter, ThemeIcon, TreeItem } from 'vscode';
+import { CancellationToken, Disposable, Event, EventEmitter, ThemeIcon, TreeItem, TreeView } from 'vscode';
 import * as types from '../../index';
 import { callWithTelemetryAndErrorHandling } from '../callWithTelemetryAndErrorHandling';
 import { NoResourceFoundError, UserCancelledError } from '../errors';
@@ -12,6 +12,7 @@ import { parseError } from '../parseError';
 import { addTreeItemValuesToMask } from './addTreeItemValuesToMask';
 import { AzExtParentTreeItem, InvalidTreeItem } from './AzExtParentTreeItem';
 import { AzExtTreeItem } from './AzExtTreeItem';
+import { CollapsibleStateTracker } from './CollapsibleStateTracker';
 import { GenericTreeItem } from './GenericTreeItem';
 import { IAzExtTreeDataProviderInternal, isAzExtParentTreeItem } from './InternalInterfaces';
 import { runWithLoadingNotification } from './runWithLoadingNotification';
@@ -20,6 +21,7 @@ import { loadMoreLabel } from './treeConstants';
 export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, types.AzExtTreeDataProvider {
     public _onTreeItemCreateEmitter: EventEmitter<AzExtTreeItem> = new EventEmitter<AzExtTreeItem>();
     private _onDidChangeTreeDataEmitter: EventEmitter<AzExtTreeItem | undefined> = new EventEmitter<AzExtTreeItem | undefined>();
+    private _collapsibleStateTracker: CollapsibleStateTracker | undefined;
 
     private readonly _loadMoreCommandId: string;
     private readonly _rootTreeItem: AzExtParentTreeItem;
@@ -39,11 +41,25 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         return this._onTreeItemCreateEmitter.event;
     }
 
+    public get collapsibleStateTracker(): CollapsibleStateTracker | undefined {
+        return this._collapsibleStateTracker;
+    }
+
+    public trackTreeItemCollapsibleState(treeView: TreeView<AzExtTreeItem>): Disposable {
+        if (!this._collapsibleStateTracker) {
+            this._collapsibleStateTracker = new CollapsibleStateTracker(treeView);
+        } else {
+            // TODO: Throw because they're calling it multiple times?
+        }
+
+        return this._collapsibleStateTracker;
+    }
+
     public getTreeItem(treeItem: AzExtTreeItem): TreeItem {
         return {
             label: treeItem.label,
             description: treeItem.effectiveDescription,
-            id: treeItem.fullIdWithContext || treeItem.fullId,
+            id: treeItem.effectiveId,
             collapsibleState: treeItem.collapsibleState,
             contextValue: treeItem.contextValue,
             iconPath: treeItem.effectiveIconPath,
