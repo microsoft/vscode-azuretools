@@ -19,6 +19,11 @@ export declare class AzExtTreeDataProvider implements TreeDataProvider<AzExtTree
     public onTreeItemCreate: Event<AzExtTreeItem>;
 
     /**
+     * Fired when a tree item is expanded, or the view is refreshed and that tree item is auto-expanded by VSCode. Note, this event cannot be accessed unless `trackTreeItemCollapsibleState` is called first!
+     */
+    public onDidExpandOrRefreshExpandedTreeItem: Event<AzExtTreeItem>;
+
+    /**
      * Azure Tree Data Provider
      * @param rootTreeItem The root tree item. This item will not actually be displayed - just used to provide children.
      * @param loadMoreCommandId The command your extension will register for the 'Load More...' tree item

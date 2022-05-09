@@ -255,6 +255,10 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
                 return;
             }
 
+            if (this.collapsibleState === TreeItemCollapsibleState.Expanded) {
+                this.treeDataProvider.collapsibleStateTracker?.onDidExpandOrRefreshExpandedEmitter.fire(this);
+            }
+
             const newTreeItems: AzExtTreeItem[] = await this.loadMoreChildrenImpl(this._clearCache, context);
             this._cachedChildren = this._cachedChildren.concat(newTreeItems).sort((ti1, ti2) => this.compareChildrenImpl(ti1, ti2));
         } finally {

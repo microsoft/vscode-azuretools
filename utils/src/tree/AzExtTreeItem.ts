@@ -43,6 +43,11 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     }
 
     public get collapsibleState(): TreeItemCollapsibleState | undefined {
+        if (!isAzExtParentTreeItem(this)) {
+            // If it's not a AzExtParentTreeItem, we can always return undefined (which is what the default was before)
+            return undefined;
+        }
+
         if (this.treeDataProvider.collapsibleStateTracker) {
             return this.treeDataProvider.collapsibleStateTracker.getCollapsibleState(this);
         }

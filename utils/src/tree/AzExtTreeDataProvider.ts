@@ -41,18 +41,20 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         return this._onTreeItemCreateEmitter.event;
     }
 
+    public get onDidExpandOrRefreshExpandedTreeItem(): Event<AzExtTreeItem> {
+        if (!this.collapsibleStateTracker) {
+            throw new Error('To use the `onDidExpandOrRefreshExpandedTreeItem`, first call `trackTreeItemCollapsibleState`.');
+        }
+
+        return this.collapsibleStateTracker.onDidExpandOrRefreshExpandedEmitter.event;
+    }
+
     public get collapsibleStateTracker(): CollapsibleStateTracker | undefined {
         return this._collapsibleStateTracker;
     }
 
     public trackTreeItemCollapsibleState(treeView: TreeView<AzExtTreeItem>): Disposable {
-        if (!this._collapsibleStateTracker) {
-            this._collapsibleStateTracker = new CollapsibleStateTracker(treeView);
-        } else {
-            // TODO: Throw because they're calling it multiple times?
-        }
-
-        return this._collapsibleStateTracker;
+        return (this._collapsibleStateTracker = new CollapsibleStateTracker(treeView));
     }
 
     public getTreeItem(treeItem: AzExtTreeItem): TreeItem {
