@@ -934,6 +934,11 @@ export interface AzExtUserInputOptions {
 }
 
 /**
+ * Specifies the sort priority of a quick pick item
+ */
+export type AzureQuickPickItemPriority = 'highest' | 'normal'; // 'highest' items come before the recently used item
+
+/**
  * Provides additional options for QuickPickItems used in Azure Extensions
  */
 export interface IAzureQuickPickItem<T = undefined> extends QuickPickItem {
@@ -964,7 +969,7 @@ export interface IAzureQuickPickItem<T = undefined> extends QuickPickItem {
     /**
      * Optionally allows some items to be automatically sorted at the top of the list
      */
-    priority?: 'highest' | 'normal'; // 'highest' items come before the recently used item
+    priority?: AzureQuickPickItemPriority;
 }
 
 /**
