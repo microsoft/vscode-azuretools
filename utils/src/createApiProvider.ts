@@ -42,11 +42,11 @@ function getApiInternal<T extends AzureExtensionApi>(azExts: AzureExtensionApi[]
         const apiVersions: string[] = azExts.map((a: AzureExtensionApi) => a.apiVersion);
         context.telemetry.properties.apiVersions = apiVersions.join(', ');
 
-        const matchedApiVersion: string = semver.maxSatisfying(apiVersions, apiVersionRange);
+        const matchedApiVersion: string | null = semver.maxSatisfying(apiVersions, apiVersionRange);
         if (matchedApiVersion) {
             return <T>(azExts.find((a: AzureExtensionApi) => a.apiVersion === matchedApiVersion));
         } else {
-            const minApiVersion: string = semver.minSatisfying(apiVersions, '');
+            const minApiVersion: string | null = semver.minSatisfying(apiVersions, '');
             let message: string;
             let code: ApiVersionCode;
             if (minApiVersion && semver.gtr(minApiVersion, apiVersionRange)) {
