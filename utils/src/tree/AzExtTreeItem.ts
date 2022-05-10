@@ -29,7 +29,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
      * Used to prevent VS Code from erroring out on nodes with the same label, but different context values (i.e. a folder and file with the same name)
      */
     public fullIdWithContext?: string;
-    public readonly collapsibleState: TreeItemCollapsibleState | undefined;
+    public readonly initialCollapsibleState: TreeItemCollapsibleState | undefined;
     public readonly parent: IAzExtParentTreeItemInternal | undefined;
     public isLoadingMore: boolean;
     public readonly valuesToMask: string[] = [];
@@ -40,6 +40,19 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
 
     public constructor(parent: IAzExtParentTreeItemInternal | undefined) {
         this.parent = parent;
+    }
+
+    public get collapsibleState(): TreeItemCollapsibleState | undefined {
+        if (!isAzExtParentTreeItem(this)) {
+            // If it's not a AzExtParentTreeItem, we can always return undefined (which is what the default was before)
+            return undefined;
+        }
+
+        if (this.treeDataProvider.collapsibleStateTracker) {
+            return this.treeDataProvider.collapsibleStateTracker.getCollapsibleState(this);
+        }
+
+        return this.initialCollapsibleState;
     }
 
     public get effectiveDescription(): string | undefined {
@@ -70,6 +83,10 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
 
             return id;
         }
+    }
+
+    public get effectiveId(): string {
+        return this.fullIdWithContext || this.fullId;
     }
 
     public set iconPath(iconPath: types.TreeItemIconPath | undefined) {

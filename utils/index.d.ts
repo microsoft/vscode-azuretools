@@ -6,7 +6,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { Environment } from '@azure/ms-rest-azure-env';
-import { CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
@@ -17,6 +17,11 @@ import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityDat
 export declare class AzExtTreeDataProvider implements TreeDataProvider<AzExtTreeItem> {
     public onDidChangeTreeData: Event<AzExtTreeItem | undefined>;
     public onTreeItemCreate: Event<AzExtTreeItem>;
+
+    /**
+     * Fired when a tree item is expanded, or the view is refreshed and that tree item is auto-expanded by VSCode. Note, this event cannot be accessed unless `trackTreeItemCollapsibleState` is called first!
+     */
+    public onDidExpandOrRefreshExpandedTreeItem: Event<AzExtTreeItem>;
 
     /**
      * Azure Tree Data Provider
@@ -80,6 +85,12 @@ export declare class AzExtTreeDataProvider implements TreeDataProvider<AzExtTree
      * @return Parent of `element`.
      */
     public getParent(treeItem: AzExtTreeItem): Promise<AzExtTreeItem | undefined>;
+
+    /**
+     * Call to track the collapsible state of tree items in the tree view.
+     * @param treeView The tree view to watch the collapsible state for. This must be the tree view created from this `AzExtTreeDataProvider`.
+     */
+    public trackTreeItemCollapsibleState(treeView: TreeView<AzExtTreeItem>): Disposable;
 }
 
 export interface ILoadingTreeContext extends IActionContext {
@@ -208,6 +219,12 @@ export interface SealedAzExtTreeItem {
     readonly valuesToMask: string[];
 
     /**
+     * If the `AzExtTreeDataProvider.trackTreeItemCollapsibleState` has been called, this should return the true TreeItemCollapsibleState
+     * Otherwise, it will return whatever initial value is given
+     */
+    readonly collapsibleState: TreeItemCollapsibleState | undefined;
+
+    /**
      * Set to true if the label of this tree item does not need to be masked
      */
     suppressMaskLabel?: boolean;
@@ -247,7 +264,7 @@ export interface AbstractAzExtTreeItem {
     commandId?: string;
     tooltip?: string;
 
-    collapsibleState?: TreeItemCollapsibleState;
+    initialCollapsibleState?: TreeItemCollapsibleState;
 
     /**
      * The arguments to pass in when executing `commandId`. If not specified, this tree item will be used.
@@ -358,6 +375,8 @@ export declare abstract class AzExtTreeItem implements IAzExtTreeItem {
 
     public set tooltip(tt: string | undefined);
     public get tooltip(): string | undefined;
+
+    public get collapsibleState(): TreeItemCollapsibleState | undefined;
 
     /**
      * The arguments to pass in when executing `commandId`. If not specified, this tree item will be used.
@@ -516,6 +535,11 @@ export declare abstract class AzExtParentTreeItem extends AzExtTreeItem implemen
      */
     createNewLabel?: string;
     //#endregion
+
+    /**
+     * Sets the initial collapsible state.
+     */
+    public readonly initialCollapsibleState: TreeItemCollapsibleState | undefined;
 
     //#region Methods implemented by base class
     /**
