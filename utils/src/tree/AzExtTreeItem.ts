@@ -187,14 +187,23 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
         });
     }
 
-    public async runWithTemporaryDescription(context: types.IActionContext, description: string, callback: () => Promise<void>): Promise<void> {
-        this._temporaryDescription = description;
+    public async runWithTemporaryDescription(context: types.IActionContext, description: string, callback: () => Promise<void>): Promise<void>
+    public async runWithTemporaryDescription(context: types.IActionContext, options: types.RunWithTemporaryDescriptionOptions, callback: () => Promise<void>): Promise<void>
+    public async runWithTemporaryDescription(context: types.IActionContext, options: string | types.RunWithTemporaryDescriptionOptions, callback: () => Promise<void>): Promise<void> {
+        options = typeof options === 'string' ? { description: options } : options;
+        this._temporaryDescription = options.description;
         try {
-            this.treeDataProvider.refreshUIOnly(this);
+            if (!options.softRefresh) {
+                this.treeDataProvider.refreshUIOnly(this);
+            }
             await callback();
         } finally {
             this._temporaryDescription = undefined;
-            await this.refresh(context);
+            if (!options.softRefresh) {
+                await this.refresh(context);
+            } else {
+                this.treeDataProvider.refreshUIOnly(this.parent);
+            }
         }
     }
 }

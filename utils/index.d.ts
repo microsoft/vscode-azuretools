@@ -11,6 +11,11 @@ import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
 
+export declare interface RunWithTemporaryDescriptionOptions {
+    description: string;
+    softRefresh?: boolean;
+}
+
 /**
  * Tree Data Provider for an *Az*ure *Ext*ension
  */
@@ -243,6 +248,7 @@ export interface SealedAzExtTreeItem {
      * Displays a 'Loading...' icon and temporarily changes the item's description while `callback` is being run
      */
     runWithTemporaryDescription(context: IActionContext, description: string, callback: () => Promise<void>): Promise<void>;
+    runWithTemporaryDescription(context: IActionContext, options: RunWithTemporaryDescriptionOptions, callback: () => Promise<void>): Promise<void>;
 }
 
 // AzExtTreeItem stuff we need them to implement
@@ -447,6 +453,7 @@ export declare abstract class AzExtTreeItem implements IAzExtTreeItem {
      * Displays a 'Loading...' icon and temporarily changes the item's description while `callback` is being run
      */
     public runWithTemporaryDescription(context: IActionContext, description: string, callback: () => Promise<void>): Promise<void>;
+    public runWithTemporaryDescription(context: IActionContext, options: RunWithTemporaryDescriptionOptions, callback: () => Promise<void>): Promise<void>;
 
     /**
      * If implemented, resolves the tooltip at the time of hovering, and the value of the `tooltip` property is ignored. Otherwise, the `tooltip` property is used.
