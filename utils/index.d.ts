@@ -13,6 +13,9 @@ import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityDat
 
 export declare interface RunWithTemporaryDescriptionOptions {
     description: string;
+    /**
+     * If true, runWithTemporaryDescription will not call refresh or refreshUIOnly on the tree item.
+     */
     softRefresh?: boolean;
 }
 
