@@ -96,13 +96,13 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
         } else if (azureAccount.status === 'LoggedOut') {
             const studentAccountTreeItem =new GenericTreeItem(this, { 
                 label: createStudentAccountLabel,
-                 commandId: 'azureResourceGroups.openUrl', 
-                 contextValue, 
-                 id: createStudentAccountCommandId, 
-                 iconPath: new ThemeIcon('mortar-board'), 
-                 includeInTreeItemPicker: true});
+                commandId: 'azureResourceGroups.openUrl', 
+                contextValue, 
+                id: createStudentAccountCommandId, 
+                iconPath: new ThemeIcon('mortar-board'), 
+                includeInTreeItemPicker: true});
 
-                 studentAccountTreeItem.commandArgs = ['https://aka.ms/student-account'];
+                studentAccountTreeItem.commandArgs = ['https://aka.ms/student-account'];
 
             return [
                 new GenericTreeItem(this, { label: signInLabel, commandId: signInCommandId, contextValue, id: signInCommandId, iconPath: new ThemeIcon('sign-in'), includeInTreeItemPicker: true }),
