@@ -13,10 +13,12 @@ import { SubscriptionTreeItemBase } from './SubscriptionTreeItemBase';
 import { AzExtServiceClientCredentials, nonNullProp, nonNullValue, UserCancelledError, registerEvent, AzureWizardPromptStep, AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, addExtensionValueToMask, IActionContext, ISubscriptionActionContext, TreeItemIconPath, ISubscriptionContext } from '@microsoft/vscode-azext-utils';
 
 const signInLabel: string = localize('signInLabel', 'Sign in to Azure...');
-const createAccountLabel: string = localize('createAccountLabel', 'Create a Free Azure Account...');
+const createAccountLabel: string = localize('createAccountLabel', 'Create an Azure Account...');
+const createStudentAccountLabel: string = localize('createStudentAccount', 'Create an Azure for Students Account...');
 const selectSubscriptionsLabel: string = localize('noSubscriptions', 'Select Subscriptions...');
 const signInCommandId: string = 'azure-account.login';
 const createAccountCommandId: string = 'azure-account.createAccount';
+const createStudentAccountCommandId: string = 'azure-account.createStudentAccount';
 const selectSubscriptionsCommandId: string = 'azure-account.selectSubscriptions';
 const azureAccountExtensionId: string = 'ms-vscode.azure-account';
 const extensionOpenCommand: string = 'extension.open';
@@ -92,9 +94,20 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
                 iconPath: new ThemeIcon('loading~spin')
             })];
         } else if (azureAccount.status === 'LoggedOut') {
+            const studentAccountTreeItem =new GenericTreeItem(this, { 
+                label: createStudentAccountLabel,
+                 commandId: 'azureResourceGroups.openUrl', 
+                 contextValue, 
+                 id: createStudentAccountCommandId, 
+                 iconPath: new ThemeIcon('mortar-board'), 
+                 includeInTreeItemPicker: true});
+
+                 studentAccountTreeItem.commandArgs = ['https://aka.ms/student-account'];
+
             return [
                 new GenericTreeItem(this, { label: signInLabel, commandId: signInCommandId, contextValue, id: signInCommandId, iconPath: new ThemeIcon('sign-in'), includeInTreeItemPicker: true }),
-                new GenericTreeItem(this, { label: createAccountLabel, commandId: createAccountCommandId, contextValue, id: createAccountCommandId, iconPath: new ThemeIcon('add'), includeInTreeItemPicker: true })
+                new GenericTreeItem(this, { label: createAccountLabel, commandId: createAccountCommandId, contextValue, id: createAccountCommandId, iconPath: new ThemeIcon('add'), includeInTreeItemPicker: true }),
+                studentAccountTreeItem
             ];
         }
 
