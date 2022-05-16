@@ -11,7 +11,7 @@ import { getWorkspaceSetting } from '../utils/settings';
 import { AppSource, IDeployContext } from './IDeployContext';
 
 function isAzExtTreeItem(ti: unknown): ti is AzExtTreeItem {
-    return (ti as AzExtTreeItem).fullId !== undefined;
+    return (ti as AzExtTreeItem).fullId !== undefined && (ti as AzExtTreeItem).fullId !== null;
 }
 
 /**
