@@ -3,34 +3,35 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ApplicationInsightsComponent, ApplicationInsightsComponentListResult } from '@azure/arm-appinsights/esm/models';
-import { AzureWizardPromptStep } from 'vscode-azureextensionui';
+// eslint-disable-next-line import/no-internal-modules
+import type { ApplicationInsightsComponent, ApplicationInsightsComponentListResult } from '@azure/arm-appinsights/esm/models';
+import { AzureWizardPromptStep } from '@microsoft/vscode-azext-utils';
 import { localize } from '../localize';
 import { AppInsightsListStep, appInsightsNamingRules } from './AppInsightsListStep';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class AppInsightsNameStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
 
-    public async isNameAvailable(wizardContext: IAppServiceWizardContext, name: string): Promise<boolean> {
-        const appInsightsComponents: ApplicationInsightsComponentListResult = await AppInsightsListStep.getAppInsightsComponents(wizardContext);
+    public async isNameAvailable(context: IAppServiceWizardContext, name: string): Promise<boolean> {
+        const appInsightsComponents: ApplicationInsightsComponentListResult = await AppInsightsListStep.getAppInsightsComponents(context);
         return !appInsightsComponents.some((ai: ApplicationInsightsComponent) => ai.name !== undefined && ai.name.toLowerCase() === name.toLowerCase());
     }
 
-    public async prompt(wizardContext: IAppServiceWizardContext): Promise<void> {
-        const suggestedName: string | undefined = wizardContext.relatedNameTask ? await wizardContext.relatedNameTask : undefined;
-        wizardContext.newAppInsightsName = (await wizardContext.ui.showInputBox({
+    public async prompt(context: IAppServiceWizardContext): Promise<void> {
+        const suggestedName: string | undefined = context.relatedNameTask ? await context.relatedNameTask : undefined;
+        context.newAppInsightsName = (await context.ui.showInputBox({
             value: suggestedName,
             prompt: 'Enter the name of the new Application Insights resource.',
-            validateInput: async (value: string): Promise<string | undefined> => await this.validateApplicationInsightName(wizardContext, value)
+            validateInput: async (value: string): Promise<string | undefined> => await this.validateApplicationInsightName(context, value)
         })).trim();
-        wizardContext.valuesToMask.push(wizardContext.newAppInsightsName);
+        context.valuesToMask.push(context.newAppInsightsName);
     }
 
-    public shouldPrompt(wizardContext: IAppServiceWizardContext): boolean {
-        return !wizardContext.newAppInsightsName;
+    public shouldPrompt(context: IAppServiceWizardContext): boolean {
+        return !context.newAppInsightsName;
     }
 
-    private async validateApplicationInsightName(wizardContext: IAppServiceWizardContext, name: string): Promise<string | undefined> {
+    private async validateApplicationInsightName(context: IAppServiceWizardContext, name: string): Promise<string | undefined> {
         name = name.trim();
 
         if (name.length < appInsightsNamingRules.minLength || name.length > appInsightsNamingRules.maxLength) {
@@ -39,8 +40,8 @@ export class AppInsightsNameStep extends AzureWizardPromptStep<IAppServiceWizard
             return localize('invalidChars', "The name can only contain alphanumeric characters or the symbols ._-()");
         } else if (name.endsWith('.')) {
             return localize('invalidEndingChar', "The name cannot end in a period.");
-        } else if (!await this.isNameAvailable(wizardContext, name)) {
-            return localize('nameAlreadyExists', 'Application Insights resource "{0}" already exists in subscription "{1}".', name, wizardContext.subscriptionDisplayName);
+        } else if (!await this.isNameAvailable(context, name)) {
+            return localize('nameAlreadyExists', 'Application Insights resource "{0}" already exists in subscription "{1}".', name, context.subscriptionDisplayName);
         } else {
             return undefined;
         }

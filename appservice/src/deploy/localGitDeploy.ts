@@ -3,14 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { WebSiteManagementModels } from '@azure/arm-appservice';
-import * as git from 'simple-git/promise';
+import type { User } from '@azure/arm-appservice';
+import { callWithMaskHandling, IActionContext, nonNullProp } from '@microsoft/vscode-azext-utils';
+import simpleGit, { Options, SimpleGit, StatusResult } from 'simple-git';
 import * as vscode from 'vscode';
-import { callWithMaskHandling, IActionContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { SiteClient } from '../SiteClient';
-import { nonNullProp } from '../utils/nonNull';
+import { ParsedSite } from '../SiteClient';
 import { openUrl } from '../utils/openUrl';
 import { verifyNoRunFromPackageSetting } from '../verifyNoRunFromPackageSetting';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
@@ -27,28 +26,27 @@ type localGitOptions = {
     commit?: boolean;
 };
 
-export async function localGitDeploy(client: SiteClient, options: localGitOptions, context: IActionContext): Promise<void> {
-    const publishCredentials: WebSiteManagementModels.User = await client.getWebAppPublishCredential();
+export async function localGitDeploy(site: ParsedSite, options: localGitOptions, context: IActionContext): Promise<void> {
+    const client = await site.createClient(context);
+    const publishCredentials: User = await client.getWebAppPublishCredential();
     const publishingPassword: string = nonNullProp(publishCredentials, 'publishingPassword');
     const publishingUserName: string = nonNullProp(publishCredentials, 'publishingUserName');
 
     await callWithMaskHandling(
         async (): Promise<void> => {
-            const remote: string = `https://${encodeURIComponent(publishingUserName)}:${encodeURIComponent(publishingPassword)}@${client.gitUrl}`;
-            const localGit: git.SimpleGit = git(options.fsPath);
-            let status: git.StatusResult;
+            const remote: string = `https://${encodeURIComponent(publishingUserName)}:${encodeURIComponent(publishingPassword)}@${site.gitUrl}`;
+            const localGit: SimpleGit = simpleGit(options.fsPath);
+            let status: StatusResult;
             try {
                 status = await localGit.status();
                 if (status.files.length > 0 && !options.commit) {
-                    context.telemetry.properties.cancelStep = 'pushWithUncommitChanges';
                     const message: string = localize('localGitUncommit', '{0} uncommitted change(s) in local repo "{1}"', status.files.length, options.fsPath);
                     const deployAnyway: vscode.MessageItem = { title: localize('deployAnyway', 'Deploy Anyway') };
-                    await context.ui.showWarningMessage(message, { modal: true }, deployAnyway);
-                    context.telemetry.properties.cancelStep = undefined;
+                    await context.ui.showWarningMessage(message, { modal: true, stepName: 'pushWithUncommitChanges' }, deployAnyway);
                     context.telemetry.properties.pushWithUncommitChanges = 'true';
                 }
-                await verifyNoRunFromPackageSetting(client);
-                ext.outputChannel.appendLog(localize('localGitDeploy', `Deploying Local Git repository to "${client.fullName}"...`), { resourceName: client.fullName });
+                await verifyNoRunFromPackageSetting(context, site);
+                ext.outputChannel.appendLog(localize('localGitDeploy', `Deploying Local Git repository to "${site.fullName}"...`), { resourceName: site.fullName });
                 await tryPushAndWaitForDeploymentToComplete();
 
             } catch (err) {
@@ -66,9 +64,7 @@ export async function localGitDeploy(client: SiteClient, options: localGitOption
                     const forcePushMessage: vscode.MessageItem = { title: localize('forcePush', 'Force Push') };
                     const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging.');
 
-                    context.telemetry.properties.cancelStep = 'forcePush';
-                    await context.ui.showWarningMessage(pushReject, { modal: true }, forcePushMessage);
-                    context.telemetry.properties.cancelStep = undefined;
+                    await context.ui.showWarningMessage(pushReject, { modal: true, stepName: 'forcePush' }, forcePushMessage);
                     context.telemetry.properties.forcePush = 'true';
                     await tryPushAndWaitForDeploymentToComplete(true);
                 } else {
@@ -81,21 +77,21 @@ export async function localGitDeploy(client: SiteClient, options: localGitOption
                 const token: vscode.CancellationToken = tokenSource.token;
                 try {
                     if (options.commit) {
-                        const commitOptions: git.Options = { '-a': null };
+                        const commitOptions: Options = { '-a': null };
                         await localGit.commit('Deployed via Azure App Service Extension', undefined, commitOptions);
                     }
-                    const commitId: string = (await localGit.log()).latest.hash;
+                    const commitId: string | undefined = (await localGit.log()).latest?.hash;
 
                     await new Promise<void>((resolve: () => void, reject: (error: Error) => void): void => {
 
-                        const pushOptions: git.Options = forcePush ? { '-f': null } : {};
+                        const pushOptions: Options = forcePush ? { '-f': null } : {};
 
                         localGit.push(remote, `HEAD:${options.branch ?? 'master'}`, pushOptions).catch((error) => {
                             reject(error);
                             tokenSource.cancel();
                         });
 
-                        waitForDeploymentToComplete(context, client, commitId, token).then(resolve).catch(reject);
+                        waitForDeploymentToComplete(context, site, commitId, token).then(resolve).catch(reject);
                     });
                 } finally {
                     tokenSource.dispose();

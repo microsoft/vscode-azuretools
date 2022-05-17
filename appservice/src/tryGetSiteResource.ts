@@ -3,36 +3,30 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { WebSiteManagementClient, WebSiteManagementModels } from '@azure/arm-appservice';
-import { parseError } from "vscode-azureextensionui";
+import type { AppServicePlansGetResponse, WebAppsGetResponse, WebAppsGetSlotResponse, WebSiteManagementClient } from '@azure/arm-appservice';
+import { parseError } from '@microsoft/vscode-azext-utils';
 
-export async function tryGetAppServicePlan(client: WebSiteManagementClient, resourceGroupName: string, name: string): Promise<WebSiteManagementModels.AppServicePlansGetResponse | undefined> {
+export async function tryGetAppServicePlan(client: WebSiteManagementClient, resourceGroupName: string, name: string): Promise<AppServicePlansGetResponse | undefined> {
     return await tryGetSiteResource(async () => await client.appServicePlans.get(resourceGroupName, name));
 }
 
-export async function tryGetWebApp(client: WebSiteManagementClient, resourceGroupName: string, name: string): Promise<WebSiteManagementModels.WebAppsGetResponse | undefined> {
+export async function tryGetWebApp(client: WebSiteManagementClient, resourceGroupName: string, name: string): Promise<WebAppsGetResponse | undefined> {
     return await tryGetSiteResource(async () => await client.webApps.get(resourceGroupName, name));
 }
 
-export async function tryGetWebAppSlot(client: WebSiteManagementClient, resourceGroupName: string, name: string, slot: string): Promise<WebSiteManagementModels.WebAppsGetSlotResponse | undefined> {
+export async function tryGetWebAppSlot(client: WebSiteManagementClient, resourceGroupName: string, name: string, slot: string): Promise<WebAppsGetSlotResponse | undefined> {
     return await tryGetSiteResource(async () => await client.webApps.getSlot(resourceGroupName, name, slot));
 }
 
-/**
- * Workaround for https://github.com/Azure/azure-sdk-for-js/issues/10457
- * The azure sdk currently returns the error when a resource isn't found. Instead, they should throw the error or return undefined. We will do the latter.
- *
- * Example values for `result`:
- * 1. { "error": { "code": "ResourceGroupNotFound", "message": "Resource group 'appsvc_linux_centralus' could not be found." }}
- * 2. { "error": { "code": "ResourceNotFound", "message": "The Resource 'Microsoft.Web/serverFarms/appsvc_linux_centralus' under resource group 'appsvc_linux_centralus' was not found. For more details please go to https://aka.ms/ARMResourceNotFoundFix" }}
- * 3. { "Code": "NotFound", "Message": "Server farm with name appsvc_linux_centralus not found." }
- */
-async function tryGetSiteResource<T>(callback: () => Promise<T | WebSiteManagementModels.DefaultErrorResponse>): Promise<T | undefined> {
-    const result: T | WebSiteManagementModels.DefaultErrorResponse = await callback();
-    const regExp: RegExp = /NotFound/i;
-    if (regExp.test(parseError(result).errorType) || ('error' in result && regExp.test(parseError(result.error).errorType))) {
-        return undefined;
-    } else {
-        return <T>result;
+async function tryGetSiteResource<T>(callback: () => Promise<T>): Promise<T | undefined> {
+    try {
+        return await callback();
+    } catch (error) {
+        const regExp: RegExp = /NotFound/i;
+        if (regExp.test(parseError(error).errorType)) {
+            return undefined;
+        } else {
+            throw error;
+        }
     }
 }

@@ -4,16 +4,16 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AbortController } from '@azure/abort-controller';
-import { WebSiteManagementModels } from '@azure/arm-appservice';
+import type { User } from '@azure/arm-appservice';
 import { BasicAuthenticationCredentials, HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
+import { createGenericClient } from '@microsoft/vscode-azext-azureutils';
+import { callWithTelemetryAndErrorHandling, IActionContext, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
 import { setInterval } from 'timers';
 import * as vscode from 'vscode';
-import { callWithTelemetryAndErrorHandling, createGenericClient, IActionContext, parseError } from 'vscode-azureextensionui';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { pingFunctionApp } from './pingFunctionApp';
-import { SiteClient } from './SiteClient';
-import { nonNullProp } from './utils/nonNull';
+import { ParsedSite } from './SiteClient';
 
 export interface ILogStream extends vscode.Disposable {
     isConnected: boolean;
@@ -22,16 +22,16 @@ export interface ILogStream extends vscode.Disposable {
 
 const logStreams: Map<string, ILogStream> = new Map<string, ILogStream>();
 
-function getLogStreamId(client: SiteClient, logsPath: string): string {
-    return `${client.id}${logsPath}`;
+function getLogStreamId(site: ParsedSite, logsPath: string): string {
+    return `${site.id}${logsPath}`;
 }
 
-export async function startStreamingLogs(client: SiteClient, verifyLoggingEnabled: () => Promise<void>, logStreamLabel: string, logsPath: string = ''): Promise<ILogStream> {
-    const logStreamId: string = getLogStreamId(client, logsPath);
+export async function startStreamingLogs(context: IActionContext, site: ParsedSite, verifyLoggingEnabled: () => Promise<void>, logStreamLabel: string, logsPath: string = ''): Promise<ILogStream> {
+    const logStreamId: string = getLogStreamId(site, logsPath);
     const logStream: ILogStream | undefined = logStreams.get(logStreamId);
     if (logStream && logStream.isConnected) {
         logStream.outputChannel.show();
-        void ext.ui.showWarningMessage(localize('logStreamAlreadyActive', 'The log-streaming service for "{0}" is already active.', logStreamLabel));
+        void context.ui.showWarningMessage(localize('logStreamAlreadyActive', 'The log-streaming service for "{0}" is already active.', logStreamLabel));
         return logStream;
     } else {
         await verifyLoggingEnabled();
@@ -41,27 +41,28 @@ export async function startStreamingLogs(client: SiteClient, verifyLoggingEnable
         outputChannel.show();
         outputChannel.appendLine(localize('connectingToLogStream', 'Connecting to log stream...'));
 
-        const creds: WebSiteManagementModels.User = await client.getWebAppPublishCredential();
+        const client = await site.createClient(context);
+        const creds: User = await client.getWebAppPublishCredential();
 
         return await new Promise((onLogStreamCreated: (ls: ILogStream) => void): void => {
             // Intentionally setting up a separate telemetry event and not awaiting the result here since log stream is a long-running action
-            void callWithTelemetryAndErrorHandling('appService.streamingLogs', async (context: IActionContext) => {
-                context.errorHandling.suppressDisplay = true;
+            void callWithTelemetryAndErrorHandling('appService.streamingLogs', async (streamContext: IActionContext) => {
+                streamContext.errorHandling.suppressDisplay = true;
                 let timerId: NodeJS.Timer | undefined;
-                if (client.isFunctionApp) {
+                if (site.isFunctionApp) {
                     // For Function Apps, we have to ping "/admin/host/status" every minute for logging to work
                     // https://github.com/Microsoft/vscode-azurefunctions/issues/227
-                    await pingFunctionApp(client);
+                    await pingFunctionApp(streamContext, site);
                     // eslint-disable-next-line @typescript-eslint/no-misused-promises
-                    timerId = setInterval(async () => await pingFunctionApp(client), 60 * 1000);
+                    timerId = setInterval(async () => await pingFunctionApp(streamContext, site), 60 * 1000);
                 }
 
-                const genericClient: ServiceClient = await createGenericClient(new BasicAuthenticationCredentials(creds.publishingUserName, nonNullProp(creds, 'publishingPassword')));
+                const genericClient: ServiceClient = await createGenericClient(streamContext, new BasicAuthenticationCredentials(nonNullProp(creds, 'publishingUserName'), nonNullProp(creds, 'publishingPassword')));
                 const abortController: AbortController = new AbortController();
 
                 const logsResponse: HttpOperationResponse = await genericClient.sendRequest({
                     method: 'GET',
-                    url: `${client.kuduUrl}/api/logstream/${logsPath}`,
+                    url: `${site.kuduUrl}/api/logstream/${logsPath}`,
                     streamResponseBody: true,
                     abortSignal: abortController.signal
                 });
@@ -106,8 +107,8 @@ export async function startStreamingLogs(client: SiteClient, verifyLoggingEnable
     }
 }
 
-export async function stopStreamingLogs(client: SiteClient, logsPath: string = ''): Promise<void> {
-    const logStreamId: string = getLogStreamId(client, logsPath);
+export async function stopStreamingLogs(site: ParsedSite, logsPath: string = ''): Promise<void> {
+    const logStreamId: string = getLogStreamId(site, logsPath);
     const logStream: ILogStream | undefined = logStreams.get(logStreamId);
     if (logStream && logStream.isConnected) {
         logStream.dispose();

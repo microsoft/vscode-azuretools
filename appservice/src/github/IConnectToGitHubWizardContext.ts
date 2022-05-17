@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ServiceClient } from '@azure/ms-rest-js';
-import { IActionContext, ISubscriptionContext } from 'vscode-azureextensionui';
-import { SiteClient } from '../SiteClient';
+import type { ServiceClient } from '@azure/ms-rest-js';
+import { IActionContext, ISubscriptionContext } from '@microsoft/vscode-azext-utils';
+import { ParsedSite } from '../SiteClient';
 import { gitHubBranchData, gitHubOrgData, gitHubRepoData } from './connectToGitHub';
 
 export interface IConnectToGitHubWizardContext extends IActionContext, ISubscriptionContext {
     orgData?: gitHubOrgData;
     repoData?: gitHubRepoData;
     branchData?: gitHubBranchData;
-    client?: SiteClient;
+    site?: ParsedSite;
     gitHubClient?: ServiceClient;
 }

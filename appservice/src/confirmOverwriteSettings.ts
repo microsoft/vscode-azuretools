@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { DialogResponses, IActionContext } from '@microsoft/vscode-azext-utils';
 import { MessageItem } from 'vscode';
-import { DialogResponses } from 'vscode-azureextensionui';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
 
-export async function confirmOverwriteSettings(sourceSettings: { [key: string]: string }, destinationSettings: { [key: string]: string }, destinationName: string): Promise<void> {
+export async function confirmOverwriteSettings(context: IActionContext, sourceSettings: { [key: string]: string }, destinationSettings: { [key: string]: string }, destinationName: string): Promise<void> {
     let suppressPrompt: boolean = false;
     let overwriteSetting: boolean = false;
 
@@ -17,16 +17,21 @@ export async function confirmOverwriteSettings(sourceSettings: { [key: string]: 
     const userIgnoredKeys: string[] = [];
     const matchingKeys: string[] = [];
 
-    for (const key of Object.keys(sourceSettings)) {
-        if (destinationSettings[key] === undefined) {
-            addedKeys.push(key);
-            destinationSettings[key] = sourceSettings[key];
-        } else if (destinationSettings[key] !== sourceSettings[key]) {
+    for (const srcKey of Object.keys(sourceSettings)) {
+        // App setting keys are case insensitive, so find the destination key that matches
+        const destKey = Object.keys(destinationSettings).find(dk => srcKey.toLowerCase() === dk.toLowerCase()) || srcKey;
+
+        if (destinationSettings[destKey] === undefined) {
+            addedKeys.push(destKey);
+            destinationSettings[destKey] = sourceSettings[srcKey];
+        } else if (destinationSettings[destKey] === sourceSettings[srcKey]) {
+            matchingKeys.push(destKey);
+        } else if (sourceSettings[srcKey]) { // ignore empty settings
             if (!suppressPrompt) {
                 const yesToAll: MessageItem = { title: localize('yesToAll', 'Yes to all') };
                 const noToAll: MessageItem = { title: localize('noToAll', 'No to all') };
-                const message: string = localize('overwriteSetting', 'Setting "{0}" already exists in "{1}". Overwrite?', key, destinationName);
-                const result: MessageItem = await ext.ui.showWarningMessage(message, { modal: true }, DialogResponses.yes, yesToAll, DialogResponses.no, noToAll);
+                const message: string = localize('overwriteSetting', 'Setting "{0}" already exists in "{1}". Overwrite?', destKey, destinationName);
+                const result: MessageItem = await context.ui.showWarningMessage(message, { modal: true, stepName: 'confirmOverwriteSetting' }, DialogResponses.yes, yesToAll, DialogResponses.no, noToAll);
                 if (result === DialogResponses.yes) {
                     overwriteSetting = true;
                 } else if (result === yesToAll) {
@@ -41,13 +46,11 @@ export async function confirmOverwriteSettings(sourceSettings: { [key: string]: 
             }
 
             if (overwriteSetting) {
-                updatedKeys.push(key);
-                destinationSettings[key] = sourceSettings[key];
+                updatedKeys.push(destKey);
+                destinationSettings[destKey] = sourceSettings[srcKey];
             } else {
-                userIgnoredKeys.push(key);
+                userIgnoredKeys.push(destKey);
             }
-        } else {
-            matchingKeys.push(key);
         }
     }
 
@@ -74,8 +77,8 @@ export async function confirmOverwriteSettings(sourceSettings: { [key: string]: 
     if (Object.keys(destinationSettings).length > Object.keys(sourceSettings).length) {
         ext.outputChannel.appendLog(localize('noDeleteKey', 'WARNING: This operation will not delete any settings in "{0}". You must manually delete settings if desired.', destinationName));
     }
+}
 
-    function logKey(key: string): void {
-        ext.outputChannel.appendLog(`- ${key}`);
-    }
+function logKey(key: string): void {
+    ext.outputChannel.appendLine(`- ${key}`);
 }

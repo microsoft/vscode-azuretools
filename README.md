@@ -8,24 +8,28 @@ This project provides Node.js packages that make it easy to consume and manage A
 
 * [Azure Kudu](kudu/)
 * [Azure App Service](appservice/)
-* [Azure UI](ui/)
+* [Azure Extension UI++ utilities (no Azure dependencies)](utils/)
+* [Azure Extension UI++ utilities (Azure dependencies)](azure/)
 * [Azure Dev](dev/)
 
 ## Developing locally
 
-In order to quickly develop and debug these packages locally, follow these instructions:
-1. Navigate to the package you are developing and run `npm install`, `npm run build`, and `npm link`
-1. Navigate to the project that references the package you're developing and run `npm link <name of package>`
+In order to develop and debug these packages locally, follow these instructions:
+1. Navigate to the package you are developing
+1. Run `npm install`
+1. Run `npm pack` and note down the name of the "tgz" file created
+1. Navigate to the project that references the package you're developing and run `npm install <path to tgz>`
 
 Example:
 ```
     cd ~/repos/vscode-azuretools/ui
     npm install
-    npm run build
-    npm link
+    npm pack
     cd ~/repos/vscode-azurestorage
-    npm link vscode-azureextensionui
+    npm install ../vscode-azuretools/ui/vscode-azureextensionui-0.44.2.tgz
 ```
+
+> NOTE: You may also try [`npm link`](https://docs.npmjs.com/cli/v7/commands/npm-link), but we've had issues with this method including breakpoints not being hit and dependencies (e.g. "fs-extra") being removed in the package's repo
 
 ## Contributing
 

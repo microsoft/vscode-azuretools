@@ -3,17 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { WebSiteManagementModels } from '@azure/arm-appservice';
+import type { StringDictionary } from '@azure/arm-appservice';
 import { Environment } from '@azure/ms-rest-azure-env';
 import { BlobSASPermissions, BlobServiceClient, BlockBlobClient, ContainerClient, generateBlobSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
+import { IActionContext, parseError } from '@microsoft/vscode-azext-utils';
 import * as dayjs from 'dayjs';
+// eslint-disable-next-line import/no-internal-modules
 import * as relativeTime from 'dayjs/plugin/relativeTime';
+// eslint-disable-next-line import/no-internal-modules
 import * as utc from 'dayjs/plugin/utc';
 import { URL } from 'url';
-import { IActionContext, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { SiteClient } from '../SiteClient';
+import { ParsedSite } from '../SiteClient';
 import { randomUtils } from '../utils/randomUtils';
 import { IDeployContext } from './IDeployContext';
 import { runWithZipStream } from './runWithZipStream';
@@ -26,29 +28,31 @@ dayjs.extend(utc);
  * To deploy with Run from Package on a Windows plan, create the app setting "WEBSITE_RUN_FROM_PACKAGE" and set it to "1".
  * Then deploy via "zipdeploy" as usual.
  */
-export async function deployToStorageAccount(context: IDeployContext, fsPath: string, client: SiteClient): Promise<void> {
+export async function deployToStorageAccount(context: IDeployContext, fsPath: string, site: ParsedSite): Promise<void> {
     context.telemetry.properties.useStorageAccountDeploy = 'true';
 
     const datePart: string = dayjs().utc().format('YYYYMMDDHHmmss');
     const randomPart: string = randomUtils.getRandomHexString(32);
     const blobName: string = `${datePart}-${randomPart}.zip`;
 
-    const blobService: BlobServiceClient = await createBlobServiceClient(client);
-    const blobUrl: string = await createBlobFromZip(context, fsPath, client, blobService, blobName);
-    const appSettings: WebSiteManagementModels.StringDictionary = await client.listApplicationSettings();
+    const blobService: BlobServiceClient = await createBlobServiceClient(context, site);
+    const blobUrl: string = await createBlobFromZip(context, fsPath, site, blobService, blobName);
+    const client = await site.createClient(context);
+    const appSettings: StringDictionary = await client.listApplicationSettings();
     appSettings.properties = appSettings.properties || {};
     delete appSettings.properties.WEBSITE_RUN_FROM_ZIP; // delete old app setting name if it exists
     appSettings.properties.WEBSITE_RUN_FROM_PACKAGE = blobUrl;
     await client.updateApplicationSettings(appSettings);
-    ext.outputChannel.appendLog(localize('deploymentSuccessful', 'Deployment successful.'), { resourceName: client.fullName });
+    ext.outputChannel.appendLog(localize('deploymentSuccessful', 'Deployment successful.'), { resourceName: site.fullName });
 
     context.syncTriggersPostDeploy = true;
 }
 
-async function createBlobServiceClient(client: SiteClient): Promise<BlobServiceClient> {
+async function createBlobServiceClient(context: IActionContext, site: ParsedSite): Promise<BlobServiceClient> {
+    const client = await site.createClient(context);
     // Use same storage account as AzureWebJobsStorage for deployments
     const azureWebJobsStorageKey: string = 'AzureWebJobsStorage';
-    const settings: WebSiteManagementModels.StringDictionary = await client.listApplicationSettings();
+    const settings: StringDictionary = await client.listApplicationSettings();
     let connectionString: string | undefined = settings.properties && settings.properties[azureWebJobsStorageKey];
     if (connectionString) {
         try {
@@ -73,7 +77,7 @@ async function createBlobServiceClient(client: SiteClient): Promise<BlobServiceC
     }
 }
 
-async function createBlobFromZip(context: IActionContext, fsPath: string, client: SiteClient, blobService: BlobServiceClient, blobName: string): Promise<string> {
+async function createBlobFromZip(context: IActionContext, fsPath: string, site: ParsedSite, blobService: BlobServiceClient, blobName: string): Promise<string> {
     const containerName: string = 'function-releases';
     const containerClient: ContainerClient = blobService.getContainerClient(containerName);
     if (!await containerClient.exists()) {
@@ -82,9 +86,11 @@ async function createBlobFromZip(context: IActionContext, fsPath: string, client
 
     const blobClient: BlockBlobClient = containerClient.getBlockBlobClient(blobName);
 
-    await runWithZipStream(context, fsPath, client, async zipStream => {
-        ext.outputChannel.appendLog(localize('creatingBlob', 'Uploading zip package to storage container...'), { resourceName: client.fullName });
-        await blobClient.uploadStream(zipStream);
+    await runWithZipStream(context, {
+        fsPath, site, callback: async zipStream => {
+            ext.outputChannel.appendLog(localize('creatingBlob', 'Uploading zip package to storage container...'), { resourceName: site.fullName });
+            await blobClient.uploadStream(zipStream);
+        }
     });
 
     // NOTE: the `result` from `uploadStream` above doesn't actually have the contentLength - thus we have to make a separate call here

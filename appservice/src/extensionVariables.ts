@@ -3,11 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { IAzureUtilsExtensionVariables, registerAzureUtilsExtensionVariables } from "@microsoft/vscode-azext-azureutils";
+import { IAzExtOutputChannel, IAzureUserInput, registerUIExtensionVariables, UIExtensionVariables } from "@microsoft/vscode-azext-utils";
 import { ExtensionContext } from "vscode";
-import { IAzExtOutputChannel, IAzureUserInput, registerUIExtensionVariables, UIExtensionVariables } from 'vscode-azureextensionui';
 import { localize } from "./localize";
 
-class UninitializedExtensionVariables implements UIExtensionVariables {
+class UninitializedExtensionVariables implements UIExtensionVariables, IAzureUtilsExtensionVariables {
     private _error: Error = new Error(localize('uninitializedError', '"registerUIExtensionVariables" must be called before using the vscode-azureappservice package.'));
 
     public get context(): ExtensionContext {
@@ -27,7 +28,7 @@ class UninitializedExtensionVariables implements UIExtensionVariables {
     }
 }
 
-interface IAppServiceExtensionVariables extends UIExtensionVariables {
+interface IAppServiceExtensionVariables extends UIExtensionVariables, IAzureUtilsExtensionVariables {
     prefix: string;
 }
 
@@ -47,4 +48,5 @@ export function registerAppServiceExtensionVariables(extVars: IAppServiceExtensi
 
     ext = extVars;
     registerUIExtensionVariables(extVars);
+    registerAzureUtilsExtensionVariables(extVars);
 }

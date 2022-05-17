@@ -28,15 +28,27 @@ export class TestUserInput implements types.TestUserInput {
         this._onDidFinishPromptEmitter = new this._vscode.EventEmitter<types.PromptResult>();
     }
 
+    public static async create(): Promise<TestUserInput> {
+        return new TestUserInput(await import('vscode'));
+    }
+
     public get onDidFinishPrompt(): vscodeTypes.Event<types.PromptResult> {
         return this._onDidFinishPromptEmitter.event;
     }
 
     public async runWithInputs<T>(inputs: (string | RegExp | types.TestInput)[], callback: () => Promise<T>): Promise<T> {
-        this._inputs = <(string | RegExp | TestInput)[]>inputs;
+        this.setInputs(inputs);
         const result: T = await callback();
-        assert.equal(this._inputs.length, 0, `Not all inputs were used: ${this._inputs.toString()}`);
+        this.validateAllInputsUsed();
         return result;
+    }
+
+    public setInputs(inputs: (string | RegExp | types.TestInput)[]): void {
+        this._inputs = <(string | RegExp | TestInput)[]>inputs;
+    }
+
+    public validateAllInputsUsed(): void {
+        assert.strictEqual(this._inputs.length, 0, `Not all inputs were used: ${this._inputs.toString()}`);
     }
 
     public async showQuickPick<T extends vscodeTypes.QuickPickItem>(items: T[] | Thenable<T[]>, options: vscodeTypes.QuickPickOptions): Promise<T | T[]> {
@@ -55,7 +67,9 @@ export class TestUserInput implements types.TestUserInput {
                 result = resolvedItems[0];
             } else {
                 function qpiMatchesInput(qpi: vscodeTypes.QuickPickItem): boolean {
-                    return (input instanceof RegExp && (input.test(qpi.label) || (qpi.description && input.test(qpi.description)))) || qpi.label === input || qpi.description === input;
+                    const description = qpi.description || '';
+                    const valuesToTest = [qpi.label, description, `${qpi.label} ${description}`];
+                    return valuesToTest.some(v => input instanceof RegExp ? input.test(v) : input === v);
                 }
 
                 if (options.canPickMany) {
@@ -66,7 +80,14 @@ export class TestUserInput implements types.TestUserInput {
                         result = resolvedItem;
                     } else {
                         const picksString = resolvedItems.map(i => `"${i.label}"`).join(', ')
-                        throw new Error(`Did not find quick pick item matching "${input}". Placeholder: "${options.placeHolder}". Picks: ${picksString}`);
+                        const lastItem = resolvedItems[resolvedItems.length - 1];
+                        if (/load more/i.test(lastItem.label)) {
+                            console.log(`Loading more items for quick pick with placeholder "${options.placeHolder}"...`);
+                            result = lastItem;
+                            this._inputs.unshift(input);
+                        } else {
+                            throw new Error(`Did not find quick pick item matching "${input}". Placeholder: "${options.placeHolder}". Picks: ${picksString}`);
+                        }
                     }
                 }
             }
@@ -146,4 +167,26 @@ export class TestUserInput implements types.TestUserInput {
         this._onDidFinishPromptEmitter.fire({ value: result });
         return result;
     }
+}
+
+
+export async function runWithInputs<T>(callbackId: string, inputs: (string | RegExp | types.TestInput)[], registerOnActionStartHandler: types.registerOnActionStartHandlerType, callback: () => Promise<T>): Promise<T> {
+    const testUserInput = await TestUserInput.create();
+    testUserInput.setInputs(inputs);
+    const disposable = registerOnActionStartHandler((context) => {
+        if (context.callbackId === callbackId) {
+            context.ui = testUserInput;
+            disposable.dispose();
+        }
+    });
+
+    let result: T;
+    try {
+        result = await callback();
+    } finally {
+        disposable.dispose();
+    }
+
+    testUserInput.validateAllInputsUsed();
+    return result;
 }

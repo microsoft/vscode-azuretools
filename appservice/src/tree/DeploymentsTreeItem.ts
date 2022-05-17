@@ -3,17 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { WebSiteManagementModels } from '@azure/arm-appservice';
+import type { SiteConfig, SiteSourceControl } from '@azure/arm-appservice';
+import { AzExtParentTreeItem, AzExtTreeItem, createContextValue, GenericTreeItem, IActionContext, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
 import { ThemeIcon } from 'vscode';
-import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
 import { KuduModels } from 'vscode-azurekudu';
 import { createKuduClient } from '../createKuduClient';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { ScmType } from '../ScmType';
-import { SiteClient } from '../SiteClient';
+import { ParsedSite } from '../SiteClient';
 import { retryKuduCall } from '../utils/kuduUtils';
 import { DeploymentTreeItem } from './DeploymentTreeItem';
+
+interface DeploymentsTreeItemOptions {
+    site: ParsedSite;
+    siteConfig: SiteConfig;
+    sourceControl: SiteSourceControl;
+    contextValuesToAdd?: string[];
+}
 
 /**
  * NOTE: This leverages a command with id `ext.prefix + '.connectToGitHub'` that should be registered by each extension
@@ -23,16 +30,19 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
     public static contextValueUnconnected: string = 'deploymentsUnconnected';
     public readonly label: string = localize('Deployments', 'Deployments');
     public readonly childTypeLabel: string = localize('Deployment', 'Deployment');
-    public readonly client: SiteClient;
+    public readonly site: ParsedSite;
+    public suppressMaskLabel: boolean = true;
+    public readonly contextValuesToAdd: string[];
 
     private _scmType?: string;
     private _repoUrl?: string;
 
-    public constructor(parent: AzExtParentTreeItem, client: SiteClient, siteConfig: WebSiteManagementModels.SiteConfig, sourceControl: WebSiteManagementModels.SiteSourceControl) {
+    public constructor(parent: AzExtParentTreeItem, options: DeploymentsTreeItemOptions) {
         super(parent);
-        this.client = client;
-        this._scmType = siteConfig.scmType;
-        this._repoUrl = sourceControl.repoUrl;
+        this.site = options.site;
+        this._scmType = options.siteConfig.scmType;
+        this._repoUrl = options.sourceControl.repoUrl;
+        this.contextValuesToAdd = options?.contextValuesToAdd || [];
     }
 
     public get iconPath(): TreeItemIconPath {
@@ -53,7 +63,7 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
     }
 
     public get contextValue(): string {
-        return this._scmType === ScmType.None ? DeploymentsTreeItem.contextValueUnconnected : DeploymentsTreeItem.contextValueConnected;
+        return createContextValue([this._scmType === ScmType.None ? DeploymentsTreeItem.contextValueUnconnected : DeploymentsTreeItem.contextValueConnected, ...this.contextValuesToAdd]);
     }
 
     public hasMoreChildrenImpl(): boolean {
@@ -61,8 +71,9 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
     }
 
     public async loadMoreChildrenImpl(_clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {
-        const siteConfig: WebSiteManagementModels.SiteConfig = await this.client.getSiteConfig();
-        const kuduClient = await createKuduClient(context, this.client);
+        const client = await this.site.createClient(context);
+        const siteConfig: SiteConfig = await client.getSiteConfig();
+        const kuduClient = await createKuduClient(context, this.site);
         const deployments: KuduModels.DeployResult[] = await retryKuduCall(context, 'getDeployResults', async () => {
             return kuduClient.deployment.getDeployResults();
         });
@@ -99,9 +110,10 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
         return ti2.receivedTime.valueOf() - ti1.receivedTime.valueOf();
     }
 
-    public async refreshImpl(): Promise<void> {
-        const siteConfig: WebSiteManagementModels.SiteConfig = await this.client.getSiteConfig();
-        const sourceControl: WebSiteManagementModels.SiteSourceControl = await this.client.getSourceControl();
+    public async refreshImpl(context: IActionContext): Promise<void> {
+        const client = await this.site.createClient(context);
+        const siteConfig: SiteConfig = await client.getSiteConfig();
+        const sourceControl: SiteSourceControl = await client.getSourceControl();
         this._scmType = siteConfig.scmType;
         this._repoUrl = sourceControl.repoUrl;
     }

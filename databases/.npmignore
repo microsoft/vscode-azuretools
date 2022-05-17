@@ -1,0 +1,8 @@
+node_modules/
+.vscode/
+src/
+tsconfig.json
+*.tgz
+**/*.js.map
+.eslintignore
+.eslintrc.js

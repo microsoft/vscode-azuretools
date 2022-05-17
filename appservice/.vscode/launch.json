@@ -8,7 +8,8 @@
             "runtimeExecutable": "${execPath}",
             "args": [
                 "--extensionDevelopmentPath=${workspaceFolder}/test/extension",
-                "--extensionTestsPath=${workspaceFolder}/out/test/index"
+                "--extensionTestsPath=${workspaceFolder}/out/test/index",
+                "${workspaceFolder}/test/test.code-workspace"
             ],
             "outFiles": [
                 "${workspaceFolder}/out/test/**/*.js"

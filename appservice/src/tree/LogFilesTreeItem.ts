@@ -3,24 +3,40 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { AzExtParentTreeItem, AzExtTreeItem, createContextValue, GenericTreeItem, IActionContext, parseError } from '@microsoft/vscode-azext-utils';
 import { ThemeIcon } from 'vscode';
-import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, parseError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { SiteClient } from '../SiteClient';
+import { ParsedSite } from '../SiteClient';
 import { FolderTreeItem } from './FolderTreeItem';
+
+interface LogFilesTreeItemOptions {
+    site: ParsedSite;
+    contextValuesToAdd?: string[];
+}
 
 /**
  * NOTE: This leverages a command with id `ext.prefix + '.startStreamingLogs'` that should be registered by each extension
  */
 export class LogFilesTreeItem extends FolderTreeItem {
     public static contextValue: string = 'logFiles';
-    public readonly contextValue: string = LogFilesTreeItem.contextValue;
+    public suppressMaskLabel: boolean = true;
+    public readonly contextValuesToAdd: string[];
 
     protected readonly _isRoot: boolean = true;
 
-    constructor(parent: AzExtParentTreeItem, client: SiteClient) {
-        super(parent, client, localize('logFiles', 'Logs'), '/LogFiles', true);
+    constructor(parent: AzExtParentTreeItem, options: LogFilesTreeItemOptions) {
+        super(parent, {
+            site: options.site,
+            label: localize('logFiles', 'Logs'),
+            path: '/LogFiles',
+            isReadOnly: true,
+            contextValuesToAdd: options.contextValuesToAdd || []
+        });
+    }
+
+    public get contextValue(): string {
+        return createContextValue([LogFilesTreeItem.contextValue, ...this.contextValuesToAdd]);
     }
 
     public async loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {

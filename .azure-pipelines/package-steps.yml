@@ -45,7 +45,7 @@ steps:
 - task: CopyFiles@2
   displayName: '${{ parameters.package }}: copy package'
   inputs:
-    Contents: '${{ parameters.package }}/vscode-*.tgz'
+    Contents: '${{ parameters.package }}/@(microsoft|vscode)-*.tgz'
     TargetFolder: '$(build.artifactstagingdirectory)'
   condition: and(not(variables['skipPackage']), eq(variables['Agent.OS'], 'Linux'), ne(variables['System.PullRequest.IsFork'], 'True'))
 
@@ -75,3 +75,18 @@ steps:
     testResultsFiles: '${{ parameters.package }}/*-results.xml'
     testRunTitle: '$(Agent.OS) ${{ parameters.package }}'
   condition: succeededOrFailed()
+
+- task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
+  displayName: "SBoM Generation Task"
+  env:
+    DeleteManifestDirIfPresent: true
+  inputs:
+    BuildDropPath: "$(Build.ArtifactStagingDirectory)"
+  condition: and(eq(variables['Agent.OS'], 'Linux'), ne(variables['System.PullRequest.IsFork'], 'True'))
+
+- task: PublishBuildArtifacts@1
+  displayName: "Publish artifacts: sbom"
+  inputs:
+    PathtoPublish: "$(Build.ArtifactStagingDirectory)/_manifest"
+    ArtifactName: "${{ parameters.package }}_manifest"
+  condition: and(eq(variables['Agent.OS'], 'Linux'), ne(variables['System.PullRequest.IsFork'], 'True'))

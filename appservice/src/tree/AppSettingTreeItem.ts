@@ -3,11 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { WebSiteManagementModels } from '@azure/arm-appservice';
+import type { SlotConfigNamesResource, StringDictionary } from '@azure/arm-appservice';
+import { AzExtTreeItem, createContextValue, DialogResponses, IActionContext, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
 import { ThemeIcon } from 'vscode';
-import { AzExtTreeItem, DialogResponses, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
-import { IAppSettingsClient } from '../IAppSettingsClient';
 import { localize } from '../localize';
 import { AppSettingsTreeItem, validateAppSettingKey } from './AppSettingsTreeItem';
 
@@ -18,7 +17,8 @@ export class AppSettingTreeItem extends AzExtTreeItem {
     public static contextValue: string = 'applicationSettingItem';
     public static contextValueNoSlots: string = 'applicationSettingItemNoSlots';
     public get contextValue(): string {
-        return this.parent.supportsSlots ? AppSettingTreeItem.contextValue : AppSettingTreeItem.contextValueNoSlots;
+        const contextValue = this.parent.supportsSlots ? AppSettingTreeItem.contextValue : AppSettingTreeItem.contextValueNoSlots;
+        return createContextValue([contextValue, ...this.parent.contextValuesToAdd]);
     }
     public readonly parent: AppSettingsTreeItem;
 
@@ -26,20 +26,18 @@ export class AppSettingTreeItem extends AzExtTreeItem {
     private _value: string;
     private _hideValue: boolean;
 
-    private readonly _client: IAppSettingsClient;
-
-    private constructor(parent: AppSettingsTreeItem, client: IAppSettingsClient, key: string, value: string) {
+    private constructor(parent: AppSettingsTreeItem, key: string, value: string) {
         super(parent);
-        this._client = client;
         this._key = key;
         this._value = value;
         this._hideValue = true;
+        this.valuesToMask.push(key, value);
     }
 
-    public static async createAppSettingTreeItem(parent: AppSettingsTreeItem, client: IAppSettingsClient, key: string, value: string): Promise<AppSettingTreeItem> {
-        const ti: AppSettingTreeItem = new AppSettingTreeItem(parent, client, key, value);
+    public static async createAppSettingTreeItem(context: IActionContext, parent: AppSettingsTreeItem, key: string, value: string): Promise<AppSettingTreeItem> {
+        const ti: AppSettingTreeItem = new AppSettingTreeItem(parent, key, value);
         // check if it's a slot setting
-        await ti.refreshImpl();
+        await ti.refreshImpl(context);
         return ti;
     }
     public get id(): string {
@@ -61,6 +59,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
     public async edit(context: IActionContext): Promise<void> {
         const newValue: string = await context.ui.showInputBox({
             prompt: `Enter setting value for "${this._key}"`,
+            stepName: 'appSettingValue',
             value: this._value
         });
 
@@ -70,13 +69,15 @@ export class AppSettingTreeItem extends AzExtTreeItem {
     }
 
     public async rename(context: IActionContext): Promise<void> {
-        const settings: WebSiteManagementModels.StringDictionary = await this.parent.ensureSettings(context);
+        const settings: StringDictionary = await this.parent.ensureSettings(context);
 
+        const client = await this.parent.clientProvider.createClient(context);
         const oldKey: string = this._key;
         const newKey: string = await context.ui.showInputBox({
             prompt: `Enter a new name for "${oldKey}"`,
+            stepName: 'appSettingName',
             value: this._key,
-            validateInput: (v: string): string | undefined => validateAppSettingKey(settings, this._client, v, oldKey)
+            validateInput: (v: string): string | undefined => validateAppSettingKey(settings, client, v, oldKey)
         });
 
         await this.parent.editSettingItem(oldKey, newKey, this._value, context);
@@ -85,7 +86,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
     }
 
     public async deleteTreeItemImpl(context: IActionContext): Promise<void> {
-        await context.ui.showWarningMessage(`Are you sure you want to delete setting "${this._key}"?`, { modal: true }, DialogResponses.deleteResponse);
+        await context.ui.showWarningMessage(`Are you sure you want to delete setting "${this._key}"?`, { modal: true, stepName: 'confirmDelete' }, DialogResponses.deleteResponse);
         await this.parent.deleteSettingItem(this._key, context);
     }
 
@@ -95,8 +96,9 @@ export class AppSettingTreeItem extends AzExtTreeItem {
     }
 
     public async toggleSlotSetting(context: IActionContext): Promise<void> {
-        if (this._client.updateSlotConfigurationNames && this._client.listSlotConfigurationNames) {
-            const slotSettings: WebSiteManagementModels.SlotConfigNamesResource = await this._client.listSlotConfigurationNames();
+        const client = await this.parent.clientProvider.createClient(context);
+        if (client.updateSlotConfigurationNames && client.listSlotConfigurationNames) {
+            const slotSettings: SlotConfigNamesResource = await client.listSlotConfigurationNames();
             if (!slotSettings.appSettingNames) {
                 slotSettings.appSettingNames = [];
             }
@@ -108,16 +110,17 @@ export class AppSettingTreeItem extends AzExtTreeItem {
                 slotSettings.appSettingNames.push(this._key);
             }
 
-            await this._client.updateSlotConfigurationNames(slotSettings);
+            await client.updateSlotConfigurationNames(slotSettings);
             await this.refresh(context);
         } else {
             throw Error(localize('toggleSlotSettingsNotSupported', 'Toggling slot settings is not supported.'));
         }
     }
 
-    public async refreshImpl(): Promise<void> {
-        if (this._client.listSlotConfigurationNames) {
-            const slotSettings: WebSiteManagementModels.SlotConfigNamesResource = await this._client.listSlotConfigurationNames();
+    public async refreshImpl(context: IActionContext): Promise<void> {
+        const client = await this.parent.clientProvider.createClient(context);
+        if (client.listSlotConfigurationNames) {
+            const slotSettings: SlotConfigNamesResource = await client.listSlotConfigurationNames();
             if (slotSettings.appSettingNames && slotSettings.appSettingNames.find((value: string) => { return value === this._key; })) {
                 this.description = localize('slotSetting', 'Slot Setting');
             } else {

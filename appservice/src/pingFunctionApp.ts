@@ -3,22 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ServiceClient } from '@azure/ms-rest-js';
-import { createGenericClient } from 'vscode-azureextensionui';
-import { localize } from './localize';
-import { SiteClient } from './SiteClient';
+import type { ServiceClient } from '@azure/ms-rest-js';
+import { createGenericClient } from '@microsoft/vscode-azext-azureutils';
+import { IActionContext } from '@microsoft/vscode-azext-utils';
+import { ParsedSite } from './SiteClient';
 
-export async function pingFunctionApp(siteClient: SiteClient): Promise<void> {
-    if (siteClient.listHostKeys) {
-        const client: ServiceClient = await createGenericClient();
-        await client.sendRequest({
-            method: 'GET',
-            url: `${siteClient.defaultHostUrl}/admin/host/status`,
-            headers: {
-                'x-functions-key': (await siteClient.listHostKeys()).masterKey
-            }
-        });
-    } else {
-        throw Error(localize('listHostKeysNotSupported', 'Listing host keys is not supported.'));
-    }
+export async function pingFunctionApp(context: IActionContext, site: ParsedSite): Promise<void> {
+    const client = await site.createClient(context);
+    const genericClient: ServiceClient = await createGenericClient(context, undefined);
+    await genericClient.sendRequest({
+        method: 'GET',
+        url: `${site.defaultHostUrl}/admin/host/status`,
+        headers: {
+            'x-functions-key': (await client.listHostKeys()).masterKey
+        }
+    });
 }

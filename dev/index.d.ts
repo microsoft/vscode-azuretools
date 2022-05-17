@@ -5,7 +5,7 @@
 
 import { Environment } from "@azure/ms-rest-azure-env";
 import * as cp from "child_process";
-import { Event, InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, Uri } from "vscode";
+import { Disposable, Event, InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, Uri } from "vscode";
 import * as webpack from 'webpack';
 
 /**
@@ -105,19 +105,45 @@ export declare function gulp_installVSCodeExtension(publisherId: string, extensi
 export declare function gulp_webpack(mode: string): cp.ChildProcess;
 
 /**
- * Loose interface to allow for the use of different versions of "@azure/ms-rest-js"
- * There's several cases where we don't control which "credentials" interface gets used, causing build errors even though the functionality itself seems to be compatible
- * For example: https://github.com/Azure/azure-sdk-for-js/issues/10045
+ * Loose type to use for T1 and T2 versions of "@azure/ms-rest-js".  The Azure Account extension returns
+ * credentials that will satisfy both T1 and T2 requirements
  */
-export interface AzExtServiceClientCredentials {
-    /**
-     * Signs a request with the Authentication header.
-     *
-     * @param {WebResourceLike} webResource The WebResourceLike/request to be signed.
-     * @returns {Promise<WebResourceLike>} The signed request object;
-     */
-    signRequest(webResource: any): Promise<any>;
-}
+ export type AzExtServiceClientCredentials = AzExtServiceClientCredentialsT1 & AzExtServiceClientCredentialsT2;
+
+ /**
+  * Loose interface to allow for the use of different versions of "@azure/ms-rest-js"
+  * There's several cases where we don't control which "credentials" interface gets used, causing build errors even though the functionality itself seems to be compatible
+  * For example: https://github.com/Azure/azure-sdk-for-js/issues/10045
+  * Used specifically for T1 Azure SDKs
+  */
+ export interface AzExtServiceClientCredentialsT1 {
+     /**
+      * Signs a request with the Authentication header.
+      *
+      * @param {WebResourceLike} webResource The WebResourceLike/request to be signed.
+      * @returns {Promise<WebResourceLike>} The signed request object;
+      */
+     signRequest(webResource: any): Promise<any>;
+ }
+ 
+ /**
+  * Loose interface to allow for the use of different versions of "@azure/ms-rest-js"
+  * Used specifically for T2 Azure SDKs
+  */
+ export interface AzExtServiceClientCredentialsT2 {
+   
+     /**
+      * Gets the token provided by this credential.
+      *
+      * This method is called automatically by Azure SDK client libraries. You may call this method
+      * directly, but you must also handle token caching and token refreshing.
+      *
+      * @param scopes - The list of scopes for which the token will have access.
+      * @param options - The options used to configure any requests this
+      *                TokenCredential implementation might make.
+      */
+      getToken(scopes?: string | string[], options?: any): Promise<any | null>;
+ }
 
 /**
  * Information specific to the Subscription
@@ -130,6 +156,7 @@ export interface ISubscriptionContext {
     tenantId: string;
     userId: string;
     environment: Environment;
+    isCustomCloud: boolean;
 }
 
 /**
@@ -191,3 +218,34 @@ export declare class TestUserInput {
     public showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Promise<MessageItem>;
     public showOpenDialog(options: OpenDialogOptions): Promise<Uri[]>;
 }
+
+export interface TestActionContext {
+    telemetry: {
+        properties: { [key: string]: string | undefined; }
+        measurements: { [key: string]: number | undefined; }
+    };
+    errorHandling: {
+        issueProperties: {}
+    };
+    valuesToMask: string[];
+    ui: TestUserInput;
+}
+
+export declare function createTestActionContext(): Promise<TestActionContext>;
+
+/**
+ * Similar to `createTestActionContext` but with some extra logging
+ */
+export declare function runWithTestActionContext(callbackId: string, callback: (context: TestActionContext) => Promise<void>): Promise<void>;
+
+type registerOnActionStartHandlerType = (handler: (context: { callbackId: string; ui: Partial<TestUserInput>; }) => void) => Disposable;
+
+/**
+ * Alternative to `TestUserInput.runWithInputs` that can be used on the rare occasion when the `IActionContext` must be created inside `callback` instead of before `callback`
+ *
+ * @param callbackId The expected callbackId for the action to be run
+ * @param inputs An ordered array of inputs that will be used instead of interactively prompting in VS Code
+ * @param registerOnActionStartHandler The function defined in 'vscode-azureextensionui' for registering onActionStart handlers
+ * @param callback The callback to run
+ */
+export declare function runWithInputs<T>(callbackId: string, inputs: (string | RegExp | TestInput)[], registerOnActionStartHandler: registerOnActionStartHandlerType, callback: () => Promise<T>): Promise<T>;

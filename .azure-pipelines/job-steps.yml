@@ -5,7 +5,10 @@ steps:
       package: 'dev'
   - template: package-steps.yml
     parameters:
-      package: 'ui'
+      package: 'utils'
+  - template: package-steps.yml
+    parameters:
+      package: 'azure'
   - template: package-steps.yml
     parameters:
       package: 'kudu'

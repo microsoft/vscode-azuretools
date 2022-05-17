@@ -3,26 +3,25 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { UserCancelledError } from '@microsoft/vscode-azext-utils';
 import { join } from 'path';
 import { commands, MessageItem, Uri, window } from "vscode";
-import { UserCancelledError } from "vscode-azureextensionui";
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { SiteClient } from '../SiteClient';
+import { ParsedSite } from '../SiteClient';
 import { delay } from '../utils/delay';
 import { updateWorkspaceSetting } from '../utils/settings';
 import { AppSource, IDeployContext } from './IDeployContext';
 
-export async function showDeployConfirmation(context: IDeployContext, client: SiteClient, deployCommandId: string): Promise<void> {
-    const warning: string = localize('confirmDeploy', 'Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', client.fullName);
-    context.telemetry.properties.cancelStep = 'confirmDestructiveDeployment';
+export async function showDeployConfirmation(context: IDeployContext, site: ParsedSite, deployCommandId: string): Promise<void> {
+    const warning: string = localize('confirmDeploy', 'Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', site.fullName);
     const items: MessageItem[] = [{ title: localize('deploy', 'Deploy') }];
     const resetDefault: MessageItem = { title: 'Reset default' };
     if (context.appSource === AppSource.setting) {
         items.push(resetDefault);
     }
 
-    const result: MessageItem = await context.ui.showWarningMessage(warning, { modal: true }, ...items);
+    const result: MessageItem = await context.ui.showWarningMessage(warning, { modal: true, stepName: 'confirmDestructiveDeployment' }, ...items);
 
     // a temporary workaround for this issue:
     // https://github.com/Microsoft/vscode-azureappservice/issues/844
@@ -36,8 +35,6 @@ export async function showDeployConfirmation(context: IDeployContext, client: Si
         // If resetDefault button was clicked we ask what and where to deploy again
         // don't wait
         void commands.executeCommand(deployCommandId);
-        context.telemetry.properties.cancelStep = 'resetDefault';
-        throw new UserCancelledError();
+        throw new UserCancelledError('resetDefault');
     }
-    context.telemetry.properties.cancelStep = undefined;
 }

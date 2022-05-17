@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { IActionContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
-import { IActionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { ScmType } from '../ScmType';
@@ -108,9 +108,9 @@ export async function handleFailedPreDeployTask(context: IActionContext, preDepl
     } else if (result === openSettings) {
         context.telemetry.properties.preDeployTaskResponse = 'openSettings';
         await vscode.commands.executeCommand('workbench.action.openSettings');
-        throw new UserCancelledError();
+        throw new UserCancelledError('preDeployFailed|OpenSettings');
     } else {
         context.telemetry.properties.preDeployTaskResponse = 'cancel';
-        throw new UserCancelledError();
+        throw new UserCancelledError('preDeployFailed');
     }
 }

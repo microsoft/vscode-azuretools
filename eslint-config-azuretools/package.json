@@ -1,0 +1,28 @@
+{
+  "name": "@microsoft/eslint-config-azuretools",
+  "version": "0.1.0",
+  "description": "Shared ESLint configuration used by Azure Tools for VS Code",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Microsoft/vscode-azuretools"
+  },
+  "keywords": [
+    "eslint",
+    "eslintconfig"
+  ],
+  "author": "Microsoft Corporation",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Microsoft/vscode-azuretools/issues"
+  },
+  "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/eslint-config-azuretools/README.md",
+  "peerDependencies": {
+    "@typescript-eslint/eslint-plugin": ">=4",
+    "eslint": ">=7",
+    "eslint-plugin-import": ">=2"
+  },
+  "dependencies": {
+    "@typescript-eslint/parser": "^4.28.5"
+  }
+}

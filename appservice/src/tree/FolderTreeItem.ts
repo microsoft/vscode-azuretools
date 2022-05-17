@@ -3,30 +3,44 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { AzExtParentTreeItem, AzExtTreeItem, createContextValue, GenericTreeItem, IActionContext, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
 import { ThemeIcon } from 'vscode';
-import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, TreeItemIconPath } from 'vscode-azureextensionui';
 import { localize } from '../localize';
-import { SiteClient } from '../SiteClient';
+import { ParsedSite } from '../SiteClient';
 import { ISiteFileMetadata, listFiles } from '../siteFiles';
 import { FileTreeItem } from './FileTreeItem';
 
+export interface FolderTreeItemOptions {
+    site: ParsedSite;
+    label: string;
+    path: string;
+    isReadOnly: boolean;
+    contextValuesToAdd?: string[];
+}
+
 export class FolderTreeItem extends AzExtParentTreeItem {
     public static contextValue: string = 'folder';
-    public readonly contextValue: string = FolderTreeItem.contextValue;
     public readonly childTypeLabel: string = localize('fileOrFolder', 'file or folder');
     public readonly label: string;
     public readonly path: string;
     public readonly isReadOnly: boolean;
 
-    public readonly client: SiteClient;
+    public readonly contextValuesToAdd: string[];
+
+    public readonly site: ParsedSite;
     protected readonly _isRoot: boolean = false;
 
-    constructor(parent: AzExtParentTreeItem, client: SiteClient, label: string, path: string, isReadOnly: boolean) {
+    constructor(parent: AzExtParentTreeItem, options: FolderTreeItemOptions) {
         super(parent);
-        this.client = client;
-        this.label = label;
-        this.path = path;
-        this.isReadOnly = isReadOnly;
+        this.site = options.site;
+        this.label = options.label;
+        this.path = options.path;
+        this.isReadOnly = options.isReadOnly;
+        this.contextValuesToAdd = options.contextValuesToAdd || [];
+    }
+
+    public get contextValue(): string {
+        return createContextValue([FolderTreeItem.contextValue, ...this.contextValuesToAdd]);
     }
 
     public get iconPath(): TreeItemIconPath {
@@ -42,7 +56,7 @@ export class FolderTreeItem extends AzExtParentTreeItem {
     }
 
     public async loadMoreChildrenImpl(_clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {
-        let files: ISiteFileMetadata[] = await listFiles(context, this.client, this.path);
+        let files: ISiteFileMetadata[] = await listFiles(context, this.site, this.path);
 
         // this file is being accessed by Kudu and is not viewable
         files = files.filter(f => f.mime !== 'text/xml' || !f.name.includes('LogFiles-kudu-trace_pending.xml'));
@@ -53,7 +67,13 @@ export class FolderTreeItem extends AzExtParentTreeItem {
             // the substring starts at file.path.indexOf(home) because the path sometimes includes site/ or D:\
             // the home.length + 1 is to account for the trailing slash, Linux uses / and Window uses \
             const fsPath: string = file.path.substring(file.path.indexOf(home) + home.length + 1);
-            return file.mime === 'inode/directory' ? new FolderTreeItem(this, this.client, file.name, fsPath, this.isReadOnly) : new FileTreeItem(this, this.client, file.name, fsPath, this.isReadOnly);
+            return file.mime === 'inode/directory' ? new FolderTreeItem(this, {
+                site: this.site,
+                label: file.name,
+                isReadOnly: this.isReadOnly,
+                path: fsPath,
+                contextValuesToAdd: this.contextValuesToAdd
+            }) : new FileTreeItem(this, this.site, file.name, fsPath, this.isReadOnly);
         });
     }
 

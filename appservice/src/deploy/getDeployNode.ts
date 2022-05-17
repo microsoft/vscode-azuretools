@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { AzExtTreeDataProvider, AzExtTreeItem } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
-import { AzExtTreeDataProvider, AzExtTreeItem } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { getWorkspaceSetting, updateWorkspaceSetting } from '../utils/settings';
+import { getWorkspaceSetting } from '../utils/settings';
 import { AppSource, IDeployContext } from './IDeployContext';
 
 /**
@@ -16,7 +16,7 @@ import { AppSource, IDeployContext } from './IDeployContext';
  * @param arg1 The first arg passed in by VS Code to the deploy command. Typically the node or uri
  * @param arg2 The second arg passed in by VS Code to the deploy command. Usually this is ignored, but can be the appId if called programatically from an API
  */
-export async function getDeployNode<T extends AzExtTreeItem>(context: IDeployContext, tree: AzExtTreeDataProvider, arg1: unknown, arg2: unknown, expectedContextValue: string | string[]): Promise<T> {
+export async function getDeployNode<T extends AzExtTreeItem>(context: IDeployContext, tree: AzExtTreeDataProvider, arg1: unknown, arg2: unknown, pickNode: () => Promise<T>): Promise<T> {
     let node: AzExtTreeItem | undefined;
 
     if (arg1 instanceof AzExtTreeItem) {
@@ -35,8 +35,7 @@ export async function getDeployNode<T extends AzExtTreeItem>(context: IDeployCon
             if (node) {
                 context.appSource = AppSource.setting;
             } else {
-                // if defaultPath or defaultNode cannot be found or there was a mismatch, delete old setting and prompt to save next deployment
-                await updateWorkspaceSetting(context.defaultAppSetting, undefined, context.workspaceFolder.uri.fsPath, ext.prefix);
+                ext.outputChannel.appendLog(localize('appFromSettingNotFound', 'WARNING: Failed to find app matching setting "{0}.{1}" with id "{2}"', ext.prefix, context.defaultAppSetting, defaultAppId));
             }
         }
 
@@ -44,7 +43,7 @@ export async function getDeployNode<T extends AzExtTreeItem>(context: IDeployCon
             const newNodes: AzExtTreeItem[] = [];
             const disposable: vscode.Disposable = tree.onTreeItemCreate(newNode => { newNodes.push(newNode); });
             try {
-                node = await tree.showTreeItemPicker<AzExtTreeItem>(expectedContextValue, context);
+                node = await pickNode();
             } finally {
                 disposable.dispose();
             }
