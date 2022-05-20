@@ -33,18 +33,9 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
                             resolve(Array.from(quickPick.selectedItems));
                         } else {
                             const selectedItem: TPick | undefined = quickPick.selectedItems[0];
-                            if (selectedItem) {
-                                const group = groups.find(g => selectedItem.data === g);
-                                if (group) {
-                                    group.isCollapsed = !group.isCollapsed;
-                                    quickPick.items = getGroupedPicks(groups);
 
-                                    // The active pick gets reset when we change the items, but we can explicitly set it here to persist the active state
-                                    const newGroupPick = quickPick.items.find(i => i.data === group);
-                                    if (newGroupPick) {
-                                        quickPick.activeItems = [newGroupPick];
-                                    }
-                                } else if (selectedItem.onPicked) {
+                            if (selectedItem) {
+                                if (selectedItem.onPicked) {
                                     await selectedItem.onPicked();
                                 } else {
                                     resolve(selectedItem);
@@ -236,13 +227,13 @@ function getGroupedPicks<TPick extends types.IAzureQuickPickItem<unknown>>(group
             if (!group.name) {
                 picks.push(...group.picks);
             } else {
+                // TODO: Switch kind from -1 to QuickPickItemKind.Separator when VS Code type files are updated
                 picks.push({
-                    label: `$(chevron-${group.isCollapsed ? 'right' : 'down'}) ${group.name}`,
+                    label: group.name,
+                    kind: -1,
                     data: group
-                });
-                if (!group.isCollapsed) {
-                    picks.push(...group.picks);
-                }
+                } as types.IAzureQuickPickItem<unknown>);
+                picks.push(...group.picks);
             }
         }
     } else {
