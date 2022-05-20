@@ -261,6 +261,7 @@ const getItemOperationSpec: msRest.OperationSpec = {
   ],
   responses: {
     200: {},
+    307: {},
     default: {}
   },
   serializer
