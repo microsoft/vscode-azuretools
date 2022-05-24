@@ -30,7 +30,9 @@ suite("showQuickPick", () => {
                 async update(key: string, value: any): Promise<void> {
                     this.fakeKeys[key] = value;
                 }
-
+                keys(): string[] {
+                    return Object.keys(this.fakeKeys);
+                }
             }
 
             function getrecentlyUsed(label: string): string {
