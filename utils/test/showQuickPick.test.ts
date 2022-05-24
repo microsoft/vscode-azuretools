@@ -22,6 +22,11 @@ suite("showQuickPick", () => {
             class FakeMemento implements Memento {
                 public fakeKeys = new Map<string, unknown>();
 
+
+                keys(): readonly string[] {
+                    return Object.keys(this.fakeKeys);
+                }
+
                 get<T>(key: string): T | undefined;
                 get<T>(key: string, defaultValue: T): T;
                 get<T>(key: any, defaultValue?: any): T | T | undefined {

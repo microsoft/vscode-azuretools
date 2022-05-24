@@ -36,6 +36,7 @@ export class TestOutputChannel implements OutputChannel {
     public append(value: string): void;
     public appendLine(value: string): void;
     public appendLog(value: string, options?: { resourceName?: string, date?: Date }): void
+    public replace(value: string): void;
     public clear(): void;
     public show(): void;
     public hide(): void;
@@ -125,13 +126,13 @@ export declare function gulp_webpack(mode: string): cp.ChildProcess;
       */
      signRequest(webResource: any): Promise<any>;
  }
- 
+
  /**
   * Loose interface to allow for the use of different versions of "@azure/ms-rest-js"
   * Used specifically for T2 Azure SDKs
   */
  export interface AzExtServiceClientCredentialsT2 {
-   
+
      /**
       * Gets the token provided by this credential.
       *

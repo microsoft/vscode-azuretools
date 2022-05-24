@@ -47,6 +47,10 @@ class AzExtOutputChannel implements types.IAzExtOutputChannel {
         this._outputChannel.clear();
     }
 
+    public replace(value: string): void {
+        this._outputChannel.replace(value);
+    }
+
     public show(preserveFocus?: boolean | undefined): void;
     public show(column?: ViewColumn | undefined, preserveFocus?: boolean | undefined): void;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
