@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, Memento, QuickInputButton, QuickInputButtons, QuickPick, window } from 'vscode';
+import { Disposable, Memento, QuickInputButton, QuickInputButtons, QuickPick, QuickPickItemKind, window } from 'vscode';
 import * as types from '../../index';
 import { AzExtQuickInputButtons } from '../constants';
 import { GoBackError, UserCancelledError } from '../errors';
@@ -227,12 +227,11 @@ function getGroupedPicks<TPick extends types.IAzureQuickPickItem<unknown>>(group
             if (!group.name) {
                 picks.push(...group.picks);
             } else {
-                // TODO: Switch kind from -1 to QuickPickItemKind.Separator when VS Code type files are updated
                 picks.push({
                     label: group.name,
-                    kind: -1,
+                    kind: QuickPickItemKind.Separator,
                     data: group
-                } as types.IAzureQuickPickItem<unknown>);
+                });
                 picks.push(...group.picks);
             }
         }
