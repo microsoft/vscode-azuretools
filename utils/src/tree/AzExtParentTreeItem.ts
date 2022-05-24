@@ -23,7 +23,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
     public createNewLabel?: string;
     //#endregion
 
-    public readonly collapsibleState: TreeItemCollapsibleState | undefined = TreeItemCollapsibleState.Collapsed;
+    public readonly initialCollapsibleState: TreeItemCollapsibleState | undefined = TreeItemCollapsibleState.Collapsed;
     public readonly _isAzExtParentTreeItem: boolean = true;
 
     private _cachedChildren: AzExtTreeItem[] = [];
@@ -253,6 +253,10 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
             } else if (!this.hasMoreChildrenImpl()) {
                 // No-op since all children are already loaded
                 return;
+            }
+
+            if (this.collapsibleState === TreeItemCollapsibleState.Expanded) {
+                this.treeDataProvider.collapsibleStateTracker?.onDidExpandOrRefreshExpandedEmitter.fire(this);
             }
 
             const newTreeItems: AzExtTreeItem[] = await this.loadMoreChildrenImpl(this._clearCache, context);

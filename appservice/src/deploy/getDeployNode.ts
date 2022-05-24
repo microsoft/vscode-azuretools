@@ -10,6 +10,10 @@ import { localize } from '../localize';
 import { getWorkspaceSetting } from '../utils/settings';
 import { AppSource, IDeployContext } from './IDeployContext';
 
+function isAzExtTreeItem(ti: unknown): ti is AzExtTreeItem {
+    return !!ti && (ti as AzExtTreeItem).fullId !== undefined && (ti as AzExtTreeItem).fullId !== null;
+}
+
 /**
  * Converts the args passed in by VS Code and any relevant settings into the node used to deploy
  *
@@ -19,7 +23,7 @@ import { AppSource, IDeployContext } from './IDeployContext';
 export async function getDeployNode<T extends AzExtTreeItem>(context: IDeployContext, tree: AzExtTreeDataProvider, arg1: unknown, arg2: unknown, pickNode: () => Promise<T>): Promise<T> {
     let node: AzExtTreeItem | undefined;
 
-    if (arg1 instanceof AzExtTreeItem) {
+    if (isAzExtTreeItem(arg1)) {
         node = arg1;
         context.appSource = AppSource.tree;
     } else if (typeof arg2 === 'string' && arg2) {
