@@ -3,9 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureWizardPromptStep, IAzureQuickPickItem, AzExtLocation } from 'vscode-azureextensionui';
+import { AzureWizardPromptStep, IAzureQuickPickItem } from '@microsoft/vscode-azext-utils';
 import { localize } from '../localize';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
+import { AzExtLocation } from '@microsoft/vscode-azext-azureutils';
 
 interface AppServiceWizardContext extends IAppServiceWizardContext {
     _location: AzExtLocation;
