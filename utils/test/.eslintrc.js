@@ -4,6 +4,7 @@ module.exports = {
         "@microsoft/eslint-config-azuretools/test"
     ],
     "rules": {
-        "no-restricted-imports": "off"
+        "no-restricted-imports": "off",
+        "@typescript-eslint/no-floating-promises": "warn",
     }
 };
