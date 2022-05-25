@@ -24,6 +24,10 @@ export class TestOutputChannel implements OutputChannel {
 
     }
 
+    public replace(value: string): void {
+        console.log(value);
+    }
+
     public clear(): void {
         // do nothing
     }

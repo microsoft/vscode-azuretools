@@ -6,6 +6,7 @@
 import { EventEmitter } from 'vscode';
 import * as types from '../../index';
 import { AzExtTreeItem } from './AzExtTreeItem';
+import { CollapsibleStateTracker } from './CollapsibleStateTracker';
 
 // Interfaces for methods on the tree that aren't exposed outside of this package
 // We can't reference the classes directly because it would result in circular dependencies
@@ -21,6 +22,7 @@ export interface IAzExtParentTreeItemInternal extends types.AzExtParentTreeItem,
 export interface IAzExtTreeDataProviderInternal extends types.AzExtTreeDataProvider {
     _onTreeItemCreateEmitter: EventEmitter<AzExtTreeItem>;
     refreshUIOnly(treeItem: AzExtTreeItem | undefined): void;
+    readonly collapsibleStateTracker: CollapsibleStateTracker | undefined;
 }
 
 /**

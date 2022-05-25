@@ -86,25 +86,40 @@ export interface AzureHostExtensionApi {
     //#endregion
 }
 
+export interface AppResourceFilter {
+    /**
+     * App resource type to filter the app resource picks
+     */
+    type: string;
+
+    /**
+     * (Optional) App resource kind to filter the app resource picks
+     */
+    kind?: string;
+
+    /**
+     * (Optional) ARM tags that must be present on the resource. Resource must match all provided tags.
+     */
+    tags?: Record<string, string>;
+}
+
 export interface PickAppResourceOptions extends IAzureQuickPickOptions {
     /**
-     * Options to filter the picks
+     * Options to filter the picks to resources that match any of the provided filters
      */
-    filter?: {
-        /**
-         * App resource type to filter the app resource picks
-         */
-        type: string;
-        /**
-         * App resource kind to filter the app resource picks
-         */
-        kind?: string;
-    }
+    filter?: AppResourceFilter | AppResourceFilter[];
 
     /**
      * Set this to pick a child of the selected app resource
      */
     expectedChildContextValue?: string | RegExp | (string | RegExp)[];
+
+    /**
+     * Whether `AppResourceTreeItem`s should be resolved before displaying them as quick picks, or only once one has been selected
+     * If a client extension needs to change label/description/something visible on the quick pick via `resolve`, set to true,
+     * otherwise set to false. Default will be false.
+     */
+    resolveQuickPicksBeforeDisplay?: boolean;
 }
 
 /**
