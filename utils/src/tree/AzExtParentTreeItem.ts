@@ -256,7 +256,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
             }
 
             if (this.collapsibleState === TreeItemCollapsibleState.Expanded) {
-                this.treeDataProvider.collapsibleStateTracker?.onDidExpandOrRefreshExpandedEmitter.fire(this);
+                this.treeDataProvider.collapsibleStateTracker?.onDidExpandOrRefreshExpandedEmitter.fire({ item: this, source: 'refresh' });
             }
 
             const newTreeItems: AzExtTreeItem[] = await this.loadMoreChildrenImpl(this._clearCache, context);

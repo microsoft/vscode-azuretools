@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken, Disposable, Event, EventEmitter, ThemeIcon, TreeItem, TreeView } from 'vscode';
+import { CancellationToken, Disposable, Event, EventEmitter, ThemeIcon, TreeItem, TreeItemCollapsibleState, TreeView } from 'vscode';
 import * as types from '../../index';
 import { callWithTelemetryAndErrorHandling } from '../callWithTelemetryAndErrorHandling';
 import { NoResourceFoundError, UserCancelledError } from '../errors';
@@ -41,7 +41,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         return this._onTreeItemCreateEmitter.event;
     }
 
-    public get onDidExpandOrRefreshExpandedTreeItem(): Event<AzExtTreeItem> {
+    public get onDidExpandOrRefreshExpandedTreeItem(): Event<types.OnDidExpandOrRefreshExpandedEmitterData> {
         if (!this.collapsibleStateTracker) {
             throw new Error('To use the `onDidExpandOrRefreshExpandedTreeItem`, first call `trackTreeItemCollapsibleState`.');
         }
@@ -82,8 +82,34 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         return ti;
     }
 
-    public async getChildren(arg?: AzExtParentTreeItem): Promise<AzExtTreeItem[]> {
+    public async getChildren(arg?: AzExtParentTreeItem & { preventEagerLoading?: boolean }): Promise<AzExtTreeItem[]> {
         try {
+
+            if (arg?.preventEagerLoading && arg.collapsibleState === TreeItemCollapsibleState.Collapsed) {
+                try {
+
+                    await new Promise<void>((resolve, reject) => {
+                        this.onDidExpandOrRefreshExpandedTreeItem((data) => {
+                            if (data.item === arg) {
+                                resolve();
+                            }
+                        });
+
+                        setTimeout(() => {
+                            if (arg.collapsibleState === TreeItemCollapsibleState.Collapsed) {
+                                reject('Timeout waiting for tree item to expand');
+                            } else {
+                                console.log('Resolved without listener');
+                                resolve();
+                            }
+                        }, 100);
+                    });
+                } catch (e) {
+                    arg?.clearCache();
+                    return [];
+                }
+            }
+
             return <AzExtTreeItem[]>await callWithTelemetryAndErrorHandling('AzureTreeDataProvider.getChildren', async (context: types.IActionContext) => {
                 context.errorHandling.suppressDisplay = true;
                 context.errorHandling.rethrow = true;

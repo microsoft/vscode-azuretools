@@ -19,6 +19,11 @@ export declare interface RunWithTemporaryDescriptionOptions {
     softRefresh?: boolean;
 }
 
+export declare interface OnDidExpandOrRefreshExpandedEmitterData {
+    item: AzExtTreeItem;
+    source: 'refresh' | 'expand';
+}
+
 /**
  * Tree Data Provider for an *Az*ure *Ext*ension
  */
@@ -29,7 +34,7 @@ export declare class AzExtTreeDataProvider implements TreeDataProvider<AzExtTree
     /**
      * Fired when a tree item is expanded, or the view is refreshed and that tree item is auto-expanded by VSCode. Note, this event cannot be accessed unless `trackTreeItemCollapsibleState` is called first!
      */
-    public onDidExpandOrRefreshExpandedTreeItem: Event<AzExtTreeItem>;
+    public onDidExpandOrRefreshExpandedTreeItem: Event<OnDidExpandOrRefreshExpandedEmitterData>;
 
     /**
      * Azure Tree Data Provider

@@ -4,13 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Disposable, EventEmitter, TreeItemCollapsibleState, TreeView } from "vscode";
+import * as types from "../../index";
 import { AzExtTreeItem } from "./AzExtTreeItem";
 
 export class CollapsibleStateTracker implements Disposable {
     private readonly disposables: Disposable[] = [];
     private readonly collapsibleStateCache = new Map<string, TreeItemCollapsibleState | undefined>();
 
-    public readonly onDidExpandOrRefreshExpandedEmitter = new EventEmitter<AzExtTreeItem>();
+    public readonly onDidExpandOrRefreshExpandedEmitter = new EventEmitter<types.OnDidExpandOrRefreshExpandedEmitterData>();
 
     public constructor(private readonly treeView: TreeView<AzExtTreeItem>) {
         this.disposables.push(
@@ -22,7 +23,7 @@ export class CollapsibleStateTracker implements Disposable {
         this.disposables.push(
             this.treeView.onDidExpandElement(evt => {
                 this.collapsibleStateCache.set(evt.element.effectiveId, TreeItemCollapsibleState.Expanded);
-                this.onDidExpandOrRefreshExpandedEmitter.fire(evt.element);
+                this.onDidExpandOrRefreshExpandedEmitter.fire({ item: evt.element, source: 'expand' });
             })
         );
     }
