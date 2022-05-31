@@ -41,7 +41,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         return this._onTreeItemCreateEmitter.event;
     }
 
-    public get onDidExpandOrRefreshExpandedTreeItem(): Event<types.OnDidExpandOrRefreshExpandedEmitterData> {
+    public get onDidExpandOrRefreshExpandedTreeItem(): Event<types.OnDidExpandOrRefreshExpandedEventData> {
         if (!this.collapsibleStateTracker) {
             throw new Error('To use the `onDidExpandOrRefreshExpandedTreeItem`, first call `trackTreeItemCollapsibleState`.');
         }

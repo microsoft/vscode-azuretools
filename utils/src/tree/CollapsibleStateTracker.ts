@@ -11,7 +11,7 @@ export class CollapsibleStateTracker implements Disposable {
     private readonly disposables: Disposable[] = [];
     private readonly collapsibleStateCache = new Map<string, TreeItemCollapsibleState | undefined>();
 
-    public readonly onDidExpandOrRefreshExpandedEmitter = new EventEmitter<types.OnDidExpandOrRefreshExpandedEmitterData>();
+    public readonly onDidExpandOrRefreshExpandedEmitter = new EventEmitter<types.OnDidExpandOrRefreshExpandedEventData>();
 
     public constructor(private readonly treeView: TreeView<AzExtTreeItem>) {
         this.disposables.push(
