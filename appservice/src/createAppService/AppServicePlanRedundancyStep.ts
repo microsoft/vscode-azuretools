@@ -7,6 +7,7 @@ import { AzureWizardPromptStep, IAzureQuickPickItem } from '@microsoft/vscode-az
 import { localize } from '../localize';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 import { AzExtLocation } from '@microsoft/vscode-azext-azureutils';
+import { SkuDescription } from '@azure/arm-appservice';
 
 interface AppServiceWizardContext extends IAppServiceWizardContext {
     _location: AzExtLocation;
@@ -47,11 +48,23 @@ export class AppServicePlanRedundancyStep extends AzureWizardPromptStep<IAppServ
 
         return zoneRedundancySupportedLocations.includes(location);
     }
+    
+    private isAllowedServicePlan(newPlanSku: SkuDescription): boolean {
+        const { family } = newPlanSku;
+        const allowedServicePlan = [
+            'Pv2',
+            'Pv3',
+            'WS',
+        ];
+
+        return allowedServicePlan.includes(family!);
+    }
 
     public shouldPrompt(context: AppServiceWizardContext): boolean {
-        const { customLocation, _location, plan } = context;
-        if (plan === undefined && customLocation === undefined && _location && _location.name) {
-            return this.isZoneRedundancyEnabled(context._location.name);
+        const { customLocation, _location, plan, newPlanSku } = context;
+        const { name } = _location || {};
+        if (plan === undefined && customLocation === undefined && name && newPlanSku) {
+            return this.isZoneRedundancyEnabled(name) && this.isAllowedServicePlan(newPlanSku);
         }
         return false;
     }
