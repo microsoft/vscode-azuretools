@@ -116,7 +116,23 @@ function parseIfJson(o: any): any {
 function parseIfHtml(message: string): string {
     if (/<html/i.test(message)) {
         try {
-            return htmlToText.fromString(message, { wordwrap: false, uppercaseHeadings: false, ignoreImage: true });
+            var headerOptions = { leadingLineBreaks: 1, trailingLineBreaks: 1, uppercase: false };
+
+            return htmlToText.convert(
+                message,
+                {
+                    selectors: [
+                        { selector: 'h1', options: headerOptions },
+                        { selector: 'h2', options: headerOptions },
+                        { selector: 'h3', options: headerOptions },
+                        { selector: 'h4', options: headerOptions },
+                        { selector: 'h5', options: headerOptions },
+                        { selector: 'h6', options: headerOptions },
+                        { selector: 'img', format: 'skip' },
+                        { selector: 'table', options: { uppercaseHeaderCells: false } }
+                    ],
+                    wordwrap: false
+                });
         } catch (err) {
             // ignore
         }
