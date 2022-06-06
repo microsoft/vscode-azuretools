@@ -567,7 +567,8 @@ callWithTelemetryAndErrorHandling.js.__awaiter vscode-azureextensionui/extension
         const pe: IParsedError = parseError(err);
 
         assert.strictEqual(pe.errorType, 'string');
-        assert.strictEqual(pe.message, ` 404 Web Site not found.
+        assert.strictEqual(pe.message, `404 Web Site not found.
+
 You may be seeing this error due to one of the reasons listed below :
 
  * Custom domain has not been configured inside Azure. See how to map an existing domain [https://docs.microsoft.com/en-us/azure/app-service-web/app-service-web-tutorial-custom-domain] to resolve this.
