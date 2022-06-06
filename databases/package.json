@@ -49,7 +49,7 @@
     "@azure/arm-postgresql": "^6.0.0",
     "@azure/arm-postgresql-flexible": "^5.0.0",
     "@microsoft/vscode-azext-azureutils": "^0.3.0",
-    "@microsoft/vscode-azext-utils": "^0.3.0",
+    "@microsoft/vscode-azext-utils": "^0.3.3",
     "url": "^0.11.0",
     "vscode-nls": "^5.0.1"
   }
