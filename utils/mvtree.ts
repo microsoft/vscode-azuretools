@@ -12,10 +12,17 @@ import { AppResource } from './hostapi';
  * branch of the tree if these properties are not present.
  */
 export interface QuickPickableModelNode {
+    readonly quickPickOptions: QuickPickableModelOptions;
+}
+
+/**
+ * This interface describes the specific options required for the quick pick functionality to work.
+ */
+export interface QuickPickableModelOptions {
     /**
      * An array of context values.
      */
-    readonly contextValuesArray: string[];
+    readonly contextValues: string[];
 
     /**
      * Whether or not this node is a leaf in the overall tree
