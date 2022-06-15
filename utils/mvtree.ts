@@ -25,15 +25,18 @@ export interface QuickPickableModelNode {
 
 /**
  * This interface describes a provider for a subsection of the Azure Resources tree--i.e., a branch
- * in that tree
+ * in that tree.
+ *
+ * This is largely identical to {@link vscode.TreeDataProvider}.
  */
 export interface BranchDataProvider<T extends Partial<QuickPickableModelNode>> extends vscode.TreeDataProvider<T> {
     /**
      * Get the trunk element corresponding to the `resource` parameter. In essence, `resource`
      * and the returned `T` object would occupy the same location in the tree view.
      * @param resource The resource fetched by the Azure Resources extension.
+     * @return The model object corresponding to the resource fetched by the Azure Resources extension.
      */
-    getTrunkModelElement(resource: AppResource2): vscode.ProviderResult<T>;
+    getTrunkElement(resource: AppResource2): vscode.ProviderResult<T>;
 
     /**
      * Get the children of `element`. `element` will never be falsy.
