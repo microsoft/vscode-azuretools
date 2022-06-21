@@ -83,6 +83,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
     }
 
     public async getChildren(arg?: AzExtParentTreeItem): Promise<AzExtTreeItem[]> {
+        console.log('Getting children of ' + (arg ? arg.label : 'root'));
         try {
             return <AzExtTreeItem[]>await callWithTelemetryAndErrorHandling('AzureTreeDataProvider.getChildren', async (context: types.IActionContext) => {
                 context.errorHandling.suppressDisplay = true;
@@ -100,6 +101,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
 
                 context.telemetry.properties.contextValue = treeItem.contextValue;
 
+                treeItem.clearCache();
                 const children: AzExtTreeItem[] = [...treeItem.creatingTreeItems, ...await treeItem.getCachedChildren(context)];
                 const hasMoreChildren: boolean = treeItem.hasMoreChildrenImpl();
                 context.telemetry.properties.hasMoreChildren = String(hasMoreChildren);
@@ -140,6 +142,8 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
     }
 
     public async refresh(context: types.IActionContext, treeItem?: AzExtTreeItem): Promise<void> {
+        console.log("Refreshing " + (treeItem ? treeItem.label : 'root'));
+
         treeItem ||= this._rootTreeItem;
 
         if (treeItem.refreshImpl && !treeItem.hasBeenDeleted) {
@@ -154,6 +158,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
     }
 
     public refreshUIOnly(_treeItem: AzExtTreeItem | undefined): void {
+        console.log("Refreshing UI only " + (_treeItem ? _treeItem.label : 'root'));
         this._onDidChangeTreeDataEmitter.fire(undefined);
     }
 
