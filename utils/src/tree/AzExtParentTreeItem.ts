@@ -11,7 +11,7 @@ import { localize } from '../localize';
 import { randomUtils } from '../utils/randomUtils';
 import { AzExtTreeItem } from './AzExtTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';
-import { IAzExtParentTreeItemInternal, isAzExtParentTreeItem } from './InternalInterfaces';
+import { IAzExtParentTreeItemInternal } from './InternalInterfaces';
 import { runWithLoadingNotification } from './runWithLoadingNotification';
 import { loadMoreLabel } from './treeConstants';
 
@@ -29,20 +29,11 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
     private _cachedChildren: AzExtTreeItem[] = [];
     private _creatingTreeItems: AzExtTreeItem[] = [];
     private _clearCache: boolean = true;
-    private _loadMoreChildrenTask: Promise<void> | undefined;
-    private _initChildrenTask: Promise<void> | undefined;
+    private _loadMoreChildrenTask: Promise<AzExtTreeItem[]> | undefined;
 
     public async getCachedChildren(context: types.IActionContext): Promise<AzExtTreeItem[]> {
-        if (this._clearCache) {
-            this._initChildrenTask = this.loadMoreChildren(context);
-        }
-
-        if (this._initChildrenTask) {
-            await this._initChildrenTask;
-        }
-
         // Return a clone to prevent timing issues and/or unintended modifications
-        return [...this._cachedChildren];
+        return this.loadChildren(context);
     }
 
     public get creatingTreeItems(): AzExtTreeItem[] {
@@ -160,7 +151,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         if (this._loadMoreChildrenTask) {
             await this._loadMoreChildrenTask;
         } else {
-            this._loadMoreChildrenTask = this.loadMoreChildrenInternal(context);
+            this._loadMoreChildrenTask = this.loadChildren(context);
             try {
                 await this._loadMoreChildrenTask;
             } finally {
@@ -240,30 +231,13 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         return treeItems;
     }
 
-    private async loadMoreChildrenInternal(context: types.IActionContext): Promise<void> {
-        try {
-            if (this._clearCache) {
-                // Just in case implementers of `loadMoreChildrenImpl` re-use the same child node, we want to clear those caches as well
-                for (const child of this._cachedChildren) {
-                    if (isAzExtParentTreeItem(child)) {
-                        (<AzExtParentTreeItem>child).clearCache();
-                    }
-                }
-                this._cachedChildren = [];
-            } else if (!this.hasMoreChildrenImpl()) {
-                // No-op since all children are already loaded
-                return;
-            }
-
-            if (this.collapsibleState === TreeItemCollapsibleState.Expanded) {
-                this.treeDataProvider.collapsibleStateTracker?.onDidExpandOrRefreshExpandedEmitter.fire(this);
-            }
-
-            const newTreeItems: AzExtTreeItem[] = await this.loadMoreChildrenImpl(this._clearCache, context);
-            this._cachedChildren = this._cachedChildren.concat(newTreeItems).sort((ti1, ti2) => this.compareChildrenImpl(ti1, ti2));
-        } finally {
-            this._clearCache = false;
+    public async loadChildren(context: types.IActionContext): Promise<AzExtTreeItem[]> {
+        if (this.collapsibleState === TreeItemCollapsibleState.Expanded) {
+            this.treeDataProvider.collapsibleStateTracker?.onDidExpandOrRefreshExpandedEmitter.fire(this);
         }
+
+        const newTreeItems: AzExtTreeItem[] = await this.loadMoreChildrenImpl(this._clearCache, context);
+        return newTreeItems.sort((ti1, ti2) => this.compareChildrenImpl(ti1, ti2));
     }
 
     private async getQuickPicks(expectedContextValues: (string | RegExp)[], context: types.ITreeItemPickerContext & Partial<types.ICreateChildImplContext>): Promise<types.IAzureQuickPickItem<GetTreeItemFunction>[]> {

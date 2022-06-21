@@ -101,8 +101,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
 
                 context.telemetry.properties.contextValue = treeItem.contextValue;
 
-                treeItem.clearCache();
-                const children: AzExtTreeItem[] = [...treeItem.creatingTreeItems, ...await treeItem.getCachedChildren(context)];
+                const children: AzExtTreeItem[] = [...treeItem.creatingTreeItems, ...await treeItem.loadChildren(context)];
                 const hasMoreChildren: boolean = treeItem.hasMoreChildrenImpl();
                 context.telemetry.properties.hasMoreChildren = String(hasMoreChildren);
 
@@ -159,7 +158,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
 
     public refreshUIOnly(_treeItem: AzExtTreeItem | undefined): void {
         console.log("Refreshing UI only " + (_treeItem ? _treeItem.label : 'root'));
-        this._onDidChangeTreeDataEmitter.fire(undefined);
+        this._onDidChangeTreeDataEmitter.fire(_treeItem);
     }
 
     public async loadMore(treeItem: AzExtParentTreeItem, context: types.IActionContext): Promise<void> {
