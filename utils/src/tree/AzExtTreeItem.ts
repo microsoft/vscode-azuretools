@@ -119,7 +119,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     }
 
     public get tooltip(): string | undefined {
-        if(workspaceConfig.get("azureTools.showContextValues")) {
+        if(process.env.DEBUGTELEMETRY === "v" && workspaceConfig.get("azureTools.showContextValues")) {
             return `Context: "${this.contextValue}"`;
         } else {
             return this._tooltip;
