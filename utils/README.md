@@ -158,9 +158,13 @@ export class WebAppProvider extends SubscriptionTreeItem {
 }
 ```
 
-### Debug telemetry
+### Debug Telemetry
 
 If the environment variable `DEBUGTELEMETRY` is set to a non-empty, non-zero value, then the telemetry reporter used internally by this package will not attempt to send any data.  If the value is 'verbose' or 'v', the telemetry will not be sent but will be displayed on the console window.
+
+### Display Context Values
+
+With environment variable `DEBUGTELEMETRY` set to 'v' and settings.json field `"azureTools.showContextValues": true`, tooltips on treeItems will display their `contextValue` instead of their conventional tooltip.  Set this value to false if you wish to display the normal tooltip while in debug mode.  Tree items that were rendered before the change took place will need to be rerendered before the change will appear.
 
 ## Azure Extension Tree File System
 
