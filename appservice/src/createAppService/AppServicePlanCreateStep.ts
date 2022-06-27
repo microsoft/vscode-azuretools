@@ -73,7 +73,8 @@ async function getNewPlan(context: IAppServiceWizardContext): Promise<AppService
         kind: getPlanKind(context),
         sku: nonNullProp(context, 'newPlanSku'),
         location: location.name,
-        reserved: context.newSiteOS === WebsiteOS.linux  // The secret property - must be set to true to make it a Linux plan. Confirmed by the team who owns this API.
+        reserved: context.newSiteOS === WebsiteOS.linux,  // The secret property - must be set to true to make it a Linux plan. Confirmed by the team who owns this API.
+        zoneRedundant: context.zoneRedundant,
     };
 
     const skuFamily = context.newPlanSku?.family ? context.newPlanSku?.family.toLowerCase() : '';
