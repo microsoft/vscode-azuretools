@@ -9,7 +9,8 @@ import { NotImplementedError } from '../errors';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
 import { IAzExtParentTreeItemInternal, IAzExtTreeDataProviderInternal, isAzExtParentTreeItem } from "./InternalInterfaces";
-import { workspaceConfig } from '../workspaceConfig';
+import { settingUtils } from '../utils/settingUtils';
+import { showContextValueSetting } from '../constants';
 
 export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     //#region Properties implemented by base class
@@ -119,7 +120,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     }
 
     public get tooltip(): string | undefined {
-        if(process.env.DEBUGTELEMETRY === "v" && workspaceConfig.get("showContextValues")) {
+        if(process.env.DEBUGTELEMETRY === 'v' && settingUtils.getWorkspaceSetting(showContextValueSetting) === true) {
             return `Context: "${this.contextValue}"`;
         } else {
             return this._tooltip;
