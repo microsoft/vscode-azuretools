@@ -164,7 +164,7 @@ If the environment variable `DEBUGTELEMETRY` is set to a non-empty, non-zero val
 
 ### Display Context Values
 
-With environment variable `DEBUGTELEMETRY` set to 'v' and settings.json field `"azureTools.showContextValues": true`, tooltips on treeItems will display their `contextValue` instead of their conventional tooltip.  Set this value to false if you wish to display the normal tooltip while in debug mode.  Tree items that were rendered before the change took place will need to be rerendered before the change will appear.
+With environment variable `DEBUGTELEMETRY` set to 'v' and settings.json field `"azureTools.showContextValues": true`, tooltips on treeItems will display their `contextValue` instead of their conventional tooltip.  Set this value to false if you wish to display the normal tooltip while in debug mode.  The change in tooltip will then be reflected after the next user action is made through the tree GUI.
 
 ## Azure Extension Tree File System
 
