@@ -302,6 +302,7 @@ export interface PushDeploymentZipPushDeployOptionalParams extends msRest.Reques
   authorEmail?: string;
   deployer?: string;
   message?: string;
+  trackDeploymentId?: boolean;
 }
 
 /**
