@@ -91,7 +91,7 @@ export async function localGitDeploy(site: ParsedSite, options: localGitOptions,
                             tokenSource.cancel();
                         });
 
-                        waitForDeploymentToComplete(context, site, commitId, token).then(resolve).catch(reject);
+                        waitForDeploymentToComplete(context, site, {expectedId: commitId, token}).then(resolve).catch(reject);
                     });
                 } finally {
                     tokenSource.dispose();
