@@ -91,7 +91,8 @@ const zipPushDeployOperationSpec: msRest.OperationSpec = {
     Parameters.author,
     Parameters.authorEmail,
     Parameters.deployer,
-    Parameters.message
+    Parameters.message,
+    Parameters.trackDeploymentId
   ],
   requestBody: {
     parameterPath: "file",
