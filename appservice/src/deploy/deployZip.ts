@@ -17,13 +17,17 @@ export async function deployZip(context: IDeployContext, site: ParsedSite, fsPat
     const response = await runWithZipStream(context, {
         fsPath, site, pathFileMap,
         callback: async zipStream => {
-            return await kuduClient.pushDeployment.zipPushDeploy(() => zipStream, { isAsync: true, author: 'VS Code' });
+            return await kuduClient.pushDeployment.zipPushDeploy(() => zipStream, { isAsync: true, author: 'VS Code', trackDeploymentId: true });
         }
     });
     let locationUrl: string | undefined;
-    if (response) {
-        context.telemetry.properties.deploymentId = response._response.headers.get('scm-deployment-id');
-        locationUrl = response._response.headers.get('location');
+    try {
+        if (response) {
+            context.telemetry.properties.deploymentId = response._response.headers.get('scm-deployment-id');
+            locationUrl = response._response.headers.get('location');
+        }
+    } catch (e) {
+        // swallow errors, we don't want a failure here to block deployment
     }
 
     await waitForDeploymentToComplete(context, site, { locationUrl});
