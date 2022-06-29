@@ -8,6 +8,9 @@ import { localize } from "./localize";
 
 export const learnMore: string = localize('learnMore', "Learn more");
 
+export const azToolsPrefix: string = "azureTools";
+export const showContextValueSetting: string = "showContextValues";
+
 export namespace AzExtQuickInputButtons {
     export const LearnMore: QuickInputButton = { iconPath: new ThemeIcon('question'), tooltip: learnMore }
 }
