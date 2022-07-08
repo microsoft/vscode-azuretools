@@ -9,30 +9,17 @@ import * as types from '../../index';
 import * as hTypes from '../../hostapi';
 import { parseError } from "../parseError";
 
-export enum ActivityStatus {
-    NotStarted = 'NotStarted',
-    Running = 'Running',
-    Succeeded = 'Succeeded',
-    Failed = 'Failed',
-    Cancelled = 'Cancelled',
-}
-
 export abstract class ActivityBase<R> implements hTypes.Activity {
 
-    public readonly onStart: typeof this._onStartEmitter.event;
-    public readonly onProgress: typeof this._onProgressEmitter.event;
-    public readonly onSuccess: typeof this._onSuccessEmitter.event;
-    public readonly onError: typeof this._onErrorEmitter.event;
-
-    private readonly _onStartEmitter = new EventEmitter<hTypes.OnStartActivityData>();
-    private readonly _onProgressEmitter = new EventEmitter<hTypes.OnProgressActivityData>();
-    private readonly _onSuccessEmitter = new EventEmitter<hTypes.OnSuccessActivityData>();
-    private readonly _onErrorEmitter = new EventEmitter<hTypes.OnErrorActivityData>();
-
-    private status: ActivityStatus = ActivityStatus.NotStarted;
-    public error?: types.IParsedError;
-    public readonly task: types.ActivityTask<R>;
     public readonly id: string;
+    public status: types.ActivityStatus = types.ActivityStatus.NotStarted;
+    public error?: types.IParsedError;
+    public message?: string;
+
+    public readonly onChange: typeof this._onChangeEmitter.event;
+    private readonly _onChangeEmitter = new EventEmitter();
+
+    public readonly task: types.ActivityTask<R>;
     public readonly cancellationTokenSource: CancellationTokenSource = new CancellationTokenSource();
 
     abstract initialState(): hTypes.ActivityTreeItemOptions;
@@ -43,36 +30,35 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
         this.id = randomUUID();
         this.task = task;
 
-        this.onStart = this._onStartEmitter.event;
-        this.onProgress = this._onProgressEmitter.event;
-        this.onSuccess = this._onSuccessEmitter.event;
-        this.onError = this._onErrorEmitter.event;
+        this.onChange = this._onChangeEmitter.event;
     }
 
     private report(progress: { message?: string; increment?: number }): void {
-        this._onProgressEmitter.fire({ ...this.getState(), message: progress.message });
+        this.message = progress.message ?? this.message;
+        this._onChangeEmitter.fire(null);
     }
 
     public async run(): Promise<R> {
         try {
-            this._onStartEmitter.fire(this.getState());
+            this.status = types.ActivityStatus.Running;
+            this._onChangeEmitter.fire(null);
             const result = await this.task({ report: this.report.bind(this) as typeof this.report }, this.cancellationTokenSource.token);
-            this.status = ActivityStatus.Succeeded;
-            this._onSuccessEmitter.fire(this.getState());
+            this.status = types.ActivityStatus.Succeeded;
+            this._onChangeEmitter.fire(null);
             return result as R;
         } catch (e) {
             this.error = parseError(e);
-            this.status = ActivityStatus.Failed;
-            this._onErrorEmitter.fire({ ...this.getState(), error: e });
+            this.status = types.ActivityStatus.Failed;
+            this._onChangeEmitter.fire(null);
             throw e;
         }
     }
 
-    public getState(): hTypes.ActivityTreeItemOptions {
+    public get state(): hTypes.ActivityTreeItemOptions {
         switch (this.status) {
-            case ActivityStatus.Failed:
+            case types.ActivityStatus.Failed:
                 return this.errorState(this.error);
-            case ActivityStatus.Succeeded:
+            case types.ActivityStatus.Succeeded:
                 return this.successState();
             default:
                 return this.initialState();

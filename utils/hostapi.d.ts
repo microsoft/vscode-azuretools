@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import type * as vscode from 'vscode';
-import type { AbstractAzExtTreeItem, AzExtParentTreeItem, AzExtTreeDataProvider, AzExtTreeItem, IActionContext, IAzureQuickPickOptions, ISubscriptionContext, ITreeItemPickerContext, SealedAzExtTreeItem } from './index'; // This must remain `import type` or else a circular reference will result
+import type { AbstractAzExtTreeItem, AzExtParentTreeItem, AzExtTreeDataProvider, AzExtTreeItem, IActionContext, IAzureQuickPickOptions, IParsedError, ISubscriptionContext, ITreeItemPickerContext, SealedAzExtTreeItem, ActivityStatus } from './index'; // This must remain `import type` or else a circular reference will result
 
 /**
  * The API implemented by the Azure Resource Groups host extension
@@ -263,25 +263,15 @@ export interface Activity {
      */
     cancellationTokenSource?: vscode.CancellationTokenSource;
 
-    /**
-     * Fire this event to start the activity
-     */
-    onStart: vscode.Event<OnStartActivityData>;
+    status: ActivityStatus;
 
-    /**
-     * Fire this event to report progress on the activity
-     */
-    onProgress: vscode.Event<OnProgressActivityData>;
-
-    /**
-     * Fire this event when the activity succeeds
-     */
-    onSuccess: vscode.Event<OnSuccessActivityData>;
+    error?: IParsedError;
+    message?: string;
 
     /**
      * Fire this event when the activity fails
      */
-    onError: vscode.Event<OnErrorActivityData>;
+    onChange: vscode.Event<unknown>;
 }
 
 /**

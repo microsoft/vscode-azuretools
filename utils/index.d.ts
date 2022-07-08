@@ -9,7 +9,15 @@ import type { Environment } from '@azure/ms-rest-azure-env';
 import { CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
-import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
+import type { Activity, ActivityTreeItemOptions, AppResource } from './hostapi'; // This must remain `import type` or else a circular reference will result
+
+export const enum ActivityStatus {
+    NotStarted = 'NotStarted',
+    Running = 'Running',
+    Succeeded = 'Succeeded',
+    Failed = 'Failed',
+    Cancelled = 'Cancelled',
+}
 
 export declare interface RunWithTemporaryDescriptionOptions {
     description: string;
@@ -1079,10 +1087,7 @@ export interface IWizardOptions<T extends IActionContext> {
 export type ActivityTask<R> = (progress: Progress<{ message?: string, increment?: number }>, cancellationToken: CancellationToken) => Promise<R>;
 
 export declare abstract class ActivityBase<R> implements Activity {
-    public readonly onStart: Event<OnStartActivityData>;
-    public readonly onProgress: Event<OnProgressActivityData>;
-    public readonly onSuccess: Event<OnSuccessActivityData>;
-    public readonly onError: Event<OnErrorActivityData>;
+    public readonly onChange: Event<unknown>;
 
     public readonly task: ActivityTask<R>;
     public readonly id: string;
@@ -1093,8 +1098,13 @@ export declare abstract class ActivityBase<R> implements Activity {
     abstract errorState(error: IParsedError): ActivityTreeItemOptions;
 
     public constructor(task: ActivityTask<R>);
+
+    status: ActivityStatus;
+    error?: IParsedError | undefined;
+    message?: string | undefined;
     public report(progress: { message?: string; increment?: number }): void;
     public run(): Promise<void>;
+    public get state(): ActivityTreeItemOptions;
 }
 
 /**
