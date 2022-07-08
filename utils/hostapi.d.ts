@@ -272,6 +272,8 @@ export interface Activity {
      * Fire this event when the activity fails
      */
     onChange: vscode.Event<unknown>;
+
+    options: ActivityTreeItemOptions;
 }
 
 /**

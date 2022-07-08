@@ -7,7 +7,8 @@ import { isNullOrUndefined } from 'util';
 import * as vscode from 'vscode';
 import { ProgressLocation } from 'vscode';
 import * as types from '../../index';
-import { ExecuteActivity } from '../activityLog/activities/ExecuteActivity';
+import { ExecuteActivityOptions } from '../activityLog/activities/ExecuteActivity';
+import { ActivityBase } from '../activityLog/Activity';
 import { GoBackError, UserCancelledError } from '../errors';
 import { localize } from '../localize';
 import { parseError } from '../parseError';
@@ -182,9 +183,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
     private async withProgress(options: vscode.ProgressOptions, task: (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) => Promise<void>): Promise<void> {
         if (this._context.registerActivity) {
             this._context.activityTitle ??= this.title;
-            const activity = new ExecuteActivity({
-                context: this._context as types.ExecuteActivityContext,
-            }, async (activityProgress) => {
+            const activity = new ActivityBase(async (activityProgress) => {
                 if (this._context.suppressNotification) {
                     await task(activityProgress, activity.cancellationTokenSource.token);
                 } else {
@@ -203,7 +202,10 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                         await task(internalProgress, token);
                     });
                 }
-            });
+                // can allow consumer to provide their own ActivityOptionsFactory, but use this one as default
+            }, new ExecuteActivityOptions({
+                context: this._context as types.ExecuteActivityContext,
+            }));
 
             await this._context.registerActivity(activity);
             await activity.run();

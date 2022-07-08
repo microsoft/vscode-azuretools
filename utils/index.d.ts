@@ -1104,7 +1104,7 @@ export declare abstract class ActivityBase<R> implements Activity {
     message?: string | undefined;
     public report(progress: { message?: string; increment?: number }): void;
     public run(): Promise<void>;
-    public get state(): ActivityTreeItemOptions;
+    public get options(): ActivityTreeItemOptions;
 }
 
 /**

@@ -9,7 +9,11 @@ import * as types from '../../index';
 import * as hTypes from '../../hostapi';
 import { parseError } from "../parseError";
 
-export abstract class ActivityBase<R> implements hTypes.Activity {
+export interface ActivityOptionsFactory {
+    getOptions(activity: hTypes.Activity): hTypes.ActivityTreeItemOptions;
+}
+
+export class ActivityBase<R> implements hTypes.Activity {
 
     public readonly id: string;
     public status: types.ActivityStatus = types.ActivityStatus.NotStarted;
@@ -22,11 +26,7 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
     public readonly task: types.ActivityTask<R>;
     public readonly cancellationTokenSource: CancellationTokenSource = new CancellationTokenSource();
 
-    abstract initialState(): hTypes.ActivityTreeItemOptions;
-    abstract successState(): hTypes.ActivityTreeItemOptions;
-    abstract errorState(error?: types.IParsedError): hTypes.ActivityTreeItemOptions;
-
-    public constructor(task: types.ActivityTask<R>) {
+    public constructor(task: types.ActivityTask<R>, private readonly optionsFactory: ActivityOptionsFactory) {
         this.id = randomUUID();
         this.task = task;
 
@@ -54,14 +54,7 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
         }
     }
 
-    public get state(): hTypes.ActivityTreeItemOptions {
-        switch (this.status) {
-            case types.ActivityStatus.Failed:
-                return this.errorState(this.error);
-            case types.ActivityStatus.Succeeded:
-                return this.successState();
-            default:
-                return this.initialState();
-        }
+    public get options(): hTypes.ActivityTreeItemOptions {
+        return this.optionsFactory.getOptions(this);
     }
 }
