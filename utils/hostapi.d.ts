@@ -4,6 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import type * as vscode from 'vscode';
+import type { AzureResourceType } from './azureResourceType';
 import type { AbstractAzExtTreeItem, AzExtParentTreeItem, AzExtTreeDataProvider, AzExtTreeItem, IActionContext, IAzureQuickPickOptions, ISubscriptionContext, ITreeItemPickerContext, SealedAzExtTreeItem } from './index'; // This must remain `import type` or else a circular reference will result
 
 /**
@@ -128,6 +129,7 @@ export interface PickAppResourceOptions extends IAzureQuickPickOptions {
 export interface AppResource {
     readonly id: string;
     readonly name: string;
+    readonly azureResourceType: AzureResourceType;
     readonly type: string;
     readonly kind?: string;
     readonly location?: string;
