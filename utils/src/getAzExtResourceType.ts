@@ -3,12 +3,12 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { AzureResourceType } from "../azureResourceType";
+import { AzExtResourceType } from "../azExtResourceType";
 
 const FunctionAppKind = 'functionapp';
 const LogicAppKind = 'workflowapp';
 
-export function getAzureResourceType(resource: { type: string; kind?: string; }): AzureResourceType | undefined {
+export function getAzExtResourceType(resource: { type: string; kind?: string; }): AzExtResourceType | undefined {
     const type = resource.type.toLowerCase();
     const kind = resource.kind?.toLowerCase() || '';
 
@@ -16,99 +16,99 @@ export function getAzureResourceType(resource: { type: string; kind?: string; })
         case 'microsoft.web/sites':
             // Logic apps, function apps, and app services all have the same type
             if (kind.includes(FunctionAppKind) && kind.includes(LogicAppKind)) {
-                return AzureResourceType.LogicApp;
+                return AzExtResourceType.LogicApp;
             } else if (kind.includes(FunctionAppKind)) {
-                return AzureResourceType.FunctionApp;
+                return AzExtResourceType.FunctionApp;
             } else {
-                return AzureResourceType.AppServices;
+                return AzExtResourceType.AppServices;
             }
 
         case 'microsoft.web/staticsites':
-            return AzureResourceType.StaticWebApps;
+            return AzExtResourceType.StaticWebApps;
 
         case 'microsoft.compute/virtualmachines':
-            return AzureResourceType.VirtualMachines;
+            return AzExtResourceType.VirtualMachines;
 
         case 'microsoft.storage/storageaccounts':
-            return AzureResourceType.StorageAccounts;
+            return AzExtResourceType.StorageAccounts;
 
         case 'microsoft.network/networksecuritygroups':
-            return AzureResourceType.NetworkSecurityGroups;
+            return AzExtResourceType.NetworkSecurityGroups;
 
         case 'microsoft.network/loadbalancers':
-            return AzureResourceType.LoadBalancers;
+            return AzExtResourceType.LoadBalancers;
 
         case 'microsoft.compute/disks':
-            return AzureResourceType.Disks;
+            return AzExtResourceType.Disks;
 
         case 'microsoft.compute/images':
-            return AzureResourceType.Images;
+            return AzExtResourceType.Images;
 
         case 'microsoft.compute/availabilitysets':
-            return AzureResourceType.AvailabilitySets;
+            return AzExtResourceType.AvailabilitySets;
 
         case 'microsoft.compute/virtualmachinescalesets':
-            return AzureResourceType.VirtualMachineScaleSets;
+            return AzExtResourceType.VirtualMachineScaleSets;
 
         case 'microsoft.network/virtualnetworks':
-            return AzureResourceType.VirtualNetworks;
+            return AzExtResourceType.VirtualNetworks;
 
         case 'microsoft.cdn/profiles':
-            return AzureResourceType.FrontDoorAndCdnProfiles;
+            return AzExtResourceType.FrontDoorAndCdnProfiles;
 
         case 'microsoft.network/publicipaddresses':
-            return AzureResourceType.PublicIpAddresses;
+            return AzExtResourceType.PublicIpAddresses;
 
         case 'microsoft.network/networkinterfaces':
-            return AzureResourceType.NetworkInterfaces;
+            return AzExtResourceType.NetworkInterfaces;
 
         case 'microsoft.network/networkwatchers':
-            return AzureResourceType.NetworkWatchers;
+            return AzExtResourceType.NetworkWatchers;
 
         case 'microsoft.batch/batchaccounts':
-            return AzureResourceType.BatchAccounts;
+            return AzExtResourceType.BatchAccounts;
 
         case 'microsoft.containerregistry/registries':
-            return AzureResourceType.ContainerRegistry;
+            return AzExtResourceType.ContainerRegistry;
 
         case 'microsoft.dbforpostgresql/servers':
-            return AzureResourceType.PostgresqlServersStandard;
+            return AzExtResourceType.PostgresqlServersStandard;
 
         case 'microsoft.dbforpostgresql/flexibleservers':
-            return AzureResourceType.PostgresqlServersFlexible;
+            return AzExtResourceType.PostgresqlServersFlexible;
 
         case 'microsoft.dbformysql/servers':
-            return AzureResourceType.MysqlServers;
+            return AzExtResourceType.MysqlServers;
 
         case 'microsoft.sql/servers/databases':
-            return AzureResourceType.SqlDatabases;
+            return AzExtResourceType.SqlDatabases;
 
         case 'microsoft.sql/servers':
-            return AzureResourceType.SqlServers;
+            return AzExtResourceType.SqlServers;
 
         case 'microsoft.documentdb/databaseaccounts':
-            return AzureResourceType.AzureCosmosDb;
+            return AzExtResourceType.AzureCosmosDb;
 
         case 'microsoft.operationalinsights/workspaces':
-            return AzureResourceType.OperationalInsightsWorkspaces;
+            return AzExtResourceType.OperationalInsightsWorkspaces;
 
         case 'microsoft.operationsmanagement/solutions':
-            return AzureResourceType.OperationsManagementSolutions;
+            return AzExtResourceType.OperationsManagementSolutions;
 
         case 'microsoft.insights/components':
-            return AzureResourceType.ApplicationInsights;
+            return AzExtResourceType.ApplicationInsights;
 
         case 'microsoft.web/serverfarms':
-            return AzureResourceType.AppServicePlans;
+            return AzExtResourceType.AppServicePlans;
 
         case 'microsoft.web/kubeenvironments':
-            return AzureResourceType.AppServiceKubernetesEnvironment;
+            return AzExtResourceType.AppServiceKubernetesEnvironment;
 
         case 'microsoft.app/managedenvironments':
-            return AzureResourceType.ContainerAppsEnvironment;
+            return AzExtResourceType.ContainerAppsEnvironment;
 
         case 'microsoft.app/containerapps':
-            return AzureResourceType.ContainerApps;
+            return AzExtResourceType.ContainerApps;
 
         default:
             return undefined;

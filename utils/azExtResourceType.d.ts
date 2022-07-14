@@ -7,7 +7,7 @@
  * Normalized type for Azure resources that uniquely identifies resource type for the purposes
  * of the Azure extensions
  */
-export declare enum AzureResourceType {
+export declare enum AzExtResourceType {
     AppServices = 'AppServices',
     StaticWebApps = 'StaticWebApps',
     FunctionApp = 'FunctionApp',
@@ -44,8 +44,8 @@ export declare enum AzureResourceType {
 
 /**
  * Gets a normalized type for an Azure resource, accounting for the fact that some
- * Azure resources share values for type
- * @param resource The resource to check the {@link AzureResourceType} for
+ * Azure resources share values for type and/or kind
+ * @param resource The resource to check the {@link AzExtResourceType} for
  * @returns The normalized Azure resource type
  */
-export declare function getAzureResourceType(resource: { type: string; kind?: string }): AzureResourceType | undefined;
+export declare function getAzExtResourceType(resource: { type: string; kind?: string }): AzExtResourceType | undefined;
