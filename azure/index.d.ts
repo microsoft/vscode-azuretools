@@ -419,10 +419,10 @@ export declare namespace uiUtils {
     export function listAllIterator<T>(iterator: PagedAsyncIterableIterator<T>): Promise<T[]>
 }
 
-export interface ParsedAzureResourceId {
+interface ParsedAzureResourceId {
     rawId: string;
     subscriptionId: string;
-    resourceGroupId: string;
+    resourceGroupName: string;
     provider: string;
     resourceName: string;
 }

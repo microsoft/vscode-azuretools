@@ -16,7 +16,7 @@ export function parseAzureResourceId(id: string): types.ParsedAzureResourceId {
     return {
         rawId: id,
         subscriptionId: matches[1],
-        resourceGroupId: matches[2],
+        resourceGroupName: matches[2],
         provider: matches[3],
         resourceName: matches[4]
     }
