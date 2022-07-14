@@ -190,7 +190,6 @@ export function getAzExtResourceType(resource: { type: string; kind?: string; })
         case 'microsoft.apimanagement/service':
             return AzExtResourceType.ApiManagementService;
 
-
         default:
             return undefined;
     }
