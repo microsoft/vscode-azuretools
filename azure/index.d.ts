@@ -418,3 +418,13 @@ export function createAzureSubscriptionClient<T>(context: AzExtClientContext, cl
 export declare namespace uiUtils {
     export function listAllIterator<T>(iterator: PagedAsyncIterableIterator<T>): Promise<T[]>
 }
+
+export interface ParsedAzureResourceId {
+    rawId: string;
+    subscriptionId: string;
+    resourceGroupId: string;
+    provider: string;
+    resourceName: string;
+}
+
+export function parseAzureResourceId(id: string): ParsedAzureResourceId;
