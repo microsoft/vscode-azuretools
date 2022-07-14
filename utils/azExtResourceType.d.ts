@@ -58,7 +58,7 @@ export declare enum AzExtResourceType {
     LogicWorkflows = 'LogicWorkflows',
     KubernetesConnectedClusters = 'KubernetesConnectedClusters',
     KeyVaults = 'KeyVaults',
-    Customlocations = 'Customlocations',
+    CustomLocations = 'CustomLocations',
     EventHubNamespaces = 'EventHubNamespaces',
     EventGridDomains = 'EventGridDomains',
     EventGridEventSubscriptions = 'EventGridEventSubscriptions',

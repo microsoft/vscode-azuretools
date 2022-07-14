@@ -161,7 +161,7 @@ export function getAzExtResourceType(resource: { type: string; kind?: string; })
             return AzExtResourceType.KeyVaults;
 
         case 'microsoft.extendedlocation/customlocations':
-            return AzExtResourceType.Customlocations;
+            return AzExtResourceType.CustomLocations;
 
         case 'microsoft.eventhub/namespaces':
             return AzExtResourceType.EventHubNamespaces;
