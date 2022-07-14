@@ -110,6 +110,86 @@ export function getAzExtResourceType(resource: { type: string; kind?: string; })
         case 'microsoft.app/containerapps':
             return AzExtResourceType.ContainerApps;
 
+
+        case 'microsoft.web/hostingenvironments':
+            return AzExtResourceType.WebHostingEnvironments;
+
+        case 'microsoft.signalrservice/signalr':
+            return AzExtResourceType.SignalRService;
+
+        case 'microsoft.servicefabricmesh/applications':
+            return AzExtResourceType.ServiceFabricMeshApplications;
+
+        case 'microsoft.servicefabric/clusters':
+            return AzExtResourceType.ServiceFabricClusters;
+
+        case 'microsoft.servicebus/namespaces':
+            return AzExtResourceType.ServiceBusNamespaces;
+
+        case 'microsoft.notificationhubs/namespaces':
+            return AzExtResourceType.NotificationHubNamespaces;
+
+        case 'microsoft.network/applicationgateways':
+            return AzExtResourceType.NetworkApplicationGateways;
+
+        case 'microsoft.network/applicationsecuritygroups':
+            return AzExtResourceType.NetworkApplicationSecurityGroups;
+
+        case 'microsoft.network/localnetworkgateways':
+            return AzExtResourceType.NetworkLocalNetworkGateways;
+
+        case 'microsoft.network/publicipprefixes':
+            return AzExtResourceType.NetworkPublicIpPrefixes;
+
+        case 'microsoft.network/routetables':
+            return AzExtResourceType.NetworkRouteTables;
+
+        case 'microsoft.network/virtualnetworkgateways':
+            return AzExtResourceType.NetworkVirtualNetworkGateways;
+
+        case 'microsoft.managedidentity/userassignedidentities':
+            return AzExtResourceType.ManagedIdentityUserAssignedIdentities;
+
+        case 'microsoft.logic/workflows':
+            return AzExtResourceType.LogicWorkflows;
+
+        case 'microsoft.kubernetes/connectedclusters':
+            return AzExtResourceType.KubernetesConnectedClusters;
+
+        case 'microsoft.keyvault/vaults':
+            return AzExtResourceType.KeyVaults;
+
+        case 'microsoft.extendedlocation/customlocations':
+            return AzExtResourceType.Customlocations;
+
+        case 'microsoft.eventhub/namespaces':
+            return AzExtResourceType.EventHubNamespaces;
+
+        case 'microsoft.eventgrid/domains':
+            return AzExtResourceType.EventGridDomains;
+
+        case 'microsoft.eventgrid/eventsubscriptions':
+            return AzExtResourceType.EventGridEventSubscriptions;
+
+        case 'microsoft.eventgrid/topics':
+            return AzExtResourceType.EventGridTopics;
+
+        case 'microsoft.devtestlab/labs':
+            return AzExtResourceType.DevTestLabs;
+
+        case 'microsoft.devices/iothubs':
+            return AzExtResourceType.DeviceIotHubs;
+
+        case 'microsoft.containerservice/managedclusters':
+            return AzExtResourceType.ContainerServiceManagedClusters;
+
+        case 'microsoft.cache/redis':
+            return AzExtResourceType.CacheRedis;
+
+        case 'microsoft.apimanagement/service':
+            return AzExtResourceType.ApiManagementService;
+
+
         default:
             return undefined;
     }
