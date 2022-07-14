@@ -36,7 +36,7 @@ export class ExecuteActivity<C extends types.ExecuteActivityContext> extends Act
                     id: nonNullProp(activityResult, 'id'),
                     name: nonNullProp(activityResult, 'name'),
                     type: nonNullProp(activityResult, 'type'),
-                    azureResourceType: nonNullProp(activityResult, 'azureResourceType'),
+                    azExtResourceType: nonNullProp(activityResult, 'azExtResourceType'),
                 }
 
                 const ti = new GenericTreeItem(parent, {
