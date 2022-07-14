@@ -70,7 +70,6 @@ export declare enum AzExtResourceType {
     WebHostingEnvironments = 'WebHostingEnvironments',
 }
 
-
 /**
  * Gets a normalized type for an Azure resource, accounting for the fact that some
  * Azure resources share values for type and/or kind
