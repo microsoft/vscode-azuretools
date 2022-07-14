@@ -422,7 +422,7 @@ export declare namespace uiUtils {
 interface ParsedAzureResourceId {
     rawId: string;
     subscriptionId: string;
-    resourceGroupName: string;
+    resourceGroup: string;
     provider: string;
     resourceName: string;
 }
