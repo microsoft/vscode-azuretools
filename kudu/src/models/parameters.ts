@@ -416,3 +416,15 @@ export const version: msRest.OperationQueryParameter = {
     }
   }
 };
+export const trackDeploymentId: msRest.OperationQueryParameter = {
+  parameterPath: [
+    "options",
+    "trackDeploymentId"
+  ],
+  mapper: {
+    serializedName: "trackDeploymentId",
+    type: {
+      name: "Boolean"
+    }
+  }
+};

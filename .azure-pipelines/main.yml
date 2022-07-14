@@ -19,7 +19,7 @@ jobs:
 
 - job: macOS
   pool:
-    vmImage: macOS-latest
+    vmImage: macOS-12
   steps:
   - template: job-steps.yml
 

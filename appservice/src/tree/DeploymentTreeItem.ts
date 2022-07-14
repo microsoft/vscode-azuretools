@@ -100,7 +100,7 @@ export class DeploymentTreeItem extends AzExtTreeItem {
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
             const refreshingInteveral: NodeJS.Timer = setInterval(async () => { await this.refresh(context); }, 1000); /* the status of the label changes during deployment so poll for that*/
             try {
-                await waitForDeploymentToComplete(context, this.parent.site, this.id);
+                await waitForDeploymentToComplete(context, this.parent.site, {expectedId: this.id});
                 await this.parent.refresh(context); /* refresh entire node because active statuses has changed */
                 void window.showInformationMessage(redeployed);
                 ext.outputChannel.appendLog(redeployed);
