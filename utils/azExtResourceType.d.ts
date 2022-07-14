@@ -8,7 +8,7 @@
  * of the Azure extensions
  */
 export declare enum AzExtResourceType {
-AppServices = 'AppServices',
+    AppServices = 'AppServices',
     AzureCosmosDb = 'AzureCosmosDb',
     ContainerApps = 'ContainerApps',
     ContainerAppsEnvironment = 'ContainerAppsEnvironment',
