@@ -110,6 +110,7 @@ export function getAzExtResourceType(resource: { type: string; kind?: string; })
         case 'microsoft.app/containerapps':
             return AzExtResourceType.ContainerApps;
 
+        // The below are not supported by the Azure extensions but have icons in the Resources extension
 
         case 'microsoft.web/hostingenvironments':
             return AzExtResourceType.WebHostingEnvironments;
