@@ -23,174 +23,66 @@ export function getAzExtResourceType(resource: { type: string; kind?: string; })
                 return AzExtResourceType.AppServices;
             }
 
-        case 'microsoft.app/containerapps':
-            return AzExtResourceType.ContainerApps;
-
-        case 'microsoft.app/managedenvironments':
-            return AzExtResourceType.ContainerAppsEnvironment;
-
-        case 'microsoft.compute/virtualmachines':
-            return AzExtResourceType.VirtualMachines;
-
-        case 'microsoft.dbforpostgresql/flexibleservers':
-            return AzExtResourceType.PostgresqlServersFlexible;
-
-        case 'microsoft.dbforpostgresql/servers':
-            return AzExtResourceType.PostgresqlServersStandard;
-
-        case 'microsoft.documentdb/databaseaccounts':
-            return AzExtResourceType.AzureCosmosDb;
-
-        case 'microsoft.storage/storageaccounts':
-            return AzExtResourceType.StorageAccounts;
-
-        case 'microsoft.web/staticsites':
-            return AzExtResourceType.StaticWebApps;
-
-        // The below are not supported by the Azure extensions but have icons in the Resources extension
-
-        case 'microsoft.apimanagement/service':
-            return AzExtResourceType.ApiManagementService;
-
-        case 'microsoft.batch/batchaccounts':
-            return AzExtResourceType.BatchAccounts;
-
-        case 'microsoft.cache/redis':
-            return AzExtResourceType.CacheRedis;
-
-        case 'microsoft.cdn/profiles':
-            return AzExtResourceType.FrontDoorAndCdnProfiles;
-
-        case 'microsoft.compute/availabilitysets':
-            return AzExtResourceType.AvailabilitySets;
-
-        case 'microsoft.compute/disks':
-            return AzExtResourceType.Disks;
-
-        case 'microsoft.compute/images':
-            return AzExtResourceType.Images;
-
-        case 'microsoft.compute/virtualmachinescalesets':
-            return AzExtResourceType.VirtualMachineScaleSets;
-
-        case 'microsoft.containerregistry/registries':
-            return AzExtResourceType.ContainerRegistry;
-
-        case 'microsoft.containerservice/managedclusters':
-            return AzExtResourceType.ContainerServiceManagedClusters;
-
-        case 'microsoft.dbformysql/servers':
-            return AzExtResourceType.MysqlServers;
-
-        case 'microsoft.devices/iothubs':
-            return AzExtResourceType.DeviceIotHubs;
-
-        case 'microsoft.devtestlab/labs':
-            return AzExtResourceType.DevTestLabs;
-
-        case 'microsoft.eventgrid/domains':
-            return AzExtResourceType.EventGridDomains;
-
-        case 'microsoft.eventgrid/eventsubscriptions':
-            return AzExtResourceType.EventGridEventSubscriptions;
-
-        case 'microsoft.eventgrid/topics':
-            return AzExtResourceType.EventGridTopics;
-
-        case 'microsoft.eventhub/namespaces':
-            return AzExtResourceType.EventHubNamespaces;
-
-        case 'microsoft.extendedlocation/customlocations':
-            return AzExtResourceType.CustomLocations;
-
-        case 'microsoft.insights/components':
-            return AzExtResourceType.ApplicationInsights;
-
-        case 'microsoft.keyvault/vaults':
-            return AzExtResourceType.KeyVaults;
-
-        case 'microsoft.kubernetes/connectedclusters':
-            return AzExtResourceType.KubernetesConnectedClusters;
-
-        case 'microsoft.logic/workflows':
-            return AzExtResourceType.LogicWorkflows;
-
-        case 'microsoft.managedidentity/userassignedidentities':
-            return AzExtResourceType.ManagedIdentityUserAssignedIdentities;
-
-        case 'microsoft.network/applicationgateways':
-            return AzExtResourceType.NetworkApplicationGateways;
-
-        case 'microsoft.network/applicationsecuritygroups':
-            return AzExtResourceType.NetworkApplicationSecurityGroups;
-
-        case 'microsoft.network/loadbalancers':
-            return AzExtResourceType.LoadBalancers;
-
-        case 'microsoft.network/localnetworkgateways':
-            return AzExtResourceType.NetworkLocalNetworkGateways;
-
-        case 'microsoft.network/networkinterfaces':
-            return AzExtResourceType.NetworkInterfaces;
-
-        case 'microsoft.network/networksecuritygroups':
-            return AzExtResourceType.NetworkSecurityGroups;
-
-        case 'microsoft.network/networkwatchers':
-            return AzExtResourceType.NetworkWatchers;
-
-        case 'microsoft.network/publicipaddresses':
-            return AzExtResourceType.PublicIpAddresses;
-
-        case 'microsoft.network/publicipprefixes':
-            return AzExtResourceType.NetworkPublicIpPrefixes;
-
-        case 'microsoft.network/routetables':
-            return AzExtResourceType.NetworkRouteTables;
-
-        case 'microsoft.network/virtualnetworkgateways':
-            return AzExtResourceType.NetworkVirtualNetworkGateways;
-
-        case 'microsoft.network/virtualnetworks':
-            return AzExtResourceType.VirtualNetworks;
-
-        case 'microsoft.notificationhubs/namespaces':
-            return AzExtResourceType.NotificationHubNamespaces;
-
-        case 'microsoft.operationalinsights/workspaces':
-            return AzExtResourceType.OperationalInsightsWorkspaces;
-
-        case 'microsoft.operationsmanagement/solutions':
-            return AzExtResourceType.OperationsManagementSolutions;
-
-        case 'microsoft.servicebus/namespaces':
-            return AzExtResourceType.ServiceBusNamespaces;
-
-        case 'microsoft.servicefabric/clusters':
-            return AzExtResourceType.ServiceFabricClusters;
-
-        case 'microsoft.servicefabricmesh/applications':
-            return AzExtResourceType.ServiceFabricMeshApplications;
-
-        case 'microsoft.signalrservice/signalr':
-            return AzExtResourceType.SignalRService;
-
-        case 'microsoft.sql/servers':
-            return AzExtResourceType.SqlServers;
-
-        case 'microsoft.sql/servers/databases':
-            return AzExtResourceType.SqlDatabases;
-
-        case 'microsoft.web/hostingenvironments':
-            return AzExtResourceType.WebHostingEnvironments;
-
-        case 'microsoft.web/kubeenvironments':
-            return AzExtResourceType.AppServiceKubernetesEnvironment;
-
-        case 'microsoft.web/serverfarms':
-            return AzExtResourceType.AppServicePlans;
-
         default:
-            return undefined;
+            return azureTypeToAzExtResourceTypeMap[resource.type];
     }
 }
+
+const azureTypeToAzExtResourceTypeMap: Record<string, AzExtResourceType | undefined> = {
+    'microsoft.app/containerapps': AzExtResourceType.ContainerApps,
+    'microsoft.app/managedenvironments': AzExtResourceType.ContainerAppsEnvironment,
+    'microsoft.compute/virtualmachines': AzExtResourceType.VirtualMachines,
+    'microsoft.dbforpostgresql/flexibleservers': AzExtResourceType.PostgresqlServersFlexible,
+    'microsoft.dbforpostgresql/servers': AzExtResourceType.PostgresqlServersStandard,
+    'microsoft.documentdb/databaseaccounts': AzExtResourceType.AzureCosmosDb,
+    'microsoft.storage/storageaccounts': AzExtResourceType.StorageAccounts,
+    'microsoft.web/staticsites': AzExtResourceType.StaticWebApps,
+    // The below are not supported by the Azure extensions but have icons in the Resources extension
+    'microsoft.apimanagement/service': AzExtResourceType.ApiManagementService,
+    'microsoft.batch/batchaccounts': AzExtResourceType.BatchAccounts,
+    'microsoft.cache/redis': AzExtResourceType.CacheRedis,
+    'microsoft.cdn/profiles': AzExtResourceType.FrontDoorAndCdnProfiles,
+    'microsoft.compute/availabilitysets': AzExtResourceType.AvailabilitySets,
+    'microsoft.compute/disks': AzExtResourceType.Disks,
+    'microsoft.compute/images': AzExtResourceType.Images,
+    'microsoft.compute/virtualmachinescalesets': AzExtResourceType.VirtualMachineScaleSets,
+    'microsoft.containerregistry/registries': AzExtResourceType.ContainerRegistry,
+    'microsoft.containerservice/managedclusters': AzExtResourceType.ContainerServiceManagedClusters,
+    'microsoft.dbformysql/servers': AzExtResourceType.MysqlServers,
+    'microsoft.devices/iothubs': AzExtResourceType.DeviceIotHubs,
+    'microsoft.devtestlab/labs': AzExtResourceType.DevTestLabs,
+    'microsoft.eventgrid/domains': AzExtResourceType.EventGridDomains,
+    'microsoft.eventgrid/eventsubscriptions': AzExtResourceType.EventGridEventSubscriptions,
+    'microsoft.eventgrid/topics': AzExtResourceType.EventGridTopics,
+    'microsoft.eventhub/namespaces': AzExtResourceType.EventHubNamespaces,
+    'microsoft.extendedlocation/customlocations': AzExtResourceType.CustomLocations,
+    'microsoft.insights/components': AzExtResourceType.ApplicationInsights,
+    'microsoft.keyvault/vaults': AzExtResourceType.KeyVaults,
+    'microsoft.kubernetes/connectedclusters': AzExtResourceType.KubernetesConnectedClusters,
+    'microsoft.logic/workflows': AzExtResourceType.LogicWorkflows,
+    'microsoft.managedidentity/userassignedidentities': AzExtResourceType.ManagedIdentityUserAssignedIdentities,
+    'microsoft.network/applicationgateways': AzExtResourceType.NetworkApplicationGateways,
+    'microsoft.network/applicationsecuritygroups': AzExtResourceType.NetworkApplicationSecurityGroups,
+    'microsoft.network/loadbalancers': AzExtResourceType.LoadBalancers,
+    'microsoft.network/localnetworkgateways': AzExtResourceType.NetworkLocalNetworkGateways,
+    'microsoft.network/networkinterfaces': AzExtResourceType.NetworkInterfaces,
+    'microsoft.network/networksecuritygroups': AzExtResourceType.NetworkSecurityGroups,
+    'microsoft.network/networkwatchers': AzExtResourceType.NetworkWatchers,
+    'microsoft.network/publicipaddresses': AzExtResourceType.PublicIpAddresses,
+    'microsoft.network/publicipprefixes': AzExtResourceType.NetworkPublicIpPrefixes,
+    'microsoft.network/routetables': AzExtResourceType.NetworkRouteTables,
+    'microsoft.network/virtualnetworkgateways': AzExtResourceType.NetworkVirtualNetworkGateways,
+    'microsoft.network/virtualnetworks': AzExtResourceType.VirtualNetworks,
+    'microsoft.notificationhubs/namespaces': AzExtResourceType.NotificationHubNamespaces,
+    'microsoft.operationalinsights/workspaces': AzExtResourceType.OperationalInsightsWorkspaces,
+    'microsoft.operationsmanagement/solutions': AzExtResourceType.OperationsManagementSolutions,
+    'microsoft.servicebus/namespaces': AzExtResourceType.ServiceBusNamespaces,
+    'microsoft.servicefabric/clusters': AzExtResourceType.ServiceFabricClusters,
+    'microsoft.servicefabricmesh/applications': AzExtResourceType.ServiceFabricMeshApplications,
+    'microsoft.signalrservice/signalr': AzExtResourceType.SignalRService,
+    'microsoft.sql/servers': AzExtResourceType.SqlServers,
+    'microsoft.sql/servers/databases': AzExtResourceType.SqlDatabases,
+    'microsoft.web/hostingenvironments': AzExtResourceType.WebHostingEnvironments,
+    'microsoft.web/kubeenvironments': AzExtResourceType.AppServiceKubernetesEnvironment,
+    'microsoft.web/serverfarms': AzExtResourceType.AppServicePlans,
+};
