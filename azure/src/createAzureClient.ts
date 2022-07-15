@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { BaseRequestPolicy, BasicAuthenticationCredentials, HttpOperationResponse, RequestPolicy, RequestPolicyFactory, RequestPolicyOptions, RestError, ServiceClient, TokenCredentials, WebResource, WebResourceLike } from '@azure/ms-rest-js';
+import { randomUUID } from 'crypto';
 import { Agent } from 'http';
 import { Agent as HttpsAgent } from 'https';
-import { v4 as uuid } from 'uuid';
 import * as vscode from "vscode";
 import * as types from '../index';
 import type { GenericServiceClient } from './GenericServiceClient';
@@ -144,7 +144,7 @@ class CorrelationIdPolicy extends BaseRequestPolicy {
 
     public async sendRequest(request: WebResourceLike): Promise<HttpOperationResponse> {
         const headerName = 'x-ms-correlation-request-id';
-        const id: string = this._context.telemetry.properties[headerName] ||= uuid();
+        const id: string = this._context.telemetry.properties[headerName] ||= randomUUID();
         request.headers.set(headerName, id);
         return await this._nextPolicy.sendRequest(request);
     }

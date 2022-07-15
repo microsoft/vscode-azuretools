@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import type * as vscode from 'vscode';
-import type { AzureResourceBrand } from './azureResourceType';
+import type { AzExtResourceType } from './azExtResourceType';
 import type { AbstractAzExtTreeItem, AzExtParentTreeItem, AzExtTreeDataProvider, AzExtTreeItem, IActionContext, IAzureQuickPickOptions, ISubscriptionContext, ITreeItemPickerContext, SealedAzExtTreeItem } from './index'; // This must remain `import type` or else a circular reference will result
 
 /**
@@ -129,7 +129,11 @@ export interface PickAppResourceOptions extends IAzureQuickPickOptions {
 export interface AppResource {
     readonly id: string;
     readonly name: string;
-    readonly azureResourceType: AzureResourceBrand;
+    /**
+     * This is a custom property that unambiguously describes the type of an Azure resource for the purposes of the Azure extensions.
+     * This accounts for the fact that some Azure resource have overlapping type and kind values.
+     */
+    readonly azExtResourceType: AzExtResourceType;
     readonly type: string;
     readonly kind?: string;
     readonly location?: string;

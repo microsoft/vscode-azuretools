@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { SubscriptionModels } from '@azure/arm-resources-subscriptions';
+import type { Subscription } from '@azure/arm-resources-subscriptions';
 import { TokenCredential } from '@azure/core-auth';
 import { Environment } from '@azure/ms-rest-azure-env';
 import type { TokenCredentialsBase } from '@azure/ms-rest-nodeauth';
@@ -41,7 +41,7 @@ export interface AzureSession {
 
 export interface AzureSubscription {
 	readonly session: AzureSession;
-	readonly subscription: SubscriptionModels.Subscription;
+	readonly subscription: Subscription;
 }
 
 export type AzureResourceFilter = AzureSubscription;
