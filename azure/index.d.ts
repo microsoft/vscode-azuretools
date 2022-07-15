@@ -428,3 +428,4 @@ interface ParsedAzureResourceId {
 }
 
 export function parseAzureResourceId(id: string): ParsedAzureResourceId;
+export function getResourceGroupFromId(id: string): string;

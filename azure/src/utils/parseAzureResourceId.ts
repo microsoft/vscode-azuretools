@@ -21,3 +21,7 @@ export function parseAzureResourceId(id: string): types.ParsedAzureResourceId {
         resourceName: matches[4]
     }
 }
+
+export function getResourceGroupFromId(id: string): string {
+    return parseAzureResourceId(id).resourceGroup;
+}
