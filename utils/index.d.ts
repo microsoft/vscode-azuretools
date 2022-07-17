@@ -1539,6 +1539,13 @@ export declare function nonNullValue<T>(value: T | undefined, propertyNameOrMess
 export declare function nonNullOrEmptyValue(value: string | undefined, propertyNameOrMessage?: string): string;
 
 /**
+ * Validates that a given object is not null and not undefined.
+ * Then retrieves a property by name from that object and checks that it's not null and not undefined.  It is strongly typed
+ * for the property and will give a compile error if the given name is not a property of the source.
+ */
+export declare function nonNullValueAndProp<TSource, TKey extends keyof TSource>(source: TSource | undefined, name: TKey): NonNullable<TSource[TKey]>;
+
+/**
  * Finds an available port.
  * NOTE: If another listener is on '0.0.0.0', this will take the '127.0.0.1' allocation from them!
  * @param startPort (Optional) The first port to try. By default, a random port from 10000 (inclusive) to 64000 (exclusive)

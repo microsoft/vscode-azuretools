@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-azureutils",
     "author": "Microsoft Corporation",
-    "version": "0.3.2",
+    "version": "0.3.4",
     "description": "Common Azure utils for developing Azure extensions for VS Code",
     "tags": [
         "azure",
@@ -33,14 +33,13 @@
     },
     "dependencies": {
         "@azure/arm-resources": "^5.0.0",
-        "@azure/arm-resources-profile-2020-09-01-hybrid": "^1.0.0",
-        "@azure/arm-resources-subscriptions": "^1.0.0",
+        "@azure/arm-resources-profile-2020-09-01-hybrid": "^2.0.0",
+        "@azure/arm-resources-subscriptions": "^2.0.0",
         "@azure/arm-storage": "^17.0.0",
-        "@azure/arm-storage-profile-2020-09-01-hybrid": "^1.0.0",
+        "@azure/arm-storage-profile-2020-09-01-hybrid": "^2.0.0",
         "@azure/ms-rest-js": "^2.2.1",
         "@microsoft/vscode-azext-utils": "^0.3.3",
         "semver": "^7.3.7",
-        "uuid": "^8.3.2",
         "vscode-nls": "^5.0.1"
     },
     "devDependencies": {
@@ -52,7 +51,6 @@
         "@types/mocha": "^7.0.2",
         "@types/node": "^14.0.0",
         "@types/semver": "^7.3.9",
-        "@types/uuid": "^8.3.1",
         "@types/vscode": "1.64.0",
         "@typescript-eslint/eslint-plugin": "^4.28.3",
         "eslint": "^7.19.0",

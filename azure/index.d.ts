@@ -5,14 +5,14 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import type { SubscriptionModels } from '@azure/arm-resources-subscriptions';
+import type { Location } from '@azure/arm-resources-subscriptions';
 import type { Environment } from '@azure/ms-rest-azure-env';
 import type { HttpOperationResponse, RequestPrepareOptions, ServiceClient } from '@azure/ms-rest-js';
 import type { PagedAsyncIterableIterator } from '@azure/core-paging';
 import { Disposable, Progress } from 'vscode';
 import type { AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtServiceClientCredentialsT1, AzExtServiceClientCredentialsT2, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IRelatedNameWizardContext, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
 import { ExtendedLocation, ResourceGroup } from '@azure/arm-resources';
-import { StorageAccount } from '@azure/arm-storage';
+import type { StorageAccount } from '@azure/arm-storage';
 
 export type OpenInPortalOptions = {
     /**
@@ -78,7 +78,7 @@ export declare abstract class AzureAccountTreeItemBase extends AzExtParentTreeIt
 */
 export declare function openInPortal(root: ISubscriptionContext | AzExtTreeItem, id: string, options?: OpenInPortalOptions): Promise<void>;
 
-export type AzExtLocation = SubscriptionModels.Location & {
+export type AzExtLocation = Location & {
     id: string;
     name: string;
     displayName: string;
@@ -418,3 +418,14 @@ export function createAzureSubscriptionClient<T>(context: AzExtClientContext, cl
 export declare namespace uiUtils {
     export function listAllIterator<T>(iterator: PagedAsyncIterableIterator<T>): Promise<T[]>
 }
+
+interface ParsedAzureResourceId {
+    rawId: string;
+    subscriptionId: string;
+    resourceGroup: string;
+    provider: string;
+    resourceName: string;
+}
+
+export function parseAzureResourceId(id: string): ParsedAzureResourceId;
+export function getResourceGroupFromId(id: string): string;
