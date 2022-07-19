@@ -12,3 +12,4 @@ export * from './TestOutputChannel';
 export * from './TestUserInput';
 export { getDefaultWebpackConfig } from './webpack/getDefaultWebpackConfig';
 
+// foo
