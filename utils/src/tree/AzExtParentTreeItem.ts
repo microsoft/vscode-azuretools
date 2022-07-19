@@ -300,8 +300,6 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
             }
         });
 
-        // test change
-
         if (this.createChildImpl && this.childTypeLabel && !context.suppressCreatePick) {
             const createNewLabel: string = this.createNewLabel || localize('treePickerCreateNew', 'Create new {0}...', this.childTypeLabel);
 
