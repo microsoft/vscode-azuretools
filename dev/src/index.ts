@@ -11,3 +11,4 @@ export * from './testing/addPackageLintSuites';
 export * from './TestOutputChannel';
 export * from './TestUserInput';
 export { getDefaultWebpackConfig } from './webpack/getDefaultWebpackConfig';
+
