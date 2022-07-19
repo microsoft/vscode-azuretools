@@ -4,12 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as path from 'path';
-import { runTests } from 'vscode-test';
+import { downloadAndUnzipVSCode, runTests } from '@vscode/test-electron';
 
 async function main(): Promise<void> {
     try {
+        const vscodeExecutablePath = await downloadAndUnzipVSCode();
         const repoRoot: string = path.resolve(__dirname, '..', '..');
         await runTests({
+            vscodeExecutablePath,
             extensionDevelopmentPath: path.resolve(repoRoot, 'test', 'extension'),
             launchArgs: [
                 path.resolve(repoRoot, 'test', 'test.code-workspace'),
