@@ -24,7 +24,7 @@ export class LogAnalyticsCreateStep extends AzureWizardExecuteStep<IAppServiceWi
 
         if (!appInsightsLocation) {
             // if there is no supported AI location, then skip this as AppInsightsCreateStep will be skipped
-            return undefined;
+            return;
         }
         
         const workspaces = await uiUtils.listAllIterator(opClient.workspaces.list());
