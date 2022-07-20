@@ -5,7 +5,7 @@
 
 import type { ApplicationInsightsManagementClient } from '@azure/arm-appinsights';
 import type { WebSiteManagementClient } from '@azure/arm-appservice';
-import { OperationalInsightsManagementClient } from '@azure/arm-operationalinsights';
+import type { OperationalInsightsManagementClient } from '@azure/arm-operationalinsights';
 import type { ResourceGraphClient } from '@azure/arm-resourcegraph';
 import type { ResourceManagementClient } from '@azure/arm-resources';
 import { AzExtClientContext, createAzureClient, createAzureSubscriptionClient } from '@microsoft/vscode-azext-azureutils';
