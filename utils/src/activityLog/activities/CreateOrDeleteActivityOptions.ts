@@ -9,11 +9,10 @@ import { localize } from "../../localize";
 import { AzExtParentTreeItem } from "../../tree/AzExtParentTreeItem";
 import { GenericTreeItem } from "../../tree/GenericTreeItem";
 import { nonNullProp } from "../../utils/nonNull";
-import { ActivityOptionsFactory } from "../Activity";
+import { ActivityOptionsFactoryBase } from './ActivityOptionsFactoryBase';
 
-export class ExecuteActivityOptions<C extends types.ExecuteActivityContext> implements ActivityOptionsFactory {
-
-    constructor(private readonly data: ExecuteActivityData<C>) { }
+// This class takes the place of the old ExecuteActivity
+export class CreateOrDeleteActivityOptions extends ActivityOptionsFactoryBase<types.ExecuteActivityContext> {
 
     public getOptions(activity: hTypes.Activity): hTypes.ActivityTreeItemOptions {
         switch (activity.status) {
@@ -26,14 +25,8 @@ export class ExecuteActivityOptions<C extends types.ExecuteActivityContext> impl
         }
     }
 
-    private initialState(): hTypes.ActivityTreeItemOptions {
-        return {
-            label: this.label,
-        }
-    }
-
-    private successState(): hTypes.ActivityTreeItemOptions {
-        const activityResult = this.data.context.activityResult;
+    protected override successState(): hTypes.ActivityTreeItemOptions {
+        const activityResult = this.context.activityResult;
         return {
             label: this.label,
             getChildren: activityResult ? ((parent: AzExtParentTreeItem) => {
@@ -57,7 +50,7 @@ export class ExecuteActivityOptions<C extends types.ExecuteActivityContext> impl
         }
     }
 
-    private errorState(error: types.IParsedError): hTypes.ActivityTreeItemOptions {
+    protected override errorState(error: types.IParsedError): hTypes.ActivityTreeItemOptions {
         return {
             label: this.label,
             getChildren: (parent: AzExtParentTreeItem) => {
@@ -70,12 +63,4 @@ export class ExecuteActivityOptions<C extends types.ExecuteActivityContext> impl
             }
         }
     }
-
-    private get label(): string {
-        return this.data.context.activityTitle ?? localize('azureActivity', "Azure Activity");
-    }
-}
-
-interface ExecuteActivityData<C extends types.ExecuteActivityContext> {
-    context: C;
 }

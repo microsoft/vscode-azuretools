@@ -16,6 +16,7 @@ export interface ActivityOptionsFactory {
 export class ActivityBase<R> implements hTypes.Activity {
 
     public readonly id: string;
+    public startedAtMs: number;
     public status: types.ActivityStatus = types.ActivityStatus.NotStarted;
     public error?: types.IParsedError;
     public message?: string;
@@ -41,6 +42,7 @@ export class ActivityBase<R> implements hTypes.Activity {
     public async run(): Promise<R> {
         try {
             this.status = types.ActivityStatus.Running;
+            this.startedAtMs = Date.now();
             this._onChangeEmitter.fire(null);
             const result = await this.task({ report: this.report.bind(this) as typeof this.report }, this.cancellationTokenSource.token);
             this.status = types.ActivityStatus.Succeeded;

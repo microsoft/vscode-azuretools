@@ -1121,12 +1121,34 @@ export declare class AzureWizard<T extends IActionContext & Partial<ExecuteActiv
     public execute(): Promise<void>;
 }
 
-export declare interface ExecuteActivityContext {
-    registerActivity: (activity: Activity) => Promise<void>;
+export declare interface ActivityOptionsFactory {
+    getOptions(activity: Activity): ActivityTreeItemOptions;
+}
+
+export declare abstract class ExecuteActivityOptionsFactory<T extends IActionContext & Partial<ExecuteActivityContext>> implements ActivityOptionsFactory {
+    constructor(context: T);
+    abstract getOptions(activity: Activity): ActivityTreeItemOptions;
+}
+
+export declare interface ActivityContext {
     /**
      * Becomes label of activity tree item, defaults to wizard title or "Azure Activity"
      */
     activityTitle?: string;
+}
+
+export class ActivityOptionsFactoryBase<C extends ActivityContext> implements ActivityOptionsFactory {
+    constructor(context: C);
+    public getOptions(activity: Activity): ActivityTreeItemOptions;
+    protected get label(): string;
+    protected initialState(): ActivityTreeItemOptions;
+    protected successState(): ActivityTreeItemOptions;
+    protected errorState(error: IParsedError): ActivityTreeItemOptions;
+}
+
+
+export declare interface ExecuteActivityContext extends ActivityContext {
+    registerActivity: (activity: Activity) => Promise<void>;
     /**
      * Set to show a "Click to view resource" child on success.
      */
@@ -1135,6 +1157,11 @@ export declare interface ExecuteActivityContext {
      * Hide activity notifications
      */
     suppressNotification?: boolean;
+
+    /**
+     * Provide to customize how an execute activity is displayed
+     */
+    displayOptions?: ActivityOptionsFactory;
 }
 
 export declare abstract class AzureWizardExecuteStep<T extends IActionContext> {
