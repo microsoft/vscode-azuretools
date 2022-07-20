@@ -5,7 +5,7 @@
 
 import { ApplicationInsightsComponent } from '@azure/arm-appinsights';
 import type { AppServicePlan, Site, SkuDescription } from '@azure/arm-appservice';
-import { Workspace } from '@azure/arm-operationalinsights';
+import type { Workspace } from '@azure/arm-operationalinsights';
 import { IResourceGroupWizardContext, IStorageAccountWizardContext } from '@microsoft/vscode-azext-azureutils';
 import { AppKind, WebsiteOS } from './AppKind';
 
