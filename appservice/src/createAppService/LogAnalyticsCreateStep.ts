@@ -43,7 +43,7 @@ export class LogAnalyticsCreateStep extends AzureWizardExecuteStep<IAppServiceWi
             const workspaceName = `workspace-${context.newAppInsightsName}`
             const createdLaw: string = localize('createdLogAnalyticWorkspace', 'Successfully created new Log Analytics workspace "{0}".', workspaceName);
             ext.outputChannel.appendLog(createdLaw);
-            void progress.report({ message: createdLaw });
+            progress.report({ message: createdLaw });
             context.logAnalyticsWorkspace = await opClient.workspaces.beginCreateOrUpdateAndWait(rgName, workspaceName, { location });
         }
     }
