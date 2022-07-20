@@ -23,7 +23,7 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
         const resourceLocation: AzExtLocation = await LocationListStep.getLocation(context);
         const verifyingAppInsightsAvailable: string = localize('verifyingAppInsightsAvailable', 'Verifying that Application Insights is available for this location...');
         ext.outputChannel.appendLog(verifyingAppInsightsAvailable);
-        const appInsightsLocation: string | undefined = await this.getSupportedLocation(context, resourceLocation);
+        const appInsightsLocation: string | undefined = await AppInsightsCreateStep.getSupportedLocation(this, context, resourceLocation);
 
         if (appInsightsLocation) {
             const client: ApplicationInsightsManagementClient = await createAppInsightsClient(context);
@@ -42,7 +42,8 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
                     ext.outputChannel.appendLog(creatingNewAppInsights);
                     progress.report({ message: creatingNewAppInsights });
 
-                    context.appInsightsComponent = await client.components.createOrUpdate(rgName, aiName, { kind: 'web', applicationType: 'web', location: appInsightsLocation });
+                    context.appInsightsComponent = await client.components.createOrUpdate(rgName, aiName, { kind: 'web', applicationType: 'web', location: appInsightsLocation, 
+                    workspaceResourceId: context.logAnalyticsWorkspace?.id});
                     const createdNewAppInsights: string = localize('createdNewAppInsights', 'Successfully created Application Insights resource "{0}".', aiName);
                     ext.outputChannel.appendLog(createdNewAppInsights);
                 } else if (pError.errorType === 'AuthorizationFailed') {
@@ -84,8 +85,8 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
     }
 
     // returns the supported location, a location in the region map, or undefined
-    private async getSupportedLocation(context: IAppServiceWizardContext, location: AzExtLocation): Promise<string | undefined> {
-        const locations: string[] = await this.getLocations(context) || [];
+    public static async getSupportedLocation(step: AppInsightsCreateStep, context: IAppServiceWizardContext, location: AzExtLocation): Promise<string | undefined> {
+        const locations: string[] = await step.getLocations(context) || [];
         const locationName: string = nonNullProp(location, 'name');
 
         if (locations.some((loc) => areLocationNamesEqual(loc, location.name))) {
@@ -93,7 +94,7 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
             return locationName;
         } else {
             // If there is no exact match, then query the regionMapping.json
-            const pairedRegions: string[] | undefined = await this.getPairedRegions(context, locationName);
+            const pairedRegions: string[] | undefined = await step.getPairedRegions(context, locationName);
             if (pairedRegions.length > 0) {
                 // if there is at least one region listed, return the first
                 context.telemetry.properties.aiLocationSupported = 'pairedRegion';
