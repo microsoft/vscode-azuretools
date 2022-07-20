@@ -9,7 +9,7 @@ import { Progress } from "vscode";
 import { ext } from "../extensionVariables";
 import { localize } from "../localize";
 import { createOperationalInsightsManagementClient } from "../utils/azureClients";
-import { AppInsightsCreateStep } from "./AppInsightsCreateStep";
+import { getAppInsightsSupportedLocation } from "./getAppInsightsSupportedLocation";
 import { IAppServiceWizardContext } from "./IAppServiceWizardContext";
 
 export class LogAnalyticsCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
@@ -19,21 +19,20 @@ export class LogAnalyticsCreateStep extends AzureWizardExecuteStep<IAppServiceWi
         const opClient = await createOperationalInsightsManagementClient(context);
         const rgName = nonNullValueAndProp(context.resourceGroup, 'name');
         const resourceLocation: AzExtLocation = await LocationListStep.getLocation(context);
-        const aiStep = new AppInsightsCreateStep();
-        const appInsightsLocation: string | undefined = await AppInsightsCreateStep.getSupportedLocation(aiStep, context, resourceLocation);
+        const location = await getAppInsightsSupportedLocation(context, resourceLocation);
 
-        if (!appInsightsLocation) {
+        if (!location) { 
             // if there is no supported AI location, then skip this as AppInsightsCreateStep will be skipped
             return;
         }
-        
+
         const workspaces = await uiUtils.listAllIterator(opClient.workspaces.list());
-        const workspacesInSameLoc = workspaces.filter(ws => ws.location === appInsightsLocation);
+        const workspacesInSameLoc = workspaces.filter(ws => ws.location === location);
         const workspacesInSameRg = workspacesInSameLoc.filter(ws => getResourceGroupFromId(nonNullProp(ws, 'id')) === rgName);
 
         context.logAnalyticsWorkspace = workspacesInSameRg[0] ?? workspacesInSameLoc[0];
-        
-        if (context.logAnalyticsWorkspace) {   
+
+        if (context.logAnalyticsWorkspace) {
             const usingLaw: string = localize('usingLogAnalyticsWorkspace', 'Using existing Log Analytics workspace "{0}"', context.logAnalyticsWorkspace.name);
             progress.report({ message: usingLaw });
             ext.outputChannel.appendLog(usingLaw);
@@ -41,13 +40,11 @@ export class LogAnalyticsCreateStep extends AzureWizardExecuteStep<IAppServiceWi
             const creatingLaw: string = localize('creatingLogAnalyticsWorkspace', 'Creating new Log Analytics workspace...');
             progress.report({ message: creatingLaw });
             ext.outputChannel.appendLog(creatingLaw);
-
             const workspaceName = `workspace-${context.newAppInsightsName}`
-            context.logAnalyticsWorkspace = await opClient.workspaces.beginCreateOrUpdateAndWait(rgName, workspaceName, { location: appInsightsLocation });
-    
-            const createdLaw: string = localize('createdLogAnalyticWorkspace', 'Successfully created new Log Analytics workspace "{0}".', workspaceName );
+            const createdLaw: string = localize('createdLogAnalyticWorkspace', 'Successfully created new Log Analytics workspace "{0}".', workspaceName);
             ext.outputChannel.appendLog(createdLaw);
             void progress.report({ message: createdLaw });
+            context.logAnalyticsWorkspace = await opClient.workspaces.beginCreateOrUpdateAndWait(rgName, workspaceName, { location });
         }
     }
 
