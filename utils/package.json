@@ -51,13 +51,13 @@
         "@types/semver": "^7.3.9",
         "@types/vscode": "1.64.0",
         "@typescript-eslint/eslint-plugin": "^4.28.3",
+        "@vscode/test-electron": "^2.1.5",
         "eslint": "^7.19.0",
         "eslint-plugin-import": "^2.22.1",
         "glob": "^7.1.6",
         "mocha": "^9.1.3",
         "mocha-junit-reporter": "^2.0.2",
         "mocha-multi-reporters": "^1.1.7",
-        "typescript": "^4.3.5",
-        "vscode-test": "^1.3.0"
+        "typescript": "^4.3.5"
     }
 }

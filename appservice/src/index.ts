@@ -51,3 +51,4 @@ export * from './TunnelProxy';
 export * from './deleteSite/IDeleteSiteWizardContext';
 export * from './deleteSite/DeleteLastServicePlanStep';
 export * from './deleteSite/DeleteSiteStep';
+export * from './utils/azureClients';
