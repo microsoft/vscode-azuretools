@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ApplicationInsightsComponent } from '@azure/arm-appinsights';
+import type { ApplicationInsightsComponent } from '@azure/arm-appinsights';
 import type { AppServicePlan, Site, SkuDescription } from '@azure/arm-appservice';
 import type { Workspace } from '@azure/arm-operationalinsights';
 import { IResourceGroupWizardContext, IStorageAccountWizardContext } from '@microsoft/vscode-azext-azureutils';
@@ -95,7 +95,7 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
      * it will look for a workspace within the same resource group and location as the App Insight
      * component. If neither conditions are met, then it will automatically create a workspace
      */
-     logAnalyticsWorkspace?: Workspace;
+    logAnalyticsWorkspace?: Workspace;
 
     /**
      * Indicates advanced creation should be used

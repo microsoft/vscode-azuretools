@@ -40,8 +40,15 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
                     ext.outputChannel.appendLog(creatingNewAppInsights);
                     progress.report({ message: creatingNewAppInsights });
 
-                    context.appInsightsComponent = await client.components.createOrUpdate(rgName, aiName, { kind: 'web', applicationType: 'web', location: appInsightsLocation, 
-                    workspaceResourceId: context.logAnalyticsWorkspace?.id});
+                    context.appInsightsComponent = await client.components.createOrUpdate(
+                        rgName,
+                        aiName,
+                        {
+                            kind: 'web',
+                            applicationType: 'web',
+                            location: appInsightsLocation,
+                            workspaceResourceId: context.logAnalyticsWorkspace?.id
+                        });
                     const createdNewAppInsights: string = localize('createdNewAppInsights', 'Successfully created Application Insights resource "{0}".', aiName);
                     ext.outputChannel.appendLog(createdNewAppInsights);
                 } else if (pError.errorType === 'AuthorizationFailed') {

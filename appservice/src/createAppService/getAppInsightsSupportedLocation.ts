@@ -3,11 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { Provider } from '@azure/arm-resources';
-import { ResourceManagementClient, ProviderResourceType } from "@azure/arm-resources";
-import { ServiceClient, HttpOperationResponse } from "@azure/ms-rest-js";
+import type { Provider, ProviderResourceType, ResourceManagementClient } from '@azure/arm-resources';
+import type { HttpOperationResponse, ServiceClient } from "@azure/ms-rest-js";
 import { AzExtLocation, createGenericClient } from "@microsoft/vscode-azext-azureutils";
-import { nonNullProp, IActionContext } from "@microsoft/vscode-azext-utils";
+import { IActionContext, nonNullProp } from "@microsoft/vscode-azext-utils";
 import { createResourceClient } from "../utils/azureClients";
 import { areLocationNamesEqual } from "../utils/azureUtils";
 import { IAppServiceWizardContext } from "./IAppServiceWizardContext";
@@ -64,12 +63,12 @@ async function getLocations(context: IAppServiceWizardContext): Promise<string[]
 }
 
 type RegionMappingJsonResponse = {
-regions: {
-    [key: string]: RegionMap
-}
+    regions: {
+        [key: string]: RegionMap
+    }
 };
 
 type RegionMap = {
-geo: string,
-pairedRegions: string[]
+    geo: string,
+    pairedRegions: string[]
 };
