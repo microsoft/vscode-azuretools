@@ -3,8 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// eslint-disable-next-line import/no-internal-modules
-import type { ApplicationInsightsComponent, ApplicationInsightsComponentListResult } from '@azure/arm-appinsights/esm/models';
+import type { ApplicationInsightsComponent } from '@azure/arm-appinsights';
 import { AzureWizardPromptStep } from '@microsoft/vscode-azext-utils';
 import { localize } from '../localize';
 import { AppInsightsListStep, appInsightsNamingRules } from './AppInsightsListStep';
@@ -13,7 +12,7 @@ import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 export class AppInsightsNameStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
 
     public async isNameAvailable(context: IAppServiceWizardContext, name: string): Promise<boolean> {
-        const appInsightsComponents: ApplicationInsightsComponentListResult = await AppInsightsListStep.getAppInsightsComponents(context);
+        const appInsightsComponents: ApplicationInsightsComponent[] = await AppInsightsListStep.getAppInsightsComponents(context);
         return !appInsightsComponents.some((ai: ApplicationInsightsComponent) => ai.name !== undefined && ai.name.toLowerCase() === name.toLowerCase());
     }
 
