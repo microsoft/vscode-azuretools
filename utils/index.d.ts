@@ -1078,6 +1078,14 @@ export interface IWizardOptions<T extends IActionContext> {
 
 export type ActivityTask<R> = (progress: Progress<{ message?: string, increment?: number }>, cancellationToken: CancellationToken) => Promise<R>;
 
+export const enum ActivityStatus {
+    NotStarted = 'NotStarted',
+    Running = 'Running',
+    Succeeded = 'Succeeded',
+    Failed = 'Failed',
+    Cancelled = 'Cancelled',
+}
+
 export declare abstract class ActivityBase<R> implements Activity {
     public readonly onStart: Event<OnStartActivityData>;
     public readonly onProgress: Event<OnProgressActivityData>;
@@ -1088,13 +1096,13 @@ export declare abstract class ActivityBase<R> implements Activity {
     public readonly id: string;
     public readonly cancellationTokenSource: CancellationTokenSource;
 
-    abstract initialState(): ActivityTreeItemOptions;
-    abstract successState(): ActivityTreeItemOptions;
-    abstract errorState(error: IParsedError): ActivityTreeItemOptions;
+    public constructor(task: ActivityTask<R>, optionsFactory: ActivityTreeItemOptionsFactory);
 
-    public constructor(task: ActivityTask<R>);
-    public report(progress: { message?: string; increment?: number }): void;
-    public run(): Promise<void>;
+    status: ActivityStatus;
+    error?: IParsedError | undefined;
+    message?: string | undefined;
+    public run(): Promise<R>;
+    public get options(): ActivityTreeItemOptions;
 }
 
 /**
@@ -1111,12 +1119,19 @@ export declare class AzureWizard<T extends IActionContext & Partial<ExecuteActiv
     public execute(): Promise<void>;
 }
 
-export declare interface ExecuteActivityContext {
-    registerActivity: (activity: Activity) => Promise<void>;
+export declare interface ActivityTreeItemOptionsFactory {
+    getOptions(activity: ActivityBase<unknown>): ActivityTreeItemOptions;
+}
+
+export declare interface ActivityContext {
     /**
-     * Becomes label of activity tree item, defaults to wizard title or "Azure Activity"
+     * Becomes label of activity tree item, defaults to "Azure Activity"
      */
     activityTitle?: string;
+}
+
+export declare interface ExecuteActivityContext extends ActivityContext {
+    registerActivity: (activity: Activity) => Promise<void>;
     /**
      * Set to show a "Click to view resource" child on success.
      */
@@ -1125,6 +1140,20 @@ export declare interface ExecuteActivityContext {
      * Hide activity notifications
      */
     suppressNotification?: boolean;
+
+    /**
+     * Provide to customize how an execute activity is displayed
+     */
+    displayOptions?: ActivityTreeItemOptionsFactory;
+}
+
+export class ActivityOptionsFactoryBase<C extends ActivityContext> implements ActivityTreeItemOptionsFactory {
+    constructor(context: C);
+    public getOptions(activity: Activity): ActivityTreeItemOptions;
+    protected get label(): string;
+    protected initialState(): ActivityTreeItemOptions;
+    protected successState(): ActivityTreeItemOptions;
+    protected errorState(error: IParsedError): ActivityTreeItemOptions;
 }
 
 export declare abstract class AzureWizardExecuteStep<T extends IActionContext> {

@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import type * as vscode from 'vscode';
-import type { AbstractAzExtTreeItem, AzExtParentTreeItem, AzExtTreeDataProvider, AzExtTreeItem, IActionContext, IAzureQuickPickOptions, ISubscriptionContext, ITreeItemPickerContext, SealedAzExtTreeItem } from './index'; // This must remain `import type` or else a circular reference will result
+import type { AbstractAzExtTreeItem, AzExtParentTreeItem, AzExtTreeDataProvider, AzExtTreeItem, IAzureQuickPickOptions, ISubscriptionContext, ITreeItemPickerContext, SealedAzExtTreeItem } from './index'; // This must remain `import type` or else a circular reference will result
 
 /**
  * The API implemented by the Azure Resource Groups host extension
@@ -262,6 +262,11 @@ export interface Activity {
      * If the activity supports cancellation, provide this `CancellationTokenSource`. The Activity Log will add a cancel button that will trigger this CTS.
      */
     cancellationTokenSource?: vscode.CancellationTokenSource;
+
+    /**
+     * Options for how the activity is displayed as a tree item
+     */
+    options: ActivityTreeItemOptions;
 
     /**
      * Fire this event to start the activity

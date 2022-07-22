@@ -9,15 +9,7 @@ import * as types from '../../index';
 import * as hTypes from '../../hostapi';
 import { parseError } from "../parseError";
 
-export enum ActivityStatus {
-    NotStarted = 'NotStarted',
-    Running = 'Running',
-    Succeeded = 'Succeeded',
-    Failed = 'Failed',
-    Cancelled = 'Cancelled',
-}
-
-export abstract class ActivityBase<R> implements hTypes.Activity {
+export class ActivityBase<R> implements hTypes.Activity {
 
     public readonly onStart: typeof this._onStartEmitter.event;
     public readonly onProgress: typeof this._onProgressEmitter.event;
@@ -29,17 +21,13 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
     private readonly _onSuccessEmitter = new EventEmitter<hTypes.OnSuccessActivityData>();
     private readonly _onErrorEmitter = new EventEmitter<hTypes.OnErrorActivityData>();
 
-    private status: ActivityStatus = ActivityStatus.NotStarted;
+    public status: types.ActivityStatus = types.ActivityStatus.NotStarted;
     public error?: types.IParsedError;
     public readonly task: types.ActivityTask<R>;
     public readonly id: string;
     public readonly cancellationTokenSource: CancellationTokenSource = new CancellationTokenSource();
 
-    abstract initialState(): hTypes.ActivityTreeItemOptions;
-    abstract successState(): hTypes.ActivityTreeItemOptions;
-    abstract errorState(error?: types.IParsedError): hTypes.ActivityTreeItemOptions;
-
-    public constructor(task: types.ActivityTask<R>) {
+    public constructor(task: types.ActivityTask<R>, private readonly optionsFactory: types.ActivityTreeItemOptionsFactory) {
         this.id = randomUUID();
         this.task = task;
 
@@ -50,32 +38,26 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
     }
 
     private report(progress: { message?: string; increment?: number }): void {
-        this._onProgressEmitter.fire({ ...this.getState(), message: progress.message });
+        this._onProgressEmitter.fire({ ...this.options, message: progress.message });
     }
 
     public async run(): Promise<R> {
         try {
-            this._onStartEmitter.fire(this.getState());
+            this.status = types.ActivityStatus.Running;
+            this._onStartEmitter.fire(this.options);
             const result = await this.task({ report: this.report.bind(this) as typeof this.report }, this.cancellationTokenSource.token);
-            this.status = ActivityStatus.Succeeded;
-            this._onSuccessEmitter.fire(this.getState());
+            this.status = types.ActivityStatus.Succeeded;
+            this._onSuccessEmitter.fire(this.options);
             return result as R;
         } catch (e) {
             this.error = parseError(e);
-            this.status = ActivityStatus.Failed;
-            this._onErrorEmitter.fire({ ...this.getState(), error: e });
+            this.status = types.ActivityStatus.Failed;
+            this._onErrorEmitter.fire({ ...this.options, error: this.error });
             throw e;
         }
     }
 
-    public getState(): hTypes.ActivityTreeItemOptions {
-        switch (this.status) {
-            case ActivityStatus.Failed:
-                return this.errorState(this.error);
-            case ActivityStatus.Succeeded:
-                return this.successState();
-            default:
-                return this.initialState();
-        }
+    public get options(): hTypes.ActivityTreeItemOptions {
+        return this.optionsFactory.getOptions(this);
     }
 }
