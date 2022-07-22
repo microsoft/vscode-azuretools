@@ -1516,6 +1516,8 @@ export declare namespace AzExtFsExtra {
     export function readFile(resource: Uri | string): Promise<string>;
     export function writeFile(resource: Uri | string, contents: string): Promise<void>;
     export function pathExists(resource: Uri | string): Promise<boolean>;
+    export function readJSON(resource: Uri | string): Promise<unknown>
+    export function writeJSON(resource: Uri | string, json: unknown): Promise<void>
 }
 
 export declare function maskValue(data: string, valueToMask: string | undefined): string;
