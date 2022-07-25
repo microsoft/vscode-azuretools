@@ -1147,7 +1147,7 @@ export declare interface ExecuteActivityContext extends ActivityContext {
     displayOptions?: ActivityTreeItemOptionsFactory;
 }
 
-export class ActivityOptionsFactoryBase<C extends ActivityContext> implements ActivityTreeItemOptionsFactory {
+export class ActivityTreeItemOptionsBase<C extends ActivityContext> implements ActivityTreeItemOptionsFactory {
     constructor(context: C);
     public getOptions(activity: Activity): ActivityTreeItemOptions;
     protected get label(): string;
