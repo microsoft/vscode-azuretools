@@ -17,7 +17,7 @@ interface ExecuteActivityData<C extends types.ExecuteActivityContext> {
 
 export class ExecuteActivity<C extends types.ExecuteActivityContext> extends ActivityBase<void> {
 
-    public constructor(private readonly data: ExecuteActivityData<C>, task: types.ActivityTask<void>) {
+    public constructor(protected readonly data: ExecuteActivityData<C>, task: types.ActivityTask<void>) {
         super(task);
     }
 
@@ -66,7 +66,7 @@ export class ExecuteActivity<C extends types.ExecuteActivityContext> extends Act
         }
     }
 
-    private get label(): string {
+    protected get label(): string {
         return this.data.context.activityTitle ?? localize('azureActivity', "Azure Activity");
     }
 }

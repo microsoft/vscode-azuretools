@@ -182,7 +182,10 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
     private async withProgress(options: vscode.ProgressOptions, task: (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) => Promise<void>): Promise<void> {
         if (this._context.registerActivity) {
             this._context.activityTitle ??= this.title;
-            const activity = new ExecuteActivity({
+
+            const WizardActivity = this._context.wizardActivity ?? ExecuteActivity;
+
+            const activity = new WizardActivity({
                 context: this._context as types.ExecuteActivityContext,
             }, async (activityProgress) => {
                 if (this._context.suppressNotification) {
