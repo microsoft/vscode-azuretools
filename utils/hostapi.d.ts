@@ -264,11 +264,6 @@ export interface Activity {
     cancellationTokenSource?: vscode.CancellationTokenSource;
 
     /**
-     * Options for how the activity is displayed as a tree item
-     */
-    options: ActivityTreeItemOptions;
-
-    /**
      * Fire this event to start the activity
      */
     onStart: vscode.Event<OnStartActivityData>;
