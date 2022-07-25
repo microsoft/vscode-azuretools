@@ -81,7 +81,7 @@ export namespace AzExtFsExtra {
         return JSON.parse(file);
     }
 
-    export async function writeJSON<T>(resource: Uri | string, contents: string | T): Promise<void> {
+    export async function writeJSON(resource: Uri | string, contents: string | unknown): Promise<void> {
         let stringified;
         if (typeof contents === 'string') {
             // ensure string is in JSON object format
