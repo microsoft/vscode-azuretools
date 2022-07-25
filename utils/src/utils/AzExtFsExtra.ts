@@ -76,14 +76,22 @@ export namespace AzExtFsExtra {
         return !!stats;
     }
 
-    export async function readJSON(resource: Uri | string): Promise<unknown> {
+    export async function readJSON<T>(resource: Uri | string): Promise<T> {
         const file = await readFile(resource);
-        return JSON.parse(file) as unknown;
+        return JSON.parse(file);
     }
 
-    export async function writeJSON(resource: Uri | string, json: unknown): Promise<void> {
-        const stringify = JSON.stringify(json);
-        await writeFile(resource, stringify);
+    export async function writeJSON<T>(resource: Uri | string, json: string | T): Promise<void> {
+        let stringified;
+        if (typeof json === 'string') {
+            // ensure string is in JSON object format
+            JSON.parse(json);
+            stringified = json;
+        } else {
+            stringified = JSON.stringify(json);
+        }
+
+        await writeFile(resource, stringified);
     }
 
     function convertToUri(resource: Uri | string): Uri {
