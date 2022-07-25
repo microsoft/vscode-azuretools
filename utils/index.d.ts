@@ -1118,9 +1118,11 @@ export declare interface ExecuteActivityContext {
      */
     activityTitle?: string;
     /**
+     * Resource or resourceId
+     *
      * Set to show a "Click to view resource" child on success.
      */
-    activityResult?: AppResource;
+    activityResult?: AppResource | string;
     /**
      * Hide activity notifications
      */
