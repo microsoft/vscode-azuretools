@@ -1509,8 +1509,8 @@ export declare function registerReportIssueCommand(commandId: string): void;
  * Registers a namespace that leverages vscode.workspace.fs API to access the file system
  */
 export declare namespace AzExtFsExtra {
-    export function isDirectory(): Promise<boolean>;
-    export function isFile(): Promise<boolean>;
+    export function isDirectory(resource: Uri | string): Promise<boolean>;
+    export function isFile(resource: Uri | string): Promise<boolean>;
     export function ensureDir(resource: Uri | string): Promise<void>;
     export function ensureFile(resource: Uri | string): Promise<void>;
     export function readFile(resource: Uri | string): Promise<string>;
