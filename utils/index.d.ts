@@ -1112,8 +1112,8 @@ export declare class AzureWizard<T extends IActionContext & Partial<ExecuteActiv
 }
 
 export class ExecuteActivity<C extends ExecuteActivityContext> extends ActivityBase<void> {
-    protected readonly data: ExecuteActivityData<C>;
-    public constructor(data: ExecuteActivityData<C>, task: ActivityTask<void>);
+    protected readonly context: C;
+    public constructor(data: C, task: ActivityTask<void>);
     public initialState(): ActivityTreeItemOptions;
     public successState(): ActivityTreeItemOptions;
     public errorState(error: IParsedError): ActivityTreeItemOptions;
@@ -1138,11 +1138,7 @@ export declare interface ExecuteActivityContext {
     /**
      * The activity implementation to use, defaults to ExecuteActivity
      */
-    wizardActivity?: new (data: ExecuteActivityData<any>, task: ActivityTask<void>) => ExecuteActivity<ExecuteActivityContext>;
-}
-
-interface ExecuteActivityData<C extends ExecuteActivityContext> {
-    context: C;
+    wizardActivity?: new <C extends ExecuteActivityContext>(context: C, task: ActivityTask<void>) => ExecuteActivity<ExecuteActivityContext>;
 }
 
 export declare abstract class AzureWizardExecuteStep<T extends IActionContext> {

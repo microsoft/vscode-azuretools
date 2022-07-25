@@ -185,28 +185,28 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
 
             const WizardActivity = this._context.wizardActivity ?? ExecuteActivity;
 
-            const activity = new WizardActivity({
-                context: this._context as types.ExecuteActivityContext,
-            }, async (activityProgress) => {
-                if (this._context.suppressNotification) {
-                    await task(activityProgress, activity.cancellationTokenSource.token);
-                } else {
-                    await vscode.window.withProgress(options, async (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken): Promise<void> => {
-                        token.onCancellationRequested(() => {
-                            activity.cancellationTokenSource.cancel();
+            const activity = new WizardActivity(
+                this._context as types.ExecuteActivityContext,
+                async (activityProgress) => {
+                    if (this._context.suppressNotification) {
+                        await task(activityProgress, activity.cancellationTokenSource.token);
+                    } else {
+                        await vscode.window.withProgress(options, async (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken): Promise<void> => {
+                            token.onCancellationRequested(() => {
+                                activity.cancellationTokenSource.cancel();
+                            });
+
+                            const internalProgress: vscode.Progress<{ message?: string; increment?: number }> = {
+                                report: (value: { message?: string; increment?: number }): void => {
+                                    progress.report(value);
+                                    activityProgress.report(value);
+                                }
+                            };
+
+                            await task(internalProgress, token);
                         });
-
-                        const internalProgress: vscode.Progress<{ message?: string; increment?: number }> = {
-                            report: (value: { message?: string; increment?: number }): void => {
-                                progress.report(value);
-                                activityProgress.report(value);
-                            }
-                        };
-
-                        await task(internalProgress, token);
-                    });
-                }
-            });
+                    }
+                });
 
             await this._context.registerActivity(activity);
             await activity.run();
