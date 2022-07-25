@@ -9,6 +9,7 @@ import { localize } from "../../localize";
 import { AzExtParentTreeItem } from "../../tree/AzExtParentTreeItem";
 import { GenericTreeItem } from "../../tree/GenericTreeItem";
 import { ActivityBase } from "../Activity";
+import { RevealResourceTreeItem } from './RevealResourceTreeItem';
 
 interface ExecuteActivityData<C extends types.ExecuteActivityContext> {
     context: C;
@@ -31,19 +32,7 @@ export class ExecuteActivity<C extends types.ExecuteActivityContext> extends Act
         const resourceId: string | undefined = typeof activityResult === 'string' ? activityResult : activityResult?.id;
         return {
             label: this.label,
-            getChildren: activityResult ? ((parent: AzExtParentTreeItem) => {
-
-                const ti = new GenericTreeItem(parent, {
-                    contextValue: 'executeResult',
-                    label: localize("clickToView", "Click to view resource"),
-                    commandId: 'azureResourceGroups.revealResource',
-                });
-
-                ti.commandArgs = [resourceId];
-
-                return [ti];
-
-            }) : undefined
+            getChildren: resourceId ? ((parent: AzExtParentTreeItem) => [new RevealResourceTreeItem(parent, resourceId)]) : undefined
         }
     }
 
