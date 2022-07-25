@@ -81,14 +81,14 @@ export namespace AzExtFsExtra {
         return JSON.parse(file) as T;
     }
 
-    export async function writeJSON(resource: Uri | string, contents: string | unknown): Promise<void> {
+    export async function writeJSON(resource: Uri | string, contents: string | unknown, spaces?: string | number): Promise<void> {
         let stringified;
         if (typeof contents === 'string') {
             // ensure string is in JSON object format
             JSON.parse(contents);
             stringified = contents;
         } else {
-            stringified = JSON.stringify(contents);
+            stringified = JSON.stringify(contents, undefined, spaces);
         }
 
         await writeFile(resource, stringified);
