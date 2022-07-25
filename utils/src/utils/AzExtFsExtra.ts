@@ -78,7 +78,7 @@ export namespace AzExtFsExtra {
 
     export async function readJSON<T>(resource: Uri | string): Promise<T> {
         const file = await readFile(resource);
-        return JSON.parse(file);
+        return JSON.parse(file) as T;
     }
 
     export async function writeJSON(resource: Uri | string, contents: string | unknown): Promise<void> {
