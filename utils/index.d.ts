@@ -1518,6 +1518,7 @@ export declare namespace AzExtFsExtra {
     export function pathExists(resource: Uri | string): Promise<boolean>;
     export function readJSON<T>(resource: Uri | string): Promise<T>
     export function writeJSON(resource: Uri | string, contents: string | unknown, spaces?: string | number): Promise<void>
+    export function emptyDir(resource: Uri | string): Promise<void>;
 }
 
 export declare function maskValue(data: string, valueToMask: string | undefined): string;

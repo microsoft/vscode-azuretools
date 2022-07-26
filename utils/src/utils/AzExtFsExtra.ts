@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { dirname } from 'path';
+import path = require('path');
 import { FileStat, FileType, Uri, workspace } from 'vscode';
 import { parseError } from '../parseError';
 
@@ -92,6 +93,15 @@ export namespace AzExtFsExtra {
         }
 
         await writeFile(resource, stringified);
+    }
+
+    export async function emptyDir(resource: Uri | string): Promise<void> {
+        const uri = convertToUri(resource);
+        const files = await workspace.fs.readDirectory(uri);
+
+        await Promise.all(files.map(async file => {
+            await workspace.fs.delete(Uri.file(path.join(uri.fsPath, file[0])), { recursive: true })
+        }));
     }
 
     function convertToUri(resource: Uri | string): Uri {
