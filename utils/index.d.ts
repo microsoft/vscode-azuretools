@@ -1511,15 +1511,22 @@ export declare function registerReportIssueCommand(commandId: string): void;
  * Registers a namespace that leverages vscode.workspace.fs API to access the file system
  */
 export declare namespace AzExtFsExtra {
-    export function isDirectory(): Promise<boolean>;
-    export function isFile(): Promise<boolean>;
+    export function isDirectory(resource: Uri | string): Promise<boolean>;
+    export function isFile(resource: Uri | string): Promise<boolean>;
     export function ensureDir(resource: Uri | string): Promise<void>;
     export function ensureFile(resource: Uri | string): Promise<void>;
     export function readFile(resource: Uri | string): Promise<string>;
     export function writeFile(resource: Uri | string, contents: string): Promise<void>;
     export function pathExists(resource: Uri | string): Promise<boolean>;
     export function readJSON<T>(resource: Uri | string): Promise<T>
-    export function writeJSON(resource: Uri | string, contents: string | unknown): Promise<void>
+    /**
+     * @param spaces Defaults to 2 spaces. If the default JSON.stringify behavior is required, input 0
+     */
+    export function writeJSON(resource: Uri | string, contents: string | unknown, spaces?: string | number): Promise<void>
+    export function readDirectory(resource: Uri | string): Promise<{ fsPath: string, name: string, type: FileType }[]>;
+    export function emptyDir(resource: Uri | string): Promise<void>;
+    export function copy(src: Uri | string, dest: Uri | string, options?: { overwrite?: boolean }): Promise<void>;
+    export function deleteResource(resource: Uri | string, options?: { recursive?: boolean, useTrash?: boolean }): Promise<void>
 }
 
 export declare function maskValue(data: string, valueToMask: string | undefined): string;
