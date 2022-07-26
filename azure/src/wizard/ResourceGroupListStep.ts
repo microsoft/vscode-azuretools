@@ -8,11 +8,10 @@ import * as types from '../../index';
 import { createResourcesClient } from '../clients';
 import { localize } from '../localize';
 import { uiUtils } from '../utils/uiUtils';
-import { AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions } from '@microsoft/vscode-azext-utils';
+import { AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, nonNullProp } from '@microsoft/vscode-azext-utils';
 import { LocationListStep } from './LocationListStep';
 import { ResourceGroupCreateStep } from './ResourceGroupCreateStep';
 import { ResourceGroupNameStep } from './ResourceGroupNameStep';
-import { nonNullProp } from '@microsoft/vscode-azext-utils';
 
 export const resourceGroupNamingRules: IAzureNamingRules = {
     minLength: 1,
