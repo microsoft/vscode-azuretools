@@ -1517,6 +1517,9 @@ export declare namespace AzExtFsExtra {
     export function writeFile(resource: Uri | string, contents: string): Promise<void>;
     export function pathExists(resource: Uri | string): Promise<boolean>;
     export function readJSON<T>(resource: Uri | string): Promise<T>
+    /**
+     * @param spaces Defaults to 2 spaces. If the default JSON.stringify behavior is required, input 0
+     */
     export function writeJSON(resource: Uri | string, contents: string | unknown, spaces?: string | number): Promise<void>
     export function readDirectory(resource: Uri | string): Promise<{ fsPath: string, name: string, type: FileType }[]>;
     export function emptyDir(resource: Uri | string): Promise<void>;
