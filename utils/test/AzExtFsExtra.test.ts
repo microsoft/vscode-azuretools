@@ -208,6 +208,54 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
         assert.strictEqual(files.length, 0);
     });
 
+    test('readDirectory', async () => {
+        const fsPath = path.join(testFolderPath, randomUtils.getRandomHexString());
+        ensureDir(fsPath);
+
+        for (let i = 0; i < 5; i++) {
+            const newFolderPath = path.join(fsPath, `folder-${i.toString()}`);
+            const newFilePath = `file-${i.toString()}`
+            ensureDir(newFolderPath);
+            ensureFile(path.join(fsPath, newFilePath));
+            ensureFile(path.join(newFolderPath, newFilePath));
+        }
+
+        const expectedFiles = fs.readdirSync(fsPath);
+        const actualFiles = await AzExtFsExtra.readDirectory(fsPath);
+
+        expectedFiles.map((ef, i) => {
+            assert.strictEqual(actualFiles[i].name, ef);
+            assert.strictEqual(isDirectoryFs(actualFiles[i].fsPath), isDirectoryFs(path.join(fsPath, ef)));
+            assert.strictEqual(isFileFs(actualFiles[i].fsPath), isFileFs(path.join(fsPath, ef)));
+        });
+    });
+
+    test('copy', async () => {
+        const fsPath = path.join(testFolderPath, randomUtils.getRandomHexString());
+        await AzExtFsExtra.copy(workspaceFilePath, fsPath);
+        let fileContents = fs.readFileSync(fsPath).toString();
+        const fsFileContents = fs.readFileSync(workspaceFilePath).toString();
+        assert.strictEqual(fileContents, fsFileContents);
+
+        await AzExtFsExtra.copy(jsonFilePath, fsPath, { overwrite: true });
+        fileContents = fs.readFileSync(fsPath).toString();
+        const jsonFileContents = fs.readFileSync(jsonFilePath).toString();
+        assert.strictEqual(fileContents, jsonFileContents);
+    });
+
+    test('deleteFile', async () => {
+        const fsPath = path.join(testFolderPath, randomUtils.getRandomHexString());
+        ensureFile(fsPath);
+
+        assert.strictEqual(fs.existsSync(fsPath), true);
+
+        await AzExtFsExtra.deleteResource(fsPath);
+        assert.strictEqual(fs.existsSync(fsPath), false);
+
+    });
+
+
+
 });
 
 function isDirectoryFs(fsPath: string): boolean {

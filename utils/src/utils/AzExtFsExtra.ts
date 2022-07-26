@@ -3,8 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { dirname } from 'path';
-import path = require('path');
+import * as path from 'path';
 import { FileStat, FileType, Uri, workspace } from 'vscode';
 import { parseError } from '../parseError';
 
@@ -48,7 +47,7 @@ export namespace AzExtFsExtra {
             // throws a vscode.FileSystemError is it doesn't exist
             const pError = parseError(err);
             if (pError && pError.errorType === 'FileNotFound') {
-                const dir: string = dirname(uri.fsPath);
+                const dir: string = path.dirname(uri.fsPath);
                 await ensureDir(dir);
             } else {
                 throw err
@@ -95,6 +94,14 @@ export namespace AzExtFsExtra {
         await writeFile(resource, stringified);
     }
 
+    export async function readDirectory(resource: Uri | string): Promise<{ fsPath: string, name: string, type: FileType }[]> {
+        const uri = convertToUri(resource);
+        const fileTuples = await workspace.fs.readDirectory(uri);
+        // workspace.fs.readDirectory() returns a tuple with the file name and FileType
+        // typically, it's more useful to have the full fsPath, so return that as well
+        return fileTuples.map(f => { return { fsPath: path.join(uri.fsPath, f[0]), name: f[0], type: f[1] } });
+    }
+
     export async function emptyDir(resource: Uri | string): Promise<void> {
         const uri = convertToUri(resource);
         const files = await workspace.fs.readDirectory(uri);
@@ -102,6 +109,18 @@ export namespace AzExtFsExtra {
         await Promise.all(files.map(async file => {
             await workspace.fs.delete(Uri.file(path.join(uri.fsPath, file[0])), { recursive: true })
         }));
+    }
+
+    export async function copy(src: Uri | string, dest: Uri | string, options?: { overwrite?: boolean }): Promise<void> {
+        const sUri = convertToUri(src);
+        const dUri = convertToUri(dest);
+
+        await workspace.fs.copy(sUri, dUri, options);
+    }
+
+    export async function deleteResource(resource: Uri | string, options?: { recursive?: boolean, useTrash?: boolean }): Promise<void> {
+        const uri = convertToUri(resource);
+        await workspace.fs.delete(uri, options);
     }
 
     function convertToUri(resource: Uri | string): Uri {
