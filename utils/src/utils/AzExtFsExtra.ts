@@ -81,16 +81,13 @@ export namespace AzExtFsExtra {
         return JSON.parse(file) as T;
     }
 
-    export async function writeJSON(resource: Uri | string, contents: string | unknown, spaces?: string | number): Promise<void> {
-        let stringified;
+    export async function writeJSON(resource: Uri | string, contents: string | unknown, space: string | number = 2): Promise<void> {
         if (typeof contents === 'string') {
-            // ensure string is in JSON object format
-            JSON.parse(contents);
-            stringified = contents;
-        } else {
-            stringified = JSON.stringify(contents, undefined, spaces);
+            // ensure string is in JSON object format and has proper spaces
+            contents = JSON.parse(contents);
         }
 
+        const stringified = JSON.stringify(contents, undefined, space);
         await writeFile(resource, stringified);
     }
 

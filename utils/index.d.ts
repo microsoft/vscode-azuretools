@@ -1518,7 +1518,10 @@ export declare namespace AzExtFsExtra {
     export function pathExists(resource: Uri | string): Promise<boolean>;
     export function readJSON<T>(resource: Uri | string): Promise<T>
     export function writeJSON(resource: Uri | string, contents: string | unknown, spaces?: string | number): Promise<void>
+    export function readDirectory(resource: Uri | string): Promise<{ fsPath: string, name: string, type: FileType }[]>;
     export function emptyDir(resource: Uri | string): Promise<void>;
+    export function copy(src: Uri | string, dest: Uri | string, options?: { overwrite?: boolean }): Promise<void>;
+    export function deleteResource(resource: Uri | string, options?: { recursive?: boolean, useTrash?: boolean }): Promise<void>
 }
 
 export declare function maskValue(data: string, valueToMask: string | undefined): string;
