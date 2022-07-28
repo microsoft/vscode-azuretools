@@ -8,7 +8,6 @@ import * as types from '../../../index';
 import { localize } from "../../localize";
 import { AzExtParentTreeItem } from "../../tree/AzExtParentTreeItem";
 import { GenericTreeItem } from "../../tree/GenericTreeItem";
-import { nonNullProp } from "../../utils/nonNull";
 import { ActivityBase } from "../Activity";
 
 export class ExecuteActivity<C extends types.ExecuteActivityContext = types.ExecuteActivityContext> extends ActivityBase<void> {
@@ -25,14 +24,10 @@ export class ExecuteActivity<C extends types.ExecuteActivityContext = types.Exec
 
     public successState(): hTypes.ActivityTreeItemOptions {
         const activityResult = this.context.activityResult;
+        const resourceId: string | undefined = typeof activityResult === 'string' ? activityResult : activityResult?.id;
         return {
             label: this.label,
             getChildren: activityResult ? ((parent: AzExtParentTreeItem) => {
-                const appResource: hTypes.AppResource = {
-                    id: nonNullProp(activityResult, 'id'),
-                    name: nonNullProp(activityResult, 'name'),
-                    type: nonNullProp(activityResult, 'type'),
-                }
 
                 const ti = new GenericTreeItem(parent, {
                     contextValue: 'executeResult',
@@ -40,7 +35,7 @@ export class ExecuteActivity<C extends types.ExecuteActivityContext = types.Exec
                     commandId: 'azureResourceGroups.revealResource',
                 });
 
-                ti.commandArgs = [appResource];
+                ti.commandArgs = [resourceId];
 
                 return [ti];
 
