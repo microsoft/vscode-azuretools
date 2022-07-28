@@ -1111,6 +1111,15 @@ export declare class AzureWizard<T extends IActionContext & Partial<ExecuteActiv
     public execute(): Promise<void>;
 }
 
+export class ExecuteActivity<C extends ExecuteActivityContext = ExecuteActivityContext> extends ActivityBase<void> {
+    protected readonly context: C;
+    public constructor(context: C, task: ActivityTask<void>);
+    public initialState(): ActivityTreeItemOptions;
+    public successState(): ActivityTreeItemOptions;
+    public errorState(error: IParsedError): ActivityTreeItemOptions;
+    protected get label(): string;
+}
+
 export declare interface ExecuteActivityContext {
     registerActivity: (activity: Activity) => Promise<void>;
     /**
@@ -1127,6 +1136,11 @@ export declare interface ExecuteActivityContext {
      * Hide activity notifications
      */
     suppressNotification?: boolean;
+
+    /**
+     * The activity implementation to use, defaults to ExecuteActivity
+     */
+    wizardActivity?: new <TContext extends ExecuteActivityContext>(context: TContext, task: ActivityTask<void>) => ExecuteActivity;
 }
 
 export declare abstract class AzureWizardExecuteStep<T extends IActionContext> {

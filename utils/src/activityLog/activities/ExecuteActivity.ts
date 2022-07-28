@@ -3,20 +3,16 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import * as types from '../../../index';
 import * as hTypes from '../../../hostapi';
+import * as types from '../../../index';
 import { localize } from "../../localize";
 import { AzExtParentTreeItem } from "../../tree/AzExtParentTreeItem";
 import { GenericTreeItem } from "../../tree/GenericTreeItem";
 import { ActivityBase } from "../Activity";
 
-interface ExecuteActivityData<C extends types.ExecuteActivityContext> {
-    context: C;
-}
+export class ExecuteActivity<TContext extends types.ExecuteActivityContext = types.ExecuteActivityContext> extends ActivityBase<void> {
 
-export class ExecuteActivity<C extends types.ExecuteActivityContext> extends ActivityBase<void> {
-
-    public constructor(private readonly data: ExecuteActivityData<C>, task: types.ActivityTask<void>) {
+    public constructor(protected readonly context: TContext, task: types.ActivityTask<void>) {
         super(task);
     }
 
@@ -27,7 +23,7 @@ export class ExecuteActivity<C extends types.ExecuteActivityContext> extends Act
     }
 
     public successState(): hTypes.ActivityTreeItemOptions {
-        const activityResult = this.data.context.activityResult;
+        const activityResult = this.context.activityResult;
         const resourceId: string | undefined = typeof activityResult === 'string' ? activityResult : activityResult?.id;
         return {
             label: this.label,
@@ -61,7 +57,7 @@ export class ExecuteActivity<C extends types.ExecuteActivityContext> extends Act
         }
     }
 
-    private get label(): string {
-        return this.data.context.activityTitle ?? localize('azureActivity', "Azure Activity");
+    protected get label(): string {
+        return this.context.activityTitle ?? localize('azureActivity', "Azure Activity");
     }
 }
