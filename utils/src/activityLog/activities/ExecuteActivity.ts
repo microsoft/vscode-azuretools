@@ -11,13 +11,9 @@ import { GenericTreeItem } from "../../tree/GenericTreeItem";
 import { nonNullProp } from "../../utils/nonNull";
 import { ActivityBase } from "../Activity";
 
-interface ExecuteActivityData<C extends types.ExecuteActivityContext> {
-    context: C;
-}
-
 export class ExecuteActivity<C extends types.ExecuteActivityContext = types.ExecuteActivityContext> extends ActivityBase<void> {
 
-    public constructor(protected readonly data: ExecuteActivityData<C>, task: types.ActivityTask<void>) {
+    public constructor(protected readonly context: C, task: types.ActivityTask<void>) {
         super(task);
     }
 
@@ -28,7 +24,7 @@ export class ExecuteActivity<C extends types.ExecuteActivityContext = types.Exec
     }
 
     public successState(): hTypes.ActivityTreeItemOptions {
-        const activityResult = this.data.context.activityResult;
+        const activityResult = this.context.activityResult;
         return {
             label: this.label,
             getChildren: activityResult ? ((parent: AzExtParentTreeItem) => {
@@ -67,6 +63,6 @@ export class ExecuteActivity<C extends types.ExecuteActivityContext = types.Exec
     }
 
     protected get label(): string {
-        return this.data.context.activityTitle ?? localize('azureActivity', "Azure Activity");
+        return this.context.activityTitle ?? localize('azureActivity', "Azure Activity");
     }
 }
