@@ -3,8 +3,8 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import * as types from '../../../index';
 import * as hTypes from '../../../hostapi';
+import * as types from '../../../index';
 import { localize } from "../../localize";
 import { AzExtParentTreeItem } from "../../tree/AzExtParentTreeItem";
 import { GenericTreeItem } from "../../tree/GenericTreeItem";
@@ -15,7 +15,7 @@ interface ExecuteActivityData<C extends types.ExecuteActivityContext> {
     context: C;
 }
 
-export class ExecuteActivity<C extends types.ExecuteActivityContext> extends ActivityBase<void> {
+export class ExecuteActivity<C extends types.ExecuteActivityContext = types.ExecuteActivityContext> extends ActivityBase<void> {
 
     public constructor(protected readonly data: ExecuteActivityData<C>, task: types.ActivityTask<void>) {
         super(task);

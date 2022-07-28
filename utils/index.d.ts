@@ -1111,7 +1111,7 @@ export declare class AzureWizard<T extends IActionContext & Partial<ExecuteActiv
     public execute(): Promise<void>;
 }
 
-export class ExecuteActivity<C extends ExecuteActivityContext> extends ActivityBase<void> {
+export class ExecuteActivity<C extends ExecuteActivityContext = ExecuteActivityContext> extends ActivityBase<void> {
     protected readonly data: ExecuteActivityData<C>;
     public constructor(data: ExecuteActivityData<C>, task: ActivityTask<void>);
     public initialState(): ActivityTreeItemOptions;
