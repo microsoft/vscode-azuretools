@@ -3,15 +3,15 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import * as types from '../../../index';
 import * as hTypes from '../../../hostapi';
+import * as types from '../../../index';
 import { localize } from "../../localize";
 import { AzExtParentTreeItem } from "../../tree/AzExtParentTreeItem";
 import { GenericTreeItem } from "../../tree/GenericTreeItem";
 import { nonNullProp } from "../../utils/nonNull";
 import { ActivityBase } from "../Activity";
 
-export class ExecuteActivity<C extends types.ExecuteActivityContext> extends ActivityBase<void> {
+export class ExecuteActivity<C extends types.ExecuteActivityContext = types.ExecuteActivityContext> extends ActivityBase<void> {
 
     public constructor(protected readonly context: C, task: types.ActivityTask<void>) {
         super(task);
