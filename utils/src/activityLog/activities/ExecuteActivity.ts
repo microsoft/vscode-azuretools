@@ -10,9 +10,9 @@ import { AzExtParentTreeItem } from "../../tree/AzExtParentTreeItem";
 import { GenericTreeItem } from "../../tree/GenericTreeItem";
 import { ActivityBase } from "../Activity";
 
-export class ExecuteActivity<C extends types.ExecuteActivityContext = types.ExecuteActivityContext> extends ActivityBase<void> {
+export class ExecuteActivity<TContext extends types.ExecuteActivityContext = types.ExecuteActivityContext> extends ActivityBase<void> {
 
-    public constructor(protected readonly context: C, task: types.ActivityTask<void>) {
+    public constructor(protected readonly context: TContext, task: types.ActivityTask<void>) {
         super(task);
     }
 

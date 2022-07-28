@@ -1140,7 +1140,7 @@ export declare interface ExecuteActivityContext {
     /**
      * The activity implementation to use, defaults to ExecuteActivity
      */
-    wizardActivity?: new <C extends ExecuteActivityContext>(context: C, task: ActivityTask<void>) => ExecuteActivity;
+    wizardActivity?: new <TContext extends ExecuteActivityContext>(context: TContext, task: ActivityTask<void>) => ExecuteActivity;
 }
 
 export declare abstract class AzureWizardExecuteStep<T extends IActionContext> {
