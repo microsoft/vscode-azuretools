@@ -984,7 +984,7 @@ export interface IAzureQuickPickItem<T = undefined> extends QuickPickItem {
     /**
      * @deprecated Use {@link IAzureQuickPickOptions.isPickSelected} instead
      */
-    picked?: never;
+    picked?: boolean;
 }
 
 /**
