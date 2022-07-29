@@ -980,6 +980,11 @@ export interface IAzureQuickPickItem<T = undefined> extends QuickPickItem {
      * Optionally allows some items to be automatically sorted at the top of the list
      */
     priority?: AzureQuickPickItemPriority;
+
+    /**
+     * @deprecated Use {@link IAzureQuickPickOptions.isPickSelected} instead
+     */
+    picked?: never;
 }
 
 /**
