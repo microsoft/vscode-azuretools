@@ -9,12 +9,15 @@ import type { OperationalInsightsManagementClient } from '@azure/arm-operational
 import type { ResourceGraphClient } from '@azure/arm-resourcegraph';
 import type { ResourceManagementClient } from '@azure/arm-resources';
 import { AzExtClientContext, createAzureClient, createAzureSubscriptionClient } from '@microsoft/vscode-azext-azureutils';
+import { ISubscriptionContext } from '@microsoft/vscode-azext-utils';
 
 // Lazy-load @azure packages to improve startup performance.
 // NOTE: The client is the only import that matters, the rest of the types disappear when compiled to JavaScript
 
-export async function createWebSiteClient(context: AzExtClientContext): Promise<WebSiteManagementClient> {
-    return createAzureClient(context, (await import('@azure/arm-appservice')).WebSiteManagementClient);
+export async function createWebSiteClient(context: AzExtClientContext & Partial<ISubscriptionContext>): Promise<WebSiteManagementClient> {
+    return context.isCustomCloud ?
+        <WebSiteManagementClient><unknown>createAzureClient(context, (await import('@azure/arm-appservice-profile-2020-09-01-hybrid')).WebSiteManagementClient) :
+        createAzureClient(context, (await import('@azure/arm-appservice')).WebSiteManagementClient);
 }
 
 export async function createAppInsightsClient(context: AzExtClientContext): Promise<ApplicationInsightsManagementClient> {
