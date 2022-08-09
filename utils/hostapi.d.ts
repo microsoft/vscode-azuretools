@@ -4,8 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import type * as vscode from 'vscode';
-import type { AbstractAzExtTreeItem, AzExtParentTreeItem, AzExtTreeDataProvider, AzExtTreeItem, IAzureQuickPickOptions, ISubscriptionContext, ITreeItemPickerContext, SealedAzExtTreeItem } from './index'; // This must remain `import type` or else a circular reference will result
-import { AzExtResourceType } from './src/azExtResourceType';
+import type { AbstractAzExtTreeItem, AzExtParentTreeItem, AzExtTreeDataProvider, AzExtTreeItem, IAzureQuickPickOptions, ISubscriptionContext, ITreeItemPickerContext, SealedAzExtTreeItem, AzExtResourceType } from './index'; // This must remain `import type` or else a circular reference will result
 
 /**
  * The API implemented by the Azure Resource Groups host extension
