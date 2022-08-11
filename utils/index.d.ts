@@ -1611,6 +1611,8 @@ export declare function getAzExtResourceType(resource: { type: string; kind?: st
 /**
  * Normalized type for Azure resources that uniquely identifies resource type for the purposes
  * of the Azure extensions
+ *
+ * See enum definition in AzExtResourceType.ts
  */
 export declare enum AzExtResourceType {
     AppServices = 'AppServices',

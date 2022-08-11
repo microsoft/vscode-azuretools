@@ -1,7 +1,13 @@
+/*---------------------------------------------------------------------------------------------
+*  Copyright (c) Microsoft Corporation. All rights reserved.
+*  Licensed under the MIT License. See License.txt in the project root for license information.
+*--------------------------------------------------------------------------------------------*/
 
 /**
  * Normalized type for Azure resources that uniquely identifies resource type for the purposes
  * of the Azure extensions
+ *
+ * See enum declaration in index.d.ts
  */
 export enum AzExtResourceType {
     AppServices = 'AppServices',
