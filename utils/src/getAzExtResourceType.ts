@@ -24,7 +24,7 @@ export function getAzExtResourceType(resource: { type: string; kind?: string; })
             }
 
         default:
-            return azureTypeToAzExtResourceTypeMap[resource.type];
+            return azureTypeToAzExtResourceTypeMap[type];
     }
 }
 
