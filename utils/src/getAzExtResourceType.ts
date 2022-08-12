@@ -3,7 +3,7 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { AzExtResourceType } from "../azExtResourceType";
+import { AzExtResourceType } from "./azExtResourceType";
 
 const FunctionAppKind = 'functionapp';
 const LogicAppKind = 'workflowapp';
@@ -24,7 +24,7 @@ export function getAzExtResourceType(resource: { type: string; kind?: string; })
             }
 
         default:
-            return azureTypeToAzExtResourceTypeMap[resource.type];
+            return azureTypeToAzExtResourceTypeMap[type];
     }
 }
 
