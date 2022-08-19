@@ -7,12 +7,12 @@
 
 /**
  * This script sorts:
- * 
+ *
  * package.json
  *  - activationEvents
  *  - contributes.commands
  *  - contributes.menus
- * 
+ *
  * package.nls.json
  */
 
@@ -35,7 +35,7 @@ async function sortPackageJson(path) {
     await writeJson(path, packageJson);
 }
 
-const sortCommand = (a, b) => a.command.localeCompare(b.command);
+const sortCommand = (a, b) => a.command?.localeCompare(b.command);
 
 function sortCommands(commands) {
     commands = commands.sort(sortCommand);

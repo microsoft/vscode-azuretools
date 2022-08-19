@@ -153,8 +153,8 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         this.refreshUIOnly(treeItem);
     }
 
-    public refreshUIOnly(treeItem: AzExtTreeItem | undefined): void {
-        this._onDidChangeTreeDataEmitter.fire(treeItem === this._rootTreeItem ? undefined : treeItem);
+    public refreshUIOnly(_treeItem: AzExtTreeItem | undefined): void {
+        this._onDidChangeTreeDataEmitter.fire(undefined);
     }
 
     public async loadMore(treeItem: AzExtParentTreeItem, context: types.IActionContext): Promise<void> {

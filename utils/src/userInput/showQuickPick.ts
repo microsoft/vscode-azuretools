@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, Memento, QuickInputButton, QuickInputButtons, QuickPick, window } from 'vscode';
+import { Disposable, Memento, QuickInputButton, QuickInputButtons, QuickPick, QuickPickItemKind, window } from 'vscode';
 import * as types from '../../index';
 import { AzExtQuickInputButtons } from '../constants';
 import { GoBackError, UserCancelledError } from '../errors';
@@ -33,18 +33,9 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
                             resolve(Array.from(quickPick.selectedItems));
                         } else {
                             const selectedItem: TPick | undefined = quickPick.selectedItems[0];
-                            if (selectedItem) {
-                                const group = groups.find(g => selectedItem.data === g);
-                                if (group) {
-                                    group.isCollapsed = !group.isCollapsed;
-                                    quickPick.items = getGroupedPicks(groups);
 
-                                    // The active pick gets reset when we change the items, but we can explicitly set it here to persist the active state
-                                    const newGroupPick = quickPick.items.find(i => i.data === group);
-                                    if (newGroupPick) {
-                                        quickPick.activeItems = [newGroupPick];
-                                    }
-                                } else if (selectedItem.onPicked) {
+                            if (selectedItem) {
+                                if (selectedItem.onPicked) {
                                     await selectedItem.onPicked();
                                 } else {
                                     resolve(selectedItem);
@@ -237,12 +228,11 @@ function getGroupedPicks<TPick extends types.IAzureQuickPickItem<unknown>>(group
                 picks.push(...group.picks);
             } else {
                 picks.push({
-                    label: `$(chevron-${group.isCollapsed ? 'right' : 'down'}) ${group.name}`,
+                    label: group.name,
+                    kind: QuickPickItemKind.Separator,
                     data: group
                 });
-                if (!group.isCollapsed) {
-                    picks.push(...group.picks);
-                }
+                picks.push(...group.picks);
             }
         }
     } else {

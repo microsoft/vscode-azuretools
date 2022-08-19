@@ -4,27 +4,25 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { ApplicationInsightsManagementClient } from '@azure/arm-appinsights';
-import type { Provider, ProviderResourceType, ResourceGroup, ResourceManagementClient } from '@azure/arm-resources';
-import type { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
-import { AzExtLocation, createGenericClient, LocationListStep } from '@microsoft/vscode-azext-azureutils';
-import { AzureWizardExecuteStep, IActionContext, IParsedError, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
+import type { ResourceGroup } from '@azure/arm-resources';
+import { AzExtLocation, LocationListStep } from '@microsoft/vscode-azext-azureutils';
+import { AzureWizardExecuteStep, IParsedError, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
 import { MessageItem, Progress } from 'vscode';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { createAppInsightsClient, createResourceClient } from '../utils/azureClients';
-import { areLocationNamesEqual } from '../utils/azureUtils';
+import { createAppInsightsClient } from '../utils/azureClients';
 import { AppInsightsListStep } from './AppInsightsListStep';
+import { getAppInsightsSupportedLocation } from './getAppInsightsSupportedLocation';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
     public priority: number = 135;
 
     public async execute(context: IAppServiceWizardContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
-        const resourceLocation: AzExtLocation = await LocationListStep.getLocation(context);
         const verifyingAppInsightsAvailable: string = localize('verifyingAppInsightsAvailable', 'Verifying that Application Insights is available for this location...');
         ext.outputChannel.appendLog(verifyingAppInsightsAvailable);
-        const appInsightsLocation: string | undefined = await this.getSupportedLocation(context, resourceLocation);
-
+        const resourceLocation: AzExtLocation = await LocationListStep.getLocation(context);
+        const appInsightsLocation = await getAppInsightsSupportedLocation(context, resourceLocation);
         if (appInsightsLocation) {
             const client: ApplicationInsightsManagementClient = await createAppInsightsClient(context);
             const rg: ResourceGroup = nonNullProp(context, 'resourceGroup');
@@ -42,7 +40,15 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
                     ext.outputChannel.appendLog(creatingNewAppInsights);
                     progress.report({ message: creatingNewAppInsights });
 
-                    context.appInsightsComponent = await client.components.createOrUpdate(rgName, aiName, { kind: 'web', applicationType: 'web', location: appInsightsLocation });
+                    context.appInsightsComponent = await client.components.createOrUpdate(
+                        rgName,
+                        aiName,
+                        {
+                            kind: 'web',
+                            applicationType: 'web',
+                            location: appInsightsLocation,
+                            workspaceResourceId: context.logAnalyticsWorkspace?.id
+                        });
                     const createdNewAppInsights: string = localize('createdNewAppInsights', 'Successfully created Application Insights resource "{0}".', aiName);
                     ext.outputChannel.appendLog(createdNewAppInsights);
                 } else if (pError.errorType === 'AuthorizationFailed') {
@@ -82,66 +88,4 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
     public shouldExecute(context: IAppServiceWizardContext): boolean {
         return !context.appInsightsComponent && !!context.newAppInsightsName;
     }
-
-    // returns the supported location, a location in the region map, or undefined
-    private async getSupportedLocation(context: IAppServiceWizardContext, location: AzExtLocation): Promise<string | undefined> {
-        const locations: string[] = await this.getLocations(context) || [];
-        const locationName: string = nonNullProp(location, 'name');
-
-        if (locations.some((loc) => areLocationNamesEqual(loc, location.name))) {
-            context.telemetry.properties.aiLocationSupported = 'true';
-            return locationName;
-        } else {
-            // If there is no exact match, then query the regionMapping.json
-            const pairedRegions: string[] | undefined = await this.getPairedRegions(context, locationName);
-            if (pairedRegions.length > 0) {
-                // if there is at least one region listed, return the first
-                context.telemetry.properties.aiLocationSupported = 'pairedRegion';
-                return pairedRegions[0];
-            }
-
-            context.telemetry.properties.aiLocationSupported = 'false';
-            return undefined;
-        }
-    }
-
-    private async getPairedRegions(context: IActionContext, locationName: string): Promise<string[]> {
-        try {
-            const client: ServiceClient = await createGenericClient(context, undefined);
-            const response: HttpOperationResponse = await client.sendRequest({
-                method: 'GET',
-                url: 'https://appinsights.azureedge.net/portal/regionMapping.json'
-            });
-            const regionMappingJson: RegionMappingJsonResponse = <RegionMappingJsonResponse>response.parsedBody;
-
-            if (regionMappingJson.regions[locationName]) {
-                return regionMappingJson.regions[locationName].pairedRegions;
-            }
-        } catch (error) {
-            // ignore the error
-        }
-        return [];
-    }
-
-    private async getLocations(context: IAppServiceWizardContext): Promise<string[] | undefined> {
-        const resourceClient: ResourceManagementClient = await createResourceClient(context);
-        const supportedRegions: Provider = await resourceClient.providers.get('microsoft.insights');
-        const componentsResourceType: ProviderResourceType | undefined = supportedRegions.resourceTypes && supportedRegions.resourceTypes.find(aiRt => aiRt.resourceType === 'components');
-        if (!!componentsResourceType && !!componentsResourceType.locations) {
-            return componentsResourceType.locations;
-        } else {
-            return undefined;
-        }
-    }
 }
-
-type RegionMappingJsonResponse = {
-    regions: {
-        [key: string]: RegionMap
-    }
-};
-
-type RegionMap = {
-    geo: string,
-    pairedRegions: string[]
-};

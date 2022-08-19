@@ -7,6 +7,7 @@ export * from './createAzureClient';
 export * from './openInPortal';
 export * from './tree/AzureAccountTreeItemBase';
 export * from './tree/SubscriptionTreeItemBase';
+export * from './utils/parseAzureResourceId';
 export * from './utils/uiUtils';
 export * from './wizard/LocationListStep';
 export * from './wizard/ResourceGroupCreateStep';

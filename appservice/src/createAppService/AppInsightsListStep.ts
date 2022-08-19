@@ -4,15 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { ApplicationInsightsManagementClient } from "@azure/arm-appinsights";
-// eslint-disable-next-line import/no-internal-modules
-import type { ApplicationInsightsComponent, ApplicationInsightsComponentListResult } from "@azure/arm-appinsights/esm/models";
-import { LocationListStep } from "@microsoft/vscode-azext-azureutils";
+import type { ApplicationInsightsComponent } from "@azure/arm-appinsights";
+import { LocationListStep, uiUtils } from "@microsoft/vscode-azext-azureutils";
 import { AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, nonNullProp } from "@microsoft/vscode-azext-utils";
 import { localize } from "../localize";
 import { createAppInsightsClient } from "../utils/azureClients";
 import { AppInsightsCreateStep } from "./AppInsightsCreateStep";
 import { AppInsightsNameStep } from "./AppInsightsNameStep";
 import { IAppServiceWizardContext } from "./IAppServiceWizardContext";
+import { LogAnalyticsCreateStep } from "./LogAnalyticsCreateStep";
 
 export const appInsightsNamingRules: IAzureNamingRules = {
     minLength: 1,
@@ -30,10 +30,10 @@ export class AppInsightsListStep extends AzureWizardPromptStep<IAppServiceWizard
         this._suppressCreate = suppressCreate;
     }
 
-    public static async getAppInsightsComponents(context: IAppServiceWizardContext): Promise<ApplicationInsightsComponentListResult> {
+    public static async getAppInsightsComponents(context: IAppServiceWizardContext): Promise<ApplicationInsightsComponent[]> {
         if (context.appInsightsTask === undefined) {
             const client: ApplicationInsightsManagementClient = await createAppInsightsClient(context);
-            context.appInsightsTask = client.components.list();
+            context.appInsightsTask = uiUtils.listAllIterator(client.components.list());
         }
 
         return await context.appInsightsTask;
@@ -65,7 +65,7 @@ export class AppInsightsListStep extends AzureWizardPromptStep<IAppServiceWizard
             LocationListStep.addStep(context, promptSteps);
             return {
                 promptSteps: promptSteps,
-                executeSteps: [new AppInsightsCreateStep()]
+                executeSteps: [new LogAnalyticsCreateStep(), new AppInsightsCreateStep()]
             };
         }
 
@@ -84,7 +84,7 @@ export class AppInsightsListStep extends AzureWizardPromptStep<IAppServiceWizard
             data: undefined
         });
 
-        let components: ApplicationInsightsComponentListResult = await AppInsightsListStep.getAppInsightsComponents(context);
+        let components: ApplicationInsightsComponent[] = await AppInsightsListStep.getAppInsightsComponents(context);
 
         // https://github.com/microsoft/vscode-azurefunctions/issues/1454
         if (!Array.isArray(components)) {

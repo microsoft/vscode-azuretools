@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { sendRequestWithTimeout } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, IParsedError, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
 import { CancellationToken, window } from 'vscode';
 import { KuduClient, KuduModels } from 'vscode-azurekudu';
@@ -14,7 +15,14 @@ import { delay } from '../utils/delay';
 import { ignore404Error, retryKuduCall } from '../utils/kuduUtils';
 import { IDeployContext } from './IDeployContext';
 
-export async function waitForDeploymentToComplete(context: IActionContext & Partial<IDeployContext>, site: ParsedSite, expectedId?: string, token?: CancellationToken, pollingInterval: number = 5000): Promise<void> {
+type DeploymentOptions = {
+    expectedId?: string,
+    token?: CancellationToken,
+    pollingInterval?: number,
+    locationUrl?: string
+}
+
+export async function waitForDeploymentToComplete(context: IActionContext & Partial<IDeployContext>, site: ParsedSite, options: DeploymentOptions = {}): Promise<void> {
     let fullLog: string = '';
 
     let lastLogTime: Date = new Date(0);
@@ -26,8 +34,17 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
     const maxTimeToWaitForExpectedId: number = Date.now() + 60 * 1000;
     const kuduClient = await createKuduClient(context, site);
 
+    const {expectedId, token, locationUrl} = options;
+    const pollingInterval = options.pollingInterval ?? 5000;
+
     while (!token?.isCancellationRequested) {
-        [deployment, permanentId, initialStartTime] = await tryGetLatestDeployment(context, kuduClient, permanentId, initialStartTime, expectedId);
+        if (locationUrl) {
+            deployment = (await sendRequestWithTimeout(context, {method: 'GET', url: locationUrl}, pollingInterval, site.subscription)).parsedBody as KuduModels.DeployResult;
+        }
+         else {
+             [deployment, permanentId, initialStartTime] = await tryGetLatestDeployment(context, kuduClient, permanentId, initialStartTime, expectedId);
+         }
+
         if ((deployment === undefined || !deployment.id)) {
             if (expectedId && Date.now() < maxTimeToWaitForExpectedId) {
                 await delay(pollingInterval);
