@@ -980,6 +980,11 @@ export interface IAzureQuickPickItem<T = undefined> extends QuickPickItem {
      * Optionally allows some items to be automatically sorted at the top of the list
      */
     priority?: AzureQuickPickItemPriority;
+
+    /**
+     * @deprecated Use {@link IAzureQuickPickOptions.isPickSelected} instead
+     */
+    picked?: boolean;
 }
 
 /**
@@ -1111,6 +1116,15 @@ export declare class AzureWizard<T extends IActionContext & Partial<ExecuteActiv
     public execute(): Promise<void>;
 }
 
+export class ExecuteActivity<C extends ExecuteActivityContext = ExecuteActivityContext> extends ActivityBase<void> {
+    protected readonly context: C;
+    public constructor(context: C, task: ActivityTask<void>);
+    public initialState(): ActivityTreeItemOptions;
+    public successState(): ActivityTreeItemOptions;
+    public errorState(error: IParsedError): ActivityTreeItemOptions;
+    protected get label(): string;
+}
+
 export declare interface ExecuteActivityContext {
     registerActivity: (activity: Activity) => Promise<void>;
     /**
@@ -1118,13 +1132,20 @@ export declare interface ExecuteActivityContext {
      */
     activityTitle?: string;
     /**
+     * Resource or resourceId
+     *
      * Set to show a "Click to view resource" child on success.
      */
-    activityResult?: AppResource;
+    activityResult?: AppResource | string;
     /**
      * Hide activity notifications
      */
     suppressNotification?: boolean;
+
+    /**
+     * The activity implementation to use, defaults to ExecuteActivity
+     */
+    wizardActivity?: new <TContext extends ExecuteActivityContext>(context: TContext, task: ActivityTask<void>) => ExecuteActivity;
 }
 
 export declare abstract class AzureWizardExecuteStep<T extends IActionContext> {
@@ -1509,13 +1530,22 @@ export declare function registerReportIssueCommand(commandId: string): void;
  * Registers a namespace that leverages vscode.workspace.fs API to access the file system
  */
 export declare namespace AzExtFsExtra {
-    export function isDirectory(): Promise<boolean>;
-    export function isFile(): Promise<boolean>;
+    export function isDirectory(resource: Uri | string): Promise<boolean>;
+    export function isFile(resource: Uri | string): Promise<boolean>;
     export function ensureDir(resource: Uri | string): Promise<void>;
     export function ensureFile(resource: Uri | string): Promise<void>;
     export function readFile(resource: Uri | string): Promise<string>;
     export function writeFile(resource: Uri | string, contents: string): Promise<void>;
     export function pathExists(resource: Uri | string): Promise<boolean>;
+    export function readJSON<T>(resource: Uri | string): Promise<T>
+    /**
+     * @param spaces Defaults to 2 spaces. If the default JSON.stringify behavior is required, input 0
+     */
+    export function writeJSON(resource: Uri | string, contents: string | unknown, spaces?: string | number): Promise<void>
+    export function readDirectory(resource: Uri | string): Promise<{ fsPath: string, name: string, type: FileType }[]>;
+    export function emptyDir(resource: Uri | string): Promise<void>;
+    export function copy(src: Uri | string, dest: Uri | string, options?: { overwrite?: boolean }): Promise<void>;
+    export function deleteResource(resource: Uri | string, options?: { recursive?: boolean, useTrash?: boolean }): Promise<void>
 }
 
 export declare function maskValue(data: string, valueToMask: string | undefined): string;
@@ -1537,6 +1567,13 @@ export declare function nonNullValue<T>(value: T | undefined, propertyNameOrMess
  * Validates that a given string is not null, undefined, nor empty
  */
 export declare function nonNullOrEmptyValue(value: string | undefined, propertyNameOrMessage?: string): string;
+
+/**
+ * Validates that a given object is not null and not undefined.
+ * Then retrieves a property by name from that object and checks that it's not null and not undefined.  It is strongly typed
+ * for the property and will give a compile error if the given name is not a property of the source.
+ */
+export declare function nonNullValueAndProp<TSource, TKey extends keyof TSource>(source: TSource | undefined, name: TKey): NonNullable<TSource[TKey]>;
 
 /**
  * Finds an available port.
@@ -1562,3 +1599,80 @@ export declare class DeleteConfirmationStep extends AzureWizardPromptStep<IActio
  * @returns a sorted, unique string of values separated by `;`
  */
 export function createContextValue(values: string[]): string;
+
+/**
+ * Gets a normalized type for an Azure resource, accounting for the fact that some
+ * Azure resources share values for type and/or kind
+ * @param resource The resource to check the {@link AzExtResourceType} for
+ * @returns The normalized Azure resource type
+ */
+export declare function getAzExtResourceType(resource: { type: string; kind?: string }): AzExtResourceType | undefined;
+
+/**
+ * Normalized type for Azure resources that uniquely identifies resource type for the purposes
+ * of the Azure extensions
+ *
+ * See enum definition in AzExtResourceType.ts
+ */
+export declare enum AzExtResourceType {
+    AppServices = 'AppServices',
+    AzureCosmosDb = 'AzureCosmosDb',
+    ContainerApps = 'ContainerApps',
+    ContainerAppsEnvironment = 'ContainerAppsEnvironment',
+    FunctionApp = 'FunctionApp',
+    PostgresqlServersFlexible = 'PostgresqlServersFlexible',
+    PostgresqlServersStandard = 'PostgresqlServersStandard',
+    StaticWebApps = 'StaticWebApps',
+    StorageAccounts = 'StorageAccounts',
+    VirtualMachines = 'VirtualMachines',
+
+    // Below are not supported but have icons in the Resources extension
+    ApiManagementService = 'ApiManagementService',
+    ApplicationInsights = 'ApplicationInsights',
+    AppServiceKubernetesEnvironment = 'AppServiceKubernetesEnvironment',
+    AppServicePlans = 'AppServicePlans',
+    AvailabilitySets = 'AvailabilitySets',
+    BatchAccounts = 'BatchAccounts',
+    CacheRedis = 'CacheRedis',
+    ContainerRegistry = 'ContainerRegistry',
+    ContainerServiceManagedClusters = 'ContainerServiceManagedClusters',
+    CustomLocations = 'CustomLocations',
+    DeviceIotHubs = 'DeviceIotHubs',
+    DevTestLabs = 'DevTestLabs',
+    Disks = 'Disks',
+    EventGridDomains = 'EventGridDomains',
+    EventGridEventSubscriptions = 'EventGridEventSubscriptions',
+    EventGridTopics = 'EventGridTopics',
+    EventHubNamespaces = 'EventHubNamespaces',
+    FrontDoorAndCdnProfiles = 'FrontDoorAndCdnProfiles',
+    Images = 'Images',
+    KeyVaults = 'KeyVaults',
+    KubernetesConnectedClusters = 'KubernetesConnectedClusters',
+    LoadBalancers = 'LoadBalancers',
+    LogicApp = 'LogicApp',
+    LogicWorkflows = 'LogicWorkflows',
+    ManagedIdentityUserAssignedIdentities = 'ManagedIdentityUserAssignedIdentities',
+    MysqlServers = 'MysqlServers',
+    NetworkApplicationGateways = 'NetworkApplicationGateways',
+    NetworkApplicationSecurityGroups = 'NetworkApplicationSecurityGroups',
+    NetworkInterfaces = 'NetworkInterfaces',
+    NetworkLocalNetworkGateways = 'NetworkLocalNetworkGateways',
+    NetworkPublicIpPrefixes = 'NetworkPublicIpPrefixes',
+    NetworkRouteTables = 'NetworkRouteTables',
+    NetworkSecurityGroups = 'NetworkSecurityGroups',
+    NetworkVirtualNetworkGateways = 'NetworkVirtualNetworkGateways',
+    NetworkWatchers = 'NetworkWatchers',
+    NotificationHubNamespaces = 'NotificationHubNamespaces',
+    OperationalInsightsWorkspaces = 'OperationalInsightsWorkspaces',
+    OperationsManagementSolutions = 'OperationsManagementSolutions',
+    PublicIpAddresses = 'PublicIpAddresses',
+    ServiceBusNamespaces = 'ServiceBusNamespaces',
+    ServiceFabricClusters = 'ServiceFabricClusters',
+    ServiceFabricMeshApplications = 'ServiceFabricMeshApplications',
+    SignalRService = 'SignalRService',
+    SqlDatabases = 'SqlDatabases',
+    SqlServers = 'SqlServers',
+    VirtualMachineScaleSets = 'VirtualMachineScaleSets',
+    VirtualNetworks = 'VirtualNetworks',
+    WebHostingEnvironments = 'WebHostingEnvironments',
+}

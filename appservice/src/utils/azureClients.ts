@@ -5,6 +5,7 @@
 
 import type { ApplicationInsightsManagementClient } from '@azure/arm-appinsights';
 import type { WebSiteManagementClient } from '@azure/arm-appservice';
+import type { OperationalInsightsManagementClient } from '@azure/arm-operationalinsights';
 import type { ResourceGraphClient } from '@azure/arm-resourcegraph';
 import type { ResourceManagementClient } from '@azure/arm-resources';
 import { AzExtClientContext, createAzureClient, createAzureSubscriptionClient } from '@microsoft/vscode-azext-azureutils';
@@ -26,4 +27,8 @@ export async function createResourceClient(context: AzExtClientContext): Promise
 
 export async function createResourceGraphClient(context: AzExtClientContext): Promise<ResourceGraphClient> {
     return createAzureSubscriptionClient(context, (await import('@azure/arm-resourcegraph')).ResourceGraphClient);
+}
+
+export async function createOperationalInsightsManagementClient(context: AzExtClientContext): Promise<OperationalInsightsManagementClient> {
+    return createAzureClient(context, (await import('@azure/arm-operationalinsights')).OperationalInsightsManagementClient);
 }

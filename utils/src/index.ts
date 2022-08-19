@@ -33,4 +33,7 @@ export * from './utils/findFreePort';
 export * from './activityLog/Activity';
 export * from './wizard/DeleteConfirmationStep';
 export * from './utils/contextUtils';
+export * from './activityLog/activities/ExecuteActivity';
+export * from './getAzExtResourceType';
+export * from './AzExtResourceType';
 // NOTE: The auto-fix action "source.organizeImports" does weird things with this file, but there doesn't seem to be a way to disable it on a per-file basis so we'll just let it happen

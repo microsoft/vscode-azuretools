@@ -3,7 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ExtendedLocation } from '@azure/arm-resources';
+import type { ExtendedLocation } from '@azure/arm-resources';
+import type { Location } from '@azure/arm-resources-subscriptions';
 import * as types from '../../index';
 import { createResourcesClient, createSubscriptionsClient } from '../clients';
 import { resourcesProvider } from '../constants';
@@ -11,6 +12,7 @@ import { AzureWizardPromptStep, IActionContext, IAzureQuickPickItem, IAzureQuick
 import { localize } from '../localize';
 import { ext } from '../extensionVariables';
 import { nonNullProp, nonNullValue } from '@microsoft/vscode-azext-utils';
+import { uiUtils } from '../utils/uiUtils';
 
 interface ILocationWizardContextInternal extends types.ILocationWizardContext {
     /**
@@ -205,7 +207,7 @@ function generalizeLocationName(name: string | undefined): string {
 
 async function getAllLocations(wizardContext: types.ILocationWizardContext): Promise<types.AzExtLocation[]> {
     const client = await createSubscriptionsClient(wizardContext);
-    const locations = await client.subscriptions.listLocations(wizardContext.subscriptionId, { includeExtendedLocations: wizardContext.includeExtendedLocations });
+    const locations = await uiUtils.listAllIterator<Location>(client.subscriptions.listLocations(wizardContext.subscriptionId, { includeExtendedLocations: wizardContext.includeExtendedLocations }));
     return locations.filter((l): l is types.AzExtLocation => !!(l.id && l.name && l.displayName));
 }
 

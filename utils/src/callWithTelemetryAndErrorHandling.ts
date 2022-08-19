@@ -226,9 +226,8 @@ function handleTelemetry(context: types.IActionContext, callbackId: string, star
                 }
             }
 
-            const errorProps: string[] = Object.keys(context.telemetry.properties).filter(key => /(error|exception|stack)/i.test(key));
             // Note: The id of the extension is automatically prepended to the given callbackId (e.g. "vscode-cosmosdb/")
-            ext._internalReporter.sendTelemetryErrorEvent(getTelemetryEventName(handlerContext), context.telemetry.properties, context.telemetry.measurements, errorProps);
+            ext._internalReporter.sendTelemetryErrorEvent(getTelemetryEventName(handlerContext), context.telemetry.properties, context.telemetry.measurements);
         }
     } catch {
         sendHandlerFailedEvent(handlerContext, 'telemetry');
