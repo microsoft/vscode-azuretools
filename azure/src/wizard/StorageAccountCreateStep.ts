@@ -4,8 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { SkuName, StorageManagementClient } from '@azure/arm-storage';
-import type { IAzureNamingRules } from '@microsoft/vscode-azext-utils';
-import { AzureWizardExecuteStep } from '@microsoft/vscode-azext-utils';
+import { AzureWizardExecuteStep, IAzureNamingRules } from '@microsoft/vscode-azext-utils';
 import { isArray } from 'util';
 import { Progress } from 'vscode';
 import * as types from '../../index';
