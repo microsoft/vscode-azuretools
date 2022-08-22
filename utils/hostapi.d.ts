@@ -105,14 +105,24 @@ export interface AppResourceFilter {
 
 export interface PickAppResourceOptions extends IAzureQuickPickOptions {
     /**
-     * Options to filter the picks to resources that match any of the provided filters
+     * Options to filter the picks to 'remote' resources that match any of the provided filters
      */
     filter?: AppResourceFilter | AppResourceFilter[];
 
     /**
-     * Set this to pick a child of the selected app resource
+     * Set this to pick a child of the selected 'remote' app resource
      */
     expectedChildContextValue?: string | RegExp | (string | RegExp)[];
+
+    /**
+     * Specify the 'local' workspace resource root from which to begin looking for resource children
+     */
+    workspaceRootContextValue?: string | RegExp | (string | RegExp)[];
+
+    /**
+     * Set this to pick a child of the selected 'local' workspace resource
+     */
+    expectedWorkspaceContextValue?: string | RegExp | (string | RegExp)[];
 
     /**
      * Whether `AppResourceTreeItem`s should be resolved before displaying them as quick picks, or only once one has been selected
