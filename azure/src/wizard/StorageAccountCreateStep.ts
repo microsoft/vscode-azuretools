@@ -66,8 +66,8 @@ export class StorageAccountCreateStep<T extends types.IStorageAccountWizardConte
         const minLength: number = Math.max(...namingRules.map((n: IAzureNamingRules) => n.minLength));
         const maxLength: number = Math.min(...namingRules.map((n: IAzureNamingRules) => n.maxLength));
 
-        const maxTries: number = 100;
-        let count: number = 1;
+        const maxTries: number = 5;
+        let count: number = 0;
         let newName: string;
         while (count < maxTries) {
             newName = this.generateSuffixedName(preferredName, count, minLength, maxLength);
@@ -85,7 +85,7 @@ export class StorageAccountCreateStep<T extends types.IStorageAccountWizardConte
     }
 
     private generateSuffixedName(preferredName: string, i: number, minLength: number, maxLength: number): string {
-        const suffix: string = i === 1 ? '' : i.toString();
+        const suffix: string = i === 0 ? '' : i.toString();
         const minUnsuffixedLength: number = minLength - suffix.length;
         const maxUnsuffixedLength: number = maxLength - suffix.length;
 
