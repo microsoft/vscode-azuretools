@@ -70,7 +70,7 @@ export class StorageAccountCreateStep<T extends types.IStorageAccountWizardConte
         let count: number = 0;
         let newName: string;
         while (count < maxTries) {
-            newName = this.generateSuffixedName(preferredName, count, minLength, maxLength);
+            newName = this.generateSuffixedName(preferredName, minLength, maxLength);
             if (await this.isRelatedNameAvailable(wizardContext, newName)) {
                 return newName;
             }
@@ -84,8 +84,8 @@ export class StorageAccountCreateStep<T extends types.IStorageAccountWizardConte
         return await ResourceGroupListStep.isNameAvailable(wizardContext, name);
     }
 
-    private generateSuffixedName(preferredName: string, i: number, minLength: number, maxLength: number): string {
-        const suffix: string = i === 0 ? '' : i.toString();
+    private generateSuffixedName(preferredName: string, minLength: number, maxLength: number): string {
+        const suffix: string = (Math.floor(Math.random() * (100 - 1)) + 1).toString();
         const minUnsuffixedLength: number = minLength - suffix.length;
         const maxUnsuffixedLength: number = maxLength - suffix.length;
 
