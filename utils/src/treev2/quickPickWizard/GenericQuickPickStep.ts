@@ -62,6 +62,8 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
 
     protected async getPicks(wizardContext: TContext): Promise<types.IAzureQuickPickItem<TNode>[]> {
         const lastPickedItem: TNode | undefined = getLastNode(wizardContext);
+
+        // TODO: if `lastPickedItem` is an `AzExtParentTreeItem`, should we clear its cache?
         const children = (await this.treeDataProvider.getChildren(lastPickedItem)) || [];
 
         const directChoices = children.filter(c => this.isDirectPick(c));
