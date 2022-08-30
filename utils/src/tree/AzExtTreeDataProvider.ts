@@ -147,7 +147,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         }
 
         if (isAzExtParentTreeItem(treeItem)) {
-            (<AzExtParentTreeItem>treeItem).clearCache();
+            treeItem.clearCache();
         }
 
         this.refreshUIOnly(treeItem);
@@ -179,7 +179,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
 
         while (!treeItem.matchesContextValue(expectedContextValues)) {
             if (isAzExtParentTreeItem(treeItem)) {
-                const pickedItems: AzExtTreeItem | AzExtTreeItem[] = await (<AzExtParentTreeItem>treeItem).pickChildTreeItem(expectedContextValues, context);
+                const pickedItems: AzExtTreeItem | AzExtTreeItem[] = await treeItem.pickChildTreeItem(expectedContextValues, context);
                 if (Array.isArray(pickedItems)) {
                     // canPickMany is only supported at the last stage of the picker, so automatically return if this is an array
                     return <T[]><unknown>pickedItems;

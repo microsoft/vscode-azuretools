@@ -5,13 +5,14 @@
 
 import { EventEmitter } from 'vscode';
 import * as types from '../../index';
+import { AzExtParentTreeItem } from './AzExtParentTreeItem';
 import { AzExtTreeItem } from './AzExtTreeItem';
 import { CollapsibleStateTracker } from './CollapsibleStateTracker';
 
 // Interfaces for methods on the tree that aren't exposed outside of this package
 // We can't reference the classes directly because it would result in circular dependencies
 
-export interface IAzExtParentTreeItemInternal extends types.AzExtParentTreeItem, AzExtTreeItem {
+export interface IAzExtParentTreeItemInternal extends AzExtParentTreeItem {
     _isAzExtParentTreeItem: boolean;
     parent: IAzExtParentTreeItemInternal | undefined;
     treeDataProvider: IAzExtTreeDataProviderInternal;
@@ -28,6 +29,6 @@ export interface IAzExtTreeDataProviderInternal extends types.AzExtTreeDataProvi
 /**
  * Using instanceof AzExtParentTreeItem causes issues whenever packages are linked for dev testing. Instead, check _isAzExtParentTreeItem
  */
-export function isAzExtParentTreeItem(item: {}): boolean {
-    return !!(<IAzExtParentTreeItemInternal>item)._isAzExtParentTreeItem;
+export function isAzExtParentTreeItem(maybeParent: unknown): maybeParent is IAzExtParentTreeItemInternal {
+    return !!(maybeParent as IAzExtParentTreeItemInternal)._isAzExtParentTreeItem;
 }
