@@ -8,8 +8,21 @@ import { GenericQuickPickOptions, GenericQuickPickStep } from './GenericQuickPic
 import { isAzExtParentTreeItem } from '../../tree/InternalInterfaces';
 import { QuickPickWizardContext } from './QuickPickWizardContext';
 
+/**
+ * Describes filtering based on context value. Items that pass the filter will
+ * match at least one of the `include` filters, but none of the `exclude` filters.
+ */
 export interface ContextValueFilter {
+    /**
+     * This filter will include items that match *any* of the values in the array.
+     * When a string is used, exact value comparison is done.
+     */
     include: string | RegExp | (string | RegExp)[];
+
+    /**
+     * This filter will exclude items that match *any* of the values in the array.
+     * When a string is used, exact value comparison is done.
+     */
     exclude?: string | RegExp | (string | RegExp)[];
 }
 
