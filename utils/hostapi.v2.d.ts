@@ -80,26 +80,13 @@ export interface ContextValueFilter {
     exclude?: string | RegExp | (string | RegExp)[];
 }
 
-interface ContextValueFilterableTreeNodeV2 {
-    readonly quickPickOptions: {
-        readonly contextValues: Array<string>;
-        readonly isLeaf: boolean;
-    }
+type ContextValueFilterableTreeNodeV2 = {
+    quickPickOptions: Required<ResourceQuickPickOptions>
 }
 
 export type ContextValueFilterableTreeNode = ContextValueFilterableTreeNodeV2 | AzExtTreeItem;
 
 export type ResourceGroupsItem = ContextValueFilterableTreeNode;
-
-export type SubscriptionItem = ResourceGroupsItem & {
-    subscription: ApplicationSubscription;
-};
-
-export type GroupingItem = ResourceGroupsItem & {
-    resourceType?: AzExtResourceType
-}
-
-export type AppResourceItem = ResourceGroupsItem & ApplicationResource;
 
 /**
  * Represents an individual resource in Azure.
@@ -148,3 +135,5 @@ export type TreeNodeCommandCallback<T> = (context: IActionContext, node?: T, nod
  * NOTE: If the environment variable `DEBUGTELEMETRY` is set to a non-empty, non-zero value, then telemetry will not be sent. If the value is 'verbose' or 'v', telemetry will be displayed in the console window.
  */
 export declare function registerCommandWithTreeNodeUnboxing<T>(commandId: string, callback: TreeNodeCommandCallback<T>, debounce?: number, telemetryId?: string): void;
+
+export declare function appResourceExperience<TPick>(context: IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, resourceType: AzExtResourceType, childItemFilter?: ContextValueFilter): Promise<TPick>;
