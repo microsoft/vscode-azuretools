@@ -1679,35 +1679,3 @@ export declare enum AzExtResourceType {
     VirtualNetworks = 'VirtualNetworks',
     WebHostingEnvironments = 'WebHostingEnvironments',
 }
-
-export interface ContextValueFilter {
-    /**
-     * This filter will include items that match *any* of the values in the array.
-     * When a string is used, exact value comparison is done.
-     */
-    include: string | RegExp | (string | RegExp)[];
-
-    /**
-     * This filter will exclude items that match *any* of the values in the array.
-     * When a string is used, exact value comparison is done.
-     */
-    exclude?: string | RegExp | (string | RegExp)[];
-}
-
-export type ResourceGroupsItem = v2Types.ResourceModelBase | AzExtTreeItem;
-
-export function appResourceExperience<TPick>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceType: AzExtResourceType, childItemFilter?: ContextValueFilter): Promise<TPick>;
-
-export type SubscriptionItem = ResourceGroupsItem & {
-    subscription: v2Types.ApplicationSubscription;
-};
-
-export type GroupingItem = ResourceGroupsItem & {
-    resourceType?: AzExtResourceType
-}
-
-export type AppResourceItem = ResourceGroupsItem & v2Types.ApplicationResource;
-
-export interface Box<T> {
-    unwrap(): T;
-}
