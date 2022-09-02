@@ -4,9 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
+import { ApplicationSubscription, ResourceGroupsItem } from '../../../../hostapi.v2';
 import { GenericQuickPickOptions, GenericQuickPickStep, SkipIfOneQuickPickOptions } from '../GenericQuickPickStep';
 import { AzureResourceQuickPickWizardContext } from './AzureResourceQuickPickWizardContext';
-import { ResourceGroupsItem, SubscriptionItem } from './tempTypes';
+
+type SubscriptionItem = ResourceGroupsItem & {
+    subscription: ApplicationSubscription;
+};
 
 export class QuickPickAzureSubscriptionStep extends GenericQuickPickStep<ResourceGroupsItem, AzureResourceQuickPickWizardContext, SkipIfOneQuickPickOptions> {
     public constructor(tdp: vscode.TreeDataProvider<ResourceGroupsItem>, options?: GenericQuickPickOptions) {
@@ -20,7 +24,7 @@ export class QuickPickAzureSubscriptionStep extends GenericQuickPickStep<Resourc
     }
 
     protected override async promptInternal(wizardContext: AzureResourceQuickPickWizardContext): Promise<SubscriptionItem> {
-        const pickedSubscription = await super.promptInternal(wizardContext) as SubscriptionItem;
+        const pickedSubscription = await super.promptInternal(wizardContext) as unknown as SubscriptionItem;
 
         // TODO
         wizardContext.subscription = pickedSubscription.subscription;

@@ -7,7 +7,7 @@ import * as types from "../../../../index";
 import { ContextValueFilterableTreeNode } from "../ContextValueQuickPickStep";
 import { GenericQuickPickOptions, GenericQuickPickStep } from "../GenericQuickPickStep";
 import { AzureResourceQuickPickWizardContext } from "./AzureResourceQuickPickWizardContext";
-import { ResourceGroupsItem } from "./tempTypes";
+import { ResourceGroupsItem } from "../../../../hostapi.v2";
 
 // TODO: implement this for picking resource group
 // The resource group may NOT be the grouping method used in the tree

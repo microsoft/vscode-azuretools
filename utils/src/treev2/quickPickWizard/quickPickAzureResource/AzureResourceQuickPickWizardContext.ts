@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { QuickPickWizardContext } from "../QuickPickWizardContext";
-import { ApplicationResource, ApplicationSubscription, ResourceGroupsItem } from "./tempTypes";
+import { ApplicationResource, ApplicationSubscription, ResourceGroupsItem } from "../../../../hostapi.v2";
 
 export interface AzureResourceQuickPickWizardContext extends QuickPickWizardContext<ResourceGroupsItem> {
-    subscription: ApplicationSubscription | undefined;
-    resource: ApplicationResource | undefined;
-    resourceGroup: string | undefined;
+    subscription?: ApplicationSubscription;
+    resource?: ApplicationResource;
+    resourceGroup?: string;
 }

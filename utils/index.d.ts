@@ -10,6 +10,7 @@ import { CancellationToken, CancellationTokenSource, Disposable, Event, Extensio
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
+import * as v2Types from './hostapi.v2';
 
 export declare interface RunWithTemporaryDescriptionOptions {
     description: string;
@@ -1675,4 +1676,36 @@ export declare enum AzExtResourceType {
     VirtualMachineScaleSets = 'VirtualMachineScaleSets',
     VirtualNetworks = 'VirtualNetworks',
     WebHostingEnvironments = 'WebHostingEnvironments',
+}
+
+export interface ContextValueFilter {
+    /**
+     * This filter will include items that match *any* of the values in the array.
+     * When a string is used, exact value comparison is done.
+     */
+    include: string | RegExp | (string | RegExp)[];
+
+    /**
+     * This filter will exclude items that match *any* of the values in the array.
+     * When a string is used, exact value comparison is done.
+     */
+    exclude?: string | RegExp | (string | RegExp)[];
+}
+
+export type ResourceGroupsItem = v2Types.ResourceModelBase | AzExtTreeItem;
+
+export function appResourceExperience<TPick>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceType: AzExtResourceType, childItemFilter?: ContextValueFilter): Promise<TPick>;
+
+export type SubscriptionItem = ResourceGroupsItem & {
+    subscription: v2Types.ApplicationSubscription;
+};
+
+export type GroupingItem = ResourceGroupsItem & {
+    resourceType?: AzExtResourceType
+}
+
+export type AppResourceItem = ResourceGroupsItem & v2Types.ApplicationResource;
+
+export interface Box<T> {
+    unwrap(): T;
 }
