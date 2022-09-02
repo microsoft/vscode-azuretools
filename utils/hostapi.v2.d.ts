@@ -1,5 +1,4 @@
 import type { Environment } from '@azure/ms-rest-azure-env';
-import type { AppResourceFilter } from './hostapi';
 import * as vscode from 'vscode';
 import { AzExtResourceType, AzExtTreeItem, IActionContext } from './index';
 
