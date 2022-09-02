@@ -34,16 +34,18 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
     const maxTimeToWaitForExpectedId: number = Date.now() + 60 * 1000;
     const kuduClient = await createKuduClient(context, site);
 
-    const {expectedId, token, locationUrl} = options;
+    const { expectedId, token, locationUrl } = options;
     const pollingInterval = options.pollingInterval ?? 5000;
 
     while (!token?.isCancellationRequested) {
         if (locationUrl) {
-            deployment = (await sendRequestWithTimeout(context, {method: 'GET', url: locationUrl}, pollingInterval, site.subscription)).parsedBody as KuduModels.DeployResult;
+            deployment = await retryKuduCall<KuduModels.DeployResult | undefined>(context, 'getDeploymentFromLocation', async () => {
+                // request can occasionally take more than 10 seconds
+                return (await sendRequestWithTimeout(context, { method: 'GET', url: locationUrl }, 10 * 1000, site.subscription)).parsedBody as KuduModels.DeployResult;
+            })
+        } else {
+            [deployment, permanentId, initialStartTime] = await tryGetLatestDeployment(context, kuduClient, permanentId, initialStartTime, expectedId);
         }
-         else {
-             [deployment, permanentId, initialStartTime] = await tryGetLatestDeployment(context, kuduClient, permanentId, initialStartTime, expectedId);
-         }
 
         if ((deployment === undefined || !deployment.id)) {
             if (expectedId && Date.now() < maxTimeToWaitForExpectedId) {
