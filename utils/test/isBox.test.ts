@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import { Box } from '../hostapi';
+import type { Box } from '../hostapi.v2';
 import { isBox } from '../src/registerCommandWithTreeNodeUnboxing';
 
 suite('isBox', () => {

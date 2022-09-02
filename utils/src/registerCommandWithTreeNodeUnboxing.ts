@@ -3,8 +3,8 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { CommandCallback, IActionContext } from '../index';
-import { Box, TreeNodeCommandCallback } from '../hostapi';
+import type { CommandCallback, IActionContext } from '../index';
+import type { Box, TreeNodeCommandCallback } from '../hostapi.v2';
 import { registerCommand } from './registerCommand';
 
 export function registerCommandWithTreeNodeUnboxing<T>(commandId: string, treeNodeCallback: TreeNodeCommandCallback<T>, debounce?: number, telemetryId?: string): void {
