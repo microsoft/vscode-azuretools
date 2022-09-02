@@ -54,17 +54,15 @@ export interface ResourceModelBase {
     readonly azureResourceId?: string;
 }
 
-/**
- * Represents a branch data provider resource model as returned by a context menu command.
- */
-export interface WrappedResourceModel {
-    /**
-     * Unwraps the resource, returning the underlying branch data provider resource model.
-     *
-     * @remarks TODO: Should this be an async method (which might be viral for existing command implementations)?
-     */
-    unwrap<T extends ResourceModelBase>(): T | undefined;
+//#region tree item picker types
+
+type ContextValueFilterableTreeNodeV2 = {
+    quickPickOptions: Required<ResourceQuickPickOptions>
 }
+
+export type ContextValueFilterableTreeNode = ContextValueFilterableTreeNodeV2 | AzExtTreeItem;
+
+export type ResourceGroupsItem = ContextValueFilterableTreeNode;
 
 export interface ContextValueFilter {
     /**
@@ -80,23 +78,11 @@ export interface ContextValueFilter {
     exclude?: string | RegExp | (string | RegExp)[];
 }
 
-type ContextValueFilterableTreeNodeV2 = {
-    quickPickOptions: Required<ResourceQuickPickOptions>
-}
+export declare function appResourceExperience<TPick>(context: IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, resourceType: AzExtResourceType, childItemFilter?: ContextValueFilter): Promise<TPick>;
 
-export type ContextValueFilterableTreeNode = ContextValueFilterableTreeNodeV2 | AzExtTreeItem;
+export declare function contextValueExperience<TPick extends ContextValueFilterableTreeNode>(context: IActionContext, tdp: vscode.TreeDataProvider<TPick>, contextValueFilter: ContextValueFilter): Promise<TPick>;
 
-export type ResourceGroupsItem = ContextValueFilterableTreeNode;
-
-/**
- * Represents an individual resource in Azure.
- * @remarks The `id` property is expected to be the Azure resource ID.
- */
-export interface ApplicationResource extends ResourceBase {
-    readonly subscription: ApplicationSubscription;
-    readonly azExtResourceType?: AzExtResourceType;
-    readonly resourceGroup?: string;
-}
+//#endregion
 
 /**
  * Interface describing an object that wraps another object.
@@ -135,7 +121,3 @@ export type TreeNodeCommandCallback<T> = (context: IActionContext, node?: T, nod
  * NOTE: If the environment variable `DEBUGTELEMETRY` is set to a non-empty, non-zero value, then telemetry will not be sent. If the value is 'verbose' or 'v', telemetry will be displayed in the console window.
  */
 export declare function registerCommandWithTreeNodeUnboxing<T>(commandId: string, callback: TreeNodeCommandCallback<T>, debounce?: number, telemetryId?: string): void;
-
-export declare function appResourceExperience<TPick>(context: IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, resourceType: AzExtResourceType, childItemFilter?: ContextValueFilter): Promise<TPick>;
-
-export declare function contextValueExperience<TPick extends ContextValueFilterableTreeNode>(context: IActionContext, tdp: vscode.TreeDataProvider<TPick>, contextValueFilter: ContextValueFilter): Promise<TPick>;
