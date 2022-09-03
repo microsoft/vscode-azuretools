@@ -10,6 +10,7 @@ import { CancellationToken, CancellationTokenSource, Disposable, Event, Extensio
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
+import { ResourceGroupsItem, ContextValueFilter, ContextValueFilterableTreeNode } from './hostapi.v2';
 
 export declare interface RunWithTemporaryDescriptionOptions {
     description: string;
@@ -1678,3 +1679,7 @@ export declare enum AzExtResourceType {
     VirtualNetworks = 'VirtualNetworks',
     WebHostingEnvironments = 'WebHostingEnvironments',
 }
+
+export declare function appResourceExperience<TPick>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceType: AzExtResourceType, childItemFilter?: ContextValueFilter): Promise<TPick>;
+
+export declare function contextValueExperience<TPick extends ContextValueFilterableTreeNode>(context: IActionContext, tdp: TreeDataProvider<TPick>, contextValueFilter: ContextValueFilter): Promise<TPick>;

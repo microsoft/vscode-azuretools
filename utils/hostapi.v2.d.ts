@@ -78,10 +78,6 @@ export interface ContextValueFilter {
     exclude?: string | RegExp | (string | RegExp)[];
 }
 
-export declare function appResourceExperience<TPick>(context: IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, resourceType: AzExtResourceType, childItemFilter?: ContextValueFilter): Promise<TPick>;
-
-export declare function contextValueExperience<TPick extends ContextValueFilterableTreeNode>(context: IActionContext, tdp: vscode.TreeDataProvider<TPick>, contextValueFilter: ContextValueFilter): Promise<TPick>;
-
 //#endregion
 
 /**
