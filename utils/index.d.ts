@@ -780,6 +780,8 @@ export interface IErrorHandlingContext {
      * Custom properties that will be included in any error reports generated during this action
      */
     issueProperties: { [key: string]: string | undefined };
+
+    rethrowUserCancelledError?: boolean;
 }
 
 export interface TelemetryProperties {
