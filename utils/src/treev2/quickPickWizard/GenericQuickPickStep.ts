@@ -5,9 +5,9 @@
 
 import * as types from '../../../index';
 import * as vscode from 'vscode';
-import { getLastNode, QuickPickWizardContext } from './QuickPickWizardContext';
+import { getLastNode, PickedItem, QuickPickWizardContext } from './QuickPickWizardContext';
 import { AzureWizardPromptStep } from '../../wizard/AzureWizardPromptStep';
-import { NoResourceFoundError } from '../../errors';
+// import { NoResourceFoundError } from '../../errors';
 import { parseError } from '../../parseError';
 
 export interface GenericQuickPickOptions {
@@ -50,14 +50,16 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
         return true;
     }
 
-    protected async promptInternal(wizardContext: TContext): Promise<TNode> {
+    protected async promptInternal(wizardContext: TContext): Promise<PickedItem<TNode>> {
         const picks = await this.getPicks(wizardContext);
 
         if (picks.length === 1 && this.pickOptions.skipIfOne) {
-            return picks[0].data;
+            return picks[0];
         } else {
-            const selected = await wizardContext.ui.showQuickPick(picks, { /* TODO: options */ });
-            return selected.data;
+            return await wizardContext.ui.showQuickPick(picks, {
+                noPicksMessage: 'No matching resources',
+                /* TODO: options */
+            });
         }
     }
 
@@ -70,15 +72,14 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
         const directChoices = children.filter(c => this.isDirectPick(c));
         const indirectChoices = children.filter(c => this.isIndirectPick(c));
 
-
-
         let promptChoices: TNode[];
         if (directChoices.length === 0) {
             if (indirectChoices.length === 0) {
                 if (this.pickOptions.fallbackToAll) {
                     promptChoices = children;
                 } else {
-                    throw new NoResourceFoundError();
+                    return [];
+                    // throw new NoResourceFoundError();
                 }
             } else {
                 promptChoices = indirectChoices;
@@ -107,7 +108,7 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
      */
     protected abstract isIndirectPick(node: TNode): boolean;
 
-    private async getQuickPickItem(resource: TNode): Promise<types.IAzureQuickPickItem<TNode>> {
+    protected async getQuickPickItem(resource: TNode): Promise<types.IAzureQuickPickItem<TNode>> {
         const treeItem = await Promise.resolve(this.treeDataProvider.getTreeItem(resource));
 
         return {
