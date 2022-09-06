@@ -3,13 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { ResourceGroupsItem } from '../../../../hostapi.v2';
 import * as types from '../../../../index';
-import { ContextValueFilterableTreeNode } from '../ContextValueQuickPickStep';
 
 // TODO: THIS FILE IS TEMPORARY //
 // It needs to be replaced by real Resources extension interfaces //
-
-export type ResourceGroupsItem = ContextValueFilterableTreeNode;
 
 export type SubscriptionItem = ResourceGroupsItem & {
     subscription: ApplicationSubscription;

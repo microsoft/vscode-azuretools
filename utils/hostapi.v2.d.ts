@@ -1,4 +1,4 @@
-import { IActionContext } from "./index";
+import { AzExtTreeItem, IActionContext } from "./index";
 
 /**
  * Interface describing an object that wraps another object.
@@ -29,3 +29,32 @@ export type TreeNodeCommandCallback<T> = (context: IActionContext, node?: T, nod
  * NOTE: If the environment variable `DEBUGTELEMETRY` is set to a non-empty, non-zero value, then telemetry will not be sent. If the value is 'verbose' or 'v', telemetry will be displayed in the console window.
  */
 export declare function registerCommandWithTreeNodeUnboxing<T>(commandId: string, callback: TreeNodeCommandCallback<T>, debounce?: number, telemetryId?: string): void;
+
+/**
+ * Describes filtering based on context value. Items that pass the filter will
+ * match at least one of the `include` filters, but none of the `exclude` filters.
+ */
+export interface ContextValueFilter {
+    /**
+     * This filter will include items that match *any* of the values in the array.
+     * When a string is used, exact value comparison is done.
+     */
+    include: string | RegExp | (string | RegExp)[];
+
+    /**
+     * This filter will exclude items that match *any* of the values in the array.
+     * When a string is used, exact value comparison is done.
+     */
+    exclude?: string | RegExp | (string | RegExp)[];
+}
+
+export interface ContextValueFilterableTreeNodeV2 {
+    readonly quickPickOptions: {
+        readonly contextValues: Array<string>;
+        readonly isLeaf: boolean;
+    }
+}
+
+export type ContextValueFilterableTreeNode = ContextValueFilterableTreeNodeV2 | AzExtTreeItem;
+
+export type ResourceGroupsItem = ContextValueFilterableTreeNode;

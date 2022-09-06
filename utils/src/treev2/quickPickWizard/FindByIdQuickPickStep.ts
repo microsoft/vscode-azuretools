@@ -7,8 +7,9 @@ import * as types from '../../../index';
 import * as vscode from 'vscode';
 import { getLastNode, QuickPickWizardContext } from './QuickPickWizardContext';
 import { isAzExtParentTreeItem } from '../../tree/InternalInterfaces';
-import { ContextValueFilterableTreeNodeV2, isContextValueFilterableTreeNodeV2 } from './ContextValueQuickPickStep';
+import { isContextValueFilterableTreeNodeV2 } from './ContextValueQuickPickStep';
 import { GenericQuickPickStep, SkipIfOneQuickPickOptions } from './GenericQuickPickStep';
+import { ContextValueFilterableTreeNodeV2 } from '../../../hostapi.v2';
 
 interface FindableByIdTreeNodeV2 extends ContextValueFilterableTreeNodeV2 {
     id: vscode.Uri;

@@ -10,7 +10,7 @@ import { CancellationToken, CancellationTokenSource, Disposable, Event, Extensio
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
-import { Box } from './hostapi.v2';
+import { Box, ContextValueFilter, ResourceGroupsItem } from './hostapi.v2';
 
 export declare interface RunWithTemporaryDescriptionOptions {
     description: string;
@@ -1687,3 +1687,5 @@ export declare enum AzExtResourceType {
  * @returns True if a box, false otherwise
  */
 export declare function isBox(maybeBox: unknown): maybeBox is Box;
+
+export declare function appResourceExperience<TPick>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceType: AzExtResourceType, childItemFilter?: ContextValueFilter): Promise<TPick>;

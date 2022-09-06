@@ -4,13 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { ContextValueFilter, ContextValueFilterableTreeNode } from '../ContextValueQuickPickStep';
 import { RecursiveQuickPickStep } from '../RecursiveQuickPickStep';
 import { getLastNode, QuickPickWizardContext } from '../QuickPickWizardContext';
 import { NoResourceFoundError } from '../../../errors';
 import { AzureWizardPromptStep } from '../../../wizard/AzureWizardPromptStep';
 import { IActionContext } from '../../../../index';
 import { AzureWizard } from '../../../wizard/AzureWizard';
+import { ContextValueFilter, ContextValueFilterableTreeNode } from '../../../../hostapi.v2';
 
 export async function contextValueExperience<TPick extends ContextValueFilterableTreeNode>(context: IActionContext, tdp: vscode.TreeDataProvider<TPick>, contextValueFilter: ContextValueFilter): Promise<TPick> {
     const promptSteps: AzureWizardPromptStep<QuickPickWizardContext<TPick>>[] = [

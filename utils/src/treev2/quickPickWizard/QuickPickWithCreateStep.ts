@@ -5,8 +5,9 @@
 
 import * as types from '../../../index';
 import { getLastNode, QuickPickWizardContext } from './QuickPickWizardContext';
-import { ContextValueFilterableTreeNode, ContextValueFilterQuickPickOptions, ContextValueQuickPickStep } from './ContextValueQuickPickStep';
+import { ContextValueFilterQuickPickOptions, ContextValueQuickPickStep } from './ContextValueQuickPickStep';
 import { localize } from '../../localize';
+import { ContextValueFilterableTreeNode } from '../../../hostapi.v2';
 
 type CreateCallback = <TNode extends ContextValueFilterableTreeNode>() => TNode | Promise<TNode>;
 interface CreateQuickPickOptions extends ContextValueFilterQuickPickOptions {

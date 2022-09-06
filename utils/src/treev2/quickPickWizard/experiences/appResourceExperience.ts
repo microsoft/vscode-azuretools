@@ -4,19 +4,18 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { ContextValueFilter } from '../ContextValueQuickPickStep';
 import { QuickPickAzureSubscriptionStep } from '../quickPickAzureResource/QuickPickAzureSubscriptionStep';
 import { QuickPickGroupStep } from '../quickPickAzureResource/QuickPickGroupStep';
 import { QuickPickAppResourceStep } from '../quickPickAzureResource/QuickPickAppResourceStep';
 import { AzureResourceQuickPickWizardContext } from '../quickPickAzureResource/AzureResourceQuickPickWizardContext';
 import { RecursiveQuickPickStep } from '../RecursiveQuickPickStep';
-import { Box, ResourceGroupsItem } from '../quickPickAzureResource/tempTypes';
 import { getLastNode } from '../QuickPickWizardContext';
 import { NoResourceFoundError } from '../../../errors';
 import { IActionContext } from '../../../../index';
 import { AzureWizardPromptStep } from '../../../wizard/AzureWizardPromptStep';
 import { AzExtResourceType } from '../../../AzExtResourceType';
 import { AzureWizard } from '../../../wizard/AzureWizard';
+import { Box, ContextValueFilter, ResourceGroupsItem } from '../../../../hostapi.v2';
 
 export async function appResourceExperience<TPick>(context: IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, resourceType: AzExtResourceType, childItemFilter?: ContextValueFilter): Promise<TPick> {
     const promptSteps: AzureWizardPromptStep<AzureResourceQuickPickWizardContext>[] = [
@@ -53,9 +52,7 @@ export async function appResourceExperience<TPick>(context: IActionContext, tdp:
     if (!lastPickedItem) {
         throw new NoResourceFoundError(wizardContext);
     } else {
-        // Treat lastPickedItem as a box containing the desired end object
-        // TODO
-        const pickedAsBox = lastPickedItem as unknown as Box<TPick>;
-        return pickedAsBox.unwrap();
+        const pickedAsBox = lastPickedItem as unknown as Box;
+        return pickedAsBox.unwrap<TPick>();
     }
 }
