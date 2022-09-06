@@ -32,7 +32,3 @@ export interface ApplicationResource extends ResourceBase {
 }
 
 export type ApplicationSubscription = unknown;
-
-export interface Box<T> {
-    unwrap(): T;
-}
