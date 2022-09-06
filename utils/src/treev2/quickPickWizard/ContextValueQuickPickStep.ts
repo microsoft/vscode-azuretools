@@ -7,6 +7,7 @@ import * as types from '../../../index';
 import { GenericQuickPickOptions, GenericQuickPickStep } from './GenericQuickPickStep';
 import { isAzExtParentTreeItem } from '../../tree/InternalInterfaces';
 import { QuickPickWizardContext } from './QuickPickWizardContext';
+import { isBox } from '../../registerCommandWithTreeNodeUnboxing';
 
 /**
  * Describes filtering based on context value. Items that pass the filter will
@@ -48,6 +49,8 @@ export class ContextValueQuickPickStep<TNode extends ContextValueFilterableTreeN
         const excludeArray: (string | RegExp)[] = excludeOption ?
             (Array.isArray(excludeOption) ? excludeOption : [excludeOption]) :
             [];
+
+        node = isBox(node) ? node.unwrap() : node;
 
         const nodeContextValues: string[] = isContextValueFilterableTreeNodeV2(node) ?
             node.quickPickOptions.contextValues :
