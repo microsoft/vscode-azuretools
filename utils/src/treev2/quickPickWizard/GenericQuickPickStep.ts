@@ -12,6 +12,7 @@ import { parseError } from '../../parseError';
 
 export interface GenericQuickPickOptions {
     skipIfOne?: boolean;
+    fallbackToAll?: boolean;
 }
 
 export interface SkipIfOneQuickPickOptions extends GenericQuickPickOptions {
@@ -72,7 +73,11 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
         let promptChoices: TNode[];
         if (directChoices.length === 0) {
             if (indirectChoices.length === 0) {
-                throw new NoResourceFoundError();
+                if (this.pickOptions.fallbackToAll) {
+                    promptChoices = children;
+                } else {
+                    throw new NoResourceFoundError();
+                }
             } else {
                 promptChoices = indirectChoices;
             }

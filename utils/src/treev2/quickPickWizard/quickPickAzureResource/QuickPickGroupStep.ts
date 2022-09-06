@@ -22,6 +22,7 @@ export class QuickPickGroupStep extends GenericQuickPickStep<ResourceGroupsItem,
             {
                 ...options,
                 skipIfOne: true, // Group is always skip-if-one
+                fallbackToAll: true,
             }
         );
     }
