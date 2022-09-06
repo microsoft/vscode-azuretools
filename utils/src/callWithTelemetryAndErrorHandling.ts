@@ -133,7 +133,7 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
         if (errorData.isUserCancelledError) {
             context.telemetry.properties.result = 'Canceled';
             context.errorHandling.suppressDisplay = true;
-            context.errorHandling.rethrow = !!context.errorHandling.rethrowUserCancelledError;
+            context.errorHandling.rethrow = false;
         } else {
             context.telemetry.properties.result = 'Failed';
             context.telemetry.properties.error = errorData.errorType;
