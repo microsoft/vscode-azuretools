@@ -3,15 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as types from '../../../../index';
 import * as vscode from 'vscode';
 import { ContextValueFilter, ContextValueFilterableTreeNode } from '../ContextValueQuickPickStep';
 import { RecursiveQuickPickStep } from '../RecursiveQuickPickStep';
 import { getLastNode, QuickPickWizardContext } from '../QuickPickWizardContext';
 import { NoResourceFoundError } from '../../../errors';
+import { AzureWizardPromptStep } from '../../../wizard/AzureWizardPromptStep';
+import { IActionContext } from '../../../../index';
+import { AzureWizard } from '../../../wizard/AzureWizard';
 
-export async function contextValueExperience<TPick extends ContextValueFilterableTreeNode>(context: types.IActionContext, tdp: vscode.TreeDataProvider<TPick>, contextValueFilter: ContextValueFilter): Promise<TPick> {
-    const promptSteps: types.AzureWizardPromptStep<QuickPickWizardContext<TPick>>[] = [
+export async function contextValueExperience<TPick extends ContextValueFilterableTreeNode>(context: IActionContext, tdp: vscode.TreeDataProvider<TPick>, contextValueFilter: ContextValueFilter): Promise<TPick> {
+    const promptSteps: AzureWizardPromptStep<QuickPickWizardContext<TPick>>[] = [
         new RecursiveQuickPickStep(tdp, {
             contextValueFilter: contextValueFilter,
             skipIfOne: false,
@@ -22,7 +24,7 @@ export async function contextValueExperience<TPick extends ContextValueFilterabl
     const wizardContext = context as QuickPickWizardContext<TPick>;
     wizardContext.pickedNodes = [];
 
-    const wizard = new types.AzureWizard(context, {
+    const wizard = new AzureWizard(context, {
         hideStepCount: true,
         promptSteps: promptSteps,
     });
