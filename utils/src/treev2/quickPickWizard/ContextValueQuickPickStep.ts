@@ -26,7 +26,7 @@ export interface ContextValueFilter {
     exclude?: string | RegExp | (string | RegExp)[];
 }
 
-interface ContextValueFilterableTreeNodeV2 {
+export interface ContextValueFilterableTreeNodeV2 {
     readonly quickPickOptions: {
         readonly contextValues: Array<string>;
         readonly isLeaf: boolean;
@@ -49,7 +49,7 @@ export class ContextValueQuickPickStep<TNode extends ContextValueFilterableTreeN
             (Array.isArray(excludeOption) ? excludeOption : [excludeOption]) :
             [];
 
-        const nodeContextValues: string[] = isV2TreeNode(node) ?
+        const nodeContextValues: string[] = isContextValueFilterableTreeNodeV2(node) ?
             node.quickPickOptions.contextValues :
             [node.contextValue];
 
@@ -58,7 +58,7 @@ export class ContextValueQuickPickStep<TNode extends ContextValueFilterableTreeN
     }
 
     protected override isIndirectPick(node: TNode): boolean {
-        if (isV2TreeNode(node)) {
+        if (isContextValueFilterableTreeNodeV2(node)) {
             return node.quickPickOptions.isLeaf === false;
         } else if (isAzExtParentTreeItem(node)) {
             return true;
@@ -79,7 +79,7 @@ export class ContextValueQuickPickStep<TNode extends ContextValueFilterableTreeN
     }
 }
 
-function isV2TreeNode(maybeNode: unknown): maybeNode is ContextValueFilterableTreeNodeV2 {
+export function isContextValueFilterableTreeNodeV2(maybeNode: unknown): maybeNode is ContextValueFilterableTreeNodeV2 {
     if (typeof maybeNode === 'object') {
         return Array.isArray((maybeNode as ContextValueFilterableTreeNodeV2).quickPickOptions?.contextValues) &&
             (maybeNode as ContextValueFilterableTreeNodeV2).quickPickOptions?.isLeaf !== undefined &&
