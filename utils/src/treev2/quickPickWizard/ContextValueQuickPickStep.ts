@@ -82,6 +82,7 @@ export class ContextValueQuickPickStep<TNode extends ContextValueFilterableTreeN
 function isV2TreeNode(maybeNode: unknown): maybeNode is ContextValueFilterableTreeNodeV2 {
     if (typeof maybeNode === 'object') {
         return Array.isArray((maybeNode as ContextValueFilterableTreeNodeV2).quickPickOptions?.contextValues) &&
+            (maybeNode as ContextValueFilterableTreeNodeV2).quickPickOptions?.isLeaf !== undefined &&
             (maybeNode as ContextValueFilterableTreeNodeV2).quickPickOptions?.isLeaf !== null;
     }
 
