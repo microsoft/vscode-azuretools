@@ -5,7 +5,7 @@
 
 import * as types from '../../../index';
 import * as vscode from 'vscode';
-import { getLastNode, PickedItem, QuickPickWizardContext } from './QuickPickWizardContext';
+import { getLastNode, QuickPickWizardContext } from './QuickPickWizardContext';
 import { AzureWizardPromptStep } from '../../wizard/AzureWizardPromptStep';
 // import { NoResourceFoundError } from '../../errors';
 import { parseError } from '../../parseError';
@@ -50,16 +50,17 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
         return true;
     }
 
-    protected async promptInternal(wizardContext: TContext): Promise<PickedItem<TNode>> {
+    protected async promptInternal(wizardContext: TContext): Promise<TNode> {
         const picks = await this.getPicks(wizardContext);
 
         if (picks.length === 1 && this.pickOptions.skipIfOne) {
-            return picks[0];
+            return picks[0].data;
         } else {
-            return await wizardContext.ui.showQuickPick(picks, {
+            const selected = await wizardContext.ui.showQuickPick(picks, {
                 noPicksMessage: 'No matching resources',
                 /* TODO: options */
             });
+            return selected.data;
         }
     }
 
