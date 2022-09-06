@@ -21,16 +21,6 @@ export interface Box {
 export type TreeNodeCommandCallback<T> = (context: IActionContext, node?: T, nodes?: T[], ...args: any[]) => any;
 
 /**
- * Used to register VSCode tree node context menu commands that are in the host extension's tree. It wraps your callback with consistent error and telemetry handling
- * Use debounce property if you need a delay between clicks for this particular command
- * A telemetry event is automatically sent whenever a command is executed. The telemetry event ID will default to the same as the
- *   commandId passed in, but can be overridden per command with telemetryId
- * The telemetry event for this command will be named telemetryId if specified, otherwise it defaults to the commandId
- * NOTE: If the environment variable `DEBUGTELEMETRY` is set to a non-empty, non-zero value, then telemetry will not be sent. If the value is 'verbose' or 'v', telemetry will be displayed in the console window.
- */
-export declare function registerCommandWithTreeNodeUnboxing<T>(commandId: string, callback: TreeNodeCommandCallback<T>, debounce?: number, telemetryId?: string): void;
-
-/**
  * Describes filtering based on context value. Items that pass the filter will
  * match at least one of the `include` filters, but none of the `exclude` filters.
  */
