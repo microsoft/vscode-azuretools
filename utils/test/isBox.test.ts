@@ -21,7 +21,7 @@ suite('isBox', () => {
 
     test('Box', () => {
         const actualBox: Box = {
-            unwrap: <T>() => { return Promise.resolve(undefined as unknown as T) },
+            unwrap: <T>() => { return undefined as unknown as T },
         };
 
         assert.strictEqual(isBox(actualBox), true);

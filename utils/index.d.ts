@@ -10,6 +10,7 @@ import { CancellationToken, CancellationTokenSource, Disposable, Event, Extensio
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
+import { Box } from './hostapi.v2';
 
 export declare interface RunWithTemporaryDescriptionOptions {
     description: string;
@@ -1678,3 +1679,11 @@ export declare enum AzExtResourceType {
     VirtualNetworks = 'VirtualNetworks',
     WebHostingEnvironments = 'WebHostingEnvironments',
 }
+
+/**
+ * Tests to see if something is a box, by ensuring it is an object
+ * and has an "unwrap" function
+ * @param maybeBox An object to test if it is a box
+ * @returns True if a box, false otherwise
+ */
+export declare function isBox(maybeBox: unknown): maybeBox is Box;
