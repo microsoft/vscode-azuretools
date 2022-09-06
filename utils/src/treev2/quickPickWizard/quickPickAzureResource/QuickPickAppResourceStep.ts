@@ -5,6 +5,7 @@
 
 import { ContextValueFilter, ResourceGroupsItem } from '../../../../hostapi.v2';
 import * as types from '../../../../index';
+import { isBox } from '../../../registerCommandWithTreeNodeUnboxing';
 import { GenericQuickPickOptions, GenericQuickPickStep } from '../GenericQuickPickStep';
 import { AzureResourceQuickPickWizardContext } from './AzureResourceQuickPickWizardContext';
 import { AppResourceItem } from './tempTypes';
@@ -26,6 +27,9 @@ export class QuickPickAppResourceStep extends GenericQuickPickStep<ResourceGroup
     }
 
     protected isDirectPick(node: AppResourceItem): boolean {
+        // TODO do this before calling isDirectPick/isIndirectPick in GenericQuickPickStep?
+        node = isBox(node) ? node.unwrap() : node;
+
         // If childItemFilter is defined, this cannot be a direct pick
         if (this.pickOptions.childItemFilter) {
             return false;
@@ -35,6 +39,9 @@ export class QuickPickAppResourceStep extends GenericQuickPickStep<ResourceGroup
     }
 
     protected isIndirectPick(node: AppResourceItem): boolean {
+        // TODO do this before calling isDirectPick/isIndirectPick in GenericQuickPickStep?
+        node = isBox(node) ? node.unwrap() : node;
+
         // If childItemFilter is undefined, this cannot be an indirect pick
         if (!this.pickOptions.childItemFilter) {
             return false;
