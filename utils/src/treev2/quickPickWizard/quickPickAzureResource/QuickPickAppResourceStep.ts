@@ -20,8 +20,8 @@ export class QuickPickAppResourceStep extends GenericQuickPickStep<ResourceGroup
         const pickedAppResource = await super.promptInternal(wizardContext) as AppResourceItem;
 
         // TODO
-        wizardContext.resource = pickedAppResource;
-        wizardContext.resourceGroup = pickedAppResource.resourceGroup;
+        wizardContext.resource = pickedAppResource.resource;
+        wizardContext.resourceGroup = pickedAppResource.resource.resourceGroup;
 
         return pickedAppResource;
     }
@@ -35,7 +35,7 @@ export class QuickPickAppResourceStep extends GenericQuickPickStep<ResourceGroup
             return false;
         }
 
-        return node.azExtResourceType === this.pickOptions.resourceType;
+        return node.resource.azExtResourceType === this.pickOptions.resourceType;
     }
 
     protected isIndirectPick(node: AppResourceItem): boolean {
@@ -47,6 +47,6 @@ export class QuickPickAppResourceStep extends GenericQuickPickStep<ResourceGroup
             return false;
         }
 
-        return node.azExtResourceType === this.pickOptions.resourceType;
+        return node.resource.azExtResourceType === this.pickOptions.resourceType;
     }
 }

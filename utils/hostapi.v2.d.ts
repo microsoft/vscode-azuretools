@@ -1,4 +1,54 @@
+/*---------------------------------------------------------------------------------------------
+*  Copyright (c) Microsoft Corporation. All rights reserved.
+*  Licensed under the MIT License. See License.txt in the project root for license information.
+*--------------------------------------------------------------------------------------------*/
+
 import { AzExtTreeItem, IActionContext } from "./index";
+import * as vscode from 'vscode';
+import type { Environment } from '@azure/ms-rest-azure-env';
+import { AzExtResourceType } from "./src/AzExtResourceType";
+
+export interface ApplicationAuthentication {
+    getSession(scopes?: string[]): vscode.ProviderResult<vscode.AuthenticationSession>;
+}
+
+/**
+ * Information specific to the Subscription
+ */
+export interface ApplicationSubscription {
+    readonly authentication: ApplicationAuthentication;
+    readonly displayName: string;
+    readonly subscriptionId: string;
+    readonly environment: Environment;
+    readonly isCustomCloud: boolean;
+}
+
+export interface ResourceBase {
+    readonly id: string;
+    readonly name: string;
+}
+
+export interface ApplicationResourceType {
+    readonly type: string;
+    readonly kinds?: string[];
+}
+
+/**
+ * Represents an individual resource in Azure.
+ * @remarks The `id` property is expected to be the Azure resource ID.
+ */
+export interface ApplicationResource extends ResourceBase {
+    readonly subscription: ApplicationSubscription;
+    readonly type: ApplicationResourceType;
+    readonly azExtResourceType?: AzExtResourceType;
+    readonly location?: string;
+    readonly resourceGroup?: string;
+    /** Resource tags */
+    readonly tags?: {
+        [propertyName: string]: string;
+    };
+    /* add more properties from GenericResource if needed */
+}
 
 /**
  * Interface describing an object that wraps another object.
