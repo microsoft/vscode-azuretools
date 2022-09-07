@@ -97,4 +97,5 @@ export interface ContextValueFilterableTreeNodeV2 {
 
 export type ContextValueFilterableTreeNode = ContextValueFilterableTreeNodeV2 | AzExtTreeItem;
 
+// temporary type until we have the real type from RGs
 export type ResourceGroupsItem = ContextValueFilterableTreeNode;
