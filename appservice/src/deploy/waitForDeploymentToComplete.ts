@@ -34,19 +34,26 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
     const maxTimeToWaitForExpectedId: number = Date.now() + 60 * 1000;
     const kuduClient = await createKuduClient(context, site);
 
-    const {expectedId, token, locationUrl} = options;
+    const { expectedId, token, locationUrl } = options;
     const pollingInterval = options.pollingInterval ?? 5000;
 
     while (!token?.isCancellationRequested) {
         if (locationUrl) {
-            deployment = (await sendRequestWithTimeout(context, {method: 'GET', url: locationUrl}, pollingInterval, site.subscription)).parsedBody as KuduModels.DeployResult;
+            try {
+                // request can occasionally take more than 10 seconds
+                deployment = (await sendRequestWithTimeout(context, { method: 'GET', url: locationUrl }, 10 * 1000, site.subscription)).parsedBody as KuduModels.DeployResult;
+            } catch (error: unknown) {
+                const parsedError = parseError(error);
+                if (parsedError.errorType !== 'REQUEST_ABORTED_ERROR') {
+                    throw parsedError;
+                }
+            }
+        } else {
+            [deployment, permanentId, initialStartTime] = await tryGetLatestDeployment(context, kuduClient, permanentId, initialStartTime, expectedId);
         }
-         else {
-             [deployment, permanentId, initialStartTime] = await tryGetLatestDeployment(context, kuduClient, permanentId, initialStartTime, expectedId);
-         }
 
         if ((deployment === undefined || !deployment.id)) {
-            if (expectedId && Date.now() < maxTimeToWaitForExpectedId) {
+            if ((expectedId || locationUrl) && Date.now() < maxTimeToWaitForExpectedId) {
                 await delay(pollingInterval);
                 continue;
             }
