@@ -10,7 +10,7 @@ import { CancellationToken, CancellationTokenSource, Disposable, Event, Extensio
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
-import type { Box, ContextValueFilter, ResourceGroupsItem, TreeNodeCommandCallback } from './hostapi.v2';
+import { Box, ContextValueFilter, ContextValueFilterableTreeNode, ResourceGroupsItem, TreeItemPickerRoot, TreeNodeCommandCallback } from './hostapi.v2';
 
 export declare interface RunWithTemporaryDescriptionOptions {
     description: string;
@@ -1699,3 +1699,5 @@ export declare function appResourceExperience<TPick>(context: IActionContext, td
  * NOTE: If the environment variable `DEBUGTELEMETRY` is set to a non-empty, non-zero value, then telemetry will not be sent. If the value is 'verbose' or 'v', telemetry will be displayed in the console window.
  */
 export declare function registerCommandWithTreeNodeUnboxing<T>(commandId: string, callback: TreeNodeCommandCallback<T>, debounce?: number, telemetryId?: string): void;
+
+export declare function createTreeItemPicker(treeDataProvider: TreeDataProvider<ContextValueFilterableTreeNode>): TreeItemPickerRoot;

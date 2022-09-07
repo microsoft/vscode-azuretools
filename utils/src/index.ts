@@ -38,4 +38,5 @@ export * from './activityLog/activities/ExecuteActivity';
 export * from './getAzExtResourceType';
 export * from './AzExtResourceType';
 export * from './treev2/quickPickWizard/experiences/appResourceExperience';
+export * from './treev2/quickPickWizard/experiences/TreeItemPicker';
 // NOTE: The auto-fix action "source.organizeImports" does weird things with this file, but there doesn't seem to be a way to disable it on a per-file basis so we'll just let it happen

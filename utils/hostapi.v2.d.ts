@@ -99,3 +99,26 @@ export type ContextValueFilterableTreeNode = ContextValueFilterableTreeNodeV2 | 
 
 // temporary type until we have the real type from RGs
 export type ResourceGroupsItem = ContextValueFilterableTreeNode;
+
+// #region pick tree item types
+
+type Stamped<T, Stamp> = T & { _stamp: Stamp };
+type MaybeStamped<T> = T | Stamped<T, unknown>;
+type GetStamp<T> = T extends Stamped<unknown, infer Stamp> ? Stamp : unknown;
+
+type PickDescendantOptions = { filter: ContextValueFilter };
+type PickResourceOptions = { type: AzExtResourceType; };
+
+interface TreeItemPickerBase<TPick = unknown> {
+    run(context: IActionContext): Promise<TPick>;
+}
+
+interface TreeItemPickerWithDescendants<TPick = unknown> extends TreeItemPickerBase<TPick> {
+    descendant<Options extends MaybeStamped<PickDescendantOptions>>(options: Options): TreeItemPickerBase<GetStamp<Options>>
+}
+export interface TreeItemPickerRoot {
+    resource<Options extends MaybeStamped<PickResourceOptions>>(options: Options): TreeItemPickerWithDescendants<GetStamp<Options>>;
+    descendant<Options extends MaybeStamped<PickDescendantOptions>>(options: Options): TreeItemPickerBase<GetStamp<Options>>;
+}
+
+// #endregion pick tree item types
