@@ -6,7 +6,6 @@
 import { GenericQuickPickOptions, GenericQuickPickStep } from './GenericQuickPickStep';
 import { isAzExtParentTreeItem } from '../../tree/InternalInterfaces';
 import { QuickPickWizardContext } from './QuickPickWizardContext';
-import { isBox } from '../../registerCommandWithTreeNodeUnboxing';
 import { ContextValueFilter, ContextValueFilterableTreeNode, ContextValueFilterableTreeNodeV2 } from '../../../hostapi.v2';
 
 export interface ContextValueFilterQuickPickOptions extends GenericQuickPickOptions {
@@ -22,8 +21,6 @@ export class ContextValueQuickPickStep<TNode extends ContextValueFilterableTreeN
         const excludeArray: (string | RegExp)[] = excludeOption ?
             (Array.isArray(excludeOption) ? excludeOption : [excludeOption]) :
             [];
-
-        node = isBox(node) ? node.unwrap() : node;
 
         const nodeContextValues: string[] = isContextValueFilterableTreeNodeV2(node) ?
             node.quickPickOptions.contextValues :
