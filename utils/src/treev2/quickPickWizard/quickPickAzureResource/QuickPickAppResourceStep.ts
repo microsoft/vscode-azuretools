@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { ContextValueFilter, ResourceGroupsItem } from '../../../../hostapi.v2';
 import * as types from '../../../../index';
-import { ContextValueFilter } from '../ContextValueQuickPickStep';
 import { GenericQuickPickOptions, GenericQuickPickStep } from '../GenericQuickPickStep';
 import { AzureResourceQuickPickWizardContext } from './AzureResourceQuickPickWizardContext';
-import { AppResourceItem, ResourceGroupsItem } from './tempTypes';
+import { AppResourceItem } from './tempTypes';
 
 interface AppResourceQuickPickOptions extends GenericQuickPickOptions {
     resourceType: types.AzExtResourceType;
@@ -19,8 +19,8 @@ export class QuickPickAppResourceStep extends GenericQuickPickStep<ResourceGroup
         const pickedAppResource = await super.promptInternal(wizardContext) as AppResourceItem;
 
         // TODO
-        wizardContext.resource = pickedAppResource;
-        wizardContext.resourceGroup = pickedAppResource.resourceGroup;
+        wizardContext.resource = pickedAppResource.resource;
+        wizardContext.resourceGroup = pickedAppResource.resource.resourceGroup;
 
         return pickedAppResource;
     }
@@ -31,7 +31,7 @@ export class QuickPickAppResourceStep extends GenericQuickPickStep<ResourceGroup
             return false;
         }
 
-        return node.azExtResourceType === this.pickOptions.resourceType;
+        return node.resource.azExtResourceType === this.pickOptions.resourceType;
     }
 
     protected isIndirectPick(node: AppResourceItem): boolean {
@@ -40,6 +40,6 @@ export class QuickPickAppResourceStep extends GenericQuickPickStep<ResourceGroup
             return false;
         }
 
-        return node.azExtResourceType === this.pickOptions.resourceType;
+        return node.resource.azExtResourceType === this.pickOptions.resourceType;
     }
 }

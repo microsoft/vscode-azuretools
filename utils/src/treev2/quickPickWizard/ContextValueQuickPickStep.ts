@@ -3,37 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as types from '../../../index';
 import { GenericQuickPickOptions, GenericQuickPickStep } from './GenericQuickPickStep';
 import { isAzExtParentTreeItem } from '../../tree/InternalInterfaces';
 import { QuickPickWizardContext } from './QuickPickWizardContext';
-
-/**
- * Describes filtering based on context value. Items that pass the filter will
- * match at least one of the `include` filters, but none of the `exclude` filters.
- */
-export interface ContextValueFilter {
-    /**
-     * This filter will include items that match *any* of the values in the array.
-     * When a string is used, exact value comparison is done.
-     */
-    include: string | RegExp | (string | RegExp)[];
-
-    /**
-     * This filter will exclude items that match *any* of the values in the array.
-     * When a string is used, exact value comparison is done.
-     */
-    exclude?: string | RegExp | (string | RegExp)[];
-}
-
-export interface ContextValueFilterableTreeNodeV2 {
-    readonly quickPickOptions: {
-        readonly contextValues: Array<string>;
-        readonly isLeaf: boolean;
-    }
-}
-
-export type ContextValueFilterableTreeNode = ContextValueFilterableTreeNodeV2 | types.AzExtTreeItem;
+import { ContextValueFilter, ContextValueFilterableTreeNode, ContextValueFilterableTreeNodeV2 } from '../../../hostapi.v2';
 
 export interface ContextValueFilterQuickPickOptions extends GenericQuickPickOptions {
     contextValueFilter: ContextValueFilter;

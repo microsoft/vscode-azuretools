@@ -28,7 +28,7 @@ export function registerCommandWithTreeNodeUnboxing<T>(commandId: string, treeNo
             const boxedNodes = maybeNodeBoxArray as Box[];
             nodes = [];
             for (const n of boxedNodes) {
-                nodes.push(await n.unwrap<T>())
+                nodes.push(n.unwrap<T>())
             }
         } else if (maybeNodeBoxArray && Array.isArray(maybeNodeBoxArray)) {
             // Otherwise, assume it is just an array of T's

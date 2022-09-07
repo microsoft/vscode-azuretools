@@ -10,6 +10,7 @@ import { CancellationToken, CancellationTokenSource, Disposable, Event, Extensio
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
+import type { Box, ContextValueFilter, ResourceGroupsItem, TreeNodeCommandCallback } from './hostapi.v2';
 
 export declare interface RunWithTemporaryDescriptionOptions {
     description: string;
@@ -1678,3 +1679,23 @@ export declare enum AzExtResourceType {
     VirtualNetworks = 'VirtualNetworks',
     WebHostingEnvironments = 'WebHostingEnvironments',
 }
+
+/**
+ * Tests to see if something is a box, by ensuring it is an object
+ * and has an "unwrap" function
+ * @param maybeBox An object to test if it is a box
+ * @returns True if a box, false otherwise
+ */
+export declare function isBox(maybeBox: unknown): maybeBox is Box;
+
+export declare function appResourceExperience<TPick>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceType: AzExtResourceType, childItemFilter?: ContextValueFilter): Promise<TPick>;
+
+/**
+ * Used to register VSCode tree node context menu commands that are in the host extension's tree. It wraps your callback with consistent error and telemetry handling
+ * Use debounce property if you need a delay between clicks for this particular command
+ * A telemetry event is automatically sent whenever a command is executed. The telemetry event ID will default to the same as the
+ *   commandId passed in, but can be overridden per command with telemetryId
+ * The telemetry event for this command will be named telemetryId if specified, otherwise it defaults to the commandId
+ * NOTE: If the environment variable `DEBUGTELEMETRY` is set to a non-empty, non-zero value, then telemetry will not be sent. If the value is 'verbose' or 'v', telemetry will be displayed in the console window.
+ */
+export declare function registerCommandWithTreeNodeUnboxing<T>(commandId: string, callback: TreeNodeCommandCallback<T>, debounce?: number, telemetryId?: string): void;

@@ -3,20 +3,23 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as types from '../../../../index';
 import * as vscode from 'vscode';
-import { ContextValueFilter } from '../ContextValueQuickPickStep';
 import { QuickPickAzureSubscriptionStep } from '../quickPickAzureResource/QuickPickAzureSubscriptionStep';
 import { QuickPickGroupStep } from '../quickPickAzureResource/QuickPickGroupStep';
 import { QuickPickAppResourceStep } from '../quickPickAzureResource/QuickPickAppResourceStep';
 import { AzureResourceQuickPickWizardContext } from '../quickPickAzureResource/AzureResourceQuickPickWizardContext';
 import { RecursiveQuickPickStep } from '../RecursiveQuickPickStep';
-import { Box, ResourceGroupsItem } from '../quickPickAzureResource/tempTypes';
 import { getLastNode } from '../QuickPickWizardContext';
 import { NoResourceFoundError } from '../../../errors';
+import { IActionContext } from '../../../../index';
+import { AzureWizardPromptStep } from '../../../wizard/AzureWizardPromptStep';
+import { AzExtResourceType } from '../../../AzExtResourceType';
+import { AzureWizard } from '../../../wizard/AzureWizard';
+import { ContextValueFilter, ResourceGroupsItem } from '../../../../hostapi.v2';
+import { isBox } from '../../../registerCommandWithTreeNodeUnboxing';
 
-export async function appResourceExperience<TPick>(context: types.IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, resourceType: types.AzExtResourceType, childItemFilter?: ContextValueFilter): Promise<TPick> {
-    const promptSteps: types.AzureWizardPromptStep<AzureResourceQuickPickWizardContext>[] = [
+export async function appResourceExperience<TPick>(context: IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, resourceType: AzExtResourceType, childItemFilter?: ContextValueFilter): Promise<TPick> {
+    const promptSteps: AzureWizardPromptStep<AzureResourceQuickPickWizardContext>[] = [
         new QuickPickAzureSubscriptionStep(tdp),
         new QuickPickGroupStep(tdp, {
             groupType: resourceType,
@@ -38,7 +41,7 @@ export async function appResourceExperience<TPick>(context: types.IActionContext
     const wizardContext = context as AzureResourceQuickPickWizardContext;
     wizardContext.pickedNodes = [];
 
-    const wizard = new types.AzureWizard(context, {
+    const wizard = new AzureWizard(context, {
         hideStepCount: true,
         promptSteps: promptSteps,
     });
@@ -50,9 +53,6 @@ export async function appResourceExperience<TPick>(context: types.IActionContext
     if (!lastPickedItem) {
         throw new NoResourceFoundError(wizardContext);
     } else {
-        // Treat lastPickedItem as a box containing the desired end object
-        // TODO
-        const pickedAsBox = lastPickedItem as unknown as Box<TPick>;
-        return pickedAsBox.unwrap();
+        return isBox(lastPickedItem) ? lastPickedItem.unwrap<TPick>() : lastPickedItem as unknown as TPick;
     }
 }
