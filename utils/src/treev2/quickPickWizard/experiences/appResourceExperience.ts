@@ -53,6 +53,6 @@ export async function appResourceExperience<TPick>(context: IActionContext, tdp:
     if (!lastPickedItem) {
         throw new NoResourceFoundError(wizardContext);
     } else {
-        return isBox(lastPickedItem) ? lastPickedItem.unwrap<TPick>() : lastPickedItem as TPick;
+        return isBox(lastPickedItem) ? lastPickedItem.unwrap<TPick>() : lastPickedItem as unknown as TPick;
     }
 }
