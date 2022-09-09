@@ -18,8 +18,7 @@ export type ContextValueFilterQuickPickOptions = GenericQuickPickOptions & {
 export class ContextValueQuickPickStep<TNode extends ContextValueFilterableTreeNode, TContext extends QuickPickWizardContext<TNode>, TOptions extends ContextValueFilterQuickPickOptions> extends GenericQuickPickStep<TNode, TContext, TOptions> {
 
     public override async prompt(wizardContext: TContext): Promise<void> {
-        await this.provideCompatabilityWithPickTreeItemImpl(wizardContext);
-        await super.prompt(wizardContext);
+        await this.provideCompatabilityWithPickTreeItemImpl(wizardContext) || await super.prompt(wizardContext);
     }
 
     protected override isDirectPick(node: TNode): boolean {
@@ -60,7 +59,7 @@ export class ContextValueQuickPickStep<TNode extends ContextValueFilterableTreeN
         })
     }
 
-    private async provideCompatabilityWithPickTreeItemImpl(wizardContext: TContext): Promise<void> {
+    private async provideCompatabilityWithPickTreeItemImpl(wizardContext: TContext): Promise<boolean> {
         const lastPickedItem = getLastNode(wizardContext);
         const lastPickedItemUnwrapped = isBox(lastPickedItem) ? lastPickedItem.unwrap() : lastPickedItem
         if (isAzExtParentTreeItem(lastPickedItemUnwrapped)) {
@@ -75,9 +74,11 @@ export class ContextValueQuickPickStep<TNode extends ContextValueFilterableTreeN
 
                 if (customPick) {
                     wizardContext.pickedNodes.push(customPick);
+                    return true;
                 }
             }
         }
+        return false;
     }
 
     private async getCustomChildren(context: TContext, node: AzExtParentTreeItem): Promise<AzExtTreeItem | undefined> {
