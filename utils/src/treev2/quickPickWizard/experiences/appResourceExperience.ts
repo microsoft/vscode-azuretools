@@ -18,14 +18,14 @@ import { AzureWizard } from '../../../wizard/AzureWizard';
 import { ContextValueFilter, ResourceGroupsItem } from '../../../../hostapi.v2';
 import { isBox } from '../../../registerCommandWithTreeNodeUnboxing';
 
-export async function appResourceExperience<TPick>(context: IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, resourceType: AzExtResourceType, childItemFilter?: ContextValueFilter): Promise<TPick> {
+export async function appResourceExperience<TPick>(context: IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: ContextValueFilter): Promise<TPick> {
     const promptSteps: AzureWizardPromptStep<AzureResourceQuickPickWizardContext>[] = [
         new QuickPickAzureSubscriptionStep(tdp),
         new QuickPickGroupStep(tdp, {
-            groupType: resourceType,
+            groupType: resourceTypes ? Array.isArray(resourceTypes) ? resourceTypes : [resourceTypes] : undefined,
         }),
         new QuickPickAppResourceStep(tdp, {
-            resourceType: resourceType,
+            resourceTypes: resourceTypes ? Array.isArray(resourceTypes) ? resourceTypes : [resourceTypes] : undefined,
             skipIfOne: false,
         }),
     ];

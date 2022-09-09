@@ -11,7 +11,7 @@ import { GroupingItem } from './tempTypes';
 import { ResourceGroupsItem } from '../../../../hostapi.v2';
 
 interface GroupQuickPickOptions extends SkipIfOneQuickPickOptions {
-    groupType: types.AzExtResourceType;
+    groupType?: types.AzExtResourceType[];
     skipIfOne?: true;
 }
 
@@ -32,6 +32,6 @@ export class QuickPickGroupStep extends GenericQuickPickStep<ResourceGroupsItem,
     }
 
     protected isIndirectPick(node: GroupingItem): boolean {
-        return !node.resourceType || node.resourceType === this.pickOptions.groupType;
+        return !node.resourceType || !this.pickOptions.groupType || this.pickOptions.groupType.includes(node.resourceType);
     }
 }
