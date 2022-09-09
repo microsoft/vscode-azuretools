@@ -3,10 +3,9 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { AzExtTreeItem, IActionContext } from "./index";
+import type { AzExtResourceType, AzExtTreeItem, IActionContext } from "./index";
 import * as vscode from 'vscode';
 import type { Environment } from '@azure/ms-rest-azure-env';
-import { AzExtResourceType } from "./src/AzExtResourceType";
 
 export interface ApplicationAuthentication {
     getSession(scopes?: string[]): vscode.ProviderResult<vscode.AuthenticationSession>;
