@@ -3,15 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ContextValueFilter, ResourceGroupsItem } from '../../../../hostapi.v2';
+import { AzureResourceQuickPickWizardContext, ResourceGroupsItem } from '../../../../hostapi.v2';
 import * as types from '../../../../index';
 import { GenericQuickPickOptions, GenericQuickPickStep } from '../GenericQuickPickStep';
-import { AzureResourceQuickPickWizardContext } from './AzureResourceQuickPickWizardContext';
 import { AppResourceItem } from './tempTypes';
 
 interface AppResourceQuickPickOptions extends GenericQuickPickOptions {
     resourceType: types.AzExtResourceType;
-    childItemFilter?: ContextValueFilter;
+    childItemFilter?: types.ContextValueFilter;
 }
 
 export class QuickPickAppResourceStep extends GenericQuickPickStep<ResourceGroupsItem, AzureResourceQuickPickWizardContext, AppResourceQuickPickOptions> {

@@ -5,11 +5,7 @@
 
 import * as types from '../../../index';
 
-export interface QuickPickWizardContext<TNode extends unknown> extends types.IActionContext {
-    pickedNodes: TNode[];
-}
-
-export function getLastNode<TNode extends unknown>(context: QuickPickWizardContext<TNode>): TNode | undefined {
+export function getLastNode<TNode extends unknown>(context: types.QuickPickWizardContext<TNode>): TNode | undefined {
     if (context.pickedNodes.length) {
         return context.pickedNodes[context.pickedNodes.length - 1];
     }

@@ -3,19 +3,19 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { AzExtTreeItem, IActionContext } from "./index";
+import type { ContextValueFilterableTreeNode, IActionContext, QuickPickWizardContext } from "./index";
 import * as vscode from 'vscode';
 import type { Environment } from '@azure/ms-rest-azure-env';
 import { AzExtResourceType } from "./src/AzExtResourceType";
 
-export interface ApplicationAuthentication {
+export declare interface ApplicationAuthentication {
     getSession(scopes?: string[]): vscode.ProviderResult<vscode.AuthenticationSession>;
 }
 
 /**
  * Information specific to the Subscription
  */
-export interface ApplicationSubscription {
+export declare interface ApplicationSubscription {
     readonly authentication: ApplicationAuthentication;
     readonly displayName: string;
     readonly subscriptionId: string;
@@ -23,12 +23,12 @@ export interface ApplicationSubscription {
     readonly isCustomCloud: boolean;
 }
 
-export interface ResourceBase {
+export declare interface ResourceBase {
     readonly id: string;
     readonly name: string;
 }
 
-export interface ApplicationResourceType {
+export declare interface ApplicationResourceType {
     readonly type: string;
     readonly kinds?: string[];
 }
@@ -37,7 +37,7 @@ export interface ApplicationResourceType {
  * Represents an individual resource in Azure.
  * @remarks The `id` property is expected to be the Azure resource ID.
  */
-export interface ApplicationResource extends ResourceBase {
+export declare interface ApplicationResource extends ResourceBase {
     readonly subscription: ApplicationSubscription;
     readonly type: ApplicationResourceType;
     readonly azExtResourceType?: AzExtResourceType;
@@ -61,41 +61,20 @@ export interface ApplicationResource extends ResourceBase {
  * unboxing automatically (i.e., will not unbox if the arguments
  * aren't boxes)
  */
-export interface Box {
+export declare interface Box {
     unwrap<T>(): T;
 }
 
 /**
  * Describes command callbacks for tree node context menu commands
  */
-export type TreeNodeCommandCallback<T> = (context: IActionContext, node?: T, nodes?: T[], ...args: any[]) => any;
-
-/**
- * Describes filtering based on context value. Items that pass the filter will
- * match at least one of the `include` filters, but none of the `exclude` filters.
- */
-export interface ContextValueFilter {
-    /**
-     * This filter will include items that match *any* of the values in the array.
-     * When a string is used, exact value comparison is done.
-     */
-    include: string | RegExp | (string | RegExp)[];
-
-    /**
-     * This filter will exclude items that match *any* of the values in the array.
-     * When a string is used, exact value comparison is done.
-     */
-    exclude?: string | RegExp | (string | RegExp)[];
-}
-
-export interface ContextValueFilterableTreeNodeV2 {
-    readonly quickPickOptions: {
-        readonly contextValues: Array<string>;
-        readonly isLeaf: boolean;
-    }
-}
-
-export type ContextValueFilterableTreeNode = ContextValueFilterableTreeNodeV2 | AzExtTreeItem;
+export declare type TreeNodeCommandCallback<T> = (context: IActionContext, node?: T, nodes?: T[], ...args: any[]) => any;
 
 // temporary type until we have the real type from RGs
-export type ResourceGroupsItem = ContextValueFilterableTreeNode;
+export declare type ResourceGroupsItem = ContextValueFilterableTreeNode;
+
+export declare interface AzureResourceQuickPickWizardContext extends QuickPickWizardContext<ResourceGroupsItem> {
+    subscription?: ApplicationSubscription;
+    resource?: ApplicationResource;
+    resourceGroup?: string;
+}

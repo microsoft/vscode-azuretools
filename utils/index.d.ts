@@ -10,7 +10,7 @@ import { CancellationToken, CancellationTokenSource, Disposable, Event, Extensio
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
-import type { Box, ContextValueFilter, ResourceGroupsItem, TreeNodeCommandCallback } from './hostapi.v2';
+import type { Box, ResourceGroupsItem, TreeNodeCommandCallback } from './hostapi.v2';
 
 export declare interface RunWithTemporaryDescriptionOptions {
     description: string;
@@ -1688,7 +1688,46 @@ export declare enum AzExtResourceType {
  */
 export declare function isBox(maybeBox: unknown): maybeBox is Box;
 
-export declare function appResourceExperience<TPick>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceType: AzExtResourceType, childItemFilter?: ContextValueFilter): Promise<TPick>;
+export declare function appResourceExperience<TPick extends ContextValueFilterableTreeNode>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceType: AzExtResourceType, childItemFilter?: ContextValueFilter): Promise<TPick>;
+export declare function contextValueExperience<TPick extends ContextValueFilterableTreeNode>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, contextValueFilter: ContextValueFilter): Promise<TPick>;
+export declare function findByIdExperience<TPick extends FindableByIdTreeNode>(context: IActionContext, tdp: TreeDataProvider<TPick>, id: string | Uri): Promise<TPick>;
+
+export declare interface QuickPickWizardContext<TNode extends unknown> extends IActionContext {
+    pickedNodes: TNode[];
+}
+
+/**
+ * Describes filtering based on context value. Items that pass the filter will
+ * match at least one of the `include` filters, but none of the `exclude` filters.
+ */
+export declare interface ContextValueFilter {
+    /**
+     * This filter will include items that match *any* of the values in the array.
+     * When a string is used, exact value comparison is done.
+     */
+    include: string | RegExp | (string | RegExp)[];
+
+    /**
+     * This filter will exclude items that match *any* of the values in the array.
+     * When a string is used, exact value comparison is done.
+     */
+    exclude?: string | RegExp | (string | RegExp)[];
+}
+
+export declare interface ContextValueFilterableTreeNodeV2 {
+    readonly quickPickOptions: {
+        readonly contextValues: Array<string>;
+        readonly isLeaf: boolean;
+    }
+}
+
+export declare type ContextValueFilterableTreeNode = ContextValueFilterableTreeNodeV2 | AzExtTreeItem;
+
+export declare interface FindableByIdTreeNodeV2 extends ContextValueFilterableTreeNodeV2 {
+    id: string;
+}
+
+export declare type FindableByIdTreeNode = FindableByIdTreeNodeV2 | AzExtTreeItem;
 
 /**
  * Used to register VSCode tree node context menu commands that are in the host extension's tree. It wraps your callback with consistent error and telemetry handling

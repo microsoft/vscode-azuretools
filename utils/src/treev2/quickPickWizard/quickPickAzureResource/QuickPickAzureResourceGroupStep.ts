@@ -3,10 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ResourceGroupsItem, ContextValueFilterableTreeNode } from "../../../../hostapi.v2";
+import { AzureResourceQuickPickWizardContext, ResourceGroupsItem } from "../../../../hostapi.v2";
 import * as types from "../../../../index";
 import { GenericQuickPickOptions, GenericQuickPickStep } from "../GenericQuickPickStep";
-import { AzureResourceQuickPickWizardContext } from "./AzureResourceQuickPickWizardContext";
 
 // TODO: implement this for picking resource group
 // The resource group may NOT be the grouping method used in the tree
@@ -15,11 +14,11 @@ export class QuickPickAzureResourceGroupStep extends GenericQuickPickStep<Resour
         throw new Error("Method not implemented.");
     }
 
-    protected isDirectPick(_node: ContextValueFilterableTreeNode): boolean {
+    protected isDirectPick(_node: types.ContextValueFilterableTreeNode): boolean {
         throw new Error("Method not implemented.");
     }
 
-    protected isIndirectPick(_node: ContextValueFilterableTreeNode): boolean {
+    protected isIndirectPick(_node: types.ContextValueFilterableTreeNode): boolean {
         throw new Error("Method not implemented.");
     }
 }

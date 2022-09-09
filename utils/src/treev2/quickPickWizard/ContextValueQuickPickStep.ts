@@ -3,16 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import * as types from '../../../index';
 import { GenericQuickPickOptions, GenericQuickPickStep } from './GenericQuickPickStep';
 import { isAzExtParentTreeItem } from '../../tree/InternalInterfaces';
-import { QuickPickWizardContext } from './QuickPickWizardContext';
-import { ContextValueFilter, ContextValueFilterableTreeNode, ContextValueFilterableTreeNodeV2 } from '../../../hostapi.v2';
 
 export interface ContextValueFilterQuickPickOptions extends GenericQuickPickOptions {
-    contextValueFilter: ContextValueFilter;
+    contextValueFilter: types.ContextValueFilter;
 }
 
-export class ContextValueQuickPickStep<TNode extends ContextValueFilterableTreeNode, TContext extends QuickPickWizardContext<TNode>, TOptions extends ContextValueFilterQuickPickOptions> extends GenericQuickPickStep<TNode, TContext, TOptions> {
+export class ContextValueQuickPickStep<TNode extends types.ContextValueFilterableTreeNode, TContext extends types.QuickPickWizardContext<TNode>, TOptions extends ContextValueFilterQuickPickOptions> extends GenericQuickPickStep<TNode, TContext, TOptions> {
     protected override isDirectPick(node: TNode): boolean {
         const includeOption = this.pickOptions.contextValueFilter.include;
         const excludeOption = this.pickOptions.contextValueFilter.exclude;
@@ -52,11 +51,11 @@ export class ContextValueQuickPickStep<TNode extends ContextValueFilterableTreeN
     }
 }
 
-export function isContextValueFilterableTreeNodeV2(maybeNode: unknown): maybeNode is ContextValueFilterableTreeNodeV2 {
+export function isContextValueFilterableTreeNodeV2(maybeNode: unknown): maybeNode is types.ContextValueFilterableTreeNodeV2 {
     if (typeof maybeNode === 'object') {
-        return Array.isArray((maybeNode as ContextValueFilterableTreeNodeV2).quickPickOptions?.contextValues) &&
-            (maybeNode as ContextValueFilterableTreeNodeV2).quickPickOptions?.isLeaf !== undefined &&
-            (maybeNode as ContextValueFilterableTreeNodeV2).quickPickOptions?.isLeaf !== null;
+        return Array.isArray((maybeNode as types.ContextValueFilterableTreeNodeV2).quickPickOptions?.contextValues) &&
+            (maybeNode as types.ContextValueFilterableTreeNodeV2).quickPickOptions?.isLeaf !== undefined &&
+            (maybeNode as types.ContextValueFilterableTreeNodeV2).quickPickOptions?.isLeaf !== null;
     }
 
     return false;

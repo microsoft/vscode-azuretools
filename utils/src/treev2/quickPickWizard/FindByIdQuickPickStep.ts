@@ -5,24 +5,17 @@
 
 import * as types from '../../../index';
 import * as vscode from 'vscode';
-import { getLastNode, QuickPickWizardContext } from './QuickPickWizardContext';
+import { getLastNode } from './QuickPickWizardContext';
 import { isAzExtParentTreeItem } from '../../tree/InternalInterfaces';
 import { isContextValueFilterableTreeNodeV2 } from './ContextValueQuickPickStep';
 import { GenericQuickPickStep, SkipIfOneQuickPickOptions } from './GenericQuickPickStep';
-import { ContextValueFilterableTreeNodeV2 } from '../../../hostapi.v2';
-
-interface FindableByIdTreeNodeV2 extends ContextValueFilterableTreeNodeV2 {
-    id: vscode.Uri;
-}
-
-export type FindableByIdTreeNode = FindableByIdTreeNodeV2 | types.AzExtTreeItem;
 
 interface FindByIdQuickPickOptions extends SkipIfOneQuickPickOptions {
-    id: string | vscode.Uri;
+    id: string;
     skipIfOne?: true;
 }
 
-export class FindByIdQuickPickStep<TNode extends FindableByIdTreeNode, TContext extends QuickPickWizardContext<TNode>> extends GenericQuickPickStep<TNode, TContext, FindByIdQuickPickOptions> {
+export class FindByIdQuickPickStep<TNode extends types.FindableByIdTreeNode, TContext extends types.QuickPickWizardContext<TNode>> extends GenericQuickPickStep<TNode, TContext, FindByIdQuickPickOptions> {
     public constructor(tdp: vscode.TreeDataProvider<TNode>, options: FindByIdQuickPickOptions) {
         super(
             tdp,
@@ -64,59 +57,32 @@ export class FindByIdQuickPickStep<TNode extends FindableByIdTreeNode, TContext 
                 return false;
             }
 
-            if (typeof this.pickOptions.id === 'string') {
-                // Append '/' to 'treeItem.fullId' when checking 'startsWith' to ensure its actually an ancestor, rather than a treeItem at the same level that _happens_ to start with the same id
-                // For example, two databases named 'test' and 'test1' as described in this issue: https://github.com/Microsoft/vscode-cosmosdb/issues/488
-                return this.pickOptions.id.startsWith(`${node.id.toString()}/`);
-            } else {
-                return this.pickOptions.id.scheme === node.id.scheme &&
-                    this.pickOptions.id.authority === node.id.authority &&
-                    this.pickOptions.id.path.startsWith(`${node.id.path}/`);
-            }
+            return this.pickOptions.id.startsWith(node.id);
         } else {
             if (!isAzExtParentTreeItem(node)) {
                 return false;
             }
 
-            if (typeof this.pickOptions.id === 'string') {
-                return this.pickOptions.id.startsWith(`${node.fullId}/`);
-            } else {
-                return this.pickOptions.id.toString().startsWith(`${node.fullId}/`);
-            }
+            return this.pickOptions.id.startsWith(node.fullId);
         }
     }
 
     protected override isDirectPick(node: TNode): boolean {
         if (isFindableByIdTreeNodeV2(node)) {
-            if (typeof this.pickOptions.id === 'string') {
-                return this.pickOptions.id === node.id.toString();
-            } else {
-                return this.pickOptions.id.scheme === node.id.scheme &&
-                    this.pickOptions.id.authority === node.id.authority &&
-                    this.pickOptions.id.path === node.id.path;
-            }
+            return this.pickOptions.id === node.id;
         } else {
-            if (typeof this.pickOptions.id === 'string') {
-                return this.pickOptions.id === node.fullId;
-            } else {
-                return this.pickOptions.id.toString() === node.fullId;
-            }
+            return this.pickOptions.id === node.fullId;
         }
     }
 }
 
-function isFindableByIdTreeNodeV2(maybeNode: unknown): maybeNode is FindableByIdTreeNodeV2 {
+function isFindableByIdTreeNodeV2(maybeNode: unknown): maybeNode is types.FindableByIdTreeNodeV2 {
     if (!isContextValueFilterableTreeNodeV2(maybeNode)) {
         return false;
     }
 
     if (typeof maybeNode === 'object') {
-        const idAsUri = (maybeNode as FindableByIdTreeNodeV2).id as vscode.Uri;
-
-        return typeof idAsUri === 'object' &&
-            typeof idAsUri.scheme === 'string' &&
-            typeof idAsUri.authority === 'string' &&
-            typeof idAsUri.path === 'string';
+        return typeof (maybeNode as types.FindableByIdTreeNodeV2).id === 'string' && !!(maybeNode as types.FindableByIdTreeNodeV2).id;
     }
 
     return false;
