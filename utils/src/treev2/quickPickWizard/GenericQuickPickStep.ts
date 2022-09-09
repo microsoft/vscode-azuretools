@@ -66,7 +66,12 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
         if (picks.length === 1 && this.pickOptions.skipIfOne) {
             return picks[0].data;
         } else {
-            const selected = await wizardContext.ui.showQuickPick(picks, { /* TODO: options */ });
+            const selected = await wizardContext.ui.showQuickPick(picks, {
+                /* TODO: options */
+                /* TODO: set id here so recently picked items appear at the top */
+            });
+
+            // check if the last picked item is a create callback
             if (typeof selected.data === 'function') {
                 // If the last node is a function, pop it off the list and execute it
                 const callback = selected.data as unknown as CreateCallback<TNode>;
@@ -81,6 +86,7 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
 
                 throw new UserCancelledError();
             }
+
             return selected.data;
         }
     }
