@@ -10,7 +10,7 @@ import { CancellationToken, CancellationTokenSource, Disposable, Event, Extensio
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
-import type { Box, ResourceGroupsItem, TreeNodeCommandCallback } from './hostapi.v2';
+import type { ResourceGroupsItem, TreeNodeCommandCallback } from './hostapi.v2';
 
 export declare interface RunWithTemporaryDescriptionOptions {
     description: string;
@@ -1681,12 +1681,27 @@ export declare enum AzExtResourceType {
 }
 
 /**
- * Tests to see if something is a box, by ensuring it is an object
- * and has an "unwrap" function
- * @param maybeBox An object to test if it is a box
- * @returns True if a box, false otherwise
+ * Interface describing an object that wraps another object.
+ *
+ * The host extension will wrap all tree nodes provided by the client
+ * extensions. When commands are executed, the wrapper objects are
+ * sent directly to the client extension, which will need to unwrap
+ * them. The `registerCommandWithTreeNodeUnwrapping` method below, used
+ * in place of `registerCommand`, will intelligently do this
+ * unwrapping automatically (i.e., will not unwrap if the arguments
+ * aren't wrappers)
  */
-export declare function isBox(maybeBox: unknown): maybeBox is Box;
+export declare interface Wrapper {
+    unwrap<T>(): T;
+}
+
+/**
+ * Tests to see if something is a wrapper, by ensuring it is an object
+ * and has an "unwrap" function
+ * @param maybeWrapper An object to test if it is a wrapper
+ * @returns True if a wrapper, false otherwise
+ */
+export declare function isWrapper(maybeWrapper: unknown): maybeWrapper is Wrapper;
 
 export declare function appResourceExperience<TPick extends ContextValueFilterableTreeNode>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceType: AzExtResourceType, childItemFilter?: ContextValueFilter): Promise<TPick>;
 export declare function contextValueExperience<TPick extends ContextValueFilterableTreeNode>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, contextValueFilter: ContextValueFilter): Promise<TPick>;

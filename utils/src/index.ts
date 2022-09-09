@@ -16,7 +16,7 @@ export { addExtensionValueToMask, callWithMaskHandling, maskValue } from './mask
 export * from './openReadOnlyContent';
 export * from './parseError';
 export * from './registerCommand';
-export * from './registerCommandWithTreeNodeUnboxing';
+export * from './registerCommandWithTreeNodeUnwrapping';
 export * from './registerEvent';
 export { registerReportIssueCommand } from './registerReportIssueCommand';
 export * from './tree/AzExtParentTreeItem';

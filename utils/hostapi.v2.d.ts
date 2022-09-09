@@ -51,21 +51,6 @@ export declare interface ApplicationResource extends ResourceBase {
 }
 
 /**
- * Interface describing an object that wraps another object.
- *
- * The host extension will wrap all tree nodes provided by the client
- * extensions. When commands are executed, the wrapper objects are
- * sent directly to the client extension, which will need to unwrap
- * them. The `registerCommandWithTreeNodeUnboxing` method below, used
- * in place of `registerCommand`, will intelligently do this
- * unboxing automatically (i.e., will not unbox if the arguments
- * aren't boxes)
- */
-export declare interface Box {
-    unwrap<T>(): T;
-}
-
-/**
  * Describes command callbacks for tree node context menu commands
  */
 export declare type TreeNodeCommandCallback<T> = (context: IActionContext, node?: T, nodes?: T[], ...args: any[]) => any;

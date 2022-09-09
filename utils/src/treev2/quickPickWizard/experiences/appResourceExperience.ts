@@ -15,7 +15,7 @@ import { AzureWizardPromptStep } from '../../../wizard/AzureWizardPromptStep';
 import { AzExtResourceType } from '../../../AzExtResourceType';
 import { AzureWizard } from '../../../wizard/AzureWizard';
 import { AzureResourceQuickPickWizardContext, ResourceGroupsItem } from '../../../../hostapi.v2';
-import { isBox } from '../../../registerCommandWithTreeNodeUnboxing';
+import { isWrapper } from '../../../registerCommandWithTreeNodeUnwrapping';
 
 export async function appResourceExperience<TPick>(context: types.IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, resourceType: AzExtResourceType, childItemFilter?: types.ContextValueFilter): Promise<TPick> {
     const promptSteps: AzureWizardPromptStep<AzureResourceQuickPickWizardContext>[] = [
@@ -52,6 +52,6 @@ export async function appResourceExperience<TPick>(context: types.IActionContext
     if (!lastPickedItem) {
         throw new NoResourceFoundError(wizardContext);
     } else {
-        return isBox(lastPickedItem) ? lastPickedItem.unwrap<TPick>() : lastPickedItem as unknown as TPick;
+        return isWrapper(lastPickedItem) ? lastPickedItem.unwrap<TPick>() : lastPickedItem as unknown as TPick;
     }
 }
