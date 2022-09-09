@@ -67,7 +67,7 @@ async function getFsResponse(context: IActionContext, site: ParsedSite, filePath
             const client: ServiceClient = await createGenericClient(context, site.subscription);
             return await client.sendRequest({
                 method: 'GET',
-                url: `${site.id}/hostruntime/admin/vfs/${filePath}?api-version=2018-11-01`
+                url: `${site.id}/hostruntime/admin/vfs/${filePath}/?api-version=2018-11-01`
             });
         } else {
             const kuduClient = await createKuduClient(context, site);
