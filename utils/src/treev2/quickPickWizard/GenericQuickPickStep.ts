@@ -10,7 +10,6 @@ import { AzureWizardPromptStep } from '../../wizard/AzureWizardPromptStep';
 import { NoResourceFoundError, UserCancelledError } from '../../errors';
 import { parseError } from '../../parseError';
 import { localize } from '../../localize';
-import { callWithTelemetryAndErrorHandling } from '../../callWithTelemetryAndErrorHandling';
 
 type CreateCallback<TNode = unknown> = (context: types.IActionContext) => TNode | Promise<TNode>;
 
@@ -72,13 +71,9 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
                 // If the last node is a function, pop it off the list and execute it
                 const callback = selected.data as unknown as CreateCallback<TNode>;
 
-                const createdPick = await callWithTelemetryAndErrorHandling<TNode>('createPick', async (context: types.IActionContext) => {
-                    context.errorHandling.rethrow = true;
-                    return await callback({
-                        ...wizardContext,
-                        ...context,
-                    });
-                });
+                // context passed to callback must have the same `ui` as the wizardContext
+                // to prevent the wizard from being cancelled unexpectedly
+                const createdPick = await callback?.(wizardContext);
 
                 if (createdPick) {
                     return createdPick;
