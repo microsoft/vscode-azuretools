@@ -44,6 +44,7 @@ export async function appResourceExperience<TPick>(context: IActionContext, tdp:
     const wizard = new AzureWizard(context, {
         hideStepCount: true,
         promptSteps: promptSteps,
+        showLoadingPrompt: true,
     });
 
     await wizard.prompt();

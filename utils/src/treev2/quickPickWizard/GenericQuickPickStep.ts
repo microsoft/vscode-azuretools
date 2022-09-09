@@ -19,17 +19,15 @@ type CreateOptions<TNode = unknown> = {
     callback: CreateCallback<TNode>;
 }
 
-export interface GenericCreateQuickPickOptions {
-    skipIfOne?: false;
-    create?: CreateOptions;
-}
-
 export interface SkipIfOneQuickPickOptions {
     skipIfOne?: true;
     create?: never;
 }
 
-export type GenericQuickPickOptions = GenericCreateQuickPickOptions | SkipIfOneQuickPickOptions;
+export interface GenericQuickPickOptions {
+    skipIfOne?: boolean;
+    create?: CreateOptions;
+}
 
 export abstract class GenericQuickPickStep<TNode extends unknown, TContext extends QuickPickWizardContext<TNode>, TOptions extends GenericQuickPickOptions> extends AzureWizardPromptStep<TContext> {
     public readonly supportsDuplicateSteps = true;
@@ -45,6 +43,7 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
         try {
             const pick = await this.promptInternal(wizardContext);
             wizardContext.pickedNodes.push(pick as TNode);
+
         } catch (err) {
             const error = parseError(err);
             if (error.errorType === 'GoBackError') {
@@ -137,7 +136,7 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
      */
     protected abstract isIndirectPick(node: TNode): boolean;
 
-    private async getQuickPickItem(resource: TNode): Promise<types.IAzureQuickPickItem<TNode>> {
+    protected async getQuickPickItem(resource: TNode): Promise<types.IAzureQuickPickItem<TNode>> {
         const treeItem = await Promise.resolve(this.treeDataProvider.getTreeItem(resource));
 
         return {

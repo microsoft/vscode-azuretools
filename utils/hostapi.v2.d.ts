@@ -91,6 +91,7 @@ export interface ContextValueFilterableTreeNodeV2 {
     readonly quickPickOptions: {
         readonly contextValues: Array<string>;
         readonly isLeaf: boolean;
+        readonly createChild?: CreateOptions;
     }
 }
 
@@ -101,7 +102,7 @@ export type ResourceGroupsItem = ContextValueFilterableTreeNode;
 
 // #region pick tree item types
 
-type CreateCallback<TNode = unknown> = () => TNode | Promise<TNode>;
+type CreateCallback<TNode = unknown> = (context: IActionContext) => TNode | Promise<TNode>;
 
 type CreateOptions<TNode = unknown> = {
     label?: string;
