@@ -8,7 +8,7 @@ import { isAzExtParentTreeItem } from '../../tree/InternalInterfaces';
 import { QuickPickWizardContext } from './QuickPickWizardContext';
 import { ContextValueFilter, ContextValueFilterableTreeNode, ContextValueFilterableTreeNodeV2 } from '../../../hostapi.v2';
 
-export interface ContextValueFilterQuickPickOptions extends GenericQuickPickOptions {
+export type ContextValueFilterQuickPickOptions = GenericQuickPickOptions & {
     contextValueFilter: ContextValueFilter;
 }
 

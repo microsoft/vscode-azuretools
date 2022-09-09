@@ -7,16 +7,29 @@ import * as types from '../../../index';
 import * as vscode from 'vscode';
 import { getLastNode, QuickPickWizardContext } from './QuickPickWizardContext';
 import { AzureWizardPromptStep } from '../../wizard/AzureWizardPromptStep';
-import { NoResourceFoundError } from '../../errors';
+import { NoResourceFoundError, UserCancelledError } from '../../errors';
 import { parseError } from '../../parseError';
+import { localize } from '../../localize';
+import { callWithTelemetryAndErrorHandling } from '../../callWithTelemetryAndErrorHandling';
 
-export interface GenericQuickPickOptions {
-    skipIfOne?: boolean;
+type CreateCallback<TNode = unknown> = (context: types.IActionContext) => TNode | Promise<TNode>;
+
+type CreateOptions<TNode = unknown> = {
+    label?: string;
+    callback: CreateCallback<TNode>;
 }
 
-export interface SkipIfOneQuickPickOptions extends GenericQuickPickOptions {
+export interface GenericCreateQuickPickOptions {
+    skipIfOne?: false;
+    create?: CreateOptions;
+}
+
+export interface SkipIfOneQuickPickOptions {
     skipIfOne?: true;
+    create?: never;
 }
+
+export type GenericQuickPickOptions = GenericCreateQuickPickOptions | SkipIfOneQuickPickOptions;
 
 export abstract class GenericQuickPickStep<TNode extends unknown, TContext extends QuickPickWizardContext<TNode>, TOptions extends GenericQuickPickOptions> extends AzureWizardPromptStep<TContext> {
     public readonly supportsDuplicateSteps = true;
@@ -31,7 +44,7 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
     public async prompt(wizardContext: TContext): Promise<void> {
         try {
             const pick = await this.promptInternal(wizardContext);
-            wizardContext.pickedNodes.push(pick);
+            wizardContext.pickedNodes.push(pick as TNode);
         } catch (err) {
             const error = parseError(err);
             if (error.errorType === 'GoBackError') {
@@ -49,18 +62,36 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
         return true;
     }
 
-    protected async promptInternal(wizardContext: TContext): Promise<TNode> {
+    protected async promptInternal(wizardContext: TContext): Promise<TNode | CreateCallback> {
         const picks = await this.getPicks(wizardContext);
 
         if (picks.length === 1 && this.pickOptions.skipIfOne) {
             return picks[0].data;
         } else {
             const selected = await wizardContext.ui.showQuickPick(picks, { /* TODO: options */ });
+            if (typeof selected.data === 'function') {
+                // If the last node is a function, pop it off the list and execute it
+                const callback = selected.data as unknown as CreateCallback<TNode>;
+
+                const createdPick = await callWithTelemetryAndErrorHandling<TNode>('createPick', async (context: types.IActionContext) => {
+                    context.errorHandling.rethrow = true;
+                    return await callback({
+                        ...wizardContext,
+                        ...context,
+                    });
+                });
+
+                if (createdPick) {
+                    return createdPick;
+                }
+
+                throw new UserCancelledError();
+            }
             return selected.data;
         }
     }
 
-    protected async getPicks(wizardContext: TContext): Promise<types.IAzureQuickPickItem<TNode>[]> {
+    protected async getPicks(wizardContext: TContext): Promise<types.IAzureQuickPickItem<TNode | CreateCallback>[]> {
         const lastPickedItem: TNode | undefined = getLastNode(wizardContext);
 
         // TODO: if `lastPickedItem` is an `AzExtParentTreeItem`, should we clear its cache?
@@ -69,9 +100,10 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
         const directChoices = children.filter(c => this.isDirectPick(c));
         const indirectChoices = children.filter(c => this.isIndirectPick(c));
 
-        let promptChoices: TNode[];
+        let promptChoices: TNode[] = [];
+
         if (directChoices.length === 0) {
-            if (indirectChoices.length === 0) {
+            if (indirectChoices.length === 0 && !this.pickOptions.create) {
                 throw new NoResourceFoundError();
             } else {
                 promptChoices = indirectChoices;
@@ -80,10 +112,15 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
             promptChoices = directChoices;
         }
 
-        const picks: types.IAzureQuickPickItem<TNode>[] = [];
+        const picks: types.IAzureQuickPickItem<TNode | CreateCallback>[] = [];
         for (const choice of promptChoices) {
             picks.push(await this.getQuickPickItem(choice));
         }
+
+        if (this.pickOptions.create) {
+            picks.push(this.getCreatePick(this.pickOptions.create));
+        }
+
 
         return picks;
     }
@@ -107,6 +144,13 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
             label: ((treeItem.label as vscode.TreeItemLabel)?.label || treeItem.label) as string,
             description: treeItem.description as string,
             data: resource,
+        };
+    }
+
+    private getCreatePick(options: CreateOptions): types.IAzureQuickPickItem<CreateCallback> {
+        return {
+            label: options.label || localize('createQuickPickLabel', '$(add) Create...'),
+            data: options.callback,
         };
     }
 }

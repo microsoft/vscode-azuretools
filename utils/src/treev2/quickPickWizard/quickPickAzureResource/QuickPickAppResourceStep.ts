@@ -9,7 +9,7 @@ import { GenericQuickPickOptions, GenericQuickPickStep } from '../GenericQuickPi
 import { AzureResourceQuickPickWizardContext } from './AzureResourceQuickPickWizardContext';
 import { AppResourceItem } from './tempTypes';
 
-interface AppResourceQuickPickOptions extends GenericQuickPickOptions {
+type AppResourceQuickPickOptions = GenericQuickPickOptions & {
     resourceTypes?: types.AzExtResourceType[];
     childItemFilter?: ContextValueFilter;
 }

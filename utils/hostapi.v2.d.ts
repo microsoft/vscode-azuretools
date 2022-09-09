@@ -98,3 +98,26 @@ export type ContextValueFilterableTreeNode = ContextValueFilterableTreeNodeV2 | 
 
 // temporary type until we have the real type from RGs
 export type ResourceGroupsItem = ContextValueFilterableTreeNode;
+
+// #region pick tree item types
+
+type CreateCallback<TNode = unknown> = () => TNode | Promise<TNode>;
+
+type CreateOptions<TNode = unknown> = {
+    label?: string;
+    callback: CreateCallback<TNode>;
+}
+
+export interface GenericCreateQuickPickOptions {
+    skipIfOne?: false;
+    create?: CreateOptions;
+}
+
+export interface SkipIfOneQuickPickOptions {
+    skipIfOne?: true;
+    create?: never;
+}
+
+export type GenericQuickPickOptions = GenericCreateQuickPickOptions | SkipIfOneQuickPickOptions;
+
+// #endregion pick tree item types
