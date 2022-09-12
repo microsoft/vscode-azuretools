@@ -5,13 +5,13 @@
 
 import type { SkuName, StorageManagementClient } from '@azure/arm-storage';
 import { AzureWizardExecuteStep, IAzureNamingRules } from '@microsoft/vscode-azext-utils';
-import { isArray } from 'util';
 import { Progress } from 'vscode';
 import * as types from '../../index';
 import { createStorageClient } from '../clients';
 import { storageProvider } from '../constants';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
+import { randomUtils } from '../utils/randomUtils';
 import { LocationListStep } from './LocationListStep';
 import { ResourceGroupListStep } from './ResourceGroupListStep';
 import { storageAccountNamingRules } from './StorageAccountListStep';
@@ -51,7 +51,7 @@ export class StorageAccountCreateStep<T extends types.IStorageAccountWizardConte
     }
 
     protected async generateRelatedName(wizardContext: T, name: string, namingRules: IAzureNamingRules | IAzureNamingRules[]): Promise<string | undefined> {
-        if (!isArray(namingRules)) {
+        if (!Array.isArray(namingRules)) {
             namingRules = [namingRules];
         }
 
@@ -77,6 +77,8 @@ export class StorageAccountCreateStep<T extends types.IStorageAccountWizardConte
             count += 1;
         }
 
+        const createdStorageAccount: string = localize('FailStorageAccount', 'Something went wrong in the creation of the storage account');
+        ext.outputChannel.appendLog(createdStorageAccount);
         return undefined;
     }
 
@@ -85,7 +87,7 @@ export class StorageAccountCreateStep<T extends types.IStorageAccountWizardConte
     }
 
     private generateSuffixedName(preferredName: string, minLength: number, maxLength: number): string {
-        const suffix: string = (Math.floor(Math.random() * (100 - 1)) + 1).toString();
+        const suffix: string = randomUtils.getRandomHexString();
         const minUnsuffixedLength: number = minLength - suffix.length;
         const maxUnsuffixedLength: number = maxLength - suffix.length;
 
