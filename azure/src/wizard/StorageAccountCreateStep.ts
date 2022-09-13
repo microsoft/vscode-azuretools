@@ -77,8 +77,6 @@ export class StorageAccountCreateStep<T extends types.IStorageAccountWizardConte
             count += 1;
         }
 
-        const createdStorageAccount: string = localize('FailStorageAccount', 'Something went wrong in the creation of the storage account');
-        ext.outputChannel.appendLog(createdStorageAccount);
         return undefined;
     }
 
