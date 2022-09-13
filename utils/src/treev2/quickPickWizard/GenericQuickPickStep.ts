@@ -7,25 +7,15 @@ import * as types from '../../../index';
 import * as vscode from 'vscode';
 import { getLastNode, QuickPickWizardContext } from './QuickPickWizardContext';
 import { AzureWizardPromptStep } from '../../wizard/AzureWizardPromptStep';
-import { NoResourceFoundError, UserCancelledError } from '../../errors';
+import { NoResourceFoundError } from '../../errors';
 import { parseError } from '../../parseError';
-import { localize } from '../../localize';
-
-type CreateCallback<TNode = unknown> = (context: types.IActionContext) => TNode | Promise<TNode>;
-
-type CreateOptions<TNode = unknown> = {
-    label?: string;
-    callback: CreateCallback<TNode>;
-}
 
 export interface SkipIfOneQuickPickOptions {
     skipIfOne?: true;
-    create?: never;
 }
 
 export interface GenericQuickPickOptions {
     skipIfOne?: boolean;
-    create?: CreateOptions;
 }
 
 export abstract class GenericQuickPickStep<TNode extends unknown, TContext extends QuickPickWizardContext<TNode>, TOptions extends GenericQuickPickOptions> extends AzureWizardPromptStep<TContext> {
@@ -60,7 +50,7 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
         return true;
     }
 
-    protected async promptInternal(wizardContext: TContext): Promise<TNode | CreateCallback> {
+    protected async promptInternal(wizardContext: TContext): Promise<TNode> {
         const picks = await this.getPicks(wizardContext);
 
         if (picks.length === 1 && this.pickOptions.skipIfOne) {
@@ -71,27 +61,11 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
                 /* TODO: set id here so recently picked items appear at the top */
             });
 
-            // check if the last picked item is a create callback
-            if (typeof selected.data === 'function') {
-                // If the last node is a function, pop it off the list and execute it
-                const callback = selected.data as unknown as CreateCallback<TNode>;
-
-                // context passed to callback must have the same `ui` as the wizardContext
-                // to prevent the wizard from being cancelled unexpectedly
-                const createdPick = await callback?.(wizardContext);
-
-                if (createdPick) {
-                    return createdPick;
-                }
-
-                throw new UserCancelledError();
-            }
-
             return selected.data;
         }
     }
 
-    protected async getPicks(wizardContext: TContext): Promise<types.IAzureQuickPickItem<TNode | CreateCallback>[]> {
+    protected async getPicks(wizardContext: TContext): Promise<types.IAzureQuickPickItem<TNode>[]> {
         const lastPickedItem: TNode | undefined = getLastNode(wizardContext);
 
         // TODO: if `lastPickedItem` is an `AzExtParentTreeItem`, should we clear its cache?
@@ -103,7 +77,7 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
         let promptChoices: TNode[] = [];
 
         if (directChoices.length === 0) {
-            if (indirectChoices.length === 0 && !this.pickOptions.create) {
+            if (indirectChoices.length === 0) {
                 throw new NoResourceFoundError();
             } else {
                 promptChoices = indirectChoices;
@@ -112,15 +86,10 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
             promptChoices = directChoices;
         }
 
-        const picks: types.IAzureQuickPickItem<TNode | CreateCallback>[] = [];
+        const picks: types.IAzureQuickPickItem<TNode>[] = [];
         for (const choice of promptChoices) {
             picks.push(await this.getQuickPickItem(choice));
         }
-
-        if (this.pickOptions.create) {
-            picks.push(this.getCreatePick(this.pickOptions.create));
-        }
-
 
         return picks;
     }
@@ -144,13 +113,6 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
             label: ((treeItem.label as vscode.TreeItemLabel)?.label || treeItem.label) as string,
             description: treeItem.description as string,
             data: resource,
-        };
-    }
-
-    private getCreatePick(options: CreateOptions): types.IAzureQuickPickItem<CreateCallback> {
-        return {
-            label: options.label || localize('createQuickPickLabel', '$(add) Create...'),
-            data: options.callback,
         };
     }
 }

@@ -5,21 +5,14 @@
 
 import { GenericQuickPickOptions, GenericQuickPickStep } from './GenericQuickPickStep';
 import { isAzExtParentTreeItem } from '../../tree/InternalInterfaces';
-import { getLastNode, QuickPickWizardContext } from './QuickPickWizardContext';
+import { QuickPickWizardContext } from './QuickPickWizardContext';
 import { ContextValueFilter, ContextValueFilterableTreeNode, ContextValueFilterableTreeNodeV2 } from '../../../hostapi.v2';
-import { AzExtTreeItem } from '../../tree/AzExtTreeItem';
-import { AzExtParentTreeItem } from '../../tree/AzExtParentTreeItem';
-import { isBox } from '../../registerCommandWithTreeNodeUnboxing';
 
 export type ContextValueFilterQuickPickOptions = GenericQuickPickOptions & {
     contextValueFilter: ContextValueFilter;
 }
 
 export class ContextValueQuickPickStep<TNode extends ContextValueFilterableTreeNode, TContext extends QuickPickWizardContext<TNode>, TOptions extends ContextValueFilterQuickPickOptions> extends GenericQuickPickStep<TNode, TContext, TOptions> {
-
-    public override async prompt(wizardContext: TContext): Promise<void> {
-        await this.provideCompatabilityWithPickTreeItemImpl(wizardContext) || await super.prompt(wizardContext);
-    }
 
     protected override isDirectPick(node: TNode): boolean {
         const includeOption = this.pickOptions.contextValueFilter.include;
@@ -57,32 +50,6 @@ export class ContextValueQuickPickStep<TNode extends ContextValueFilterableTreeN
             // Context value matcher is a string, do full equality (same as old behavior)
             return c === matcher;
         })
-    }
-
-    private async provideCompatabilityWithPickTreeItemImpl(wizardContext: TContext): Promise<boolean> {
-        const lastPickedItem = getLastNode(wizardContext);
-        const lastPickedItemUnwrapped = isBox(lastPickedItem) ? lastPickedItem.unwrap() : lastPickedItem
-        if (isAzExtParentTreeItem(lastPickedItemUnwrapped)) {
-            const children = await this.treeDataProvider.getChildren(lastPickedItem);
-            if (children && children.length) {
-                const customChild = await this.getCustomChildren(wizardContext, lastPickedItemUnwrapped);
-
-                const customPick = children.find((child) => {
-                    const ti: AzExtTreeItem = isBox(child) ? child.unwrap<AzExtTreeItem>() : child as AzExtTreeItem;
-                    return ti.fullId === customChild?.fullId;
-                });
-
-                if (customPick) {
-                    wizardContext.pickedNodes.push(customPick);
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private async getCustomChildren(context: TContext, node: AzExtParentTreeItem): Promise<AzExtTreeItem | undefined> {
-        return await node.pickTreeItemImpl?.(Array.isArray(this.pickOptions.contextValueFilter.include) ? this.pickOptions.contextValueFilter.include : [this.pickOptions.contextValueFilter.include], context);
     }
 }
 

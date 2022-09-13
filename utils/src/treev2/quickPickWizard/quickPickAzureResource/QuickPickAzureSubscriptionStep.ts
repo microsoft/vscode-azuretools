@@ -15,8 +15,7 @@ export class QuickPickAzureSubscriptionStep extends GenericQuickPickStep<Resourc
             tdp,
             {
                 ...options,
-                skipIfOne: true, // Subscription is always skip-if-one,
-                create: undefined,
+                skipIfOne: true, // Subscription is always skip-if-one
             }
         )
     }
