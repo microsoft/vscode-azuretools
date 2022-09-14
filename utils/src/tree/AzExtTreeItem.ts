@@ -217,5 +217,8 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
 }
 
 export function isAzExtTreeItem(maybeTreeItem: unknown): maybeTreeItem is types.AzExtTreeItem {
-    return (maybeTreeItem as AzExtTreeItem)._isAzExtTreeItem === true;
+    if (typeof maybeTreeItem === 'object') {
+        return (maybeTreeItem as AzExtTreeItem)._isAzExtTreeItem === true;
+    }
+    return false;
 }
