@@ -12,7 +12,7 @@ import { CompatibilityContextValueFilterQuickPickOptions, CompatibilityContextVa
 import { localize } from "../../../localize";
 import { NoResourceFoundError, UserCancelledError } from "../../../errors";
 
-export type CompatibilityRecursiveQuickPickOptions = CompatibilityContextValueFilterQuickPickOptions & {
+export interface CompatibilityRecursiveQuickPickOptions extends CompatibilityContextValueFilterQuickPickOptions {
     create?: CreateOptions;
 }
 

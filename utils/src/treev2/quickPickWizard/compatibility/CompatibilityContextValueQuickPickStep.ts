@@ -12,7 +12,7 @@ import { AzExtTreeItem } from "../../../tree/AzExtTreeItem";
 import { AzExtParentTreeItem } from "../../../tree/AzExtParentTreeItem";
 import { GenericQuickPickOptions } from "../GenericQuickPickStep";
 
-export type CompatibilityContextValueFilterQuickPickOptions = GenericQuickPickOptions & {
+export interface CompatibilityContextValueFilterQuickPickOptions extends GenericQuickPickOptions {
     contextValueFilter: ContextValueFilter;
 }
 
