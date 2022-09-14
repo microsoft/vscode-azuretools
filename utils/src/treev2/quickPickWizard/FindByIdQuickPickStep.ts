@@ -7,7 +7,6 @@ import * as types from '../../../index';
 import * as vscode from 'vscode';
 import { getLastNode } from './QuickPickWizardContext';
 import { isAzExtParentTreeItem } from '../../tree/InternalInterfaces';
-import { isContextValueFilterableTreeNodeV2 } from './ContextValueQuickPickStep';
 import { GenericQuickPickStep, SkipIfOneQuickPickOptions } from './GenericQuickPickStep';
 
 interface FindByIdQuickPickOptions extends SkipIfOneQuickPickOptions {
@@ -74,6 +73,16 @@ export class FindByIdQuickPickStep<TNode extends types.FindableByIdTreeNode, TCo
             return this.pickOptions.id === node.fullId;
         }
     }
+}
+
+function isContextValueFilterableTreeNodeV2(maybeNode: unknown): maybeNode is types.ContextValueFilterableTreeNodeV2 {
+    if (typeof maybeNode === 'object') {
+        return Array.isArray((maybeNode as types.ContextValueFilterableTreeNodeV2).quickPickOptions?.contextValues) &&
+            (maybeNode as types.ContextValueFilterableTreeNodeV2).quickPickOptions?.isLeaf !== undefined &&
+            (maybeNode as types.ContextValueFilterableTreeNodeV2).quickPickOptions?.isLeaf !== null;
+    }
+
+    return false;
 }
 
 function isFindableByIdTreeNodeV2(maybeNode: unknown): maybeNode is types.FindableByIdTreeNodeV2 {

@@ -41,13 +41,3 @@ export class ContextValueQuickPickStep<TNode extends types.ContextValueFilterabl
         })
     }
 }
-
-export function isContextValueFilterableTreeNodeV2(maybeNode: unknown): maybeNode is types.ContextValueFilterableTreeNodeV2 {
-    if (typeof maybeNode === 'object') {
-        return Array.isArray((maybeNode as types.ContextValueFilterableTreeNodeV2).quickPickOptions?.contextValues) &&
-            (maybeNode as types.ContextValueFilterableTreeNodeV2).quickPickOptions?.isLeaf !== undefined &&
-            (maybeNode as types.ContextValueFilterableTreeNodeV2).quickPickOptions?.isLeaf !== null;
-    }
-
-    return false;
-}

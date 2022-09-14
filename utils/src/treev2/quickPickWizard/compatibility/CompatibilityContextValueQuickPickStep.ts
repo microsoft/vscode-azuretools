@@ -5,23 +5,27 @@
 
 import * as types from "../../../../index";
 import { isAzExtParentTreeItem } from "../../../tree/InternalInterfaces";
-import { ContextValueQuickPickStep } from "../ContextValueQuickPickStep";
+import { ContextValueFilterQuickPickOptions, ContextValueQuickPickStep } from "../ContextValueQuickPickStep";
 import { getLastNode } from "../QuickPickWizardContext";
 import { AzExtTreeItem } from "../../../tree/AzExtTreeItem";
 import { AzExtParentTreeItem } from "../../../tree/AzExtParentTreeItem";
-import { GenericQuickPickOptions } from "../GenericQuickPickStep";
 import { isWrapper } from "../../../registerCommandWithTreeNodeUnwrapping";
 
-export interface CompatibilityContextValueFilterQuickPickOptions extends GenericQuickPickOptions {
-    contextValueFilter: types.ContextValueFilter;
-}
-
-export class CompatibilityContextValueQuickPickStep<TNode extends types.CompatibleContextValueFilterableTreeNode, TContext extends types.QuickPickWizardContext<TNode>, TOptions extends CompatibilityContextValueFilterQuickPickOptions> extends ContextValueQuickPickStep<TNode, TContext, TOptions> {
+/**
+ * Provides compatability with {@link AzExtParentTreeItem.pickTreeItemImpl}
+ */
+export class CompatibilityContextValueQuickPickStep<TNode extends types.CompatibleContextValueFilterableTreeNode, TContext extends types.QuickPickWizardContext<TNode>, TOptions extends ContextValueFilterQuickPickOptions> extends ContextValueQuickPickStep<TNode, TContext, TOptions> {
 
     public override async prompt(wizardContext: TContext): Promise<void> {
         await this.provideCompatabilityWithPickTreeItemImpl(wizardContext) || await super.prompt(wizardContext);
     }
 
+    /**
+     * Mimics how the legacy {@link AzExtParentTreeItem.pickChildTreeItem}
+     * uses {@link AzExtParentTreeItem.pickTreeItemImpl} to customize the tree item picker.
+     *
+     * An example customization is skipping having to pick a UI-only node (ex: App Settings parent node)
+     */
     private async provideCompatabilityWithPickTreeItemImpl(wizardContext: TContext): Promise<boolean> {
         const lastPickedItem = getLastNode(wizardContext);
         const lastPickedItemUnwrapped = isWrapper(lastPickedItem) ? lastPickedItem.unwrap() : lastPickedItem

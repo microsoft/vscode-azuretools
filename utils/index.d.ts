@@ -1713,7 +1713,7 @@ interface CompatibilityPickResourceExperienceOptions {
     childItemFilter?: ContextValueFilter
 }
 
-export declare function compatibilityPickResourceExperience<TPick>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, options: CompatibilityPickResourceExperienceOptions): Promise<TPick>;
+export declare function compatibilityPickAppResourceExperience<TPick>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, options: CompatibilityPickResourceExperienceOptions): Promise<TPick>;
 
 export declare interface QuickPickWizardContext<TNode extends unknown> extends IActionContext {
     pickedNodes: TNode[];

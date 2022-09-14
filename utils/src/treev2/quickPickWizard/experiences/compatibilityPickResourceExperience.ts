@@ -16,7 +16,10 @@ import { AzureResourceQuickPickWizardContext, ResourceGroupsItem } from '../../.
 import { CompatibilityRecursiveQuickPickStep } from '../compatibility/CompatibilityRecursiveQuickPickStep';
 import { isWrapper } from '../../../registerCommandWithTreeNodeUnwrapping';
 
-export async function compatibilityPickResourceExperience<TPick>(context: types.IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, options: types.CompatibilityPickResourceExperienceOptions): Promise<TPick> {
+/**
+ * Provides compatibility for the legacy `pickAppResource` Resource Groups API
+ */
+export async function compatibilityPickAppResourceExperience<TPick>(context: types.IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, options: types.CompatibilityPickResourceExperienceOptions): Promise<TPick> {
     const { resourceTypes, childItemFilter } = options;
 
     const promptSteps: AzureWizardPromptStep<AzureResourceQuickPickWizardContext>[] = [
