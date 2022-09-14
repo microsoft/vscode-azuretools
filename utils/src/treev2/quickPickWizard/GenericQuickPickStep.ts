@@ -14,7 +14,7 @@ export interface GenericQuickPickOptions {
     skipIfOne?: boolean;
 }
 
-export interface SkipIfOneQuickPickOptions {
+export interface SkipIfOneQuickPickOptions extends GenericQuickPickOptions {
     skipIfOne?: true;
 }
 
