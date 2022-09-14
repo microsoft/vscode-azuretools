@@ -5,7 +5,6 @@
 
 import * as types from '../../../index';
 import { GenericQuickPickOptions, GenericQuickPickStep } from './GenericQuickPickStep';
-import { isAzExtParentTreeItem } from '../../tree/InternalInterfaces';
 
 export interface ContextValueFilterQuickPickOptions extends GenericQuickPickOptions {
     contextValueFilter: types.ContextValueFilter;
@@ -28,13 +27,7 @@ export class ContextValueQuickPickStep<TNode extends types.ContextValueFilterabl
     }
 
     protected override isIndirectPick(node: TNode): boolean {
-        if (isContextValueFilterableTreeNodeV2(node)) {
-            return node.quickPickOptions.isLeaf === false;
-        } else if (isAzExtParentTreeItem(node)) {
-            return true;
-        }
-
-        return false;
+        return node.quickPickOptions.isLeaf === false;
     }
 
     private matchesSingleFilter(matcher: string | RegExp, nodeContextValues: string[]): boolean {
