@@ -16,7 +16,7 @@ export { addExtensionValueToMask, callWithMaskHandling, maskValue } from './mask
 export * from './openReadOnlyContent';
 export * from './parseError';
 export * from './registerCommand';
-export * from './registerCommandWithTreeNodeUnboxing';
+export * from './registerCommandWithTreeNodeUnwrapping';
 export * from './registerEvent';
 export { registerReportIssueCommand } from './registerReportIssueCommand';
 export * from './tree/AzExtParentTreeItem';
@@ -39,4 +39,6 @@ export * from './getAzExtResourceType';
 export * from './AzExtResourceType';
 export * from './treev2/quickPickWizard/experiences/appResourceExperience';
 export * from './treev2/quickPickWizard/experiences/compatibilityPickResourceExperience';
+export * from './treev2/quickPickWizard/experiences/contextValueExperience';
+export * from './treev2/quickPickWizard/experiences/findByIdExperience';
 // NOTE: The auto-fix action "source.organizeImports" does weird things with this file, but there doesn't seem to be a way to disable it on a per-file basis so we'll just let it happen

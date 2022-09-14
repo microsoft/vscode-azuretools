@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import * as types from '../../../../index';
 import * as vscode from 'vscode';
 import { RecursiveQuickPickStep } from '../RecursiveQuickPickStep';
-import { getLastNode, QuickPickWizardContext } from '../QuickPickWizardContext';
+import { getLastNode } from '../QuickPickWizardContext';
 import { NoResourceFoundError } from '../../../errors';
 import { AzureWizardPromptStep } from '../../../wizard/AzureWizardPromptStep';
-import { IActionContext } from '../../../../index';
 import { AzureWizard } from '../../../wizard/AzureWizard';
-import { ContextValueFilter, ContextValueFilterableTreeNode } from '../../../../hostapi.v2';
+import { isWrapper } from '../../../registerCommandWithTreeNodeUnwrapping';
 
-export async function contextValueExperience<TPick extends ContextValueFilterableTreeNode>(context: IActionContext, tdp: vscode.TreeDataProvider<TPick>, contextValueFilter: ContextValueFilter): Promise<TPick> {
-    const promptSteps: AzureWizardPromptStep<QuickPickWizardContext<TPick>>[] = [
+export async function contextValueExperience<TPick extends types.ContextValueFilterableTreeNode>(context: types.IActionContext, tdp: vscode.TreeDataProvider<TPick>, contextValueFilter: types.ContextValueFilter): Promise<TPick> {
+    const promptSteps: AzureWizardPromptStep<types.QuickPickWizardContext<TPick>>[] = [
         new RecursiveQuickPickStep(tdp, {
             contextValueFilter: contextValueFilter,
             skipIfOne: false,
@@ -21,7 +21,7 @@ export async function contextValueExperience<TPick extends ContextValueFilterabl
     ];
 
     // Fill in the `pickedNodes` property
-    const wizardContext = context as QuickPickWizardContext<TPick>;
+    const wizardContext = context as types.QuickPickWizardContext<TPick>;
     wizardContext.pickedNodes = [];
 
     const wizard = new AzureWizard(context, {
@@ -36,6 +36,6 @@ export async function contextValueExperience<TPick extends ContextValueFilterabl
     if (!lastPickedItem) {
         throw new NoResourceFoundError(wizardContext);
     } else {
-        return lastPickedItem;
+        return isWrapper(lastPickedItem) ? lastPickedItem.unwrap<TPick>() : lastPickedItem as unknown as TPick;
     }
 }

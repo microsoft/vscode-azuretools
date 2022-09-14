@@ -5,7 +5,7 @@
 
 import * as types from '../../../index';
 import * as vscode from 'vscode';
-import { getLastNode, QuickPickWizardContext } from './QuickPickWizardContext';
+import { getLastNode } from './QuickPickWizardContext';
 import { AzureWizardPromptStep } from '../../wizard/AzureWizardPromptStep';
 import { NoResourceFoundError } from '../../errors';
 import { parseError } from '../../parseError';
@@ -18,7 +18,7 @@ export interface SkipIfOneQuickPickOptions extends GenericQuickPickOptions {
     skipIfOne?: true;
 }
 
-export abstract class GenericQuickPickStep<TNode extends unknown, TContext extends QuickPickWizardContext<TNode>, TOptions extends GenericQuickPickOptions> extends AzureWizardPromptStep<TContext> {
+export abstract class GenericQuickPickStep<TNode extends unknown, TContext extends types.QuickPickWizardContext<TNode>, TOptions extends GenericQuickPickOptions> extends AzureWizardPromptStep<TContext> {
     public readonly supportsDuplicateSteps = true;
 
     public constructor(

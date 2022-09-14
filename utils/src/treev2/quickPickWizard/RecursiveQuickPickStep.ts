@@ -3,12 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ContextValueFilterableTreeNode } from '../../../hostapi.v2';
 import * as types from '../../../index';
 import { ContextValueFilterQuickPickOptions, ContextValueQuickPickStep } from './ContextValueQuickPickStep';
-import { getLastNode, QuickPickWizardContext } from './QuickPickWizardContext';
+import { getLastNode } from './QuickPickWizardContext';
 
-export class RecursiveQuickPickStep<TNode extends ContextValueFilterableTreeNode, TContext extends QuickPickWizardContext<TNode>> extends ContextValueQuickPickStep<TNode, TContext, ContextValueFilterQuickPickOptions> {
+export class RecursiveQuickPickStep<TNode extends types.ContextValueFilterableTreeNode, TContext extends types.QuickPickWizardContext<TNode>> extends ContextValueQuickPickStep<TNode, TContext, ContextValueFilterQuickPickOptions> {
     public async getSubWizard(wizardContext: TContext): Promise<types.IWizardOptions<TContext> | undefined> {
         const lastPickedItem = getLastNode(wizardContext);
 
