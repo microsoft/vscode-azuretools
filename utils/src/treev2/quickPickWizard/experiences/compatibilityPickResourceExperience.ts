@@ -11,13 +11,14 @@ import { getLastNode } from '../QuickPickWizardContext';
 import { NoResourceFoundError } from '../../../errors';
 import * as types from '../../../../index';
 import { AzureWizardPromptStep } from '../../../wizard/AzureWizardPromptStep';
-import { AzExtResourceType } from '../../../AzExtResourceType';
 import { AzureWizard } from '../../../wizard/AzureWizard';
 import { AzureResourceQuickPickWizardContext, ResourceGroupsItem } from '../../../../hostapi.v2';
 import { CompatibilityRecursiveQuickPickStep } from '../compatibility/CompatibilityRecursiveQuickPickStep';
 import { isWrapper } from '../../../registerCommandWithTreeNodeUnwrapping';
 
-export async function compatibilityPickResourceExperience<TPick>(context: types.IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: types.ContextValueFilter): Promise<TPick> {
+export async function compatibilityPickResourceExperience<TPick>(context: types.IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, options: types.CompatibilityPickResourceExperienceOptions): Promise<TPick> {
+    const { resourceTypes, childItemFilter } = options;
+
     const promptSteps: AzureWizardPromptStep<AzureResourceQuickPickWizardContext>[] = [
         new QuickPickAzureSubscriptionStep(tdp),
         new QuickPickGroupStep(tdp, {

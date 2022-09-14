@@ -1703,10 +1703,17 @@ export declare interface Wrapper {
  * @returns True if a wrapper, false otherwise
  */
 export declare function isWrapper(maybeWrapper: unknown): maybeWrapper is Wrapper;
+
 export declare function appResourceExperience<TPick extends ContextValueFilterableTreeNode>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: ContextValueFilter): Promise<TPick>;
 export declare function contextValueExperience<TPick extends ContextValueFilterableTreeNode>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, contextValueFilter: ContextValueFilter): Promise<TPick>;
 export declare function findByIdExperience<TPick extends FindableByIdTreeNode>(context: IActionContext, tdp: TreeDataProvider<TPick>, id: string | Uri): Promise<TPick>;
-export declare function compatibilityPickResourceExperience<TPick>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: ContextValueFilter): Promise<TPick>;
+
+interface CompatibilityPickResourceExperienceOptions {
+    resourceTypes?: AzExtResourceType | AzExtResourceType[];
+    childItemFilter?: ContextValueFilter
+}
+
+export declare function compatibilityPickResourceExperience<TPick>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, options: CompatibilityPickResourceExperienceOptions): Promise<TPick>;
 
 export declare interface QuickPickWizardContext<TNode extends unknown> extends IActionContext {
     pickedNodes: TNode[];
