@@ -28,7 +28,7 @@ export class CompatibilityContextValueQuickPickStep<TNode extends types.Compatib
      */
     private async provideCompatabilityWithPickTreeItemImpl(wizardContext: TContext): Promise<boolean> {
         const lastPickedItem = getLastNode(wizardContext);
-        const lastPickedItemUnwrapped = isWrapper(lastPickedItem) ? lastPickedItem.unwrap() : lastPickedItem
+        const lastPickedItemUnwrapped = isWrapper(lastPickedItem) ? lastPickedItem.unwrap() : lastPickedItem;
         if (isAzExtParentTreeItem(lastPickedItemUnwrapped)) {
             const children = await this.treeDataProvider.getChildren(lastPickedItem);
             if (children && children.length) {
