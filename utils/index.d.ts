@@ -360,7 +360,6 @@ export interface IAzExtParentTreeItem extends IAzExtTreeItem {
  * NOTE: *Impl methods are not meant to be called directly - just implemented.
  */
 export declare abstract class AzExtTreeItem implements IAzExtTreeItem {
-    public readonly _isAzExtTreeItem = true;
     //#region Properties implemented by base class
     /**
      * This is is used for the openInPortal action. It is also used per the following documentation copied from VS Code:
@@ -465,6 +464,8 @@ export declare abstract class AzExtTreeItem implements IAzExtTreeItem {
      */
     public resolveTooltip?(): Promise<string | MarkdownString>;
 }
+
+export declare function isAzExtTreeItem(maybeTreeItem: unknown): maybeTreeItem is AzExtTreeItem;
 
 export interface IGenericTreeItemOptions {
     id?: string;

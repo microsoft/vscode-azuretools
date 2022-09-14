@@ -13,7 +13,6 @@ import { settingUtils } from '../utils/settingUtils';
 import { showContextValueSetting } from '../constants';
 
 export abstract class AzExtTreeItem implements types.AzExtTreeItem {
-
     public readonly _isAzExtTreeItem = true;
 
     //#region Properties implemented by base class
@@ -215,4 +214,8 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
             }
         }
     }
+}
+
+export function isAzExtTreeItem(maybeTreeItem: unknown): maybeTreeItem is types.AzExtTreeItem {
+    return (maybeTreeItem as AzExtTreeItem)._isAzExtTreeItem === true;
 }
