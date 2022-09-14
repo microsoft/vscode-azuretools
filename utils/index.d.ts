@@ -1737,20 +1737,16 @@ export declare interface ContextValueFilter {
     exclude?: string | RegExp | (string | RegExp)[];
 }
 
+interface QuickPickOptions {
+    readonly contextValues: Array<string>;
+    readonly isLeaf: boolean;
+}
+
 type CreateCallback<TNode = unknown> = (context: IActionContext) => TNode | Promise<TNode>;
 
 type CreateOptions<TNode = unknown> = {
     label?: string;
     callback: CreateCallback<TNode>;
-}
-
-interface QuickPickOptions {
-    readonly contextValues: Array<string>;
-    readonly isLeaf: boolean;
-    /**
-     * @deprecated use
-     */
-    readonly createChild?: CreateOptions;
 }
 
 interface CompatibleQuickPickOptions extends QuickPickOptions {
