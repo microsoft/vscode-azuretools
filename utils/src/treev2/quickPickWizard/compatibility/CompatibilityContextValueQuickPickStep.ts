@@ -3,20 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ContextValueFilter, ContextValueFilterableTreeNode } from "../../../../hostapi.v2";
+import * as types from "../../../../index";
 import { isAzExtParentTreeItem } from "../../../tree/InternalInterfaces";
 import { ContextValueQuickPickStep } from "../ContextValueQuickPickStep";
-import { QuickPickWizardContext, getLastNode } from "../QuickPickWizardContext";
-import { isBox } from "../../../registerCommandWithTreeNodeUnboxing";
+import { getLastNode } from "../QuickPickWizardContext";
 import { AzExtTreeItem } from "../../../tree/AzExtTreeItem";
 import { AzExtParentTreeItem } from "../../../tree/AzExtParentTreeItem";
 import { GenericQuickPickOptions } from "../GenericQuickPickStep";
+import { isWrapper } from "../../../registerCommandWithTreeNodeUnwrapping";
 
 export interface CompatibilityContextValueFilterQuickPickOptions extends GenericQuickPickOptions {
-    contextValueFilter: ContextValueFilter;
+    contextValueFilter: types.ContextValueFilter;
 }
 
-export class CompatibilityContextValueQuickPickStep<TNode extends ContextValueFilterableTreeNode, TContext extends QuickPickWizardContext<TNode>, TOptions extends CompatibilityContextValueFilterQuickPickOptions> extends ContextValueQuickPickStep<TNode, TContext, TOptions> {
+export class CompatibilityContextValueQuickPickStep<TNode extends types.ContextValueFilterableTreeNode, TContext extends types.QuickPickWizardContext<TNode>, TOptions extends CompatibilityContextValueFilterQuickPickOptions> extends ContextValueQuickPickStep<TNode, TContext, TOptions> {
 
     public override async prompt(wizardContext: TContext): Promise<void> {
         await this.provideCompatabilityWithPickTreeItemImpl(wizardContext) || await super.prompt(wizardContext);
@@ -24,14 +24,14 @@ export class CompatibilityContextValueQuickPickStep<TNode extends ContextValueFi
 
     private async provideCompatabilityWithPickTreeItemImpl(wizardContext: TContext): Promise<boolean> {
         const lastPickedItem = getLastNode(wizardContext);
-        const lastPickedItemUnwrapped = isBox(lastPickedItem) ? lastPickedItem.unwrap() : lastPickedItem
+        const lastPickedItemUnwrapped = isWrapper(lastPickedItem) ? lastPickedItem.unwrap() : lastPickedItem
         if (isAzExtParentTreeItem(lastPickedItemUnwrapped)) {
             const children = await this.treeDataProvider.getChildren(lastPickedItem);
             if (children && children.length) {
                 const customChild = await this.getCustomChildren(wizardContext, lastPickedItemUnwrapped);
 
                 const customPick = children.find((child) => {
-                    const ti: AzExtTreeItem = isBox(child) ? child.unwrap<AzExtTreeItem>() : child as AzExtTreeItem;
+                    const ti: AzExtTreeItem = isWrapper(child) ? child.unwrap() as AzExtTreeItem : child as AzExtTreeItem;
                     return ti.fullId === customChild?.fullId;
                 });
 

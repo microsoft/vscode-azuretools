@@ -3,23 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { IAzureQuickPickItem, IWizardOptions } from "../../../../index";
-import type { ContextValueFilterableTreeNode, CreateCallback, CreateOptions } from "../../../../hostapi.v2";
+import * as types from "../../../../index";
 import { isAzExtParentTreeItem } from "../../../tree/InternalInterfaces";
-import { isContextValueFilterableTreeNodeV2 } from "../ContextValueQuickPickStep";
-import { QuickPickWizardContext, getLastNode } from "../QuickPickWizardContext";
+import { getLastNode } from "../QuickPickWizardContext";
 import { CompatibilityContextValueFilterQuickPickOptions, CompatibilityContextValueQuickPickStep } from './CompatibilityContextValueQuickPickStep';
 import { localize } from "../../../localize";
 import { NoResourceFoundError, UserCancelledError } from "../../../errors";
+
+type CreateCallback<TNode = unknown> = (context: types.IActionContext) => TNode | Promise<TNode>;
+
+type CreateOptions<TNode = unknown> = {
+    label?: string;
+    callback: CreateCallback<TNode>;
+}
 
 export interface CompatibilityRecursiveQuickPickOptions extends CompatibilityContextValueFilterQuickPickOptions {
     create?: CreateOptions;
 }
 
-export class CompatibilityRecursiveQuickPickStep<TNode extends ContextValueFilterableTreeNode, TContext extends QuickPickWizardContext<TNode>> extends CompatibilityContextValueQuickPickStep<TNode, TContext, CompatibilityRecursiveQuickPickOptions> {
+export class CompatibilityRecursiveQuickPickStep<TNode extends types.ContextValueFilterableTreeNode, TContext extends types.QuickPickWizardContext<TNode>> extends CompatibilityContextValueQuickPickStep<TNode, TContext, CompatibilityRecursiveQuickPickOptions> {
 
     protected override async promptInternal(wizardContext: TContext): Promise<TNode> {
-        const picks = await this.getPicks(wizardContext) as IAzureQuickPickItem<TNode>[];
+        const picks = await this.getPicks(wizardContext) as types.IAzureQuickPickItem<TNode>[];
 
         if (picks.length === 1 && this.pickOptions.skipIfOne) {
             return picks[0].data;
@@ -49,7 +54,7 @@ export class CompatibilityRecursiveQuickPickStep<TNode extends ContextValueFilte
         }
     }
 
-    protected override async getPicks(wizardContext: TContext): Promise<IAzureQuickPickItem<TNode>[]> {
+    protected override async getPicks(wizardContext: TContext): Promise<types.IAzureQuickPickItem<TNode>[]> {
         const lastPickedItem: TNode | undefined = getLastNode(wizardContext);
 
         // TODO: if `lastPickedItem` is an `AzExtParentTreeItem`, should we clear its cache?
@@ -70,7 +75,7 @@ export class CompatibilityRecursiveQuickPickStep<TNode extends ContextValueFilte
             promptChoices = directChoices;
         }
 
-        const picks: IAzureQuickPickItem<TNode | CreateCallback>[] = [];
+        const picks: types.IAzureQuickPickItem<TNode | CreateCallback>[] = [];
         for (const choice of promptChoices) {
             picks.push(await this.getQuickPickItem(choice as TNode));
         }
@@ -80,17 +85,17 @@ export class CompatibilityRecursiveQuickPickStep<TNode extends ContextValueFilte
         }
 
 
-        return picks as IAzureQuickPickItem<TNode>[];
+        return picks as types.IAzureQuickPickItem<TNode>[];
     }
 
-    private getCreatePick(options: CreateOptions): IAzureQuickPickItem<CreateCallback> {
+    private getCreatePick(options: CreateOptions): types.IAzureQuickPickItem<CreateCallback> {
         return {
             label: options.label || localize('createQuickPickLabel', '$(add) Create...'),
             data: options.callback,
         };
     }
 
-    public async getSubWizard(wizardContext: TContext): Promise<IWizardOptions<TContext> | undefined> {
+    public async getSubWizard(wizardContext: TContext): Promise<types.IWizardOptions<TContext> | undefined> {
         const lastPickedItem = getLastNode(wizardContext);
 
         if (!lastPickedItem) {
@@ -120,10 +125,6 @@ export class CompatibilityRecursiveQuickPickStep<TNode extends ContextValueFilte
     }
 
     private getCreateOptions(node: TNode): CreateOptions | undefined {
-        if (isContextValueFilterableTreeNodeV2(node)) {
-            return node.quickPickOptions.createChild;
-        }
-
         if (isAzExtParentTreeItem(node)) {
             return {
                 label: node.createNewLabel,

@@ -7,18 +7,17 @@ import * as vscode from 'vscode';
 import { QuickPickAzureSubscriptionStep } from '../quickPickAzureResource/QuickPickAzureSubscriptionStep';
 import { QuickPickGroupStep } from '../quickPickAzureResource/QuickPickGroupStep';
 import { QuickPickAppResourceStep } from '../quickPickAzureResource/QuickPickAppResourceStep';
-import { AzureResourceQuickPickWizardContext } from '../quickPickAzureResource/AzureResourceQuickPickWizardContext';
 import { getLastNode } from '../QuickPickWizardContext';
 import { NoResourceFoundError } from '../../../errors';
-import { IActionContext } from '../../../../index';
+import * as types from '../../../../index';
 import { AzureWizardPromptStep } from '../../../wizard/AzureWizardPromptStep';
 import { AzExtResourceType } from '../../../AzExtResourceType';
 import { AzureWizard } from '../../../wizard/AzureWizard';
-import { ContextValueFilter, ResourceGroupsItem } from '../../../../hostapi.v2';
-import { isBox } from '../../../registerCommandWithTreeNodeUnboxing';
+import { AzureResourceQuickPickWizardContext, ResourceGroupsItem } from '../../../../hostapi.v2';
 import { CompatibilityRecursiveQuickPickStep } from '../compatibility/CompatibilityRecursiveQuickPickStep';
+import { isWrapper } from '../../../registerCommandWithTreeNodeUnwrapping';
 
-export async function compatibilityPickResourceExperience<TPick>(context: IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: ContextValueFilter): Promise<TPick> {
+export async function compatibilityPickResourceExperience<TPick>(context: types.IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: types.ContextValueFilter): Promise<TPick> {
     const promptSteps: AzureWizardPromptStep<AzureResourceQuickPickWizardContext>[] = [
         new QuickPickAzureSubscriptionStep(tdp),
         new QuickPickGroupStep(tdp, {
@@ -54,6 +53,6 @@ export async function compatibilityPickResourceExperience<TPick>(context: IActio
     if (!lastPickedItem) {
         throw new NoResourceFoundError(wizardContext);
     } else {
-        return isBox(lastPickedItem) ? lastPickedItem.unwrap<TPick>() : lastPickedItem as unknown as TPick;
+        return isWrapper(lastPickedItem) ? lastPickedItem.unwrap<TPick>() : lastPickedItem as unknown as TPick;
     }
 }
