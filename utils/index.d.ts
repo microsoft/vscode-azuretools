@@ -1753,7 +1753,7 @@ interface CompatibleQuickPickOptions extends QuickPickOptions {
     readonly createChild?: CreateOptions;
 }
 
-export declare interface ContextValueFilterableTreeNodeV2 {
+export declare interface ContextValueFilterableTreeNode {
     readonly quickPickOptions: QuickPickOptions;
 }
 
@@ -1761,9 +1761,7 @@ export declare interface CompatibleContextValueFilterableTreeNode {
     readonly quickPickOptions: CompatibleQuickPickOptions;
 }
 
-export declare type ContextValueFilterableTreeNode = ContextValueFilterableTreeNodeV2;
-
-export declare interface FindableByIdTreeNodeV2 extends ContextValueFilterableTreeNodeV2 {
+export declare interface FindableByIdTreeNodeV2 extends ContextValueFilterableTreeNode {
     id: string;
 }
 

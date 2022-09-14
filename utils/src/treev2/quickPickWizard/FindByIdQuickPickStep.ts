@@ -75,11 +75,11 @@ export class FindByIdQuickPickStep<TNode extends types.FindableByIdTreeNode, TCo
     }
 }
 
-function isContextValueFilterableTreeNodeV2(maybeNode: unknown): maybeNode is types.ContextValueFilterableTreeNodeV2 {
+function isContextValueFilterableTreeNodeV2(maybeNode: unknown): maybeNode is types.ContextValueFilterableTreeNode {
     if (typeof maybeNode === 'object') {
-        return Array.isArray((maybeNode as types.ContextValueFilterableTreeNodeV2).quickPickOptions?.contextValues) &&
-            (maybeNode as types.ContextValueFilterableTreeNodeV2).quickPickOptions?.isLeaf !== undefined &&
-            (maybeNode as types.ContextValueFilterableTreeNodeV2).quickPickOptions?.isLeaf !== null;
+        return Array.isArray((maybeNode as types.ContextValueFilterableTreeNode).quickPickOptions.contextValues) &&
+            (maybeNode as types.ContextValueFilterableTreeNode).quickPickOptions?.isLeaf !== undefined &&
+            (maybeNode as types.ContextValueFilterableTreeNode).quickPickOptions?.isLeaf !== null;
     }
 
     return false;
