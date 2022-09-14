@@ -3,7 +3,7 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import type { IActionContext, AzExtResourceType, AzExtTreeItem, ContextValueFilterableTreeNode, QuickPickWizardContext } from "./index";
+import type { IActionContext, AzExtResourceType, ContextValueFilterableTreeNode, QuickPickWizardContext } from "./index";
 import * as vscode from 'vscode';
 import type { Environment } from '@azure/ms-rest-azure-env';
 
