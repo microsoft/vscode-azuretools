@@ -8,12 +8,11 @@ import { isAzExtParentTreeItem } from '../../tree/InternalInterfaces';
 import { QuickPickWizardContext } from './QuickPickWizardContext';
 import { ContextValueFilter, ContextValueFilterableTreeNode, ContextValueFilterableTreeNodeV2 } from '../../../hostapi.v2';
 
-export type ContextValueFilterQuickPickOptions = GenericQuickPickOptions & {
+export interface ContextValueFilterQuickPickOptions extends GenericQuickPickOptions {
     contextValueFilter: ContextValueFilter;
 }
 
 export class ContextValueQuickPickStep<TNode extends ContextValueFilterableTreeNode, TContext extends QuickPickWizardContext<TNode>, TOptions extends ContextValueFilterQuickPickOptions> extends GenericQuickPickStep<TNode, TContext, TOptions> {
-
     protected override isDirectPick(node: TNode): boolean {
         const includeOption = this.pickOptions.contextValueFilter.include;
         const excludeOption = this.pickOptions.contextValueFilter.exclude;

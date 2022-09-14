@@ -10,12 +10,12 @@ import { AzureWizardPromptStep } from '../../wizard/AzureWizardPromptStep';
 import { NoResourceFoundError } from '../../errors';
 import { parseError } from '../../parseError';
 
-export interface SkipIfOneQuickPickOptions {
-    skipIfOne?: true;
-}
-
 export interface GenericQuickPickOptions {
     skipIfOne?: boolean;
+}
+
+export interface SkipIfOneQuickPickOptions {
+    skipIfOne?: true;
 }
 
 export abstract class GenericQuickPickStep<TNode extends unknown, TContext extends QuickPickWizardContext<TNode>, TOptions extends GenericQuickPickOptions> extends AzureWizardPromptStep<TContext> {
@@ -31,8 +31,7 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
     public async prompt(wizardContext: TContext): Promise<void> {
         try {
             const pick = await this.promptInternal(wizardContext);
-            wizardContext.pickedNodes.push(pick as TNode);
-
+            wizardContext.pickedNodes.push(pick);
         } catch (err) {
             const error = parseError(err);
             if (error.errorType === 'GoBackError') {
@@ -74,8 +73,7 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
         const directChoices = children.filter(c => this.isDirectPick(c));
         const indirectChoices = children.filter(c => this.isIndirectPick(c));
 
-        let promptChoices: TNode[] = [];
-
+        let promptChoices: TNode[];
         if (directChoices.length === 0) {
             if (indirectChoices.length === 0) {
                 throw new NoResourceFoundError();
