@@ -21,10 +21,14 @@ export async function appResourceExperience<TPick>(context: types.IActionContext
     const promptSteps: AzureWizardPromptStep<AzureResourceQuickPickWizardContext>[] = [
         new QuickPickAzureSubscriptionStep(tdp),
         new QuickPickGroupStep(tdp, {
-            groupType: resourceTypes ? Array.isArray(resourceTypes) ? resourceTypes : [resourceTypes] : undefined,
+            groupType: resourceTypes ?
+                (Array.isArray(resourceTypes) ? resourceTypes : [resourceTypes]) :
+                undefined,
         }),
         new QuickPickAppResourceStep(tdp, {
-            resourceTypes: resourceTypes ? Array.isArray(resourceTypes) ? resourceTypes : [resourceTypes] : undefined,
+            resourceTypes: resourceTypes ?
+                (Array.isArray(resourceTypes) ? resourceTypes : [resourceTypes]) :
+                undefined,
             skipIfOne: false,
         }),
     ];
