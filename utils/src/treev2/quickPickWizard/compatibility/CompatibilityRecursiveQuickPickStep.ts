@@ -78,35 +78,20 @@ export class CompatibilityRecursiveQuickPickStep<TNode extends types.CompatibleC
     }
 
     protected override async getPicks(wizardContext: TContext): Promise<types.IAzureQuickPickItem<TNode>[]> {
-        const lastPickedItem: TNode | undefined = getLastNode(wizardContext);
-
-        // TODO: if `lastPickedItem` is an `AzExtParentTreeItem`, should we clear its cache?
-        const children = (await this.treeDataProvider.getChildren(lastPickedItem)) || [];
-
-        const directChoices = children.filter(c => this.isDirectPick(c));
-        const indirectChoices = children.filter(c => this.isIndirectPick(c));
-
-        let promptChoices: (TNode | types.CreateCallback)[] = [];
-
-        if (directChoices.length === 0) {
-            if (indirectChoices.length === 0 && !this.pickOptions.create) {
-                throw new NoResourceFoundError();
-            } else {
-                promptChoices = indirectChoices;
-            }
-        } else {
-            promptChoices = directChoices;
-        }
-
         const picks: types.IAzureQuickPickItem<TNode | types.CreateCallback>[] = [];
-        for (const choice of promptChoices) {
-            picks.push(await this.getQuickPickItem(choice as TNode));
+        try {
+            picks.push(...await super.getPicks(wizardContext));
+        } catch (error) {
+            if (error instanceof NoResourceFoundError && !!this.pickOptions.create) {
+                // swallow NoResourceFoundError if create is defined, since we'll add a create pick
+            } else {
+                throw error;
+            }
         }
 
         if (this.pickOptions.create) {
             picks.push(this.getCreatePick(this.pickOptions.create));
         }
-
 
         return picks as types.IAzureQuickPickItem<TNode>[];
     }

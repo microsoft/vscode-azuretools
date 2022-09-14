@@ -104,7 +104,7 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
      */
     protected abstract isIndirectPick(node: TNode): boolean;
 
-    protected async getQuickPickItem(resource: TNode): Promise<types.IAzureQuickPickItem<TNode>> {
+    private async getQuickPickItem(resource: TNode): Promise<types.IAzureQuickPickItem<TNode>> {
         const treeItem = await Promise.resolve(this.treeDataProvider.getTreeItem(resource));
 
         return {
