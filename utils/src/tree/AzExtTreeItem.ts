@@ -13,6 +13,9 @@ import { settingUtils } from '../utils/settingUtils';
 import { showContextValueSetting } from '../constants';
 
 export abstract class AzExtTreeItem implements types.AzExtTreeItem {
+
+    public readonly _isAzExtTreeItem = true;
+
     //#region Properties implemented by base class
     public abstract label: string;
     public abstract contextValue: string;
@@ -120,7 +123,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     }
 
     public get tooltip(): string | undefined {
-        if(process.env.DEBUGTELEMETRY === 'v' && !!settingUtils.getWorkspaceSetting<unknown>(showContextValueSetting)) {
+        if (process.env.DEBUGTELEMETRY === 'v' && !!settingUtils.getWorkspaceSetting<unknown>(showContextValueSetting)) {
             return `Context: "${this.contextValue}"`;
         } else {
             return this._tooltip;

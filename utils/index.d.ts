@@ -6,7 +6,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { Environment } from '@azure/ms-rest-azure-env';
-import { CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions as VSCodeQuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
@@ -360,6 +360,7 @@ export interface IAzExtParentTreeItem extends IAzExtTreeItem {
  * NOTE: *Impl methods are not meant to be called directly - just implemented.
  */
 export declare abstract class AzExtTreeItem implements IAzExtTreeItem {
+    public readonly _isAzExtTreeItem = true;
     //#region Properties implemented by base class
     /**
      * This is is used for the openInPortal action. It is also used per the following documentation copied from VS Code:
@@ -993,7 +994,7 @@ export interface IAzureQuickPickItem<T = undefined> extends QuickPickItem {
 /**
  * Provides additional options for QuickPicks used in Azure Extensions
  */
-export interface IAzureQuickPickOptions extends QuickPickOptions, AzExtUserInputOptions {
+export interface IAzureQuickPickOptions extends VSCodeQuickPickOptions, AzExtUserInputOptions {
     /**
      * An optional id to identify this QuickPick across sessions, used in persisting previous selections
      * If not specified, a hash of the placeHolder will be used
@@ -1729,14 +1730,35 @@ export declare interface ContextValueFilter {
     exclude?: string | RegExp | (string | RegExp)[];
 }
 
-export declare interface ContextValueFilterableTreeNodeV2 {
-    readonly quickPickOptions: {
-        readonly contextValues: Array<string>;
-        readonly isLeaf: boolean;
-    }
+type CreateCallback<TNode = unknown> = (context: IActionContext) => TNode | Promise<TNode>;
+
+type CreateOptions<TNode = unknown> = {
+    label?: string;
+    callback: CreateCallback<TNode>;
 }
 
-export declare type ContextValueFilterableTreeNode = ContextValueFilterableTreeNodeV2 | AzExtTreeItem;
+interface QuickPickOptions {
+    readonly contextValues: Array<string>;
+    readonly isLeaf: boolean;
+    /**
+     * @deprecated use
+     */
+    readonly createChild?: CreateOptions;
+}
+
+interface CompatibleQuickPickOptions extends QuickPickOptions {
+    readonly createChild?: CreateOptions;
+}
+
+export declare interface ContextValueFilterableTreeNodeV2 {
+    readonly quickPickOptions: QuickPickOptions;
+}
+
+export declare interface CompatibleContextValueFilterableTreeNode {
+    readonly quickPickOptions: CompatibleQuickPickOptions;
+}
+
+export declare type ContextValueFilterableTreeNode = ContextValueFilterableTreeNodeV2;
 
 export declare interface FindableByIdTreeNodeV2 extends ContextValueFilterableTreeNodeV2 {
     id: string;

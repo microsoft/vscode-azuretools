@@ -16,7 +16,7 @@ export interface CompatibilityContextValueFilterQuickPickOptions extends Generic
     contextValueFilter: types.ContextValueFilter;
 }
 
-export class CompatibilityContextValueQuickPickStep<TNode extends types.ContextValueFilterableTreeNode, TContext extends types.QuickPickWizardContext<TNode>, TOptions extends CompatibilityContextValueFilterQuickPickOptions> extends ContextValueQuickPickStep<TNode, TContext, TOptions> {
+export class CompatibilityContextValueQuickPickStep<TNode extends types.CompatibleContextValueFilterableTreeNode, TContext extends types.QuickPickWizardContext<TNode>, TOptions extends CompatibilityContextValueFilterQuickPickOptions> extends ContextValueQuickPickStep<TNode, TContext, TOptions> {
 
     public override async prompt(wizardContext: TContext): Promise<void> {
         await this.provideCompatabilityWithPickTreeItemImpl(wizardContext) || await super.prompt(wizardContext);
@@ -31,7 +31,7 @@ export class CompatibilityContextValueQuickPickStep<TNode extends types.ContextV
                 const customChild = await this.getCustomChildren(wizardContext, lastPickedItemUnwrapped);
 
                 const customPick = children.find((child) => {
-                    const ti: AzExtTreeItem = isWrapper(child) ? child.unwrap() as AzExtTreeItem : child as AzExtTreeItem;
+                    const ti: AzExtTreeItem = isWrapper(child) ? child.unwrap() : child as unknown as AzExtTreeItem;
                     return ti.fullId === customChild?.fullId;
                 });
 

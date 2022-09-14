@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as types from "../../../../index";
-import { isAzExtParentTreeItem } from "../../../tree/InternalInterfaces";
 import { getLastNode } from "../QuickPickWizardContext";
 import { CompatibilityContextValueFilterQuickPickOptions, CompatibilityContextValueQuickPickStep } from './CompatibilityContextValueQuickPickStep';
 import { localize } from "../../../localize";
@@ -21,7 +20,7 @@ export interface CompatibilityRecursiveQuickPickOptions extends CompatibilityCon
     create?: CreateOptions;
 }
 
-export class CompatibilityRecursiveQuickPickStep<TNode extends types.ContextValueFilterableTreeNode, TContext extends types.QuickPickWizardContext<TNode>> extends CompatibilityContextValueQuickPickStep<TNode, TContext, CompatibilityRecursiveQuickPickOptions> {
+export class CompatibilityRecursiveQuickPickStep<TNode extends types.CompatibleContextValueFilterableTreeNode, TContext extends types.QuickPickWizardContext<TNode>> extends CompatibilityContextValueQuickPickStep<TNode, TContext, CompatibilityRecursiveQuickPickOptions> {
 
     protected override async promptInternal(wizardContext: TContext): Promise<TNode> {
         const picks = await this.getPicks(wizardContext) as types.IAzureQuickPickItem<TNode>[];
@@ -108,32 +107,17 @@ export class CompatibilityRecursiveQuickPickStep<TNode extends types.ContextValu
             // No need to continue prompting
             return undefined;
         } else {
-
-            const create = this.getCreateOptions(lastPickedItem);
             // Need to keep going because the last picked node is not a match
             return {
                 hideStepCount: true,
                 promptSteps: [
                     new CompatibilityRecursiveQuickPickStep(this.treeDataProvider, {
                         ...this.pickOptions,
-                        skipIfOne: !create,
-                        create,
+                        skipIfOne: !lastPickedItem.quickPickOptions.createChild,
+                        create: lastPickedItem.quickPickOptions.createChild,
                     })
                 ],
             };
         }
-    }
-
-    private getCreateOptions(node: TNode): CreateOptions | undefined {
-        if (isAzExtParentTreeItem(node)) {
-            return {
-                label: node.createNewLabel,
-                callback: async () => {
-                    node.createChild.bind(node) as typeof node.createChild
-                },
-            }
-        }
-
-        return undefined;
     }
 }

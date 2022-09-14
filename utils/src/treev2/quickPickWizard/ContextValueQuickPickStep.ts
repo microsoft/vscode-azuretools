@@ -21,9 +21,7 @@ export class ContextValueQuickPickStep<TNode extends types.ContextValueFilterabl
             (Array.isArray(excludeOption) ? excludeOption : [excludeOption]) :
             [];
 
-        const nodeContextValues: string[] = isContextValueFilterableTreeNodeV2(node) ?
-            node.quickPickOptions.contextValues :
-            [node.contextValue];
+        const nodeContextValues: string[] = node.quickPickOptions.contextValues;
 
         return includeArray.some(i => this.matchesSingleFilter(i, nodeContextValues)) &&
             !excludeArray.some(e => this.matchesSingleFilter(e, nodeContextValues));
