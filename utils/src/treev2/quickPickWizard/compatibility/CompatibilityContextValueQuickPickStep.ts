@@ -3,14 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { isBox, AzExtTreeItem, AzExtParentTreeItem } from "../../../..";
-import { ContextValueFilter, ContextValueFilterableTreeNode } from "../../../../hostapi.v2";
+import type { ContextValueFilter, ContextValueFilterableTreeNode } from "../../../../hostapi.v2";
 import { isAzExtParentTreeItem } from "../../../tree/InternalInterfaces";
 import { ContextValueQuickPickStep } from "../ContextValueQuickPickStep";
 import { QuickPickWizardContext, getLastNode } from "../QuickPickWizardContext";
-import { CompatibilityGenericQuickPickOptions } from "./CompatibilityGenericQuickPickStep";
+import { isBox } from "../../../registerCommandWithTreeNodeUnboxing";
+import { AzExtTreeItem } from "../../../tree/AzExtTreeItem";
+import { AzExtParentTreeItem } from "../../../tree/AzExtParentTreeItem";
+import { GenericQuickPickOptions } from "../GenericQuickPickStep";
 
-export type CompatibilityContextValueFilterQuickPickOptions = CompatibilityGenericQuickPickOptions & {
+export type CompatibilityContextValueFilterQuickPickOptions = GenericQuickPickOptions & {
     contextValueFilter: ContextValueFilter;
 }
 

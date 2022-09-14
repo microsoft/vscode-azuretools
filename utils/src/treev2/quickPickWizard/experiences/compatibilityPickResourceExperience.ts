@@ -8,7 +8,6 @@ import { QuickPickAzureSubscriptionStep } from '../quickPickAzureResource/QuickP
 import { QuickPickGroupStep } from '../quickPickAzureResource/QuickPickGroupStep';
 import { QuickPickAppResourceStep } from '../quickPickAzureResource/QuickPickAppResourceStep';
 import { AzureResourceQuickPickWizardContext } from '../quickPickAzureResource/AzureResourceQuickPickWizardContext';
-import { RecursiveQuickPickStep } from '../RecursiveQuickPickStep';
 import { getLastNode } from '../QuickPickWizardContext';
 import { NoResourceFoundError } from '../../../errors';
 import { IActionContext } from '../../../../index';
