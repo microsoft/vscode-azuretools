@@ -4,11 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as types from "../../../../index";
-import { isAzExtParentTreeItem } from "../../../tree/InternalInterfaces";
 import { ContextValueFilterQuickPickOptions, ContextValueQuickPickStep } from "../ContextValueQuickPickStep";
 import { getLastNode } from "../QuickPickWizardContext";
 import { AzExtTreeItem } from "../../../tree/AzExtTreeItem";
-import { AzExtParentTreeItem } from "../../../tree/AzExtParentTreeItem";
+import { AzExtParentTreeItem, isAzExtParentTreeItem } from "../../../tree/AzExtParentTreeItem";
 import { isWrapper } from "../../../registerCommandWithTreeNodeUnwrapping";
 
 /**
