@@ -6,7 +6,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { Environment } from '@azure/ms-rest-azure-env';
-import { CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions as VSCodeQuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
@@ -464,6 +464,8 @@ export declare abstract class AzExtTreeItem implements IAzExtTreeItem {
      */
     public resolveTooltip?(): Promise<string | MarkdownString>;
 }
+
+export declare function isAzExtTreeItem(maybeTreeItem: unknown): maybeTreeItem is AzExtTreeItem;
 
 export interface IGenericTreeItemOptions {
     id?: string;
@@ -993,7 +995,7 @@ export interface IAzureQuickPickItem<T = undefined> extends QuickPickItem {
 /**
  * Provides additional options for QuickPicks used in Azure Extensions
  */
-export interface IAzureQuickPickOptions extends QuickPickOptions, AzExtUserInputOptions {
+export interface IAzureQuickPickOptions extends VSCodeQuickPickOptions, AzExtUserInputOptions {
     /**
      * An optional id to identify this QuickPick across sessions, used in persisting previous selections
      * If not specified, a hash of the placeHolder will be used
@@ -1703,9 +1705,16 @@ export declare interface Wrapper {
  */
 export declare function isWrapper(maybeWrapper: unknown): maybeWrapper is Wrapper;
 
-export declare function appResourceExperience<TPick extends ContextValueFilterableTreeNode>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceType: AzExtResourceType, childItemFilter?: ContextValueFilter): Promise<TPick>;
-export declare function contextValueExperience<TPick extends ContextValueFilterableTreeNode>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, contextValueFilter: ContextValueFilter): Promise<TPick>;
+export declare function appResourceExperience<TPick extends ContextValueFilterableTreeNode>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: ContextValueFilter): Promise<TPick>;
+export declare function contextValueExperience<TPick extends ContextValueFilterableTreeNode>(context: IActionContext, tdp: TreeDataProvider<TPick>, contextValueFilter: ContextValueFilter): Promise<TPick>;
 export declare function findByIdExperience<TPick extends FindableByIdTreeNode>(context: IActionContext, tdp: TreeDataProvider<TPick>, id: string | Uri): Promise<TPick>;
+
+interface CompatibilityPickResourceExperienceOptions {
+    resourceTypes?: AzExtResourceType | AzExtResourceType[];
+    childItemFilter?: ContextValueFilter
+}
+
+export declare function compatibilityPickAppResourceExperience<TPick extends AzExtTreeItem>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, options: CompatibilityPickResourceExperienceOptions): Promise<TPick>;
 
 export declare interface QuickPickWizardContext<TNode extends unknown> extends IActionContext {
     pickedNodes: TNode[];
@@ -1729,16 +1738,31 @@ export declare interface ContextValueFilter {
     exclude?: string | RegExp | (string | RegExp)[];
 }
 
-export declare interface ContextValueFilterableTreeNodeV2 {
-    readonly quickPickOptions: {
-        readonly contextValues: Array<string>;
-        readonly isLeaf: boolean;
-    }
+interface QuickPickOptions {
+    readonly contextValues: Array<string>;
+    readonly isLeaf: boolean;
 }
 
-export declare type ContextValueFilterableTreeNode = ContextValueFilterableTreeNodeV2 | AzExtTreeItem;
+type CreateCallback<TNode = unknown> = (context: IActionContext) => TNode | Promise<TNode>;
 
-export declare interface FindableByIdTreeNodeV2 extends ContextValueFilterableTreeNodeV2 {
+type CreateOptions<TNode = unknown> = {
+    label?: string;
+    callback: CreateCallback<TNode>;
+}
+
+interface CompatibleQuickPickOptions extends QuickPickOptions {
+    readonly createChild?: CreateOptions;
+}
+
+export declare interface ContextValueFilterableTreeNode {
+    readonly quickPickOptions: QuickPickOptions;
+}
+
+export declare interface CompatibleContextValueFilterableTreeNode {
+    readonly quickPickOptions: CompatibleQuickPickOptions;
+}
+
+export declare interface FindableByIdTreeNodeV2 extends ContextValueFilterableTreeNode {
     id: string;
 }
 
@@ -1752,4 +1776,4 @@ export declare type FindableByIdTreeNode = FindableByIdTreeNodeV2 | AzExtTreeIte
  * The telemetry event for this command will be named telemetryId if specified, otherwise it defaults to the commandId
  * NOTE: If the environment variable `DEBUGTELEMETRY` is set to a non-empty, non-zero value, then telemetry will not be sent. If the value is 'verbose' or 'v', telemetry will be displayed in the console window.
  */
-export declare function registerCommandWithTreeNodeUnboxing<T>(commandId: string, callback: TreeNodeCommandCallback<T>, debounce?: number, telemetryId?: string): void;
+export declare function registerCommandWithTreeNodeUnwrapping<T>(commandId: string, callback: TreeNodeCommandCallback<T>, debounce?: number, telemetryId?: string): void;

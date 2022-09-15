@@ -55,7 +55,11 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
         if (picks.length === 1 && this.pickOptions.skipIfOne) {
             return picks[0].data;
         } else {
-            const selected = await wizardContext.ui.showQuickPick(picks, { /* TODO: options */ });
+            const selected = await wizardContext.ui.showQuickPick(picks, {
+                /* TODO: options */
+                /* TODO: set id here so recently picked items appear at the top */
+            });
+
             return selected.data;
         }
     }

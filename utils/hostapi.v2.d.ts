@@ -3,10 +3,9 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import type { ContextValueFilterableTreeNode, IActionContext, QuickPickWizardContext } from "./index";
+import type { IActionContext, AzExtResourceType, ContextValueFilterableTreeNode, QuickPickWizardContext } from "./index";
 import * as vscode from 'vscode';
 import type { Environment } from '@azure/ms-rest-azure-env';
-import { AzExtResourceType } from "./src/AzExtResourceType";
 
 export declare interface ApplicationAuthentication {
     getSession(scopes?: string[]): vscode.ProviderResult<vscode.AuthenticationSession>;

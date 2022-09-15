@@ -7,6 +7,7 @@ import * as types from '../../../index';
 import { getLastNode } from './QuickPickWizardContext';
 import { ContextValueFilterQuickPickOptions, ContextValueQuickPickStep } from './ContextValueQuickPickStep';
 import { localize } from '../../localize';
+import { NoResourceFoundError } from '../../errors';
 
 type CreateCallback = <TNode extends types.ContextValueFilterableTreeNode>() => TNode | Promise<TNode>;
 interface CreateQuickPickOptions extends ContextValueFilterQuickPickOptions {
@@ -28,7 +29,17 @@ export class CreateQuickPickStep<TNode extends types.ContextValueFilterableTreeN
     }
 
     protected override async getPicks(wizardContext: TContext): Promise<types.IAzureQuickPickItem<TNode>[]> {
-        const picks: types.IAzureQuickPickItem<TNode | CreateCallback>[] = await super.getPicks(wizardContext);
+        const picks: types.IAzureQuickPickItem<TNode | types.CreateCallback>[] = [];
+        try {
+            picks.push(...await super.getPicks(wizardContext));
+        } catch (error) {
+            if (error instanceof NoResourceFoundError) {
+                // swallow NoResourceFoundError if create is defined, since we'll add a create pick
+            } else {
+                throw error;
+            }
+        }
+
         picks.push(this.getCreatePick());
         return picks as types.IAzureQuickPickItem<TNode>[];
     }

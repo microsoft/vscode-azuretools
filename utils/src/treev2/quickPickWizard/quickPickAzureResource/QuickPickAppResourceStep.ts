@@ -9,7 +9,7 @@ import { GenericQuickPickOptions, GenericQuickPickStep } from '../GenericQuickPi
 import { AppResourceItem } from './tempTypes';
 
 interface AppResourceQuickPickOptions extends GenericQuickPickOptions {
-    resourceType: types.AzExtResourceType;
+    resourceTypes?: types.AzExtResourceType[];
     childItemFilter?: types.ContextValueFilter;
 }
 
@@ -30,7 +30,11 @@ export class QuickPickAppResourceStep extends GenericQuickPickStep<ResourceGroup
             return false;
         }
 
-        return node.resource.azExtResourceType === this.pickOptions.resourceType;
+        if (!node.resource.azExtResourceType) {
+            return false;
+        }
+
+        return !this.pickOptions.resourceTypes || this.pickOptions.resourceTypes.includes(node.resource.azExtResourceType);
     }
 
     protected isIndirectPick(node: AppResourceItem): boolean {
@@ -39,6 +43,10 @@ export class QuickPickAppResourceStep extends GenericQuickPickStep<ResourceGroup
             return false;
         }
 
-        return node.resource.azExtResourceType === this.pickOptions.resourceType;
+        if (!node.resource.azExtResourceType) {
+            return false;
+        }
+
+        return !this.pickOptions.resourceTypes || this.pickOptions.resourceTypes.includes(node.resource.azExtResourceType);
     }
 }

@@ -5,7 +5,6 @@
 
 import * as types from '../../../index';
 import { GenericQuickPickOptions, GenericQuickPickStep } from './GenericQuickPickStep';
-import { isAzExtParentTreeItem } from '../../tree/InternalInterfaces';
 
 export interface ContextValueFilterQuickPickOptions extends GenericQuickPickOptions {
     contextValueFilter: types.ContextValueFilter;
@@ -21,22 +20,14 @@ export class ContextValueQuickPickStep<TNode extends types.ContextValueFilterabl
             (Array.isArray(excludeOption) ? excludeOption : [excludeOption]) :
             [];
 
-        const nodeContextValues: string[] = isContextValueFilterableTreeNodeV2(node) ?
-            node.quickPickOptions.contextValues :
-            [node.contextValue];
+        const nodeContextValues: string[] = node.quickPickOptions.contextValues;
 
         return includeArray.some(i => this.matchesSingleFilter(i, nodeContextValues)) &&
             !excludeArray.some(e => this.matchesSingleFilter(e, nodeContextValues));
     }
 
     protected override isIndirectPick(node: TNode): boolean {
-        if (isContextValueFilterableTreeNodeV2(node)) {
-            return node.quickPickOptions.isLeaf === false;
-        } else if (isAzExtParentTreeItem(node)) {
-            return true;
-        }
-
-        return false;
+        return node.quickPickOptions.isLeaf === false;
     }
 
     private matchesSingleFilter(matcher: string | RegExp, nodeContextValues: string[]): boolean {
@@ -49,14 +40,4 @@ export class ContextValueQuickPickStep<TNode extends types.ContextValueFilterabl
             return c === matcher;
         })
     }
-}
-
-export function isContextValueFilterableTreeNodeV2(maybeNode: unknown): maybeNode is types.ContextValueFilterableTreeNodeV2 {
-    if (typeof maybeNode === 'object') {
-        return Array.isArray((maybeNode as types.ContextValueFilterableTreeNodeV2).quickPickOptions?.contextValues) &&
-            (maybeNode as types.ContextValueFilterableTreeNodeV2).quickPickOptions?.isLeaf !== undefined &&
-            (maybeNode as types.ContextValueFilterableTreeNodeV2).quickPickOptions?.isLeaf !== null;
-    }
-
-    return false;
 }

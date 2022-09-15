@@ -17,14 +17,18 @@ import { AzureWizard } from '../../../wizard/AzureWizard';
 import { AzureResourceQuickPickWizardContext, ResourceGroupsItem } from '../../../../hostapi.v2';
 import { isWrapper } from '../../../registerCommandWithTreeNodeUnwrapping';
 
-export async function appResourceExperience<TPick>(context: types.IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, resourceType: AzExtResourceType, childItemFilter?: types.ContextValueFilter): Promise<TPick> {
+export async function appResourceExperience<TPick>(context: types.IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: types.ContextValueFilter): Promise<TPick> {
     const promptSteps: AzureWizardPromptStep<AzureResourceQuickPickWizardContext>[] = [
         new QuickPickAzureSubscriptionStep(tdp),
         new QuickPickGroupStep(tdp, {
-            groupType: resourceType,
+            groupType: resourceTypes ?
+                (Array.isArray(resourceTypes) ? resourceTypes : [resourceTypes]) :
+                undefined,
         }),
         new QuickPickAppResourceStep(tdp, {
-            resourceType: resourceType,
+            resourceTypes: resourceTypes ?
+                (Array.isArray(resourceTypes) ? resourceTypes : [resourceTypes]) :
+                undefined,
             skipIfOne: false,
         }),
     ];
@@ -43,6 +47,7 @@ export async function appResourceExperience<TPick>(context: types.IActionContext
     const wizard = new AzureWizard(context, {
         hideStepCount: true,
         promptSteps: promptSteps,
+        showLoadingPrompt: true,
     });
 
     await wizard.prompt();

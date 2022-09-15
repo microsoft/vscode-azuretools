@@ -9,6 +9,7 @@ import { getLastNode } from '../QuickPickWizardContext';
 import { NoResourceFoundError } from '../../../errors';
 import { FindByIdQuickPickStep } from '../FindByIdQuickPickStep';
 import { isWrapper } from '../../../registerCommandWithTreeNodeUnwrapping';
+import { AzureWizard } from '../../../wizard/AzureWizard';
 
 export async function findByIdExperience<TPick extends types.FindableByIdTreeNode>(context: types.IActionContext, tdp: vscode.TreeDataProvider<TPick>, id: string): Promise<TPick> {
     const promptSteps: types.AzureWizardPromptStep<types.QuickPickWizardContext<TPick>>[] = [
@@ -21,7 +22,7 @@ export async function findByIdExperience<TPick extends types.FindableByIdTreeNod
     const wizardContext = context as types.QuickPickWizardContext<TPick>;
     wizardContext.pickedNodes = [];
 
-    const wizard = new types.AzureWizard(context, {
+    const wizard = new AzureWizard(context, {
         hideStepCount: true,
         promptSteps: promptSteps,
     });
