@@ -8,9 +8,10 @@ import * as types from '../../index';
 import { NotImplementedError } from '../errors';
 import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
-import { IAzExtParentTreeItemInternal, IAzExtTreeDataProviderInternal, isAzExtParentTreeItem } from "./InternalInterfaces";
+import { IAzExtParentTreeItemInternal, IAzExtTreeDataProviderInternal } from "./InternalInterfaces";
 import { settingUtils } from '../utils/settingUtils';
 import { showContextValueSetting } from '../constants';
+import { isAzExtParentTreeItem } from './AzExtParentTreeItem';
 
 export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     public readonly _isAzExtTreeItem = true;
