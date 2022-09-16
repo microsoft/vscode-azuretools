@@ -466,6 +466,7 @@ export declare abstract class AzExtTreeItem implements IAzExtTreeItem {
 }
 
 export declare function isAzExtTreeItem(maybeTreeItem: unknown): maybeTreeItem is AzExtTreeItem;
+export declare function isAzExtParentTreeItem(maybeParentTreeItem: unknown): maybeParentTreeItem is AzExtParentTreeItem;
 
 export interface IGenericTreeItemOptions {
     id?: string;

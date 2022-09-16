@@ -6,8 +6,8 @@
 import * as types from '../../../index';
 import * as vscode from 'vscode';
 import { getLastNode } from './QuickPickWizardContext';
-import { isAzExtParentTreeItem } from '../../tree/InternalInterfaces';
 import { GenericQuickPickStep, SkipIfOneQuickPickOptions } from './GenericQuickPickStep';
+import { isAzExtParentTreeItem } from '../../tree/AzExtParentTreeItem';
 
 interface FindByIdQuickPickOptions extends SkipIfOneQuickPickOptions {
     id: string;

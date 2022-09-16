@@ -25,10 +25,3 @@ export interface IAzExtTreeDataProviderInternal extends types.AzExtTreeDataProvi
     refreshUIOnly(treeItem: AzExtTreeItem | undefined): void;
     readonly collapsibleStateTracker: CollapsibleStateTracker | undefined;
 }
-
-/**
- * Using instanceof AzExtParentTreeItem causes issues whenever packages are linked for dev testing. Instead, check _isAzExtParentTreeItem
- */
-export function isAzExtParentTreeItem(maybeParent: unknown): maybeParent is IAzExtParentTreeItemInternal {
-    return !!(maybeParent as IAzExtParentTreeItemInternal)._isAzExtParentTreeItem;
-}
