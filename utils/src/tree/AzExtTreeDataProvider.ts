@@ -10,11 +10,12 @@ import { NoResourceFoundError, UserCancelledError } from '../errors';
 import { localize } from '../localize';
 import { parseError } from '../parseError';
 import { addTreeItemValuesToMask } from './addTreeItemValuesToMask';
-import { AzExtParentTreeItem, InvalidTreeItem, isAzExtParentTreeItem } from './AzExtParentTreeItem';
+import { AzExtParentTreeItem, InvalidTreeItem } from './AzExtParentTreeItem';
 import { AzExtTreeItem } from './AzExtTreeItem';
 import { CollapsibleStateTracker } from './CollapsibleStateTracker';
 import { GenericTreeItem } from './GenericTreeItem';
 import { IAzExtTreeDataProviderInternal } from './InternalInterfaces';
+import { isAzExtParentTreeItem } from './isAzExtParentTreeItem';
 import { runWithLoadingNotification } from './runWithLoadingNotification';
 import { loadMoreLabel } from './treeConstants';
 

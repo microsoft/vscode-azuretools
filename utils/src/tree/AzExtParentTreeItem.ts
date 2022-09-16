@@ -12,6 +12,7 @@ import { randomUtils } from '../utils/randomUtils';
 import { AzExtTreeItem } from './AzExtTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';
 import { IAzExtParentTreeItemInternal } from './InternalInterfaces';
+import { isAzExtParentTreeItem } from './isAzExtParentTreeItem';
 import { runWithLoadingNotification } from './runWithLoadingNotification';
 import { loadMoreLabel } from './treeConstants';
 
@@ -396,11 +397,4 @@ class CanPickManyError extends Error {
         super();
         this.picks = picks;
     }
-}
-
-/**
- * Using instanceof AzExtParentTreeItem causes issues since each extension has their own version of the utils. Instead, check _isAzExtParentTreeItem
- */
-export function isAzExtParentTreeItem(maybeParentTreeItem: unknown): maybeParentTreeItem is AzExtParentTreeItem {
-    return typeof maybeParentTreeItem === 'object' && (maybeParentTreeItem as IAzExtParentTreeItemInternal)._isAzExtParentTreeItem === true;
 }
