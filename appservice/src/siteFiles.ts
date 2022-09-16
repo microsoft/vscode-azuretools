@@ -6,11 +6,11 @@
 import { HttpOperationResponse, RestError, ServiceClient } from '@azure/ms-rest-js';
 import { createGenericClient } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, IParsedError, parseError } from '@microsoft/vscode-azext-utils';
+import * as retry from 'p-retry';
+import { AbortError } from 'p-retry';
 import * as path from 'path';
 import { createKuduClient } from './createKuduClient';
 import { ParsedSite } from './SiteClient';
-import { delay } from './utils/delay';
-
 export interface ISiteFile {
     data: string;
     etag: string;
@@ -67,29 +67,31 @@ async function getFsResponse(context: IActionContext, site: ParsedSite, filePath
 
             /*
                 * Related to issue: https://github.com/microsoft/vscode-azurefunctions/issues/3337
-                Sometimes get a 'BadGateway' or 'ServiceUnavailable' error on initial fetch, but consecutive re-fetching usually fixes the issue.
+                Sometimes receive a 'BadGateway' or 'ServiceUnavailable' error on initial fetch, but consecutive re-fetching usually fixes the issue.
                 Under these circumstances, we will attempt to do the call 3 times during warmup before throwing the error
             */
-            let attempts: number = 1;
+            const retries = 3;
             const badGateway: RegExp = /BadGateway/i;
             const serviceUnavailable: RegExp = /ServiceUnavailable/i;
+            const client: ServiceClient = await createGenericClient(context, site.subscription);
 
-            while (true) {
-                try {
-                    const client: ServiceClient = await createGenericClient(context, site.subscription);
-                    return await client.sendRequest({
-                        method: 'GET',
-                        url: `${site.id}/hostruntime/admin/vfs/${filePath}/?api-version=2018-11-01`
-                    });
-                } catch (error) {
-                    const parsedError: IParsedError = parseError(error);
-                    if (!(badGateway.test(parsedError.message) || serviceUnavailable.test(parsedError.message)) || attempts === 3) {
+            return await retry<HttpOperationResponse>(
+                async () => {
+                    try {
+                        return await client.sendRequest({
+                            method: 'GET',
+                            url: `${site.id}/hostruntime/admin/vfs/${filePath}/?api-version=2018-11-01`
+                        });
+                    } catch (error) {
+                        const parsedError: IParsedError = parseError(error);
+                        if (!(badGateway.test(parsedError.message) || serviceUnavailable.test(parsedError.message))) {
+                            throw new AbortError(error);
+                        }
                         throw error;
                     }
-                    attempts++;
-                    await delay(10 * 1000);
-                }
-            }
+                },
+                { retries, minTimeout: 10 * 1000 }
+            );
         } else {
             const kuduClient = await createKuduClient(context, site);
             return (await kuduClient.vfs.getItem(filePath))._response;
