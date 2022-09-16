@@ -6,7 +6,7 @@
 import { EventEmitter } from 'vscode';
 import * as types from '../../index';
 import { AzExtParentTreeItem } from './AzExtParentTreeItem';
-import { AzExtTreeItem } from './AzExtTreeItem';
+import type { AzExtTreeItem } from './AzExtTreeItem';
 import { CollapsibleStateTracker } from './CollapsibleStateTracker';
 
 // Interfaces for methods on the tree that aren't exposed outside of this package
