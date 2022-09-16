@@ -7,7 +7,6 @@ import { HttpOperationResponse, RestError, ServiceClient } from '@azure/ms-rest-
 import { createGenericClient } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, IParsedError, parseError } from '@microsoft/vscode-azext-utils';
 import * as retry from 'p-retry';
-import { AbortError } from 'p-retry';
 import * as path from 'path';
 import { createKuduClient } from './createKuduClient';
 import { ParsedSite } from './SiteClient';
@@ -85,7 +84,7 @@ async function getFsResponse(context: IActionContext, site: ParsedSite, filePath
                     } catch (error) {
                         const parsedError: IParsedError = parseError(error);
                         if (!(badGateway.test(parsedError.message) || serviceUnavailable.test(parsedError.message))) {
-                            throw new AbortError(error);
+                            throw new retry.AbortError(error);
                         }
                         throw error;
                     }
