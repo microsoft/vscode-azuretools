@@ -58,7 +58,9 @@ export class CompatibilityRecursiveQuickPickStep<TNode extends types.CompatibleC
             throw new Error('No node was set after prompt step.');
         }
 
-        if (super.isDirectPick(lastPickedItem)) {
+        const ti = await this.treeDataProvider.getTreeItem(lastPickedItem);
+
+        if (super.isDirectPick(ti)) {
             // The last picked node matches the expected filter
             // No need to continue prompting
             return undefined;

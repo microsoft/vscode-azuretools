@@ -3,8 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { TreeItem } from 'vscode';
 import { AzureResourceQuickPickWizardContext, ResourceGroupsItem } from '../../../../hostapi.v2';
 import * as types from '../../../../index';
+import { parseContextValue } from '../../../utils/contextUtils';
 import { GenericQuickPickOptions, GenericQuickPickStep } from '../GenericQuickPickStep';
 import { AppResourceItem } from './tempTypes';
 
@@ -24,29 +26,33 @@ export class QuickPickAppResourceStep extends GenericQuickPickStep<ResourceGroup
         return pickedAppResource;
     }
 
-    protected isDirectPick(node: AppResourceItem): boolean {
+    protected isDirectPick(node: TreeItem): boolean {
         // If childItemFilter is defined, this cannot be a direct pick
         if (this.pickOptions.childItemFilter) {
             return false;
         }
 
-        if (!node.resource.azExtResourceType) {
+        const contextValues = parseContextValue(node.contextValue);
+
+        if (!contextValues.includes('azureResource')) {
             return false;
         }
 
-        return !this.pickOptions.resourceTypes || this.pickOptions.resourceTypes.includes(node.resource.azExtResourceType);
+        return !this.pickOptions.resourceTypes || this.pickOptions.resourceTypes.some((type) => contextValues.includes(type));
     }
 
-    protected isIndirectPick(node: AppResourceItem): boolean {
+    protected isIndirectPick(node: TreeItem): boolean {
         // If childItemFilter is undefined, this cannot be an indirect pick
         if (!this.pickOptions.childItemFilter) {
             return false;
         }
 
-        if (!node.resource.azExtResourceType) {
+        const contextValues = parseContextValue(node.contextValue);
+
+        if (!contextValues.includes('azureResource')) {
             return false;
         }
 
-        return !this.pickOptions.resourceTypes || this.pickOptions.resourceTypes.includes(node.resource.azExtResourceType);
+        return !this.pickOptions.resourceTypes || this.pickOptions.resourceTypes.some((type) => contextValues.includes(type));
     }
 }

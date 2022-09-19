@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { TreeItem } from "vscode";
 import { AzureResourceQuickPickWizardContext, ResourceGroupsItem } from "../../../../hostapi.v2";
 import * as types from "../../../../index";
 import { GenericQuickPickOptions, GenericQuickPickStep } from "../GenericQuickPickStep";
@@ -14,11 +15,11 @@ export class QuickPickAzureResourceGroupStep extends GenericQuickPickStep<Resour
         throw new Error("Method not implemented.");
     }
 
-    protected isDirectPick(_node: types.ContextValueFilterableTreeNode): boolean {
+    protected isDirectPick(_node: TreeItem): boolean {
         throw new Error("Method not implemented.");
     }
 
-    protected isIndirectPick(_node: types.ContextValueFilterableTreeNode): boolean {
+    protected isIndirectPick(_node: TreeItem): boolean {
         throw new Error("Method not implemented.");
     }
 }

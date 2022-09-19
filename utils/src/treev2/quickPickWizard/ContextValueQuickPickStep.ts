@@ -3,15 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { TreeItem } from 'vscode';
 import * as types from '../../../index';
+import { parseContextValue } from '../../utils/contextUtils';
 import { GenericQuickPickOptions, GenericQuickPickStep } from './GenericQuickPickStep';
 
 export interface ContextValueFilterQuickPickOptions extends GenericQuickPickOptions {
     contextValueFilter: types.ContextValueFilter;
 }
 
-export class ContextValueQuickPickStep<TNode extends types.ContextValueFilterableTreeNode, TContext extends types.QuickPickWizardContext<TNode>, TOptions extends ContextValueFilterQuickPickOptions> extends GenericQuickPickStep<TNode, TContext, TOptions> {
-    protected override isDirectPick(node: TNode): boolean {
+export class ContextValueQuickPickStep<TNode extends unknown, TContext extends types.QuickPickWizardContext<TNode>, TOptions extends ContextValueFilterQuickPickOptions> extends GenericQuickPickStep<TNode, TContext, TOptions> {
+    protected override isDirectPick(node: TreeItem): boolean {
         const includeOption = this.pickOptions.contextValueFilter.include;
         const excludeOption = this.pickOptions.contextValueFilter.exclude;
 
@@ -20,14 +22,15 @@ export class ContextValueQuickPickStep<TNode extends types.ContextValueFilterabl
             (Array.isArray(excludeOption) ? excludeOption : [excludeOption]) :
             [];
 
-        const nodeContextValues: string[] = node.quickPickOptions.contextValues;
+        const nodeContextValues: string[] = parseContextValue(node.contextValue);
 
         return includeArray.some(i => this.matchesSingleFilter(i, nodeContextValues)) &&
             !excludeArray.some(e => this.matchesSingleFilter(e, nodeContextValues));
     }
 
-    protected override isIndirectPick(node: TNode): boolean {
-        return node.quickPickOptions.isLeaf === false;
+    protected override isIndirectPick(node: TreeItem): boolean {
+        // TreeItemCollapsibleState.None is falsy
+        return !node.collapsibleState;
     }
 
     private matchesSingleFilter(matcher: string | RegExp, nodeContextValues: string[]): boolean {

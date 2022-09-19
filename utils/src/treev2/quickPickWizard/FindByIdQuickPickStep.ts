@@ -7,14 +7,13 @@ import * as types from '../../../index';
 import * as vscode from 'vscode';
 import { getLastNode } from './QuickPickWizardContext';
 import { GenericQuickPickStep, SkipIfOneQuickPickOptions } from './GenericQuickPickStep';
-import { isAzExtParentTreeItem } from '../../tree/isAzExtParentTreeItem';
 
 interface FindByIdQuickPickOptions extends SkipIfOneQuickPickOptions {
     id: string;
     skipIfOne?: true;
 }
 
-export class FindByIdQuickPickStep<TNode extends types.FindableByIdTreeNode, TContext extends types.QuickPickWizardContext<TNode>> extends GenericQuickPickStep<TNode, TContext, FindByIdQuickPickOptions> {
+export class FindByIdQuickPickStep<TNode extends unknown, TContext extends types.QuickPickWizardContext<TNode>> extends GenericQuickPickStep<TNode, TContext, FindByIdQuickPickOptions> {
     public constructor(tdp: vscode.TreeDataProvider<TNode>, options: FindByIdQuickPickOptions) {
         super(
             tdp,
@@ -50,49 +49,20 @@ export class FindByIdQuickPickStep<TNode extends types.FindableByIdTreeNode, TCo
         }
     }
 
-    protected override isIndirectPick(node: TNode): boolean {
-        if (isFindableByIdTreeNodeV2(node)) {
-            if (node.quickPickOptions.isLeaf) {
-                return false;
-            }
-
-            return this.pickOptions.id.startsWith(node.id);
-        } else {
-            if (!isAzExtParentTreeItem(node)) {
-                return false;
-            }
-
-            return this.pickOptions.id.startsWith(node.fullId);
+    protected override isIndirectPick(node: vscode.TreeItem): boolean {
+        if (!node.collapsibleState) {
+            // can't be an indirect pick if it doesn't have children
+            return false;
         }
-    }
 
-    protected override isDirectPick(node: TNode): boolean {
-        if (isFindableByIdTreeNodeV2(node)) {
-            return this.pickOptions.id === node.id;
-        } else {
-            return this.pickOptions.id === node.fullId;
+        if (node.id) {
+            return node.id.startsWith(node.id);
         }
-    }
-}
 
-function isContextValueFilterableTreeNodeV2(maybeNode: unknown): maybeNode is types.ContextValueFilterableTreeNode {
-    if (typeof maybeNode === 'object') {
-        return Array.isArray((maybeNode as types.ContextValueFilterableTreeNode).quickPickOptions.contextValues) &&
-            (maybeNode as types.ContextValueFilterableTreeNode).quickPickOptions?.isLeaf !== undefined &&
-            (maybeNode as types.ContextValueFilterableTreeNode).quickPickOptions?.isLeaf !== null;
-    }
-
-    return false;
-}
-
-function isFindableByIdTreeNodeV2(maybeNode: unknown): maybeNode is types.FindableByIdTreeNodeV2 {
-    if (!isContextValueFilterableTreeNodeV2(maybeNode)) {
         return false;
     }
 
-    if (typeof maybeNode === 'object') {
-        return typeof (maybeNode as types.FindableByIdTreeNodeV2).id === 'string' && !!(maybeNode as types.FindableByIdTreeNodeV2).id;
+    protected override isDirectPick(node: vscode.TreeItem): boolean {
+        return this.pickOptions.id === node.id;
     }
-
-    return false;
 }

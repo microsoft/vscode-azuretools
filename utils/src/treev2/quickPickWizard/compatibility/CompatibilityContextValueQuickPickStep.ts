@@ -40,7 +40,7 @@ export class CompatibilityContextValueQuickPickStep<TNode extends types.Compatib
                 });
 
                 if (customPick) {
-                    wizardContext.pickedNodes.push(customPick);
+                    wizardContext.pickedNodes.push(customPick as TNode);
                     return true;
                 }
             }

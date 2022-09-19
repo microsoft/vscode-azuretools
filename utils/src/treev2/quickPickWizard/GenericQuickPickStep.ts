@@ -22,7 +22,7 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
     public readonly supportsDuplicateSteps = true;
 
     public constructor(
-        protected readonly treeDataProvider: vscode.TreeDataProvider<TNode>,
+        protected readonly treeDataProvider: vscode.TreeDataProvider<unknown>,
         protected readonly pickOptions: TOptions
     ) {
         super();
@@ -68,12 +68,14 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
         const lastPickedItem: TNode | undefined = getLastNode(wizardContext);
 
         // TODO: if `lastPickedItem` is an `AzExtParentTreeItem`, should we clear its cache?
-        const children = (await this.treeDataProvider.getChildren(lastPickedItem)) || [];
+        const childElements = (await this.treeDataProvider.getChildren(lastPickedItem)) || [];
+        const childItems = await Promise.all(childElements.map(async (childElement: TNode) => await this.treeDataProvider.getTreeItem(childElement)));
+        const childs: [TNode, vscode.TreeItem][] = childElements.map((childElement: TNode, i: number) => [childElement, childItems[i]]);
 
-        const directChoices = children.filter(c => this.isDirectPick(c));
-        const indirectChoices = children.filter(c => this.isIndirectPick(c));
+        const directChoices = childs.filter(([, ti]) => this.isDirectPick(ti));
+        const indirectChoices = childs.filter(([, ti]) => this.isIndirectPick(ti));
 
-        let promptChoices: TNode[];
+        let promptChoices: [TNode, vscode.TreeItem][];
         if (directChoices.length === 0) {
             if (indirectChoices.length === 0) {
                 throw new NoResourceFoundError();
@@ -86,7 +88,7 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
 
         const picks: types.IAzureQuickPickItem<TNode>[] = [];
         for (const choice of promptChoices) {
-            picks.push(await this.getQuickPickItem(choice));
+            picks.push(await this.getQuickPickItem(...choice));
         }
 
         return picks;
@@ -96,21 +98,19 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
      * Filters for nodes that match the final target.
      * @param node The node to apply the filter to
      */
-    protected abstract isDirectPick(node: TNode): boolean;
+    protected abstract isDirectPick(node: vscode.TreeItem): boolean;
 
     /**
      * Filters for nodes that could have a descendant matching the final target.
      * @param node The node to apply the filter to
      */
-    protected abstract isIndirectPick(node: TNode): boolean;
+    protected abstract isIndirectPick(node: vscode.TreeItem): boolean;
 
-    private async getQuickPickItem(resource: TNode): Promise<types.IAzureQuickPickItem<TNode>> {
-        const treeItem = await Promise.resolve(this.treeDataProvider.getTreeItem(resource));
-
+    private async getQuickPickItem(node: TNode, item: vscode.TreeItem,): Promise<types.IAzureQuickPickItem<TNode>> {
         return {
-            label: ((treeItem.label as vscode.TreeItemLabel)?.label || treeItem.label) as string,
-            description: treeItem.description as string,
-            data: resource,
+            label: ((item.label as vscode.TreeItemLabel)?.label || item.label) as string,
+            description: item.description as string,
+            data: node,
         };
     }
 }

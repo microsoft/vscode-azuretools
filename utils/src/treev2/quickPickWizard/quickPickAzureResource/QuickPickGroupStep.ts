@@ -6,8 +6,8 @@
 import * as types from '../../../../index';
 import * as vscode from 'vscode';
 import { GenericQuickPickStep, SkipIfOneQuickPickOptions } from '../GenericQuickPickStep';
-import { GroupingItem } from './tempTypes';
 import { AzureResourceQuickPickWizardContext, ResourceGroupsItem } from '../../../../hostapi.v2';
+import { parseContextValue } from '../../../utils/contextUtils';
 
 interface GroupQuickPickOptions extends SkipIfOneQuickPickOptions {
     groupType?: types.AzExtResourceType[];
@@ -15,7 +15,7 @@ interface GroupQuickPickOptions extends SkipIfOneQuickPickOptions {
 }
 
 export class QuickPickGroupStep extends GenericQuickPickStep<ResourceGroupsItem, AzureResourceQuickPickWizardContext, GroupQuickPickOptions> {
-    public constructor(tdp: vscode.TreeDataProvider<ResourceGroupsItem>, options: GroupQuickPickOptions) {
+    public constructor(tdp: vscode.TreeDataProvider<unknown>, options: GroupQuickPickOptions) {
         super(
             tdp,
             {
@@ -25,12 +25,16 @@ export class QuickPickGroupStep extends GenericQuickPickStep<ResourceGroupsItem,
         );
     }
 
-    protected isDirectPick(_node: GroupingItem): boolean {
+    protected isDirectPick(_node: vscode.TreeItem): boolean {
         // Group is never a direct pick
         return false;
     }
 
-    protected isIndirectPick(node: GroupingItem): boolean {
-        return !node.resourceType || !this.pickOptions.groupType || this.pickOptions.groupType.includes(node.resourceType);
+    protected isIndirectPick(node: vscode.TreeItem): boolean {
+        const contextValues = parseContextValue(node.contextValue);
+
+        return !this.pickOptions.groupType ||
+            !contextValues.includes('azureResourceTypeGroup') ||
+            this.pickOptions.groupType.some(groupType => contextValues.includes(groupType));
     }
 }
