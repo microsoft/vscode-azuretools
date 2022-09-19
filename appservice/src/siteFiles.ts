@@ -66,9 +66,9 @@ async function getFsResponse(context: IActionContext, site: ParsedSite, filePath
             }
 
             /*
-                * Related to issue: https://github.com/microsoft/vscode-azurefunctions/issues/3337
+                Related to issue: https://github.com/microsoft/vscode-azurefunctions/issues/3337
                 Sometimes receive a 'BadGateway' or 'ServiceUnavailable' error on initial fetch, but consecutive re-fetching usually fixes the issue.
-                Under these circumstances, we will attempt to do the call 3 times during warmup before throwing the error
+                Under these circumstances, we will attempt to do the call 3 times during warmup before throwing the error.
             */
             const retries = 3;
             const badGateway: RegExp = /BadGateway/i;
