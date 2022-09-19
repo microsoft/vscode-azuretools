@@ -9,6 +9,7 @@ import { CompatibilityContextValueQuickPickStep } from './CompatibilityContextVa
 import { localize } from "../../../localize";
 import { NoResourceFoundError, UserCancelledError } from "../../../errors";
 import type { ContextValueFilterQuickPickOptions } from "../ContextValueQuickPickStep";
+import { isAzExtTreeItem } from "../../../tree/AzExtTreeItem";
 
 export interface CompatibilityRecursiveQuickPickOptions extends ContextValueFilterQuickPickOptions {
     create?: types.CreateOptions;
@@ -58,7 +59,8 @@ export class CompatibilityRecursiveQuickPickStep<TNode extends types.CompatibleC
             throw new Error('No node was set after prompt step.');
         }
 
-        const ti = await this.treeDataProvider.getTreeItem(lastPickedItem);
+        // lastPickedItem might already be a tree item if the user picked a create callback
+        const ti = isAzExtTreeItem(lastPickedItem) ? lastPickedItem : await this.treeDataProvider.getTreeItem(lastPickedItem);
 
         if (super.isDirectPick(ti)) {
             // The last picked node matches the expected filter

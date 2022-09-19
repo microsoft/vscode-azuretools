@@ -30,6 +30,7 @@ export async function compatibilityPickAppResourceExperience<TPick extends types
         new QuickPickAppResourceStep(tdp, {
             resourceTypes: resourceTypes ? Array.isArray(resourceTypes) ? resourceTypes : [resourceTypes] : undefined,
             skipIfOne: false,
+            childItemFilter,
         }),
     ];
 
