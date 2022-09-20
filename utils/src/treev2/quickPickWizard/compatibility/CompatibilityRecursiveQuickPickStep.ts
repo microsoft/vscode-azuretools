@@ -20,10 +20,10 @@ export interface CompatibilityRecursiveQuickPickOptions extends ContextValueFilt
 /**
  * Recursive step which is compatible which adds create picks based if the node has {@link types.CompatibleQuickPickOptions.createChild quickPickOptions.createChild} defined.
  */
-export class CompatibilityRecursiveQuickPickStep<TNode extends types.CompatibleContextValueFilterableTreeNode, TContext extends types.QuickPickWizardContext<TNode>> extends CompatibilityContextValueQuickPickStep<TNode, TContext, CompatibilityRecursiveQuickPickOptions> {
+export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPickWizardContext> extends CompatibilityContextValueQuickPickStep<TContext, CompatibilityRecursiveQuickPickOptions> {
 
-    protected override async promptInternal(wizardContext: TContext): Promise<TNode> {
-        const picks = await this.getPicks(wizardContext) as types.IAzureQuickPickItem<TNode>[];
+    protected override async promptInternal(wizardContext: TContext): Promise<unknown> {
+        const picks = await this.getPicks(wizardContext) as types.IAzureQuickPickItem<unknown>[];
 
         if (picks.length === 1 && this.pickOptions.skipIfOne) {
             return picks[0].data;
@@ -36,7 +36,7 @@ export class CompatibilityRecursiveQuickPickStep<TNode extends types.CompatibleC
             // check if the last picked item is a create callback
             if (typeof selected.data === 'function') {
                 // If the last node is a function, pop it off the list and execute it
-                const callback = selected.data as unknown as types.CreateCallback<TNode>;
+                const callback = selected.data as unknown as types.CreateCallback<unknown>;
 
                 // context passed to callback must have the same `ui` as the wizardContext
                 // to prevent the wizard from being cancelled unexpectedly
@@ -87,8 +87,8 @@ export class CompatibilityRecursiveQuickPickStep<TNode extends types.CompatibleC
         }
     }
 
-    protected override async getPicks(wizardContext: TContext): Promise<types.IAzureQuickPickItem<TNode>[]> {
-        const picks: types.IAzureQuickPickItem<TNode | types.CreateCallback>[] = [];
+    protected override async getPicks(wizardContext: TContext): Promise<types.IAzureQuickPickItem<unknown>[]> {
+        const picks: types.IAzureQuickPickItem<unknown | types.CreateCallback>[] = [];
         try {
             picks.push(...await super.getPicks(wizardContext));
         } catch (error) {
@@ -103,7 +103,7 @@ export class CompatibilityRecursiveQuickPickStep<TNode extends types.CompatibleC
             picks.push(this.getCreatePick(this.pickOptions.create));
         }
 
-        return picks as types.IAzureQuickPickItem<TNode>[];
+        return picks as types.IAzureQuickPickItem<unknown>[];
     }
 
     private getCreatePick(options: types.CreateOptions): types.IAzureQuickPickItem<types.CreateCallback> {

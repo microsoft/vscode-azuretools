@@ -3,7 +3,7 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import type { IActionContext, AzExtResourceType, ContextValueFilterableTreeNode, QuickPickWizardContext } from "./index";
+import type { IActionContext, AzExtResourceType, QuickPickWizardContext } from "./index";
 import * as vscode from 'vscode';
 import type { Environment } from '@azure/ms-rest-azure-env';
 
@@ -54,10 +54,7 @@ export declare interface ApplicationResource extends ResourceBase {
  */
 export declare type TreeNodeCommandCallback<T> = (context: IActionContext, node?: T, nodes?: T[], ...args: any[]) => any;
 
-// temporary type until we have the real type from RGs
-export declare type ResourceGroupsItem = ContextValueFilterableTreeNode;
-
-export declare interface AzureResourceQuickPickWizardContext extends QuickPickWizardContext<ResourceGroupsItem> {
+export declare interface AzureResourceQuickPickWizardContext extends QuickPickWizardContext {
     subscription?: ApplicationSubscription;
     resource?: ApplicationResource;
     resourceGroup?: string;

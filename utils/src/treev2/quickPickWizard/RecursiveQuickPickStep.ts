@@ -7,7 +7,7 @@ import * as types from '../../../index';
 import { ContextValueFilterQuickPickOptions, ContextValueQuickPickStep } from './ContextValueQuickPickStep';
 import { getLastNode } from './QuickPickWizardContext';
 
-export class RecursiveQuickPickStep<TNode extends unknown, TContext extends types.QuickPickWizardContext<TNode>> extends ContextValueQuickPickStep<TNode, TContext, ContextValueFilterQuickPickOptions> {
+export class RecursiveQuickPickStep<TContext extends types.QuickPickWizardContext> extends ContextValueQuickPickStep<TContext, ContextValueFilterQuickPickOptions> {
     public async getSubWizard(wizardContext: TContext): Promise<types.IWizardOptions<TContext> | undefined> {
         const lastPickedItem = getLastNode(wizardContext);
 
@@ -16,7 +16,7 @@ export class RecursiveQuickPickStep<TNode extends unknown, TContext extends type
             throw new Error('No node was set after prompt step.');
         }
 
-        if (super.isDirectPick(lastPickedItem)) {
+        if (super.isDirectPick(await this.treeDataProvider.getTreeItem((lastPickedItem)))) {
             // The last picked node matches the expected filter
             // No need to continue prompting
             return undefined;

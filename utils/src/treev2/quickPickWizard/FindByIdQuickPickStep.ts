@@ -13,8 +13,8 @@ interface FindByIdQuickPickOptions extends SkipIfOneQuickPickOptions {
     skipIfOne?: true;
 }
 
-export class FindByIdQuickPickStep<TNode extends unknown, TContext extends types.QuickPickWizardContext<TNode>> extends GenericQuickPickStep<TNode, TContext, FindByIdQuickPickOptions> {
-    public constructor(tdp: vscode.TreeDataProvider<TNode>, options: FindByIdQuickPickOptions) {
+export class FindByIdQuickPickStep<TContext extends types.QuickPickWizardContext> extends GenericQuickPickStep<TContext, FindByIdQuickPickOptions> {
+    public constructor(tdp: vscode.TreeDataProvider<unknown>, options: FindByIdQuickPickOptions) {
         super(
             tdp,
             {

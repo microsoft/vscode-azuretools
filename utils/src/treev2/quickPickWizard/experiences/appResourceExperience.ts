@@ -14,7 +14,7 @@ import { NoResourceFoundError } from '../../../errors';
 import { AzureWizardPromptStep } from '../../../wizard/AzureWizardPromptStep';
 import { AzExtResourceType } from '../../../AzExtResourceType';
 import { AzureWizard } from '../../../wizard/AzureWizard';
-import { AzureResourceQuickPickWizardContext, ResourceGroupsItem } from '../../../../hostapi.v2';
+import { AzureResourceQuickPickWizardContext } from '../../../../hostapi.v2';
 import { isWrapper } from '../../../registerCommandWithTreeNodeUnwrapping';
 
 export async function appResourceExperience<TPick>(context: types.IActionContext, tdp: vscode.TreeDataProvider<unknown>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: types.ContextValueFilter): Promise<TPick> {
@@ -34,7 +34,7 @@ export async function appResourceExperience<TPick>(context: types.IActionContext
     ];
 
     if (childItemFilter) {
-        promptSteps.push(new RecursiveQuickPickStep<ResourceGroupsItem, AzureResourceQuickPickWizardContext>(tdp, {
+        promptSteps.push(new RecursiveQuickPickStep<AzureResourceQuickPickWizardContext>(tdp, {
             contextValueFilter: childItemFilter,
             skipIfOne: false,
         }));

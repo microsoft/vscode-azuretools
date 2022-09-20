@@ -9,18 +9,18 @@ import { ContextValueFilterQuickPickOptions, ContextValueQuickPickStep } from '.
 import { localize } from '../../localize';
 import { NoResourceFoundError } from '../../errors';
 
-type CreateCallback = <TNode extends types.ContextValueFilterableTreeNode>() => TNode | Promise<TNode>;
+type CreateCallback = <TNode extends unknown>() => TNode | Promise<TNode>;
 interface CreateQuickPickOptions extends ContextValueFilterQuickPickOptions {
     skipIfOne?: never; // Not allowed in CreateQuickPickStep
     createLabel?: string;
     createCallback: CreateCallback;
 }
 
-export class CreateQuickPickStep<TNode extends types.ContextValueFilterableTreeNode, TContext extends types.QuickPickWizardContext<TNode>> extends ContextValueQuickPickStep<TNode, TContext, CreateQuickPickOptions> {
+export class CreateQuickPickStep<TContext extends types.QuickPickWizardContext> extends ContextValueQuickPickStep<TContext, CreateQuickPickOptions> {
     public override async prompt(wizardContext: TContext): Promise<void> {
         await super.prompt(wizardContext);
 
-        const lastNode = getLastNode(wizardContext) as (TNode | CreateCallback);
+        const lastNode = getLastNode(wizardContext) as (unknown | CreateCallback);
         if (typeof lastNode === 'function') {
             // If the last node is a function, pop it off the list and execute it
             const callback = wizardContext.pickedNodes.pop() as unknown as CreateCallback;
@@ -28,8 +28,8 @@ export class CreateQuickPickStep<TNode extends types.ContextValueFilterableTreeN
         }
     }
 
-    protected override async getPicks(wizardContext: TContext): Promise<types.IAzureQuickPickItem<TNode>[]> {
-        const picks: types.IAzureQuickPickItem<TNode | types.CreateCallback>[] = [];
+    protected override async getPicks(wizardContext: TContext): Promise<types.IAzureQuickPickItem<unknown>[]> {
+        const picks: types.IAzureQuickPickItem<unknown | types.CreateCallback>[] = [];
         try {
             picks.push(...await super.getPicks(wizardContext));
         } catch (error) {
@@ -41,7 +41,7 @@ export class CreateQuickPickStep<TNode extends types.ContextValueFilterableTreeN
         }
 
         picks.push(this.getCreatePick());
-        return picks as types.IAzureQuickPickItem<TNode>[];
+        return picks as types.IAzureQuickPickItem<unknown>[];
     }
 
     private getCreatePick(): types.IAzureQuickPickItem<CreateCallback> {

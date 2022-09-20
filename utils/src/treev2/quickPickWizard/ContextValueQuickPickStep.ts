@@ -12,7 +12,7 @@ export interface ContextValueFilterQuickPickOptions extends GenericQuickPickOpti
     contextValueFilter: types.ContextValueFilter;
 }
 
-export class ContextValueQuickPickStep<TNode extends unknown, TContext extends types.QuickPickWizardContext<TNode>, TOptions extends ContextValueFilterQuickPickOptions> extends GenericQuickPickStep<TNode, TContext, TOptions> {
+export class ContextValueQuickPickStep<TContext extends types.QuickPickWizardContext, TOptions extends ContextValueFilterQuickPickOptions> extends GenericQuickPickStep<TContext, TOptions> {
     protected override isDirectPick(node: TreeItem): boolean {
         const includeOption = this.pickOptions.contextValueFilter.include;
         const excludeOption = this.pickOptions.contextValueFilter.exclude;

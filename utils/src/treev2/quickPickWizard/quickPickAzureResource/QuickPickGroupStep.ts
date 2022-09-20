@@ -6,7 +6,7 @@
 import * as types from '../../../../index';
 import * as vscode from 'vscode';
 import { GenericQuickPickStep, SkipIfOneQuickPickOptions } from '../GenericQuickPickStep';
-import { AzureResourceQuickPickWizardContext, ResourceGroupsItem } from '../../../../hostapi.v2';
+import { AzureResourceQuickPickWizardContext } from '../../../../hostapi.v2';
 import { parseContextValue } from '../../../utils/contextUtils';
 
 interface GroupQuickPickOptions extends SkipIfOneQuickPickOptions {
@@ -14,7 +14,7 @@ interface GroupQuickPickOptions extends SkipIfOneQuickPickOptions {
     skipIfOne?: true;
 }
 
-export class QuickPickGroupStep extends GenericQuickPickStep<ResourceGroupsItem, AzureResourceQuickPickWizardContext, GroupQuickPickOptions> {
+export class QuickPickGroupStep extends GenericQuickPickStep<AzureResourceQuickPickWizardContext, GroupQuickPickOptions> {
     public constructor(tdp: vscode.TreeDataProvider<unknown>, options: GroupQuickPickOptions) {
         super(
             tdp,

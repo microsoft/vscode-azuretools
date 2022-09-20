@@ -18,7 +18,7 @@ export interface SkipIfOneQuickPickOptions extends GenericQuickPickOptions {
     skipIfOne?: true;
 }
 
-export abstract class GenericQuickPickStep<TNode extends unknown, TContext extends types.QuickPickWizardContext<TNode>, TOptions extends GenericQuickPickOptions> extends AzureWizardPromptStep<TContext> {
+export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizardContext, TOptions extends GenericQuickPickOptions> extends AzureWizardPromptStep<TContext> {
     public readonly supportsDuplicateSteps = true;
 
     public constructor(
@@ -49,7 +49,7 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
         return true;
     }
 
-    protected async promptInternal(wizardContext: TContext): Promise<TNode> {
+    protected async promptInternal(wizardContext: TContext): Promise<unknown> {
         const picks = await this.getPicks(wizardContext);
 
         if (picks.length === 1 && this.pickOptions.skipIfOne) {
@@ -64,18 +64,18 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
         }
     }
 
-    protected async getPicks(wizardContext: TContext): Promise<types.IAzureQuickPickItem<TNode>[]> {
-        const lastPickedItem: TNode | undefined = getLastNode(wizardContext);
+    protected async getPicks(wizardContext: TContext): Promise<types.IAzureQuickPickItem<unknown>[]> {
+        const lastPickedItem: unknown | undefined = getLastNode(wizardContext);
 
         // TODO: if `lastPickedItem` is an `AzExtParentTreeItem`, should we clear its cache?
         const childElements = (await this.treeDataProvider.getChildren(lastPickedItem)) || [];
-        const childItems = await Promise.all(childElements.map(async (childElement: TNode) => await this.treeDataProvider.getTreeItem(childElement)));
-        const childs: [TNode, vscode.TreeItem][] = childElements.map((childElement: TNode, i: number) => [childElement, childItems[i]]);
+        const childItems = await Promise.all(childElements.map(async (childElement: unknown) => await this.treeDataProvider.getTreeItem(childElement)));
+        const childs: [unknown, vscode.TreeItem][] = childElements.map((childElement: unknown, i: number) => [childElement, childItems[i]]);
 
         const directChoices = childs.filter(([, ti]) => this.isDirectPick(ti));
         const indirectChoices = childs.filter(([, ti]) => this.isIndirectPick(ti));
 
-        let promptChoices: [TNode, vscode.TreeItem][];
+        let promptChoices: [unknown, vscode.TreeItem][];
         if (directChoices.length === 0) {
             if (indirectChoices.length === 0) {
                 throw new NoResourceFoundError();
@@ -86,7 +86,7 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
             promptChoices = directChoices;
         }
 
-        const picks: types.IAzureQuickPickItem<TNode>[] = [];
+        const picks: types.IAzureQuickPickItem<unknown>[] = [];
         for (const choice of promptChoices) {
             picks.push(await this.getQuickPickItem(...choice));
         }
@@ -106,7 +106,7 @@ export abstract class GenericQuickPickStep<TNode extends unknown, TContext exten
      */
     protected abstract isIndirectPick(node: vscode.TreeItem): boolean;
 
-    private async getQuickPickItem(node: TNode, item: vscode.TreeItem,): Promise<types.IAzureQuickPickItem<TNode>> {
+    private async getQuickPickItem(node: unknown, item: vscode.TreeItem,): Promise<types.IAzureQuickPickItem<unknown>> {
         return {
             label: ((item.label as vscode.TreeItemLabel)?.label || item.label) as string,
             description: item.description as string,

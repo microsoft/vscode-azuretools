@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { TreeItem } from 'vscode';
-import { AzureResourceQuickPickWizardContext, ResourceGroupsItem } from '../../../../hostapi.v2';
+import { AzureResourceQuickPickWizardContext } from '../../../../hostapi.v2';
 import * as types from '../../../../index';
 import { parseContextValue } from '../../../utils/contextUtils';
 import { GenericQuickPickOptions, GenericQuickPickStep } from '../GenericQuickPickStep';
@@ -15,9 +15,9 @@ interface AppResourceQuickPickOptions extends GenericQuickPickOptions {
     childItemFilter?: types.ContextValueFilter;
 }
 
-export class QuickPickAppResourceStep extends GenericQuickPickStep<ResourceGroupsItem, AzureResourceQuickPickWizardContext, AppResourceQuickPickOptions> {
+export class QuickPickAppResourceStep extends GenericQuickPickStep<AzureResourceQuickPickWizardContext, AppResourceQuickPickOptions> {
     protected override async promptInternal(wizardContext: AzureResourceQuickPickWizardContext): Promise<AppResourceItem> {
-        const pickedAppResource = await super.promptInternal(wizardContext) as AppResourceItem;
+        const pickedAppResource = (await super.promptInternal(wizardContext)) as unknown as AppResourceItem;
 
         // TODO
         wizardContext.resource = pickedAppResource.resource;

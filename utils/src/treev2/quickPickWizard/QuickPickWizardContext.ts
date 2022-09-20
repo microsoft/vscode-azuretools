@@ -5,7 +5,7 @@
 
 import * as types from '../../../index';
 
-export function getLastNode<TNode extends unknown>(context: types.QuickPickWizardContext<TNode>): TNode | undefined {
+export function getLastNode(context: types.QuickPickWizardContext): unknown | undefined {
     if (context.pickedNodes.length) {
         return context.pickedNodes[context.pickedNodes.length - 1];
     }

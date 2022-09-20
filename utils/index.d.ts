@@ -10,7 +10,7 @@ import { CancellationToken, CancellationTokenSource, Disposable, Event, Extensio
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
-import type { ResourceGroupsItem, TreeNodeCommandCallback } from './hostapi.v2';
+import type { TreeNodeCommandCallback } from './hostapi.v2';
 
 export declare interface RunWithTemporaryDescriptionOptions {
     description: string;
@@ -1706,7 +1706,7 @@ export declare interface Wrapper {
  */
 export declare function isWrapper(maybeWrapper: unknown): maybeWrapper is Wrapper;
 
-export declare function appResourceExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: ContextValueFilter): Promise<TPick>;
+export declare function appResourceExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<unknown>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: ContextValueFilter): Promise<TPick>;
 export declare function contextValueExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<TPick>, contextValueFilter: ContextValueFilter): Promise<TPick>;
 export declare function findByIdExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<TPick>, id: string | Uri): Promise<TPick>;
 
@@ -1715,10 +1715,10 @@ interface CompatibilityPickResourceExperienceOptions {
     childItemFilter?: ContextValueFilter
 }
 
-export declare function compatibilityPickAppResourceExperience<TPick extends AzExtTreeItem>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, options: CompatibilityPickResourceExperienceOptions): Promise<TPick>;
+export declare function compatibilityPickAppResourceExperience<TPick extends AzExtTreeItem>(context: IActionContext, tdp: TreeDataProvider<unknown>, options: CompatibilityPickResourceExperienceOptions): Promise<TPick>;
 
-export declare interface QuickPickWizardContext<TNode extends unknown> extends IActionContext {
-    pickedNodes: TNode[];
+export declare interface QuickPickWizardContext extends IActionContext {
+    pickedNodes: unknown[];
 }
 
 /**
@@ -1746,19 +1746,7 @@ type CreateOptions<TNode = unknown> = {
     callback: CreateCallback<TNode>;
 }
 
-interface CompatibleQuickPickOptions {
-    readonly createChild?: CreateOptions;
-}
-
-export declare interface ContextValueFilterableTreeNode {
-    readonly quickPickOptions: CompatibleQuickPickOptions;
-}
-
-export declare interface CompatibleContextValueFilterableTreeNode {
-    readonly quickPickOptions: CompatibleQuickPickOptions;
-}
-
-export declare interface FindableByIdTreeNodeV2 extends ContextValueFilterableTreeNode {
+export declare interface FindableByIdTreeNodeV2 {
     id: string;
 }
 

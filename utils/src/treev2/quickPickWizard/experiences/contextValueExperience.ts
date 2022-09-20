@@ -13,7 +13,7 @@ import { AzureWizard } from '../../../wizard/AzureWizard';
 import { isWrapper } from '../../../registerCommandWithTreeNodeUnwrapping';
 
 export async function contextValueExperience<TPick extends unknown>(context: types.IActionContext, tdp: vscode.TreeDataProvider<TPick>, contextValueFilter: types.ContextValueFilter): Promise<TPick> {
-    const promptSteps: AzureWizardPromptStep<types.QuickPickWizardContext<TPick>>[] = [
+    const promptSteps: AzureWizardPromptStep<types.QuickPickWizardContext>[] = [
         new RecursiveQuickPickStep(tdp, {
             contextValueFilter: contextValueFilter,
             skipIfOne: false,
@@ -21,7 +21,7 @@ export async function contextValueExperience<TPick extends unknown>(context: typ
     ];
 
     // Fill in the `pickedNodes` property
-    const wizardContext = context as types.QuickPickWizardContext<TPick>;
+    const wizardContext = context as types.QuickPickWizardContext;
     wizardContext.pickedNodes = [];
 
     const wizard = new AzureWizard(context, {
