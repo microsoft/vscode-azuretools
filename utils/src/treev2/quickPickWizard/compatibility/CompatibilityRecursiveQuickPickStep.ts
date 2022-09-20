@@ -9,7 +9,9 @@ import { CompatibilityContextValueQuickPickStep } from './CompatibilityContextVa
 import { localize } from "../../../localize";
 import { NoResourceFoundError, UserCancelledError } from "../../../errors";
 import type { ContextValueFilterQuickPickOptions } from "../ContextValueQuickPickStep";
-import { isAzExtTreeItem } from "../../../tree/AzExtTreeItem";
+import { AzExtTreeItem, isAzExtTreeItem } from "../../../tree/AzExtTreeItem";
+import { isAzExtParentTreeItem } from "../../../tree/isAzExtParentTreeItem";
+import { isWrapper } from "../../../registerCommandWithTreeNodeUnwrapping";
 
 export interface CompatibilityRecursiveQuickPickOptions extends ContextValueFilterQuickPickOptions {
     create?: types.CreateOptions;
@@ -60,21 +62,25 @@ export class CompatibilityRecursiveQuickPickStep<TNode extends types.CompatibleC
         }
 
         // lastPickedItem might already be a tree item if the user picked a create callback
-        const ti = isAzExtTreeItem(lastPickedItem) ? lastPickedItem : await this.treeDataProvider.getTreeItem(lastPickedItem);
+        const ti = isAzExtTreeItem(lastPickedItem) ? lastPickedItem : await this.treeDataProvider.getTreeItem(lastPickedItem) as AzExtTreeItem;
 
         if (super.isDirectPick(ti)) {
             // The last picked node matches the expected filter
             // No need to continue prompting
             return undefined;
         } else {
+            const lastPickedItemTi = isWrapper(lastPickedItem) ? lastPickedItem.unwrap<AzExtTreeItem>() : lastPickedItem;
             // Need to keep going because the last picked node is not a match
             return {
                 hideStepCount: true,
                 promptSteps: [
                     new CompatibilityRecursiveQuickPickStep(this.treeDataProvider, {
                         ...this.pickOptions,
-                        skipIfOne: !lastPickedItem.quickPickOptions.createChild,
-                        create: lastPickedItem.quickPickOptions.createChild,
+                        skipIfOne: isAzExtParentTreeItem(lastPickedItemTi) && !!lastPickedItemTi.createChildImpl,
+                        create: (isAzExtParentTreeItem(lastPickedItemTi) && !!lastPickedItemTi.createChildImpl) ? {
+                            callback: lastPickedItemTi.createChild.bind(lastPickedItemTi) as typeof lastPickedItemTi.createChild,
+                            label: lastPickedItemTi.createNewLabel ?? localize('createNewItem', '$(plus) Create new {0}', lastPickedItemTi.childTypeLabel)
+                        } : undefined
                     })
                 ],
             };

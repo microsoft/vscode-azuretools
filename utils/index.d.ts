@@ -1706,9 +1706,9 @@ export declare interface Wrapper {
  */
 export declare function isWrapper(maybeWrapper: unknown): maybeWrapper is Wrapper;
 
-export declare function appResourceExperience<TPick extends ContextValueFilterableTreeNode>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: ContextValueFilter): Promise<TPick>;
-export declare function contextValueExperience<TPick extends ContextValueFilterableTreeNode>(context: IActionContext, tdp: TreeDataProvider<TPick>, contextValueFilter: ContextValueFilter): Promise<TPick>;
-export declare function findByIdExperience<TPick extends FindableByIdTreeNode>(context: IActionContext, tdp: TreeDataProvider<TPick>, id: string | Uri): Promise<TPick>;
+export declare function appResourceExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: ContextValueFilter): Promise<TPick>;
+export declare function contextValueExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<TPick>, contextValueFilter: ContextValueFilter): Promise<TPick>;
+export declare function findByIdExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<TPick>, id: string | Uri): Promise<TPick>;
 
 interface CompatibilityPickResourceExperienceOptions {
     resourceTypes?: AzExtResourceType | AzExtResourceType[];
@@ -1739,11 +1739,6 @@ export declare interface ContextValueFilter {
     exclude?: string | RegExp | (string | RegExp)[];
 }
 
-interface QuickPickOptions {
-    readonly contextValues: Array<string>;
-    readonly isLeaf: boolean;
-}
-
 type CreateCallback<TNode = unknown> = (context: IActionContext) => TNode | Promise<TNode>;
 
 type CreateOptions<TNode = unknown> = {
@@ -1751,12 +1746,12 @@ type CreateOptions<TNode = unknown> = {
     callback: CreateCallback<TNode>;
 }
 
-interface CompatibleQuickPickOptions extends QuickPickOptions {
+interface CompatibleQuickPickOptions {
     readonly createChild?: CreateOptions;
 }
 
 export declare interface ContextValueFilterableTreeNode {
-    readonly quickPickOptions: QuickPickOptions;
+    readonly quickPickOptions: CompatibleQuickPickOptions;
 }
 
 export declare interface CompatibleContextValueFilterableTreeNode {
