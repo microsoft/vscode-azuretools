@@ -29,7 +29,7 @@ export class ContextValueQuickPickStep<TContext extends types.QuickPickWizardCon
     }
 
     protected override isIndirectPick(node: TreeItem): boolean {
-        // TreeItemCollapsibleState.None is falsy
+        // `TreeItemCollapsibleState.None` and `undefined` are both falsy, and indicate that a `TreeItem` cannot have children--and therefore, cannot be an indirect pick
         return !node.collapsibleState;
     }
 
