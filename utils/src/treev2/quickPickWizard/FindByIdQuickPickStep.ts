@@ -56,7 +56,7 @@ export class FindByIdQuickPickStep<TContext extends types.QuickPickWizardContext
         }
 
         if (node.id) {
-            return node.id.startsWith(node.id);
+            return this.pickOptions.id.startsWith(node.id);
         }
 
         return false;
