@@ -16,8 +16,9 @@ import { AzExtResourceType } from '../../../AzExtResourceType';
 import { AzureWizard } from '../../../wizard/AzureWizard';
 import { AzureResourceQuickPickWizardContext } from '../../../../hostapi.v2';
 import { isWrapper } from '../../../registerCommandWithTreeNodeUnwrapping';
+import { ResourceGroupsItem } from '../quickPickAzureResource/tempTypes';
 
-export async function appResourceExperience<TPick>(context: types.IActionContext, tdp: vscode.TreeDataProvider<unknown>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: types.ContextValueFilter): Promise<TPick> {
+export async function appResourceExperience<TPick>(context: types.IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: types.ContextValueFilter): Promise<TPick> {
     const promptSteps: AzureWizardPromptStep<AzureResourceQuickPickWizardContext>[] = [
         new QuickPickAzureSubscriptionStep(tdp),
         new QuickPickGroupStep(tdp, {

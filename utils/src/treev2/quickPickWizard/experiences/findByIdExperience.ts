@@ -10,8 +10,9 @@ import { NoResourceFoundError } from '../../../errors';
 import { FindByIdQuickPickStep } from '../FindByIdQuickPickStep';
 import { isWrapper } from '../../../registerCommandWithTreeNodeUnwrapping';
 import { AzureWizard } from '../../../wizard/AzureWizard';
+import { ResourceGroupsItem } from '../quickPickAzureResource/tempTypes';
 
-export async function findByIdExperience<TPick extends types.FindableByIdTreeNode>(context: types.IActionContext, tdp: vscode.TreeDataProvider<TPick>, id: string): Promise<TPick> {
+export async function findByIdExperience<TPick extends types.FindableByIdTreeNode>(context: types.IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, id: string): Promise<TPick> {
     const promptSteps: types.AzureWizardPromptStep<types.QuickPickWizardContext>[] = [
         new FindByIdQuickPickStep(tdp, {
             id: id,

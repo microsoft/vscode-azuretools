@@ -22,3 +22,5 @@ export type GroupingItem = {
 export type AppResourceItem = {
     resource: ApplicationResource;
 };
+
+export type ResourceGroupsItem = unknown;

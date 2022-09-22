@@ -11,8 +11,9 @@ import { NoResourceFoundError } from '../../../errors';
 import { AzureWizardPromptStep } from '../../../wizard/AzureWizardPromptStep';
 import { AzureWizard } from '../../../wizard/AzureWizard';
 import { isWrapper } from '../../../registerCommandWithTreeNodeUnwrapping';
+import { ResourceGroupsItem } from '../quickPickAzureResource/tempTypes';
 
-export async function contextValueExperience<TPick extends unknown>(context: types.IActionContext, tdp: vscode.TreeDataProvider<TPick>, contextValueFilter: types.ContextValueFilter): Promise<TPick> {
+export async function contextValueExperience<TPick extends unknown>(context: types.IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, contextValueFilter: types.ContextValueFilter): Promise<TPick> {
     const promptSteps: AzureWizardPromptStep<types.QuickPickWizardContext>[] = [
         new RecursiveQuickPickStep(tdp, {
             contextValueFilter: contextValueFilter,

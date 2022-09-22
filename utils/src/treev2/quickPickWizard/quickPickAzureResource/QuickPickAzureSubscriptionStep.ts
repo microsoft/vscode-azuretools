@@ -6,10 +6,10 @@
 import * as vscode from 'vscode';
 import { AzureResourceQuickPickWizardContext } from '../../../../hostapi.v2';
 import { GenericQuickPickOptions, GenericQuickPickStep, SkipIfOneQuickPickOptions } from '../GenericQuickPickStep';
-import { SubscriptionItem } from './tempTypes';
+import { ResourceGroupsItem, SubscriptionItem } from './tempTypes';
 
 export class QuickPickAzureSubscriptionStep extends GenericQuickPickStep<AzureResourceQuickPickWizardContext, SkipIfOneQuickPickOptions> {
-    public constructor(tdp: vscode.TreeDataProvider<unknown>, options?: GenericQuickPickOptions) {
+    public constructor(tdp: vscode.TreeDataProvider<ResourceGroupsItem>, options?: GenericQuickPickOptions) {
         super(
             tdp,
             {
