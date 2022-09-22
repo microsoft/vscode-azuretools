@@ -106,7 +106,7 @@ export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizar
      */
     protected abstract isIndirectPick(node: vscode.TreeItem): boolean;
 
-    private async getQuickPickItem(node: unknown, item: vscode.TreeItem,): Promise<types.IAzureQuickPickItem<unknown>> {
+    private async getQuickPickItem(node: unknown, item: vscode.TreeItem): Promise<types.IAzureQuickPickItem<unknown>> {
         return {
             label: ((item.label as vscode.TreeItemLabel)?.label || item.label) as string,
             description: item.description as string,
