@@ -20,7 +20,7 @@ export class CreateQuickPickStep<TContext extends types.QuickPickWizardContext> 
     public override async prompt(wizardContext: TContext): Promise<void> {
         await super.prompt(wizardContext);
 
-        const lastNode = getLastNode(wizardContext) as (unknown | CreateCallback);
+        const lastNode = getLastNode<unknown | CreateCallback>(wizardContext);
         if (typeof lastNode === 'function') {
             // If the last node is a function, pop it off the list and execute it
             const callback = wizardContext.pickedNodes.pop() as unknown as CreateCallback;
