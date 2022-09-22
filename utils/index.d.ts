@@ -1706,7 +1706,7 @@ export declare interface Wrapper {
  */
 export declare function isWrapper(maybeWrapper: unknown): maybeWrapper is Wrapper;
 
-export declare function appResourceExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<unknown>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: ContextValueFilter): Promise<TPick>;
+export declare function appResourceExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<TPick>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: ContextValueFilter): Promise<TPick>;
 export declare function contextValueExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<TPick>, contextValueFilter: ContextValueFilter): Promise<TPick>;
 export declare function findByIdExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<TPick>, id: string | Uri): Promise<TPick>;
 
