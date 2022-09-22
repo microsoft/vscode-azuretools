@@ -11,15 +11,15 @@ import * as types from '../../../../index';
 
 // These are assumptions made about the nodes in the tree
 
-export type SubscriptionItem = {
+export type SubscriptionItem = ResourceGroupsItem & {
     subscription: ApplicationSubscription;
 }
 
-export type GroupingItem = {
+export type GroupingItem = ResourceGroupsItem & {
     resourceType?: types.AzExtResourceType
 }
 
-export type AppResourceItem = {
+export type AppResourceItem = ResourceGroupsItem & {
     resource: ApplicationResource;
 };
 
