@@ -20,11 +20,9 @@ export class FindByIdQuickPickStep<TContext extends types.QuickPickWizardContext
             ...options,
             skipIfOne: true, // Find-by-id is always skip-if-one
         });
-
-        this.pickFilter = new FindByIdPickFilter(options);
     }
 
-    readonly pickFilter: PickFilter;
+    readonly pickFilter: PickFilter = new FindByIdPickFilter(this.pickOptions);
 
     public async getSubWizard(wizardContext: TContext): Promise<types.IWizardOptions<TContext> | undefined> {
         // TODO: this code is nearly identical to `RecursiveQuickPickStep`, but this class can't inherit from it because it's

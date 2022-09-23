@@ -21,11 +21,9 @@ export class QuickPickGroupStep extends GenericQuickPickStep<AzureResourceQuickP
             ...options,
             skipIfOne: true, // Group is always skip-if-one
         });
-
-        this.pickFilter = new GroupPickFilter(options);
     }
 
-    readonly pickFilter: PickFilter;
+    readonly pickFilter: PickFilter = new GroupPickFilter(this.pickOptions);
 }
 
 class GroupPickFilter implements PickFilter {
