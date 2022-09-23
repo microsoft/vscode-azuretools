@@ -7,15 +7,14 @@ import * as types from '../../../index';
 import * as vscode from 'vscode';
 import { getLastNode } from './QuickPickWizardContext';
 import { GenericQuickPickStep, SkipIfOneQuickPickOptions } from './GenericQuickPickStep';
-import { isAzExtParentTreeItem } from '../../tree/isAzExtParentTreeItem';
 
 interface FindByIdQuickPickOptions extends SkipIfOneQuickPickOptions {
     id: string;
     skipIfOne?: true;
 }
 
-export class FindByIdQuickPickStep<TNode extends types.FindableByIdTreeNode, TContext extends types.QuickPickWizardContext<TNode>> extends GenericQuickPickStep<TNode, TContext, FindByIdQuickPickOptions> {
-    public constructor(tdp: vscode.TreeDataProvider<TNode>, options: FindByIdQuickPickOptions) {
+export class FindByIdQuickPickStep<TContext extends types.QuickPickWizardContext> extends GenericQuickPickStep<TContext, FindByIdQuickPickOptions> {
+    public constructor(tdp: vscode.TreeDataProvider<unknown>, options: FindByIdQuickPickOptions) {
         super(
             tdp,
             {
@@ -35,7 +34,7 @@ export class FindByIdQuickPickStep<TNode extends types.FindableByIdTreeNode, TCo
             throw new Error('No node was set after prompt step.');
         }
 
-        if (this.isDirectPick(lastPickedItem)) {
+        if (this.isDirectPick(await this.treeDataProvider.getTreeItem(lastPickedItem))) {
             // The last picked node matches the expected ID
             // No need to continue prompting
             return undefined;
@@ -50,49 +49,20 @@ export class FindByIdQuickPickStep<TNode extends types.FindableByIdTreeNode, TCo
         }
     }
 
-    protected override isIndirectPick(node: TNode): boolean {
-        if (isFindableByIdTreeNodeV2(node)) {
-            if (node.quickPickOptions.isLeaf) {
-                return false;
-            }
+    protected override isIndirectPick(node: vscode.TreeItem): boolean {
+        if (!node.collapsibleState) {
+            // can't be an indirect pick if it doesn't have children
+            return false;
+        }
 
+        if (node.id) {
             return this.pickOptions.id.startsWith(node.id);
-        } else {
-            if (!isAzExtParentTreeItem(node)) {
-                return false;
-            }
-
-            return this.pickOptions.id.startsWith(node.fullId);
         }
-    }
 
-    protected override isDirectPick(node: TNode): boolean {
-        if (isFindableByIdTreeNodeV2(node)) {
-            return this.pickOptions.id === node.id;
-        } else {
-            return this.pickOptions.id === node.fullId;
-        }
-    }
-}
-
-function isContextValueFilterableTreeNodeV2(maybeNode: unknown): maybeNode is types.ContextValueFilterableTreeNode {
-    if (typeof maybeNode === 'object') {
-        return Array.isArray((maybeNode as types.ContextValueFilterableTreeNode).quickPickOptions.contextValues) &&
-            (maybeNode as types.ContextValueFilterableTreeNode).quickPickOptions?.isLeaf !== undefined &&
-            (maybeNode as types.ContextValueFilterableTreeNode).quickPickOptions?.isLeaf !== null;
-    }
-
-    return false;
-}
-
-function isFindableByIdTreeNodeV2(maybeNode: unknown): maybeNode is types.FindableByIdTreeNodeV2 {
-    if (!isContextValueFilterableTreeNodeV2(maybeNode)) {
         return false;
     }
 
-    if (typeof maybeNode === 'object') {
-        return typeof (maybeNode as types.FindableByIdTreeNodeV2).id === 'string' && !!(maybeNode as types.FindableByIdTreeNodeV2).id;
+    protected override isDirectPick(node: vscode.TreeItem): boolean {
+        return this.pickOptions.id === node.id;
     }
-
-    return false;
 }

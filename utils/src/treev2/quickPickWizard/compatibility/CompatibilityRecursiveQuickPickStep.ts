@@ -9,6 +9,9 @@ import { CompatibilityContextValueQuickPickStep } from './CompatibilityContextVa
 import { localize } from "../../../localize";
 import { NoResourceFoundError, UserCancelledError } from "../../../errors";
 import type { ContextValueFilterQuickPickOptions } from "../ContextValueQuickPickStep";
+import { AzExtTreeItem, isAzExtTreeItem } from "../../../tree/AzExtTreeItem";
+import { isAzExtParentTreeItem } from "../../../tree/isAzExtParentTreeItem";
+import { isWrapper } from "../../../registerCommandWithTreeNodeUnwrapping";
 
 export interface CompatibilityRecursiveQuickPickOptions extends ContextValueFilterQuickPickOptions {
     create?: types.CreateOptions;
@@ -17,10 +20,10 @@ export interface CompatibilityRecursiveQuickPickOptions extends ContextValueFilt
 /**
  * Recursive step which is compatible which adds create picks based if the node has {@link types.CompatibleQuickPickOptions.createChild quickPickOptions.createChild} defined.
  */
-export class CompatibilityRecursiveQuickPickStep<TNode extends types.CompatibleContextValueFilterableTreeNode, TContext extends types.QuickPickWizardContext<TNode>> extends CompatibilityContextValueQuickPickStep<TNode, TContext, CompatibilityRecursiveQuickPickOptions> {
+export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPickWizardContext> extends CompatibilityContextValueQuickPickStep<TContext, CompatibilityRecursiveQuickPickOptions> {
 
-    protected override async promptInternal(wizardContext: TContext): Promise<TNode> {
-        const picks = await this.getPicks(wizardContext) as types.IAzureQuickPickItem<TNode>[];
+    protected override async promptInternal(wizardContext: TContext): Promise<unknown> {
+        const picks = await this.getPicks(wizardContext) as types.IAzureQuickPickItem<unknown>[];
 
         if (picks.length === 1 && this.pickOptions.skipIfOne) {
             return picks[0].data;
@@ -33,7 +36,7 @@ export class CompatibilityRecursiveQuickPickStep<TNode extends types.CompatibleC
             // check if the last picked item is a create callback
             if (typeof selected.data === 'function') {
                 // If the last node is a function, pop it off the list and execute it
-                const callback = selected.data as unknown as types.CreateCallback<TNode>;
+                const callback = selected.data as unknown as types.CreateCallback<unknown>;
 
                 // context passed to callback must have the same `ui` as the wizardContext
                 // to prevent the wizard from being cancelled unexpectedly
@@ -58,27 +61,34 @@ export class CompatibilityRecursiveQuickPickStep<TNode extends types.CompatibleC
             throw new Error('No node was set after prompt step.');
         }
 
-        if (super.isDirectPick(lastPickedItem)) {
+        // lastPickedItem might already be a tree item if the user picked a create callback
+        const ti = isAzExtTreeItem(lastPickedItem) ? lastPickedItem : await this.treeDataProvider.getTreeItem(lastPickedItem) as AzExtTreeItem;
+
+        if (super.isDirectPick(ti)) {
             // The last picked node matches the expected filter
             // No need to continue prompting
             return undefined;
         } else {
+            const lastPickedItemTi = isWrapper(lastPickedItem) ? lastPickedItem.unwrap<AzExtTreeItem>() : lastPickedItem;
             // Need to keep going because the last picked node is not a match
             return {
                 hideStepCount: true,
                 promptSteps: [
                     new CompatibilityRecursiveQuickPickStep(this.treeDataProvider, {
                         ...this.pickOptions,
-                        skipIfOne: !lastPickedItem.quickPickOptions.createChild,
-                        create: lastPickedItem.quickPickOptions.createChild,
+                        skipIfOne: isAzExtParentTreeItem(lastPickedItemTi) && !!lastPickedItemTi.createChildImpl,
+                        create: (isAzExtParentTreeItem(lastPickedItemTi) && !!lastPickedItemTi.createChildImpl) ? {
+                            callback: lastPickedItemTi.createChild.bind(lastPickedItemTi) as typeof lastPickedItemTi.createChild,
+                            label: lastPickedItemTi.createNewLabel ?? localize('createNewItem', '$(plus) Create new {0}', lastPickedItemTi.childTypeLabel)
+                        } : undefined
                     })
                 ],
             };
         }
     }
 
-    protected override async getPicks(wizardContext: TContext): Promise<types.IAzureQuickPickItem<TNode>[]> {
-        const picks: types.IAzureQuickPickItem<TNode | types.CreateCallback>[] = [];
+    protected override async getPicks(wizardContext: TContext): Promise<types.IAzureQuickPickItem<unknown>[]> {
+        const picks: types.IAzureQuickPickItem<unknown | types.CreateCallback>[] = [];
         try {
             picks.push(...await super.getPicks(wizardContext));
         } catch (error) {
@@ -93,7 +103,7 @@ export class CompatibilityRecursiveQuickPickStep<TNode extends types.CompatibleC
             picks.push(this.getCreatePick(this.pickOptions.create));
         }
 
-        return picks as types.IAzureQuickPickItem<TNode>[];
+        return picks as types.IAzureQuickPickItem<unknown>[];
     }
 
     private getCreatePick(options: types.CreateOptions): types.IAzureQuickPickItem<types.CreateCallback> {

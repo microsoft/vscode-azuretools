@@ -14,7 +14,7 @@ import { isAzExtParentTreeItem } from "../../../tree/isAzExtParentTreeItem";
 /**
  * Provides compatability with {@link AzExtParentTreeItem.pickTreeItemImpl}
  */
-export class CompatibilityContextValueQuickPickStep<TNode extends types.CompatibleContextValueFilterableTreeNode, TContext extends types.QuickPickWizardContext<TNode>, TOptions extends ContextValueFilterQuickPickOptions> extends ContextValueQuickPickStep<TNode, TContext, TOptions> {
+export class CompatibilityContextValueQuickPickStep<TContext extends types.QuickPickWizardContext, TOptions extends ContextValueFilterQuickPickOptions> extends ContextValueQuickPickStep<TContext, TOptions> {
 
     public override async prompt(wizardContext: TContext): Promise<void> {
         await this.provideCompatabilityWithPickTreeItemImpl(wizardContext) || await super.prompt(wizardContext);

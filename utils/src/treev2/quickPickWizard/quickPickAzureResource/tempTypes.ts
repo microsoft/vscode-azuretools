@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ApplicationResource, ApplicationSubscription, ResourceGroupsItem } from '../../../../hostapi.v2';
+import { ApplicationResource, ApplicationSubscription } from '../../../../hostapi.v2';
 import * as types from '../../../../index';
 
 // TODO: THIS FILE IS TEMPORARY //
@@ -22,3 +22,5 @@ export type GroupingItem = ResourceGroupsItem & {
 export type AppResourceItem = ResourceGroupsItem & {
     resource: ApplicationResource;
 };
+
+export type ResourceGroupsItem = unknown;

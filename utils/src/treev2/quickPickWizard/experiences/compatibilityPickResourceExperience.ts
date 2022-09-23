@@ -12,9 +12,10 @@ import { NoResourceFoundError } from '../../../errors';
 import * as types from '../../../../index';
 import { AzureWizardPromptStep } from '../../../wizard/AzureWizardPromptStep';
 import { AzureWizard } from '../../../wizard/AzureWizard';
-import { AzureResourceQuickPickWizardContext, ResourceGroupsItem } from '../../../../hostapi.v2';
+import { AzureResourceQuickPickWizardContext } from '../../../../hostapi.v2';
 import { CompatibilityRecursiveQuickPickStep } from '../compatibility/CompatibilityRecursiveQuickPickStep';
 import { isWrapper } from '../../../registerCommandWithTreeNodeUnwrapping';
+import { ResourceGroupsItem } from '../quickPickAzureResource/tempTypes';
 
 /**
  * Provides compatibility for the legacy `pickAppResource` Resource Groups API
@@ -30,11 +31,12 @@ export async function compatibilityPickAppResourceExperience<TPick extends types
         new QuickPickAppResourceStep(tdp, {
             resourceTypes: resourceTypes ? Array.isArray(resourceTypes) ? resourceTypes : [resourceTypes] : undefined,
             skipIfOne: false,
+            childItemFilter,
         }),
     ];
 
     if (childItemFilter) {
-        promptSteps.push(new CompatibilityRecursiveQuickPickStep<ResourceGroupsItem, AzureResourceQuickPickWizardContext>(tdp, {
+        promptSteps.push(new CompatibilityRecursiveQuickPickStep<AzureResourceQuickPickWizardContext>(tdp, {
             contextValueFilter: childItemFilter,
             skipIfOne: false,
         }));
