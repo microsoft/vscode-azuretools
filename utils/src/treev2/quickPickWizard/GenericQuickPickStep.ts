@@ -7,8 +7,7 @@ import * as types from '../../../index';
 import * as vscode from 'vscode';
 import { getLastNode } from './QuickPickWizardContext';
 import { AzureWizardPromptStep } from '../../wizard/AzureWizardPromptStep';
-import { NoResourceFoundError } from '../../errors';
-import { parseError } from '../../parseError';
+import { localize } from 'vscode-nls';
 
 export interface GenericQuickPickOptions {
     skipIfOne?: boolean;
@@ -29,20 +28,12 @@ export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizar
     }
 
     public async prompt(wizardContext: TContext): Promise<void> {
-        try {
-            const pick = await this.promptInternal(wizardContext);
-            wizardContext.pickedNodes.push(pick);
-        } catch (err) {
-            const error = parseError(err);
-            if (error.errorType === 'GoBackError') {
-                // Instead of wiping out a property value, which is the default wizard behavior for `GoBackError`, pop the most recent
-                // value off from the provenance of the picks
-                wizardContext.pickedNodes.pop();
-            }
+        const pick = await this.promptInternal(wizardContext);
+        wizardContext.pickedNodes.push(pick);
+    }
 
-            // And rethrow
-            throw err;
-        }
+    public undo(wizardContext: TContext): void {
+        wizardContext.pickedNodes.pop();
     }
 
     public shouldPrompt(_wizardContext: TContext): boolean {
@@ -53,9 +44,11 @@ export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizar
         const picks = await this.getPicks(wizardContext);
 
         if (picks.length === 1 && this.pickOptions.skipIfOne) {
+            this.skipped = true;
             return picks[0].data;
         } else {
             const selected = await wizardContext.ui.showQuickPick(picks, {
+                noPicksMessage: localize('noMatchingResources', 'No matching resources found.'),
                 /* TODO: options */
                 /* TODO: set id here so recently picked items appear at the top */
             });
@@ -75,10 +68,10 @@ export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizar
         const directChoices = childPairs.filter(([, ti]) => this.isDirectPick(ti));
         const indirectChoices = childPairs.filter(([, ti]) => this.isIndirectPick(ti));
 
-        let promptChoices: [unknown, vscode.TreeItem][];
+        let promptChoices: [unknown, vscode.TreeItem][] = [];
         if (directChoices.length === 0) {
             if (indirectChoices.length === 0) {
-                throw new NoResourceFoundError();
+                //
             } else {
                 promptChoices = indirectChoices;
             }

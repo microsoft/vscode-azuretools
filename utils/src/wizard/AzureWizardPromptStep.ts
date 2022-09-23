@@ -14,11 +14,17 @@ export abstract class AzureWizardPromptStep<T extends types.IActionContext> impl
     public numSubExecuteSteps: number;
     public propertiesBeforePrompt: string[];
     public prompted: boolean;
+    /**
+     * If step doesn't show any UI in the prompt method,
+     * but still needs to be undone when the user goes back.
+     */
+    public skipped: boolean;
     public id?: string;
 
     public abstract prompt(wizardContext: T): Promise<void>;
 
     public getSubWizard?(wizardContext: T): Promise<types.IWizardOptions<T> | undefined>;
+    public undo?(wizardContext: T): void;
 
     public abstract shouldPrompt(wizardContext: T): boolean;
 

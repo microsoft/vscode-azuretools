@@ -221,6 +221,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
         do {
             this._promptSteps.push(step);
             step = this._finishedPromptSteps.pop();
+            step?.undo?.(this._context);
             if (!step) {
                 throw new GoBackError();
             }
@@ -229,7 +230,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                 removeFromEnd(this._promptSteps, step.numSubPromptSteps);
                 removeFromEnd(this._executeSteps, step.numSubExecuteSteps);
             }
-        } while (!step.prompted);
+        } while (!step.prompted || step.skipped);
 
         for (const key of Object.keys(this._context)) {
             if (!step.propertiesBeforePrompt.find(p => p === key)) {
