@@ -7,6 +7,7 @@ import { TreeItem } from 'vscode';
 import { AzureResourceQuickPickWizardContext } from '../../../../hostapi.v2';
 import * as types from '../../../../index';
 import { parseContextValue } from '../../../utils/contextUtils';
+import { PickFilter } from '../common/PickFilter';
 import { GenericQuickPickOptions, GenericQuickPickStep } from '../GenericQuickPickStep';
 import { AppResourceItem } from './tempTypes';
 
@@ -26,29 +27,32 @@ export class QuickPickAppResourceStep extends GenericQuickPickStep<AzureResource
         return pickedAppResource;
     }
 
-    protected isDirectPick(node: TreeItem): boolean {
+    readonly pickFilter: PickFilter = new AppResourcePickFilter(this.pickOptions);
+}
+
+class AppResourcePickFilter implements PickFilter {
+
+    constructor(private readonly pickOptions: AppResourceQuickPickOptions) { }
+
+    isDirectPick(node: TreeItem): boolean {
         // If childItemFilter is defined, this cannot be a direct pick
         if (this.pickOptions.childItemFilter) {
             return false;
         }
 
-        const contextValues = parseContextValue(node.contextValue);
-
-        if (!contextValues.includes('azureResource')) {
-            return false;
-        }
-
-        return !this.pickOptions.resourceTypes || this.pickOptions.resourceTypes.some((type) => contextValues.includes(type));
+        return this.matchesResourceType(parseContextValue(node.contextValue));
     }
 
-    protected isIndirectPick(node: TreeItem): boolean {
+    isIndirectPick(node: TreeItem): boolean {
         // If childItemFilter is undefined, this cannot be an indirect pick
         if (!this.pickOptions.childItemFilter) {
             return false;
         }
 
-        const contextValues = parseContextValue(node.contextValue);
+        return this.matchesResourceType(parseContextValue(node.contextValue));
+    }
 
+    private matchesResourceType(contextValues: string[]): boolean {
         if (!contextValues.includes('azureResource')) {
             return false;
         }

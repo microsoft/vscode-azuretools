@@ -9,6 +9,7 @@ import { getLastNode } from './QuickPickWizardContext';
 import { AzureWizardPromptStep } from '../../wizard/AzureWizardPromptStep';
 import { NoResourceFoundError } from '../../errors';
 import { parseError } from '../../parseError';
+import { PickFilter } from './common/PickFilter';
 
 export interface GenericQuickPickOptions {
     skipIfOne?: boolean;
@@ -20,6 +21,8 @@ export interface SkipIfOneQuickPickOptions extends GenericQuickPickOptions {
 
 export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizardContext, TOptions extends GenericQuickPickOptions> extends AzureWizardPromptStep<TContext> {
     public readonly supportsDuplicateSteps = true;
+
+    abstract pickFilter: PickFilter<vscode.TreeItem>;
 
     public constructor(
         protected readonly treeDataProvider: vscode.TreeDataProvider<unknown>,
@@ -72,8 +75,8 @@ export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizar
         const childItems = await Promise.all(childNodes.map(async (childElement: unknown) => await this.treeDataProvider.getTreeItem(childElement)));
         const childPairs: [unknown, vscode.TreeItem][] = childNodes.map((childElement: unknown, i: number) => [childElement, childItems[i]]);
 
-        const directChoices = childPairs.filter(([, ti]) => this.isDirectPick(ti));
-        const indirectChoices = childPairs.filter(([, ti]) => this.isIndirectPick(ti));
+        const directChoices = childPairs.filter(([, ti]) => this.pickFilter.isDirectPick(ti));
+        const indirectChoices = childPairs.filter(([, ti]) => this.pickFilter.isIndirectPick(ti));
 
         let promptChoices: [unknown, vscode.TreeItem][];
         if (directChoices.length === 0) {
@@ -93,18 +96,6 @@ export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizar
 
         return picks;
     }
-
-    /**
-     * Filters for nodes that match the final target.
-     * @param node The node to apply the filter to
-     */
-    protected abstract isDirectPick(node: vscode.TreeItem): boolean;
-
-    /**
-     * Filters for nodes that could have a descendant matching the final target.
-     * @param node The node to apply the filter to
-     */
-    protected abstract isIndirectPick(node: vscode.TreeItem): boolean;
 
     private async getQuickPickItem(node: unknown, item: vscode.TreeItem): Promise<types.IAzureQuickPickItem<unknown>> {
         return {
