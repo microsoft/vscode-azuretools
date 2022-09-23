@@ -7,7 +7,6 @@ import * as types from '../../../index';
 import * as vscode from 'vscode';
 import { getLastNode } from './QuickPickWizardContext';
 import { GenericQuickPickStep, SkipIfOneQuickPickOptions } from './GenericQuickPickStep';
-import { isWrapper } from '../../registerCommandWithTreeNodeUnwrapping';
 
 interface FindByIdQuickPickOptions extends SkipIfOneQuickPickOptions {
     id: string;
