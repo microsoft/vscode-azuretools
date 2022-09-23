@@ -11,7 +11,6 @@ import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
 import type { TreeNodeCommandCallback } from './hostapi.v2';
-import { ResourceGroupsItem } from './src/treev2/quickPickWizard/quickPickAzureResource/tempTypes';
 
 export declare interface RunWithTemporaryDescriptionOptions {
     description: string;
@@ -1698,6 +1697,9 @@ export declare enum AzExtResourceType {
 export declare interface Wrapper {
     unwrap<T>(): T;
 }
+
+// temporary
+type ResourceGroupsItem = unknown;
 
 /**
  * Tests to see if something is a wrapper, by ensuring it is an object
