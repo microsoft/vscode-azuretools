@@ -27,7 +27,7 @@ export class FindByIdQuickPickStep<TContext extends types.QuickPickWizardContext
     public async getSubWizard(wizardContext: TContext): Promise<types.IWizardOptions<TContext> | undefined> {
         // TODO: this code is nearly identical to `RecursiveQuickPickStep`, but this class can't inherit from it because it's
         // not at all based on context value for filtering
-        const lastPickedItem = getLastNode(wizardContext);
+        const lastPickedItem = getLastNode<vscode.TreeItem>(wizardContext);
 
         if (!lastPickedItem) {
             // Something went wrong, no node was chosen
