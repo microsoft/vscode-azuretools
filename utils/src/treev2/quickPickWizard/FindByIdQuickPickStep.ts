@@ -7,6 +7,7 @@ import * as types from '../../../index';
 import * as vscode from 'vscode';
 import { getLastNode } from './QuickPickWizardContext';
 import { GenericQuickPickStep, SkipIfOneQuickPickOptions } from './GenericQuickPickStep';
+import { isWrapper } from '../../registerCommandWithTreeNodeUnwrapping';
 
 interface FindByIdQuickPickOptions extends SkipIfOneQuickPickOptions {
     id: string;
@@ -27,14 +28,14 @@ export class FindByIdQuickPickStep<TContext extends types.QuickPickWizardContext
     public async getSubWizard(wizardContext: TContext): Promise<types.IWizardOptions<TContext> | undefined> {
         // TODO: this code is nearly identical to `RecursiveQuickPickStep`, but this class can't inherit from it because it's
         // not at all based on context value for filtering
-        const lastPickedItem = getLastNode<vscode.TreeItem>(wizardContext);
+        const lastPickedItem = getLastNode(wizardContext);
 
         if (!lastPickedItem) {
             // Something went wrong, no node was chosen
             throw new Error('No node was set after prompt step.');
         }
 
-        if (this.isDirectPick(lastPickedItem)) {
+        if (this.isDirectPick(await this.treeDataProvider.getTreeItem(lastPickedItem))) {
             // The last picked node matches the expected ID
             // No need to continue prompting
             return undefined;
