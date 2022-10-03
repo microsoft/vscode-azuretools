@@ -6,6 +6,7 @@
 import { TreeItem } from "vscode";
 import { AzureResourceQuickPickWizardContext } from "../../../../hostapi.v2";
 import * as types from "../../../../index";
+import { PickFilter } from "../common/PickFilter";
 import { GenericQuickPickOptions, GenericQuickPickStep } from "../GenericQuickPickStep";
 
 // TODO: implement this for picking resource group
@@ -15,11 +16,5 @@ export class QuickPickAzureResourceGroupStep extends GenericQuickPickStep<AzureR
         throw new Error("Method not implemented.");
     }
 
-    protected isDirectPick(_node: TreeItem): boolean {
-        throw new Error("Method not implemented.");
-    }
-
-    protected isIndirectPick(_node: TreeItem): boolean {
-        throw new Error("Method not implemented.");
-    }
+    pickFilter: PickFilter<TreeItem>;
 }
