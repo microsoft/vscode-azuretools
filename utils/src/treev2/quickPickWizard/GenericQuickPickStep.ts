@@ -22,7 +22,7 @@ export interface SkipIfOneQuickPickOptions extends GenericQuickPickOptions {
 export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizardContext, TOptions extends GenericQuickPickOptions> extends AzureWizardPromptStep<TContext> {
     public readonly supportsDuplicateSteps = true;
 
-    abstract pickFilter: PickFilter<vscode.TreeItem>;
+    protected readonly abstract pickFilter: PickFilter<vscode.TreeItem>;
 
     public constructor(
         protected readonly treeDataProvider: vscode.TreeDataProvider<unknown>,

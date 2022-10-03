@@ -22,7 +22,7 @@ export class FindByIdQuickPickStep<TContext extends types.QuickPickWizardContext
         });
     }
 
-    readonly pickFilter: PickFilter = new FindByIdPickFilter(this.pickOptions);
+    protected readonly pickFilter: PickFilter = new FindByIdPickFilter(this.pickOptions);
 
     public async getSubWizard(wizardContext: TContext): Promise<types.IWizardOptions<TContext> | undefined> {
         // TODO: this code is nearly identical to `RecursiveQuickPickStep`, but this class can't inherit from it because it's

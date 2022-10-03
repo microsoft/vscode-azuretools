@@ -23,7 +23,7 @@ export class QuickPickGroupStep extends GenericQuickPickStep<AzureResourceQuickP
         });
     }
 
-    readonly pickFilter: PickFilter = new GroupPickFilter(this.pickOptions);
+    protected readonly pickFilter: PickFilter = new GroupPickFilter(this.pickOptions);
 }
 
 class GroupPickFilter implements PickFilter {

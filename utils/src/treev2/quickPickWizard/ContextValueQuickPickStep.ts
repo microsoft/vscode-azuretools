@@ -14,7 +14,7 @@ export interface ContextValueFilterQuickPickOptions extends GenericQuickPickOpti
 }
 
 export class ContextValueQuickPickStep<TContext extends types.QuickPickWizardContext, TOptions extends ContextValueFilterQuickPickOptions> extends GenericQuickPickStep<TContext, TOptions> {
-    readonly pickFilter: PickFilter = new ContextValuePickFilter(this.pickOptions);
+    protected readonly pickFilter: PickFilter = new ContextValuePickFilter(this.pickOptions);
 }
 
 class ContextValuePickFilter implements PickFilter {

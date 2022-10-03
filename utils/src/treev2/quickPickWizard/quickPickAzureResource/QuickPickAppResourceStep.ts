@@ -27,7 +27,7 @@ export class QuickPickAppResourceStep extends GenericQuickPickStep<AzureResource
         return pickedAppResource;
     }
 
-    readonly pickFilter: PickFilter = new AppResourcePickFilter(this.pickOptions);
+    protected readonly pickFilter: PickFilter = new AppResourcePickFilter(this.pickOptions);
 }
 
 class AppResourcePickFilter implements PickFilter {

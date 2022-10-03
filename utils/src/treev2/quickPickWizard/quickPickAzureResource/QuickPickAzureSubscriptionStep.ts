@@ -17,7 +17,7 @@ export class QuickPickAzureSubscriptionStep extends GenericQuickPickStep<AzureRe
         });
     }
 
-    readonly pickFilter = new AzureSubscriptionPickFilter();
+    protected readonly pickFilter = new AzureSubscriptionPickFilter();
 
     protected override async promptInternal(wizardContext: AzureResourceQuickPickWizardContext): Promise<SubscriptionItem> {
         const pickedSubscription = await super.promptInternal(wizardContext) as SubscriptionItem;
