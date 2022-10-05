@@ -7,9 +7,8 @@ import * as types from '../../../index';
 import * as vscode from 'vscode';
 import { getLastNode } from './QuickPickWizardContext';
 import { AzureWizardPromptStep } from '../../wizard/AzureWizardPromptStep';
-import { NoResourceFoundError } from '../../errors';
-import { parseError } from '../../parseError';
 import { PickFilter } from './common/PickFilter';
+import { localize } from '../../localize';
 
 export interface GenericQuickPickOptions {
     skipIfOne?: boolean;
