@@ -6,6 +6,7 @@
 import { TreeItem } from 'vscode';
 import * as types from '../../../index';
 import { parseContextValue } from '../../utils/contextUtils';
+import { PickFilter } from './common/PickFilter';
 import { GenericQuickPickOptions, GenericQuickPickStep } from './GenericQuickPickStep';
 
 export interface ContextValueFilterQuickPickOptions extends GenericQuickPickOptions {
@@ -13,7 +14,13 @@ export interface ContextValueFilterQuickPickOptions extends GenericQuickPickOpti
 }
 
 export class ContextValueQuickPickStep<TContext extends types.QuickPickWizardContext, TOptions extends ContextValueFilterQuickPickOptions> extends GenericQuickPickStep<TContext, TOptions> {
-    protected override isDirectPick(node: TreeItem): boolean {
+    protected readonly pickFilter: PickFilter = new ContextValuePickFilter(this.pickOptions);
+}
+
+class ContextValuePickFilter implements PickFilter {
+    constructor(private readonly pickOptions: ContextValueFilterQuickPickOptions) { }
+
+    isDirectPick(node: TreeItem): boolean {
         const includeOption = this.pickOptions.contextValueFilter.include;
         const excludeOption = this.pickOptions.contextValueFilter.exclude;
 
@@ -28,7 +35,7 @@ export class ContextValueQuickPickStep<TContext extends types.QuickPickWizardCon
             !excludeArray.some(e => this.matchesSingleFilter(e, nodeContextValues));
     }
 
-    protected override isIndirectPick(node: TreeItem): boolean {
+    isIndirectPick(node: TreeItem): boolean {
         // `TreeItemCollapsibleState.None` and `undefined` are both falsy, and indicate that a `TreeItem` cannot have children--and therefore, cannot be an indirect pick
         return !node.collapsibleState;
     }
