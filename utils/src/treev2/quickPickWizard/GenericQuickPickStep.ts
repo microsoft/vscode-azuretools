@@ -73,7 +73,7 @@ export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizar
         let promptChoices: [unknown, vscode.TreeItem][] = [];
         if (directChoices.length === 0) {
             if (indirectChoices.length === 0) {
-                //
+                // Don't throw and end the wizard, let user use back button instead
             } else {
                 promptChoices = indirectChoices;
             }
