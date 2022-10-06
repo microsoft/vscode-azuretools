@@ -47,7 +47,6 @@ export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizar
         const picks = await this.getPicks(wizardContext);
 
         if (picks.length === 1 && this.pickOptions.skipIfOne) {
-            this.skipped = true;
             return picks[0].data;
         } else {
             const selected = await wizardContext.ui.showQuickPick(picks, {
