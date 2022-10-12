@@ -6,6 +6,7 @@
 import type { IActionContext, AzExtResourceType, QuickPickWizardContext } from "./index";
 import * as vscode from 'vscode';
 import type { Environment } from '@azure/ms-rest-azure-env';
+import { AzureExtensionApi } from "./api";
 
 export declare interface ApplicationAuthentication {
     getSession(scopes?: string[]): vscode.ProviderResult<vscode.AuthenticationSession>;
@@ -14,10 +15,12 @@ export declare interface ApplicationAuthentication {
 /**
  * Information specific to the Subscription
  */
-export declare interface ApplicationSubscription {
+export interface ApplicationSubscription {
     readonly authentication: ApplicationAuthentication;
     readonly displayName: string;
     readonly subscriptionId: string;
+    readonly subscriptionPath: string;
+    readonly tenantId: string;
     readonly environment: Environment;
     readonly isCustomCloud: boolean;
 }
@@ -54,8 +57,11 @@ export declare interface ApplicationResource extends ResourceBase {
  */
 export declare type TreeNodeCommandCallback<T> = (context: IActionContext, node?: T, nodes?: T[], ...args: any[]) => any;
 
-export declare interface AzureResourceQuickPickWizardContext extends QuickPickWizardContext {
+export declare interface PickSubscriptionWizardContext extends QuickPickWizardContext {
     subscription?: ApplicationSubscription;
+}
+
+export declare interface AzureResourceQuickPickWizardContext extends QuickPickWizardContext, PickSubscriptionWizardContext {
     resource?: ApplicationResource;
     resourceGroup?: string;
 }

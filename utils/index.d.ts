@@ -1719,6 +1719,7 @@ interface CompatibilityPickResourceExperienceOptions {
 }
 
 export declare function compatibilityPickAppResourceExperience<TPick extends AzExtTreeItem>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, options: CompatibilityPickResourceExperienceOptions): Promise<TPick>;
+export declare function compatibilitySubscriptionExperience(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>): Promise<ISubscriptionContext>;
 
 export declare interface QuickPickWizardContext extends IActionContext {
     pickedNodes: unknown[];
