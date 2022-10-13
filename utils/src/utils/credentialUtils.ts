@@ -36,6 +36,8 @@ export function createCredential(getSession: (scopes?: string[]) => vscode.Provi
 
 /**
  * Creates a subscription context from an application subscription.
+ *
+ * TODO: expose these utils and remove duplicate code in resource groups + client extensions
  */
 export function createSubscriptionContext(subscription: ApplicationSubscription): ISubscriptionContext {
     return {
