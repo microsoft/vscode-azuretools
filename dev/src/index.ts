@@ -6,9 +6,7 @@
 export * from './gulp/gulp_installVSCodeExtension';
 export * from './gulp/gulp_webpack';
 export * from './TestActionContext';
-export * from './TestAzureAccount';
 export * from './testing/addPackageLintSuites';
 export * from './TestOutputChannel';
 export * from './TestUserInput';
 export { getDefaultWebpackConfig } from './webpack/getDefaultWebpackConfig';
-

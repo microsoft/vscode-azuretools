@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-dev",
     "author": "Microsoft Corporation",
-    "version": "0.1.4",
+    "version": "0.2.0",
     "description": "Common dev dependency tools for developing Azure extensions for VS Code",
     "tags": [
         "azure",
@@ -54,10 +54,6 @@
         "typescript": "^4.8.2"
     },
     "dependencies": {
-        "@azure/arm-subscriptions": "^2.0.0",
-        "@azure/ms-rest-azure-env": "^2.0.0",
-        "@azure/ms-rest-js": "^2.2.1",
-        "@azure/ms-rest-nodeauth": "^3.0.5",
         "clean-webpack-plugin": "^3.0.0",
         "copy-webpack-plugin": "^6.0.0",
         "fs-extra": "^8.0.0",
