@@ -7,6 +7,7 @@ import type { IActionContext, AzExtResourceType, QuickPickWizardContext } from "
 import * as vscode from 'vscode';
 import type { Environment } from '@azure/ms-rest-azure-env';
 import { AzureExtensionApi } from "./api";
+import { ResourceGroupsItem } from "./src/treev2/quickPickWizard/quickPickAzureResource/tempTypes";
 
 export declare interface ApplicationAuthentication {
     getSession(scopes?: string[]): vscode.ProviderResult<vscode.AuthenticationSession>;
@@ -64,4 +65,9 @@ export declare interface PickSubscriptionWizardContext extends QuickPickWizardCo
 export declare interface AzureResourceQuickPickWizardContext extends QuickPickWizardContext, PickSubscriptionWizardContext {
     resource?: ApplicationResource;
     resourceGroup?: string;
+}
+
+export interface V2AzureResourcesApi extends AzureExtensionApi {
+    readonly applicationResourceTreeDataProvider: vscode.TreeDataProvider<ResourceGroupsItem>;
+    readonly workspaceResourceTreeDataProvider: vscode.TreeDataProvider<ResourceGroupsItem>;
 }
