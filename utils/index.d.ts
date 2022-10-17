@@ -1768,5 +1768,13 @@ export declare function registerCommandWithTreeNodeUnwrapping<T>(commandId: stri
 
 export declare function unwrapArgs<T>(treeNodeCallback: TreeNodeCommandCallback<T>): TreeNodeCommandCallback<T>;
 
+/**
+ * Gets the Azure Resource Groups API
+ */
 export declare function getResourceGroupsApi(apiVersionRange: AzureHostExtensionApi['apiVersion']): Promise<AzureHostExtensionApi>;
 export declare function getResourceGroupsApi<T extends AzureExtensionApi>(apiVersionRange: string): Promise<T>;
+
+/**
+ * Get exported API from an extension
+ */
+export declare function getApiExport<T>(extensionId: string): Promise<T | undefined>;

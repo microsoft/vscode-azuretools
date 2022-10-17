@@ -18,7 +18,7 @@ export async function getResourceGroupsApi<T extends AzureExtensionApi>(apiVersi
     }
 }
 
-async function getApiExport<T>(extensionId: string): Promise<T | undefined> {
+export async function getApiExport<T>(extensionId: string): Promise<T | undefined> {
     const extension: Extension<T> | undefined = extensions.getExtension(extensionId);
     if (extension) {
         if (!extension.isActive) {
