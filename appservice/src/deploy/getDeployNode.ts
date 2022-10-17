@@ -3,8 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzExtTreeDataProvider, AzExtTreeItem } from '@microsoft/vscode-azext-utils';
-import * as vscode from 'vscode';
+import { AzExtTreeItem, IActionContext } from '@microsoft/vscode-azext-utils';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { getWorkspaceSetting } from '../utils/settings';
@@ -20,14 +19,14 @@ function isAzExtTreeItem(ti: unknown): ti is AzExtTreeItem {
  * @param arg1 The first arg passed in by VS Code to the deploy command. Typically the node or uri
  * @param arg2 The second arg passed in by VS Code to the deploy command. Usually this is ignored, but can be the appId if called programatically from an API
  */
-export async function getDeployNode<T extends AzExtTreeItem>(context: IDeployContext, tree: AzExtTreeDataProvider, arg1: unknown, arg2: unknown, pickNode: () => Promise<T>): Promise<T> {
+export async function getDeployNode<T extends AzExtTreeItem>(context: IDeployContext, findTreeItem: (context: IActionContext, id: string) => Promise<AzExtTreeItem>, arg1: unknown, arg2: unknown, pickNode: () => Promise<T>): Promise<T> {
     let node: AzExtTreeItem | undefined;
 
     if (isAzExtTreeItem(arg1)) {
         node = arg1;
         context.appSource = AppSource.tree;
     } else if (typeof arg2 === 'string' && arg2) {
-        node = await tree.findTreeItem(arg2, context);
+        node = await findTreeItem(context, arg2);
         if (!node) {
             throw new Error(localize('noMatchingApp', 'Failed to find app matching id "{0}".', arg2));
         }
@@ -35,7 +34,7 @@ export async function getDeployNode<T extends AzExtTreeItem>(context: IDeployCon
     } else {
         const defaultAppId: string | undefined = getWorkspaceSetting(context.defaultAppSetting, ext.prefix, context.workspaceFolder.uri.fsPath);
         if (defaultAppId && defaultAppId.toLowerCase() !== 'none') {
-            node = await tree.findTreeItem(defaultAppId, context);
+            node = await findTreeItem(context, defaultAppId);
             if (node) {
                 context.appSource = AppSource.setting;
             } else {
@@ -44,14 +43,8 @@ export async function getDeployNode<T extends AzExtTreeItem>(context: IDeployCon
         }
 
         if (!node) {
-            const newNodes: AzExtTreeItem[] = [];
-            const disposable: vscode.Disposable = tree.onTreeItemCreate(newNode => { newNodes.push(newNode); });
-            try {
-                node = await pickNode();
-            } finally {
-                disposable.dispose();
-            }
-            context.isNewApp = newNodes.some(newNode => node && newNode.fullId === node.fullId);
+            node = await pickNode();
+            context.isNewApp = false; // TODO: once we create from quick pick is implemented, this needs to be updated
             context.appSource = AppSource.nodePicker;
         }
     }
