@@ -1765,7 +1765,8 @@ export declare type FindableByIdTreeNode = FindableByIdTreeNodeV2 | AzExtTreeIte
  * NOTE: If the environment variable `DEBUGTELEMETRY` is set to a non-empty, non-zero value, then telemetry will not be sent. If the value is 'verbose' or 'v', telemetry will be displayed in the console window.
  */
 export declare function registerCommandWithTreeNodeUnwrapping<T>(commandId: string, callback: TreeNodeCommandCallback<T>, debounce?: number, telemetryId?: string): void;
-export function unwrapArgs<TCallback extends TreeNodeCommandCallback<T>, T>(treeNodeCallback: TCallback): TreeNodeCommandCallback<TCallback>;
+
+export declare function unwrapArgs<T>(treeNodeCallback: TreeNodeCommandCallback<T>): TreeNodeCommandCallback<T>;
 
 export declare function getResourceGroupsApi(apiVersionRange: AzureHostExtensionApi['apiVersion']): Promise<AzureHostExtensionApi>;
 export declare function getResourceGroupsApi<T extends AzureExtensionApi>(apiVersionRange: string): Promise<T>;

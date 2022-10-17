@@ -68,6 +68,6 @@ export declare interface AzureResourceQuickPickWizardContext extends QuickPickWi
 }
 
 export interface V2AzureResourcesApi extends AzureExtensionApi {
-    readonly applicationResourceTreeDataProvider: vscode.TreeDataProvider<ResourceGroupsItem>;
-    readonly workspaceResourceTreeDataProvider: vscode.TreeDataProvider<ResourceGroupsItem>;
+    readonly applicationResourceTreeDataProvider: vscode.TreeDataProvider<unknown>;
+    readonly workspaceResourceTreeDataProvider: vscode.TreeDataProvider<unknown>;
 }
