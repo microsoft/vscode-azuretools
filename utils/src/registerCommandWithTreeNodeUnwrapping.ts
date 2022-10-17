@@ -3,12 +3,16 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import type { CommandCallback, IActionContext, Wrapper } from '../index';
+import type { IActionContext, Wrapper } from '../index';
 import type { TreeNodeCommandCallback } from '../hostapi.v2';
 import { registerCommand } from './registerCommand';
 
 export function registerCommandWithTreeNodeUnwrapping<T>(commandId: string, treeNodeCallback: TreeNodeCommandCallback<T>, debounce?: number, telemetryId?: string): void {
-    const unwrappingCallback: CommandCallback = async (context: IActionContext, ...args: unknown[]) => {
+    registerCommand(commandId, unwrapArgs(treeNodeCallback), debounce, telemetryId);
+}
+
+export function unwrapArgs<T>(treeNodeCallback: TreeNodeCommandCallback<T>): TreeNodeCommandCallback<T> {
+    return async (context: IActionContext, ...args: unknown[]) => {
         const maybeNodeWrapper = args?.[0];
         const maybeNodeWrapperArray = args?.[1];
         const remainingArgs = args.slice(2);
@@ -35,11 +39,9 @@ export function registerCommandWithTreeNodeUnwrapping<T>(commandId: string, tree
             nodes = maybeNodeWrapperArray as T[];
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return treeNodeCallback(context, node, nodes, ...remainingArgs);
     };
-
-    registerCommand(commandId, unwrappingCallback, debounce, telemetryId);
 }
 
 export function isWrapper(maybeWrapper: unknown): maybeWrapper is Wrapper {
