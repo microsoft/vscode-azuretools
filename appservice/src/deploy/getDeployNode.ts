@@ -44,7 +44,7 @@ export async function getDeployNode<T extends AzExtTreeItem>(context: IDeployCon
 
         if (!node) {
             node = await pickNode();
-            context.isNewApp = false; // TODO: once we create from quick pick is implemented, this needs to be updated
+            context.isNewApp = false; // TODO: re-implement once users can create new apps from the quick pick
             context.appSource = AppSource.nodePicker;
         }
     }
