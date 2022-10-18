@@ -5,6 +5,7 @@
 
 export * from './createAzureClient';
 export * from './openInPortal';
+export * from './VSCodeTokenCredential';
 export * from './tree/AzureAccountTreeItemBase';
 export * from './tree/SubscriptionTreeItemBase';
 export * from './utils/parseAzureResourceId';
