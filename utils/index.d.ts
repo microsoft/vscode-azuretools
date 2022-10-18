@@ -6,10 +6,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { Environment } from '@azure/ms-rest-azure-env';
-import { CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions as VSCodeQuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Disposable, Event, EventEmitter, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, ProviderResult, QuickPickItem, QuickPickOptions as VSCodeQuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
-import type { Activity, ActivityTreeItemOptions, AppResource, AzureHostExtensionApi, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
+import type { Activity, ActivityTreeItemOptions, AppResource, AppResourceResolver, AzureHostExtensionApi, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData, ResolvedAppResourceBase } from './hostapi'; // This must remain `import type` or else a circular reference will result
 import type { TreeNodeCommandCallback } from './hostapi.v2';
 
 export declare interface RunWithTemporaryDescriptionOptions {
@@ -1778,3 +1778,13 @@ export declare function getResourceGroupsApi<T extends AzureExtensionApi>(apiVer
  * Get exported API from an extension
  */
 export declare function getApiExport<T>(extensionId: string): Promise<T | undefined>;
+
+export abstract class CompatabilityAppResourceResolverBase implements AppResourceResolver {
+    abstract resolveResource(subContext: ISubscriptionContext, resource: AppResource): ProviderResult<ResolvedAppResourceBase>;
+    abstract matchesResource(resource: AppResource): boolean;
+
+    private readonly onDidChangeTreeDataEmitter: EventEmitter<ResolvedAppResourceBase | undefined>;
+    onDidChangeTreeData: Event<ResolvedAppResourceBase | undefined>;
+
+    refresh(resource?: ResolvedAppResourceBase): void;
+}

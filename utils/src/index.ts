@@ -44,4 +44,5 @@ export * from './treev2/quickPickWizard/experiences/findByIdExperience';
 export * from './treev2/quickPickWizard/experiences/compatibility/compatibilityPickSubscriptionExperience';
 export * from './tree/isAzExtParentTreeItem';
 export * from './utils/apiUtils';
+export * from './treev2/compatibility/CompatibilityAppResourceResolverBase';
 // NOTE: The auto-fix action "source.organizeImports" does weird things with this file, but there doesn't seem to be a way to disable it on a per-file basis so we'll just let it happen

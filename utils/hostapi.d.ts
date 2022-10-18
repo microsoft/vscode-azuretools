@@ -209,6 +209,8 @@ export interface AppResourceResolver {
      * @param resource The AppResource to check if this resolver matches
      */
     matchesResource(resource: AppResource): boolean;
+
+    onDidChangeTreeData?: vscode.Event<ResolvedAppResourceBase | undefined>;
 }
 
 // Not part of public interface to start with--only Resource Groups extension will call it (for now)
