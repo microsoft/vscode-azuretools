@@ -9,7 +9,7 @@ import type { Environment } from '@azure/ms-rest-azure-env';
 import { CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions as VSCodeQuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
-import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
+import type { Activity, ActivityTreeItemOptions, AppResource, AzureHostExtensionApi, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
 import type { TreeNodeCommandCallback } from './hostapi.v2';
 
 export declare interface RunWithTemporaryDescriptionOptions {
@@ -1767,3 +1767,14 @@ export declare type FindableByIdTreeNode = FindableByIdTreeNodeV2 | AzExtTreeIte
 export declare function registerCommandWithTreeNodeUnwrapping<T>(commandId: string, callback: TreeNodeCommandCallback<T>, debounce?: number, telemetryId?: string): void;
 
 export declare function unwrapArgs<T>(treeNodeCallback: TreeNodeCommandCallback<T>): TreeNodeCommandCallback<T>;
+
+/**
+ * Gets the Azure Resource Groups API
+ */
+export declare function getResourceGroupsApi(apiVersionRange: AzureHostExtensionApi['apiVersion']): Promise<AzureHostExtensionApi>;
+export declare function getResourceGroupsApi<T extends AzureExtensionApi>(apiVersionRange: string): Promise<T>;
+
+/**
+ * Get exported API from an extension
+ */
+export declare function getApiExport<T>(extensionId: string): Promise<T | undefined>;
