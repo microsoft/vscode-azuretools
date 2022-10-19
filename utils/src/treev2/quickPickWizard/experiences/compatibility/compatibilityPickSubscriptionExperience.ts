@@ -9,11 +9,17 @@ import { ISubscriptionContext } from '@microsoft/vscode-azext-dev';
 import { subscriptionExperience } from '../subscriptionExperience';
 import { createSubscriptionContext } from '../../../../utils/credentialUtils';
 import { ResourceGroupsItem } from '../../quickPickAzureResource/tempTypes';
+import { isAzExtTreeItem } from '../../../../tree/AzExtTreeItem';
 
 /**
  * Returns `ISubscriptionContext` instead of `ApplicationSubscription` for compatibility.
  */
 export async function compatibilitySubscriptionExperience(context: types.IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>): Promise<ISubscriptionContext> {
     const applicationSubscription = await subscriptionExperience(context, tdp);
+
+    if (isAzExtTreeItem(applicationSubscription)) {
+        return applicationSubscription.subscription;
+    }
+
     return createSubscriptionContext(applicationSubscription);
 }
