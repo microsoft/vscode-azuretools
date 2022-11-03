@@ -8,6 +8,8 @@ import { ContextValueFilterQuickPickOptions, ContextValueQuickPickStep } from '.
 import { getLastNode } from './QuickPickWizardContext';
 
 export class RecursiveQuickPickStep<TContext extends types.QuickPickWizardContext> extends ContextValueQuickPickStep<TContext, ContextValueFilterQuickPickOptions> {
+    hideStepCount: boolean = true;
+
     public async getSubWizard(wizardContext: TContext): Promise<types.IWizardOptions<TContext> | undefined> {
         const lastPickedItem = getLastNode(wizardContext);
 
@@ -23,7 +25,6 @@ export class RecursiveQuickPickStep<TContext extends types.QuickPickWizardContex
         } else {
             // Need to keep going because the last picked node is not a match
             return {
-                hideStepCount: true,
                 promptSteps: [
                     new RecursiveQuickPickStep(this.treeDataProvider, this.pickOptions)
                 ],
