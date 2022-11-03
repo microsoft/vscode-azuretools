@@ -30,12 +30,12 @@ export class QuickPickAzureSubscriptionStep extends GenericQuickPickStep<AzureRe
 }
 
 class AzureSubscriptionPickFilter implements PickFilter {
-    isDirectPick(_node: vscode.TreeItem): boolean {
+    isFinalPick(_node: vscode.TreeItem): boolean {
         // Subscription is never a direct pick
         return false;
     }
 
-    isIndirectPick(_node: vscode.TreeItem): boolean {
+    isAncestorPick(_node: vscode.TreeItem): boolean {
         // All nodes at this level are always subscription nodes
         return true;
     }

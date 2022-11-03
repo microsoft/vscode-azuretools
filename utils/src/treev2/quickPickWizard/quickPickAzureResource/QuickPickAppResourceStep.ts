@@ -34,7 +34,7 @@ class AppResourcePickFilter implements PickFilter {
 
     constructor(private readonly pickOptions: AppResourceQuickPickOptions) { }
 
-    isDirectPick(node: TreeItem): boolean {
+    isFinalPick(node: TreeItem): boolean {
         // If childItemFilter is defined, this cannot be a direct pick
         if (this.pickOptions.childItemFilter) {
             return false;
@@ -43,7 +43,7 @@ class AppResourcePickFilter implements PickFilter {
         return this.matchesResourceType(parseContextValue(node.contextValue));
     }
 
-    isIndirectPick(node: TreeItem): boolean {
+    isAncestorPick(node: TreeItem): boolean {
         // If childItemFilter is undefined, this cannot be an indirect pick
         if (!this.pickOptions.childItemFilter) {
             return false;

@@ -20,7 +20,7 @@ export class ContextValueQuickPickStep<TContext extends types.QuickPickWizardCon
 class ContextValuePickFilter implements PickFilter {
     constructor(private readonly pickOptions: ContextValueFilterQuickPickOptions) { }
 
-    isDirectPick(node: TreeItem): boolean {
+    isFinalPick(node: TreeItem): boolean {
         const includeOption = this.pickOptions.contextValueFilter.include;
         const excludeOption = this.pickOptions.contextValueFilter.exclude;
 
@@ -35,7 +35,7 @@ class ContextValuePickFilter implements PickFilter {
             !excludeArray.some(e => this.matchesSingleFilter(e, nodeContextValues));
     }
 
-    isIndirectPick(node: TreeItem): boolean {
+    isAncestorPick(node: TreeItem): boolean {
         // `TreeItemCollapsibleState.None` and `undefined` are both falsy, and indicate that a `TreeItem` cannot have children--and therefore, cannot be an indirect pick
         return !node.collapsibleState;
     }

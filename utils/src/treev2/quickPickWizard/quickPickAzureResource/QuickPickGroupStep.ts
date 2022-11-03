@@ -29,12 +29,12 @@ export class QuickPickGroupStep extends GenericQuickPickStep<AzureResourceQuickP
 class GroupPickFilter implements PickFilter {
     constructor(private readonly pickOptions: GroupQuickPickOptions) { }
 
-    isDirectPick(_node: vscode.TreeItem): boolean {
+    isFinalPick(_node: vscode.TreeItem): boolean {
         // Group is never a direct pick
         return false;
     }
 
-    isIndirectPick(node: vscode.TreeItem): boolean {
+    isAncestorPick(node: vscode.TreeItem): boolean {
         const contextValues = parseContextValue(node.contextValue);
 
         return !this.pickOptions.groupType ||

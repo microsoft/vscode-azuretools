@@ -67,8 +67,8 @@ export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizar
         const childItems = await Promise.all(childNodes.map(async (childElement: unknown) => await this.treeDataProvider.getTreeItem(childElement)));
         const childPairs: [unknown, vscode.TreeItem][] = childNodes.map((childElement: unknown, i: number) => [childElement, childItems[i]]);
 
-        const directChoices = childPairs.filter(([, ti]) => this.pickFilter.isDirectPick(ti));
-        const indirectChoices = childPairs.filter(([, ti]) => this.pickFilter.isIndirectPick(ti));
+        const directChoices = childPairs.filter(([, ti]) => this.pickFilter.isFinalPick(ti));
+        const indirectChoices = childPairs.filter(([, ti]) => this.pickFilter.isAncestorPick(ti));
 
         let promptChoices: [unknown, vscode.TreeItem][] = [];
         if (directChoices.length === 0) {

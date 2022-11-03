@@ -34,7 +34,7 @@ export class FindByIdQuickPickStep<TContext extends types.QuickPickWizardContext
             throw new Error('No node was set after prompt step.');
         }
 
-        if (this.pickFilter.isDirectPick(await this.treeDataProvider.getTreeItem(lastPickedItem))) {
+        if (this.pickFilter.isFinalPick(await this.treeDataProvider.getTreeItem(lastPickedItem))) {
             // The last picked node matches the expected ID
             // No need to continue prompting
             return undefined;
@@ -53,7 +53,7 @@ export class FindByIdQuickPickStep<TContext extends types.QuickPickWizardContext
 class FindByIdPickFilter implements PickFilter {
     constructor(private readonly pickOptions: FindByIdQuickPickOptions) { }
 
-    isIndirectPick(node: vscode.TreeItem): boolean {
+    isAncestorPick(node: vscode.TreeItem): boolean {
         if (!node.collapsibleState) {
             // can't be an indirect pick if it doesn't have children
             return false;
@@ -66,7 +66,7 @@ class FindByIdPickFilter implements PickFilter {
         return false;
     }
 
-    isDirectPick(node: vscode.TreeItem): boolean {
+    isFinalPick(node: vscode.TreeItem): boolean {
         return this.pickOptions.id === node.id;
     }
 }
