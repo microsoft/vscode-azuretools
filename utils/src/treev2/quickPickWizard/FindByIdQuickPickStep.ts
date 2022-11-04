@@ -11,7 +11,6 @@ import { PickFilter } from './common/PickFilter';
 
 interface FindByIdQuickPickOptions extends SkipIfOneQuickPickOptions {
     id: string;
-    skipIfOne?: true;
 }
 
 export class FindByIdQuickPickStep<TContext extends types.QuickPickWizardContext> extends GenericQuickPickStep<TContext, FindByIdQuickPickOptions> {
