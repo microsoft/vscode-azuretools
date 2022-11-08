@@ -3,8 +3,7 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import type { IActionContext, Wrapper } from '../index';
-import type { TreeNodeCommandCallback } from '../hostapi.v2';
+import type { IActionContext, Wrapper, TreeNodeCommandCallback } from '../index';
 import { registerCommand } from './registerCommand';
 
 export function registerCommandWithTreeNodeUnwrapping<T>(commandId: string, treeNodeCallback: TreeNodeCommandCallback<T>, debounce?: number, telemetryId?: string): void {

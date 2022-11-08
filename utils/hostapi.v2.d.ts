@@ -52,11 +52,6 @@ export declare interface ApplicationResource extends ResourceBase {
     /* add more properties from GenericResource if needed */
 }
 
-/**
- * Describes command callbacks for tree node context menu commands
- */
-export declare type TreeNodeCommandCallback<T> = (context: IActionContext, node?: T, nodes?: T[], ...args: any[]) => any;
-
 export declare interface PickSubscriptionWizardContext extends QuickPickWizardContext {
     subscription?: ApplicationSubscription;
 }
