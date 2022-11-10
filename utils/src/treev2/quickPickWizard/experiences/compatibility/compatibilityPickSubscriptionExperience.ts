@@ -9,7 +9,7 @@ import { ISubscriptionContext } from '@microsoft/vscode-azext-dev';
 import { subscriptionExperience } from '../subscriptionExperience';
 import { createSubscriptionContext } from '../../../../utils/credentialUtils';
 import { ResourceGroupsItem } from '../../quickPickAzureResource/tempTypes';
-import { isAzExtTreeItem } from '../../../../tree/AzExtTreeItem';
+import { isAzExtTreeItem } from '../../../../tree/isAzExtParentTreeItem';
 
 /**
  * Returns `ISubscriptionContext` instead of `ApplicationSubscription` for compatibility.

@@ -9,8 +9,8 @@ import { CompatibilityContextValueQuickPickStep } from './CompatibilityContextVa
 import { localize } from "../../../localize";
 import { NoResourceFoundError, UserCancelledError } from "../../../errors";
 import type { ContextValueFilterQuickPickOptions } from "../ContextValueQuickPickStep";
-import { AzExtTreeItem, isAzExtTreeItem } from "../../../tree/AzExtTreeItem";
-import { isAzExtParentTreeItem } from "../../../tree/isAzExtParentTreeItem";
+import { AzExtTreeItem } from "../../../tree/AzExtTreeItem";
+import { isAzExtParentTreeItem, isAzExtTreeItem } from "../../../tree/isAzExtParentTreeItem";
 import { isWrapper } from "../../../registerCommandWithTreeNodeUnwrapping";
 
 export interface CompatibilityRecursiveQuickPickOptions extends ContextValueFilterQuickPickOptions {
