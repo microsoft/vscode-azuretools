@@ -13,7 +13,7 @@ export interface PickFilter<TPick = vscode.TreeItem> {
     isFinalPick(node: TPick): boolean;
 
     /**
-     * Filters for nodes that could have a descendant matching the final target.
+     * Filters for nodes that could be an ancestor of a node matching the final target.
      * @param node The node to apply the filter to
      */
     isAncestorPick(node: TPick): boolean;
