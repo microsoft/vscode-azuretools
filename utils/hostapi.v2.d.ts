@@ -61,7 +61,9 @@ export declare interface AzureResourceQuickPickWizardContext extends QuickPickWi
     resourceGroup?: string;
 }
 
+export type ResourceGroupsTreeDataProvider = Pick<vscode.TreeDataProvider<unknown>, 'getChildren' | 'getTreeItem'>;
+
 export interface V2AzureResourcesApi extends AzureExtensionApi {
-    readonly applicationResourceTreeDataProvider: vscode.TreeDataProvider<unknown>;
-    readonly workspaceResourceTreeDataProvider: vscode.TreeDataProvider<unknown>;
+    readonly applicationResourceTreeDataProvider: ResourceGroupsTreeDataProvider;
+    readonly workspaceResourceTreeDataProvider: ResourceGroupsTreeDataProvider;
 }
