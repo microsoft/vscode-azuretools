@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { AppServicePlan } from '@azure/arm-appservice';
+import { publisherName } from '../constants';
 import { createKuduClient } from '../createKuduClient';
 import { ParsedSite } from '../SiteClient';
 import { delayFirstWebAppDeploy } from './delayFirstWebAppDeploy';
@@ -17,7 +18,12 @@ export async function deployZip(context: IDeployContext, site: ParsedSite, fsPat
     const response = await runWithZipStream(context, {
         fsPath, site, pathFileMap,
         callback: async zipStream => {
-            return await kuduClient.pushDeployment.zipPushDeploy(() => zipStream, { isAsync: true, author: 'VS Code', trackDeploymentId: true });
+            return await kuduClient.pushDeployment.zipPushDeploy(() => zipStream, {
+                isAsync: true,
+                author: publisherName,
+                deployer: publisherName,
+                trackDeploymentId: true
+            });
         }
     });
     let locationUrl: string | undefined;
@@ -30,7 +36,7 @@ export async function deployZip(context: IDeployContext, site: ParsedSite, fsPat
         // swallow errors, we don't want a failure here to block deployment
     }
 
-    await waitForDeploymentToComplete(context, site, { locationUrl});
+    await waitForDeploymentToComplete(context, site, { locationUrl });
 
     // https://github.com/Microsoft/vscode-azureappservice/issues/644
     // This delay is a temporary stopgap that should be resolved with the new pipelines

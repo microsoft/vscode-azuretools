@@ -104,5 +104,6 @@ function createInputBox(context: IInternalActionContext, options: types.AzExtInp
     inputBox.password = !!options.password;
     inputBox.placeholder = options.placeHolder;
     inputBox.prompt = options.prompt;
+    inputBox.title ??= options.title;
     return inputBox;
 }
