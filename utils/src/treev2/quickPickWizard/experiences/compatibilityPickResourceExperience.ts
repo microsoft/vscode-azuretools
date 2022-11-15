@@ -43,7 +43,7 @@ export async function compatibilityPickAppResourceExperience<TPick extends types
     }
 
     // Fill in the `pickedNodes` property
-    const wizardContext = context as AzureResourceQuickPickWizardContext;
+    const wizardContext = { ...context } as AzureResourceQuickPickWizardContext;
     wizardContext.pickedNodes = [];
 
     const wizard = new AzureWizard(context, {

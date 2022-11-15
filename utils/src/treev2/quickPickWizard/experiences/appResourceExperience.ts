@@ -42,7 +42,7 @@ export async function appResourceExperience<TPick>(context: types.IActionContext
     }
 
     // Fill in the `pickedNodes` property
-    const wizardContext = context as AzureResourceQuickPickWizardContext;
+    const wizardContext = { ...context } as AzureResourceQuickPickWizardContext;
     wizardContext.pickedNodes = [];
 
     const wizard = new AzureWizard(context, {

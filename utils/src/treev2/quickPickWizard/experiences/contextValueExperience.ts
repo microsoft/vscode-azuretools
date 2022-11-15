@@ -22,7 +22,7 @@ export async function contextValueExperience<TPick extends unknown>(context: typ
     ];
 
     // Fill in the `pickedNodes` property
-    const wizardContext = context as types.QuickPickWizardContext;
+    const wizardContext = { ...context } as types.QuickPickWizardContext;
     wizardContext.pickedNodes = [];
 
     const wizard = new AzureWizard(context, {

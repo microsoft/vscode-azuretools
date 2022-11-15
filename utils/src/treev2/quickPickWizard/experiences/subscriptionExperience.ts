@@ -13,7 +13,7 @@ import { NoResourceFoundError } from '../../../errors';
 
 export async function subscriptionExperience(context: types.IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>): Promise<ApplicationSubscription> {
 
-    const wizardContext = context as PickSubscriptionWizardContext;
+    const wizardContext = { ...context } as PickSubscriptionWizardContext;
     wizardContext.pickedNodes = [];
 
     const wizard = new AzureWizard(wizardContext, {
