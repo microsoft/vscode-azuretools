@@ -38,7 +38,7 @@ export * from './activityLog/activities/ExecuteActivity';
 export * from './getAzExtResourceType';
 export * from './AzExtResourceType';
 export * from './treev2/quickPickWizard/experiences/appResourceExperience';
-export * from './treev2/quickPickWizard/experiences/compatibilityPickResourceExperience';
+export * from './treev2/quickPickWizard/experiences/compatibility/compatibilityPickResourceExperience';
 export * from './treev2/quickPickWizard/experiences/contextValueExperience';
 export * from './treev2/quickPickWizard/experiences/findByIdExperience';
 export * from './treev2/quickPickWizard/experiences/compatibility/compatibilityPickSubscriptionExperience';

@@ -4,18 +4,18 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { QuickPickAzureSubscriptionStep } from '../quickPickAzureResource/QuickPickAzureSubscriptionStep';
-import { QuickPickGroupStep } from '../quickPickAzureResource/QuickPickGroupStep';
-import { QuickPickAppResourceStep } from '../quickPickAzureResource/QuickPickAppResourceStep';
-import { getLastNode } from '../QuickPickWizardContext';
-import { NoResourceFoundError } from '../../../errors';
-import * as types from '../../../../index';
-import { AzureWizardPromptStep } from '../../../wizard/AzureWizardPromptStep';
-import { AzureWizard } from '../../../wizard/AzureWizard';
-import { AzureResourceQuickPickWizardContext } from '../../../../hostapi.v2';
-import { CompatibilityRecursiveQuickPickStep } from '../compatibility/CompatibilityRecursiveQuickPickStep';
-import { isWrapper } from '../../../registerCommandWithTreeNodeUnwrapping';
-import { ResourceGroupsItem } from '../quickPickAzureResource/tempTypes';
+import { QuickPickAzureSubscriptionStep } from '../../quickPickAzureResource/QuickPickAzureSubscriptionStep';
+import { QuickPickGroupStep } from '../../quickPickAzureResource/QuickPickGroupStep';
+import { QuickPickAppResourceStep } from '../../quickPickAzureResource/QuickPickAppResourceStep';
+import { getLastNode } from '../../QuickPickWizardContext';
+import { NoResourceFoundError } from '../../../../errors';
+import * as types from '../../../../../index';
+import { AzureWizardPromptStep } from '../../../../wizard/AzureWizardPromptStep';
+import { AzureWizard } from '../../../../wizard/AzureWizard';
+import { AzureResourceQuickPickWizardContext } from '../../../../../hostapi.v2';
+import { CompatibilityRecursiveQuickPickStep } from '../../compatibility/CompatibilityRecursiveQuickPickStep';
+import { isWrapper } from '../../../../registerCommandWithTreeNodeUnwrapping';
+import { ResourceGroupsItem } from '../../quickPickAzureResource/tempTypes';
 
 /**
  * Provides compatibility for the legacy `pickAppResource` Resource Groups API
