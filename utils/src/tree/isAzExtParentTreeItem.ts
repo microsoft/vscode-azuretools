@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import type { AzExtParentTreeItem } from "./AzExtParentTreeItem";
-import { AzExtTreeItem } from "./AzExtTreeItem";
+import type { AzExtTreeItem } from "./AzExtTreeItem";
 import type { IAzExtParentTreeItemInternal } from "./InternalInterfaces";
 
 /**
