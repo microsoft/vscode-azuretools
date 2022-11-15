@@ -1734,8 +1734,16 @@ interface CompatibilityPickResourceExperienceOptions {
     childItemFilter?: ContextValueFilter
 }
 
-export declare function compatibilityPickAppResourceExperience<TPick extends AzExtTreeItem>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, options: CompatibilityPickResourceExperienceOptions): Promise<TPick>;
-export declare function compatibilitySubscriptionExperience(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>): Promise<ISubscriptionContext>;
+export declare namespace PickTreeItemWithCompatibility {
+    /**
+     * Provides compatibility for the legacy `pickAppResource` Resource Groups API
+     */
+    export function resource<TPick extends AzExtTreeItem>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, options: CompatibilityPickResourceExperienceOptions): Promise<TPick>;
+    /**
+     * Returns `ISubscriptionContext` instead of `ApplicationSubscription` for compatibility.
+     */
+    export function subscription(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>): Promise<ISubscriptionContext>;
+}
 
 export declare interface QuickPickWizardContext extends IActionContext {
     pickedNodes: unknown[];

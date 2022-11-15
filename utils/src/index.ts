@@ -38,10 +38,9 @@ export * from './activityLog/activities/ExecuteActivity';
 export * from './getAzExtResourceType';
 export * from './AzExtResourceType';
 export * from './treev2/quickPickWizard/experiences/appResourceExperience';
-export * from './treev2/quickPickWizard/experiences/compatibility/compatibilityPickResourceExperience';
+export * from './treev2/quickPickWizard/experiences/compatibility/PickTreeItemWithCompatibility';
 export * from './treev2/quickPickWizard/experiences/contextValueExperience';
 export * from './treev2/quickPickWizard/experiences/findByIdExperience';
-export * from './treev2/quickPickWizard/experiences/compatibility/compatibilityPickSubscriptionExperience';
 export * from './tree/isAzExtParentTreeItem';
 export * from './utils/apiUtils';
 // NOTE: The auto-fix action "source.organizeImports" does weird things with this file, but there doesn't seem to be a way to disable it on a per-file basis so we'll just let it happen
