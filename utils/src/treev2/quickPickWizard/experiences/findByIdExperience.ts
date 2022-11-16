@@ -23,7 +23,7 @@ export async function findByIdExperience<TPick extends types.FindableByIdTreeNod
     const wizardContext = { ...context } as types.QuickPickWizardContext;
     wizardContext.pickedNodes = [];
 
-    const wizard = new AzureWizard(context, {
+    const wizard = new AzureWizard(wizardContext, {
         hideStepCount: true,
         promptSteps: promptSteps,
     });

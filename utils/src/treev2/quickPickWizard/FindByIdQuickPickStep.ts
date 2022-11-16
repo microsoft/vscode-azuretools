@@ -8,6 +8,7 @@ import * as vscode from 'vscode';
 import { getLastNode } from './QuickPickWizardContext';
 import { GenericQuickPickStep, SkipIfOneQuickPickOptions } from './GenericQuickPickStep';
 import { PickFilter } from './common/PickFilter';
+import { ApplicationResource } from '../../../hostapi.v2';
 
 interface FindByIdQuickPickOptions extends SkipIfOneQuickPickOptions {
     id: string;
@@ -21,7 +22,7 @@ export class FindByIdQuickPickStep<TContext extends types.QuickPickWizardContext
         });
     }
 
-    protected readonly pickFilter: PickFilter = new FindByIdPickFilter(this.pickOptions);
+    protected readonly pickFilter = new FindByIdPickFilter(this.pickOptions);
 
     public async getSubWizard(wizardContext: TContext): Promise<types.IWizardOptions<TContext> | undefined> {
         // TODO: this code is nearly identical to `RecursiveQuickPickStep`, but this class can't inherit from it because it's
@@ -52,10 +53,14 @@ export class FindByIdQuickPickStep<TContext extends types.QuickPickWizardContext
 class FindByIdPickFilter implements PickFilter {
     constructor(private readonly pickOptions: FindByIdQuickPickOptions) { }
 
-    isAncestorPick(node: vscode.TreeItem): boolean {
+    isAncestorPick(node: vscode.TreeItem, item?: { resources?: ApplicationResource[] }): boolean {
         if (!node.collapsibleState) {
             // can't be an indirect pick if it doesn't have children
             return false;
+        }
+
+        if (item?.resources) {
+            return item.resources.some((resource) => this.pickOptions.id.startsWith(resource.id));
         }
 
         if (node.id) {
