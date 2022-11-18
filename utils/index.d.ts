@@ -1676,3 +1676,10 @@ export declare enum AzExtResourceType {
     VirtualNetworks = 'VirtualNetworks',
     WebHostingEnvironments = 'WebHostingEnvironments',
 }
+
+/**
+ * Get extension exports for the extension with the given id. Activates extension first if needed.
+ *
+ * @returns `undefined` if the extension is not installed
+ */
+export function getExtensionExports<T>(extensionId: string): Promise<T | undefined>;

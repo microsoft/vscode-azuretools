@@ -36,4 +36,5 @@ export * from './utils/contextUtils';
 export * from './activityLog/activities/ExecuteActivity';
 export * from './getAzExtResourceType';
 export * from './AzExtResourceType';
+export * from './utils/apiUtils';
 // NOTE: The auto-fix action "source.organizeImports" does weird things with this file, but there doesn't seem to be a way to disable it on a per-file basis so we'll just let it happen
