@@ -62,7 +62,6 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
             // Show progress bar while loading quick picks
             quickPick.busy = true;
             quickPick.enabled = false;
-            quickPick.show();
             try {
                 quickPick.items = await createQuickPickItems<TPick>(picks, options, groups, recentlyUsedKey);
 
@@ -81,6 +80,7 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
             } catch (err) {
                 reject(err);
             }
+            quickPick.show();
         });
 
         if (recentlyUsedKey && !Array.isArray(result) && !result.suppressPersistence) {
