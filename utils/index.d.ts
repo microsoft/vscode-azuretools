@@ -1727,7 +1727,6 @@ export declare function isWrapper(maybeWrapper: unknown): maybeWrapper is Wrappe
 
 export declare function appResourceExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: ContextValueFilter): Promise<TPick>;
 export declare function contextValueExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, contextValueFilter: ContextValueFilter): Promise<TPick>;
-export declare function findByIdExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, id: string | Uri): Promise<TPick>;
 
 interface CompatibilityPickResourceExperienceOptions {
     resourceTypes?: AzExtResourceType | AzExtResourceType[];
@@ -1773,12 +1772,6 @@ type CreateOptions<TNode = unknown> = {
     label?: string;
     callback: CreateCallback<TNode>;
 }
-
-export declare interface FindableByIdTreeNodeV2 {
-    id: string;
-}
-
-export declare type FindableByIdTreeNode = FindableByIdTreeNodeV2 | AzExtTreeItem;
 
 /**
  * Gets the Azure Resource Groups API
