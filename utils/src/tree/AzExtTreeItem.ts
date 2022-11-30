@@ -11,7 +11,7 @@ import { nonNullProp } from '../utils/nonNull';
 import { IAzExtParentTreeItemInternal, IAzExtTreeDataProviderInternal } from "./InternalInterfaces";
 import { settingUtils } from '../utils/settingUtils';
 import { showContextValueSetting } from '../constants';
-import { isAzExtParentTreeItem } from './isAzExtParentTreeItem';
+import { isAzExtParentTreeItem } from './isAzExtTreeItem';
 
 export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     public readonly _isAzExtTreeItem = true;
