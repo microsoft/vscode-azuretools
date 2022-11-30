@@ -11,7 +11,8 @@ import { localize } from '../localize';
 import { randomUtils } from '../utils/randomUtils';
 import { AzExtTreeItem } from './AzExtTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';
-import { IAzExtParentTreeItemInternal, isAzExtParentTreeItem } from './InternalInterfaces';
+import { IAzExtParentTreeItemInternal } from './InternalInterfaces';
+import { isAzExtParentTreeItem } from './isAzExtParentTreeItem';
 import { runWithLoadingNotification } from './runWithLoadingNotification';
 import { loadMoreLabel } from './treeConstants';
 

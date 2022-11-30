@@ -14,7 +14,8 @@ import { AzExtParentTreeItem, InvalidTreeItem } from './AzExtParentTreeItem';
 import { AzExtTreeItem } from './AzExtTreeItem';
 import { CollapsibleStateTracker } from './CollapsibleStateTracker';
 import { GenericTreeItem } from './GenericTreeItem';
-import { IAzExtTreeDataProviderInternal, isAzExtParentTreeItem } from './InternalInterfaces';
+import { IAzExtTreeDataProviderInternal } from './InternalInterfaces';
+import { isAzExtParentTreeItem } from './isAzExtParentTreeItem';
 import { runWithLoadingNotification } from './runWithLoadingNotification';
 import { loadMoreLabel } from './treeConstants';
 
