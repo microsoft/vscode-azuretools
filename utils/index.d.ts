@@ -638,9 +638,7 @@ export declare class UserCancelledError extends Error {
     constructor(stepName?: string);
 }
 
-export declare class NoResourceFoundError extends Error {
-    constructor(context?: ITreeItemPickerContext);
-}
+export declare class NoResourceFoundError extends Error { }
 
 export type CommandCallback = (context: IActionContext, ...args: any[]) => any;
 
