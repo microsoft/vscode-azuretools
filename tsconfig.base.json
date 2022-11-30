@@ -1,0 +1,20 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es6",
+        "lib": [
+            "es6",
+        ],
+        "sourceMap": true,
+        "noUnusedLocals": true,
+        "noImplicitThis": true,
+        "noImplicitReturns": true,
+        "strictNullChecks": true,
+        "noUnusedParameters": true,
+        "incremental": true,
+    },
+    "exclude": [
+        "node_modules",
+        "lib",
+    ],
+}
