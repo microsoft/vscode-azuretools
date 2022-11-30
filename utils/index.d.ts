@@ -464,6 +464,9 @@ export declare abstract class AzExtTreeItem implements IAzExtTreeItem {
     public resolveTooltip?(): Promise<string | MarkdownString>;
 }
 
+export declare function isAzExtTreeItem(maybeTreeItem: unknown): maybeTreeItem is AzExtTreeItem;
+export declare function isAzExtParentTreeItem(maybeParentTreeItem: unknown): maybeParentTreeItem is AzExtParentTreeItem;
+
 export interface IGenericTreeItemOptions {
     id?: string;
     label: string;
