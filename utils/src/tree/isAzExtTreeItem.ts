@@ -15,5 +15,5 @@ export function isAzExtTreeItem(maybeTreeItem: unknown): maybeTreeItem is AzExtT
  * Using instanceof AzExtParentTreeItem causes issues since each extension has their own version of the utils. Instead, check _isAzExtParentTreeItem
  */
 export function isAzExtParentTreeItem(maybeParentTreeItem: unknown): maybeParentTreeItem is AzExtParentTreeItem {
-    return typeof maybeParentTreeItem === 'object' && (maybeParentTreeItem as IAzExtParentTreeItemInternal)._isAzExtParentTreeItem === true;
+    return isAzExtTreeItem(maybeParentTreeItem) && (maybeParentTreeItem as IAzExtParentTreeItemInternal)._isAzExtParentTreeItem === true;
 }
