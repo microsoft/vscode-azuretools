@@ -10,3 +10,4 @@ out/test/
 test-results.xml
 .eslintignore
 .eslintrc.js
+*.tsbuildinfo
