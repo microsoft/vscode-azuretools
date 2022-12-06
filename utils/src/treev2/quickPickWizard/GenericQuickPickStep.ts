@@ -67,18 +67,18 @@ export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizar
         const childItems = await Promise.all(childNodes.map(async (childElement: unknown) => await this.treeDataProvider.getTreeItem(childElement)));
         const childPairs: [unknown, vscode.TreeItem][] = childNodes.map((childElement: unknown, i: number) => [childElement, childItems[i]]);
 
-        const directChoices = childPairs.filter(([, ti]) => this.pickFilter.isFinalPick(ti));
-        const indirectChoices = childPairs.filter(([, ti]) => this.pickFilter.isAncestorPick(ti));
+        const finalChoices = childPairs.filter(([, ti]) => this.pickFilter.isFinalPick(ti));
+        const ancestorChoices = childPairs.filter(([, ti]) => this.pickFilter.isAncestorPick(ti));
 
         let promptChoices: [unknown, vscode.TreeItem][] = [];
-        if (directChoices.length === 0) {
-            if (indirectChoices.length === 0) {
+        if (finalChoices.length === 0) {
+            if (ancestorChoices.length === 0) {
                 // Don't throw and end the wizard, let user use back button instead
             } else {
-                promptChoices = indirectChoices;
+                promptChoices = ancestorChoices;
             }
         } else {
-            promptChoices = directChoices;
+            promptChoices = finalChoices;
         }
 
         const picks: types.IAzureQuickPickItem<unknown>[] = [];
