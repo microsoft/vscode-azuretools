@@ -241,8 +241,10 @@ type WorkspaceResourceType = string;
 export interface WorkspaceResource extends ResourceBase {
     /**
      * The folder to which this resource belongs.
+     * Leave undefined if this resource is a global or system-level resource
+     * not associated with a specific workspace folder.
      */
-    readonly folder: vscode.WorkspaceFolder;
+    readonly folder?: vscode.WorkspaceFolder;
 
     /**
      * The type of this resource.
@@ -259,8 +261,11 @@ export type WorkspaceResourceModel = ResourceModelBase;
 
 /**
  * A provider for supplying items for the workspace resource tree (e.g., storage emulator, function apps in workspace, etc.).
+ *
+ * When a resources source is undefined, the resource is a global or system level resource not associated with a workspace folder.
+ *
  */
-export type WorkspaceResourceProvider = ResourceProvider<vscode.WorkspaceFolder, WorkspaceResource>;
+export type WorkspaceResourceProvider = ResourceProvider<vscode.WorkspaceFolder | undefined, WorkspaceResource>;
 
 /**
  * A provider for visualizing items in the workspace resource tree (e.g., storage emulator, function apps in workspace, etc.).
