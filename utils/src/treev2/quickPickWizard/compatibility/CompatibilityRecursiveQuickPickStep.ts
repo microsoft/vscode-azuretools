@@ -13,8 +13,15 @@ import { AzExtTreeItem } from "../../../tree/AzExtTreeItem";
 import { isAzExtParentTreeItem, isAzExtTreeItem } from "../../../tree/isAzExtTreeItem";
 import { isWrapper } from "../../../registerCommandWithTreeNodeUnwrapping";
 
-export interface CompatibilityRecursiveQuickPickOptions extends ContextValueFilterQuickPickOptions {
-    create?: types.CreateOptions;
+type CreateCallback<TNode = unknown> = (context: types.IActionContext) => TNode | Promise<TNode>;
+
+type CreateOptions<TNode = unknown> = {
+    label?: string;
+    callback: CreateCallback<TNode>;
+}
+
+interface CompatibilityRecursiveQuickPickOptions extends ContextValueFilterQuickPickOptions {
+    create?: CreateOptions;
 }
 
 /**
@@ -36,7 +43,7 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
             // check if the last picked item is a create callback
             if (typeof selected.data === 'function') {
                 // If the last node is a function, pop it off the list and execute it
-                const callback = selected.data as unknown as types.CreateCallback<unknown>;
+                const callback = selected.data as unknown as CreateCallback<unknown>;
 
                 // context passed to callback must have the same `ui` as the wizardContext
                 // to prevent the wizard from being cancelled unexpectedly
@@ -88,7 +95,7 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
     }
 
     protected override async getPicks(wizardContext: TContext): Promise<types.IAzureQuickPickItem<unknown>[]> {
-        const picks: types.IAzureQuickPickItem<unknown | types.CreateCallback>[] = [];
+        const picks: types.IAzureQuickPickItem<unknown | CreateCallback>[] = [];
         try {
             picks.push(...await super.getPicks(wizardContext));
         } catch (error) {
@@ -106,7 +113,7 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
         return picks as types.IAzureQuickPickItem<unknown>[];
     }
 
-    private getCreatePick(options: types.CreateOptions): types.IAzureQuickPickItem<types.CreateCallback> {
+    private getCreatePick(options: CreateOptions): types.IAzureQuickPickItem<CreateCallback> {
         return {
             label: options.label || localize('createQuickPickLabel', '$(add) Create...'),
             data: options.callback,

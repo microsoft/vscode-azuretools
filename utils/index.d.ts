@@ -1768,13 +1768,6 @@ export declare interface ContextValueFilter {
     exclude?: string | RegExp | (string | RegExp)[];
 }
 
-type CreateCallback<TNode = unknown> = (context: IActionContext) => TNode | Promise<TNode>;
-
-type CreateOptions<TNode = unknown> = {
-    label?: string;
-    callback: CreateCallback<TNode>;
-}
-
 /**
  * Get extension exports for the extension with the given id. Activates extension first if needed.
  *
