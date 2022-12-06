@@ -224,11 +224,6 @@ export interface AzureResourceModel extends ResourceModelBase {
 }
 
 /**
- * A provider for supplying items for the Azure resource tree (e.g. Cosmos DB, Storage, etc.).
- */
-export type AzureResourceProvider = ResourceProvider<AzureSubscription, AzureResource>;
-
-/**
  * A provider for visualizing items in the Azure resource tree (e.g. Cosmos DB, Storage, etc.).
  */
 export type AzureResourceBranchDataProvider<TModel extends AzureResourceModel> = BranchDataProvider<AzureResource, TModel>;
@@ -246,8 +241,10 @@ type WorkspaceResourceType = string;
 export interface WorkspaceResource extends ResourceBase {
     /**
      * The folder to which this resource belongs.
+     * Leave undefined if this resource is a global or system-level resource
+     * not associated with a specific workspace folder.
      */
-    readonly folder: vscode.WorkspaceFolder;
+    readonly folder?: vscode.WorkspaceFolder;
 
     /**
      * The type of this resource.
@@ -264,14 +261,18 @@ export type WorkspaceResourceModel = ResourceModelBase;
 
 /**
  * A provider for supplying items for the workspace resource tree (e.g., storage emulator, function apps in workspace, etc.).
+ *
+ * When a resources source is undefined, the resource is a global or system level resource not associated with a workspace folder.
+ *
  */
-export type WorkspaceResourceProvider = ResourceProvider<vscode.WorkspaceFolder, WorkspaceResource>;
+export type WorkspaceResourceProvider = ResourceProvider<vscode.WorkspaceFolder | undefined, WorkspaceResource>;
 
 /**
  * A provider for visualizing items in the workspace resource tree (e.g., storage emulator, function apps in workspace, etc.).
  */
 export type WorkspaceResourceBranchDataProvider<TModel extends WorkspaceResourceModel> = BranchDataProvider<WorkspaceResource, TModel>;
 
+// scope down vscode.TreeDataProvider to exactly what's allowed to be used
 type ResourceGroupsTreeDataProvider = Pick<vscode.TreeDataProvider<unknown>, 'getChildren' | 'getTreeItem'>;
 
 /**
@@ -293,15 +294,6 @@ export interface v2AzureResourcesApi extends AzureExtensionApi {
          * {@link vscode.TreeDataProvider} representing the Azure tree view.
          */
         readonly treeDataProvider: ResourceGroupsTreeDataProvider;
-
-        /**
-         * Registers a provider of Azure resources.
-         *
-         * @param provider The resource provider.
-         *
-         * @returns A disposable that unregisters the provider when disposed.
-         */
-        registerResourceProvider(provider: AzureResourceProvider): vscode.Disposable;
 
         /**
          * Registers an Azure resource branch data provider.
