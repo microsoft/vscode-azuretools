@@ -272,10 +272,22 @@ export type WorkspaceResourceProvider = ResourceProvider<vscode.WorkspaceFolder,
  */
 export type WorkspaceResourceBranchDataProvider<TModel extends WorkspaceResourceModel> = BranchDataProvider<WorkspaceResource, TModel>;
 
+type ResourceGroupsTreeDataProvider = Pick<vscode.TreeDataProvider<unknown>, 'getChildren' | 'getTreeItem'>;
+
 /**
  * The current (v2) Azure Resources extension API.
  */
 export interface v2AzureResourcesApi extends AzureExtensionApi {
+    /**
+     * {@link vscode.TreeDataProvider} representing the Azure tree view.
+     */
+    readonly azureResourceTreeDataProvider: ResourceGroupsTreeDataProvider;
+
+    /**
+     * {@link vscode.TreeDataProvider} representing the Workspace tree view.
+     */
+    readonly workspaceResourceTreeDataProvider: ResourceGroupsTreeDataProvider;
+
     /**
      * Registers an activity to appear in the activity window.
      *
@@ -304,20 +316,20 @@ export interface v2AzureResourcesApi extends AzureExtensionApi {
 
     /**
      * Registers a provider of workspace resources.
-     *
-     * @param provider The resource provider.
-     *
-     * @returns A disposable that unregisters the provider.
-     */
+    *
+    * @param provider The resource provider.
+    *
+    * @returns A disposable that unregisters the provider.
+    */
     registerWorkspaceResourceProvider(provider: WorkspaceResourceProvider): vscode.Disposable;
 
     /**
      * Registers a workspace resource branch data provider.
-     *
-     * @param type The workspace resource type associated with the provider. Must be unique.
-     * @param provider The branch data provider for the resource type.
-     *
-     * @returns A disposable that unregisters the provider.
-     */
+    *
+    * @param type The workspace resource type associated with the provider. Must be unique.
+    * @param provider The branch data provider for the resource type.
+    *
+    * @returns A disposable that unregisters the provider.
+    */
     registerWorkspaceResourceBranchDataProvider<TModel extends WorkspaceResourceModel>(type: WorkspaceResourceType, provider: WorkspaceResourceBranchDataProvider<TModel>): vscode.Disposable;
 }
