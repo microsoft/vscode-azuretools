@@ -1727,4 +1727,4 @@ export declare function isWrapper(maybeWrapper: unknown): maybeWrapper is Wrappe
  *
  * @returns `undefined` if the extension is not installed
  */
-export function getExtensionExports<T>(extensionId: string): Promise<T | undefined>;
+export declare function getExtensionExports<T>(extensionId: string): Promise<T | undefined>;
