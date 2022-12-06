@@ -278,17 +278,7 @@ type ResourceGroupsTreeDataProvider = Pick<vscode.TreeDataProvider<unknown>, 'ge
 /**
  * The current (v2) Azure Resources extension API.
  */
-export interface v2AzureResourcesApi extends AzureExtensionApi {
-
-    activity: {
-        /**
-         * Registers an activity to appear in the activity window.
-        *
-        * @param activity The activity information to show.
-        */
-        registerActivity(activity: Activity): Promise<void>;
-    }
-
+export interface AzureResourcesHostApi {
     azure: {
         /**
          * {@link vscode.TreeDataProvider} representing the Azure tree view.
@@ -332,3 +322,16 @@ export interface v2AzureResourcesApi extends AzureExtensionApi {
         registerResourceBranchDataProvider<TModel extends WorkspaceResourceModel>(type: WorkspaceResourceType, provider: WorkspaceResourceBranchDataProvider<TModel>): vscode.Disposable;
     }
 }
+
+export interface ActivityApi {
+    activity: {
+        /**
+         * Registers an activity to appear in the activity window.
+        *
+        * @param activity The activity information to show.
+        */
+        registerActivity(activity: Activity): Promise<void>;
+    }
+}
+
+export type AzureResourcesApi = AzureResourcesHostApi & ActivityApi & AzureExtensionApi;
