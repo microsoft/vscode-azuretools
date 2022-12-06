@@ -22,7 +22,7 @@ export declare interface RunWithTemporaryDescriptionOptions {
 /**
  * Tree Data Provider for an *Az*ure *Ext*ension
  */
-export declare class AzExtTreeDataProvider implements TreeDataProvider<AzExtTreeItem> {
+export declare class AzExtTreeDataProvider implements TreeDataProvider<AzExtTreeItem>, Disposable {
     public onDidChangeTreeData: Event<AzExtTreeItem | undefined>;
     public onTreeItemCreate: Event<AzExtTreeItem>;
 
@@ -99,6 +99,8 @@ export declare class AzExtTreeDataProvider implements TreeDataProvider<AzExtTree
      * @param treeView The tree view to watch the collapsible state for. This must be the tree view created from this `AzExtTreeDataProvider`.
      */
     public trackTreeItemCollapsibleState(treeView: TreeView<AzExtTreeItem>): Disposable;
+
+    public dispose(): void;
 }
 
 export interface ILoadingTreeContext extends IActionContext {

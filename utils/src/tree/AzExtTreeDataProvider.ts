@@ -15,11 +15,11 @@ import { AzExtTreeItem } from './AzExtTreeItem';
 import { CollapsibleStateTracker } from './CollapsibleStateTracker';
 import { GenericTreeItem } from './GenericTreeItem';
 import { IAzExtTreeDataProviderInternal } from './InternalInterfaces';
-import { isAzExtParentTreeItem } from './isAzExtParentTreeItem';
+import { isAzExtParentTreeItem } from './isAzExtTreeItem';
 import { runWithLoadingNotification } from './runWithLoadingNotification';
 import { loadMoreLabel } from './treeConstants';
 
-export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, types.AzExtTreeDataProvider {
+export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, types.AzExtTreeDataProvider, Disposable {
     public _onTreeItemCreateEmitter: EventEmitter<AzExtTreeItem> = new EventEmitter<AzExtTreeItem>();
     private _onDidChangeTreeDataEmitter: EventEmitter<AzExtTreeItem | undefined> = new EventEmitter<AzExtTreeItem | undefined>();
     private _collapsibleStateTracker: CollapsibleStateTracker | undefined;
@@ -222,6 +222,12 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
             addTreeItemValuesToMask(context, result, 'findTreeItem');
         }
         return <T><unknown>result;
+    }
+
+    public dispose(): void {
+        this._collapsibleStateTracker?.dispose();
+        this._onDidChangeTreeDataEmitter.dispose();
+        this._onTreeItemCreateEmitter.dispose();
     }
 
     /**

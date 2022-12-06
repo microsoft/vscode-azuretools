@@ -1,21 +1,11 @@
 {
+    "extends": "../tsconfig.base.json",
     "compilerOptions": {
-        "module": "commonjs",
-        "target": "es6",
         "outDir": "out",
-        "lib": [
-            "es6"
-        ],
-        "sourceMap": true,
         "rootDir": ".",
-        "noUnusedLocals": true,
-        "noImplicitThis": true,
-        "noImplicitReturns": true,
-        "strictNullChecks": true,
-        "noUnusedParameters": true,
         "strict": true,
         "alwaysStrict": true,
-        "skipLibCheck": true // https://github.com/Azure/ms-rest-js/issues/367
+        "skipLibCheck": true, // https://github.com/Azure/ms-rest-js/issues/367,
     },
     "exclude": [
         "node_modules",

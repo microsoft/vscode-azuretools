@@ -12,7 +12,7 @@ import { randomUtils } from '../utils/randomUtils';
 import { AzExtTreeItem } from './AzExtTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';
 import { IAzExtParentTreeItemInternal } from './InternalInterfaces';
-import { isAzExtParentTreeItem } from './isAzExtParentTreeItem';
+import { isAzExtParentTreeItem } from './isAzExtTreeItem';
 import { runWithLoadingNotification } from './runWithLoadingNotification';
 import { loadMoreLabel } from './treeConstants';
 

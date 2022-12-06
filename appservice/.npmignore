@@ -12,3 +12,4 @@ test-results.xml
 testWorkspace
 .eslintignore
 .eslintrc.js
+*.tsbuildinfo
