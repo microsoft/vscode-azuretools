@@ -1774,14 +1774,3 @@ type CreateOptions<TNode = unknown> = {
     label?: string;
     callback: CreateCallback<TNode>;
 }
-
-/**
- * Gets the Azure Resource Groups API
- */
-export declare function getResourceGroupsApi(apiVersionRange: AzureHostExtensionApi['apiVersion']): Promise<AzureHostExtensionApi>;
-export declare function getResourceGroupsApi<T extends AzureExtensionApi>(apiVersionRange: string): Promise<T>;
-
-/**
- * Get exported API from an extension
- */
-export declare function getApiExport<T>(extensionId: string): Promise<T | undefined>;
