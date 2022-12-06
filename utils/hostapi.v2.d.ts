@@ -278,58 +278,65 @@ type ResourceGroupsTreeDataProvider = Pick<vscode.TreeDataProvider<unknown>, 'ge
  * The current (v2) Azure Resources extension API.
  */
 export interface v2AzureResourcesApi extends AzureExtensionApi {
-    /**
-     * {@link vscode.TreeDataProvider} representing the Azure tree view.
-     */
-    readonly azureResourceTreeDataProvider: ResourceGroupsTreeDataProvider;
 
-    /**
-     * {@link vscode.TreeDataProvider} representing the Workspace tree view.
-     */
-    readonly workspaceResourceTreeDataProvider: ResourceGroupsTreeDataProvider;
+    activity: {
+        /**
+         * Registers an activity to appear in the activity window.
+        *
+        * @param activity The activity information to show.
+        */
+        registerActivity(activity: Activity): Promise<void>;
+    }
 
-    /**
-     * Registers an activity to appear in the activity window.
-     *
-     * @param activity The activity information to show.
-     */
-    registerActivity(activity: Activity): Promise<void>;
+    azure: {
+        /**
+         * {@link vscode.TreeDataProvider} representing the Azure tree view.
+         */
+        readonly treeDataProvider: ResourceGroupsTreeDataProvider;
 
-    /**
-     * Registers a provider of Azure resources.
-     *
-     * @param provider The resource provider.
-     *
-     * @returns A disposable that unregisters the provider when disposed.
-     */
-    registerAzureResourceProvider(provider: AzureResourceProvider): vscode.Disposable;
+        /**
+         * Registers a provider of Azure resources.
+         *
+         * @param provider The resource provider.
+         *
+         * @returns A disposable that unregisters the provider when disposed.
+         */
+        registerResourceProvider(provider: AzureResourceProvider): vscode.Disposable;
 
-    /**
-     * Registers an Azure resource branch data provider.
-     *
-     * @param type The Azure resource type associated with the provider. Must be unique.
-     * @param resolver The branch data provider for the resource type.
-     *
-     * @returns A disposable that unregisters the provider.
-     */
-    registerAzureResourceBranchDataProvider<TModel extends AzureResourceModel>(type: AzExtResourceType, provider: AzureResourceBranchDataProvider<TModel>): vscode.Disposable;
+        /**
+         * Registers an Azure resource branch data provider.
+         *
+         * @param type The Azure resource type associated with the provider. Must be unique.
+         * @param resolver The branch data provider for the resource type.
+         *
+         * @returns A disposable that unregisters the provider.
+         */
+        registerResourceBranchDataProvider<TModel extends AzureResourceModel>(type: AzExtResourceType, provider: AzureResourceBranchDataProvider<TModel>): vscode.Disposable;
+    }
 
-    /**
-     * Registers a provider of workspace resources.
-    *
-    * @param provider The resource provider.
-    *
-    * @returns A disposable that unregisters the provider.
-    */
-    registerWorkspaceResourceProvider(provider: WorkspaceResourceProvider): vscode.Disposable;
+    workspace: {
+        /**
+         * {@link vscode.TreeDataProvider} representing the Workspace tree view.
+         */
+        readonly treeDataProvider: ResourceGroupsTreeDataProvider;
 
-    /**
-     * Registers a workspace resource branch data provider.
-    *
-    * @param type The workspace resource type associated with the provider. Must be unique.
-    * @param provider The branch data provider for the resource type.
-    *
-    * @returns A disposable that unregisters the provider.
-    */
-    registerWorkspaceResourceBranchDataProvider<TModel extends WorkspaceResourceModel>(type: WorkspaceResourceType, provider: WorkspaceResourceBranchDataProvider<TModel>): vscode.Disposable;
+        /**
+         * Registers a provider of workspace resources.
+        *
+        * @param provider The resource provider.
+        *
+        * @returns A disposable that unregisters the provider.
+        */
+        registerResourceProvider(provider: WorkspaceResourceProvider): vscode.Disposable;
+
+        /**
+         * Registers a workspace resource branch data provider.
+        *
+        * @param type The workspace resource type associated with the provider. Must be unique.
+        * @param provider The branch data provider for the resource type.
+        *
+        * @returns A disposable that unregisters the provider.
+        */
+        registerResourceBranchDataProvider<TModel extends WorkspaceResourceModel>(type: WorkspaceResourceType, provider: WorkspaceResourceBranchDataProvider<TModel>): vscode.Disposable;
+    }
 }
