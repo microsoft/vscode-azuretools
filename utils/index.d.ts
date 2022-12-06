@@ -1723,3 +1723,10 @@ export declare interface Wrapper {
  * @returns True if a wrapper, false otherwise
  */
 export declare function isWrapper(maybeWrapper: unknown): maybeWrapper is Wrapper;
+
+/**
+ * Get extension exports for the extension with the given id. Activates extension first if needed.
+ *
+ * @returns `undefined` if the extension is not installed
+ */
+export declare function getExtensionExports<T>(extensionId: string): Promise<T | undefined>;
