@@ -5,7 +5,7 @@
 
 import * as types from '../../../index';
 import * as vscode from 'vscode';
-import { getLastNode } from './QuickPickWizardContext';
+import { getLastNode } from './common/getLastNode';
 import { AzureWizardPromptStep } from '../../wizard/AzureWizardPromptStep';
 import { PickFilter } from './common/PickFilter';
 import { localize } from '../../localize';

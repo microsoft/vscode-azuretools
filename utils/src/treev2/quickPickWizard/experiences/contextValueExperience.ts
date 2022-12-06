@@ -6,7 +6,7 @@
 import * as types from '../../../../index';
 import * as vscode from 'vscode';
 import { RecursiveQuickPickStep } from '../RecursiveQuickPickStep';
-import { getLastNode } from '../QuickPickWizardContext';
+import { getLastNode } from '../common/getLastNode';
 import { NoResourceFoundError } from '../../../errors';
 import { AzureWizardPromptStep } from '../../../wizard/AzureWizardPromptStep';
 import { AzureWizard } from '../../../wizard/AzureWizard';

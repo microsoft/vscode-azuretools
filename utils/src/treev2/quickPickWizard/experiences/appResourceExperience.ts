@@ -9,7 +9,7 @@ import { QuickPickAzureSubscriptionStep } from '../quickPickAzureResource/QuickP
 import { QuickPickGroupStep } from '../quickPickAzureResource/QuickPickGroupStep';
 import { QuickPickAppResourceStep } from '../quickPickAzureResource/QuickPickAppResourceStep';
 import { RecursiveQuickPickStep } from '../RecursiveQuickPickStep';
-import { getLastNode } from '../QuickPickWizardContext';
+import { getLastNode } from '../common/getLastNode';
 import { NoResourceFoundError } from '../../../errors';
 import { AzureWizardPromptStep } from '../../../wizard/AzureWizardPromptStep';
 import { AzExtResourceType } from '../../../AzExtResourceType';

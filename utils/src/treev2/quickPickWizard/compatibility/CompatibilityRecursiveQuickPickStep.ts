@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as types from "../../../../index";
-import { getLastNode } from "../QuickPickWizardContext";
+import { getLastNode } from "../common/getLastNode";
 import { CompatibilityContextValueQuickPickStep } from './CompatibilityContextValueQuickPickStep';
 import { localize } from "../../../localize";
 import { NoResourceFoundError, UserCancelledError } from "../../../errors";

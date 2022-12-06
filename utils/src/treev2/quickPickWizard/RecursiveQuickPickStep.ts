@@ -5,7 +5,7 @@
 
 import * as types from '../../../index';
 import { ContextValueFilterQuickPickOptions, ContextValueQuickPickStep } from './ContextValueQuickPickStep';
-import { getLastNode } from './QuickPickWizardContext';
+import { getLastNode } from './common/getLastNode';
 
 export class RecursiveQuickPickStep<TContext extends types.QuickPickWizardContext> extends ContextValueQuickPickStep<TContext, ContextValueFilterQuickPickOptions> {
     hideStepCount: boolean = true;
