@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { ApplicationSubscription } from '../../hostapi.v2';
+import { AzureSubscription } from '../../hostapi.v2';
 import { AzExtServiceClientCredentials, ISubscriptionContext } from '../../index';
 import { localize } from '../localize';
 
@@ -39,10 +39,11 @@ export function createCredential(getSession: (scopes?: string[]) => vscode.Provi
  *
  * TODO: expose these utils and remove duplicate code in resource groups + client extensions
  */
-export function createSubscriptionContext(subscription: ApplicationSubscription): ISubscriptionContext {
+export function createSubscriptionContext(subscription: AzureSubscription): ISubscriptionContext {
     return {
-        subscriptionDisplayName: subscription.displayName,
+        subscriptionDisplayName: subscription.name,
         userId: '', // TODO
+        subscriptionPath: subscription.subscriptionId,
         ...subscription,
         credentials: createCredential(subscription.authentication.getSession)
     };

@@ -9,7 +9,7 @@ import * as types from '../../../../index';
 import { parseContextValue } from '../../../utils/contextUtils';
 import { PickFilter } from '../common/PickFilter';
 import { GenericQuickPickOptions, GenericQuickPickStep } from '../GenericQuickPickStep';
-import { AppResourceItem } from './tempTypes';
+import { AzureResourceItem } from './tempTypes';
 
 interface AppResourceQuickPickOptions extends GenericQuickPickOptions {
     resourceTypes?: types.AzExtResourceType[];
@@ -17,8 +17,8 @@ interface AppResourceQuickPickOptions extends GenericQuickPickOptions {
 }
 
 export class QuickPickAppResourceStep extends GenericQuickPickStep<AzureResourceQuickPickWizardContext, AppResourceQuickPickOptions> {
-    protected override async promptInternal(wizardContext: AzureResourceQuickPickWizardContext): Promise<AppResourceItem> {
-        const pickedAppResource = (await super.promptInternal(wizardContext)) as unknown as AppResourceItem;
+    protected override async promptInternal(wizardContext: AzureResourceQuickPickWizardContext): Promise<AzureResourceItem> {
+        const pickedAppResource = (await super.promptInternal(wizardContext)) as unknown as AzureResourceItem;
 
         // TODO
         wizardContext.resource = pickedAppResource.resource;

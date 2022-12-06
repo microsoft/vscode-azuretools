@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ApplicationResource, ApplicationSubscription } from '../../../../hostapi.v2';
+import { AzureResource, AzureSubscription } from '../../../../hostapi.v2';
 import * as types from '../../../../index';
 
 // TODO: THIS FILE IS TEMPORARY //
@@ -12,15 +12,15 @@ import * as types from '../../../../index';
 // These are assumptions made about the nodes in the tree
 
 export type SubscriptionItem = ResourceGroupsItem & {
-    subscription: ApplicationSubscription;
+    subscription: AzureSubscription;
 }
 
 export type GroupingItem = ResourceGroupsItem & {
     resourceType?: types.AzExtResourceType
 }
 
-export type AppResourceItem = ResourceGroupsItem & {
-    resource: ApplicationResource;
+export type AzureResourceItem = ResourceGroupsItem & {
+    resource: AzureResource;
 };
 
 export type ResourceGroupsItem = unknown;
