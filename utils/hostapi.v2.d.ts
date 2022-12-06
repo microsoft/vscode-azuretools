@@ -224,11 +224,6 @@ export interface AzureResourceModel extends ResourceModelBase {
 }
 
 /**
- * A provider for supplying items for the Azure resource tree (e.g. Cosmos DB, Storage, etc.).
- */
-export type AzureResourceProvider = ResourceProvider<AzureSubscription, AzureResource>;
-
-/**
  * A provider for visualizing items in the Azure resource tree (e.g. Cosmos DB, Storage, etc.).
  */
 export type AzureResourceBranchDataProvider<TModel extends AzureResourceModel> = BranchDataProvider<AzureResource, TModel>;
@@ -294,15 +289,6 @@ export interface v2AzureResourcesApi extends AzureExtensionApi {
      * @param activity The activity information to show.
      */
     registerActivity(activity: Activity): Promise<void>;
-
-    /**
-     * Registers a provider of Azure resources.
-     *
-     * @param provider The resource provider.
-     *
-     * @returns A disposable that unregisters the provider when disposed.
-     */
-    registerAzureResourceProvider(provider: AzureResourceProvider): vscode.Disposable;
 
     /**
      * Registers an Azure resource branch data provider.
