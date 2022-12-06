@@ -267,6 +267,7 @@ export type WorkspaceResourceProvider = ResourceProvider<vscode.WorkspaceFolder,
  */
 export type WorkspaceResourceBranchDataProvider<TModel extends WorkspaceResourceModel> = BranchDataProvider<WorkspaceResource, TModel>;
 
+// scope down vscode.TreeDataProvider to exactly what's allowed to be used
 type ResourceGroupsTreeDataProvider = Pick<vscode.TreeDataProvider<unknown>, 'getChildren' | 'getTreeItem'>;
 
 /**
