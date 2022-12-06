@@ -9,7 +9,7 @@ import { getLastNode } from "../QuickPickWizardContext";
 import { AzExtTreeItem } from "../../../tree/AzExtTreeItem";
 import { AzExtParentTreeItem } from "../../../tree/AzExtParentTreeItem";
 import { isWrapper } from "../../../registerCommandWithTreeNodeUnwrapping";
-import { isAzExtParentTreeItem } from "../../../tree/isAzExtParentTreeItem";
+import { isAzExtParentTreeItem } from "../../../tree/isAzExtTreeItem";
 
 /**
  * Provides compatability with {@link AzExtParentTreeItem.pickTreeItemImpl}

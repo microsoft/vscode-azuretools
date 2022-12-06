@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { ResourceGroupsItem } from '../../quickPickAzureResource/tempTypes';
 import { appResourceExperience } from '../appResourceExperience';
 import { subscriptionExperience } from '../subscriptionExperience';
-import { isAzExtTreeItem } from '../../../../tree/isAzExtParentTreeItem';
+import { isAzExtTreeItem } from '../../../../tree/isAzExtTreeItem';
 import { createSubscriptionContext } from '../../../../utils/credentialUtils';
 import { ISubscriptionContext } from '@microsoft/vscode-azext-dev';
 

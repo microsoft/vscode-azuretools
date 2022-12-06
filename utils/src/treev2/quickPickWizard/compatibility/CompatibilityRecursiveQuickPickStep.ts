@@ -10,7 +10,7 @@ import { localize } from "../../../localize";
 import { NoResourceFoundError, UserCancelledError } from "../../../errors";
 import type { ContextValueFilterQuickPickOptions } from "../ContextValueQuickPickStep";
 import { AzExtTreeItem } from "../../../tree/AzExtTreeItem";
-import { isAzExtParentTreeItem, isAzExtTreeItem } from "../../../tree/isAzExtParentTreeItem";
+import { isAzExtParentTreeItem, isAzExtTreeItem } from "../../../tree/isAzExtTreeItem";
 import { isWrapper } from "../../../registerCommandWithTreeNodeUnwrapping";
 
 export interface CompatibilityRecursiveQuickPickOptions extends ContextValueFilterQuickPickOptions {
