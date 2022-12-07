@@ -18,7 +18,7 @@ export interface AzureHostExtensionApi {
     /**
      * The VSCode TreeView for the shared app resource view
      */
-    readonly appResourceTreeView: vscode.TreeView<AzExtTreeItem>;
+    readonly appResourceTreeView: vscode.TreeView<unknown>;
 
     /**
      * The `AzExtTreeDataProvider` for the shared workspace resource view
@@ -28,12 +28,12 @@ export interface AzureHostExtensionApi {
     /**
      * The VSCode TreeView for the shared workspace resource view
      */
-    readonly workspaceResourceTreeView: vscode.TreeView<AzExtTreeItem>;
+    readonly workspaceResourceTreeView: vscode.TreeView<unknown>;
 
     /**
      * Version of the API
      */
-    readonly apiVersion: string;
+    readonly apiVersion: '0.0.1';
 
     /**
      * Reveals an item in the shared app resource tree
@@ -76,7 +76,7 @@ export interface AzureHostExtensionApi {
     /**
      * @deprecated Use `appResourceTreeView` instead
      */
-    readonly treeView: vscode.TreeView<AzExtTreeItem>;
+    readonly treeView: vscode.TreeView<unknown>;
 
     /**
      * @deprecated Use `registerWorkspaceResourceProvider` instead
