@@ -33,7 +33,7 @@ export interface AzureHostExtensionApi {
     /**
      * Version of the API
      */
-    readonly apiVersion: '0.0.1';
+    readonly apiVersion: string;
 
     /**
      * Reveals an item in the shared app resource tree
