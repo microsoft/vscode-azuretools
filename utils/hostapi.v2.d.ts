@@ -275,15 +275,15 @@ export type WorkspaceResourceBranchDataProvider<TModel extends WorkspaceResource
 // scope down vscode.TreeDataProvider to exactly what's allowed to be used
 type ResourceGroupsTreeDataProvider = Pick<vscode.TreeDataProvider<unknown>, 'getChildren' | 'getTreeItem'>;
 
-/**
- * The current (v2) Azure Resources extension API.
- */
 export interface AzureResourcesHostApi {
-    azure: {
+    /**
+     * The current (v2) Azure Resources extension API.
+     */
+    resources: {
         /**
          * {@link vscode.TreeDataProvider} representing the Azure tree view.
          */
-        readonly treeDataProvider: ResourceGroupsTreeDataProvider;
+        readonly azureResourcesTreeDataProvider: ResourceGroupsTreeDataProvider;
 
         /**
          * Registers an Azure resource branch data provider.
@@ -293,14 +293,12 @@ export interface AzureResourcesHostApi {
          *
          * @returns A disposable that unregisters the provider.
          */
-        registerResourceBranchDataProvider<TModel extends AzureResourceModel>(type: AzExtResourceType, provider: AzureResourceBranchDataProvider<TModel>): vscode.Disposable;
-    }
+        registerAzureResourceBranchDataProvider<TModel extends AzureResourceModel>(type: AzExtResourceType, provider: AzureResourceBranchDataProvider<TModel>): vscode.Disposable;
 
-    workspace: {
         /**
          * {@link vscode.TreeDataProvider} representing the Workspace tree view.
          */
-        readonly treeDataProvider: ResourceGroupsTreeDataProvider;
+        readonly workspaceResourcesTreeDataProvider: ResourceGroupsTreeDataProvider;
 
         /**
          * Registers a provider of workspace resources.
@@ -309,7 +307,7 @@ export interface AzureResourcesHostApi {
         *
         * @returns A disposable that unregisters the provider.
         */
-        registerResourceProvider(provider: WorkspaceResourceProvider): vscode.Disposable;
+        registerWorkspaceResourceProvider(provider: WorkspaceResourceProvider): vscode.Disposable;
 
         /**
          * Registers a workspace resource branch data provider.
@@ -319,7 +317,7 @@ export interface AzureResourcesHostApi {
         *
         * @returns A disposable that unregisters the provider.
         */
-        registerResourceBranchDataProvider<TModel extends WorkspaceResourceModel>(type: WorkspaceResourceType, provider: WorkspaceResourceBranchDataProvider<TModel>): vscode.Disposable;
+        registerWorkspaceResourceBranchDataProvider<TModel extends WorkspaceResourceModel>(type: WorkspaceResourceType, provider: WorkspaceResourceBranchDataProvider<TModel>): vscode.Disposable;
     }
 }
 
