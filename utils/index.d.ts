@@ -6,10 +6,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { Environment } from '@azure/ms-rest-azure-env';
-import { CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions as VSCodeQuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
-import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
+import type { Activity, ActivityTreeItemOptions, AppResource, AzureHostExtensionApi, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
 
 export declare interface RunWithTemporaryDescriptionOptions {
     description: string;
@@ -640,7 +640,9 @@ export declare class UserCancelledError extends Error {
     constructor(stepName?: string);
 }
 
-export declare class NoResourceFoundError extends Error { }
+export declare class NoResourceFoundError extends Error {
+    constructor(context?: ITreeItemPickerContext);
+}
 
 export type CommandCallback = (context: IActionContext, ...args: any[]) => any;
 
@@ -995,7 +997,7 @@ export interface IAzureQuickPickItem<T = undefined> extends QuickPickItem {
 /**
  * Provides additional options for QuickPicks used in Azure Extensions
  */
-export interface IAzureQuickPickOptions extends QuickPickOptions, AzExtUserInputOptions {
+export interface IAzureQuickPickOptions extends VSCodeQuickPickOptions, AzExtUserInputOptions {
     /**
      * An optional id to identify this QuickPick across sessions, used in persisting previous selections
      * If not specified, a hash of the placeHolder will be used
@@ -1714,6 +1716,9 @@ export declare interface Wrapper {
     unwrap<T>(): T;
 }
 
+// temporary
+type ResourceGroupsItem = unknown;
+
 /**
  * Tests to see if something is a wrapper, by ensuring it is an object
  * and has an "unwrap" function
@@ -1721,6 +1726,47 @@ export declare interface Wrapper {
  * @returns True if a wrapper, false otherwise
  */
 export declare function isWrapper(maybeWrapper: unknown): maybeWrapper is Wrapper;
+
+export declare function appResourceExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: ContextValueFilter): Promise<TPick>;
+export declare function contextValueExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, contextValueFilter: ContextValueFilter): Promise<TPick>;
+
+interface CompatibilityPickResourceExperienceOptions {
+    resourceTypes?: AzExtResourceType | AzExtResourceType[];
+    childItemFilter?: ContextValueFilter
+}
+
+export declare namespace PickTreeItemWithCompatibility {
+    /**
+     * Provides compatibility for the legacy `pickAppResource` Resource Groups API
+     */
+    export function resource<TPick extends AzExtTreeItem>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, options: CompatibilityPickResourceExperienceOptions): Promise<TPick>;
+    /**
+     * Returns `ISubscriptionContext` instead of `ApplicationSubscription` for compatibility.
+     */
+    export function subscription(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>): Promise<ISubscriptionContext>;
+}
+
+export declare interface QuickPickWizardContext extends IActionContext {
+    pickedNodes: unknown[];
+}
+
+/**
+ * Describes filtering based on context value. Items that pass the filter will
+ * match at least one of the `include` filters, but none of the `exclude` filters.
+ */
+export declare interface ContextValueFilter {
+    /**
+     * This filter will include items that match *any* of the values in the array.
+     * When a string is used, exact value comparison is done.
+     */
+    include: string | RegExp | (string | RegExp)[];
+
+    /**
+     * This filter will exclude items that match *any* of the values in the array.
+     * When a string is used, exact value comparison is done.
+     */
+    exclude?: string | RegExp | (string | RegExp)[];
+}
 
 /**
  * Get extension exports for the extension with the given id. Activates extension first if needed.

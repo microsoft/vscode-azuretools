@@ -6,7 +6,7 @@
 import * as vscode from 'vscode';
 import type { Environment } from '@azure/ms-rest-azure-env';
 import type { Activity } from './hostapi';
-import type { AzExtResourceType } from './index';
+import type { AzExtResourceType, QuickPickWizardContext } from './index';
 import type { AzureExtensionApi } from './api';
 
 /**
@@ -333,3 +333,11 @@ export interface ActivityApi {
 }
 
 export type AzureResourcesApi = AzureResourcesHostApi & ActivityApi & AzureExtensionApi;
+export declare interface PickSubscriptionWizardContext extends QuickPickWizardContext {
+    subscription?: AzureSubscription;
+}
+
+export declare interface AzureResourceQuickPickWizardContext extends QuickPickWizardContext, PickSubscriptionWizardContext {
+    resource?: AzureResource;
+    resourceGroup?: string;
+}
