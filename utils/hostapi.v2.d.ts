@@ -275,57 +275,64 @@ export type WorkspaceResourceBranchDataProvider<TModel extends WorkspaceResource
 // scope down vscode.TreeDataProvider to exactly what's allowed to be used
 type ResourceGroupsTreeDataProvider = Pick<vscode.TreeDataProvider<unknown>, 'getChildren' | 'getTreeItem'>;
 
-/**
- * The current (v2) Azure Resources extension API.
- */
-export interface v2AzureResourcesApi extends AzureExtensionApi {
+export interface AzureResourcesHostApi {
     /**
-     * {@link vscode.TreeDataProvider} representing the Azure tree view.
+     * The current (v2) Azure Resources extension API.
      */
-    readonly azureResourceTreeDataProvider: ResourceGroupsTreeDataProvider;
+    resources: {
+        /**
+         * {@link vscode.TreeDataProvider} representing the Azure tree view.
+         */
+        readonly azureResourcesTreeDataProvider: ResourceGroupsTreeDataProvider;
 
-    /**
-     * {@link vscode.TreeDataProvider} representing the Workspace tree view.
-     */
-    readonly workspaceResourceTreeDataProvider: ResourceGroupsTreeDataProvider;
+        /**
+         * Registers an Azure resource branch data provider.
+         *
+         * @param type The Azure resource type associated with the provider. Must be unique.
+         * @param resolver The branch data provider for the resource type.
+         *
+         * @returns A disposable that unregisters the provider.
+         */
+        registerAzureResourceBranchDataProvider<TModel extends AzureResourceModel>(type: AzExtResourceType, provider: AzureResourceBranchDataProvider<TModel>): vscode.Disposable;
 
-    /**
-     * Registers an activity to appear in the activity window.
-     *
-     * @param activity The activity information to show.
-     */
-    registerActivity(activity: Activity): Promise<void>;
+        /**
+         * {@link vscode.TreeDataProvider} representing the Workspace tree view.
+         */
+        readonly workspaceResourcesTreeDataProvider: ResourceGroupsTreeDataProvider;
 
-    /**
-     * Registers an Azure resource branch data provider.
-     *
-     * @param type The Azure resource type associated with the provider. Must be unique.
-     * @param resolver The branch data provider for the resource type.
-     *
-     * @returns A disposable that unregisters the provider.
-     */
-    registerAzureResourceBranchDataProvider<TModel extends AzureResourceModel>(type: AzExtResourceType, provider: AzureResourceBranchDataProvider<TModel>): vscode.Disposable;
+        /**
+         * Registers a provider of workspace resources.
+        *
+        * @param provider The resource provider.
+        *
+        * @returns A disposable that unregisters the provider.
+        */
+        registerWorkspaceResourceProvider(provider: WorkspaceResourceProvider): vscode.Disposable;
 
-    /**
-     * Registers a provider of workspace resources.
-    *
-    * @param provider The resource provider.
-    *
-    * @returns A disposable that unregisters the provider.
-    */
-    registerWorkspaceResourceProvider(provider: WorkspaceResourceProvider): vscode.Disposable;
-
-    /**
-     * Registers a workspace resource branch data provider.
-    *
-    * @param type The workspace resource type associated with the provider. Must be unique.
-    * @param provider The branch data provider for the resource type.
-    *
-    * @returns A disposable that unregisters the provider.
-    */
-    registerWorkspaceResourceBranchDataProvider<TModel extends WorkspaceResourceModel>(type: WorkspaceResourceType, provider: WorkspaceResourceBranchDataProvider<TModel>): vscode.Disposable;
+        /**
+         * Registers a workspace resource branch data provider.
+        *
+        * @param type The workspace resource type associated with the provider. Must be unique.
+        * @param provider The branch data provider for the resource type.
+        *
+        * @returns A disposable that unregisters the provider.
+        */
+        registerWorkspaceResourceBranchDataProvider<TModel extends WorkspaceResourceModel>(type: WorkspaceResourceType, provider: WorkspaceResourceBranchDataProvider<TModel>): vscode.Disposable;
+    }
 }
 
+export interface ActivityApi {
+    activity: {
+        /**
+         * Registers an activity to appear in the activity window.
+        *
+        * @param activity The activity information to show.
+        */
+        registerActivity(activity: Activity): Promise<void>;
+    }
+}
+
+export type AzureResourcesApi = AzureResourcesHostApi & ActivityApi & AzureExtensionApi;
 export declare interface PickSubscriptionWizardContext extends QuickPickWizardContext {
     subscription?: AzureSubscription;
 }
