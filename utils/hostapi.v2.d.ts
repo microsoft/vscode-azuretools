@@ -283,7 +283,7 @@ export interface AzureResourcesHostApi {
         /**
          * {@link vscode.TreeDataProvider} representing the Azure tree view.
          */
-        readonly azureResourcesTreeDataProvider: ResourceGroupsTreeDataProvider;
+        readonly azureResourceTreeDataProvider: ResourceGroupsTreeDataProvider;
 
         /**
          * Registers an Azure resource branch data provider.
@@ -298,7 +298,7 @@ export interface AzureResourcesHostApi {
         /**
          * {@link vscode.TreeDataProvider} representing the Workspace tree view.
          */
-        readonly workspaceResourcesTreeDataProvider: ResourceGroupsTreeDataProvider;
+        readonly workspaceResourceTreeDataProvider: ResourceGroupsTreeDataProvider;
 
         /**
          * Registers a provider of workspace resources.
