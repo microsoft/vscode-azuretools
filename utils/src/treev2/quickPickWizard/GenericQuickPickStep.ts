@@ -5,9 +5,9 @@
 
 import * as types from '../../../index';
 import * as vscode from 'vscode';
-import { getLastNode } from './common/getLastNode';
+import { getLastNode } from './getLastNode';
 import { AzureWizardPromptStep } from '../../wizard/AzureWizardPromptStep';
-import { PickFilter } from './common/PickFilter';
+import { PickFilter } from './PickFilter';
 import { localize } from '../../localize';
 
 export interface GenericQuickPickOptions {

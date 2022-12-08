@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as types from '../../../index';
+import * as types from '../../../../index';
 import { ContextValueFilterQuickPickOptions, ContextValueQuickPickStep } from './ContextValueQuickPickStep';
-import { getLastNode } from './common/getLastNode';
+import { getLastNode } from '../getLastNode';
 
 export class RecursiveQuickPickStep<TContext extends types.QuickPickWizardContext> extends ContextValueQuickPickStep<TContext, ContextValueFilterQuickPickOptions> {
     hideStepCount: boolean = true;

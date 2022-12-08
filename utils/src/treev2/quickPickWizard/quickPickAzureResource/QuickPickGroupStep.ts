@@ -8,7 +8,7 @@ import * as vscode from 'vscode';
 import { GenericQuickPickStep, SkipIfOneQuickPickOptions } from '../GenericQuickPickStep';
 import { AzureResourceQuickPickWizardContext } from '../../../../hostapi.v2';
 import { parseContextValue } from '../../../utils/contextUtils';
-import { PickFilter } from '../common/PickFilter';
+import { PickFilter } from '../PickFilter';
 
 interface GroupQuickPickOptions extends SkipIfOneQuickPickOptions {
     groupType?: types.AzExtResourceType[];
