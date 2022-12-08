@@ -7,10 +7,10 @@ import { runWithTestActionContext, TestActionContext, TestInput } from '@microso
 import * as assert from 'assert';
 import { contextValueExperience } from '../../src/treev2/quickPickWizard/experiences/contextValueExperience';
 import { createContextValue } from '../../src/utils/contextUtils';
-import { assertThrowsAsync } from '../assertThrowsAsync';
-import { TestTreeDataProvider, TestTreeNode } from './TestTreeView';
+import { assertNoMatchingQuickPickItem } from './assertNoMatchingQuickPickItem';
+import { createTestTreeDataProvider, TestTreeNode } from './TestTreeView';
 
-suite.only('contextValueExperience', () => {
+suite('contextValueExperience', () => {
 
     const excludeContextValue = 'excludeContextValue';
 
@@ -93,7 +93,7 @@ suite.only('contextValueExperience', () => {
 
     test('Pick nested tree item', async () => {
         await runWithTestActionContext(('contextValueExperienceTest'), async (context: TestActionContext) => {
-            const tdp = TestTreeDataProvider(treeWithContextValues());
+            const tdp = createTestTreeDataProvider(treeWithContextValues());
             await context.ui.runWithInputs([subscription1Label, functionAppsGroupLabel, azureFunction1Label], async () => {
                 const pick = await contextValueExperience<TestTreeNode>(context, tdp, {
                     include: azureFunctionContextValues
@@ -105,7 +105,7 @@ suite.only('contextValueExperience', () => {
 
     test('Exclude tree items that match exclude context values', async () => {
         await runWithTestActionContext(('contextValueExperienceTest'), async (context: TestActionContext) => {
-            const tdp = TestTreeDataProvider(treeWithContextValues());
+            const tdp = createTestTreeDataProvider(treeWithContextValues());
             await context.ui.runWithInputs([subscription1Label, functionAppsGroupLabel, azureFunction1Label], async () => {
                 await assertNoMatchingQuickPickItem(async () => {
                     await contextValueExperience<TestTreeNode>(context, tdp, {
@@ -119,7 +119,7 @@ suite.only('contextValueExperience', () => {
 
     test('Pick a tree item that has children', async () => {
         await runWithTestActionContext(('contextValueExperienceTest'), async (context: TestActionContext) => {
-            const tdp = TestTreeDataProvider(treeWithContextValues());
+            const tdp = createTestTreeDataProvider(treeWithContextValues());
             await context.ui.runWithInputs([subscription1Label, functionAppsGroupLabel], async () => {
                 const pick = await contextValueExperience<TestTreeNode>(context, tdp, {
                     include: functionAppsGroupContextValues
@@ -131,7 +131,7 @@ suite.only('contextValueExperience', () => {
 
     test('Tree item that is both a final and ancestor pick is shown as a final pick', async () => {
         await runWithTestActionContext(('contextValueExperienceTest'), async (context: TestActionContext) => {
-            const tdp = TestTreeDataProvider(treeWithContextValues());
+            const tdp = createTestTreeDataProvider(treeWithContextValues());
             await context.ui.runWithInputs([subscription1Label, functionAppsGroupLabel, functionApp2Label], async () => {
                 const pick = await contextValueExperience<TestTreeNode>(context, tdp, {
                     include: azureFunctionContextValues
@@ -143,7 +143,7 @@ suite.only('contextValueExperience', () => {
 
     test('Ensure only final picks are shown if there are final and indirect picks available', async () => {
         await runWithTestActionContext(('contextValueExperienceTest'), async (context: TestActionContext) => {
-            const tdp = TestTreeDataProvider(treeWithContextValues());
+            const tdp = createTestTreeDataProvider(treeWithContextValues());
             await context.ui.runWithInputs([subscription1Label, functionAppsGroupLabel, functionApp4Label], async () => {
                 await assertNoMatchingQuickPickItem(async () => {
                     await contextValueExperience<TestTreeNode>(context, tdp, {
@@ -156,7 +156,7 @@ suite.only('contextValueExperience', () => {
 
     test('Pick nested tree item allows using the back button', async () => {
         await runWithTestActionContext(('contextValueExperienceTest'), async (context: TestActionContext) => {
-            const tdp = TestTreeDataProvider(treeWithContextValues());
+            const tdp = createTestTreeDataProvider(treeWithContextValues());
             await context.ui.runWithInputs([subscription1Label, functionAppsGroupLabel, TestInput.BackButton, functionAppsGroupLabel, azureFunction1Label], async () => {
                 const pick = await contextValueExperience<TestTreeNode>(context, tdp, {
                     include: azureFunctionContextValues
@@ -168,7 +168,7 @@ suite.only('contextValueExperience', () => {
 
     test('Back button actually goes back', async () => {
         await runWithTestActionContext(('contextValueExperienceTest'), async (context: TestActionContext) => {
-            const tdp = TestTreeDataProvider(treeWithContextValues());
+            const tdp = createTestTreeDataProvider(treeWithContextValues());
             await context.ui.runWithInputs([subscription1Label, functionAppsGroupLabel, TestInput.BackButton, azureFunction1Label], async () => {
                 await assertNoMatchingQuickPickItem(async () => {
                     await contextValueExperience<TestTreeNode>(context, tdp, {
@@ -181,7 +181,7 @@ suite.only('contextValueExperience', () => {
 
     test('Back button can be used when there are no matching resources', async () => {
         await runWithTestActionContext(('contextValueExperienceTest'), async (context: TestActionContext) => {
-            const tdp = TestTreeDataProvider(treeWithContextValues());
+            const tdp = createTestTreeDataProvider(treeWithContextValues());
             await context.ui.runWithInputs([subscription1Label, appServiceGroupLabel, TestInput.BackButton, functionAppsGroupLabel, azureFunction1Label], async () => {
                 const pick = await contextValueExperience<TestTreeNode>(context, tdp, {
                     include: azureFunctionContextValues
@@ -191,8 +191,3 @@ suite.only('contextValueExperience', () => {
         });
     });
 });
-
-function assertNoMatchingQuickPickItem(block: () => Promise<void>): Promise<void> {
-    const noMatchingQuickPickItem = /Did not find quick pick item matching/;
-    return assertThrowsAsync(block, noMatchingQuickPickItem);
-}
