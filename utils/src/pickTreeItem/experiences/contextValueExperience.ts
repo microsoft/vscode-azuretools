@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as types from '../../../../index';
+import * as types from '../../../index';
 import * as vscode from 'vscode';
-import { RecursiveQuickPickStep } from '../RecursiveQuickPickStep';
-import { getLastNode } from '../common/getLastNode';
-import { NoResourceFoundError } from '../../../errors';
-import { AzureWizardPromptStep } from '../../../wizard/AzureWizardPromptStep';
-import { AzureWizard } from '../../../wizard/AzureWizard';
-import { isWrapper } from '../../../registerCommandWithTreeNodeUnwrapping';
+import { RecursiveQuickPickStep } from '../contextValue/RecursiveQuickPickStep';
+import { getLastNode } from '../getLastNode';
+import { NoResourceFoundError } from '../../errors';
+import { AzureWizardPromptStep } from '../../wizard/AzureWizardPromptStep';
+import { AzureWizard } from '../../wizard/AzureWizard';
+import { isWrapper } from '../../registerCommandWithTreeNodeUnwrapping';
 import { ResourceGroupsItem } from '../quickPickAzureResource/tempTypes';
 
 export async function contextValueExperience<TPick extends unknown>(context: types.IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, contextValueFilter: types.ContextValueFilter): Promise<TPick> {

@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { AzureResourceQuickPickWizardContext } from '../../../../hostapi.v2';
-import { PickFilter } from '../common/PickFilter';
+import { AzureResourceQuickPickWizardContext } from '../../../hostapi.v2';
+import { PickFilter } from '../PickFilter';
 import { GenericQuickPickOptions, GenericQuickPickStep, SkipIfOneQuickPickOptions } from '../GenericQuickPickStep';
 import { ResourceGroupsItem, SubscriptionItem } from './tempTypes';
 
