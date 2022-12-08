@@ -5,7 +5,7 @@
 
 import * as types from "../../../../index";
 import { ContextValueFilterQuickPickOptions, ContextValueQuickPickStep } from "../ContextValueQuickPickStep";
-import { getLastNode } from "../common/getLastNode";
+import { getLastNode } from "../../getLastNode";
 import { AzExtTreeItem } from "../../../tree/AzExtTreeItem";
 import { AzExtParentTreeItem } from "../../../tree/AzExtParentTreeItem";
 import { isWrapper } from "../../../registerCommandWithTreeNodeUnwrapping";

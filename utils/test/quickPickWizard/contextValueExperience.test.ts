@@ -5,7 +5,7 @@
 
 import { runWithTestActionContext, TestActionContext, TestInput } from '@microsoft/vscode-azext-dev';
 import * as assert from 'assert';
-import { contextValueExperience } from '../../src/treev2/quickPickWizard/experiences/contextValueExperience';
+import { contextValueExperience } from '../../src/pickTreeItem/experiences/contextValueExperience';
 import { createContextValue } from '../../src/utils/contextUtils';
 import { assertNoMatchingQuickPickItem } from './assertNoMatchingQuickPickItem';
 import { createTestTreeDataProvider, TestTreeNode } from './TestTreeView';

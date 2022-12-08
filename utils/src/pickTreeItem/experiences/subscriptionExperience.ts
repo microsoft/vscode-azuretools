@@ -3,13 +3,13 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import * as types from '../../../../index';
+import * as types from '../../../index';
 import * as vscode from 'vscode';
-import { AzureWizard } from '../../../wizard/AzureWizard';
+import { AzureWizard } from '../../wizard/AzureWizard';
 import { QuickPickAzureSubscriptionStep } from '../quickPickAzureResource/QuickPickAzureSubscriptionStep';
-import { AzureSubscription, PickSubscriptionWizardContext } from '../../../../hostapi.v2';
+import { AzureSubscription, PickSubscriptionWizardContext } from '../../../hostapi.v2';
 import { ResourceGroupsItem } from '../quickPickAzureResource/tempTypes';
-import { NoResourceFoundError } from '../../../errors';
+import { NoResourceFoundError } from '../../errors';
 
 export async function subscriptionExperience(context: types.IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>): Promise<AzureSubscription> {
 
