@@ -6,8 +6,8 @@
 import { createTestActionContext } from '@microsoft/vscode-azext-dev';
 import * as assert from 'assert';
 import { IActionContext, QuickPickWizardContext } from '../../index';
-import { getLastNode } from '../../src/treev2/quickPickWizard/common/getLastNode';
-import { ContextValueFilterQuickPickOptions, ContextValueQuickPickStep } from '../../src/treev2/quickPickWizard/ContextValueQuickPickStep';
+import { ContextValueFilterQuickPickOptions, ContextValueQuickPickStep } from '../../src/pickTreeItem/contextValue/ContextValueQuickPickStep';
+import { getLastNode } from '../../src/pickTreeItem/getLastNode';
 import { createContextValue } from '../../src/utils/contextUtils';
 import { AzureWizard } from '../../src/wizard/AzureWizard';
 import { assertNoMatchingQuickPickItem } from './assertNoMatchingQuickPickItem';
