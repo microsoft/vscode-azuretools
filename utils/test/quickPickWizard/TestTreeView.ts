@@ -1,3 +1,8 @@
+/*---------------------------------------------------------------------------------------------
+*  Copyright (c) Microsoft Corporation. All rights reserved.
+*  Licensed under the MIT License. See License.txt in the project root for license information.
+*--------------------------------------------------------------------------------------------*/
+
 import * as vscode from 'vscode';
 
 export type TestTreeNode = vscode.TreeItem & {
@@ -5,7 +10,7 @@ export type TestTreeNode = vscode.TreeItem & {
     children?: TestTreeNode[];
 }
 
-export function TestTreeDataProvider(tree: TestTreeNode[]): vscode.TreeDataProvider<TestTreeNode> {
+export function createTestTreeDataProvider(tree: TestTreeNode[]): vscode.TreeDataProvider<TestTreeNode> {
     return {
         getChildren: (element) => {
             if (!element) {
