@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { TreeItem } from 'vscode';
-import { AzureResourceQuickPickWizardContext } from '../../../../hostapi.v2';
-import * as types from '../../../../index';
-import { parseContextValue } from '../../../utils/contextUtils';
+import { AzureResourceQuickPickWizardContext } from '../../../hostapi.v2';
+import * as types from '../../../index';
+import { parseContextValue } from '../../utils/contextUtils';
 import { PickFilter } from '../PickFilter';
 import { GenericQuickPickOptions, GenericQuickPickStep } from '../GenericQuickPickStep';
 import { AzureResourceItem } from './tempTypes';

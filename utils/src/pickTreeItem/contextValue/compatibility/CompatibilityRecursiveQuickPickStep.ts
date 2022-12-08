@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as types from "../../../../../index";
+import * as types from "../../../../index";
 import { getLastNode } from "../../getLastNode";
 import { CompatibilityContextValueQuickPickStep } from './CompatibilityContextValueQuickPickStep';
-import { localize } from "../../../../localize";
-import { NoResourceFoundError, UserCancelledError } from "../../../../errors";
+import { localize } from "../../../localize";
+import { NoResourceFoundError, UserCancelledError } from "../../../errors";
 import type { ContextValueFilterQuickPickOptions } from "../ContextValueQuickPickStep";
-import { AzExtTreeItem } from "../../../../tree/AzExtTreeItem";
-import { isAzExtParentTreeItem, isAzExtTreeItem } from "../../../../tree/isAzExtTreeItem";
-import { isWrapper } from "../../../../registerCommandWithTreeNodeUnwrapping";
+import { AzExtTreeItem } from "../../../tree/AzExtTreeItem";
+import { isAzExtParentTreeItem, isAzExtTreeItem } from "../../../tree/isAzExtTreeItem";
+import { isWrapper } from "../../../registerCommandWithTreeNodeUnwrapping";
 
 type CreateCallback<TNode = unknown> = (context: types.IActionContext) => TNode | Promise<TNode>;
 

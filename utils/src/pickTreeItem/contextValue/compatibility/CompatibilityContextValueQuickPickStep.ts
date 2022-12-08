@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as types from "../../../../../index";
+import * as types from "../../../../index";
 import { ContextValueFilterQuickPickOptions, ContextValueQuickPickStep } from "../ContextValueQuickPickStep";
 import { getLastNode } from "../../getLastNode";
-import { AzExtTreeItem } from "../../../../tree/AzExtTreeItem";
-import { AzExtParentTreeItem } from "../../../../tree/AzExtParentTreeItem";
-import { isWrapper } from "../../../../registerCommandWithTreeNodeUnwrapping";
-import { isAzExtParentTreeItem } from "../../../../tree/isAzExtTreeItem";
+import { AzExtTreeItem } from "../../../tree/AzExtTreeItem";
+import { AzExtParentTreeItem } from "../../../tree/AzExtParentTreeItem";
+import { isWrapper } from "../../../registerCommandWithTreeNodeUnwrapping";
+import { isAzExtParentTreeItem } from "../../../tree/isAzExtTreeItem";
 
 /**
  * Provides compatability with {@link AzExtParentTreeItem.pickTreeItemImpl}

@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { TreeItem } from 'vscode';
-import * as types from '../../../../index';
-import { parseContextValue } from '../../../utils/contextUtils';
+import * as types from '../../../index';
+import { parseContextValue } from '../../utils/contextUtils';
 import { PickFilter } from '../PickFilter';
 import { GenericQuickPickOptions, GenericQuickPickStep } from '../GenericQuickPickStep';
 
