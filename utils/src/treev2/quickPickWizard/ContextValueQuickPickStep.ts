@@ -36,8 +36,8 @@ class ContextValuePickFilter implements PickFilter {
     }
 
     isAncestorPick(node: TreeItem): boolean {
-        // `TreeItemCollapsibleState.None` and `undefined` are both falsy, and indicate that a `TreeItem` cannot have children--and therefore, cannot be an indirect pick
-        return !node.collapsibleState;
+        // `TreeItemCollapsibleState.None` and `undefined` are both falsy, and indicate that a `TreeItem` cannot have children--and therefore, cannot be an ancestor pick
+        return !!node.collapsibleState;
     }
 
     private matchesSingleFilter(matcher: string | RegExp, nodeContextValues: string[]): boolean {
