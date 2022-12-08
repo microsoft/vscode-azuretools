@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as types from '../../../../index';
+import * as types from '../../../index';
 import * as vscode from 'vscode';
 import { GenericQuickPickStep, SkipIfOneQuickPickOptions } from '../GenericQuickPickStep';
-import { AzureResourceQuickPickWizardContext } from '../../../../hostapi.v2';
-import { parseContextValue } from '../../../utils/contextUtils';
-import { PickFilter } from '../common/PickFilter';
+import { AzureResourceQuickPickWizardContext } from '../../../hostapi.v2';
+import { parseContextValue } from '../../utils/contextUtils';
+import { PickFilter } from '../PickFilter';
 
 interface GroupQuickPickOptions extends SkipIfOneQuickPickOptions {
     groupType?: types.AzExtResourceType[];

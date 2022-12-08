@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureResource, AzureSubscription } from '../../../../hostapi.v2';
-import * as types from '../../../../index';
+import { AzureResource, AzureSubscription } from '../../../hostapi.v2';
+import * as types from '../../../index';
 
 // TODO: THIS FILE IS TEMPORARY //
 // It needs to be replaced by real Resources extension interfaces //
