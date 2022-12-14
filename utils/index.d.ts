@@ -1697,7 +1697,7 @@ export declare enum AzExtResourceType {
  * @param options The options to pass when creating the API. If `options.extensionId` is left undefined, it's set to the caller extension id.
  * @throws Error if extension with id is not installed.
  */
-export function getAzureExtensionApi<T extends AzureExtensionApi>(extensionId: string, apiVersionRange: string, options?: GetApiOptions): Promise<T>;
+export declare function getAzureExtensionApi<T extends AzureExtensionApi>(extensionId: string, apiVersionRange: string, options?: GetApiOptions): Promise<T>;
 
 export type TreeNodeCommandCallback<T> = (context: IActionContext, node?: T, nodes?: T[], ...args: any[]) => any;
 
