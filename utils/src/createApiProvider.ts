@@ -10,15 +10,31 @@ import { callWithTelemetryAndErrorHandlingSync } from './callWithTelemetryAndErr
 import { getPackageInfo } from './getPackageInfo';
 import { localize } from './localize';
 
-export function createApiProvider(azExts: AzureExtensionApiFactory[]): AzureExtensionApiProvider {
+function isAzureExtensionApiFactory(maybeAzureExtensionApiFactory: AzureExtensionApiFactory | AzureExtensionApi): maybeAzureExtensionApiFactory is AzureExtensionApiFactory {
+    return (<AzureExtensionApiFactory>maybeAzureExtensionApiFactory).createApi !== undefined;
+}
+
+export function createApiProvider(azExts: (AzureExtensionApiFactory | AzureExtensionApi)[]): AzureExtensionApiProvider {
     for (const azExt of azExts) {
         if (!semver.valid(azExt.apiVersion)) {
             throw new Error(localize('invalidVersion', 'Invalid semver "{0}".', azExt.apiVersion));
         }
     }
     const extensionId: string = getPackageInfo().extensionId;
+
+    const apiFactories: AzureExtensionApiFactory[] = azExts.map((azExt): AzureExtensionApiFactory => {
+        if (isAzureExtensionApiFactory(azExt)) {
+            return azExt;
+        } else {
+            return <AzureExtensionApiFactory>{
+                apiVersion: azExt.apiVersion,
+                createApi: () => azExt,
+            }
+        }
+    });
+
     return {
-        getApi: <T extends AzureExtensionApi>(apiVersionRange: string, options: GetApiOptions): T => getApiInternal<T>(azExts, extensionId, apiVersionRange, options)
+        getApi: <T extends AzureExtensionApi>(apiVersionRange: string, options: GetApiOptions): T => getApiInternal<T>(apiFactories, extensionId, apiVersionRange, options)
     };
 }
 

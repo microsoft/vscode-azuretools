@@ -1360,7 +1360,7 @@ export type AzureExtensionApiFactory<T extends AzureExtensionApi = AzureExtensio
  * Wraps an Azure Extension's API in a very basic provider that adds versioning.
  * Multiple APIs with different versions can be supplied, but ideally a single backwards-compatible API is all that's necessary.
  */
-export declare function createApiProvider(azExts: AzureExtensionApiFactory[]): AzureExtensionApiProvider;
+export declare function createApiProvider(azExts: (AzureExtensionApiFactory | AzureExtensionApi)[]): AzureExtensionApiProvider;
 
 /**
  * Wrapper for vscode.OutputChannel that handles AzureExtension behavior for outputting messages
