@@ -1691,13 +1691,13 @@ export declare enum AzExtResourceType {
 
 /**
  * Gets the exported API from the given extension id and version range.
- * Automatically populates the consumer extension id to the created API.
  *
  * @param extensionId The extension id to get the API from
  * @param apiVersionRange The version range of the API you need. Any semver syntax is allowed. For example "1" will return any "1.x.x" version or "1.2" will return any "1.2.x" version
+ * @param options The options to pass when creating the API. If `options.extensionId` is left undefined, it's set to the caller extension id.
  * @throws Error if extension with id is not installed.
  */
-export function getAzureExtensionApi<T extends AzureExtensionApi>(extensionId: string, apiVersionRange: string): Promise<T>;
+export function getAzureExtensionApi<T extends AzureExtensionApi>(extensionId: string, apiVersionRange: string, options?: GetApiOptions): Promise<T>;
 
 export type TreeNodeCommandCallback<T> = (context: IActionContext, node?: T, nodes?: T[], ...args: any[]) => any;
 

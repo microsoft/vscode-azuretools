@@ -5,7 +5,7 @@
 
 import * as vscode from "vscode";
 import { Extension } from "vscode";
-import { AzureExtensionApi, AzureExtensionApiProvider } from "../../api";
+import { AzureExtensionApi, AzureExtensionApiProvider, GetApiOptions } from "../../api";
 import { getPackageInfo } from "../getPackageInfo";
 
 class ExtensionNotFoundError extends Error {
@@ -14,12 +14,12 @@ class ExtensionNotFoundError extends Error {
     }
 }
 
-export async function getAzureExtensionApi<T extends AzureExtensionApi>(extensionId: string, apiVersionRange: string): Promise<T> {
+export async function getAzureExtensionApi<T extends AzureExtensionApi>(extensionId: string, apiVersionRange: string, options?: GetApiOptions): Promise<T> {
     const apiProvider: AzureExtensionApiProvider | undefined = await getExtensionExports(extensionId);
 
     if (apiProvider) {
         return apiProvider.getApi<T>(apiVersionRange, {
-            extensionId: getPackageInfo().extensionId
+            extensionId: options?.extensionId ?? getPackageInfo().extensionId
         });
     }
 
