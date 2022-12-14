@@ -1690,9 +1690,12 @@ export declare enum AzExtResourceType {
 }
 
 /**
+ * Gets the exported API from the given extension id and version range.
+ * Automatically populates the consumer extension id to the created API.
  *
- * @param extensionId
- * @param apiVersionRange
+ * @param extensionId The extension id to get the API from
+ * @param apiVersionRange The version range of the API you need. Any semver syntax is allowed. For example "1" will return any "1.x.x" version or "1.2" will return any "1.2.x" version
+ * @throws Error if extension with id is not installed.
  */
 export function getExtensionApi<T extends AzureExtensionApi>(extensionId: string, apiVersionRange: string): Promise<T>;
 
