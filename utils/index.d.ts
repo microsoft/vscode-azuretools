@@ -8,8 +8,8 @@
 import type { Environment } from '@azure/ms-rest-azure-env';
 import { CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions as VSCodeQuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
-import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
-import type { Activity, ActivityTreeItemOptions, AppResource, AzureHostExtensionApi, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
+import { AzureExtensionApiProvider, AzureExtensionApi, GetApiOptions } from './api';
+import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
 
 export declare interface RunWithTemporaryDescriptionOptions {
     description: string;
@@ -1351,11 +1351,16 @@ export interface IAddUserAgent {
  */
 export declare function appendExtensionUserAgent(existingUserAgent?: string): string;
 
+export type AzureExtensionApiFactory<T extends AzureExtensionApi = AzureExtensionApi> = {
+    apiVersion: string,
+    createApi: (options?: GetApiOptions) => T
+};
+
 /**
  * Wraps an Azure Extension's API in a very basic provider that adds versioning.
  * Multiple APIs with different versions can be supplied, but ideally a single backwards-compatible API is all that's necessary.
  */
-export declare function createApiProvider(azExts: AzureExtensionApi[]): AzureExtensionApiProvider;
+export declare function createApiProvider(azExts: (AzureExtensionApiFactory | AzureExtensionApi)[]): AzureExtensionApiProvider;
 
 /**
  * Wrapper for vscode.OutputChannel that handles AzureExtension behavior for outputting messages
@@ -1685,8 +1690,15 @@ export declare enum AzExtResourceType {
 }
 
 /**
- * Describes command callbacks for tree node context menu commands
+ * Gets the exported API from the given extension id and version range.
+ *
+ * @param extensionId The extension id to get the API from
+ * @param apiVersionRange The version range of the API you need. Any semver syntax is allowed. For example "1" will return any "1.x.x" version or "1.2" will return any "1.2.x" version
+ * @param options The options to pass when creating the API. If `options.extensionId` is left undefined, it's set to the caller extension id.
+ * @throws Error if extension with id is not installed.
  */
+export declare function getAzureExtensionApi<T extends AzureExtensionApi>(extensionId: string, apiVersionRange: string, options?: GetApiOptions): Promise<T>;
+
 export type TreeNodeCommandCallback<T> = (context: IActionContext, node?: T, nodes?: T[], ...args: any[]) => any;
 
 /**

@@ -12,12 +12,22 @@ export interface AzureExtensionApi {
     apiVersion: string;
 }
 
+export interface GetApiOptions {
+    /**
+     * The ID of the extension requesting the API.
+     *
+     * @remarks This is used for telemetry purposes, to measure which extensions are using the API.
+     */
+    readonly extensionId?: string;
+}
+
 export interface AzureExtensionApiProvider {
     /**
      * Provides the API for an Azure Extension.
      *
      * @param apiVersionRange The version range of the API you need. Any semver syntax is allowed. For example "1" will return any "1.x.x" version or "1.2" will return any "1.2.x" version
+     * @param options Options for initializing the API. See {@link GetApiOptions}
      * @throws Error if a matching version is not found.
      */
-    getApi<T extends AzureExtensionApi>(apiVersionRange: string): T;
+    getApi<T extends AzureExtensionApi>(apiVersionRange: string, options?: GetApiOptions): T;
 }
