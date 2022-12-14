@@ -3,7 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Extension, extensions } from "vscode";
+import * as vscode from "vscode";
+import { Extension } from "vscode";
 import { AzureExtensionApi, AzureExtensionApiProvider } from "../../api";
 import { getPackageInfo } from "../getPackageInfo";
 
@@ -14,7 +15,7 @@ class ExtensionNotFoundError extends Error {
 }
 
 export async function getAzureExtensionApi<T extends AzureExtensionApi>(extensionId: string, apiVersionRange: string): Promise<T> {
-    const apiProvider: AzureExtensionApiProvider | undefined = await getExtensionExport(extensionId);
+    const apiProvider: AzureExtensionApiProvider | undefined = await getExtensionExports(extensionId);
 
     if (apiProvider) {
         return apiProvider.getApi<T>(apiVersionRange, {
@@ -25,8 +26,8 @@ export async function getAzureExtensionApi<T extends AzureExtensionApi>(extensio
     throw new ExtensionNotFoundError(extensionId);
 }
 
-export async function getExtensionExport<T>(extensionId: string): Promise<T | undefined> {
-    const extension: Extension<T> | undefined = extensions.getExtension(extensionId);
+export async function getExtensionExports<T>(extensionId: string): Promise<T | undefined> {
+    const extension: Extension<T> | undefined = vscode.extensions.getExtension(extensionId);
     if (extension) {
         if (!extension.isActive) {
             await extension.activate();

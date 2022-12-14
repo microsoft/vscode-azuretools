@@ -221,6 +221,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
         do {
             this._promptSteps.push(step);
             step = this._finishedPromptSteps.pop();
+            step?.undo?.(this._context);
             if (!step) {
                 throw new GoBackError();
             }

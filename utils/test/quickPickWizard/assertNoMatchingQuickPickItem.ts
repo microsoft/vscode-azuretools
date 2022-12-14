@@ -3,10 +3,9 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-export function createContextValue(values: string[]): string {
-    return Array.from(new Set(values)).sort().join(';');
-}
+import { assertThrowsAsync } from "../assertThrowsAsync";
 
-export function parseContextValue(contextValue?: string): string[] {
-    return contextValue?.split(';') ?? [];
+export function assertNoMatchingQuickPickItem(block: () => Promise<void>): Promise<void> {
+    const noMatchingQuickPickItem = /Did not find quick pick item matching/;
+    return assertThrowsAsync(block, noMatchingQuickPickItem);
 }
