@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import { AzureExtensionApi, AzureExtensionApiProvider, AzureExtensionApiFactory } from '../api';
-import { IParsedError } from '../index';
+import { AzureExtensionApi, AzureExtensionApiProvider } from '../api';
+import { AzureExtensionApiFactory, IParsedError } from '../index';
 import { createApiProvider } from '../src/createApiProvider';
 import { parseError } from '../src/parseError';
 import { assertThrowsAsync } from './assertThrowsAsync';

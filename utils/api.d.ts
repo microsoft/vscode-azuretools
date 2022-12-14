@@ -31,8 +31,3 @@ export interface AzureExtensionApiProvider {
      */
     getApi<T extends AzureExtensionApi>(apiVersionRange: string, options?: GetApiOptions): T;
 }
-
-export type AzureExtensionApiFactory<T extends AzureExtensionApi = AzureExtensionApi> = {
-    apiVersion: string,
-    createApi: (options?: GetApiOptions) => T
-};

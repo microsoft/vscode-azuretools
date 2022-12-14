@@ -8,7 +8,7 @@
 import type { Environment } from '@azure/ms-rest-azure-env';
 import { CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions as VSCodeQuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
-import { AzureExtensionApiProvider, AzureExtensionApiFactory, AzureExtensionApi } from './api';
+import { AzureExtensionApiProvider, AzureExtensionApi, GetApiOptions } from './api';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
 
 export declare interface RunWithTemporaryDescriptionOptions {
@@ -1350,6 +1350,11 @@ export interface IAddUserAgent {
  * will return just the extension portion to use in a user agent.
  */
 export declare function appendExtensionUserAgent(existingUserAgent?: string): string;
+
+export type AzureExtensionApiFactory<T extends AzureExtensionApi = AzureExtensionApi> = {
+    apiVersion: string,
+    createApi: (options?: GetApiOptions) => T
+};
 
 /**
  * Wraps an Azure Extension's API in a very basic provider that adds versioning.

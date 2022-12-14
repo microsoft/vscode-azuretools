@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as semver from 'semver';
-import { IActionContext } from '..';
-import { AzureExtensionApi, AzureExtensionApiProvider, AzureExtensionApiFactory as AzureExtensionApiFactory, GetApiOptions } from '../api';
+import { AzureExtensionApiFactory, IActionContext } from '../index';
+import { AzureExtensionApi, AzureExtensionApiProvider, GetApiOptions } from '../api';
 import { callWithTelemetryAndErrorHandlingSync } from './callWithTelemetryAndErrorHandling';
 import { getPackageInfo } from './getPackageInfo';
 import { localize } from './localize';
