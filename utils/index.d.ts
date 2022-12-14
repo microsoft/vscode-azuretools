@@ -10,8 +10,6 @@ import { CancellationToken, CancellationTokenSource, Disposable, Event, Extensio
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApiProvider, AzureExtensionApiFactory, AzureExtensionApi } from './api';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
-import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
-import type { Activity, ActivityTreeItemOptions, AppResource, AzureHostExtensionApi, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
 
 export declare interface RunWithTemporaryDescriptionOptions {
     description: string;
