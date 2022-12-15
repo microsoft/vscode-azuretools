@@ -10,6 +10,7 @@ import { CancellationToken, CancellationTokenSource, Disposable, Event, Extensio
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApiProvider, AzureExtensionApi, GetApiOptions } from './api';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
+import { AzureSubscription } from './hostapi.v2';
 
 export declare interface RunWithTemporaryDescriptionOptions {
     description: string;
@@ -1741,6 +1742,7 @@ export declare function isWrapper(maybeWrapper: unknown): maybeWrapper is Wrappe
 
 export declare function appResourceExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: ContextValueFilter): Promise<TPick>;
 export declare function contextValueExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, contextValueFilter: ContextValueFilter): Promise<TPick>;
+export declare function subscriptionExperience(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>): Promise<AzureSubscription>;
 
 interface CompatibilityPickResourceExperienceOptions {
     resourceTypes?: AzExtResourceType | AzExtResourceType[];
