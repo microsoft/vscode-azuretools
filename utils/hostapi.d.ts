@@ -36,12 +36,6 @@ export interface AzureHostExtensionApi {
     readonly apiVersion: string;
 
     /**
-     * Reveals an item in the shared app resource tree
-     * @param resourceId The ARM resource ID to reveal
-     */
-    revealTreeItem(resourceId: string): Promise<void>;
-
-    /**
      * Show a quick picker of app resources. Set `options.type` to filter the picks.
      */
     pickAppResource<T extends AzExtTreeItem>(context: ITreeItemPickerContext, options?: PickAppResourceOptions): Promise<T>
