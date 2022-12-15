@@ -1438,7 +1438,7 @@ export type AzExtItemUriParts = {
 /**
  * A virtual file system based around AzExTreeItems that only supports viewing/editing single files.
  */
-export declare abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> implements FileSystemProvider {
+export declare abstract class AzExtTreeFileSystem<TItem> implements FileSystemProvider {
     public abstract scheme: string;
 
     public constructor(tree: AzExtTreeDataProvider);
