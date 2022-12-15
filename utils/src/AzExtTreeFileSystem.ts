@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { randomUUID } from "crypto";
 import { parse as parseQuery, ParsedUrlQuery, stringify as stringifyQuery } from "querystring";
 import { Disposable, Event, EventEmitter, FileChangeEvent, FileStat, FileSystemError, FileSystemProvider, FileType, TextDocumentShowOptions, Uri, window } from "vscode";
 import * as types from '../index';
@@ -13,7 +12,7 @@ import { nonNullProp } from "./utils/nonNull";
 
 const unsupportedError: Error = new Error(localize('notSupported', 'This operation is not supported.'));
 
-export abstract class AzExtTreeFileSystem<TItem> implements FileSystemProvider {
+export abstract class AzExtTreeFileSystem<TItem extends types.AzExtTreeFileSystemItem> implements FileSystemProvider {
 
     private readonly itemCache: Map<string, TItem> = new Map<string, TItem>();
 
@@ -33,9 +32,8 @@ export abstract class AzExtTreeFileSystem<TItem> implements FileSystemProvider {
     public abstract getFilePath(item: TItem): string;
 
     public async showTextDocument(item: TItem, options?: TextDocumentShowOptions): Promise<void> {
-        const id = randomUUID();
-        const uri = this.getUriFromItem(item, id);
-        this.itemCache.set(id, item);
+        const uri = this.getUriFromItem(item, item.id);
+        this.itemCache.set(item.id, item);
         await window.showTextDocument(uri, options);
     }
 
@@ -69,7 +67,7 @@ export abstract class AzExtTreeFileSystem<TItem> implements FileSystemProvider {
         await callWithTelemetryAndErrorHandling('writeFile', async (context) => {
             const item: TItem = await this.lookup(context, uri);
             await this.writeFileImpl(context, item, content, uri);
-            // await item.refresh(context);
+            await item.refresh?.(context);
         });
     }
 

@@ -1435,10 +1435,15 @@ export type AzExtItemUriParts = {
     query: AzExtItemQuery;
 };
 
+export interface AzExtTreeFileSystemItem {
+    id: string;
+    refresh?(context: IActionContext): Promise<void>;
+}
+
 /**
  * A virtual file system based around AzExTreeItems that only supports viewing/editing single files.
  */
-export declare abstract class AzExtTreeFileSystem<TItem> implements FileSystemProvider {
+export declare abstract class AzExtTreeFileSystem<TItem extends AzExtTreeFileSystemItem> implements FileSystemProvider {
     public abstract scheme: string;
 
     public constructor(tree: AzExtTreeDataProvider);
