@@ -4,15 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { ResourceGroup, ResourceManagementClient } from '@azure/arm-resources';
+import { AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, nonNullProp } from '@microsoft/vscode-azext-utils';
 import * as types from '../../index';
 import { createResourcesClient } from '../clients';
 import { localize } from '../localize';
 import { uiUtils } from '../utils/uiUtils';
-import { AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions } from '@microsoft/vscode-azext-utils';
 import { LocationListStep } from './LocationListStep';
 import { ResourceGroupCreateStep } from './ResourceGroupCreateStep';
 import { ResourceGroupNameStep } from './ResourceGroupNameStep';
-import { nonNullProp } from '@microsoft/vscode-azext-utils';
 
 export const resourceGroupNamingRules: IAzureNamingRules = {
     minLength: 1,
@@ -46,6 +45,9 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
         // Cache resource group separately per subscription
         const options: IAzureQuickPickOptions = { placeHolder: 'Select a resource group for new resources.', id: `ResourceGroupListStep/${wizardContext.subscriptionId}` };
         wizardContext.resourceGroup = (await wizardContext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
+        if (wizardContext.resourceGroup && !LocationListStep.hasLocation(wizardContext)) {
+            await LocationListStep.setLocation(wizardContext, nonNullProp(wizardContext.resourceGroup, 'location'));
+        }
     }
 
     public async getSubWizard(wizardContext: T): Promise<IWizardOptions<T> | undefined> {
