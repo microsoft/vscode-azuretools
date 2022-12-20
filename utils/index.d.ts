@@ -1441,7 +1441,7 @@ export interface AzExtTreeFileSystemItem {
 }
 
 /**
- * A virtual file system based around AzExTreeItems that only supports viewing/editing single files.
+ * A virtual file system based around {@link AzExtTreeFileSystemItem} that only supports viewing/editing single files.
  */
 export declare abstract class AzExtTreeFileSystem<TItem extends AzExtTreeFileSystemItem> implements FileSystemProvider {
     public abstract scheme: string;
