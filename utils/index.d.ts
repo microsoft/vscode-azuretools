@@ -1742,7 +1742,7 @@ export declare function isWrapper(maybeWrapper: unknown): maybeWrapper is Wrappe
 
 export interface PickExperienceContext extends IActionContext {
     /**
-     * If true, the result will not be unwrapped.
+     * If true, the result will not be unwrapped. Intented for use internally by the Azure Resources extension.
      */
     dontUnwrap?: boolean;
 }
