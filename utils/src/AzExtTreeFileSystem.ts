@@ -32,7 +32,7 @@ export abstract class AzExtTreeFileSystem<TItem extends types.AzExtTreeFileSyste
     public abstract getFilePath(item: TItem): string;
 
     public async showTextDocument(item: TItem, options?: TextDocumentShowOptions): Promise<void> {
-        const uri = this.getUriFromItem(item, item.id);
+        const uri = this.getUriFromItem(item);
         this.itemCache.set(item.id, item);
         await window.showTextDocument(uri, options);
     }
@@ -95,7 +95,7 @@ export abstract class AzExtTreeFileSystem<TItem extends types.AzExtTreeFileSyste
         this._bufferedEvents.push(...events.map(e => {
             return {
                 type: e.type,
-                uri: this.getUriFromItem(e.item, '')
+                uri: this.getUriFromItem(e.item)
             };
         }));
 
@@ -116,11 +116,11 @@ export abstract class AzExtTreeFileSystem<TItem extends types.AzExtTreeFileSyste
         return this.itemCache.get(query.id);
     }
 
-    private getUriFromItem(item: TItem, id: string): Uri {
+    private getUriFromItem(item: TItem): Uri {
         const data: types.AzExtItemUriParts = {
             filePath: this.getFilePath(item),
             query: {
-                id
+                id: item.id
             }
         };
         const query: string = stringifyQuery(data.query);
