@@ -38,7 +38,7 @@ export * from './activityLog/activities/ExecuteActivity';
 export * from './getAzExtResourceType';
 export * from './AzExtResourceType';
 export * from './utils/apiUtils';
-export * from './pickTreeItem/experiences/appResourceExperience';
+export * from './pickTreeItem/experiences/azureResourceExperience';
 export * from './pickTreeItem/experiences/compatibility/PickTreeItemWithCompatibility';
 export * from './pickTreeItem/experiences/contextValueExperience';
 export * from './utils/apiUtils';

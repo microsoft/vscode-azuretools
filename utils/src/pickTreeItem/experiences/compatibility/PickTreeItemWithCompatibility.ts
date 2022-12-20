@@ -1,7 +1,7 @@
 import * as types from '../../../../index';
 import * as vscode from 'vscode';
 import { ResourceGroupsItem } from '../../quickPickAzureResource/tempTypes';
-import { appResourceExperience } from '../appResourceExperience';
+import { azureResourceExperience } from '../azureResourceExperience';
 import { subscriptionExperience } from '../subscriptionExperience';
 import { isAzExtTreeItem } from '../../../tree/isAzExtTreeItem';
 import { createSubscriptionContext } from '../../../utils/credentialUtils';
@@ -13,7 +13,7 @@ export namespace PickTreeItemWithCompatibility {
      */
     export async function resource<TPick extends types.AzExtTreeItem>(context: types.IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, options: types.CompatibilityPickResourceExperienceOptions): Promise<TPick> {
         const { resourceTypes, childItemFilter } = options;
-        return appResourceExperience(context, tdp, resourceTypes ? Array.isArray(resourceTypes) ? resourceTypes : [resourceTypes] : undefined, childItemFilter);
+        return azureResourceExperience(context, tdp, resourceTypes ? Array.isArray(resourceTypes) ? resourceTypes : [resourceTypes] : undefined, childItemFilter);
     }
 
     /**
