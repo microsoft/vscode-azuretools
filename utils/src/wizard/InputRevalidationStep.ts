@@ -6,7 +6,7 @@
 import { AzureWizardPromptStep, IActionContext } from "../..";
 import { localize } from "../localize";
 
-export class InputRevalidationStep<T extends IActionContext> extends AzureWizardPromptStep<T> {
+export class ConfirmPreviousInputStep<T extends IActionContext> extends AzureWizardPromptStep<T> {
     constructor(private readonly _key: string, private readonly _isPassword?: boolean) {
         super();
     }
