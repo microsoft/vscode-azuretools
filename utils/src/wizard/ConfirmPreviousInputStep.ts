@@ -6,15 +6,20 @@
 import { AzureWizardPromptStep, IActionContext } from "../..";
 import { localize } from "../localize";
 
+interface IConfirmInputOptions {
+    prompt?: string;
+    isPassword?: boolean;
+}
+
 export class ConfirmPreviousInputStep<T extends IActionContext> extends AzureWizardPromptStep<T> {
-    constructor(private readonly _key: string, private readonly _isPassword?: boolean) {
+    constructor(private readonly key: string, private readonly options?: IConfirmInputOptions) {
         super();
     }
 
     public async prompt(context: T): Promise<void> {
         await context.ui.showInputBox({
-            prompt: localize('verifyPreviousInput', 'Please confirm by re-entering the previous value.'),
-            password: this._isPassword,
+            prompt: this.options?.prompt || localize('verifyPreviousInput', 'Please confirm by re-entering the previous value.'),
+            password: this.options?.isPassword,
             validateInput: (value: string | undefined) => this.validateInput(context, value)
         });
     }
@@ -25,6 +30,6 @@ export class ConfirmPreviousInputStep<T extends IActionContext> extends AzureWiz
 
     private validateInput(context: T, value: string | undefined): string | undefined {
         const valueMismatch: string = localize('valueMismatch', 'The entered value does not match the original.');
-        return (context[this._key] === value?.trim()) ? undefined : valueMismatch;
+        return (context[this.key] === value?.trim()) ? undefined : valueMismatch;
     }
 }
