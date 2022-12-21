@@ -1752,7 +1752,7 @@ export interface PickExperienceContext extends IActionContext {
     dontUnwrap?: boolean;
 }
 
-export declare function appResourceExperience<TPick extends unknown>(context: PickExperienceContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: ContextValueFilter): Promise<TPick>;
+export declare function azureResourceExperience<TPick extends unknown>(context: PickExperienceContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: ContextValueFilter): Promise<TPick>;
 export declare function contextValueExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, contextValueFilter: ContextValueFilter): Promise<TPick>;
 export declare function subscriptionExperience(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>): Promise<AzureSubscription>;
 

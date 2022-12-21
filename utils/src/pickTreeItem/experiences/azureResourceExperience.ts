@@ -7,7 +7,7 @@ import * as vscode from 'vscode';
 import * as types from '../../../index';
 import { QuickPickAzureSubscriptionStep } from '../quickPickAzureResource/QuickPickAzureSubscriptionStep';
 import { QuickPickGroupStep } from '../quickPickAzureResource/QuickPickGroupStep';
-import { QuickPickAppResourceStep } from '../quickPickAzureResource/QuickPickAppResourceStep';
+import { QuickPickAzureResourceStep } from '../quickPickAzureResource/QuickPickAzureResourceStep';
 import { RecursiveQuickPickStep } from '../contextValue/RecursiveQuickPickStep';
 import { getLastNode } from '../getLastNode';
 import { NoResourceFoundError } from '../../errors';
@@ -18,7 +18,7 @@ import { AzureResourceQuickPickWizardContext } from '../../../hostapi.v2';
 import { ResourceGroupsItem } from '../quickPickAzureResource/tempTypes';
 import { isWrapper } from '../../registerCommandWithTreeNodeUnwrapping';
 
-export async function appResourceExperience<TPick>(context: types.PickExperienceContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: types.ContextValueFilter): Promise<TPick> {
+export async function azureResourceExperience<TPick>(context: types.PickExperienceContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: types.ContextValueFilter): Promise<TPick> {
     const promptSteps: AzureWizardPromptStep<AzureResourceQuickPickWizardContext>[] = [
         new QuickPickAzureSubscriptionStep(tdp),
         new QuickPickGroupStep(tdp, {
@@ -26,7 +26,7 @@ export async function appResourceExperience<TPick>(context: types.PickExperience
                 (Array.isArray(resourceTypes) ? resourceTypes : [resourceTypes]) :
                 undefined,
         }),
-        new QuickPickAppResourceStep(tdp, {
+        new QuickPickAzureResourceStep(tdp, {
             resourceTypes: resourceTypes ?
                 (Array.isArray(resourceTypes) ? resourceTypes : [resourceTypes]) :
                 undefined,

@@ -11,28 +11,28 @@ import { PickFilter } from '../PickFilter';
 import { GenericQuickPickOptions, GenericQuickPickStep } from '../GenericQuickPickStep';
 import { AzureResourceItem } from './tempTypes';
 
-interface AppResourceQuickPickOptions extends GenericQuickPickOptions {
+interface AzureResourceQuickPickOptions extends GenericQuickPickOptions {
     resourceTypes?: types.AzExtResourceType[];
     childItemFilter?: types.ContextValueFilter;
 }
 
-export class QuickPickAppResourceStep extends GenericQuickPickStep<AzureResourceQuickPickWizardContext, AppResourceQuickPickOptions> {
+export class QuickPickAzureResourceStep extends GenericQuickPickStep<AzureResourceQuickPickWizardContext, AzureResourceQuickPickOptions> {
     protected override async promptInternal(wizardContext: AzureResourceQuickPickWizardContext): Promise<AzureResourceItem> {
-        const pickedAppResource = (await super.promptInternal(wizardContext)) as unknown as AzureResourceItem;
+        const pickedAzureResource = (await super.promptInternal(wizardContext)) as unknown as AzureResourceItem;
 
         // TODO
-        wizardContext.resource = pickedAppResource.resource;
-        wizardContext.resourceGroup = pickedAppResource.resource.resourceGroup;
+        wizardContext.resource = pickedAzureResource.resource;
+        wizardContext.resourceGroup = pickedAzureResource.resource.resourceGroup;
 
-        return pickedAppResource;
+        return pickedAzureResource;
     }
 
-    protected readonly pickFilter: PickFilter = new AppResourcePickFilter(this.pickOptions);
+    protected readonly pickFilter: PickFilter = new AzureResourcePickFilter(this.pickOptions);
 }
 
-class AppResourcePickFilter implements PickFilter {
+class AzureResourcePickFilter implements PickFilter {
 
-    constructor(private readonly pickOptions: AppResourceQuickPickOptions) { }
+    constructor(private readonly pickOptions: AzureResourceQuickPickOptions) { }
 
     isFinalPick(node: TreeItem): boolean {
         // If childItemFilter is defined, this cannot be a direct pick
