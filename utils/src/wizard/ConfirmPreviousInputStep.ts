@@ -16,7 +16,7 @@ export class ConfirmPreviousInputStep extends AzureWizardPromptStep<types.IActio
         await context.ui.showInputBox({
             prompt: this.options?.prompt ?? localize('verifyPreviousInput', 'Please confirm by re-entering the previous value.'),
             password: this.options?.isPassword,
-            validateInput: (value: string | undefined) => this.validateInput(context, value)
+            validateInput: (value?: string) => this.validateInput(context, value)
         });
     }
 
