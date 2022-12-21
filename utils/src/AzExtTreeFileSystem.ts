@@ -8,24 +8,19 @@ import { Disposable, Event, EventEmitter, FileChangeEvent, FileStat, FileSystemE
 import * as types from '../index';
 import { callWithTelemetryAndErrorHandling } from "./callWithTelemetryAndErrorHandling";
 import { localize } from "./localize";
-import { AzExtTreeDataProvider } from "./tree/AzExtTreeDataProvider";
-import { AzExtTreeItem } from "./tree/AzExtTreeItem";
 import { nonNullProp } from "./utils/nonNull";
 
 const unsupportedError: Error = new Error(localize('notSupported', 'This operation is not supported.'));
 
-export abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> implements FileSystemProvider {
+export abstract class AzExtTreeFileSystem<TItem extends types.AzExtTreeFileSystemItem> implements FileSystemProvider {
+
+    private readonly itemCache: Map<string, TItem> = new Map<string, TItem>();
+
     public abstract scheme: string;
 
     private readonly _emitter: EventEmitter<FileChangeEvent[]> = new EventEmitter<FileChangeEvent[]>();
     private readonly _bufferedEvents: FileChangeEvent[] = [];
     private _fireSoonHandle?: NodeJS.Timer;
-
-    private _tree: AzExtTreeDataProvider;
-
-    public constructor(tree: AzExtTreeDataProvider) {
-        this._tree = tree;
-    }
 
     public get onDidChangeFile(): Event<FileChangeEvent[]> {
         return this._emitter.event;
@@ -37,7 +32,9 @@ export abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> implement
     public abstract getFilePath(item: TItem): string;
 
     public async showTextDocument(item: TItem, options?: TextDocumentShowOptions): Promise<void> {
-        await window.showTextDocument(this.getUriFromItem(item), options);
+        const uri = this.getUriFromItem(item);
+        this.itemCache.set(item.id, item);
+        await window.showTextDocument(uri, options);
     }
 
     public watch(): Disposable {
@@ -70,7 +67,7 @@ export abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> implement
         await callWithTelemetryAndErrorHandling('writeFile', async (context) => {
             const item: TItem = await this.lookup(context, uri);
             await this.writeFileImpl(context, item, content, uri);
-            await item.refresh(context);
+            await item.refresh?.(context);
         });
     }
 
@@ -115,28 +112,24 @@ export abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> implement
         );
     }
 
-    protected getUriParts(item: TItem): types.AzExtItemUriParts {
-        return {
-            filePath: this.getFilePath(item),
-            query: {
-                id: item.fullId
-            }
-        };
-    }
-
-    protected async findItem(context: types.IActionContext, query: types.AzExtItemQuery): Promise<TItem | undefined> {
-        return await this._tree.findTreeItem(query.id, context);
+    protected findItem(query: types.AzExtItemQuery): TItem | undefined {
+        return this.itemCache.get(query.id);
     }
 
     private getUriFromItem(item: TItem): Uri {
-        const data: types.AzExtItemUriParts = this.getUriParts(item);
+        const data: types.AzExtItemUriParts = {
+            filePath: this.getFilePath(item),
+            query: {
+                id: item.id
+            }
+        };
         const query: string = stringifyQuery(data.query);
         const filePath: string = encodeURIComponent(data.filePath);
         return Uri.parse(`${this.scheme}:///${filePath}?${query}`);
     }
 
     private async lookup(context: types.IActionContext, uri: Uri): Promise<TItem> {
-        const item: TItem | undefined = await this.findItem(context, this.getQueryFromUri(uri));
+        const item: TItem | undefined = this.findItem(this.getQueryFromUri(uri));
         if (!item) {
             context.telemetry.suppressAll = true;
             context.errorHandling.rethrow = true;

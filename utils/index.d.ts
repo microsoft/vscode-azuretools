@@ -1435,10 +1435,15 @@ export type AzExtItemUriParts = {
     query: AzExtItemQuery;
 };
 
+export interface AzExtTreeFileSystemItem {
+    id: string;
+    refresh?(context: IActionContext): Promise<void>;
+}
+
 /**
- * A virtual file system based around AzExTreeItems that only supports viewing/editing single files.
+ * A virtual file system based around {@link AzExtTreeFileSystemItem} that only supports viewing/editing single files.
  */
-export declare abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> implements FileSystemProvider {
+export declare abstract class AzExtTreeFileSystem<TItem extends AzExtTreeFileSystemItem> implements FileSystemProvider {
     public abstract scheme: string;
 
     public constructor(tree: AzExtTreeDataProvider);
@@ -1756,7 +1761,14 @@ type ResourceGroupsItem = unknown;
  */
 export declare function isWrapper(maybeWrapper: unknown): maybeWrapper is Wrapper;
 
-export declare function appResourceExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: ContextValueFilter): Promise<TPick>;
+export interface PickExperienceContext extends IActionContext {
+    /**
+     * If true, the result will not be unwrapped. Intented for use internally by the Azure Resources extension.
+     */
+    dontUnwrap?: boolean;
+}
+
+export declare function azureResourceExperience<TPick extends unknown>(context: PickExperienceContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: ContextValueFilter): Promise<TPick>;
 export declare function contextValueExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, contextValueFilter: ContextValueFilter): Promise<TPick>;
 export declare function subscriptionExperience(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>): Promise<AzureSubscription>;
 
