@@ -8,7 +8,7 @@
 import type { Environment } from '@azure/ms-rest-azure-env';
 import { CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions as VSCodeQuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
-import { AzureExtensionApiProvider, AzureExtensionApi, GetApiOptions } from './api';
+import { AzureExtensionApi, AzureExtensionApiProvider, GetApiOptions } from './api';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
 import { AzureSubscription } from './hostapi.v2';
 
@@ -1601,6 +1601,22 @@ export declare function nonNullValueAndProp<TSource, TKey extends keyof TSource>
  * @param timeout (Optional) The maximum time to spend. 500 ms, by default.
  */
 export declare function findFreePort(startPort?: number, maxAttempts?: number, timeout?: number): Promise<number>;
+
+export declare interface IConfirmInputOptions {
+    prompt?: string;
+    isPassword?: boolean;
+}
+
+/**
+ * @param key The context key that will be used to retrieve the value for comparison
+ * @param options (Optional) The options to pass when creating the prompt step
+ * ex: 'Please confirm by re-entering the previous value.'
+ */
+export declare class ConfirmPreviousInputStep extends AzureWizardPromptStep<IActionContext> {
+    public constructor(key: string, options?: IConfirmInputOptions);
+    public prompt(wizardContext: IActionContext): Promise<void>;
+    public shouldPrompt(wizardContext: IActionContext): boolean;
+}
 
 /**
  * @param message Message to display in the confirmation modal
