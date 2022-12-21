@@ -19,7 +19,7 @@ export * from './getAzExtResourceType';
 export { addExtensionValueToMask, callWithMaskHandling, maskValue } from './masking';
 export * from './openReadOnlyContent';
 export * from './parseError';
-export * from './pickTreeItem/experiences/appResourceExperience';
+export * from './pickTreeItem/experiences/azureResourceExperience';
 export * from './pickTreeItem/experiences/compatibility/PickTreeItemWithCompatibility';
 export * from './pickTreeItem/experiences/contextValueExperience';
 export * from './registerCommand';
