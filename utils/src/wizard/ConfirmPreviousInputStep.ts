@@ -24,7 +24,7 @@ export class ConfirmPreviousInputStep extends AzureWizardPromptStep<types.IActio
         return true;
     }
 
-    private validateInput(context: types.IActionContext, value: string | undefined): string | undefined {
+    private validateInput(context: types.IActionContext, value?: string): string | undefined {
         const valueMismatch: string = localize('valueMismatch', 'The entered value does not match the original.');
         return (context[this.key] === value?.trim()) ? undefined : valueMismatch;
     }
