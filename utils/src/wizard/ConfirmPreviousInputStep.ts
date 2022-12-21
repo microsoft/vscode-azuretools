@@ -14,7 +14,7 @@ export class ConfirmPreviousInputStep extends AzureWizardPromptStep<types.IActio
 
     public async prompt(context: types.IActionContext): Promise<void> {
         await context.ui.showInputBox({
-            prompt: this.options?.prompt || localize('verifyPreviousInput', 'Please confirm by re-entering the previous value.'),
+            prompt: this.options?.prompt ?? localize('verifyPreviousInput', 'Please confirm by re-entering the previous value.'),
             password: this.options?.isPassword,
             validateInput: (value: string | undefined) => this.validateInput(context, value)
         });
