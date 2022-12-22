@@ -3,11 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { SiteConfig, SiteSourceControl } from '@azure/arm-appservice';
+import type { Deployment, SiteConfig, SiteSourceControl } from '@azure/arm-appservice';
 import { AzExtParentTreeItem, AzExtTreeItem, createContextValue, GenericTreeItem, IActionContext, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
 import { ThemeIcon } from 'vscode';
-import { KuduModels } from 'vscode-azurekudu';
-import { createKuduClient } from '../createKuduClient';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { ScmType } from '../ScmType';
@@ -73,9 +71,8 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
     public async loadMoreChildrenImpl(_clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {
         const client = await this.site.createClient(context);
         const siteConfig: SiteConfig = await client.getSiteConfig();
-        const kuduClient = await createKuduClient(context, this.site);
-        const deployments: KuduModels.DeployResult[] = await retryKuduCall(context, 'getDeployResults', async () => {
-            return kuduClient.deployment.getDeployResults();
+        const deployments: Deployment[] = await retryKuduCall(context, 'getDeployResults', async () => {
+            return client.listDeployments();
         });
 
         const children: DeploymentTreeItem[] | GenericTreeItem[] = await this.createTreeItemsWithErrorHandling(

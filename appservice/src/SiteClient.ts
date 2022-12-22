@@ -3,10 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { AppServicePlan, SiteLogsConfig, Site, HostNameSslState, WebSiteManagementClient, User, SiteConfigResource, FunctionSecrets, FunctionEnvelope, SlotConfigNamesResource, StringDictionary, SiteSourceControl, HostKeys, WebAppsListFunctionKeysResponse, SourceControl, WebJob, WebSiteInstanceStatus } from '@azure/arm-appservice';
-import type { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
+import type { AppServicePlan, Deployment, FunctionEnvelope, FunctionSecrets, HostKeys, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SlotConfigNamesResource, SourceControl, StringDictionary, User, WebAppsListFunctionKeysResponse, WebJob, WebSiteInstanceStatus, WebSiteManagementClient } from '@azure/arm-appservice';
+import type { HttpOperationResponse, HttpRequestBody, HttpResponse, ServiceClient } from '@azure/ms-rest-js';
 import { createGenericClient, uiUtils } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, ISubscriptionContext, nonNullProp, nonNullValue, parseError } from '@microsoft/vscode-azext-utils';
+import { DeploymentDeploy1Response, DeployResult, LogEntry, PushDeploymentWarPushDeployOptionalParams } from 'vscode-azurekudu/esm/models';
 import { AppKind } from './createAppService/AppKind';
 import { AppSettingsClientProvider, IAppSettingsClient } from './IAppSettingsClient';
 import { tryGetAppServicePlan, tryGetWebApp, tryGetWebAppSlot } from './tryGetSiteResource';
@@ -306,6 +307,95 @@ export class SiteClient implements IAppSettingsClient {
         return this._site.slotName ?
             await this._client.webApps.listFunctionKeysSlot(this._site.resourceGroup, this._site.siteName, functionName, this._site.slotName) :
             await this._client.webApps.listFunctionKeys(this._site.resourceGroup, this._site.siteName, functionName);
+    }
+
+    public async getDeployment(id: string | 'latest'): Promise<Deployment> {
+        return this._site.slotName ?
+            this._client.webApps.getDeploymentSlot(this._site.resourceGroup, this._site.siteName, id, this._site.slotName) :
+            this._client.webApps.getDeployment(this._site.resourceGroup, this._site.siteName, id);
+    }
+
+    public async listDeployments(): Promise<Deployment[]> {
+        return this._site.slotName ?
+            await uiUtils.listAllIterator(this._client.webApps.listDeploymentsSlot(this._site.resourceGroup, this._site.siteName, this._site.slotName)) :
+            await uiUtils.listAllIterator(this._client.webApps.listDeployments(this._site.resourceGroup, this._site.siteName));
+    }
+
+    public async listDeploymentLog(id: string): Promise<Deployment> {
+        return this._site.slotName ?
+            this._client.webApps.listDeploymentLogSlot(this._site.resourceGroup, this._site.siteName, id, this._site.slotName) :
+            this._client.webApps.listDeploymentLog(this._site.resourceGroup, this._site.siteName, id);
+    }
+
+    public async warPushDeploy(context: IActionContext, file: HttpRequestBody, options?: PushDeploymentWarPushDeployOptionalParams): Promise<HttpOperationResponse> {
+        const client: ServiceClient = await createGenericClient(context, this._site.subscription);
+        const response: HttpOperationResponse = await client.sendRequest({
+            method: 'POST',
+            url: `${this._site.id}/api/wardeploy?api-version=2018-02-01`,
+            body: file,
+            queryParameters: options
+        });
+        return response.parsedBody as HttpOperationResponse;
+    }
+
+
+    public async deploy(context: IActionContext, id: string): Promise<DeploymentDeploy1Response> {
+        const client: ServiceClient = await createGenericClient(context, this._site.subscription);
+        const response: HttpOperationResponse = await client.sendRequest({
+            method: 'PUT',
+            url: `${this._site.id}/api/deployments/${id}?api-version=2018-02-01`
+        });
+        return response.parsedBody as DeploymentDeploy1Response;
+    }
+
+    // the ARM call doesn't give all of the metadata we require so ping the scm directly
+    public async getDeployResult(context: IActionContext, deployId: string): Promise<DeployResult> {
+        const client: ServiceClient = await createGenericClient(context, this._site.subscription);
+        const response: HttpOperationResponse = await client.sendRequest({
+            method: 'GET',
+            url: `${this._site.id}/api/deployments/${deployId}?api-version=2018-02-01`
+        });
+        return response.parsedBody as DeployResult;
+    }
+
+    // no equivalent ARM call
+    public async getLogEntry(context: IActionContext, deployId: string): Promise<LogEntry[]> {
+        const client: ServiceClient = await createGenericClient(context, this._site.subscription);
+        const response: HttpOperationResponse = await client.sendRequest({
+            method: 'GET',
+            url: `${this._site.id}/api/deployments/${deployId}/log?api-version=2018-02-01`
+        });
+        return response.parsedBody as LogEntry[];
+    }
+
+    // no equivalent ARM call
+    public async getLogEntryDetails(context: IActionContext, deployId: string, logId: string): Promise<LogEntry[]> {
+        const client: ServiceClient = await createGenericClient(context, this._site.subscription);
+        const response: HttpOperationResponse = await client.sendRequest({
+            method: 'GET',
+            url: `${this._site.id}/api/deployments/${deployId}/log/${logId}?api-version=2018-02-01`
+        });
+        return response.parsedBody as LogEntry[];
+    }
+
+    public async vfsGetItem(context: IActionContext, path: string): Promise<HttpResponse> {
+        const client: ServiceClient = await createGenericClient(context, this._site.subscription);
+        const response: HttpOperationResponse = await client.sendRequest({
+            method: 'GET',
+            url: `${this._site.id}/vfs/${path}/?api-version=2018-02-01`,
+        });
+        return response.parsedBody as HttpResponse;
+    }
+
+    public async vfsPutItem(context: IActionContext, data: string | ArrayBuffer, path: string, options?: {}): Promise<HttpResponse> {
+        const client: ServiceClient = await createGenericClient(context, this._site.subscription);
+        const response: HttpOperationResponse = await client.sendRequest({
+            method: 'PUT',
+            url: `${this._site.id}/vfs/${path}/?api-version=2018-02-01`,
+            body: data,
+            headers: options
+        });
+        return response.parsedBody as HttpResponse;
     }
 
     /**

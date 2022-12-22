@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { BasicAuthenticationCredentials, ServiceClientCredentials } from '@azure/ms-rest-js';
+import { BasicAuthenticationCredentials, ServiceClient, ServiceClientCredentials } from '@azure/core-http';
+import { } from '@azure/identity';
 import { createGenericClient } from '@microsoft/vscode-azext-azureutils';
 import { appendExtensionUserAgent, IActionContext, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
-import type { KuduClient } from 'vscode-azurekudu';
 import { localize } from './localize';
 import { ParsedSite } from './SiteClient';
 
 interface IInternalKuduActionContext extends IActionContext {
-    _cachedKuduClient?: KuduClient;
+    _cachedKuduClient?: ServiceClient;
 }
 
 /**
@@ -19,7 +19,7 @@ interface IInternalKuduActionContext extends IActionContext {
  * We'll ping the site, catch an 'Unauthorized' error, get the publishing creds, ping with those creds, and use them going forward if they work
  * Finally, we'll cache the client on the action context to avoid re-doing these requests multiple times for one action
  */
-export async function createKuduClient(context: IInternalKuduActionContext, site: ParsedSite): Promise<KuduClient> {
+export async function createKuduClient(context: IInternalKuduActionContext, site: ParsedSite): Promise<ServiceClient> {
     if (!context._cachedKuduClient) {
         if (!site.kuduHostName) {
             throw new Error(localize('notSupportedLinux', 'This operation is not supported by this app service plan.'));
@@ -47,7 +47,7 @@ export async function createKuduClient(context: IInternalKuduActionContext, site
             }
         }
 
-        context._cachedKuduClient = new (await import('vscode-azurekudu')).KuduClient(serviceClientCredentials, clientOptions);
+        context._cachedKuduClient = new ServiceClient(serviceClientCredentials, clientOptions);
     }
 
     return context._cachedKuduClient;

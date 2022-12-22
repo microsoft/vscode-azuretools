@@ -17,6 +17,7 @@ export async function deployZip(context: IDeployContext, site: ParsedSite, fsPat
     const response = await runWithZipStream(context, {
         fsPath, site, pathFileMap,
         callback: async zipStream => {
+            const kuduClient = await site.createClient(context);
             return await kuduClient.pushDeployment.zipPushDeploy(() => zipStream, { isAsync: true, author: 'VS Code', trackDeploymentId: true });
         }
     });
@@ -30,7 +31,7 @@ export async function deployZip(context: IDeployContext, site: ParsedSite, fsPat
         // swallow errors, we don't want a failure here to block deployment
     }
 
-    await waitForDeploymentToComplete(context, site, { locationUrl});
+    await waitForDeploymentToComplete(context, site, { locationUrl });
 
     // https://github.com/Microsoft/vscode-azureappservice/issues/644
     // This delay is a temporary stopgap that should be resolved with the new pipelines
