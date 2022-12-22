@@ -5,8 +5,9 @@
 
 import { IActionContext } from '@microsoft/vscode-azext-utils';
 import * as fs from 'fs';
-import { localize } from '../localize';
 import { ParsedSite } from '../SiteClient';
+import { publisherName } from '../constants';
+import { localize } from '../localize';
 import { getFileExtension } from '../utils/pathUtils';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
@@ -16,6 +17,12 @@ export async function deployWar(context: IActionContext, site: ParsedSite, fsPat
     }
 
     const kuduClient = await site.createClient(context);
-    await kuduClient.warPushDeploy(() => fs.createReadStream(fsPath), { isAsync: true });
+    await kuduClient.warPushDeploy(() => fs.createReadStream(fsPath), {
+        isAsync: true,
+        author: publisherName,
+        deployer: publisherName,
+        trackDeploymentId: true
+    });
+
     await waitForDeploymentToComplete(context, site);
 }

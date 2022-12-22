@@ -5,10 +5,18 @@
 
 import * as assert from 'assert';
 import { AzureExtensionApi, AzureExtensionApiProvider } from '../api';
-import { IParsedError } from '../index';
+import { AzureExtensionApiFactory, IParsedError } from '../index';
 import { createApiProvider } from '../src/createApiProvider';
 import { parseError } from '../src/parseError';
 import { assertThrowsAsync } from './assertThrowsAsync';
+
+class TestApiFactory implements AzureExtensionApiFactory<TestApi> {
+    constructor(public readonly apiVersion: string) { }
+
+    createApi() {
+        return new TestApi(this.apiVersion);
+    }
+}
 
 class TestApi implements AzureExtensionApi {
     public testProp: string = 'testProp';
@@ -41,12 +49,12 @@ class TestApi implements AzureExtensionApi {
 
 suite('AzureExtensionApiProvider tests', () => {
     test('Versioning', async () => {
-        assert.throws(() => createApiProvider([new TestApi('invalidVersion')]), /Invalid semver/);
+        assert.throws(() => createApiProvider([new TestApiFactory('invalidVersion')]), /Invalid semver/);
 
-        const api1: TestApi = new TestApi('1.0.0');
-        const api11: TestApi = new TestApi('1.1.0');
-        const api111: TestApi = new TestApi('1.1.1');
-        const api12: TestApi = new TestApi('1.2.0');
+        const api1: TestApiFactory = new TestApiFactory('1.0.0');
+        const api11: TestApiFactory = new TestApiFactory('1.1.0');
+        const api111: TestApiFactory = new TestApiFactory('1.1.1');
+        const api12: TestApiFactory = new TestApiFactory('1.2.0');
         const apiProvider: AzureExtensionApiProvider = createApiProvider([api1, api111, api11, api12]);
 
         /* eslint-disable @typescript-eslint/no-unsafe-return */
@@ -73,8 +81,9 @@ suite('AzureExtensionApiProvider tests', () => {
     });
 
     test('Wrapped api is same as original api', async () => {
-        const api: TestApi = new TestApi('1.0.0');
-        const apiProvider: AzureExtensionApiProvider = createApiProvider([api]);
+        const apiFactory: TestApiFactory = new TestApiFactory('1.0.0');
+        const apiProvider: AzureExtensionApiProvider = createApiProvider([apiFactory]);
+        const api = apiFactory.createApi();
 
         const wrappedApi: TestApi = apiProvider.getApi<TestApi>('1');
 

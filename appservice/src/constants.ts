@@ -4,3 +4,4 @@
  *--------------------------------------------------------------------------------------------*/
 
 export const webProvider: string = 'Microsoft.Web';
+export const publisherName: string = 'ms-azuretools-vscode';

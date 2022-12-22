@@ -4,21 +4,25 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { AppServicePlan } from '@azure/arm-appservice';
-import { createKuduClient } from '../createKuduClient';
 import { ParsedSite } from '../SiteClient';
-import { delayFirstWebAppDeploy } from './delayFirstWebAppDeploy';
+import { publisherName } from '../constants';
 import { IDeployContext } from './IDeployContext';
+import { delayFirstWebAppDeploy } from './delayFirstWebAppDeploy';
 import { runWithZipStream } from './runWithZipStream';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
 export async function deployZip(context: IDeployContext, site: ParsedSite, fsPath: string, aspPromise: Promise<AppServicePlan | undefined>, pathFileMap?: Map<string, string>): Promise<void> {
-    const kuduClient = await createKuduClient(context, site);
+    const kuduClient = await site.createClient(context);
 
     const response = await runWithZipStream(context, {
         fsPath, site, pathFileMap,
         callback: async zipStream => {
-            const kuduClient = await site.createClient(context);
-            return await kuduClient.pushDeployment.zipPushDeploy(() => zipStream, { isAsync: true, author: 'VS Code', trackDeploymentId: true });
+            return await kuduClient.pushDeployment.zipPushDeploy(() => zipStream, {
+                isAsync: true,
+                author: publisherName,
+                deployer: publisherName,
+                trackDeploymentId: true
+            });
         }
     });
     let locationUrl: string | undefined;
