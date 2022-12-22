@@ -8,7 +8,7 @@
 import type { Environment } from '@azure/ms-rest-azure-env';
 import { CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions as VSCodeQuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
-import { AzureExtensionApiProvider, AzureExtensionApi, GetApiOptions } from './api';
+import { AzureExtensionApi, AzureExtensionApiProvider, GetApiOptions } from './api';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
 import { AzureSubscription } from './hostapi.v2';
 
@@ -1435,10 +1435,15 @@ export type AzExtItemUriParts = {
     query: AzExtItemQuery;
 };
 
+export interface AzExtTreeFileSystemItem {
+    id: string;
+    refresh?(context: IActionContext): Promise<void>;
+}
+
 /**
- * A virtual file system based around AzExTreeItems that only supports viewing/editing single files.
+ * A virtual file system based around {@link AzExtTreeFileSystemItem} that only supports viewing/editing single files.
  */
-export declare abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> implements FileSystemProvider {
+export declare abstract class AzExtTreeFileSystem<TItem extends AzExtTreeFileSystemItem> implements FileSystemProvider {
     public abstract scheme: string;
 
     public constructor(tree: AzExtTreeDataProvider);
@@ -1597,6 +1602,22 @@ export declare function nonNullValueAndProp<TSource, TKey extends keyof TSource>
  */
 export declare function findFreePort(startPort?: number, maxAttempts?: number, timeout?: number): Promise<number>;
 
+export declare interface IConfirmInputOptions {
+    prompt?: string;
+    isPassword?: boolean;
+}
+
+/**
+ * @param key The context key that will be used to retrieve the value for comparison
+ * @param options (Optional) The options to pass when creating the prompt step
+ * ex: 'Please confirm by re-entering the previous value.'
+ */
+export declare class ConfirmPreviousInputStep extends AzureWizardPromptStep<IActionContext> {
+    public constructor(key: string, options?: IConfirmInputOptions);
+    public prompt(wizardContext: IActionContext): Promise<void>;
+    public shouldPrompt(wizardContext: IActionContext): boolean;
+}
+
 /**
  * @param message Message to display in the confirmation modal
  * ex: `Are you sure you want to delete function app "{0}"?`
@@ -1740,7 +1761,14 @@ type ResourceGroupsItem = unknown;
  */
 export declare function isWrapper(maybeWrapper: unknown): maybeWrapper is Wrapper;
 
-export declare function appResourceExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: ContextValueFilter): Promise<TPick>;
+export interface PickExperienceContext extends IActionContext {
+    /**
+     * If true, the result will not be unwrapped. Intented for use internally by the Azure Resources extension.
+     */
+    dontUnwrap?: boolean;
+}
+
+export declare function azureResourceExperience<TPick extends unknown>(context: PickExperienceContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: ContextValueFilter): Promise<TPick>;
 export declare function contextValueExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, contextValueFilter: ContextValueFilter): Promise<TPick>;
 export declare function subscriptionExperience(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>): Promise<AzureSubscription>;
 
