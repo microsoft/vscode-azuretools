@@ -4,11 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { BasicAuthenticationCredentials, ServiceClient, ServiceClientCredentials } from '@azure/core-http';
-import { } from '@azure/identity';
 import { createGenericClient } from '@microsoft/vscode-azext-azureutils';
-import { appendExtensionUserAgent, IActionContext, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
-import { localize } from './localize';
+import { IActionContext, appendExtensionUserAgent, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
 import { ParsedSite } from './SiteClient';
+import { localize } from './localize';
 
 interface IInternalKuduActionContext extends IActionContext {
     _cachedKuduClient?: ServiceClient;

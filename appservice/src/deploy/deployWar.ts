@@ -17,7 +17,7 @@ export async function deployWar(context: IActionContext, site: ParsedSite, fsPat
     }
 
     const kuduClient = await site.createClient(context);
-    await kuduClient.warPushDeploy(() => fs.createReadStream(fsPath), {
+    await kuduClient.warPushDeploy(context, () => fs.createReadStream(fsPath), {
         isAsync: true,
         author: publisherName,
         deployer: publisherName,

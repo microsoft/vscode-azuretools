@@ -17,7 +17,7 @@ export async function deployZip(context: IDeployContext, site: ParsedSite, fsPat
     const response = await runWithZipStream(context, {
         fsPath, site, pathFileMap,
         callback: async zipStream => {
-            return await kuduClient.pushDeployment.zipPushDeploy(() => zipStream, {
+            return await kuduClient.zipPushDeploy(context, () => zipStream, {
                 isAsync: true,
                 author: publisherName,
                 deployer: publisherName,
@@ -28,8 +28,8 @@ export async function deployZip(context: IDeployContext, site: ParsedSite, fsPat
     let locationUrl: string | undefined;
     try {
         if (response) {
-            context.telemetry.properties.deploymentId = response._response.headers.get('scm-deployment-id');
-            locationUrl = response._response.headers.get('location');
+            context.telemetry.properties.deploymentId = response.headers.get('scm-deployment-id');
+            locationUrl = response.headers.get('location');
         }
     } catch (e) {
         // swallow errors, we don't want a failure here to block deployment

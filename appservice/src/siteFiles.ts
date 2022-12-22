@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { HttpOperationResponse, HttpResponse, RestError, ServiceClient } from '@azure/core-http';
+import { HttpOperationResponse, RestError, ServiceClient } from '@azure/ms-rest-js';
 import { createGenericClient } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, IParsedError, parseError } from '@microsoft/vscode-azext-utils';
 import * as retry from 'p-retry';
@@ -49,7 +49,7 @@ export async function listFiles(context: IActionContext, site: ParsedSite, fileP
 export async function putFile(context: IActionContext, site: ParsedSite, data: string | ArrayBuffer, filePath: string, etag: string | undefined): Promise<string> {
     const options: {} = etag ? { customHeaders: { ['If-Match']: etag } } : {};
     const kuduClient = await site.createClient(context);
-    const result: HttpResponse = (await kuduClient.vfsPutItem(context, data, filePath, options));
+    const result: HttpOperationResponse = (await kuduClient.vfsPutItem(context, data, filePath, options));
     return <string>result.headers.get('etag');
 }
 
@@ -79,7 +79,7 @@ async function getFsResponse(context: IActionContext, site: ParsedSite, filePath
                     try {
                         return await client.sendRequest({
                             method: 'GET',
-                            url: `${site.id}/hostruntime/admin/vfs/${filePath}/?api-version=2018-11-01`
+                            url: `${site.id}/hostruntime/admin/vfs/${filePath}/?api-version=2022-03-01`
                         });
                     } catch (error) {
                         const parsedError: IParsedError = parseError(error);

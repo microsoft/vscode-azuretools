@@ -7,9 +7,9 @@ import type { AppServicePlan, Deployment, FunctionEnvelope, FunctionSecrets, Hos
 import type { HttpOperationResponse, HttpRequestBody, HttpResponse, ServiceClient } from '@azure/ms-rest-js';
 import { createGenericClient, uiUtils } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, ISubscriptionContext, nonNullProp, nonNullValue, parseError } from '@microsoft/vscode-azext-utils';
-import { DeploymentDeploy1Response, DeployResult, LogEntry, PushDeploymentWarPushDeployOptionalParams } from 'vscode-azurekudu/esm/models';
-import { AppKind } from './createAppService/AppKind';
+import { DeployResult, DeploymentDeploy1Response, LogEntry, PushDeploymentWarPushDeployOptionalParams } from 'vscode-azurekudu/esm/models';
 import { AppSettingsClientProvider, IAppSettingsClient } from './IAppSettingsClient';
+import { AppKind } from './createAppService/AppKind';
 import { tryGetAppServicePlan, tryGetWebApp, tryGetWebAppSlot } from './tryGetSiteResource';
 import { createWebSiteClient } from './utils/azureClients';
 
@@ -327,11 +327,22 @@ export class SiteClient implements IAppSettingsClient {
             this._client.webApps.listDeploymentLog(this._site.resourceGroup, this._site.siteName, id);
     }
 
+    public async zipPushDeploy(context: IActionContext, file: HttpRequestBody, options?: PushDeploymentWarPushDeployOptionalParams): Promise<HttpOperationResponse> {
+        const client: ServiceClient = await createGenericClient(context, this._site.subscription);
+        const response: HttpOperationResponse = await client.sendRequest({
+            method: 'POST',
+            url: `${this._site.id}/api/zipdeploy?api-version=2022-03-01`,
+            body: file,
+            queryParameters: options
+        });
+        return response.parsedBody as HttpOperationResponse;
+    }
+
     public async warPushDeploy(context: IActionContext, file: HttpRequestBody, options?: PushDeploymentWarPushDeployOptionalParams): Promise<HttpOperationResponse> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
         const response: HttpOperationResponse = await client.sendRequest({
             method: 'POST',
-            url: `${this._site.id}/api/wardeploy?api-version=2018-02-01`,
+            url: `${this._site.id}/api/wardeploy?api-version=2022-03-01`,
             body: file,
             queryParameters: options
         });
@@ -343,7 +354,7 @@ export class SiteClient implements IAppSettingsClient {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
         const response: HttpOperationResponse = await client.sendRequest({
             method: 'PUT',
-            url: `${this._site.id}/api/deployments/${id}?api-version=2018-02-01`
+            url: `${this._site.id}/api/deployments/${id}?api-version=2022-03-01`
         });
         return response.parsedBody as DeploymentDeploy1Response;
     }
@@ -353,7 +364,7 @@ export class SiteClient implements IAppSettingsClient {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
         const response: HttpOperationResponse = await client.sendRequest({
             method: 'GET',
-            url: `${this._site.id}/api/deployments/${deployId}?api-version=2018-02-01`
+            url: `${this._site.id}/api/deployments/${deployId}?api-version=2022-03-01`
         });
         return response.parsedBody as DeployResult;
     }
@@ -363,7 +374,7 @@ export class SiteClient implements IAppSettingsClient {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
         const response: HttpOperationResponse = await client.sendRequest({
             method: 'GET',
-            url: `${this._site.id}/api/deployments/${deployId}/log?api-version=2018-02-01`
+            url: `${this._site.id}/api/deployments/${deployId}/log?api-version=2022-03-01`
         });
         return response.parsedBody as LogEntry[];
     }
@@ -373,7 +384,7 @@ export class SiteClient implements IAppSettingsClient {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
         const response: HttpOperationResponse = await client.sendRequest({
             method: 'GET',
-            url: `${this._site.id}/api/deployments/${deployId}/log/${logId}?api-version=2018-02-01`
+            url: `${this._site.id}/api/deployments/${deployId}/log/${logId}?api-version=2022-03-01`
         });
         return response.parsedBody as LogEntry[];
     }
@@ -382,7 +393,7 @@ export class SiteClient implements IAppSettingsClient {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
         const response: HttpOperationResponse = await client.sendRequest({
             method: 'GET',
-            url: `${this._site.id}/vfs/${path}/?api-version=2018-02-01`,
+            url: `${this._site.id}/vfs/${path}/?api-version=2022-03-01`,
         });
         return response.parsedBody as HttpResponse;
     }
@@ -391,7 +402,7 @@ export class SiteClient implements IAppSettingsClient {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
         const response: HttpOperationResponse = await client.sendRequest({
             method: 'PUT',
-            url: `${this._site.id}/vfs/${path}/?api-version=2018-02-01`,
+            url: `${this._site.id}/vfs/${path}/?api-version=2022-03-01`,
             body: data,
             headers: options
         });
