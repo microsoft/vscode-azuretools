@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzExtTreeDataProvider, AzExtTreeItem } from '@microsoft/vscode-azext-utils';
-import * as vscode from 'vscode';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { getWorkspaceSetting } from '../utils/settings';
@@ -44,14 +43,7 @@ export async function getDeployNode<T extends AzExtTreeItem>(context: IDeployCon
         }
 
         if (!node) {
-            const newNodes: AzExtTreeItem[] = [];
-            const disposable: vscode.Disposable = tree.onTreeItemCreate(newNode => { newNodes.push(newNode); });
-            try {
-                node = await pickNode();
-            } finally {
-                disposable.dispose();
-            }
-            context.isNewApp = newNodes.some(newNode => node && newNode.fullId === node.fullId);
+            node = await pickNode();
             context.appSource = AppSource.nodePicker;
         }
     }
