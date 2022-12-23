@@ -38,11 +38,11 @@ export async function azureResourceExperience<TPick>(context: types.PickExperien
     if (childItemFilter) {
         promptSteps.push(
             compat ?
-                new RecursiveQuickPickStep<AzureResourceQuickPickWizardContext>(tdp, {
+                new CompatibilityRecursiveQuickPickStep(tdp, {
                     contextValueFilter: childItemFilter,
                     skipIfOne: false,
                 }) :
-                new CompatibilityRecursiveQuickPickStep(tdp, {
+                new RecursiveQuickPickStep<AzureResourceQuickPickWizardContext>(tdp, {
                     contextValueFilter: childItemFilter,
                     skipIfOne: false,
                 })
