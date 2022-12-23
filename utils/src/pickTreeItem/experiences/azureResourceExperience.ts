@@ -17,8 +17,9 @@ import { AzureWizard } from '../../wizard/AzureWizard';
 import { AzureResourceQuickPickWizardContext } from '../../../hostapi.v2';
 import { ResourceGroupsItem } from '../quickPickAzureResource/tempTypes';
 import { isWrapper } from '../../registerCommandWithTreeNodeUnwrapping';
+import { CompatibilityRecursiveQuickPickStep } from '../contextValue/compatibility/CompatibilityRecursiveQuickPickStep';
 
-export async function azureResourceExperience<TPick>(context: types.PickExperienceContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: types.ContextValueFilter): Promise<TPick> {
+export async function azureResourceExperience<TPick>(context: types.PickExperienceContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: types.ContextValueFilter, compat?: boolean): Promise<TPick> {
     const promptSteps: AzureWizardPromptStep<AzureResourceQuickPickWizardContext>[] = [
         new QuickPickAzureSubscriptionStep(tdp),
         new QuickPickGroupStep(tdp, {
@@ -35,10 +36,17 @@ export async function azureResourceExperience<TPick>(context: types.PickExperien
     ];
 
     if (childItemFilter) {
-        promptSteps.push(new RecursiveQuickPickStep<AzureResourceQuickPickWizardContext>(tdp, {
-            contextValueFilter: childItemFilter,
-            skipIfOne: false,
-        }));
+        promptSteps.push(
+            compat ?
+                new RecursiveQuickPickStep<AzureResourceQuickPickWizardContext>(tdp, {
+                    contextValueFilter: childItemFilter,
+                    skipIfOne: false,
+                }) :
+                new CompatibilityRecursiveQuickPickStep(tdp, {
+                    contextValueFilter: childItemFilter,
+                    skipIfOne: false,
+                })
+        );
     }
 
     // Fill in the `pickedNodes` property

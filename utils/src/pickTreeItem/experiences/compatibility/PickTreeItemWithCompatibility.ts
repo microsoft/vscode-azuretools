@@ -13,7 +13,7 @@ export namespace PickTreeItemWithCompatibility {
      */
     export async function resource<TPick extends types.AzExtTreeItem>(context: types.IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, options: types.CompatibilityPickResourceExperienceOptions): Promise<TPick> {
         const { resourceTypes, childItemFilter } = options;
-        return azureResourceExperience(context, tdp, resourceTypes ? Array.isArray(resourceTypes) ? resourceTypes : [resourceTypes] : undefined, childItemFilter);
+        return azureResourceExperience(context, tdp, resourceTypes ? Array.isArray(resourceTypes) ? resourceTypes : [resourceTypes] : undefined, childItemFilter, true);
     }
 
     /**
