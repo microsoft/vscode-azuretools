@@ -23,7 +23,7 @@ export interface InternalAzureResourceExperienceOptions extends types.PickExperi
     v1Compatibility?: boolean;
 }
 
-export async function azureResourceExperience<TPick>(context: InternalAzureResourceExperienceOptions, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: types.ContextValueFilter, compat?: boolean): Promise<TPick> {
+export async function azureResourceExperience<TPick>(context: InternalAzureResourceExperienceOptions, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: types.ContextValueFilter): Promise<TPick> {
     const promptSteps: AzureWizardPromptStep<AzureResourceQuickPickWizardContext>[] = [
         new QuickPickAzureSubscriptionStep(tdp),
         new QuickPickGroupStep(tdp, {
@@ -41,7 +41,7 @@ export async function azureResourceExperience<TPick>(context: InternalAzureResou
 
     if (childItemFilter) {
         promptSteps.push(
-            compat ?
+            context.v1Compatibility ?
                 new CompatibilityRecursiveQuickPickStep(tdp, {
                     contextValueFilter: childItemFilter,
                     skipIfOne: false,
