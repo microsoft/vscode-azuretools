@@ -29,6 +29,7 @@ export function getAzExtResourceType(resource: { type: string; kind?: string; })
 }
 
 const azureTypeToAzExtResourceTypeMap: Record<string, AzExtResourceType | undefined> = {
+    'microsoft.resources/resourcegroups': AzExtResourceType.ResourceGroup,
     'microsoft.app/containerapps': AzExtResourceType.ContainerApps,
     'microsoft.app/managedenvironments': AzExtResourceType.ContainerAppsEnvironment,
     'microsoft.compute/virtualmachines': AzExtResourceType.VirtualMachines,
