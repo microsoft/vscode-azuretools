@@ -1660,6 +1660,8 @@ export declare enum AzExtResourceType {
     StorageAccounts = 'StorageAccounts',
     VirtualMachines = 'VirtualMachines',
 
+    ResourceGroup = 'ResourceGroup',
+
     // Below are not supported but have icons in the Resources extension
     ApiManagementService = 'ApiManagementService',
     ApplicationInsights = 'ApplicationInsights',
