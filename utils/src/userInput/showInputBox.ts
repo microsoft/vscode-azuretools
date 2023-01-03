@@ -24,8 +24,12 @@ export async function showInputBox(context: IInternalActionContext, options: typ
             disposables.push(
                 inputBox.onDidChangeValue(async text => {
                     if (options.validateInput) {
-                        latestValidateInputTask = Promise.resolve(options.validateInput(text));
-                        inputBox.validationMessage = await latestValidateInputTask || '';
+                        const validateInputTask: Promise<string | undefined | null> = Promise.resolve(options.validateInput(text));
+                        latestValidateInputTask = validateInputTask;
+                        const message: string | undefined | null = await validateInputTask;
+                        if (validateInputTask === latestValidateInputTask) {
+                            inputBox.validationMessage = message || '';
+                        }
                     }
                     if (options.slowValidationTask && !inputBox.validationMessage) {
                         latestSlowValidationTask = inputBoxDebounce(options.slowValidationTask, text);
