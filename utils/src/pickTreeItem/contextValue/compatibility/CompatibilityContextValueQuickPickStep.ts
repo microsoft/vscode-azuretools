@@ -4,12 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as types from "../../../../index";
-import { ContextValueFilterQuickPickOptions, ContextValueQuickPickStep } from "../ContextValueQuickPickStep";
+import { ContextValueFilterQuickPickOptions, ContextValuePickFilter, ContextValueQuickPickStep } from "../ContextValueQuickPickStep";
 import { getLastNode } from "../../getLastNode";
 import { AzExtTreeItem } from "../../../tree/AzExtTreeItem";
 import { AzExtParentTreeItem } from "../../../tree/AzExtParentTreeItem";
 import { isWrapper } from "../../../registerCommandWithTreeNodeUnwrapping";
 import { isAzExtParentTreeItem } from "../../../tree/isAzExtTreeItem";
+import { TreeItem } from "vscode";
+import { PickFilter } from "../../PickFilter";
 
 /**
  * Provides compatability with {@link AzExtParentTreeItem.pickTreeItemImpl}
@@ -19,6 +21,8 @@ export class CompatibilityContextValueQuickPickStep<TContext extends types.Quick
     public override async prompt(wizardContext: TContext): Promise<void> {
         await this.provideCompatabilityWithPickTreeItemImpl(wizardContext) || await super.prompt(wizardContext);
     }
+
+    protected override pickFilter: PickFilter<TreeItem> = new CompatibleContextValuePickFilter(this.pickOptions);
 
     /**
      * Mimics how the legacy {@link AzExtParentTreeItem.pickChildTreeItem}
@@ -50,5 +54,17 @@ export class CompatibilityContextValueQuickPickStep<TContext extends types.Quick
 
     private async getCustomChildren(context: TContext, node: AzExtParentTreeItem): Promise<AzExtTreeItem | undefined> {
         return await node.pickTreeItemImpl?.(Array.isArray(this.pickOptions.contextValueFilter.include) ? this.pickOptions.contextValueFilter.include : [this.pickOptions.contextValueFilter.include], context);
+    }
+}
+
+class CompatibleContextValuePickFilter extends ContextValuePickFilter {
+    // For compatiblity, if the include option is a RegExp test the entire contextValue against it.
+    override isFinalPick(node: TreeItem): boolean {
+        const includeOption = this.pickOptions.contextValueFilter.include;
+        if (includeOption instanceof RegExp && node.contextValue) {
+            return includeOption.test(node.contextValue);
+        }
+
+        return super.isFinalPick(node);
     }
 }
