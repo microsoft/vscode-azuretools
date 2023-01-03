@@ -1055,6 +1055,10 @@ export interface AzExtInputBoxOptions extends InputBoxOptions, AzExtUserInputOpt
      * Optional property that will display a ? button in the input window that opens a url when clicked
      */
     learnMoreLink?: string;
+    /**
+     * Optional async input validation task to run upon triggering 'onDidAccept'
+     */
+    slowValidationTask?: (value: string) => Promise<string | undefined | null>;
 }
 
 /**

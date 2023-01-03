@@ -18,29 +18,34 @@ export async function showInputBox(context: IInternalActionContext, options: typ
         const inputBox: InputBox = createInputBox(context, options);
         disposables.push(inputBox);
 
-        let latestValidation: Promise<string | undefined | null> = options.validateInput ? Promise.resolve(options.validateInput(inputBox.value)) : Promise.resolve('');
+        let latestValidateInputTask: Promise<string | undefined | null> = options.validateInput ? Promise.resolve(options.validateInput(inputBox.value)) : Promise.resolve('');
+        let latestSlowValidationTask: Promise<string | undefined | null> = Promise.resolve('');
         return await new Promise<string>((resolve, reject): void => {
             disposables.push(
                 inputBox.onDidChangeValue(async text => {
                     if (options.validateInput) {
-                        const validation: Promise<string | undefined | null> = Promise.resolve(options.validateInput(text));
-                        latestValidation = validation;
-                        const message: string | undefined | null = await validation;
-                        if (validation === latestValidation) {
-                            inputBox.validationMessage = message || '';
-                        }
+                        latestValidateInputTask = Promise.resolve(options.validateInput(text));
+                        inputBox.validationMessage = await latestValidateInputTask || '';
+                    }
+                    if (options.slowValidationTask && !inputBox.validationMessage) {
+                        latestSlowValidationTask = inputBoxDebounce(options.slowValidationTask, text);
                     }
                 }),
                 inputBox.onDidAccept(async () => {
                     // Run final validation and resolve if value passes
                     inputBox.enabled = false;
                     inputBox.busy = true;
-                    const message: string | undefined | null = await latestValidation;
-                    if (!message) {
+
+                    const validateInputResult: string | undefined | null = await latestValidateInputTask;
+                    const slowValidationResult: string | undefined | null = await latestSlowValidationTask;
+                    if (!validateInputResult && !slowValidationResult) {
                         resolve(inputBox.value);
-                    } else {
-                        inputBox.validationMessage = message;
+                    } else if (validateInputResult) {
+                        inputBox.validationMessage = validateInputResult;
+                    } else if (slowValidationResult) {
+                        inputBox.validationMessage = slowValidationResult;
                     }
+
                     inputBox.enabled = true;
                     inputBox.busy = false;
                 }),
@@ -106,4 +111,41 @@ function createInputBox(context: IInternalActionContext, options: types.AzExtInp
     inputBox.prompt = options.prompt;
     inputBox.title ??= options.title;
     return inputBox;
+}
+
+type DisposableLike = {
+    dispose: () => unknown,
+    cancelPrevious: () => unknown
+}
+
+let activeDebounce: DisposableLike | undefined;
+
+export async function inputBoxDebounce(callback: (...args: unknown[]) => Promise<string | undefined | null>, ...args: unknown[]): Promise<string | undefined | null> {
+    // Remove active debounce if it already exists
+    if (activeDebounce) {
+        activeDebounce.cancelPrevious();
+        activeDebounce = undefined;
+    }
+
+    return new Promise((resolve) => {
+        // Schedule the callback
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        const timeout = setTimeout(async () => {
+            // Clear the callback since we're about to fire it
+            activeDebounce?.dispose();
+            activeDebounce = undefined;
+
+            // Fire the callback
+            resolve(await callback(...args));
+        }, 250);
+
+        // Keep track of the active debounce
+        activeDebounce = {
+            dispose: () => clearTimeout(timeout),
+            cancelPrevious: () => {
+                clearTimeout(timeout);
+                resolve(undefined);
+            }
+        };
+    })
 }
