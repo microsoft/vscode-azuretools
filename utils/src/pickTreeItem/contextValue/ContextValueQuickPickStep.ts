@@ -17,8 +17,8 @@ export class ContextValueQuickPickStep<TContext extends types.QuickPickWizardCon
     protected readonly pickFilter: PickFilter = new ContextValuePickFilter(this.pickOptions);
 }
 
-class ContextValuePickFilter implements PickFilter {
-    constructor(private readonly pickOptions: ContextValueFilterQuickPickOptions) { }
+export class ContextValuePickFilter implements PickFilter {
+    constructor(protected readonly pickOptions: ContextValueFilterQuickPickOptions) { }
 
     isFinalPick(node: TreeItem): boolean {
         const includeOption = this.pickOptions.contextValueFilter.include;
