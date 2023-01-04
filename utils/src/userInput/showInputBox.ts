@@ -18,23 +18,17 @@ export async function showInputBox(context: IInternalActionContext, options: typ
         const inputBox: InputBox = createInputBox(context, options);
         disposables.push(inputBox);
 
-        let latestValidateInputTask: Promise<string | undefined | null> = options.validateInput ? Promise.resolve(options.validateInput(inputBox.value)) : Promise.resolve('');
-        let latestAsyncValidationTask: Promise<string | undefined | null> = Promise.resolve('');
+        let latestValidation: Promise<string | undefined | null> = options.validateInput ? Promise.resolve(options.validateInput(inputBox.value)) : Promise.resolve('');
         return await new Promise<string>((resolve, reject): void => {
             disposables.push(
                 inputBox.onDidChangeValue(async text => {
-                    let validateInputTask: Promise<string | undefined | null> | undefined;
                     if (options.validateInput) {
-                        validateInputTask = Promise.resolve(options.validateInput(text));
-                        latestValidateInputTask = validateInputTask;
-                        const message: string | undefined | null = await validateInputTask;
-                        if (validateInputTask === latestValidateInputTask) {
+                        const validation: Promise<string | undefined | null> = Promise.resolve(options.validateInput(text));
+                        latestValidation = validation;
+                        const message: string | undefined | null = await validation;
+                        if (validation === latestValidation) {
                             inputBox.validationMessage = message || '';
                         }
-                    }
-                    if (options.asyncValidationTask && !inputBox.validationMessage && validateInputTask === latestValidateInputTask) {
-                        // Start loading the promise, but wrap with a short debounce to avoid performing server calls too frequently
-                        latestAsyncValidationTask = inputBoxDebounce(options.asyncValidationTask, text);
                     }
                 }),
                 inputBox.onDidAccept(async () => {
@@ -42,8 +36,8 @@ export async function showInputBox(context: IInternalActionContext, options: typ
                     inputBox.enabled = false;
                     inputBox.busy = true;
 
-                    const validateInputResult: string | undefined | null = await latestValidateInputTask;
-                    const asyncValidationResult: string | undefined | null = await latestAsyncValidationTask;
+                    const validateInputResult: string | undefined | null = await latestValidation;
+                    const asyncValidationResult: string | undefined | null = options.asyncValidationTask ? await options.asyncValidationTask(inputBox.value) : undefined;
                     if (!validateInputResult && !asyncValidationResult) {
                         resolve(inputBox.value);
                     } else if (validateInputResult) {
@@ -117,40 +111,4 @@ function createInputBox(context: IInternalActionContext, options: types.AzExtInp
     inputBox.prompt = options.prompt;
     inputBox.title ??= options.title;
     return inputBox;
-}
-
-type DisposableLike = {
-    dispose: () => unknown,
-    cancelPrevious: () => unknown
-}
-let activeDebounce: DisposableLike | undefined;
-
-export async function inputBoxDebounce(callback: (...args: unknown[]) => Promise<string | undefined | null>, ...args: unknown[]): Promise<string | undefined | null> {
-    // Remove active debounce if it already exists
-    if (activeDebounce) {
-        activeDebounce.cancelPrevious();
-        activeDebounce = undefined;
-    }
-
-    return new Promise((resolve) => {
-        // Schedule the callback
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        const timeout = setTimeout(async () => {
-            // Clear the callback since we're about to fire it
-            activeDebounce?.dispose();
-            activeDebounce = undefined;
-
-            // Fire the callback
-            resolve(await callback(...args));
-        }, 250);
-
-        // Keep track of the active debounce
-        activeDebounce = {
-            dispose: () => clearTimeout(timeout),
-            cancelPrevious: () => {
-                clearTimeout(timeout);
-                resolve(undefined);
-            }
-        };
-    })
 }
