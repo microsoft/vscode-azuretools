@@ -36,8 +36,7 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
             return picks[0].data;
         } else {
             const selected = await wizardContext.ui.showQuickPick(picks, {
-                /* TODO: options */
-                /* TODO: set id here so recently picked items appear at the top */
+                ...(this.promptOptions ?? {}),
             });
 
             // check if the last picked item is a create callback
@@ -77,6 +76,12 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
             return undefined;
         } else {
             const lastPickedItemTi = isWrapper(lastPickedItem) ? lastPickedItem.unwrap<AzExtTreeItem>() : lastPickedItem;
+
+            const promptOptions = isAzExtParentTreeItem(lastPickedItemTi) ? {
+                placeHolder: localize('selectTreeItem', 'Select {0}', lastPickedItemTi.childTypeLabel),
+                stepName: `treeItemPicker|${lastPickedItemTi.contextValue}`,
+            } : {};
+
             // Need to keep going because the last picked node is not a match
             return {
                 hideStepCount: true,
@@ -88,7 +93,7 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
                             callback: lastPickedItemTi.createChild.bind(lastPickedItemTi) as typeof lastPickedItemTi.createChild,
                             label: lastPickedItemTi.createNewLabel ?? localize('createNewItem', '$(plus) Create new {0}', lastPickedItemTi.childTypeLabel)
                         } : undefined
-                    })
+                    }, promptOptions)
                 ],
             };
         }

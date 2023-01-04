@@ -20,6 +20,9 @@ export class QuickPickGroupStep extends GenericQuickPickStep<AzureResourceQuickP
         super(tdp, {
             ...options,
             skipIfOne: true, // Group is always skip-if-one
+        }, {
+            // Define id so that recently used picks are tracked separately for each group type
+            id: `QuickPickGroupStep/${options.groupType?.sort().join(',') ?? ''}`,
         });
     }
 
