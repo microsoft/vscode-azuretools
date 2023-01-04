@@ -1058,7 +1058,7 @@ export interface AzExtInputBoxOptions extends InputBoxOptions, AzExtUserInputOpt
     /**
      * Optional async input validation task to run upon triggering 'onDidAccept'
      */
-    slowValidationTask?: (value: string) => Promise<string | undefined | null>;
+    asyncValidationTask?: (value: string) => Promise<string | undefined | null>;
 }
 
 /**

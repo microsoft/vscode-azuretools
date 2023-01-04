@@ -19,20 +19,22 @@ export async function showInputBox(context: IInternalActionContext, options: typ
         disposables.push(inputBox);
 
         let latestValidateInputTask: Promise<string | undefined | null> = options.validateInput ? Promise.resolve(options.validateInput(inputBox.value)) : Promise.resolve('');
-        let latestSlowValidationTask: Promise<string | undefined | null> = Promise.resolve('');
+        let latestAsyncValidationTask: Promise<string | undefined | null> = Promise.resolve('');
         return await new Promise<string>((resolve, reject): void => {
             disposables.push(
                 inputBox.onDidChangeValue(async text => {
+                    let validateInputTask: Promise<string | undefined | null> | undefined;
                     if (options.validateInput) {
-                        const validateInputTask: Promise<string | undefined | null> = Promise.resolve(options.validateInput(text));
+                        validateInputTask = Promise.resolve(options.validateInput(text));
                         latestValidateInputTask = validateInputTask;
                         const message: string | undefined | null = await validateInputTask;
                         if (validateInputTask === latestValidateInputTask) {
                             inputBox.validationMessage = message || '';
                         }
                     }
-                    if (options.slowValidationTask && !inputBox.validationMessage) {
-                        latestSlowValidationTask = inputBoxDebounce(options.slowValidationTask, text);
+                    if (options.asyncValidationTask && !inputBox.validationMessage && validateInputTask === latestValidateInputTask) {
+                        // Start loading the promise, but wrap with a short debounce to avoid performing server calls too frequently
+                        latestAsyncValidationTask = inputBoxDebounce(options.asyncValidationTask, text);
                     }
                 }),
                 inputBox.onDidAccept(async () => {
@@ -41,13 +43,13 @@ export async function showInputBox(context: IInternalActionContext, options: typ
                     inputBox.busy = true;
 
                     const validateInputResult: string | undefined | null = await latestValidateInputTask;
-                    const slowValidationResult: string | undefined | null = await latestSlowValidationTask;
-                    if (!validateInputResult && !slowValidationResult) {
+                    const asyncValidationResult: string | undefined | null = await latestAsyncValidationTask;
+                    if (!validateInputResult && !asyncValidationResult) {
                         resolve(inputBox.value);
                     } else if (validateInputResult) {
                         inputBox.validationMessage = validateInputResult;
-                    } else if (slowValidationResult) {
-                        inputBox.validationMessage = slowValidationResult;
+                    } else if (asyncValidationResult) {
+                        inputBox.validationMessage = asyncValidationResult;
                     }
 
                     inputBox.enabled = true;
@@ -121,7 +123,6 @@ type DisposableLike = {
     dispose: () => unknown,
     cancelPrevious: () => unknown
 }
-
 let activeDebounce: DisposableLike | undefined;
 
 export async function inputBoxDebounce(callback: (...args: unknown[]) => Promise<string | undefined | null>, ...args: unknown[]): Promise<string | undefined | null> {
