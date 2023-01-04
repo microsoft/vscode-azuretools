@@ -17,8 +17,13 @@ import { AzureWizard } from '../../wizard/AzureWizard';
 import { AzureResourceQuickPickWizardContext } from '../../../hostapi.v2';
 import { ResourceGroupsItem } from '../quickPickAzureResource/tempTypes';
 import { isWrapper } from '../../registerCommandWithTreeNodeUnwrapping';
+import { CompatibilityRecursiveQuickPickStep } from '../contextValue/compatibility/CompatibilityRecursiveQuickPickStep';
 
-export async function azureResourceExperience<TPick>(context: types.PickExperienceContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: types.ContextValueFilter): Promise<TPick> {
+export interface InternalAzureResourceExperienceOptions extends types.PickExperienceContext {
+    v1Compatibility?: boolean;
+}
+
+export async function azureResourceExperience<TPick>(context: InternalAzureResourceExperienceOptions, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: types.ContextValueFilter): Promise<TPick> {
     const promptSteps: AzureWizardPromptStep<AzureResourceQuickPickWizardContext>[] = [
         new QuickPickAzureSubscriptionStep(tdp),
         new QuickPickGroupStep(tdp, {
@@ -35,10 +40,17 @@ export async function azureResourceExperience<TPick>(context: types.PickExperien
     ];
 
     if (childItemFilter) {
-        promptSteps.push(new RecursiveQuickPickStep<AzureResourceQuickPickWizardContext>(tdp, {
-            contextValueFilter: childItemFilter,
-            skipIfOne: false,
-        }));
+        promptSteps.push(
+            context.v1Compatibility ?
+                new CompatibilityRecursiveQuickPickStep(tdp, {
+                    contextValueFilter: childItemFilter,
+                    skipIfOne: false,
+                }) :
+                new RecursiveQuickPickStep<AzureResourceQuickPickWizardContext>(tdp, {
+                    contextValueFilter: childItemFilter,
+                    skipIfOne: false,
+                })
+        );
     }
 
     // Fill in the `pickedNodes` property

@@ -8,12 +8,16 @@ import { AzureResourceQuickPickWizardContext } from '../../../hostapi.v2';
 import { PickFilter } from '../PickFilter';
 import { GenericQuickPickOptions, GenericQuickPickStep, SkipIfOneQuickPickOptions } from '../GenericQuickPickStep';
 import { ResourceGroupsItem, SubscriptionItem } from './tempTypes';
+import { localize } from '../../localize';
 
 export class QuickPickAzureSubscriptionStep extends GenericQuickPickStep<AzureResourceQuickPickWizardContext, SkipIfOneQuickPickOptions> {
     public constructor(tdp: vscode.TreeDataProvider<ResourceGroupsItem>, options?: GenericQuickPickOptions) {
         super(tdp, {
             ...options,
             skipIfOne: true, // Subscription is always skip-if-one
+        }, {
+            placeHolder: localize('selectSubscription', 'Select subscription'),
+            noPicksMessage: localize('noSubscriptions', 'No subscriptions found'),
         });
     }
 
