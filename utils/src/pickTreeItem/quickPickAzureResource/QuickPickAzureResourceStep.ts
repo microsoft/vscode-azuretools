@@ -3,13 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { TreeItem } from 'vscode';
+import * as vscode from 'vscode';
 import { AzureResourceQuickPickWizardContext } from '../../../hostapi.v2';
 import * as types from '../../../index';
 import { parseContextValue } from '../../utils/contextUtils';
 import { PickFilter } from '../PickFilter';
 import { GenericQuickPickOptions, GenericQuickPickStep } from '../GenericQuickPickStep';
-import { AzureResourceItem } from './tempTypes';
+import { AzureResourceItem, ResourceGroupsItem } from './tempTypes';
+import { localize } from '../../localize';
 
 interface AzureResourceQuickPickOptions extends GenericQuickPickOptions {
     resourceTypes?: types.AzExtResourceType[];
@@ -17,6 +18,13 @@ interface AzureResourceQuickPickOptions extends GenericQuickPickOptions {
 }
 
 export class QuickPickAzureResourceStep extends GenericQuickPickStep<AzureResourceQuickPickWizardContext, AzureResourceQuickPickOptions> {
+
+    public constructor(tdp: vscode.TreeDataProvider<ResourceGroupsItem>, options?: AzureResourceQuickPickOptions) {
+        super(tdp, options ?? {}, {
+            placeHolder: localize('selectResource', 'Select resource'),
+        });
+    }
+
     protected override async promptInternal(wizardContext: AzureResourceQuickPickWizardContext): Promise<AzureResourceItem> {
         const pickedAzureResource = (await super.promptInternal(wizardContext)) as unknown as AzureResourceItem;
 
@@ -34,7 +42,7 @@ class AzureResourcePickFilter implements PickFilter {
 
     constructor(private readonly pickOptions: AzureResourceQuickPickOptions) { }
 
-    isFinalPick(node: TreeItem): boolean {
+    isFinalPick(node: vscode.TreeItem): boolean {
         // If childItemFilter is defined, this cannot be a direct pick
         if (this.pickOptions.childItemFilter) {
             return false;
@@ -43,7 +51,7 @@ class AzureResourcePickFilter implements PickFilter {
         return this.matchesResourceType(parseContextValue(node.contextValue));
     }
 
-    isAncestorPick(node: TreeItem): boolean {
+    isAncestorPick(node: vscode.TreeItem): boolean {
         // If childItemFilter is undefined, this cannot be an indirect pick
         if (!this.pickOptions.childItemFilter) {
             return false;
