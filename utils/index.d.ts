@@ -1792,6 +1792,11 @@ export declare namespace PickTreeItemWithCompatibility {
      * Returns `ISubscriptionContext` instead of `ApplicationSubscription` for compatibility.
      */
     export function subscription(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>): Promise<ISubscriptionContext>;
+
+    /**
+     * Helper to provide compatibility for `AzExtParentTreeItem.showTreeItemPicker`.
+     */
+    export function showTreeItemPicker<TPick extends AzExtTreeItem>(context: ITreeItemPickerContext, tdp: TreeDataProvider<ResourceGroupsItem>, expectedContextValues: string | RegExp | (string | RegExp)[], startingTreeItem?: AzExtTreeItem): Promise<TPick>;
 }
 
 export declare interface QuickPickWizardContext extends IActionContext {
