@@ -67,6 +67,7 @@ export enum AzExtResourceType {
     ServiceFabricClusters = 'ServiceFabricClusters',
     ServiceFabricMeshApplications = 'ServiceFabricMeshApplications',
     SignalRService = 'SignalRService',
+    SpringApps = 'SpringApps',
     SqlDatabases = 'SqlDatabases',
     SqlServers = 'SqlServers',
     VirtualMachineScaleSets = 'VirtualMachineScaleSets',
