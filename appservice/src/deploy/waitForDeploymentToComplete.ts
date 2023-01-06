@@ -9,9 +9,9 @@ import { IActionContext, IParsedError, nonNullProp, nonNullValue, parseError } f
 import { CancellationToken, window } from 'vscode';
 import { KuduModels } from 'vscode-azurekudu';
 import { DeployResult } from 'vscode-azurekudu/esm/models';
+import { ParsedSite, SiteClient } from '../SiteClient';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
-import { ParsedSite, SiteClient } from '../SiteClient';
 import { delay } from '../utils/delay';
 import { ignore404Error, retryKuduCall } from '../utils/kuduUtils';
 import { IDeployContext } from './IDeployContext';
@@ -159,7 +159,7 @@ async function tryGetLatestDeployment(context: IActionContext, client: SiteClien
     } else if (initialStartTime) {
         // Use "initialReceivedTime" to find the deployment during its "temp" phase
         const deployments: Deployment[] = await retryKuduCall(context, 'getDeployResults', async () => {
-            return await client.listDeployments();
+            return await client.getDeployResults(context);
         });
         deployment = deployments
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

@@ -18,9 +18,9 @@ export async function deployZip(context: IDeployContext, site: ParsedSite, fsPat
         fsPath, site, pathFileMap,
         callback: async zipStream => {
             return await kuduClient.zipPushDeploy(context, () => zipStream, {
-                isAsync: true,
                 author: publisherName,
                 deployer: publisherName,
+                isAsync: true,
                 trackDeploymentId: true
             });
         }

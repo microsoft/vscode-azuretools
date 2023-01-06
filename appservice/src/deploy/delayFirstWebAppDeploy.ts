@@ -26,7 +26,7 @@ export async function delayFirstWebAppDeploy(context: IActionContext, site: Pars
             }
 
             const kuduClient = await site.createClient(context);
-            const deployments: number = (await kuduClient.listDeployments()).length;
+            const deployments: number = (await kuduClient.getDeployResults(context)).length;
             if (deployments > 1) {
                 resolve();
             }

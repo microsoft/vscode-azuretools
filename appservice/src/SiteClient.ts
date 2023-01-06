@@ -3,15 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { AppServicePlan, Deployment, FunctionEnvelope, FunctionSecrets, HostKeys, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SlotConfigNamesResource, SourceControl, StringDictionary, User, WebAppsListFunctionKeysResponse, WebJob, WebSiteInstanceStatus, WebSiteManagementClient } from '@azure/arm-appservice';
-import type { HttpOperationResponse, HttpRequestBody, HttpResponse, ServiceClient } from '@azure/ms-rest-js';
+import type { AppServicePlan, FunctionEnvelope, FunctionSecrets, HostKeys, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SlotConfigNamesResource, SourceControl, StringDictionary, User, WebAppsListFunctionKeysResponse, WebJob, WebSiteInstanceStatus, WebSiteManagementClient } from '@azure/arm-appservice';
+import type { HttpOperationResponse, HttpRequestBody, HttpResponse, RequestPrepareOptions, ServiceClient } from '@azure/ms-rest-js';
 import { createGenericClient, uiUtils } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, ISubscriptionContext, nonNullProp, nonNullValue, parseError } from '@microsoft/vscode-azext-utils';
-import { DeployResult, DeploymentDeploy1Response, LogEntry, PushDeploymentWarPushDeployOptionalParams } from 'vscode-azurekudu/esm/models';
+import { DeployResult, LogEntry, PushDeploymentWarPushDeployOptionalParams, PushDeploymentZipPushDeployOptionalParams } from 'vscode-azurekudu/esm/models';
 import { AppSettingsClientProvider, IAppSettingsClient } from './IAppSettingsClient';
 import { AppKind } from './createAppService/AppKind';
 import { tryGetAppServicePlan, tryGetWebApp, tryGetWebAppSlot } from './tryGetSiteResource';
 import { createWebSiteClient } from './utils/azureClients';
+import { convertQueryParamsValuesToString } from './utils/kuduUtils';
 
 export class ParsedSite implements AppSettingsClientProvider {
     public readonly id: string;
@@ -309,54 +310,51 @@ export class SiteClient implements IAppSettingsClient {
             await this._client.webApps.listFunctionKeys(this._site.resourceGroup, this._site.siteName, functionName);
     }
 
-    public async getDeployment(id: string | 'latest'): Promise<Deployment> {
-        return this._site.slotName ?
-            this._client.webApps.getDeploymentSlot(this._site.resourceGroup, this._site.siteName, id, this._site.slotName) :
-            this._client.webApps.getDeployment(this._site.resourceGroup, this._site.siteName, id);
-    }
-
-    public async listDeployments(): Promise<Deployment[]> {
-        return this._site.slotName ?
-            await uiUtils.listAllIterator(this._client.webApps.listDeploymentsSlot(this._site.resourceGroup, this._site.siteName, this._site.slotName)) :
-            await uiUtils.listAllIterator(this._client.webApps.listDeployments(this._site.resourceGroup, this._site.siteName));
-    }
-
-    public async listDeploymentLog(id: string): Promise<Deployment> {
-        return this._site.slotName ?
-            this._client.webApps.listDeploymentLogSlot(this._site.resourceGroup, this._site.siteName, id, this._site.slotName) :
-            this._client.webApps.listDeploymentLog(this._site.resourceGroup, this._site.siteName, id);
-    }
-
-    public async zipPushDeploy(context: IActionContext, file: HttpRequestBody, options?: PushDeploymentWarPushDeployOptionalParams): Promise<HttpOperationResponse> {
+    public async zipPushDeploy(context: IActionContext, file: HttpRequestBody, queryParameters: PushDeploymentZipPushDeployOptionalParams): Promise<HttpOperationResponse> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
-        const response: HttpOperationResponse = await client.sendRequest({
+        const options: RequestPrepareOptions = {
             method: 'POST',
-            url: `${this._site.id}/api/zipdeploy?api-version=2022-03-01`,
+            url: `${this._site.kuduUrl}/api/zipdeploy`,
             body: file,
-            queryParameters: options
-        });
-        return response.parsedBody as HttpOperationResponse;
+            bodyIsStream: true,
+            queryParameters: convertQueryParamsValuesToString(queryParameters)
+        };
+
+        return await client.sendRequest(options);
     }
 
-    public async warPushDeploy(context: IActionContext, file: HttpRequestBody, options?: PushDeploymentWarPushDeployOptionalParams): Promise<HttpOperationResponse> {
+    public async warPushDeploy(context: IActionContext, file: HttpRequestBody, queryParameters: PushDeploymentWarPushDeployOptionalParams): Promise<HttpOperationResponse> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
-        const response: HttpOperationResponse = await client.sendRequest({
+        return await client.sendRequest({
             method: 'POST',
-            url: `${this._site.id}/api/wardeploy?api-version=2022-03-01`,
+            url: `${this._site.kuduUrl}/api/wardeploy`,
             body: file,
-            queryParameters: options
+            queryParameters: convertQueryParamsValuesToString(queryParameters)
         });
-        return response.parsedBody as HttpOperationResponse;
     }
 
-
-    public async deploy(context: IActionContext, id: string): Promise<DeploymentDeploy1Response> {
+    public async deploy(context: IActionContext, id: string): Promise<HttpOperationResponse> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
-        const response: HttpOperationResponse = await client.sendRequest({
+        return await client.sendRequest({
             method: 'PUT',
-            url: `${this._site.id}/api/deployments/${id}?api-version=2022-03-01`
+            url: `${this._site.kuduUrl}/api/deployments/${id}`
         });
-        return response.parsedBody as DeploymentDeploy1Response;
+    }
+
+    // the ARM call doesn't give all of the metadata we require so ping the scm directly
+    public async getDeployResults(context: IActionContext): Promise<DeployResult[]> {
+        const client: ServiceClient = await createGenericClient(context, this._site.subscription);
+        const response: HttpOperationResponse = await client.sendRequest({
+            method: 'GET',
+            url: `${this._site.kuduUrl}/api/deployments`
+        });
+
+        // old kuduClient parsed recived_time: string as receivedTime: Date so we need to do the same
+        return response.parsedBody.map(obj => {
+            const dr = { ...obj };
+            dr.receivedTime = new Date(obj.received_time);
+            return dr;
+        }) as DeployResult[];
     }
 
     // the ARM call doesn't give all of the metadata we require so ping the scm directly
@@ -364,7 +362,7 @@ export class SiteClient implements IAppSettingsClient {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
         const response: HttpOperationResponse = await client.sendRequest({
             method: 'GET',
-            url: `${this._site.id}/api/deployments/${deployId}?api-version=2022-03-01`
+            url: `${this._site.kuduUrl}/api/deployments/${deployId}`
         });
         return response.parsedBody as DeployResult;
     }
@@ -374,9 +372,16 @@ export class SiteClient implements IAppSettingsClient {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
         const response: HttpOperationResponse = await client.sendRequest({
             method: 'GET',
-            url: `${this._site.id}/api/deployments/${deployId}/log?api-version=2022-03-01`
+            url: `${this._site.kuduUrl}/api/deployments/${deployId}/log`
         });
-        return response.parsedBody as LogEntry[];
+
+        // old kuduClient parsed log_time: string as logTime: Date so we need to do the same
+        return response.parsedBody.map(obj => {
+            const le = { ...obj };
+            le.logTime = new Date(obj.log_time);
+            le.detailsUrl = obj.details_url;
+            return le;
+        }) as LogEntry[];
     }
 
     // no equivalent ARM call
@@ -384,9 +389,15 @@ export class SiteClient implements IAppSettingsClient {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
         const response: HttpOperationResponse = await client.sendRequest({
             method: 'GET',
-            url: `${this._site.id}/api/deployments/${deployId}/log/${logId}?api-version=2022-03-01`
+            url: `${this._site.kuduUrl}/api/deployments/${deployId}/log/${logId}`
         });
-        return response.parsedBody as LogEntry[];
+
+        return response.parsedBody.map(obj => {
+            const le = { ...obj };
+            le.logTime = new Date(obj.log_time);
+            le.detailsUrl = obj.details_url;
+            return le;
+        }) as LogEntry[];
     }
 
     public async vfsGetItem(context: IActionContext, path: string): Promise<HttpResponse> {
