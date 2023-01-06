@@ -36,6 +36,13 @@ export class QuickPickAzureResourceStep extends GenericQuickPickStep<AzureResour
     }
 
     protected readonly pickFilter: PickFilter = new AzureResourcePickFilter(this.pickOptions);
+
+    protected override async getQuickPickItem(element: AzureResourceItem, item: vscode.TreeItem): Promise<types.IAzureQuickPickItem<unknown>> {
+        return {
+            ...await super.getQuickPickItem(element, item),
+            description: element.resource.resourceGroup,
+        };
+    }
 }
 
 class AzureResourcePickFilter implements PickFilter {
