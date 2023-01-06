@@ -40,7 +40,7 @@ export namespace PickTreeItemWithCompatibility {
      * Helper to provide compatibility for `AzExtParentTreeItem.showTreeItemPicker`.
      */
     export async function showTreeItemPicker<TPick extends types.AzExtTreeItem>(context: types.ITreeItemPickerContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, expectedContextValues: string | RegExp | (string | RegExp)[], startingTreeItem?: AzExtTreeItem): Promise<TPick> {
-        const promptSteps: AzureWizardPromptStep<types.QuickPickWizardContext>[] = [
+        const promptSteps: AzureWizardPromptStep<types.QuickPickWizardContext & types.ITreeItemPickerContext>[] = [
             new CompatibilityRecursiveQuickPickStep(tdp, {
                 contextValueFilter: {
                     include: expectedContextValues,
@@ -49,9 +49,10 @@ export namespace PickTreeItemWithCompatibility {
             }),
         ];
 
-        // Fill in the `pickedNodes` property
-        const wizardContext = { ...context } as types.QuickPickWizardContext;
-        wizardContext.pickedNodes = startingTreeItem ? [startingTreeItem] : [];
+        const wizardContext: types.QuickPickWizardContext & types.ITreeItemPickerContext = {
+            ...context,
+            pickedNodes: startingTreeItem ? [startingTreeItem] : [],
+        };
 
         const wizard = new AzureWizard(wizardContext, {
             hideStepCount: true,
