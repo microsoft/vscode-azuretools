@@ -21,13 +21,19 @@ export interface SkipIfOneQuickPickOptions extends GenericQuickPickOptions {
 export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizardContext, TOptions extends GenericQuickPickOptions> extends AzureWizardPromptStep<TContext> {
     public readonly supportsDuplicateSteps = true;
 
+    protected readonly promptOptions: types.IAzureQuickPickOptions;
     protected readonly abstract pickFilter: PickFilter<vscode.TreeItem>;
 
     public constructor(
         protected readonly treeDataProvider: vscode.TreeDataProvider<unknown>,
-        protected readonly pickOptions: TOptions
+        protected readonly pickOptions: TOptions,
+        promptOptions?: types.IAzureQuickPickOptions
     ) {
         super();
+        this.promptOptions = {
+            noPicksMessage: localize('noMatchingResources', 'No matching resources found.'),
+            ...promptOptions,
+        };
     }
 
     public async prompt(wizardContext: TContext): Promise<void> {
@@ -50,9 +56,7 @@ export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizar
             return picks[0].data;
         } else {
             const selected = await wizardContext.ui.showQuickPick(picks, {
-                noPicksMessage: localize('noMatchingResources', 'No matching resources found.'),
-                /* TODO: options */
-                /* TODO: set id here so recently picked items appear at the top */
+                ...(this.promptOptions ?? {})
             });
 
             return selected.data;
@@ -89,7 +93,7 @@ export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizar
         return picks;
     }
 
-    private async getQuickPickItem(element: unknown, item: vscode.TreeItem): Promise<types.IAzureQuickPickItem<unknown>> {
+    protected async getQuickPickItem(element: unknown, item: vscode.TreeItem): Promise<types.IAzureQuickPickItem<unknown>> {
         return {
             label: ((item.label as vscode.TreeItemLabel)?.label || item.label) as string,
             description: item.description as string,

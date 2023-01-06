@@ -21,6 +21,8 @@ export enum AzExtResourceType {
     StorageAccounts = 'StorageAccounts',
     VirtualMachines = 'VirtualMachines',
 
+    ResourceGroup = 'ResourceGroup',
+
     // Below are not supported but have icons in the Resources extension
     ApiManagementService = 'ApiManagementService',
     ApplicationInsights = 'ApplicationInsights',
@@ -65,6 +67,7 @@ export enum AzExtResourceType {
     ServiceFabricClusters = 'ServiceFabricClusters',
     ServiceFabricMeshApplications = 'ServiceFabricMeshApplications',
     SignalRService = 'SignalRService',
+    SpringApps = 'SpringApps',
     SqlDatabases = 'SqlDatabases',
     SqlServers = 'SqlServers',
     VirtualMachineScaleSets = 'VirtualMachineScaleSets',

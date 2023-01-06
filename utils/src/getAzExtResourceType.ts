@@ -29,6 +29,7 @@ export function getAzExtResourceType(resource: { type: string; kind?: string; })
 }
 
 const azureTypeToAzExtResourceTypeMap: Record<string, AzExtResourceType | undefined> = {
+    'microsoft.resources/resourcegroups': AzExtResourceType.ResourceGroup,
     'microsoft.app/containerapps': AzExtResourceType.ContainerApps,
     'microsoft.app/managedenvironments': AzExtResourceType.ContainerAppsEnvironment,
     'microsoft.compute/virtualmachines': AzExtResourceType.VirtualMachines,
@@ -80,6 +81,7 @@ const azureTypeToAzExtResourceTypeMap: Record<string, AzExtResourceType | undefi
     'microsoft.servicefabric/clusters': AzExtResourceType.ServiceFabricClusters,
     'microsoft.servicefabricmesh/applications': AzExtResourceType.ServiceFabricMeshApplications,
     'microsoft.signalrservice/signalr': AzExtResourceType.SignalRService,
+    'microsoft.appplatform/spring': AzExtResourceType.SpringApps,
     'microsoft.sql/servers': AzExtResourceType.SqlServers,
     'microsoft.sql/servers/databases': AzExtResourceType.SqlDatabases,
     'microsoft.web/hostingenvironments': AzExtResourceType.WebHostingEnvironments,

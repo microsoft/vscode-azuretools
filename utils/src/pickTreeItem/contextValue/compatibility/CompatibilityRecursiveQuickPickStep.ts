@@ -27,7 +27,7 @@ interface CompatibilityRecursiveQuickPickOptions extends ContextValueFilterQuick
 /**
  * Recursive step which is compatible which adds create picks based if the node has {@link types.CompatibleQuickPickOptions.createChild quickPickOptions.createChild} defined.
  */
-export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPickWizardContext> extends CompatibilityContextValueQuickPickStep<TContext, CompatibilityRecursiveQuickPickOptions> {
+export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPickWizardContext & types.ITreeItemPickerContext> extends CompatibilityContextValueQuickPickStep<TContext, CompatibilityRecursiveQuickPickOptions> {
 
     protected override async promptInternal(wizardContext: TContext): Promise<unknown> {
         const picks = await this.getPicks(wizardContext) as types.IAzureQuickPickItem<unknown>[];
@@ -36,8 +36,7 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
             return picks[0].data;
         } else {
             const selected = await wizardContext.ui.showQuickPick(picks, {
-                /* TODO: options */
-                /* TODO: set id here so recently picked items appear at the top */
+                ...(this.promptOptions ?? {}),
             });
 
             // check if the last picked item is a create callback
@@ -77,18 +76,28 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
             return undefined;
         } else {
             const lastPickedItemTi = isWrapper(lastPickedItem) ? lastPickedItem.unwrap<AzExtTreeItem>() : lastPickedItem;
+
+            const promptOptions: types.IAzureQuickPickOptions = isAzExtParentTreeItem(lastPickedItemTi) ? {
+                placeHolder: localize('selectTreeItem', 'Select {0}', lastPickedItemTi.childTypeLabel),
+                stepName: `treeItemPicker|${lastPickedItemTi.contextValue}`,
+                noPicksMessage: wizardContext.noItemFoundErrorMessage,
+                ignoreFocusOut: wizardContext.ignoreFocusOut,
+            } : {};
+
+            const shouldAddCreatePick = isAzExtParentTreeItem(lastPickedItemTi) && !!lastPickedItemTi.createChildImpl;
+
             // Need to keep going because the last picked node is not a match
             return {
                 hideStepCount: true,
                 promptSteps: [
                     new CompatibilityRecursiveQuickPickStep(this.treeDataProvider, {
                         ...this.pickOptions,
-                        skipIfOne: isAzExtParentTreeItem(lastPickedItemTi) && !!lastPickedItemTi.createChildImpl,
-                        create: (isAzExtParentTreeItem(lastPickedItemTi) && !!lastPickedItemTi.createChildImpl) ? {
+                        skipIfOne: !shouldAddCreatePick, // don't skip if we're adding a create pick
+                        create: shouldAddCreatePick ? {
                             callback: lastPickedItemTi.createChild.bind(lastPickedItemTi) as typeof lastPickedItemTi.createChild,
                             label: lastPickedItemTi.createNewLabel ?? localize('createNewItem', '$(plus) Create new {0}', lastPickedItemTi.childTypeLabel)
                         } : undefined
-                    })
+                    }, promptOptions)
                 ],
             };
         }

@@ -1660,6 +1660,8 @@ export declare enum AzExtResourceType {
     StorageAccounts = 'StorageAccounts',
     VirtualMachines = 'VirtualMachines',
 
+    ResourceGroup = 'ResourceGroup',
+
     // Below are not supported but have icons in the Resources extension
     ApiManagementService = 'ApiManagementService',
     ApplicationInsights = 'ApplicationInsights',
@@ -1704,6 +1706,7 @@ export declare enum AzExtResourceType {
     ServiceFabricClusters = 'ServiceFabricClusters',
     ServiceFabricMeshApplications = 'ServiceFabricMeshApplications',
     SignalRService = 'SignalRService',
+    SpringApps = 'SpringApps',
     SqlDatabases = 'SqlDatabases',
     SqlServers = 'SqlServers',
     VirtualMachineScaleSets = 'VirtualMachineScaleSets',
@@ -1786,6 +1789,11 @@ export declare namespace PickTreeItemWithCompatibility {
      * Returns `ISubscriptionContext` instead of `ApplicationSubscription` for compatibility.
      */
     export function subscription(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>): Promise<ISubscriptionContext>;
+
+    /**
+     * Helper to provide compatibility for `AzExtParentTreeItem.showTreeItemPicker`.
+     */
+    export function showTreeItemPicker<TPick extends AzExtTreeItem>(context: ITreeItemPickerContext, tdp: TreeDataProvider<ResourceGroupsItem>, expectedContextValues: string | RegExp | (string | RegExp)[], startingTreeItem?: AzExtTreeItem): Promise<TPick>;
 }
 
 export declare interface QuickPickWizardContext extends IActionContext {
