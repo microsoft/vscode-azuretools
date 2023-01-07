@@ -3,9 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { Deployment, SiteConfig, SiteSourceControl } from '@azure/arm-appservice';
+import type { SiteConfig, SiteSourceControl } from '@azure/arm-appservice';
 import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, TreeItemIconPath, createContextValue } from '@microsoft/vscode-azext-utils';
 import { ThemeIcon } from 'vscode';
+import { KuduModels } from 'vscode-azurekudu';
 import { ScmType } from '../ScmType';
 import { ParsedSite } from '../SiteClient';
 import { ext } from '../extensionVariables';
@@ -71,7 +72,7 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
     public async loadMoreChildrenImpl(_clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {
         const client = await this.site.createClient(context);
         const siteConfig: SiteConfig = await client.getSiteConfig();
-        const deployments: Deployment[] = await retryKuduCall(context, 'getDeployResults', async () => {
+        const deployments: KuduModels.DeployResult[] = await retryKuduCall(context, 'getDeployResults', async () => {
             return client.getDeployResults(context);
         });
 
