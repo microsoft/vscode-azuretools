@@ -7,7 +7,7 @@ import type { AppServicePlan, FunctionEnvelope, FunctionSecrets, HostKeys, HostN
 import type { HttpOperationResponse, HttpRequestBody, HttpResponse, RequestPrepareOptions, ServiceClient } from '@azure/ms-rest-js';
 import { createGenericClient, uiUtils } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, ISubscriptionContext, nonNullProp, nonNullValue, parseError } from '@microsoft/vscode-azext-utils';
-import { DeployResult, LogEntry, PushDeploymentWarPushDeployOptionalParams, PushDeploymentZipPushDeployOptionalParams } from 'vscode-azurekudu/esm/models';
+import type { KuduModels } from 'vscode-azurekudu';
 import { AppSettingsClientProvider, IAppSettingsClient } from './IAppSettingsClient';
 import { AppKind } from './createAppService/AppKind';
 import { tryGetAppServicePlan, tryGetWebApp, tryGetWebAppSlot } from './tryGetSiteResource';
@@ -310,7 +310,7 @@ export class SiteClient implements IAppSettingsClient {
             await this._client.webApps.listFunctionKeys(this._site.resourceGroup, this._site.siteName, functionName);
     }
 
-    public async zipPushDeploy(context: IActionContext, file: HttpRequestBody, queryParameters: PushDeploymentZipPushDeployOptionalParams): Promise<HttpOperationResponse> {
+    public async zipPushDeploy(context: IActionContext, file: HttpRequestBody, queryParameters: KuduModels.PushDeploymentZipPushDeployOptionalParams): Promise<HttpOperationResponse> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
         const options: RequestPrepareOptions = {
             method: 'POST',
@@ -323,7 +323,7 @@ export class SiteClient implements IAppSettingsClient {
         return await client.sendRequest(options);
     }
 
-    public async warPushDeploy(context: IActionContext, file: HttpRequestBody, queryParameters: PushDeploymentWarPushDeployOptionalParams): Promise<HttpOperationResponse> {
+    public async warPushDeploy(context: IActionContext, file: HttpRequestBody, queryParameters: KuduModels.PushDeploymentWarPushDeployOptionalParams): Promise<HttpOperationResponse> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
         return await client.sendRequest({
             method: 'POST',
@@ -342,7 +342,7 @@ export class SiteClient implements IAppSettingsClient {
     }
 
     // the ARM call doesn't give all of the metadata we require so ping the scm directly
-    public async getDeployResults(context: IActionContext): Promise<DeployResult[]> {
+    public async getDeployResults(context: IActionContext): Promise<KuduModels.DeployResult[]> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
         const response: HttpOperationResponse = await client.sendRequest({
             method: 'GET',
@@ -354,21 +354,21 @@ export class SiteClient implements IAppSettingsClient {
             const dr = { ...obj };
             dr.receivedTime = new Date(obj.received_time);
             return dr;
-        }) as DeployResult[];
+        }) as KuduModels.DeployResult[];
     }
 
     // the ARM call doesn't give all of the metadata we require so ping the scm directly
-    public async getDeployResult(context: IActionContext, deployId: string): Promise<DeployResult> {
+    public async getDeployResult(context: IActionContext, deployId: string): Promise<KuduModels.DeployResult> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
         const response: HttpOperationResponse = await client.sendRequest({
             method: 'GET',
             url: `${this._site.kuduUrl}/api/deployments/${deployId}`
         });
-        return response.parsedBody as DeployResult;
+        return response.parsedBody as KuduModels.DeployResult;
     }
 
     // no equivalent ARM call
-    public async getLogEntry(context: IActionContext, deployId: string): Promise<LogEntry[]> {
+    public async getLogEntry(context: IActionContext, deployId: string): Promise<KuduModels.LogEntry[]> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
         const response: HttpOperationResponse = await client.sendRequest({
             method: 'GET',
@@ -381,11 +381,11 @@ export class SiteClient implements IAppSettingsClient {
             le.logTime = new Date(obj.log_time);
             le.detailsUrl = obj.details_url;
             return le;
-        }) as LogEntry[];
+        }) as KuduModels.LogEntry[];
     }
 
     // no equivalent ARM call
-    public async getLogEntryDetails(context: IActionContext, deployId: string, logId: string): Promise<LogEntry[]> {
+    public async getLogEntryDetails(context: IActionContext, deployId: string, logId: string): Promise<KuduModels.LogEntry[]> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
         const response: HttpOperationResponse = await client.sendRequest({
             method: 'GET',
@@ -397,7 +397,7 @@ export class SiteClient implements IAppSettingsClient {
             le.logTime = new Date(obj.log_time);
             le.detailsUrl = obj.details_url;
             return le;
-        }) as LogEntry[];
+        }) as KuduModels.LogEntry[];
     }
 
     public async vfsGetItem(context: IActionContext, path: string): Promise<HttpResponse> {

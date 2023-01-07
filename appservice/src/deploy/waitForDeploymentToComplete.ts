@@ -7,8 +7,7 @@ import { Deployment } from '@azure/arm-appservice';
 import { sendRequestWithTimeout } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, IParsedError, nonNullProp, nonNullValue, parseError } from '@microsoft/vscode-azext-utils';
 import { CancellationToken, window } from 'vscode';
-import { KuduModels } from 'vscode-azurekudu';
-import { DeployResult } from 'vscode-azurekudu/esm/models';
+import type { KuduModels } from 'vscode-azurekudu';
 import { ParsedSite, SiteClient } from '../SiteClient';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -29,7 +28,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
     let lastLogTime: Date = new Date(0);
     let lastErrorLine: string = '';
     let initialStartTime: Date | undefined;
-    let deployment: DeployResult | undefined;
+    let deployment: KuduModels.DeployResult | undefined;
     let permanentId: string | undefined;
     // a 60 second timeout period to let Kudu initialize the deployment
     const maxTimeToWaitForExpectedId: number = Date.now() + 60 * 1000;
@@ -42,7 +41,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
         if (locationUrl) {
             try {
                 // request can occasionally take more than 10 seconds
-                deployment = (await sendRequestWithTimeout(context, { method: 'GET', url: locationUrl }, 10 * 1000, site.subscription)).parsedBody as DeployResult;
+                deployment = (await sendRequestWithTimeout(context, { method: 'GET', url: locationUrl }, 10 * 1000, site.subscription)).parsedBody as KuduModels.DeployResult;
             } catch (error: unknown) {
                 const parsedError = parseError(error);
                 if (parsedError.errorType !== 'REQUEST_ABORTED_ERROR') {

@@ -4,11 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { SiteSourceControl } from '@azure/arm-appservice';
-import { AzExtTreeItem, createContextValue, IActionContext, nonNullProp, openReadOnlyContent, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
+import { AzExtTreeItem, IActionContext, TreeItemIconPath, createContextValue, nonNullProp, openReadOnlyContent } from '@microsoft/vscode-azext-utils';
 import * as os from 'os';
 import { ProgressLocation, ThemeIcon, window } from 'vscode';
-import { KuduModels } from 'vscode-azurekudu';
-import type { DeployResult } from 'vscode-azurekudu/esm/models';
+import type { KuduModels } from 'vscode-azurekudu';
 import { waitForDeploymentToComplete } from '../deploy/waitForDeploymentToComplete';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -33,10 +32,10 @@ export class DeploymentTreeItem extends AzExtTreeItem {
     public label: string;
     public receivedTime: Date;
     public parent: DeploymentsTreeItem;
-    private _deployResult: DeployResult;
+    private _deployResult: KuduModels.DeployResult;
     private _scmType?: string;
 
-    constructor(parent: DeploymentsTreeItem, deployResult: DeployResult, scmType: string | undefined) {
+    constructor(parent: DeploymentsTreeItem, deployResult: KuduModels.DeployResult, scmType: string | undefined) {
         super(parent);
         this._scmType = scmType;
         this._deployResult = deployResult;
