@@ -50,7 +50,7 @@ export function convertQueryParamsValuesToString(queryParams: { [key: string]: a
         if (typeof queryParams[key] === 'object') {
             // skip objects, the ServiceClient will handle them
         } else {
-            queryParams[key] = queryParams[key].toString();
+            queryParams[key] = String(queryParams[key]);
         }
     }
 

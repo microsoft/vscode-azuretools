@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { SkuDescription } from '@azure/arm-appservice';
+import { AzExtLocation } from '@microsoft/vscode-azext-azureutils';
 import { AzureWizardPromptStep, IAzureQuickPickItem } from '@microsoft/vscode-azext-utils';
 import { localize } from '../localize';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
-import { AzExtLocation } from '@microsoft/vscode-azext-azureutils';
-import { SkuDescription } from '@azure/arm-appservice';
 
 interface AppServiceWizardContext extends IAppServiceWizardContext {
     _location: AzExtLocation;
@@ -48,7 +48,7 @@ export class AppServicePlanRedundancyStep extends AzureWizardPromptStep<IAppServ
 
         return zoneRedundancySupportedLocations.includes(location);
     }
-    
+
     private isAllowedServicePlan(newPlanSku: SkuDescription): boolean {
         const { family } = newPlanSku;
         const allowedServicePlan = [
@@ -57,7 +57,7 @@ export class AppServicePlanRedundancyStep extends AzureWizardPromptStep<IAppServ
             'WS',
         ];
 
-        return allowedServicePlan.includes(family!);
+        return !!family && allowedServicePlan.includes(family);
     }
 
     public shouldPrompt(context: AppServiceWizardContext): boolean {

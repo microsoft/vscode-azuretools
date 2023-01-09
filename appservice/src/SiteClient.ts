@@ -7,7 +7,7 @@ import type { AppServicePlan, FunctionEnvelope, FunctionSecrets, HostKeys, HostN
 import type { HttpOperationResponse, HttpRequestBody, HttpResponse, RequestPrepareOptions, ServiceClient } from '@azure/ms-rest-js';
 import { createGenericClient, uiUtils } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, ISubscriptionContext, nonNullProp, nonNullValue, parseError } from '@microsoft/vscode-azext-utils';
-import type { KuduModels } from 'vscode-azurekudu';
+import { KuduModels } from 'vscode-azurekudu';
 import { AppSettingsClientProvider, IAppSettingsClient } from './IAppSettingsClient';
 import { AppKind } from './createAppService/AppKind';
 import { tryGetAppServicePlan, tryGetWebApp, tryGetWebAppSlot } from './tryGetSiteResource';
@@ -349,10 +349,11 @@ export class SiteClient implements IAppSettingsClient {
             url: `${this._site.kuduUrl}/api/deployments`
         });
 
+        const results = response.parsedBody as (KuduModels.DeployResult & { received_time: string })[];
         // old kuduClient parsed recived_time: string as receivedTime: Date so we need to do the same
-        return response.parsedBody.map(obj => {
-            const dr = { ...obj };
-            dr.receivedTime = new Date(obj.received_time);
+        return results.map(r => {
+            const dr = { ...r };
+            dr.receivedTime = new Date(r.received_time);
             return dr;
         }) as KuduModels.DeployResult[];
     }
@@ -375,8 +376,9 @@ export class SiteClient implements IAppSettingsClient {
             url: `${this._site.kuduUrl}/api/deployments/${deployId}/log`
         });
 
+        const entries = response.parsedBody as (KuduModels.LogEntry & { log_time: string, details_url: string })[];
         // old kuduClient parsed log_time: string as logTime: Date so we need to do the same
-        return response.parsedBody.map(obj => {
+        return entries.map(obj => {
             const le = { ...obj };
             le.logTime = new Date(obj.log_time);
             le.detailsUrl = obj.details_url;
@@ -392,10 +394,11 @@ export class SiteClient implements IAppSettingsClient {
             url: `${this._site.kuduUrl}/api/deployments/${deployId}/log/${logId}`
         });
 
-        return response.parsedBody.map(obj => {
-            const le = { ...obj };
-            le.logTime = new Date(obj.log_time);
-            le.detailsUrl = obj.details_url;
+        const entries = response.parsedBody as (KuduModels.LogEntry & { log_time: string, details_url: string })[];
+        return entries.map(e => {
+            const le = { ...e };
+            le.logTime = new Date(e.log_time);
+            le.detailsUrl = e.details_url;
             return le;
         }) as KuduModels.LogEntry[];
     }
