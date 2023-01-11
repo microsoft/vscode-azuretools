@@ -84,7 +84,7 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
                 ignoreFocusOut: wizardContext.ignoreFocusOut,
             } : {};
 
-            const shouldAddCreatePick = isAzExtParentTreeItem(lastPickedItemTi) && !!lastPickedItemTi.createChildImpl;
+            const shouldAddCreatePick = isAzExtParentTreeItem(lastPickedItemTi) && !!lastPickedItemTi.createChildImpl && !!lastPickedItemTi.childTypeLabel && !wizardContext.suppressCreatePick;
 
             // Need to keep going because the last picked node is not a match
             return {
