@@ -8,7 +8,6 @@ import { createGenericClient } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, IParsedError, parseError } from '@microsoft/vscode-azext-utils';
 import * as retry from 'p-retry';
 import * as path from 'path';
-import { createKuduClient } from './createKuduClient';
 import { ParsedSite } from './SiteClient';
 
 export interface ISiteFile {
@@ -49,8 +48,8 @@ export async function listFiles(context: IActionContext, site: ParsedSite, fileP
  */
 export async function putFile(context: IActionContext, site: ParsedSite, data: string | ArrayBuffer, filePath: string, etag: string | undefined): Promise<string> {
     const options: {} = etag ? { customHeaders: { ['If-Match']: etag } } : {};
-    const kuduClient = await createKuduClient(context, site);
-    const result: HttpOperationResponse = (await kuduClient.vfs.putItem(data, filePath, options))._response;
+    const kuduClient = await site.createClient(context);
+    const result: HttpOperationResponse = (await kuduClient.vfsPutItem(context, data, filePath, options));
     return <string>result.headers.get('etag');
 }
 
@@ -80,7 +79,7 @@ async function getFsResponse(context: IActionContext, site: ParsedSite, filePath
                     try {
                         return await client.sendRequest({
                             method: 'GET',
-                            url: `${site.id}/hostruntime/admin/vfs/${filePath}/?api-version=2018-11-01`
+                            url: `${site.id}/hostruntime/admin/vfs/${filePath}/?api-version=2022-03-01`
                         });
                     } catch (error) {
                         const parsedError: IParsedError = parseError(error);
@@ -93,8 +92,8 @@ async function getFsResponse(context: IActionContext, site: ParsedSite, filePath
                 { retries, minTimeout: 10 * 1000 }
             );
         } else {
-            const kuduClient = await createKuduClient(context, site);
-            return (await kuduClient.vfs.getItem(filePath))._response;
+            const kuduClient = await site.createClient(context);
+            return await kuduClient.vfsGetItem(context, filePath);
         }
     } catch (error) {
         context.telemetry.maskEntireErrorMessage = true; // since the error could have the contents of the user's file

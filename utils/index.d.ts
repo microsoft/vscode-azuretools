@@ -1213,6 +1213,12 @@ export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
     public getSubWizard?(wizardContext: T): Promise<IWizardOptions<T> | undefined>;
 
     /**
+     * Can be used to optionally configure the wizard context before determining if prompting is required
+     * This method will be called before `shouldPrompt`
+     */
+    public configureBeforePrompt?(wizardContext: T): Promise<void>;
+
+    /**
      * Return true if this step should prompt based on the current state of the wizardContext
      * Used to prevent duplicate prompts from sub wizards, unnecessary prompts for values that had a default, and to accurately describe the number of steps
      */
@@ -1710,6 +1716,7 @@ export declare enum AzExtResourceType {
     ServiceFabricClusters = 'ServiceFabricClusters',
     ServiceFabricMeshApplications = 'ServiceFabricMeshApplications',
     SignalRService = 'SignalRService',
+    SpringApps = 'SpringApps',
     SqlDatabases = 'SqlDatabases',
     SqlServers = 'SqlServers',
     VirtualMachineScaleSets = 'VirtualMachineScaleSets',

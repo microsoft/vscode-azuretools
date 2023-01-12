@@ -5,10 +5,9 @@
 
 import { IActionContext } from '@microsoft/vscode-azext-utils';
 import * as fs from 'fs';
-import { publisherName } from '../constants';
-import { createKuduClient } from '../createKuduClient';
-import { localize } from '../localize';
 import { ParsedSite } from '../SiteClient';
+import { publisherName } from '../constants';
+import { localize } from '../localize';
 import { getFileExtension } from '../utils/pathUtils';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
@@ -17,8 +16,8 @@ export async function deployWar(context: IActionContext, site: ParsedSite, fsPat
         throw new Error(localize('NotAWarError', 'Path specified is not a war file'));
     }
 
-    const kuduClient = await createKuduClient(context, site);
-    await kuduClient.pushDeployment.warPushDeploy(() => fs.createReadStream(fsPath), {
+    const kuduClient = await site.createClient(context);
+    await kuduClient.warPushDeploy(context, () => fs.createReadStream(fsPath), {
         isAsync: true,
         author: publisherName,
         deployer: publisherName,

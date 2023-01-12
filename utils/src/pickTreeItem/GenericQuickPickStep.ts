@@ -93,7 +93,7 @@ export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizar
         return picks;
     }
 
-    private async getQuickPickItem(element: unknown, item: vscode.TreeItem): Promise<types.IAzureQuickPickItem<unknown>> {
+    protected async getQuickPickItem(element: unknown, item: vscode.TreeItem): Promise<types.IAzureQuickPickItem<unknown>> {
         return {
             label: ((item.label as vscode.TreeItemLabel)?.label || item.label) as string,
             description: item.description as string,

@@ -4,11 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { SiteSourceControl } from '@azure/arm-appservice';
-import { AzExtTreeItem, createContextValue, IActionContext, nonNullProp, openReadOnlyContent, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
+import { AzExtTreeItem, IActionContext, TreeItemIconPath, createContextValue, nonNullProp, openReadOnlyContent } from '@microsoft/vscode-azext-utils';
 import * as os from 'os';
 import { ProgressLocation, ThemeIcon, window } from 'vscode';
-import { KuduModels } from 'vscode-azurekudu';
-import { createKuduClient } from '../createKuduClient';
+import type { KuduModels } from 'vscode-azurekudu';
 import { waitForDeploymentToComplete } from '../deploy/waitForDeploymentToComplete';
 import { ext } from '../extensionVariables';
 import { localize } from '../localize';
@@ -54,8 +53,7 @@ export class DeploymentTreeItem extends AzExtTreeItem {
     }
 
     public get id(): string {
-        this._deployResult.id = nonNullProp(this._deployResult, 'id');
-        return this._deployResult.id;
+        return nonNullProp(this._deployResult, 'id');
     }
 
     public get commandId(): string {
@@ -94,13 +92,13 @@ export class DeploymentTreeItem extends AzExtTreeItem {
         const redeployed: string = localize('redeployed', 'Commit "{0}" has been redeployed to "{1}".', this.id, this.parent.site.fullName);
         await window.withProgress({ location: ProgressLocation.Notification, title: redeploying }, async (): Promise<void> => {
             ext.outputChannel.appendLog(localize('reployingOutput', 'Redeploying commit "{0}" to "{1}"...', this.id, this.parent.site.fullName), { resourceName: this.parent.site.fullName });
-            const kuduClient = await createKuduClient(context, this.parent.site);
-            void kuduClient.deployment.deploy(this.id);
+            const kuduClient = await this.parent.site.createClient(context);
+            void kuduClient.deploy(context, this.id);
 
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
             const refreshingInteveral: NodeJS.Timer = setInterval(async () => { await this.refresh(context); }, 1000); /* the status of the label changes during deployment so poll for that*/
             try {
-                await waitForDeploymentToComplete(context, this.parent.site, {expectedId: this.id});
+                await waitForDeploymentToComplete(context, this.parent.site, { expectedId: this.id });
                 await this.parent.refresh(context); /* refresh entire node because active statuses has changed */
                 void window.showInformationMessage(redeployed);
                 ext.outputChannel.appendLog(redeployed);
@@ -112,11 +110,11 @@ export class DeploymentTreeItem extends AzExtTreeItem {
     }
 
     public async getDeploymentLogs(context: IActionContext): Promise<string> {
-        const kuduClient = await createKuduClient(context, this.parent.site);
+        const kuduClient = await this.parent.site.createClient(context);
         let logEntries: KuduModels.LogEntry[] = [];
         await retryKuduCall(context, 'getLogEntry', async () => {
             await ignore404Error(context, async () => {
-                logEntries = await kuduClient.deployment.getLogEntry(this.id);
+                logEntries = await kuduClient.getLogEntry(context, this.id);
             });
         });
 
@@ -127,7 +125,7 @@ export class DeploymentTreeItem extends AzExtTreeItem {
             await retryKuduCall(context, 'getLogEntryDetails', async () => {
                 await ignore404Error(context, async () => {
                     if (logEntry.detailsUrl && logEntry.id) {
-                        detailedLogEntries = await kuduClient.deployment.getLogEntryDetails(this.id, logEntry.id);
+                        detailedLogEntries = await kuduClient.getLogEntryDetails(context, this.id, logEntry.id);
                     }
                 });
             });
@@ -160,8 +158,8 @@ export class DeploymentTreeItem extends AzExtTreeItem {
     }
 
     public async refreshImpl(context: IActionContext): Promise<void> {
-        const kuduClient = await createKuduClient(context, this.parent.site);
-        this._deployResult = await kuduClient.deployment.getResult(this.id);
+        const kuduClient = await this.parent.site.createClient(context);
+        this._deployResult = await kuduClient.getDeployResult(context, this.id);
     }
 
     private formatLogEntry(logEntry: KuduModels.LogEntry): string {

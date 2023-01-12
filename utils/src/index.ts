@@ -22,6 +22,7 @@ export * from './parseError';
 export * from './pickTreeItem/experiences/azureResourceExperience';
 export * from './pickTreeItem/experiences/compatibility/PickTreeItemWithCompatibility';
 export * from './pickTreeItem/experiences/contextValueExperience';
+export * from './pickTreeItem/experiences/subscriptionExperience';
 export * from './registerCommand';
 export * from './registerCommandWithTreeNodeUnwrapping';
 export * from './registerEvent';

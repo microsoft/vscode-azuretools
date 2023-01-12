@@ -261,11 +261,8 @@ export type WorkspaceResourceModel = ResourceModelBase;
 
 /**
  * A provider for supplying items for the workspace resource tree (e.g., storage emulator, function apps in workspace, etc.).
- *
- * When a resources source is undefined, the resource is a global or system level resource not associated with a workspace folder.
- *
  */
-export type WorkspaceResourceProvider = ResourceProvider<vscode.WorkspaceFolder | undefined, WorkspaceResource>;
+export type WorkspaceResourceProvider = ResourceProvider<void, WorkspaceResource>;
 
 /**
  * A provider for visualizing items in the workspace resource tree (e.g., storage emulator, function apps in workspace, etc.).
@@ -274,6 +271,8 @@ export type WorkspaceResourceBranchDataProvider<TModel extends WorkspaceResource
 
 // scope down vscode.TreeDataProvider to exactly what's allowed to be used
 type ResourceGroupsTreeDataProvider = Pick<vscode.TreeDataProvider<unknown>, 'getChildren' | 'getTreeItem'>;
+
+export type VSCodeRevealOptions = Parameters<vscode.TreeView<unknown>['reveal']>['1'];
 
 /**
  * The current (v2) Azure Resources extension API.
@@ -318,6 +317,13 @@ export interface AzureResourcesHostApi {
     */
     registerWorkspaceResourceBranchDataProvider<TModel extends WorkspaceResourceModel>(type: WorkspaceResourceType, provider: WorkspaceResourceBranchDataProvider<TModel>): vscode.Disposable;
 
+    /**
+     * Reveal a resource in the Azure tree view. Works with subscriptions, resource groups, or resources.
+     *
+     * @param id The Azure Resource ID to reveal in the Azure tree view.
+     * @param options Options for revealing the resource. See {@link vscode.TreeView.reveal}
+     */
+    revealAzureResource(id: string, options?: VSCodeRevealOptions): Promise<void>;
 }
 
 export interface ActivityApi {
