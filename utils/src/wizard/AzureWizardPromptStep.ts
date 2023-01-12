@@ -21,6 +21,7 @@ export abstract class AzureWizardPromptStep<T extends types.IActionContext> impl
     public getSubWizard?(wizardContext: T): Promise<types.IWizardOptions<T> | undefined>;
     public undo?(wizardContext: T): void;
 
+    public configureBeforePrompt?(wizardContext: T): Promise<void>;
     public abstract shouldPrompt(wizardContext: T): boolean;
 
     public reset(): void {
