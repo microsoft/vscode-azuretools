@@ -35,12 +35,17 @@ export async function showInputBox(context: IInternalActionContext, options: typ
                     // Run final validation and resolve if value passes
                     inputBox.enabled = false;
                     inputBox.busy = true;
-                    const message: string | undefined | null = await latestValidation;
-                    if (!message) {
+
+                    const validateInputResult: string | undefined | null = await latestValidation;
+                    const asyncValidationResult: string | undefined | null = options.asyncValidationTask ? await options.asyncValidationTask(inputBox.value) : undefined;
+                    if (!validateInputResult && !asyncValidationResult) {
                         resolve(inputBox.value);
-                    } else {
-                        inputBox.validationMessage = message;
+                    } else if (validateInputResult) {
+                        inputBox.validationMessage = validateInputResult;
+                    } else if (asyncValidationResult) {
+                        inputBox.validationMessage = asyncValidationResult;
                     }
+
                     inputBox.enabled = true;
                     inputBox.busy = false;
                 }),
