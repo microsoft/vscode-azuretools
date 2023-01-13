@@ -38,7 +38,7 @@
         "@azure/arm-storage": "^17.0.0",
         "@azure/arm-storage-profile-2020-09-01-hybrid": "^2.0.0",
         "@azure/ms-rest-js": "^2.2.1",
-        "@microsoft/vscode-azext-utils": "^0.3.3",
+        "@microsoft/vscode-azext-utils": "^0.4.0",
         "semver": "^7.3.7",
         "vscode-nls": "^5.0.1"
     },
