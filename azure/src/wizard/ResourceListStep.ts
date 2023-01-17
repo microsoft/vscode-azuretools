@@ -22,7 +22,7 @@ export type ResourceListPick<TResource> = CommandPick | IAzureQuickPickItem<TRes
 
 export interface ResourceListStepConfig extends IAzureQuickPickOptions {
     /**
-     * If true, the 'Create...' pick will not be shown. Overrides `wizardContext.supressCreaet`.
+     * If true, the 'Create...' pick will not be shown. Overrides `wizardContext.suppressCreate`.
      */
     suppressCreatePick?: boolean;
 }
