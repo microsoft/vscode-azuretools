@@ -1055,6 +1055,10 @@ export interface AzExtInputBoxOptions extends InputBoxOptions, AzExtUserInputOpt
      * Optional property that will display a ? button in the input window that opens a url when clicked
      */
     learnMoreLink?: string;
+    /**
+     * Optional async input validation task to run upon triggering 'onDidAccept'
+     */
+    asyncValidationTask?: (value: string) => Promise<string | undefined | null>;
 }
 
 /**
@@ -1207,6 +1211,12 @@ export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
      * Optionally return a subwizard. This will be called after `prompt`
      */
     public getSubWizard?(wizardContext: T): Promise<IWizardOptions<T> | undefined>;
+
+    /**
+     * Can be used to optionally configure the wizard context before determining if prompting is required
+     * This method will be called before `shouldPrompt`
+     */
+    public configureBeforePrompt?(wizardContext: T): Promise<void>;
 
     /**
      * Return true if this step should prompt based on the current state of the wizardContext
