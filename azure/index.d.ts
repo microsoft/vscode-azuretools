@@ -13,6 +13,7 @@ import { Disposable, Progress } from 'vscode';
 import type { AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtServiceClientCredentialsT1, AzExtServiceClientCredentialsT2, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IRelatedNameWizardContext, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
 import { ExtendedLocation, ResourceGroup } from '@azure/arm-resources';
 import type { StorageAccount } from '@azure/arm-storage';
+import { AzureSubscription } from '@microsoft/vscode-azext-utils/hostapi.v2';
 
 export type OpenInPortalOptions = {
     /**
@@ -429,3 +430,12 @@ interface ParsedAzureResourceId {
 
 export function parseAzureResourceId(id: string): ParsedAzureResourceId;
 export function getResourceGroupFromId(id: string): string;
+
+export interface SubscriptionListStepContext extends ISubscriptionActionContext {
+    subscription?: AzureSubscription;
+}
+
+export declare class SubscriptionListStep extends AzureWizardPromptStep<SubscriptionListStepContext> {
+    public prompt(wizardContext: SubscriptionListStepContext): Promise<void>;
+    public shouldPrompt(wizardContext: SubscriptionListStepContext): boolean;
+}
