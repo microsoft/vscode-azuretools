@@ -4,10 +4,9 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { AzureWizardPromptStep, IActionContext, IAzureQuickPickItem, IAzureQuickPickOptions, ITreeItemPickerContext, IWizardOptions, nonNullValue } from "@microsoft/vscode-azext-utils";
-import { commands } from "vscode";
 import { localize } from "vscode-nls";
 
-export interface GenericListStepContext<TResource> extends IActionContext {
+export interface GetQuickPicksContext<TResource> extends IActionContext {
     /**
      * Call this to auto select the passed resource and not show the quick pick.
      *
@@ -16,9 +15,7 @@ export interface GenericListStepContext<TResource> extends IActionContext {
     autoSelectResource: (resource: TResource) => never;
 }
 
-export type CommandPick = { label: string, data: 'command', commandId: string, commandArgs?: unknown[] };
-
-export type ResourceListPick<TResource> = CommandPick | IAzureQuickPickItem<TResource>;
+export type ResourceListPick<TResource> = IAzureQuickPickItem<TResource>;
 
 export interface ResourceListStepConfig extends IAzureQuickPickOptions {
     /**
@@ -53,7 +50,7 @@ export abstract class ResourceListStep<TContext extends ITreeItemPickerContext, 
     create?(): ResourceListCreateOptions<TContext>;
 
     abstract onPickResource(wizardContext: TContext, resource: CanPickMany extends true ? TResource[] : TResource): Promise<void> | void;
-    abstract getQuickPicks(wizardContext: GenericListStepContext<TResource> & TContext): Promise<ResourceListPick<TResource>[]>;
+    abstract getQuickPicks(wizardContext: GetQuickPicksContext<TResource> & TContext): Promise<ResourceListPick<TResource>[]>;
     abstract shouldPrompt(wizardContext: TContext): boolean;
 
     async prompt(wizardContext: TContext): Promise<void> {
@@ -62,14 +59,7 @@ export abstract class ResourceListStep<TContext extends ITreeItemPickerContext, 
                 ...(this.config ?? {}),
             });
 
-            if (isCommandPick(pick)) {
-                this.getSubWizardTask = async () => ({
-                    promptSteps: [
-                        new CommandStep(pick.commandId, pick.commandArgs),
-                        this,
-                    ],
-                });
-            } else if (pick.data === 'createPick') {
+            if (pick.data === 'createPick') {
                 this.getSubWizardTask = nonNullValue(this.createOptions).getSubWizard;
             } else {
                 const pickedResources = (Array.isArray(pick) ? (pick as IAzureQuickPickItem<TResource>[]).map(p => p.data) : pick.data) as CanPickMany extends true ? TResource[] : TResource;
@@ -119,22 +109,5 @@ class AutoSelectError<T> extends Error {
     constructor(data: T) {
         super();
         this.data = data;
-    }
-}
-
-function isCommandPick(pick: IAzureQuickPickItem | unknown): pick is CommandPick {
-    return (pick as IAzureQuickPickItem).data === 'command';
-}
-
-class CommandStep extends AzureWizardPromptStep<IActionContext> {
-    public shouldPrompt(): boolean {
-        return true;
-    }
-    constructor(private readonly commandId: string, private readonly commandArgs: unknown[] = []) {
-        super();
-    }
-
-    public async prompt(): Promise<void> {
-        await commands.executeCommand(this.commandId, ...this.commandArgs);
     }
 }

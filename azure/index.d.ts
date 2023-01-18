@@ -9,7 +9,7 @@ import type { Location } from '@azure/arm-resources-subscriptions';
 import type { Environment } from '@azure/ms-rest-azure-env';
 import type { HttpOperationResponse, RequestPrepareOptions, ServiceClient } from '@azure/ms-rest-js';
 import type { PagedAsyncIterableIterator } from '@azure/core-paging';
-import { Disposable, Progress } from 'vscode';
+import { Command, Disposable, Progress, ThemeIcon } from 'vscode';
 import type { AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtServiceClientCredentialsT1, AzExtServiceClientCredentialsT2, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IRelatedNameWizardContext, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
 import { ExtendedLocation, ResourceGroup } from '@azure/arm-resources';
 import type { StorageAccount } from '@azure/arm-storage';
@@ -431,11 +431,16 @@ interface ParsedAzureResourceId {
 export function parseAzureResourceId(id: string): ParsedAzureResourceId;
 export function getResourceGroupFromId(id: string): string;
 
-export interface SubscriptionListStepContext extends ISubscriptionActionContext {
+export interface SubscriptionListStepContext extends Partial<ISubscriptionContext>, IActionContext {
     subscription?: AzureSubscription;
 }
+export declare function getSubscriptionListStep(context: IActionContext): Promise<AzureWizardPromptStep<SubscriptionListStepContext>>;
 
-export declare class SubscriptionListStep extends AzureWizardPromptStep<SubscriptionListStepContext> {
-    public prompt(wizardContext: SubscriptionListStepContext): Promise<void>;
-    public shouldPrompt(wizardContext: SubscriptionListStepContext): boolean;
+interface AzExtCommand {
+    label: string;
+    commandId: string;
+    commandArgs?: unknown[];
+    iconPath?: ThemeIcon;
 }
+
+export declare const notLoggedInCommands: AzExtCommand[];
