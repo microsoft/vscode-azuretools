@@ -112,7 +112,6 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
     }
 
     const config: webpack.Configuration = {
-        mode: 'none',
         context: options.projectRoot,
 
         // vscode extensions run in a Node.js context, see https://webpack.js.org/configuration/node/
@@ -129,7 +128,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
             // dependencies will have a copy in each entry file, no sharing).
 
             // The entrypoint bundle for this extension, see https://webpack.js.org/configuration/entry-context/
-            extension: './src/extension.ts',
+            "extension.bundle": './extension.bundle.ts',
             ...options.entries
         },
 
@@ -192,7 +191,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
             fallback:
                 options.target === 'webworker' ? {
                     // Webpack 5 no longer polyfills Node.js core modules automatically.
-                    // see https://webpack.js.org/configuration/resolve/#resolvefallback
+                    // see
                     // for the list of Node.js core module polyfills.
                     "net": require.resolve("net-browserify"),
                     "crypto": require.resolve("crypto-browserify"),
@@ -210,7 +209,9 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                     "console": require.resolve('console-browserify'),
                     "async_hooks": false,
                     "child_process": false,
-                    "fs": false
+                    "fs": false,
+                    //caller-supplied fallbacks
+                    ...(options.resolveFallbackAliases || [])
                 } : undefined,
         },
 

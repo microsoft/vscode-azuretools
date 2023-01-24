@@ -85,6 +85,24 @@ export interface DefaultWebpackOptions {
      * Webpack target
      */
     target?: 'node' | 'webworker'
+
+    /**
+     * Additional resolve fallback aliases for webworkers if it's not covered by the default ones
+     */
+    resolveFallbackAliases?: {
+        /**
+         * New request.
+         */
+        alias: string | false | string[];
+        /**
+         * Request to be redirected.
+         */
+        name: string;
+        /**
+         * Redirect only exact matching request.
+         */
+        onlyModule?: boolean;
+    }[]
 }
 
 export declare function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack.Configuration;
@@ -108,7 +126,7 @@ export declare function gulp_installVSCodeExtension(publisherId: string, extensi
 /**
  * Spawns a webpack process
  */
-export declare function gulp_webpack(mode: string): cp.ChildProcess;
+export declare function gulp_webpack(mode: string, target?: 'node' | 'webworker'): cp.ChildProcess;
 
 /**
  * Loose type to use for T1 and T2 versions of "@azure/ms-rest-js".  The Azure Account extension returns
