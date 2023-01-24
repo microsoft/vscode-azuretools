@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
+import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as TerserPlugin from 'terser-webpack-plugin';
@@ -11,7 +12,6 @@ import * as webpack from 'webpack';
 import { Verbosity } from '../..';
 import { DefaultWebpackOptions } from '../../index';
 import { PackageLock, excludeNodeModulesAndDependencies } from './excludeNodeModulesAndDependencies';
-const CopyPlugin = require("copy-webpack-plugin");
 
 // Using webpack helps reduce the install and startup time of large extensions by reducing the large number of files into a much smaller set
 // Full webpack documentation: [https://webpack.js.org/configuration/]().
@@ -47,7 +47,8 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
 
     const plugins = [
         // Copy files to dist folder where the runtime can find them
-        new CopyPlugin({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        new CopyWebpackPlugin({
             patterns: [
                 // Test files -> dist/test (these files are ignored during packaging)
                 {
@@ -57,16 +58,6 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                 },
                 {
                     from: path.join(options.projectRoot, 'node_modules', '@microsoft', 'vscode-azext-azureutils', 'resources', '**', '*.svg'),
-                    to: path.join(options.projectRoot, 'dist'),
-                    noErrorOnMissing: true
-                },
-                {
-                    from: path.join(options.projectRoot, 'node_modules', 'vscode-azureextensionui', 'resources', '**', '*.svg'),
-                    to: path.join(options.projectRoot, 'dist'),
-                    noErrorOnMissing: true
-                },
-                {
-                    from: path.join(options.projectRoot, 'node_modules', 'vscode-azureappservice', 'resources', '**', '*.svg'),
                     to: path.join(options.projectRoot, 'dist'),
                     noErrorOnMissing: true
                 }
@@ -138,7 +129,6 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
             // dependencies will have a copy in each entry file, no sharing).
 
             // The entrypoint bundle for this extension, see https://webpack.js.org/configuration/entry-context/
-            "extension.bundle": './extension.bundle.ts',
             extension: './src/extension.ts',
             ...options.entries
         },
