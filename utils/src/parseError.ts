@@ -5,7 +5,6 @@
 
 /* eslint-disable */
 
-import * as htmlToText from 'html-to-text';
 import { IParsedError } from '../index';
 import { localize } from './localize';
 import { parseJson } from './utils/parseJson';
@@ -73,7 +72,7 @@ export function parseError(error: any): IParsedError {
     errorType ||= typeof (error);
     message ||= localize('unknownError', 'Unknown Error');
 
-    message = parseIfHtml(message);
+    //message = parseIfHtml(message);
 
     // Azure storage SDK errors are presented in XML
     // https://github.com/Azure/azure-sdk-for-js/issues/6927
@@ -113,33 +112,33 @@ function parseIfJson(o: any): any {
     return o;
 }
 
-function parseIfHtml(message: string): string {
-    if (/<html/i.test(message)) {
-        try {
-            var headerOptions = { leadingLineBreaks: 1, trailingLineBreaks: 1, uppercase: false };
+// function parseIfHtml(message: string): string {
+//     if (/<html/i.test(message)) {
+//         try {
+//             var headerOptions = { leadingLineBreaks: 1, trailingLineBreaks: 1, uppercase: false };
 
-            return htmlToText.convert(
-                message,
-                {
-                    selectors: [
-                        { selector: 'h1', options: headerOptions },
-                        { selector: 'h2', options: headerOptions },
-                        { selector: 'h3', options: headerOptions },
-                        { selector: 'h4', options: headerOptions },
-                        { selector: 'h5', options: headerOptions },
-                        { selector: 'h6', options: headerOptions },
-                        { selector: 'img', format: 'skip' },
-                        { selector: 'table', options: { uppercaseHeaderCells: false } }
-                    ],
-                    wordwrap: false
-                });
-        } catch (err) {
-            // ignore
-        }
-    }
+//             return htmlToText.convert(
+//                 message,
+//                 {
+//                     selectors: [
+//                         { selector: 'h1', options: headerOptions },
+//                         { selector: 'h2', options: headerOptions },
+//                         { selector: 'h3', options: headerOptions },
+//                         { selector: 'h4', options: headerOptions },
+//                         { selector: 'h5', options: headerOptions },
+//                         { selector: 'h6', options: headerOptions },
+//                         { selector: 'img', format: 'skip' },
+//                         { selector: 'table', options: { uppercaseHeaderCells: false } }
+//                     ],
+//                     wordwrap: false
+//                 });
+//         } catch (err) {
+//             // ignore
+//         }
+//     }
 
-    return message;
-}
+//     return message;
+// }
 
 function parseIfXml(message: string): string {
     const matches: RegExpMatchArray | null = message.match(/<Message>(.*)<\/Message>/si);

@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as semver from 'semver';
-import { AzureExtensionApiFactory, IActionContext } from '../index';
 import { AzureExtensionApi, AzureExtensionApiProvider, GetApiOptions } from '../api';
+import { AzureExtensionApiFactory, IActionContext } from '../index';
 import { callWithTelemetryAndErrorHandlingSync } from './callWithTelemetryAndErrorHandling';
 import { getPackageInfo } from './getPackageInfo';
 import { localize } from './localize';
@@ -14,13 +14,13 @@ function isAzureExtensionApiFactory(maybeAzureExtensionApiFactory: AzureExtensio
     return (<AzureExtensionApiFactory>maybeAzureExtensionApiFactory).createApi !== undefined;
 }
 
-export function createApiProvider(azExts: (AzureExtensionApiFactory | AzureExtensionApi)[]): AzureExtensionApiProvider {
+export async function createApiProvider(azExts: (AzureExtensionApiFactory | AzureExtensionApi)[]): Promise<AzureExtensionApiProvider> {
     for (const azExt of azExts) {
         if (!semver.valid(azExt.apiVersion)) {
             throw new Error(localize('invalidVersion', 'Invalid semver "{0}".', azExt.apiVersion));
         }
     }
-    const extensionId: string = getPackageInfo().extensionId;
+    const extensionId: string = (await getPackageInfo()).extensionId;
 
     const apiFactories: AzureExtensionApiFactory[] = azExts.map((azExt): AzureExtensionApiFactory => {
         if (isAzureExtensionApiFactory(azExt)) {

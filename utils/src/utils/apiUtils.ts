@@ -20,7 +20,7 @@ export async function getAzureExtensionApi<T extends AzureExtensionApi>(extensio
     if (apiProvider) {
         return apiProvider.getApi<T>(apiVersionRange, {
             ...options,
-            extensionId: options?.extensionId ?? getPackageInfo().extensionId
+            extensionId: options?.extensionId ?? (await getPackageInfo()).extensionId
         });
     }
 

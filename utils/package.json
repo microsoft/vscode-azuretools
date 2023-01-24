@@ -33,13 +33,13 @@
     },
     "dependencies": {
         "@vscode/extension-telemetry": "^0.6.2",
-        "dayjs": "^1.11.2",
         "escape-string-regexp": "^2.0.0",
-        "html-to-text": "^8.2.0",
-        "open": "^8.0.4",
         "semver": "^7.3.7",
+        "text-encoding": "^0.7.0",
+        "uuid": "^9.0.0",
         "vscode-nls": "^5.0.1",
-        "vscode-tas-client": "^0.1.47"
+        "vscode-tas-client": "^0.1.47",
+        "vscode-uri": "^3.0.6"
     },
     "devDependencies": {
         "@azure/ms-rest-azure-env": "^2.0.0",
