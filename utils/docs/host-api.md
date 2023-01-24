@@ -65,9 +65,7 @@ Client extensions can add items to the Azure Resources "Create Resource..." comm
 
 ### Branch data provider
 
-The VS Code API provides a `TreeDataProvider` interface for controlling tree views. The host extension splits tree views into branches, where each branch is controlled by a branch data provider. Clients can register a `BranchDataProvider` which is then responsible for providing the tree items for a branch in the tree view. The `BranchDataProvider` interface is a small extension of VS Code's `TreeDataProvider`.
-
-`BranchDataProvider` is an extension of [VS Code's `TreeDataProvider`](https://code.visualstudio.com/api/references/vscode-api#TreeDataProvider).
+The VS Code API provides a `TreeDataProvider` interface for controlling tree views. The host extension splits tree views into branches, where each branch is controlled by a branch data provider. Clients can register a `BranchDataProvider` which is then responsible for providing the tree items for a branch in the tree view. `BranchDataProvider` is an extension of [VS Code's `TreeDataProvider`](https://code.visualstudio.com/api/references/vscode-api#TreeDataProvider).
 
 > Note: clients registering resource providers must declare that they do so in their extension manifest. See [Extension Manifest](#extension-manifest)
 
