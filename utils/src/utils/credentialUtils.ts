@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { AzureSubscription } from '../../hostapi.v2';
+import { AzureSubscription } from '@microsoft/vscode-azureresources-api';
 import { AzExtServiceClientCredentials, ISubscriptionContext } from '../../index';
 import { localize } from '../localize';
 

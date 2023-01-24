@@ -3,7 +3,7 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { AzExtResourceType } from "./AzExtResourceType";
+import { AzExtResourceType } from "@microsoft/vscode-azureresources-api";
 
 const FunctionAppKind = 'functionapp';
 const LogicAppKind = 'workflowapp';

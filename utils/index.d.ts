@@ -10,7 +10,7 @@ import { CancellationToken, CancellationTokenSource, Disposable, Event, Extensio
 import { TargetPopulation } from 'vscode-tas-client';
 import { AzureExtensionApi, AzureExtensionApiProvider, GetApiOptions } from './api';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
-import { AzureSubscription } from './hostapi.v2';
+import type { AzureSubscription, AzureResource, AzExtResourceType } from '@microsoft/vscode-azureresources-api';
 
 export declare interface RunWithTemporaryDescriptionOptions {
     description: string;
@@ -1653,78 +1653,6 @@ export function createContextValue(values: string[]): string;
 export declare function getAzExtResourceType(resource: { type: string; kind?: string }): AzExtResourceType | undefined;
 
 /**
- * Normalized type for Azure resources that uniquely identifies resource type for the purposes
- * of the Azure extensions
- *
- * See enum definition in AzExtResourceType.ts
- */
-export declare enum AzExtResourceType {
-    AppServices = 'AppServices',
-    AzureCosmosDb = 'AzureCosmosDb',
-    ContainerApps = 'ContainerApps',
-    ContainerAppsEnvironment = 'ContainerAppsEnvironment',
-    FunctionApp = 'FunctionApp',
-    PostgresqlServersFlexible = 'PostgresqlServersFlexible',
-    PostgresqlServersStandard = 'PostgresqlServersStandard',
-    StaticWebApps = 'StaticWebApps',
-    StorageAccounts = 'StorageAccounts',
-    VirtualMachines = 'VirtualMachines',
-
-    ResourceGroup = 'ResourceGroup',
-
-    // Below are not supported but have icons in the Resources extension
-    ApiManagementService = 'ApiManagementService',
-    ApplicationInsights = 'ApplicationInsights',
-    AppServiceKubernetesEnvironment = 'AppServiceKubernetesEnvironment',
-    AppServicePlans = 'AppServicePlans',
-    AvailabilitySets = 'AvailabilitySets',
-    BatchAccounts = 'BatchAccounts',
-    CacheRedis = 'CacheRedis',
-    ContainerRegistry = 'ContainerRegistry',
-    ContainerServiceManagedClusters = 'ContainerServiceManagedClusters',
-    CustomLocations = 'CustomLocations',
-    DeviceIotHubs = 'DeviceIotHubs',
-    DevTestLabs = 'DevTestLabs',
-    Disks = 'Disks',
-    EventGridDomains = 'EventGridDomains',
-    EventGridEventSubscriptions = 'EventGridEventSubscriptions',
-    EventGridTopics = 'EventGridTopics',
-    EventHubNamespaces = 'EventHubNamespaces',
-    FrontDoorAndCdnProfiles = 'FrontDoorAndCdnProfiles',
-    Images = 'Images',
-    KeyVaults = 'KeyVaults',
-    KubernetesConnectedClusters = 'KubernetesConnectedClusters',
-    LoadBalancers = 'LoadBalancers',
-    LogicApp = 'LogicApp',
-    LogicWorkflows = 'LogicWorkflows',
-    ManagedIdentityUserAssignedIdentities = 'ManagedIdentityUserAssignedIdentities',
-    MysqlServers = 'MysqlServers',
-    NetworkApplicationGateways = 'NetworkApplicationGateways',
-    NetworkApplicationSecurityGroups = 'NetworkApplicationSecurityGroups',
-    NetworkInterfaces = 'NetworkInterfaces',
-    NetworkLocalNetworkGateways = 'NetworkLocalNetworkGateways',
-    NetworkPublicIpPrefixes = 'NetworkPublicIpPrefixes',
-    NetworkRouteTables = 'NetworkRouteTables',
-    NetworkSecurityGroups = 'NetworkSecurityGroups',
-    NetworkVirtualNetworkGateways = 'NetworkVirtualNetworkGateways',
-    NetworkWatchers = 'NetworkWatchers',
-    NotificationHubNamespaces = 'NotificationHubNamespaces',
-    OperationalInsightsWorkspaces = 'OperationalInsightsWorkspaces',
-    OperationsManagementSolutions = 'OperationsManagementSolutions',
-    PublicIpAddresses = 'PublicIpAddresses',
-    ServiceBusNamespaces = 'ServiceBusNamespaces',
-    ServiceFabricClusters = 'ServiceFabricClusters',
-    ServiceFabricMeshApplications = 'ServiceFabricMeshApplications',
-    SignalRService = 'SignalRService',
-    SpringApps = 'SpringApps',
-    SqlDatabases = 'SqlDatabases',
-    SqlServers = 'SqlServers',
-    VirtualMachineScaleSets = 'VirtualMachineScaleSets',
-    VirtualNetworks = 'VirtualNetworks',
-    WebHostingEnvironments = 'WebHostingEnvironments',
-}
-
-/**
  * Gets the exported API from the given extension id and version range.
  *
  * @param extensionId The extension id to get the API from
@@ -1734,7 +1662,7 @@ export declare enum AzExtResourceType {
  */
 export declare function getAzureExtensionApi<T extends AzureExtensionApi>(extensionId: string, apiVersionRange: string, options?: GetApiOptions): Promise<T>;
 
-export type TreeNodeCommandCallback<T> = (context: IActionContext, node?: T, nodes?: T[], ...args: any[]) => any;
+export type TreeNodeCommandCallback<T> = (context: IActionContext, node?: T, nodes?: T[], ...args: unknown[]) => unknown;
 
 /**
  * Used to register VSCode tree node context menu commands that are in the host extension's tree. It wraps your callback with consistent error and telemetry handling
@@ -1746,33 +1674,10 @@ export type TreeNodeCommandCallback<T> = (context: IActionContext, node?: T, nod
  */
 export declare function registerCommandWithTreeNodeUnwrapping<T>(commandId: string, callback: TreeNodeCommandCallback<T>, debounce?: number, telemetryId?: string): void;
 
-export declare function unwrapArgs<T>(treeNodeCallback: TreeNodeCommandCallback<T>): TreeNodeCommandCallback<T>;
-
-/**
- * Interface describing an object that wraps another object.
- *
- * The host extension will wrap all tree nodes provided by the client
- * extensions. When commands are executed, the wrapper objects are
- * sent directly to the client extension, which will need to unwrap
- * them. The `registerCommandWithTreeNodeUnwrapping` method below, used
- * in place of `registerCommand`, will intelligently do this
- * unwrapping automatically (i.e., will not unwrap if the arguments
- * aren't wrappers)
- */
-export declare interface Wrapper {
-    unwrap<T>(): T;
-}
+export function unwrapTreeNodeCommandCallback<T>(treeNodeCallback: TreeNodeCommandCallback<T>): TreeNodeCommandCallback<T>;
 
 // temporary
 type ResourceGroupsItem = unknown;
-
-/**
- * Tests to see if something is a wrapper, by ensuring it is an object
- * and has an "unwrap" function
- * @param maybeWrapper An object to test if it is a wrapper
- * @returns True if a wrapper, false otherwise
- */
-export declare function isWrapper(maybeWrapper: unknown): maybeWrapper is Wrapper;
 
 export interface PickExperienceContext extends IActionContext {
     /**
@@ -1834,3 +1739,12 @@ export declare interface ContextValueFilter {
  * @returns `undefined` if the extension is not installed
  */
 export declare function getExtensionExports<T>(extensionId: string): Promise<T | undefined>;
+
+export declare interface PickSubscriptionWizardContext extends QuickPickWizardContext {
+    subscription?: AzureSubscription;
+}
+
+export declare interface AzureResourceQuickPickWizardContext extends QuickPickWizardContext, PickSubscriptionWizardContext {
+    resource?: AzureResource;
+    resourceGroup?: string;
+}

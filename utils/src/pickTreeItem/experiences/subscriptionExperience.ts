@@ -7,9 +7,10 @@ import * as types from '../../../index';
 import * as vscode from 'vscode';
 import { AzureWizard } from '../../wizard/AzureWizard';
 import { QuickPickAzureSubscriptionStep } from '../quickPickAzureResource/QuickPickAzureSubscriptionStep';
-import { AzureSubscription, PickSubscriptionWizardContext } from '../../../hostapi.v2';
+import { PickSubscriptionWizardContext } from '../../../index';
 import { ResourceGroupsItem } from '../quickPickAzureResource/tempTypes';
 import { NoResourceFoundError } from '../../errors';
+import type { AzureSubscription } from '@microsoft/vscode-azureresources-api';
 
 export async function subscriptionExperience(context: types.IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>): Promise<AzureSubscription> {
 
