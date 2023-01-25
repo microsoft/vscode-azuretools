@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import TelemetryReporter from '@vscode/extension-telemetry';
 import * as process from 'process';
 import * as vscode from 'vscode';
-import TelemetryReporter from '@vscode/extension-telemetry';
 import { DebugReporter } from './DebugReporter';
 import { getPackageInfo } from './getPackageInfo';
 
@@ -16,8 +16,8 @@ export interface IInternalTelemetryReporter {
     sendTelemetryErrorEvent(eventName: string, properties?: { [key: string]: string | undefined }, measurements?: { [key: string]: number | undefined }, errorProps?: string[]): void;
 }
 
-export function createTelemetryReporter(ctx: vscode.ExtensionContext): IInternalTelemetryReporter {
-    const { extensionName, extensionVersion, aiKey } = getPackageInfo(ctx);
+export async function createTelemetryReporter(ctx: vscode.ExtensionContext): Promise<IInternalTelemetryReporter> {
+    const { extensionName, extensionVersion, aiKey } = await getPackageInfo(ctx);
 
     let newReporter: IInternalTelemetryReporter;
 

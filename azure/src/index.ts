@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 export * from './createAzureClient';
+export { registerAzureUtilsExtensionVariables } from './extensionVariables';
 export * from './openInPortal';
-export * from './tree/AzureAccountTreeItemBase';
 export * from './tree/SubscriptionTreeItemBase';
 export * from './utils/parseAzureResourceId';
 export * from './utils/uiUtils';
@@ -17,6 +17,5 @@ export * from './wizard/StorageAccountCreateStep';
 export * from './wizard/StorageAccountListStep';
 export * from './wizard/StorageAccountNameStep';
 export * from './wizard/VerifyProvidersStep';
-export { registerAzureUtilsExtensionVariables } from './extensionVariables';
 
 // NOTE: The auto-fix action "source.organizeImports" does weird things with this file, but there doesn't seem to be a way to disable it on a per-file basis so we'll just let it happen

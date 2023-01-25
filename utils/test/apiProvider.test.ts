@@ -55,7 +55,7 @@ suite('AzureExtensionApiProvider tests', () => {
         const api11: TestApiFactory = new TestApiFactory('1.1.0');
         const api111: TestApiFactory = new TestApiFactory('1.1.1');
         const api12: TestApiFactory = new TestApiFactory('1.2.0');
-        const apiProvider: AzureExtensionApiProvider = createApiProvider([api1, api111, api11, api12]);
+        const apiProvider: AzureExtensionApiProvider = await createApiProvider([api1, api111, api11, api12]);
 
         /* eslint-disable @typescript-eslint/no-unsafe-return */
         assert.throws(() => apiProvider.getApi('0.1'), (error) => validateApiError(error, /no longer supported/, 'NoLongerSupported'));
@@ -75,14 +75,14 @@ suite('AzureExtensionApiProvider tests', () => {
         const latestApi11Tilde: TestApi = apiProvider.getApi<TestApi>('~1.1.0');
         assert.equal(latestApi11Tilde.apiVersion, '1.1.1');
 
-        const emptyApiProvider: AzureExtensionApiProvider = createApiProvider([]);
+        const emptyApiProvider: AzureExtensionApiProvider = await createApiProvider([]);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         assert.throws(() => emptyApiProvider.getApi('^1.0.0'), (error) => validateApiError(error, /must be updated/, 'NotYetSupported'));
     });
 
     test('Wrapped api is same as original api', async () => {
         const apiFactory: TestApiFactory = new TestApiFactory('1.0.0');
-        const apiProvider: AzureExtensionApiProvider = createApiProvider([apiFactory]);
+        const apiProvider: AzureExtensionApiProvider = await createApiProvider([apiFactory]);
         const api = apiFactory.createApi();
 
         const wrappedApi: TestApi = apiProvider.getApi<TestApi>('1');

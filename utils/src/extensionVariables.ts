@@ -36,7 +36,7 @@ class UninitializedExtensionVariables implements types.UIExtensionVariables {
  */
 export let ext: IInternalExtensionVariables = new UninitializedExtensionVariables();
 
-export function registerUIExtensionVariables(extVars: types.UIExtensionVariables): void {
+export async function registerUIExtensionVariables(extVars: types.UIExtensionVariables): Promise<void> {
     if (ext === extVars) {
         // already registered
         return;
@@ -45,7 +45,7 @@ export function registerUIExtensionVariables(extVars: types.UIExtensionVariables
     assert(extVars.context, 'registerUIExtensionVariables: Missing context');
     assert(extVars.outputChannel, 'registerUIExtensionVariables: Missing outputChannel');
 
-    ext = Object.assign(extVars, { _internalReporter: createTelemetryReporter(extVars.context) });
+    ext = Object.assign(extVars, { _internalReporter: await createTelemetryReporter(extVars.context) });
 
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     registerErrorHandler(handleEntryNotFound);

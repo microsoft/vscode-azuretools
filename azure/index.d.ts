@@ -5,14 +5,15 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import type { ExtendedLocation, ResourceGroup } from '@azure/arm-resources';
 import type { Location } from '@azure/arm-resources-subscriptions';
-import type { Environment } from '@azure/ms-rest-azure-env';
-import type { HttpOperationResponse, RequestPrepareOptions, ServiceClient } from '@azure/ms-rest-js';
-import type { PagedAsyncIterableIterator } from '@azure/core-paging';
-import { Disposable, Progress } from 'vscode';
-import type { AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtServiceClientCredentialsT1, AzExtServiceClientCredentialsT2, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IRelatedNameWizardContext, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
-import { ExtendedLocation, ResourceGroup } from '@azure/arm-resources';
 import type { StorageAccount } from '@azure/arm-storage';
+import type { ServiceClient, ServiceClientOptions } from '@azure/core-client';
+import type { PagedAsyncIterableIterator } from '@azure/core-paging';
+import type { PipelineRequestOptions, PipelineResponse } from '@azure/core-rest-pipeline';
+import type { Environment } from '@azure/ms-rest-azure-env';
+import type { AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtServiceClientCredentialsT2, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IRelatedNameWizardContext, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
+import type { Progress } from 'vscode';
 
 export type OpenInPortalOptions = {
     /**
@@ -24,51 +25,11 @@ export type OpenInPortalOptions = {
 /**
  * Implement this class to display resources under a standard subscription tree item
  */
-export abstract class SubscriptionTreeItemBase extends AzExtParentTreeItem {
+export declare abstract class SubscriptionTreeItemBase extends AzExtParentTreeItem {
     public static readonly contextValue: string;
     public readonly contextValue: string;
     public readonly label: string;
     constructor(parent: AzExtParentTreeItem, subscription: ISubscriptionContext);
-}
-
-/**
- * A tree item for an Azure Account, which will display subscriptions. For Azure-centered extensions, this will be at the root of the tree.
- */
-export declare abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem implements Disposable {
-    public static readonly contextValue: string;
-    public contextValue: string;
-    public label: string;
-    public disposables: Disposable[];
-    public childTypeLabel: string;
-    public autoSelectInTreeItemPicker: boolean;
-
-    //#region Methods implemented by base class
-    /**
-     * Implement this to create a subscription tree item under this Azure Account node
-     * @param root Contains basic information about the subscription - should be passed in to the constructor of `SubscriptionTreeItemBase`
-     */
-    public abstract createSubscriptionTreeItem(root: ISubscriptionContext): SubscriptionTreeItemBase | Promise<SubscriptionTreeItemBase>;
-    //#endregion
-
-    /**
-     * Azure Account Tree Item
-     * @param parent The parent of this node or undefined if it's the root of the tree.
-     * @param testAccount Unofficial api for testing - see `TestAzureAccount` in @microsoft/vscode-azext-dev package
-     */
-    public constructor(parent?: AzExtParentTreeItem, testAccount?: {});
-
-    public dispose(): void;
-
-    /**
-     * If user is logged in and only has one subscription selected, adds that to the wizardContext and returns undefined
-     * Else, returns a prompt step for a subscription
-     */
-    public getSubscriptionPromptStep(wizardContext: Partial<ISubscriptionActionContext>): Promise<AzureWizardPromptStep<ISubscriptionActionContext> | undefined>;
-
-    public hasMoreChildrenImpl(): boolean;
-    public loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]>;
-    public pickTreeItemImpl(expectedContextValues: (string | RegExp)[]): Promise<AzExtTreeItem | undefined>;
-    public getIsLoggedIn(): Promise<boolean>;
 }
 
 /**
@@ -231,7 +192,7 @@ export declare class ResourceGroupListStep<T extends IResourceGroupWizardContext
     public shouldPrompt(wizardContext: T): boolean;
 }
 
-export class ResourceGroupNameStep<T extends IResourceGroupWizardContext> extends AzureWizardPromptStep<T> {
+export declare class ResourceGroupNameStep<T extends IResourceGroupWizardContext> extends AzureWizardPromptStep<T> {
     public prompt(wizardContext: T): Promise<void>;
     public shouldPrompt(wizardContext: T): boolean;
 }
@@ -348,26 +309,10 @@ export interface IAzureUtilsExtensionVariables extends UIExtensionVariables {
  */
 export declare function registerAzureUtilsExtensionVariables(extVars: IAzureUtilsExtensionVariables): void;
 
-export interface IMinimumServiceClientOptions {
-    acceptLanguage?: string,
-    baseUri?: string;
-    /**
-     * Pass in endpoint as a workaround for https://github.com/Azure/azure-sdk-for-js/issues/20651.
-     * Value should be the same as `baseUri`.
-     */
-    endpoint?: string;
-    userAgent?: string | ((defaultUserAgent: string) => string);
-
-    /**
-     * NOTE: Using "any" to allow for the use of different versions of "@azure/ms-rest-js", which are largely compatible for our purposes
-     */
-    requestPolicyFactories?: any[] | ((defaultRequestPolicyFactories: any[]) => (void | any[]));
-}
-
 /**
  * Credential type to be used for creating generic http rest clients
  */
-export type AzExtGenericCredentials = AzExtServiceClientCredentialsT1 | AzExtServiceClientCredentialsT2 | AzExtServiceClientCredentials;
+export type AzExtGenericCredentials = AzExtServiceClientCredentialsT2 | AzExtServiceClientCredentials;
 export type AzExtGenericClientInfo = AzExtGenericCredentials | { credentials: AzExtGenericCredentials; environment: Environment; } | undefined;
 
 /**
@@ -376,18 +321,18 @@ export type AzExtGenericClientInfo = AzExtGenericCredentials | { credentials: Az
  * 2. Uses resourceManagerEndpointUrl to support sovereigns (if clientInfo corresponds to an Azure environment)
  * @param clientInfo The client/credentials info or `undefined` if no credentials are needed
  */
-export function createGenericClient(context: IActionContext, clientInfo: AzExtGenericClientInfo): Promise<ServiceClient>;
+export declare function createGenericClient(context: IActionContext, clientInfo: AzExtGenericClientInfo | undefined): Promise<ServiceClient>;
 
-export type AzExtRequestPrepareOptions = RequestPrepareOptions & { rejectUnauthorized?: boolean }
+export type AzExtRequestPrepareOptions = PipelineRequestOptions & { rejectUnauthorized?: boolean }
 
 /**
  * Send request with a timeout specified and turn off retry policy (because retrying could take a lot longer)
  * @param timeout The timeout in milliseconds
  * @param clientInfo The client/credentials info or `undefined` if no credentials are needed
  */
-export function sendRequestWithTimeout(context: IActionContext, options: AzExtRequestPrepareOptions, timeout: number, clientInfo: AzExtGenericClientInfo): Promise<HttpOperationResponse>;
+export declare function sendRequestWithTimeout(context: IActionContext, options: AzExtRequestPrepareOptions, timeout: number, clientInfo: AzExtGenericClientInfo): Promise<PipelineResponse>;
 
-export type AzExtClientType<T> = new (credentials: AzExtServiceClientCredentials, subscriptionId: string, options?: IMinimumServiceClientOptions) => T;
+export type AzExtClientType<T extends ServiceClient> = new (credentials: AzExtServiceClientCredentials, subscriptionId: string, options?: ServiceClientOptions) => T;
 
 /**
  * Convenience type to give us multiple ways to specify subscription info and action context depending on the scenario
@@ -397,23 +342,23 @@ export type AzExtClientContext = ISubscriptionActionContext | [IActionContext, I
 /**
  * Converts `AzExtClientContext` into a single object: `ISubscriptionActionContext`
  */
-export function parseClientContext(clientContext: AzExtClientContext): ISubscriptionActionContext;
+export declare function parseClientContext(clientContext: AzExtClientContext): ISubscriptionActionContext;
 
 /**
  * Creates an Azure client, ensuring best practices are followed. For example:
  * 1. Adds extension-specific user agent
  * 2. Uses resourceManagerEndpointUrl to support sovereigns
  */
-export function createAzureClient<T>(context: AzExtClientContext, clientType: AzExtClientType<T>): T;
+export declare function createAzureClient<T extends ServiceClient>(context: AzExtClientContext, clientType: AzExtClientType<T>): T;
 
-export type AzExtSubscriptionClientType<T> = new (credentials: AzExtServiceClientCredentials, options?: IMinimumServiceClientOptions) => T;
+export type AzExtSubscriptionClientType<T> = new (credentials: AzExtServiceClientCredentials, options?: ServiceClientOptions) => T;
 
 /**
  * Creates an Azure subscription client, ensuring best practices are followed. For example:
  * 1. Adds extension-specific user agent
  * 2. Uses resourceManagerEndpointUrl to support sovereigns
  */
-export function createAzureSubscriptionClient<T>(context: AzExtClientContext, clientType: AzExtSubscriptionClientType<T>): T;
+export declare function createAzureSubscriptionClient<T>(context: AzExtClientContext, clientType: AzExtSubscriptionClientType<T>): T;
 
 export declare namespace uiUtils {
     export function listAllIterator<T>(iterator: PagedAsyncIterableIterator<T>): Promise<T[]>
@@ -427,5 +372,5 @@ interface ParsedAzureResourceId {
     resourceName: string;
 }
 
-export function parseAzureResourceId(id: string): ParsedAzureResourceId;
-export function getResourceGroupFromId(id: string): string;
+export declare function parseAzureResourceId(id: string): ParsedAzureResourceId;
+export declare function getResourceGroupFromId(id: string): string;
