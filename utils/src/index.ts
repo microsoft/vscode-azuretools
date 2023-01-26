@@ -31,7 +31,6 @@ export * from './tree/AzExtTreeDataProvider';
 export * from './tree/AzExtTreeItem';
 export * from './tree/GenericTreeItem';
 export * from './tree/isAzExtTreeItem';
-export * from './utils/apiUtils';
 export * from './utils/AzExtFsExtra';
 export * from './utils/contextUtils';
 export * from './utils/findFreePort';
