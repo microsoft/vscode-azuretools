@@ -1674,7 +1674,7 @@ export type TreeNodeCommandCallback<T> = (context: IActionContext, node?: T, nod
  */
 export declare function registerCommandWithTreeNodeUnwrapping<T>(commandId: string, callback: TreeNodeCommandCallback<T>, debounce?: number, telemetryId?: string): void;
 
-export function unwrapTreeNodeCommandCallback<T>(treeNodeCallback: TreeNodeCommandCallback<T>): TreeNodeCommandCallback<T>;
+export declare function unwrapTreeNodeCommandCallback<T>(treeNodeCallback: TreeNodeCommandCallback<T>): TreeNodeCommandCallback<T>;
 
 // temporary
 type ResourceGroupsItem = unknown;
