@@ -114,7 +114,8 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
     const config: webpack.Configuration = {
         context: options.projectRoot,
 
-        // vscode extensions run in a Node.js context, see https://webpack.js.org/configuration/node/
+        // vscode extensions run in a Node.js context on desktop, see https://webpack.js.org/configuration/node/
+        // vscode web extensions run with a "webworker" target, see https://webpack.js.org/configuration/target/#target
         target: options.target,
         node: {
             // For __dirname and __filename, let Node.js use its default behavior (i.e., gives the path to the packed extension.bundle.js file, not the original source file)
