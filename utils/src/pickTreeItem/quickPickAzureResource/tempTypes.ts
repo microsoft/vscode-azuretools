@@ -3,8 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureResource, AzureSubscription } from '../../../hostapi.v2';
-import * as types from '../../../index';
+import type { AzExtResourceType, AzureResource, AzureSubscription } from '@microsoft/vscode-azureresources-api';
 
 // TODO: THIS FILE IS TEMPORARY //
 // It needs to be replaced by real Resources extension interfaces //
@@ -16,7 +15,7 @@ export type SubscriptionItem = ResourceGroupsItem & {
 }
 
 export type GroupingItem = ResourceGroupsItem & {
-    resourceType?: types.AzExtResourceType
+    resourceType?: AzExtResourceType
 }
 
 export type AzureResourceItem = ResourceGroupsItem & {

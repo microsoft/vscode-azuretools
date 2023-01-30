@@ -8,10 +8,10 @@ import { ContextValueFilterQuickPickOptions, ContextValuePickFilter, ContextValu
 import { getLastNode } from "../../getLastNode";
 import { AzExtTreeItem } from "../../../tree/AzExtTreeItem";
 import { AzExtParentTreeItem } from "../../../tree/AzExtParentTreeItem";
-import { isWrapper } from "../../../registerCommandWithTreeNodeUnwrapping";
 import { isAzExtParentTreeItem } from "../../../tree/isAzExtTreeItem";
 import { TreeItem } from "vscode";
 import { PickFilter } from "../../PickFilter";
+import { isWrapper } from "@microsoft/vscode-azureresources-api";
 
 /**
  * Provides compatability with {@link AzExtParentTreeItem.pickTreeItemImpl}

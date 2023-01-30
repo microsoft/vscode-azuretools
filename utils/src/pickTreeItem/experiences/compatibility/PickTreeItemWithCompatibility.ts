@@ -12,7 +12,7 @@ import { AzureWizardPromptStep } from '../../../wizard/AzureWizardPromptStep';
 import { AzureWizard } from '../../../wizard/AzureWizard';
 import { getLastNode } from '../../getLastNode';
 import { NoResourceFoundError } from '../../../errors';
-import { isWrapper } from '../../../registerCommandWithTreeNodeUnwrapping';
+import { isWrapper } from '@microsoft/vscode-azureresources-api';
 
 export namespace PickTreeItemWithCompatibility {
     /**

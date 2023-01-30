@@ -10,8 +10,8 @@ import { getLastNode } from '../getLastNode';
 import { NoResourceFoundError } from '../../errors';
 import { AzureWizardPromptStep } from '../../wizard/AzureWizardPromptStep';
 import { AzureWizard } from '../../wizard/AzureWizard';
-import { isWrapper } from '../../registerCommandWithTreeNodeUnwrapping';
 import { ResourceGroupsItem } from '../quickPickAzureResource/tempTypes';
+import { isWrapper } from '@microsoft/vscode-azureresources-api';
 
 export async function contextValueExperience<TPick extends unknown>(context: types.IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, contextValueFilter: types.ContextValueFilter): Promise<TPick> {
     const promptSteps: AzureWizardPromptStep<types.QuickPickWizardContext>[] = [
