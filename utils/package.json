@@ -32,7 +32,7 @@
         "test": "node ./out/test/runTest.js"
     },
     "dependencies": {
-        "@microsoft/vscode-azureresources-api": "file:../../vscode-azureresourcegroups/api/microsoft-vscode-azureresources-api-2.0.0.tgz",
+        "@microsoft/vscode-azureresources-api": "^2.0.0",
         "@vscode/extension-telemetry": "^0.6.2",
         "dayjs": "^1.11.2",
         "escape-string-regexp": "^2.0.0",
