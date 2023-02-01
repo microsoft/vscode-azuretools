@@ -13,7 +13,7 @@ import type { PagedAsyncIterableIterator } from '@azure/core-paging';
 import type { PipelineRequestOptions, PipelineResponse } from '@azure/core-rest-pipeline';
 import type { Environment } from '@azure/ms-rest-azure-env';
 import type { AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtServiceClientCredentialsT2, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IRelatedNameWizardContext, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
-import type { Progress } from 'vscode';
+import { Disposable, Progress } from 'vscode';
 
 export type OpenInPortalOptions = {
     /**
@@ -30,6 +30,46 @@ export declare abstract class SubscriptionTreeItemBase extends AzExtParentTreeIt
     public readonly contextValue: string;
     public readonly label: string;
     constructor(parent: AzExtParentTreeItem, subscription: ISubscriptionContext);
+}
+
+/**
+ * A tree item for an Azure Account, which will display subscriptions. For Azure-centered extensions, this will be at the root of the tree.
+ */
+export declare abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem implements Disposable {
+    public static readonly contextValue: string;
+    public contextValue: string;
+    public label: string;
+    public disposables: Disposable[];
+    public childTypeLabel: string;
+    public autoSelectInTreeItemPicker: boolean;
+
+    //#region Methods implemented by base class
+    /**
+     * Implement this to create a subscription tree item under this Azure Account node
+     * @param root Contains basic information about the subscription - should be passed in to the constructor of `SubscriptionTreeItemBase`
+     */
+    public abstract createSubscriptionTreeItem(root: ISubscriptionContext): SubscriptionTreeItemBase | Promise<SubscriptionTreeItemBase>;
+    //#endregion
+
+    /**
+     * Azure Account Tree Item
+     * @param parent The parent of this node or undefined if it's the root of the tree.
+     * @param testAccount Unofficial api for testing - see `TestAzureAccount` in @microsoft/vscode-azext-dev package
+     */
+    public constructor(parent?: AzExtParentTreeItem, testAccount?: {});
+
+    public dispose(): void;
+
+    /**
+     * If user is logged in and only has one subscription selected, adds that to the wizardContext and returns undefined
+     * Else, returns a prompt step for a subscription
+     */
+    public getSubscriptionPromptStep(wizardContext: Partial<ISubscriptionActionContext>): Promise<AzureWizardPromptStep<ISubscriptionActionContext> | undefined>;
+
+    public hasMoreChildrenImpl(): boolean;
+    public loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]>;
+    public pickTreeItemImpl(expectedContextValues: (string | RegExp)[]): Promise<AzExtTreeItem | undefined>;
+    public getIsLoggedIn(): Promise<boolean>;
 }
 
 /**
