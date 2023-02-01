@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as types from '../index';
-import { AzExtTreeItem, ISubscriptionContext, openUrl } from '@microsoft/vscode-azext-utils';
+import { AzExtTreeItem, isAzExtTreeItem, ISubscriptionContext, openUrl } from '@microsoft/vscode-azext-utils';
 
 export async function openInPortal(root: ISubscriptionContext | AzExtTreeItem, id: string, options?: types.OpenInPortalOptions): Promise<void> {
-    root = root instanceof AzExtTreeItem ? root.subscription : root;
+    root = isAzExtTreeItem(root) ? root.subscription : root;
 
     const queryPrefix: string = (options && options.queryPrefix) ? `?${options.queryPrefix}` : '';
     const url: string = `${root.environment.portalUrl}/${queryPrefix}#@${root.tenantId}/resource${id}`;
