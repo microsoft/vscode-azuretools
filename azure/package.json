@@ -1,11 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-azureutils",
     "author": "Microsoft Corporation",
-<<<<<<< Updated upstream
-    "version": "0.3.7",
-=======
     "version": "0.4.0",
->>>>>>> Stashed changes
     "description": "Common Azure utils for developing Azure extensions for VS Code",
     "tags": [
         "azure",

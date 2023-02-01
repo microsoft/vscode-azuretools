@@ -3,10 +3,10 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { randomUUID } from "crypto";
+import { v4 as uuidv4 } from "uuid";
 import { CancellationTokenSource, EventEmitter } from "vscode";
-import * as types from '../../index';
 import * as hTypes from '../../hostapi';
+import * as types from '../../index';
 import { parseError } from "../parseError";
 
 export enum ActivityStatus {
@@ -40,7 +40,7 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
     abstract errorState(error?: types.IParsedError): hTypes.ActivityTreeItemOptions;
 
     public constructor(task: types.ActivityTask<R>) {
-        this.id = randomUUID();
+        this.id = uuidv4();
         this.task = task;
 
         this.onStart = this._onStartEmitter.event;

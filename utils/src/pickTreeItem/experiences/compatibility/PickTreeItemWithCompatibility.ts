@@ -1,18 +1,18 @@
-import * as types from '../../../../index';
+import { ISubscriptionContext } from '@microsoft/vscode-azext-dev';
 import * as vscode from 'vscode';
+import * as types from '../../../../index';
+import { NoResourceFoundError } from '../../../errors';
+import { isWrapper } from '../../../registerCommandWithTreeNodeUnwrapping';
+import { AzExtTreeItem } from '../../../tree/AzExtTreeItem';
+import { isAzExtTreeItem } from '../../../tree/isAzExtTreeItem';
+import { createSubscriptionContext } from '../../../utils/credentialUtils';
+import { AzureWizard } from '../../../wizard/AzureWizard';
+import { AzureWizardPromptStep } from '../../../wizard/AzureWizardPromptStep';
+import { CompatibilityRecursiveQuickPickStep } from '../../contextValue/compatibility/CompatibilityRecursiveQuickPickStep';
+import { getLastNode } from '../../getLastNode';
 import { ResourceGroupsItem } from '../../quickPickAzureResource/tempTypes';
 import { azureResourceExperience } from '../azureResourceExperience';
 import { subscriptionExperience } from '../subscriptionExperience';
-import { isAzExtTreeItem } from '../../../tree/isAzExtTreeItem';
-import { createSubscriptionContext } from '../../../utils/credentialUtils';
-import { ISubscriptionContext } from '@microsoft/vscode-azext-dev';
-import { AzExtTreeItem } from '../../../tree/AzExtTreeItem';
-import { CompatibilityRecursiveQuickPickStep } from '../../contextValue/compatibility/CompatibilityRecursiveQuickPickStep';
-import { AzureWizardPromptStep } from '../../../wizard/AzureWizardPromptStep';
-import { AzureWizard } from '../../../wizard/AzureWizard';
-import { getLastNode } from '../../getLastNode';
-import { NoResourceFoundError } from '../../../errors';
-import { isWrapper } from '../../../registerCommandWithTreeNodeUnwrapping';
 
 export namespace PickTreeItemWithCompatibility {
     /**

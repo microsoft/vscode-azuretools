@@ -31,7 +31,7 @@ export async function reportAnIssue(issue: IReportableIssue | undefined): Promis
 }
 
 export async function getReportAnIssueLink(issue: IReportableIssue | undefined): Promise<string> {
-    const { extensionVersion } = getPackageInfo();
+    const { extensionVersion } = await getPackageInfo();
 
     const stack: string = (issue?.error.stack || '').replace(/\r\n/g, '\n');
 
@@ -70,7 +70,7 @@ Language: ${vscode.env.language}`;
         body += createBodyDetail(propName, String(value));
     }
 
-    const simpleLink: string = createNewIssueLinkFromBody(body);
+    const simpleLink: string = await createNewIssueLinkFromBody(body);
     if (simpleLink.length <= maxUrlLength) {
         return simpleLink;
     }
@@ -80,8 +80,8 @@ Language: ${vscode.env.language}`;
     return createNewIssueLinkFromBody(localize('pasteIssue', "The issue text was copied to the clipboard.  Please paste it into this window."));
 }
 
-function createNewIssueLinkFromBody(issueBody: string): string {
-    const { extensionName, bugsUrl } = getPackageInfo();
+async function createNewIssueLinkFromBody(issueBody: string): Promise<string> {
+    const { extensionName, bugsUrl } = await getPackageInfo();
     const baseUrl: string = bugsUrl || `https://github.com/Microsoft/${extensionName}/issues`;
     return `${baseUrl}/new?body=${encodeURIComponent(issueBody)}`;
 }
