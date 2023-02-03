@@ -8,6 +8,7 @@ import { AzExtTreeItem } from './AzExtTreeItem';
 import { IAzExtParentTreeItemInternal } from "./InternalInterfaces";
 
 export class GenericTreeItem extends AzExtTreeItem implements types.GenericTreeItem {
+    public readonly _isGenericTreeItem = true;
     public label: string;
     public contextValue: string;
 
@@ -27,4 +28,8 @@ export class GenericTreeItem extends AzExtTreeItem implements types.GenericTreeI
     public isAncestorOfImpl(): boolean {
         return this._includeInTreeItemPicker;
     }
+}
+
+export function isGenericTreeItem(item: unknown): item is GenericTreeItem {
+    return (item as GenericTreeItem)._isGenericTreeItem;
 }

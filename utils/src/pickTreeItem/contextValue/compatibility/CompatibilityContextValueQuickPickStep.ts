@@ -12,7 +12,7 @@ import { isAzExtParentTreeItem, isAzExtTreeItem } from "../../../tree/isAzExtTre
 import { TreeItem } from "vscode";
 import { PickFilter } from "../../PickFilter";
 import { isWrapper } from "@microsoft/vscode-azureresources-api";
-import { GenericTreeItem } from "../../../tree/GenericTreeItem";
+import { GenericTreeItem, isGenericTreeItem } from "../../../tree/GenericTreeItem";
 
 /**
  * Provides compatability with {@link AzExtParentTreeItem.pickTreeItemImpl}
@@ -38,7 +38,7 @@ export class CompatibilityContextValueQuickPickStep<TContext extends types.Quick
             const children = await this.treeDataProvider.getChildren(lastPickedItem);
             if (children && children.length) {
                 // don't skip if one if a command pick is present
-                this.pickOptions.skipIfOne = !children.some(child => child instanceof GenericTreeItem);
+                this.pickOptions.skipIfOne = !children.some(child => isGenericTreeItem(child) || child instanceof GenericTreeItem);
 
                 const customChild = await this.getCustomChildren(wizardContext, lastPickedItemUnwrapped);
                 const customPick = children.find((child) => {
