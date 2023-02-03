@@ -37,8 +37,10 @@ export class CompatibilityContextValueQuickPickStep<TContext extends types.Quick
         if (isAzExtParentTreeItem(lastPickedItemUnwrapped)) {
             const children = await this.treeDataProvider.getChildren(lastPickedItem);
             if (children && children.length) {
-                // don't skip if one if a command pick is present
-                this.pickOptions.skipIfOne = !children.some(child => isGenericTreeItem(child) || child instanceof GenericTreeItem);
+                if (this.pickOptions.skipIfOne) {
+                    // don't skip if one if a command pick is present
+                    this.pickOptions.skipIfOne = !children.some(child => isGenericTreeItem(child) || child instanceof GenericTreeItem);
+                }
 
                 const customChild = await this.getCustomChildren(wizardContext, lastPickedItemUnwrapped);
                 const customPick = children.find((child) => {
