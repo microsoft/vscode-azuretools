@@ -6,7 +6,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { Environment } from '@azure/ms-rest-azure-env';
-import { CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions as VSCodeQuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri } from 'vscode';
+import { AuthenticationSession, CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, ProviderResult, QuickPickItem, QuickPickOptions as VSCodeQuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
 import type { AzureSubscription, AzureResource, AzExtResourceType, AzureExtensionApi, GetApiOptions, apiUtils } from '@microsoft/vscode-azureresources-api';
@@ -1747,3 +1747,14 @@ export declare interface AzureResourceQuickPickWizardContext extends QuickPickWi
     resource?: AzureResource;
     resourceGroup?: string;
 }
+
+/**
+ * Converts a VS Code authentication session to an Azure Track 1 & 2 compatible compatible credential.
+ */
+export function createCredential(getSession: (scopes?: string[]) => ProviderResult<AuthenticationSession>): AzExtServiceClientCredentials;
+
+/**
+ * Creates a subscription context from an application subscription.
+ *
+ */
+export function createSubscriptionContext(subscription: AzureSubscription): ISubscriptionContext;

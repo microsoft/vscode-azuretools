@@ -33,6 +33,7 @@ export * from './tree/GenericTreeItem';
 export * from './tree/isAzExtTreeItem';
 export * from './utils/AzExtFsExtra';
 export * from './utils/contextUtils';
+export * from './utils/credentialUtils';
 export * from './utils/findFreePort';
 export * from './utils/nonNull';
 export * from './utils/openUrl';
