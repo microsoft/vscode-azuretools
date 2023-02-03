@@ -18,7 +18,7 @@ export class RecursiveQuickPickStep<TContext extends types.QuickPickWizardContex
             throw new Error('No node was set after prompt step.');
         }
 
-        if (this.pickFilter.isFinalPick(await this.treeDataProvider.getTreeItem(lastPickedItem))) {
+        if (this.pickFilter.isFinalPick(await this.treeDataProvider.getTreeItem(lastPickedItem), lastPickedItem)) {
             // The last picked node matches the expected filter
             // No need to continue prompting
             return undefined;
