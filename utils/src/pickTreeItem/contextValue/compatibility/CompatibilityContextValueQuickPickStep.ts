@@ -12,6 +12,7 @@ import { isAzExtParentTreeItem } from "../../../tree/isAzExtTreeItem";
 import { TreeItem } from "vscode";
 import { PickFilter } from "../../PickFilter";
 import { isWrapper } from "@microsoft/vscode-azureresources-api";
+import { localize } from "../../../localize";
 
 /**
  * Provides compatability with {@link AzExtParentTreeItem.pickTreeItemImpl}
@@ -19,10 +20,23 @@ import { isWrapper } from "@microsoft/vscode-azureresources-api";
 export class CompatibilityContextValueQuickPickStep<TContext extends types.QuickPickWizardContext, TOptions extends ContextValueFilterQuickPickOptions> extends ContextValueQuickPickStep<TContext, TOptions> {
 
     public override async prompt(wizardContext: TContext): Promise<void> {
+        this.setCustomPlaceholder(wizardContext);
         await this.provideCompatabilityWithPickTreeItemImpl(wizardContext) || await super.prompt(wizardContext);
     }
 
     protected override pickFilter: PickFilter<TreeItem> = new CompatibleContextValuePickFilter(this.pickOptions);
+
+    /**
+    * If the last picked item is an `AzExtParentTreeItem`
+    * and has a `childTypeLabel` set, use that as the placeholder.
+    */
+    private setCustomPlaceholder(context: TContext): void {
+        const lastPickedItem = getLastNode(context);
+        const lastPickedItemUnwrapped = isWrapper(lastPickedItem) ? lastPickedItem.unwrap() : lastPickedItem;
+        if (isAzExtParentTreeItem(lastPickedItemUnwrapped) && lastPickedItemUnwrapped.childTypeLabel) {
+            this.promptOptions.placeHolder = localize('selectTreeItem', 'Select {0}', lastPickedItemUnwrapped.childTypeLabel);
+        }
+    }
 
     /**
      * Mimics how the legacy {@link AzExtParentTreeItem.pickChildTreeItem}
