@@ -8,10 +8,11 @@ import { ContextValueFilterQuickPickOptions, ContextValuePickFilter, ContextValu
 import { getLastNode } from "../../getLastNode";
 import { AzExtTreeItem } from "../../../tree/AzExtTreeItem";
 import { AzExtParentTreeItem } from "../../../tree/AzExtParentTreeItem";
-import { isAzExtParentTreeItem } from "../../../tree/isAzExtTreeItem";
+import { isAzExtParentTreeItem, isAzExtTreeItem } from "../../../tree/isAzExtTreeItem";
 import { TreeItem } from "vscode";
 import { PickFilter } from "../../PickFilter";
 import { isWrapper } from "@microsoft/vscode-azureresources-api";
+import { GenericTreeItem, isGenericTreeItem } from "../../../tree/GenericTreeItem";
 import { localize } from "../../../localize";
 
 /**
@@ -50,8 +51,12 @@ export class CompatibilityContextValueQuickPickStep<TContext extends types.Quick
         if (isAzExtParentTreeItem(lastPickedItemUnwrapped)) {
             const children = await this.treeDataProvider.getChildren(lastPickedItem);
             if (children && children.length) {
-                const customChild = await this.getCustomChildren(wizardContext, lastPickedItemUnwrapped);
+                if (this.pickOptions.skipIfOne) {
+                    // don't skip if one if a command pick is present
+                    this.pickOptions.skipIfOne = !children.some(child => isGenericTreeItem(child) || child instanceof GenericTreeItem);
+                }
 
+                const customChild = await this.getCustomChildren(wizardContext, lastPickedItemUnwrapped);
                 const customPick = children.find((child) => {
                     const ti: AzExtTreeItem = isWrapper(child) ? child.unwrap() : child as unknown as AzExtTreeItem;
                     return ti.fullId === customChild?.fullId;
@@ -80,5 +85,20 @@ class CompatibleContextValuePickFilter extends ContextValuePickFilter {
         }
 
         return super.isFinalPick(node);
+    }
+
+    /**
+     * Mimics logic in `AzExtTreeItem.includeInTreePicker`, which supports the `AzExtTreeItem.isAncestorOfImpl` method
+     */
+    override isAncestorPick(_node: TreeItem, elementWrapper: unknown): boolean {
+        const element = isWrapper(elementWrapper) ? elementWrapper.unwrap() : elementWrapper;
+        const include = Array.isArray(this.pickOptions.contextValueFilter.include) ? this.pickOptions.contextValueFilter.include : [this.pickOptions.contextValueFilter.include]
+        return include.some((val: string | RegExp) => {
+            if (isAzExtTreeItem(element) && element.isAncestorOfImpl) {
+                return element.isAncestorOfImpl(val);
+            } else {
+                return isAzExtParentTreeItem(element);
+            }
+        });
     }
 }

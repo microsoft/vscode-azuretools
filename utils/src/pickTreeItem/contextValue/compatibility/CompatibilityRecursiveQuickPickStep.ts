@@ -70,7 +70,7 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
         // lastPickedItem might already be a tree item if the user picked a create callback
         const ti = isAzExtTreeItem(lastPickedItem) ? lastPickedItem : await this.treeDataProvider.getTreeItem(lastPickedItem) as AzExtTreeItem;
 
-        if (this.pickFilter.isFinalPick(ti)) {
+        if (this.pickFilter.isFinalPick(ti, lastPickedItem)) {
             // The last picked node matches the expected filter
             // No need to continue prompting
             return undefined;
@@ -92,7 +92,6 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
                 promptSteps: [
                     new CompatibilityRecursiveQuickPickStep(this.treeDataProvider, {
                         ...this.pickOptions,
-                        skipIfOne: !shouldAddCreatePick, // don't skip if we're adding a create pick
                         create: shouldAddCreatePick ? {
                             callback: lastPickedItemTi.createChild.bind(lastPickedItemTi) as typeof lastPickedItemTi.createChild,
                             label: lastPickedItemTi.createNewLabel ?? localize('createNewItem', '$(plus) Create new {0}', lastPickedItemTi.childTypeLabel)

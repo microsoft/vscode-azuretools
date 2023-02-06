@@ -35,9 +35,9 @@ export class ContextValuePickFilter implements PickFilter {
             !excludeArray.some(e => this.matchesSingleFilter(e, nodeContextValues));
     }
 
-    isAncestorPick(node: TreeItem): boolean {
+    isAncestorPick(treeItem: TreeItem, _element: unknown): boolean {
         // `TreeItemCollapsibleState.None` and `undefined` are both falsy, and indicate that a `TreeItem` cannot have children--and therefore, cannot be an ancestor pick
-        return !!node.collapsibleState;
+        return !!treeItem.collapsibleState;
     }
 
     private matchesSingleFilter(matcher: string | RegExp, nodeContextValues: string[]): boolean {
