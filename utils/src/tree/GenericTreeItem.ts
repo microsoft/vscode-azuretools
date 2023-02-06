@@ -31,5 +31,5 @@ export class GenericTreeItem extends AzExtTreeItem implements types.GenericTreeI
 }
 
 export function isGenericTreeItem(item: unknown): item is GenericTreeItem {
-    return (item as GenericTreeItem)._isGenericTreeItem;
+    return typeof item === 'object' && (item as GenericTreeItem)._isGenericTreeItem;
 }
