@@ -9,10 +9,11 @@ import type { Location } from '@azure/arm-resources-subscriptions';
 import type { Environment } from '@azure/ms-rest-azure-env';
 import type { HttpOperationResponse, RequestPrepareOptions, ServiceClient } from '@azure/ms-rest-js';
 import type { PagedAsyncIterableIterator } from '@azure/core-paging';
-import { Disposable, Progress } from 'vscode';
+import { Disposable, Progress, Uri } from 'vscode';
 import type { AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtServiceClientCredentialsT1, AzExtServiceClientCredentialsT2, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IRelatedNameWizardContext, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
 import { ExtendedLocation, ResourceGroup } from '@azure/arm-resources';
 import type { StorageAccount } from '@azure/arm-storage';
+import type { AzureSubscription } from '@microsoft/vscode-azureresources-api';
 
 export type OpenInPortalOptions = {
     /**
@@ -429,3 +430,5 @@ interface ParsedAzureResourceId {
 
 export function parseAzureResourceId(id: string): ParsedAzureResourceId;
 export function getResourceGroupFromId(id: string): string;
+
+export declare function createPortalUri(subscription: AzureSubscription, id: string, options?: OpenInPortalOptions): Uri;
