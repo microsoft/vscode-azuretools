@@ -32,7 +32,7 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
     protected override async promptInternal(wizardContext: TContext): Promise<unknown> {
         const picks = await this.getPicks(wizardContext) as types.IAzureQuickPickItem<unknown>[];
 
-        if (picks.length === 1 && this.pickOptions.skipIfOne) {
+        if (picks.length === 1 && this.pickOptions.skipIfOne && typeof picks[0].data !== 'function') {
             return picks[0].data;
         } else {
             const selected = await wizardContext.ui.showQuickPick(picks, {
