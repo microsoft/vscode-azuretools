@@ -43,7 +43,7 @@ export async function azureResourceExperience<TPick>(context: InternalAzureResou
             context.v1Compatibility ?
                 new CompatibilityRecursiveQuickPickStep(tdp, {
                     contextValueFilter: childItemFilter,
-                    skipIfOne: false,
+                    skipIfOne: true,
                 }) :
                 new RecursiveQuickPickStep<AzureResourceQuickPickWizardContext>(tdp, {
                     contextValueFilter: childItemFilter,
