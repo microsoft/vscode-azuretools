@@ -11,7 +11,7 @@ import * as TerserPlugin from 'terser-webpack-plugin';
 import * as webpack from 'webpack';
 import { Verbosity } from '../..';
 import { DefaultWebpackOptions } from '../../index';
-import { excludeNodeModulesAndDependencies, PackageLock } from './excludeNodeModulesAndDependencies';
+import { PackageLock, excludeNodeModulesAndDependencies } from './excludeNodeModulesAndDependencies';
 
 // Using webpack helps reduce the install and startup time of large extensions by reducing the large number of files into a much smaller set
 // Full webpack documentation: [https://webpack.js.org/configuration/]().
@@ -45,11 +45,78 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
         logCore(loggingVerbosity, messageVerbosity, ...args);
     }
 
+    const plugins = [
+        // Copy files to dist folder where the runtime can find them
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        new CopyWebpackPlugin({
+            patterns: [
+                // Test files -> dist/test (these files are ignored during packaging)
+                {
+                    from: path.posix.join(options.projectRoot.replace(/\\/g, '/'), 'out', 'test', '*.*'),
+                    to: path.posix.join(options.projectRoot.replace(/\\/g, '/'), 'dist', 'test'),
+                    noErrorOnMissing: true
+                },
+                {
+                    from: path.join(options.projectRoot, 'node_modules', '@microsoft', 'vscode-azext-azureutils', 'resources', '**', '*.svg'),
+                    to: path.join(options.projectRoot, 'dist'),
+                    noErrorOnMissing: true
+                }
+            ]
+        }),
+
+        // Fix error:
+        //   > WARNING in ./node_modules/ms-rest/lib/serviceClient.js 441:19-43
+        //   > Critical dependency: the request of a dependency is an expression
+        // in this code:
+        //   let data = require(packageJsonPath);
+        //
+        new webpack.ContextReplacementPlugin(
+            // Whenever there is a dynamic require that webpack can't analyze at all (i.e. resourceRegExp=/^\./), ...
+            /^\./,
+            // CONSIDER: Is there a type for the context argument?  Can't seem to find one.
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (context: any): void => {
+                // ... and the call was from within node_modules/ms-rest/lib...
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                if (/node_modules[/\\]ms-rest[/\\]lib/.test(context.context)) {
+                    /* CONSIDER: Figure out how to make this work properly.
+
+                        // ... tell webpack that the call may be loading any of the package.json files from the 'node_modules/azure-arm*' folders
+                        // so it will include those in the package to be available for lookup at runtime
+                        context.request = path.resolve(options.projectRoot, 'node_modules');
+                        context.regExp = /azure-arm.*package\.json/;
+                    */
+
+                    // In the meantime, just ignore the error by telling webpack we've solved the critical dependency issue.
+                    // The consequences of ignoring this error are that
+                    //   the Azure SDKs (e.g. azure-arm-resource) don't get their info stamped into the user agent info for their calls.
+                    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+                    for (const d of context.dependencies) {
+                        if (d.critical) {
+                            d.critical = false;
+                        }
+                    }
+                    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+                }
+            }),
+
+        // Caller-supplied plugins
+        ...(options.plugins || [])
+    ];
+
+    if (options.target === 'webworker') {
+        plugins.push(new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }));
+        plugins.push(new webpack.ProvidePlugin({
+            process: 'process/browser'
+        }));
+    }
+
     const config: webpack.Configuration = {
         context: options.projectRoot,
 
-        // vscode extensions run in a Node.js context, see https://webpack.js.org/configuration/node/
-        target: 'node',
+        // vscode extensions run in a Node.js context on desktop, see https://webpack.js.org/configuration/node/
+        // vscode web extensions run with a "webworker" target, see https://webpack.js.org/configuration/target/#target
+        target: options.target,
         node: {
             // For __dirname and __filename, let Node.js use its default behavior (i.e., gives the path to the packed extension.bundle.js file, not the original source file)
             __filename: false,
@@ -63,14 +130,14 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
 
             // The entrypoint bundle for this extension, see https://webpack.js.org/configuration/entry-context/
             "extension.bundle": './extension.bundle.ts',
-
             ...options.entries
         },
 
         output: {
             // The bundles are stored in the 'dist' folder (check package.json), see https://webpack.js.org/configuration/output/
-            path: path.resolve(options.projectRoot, 'dist'),
+            path: options.target === 'webworker' ? path.resolve(options.projectRoot, 'dist', 'web') : path.resolve(options.projectRoot, 'dist'),
             filename: '[name].js',
+            chunkFilename: 'feature-[name].js',
             libraryTarget: 'commonjs2',
 
             // This is necessary to get correct paths in the .js.map files
@@ -103,80 +170,50 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                         keep_fnames: true
                     }
                 })
-            ]
+            ],
+            splitChunks:
+                options.target === 'webworker'
+                    ? false
+                    : {
+                        // Disable all non-async code splitting
+                        chunks: () => false,
+                        cacheGroups: {
+                            default: false,
+                            vendors: false,
+                        },
+                    },
         },
-        plugins: [
-            // Copy files to dist folder where the runtime can find them
-            new CopyWebpackPlugin({
-                patterns: [
-                    // Test files -> dist/test (these files are ignored during packaging)
-                    {
-                        from: path.join(options.projectRoot, 'out', 'test'),
-                        to: path.join(options.projectRoot, 'dist', 'test'),
-                        noErrorOnMissing: true
-                    },
-                    {
-                        from: toGlobSafePath(path.join(options.projectRoot, 'node_modules', '@microsoft', 'vscode-azext-azureutils', 'resources', '**', '*.svg')),
-                        to: path.join(options.projectRoot, 'dist'),
-                        noErrorOnMissing: true
-                    },
-                    {
-                        from: toGlobSafePath(path.join(options.projectRoot, 'node_modules', 'vscode-azureextensionui', 'resources', '**', '*.svg')),
-                        to: path.join(options.projectRoot, 'dist'),
-                        noErrorOnMissing: true
-                    },
-                    {
-                        from: toGlobSafePath(path.join(options.projectRoot, 'node_modules', 'vscode-azureappservice', 'resources', '**', '*.svg')),
-                        to: path.join(options.projectRoot, 'dist'),
-                        noErrorOnMissing: true
-                    }
-                ]
-            }),
-
-            // Fix error:
-            //   > WARNING in ./node_modules/ms-rest/lib/serviceClient.js 441:19-43
-            //   > Critical dependency: the request of a dependency is an expression
-            // in this code:
-            //   let data = require(packageJsonPath);
-            //
-            new webpack.ContextReplacementPlugin(
-                // Whenever there is a dynamic require that webpack can't analyze at all (i.e. resourceRegExp=/^\./), ...
-                /^\./,
-                // CONSIDER: Is there a type for the context argument?  Can't seem to find one.
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (context: any): void => {
-                    // ... and the call was from within node_modules/ms-rest/lib...
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                    if (/node_modules[/\\]ms-rest[/\\]lib/.test(context.context)) {
-                        /* CONSIDER: Figure out how to make this work properly.
-
-                            // ... tell webpack that the call may be loading any of the package.json files from the 'node_modules/azure-arm*' folders
-                            // so it will include those in the package to be available for lookup at runtime
-                            context.request = path.resolve(options.projectRoot, 'node_modules');
-                            context.regExp = /azure-arm.*package\.json/;
-                        */
-
-                        // In the meantime, just ignore the error by telling webpack we've solved the critical dependency issue.
-                        // The consequences of ignoring this error are that
-                        //   the Azure SDKs (e.g. azure-arm-resource) don't get their info stamped into the user agent info for their calls.
-                        /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-                        for (const d of context.dependencies) {
-                            if (d.critical) {
-                                d.critical = false;
-                            }
-                        }
-                        /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-                    }
-                }),
-
-            // Caller-supplied plugins
-            ...(options.plugins || [])
-        ],
-
+        plugins,
         resolve: {
+            mainFields: options.target === 'webworker' ? ['browser', 'module', 'main'] : ['module', 'main'], // look for `browser` entry point in imported node modules
             // Support reading TypeScript and JavaScript files, see https://github.com/TypeStrong/ts-loader
             // These will be automatically transpiled while being placed into dist/extension.bundle.js
-            extensions: ['.ts', '.js']
+            extensions: ['.ts', '.js'],
+            fallback:
+                options.target === 'webworker' ? {
+                    // Webpack 5 no longer polyfills Node.js core modules automatically.
+                    // see
+                    // for the list of Node.js core module polyfills.
+                    "net": require.resolve("net-browserify"),
+                    "crypto": require.resolve("crypto-browserify"),
+                    "path": require.resolve("path-browserify"),
+                    "os": require.resolve("os-browserify/browser"),
+                    "url": require.resolve("url/"),
+                    "util": require.resolve("util/"),
+                    "stream": require.resolve("stream-browserify"),
+                    "http": require.resolve("stream-http"),
+                    "querystring": require.resolve("querystring-es3"),
+                    "zlib": require.resolve("browserify-zlib"),
+                    "assert": require.resolve("assert/"),
+                    "process": require.resolve("process/browser"),
+                    "https": require.resolve("https-browserify"),
+                    "console": require.resolve('console-browserify'),
+                    "async_hooks": false,
+                    "child_process": false,
+                    "fs": false,
+                    //caller-supplied fallbacks
+                    ...(options.resolveFallbackAliases || [])
+                } : undefined,
         },
 
         module: {
@@ -233,12 +270,4 @@ function logCore(loggingVerbosity: Verbosity, messageVerbosity: MessageVerbosity
     if (messageVerbosityValue >= loggingVerbosityValue) {
         console.log(...args);
     }
-}
-
-/**
- * We always want to use posix separators for glob paths
- * See https://github.com/microsoft/vscode-azuretools/issues/879 and https://github.com/webpack-contrib/copy-webpack-plugin#from
- */
-function toGlobSafePath(fsPath: string): string {
-    return fsPath.replace(/\\/g, '/');
 }
