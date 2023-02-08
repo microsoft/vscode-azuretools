@@ -39,7 +39,7 @@
         "@azure/arm-storage-profile-2020-09-01-hybrid": "^2.0.0",
         "@azure/core-client": "^1.6.0",
         "@azure/core-rest-pipeline": "^1.9.0",
-        "@microsoft/vscode-azext-utils": "file:../utils/microsoft-vscode-azext-utils-0.4.1-alpha.0.tgz",
+        "@microsoft/vscode-azext-utils": "file:../utils/microsoft-vscode-azext-utils-0.4.3.tgz",
         "semver": "^7.3.7",
         "uuid": "^9.0.0",
         "vscode-nls": "^5.0.1"

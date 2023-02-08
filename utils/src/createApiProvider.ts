@@ -20,7 +20,7 @@ export function createApiProvider(azExts: (AzureExtensionApiFactory | AzureExten
             throw new Error(localize('invalidVersion', 'Invalid semver "{0}".', azExt.apiVersion));
         }
     }
-    const extensionId: string = (await getPackageInfo()).extensionId;
+    const extensionId: string = getPackageInfo().extensionId;
 
     const apiFactories: AzureExtensionApiFactory[] = azExts.map((azExt): AzureExtensionApiFactory => {
         if (isAzureExtensionApiFactory(azExt)) {

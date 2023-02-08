@@ -1,8 +1,8 @@
 import { ISubscriptionContext } from '@microsoft/vscode-azext-dev';
+import { isWrapper } from '@microsoft/vscode-azureresources-api';
 import * as vscode from 'vscode';
 import * as types from '../../../../index';
 import { NoResourceFoundError } from '../../../errors';
-import { isWrapper } from '../../../registerCommandWithTreeNodeUnwrapping';
 import { AzExtTreeItem } from '../../../tree/AzExtTreeItem';
 import { isAzExtTreeItem } from '../../../tree/isAzExtTreeItem';
 import { createSubscriptionContext } from '../../../utils/credentialUtils';

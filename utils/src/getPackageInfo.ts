@@ -4,9 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ExtensionContext } from "vscode";
-import { Utils } from 'vscode-uri';
 import { ext } from "./extensionVariables";
-import { AzExtFsExtra } from "./utils/AzExtFsExtra";
 
 interface IPackageInfo {
     extensionName: string;
@@ -18,13 +16,13 @@ interface IPackageInfo {
 
 let packageInfo: IPackageInfo | undefined;
 
-export async function getPackageInfo(ctx?: ExtensionContext): Promise<IPackageInfo> {
+export function getPackageInfo(ctx?: ExtensionContext): IPackageInfo {
     if (!packageInfo) {
         if (!ctx) {
             ctx = ext.context;
         }
 
-        const packageJson: IPackageJson = await <IPackageJson>AzExtFsExtra.readJSON(Utils.joinPath(ctx.extensionUri, 'package.json'))
+        const packageJson: IPackageJson = <IPackageJson>ctx.extension.packageJSON;
 
         const extensionName: string | undefined = packageJson.name;
         const extensionVersion: string | undefined = packageJson.version;
