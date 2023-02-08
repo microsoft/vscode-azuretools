@@ -1732,13 +1732,6 @@ export declare interface ContextValueFilter {
     exclude?: string | RegExp | (string | RegExp)[];
 }
 
-/**
- * Get extension exports for the extension with the given id. Activates extension first if needed.
- *
- * @returns `undefined` if the extension is not installed
- */
-export declare function getExtensionExports<T>(extensionId: string): Promise<T | undefined>;
-
 export declare interface PickSubscriptionWizardContext extends QuickPickWizardContext {
     subscription?: AzureSubscription;
 }
