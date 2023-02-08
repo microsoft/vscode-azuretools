@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { AzureSubscription } from '../../hostapi.v2';
+import { AzureSubscription } from '@microsoft/vscode-azureresources-api';
 import { AzExtServiceClientCredentials, ISubscriptionContext } from '../../index';
 import { localize } from '../localize';
 
@@ -36,8 +36,6 @@ export function createCredential(getSession: (scopes?: string[]) => vscode.Provi
 
 /**
  * Creates a subscription context from an application subscription.
- *
- * TODO: expose these utils and remove duplicate code in resource groups + client extensions
  */
 export function createSubscriptionContext(subscription: AzureSubscription): ISubscriptionContext {
     return {

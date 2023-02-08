@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { apiUtils, AzureExtensionApi, GetApiOptions } from '@microsoft/vscode-azureresources-api';
 import * as semver from 'semver';
-import { AzureExtensionApi, AzureExtensionApiProvider, GetApiOptions } from '../api';
 import { AzureExtensionApiFactory, IActionContext } from '../index';
 import { callWithTelemetryAndErrorHandlingSync } from './callWithTelemetryAndErrorHandling';
 import { getPackageInfo } from './getPackageInfo';
@@ -14,7 +14,7 @@ function isAzureExtensionApiFactory(maybeAzureExtensionApiFactory: AzureExtensio
     return (<AzureExtensionApiFactory>maybeAzureExtensionApiFactory).createApi !== undefined;
 }
 
-export async function createApiProvider(azExts: (AzureExtensionApiFactory | AzureExtensionApi)[]): Promise<AzureExtensionApiProvider> {
+export function createApiProvider(azExts: (AzureExtensionApiFactory | AzureExtensionApi)[]): apiUtils.AzureExtensionApiProvider {
     for (const azExt of azExts) {
         if (!semver.valid(azExt.apiVersion)) {
             throw new Error(localize('invalidVersion', 'Invalid semver "{0}".', azExt.apiVersion));

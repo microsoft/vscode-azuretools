@@ -11,7 +11,7 @@ import { NoResourceFoundError, UserCancelledError } from "../../../errors";
 import type { ContextValueFilterQuickPickOptions } from "../ContextValueQuickPickStep";
 import { AzExtTreeItem } from "../../../tree/AzExtTreeItem";
 import { isAzExtParentTreeItem, isAzExtTreeItem } from "../../../tree/isAzExtTreeItem";
-import { isWrapper } from "../../../registerCommandWithTreeNodeUnwrapping";
+import { isWrapper } from "@microsoft/vscode-azureresources-api";
 
 type CreateCallback<TNode = unknown> = (context: types.IActionContext) => TNode | Promise<TNode>;
 
@@ -32,7 +32,7 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
     protected override async promptInternal(wizardContext: TContext): Promise<unknown> {
         const picks = await this.getPicks(wizardContext) as types.IAzureQuickPickItem<unknown>[];
 
-        if (picks.length === 1 && this.pickOptions.skipIfOne) {
+        if (picks.length === 1 && this.pickOptions.skipIfOne && typeof picks[0].data !== 'function') {
             return picks[0].data;
         } else {
             const selected = await wizardContext.ui.showQuickPick(picks, {
@@ -70,7 +70,7 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
         // lastPickedItem might already be a tree item if the user picked a create callback
         const ti = isAzExtTreeItem(lastPickedItem) ? lastPickedItem : await this.treeDataProvider.getTreeItem(lastPickedItem) as AzExtTreeItem;
 
-        if (this.pickFilter.isFinalPick(ti)) {
+        if (this.pickFilter.isFinalPick(ti, lastPickedItem)) {
             // The last picked node matches the expected filter
             // No need to continue prompting
             return undefined;
@@ -92,7 +92,6 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
                 promptSteps: [
                     new CompatibilityRecursiveQuickPickStep(this.treeDataProvider, {
                         ...this.pickOptions,
-                        skipIfOne: !shouldAddCreatePick, // don't skip if we're adding a create pick
                         create: shouldAddCreatePick ? {
                             callback: lastPickedItemTi.createChild.bind(lastPickedItemTi) as typeof lastPickedItemTi.createChild,
                             label: lastPickedItemTi.createNewLabel ?? localize('createNewItem', '$(plus) Create new {0}', lastPickedItemTi.childTypeLabel)

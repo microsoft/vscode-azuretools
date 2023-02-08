@@ -4,16 +4,17 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { AzureResourceQuickPickWizardContext } from '../../../hostapi.v2';
+import { AzureResourceQuickPickWizardContext } from '../../../index';
 import * as types from '../../../index';
 import { parseContextValue } from '../../utils/contextUtils';
 import { PickFilter } from '../PickFilter';
 import { GenericQuickPickOptions, GenericQuickPickStep } from '../GenericQuickPickStep';
 import { AzureResourceItem, ResourceGroupsItem } from './tempTypes';
 import { localize } from '../../localize';
+import type { AzExtResourceType } from '@microsoft/vscode-azureresources-api';
 
 interface AzureResourceQuickPickOptions extends GenericQuickPickOptions {
-    resourceTypes?: types.AzExtResourceType[];
+    resourceTypes?: AzExtResourceType[];
     childItemFilter?: types.ContextValueFilter;
 }
 

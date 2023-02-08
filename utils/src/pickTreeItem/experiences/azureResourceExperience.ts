@@ -12,12 +12,11 @@ import { RecursiveQuickPickStep } from '../contextValue/RecursiveQuickPickStep';
 import { getLastNode } from '../getLastNode';
 import { NoResourceFoundError } from '../../errors';
 import { AzureWizardPromptStep } from '../../wizard/AzureWizardPromptStep';
-import { AzExtResourceType } from '../../AzExtResourceType';
 import { AzureWizard } from '../../wizard/AzureWizard';
-import { AzureResourceQuickPickWizardContext } from '../../../hostapi.v2';
+import { AzureResourceQuickPickWizardContext } from '../../../index';
 import { ResourceGroupsItem } from '../quickPickAzureResource/tempTypes';
-import { isWrapper } from '../../registerCommandWithTreeNodeUnwrapping';
 import { CompatibilityRecursiveQuickPickStep } from '../contextValue/compatibility/CompatibilityRecursiveQuickPickStep';
+import { AzExtResourceType, isWrapper } from '@microsoft/vscode-azureresources-api';
 
 export interface InternalAzureResourceExperienceOptions extends types.PickExperienceContext {
     v1Compatibility?: boolean;
@@ -44,7 +43,7 @@ export async function azureResourceExperience<TPick>(context: InternalAzureResou
             context.v1Compatibility ?
                 new CompatibilityRecursiveQuickPickStep(tdp, {
                     contextValueFilter: childItemFilter,
-                    skipIfOne: false,
+                    skipIfOne: true,
                 }) :
                 new RecursiveQuickPickStep<AzureResourceQuickPickWizardContext>(tdp, {
                     contextValueFilter: childItemFilter,

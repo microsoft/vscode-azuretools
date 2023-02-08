@@ -3,15 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-export * from './activityLog/activities/ExecuteActivity';
-export * from './activityLog/Activity';
+// re-export api types and utils
+export { AzureExtensionApi, GetApiOptions, apiUtils } from '@microsoft/vscode-azureresources-api';
 export { createAzExtOutputChannel } from './AzExtOutputChannel';
-export * from './AzExtResourceType';
 export * from './AzExtTreeFileSystem';
-export * from './callWithTelemetryAndErrorHandling';
-export * from './createApiProvider';
 //export { createExperimentationService } from './createExperimentationService';
 export * from './DialogResponses';
+export * from './activityLog/Activity';
+export * from './activityLog/activities/ExecuteActivity';
+export * from './callWithTelemetryAndErrorHandling';
+export * from './createApiProvider';
 export * from './errors';
 export * from './extensionUserAgent';
 export { registerUIExtensionVariables } from './extensionVariables';
@@ -32,10 +33,10 @@ export * from './tree/AzExtTreeDataProvider';
 export * from './tree/AzExtTreeItem';
 export * from './tree/GenericTreeItem';
 export * from './tree/isAzExtTreeItem';
-export * from './utils/apiUtils';
 export * from './utils/AzExtFsExtra';
 export * from './utils/contextUtils';
-//export * from './utils/findFreePort';
+export * from './utils/credentialUtils';
+// export * from './utils/findFreePort';
 export * from './utils/nonNull';
 export * from './utils/openUrl';
 export * from './wizard/AzureNameStep';
