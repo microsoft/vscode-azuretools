@@ -9,7 +9,7 @@ import type { Environment } from '@azure/ms-rest-azure-env';
 import { AuthenticationSession, CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, ProviderResult, QuickPickItem, QuickPickOptions as VSCodeQuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
-import type { AzureSubscription, AzureResource, AzExtResourceType, AzureExtensionApi, GetApiOptions } from '@microsoft/vscode-azureresources-api';
+import type { AzureSubscription, AzureResource, AzExtResourceType, AzureExtensionApi } from '@microsoft/vscode-azureresources-api';
 
 export declare interface RunWithTemporaryDescriptionOptions {
     description: string;
@@ -1752,9 +1752,8 @@ export function createCredential(getSession: (scopes?: string[]) => ProviderResu
  */
 export function createSubscriptionContext(subscription: AzureSubscription): ISubscriptionContext;
 
-/**
- * apiUtils from @microsoft/vscode-azureresources-api
- */
+
+//#region re-export API types and utils from @microsoft/vscode-azureresources-api
 export declare namespace apiUtils {
     export interface AzureExtensionApiProvider {
         /**
@@ -1785,3 +1784,20 @@ export declare namespace apiUtils {
      */
     export function getExtensionExports<T>(extensionId: string): Promise<T | undefined>;
 }
+
+export declare interface GetApiOptions {
+    /**
+     * The ID of the extension requesting the API.
+     *
+     * @remarks This is used for telemetry purposes, to measure which extensions are using the API.
+     */
+    readonly extensionId?: string;
+}
+
+export declare interface AzureExtensionApi {
+    /**
+     * The API version for this extension. It should be versioned separately from the extension and ideally remains backwards compatible.
+     */
+    apiVersion: string;
+}
+//#endregion
