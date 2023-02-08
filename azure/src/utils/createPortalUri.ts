@@ -3,7 +3,7 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { AzureSubscription } from "@microsoft/vscode-azureresources-api";
+import type { AzureSubscription } from "@microsoft/vscode-azureresources-api";
 import { OpenInPortalOptions } from "../../index";
 import * as vscode from 'vscode';
 
