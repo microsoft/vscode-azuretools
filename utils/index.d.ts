@@ -9,7 +9,7 @@ import type { Environment } from '@azure/ms-rest-azure-env';
 import { AuthenticationSession, CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, ProviderResult, QuickPickItem, QuickPickOptions as VSCodeQuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
-import type { AzureSubscription, AzureResource, AzExtResourceType, AzureExtensionApi, GetApiOptions, apiUtils } from '@microsoft/vscode-azureresources-api';
+import type { AzureSubscription, AzureResource, AzExtResourceType } from '@microsoft/vscode-azureresources-api';
 
 export declare interface RunWithTemporaryDescriptionOptions {
     description: string;
@@ -1732,13 +1732,6 @@ export declare interface ContextValueFilter {
     exclude?: string | RegExp | (string | RegExp)[];
 }
 
-/**
- * Get extension exports for the extension with the given id. Activates extension first if needed.
- *
- * @returns `undefined` if the extension is not installed
- */
-export declare function getExtensionExports<T>(extensionId: string): Promise<T | undefined>;
-
 export declare interface PickSubscriptionWizardContext extends QuickPickWizardContext {
     subscription?: AzureSubscription;
 }
@@ -1758,3 +1751,53 @@ export function createCredential(getSession: (scopes?: string[]) => ProviderResu
  *
  */
 export function createSubscriptionContext(subscription: AzureSubscription): ISubscriptionContext;
+
+
+//#region re-export API types and utils from @microsoft/vscode-azureresources-api
+export declare namespace apiUtils {
+    export interface AzureExtensionApiProvider {
+        /**
+         * Provides the API for an Azure Extension.
+         *
+         * @param apiVersionRange - The version range of the API you need. Any semver syntax is allowed. For example "1" will return any "1.x.x" version or "1.2" will return any "1.2.x" version
+         * @param options - Options for initializing the API. See {@link GetApiOptions}
+         * @throws - Error if a matching version is not found.
+         */
+        getApi<T extends AzureExtensionApi>(apiVersionRange: string, options?: GetApiOptions): T;
+    }
+    export class ExtensionNotFoundError extends Error {
+        constructor(extensionId: string);
+    }
+    /**
+     * Gets the exported API from the given extension id and version range.
+     *
+     * @param extensionId - The extension id to get the API from
+     * @param apiVersionRange - The version range of the API you need. Any semver syntax is allowed. For example "1" will return any "1.x.x" version or "1.2" will return any "1.2.x" version
+     * @param options - The options to pass when creating the API. If `options.extensionId` is left undefined, it's set to the caller extension id.
+     * @throws Error if extension with id is not installed.
+     */
+    export function getAzureExtensionApi<T extends AzureExtensionApi>(context: ExtensionContext, extensionId: string, apiVersionRange: string, options?: GetApiOptions): Promise<T>;
+    /**
+     * Get extension exports for the extension with the given id. Activates extension first if needed.
+     *
+     * @returns `undefined` if the extension is not installed
+     */
+    export function getExtensionExports<T>(extensionId: string): Promise<T | undefined>;
+}
+
+export declare interface GetApiOptions {
+    /**
+     * The ID of the extension requesting the API.
+     *
+     * @remarks This is used for telemetry purposes, to measure which extensions are using the API.
+     */
+    readonly extensionId?: string;
+}
+
+export declare interface AzureExtensionApi {
+    /**
+     * The API version for this extension. It should be versioned separately from the extension and ideally remains backwards compatible.
+     */
+    apiVersion: string;
+}
+//#endregion
