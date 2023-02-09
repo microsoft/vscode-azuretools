@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as path from 'path';
-import { TextDecoder } from 'text-encoding';
 import { FileStat, FileType, Uri, workspace } from 'vscode';
 import { parseError } from '../parseError';
 
@@ -60,8 +59,7 @@ export namespace AzExtFsExtra {
 
     export async function readFile(resource: Uri | string): Promise<string> {
         const uri = convertToUri(resource);
-        const buffer = (await workspace.fs.readFile(uri));
-        return new TextDecoder().decode(buffer);
+        return (await workspace.fs.readFile(uri)).toString();
     }
 
     export async function writeFile(resource: Uri | string, contents: string): Promise<void> {

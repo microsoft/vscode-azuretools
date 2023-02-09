@@ -16,8 +16,8 @@ export interface IInternalTelemetryReporter {
     sendTelemetryErrorEvent(eventName: string, properties?: { [key: string]: string | undefined }, measurements?: { [key: string]: number | undefined }, errorProps?: string[]): void;
 }
 
-export async function createTelemetryReporter(ctx: vscode.ExtensionContext): Promise<IInternalTelemetryReporter> {
-    const { extensionName, extensionVersion, aiKey } = await getPackageInfo(ctx);
+export function createTelemetryReporter(ctx: vscode.ExtensionContext): IInternalTelemetryReporter {
+    const { extensionName, extensionVersion, aiKey } = getPackageInfo(ctx);
 
     let newReporter: IInternalTelemetryReporter;
 

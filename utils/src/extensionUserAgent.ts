@@ -13,13 +13,13 @@ export function addExtensionUserAgent(client: IAddUserAgent): void {
     client.addUserAgentInfo(getExtensionUserAgent());
 }
 
-async function getExtensionUserAgent(): Promise<string> {
-    const { extensionName, extensionVersion } = await getPackageInfo();
+function getExtensionUserAgent(): string {
+    const { extensionName, extensionVersion } = getPackageInfo();
     return `${extensionName}/${extensionVersion}`;
 }
 
-export async function appendExtensionUserAgent(existingUserAgent?: string): Promise<string> {
-    const extensionUserAgent: string = await getExtensionUserAgent();
+export function appendExtensionUserAgent(existingUserAgent?: string): string {
+    const extensionUserAgent: string = getExtensionUserAgent();
 
     existingUserAgent ||= extensionUserAgent;
     if (existingUserAgent.includes(extensionUserAgent)) {

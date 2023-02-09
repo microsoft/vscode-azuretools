@@ -31,7 +31,7 @@ export async function reportAnIssue(issue: IReportableIssue | undefined): Promis
 }
 
 export async function getReportAnIssueLink(issue: IReportableIssue | undefined): Promise<string> {
-    const { extensionVersion } = await getPackageInfo();
+    const { extensionVersion } = getPackageInfo();
 
     const stack: string = (issue?.error.stack || '').replace(/\r\n/g, '\n');
 
