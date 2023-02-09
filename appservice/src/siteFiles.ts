@@ -47,7 +47,7 @@ export async function listFiles(context: IActionContext, site: ParsedSite, fileP
  * Returns the latest etag of the updated file
  */
 export async function putFile(context: IActionContext, site: ParsedSite, data: string | ArrayBuffer, filePath: string, etag: string | undefined): Promise<string> {
-    const options: {} = etag ? { customHeaders: { ['If-Match']: etag } } : {};
+    const options: {} = etag ? { ['If-Match']: etag } : {};
     const kuduClient = await site.createClient(context);
     const result: HttpOperationResponse = (await kuduClient.vfsPutItem(context, data, filePath, options));
     return <string>result.headers.get('etag');
