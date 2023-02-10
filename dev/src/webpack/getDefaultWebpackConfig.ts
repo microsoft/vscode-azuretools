@@ -12,6 +12,7 @@ import * as webpack from 'webpack';
 import { Verbosity } from '../..';
 import { DefaultWebpackOptions } from '../../index';
 import { PackageLock, excludeNodeModulesAndDependencies } from './excludeNodeModulesAndDependencies';
+import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 // Using webpack helps reduce the install and startup time of large extensions by reducing the large number of files into a much smaller set
 // Full webpack documentation: [https://webpack.js.org/configuration/]().
@@ -99,6 +100,8 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                     /* eslint-enable @typescript-eslint/no-unsafe-member-access */
                 }
             }),
+        // runs TypeScript type checker on a separate process since we enabled the `transpileOnly` option for ts-loader
+        new ForkTsCheckerWebpackPlugin(),
 
         // Caller-supplied plugins
         ...(options.plugins || [])
@@ -223,7 +226,11 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                     exclude: /node_modules/,
                     use: [{
                         // Note: the TS loader will transpile the .ts file directly during webpack (i.e., webpack is directly pulling the .ts files, not .js files from out/)
-                        loader: require.resolve('ts-loader')
+                        loader: require.resolve('ts-loader'),
+                        options: {
+                            // don't do type checking, instead let ForkTsCheckerWebpackPlugin do it in a separate process
+                            transpileOnly: true,
+                        }
                     }]
                 },
 
