@@ -18,11 +18,11 @@
   },
   "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/eslint-config-azuretools/README.md",
   "peerDependencies": {
-    "@typescript-eslint/eslint-plugin": ">=4",
-    "eslint": ">=7",
+    "@typescript-eslint/eslint-plugin": ">=5",
+    "eslint": ">=8",
     "eslint-plugin-import": ">=2"
   },
   "dependencies": {
-    "@typescript-eslint/parser": "^4.28.5"
+    "@typescript-eslint/parser": "^5.51.0"
   }
 }
