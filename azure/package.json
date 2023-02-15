@@ -40,6 +40,7 @@
         "@azure/core-client": "^1.6.0",
         "@azure/core-rest-pipeline": "^1.9.0",
         "@microsoft/vscode-azext-utils": "0.4.3-alpha",
+        "nanoid": "^4.0.1",
         "semver": "^7.3.7",
         "uuid": "^9.0.0",
         "vscode-nls": "^5.0.1"

@@ -3,11 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as crypto from "crypto";
+import { customAlphabet } from "nanoid";
 
 export namespace randomUtils {
     export function getRandomHexString(length: number = 6): string {
-        const buffer: Buffer = crypto.randomBytes(Math.ceil(length / 2));
-        return buffer.toString('hex').slice(0, length);
+        return customAlphabet('0123456789abcdef', length)();
     }
 }

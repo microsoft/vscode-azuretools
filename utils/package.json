@@ -37,6 +37,7 @@
         "crypto-randomuuid": "^1.0.0",
         "dayjs": "^1.11.2",
         "escape-string-regexp": "^2.0.0",
+        "nanoid": "^4.0.1",
         "semver": "^7.3.7",
         "text-encoding": "^0.7.0",
         "uuid": "^9.0.0",

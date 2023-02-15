@@ -4,11 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as crypto from "crypto";
+import { customAlphabet } from 'nanoid';
 
 export namespace randomUtils {
     export function getRandomHexString(length: number): string {
-        const buffer: Buffer = crypto.randomBytes(Math.ceil(length / 2));
-        return buffer.toString('hex').slice(0, length);
+        return customAlphabet('0123456789abcdef', length)();
     }
 
     export function getPseudononymousStringHash(s: string): string {
