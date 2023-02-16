@@ -4,16 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { GenericQuickPickStep, SkipIfOneQuickPickOptions } from '../GenericQuickPickStep';
-import { AzureResourceQuickPickWizardContext } from '../../../index';
+import { GenericQuickPickStep } from '../GenericQuickPickStep';
+import { AzureResourceQuickPickWizardContext, GroupQuickPickOptions } from '../../../index';
 import { parseContextValue } from '../../utils/contextUtils';
 import { PickFilter } from '../PickFilter';
-import type { AzExtResourceType } from '@microsoft/vscode-azureresources-api';
-
-interface GroupQuickPickOptions extends SkipIfOneQuickPickOptions {
-    groupType?: AzExtResourceType[];
-    skipIfOne?: true;
-}
 
 export class QuickPickGroupStep extends GenericQuickPickStep<AzureResourceQuickPickWizardContext, GroupQuickPickOptions> {
     public constructor(tdp: vscode.TreeDataProvider<unknown>, options: GroupQuickPickOptions) {

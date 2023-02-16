@@ -8,7 +8,6 @@ import { getLastNode } from "../../getLastNode";
 import { CompatibilityContextValueQuickPickStep } from './CompatibilityContextValueQuickPickStep';
 import { localize } from "../../../localize";
 import { NoResourceFoundError, UserCancelledError } from "../../../errors";
-import type { ContextValueFilterQuickPickOptions } from "../ContextValueQuickPickStep";
 import { AzExtTreeItem } from "../../../tree/AzExtTreeItem";
 import { isAzExtParentTreeItem, isAzExtTreeItem } from "../../../tree/isAzExtTreeItem";
 import { isWrapper } from "@microsoft/vscode-azureresources-api";
@@ -20,7 +19,7 @@ type CreateOptions<TNode = unknown> = {
     callback: CreateCallback<TNode>;
 }
 
-interface CompatibilityRecursiveQuickPickOptions extends ContextValueFilterQuickPickOptions {
+interface CompatibilityRecursiveQuickPickOptions extends types.ContextValueFilterQuickPickOptions {
     create?: CreateOptions;
 }
 
