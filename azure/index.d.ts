@@ -14,7 +14,7 @@ import type { PipelineRequestOptions, PipelineResponse } from '@azure/core-rest-
 import type { Environment } from '@azure/ms-rest-azure-env';
 import type { AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtServiceClientCredentialsT2, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IRelatedNameWizardContext, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
 import { AzureSubscription } from '@microsoft/vscode-azureresources-api';
-import { Disposable, Progress } from 'vscode';
+import { Disposable, Progress, Uri } from 'vscode';
 
 export type OpenInPortalOptions = {
     /**

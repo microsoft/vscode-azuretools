@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ServiceClient } from '@azure/core-client';
-import { createPipelineFromOptions, createPipelineRequest, Pipeline, PipelineOptions, PipelinePolicy, PipelineRequest, PipelineResponse, RetryPolicyOptions, SendRequest } from '@azure/core-rest-pipeline';
+import { createPipelineRequest, defaultRetryPolicy, Pipeline, PipelineOptions, PipelinePolicy, PipelineRequest, PipelineResponse, RetryPolicyOptions, SendRequest, userAgentPolicy } from '@azure/core-rest-pipeline';
 import { appendExtensionUserAgent, AzExtTreeItem, IActionContext, ISubscriptionActionContext, ISubscriptionContext } from '@microsoft/vscode-azext-utils';
 import { Agent as HttpsAgent } from 'https';
 import { uuid } from "uuidv4";
@@ -34,18 +34,22 @@ export function parseClientContext(clientContext: InternalAzExtClientContext): I
 
 export function createAzureClient<T extends ServiceClient>(clientContext: InternalAzExtClientContext, clientType: types.AzExtClientType<T>): T {
     const context = parseClientContext(clientContext);
-    return new clientType(context.credentials, context.subscriptionId, {
-        //endpoint: context.environment.resourceManagerEndpointUrl,
-        //userAgent: appendExtensionUserAgent,
+    const client = new clientType(context.credentials, context.subscriptionId, {
+        endpoint: context.environment.resourceManagerEndpointUrl,
     });
+
+    addAzExtPipeline(context, client.pipeline);
+    return client;
 }
 
 export function createAzureSubscriptionClient<T extends ServiceClient>(clientContext: InternalAzExtClientContext, clientType: types.AzExtSubscriptionClientType<T>): T {
     const context = parseClientContext(clientContext);
-    return new clientType(context.credentials, {
-        endpoint: context.environment.resourceManagerEndpointUrl,
-        pipeline: createAzExtPipeline(context),
+    const client = new clientType(context.credentials, {
+        endpoint: context.environment.resourceManagerEndpointUrl
     });
+
+    addAzExtPipeline(context, client.pipeline);
+    return client;
 }
 
 export async function sendRequestWithTimeout(context: IActionContext, options: types.AzExtRequestPrepareOptions, timeout: number, clientInfo: types.AzExtGenericClientInfo): Promise<PipelineResponse> {
@@ -80,24 +84,26 @@ export async function createGenericClient(context: IActionContext, clientInfo: t
 
     const client = new ServiceClient({
         credential: credentials,
-        endpoint,
-        pipeline: createAzExtPipeline(
-            context,
-            endpoint,
-            {
-                retryOptions,
-            }
-        ),
+        endpoint
     });
 
+    addAzExtPipeline(context, client.pipeline, endpoint, { retryOptions });
     return client;
 }
 
-function createAzExtPipeline(context: IActionContext, endpoint?: string, options?: PipelineOptions): Pipeline {
-    const pipeline = createPipelineFromOptions({
-        ...options,
-        userAgentOptions: { userAgentPrefix: appendExtensionUserAgent() },
-    });
+function addAzExtPipeline(context: IActionContext, pipeline: Pipeline, endpoint?: string, options?: PipelineOptions): Pipeline {
+    // ServiceClient has default pipeline policies that the core-client SDKs require. Rather than building an entirely custom pipeline,
+    // it's easier to just remove the default policies and add ours as-needed
+
+    // ServiceClient adds a default retry policy, so we need to remove it and add ours
+    if (options?.retryOptions) {
+        pipeline.removePolicy(defaultRetryPolicy());
+        pipeline.addPolicy(defaultRetryPolicy(options?.retryOptions));
+    }
+
+    // ServiceClient adds a default userAgent policy and you can't have duplicate policies, so we need to remove it and add ours
+    pipeline.removePolicy(userAgentPolicy());
+    pipeline.addPolicy(userAgentPolicy({ userAgentPrefix: appendExtensionUserAgent() }));
 
     // Policies to apply before the request
     pipeline.addPolicy(new AcceptLanguagePolicy(), { phase: 'Serialize' });
@@ -120,7 +126,7 @@ function createAzExtPipeline(context: IActionContext, endpoint?: string, options
 /**
  * Automatically add id to correlate our telemetry with the platform team's telemetry
  */
-class CorrelationIdPolicy implements PipelinePolicy {
+export class CorrelationIdPolicy implements PipelinePolicy {
     public readonly name = 'CorrelationIdPolicy';
 
     constructor(private readonly context: IActionContext) {
