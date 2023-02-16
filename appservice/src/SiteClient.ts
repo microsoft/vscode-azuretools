@@ -407,20 +407,20 @@ export class SiteClient implements IAppSettingsClient {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
         const response: HttpOperationResponse = await client.sendRequest({
             method: 'GET',
-            url: `${this._site.id}/vfs/${path}/?api-version=2022-03-01`,
+            url: `${this._site.kuduUrl}/api/vfs/${path}?api-version=2022-03-01`,
         });
-        return response.parsedBody as HttpResponse;
+        return response as HttpResponse;
     }
 
-    public async vfsPutItem(context: IActionContext, data: string | ArrayBuffer, path: string, options?: {}): Promise<HttpResponse> {
+    public async vfsPutItem(context: IActionContext, data: string | ArrayBuffer, path: string, headers?: {}): Promise<HttpResponse> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
         const response: HttpOperationResponse = await client.sendRequest({
             method: 'PUT',
-            url: `${this._site.id}/vfs/${path}/?api-version=2022-03-01`,
-            body: data,
-            headers: options
+            url: `${this._site.kuduUrl}/api/vfs/${path}?api-version=2022-03-01`,
+            body: typeof data === 'string' ? data : data.toString(),
+            headers
         });
-        return response.parsedBody as HttpResponse;
+        return response as HttpResponse;
     }
 
     /**

@@ -13,6 +13,7 @@ import type { PagedAsyncIterableIterator } from '@azure/core-paging';
 import type { PipelineRequestOptions, PipelineResponse } from '@azure/core-rest-pipeline';
 import type { Environment } from '@azure/ms-rest-azure-env';
 import type { AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtServiceClientCredentialsT2, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IRelatedNameWizardContext, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
+import { AzureSubscription } from '@microsoft/vscode-azureresources-api';
 import { Disposable, Progress } from 'vscode';
 
 export type OpenInPortalOptions = {
@@ -412,5 +413,7 @@ interface ParsedAzureResourceId {
     resourceName: string;
 }
 
-export declare function parseAzureResourceId(id: string): ParsedAzureResourceId;
-export declare function getResourceGroupFromId(id: string): string;
+export function parseAzureResourceId(id: string): ParsedAzureResourceId;
+export function getResourceGroupFromId(id: string): string;
+
+export declare function createPortalUri(subscription: AzureSubscription, id: string, options?: OpenInPortalOptions): Uri;
