@@ -201,7 +201,7 @@ export class CorrelationIdPolicy implements PipelinePolicy {
 // }
 
 // Add the "Accept-Language" header
-export class AcceptLanguagePolicy implements PipelinePolicy {
+class AcceptLanguagePolicy implements PipelinePolicy {
     public readonly name = 'AcceptLanguagePolicy';
 
     public async sendRequest(request: PipelineRequest, next: SendRequest): Promise<PipelineResponse> {
@@ -211,7 +211,7 @@ export class AcceptLanguagePolicy implements PipelinePolicy {
 }
 
 // Adds the endpoint to the request URL, if it is not present
-export class AddEndpointPolicy implements PipelinePolicy {
+class AddEndpointPolicy implements PipelinePolicy {
     public readonly name = 'AddEndpointPolicy';
 
     public constructor(private readonly endpoint: string) { }
