@@ -41,6 +41,20 @@ export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizar
         wizardContext.pickedNodes.push(pick);
     }
 
+    // provide support for picking command tree items, and running the command within the wizard
+    public async getSubWizard(wizardContext: TContext): Promise<types.IWizardOptions<TContext> | undefined> {
+        const lastPick = getLastNode(wizardContext);
+        const treeItem = await this.treeDataProvider.getTreeItem(lastPick);
+        if (treeItem.command) {
+            await vscode.commands.executeCommand(treeItem.command.command, ...(treeItem.command.arguments ?? []));
+            wizardContext.pickedNodes.pop();
+            return {
+                promptSteps: [this]
+            }
+        }
+        return undefined;
+    }
+
     public undo(wizardContext: TContext): void {
         wizardContext.pickedNodes.pop();
     }
