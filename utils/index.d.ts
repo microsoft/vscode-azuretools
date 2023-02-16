@@ -1801,3 +1801,76 @@ export declare interface AzureExtensionApi {
     apiVersion: string;
 }
 //#endregion
+
+//#region Pick tree item steps
+export declare interface GenericQuickPickOptions {
+    skipIfOne?: boolean;
+}
+
+export declare interface SkipIfOneQuickPickOptions extends GenericQuickPickOptions {
+    skipIfOne?: true;
+}
+
+export declare abstract class GenericQuickPickStep<TContext extends QuickPickWizardContext, TOptions extends GenericQuickPickOptions> extends AzureWizardPromptStep<TContext> {
+    constructor(
+        treeDataProvider: TreeDataProvider<unknown>,
+        pickOptions: TOptions,
+        promptOptions?: IAzureQuickPickOptions
+    );
+
+    prompt(wizardContext: TContext): Promise<void>;
+    undo(wizardContext: TContext): void;
+    shouldPrompt(wizardContext: TContext): boolean;
+}
+
+export declare interface PickFilter<TPick = TreeItem> {
+    /**
+     * Filters for nodes that match the final target.
+     *
+     * @param treeItem - The tree item to apply the filter to
+     * @param element - The element to apply the filter to. May be a `Wrapper`.
+     */
+    isFinalPick(treeItem: TPick, element: unknown): boolean;
+    /**
+     * Filters for nodes that could be an ancestor of a node matching the final target.
+     *
+     * @param treeItem - The tree item to apply the filter to
+     * @param element - The element to apply the filter to. May be a `Wrapper`.
+     */
+    isAncestorPick(treeItem: TPick, element: unknown): boolean;
+}
+
+export declare interface ContextValueFilterQuickPickOptions extends GenericQuickPickOptions {
+    contextValueFilter: ContextValueFilter;
+}
+
+export declare class ContextValueQuickPickStep<TContext extends QuickPickWizardContext, TOptions extends ContextValueFilterQuickPickOptions> extends GenericQuickPickStep<TContext, TOptions> {
+    protected readonly pickFilter: PickFilter;
+}
+
+export declare class RecursiveQuickPickStep<TContext extends QuickPickWizardContext> extends ContextValueQuickPickStep<TContext, ContextValueFilterQuickPickOptions> { }
+
+export declare class QuickPickAzureSubscriptionStep extends GenericQuickPickStep<AzureResourceQuickPickWizardContext, SkipIfOneQuickPickOptions> {
+    public constructor(tdp: TreeDataProvider<ResourceGroupsItem>, options?: GenericQuickPickOptions);
+}
+
+export declare interface GroupQuickPickOptions extends SkipIfOneQuickPickOptions {
+    groupType?: AzExtResourceType[];
+    skipIfOne?: true;
+}
+
+export declare class QuickPickGroupStep extends GenericQuickPickStep<AzureResourceQuickPickWizardContext, GroupQuickPickOptions> {
+    public constructor(tdp: TreeDataProvider<unknown>, options: GroupQuickPickOptions);
+}
+
+export declare interface AzureResourceQuickPickOptions extends GenericQuickPickOptions {
+    resourceTypes?: AzExtResourceType[];
+    childItemFilter?: ContextValueFilter;
+}
+
+export declare class QuickPickAzureResourceStep extends GenericQuickPickStep<AzureResourceQuickPickWizardContext, AzureResourceQuickPickOptions> {
+    public constructor(tdp: TreeDataProvider<ResourceGroupsItem>, options?: AzureResourceQuickPickOptions, promptOptions?: IAzureQuickPickOptions);
+}
+
+export declare function runQuickPickWizard<TPick>(context: PickExperienceContext, wizardOptions?: IWizardOptions<AzureResourceQuickPickWizardContext>): Promise<TPick>;
+//#endregion
