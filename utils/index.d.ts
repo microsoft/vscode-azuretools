@@ -1823,6 +1823,8 @@ export declare abstract class GenericQuickPickStep<TContext extends QuickPickWiz
     shouldPrompt(wizardContext: TContext): boolean;
 }
 
+export declare abstract class GenericQuickPickStepWithCommands<TContext extends QuickPickWizardContext, TOptions extends GenericQuickPickOptions> extends GenericQuickPickStep<TContext, TOptions> { }
+
 export declare interface PickFilter<TPick = TreeItem> {
     /**
      * Filters for nodes that match the final target.
@@ -1850,7 +1852,7 @@ export declare class ContextValueQuickPickStep<TContext extends QuickPickWizardC
 
 export declare class RecursiveQuickPickStep<TContext extends QuickPickWizardContext> extends ContextValueQuickPickStep<TContext, ContextValueFilterQuickPickOptions> { }
 
-export declare class QuickPickAzureSubscriptionStep extends GenericQuickPickStep<AzureResourceQuickPickWizardContext, SkipIfOneQuickPickOptions> {
+export declare class QuickPickAzureSubscriptionStep extends GenericQuickPickStepWithCommands<AzureResourceQuickPickWizardContext, SkipIfOneQuickPickOptions> {
     public constructor(tdp: TreeDataProvider<ResourceGroupsItem>, options?: GenericQuickPickOptions);
 }
 
