@@ -41,7 +41,8 @@ export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizar
             await vscode.commands.executeCommand(treeItem.command.command, ...(treeItem.command.arguments ?? []));
             wizardContext.pickedNodes.pop();
             return {
-                promptSteps: [this]
+                // rerun current step after command is executed
+                promptSteps: [this],
             }
         }
         return undefined;
