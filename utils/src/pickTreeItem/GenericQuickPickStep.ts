@@ -10,15 +10,7 @@ import { AzureWizardPromptStep } from '../wizard/AzureWizardPromptStep';
 import { PickFilter } from './PickFilter';
 import { localize } from '../localize';
 
-export interface GenericQuickPickOptions {
-    skipIfOne?: boolean;
-}
-
-export interface SkipIfOneQuickPickOptions extends GenericQuickPickOptions {
-    skipIfOne?: true;
-}
-
-export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizardContext, TOptions extends GenericQuickPickOptions> extends AzureWizardPromptStep<TContext> {
+export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizardContext, TOptions extends types.GenericQuickPickOptions> extends AzureWizardPromptStep<TContext> {
     public readonly supportsDuplicateSteps = true;
 
     protected readonly promptOptions: types.IAzureQuickPickOptions;
