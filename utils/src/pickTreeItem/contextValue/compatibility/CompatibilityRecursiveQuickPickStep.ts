@@ -36,7 +36,7 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
         if (isAzExtParentTreeItem(lastPickedItemTi)) {
             this.promptOptions.placeHolder = localize('selectTreeItem', 'Select {0}', lastPickedItemTi.childTypeLabel);
             this.promptOptions.stepName = `treeItemPicker|${lastPickedItemTi.contextValue}`;
-            this.promptOptions.noPicksMessage = wizardContext.noItemFoundErrorMessage;
+            this.promptOptions.noPicksMessage = wizardContext.noItemFoundErrorMessage ?? this.promptOptions.noPicksMessage;
             this.promptOptions.ignoreFocusOut = wizardContext.ignoreFocusOut;
         }
 
