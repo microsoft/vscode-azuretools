@@ -13,7 +13,7 @@ import { localize } from '../localize';
 export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizardContext, TOptions extends types.GenericQuickPickOptions> extends AzureWizardPromptStep<TContext> {
     public readonly supportsDuplicateSteps = true;
 
-    protected readonly promptOptions: types.IAzureQuickPickOptions;
+    protected promptOptions: types.IAzureQuickPickOptions;
     protected readonly abstract pickFilter: PickFilter<vscode.TreeItem>;
 
     public constructor(
