@@ -93,7 +93,7 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
                         ...this.pickOptions,
                         create: shouldAddCreatePick ? {
                             callback: lastPickedItemTi.createChild.bind(lastPickedItemTi) as typeof lastPickedItemTi.createChild,
-                            label: lastPickedItemTi.createNewLabel ?? localize('createNewItem', '$(plus) Create new {0}', lastPickedItemTi.childTypeLabel)
+                            label: lastPickedItemTi.createNewLabel ?? localize('createNewItem', '$(plus) Create new {0}...', lastPickedItemTi.childTypeLabel)
                         } : undefined
                     }, promptOptions)
                 ],
