@@ -33,13 +33,12 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
         const lastPickedItem = getLastNode(wizardContext);
         const lastPickedItemTi = isWrapper(lastPickedItem) ? lastPickedItem.unwrap<AzExtTreeItem>() : lastPickedItem;
 
-        this.promptOptions = isAzExtParentTreeItem(lastPickedItemTi) ? {
-            ...this.promptOptions,
-            placeHolder: localize('selectTreeItem', 'Select {0}', lastPickedItemTi.childTypeLabel),
-            stepName: `treeItemPicker|${lastPickedItemTi.contextValue}`,
-            noPicksMessage: wizardContext.noItemFoundErrorMessage,
-            ignoreFocusOut: wizardContext.ignoreFocusOut,
-        } : this.promptOptions;
+        if (isAzExtParentTreeItem(lastPickedItemTi)) {
+            this.promptOptions.placeHolder = localize('selectTreeItem', 'Select {0}', lastPickedItemTi.childTypeLabel);
+            this.promptOptions.stepName = `treeItemPicker|${lastPickedItemTi.contextValue}`;
+            this.promptOptions.noPicksMessage = wizardContext.noItemFoundErrorMessage;
+            this.promptOptions.ignoreFocusOut = wizardContext.ignoreFocusOut;
+        }
 
         const shouldAddCreatePick = isAzExtParentTreeItem(lastPickedItemTi) && !!lastPickedItemTi.createChildImpl && !!lastPickedItemTi.childTypeLabel && !wizardContext.suppressCreatePick;
 
