@@ -10,7 +10,7 @@ import { localize } from "../../../localize";
 import { NoResourceFoundError, UserCancelledError } from "../../../errors";
 import { AzExtTreeItem } from "../../../tree/AzExtTreeItem";
 import { isAzExtParentTreeItem, isAzExtTreeItem } from "../../../tree/isAzExtTreeItem";
-import { isWrapper } from "@microsoft/vscode-azureresources-api";
+import { isWrapper, Wrapper } from "@microsoft/vscode-azureresources-api";
 
 type CreateCallback<TNode = unknown> = (context: types.IActionContext) => TNode | Promise<TNode>;
 
@@ -63,10 +63,16 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
 
                 // context passed to callback must have the same `ui` as the wizardContext
                 // to prevent the wizard from being cancelled unexpectedly
-                const createdPick = await callback?.(wizardContext);
+                const createdTreeItem = await callback?.(wizardContext) as AzExtTreeItem;
+
+                // convert created AzExtTreeItem to a BranchDataItem so the wizard can get its children in the next step
+                const picks = await this.getPicks(wizardContext) as types.IAzureQuickPickItem<unknown>[];
+                const createdPick = picks.find((pick) => {
+                    return (pick.data as Wrapper).unwrap<AzExtTreeItem>().fullId === createdTreeItem.fullId;
+                });
 
                 if (createdPick) {
-                    return createdPick;
+                    return createdPick.data;
                 }
 
                 throw new UserCancelledError();
