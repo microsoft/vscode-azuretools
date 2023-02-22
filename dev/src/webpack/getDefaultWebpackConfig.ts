@@ -167,8 +167,8 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                         keep_classnames: true,
 
                         // Don't mangle function names. https://github.com/microsoft/vscode-azurestorage/issues/525
-                        keep_fnames: true
-                    }
+                        keep_fnames: true,
+                    },
                 })
             ],
             splitChunks:
@@ -241,7 +241,14 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                 // Caller-supplied rules
                 ...(options.loaderRules || [])
             ]
-        }
+        },
+        ignoreWarnings: [
+            {
+                // Ignore a warning from `@vscode/extension-telemetry`
+                module: /node_modules\/@vscode\/extension-telemetry/,
+                message: /Can't resolve 'applicationinsights-native-metrics'/
+            },
+        ]
     };
 
     // Clean the dist folder before webpacking
