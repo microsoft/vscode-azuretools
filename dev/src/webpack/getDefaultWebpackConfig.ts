@@ -167,8 +167,8 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                         keep_classnames: true,
 
                         // Don't mangle function names. https://github.com/microsoft/vscode-azurestorage/issues/525
-                        keep_fnames: true,
-                    },
+                        keep_fnames: true
+                    }
                 })
             ],
             splitChunks:
