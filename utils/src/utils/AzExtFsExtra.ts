@@ -79,7 +79,7 @@ export namespace AzExtFsExtra {
     export async function readJSON<T>(resource: Uri | string): Promise<T> {
         const file = await readFile(resource);
         try {
-            return JSON.parse(file);
+            return JSON.parse(file) as T;
         } catch (err) {
             const pError = parseError(err);
             if (pError.errorType === 'SyntaxError') {
