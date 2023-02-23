@@ -15,7 +15,7 @@ export function registerSiteCommand(commandId: string, callback: CommandCallback
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         async (context, ...args: any[]) => {
             try {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument
                 return await Promise.resolve(callback(context, ...args));
             } catch (error) {
                 handleSiteErrors(context, error);

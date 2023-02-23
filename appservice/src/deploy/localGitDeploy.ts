@@ -87,11 +87,12 @@ export async function localGitDeploy(site: ParsedSite, options: localGitOptions,
                         const pushOptions: Options = forcePush ? { '-f': null } : {};
 
                         localGit.push(remote, `HEAD:${options.branch ?? 'master'}`, pushOptions).catch((error) => {
+                            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                             reject(error);
                             tokenSource.cancel();
                         });
 
-                        waitForDeploymentToComplete(context, site, {expectedId: commitId, token}).then(resolve).catch(reject);
+                        waitForDeploymentToComplete(context, site, { expectedId: commitId, token }).then(resolve).catch(reject);
                     });
                 } finally {
                     tokenSource.dispose();

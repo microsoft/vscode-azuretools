@@ -43,7 +43,7 @@ export async function ignore404Error(context: IActionContext, callback: () => Pr
 }
 
 // typings of queryParamsOptions allows booleans, but the ServiceClient only parses strings
-export function convertQueryParamsValuesToString(queryParams: { [key: string]: any }): { [key: string]: string } {
+export function convertQueryParamsValuesToString(queryParams: { [key: string]: unknown }): { [key: string]: string } {
     const keys: string[] = Object.keys(queryParams);
 
     for (const key of keys) {
@@ -54,5 +54,5 @@ export function convertQueryParamsValuesToString(queryParams: { [key: string]: a
         }
     }
 
-    return queryParams;
+    return queryParams as { [key: string]: string };
 }
