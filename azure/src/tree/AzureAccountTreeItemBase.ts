@@ -94,15 +94,16 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
                 iconPath: new ThemeIcon('loading~spin')
             })];
         } else if (azureAccount.status === 'LoggedOut') {
-            const studentAccountTreeItem =new GenericTreeItem(this, { 
+            const studentAccountTreeItem = new GenericTreeItem(this, {
                 label: createStudentAccountLabel,
-                commandId: 'azureResourceGroups.openUrl', 
-                contextValue, 
-                id: createStudentAccountCommandId, 
-                iconPath: new ThemeIcon('mortar-board'), 
-                includeInTreeItemPicker: true});
+                commandId: 'azureResourceGroups.openUrl',
+                contextValue,
+                id: createStudentAccountCommandId,
+                iconPath: new ThemeIcon('mortar-board'),
+                includeInTreeItemPicker: true
+            });
 
-                studentAccountTreeItem.commandArgs = ['https://aka.ms/student-account'];
+            studentAccountTreeItem.commandArgs = ['https://aka.ms/student-account'];
 
             return [
                 new GenericTreeItem(this, { label: signInLabel, commandId: signInCommandId, contextValue, id: signInCommandId, iconPath: new ThemeIcon('sign-in'), includeInTreeItemPicker: true }),
@@ -207,7 +208,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
             if (extension) {
                 try {
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                    if (semver.lt(extension.packageJSON.version, minAccountExtensionVersion)) {
+                    if (semver.lt(extension.packageJSON.version as string, minAccountExtensionVersion)) {
                         return 'needsUpdate';
                     }
                 } catch {
