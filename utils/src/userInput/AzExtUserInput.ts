@@ -94,6 +94,7 @@ export class AzExtUserInput implements types.IAzureUserInput {
         }
         try {
             this._isPrompting = true;
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             const result = await showWarningMessage<T>(this._context, message, ...args);
             this._onDidFinishPromptEmitter.fire({ value: result });
             return result;
