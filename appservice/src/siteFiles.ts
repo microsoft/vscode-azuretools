@@ -84,6 +84,7 @@ async function getFsResponse(context: IActionContext, site: ParsedSite, filePath
                     } catch (error) {
                         const parsedError: IParsedError = parseError(error);
                         if (!(badGateway.test(parsedError.message) || serviceUnavailable.test(parsedError.message))) {
+                            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                             throw new retry.AbortError(error);
                         }
                         throw error;
