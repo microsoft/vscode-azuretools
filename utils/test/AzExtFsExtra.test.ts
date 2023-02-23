@@ -279,6 +279,7 @@ function ensureDir(fsPath: string): void {
 }
 
 function compareObjects(o1, o2): void {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     for (const [key, value] of Object.entries(o1)) {
         assert.strictEqual(value, o2[key]);
     }
