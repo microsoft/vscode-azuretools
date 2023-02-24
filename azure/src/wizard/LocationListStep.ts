@@ -95,6 +95,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
         let location: types.AzExtLocation = nonNullProp(wizardContext, '_location');
 
         function warnAboutRelatedLocation(loc: types.AzExtLocation): void {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             ext.outputChannel.appendLog(vscode.l10n.t('WARNING: Provider "{0}" does not support location "{1}". Using "{2}" instead.', provider!, location.displayName, loc.displayName));
         }
 
