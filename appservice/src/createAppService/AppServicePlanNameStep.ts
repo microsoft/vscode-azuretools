@@ -36,6 +36,7 @@ export class AppServicePlanNameStep extends AzureWizardPromptStep<IAppServiceWiz
         } else if (appServicePlanNamingRules.invalidCharsRegExp.test(name)) {
             return vscode.l10n.t("The name can only contain alphanumeric characters, hyphens, and underscores.");
         } else if (context.resourceGroup && !await AppServicePlanListStep.isNameAvailable(context, name, nonNullProp(context.resourceGroup, 'name'))) {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             return vscode.l10n.t('App Service plan "{0}" already exists in resource group "{1}".', name, context.resourceGroup.name!);
         } else {
             return undefined;

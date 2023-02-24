@@ -98,6 +98,7 @@ async function waitForPreDeployTask(preDeployTask: vscode.Task, deployFsPath: st
 }
 
 export async function handleFailedPreDeployTask(context: IActionContext, preDeployResult: IPreDeployTaskResult): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const message: string = vscode.l10n.t('Errors exist after running preDeployTask "{0}". See task output for more info.', preDeployResult.taskName!);
     const deployAnyway: vscode.MessageItem = { title: vscode.l10n.t('Deploy Anyway') };
     const openSettings: vscode.MessageItem = { title: vscode.l10n.t('Open Settings') };

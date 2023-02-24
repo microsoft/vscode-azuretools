@@ -30,6 +30,7 @@ export async function swapSlot(context: IActionContext, sourceSlot: ParsedSite, 
         }
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const placeHolder: string = l10n.t('Select which slot to swap with "{0}".', sourceSlot.slotName!);
     const targetSlot = (await context.ui.showQuickPick(otherSlots, { placeHolder, stepName: 'swapSlot' })).data;
 

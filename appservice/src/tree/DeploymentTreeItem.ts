@@ -152,6 +152,7 @@ export class DeploymentTreeItem extends AzExtTreeItem {
             await openUrl(gitHubCommitUrl);
             return;
         } else {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             throw new Error(l10n.t('There is no GitHub repo url associated with deployment "{0}".', this._deployResult.id!));
         }
     }

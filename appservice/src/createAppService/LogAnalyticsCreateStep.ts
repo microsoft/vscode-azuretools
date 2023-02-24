@@ -32,6 +32,7 @@ export class LogAnalyticsCreateStep extends AzureWizardExecuteStep<IAppServiceWi
         context.logAnalyticsWorkspace = workspacesInSameRg[0] ?? workspacesInSameLoc[0];
 
         if (context.logAnalyticsWorkspace) {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             const usingLaw: string = l10n.t('Using existing Log Analytics workspace "{0}"', context.logAnalyticsWorkspace.name!);
             progress.report({ message: usingLaw });
             ext.outputChannel.appendLog(usingLaw);
