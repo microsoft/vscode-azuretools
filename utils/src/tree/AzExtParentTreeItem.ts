@@ -110,6 +110,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
             }
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const placeHolder: string = l10n.t('Select {0}', this.childTypeLabel!);
         const stepName = `treeItemPicker|${this.contextValue}`;
 

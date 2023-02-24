@@ -34,6 +34,7 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
         const lastPickedItemTi = isWrapper(lastPickedItem) ? lastPickedItem.unwrap<AzExtTreeItem>() : lastPickedItem;
 
         if (isAzExtParentTreeItem(lastPickedItemTi)) {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             this.promptOptions.placeHolder = vscode.l10n.t('Select {0}', lastPickedItemTi.childTypeLabel!);
             this.promptOptions.stepName = `treeItemPicker|${lastPickedItemTi.contextValue}`;
             this.promptOptions.noPicksMessage = wizardContext.noItemFoundErrorMessage ?? this.promptOptions.noPicksMessage;
@@ -44,6 +45,7 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
 
         this.pickOptions.create = shouldAddCreatePick ? {
             callback: lastPickedItemTi.createChild.bind(lastPickedItemTi) as typeof lastPickedItemTi.createChild,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             label: lastPickedItemTi.createNewLabel ?? vscode.l10n.t('$(plus) Create new {0}...', lastPickedItemTi.childTypeLabel!)
         } : undefined;
 
