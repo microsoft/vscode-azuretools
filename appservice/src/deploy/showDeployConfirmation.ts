@@ -5,17 +5,16 @@
 
 import { UserCancelledError } from '@microsoft/vscode-azext-utils';
 import { join } from 'path';
-import { commands, MessageItem, Uri, window } from "vscode";
+import { commands, l10n, MessageItem, Uri, window } from "vscode";
 import { ext } from '../extensionVariables';
-import { localize } from '../localize';
 import { ParsedSite } from '../SiteClient';
 import { delay } from '../utils/delay';
 import { updateWorkspaceSetting } from '../utils/settings';
 import { AppSource, IDeployContext } from './IDeployContext';
 
 export async function showDeployConfirmation(context: IDeployContext, site: ParsedSite, deployCommandId: string): Promise<void> {
-    const warning: string = localize('confirmDeploy', 'Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', site.fullName);
-    const items: MessageItem[] = [{ title: localize('deploy', 'Deploy') }];
+    const warning: string = l10n.t('Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', site.fullName);
+    const items: MessageItem[] = [{ title: l10n.t('Deploy') }];
     const resetDefault: MessageItem = { title: 'Reset default' };
     if (context.appSource === AppSource.setting) {
         items.push(resetDefault);

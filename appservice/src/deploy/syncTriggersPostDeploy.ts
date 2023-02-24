@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as retry from 'p-retry';
 import { IActionContext } from '@microsoft/vscode-azext-utils';
+import * as retry from 'p-retry';
+import * as vscode from 'vscode';
 import { ext } from '../extensionVariables';
-import { localize } from '../localize';
 import { ParsedSite } from '../SiteClient';
 import { delay } from '../utils/delay';
 
@@ -23,8 +23,8 @@ export async function syncTriggersPostDeploy(context: IActionContext, site: Pars
     await retry(
         async (currentAttempt: number) => {
             const message: string = currentAttempt === 1 ?
-                localize('syncingTriggers', 'Syncing triggers...') :
-                localize('syncingTriggersAttempt', 'Syncing triggers (Attempt {0}/{1})...', currentAttempt, retries + 1);
+                vscode.l10n.t('Syncing triggers...') :
+                vscode.l10n.t('Syncing triggers (Attempt {0}/{1})...', currentAttempt, retries + 1);
             ext.outputChannel.appendLog(message, { resourceName: site.fullName });
             await client.syncFunctionTriggers();
         },

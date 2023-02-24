@@ -4,9 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzExtTreeItem, createContextValue, IActionContext, openReadOnlyContent, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
-import { ThemeIcon } from 'vscode';
+import { l10n, ThemeIcon } from 'vscode';
 import { ext } from '../extensionVariables';
-import { localize } from '../localize';
 import { ParsedSite } from '../SiteClient';
 import { getFile, ISiteFile } from '../siteFiles';
 import { FolderTreeItem } from './FolderTreeItem';
@@ -43,7 +42,7 @@ export class FileTreeItem extends AzExtTreeItem {
     }
 
     public async openReadOnly(context: IActionContext): Promise<void> {
-        await this.runWithTemporaryDescription(context, localize('opening', 'Opening...'), async () => {
+        await this.runWithTemporaryDescription(context, l10n.t('Opening...'), async () => {
             const file: ISiteFile = await getFile(context, this.site, this.path);
             await openReadOnlyContent(this, file.data, '');
         });

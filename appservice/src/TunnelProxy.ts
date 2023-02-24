@@ -8,10 +8,9 @@ import { BasicAuthenticationCredentials, HttpOperationResponse, RestError, Servi
 import { createGenericClient } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, IParsedError, nonNullProp, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import { createServer, Server, Socket } from 'net';
-import { CancellationToken, Disposable } from 'vscode';
+import { CancellationToken, Disposable, l10n } from 'vscode';
 import * as ws from 'ws';
 import { ext } from './extensionVariables';
-import { localize } from './localize';
 import { ParsedSite } from './SiteClient';
 import { delay } from './utils/delay';
 
@@ -110,7 +109,7 @@ export class TunnelProxy {
         } catch (error) {
             const parsedError: IParsedError = parseError(error);
             ext.outputChannel.appendLog(`[Tunnel] Checking status, error: ${parsedError.message}`);
-            throw new Error(localize('tunnelStatusError', 'Error getting tunnel status: {0}', parsedError.errorType));
+            throw new Error(l10n.t('Error getting tunnel status: {0}', parsedError.errorType));
         }
 
         if (tunnelStatus.state === AppState.STARTED) {
@@ -120,7 +119,7 @@ export class TunnelProxy {
             } else if (tunnelStatus.canReachPort) {
                 return;
             } else {
-                throw new Error(localize('tunnelUnreachable', 'App is started, but port is unreachable'));
+                throw new Error(l10n.t('App is started, but port is unreachable'));
             }
         } else if (tunnelStatus.state === AppState.STARTING) {
             throw new RetryableTunnelStatusError();
@@ -128,7 +127,7 @@ export class TunnelProxy {
             await this.pingApp(context);
             throw new RetryableTunnelStatusError();
         } else {
-            throw new Error(localize('tunnelStatusError', 'Unexpected app state: {0}', tunnelStatus.state));
+            throw new Error(l10n.t('Unexpected app state: {0}', tunnelStatus.state));
         }
     }
 
@@ -149,13 +148,13 @@ export class TunnelProxy {
                 return;
             } catch (error) {
                 if (!(error instanceof RetryableTunnelStatusError)) {
-                    throw new Error(localize('tunnelFailed', 'Unable to establish connection to application: {0}', parseError(error).message));
+                    throw new Error(l10n.t('Unable to establish connection to application: {0}', parseError(error).message));
                 } // else allow retry
             }
 
             await delay(pollingIntervalMs);
         }
-        throw new Error(localize('tunnelTimedOut', 'Unable to establish connection to application: Timed out'));
+        throw new Error(l10n.t('Unable to establish connection to application: Timed out'));
     }
 
     private async setupTunnelServer(token: CancellationToken): Promise<void> {

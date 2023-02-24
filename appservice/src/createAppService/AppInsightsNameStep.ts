@@ -5,7 +5,7 @@
 
 import type { ApplicationInsightsComponent } from '@azure/arm-appinsights';
 import { AzureWizardPromptStep } from '@microsoft/vscode-azext-utils';
-import { localize } from '../localize';
+import * as vscode from 'vscode';
 import { AppInsightsListStep, appInsightsNamingRules } from './AppInsightsListStep';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
@@ -34,13 +34,13 @@ export class AppInsightsNameStep extends AzureWizardPromptStep<IAppServiceWizard
         name = name.trim();
 
         if (name.length < appInsightsNamingRules.minLength || name.length > appInsightsNamingRules.maxLength) {
-            return localize('invalidLength', 'The name must be between {0} and {1} characters.', appInsightsNamingRules.minLength, appInsightsNamingRules.maxLength);
+            return vscode.l10n.t('The name must be between {0} and {1} characters.', appInsightsNamingRules.minLength, appInsightsNamingRules.maxLength);
         } else if (appInsightsNamingRules.invalidCharsRegExp.test(name)) {
-            return localize('invalidChars', "The name can only contain alphanumeric characters or the symbols ._-()");
+            return vscode.l10n.t("The name can only contain alphanumeric characters or the symbols ._-()");
         } else if (name.endsWith('.')) {
-            return localize('invalidEndingChar', "The name cannot end in a period.");
+            return vscode.l10n.t("The name cannot end in a period.");
         } else if (!await this.isNameAvailable(context, name)) {
-            return localize('nameAlreadyExists', 'Application Insights resource "{0}" already exists in subscription "{1}".', name, context.subscriptionDisplayName);
+            return vscode.l10n.t('Application Insights resource "{0}" already exists in subscription "{1}".', name, context.subscriptionDisplayName);
         } else {
             return undefined;
         }

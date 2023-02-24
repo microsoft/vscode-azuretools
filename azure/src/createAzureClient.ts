@@ -4,15 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { BaseRequestPolicy, BasicAuthenticationCredentials, HttpOperationResponse, RequestPolicy, RequestPolicyFactory, RequestPolicyOptions, RestError, ServiceClient, TokenCredentials, WebResource, WebResourceLike } from '@azure/ms-rest-js';
+import { appendExtensionUserAgent, AzExtTreeItem, IActionContext, ISubscriptionActionContext, ISubscriptionContext, maskValue, parseError } from '@microsoft/vscode-azext-utils';
 import { randomUUID } from 'crypto';
 import { Agent } from 'http';
 import { Agent as HttpsAgent } from 'https';
 import * as vscode from "vscode";
 import * as types from '../index';
 import type { GenericServiceClient } from './GenericServiceClient';
-import { localize } from './localize';
 import { parseJson, removeBom } from './utils/parseJson';
-import { appendExtensionUserAgent, AzExtTreeItem, IActionContext, ISubscriptionActionContext, ISubscriptionContext, maskValue, parseError } from '@microsoft/vscode-azext-utils';
 
 export type InternalAzExtClientContext = ISubscriptionActionContext | [IActionContext, ISubscriptionContext | AzExtTreeItem];
 
@@ -204,7 +203,7 @@ class StatusCodePolicy extends BaseRequestPolicy {
         if (!request.operationSpec && (response.status < 200 || response.status >= 300)) {
             const errorMessage: string = response.bodyAsText ?
                 parseError(response.parsedBody || response.bodyAsText).message :
-                localize('unexpectedStatusCode', 'Unexpected status code: {0}', response.status);
+                vscode.l10n.t('Unexpected status code: {0}', response.status);
             throw new RestError(errorMessage, undefined, response.status, request, response, response.bodyAsText);
         } else {
             return response;

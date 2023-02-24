@@ -39,8 +39,7 @@
         "@azure/arm-storage-profile-2020-09-01-hybrid": "^2.0.0",
         "@azure/ms-rest-js": "^2.2.1",
         "@microsoft/vscode-azext-utils": "^0.4.3",
-        "semver": "^7.3.7",
-        "vscode-nls": "^5.0.1"
+        "semver": "^7.3.7"
     },
     "devDependencies": {
         "@azure/core-paging": "^1.2.1",
@@ -52,7 +51,7 @@
         "@types/mocha": "^7.0.2",
         "@types/node": "^14.0.0",
         "@types/semver": "^7.3.9",
-        "@types/vscode": "1.64.0",
+        "@types/vscode": "1.75.0",
         "@typescript-eslint/eslint-plugin": "^5.53.0",
         "@vscode/test-electron": "^2.1.5",
         "eslint": "^8.34.0",

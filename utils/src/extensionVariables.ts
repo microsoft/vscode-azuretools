@@ -4,11 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import { commands, ExtensionContext } from "vscode";
+import { commands, ExtensionContext, l10n } from "vscode";
 import * as types from "../index";
 import { registerErrorHandler } from './callWithTelemetryAndErrorHandling';
 import { createTelemetryReporter, IInternalTelemetryReporter } from './createTelemetryReporter';
-import { localize } from "./localize";
 import { parseError } from './parseError';
 
 interface IInternalExtensionVariables extends types.UIExtensionVariables {
@@ -16,7 +15,7 @@ interface IInternalExtensionVariables extends types.UIExtensionVariables {
 }
 
 class UninitializedExtensionVariables implements types.UIExtensionVariables {
-    private _error: Error = new Error(localize('uninitializedError', '"registerUIExtensionVariables" must be called before using the vscode-azureextensionui package.'));
+    private _error: Error = new Error(l10n.t('"registerUIExtensionVariables" must be called before using the vscode-azureextensionui package.'));
 
     public get context(): ExtensionContext {
         throw this._error;
@@ -57,11 +56,11 @@ export function registerUIExtensionVariables(extVars: types.UIExtensionVariables
  */
 async function handleEntryNotFound(context: types.IErrorHandlerContext): Promise<void> {
     if (parseError(context.error).message === 'Entry not found in cache.') {
-        context.error = new Error(localize('mustReload', 'Your VS Code window must be reloaded to perform this action.'));
+        context.error = new Error(l10n.t('Your VS Code window must be reloaded to perform this action.'));
         context.errorHandling.suppressReportIssue = true;
         context.errorHandling.buttons = [
             {
-                title: localize('reloadWindow', 'Reload Window'),
+                title: l10n.t('Reload Window'),
                 callback: async (): Promise<void> => {
                     await commands.executeCommand('workbench.action.reloadWindow');
                 }

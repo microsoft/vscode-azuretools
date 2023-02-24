@@ -5,9 +5,8 @@
 
 import type { SlotConfigNamesResource, StringDictionary } from '@azure/arm-appservice';
 import { AzExtTreeItem, createContextValue, DialogResponses, IActionContext, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
-import { ThemeIcon } from 'vscode';
+import { l10n, ThemeIcon } from 'vscode';
 import { ext } from '../extensionVariables';
-import { localize } from '../localize';
 import { AppSettingsTreeItem, validateAppSettingKey } from './AppSettingsTreeItem';
 
 /**
@@ -113,7 +112,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
             await client.updateSlotConfigurationNames(slotSettings);
             await this.refresh(context);
         } else {
-            throw Error(localize('toggleSlotSettingsNotSupported', 'Toggling slot settings is not supported.'));
+            throw Error(l10n.t('Toggling slot settings is not supported.'));
         }
     }
 
@@ -122,7 +121,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
         if (client.listSlotConfigurationNames) {
             const slotSettings: SlotConfigNamesResource = await client.listSlotConfigurationNames();
             if (slotSettings.appSettingNames && slotSettings.appSettingNames.find((value: string) => { return value === this._key; })) {
-                this.description = localize('slotSetting', 'Slot Setting');
+                this.description = l10n.t('Slot Setting');
             } else {
                 this.description = undefined;
             }

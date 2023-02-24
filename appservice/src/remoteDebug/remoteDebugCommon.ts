@@ -7,7 +7,6 @@ import type { SiteConfigResource } from '@azure/arm-appservice';
 import { callWithTelemetryAndErrorHandling, IActionContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import { ext } from '../extensionVariables';
-import { localize } from '../localize';
 import { ParsedSite } from '../SiteClient';
 
 export function reportMessage(message: string, progress: vscode.Progress<{}>, token: vscode.CancellationToken): void {
@@ -23,7 +22,7 @@ export async function setRemoteDebug(context: IActionContext, isRemoteDebuggingT
     const client = await site.createClient(context);
     const state: string | undefined = await client.getState();
     if (state && state.toLowerCase() === 'stopped') {
-        throw new Error(localize('remoteDebugStopped', 'The app must be running, but is currently in state "Stopped". Start the app to continue.'));
+        throw new Error(vscode.l10n.t('The app must be running, but is currently in state "Stopped". Start the app to continue.'));
     }
 
     if (isRemoteDebuggingToBeEnabled !== siteConfig.remoteDebuggingEnabled) {
@@ -32,7 +31,7 @@ export async function setRemoteDebug(context: IActionContext, isRemoteDebuggingT
         // don't have to check input as this handles cancels and learnMore responses
         await context.ui.showWarningMessage(confirmMessage, { modal: true, learnMoreLink }, confirmButton);
         siteConfig.remoteDebuggingEnabled = isRemoteDebuggingToBeEnabled;
-        reportMessage(localize('remoteDebugUpdate', 'Updating site configuration to set remote debugging...'), progress, token);
+        reportMessage(vscode.l10n.t('Updating site configuration to set remote debugging...'), progress, token);
 
         await callWithTelemetryAndErrorHandling('appService.remoteDebugUpdateConfiguration', async (updateContext: IActionContext) => {
             updateContext.errorHandling.suppressDisplay = true;
@@ -40,7 +39,7 @@ export async function setRemoteDebug(context: IActionContext, isRemoteDebuggingT
             await client.updateConfiguration(siteConfig);
         });
 
-        reportMessage(localize('remoteDebugUpdateDone', 'Updating site configuration done.'), progress, token);
+        reportMessage(vscode.l10n.t('Updating site configuration done.'), progress, token);
     } else {
         // Update not needed
         if (noopMessage) {

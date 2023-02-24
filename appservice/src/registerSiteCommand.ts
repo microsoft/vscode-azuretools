@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { CommandCallback, IActionContext, IParsedError, parseError, registerCommand } from '@microsoft/vscode-azext-utils';
-import { localize } from './localize';
+import * as vscode from 'vscode';
 
 /**
  * Use this to get extra error handling for commands that interact directly with site APIs.
@@ -29,7 +29,7 @@ function handleSiteErrors(context: IActionContext, error: unknown): void {
     const parsedError: IParsedError = parseError(error);
     if (parsedError.errorType === '502' || parsedError.errorType === '503') {
         context.errorHandling.suppressReportIssue = true;
-        const troubleshooting: string = localize('502or503Troubleshooting', 'View troubleshooting tips [here](https://aka.ms/AA772mm).');
+        const troubleshooting: string = vscode.l10n.t('View troubleshooting tips [here](https://aka.ms/AA772mm).');
         throw new Error(`${parsedError.message} ${troubleshooting}`);
     } else {
         throw error;

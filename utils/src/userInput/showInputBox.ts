@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, InputBox, QuickInputButton, QuickInputButtons, window } from 'vscode';
+import { Disposable, InputBox, InputBoxValidationMessage, QuickInputButton, QuickInputButtons, window } from 'vscode';
 import * as types from '../../index';
 import { AzExtQuickInputButtons } from '../constants';
 import { GoBackError, UserCancelledError } from '../errors';
@@ -18,14 +18,14 @@ export async function showInputBox(context: IInternalActionContext, options: typ
         const inputBox: InputBox = createInputBox(context, options);
         disposables.push(inputBox);
 
-        let latestValidation: Promise<string | undefined | null> = options.validateInput ? Promise.resolve(options.validateInput(inputBox.value)) : Promise.resolve('');
+        let latestValidation: Promise<string | undefined | null | InputBoxValidationMessage> = options.validateInput ? Promise.resolve(options.validateInput(inputBox.value)) : Promise.resolve('');
         return await new Promise<string>((resolve, reject): void => {
             disposables.push(
                 inputBox.onDidChangeValue(async text => {
                     if (options.validateInput) {
-                        const validation: Promise<string | undefined | null> = Promise.resolve(options.validateInput(text));
+                        const validation: Promise<string | undefined | null | InputBoxValidationMessage> = Promise.resolve(options.validateInput(text));
                         latestValidation = validation;
-                        const message: string | undefined | null = await validation;
+                        const message: string | undefined | null | InputBoxValidationMessage = await validation;
                         if (validation === latestValidation) {
                             inputBox.validationMessage = message || '';
                         }
@@ -36,7 +36,7 @@ export async function showInputBox(context: IInternalActionContext, options: typ
                     inputBox.enabled = false;
                     inputBox.busy = true;
 
-                    const validateInputResult: string | undefined | null = await latestValidation;
+                    const validateInputResult: string | undefined | null | InputBoxValidationMessage = await latestValidation;
                     const asyncValidationResult: string | undefined | null = options.asyncValidationTask ? await options.asyncValidationTask(inputBox.value) : undefined;
                     if (!validateInputResult && !asyncValidationResult) {
                         resolve(inputBox.value);
@@ -97,7 +97,7 @@ function createInputBox(context: IInternalActionContext, options: types.AzExtInp
 
     const validateInput = options.validateInput;
     if (validateInput) {
-        options.validateInput = async (v): Promise<string | null | undefined> => validOnTimeoutOrException(async () => await validateInput(v));
+        options.validateInput = async (v): Promise<string | null | undefined | InputBoxValidationMessage> => validOnTimeoutOrException(async () => await validateInput(v));
     }
 
     if (!inputBox.password) {

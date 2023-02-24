@@ -5,8 +5,7 @@
 
 import { AzureWizardPromptStep, DialogResponses, nonNullProp } from "@microsoft/vscode-azext-utils";
 import { isNullOrUndefined } from "util";
-import { MessageItem } from "vscode";
-import { localize } from "../localize";
+import { l10n, MessageItem } from "vscode";
 import { IDeleteSiteWizardContext } from "./IDeleteSiteWizardContext";
 
 export class DeleteLastServicePlanStep extends AzureWizardPromptStep<IDeleteSiteWizardContext> {
@@ -17,7 +16,7 @@ export class DeleteLastServicePlanStep extends AzureWizardPromptStep<IDeleteSite
 
         const plan = await client.getAppServicePlan();
         if (plan && !isNullOrUndefined(plan.numberOfSites) && plan.numberOfSites < 2) {
-            const message: string = localize('deleteLastServicePlan', 'This is the last app in the App Service plan "{0}". Do you want to delete this App Service plan to prevent unexpected charges?', plan.name);
+            const message: string = l10n.t('This is the last app in the App Service plan "{0}". Do you want to delete this App Service plan to prevent unexpected charges?', plan.name!);
             const input: MessageItem = await context.ui.showWarningMessage(message, { modal: true, stepName: 'lastAppOnPlan' }, DialogResponses.yes, DialogResponses.no);
             context.deletePlan = input === DialogResponses.yes;
         }

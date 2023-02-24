@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzExtParentTreeItem, createContextValue } from '@microsoft/vscode-azext-utils';
-import { localize } from '../localize';
+import * as vscode from 'vscode';
 import { ParsedSite } from '../SiteClient';
 import { FolderTreeItem } from './FolderTreeItem';
 
@@ -25,7 +25,7 @@ export class SiteFilesTreeItem extends FolderTreeItem {
     constructor(parent: AzExtParentTreeItem, options: SiteFilesTreeItemOptions) {
         super(parent, {
             site: options.site,
-            label: localize('siteFiles', 'Files'),
+            label: vscode.l10n.t('Files'),
             path: '/site/wwwroot',
             isReadOnly: options.isReadOnly
         });

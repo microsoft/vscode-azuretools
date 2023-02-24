@@ -4,13 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzureWizardPromptStep, IAzureQuickPickItem, nonNullProp } from '@microsoft/vscode-azext-utils';
-import { localize } from '../localize';
+import * as vscode from 'vscode';
 import { getGitHubQuickPicksWithLoadMore, gitHubRepoData, ICachedQuickPicks } from './connectToGitHub';
 import { IConnectToGitHubWizardContext } from './IConnectToGitHubWizardContext';
 
 export class GitHubRepoListStep extends AzureWizardPromptStep<IConnectToGitHubWizardContext> {
     public async prompt(context: IConnectToGitHubWizardContext): Promise<void> {
-        const placeHolder: string = localize('chooseRepo', 'Choose repository');
+        const placeHolder: string = vscode.l10n.t('Choose repository');
         let repoData: gitHubRepoData | string;
         const picksCache: ICachedQuickPicks<gitHubRepoData> = { picks: [] };
 

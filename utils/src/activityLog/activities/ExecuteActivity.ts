@@ -3,9 +3,9 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
+import * as vscode from 'vscode';
 import * as hTypes from '../../../hostapi';
 import * as types from '../../../index';
-import { localize } from "../../localize";
 import { AzExtParentTreeItem } from "../../tree/AzExtParentTreeItem";
 import { GenericTreeItem } from "../../tree/GenericTreeItem";
 import { ActivityBase } from "../Activity";
@@ -31,7 +31,7 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
 
                 const ti = new GenericTreeItem(parent, {
                     contextValue: 'executeResult',
-                    label: localize("clickToView", "Click to view resource"),
+                    label: vscode.l10n.t("Click to view resource"),
                     commandId: 'azureResourceGroups.revealResource',
                 });
 
@@ -58,6 +58,6 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
     }
 
     protected get label(): string {
-        return this.context.activityTitle ?? localize('azureActivity', "Azure Activity");
+        return this.context.activityTitle ?? vscode.l10n.t("Azure Activity");
     }
 }

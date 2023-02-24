@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzExtTreeDataProvider, AzExtTreeItem } from '@microsoft/vscode-azext-utils';
+import * as vscode from 'vscode';
 import { ext } from '../extensionVariables';
-import { localize } from '../localize';
 import { getWorkspaceSetting } from '../utils/settings';
 import { AppSource, IDeployContext } from './IDeployContext';
 
@@ -28,7 +28,7 @@ export async function getDeployNode<T extends AzExtTreeItem>(context: IDeployCon
     } else if (typeof arg2 === 'string' && arg2) {
         node = await tree.findTreeItem(arg2, context);
         if (!node) {
-            throw new Error(localize('noMatchingApp', 'Failed to find app matching id "{0}".', arg2));
+            throw new Error(vscode.l10n.t('Failed to find app matching id "{0}".', arg2));
         }
         context.appSource = AppSource.api;
     } else {
@@ -38,7 +38,7 @@ export async function getDeployNode<T extends AzExtTreeItem>(context: IDeployCon
             if (node) {
                 context.appSource = AppSource.setting;
             } else {
-                ext.outputChannel.appendLog(localize('appFromSettingNotFound', 'WARNING: Failed to find app matching setting "{0}.{1}" with id "{2}"', ext.prefix, context.defaultAppSetting, defaultAppId));
+                ext.outputChannel.appendLog(vscode.l10n.t('WARNING: Failed to find app matching setting "{0}.{1}" with id "{2}"', ext.prefix, context.defaultAppSetting, defaultAppId));
             }
         }
 

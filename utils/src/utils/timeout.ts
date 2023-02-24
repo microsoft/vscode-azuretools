@@ -3,8 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from "../localize";
-
+import * as vscode from 'vscode';
 class TimeoutError extends Error { }
 
 /**
@@ -31,7 +30,7 @@ export async function rejectOnTimeout<T>(timeoutMs: number, action: () => Promis
         let timer: NodeJS.Timer | undefined = setTimeout(
             () => {
                 timer = undefined;
-                reject(new TimeoutError(callerTimeOutMessage || localize('timeout', 'Execution timed out.')));
+                reject(new TimeoutError(callerTimeOutMessage || vscode.l10n.t('Execution timed out.')));
             },
             timeoutMs);
 

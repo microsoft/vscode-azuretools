@@ -51,7 +51,6 @@
         "p-retry": "^3.0.1",
         "pretty-bytes": "^5.3.0",
         "simple-git": "^3.5.0",
-        "vscode-nls": "^5.0.1",
         "ws": "^8.5.0",
         "yazl": "^2.5.1"
     },
@@ -62,7 +61,7 @@
         "@types/mocha": "^9.0.0",
         "@types/node": "^16.0.0",
         "@types/p-retry": "^2.0.0",
-        "@types/vscode": "1.64.0",
+        "@types/vscode": "1.75.0",
         "@types/ws": "^8.5.3",
         "@types/yazl": "^2.4.2",
         "@typescript-eslint/eslint-plugin": "^5.53.0",

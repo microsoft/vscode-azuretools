@@ -3,14 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { MarkdownString, ThemeIcon, TreeItemCollapsibleState } from 'vscode';
+import { l10n, MarkdownString, ThemeIcon, TreeItemCollapsibleState } from 'vscode';
 import * as types from '../../index';
-import { NotImplementedError } from '../errors';
-import { localize } from '../localize';
-import { nonNullProp } from '../utils/nonNull';
-import { IAzExtParentTreeItemInternal, IAzExtTreeDataProviderInternal } from "./InternalInterfaces";
-import { settingUtils } from '../utils/settingUtils';
 import { showContextValueSetting } from '../constants';
+import { NotImplementedError } from '../errors';
+import { nonNullProp } from '../utils/nonNull';
+import { settingUtils } from '../utils/settingUtils';
+import { IAzExtParentTreeItemInternal, IAzExtTreeDataProviderInternal } from "./InternalInterfaces";
 import { isAzExtParentTreeItem } from './isAzExtTreeItem';
 
 export abstract class AzExtTreeItem implements types.AzExtTreeItem {
@@ -145,7 +144,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     public get subscription(): types.ISubscriptionContext {
         const result = this._subscription || this.parent?.subscription;
         if (!result) {
-            throw Error(localize('noSubscriptionFound', 'No Azure subscription found for this tree item.'));
+            throw Error(l10n.t('No Azure subscription found for this tree item.'));
         } else {
             return result;
         }
@@ -183,7 +182,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     }
 
     public async deleteTreeItem(context: types.IActionContext): Promise<void> {
-        await this.runWithTemporaryDescription(context, localize('deleting', 'Deleting...'), async () => {
+        await this.runWithTemporaryDescription(context, l10n.t('Deleting...'), async () => {
             if (this.deleteTreeItemImpl) {
                 await this.deleteTreeItemImpl(context);
                 if (this.parent) {

@@ -5,9 +5,9 @@
 
 import type { ResourceNameAvailability } from '@azure/arm-appservice';
 import { ServiceClient } from '@azure/ms-rest-js';
-import { ResourceGroupListStep, StorageAccountListStep, resourceGroupNamingRules, storageAccountNamingRules, createGenericClient } from '@microsoft/vscode-azext-azureutils';
+import { createGenericClient, ResourceGroupListStep, resourceGroupNamingRules, StorageAccountListStep, storageAccountNamingRules } from '@microsoft/vscode-azext-azureutils';
 import { AzureNameStep, IAzureNamingRules } from '@microsoft/vscode-azext-utils';
-import { localize } from '../localize';
+import * as vscode from 'vscode';
 import { checkNameAvailability } from '../utils/azureUtils';
 import { appInsightsNamingRules } from './AppInsightsListStep';
 import { AppKind } from './AppKind';
@@ -31,22 +31,22 @@ export class SiteNameStep extends AzureNameStep<IAppServiceWizardContext> {
             // For now, we'll only display this placeholder for the most common case
             let namePlaceholder: string;
             if (context.newSiteKind === AppKind.functionapp) {
-                namePlaceholder = localize('funcAppName', 'function app name');
+                namePlaceholder = vscode.l10n.t('function app name');
             } else if (context.newSiteKind?.includes(AppKind.workflowapp)) {
-                namePlaceholder = localize('logicAppName', 'logic app name');
+                namePlaceholder = vscode.l10n.t('logic app name');
             } else {
-                namePlaceholder = localize('webAppName', 'web app name');
+                namePlaceholder = vscode.l10n.t('web app name');
             }
             placeHolder = `<${namePlaceholder}>.azurewebsites.net`;
         }
 
         let prompt: string;
         if (context.newSiteKind === AppKind.functionapp) {
-            prompt = localize('functionAppNamePrompt', 'Enter a globally unique name for the new function app.');
+            prompt = vscode.l10n.t('Enter a globally unique name for the new function app.');
         } else if (context.newSiteKind?.includes(AppKind.workflowapp)) {
-            prompt = localize('functionAppNamePrompt', 'Enter a globally unique name for the new logic app.');
+            prompt = vscode.l10n.t('Enter a globally unique name for the new logic app.');
         } else {
-            prompt = localize('webAppNamePrompt', 'Enter a globally unique name for the new web app.');
+            prompt = vscode.l10n.t('Enter a globally unique name for the new web app.');
         }
 
         context.newSiteName = (await context.ui.showInputBox({
@@ -90,9 +90,9 @@ export class SiteNameStep extends AzureNameStep<IAppServiceWizardContext> {
         name = name.trim();
 
         if (name.length < siteNamingRules.minLength || name.length > siteNamingRules.maxLength) {
-            return localize('invalidLength', 'The name must be between {0} and {1} characters.', siteNamingRules.minLength, siteNamingRules.maxLength);
+            return vscode.l10n.t('The name must be between {0} and {1} characters.', siteNamingRules.minLength, siteNamingRules.maxLength);
         } else if (siteNamingRules.invalidCharsRegExp.test(name)) {
-            return localize('invalidChars', "The name can only contain letters, numbers, or hyphens.");
+            return vscode.l10n.t("The name can only contain letters, numbers, or hyphens.");
         } else {
             const nameAvailability: ResourceNameAvailability = await checkNameAvailability(client, subscriptionId, name, 'Site');
             if (!nameAvailability.nameAvailable) {

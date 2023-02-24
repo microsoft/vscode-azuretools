@@ -3,12 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as types from '../../index';
 import * as vscode from 'vscode';
-import { getLastNode } from './getLastNode';
+import * as types from '../../index';
 import { AzureWizardPromptStep } from '../wizard/AzureWizardPromptStep';
+import { getLastNode } from './getLastNode';
 import { PickFilter } from './PickFilter';
-import { localize } from '../localize';
 
 export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizardContext, TOptions extends types.GenericQuickPickOptions> extends AzureWizardPromptStep<TContext> {
     public readonly supportsDuplicateSteps = true;
@@ -23,7 +22,7 @@ export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizar
     ) {
         super();
         this.promptOptions = {
-            noPicksMessage: localize('noMatchingResources', 'No matching resources found.'),
+            noPicksMessage: vscode.l10n.t('No matching resources found.'),
             ...promptOptions,
         };
     }

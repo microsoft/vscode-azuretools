@@ -3,19 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { addExtensionValueToMask, AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtTreeItem, AzureWizardPromptStep, GenericTreeItem, IActionContext, ISubscriptionActionContext, ISubscriptionContext, nonNullProp, nonNullValue, registerEvent, TreeItemIconPath, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as semver from 'semver';
-import { commands, Disposable, Extension, extensions, MessageItem, ProgressLocation, ThemeIcon, window } from 'vscode';
+import { commands, Disposable, Extension, extensions, l10n, MessageItem, ProgressLocation, ThemeIcon, window } from 'vscode';
 import * as types from '../../index';
 import { AzureAccountExtensionApi, AzureLoginStatus, AzureResourceFilter } from '../azure-account.api';
-import { localize } from '../localize';
 import { getIconPath } from './IconPath';
 import { SubscriptionTreeItemBase } from './SubscriptionTreeItemBase';
-import { AzExtServiceClientCredentials, nonNullProp, nonNullValue, UserCancelledError, registerEvent, AzureWizardPromptStep, AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, addExtensionValueToMask, IActionContext, ISubscriptionActionContext, TreeItemIconPath, ISubscriptionContext } from '@microsoft/vscode-azext-utils';
 
-const signInLabel: string = localize('signInLabel', 'Sign in to Azure...');
-const createAccountLabel: string = localize('createAccountLabel', 'Create an Azure Account...');
-const createStudentAccountLabel: string = localize('createStudentAccount', 'Create an Azure for Students Account...');
-const selectSubscriptionsLabel: string = localize('noSubscriptions', 'Select Subscriptions...');
+const signInLabel: string = l10n.t('Sign in to Azure...');
+const createAccountLabel: string = l10n.t('Create an Azure Account...');
+const createStudentAccountLabel: string = l10n.t('Create an Azure for Students Account...');
+const selectSubscriptionsLabel: string = l10n.t('Select Subscriptions...');
 const signInCommandId: string = 'azure-account.login';
 const createAccountCommandId: string = 'azure-account.createAccount';
 const createStudentAccountCommandId: string = 'azure-account.createStudentAccount';
@@ -30,7 +29,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
     public static contextValue: string = 'azureextensionui.azureAccount';
     public readonly contextValue: string = AzureAccountTreeItemBase.contextValue;
     public readonly label: string = 'Azure';
-    public childTypeLabel: string = localize('subscription', 'subscription');
+    public childTypeLabel: string = l10n.t('subscription');
     public autoSelectInTreeItemPicker: boolean = true;
     public disposables: Disposable[] = [];
     public suppressMaskLabel: boolean = true;
@@ -72,8 +71,8 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
         if (typeof azureAccount === 'string') {
             context.telemetry.properties.accountStatus = azureAccount;
             const label: string = azureAccount === 'notInstalled' ?
-                localize('installAzureAccount', 'Install Azure Account Extension...') :
-                localize('updateAzureAccount', 'Update Azure Account Extension to at least version "{0}"...', minAccountExtensionVersion);
+                l10n.t('Install Azure Account Extension...') :
+                l10n.t('Update Azure Account Extension to at least version "{0}"...', minAccountExtensionVersion);
             const iconPath: TreeItemIconPath = new ThemeIcon('warning');
             const result: AzExtTreeItem = new GenericTreeItem(this, { label, commandId: extensionOpenCommand, contextValue: 'azureAccount' + azureAccount, includeInTreeItemPicker: true, iconPath });
             result.commandArgs = [azureAccountExtensionId];
@@ -87,7 +86,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
         const contextValue: string = 'azureCommand';
         if (azureAccount.status === 'Initializing' || azureAccount.status === 'LoggingIn') {
             return [new GenericTreeItem(this, {
-                label: azureAccount.status === 'Initializing' ? localize('loadingTreeItem', 'Loading...') : localize('signingIn', 'Waiting for Azure sign-in...'),
+                label: azureAccount.status === 'Initializing' ? l10n.t('Loading...') : l10n.t('Waiting for Azure sign-in...'),
                 commandId: signInCommandId,
                 contextValue,
                 id: signInCommandId,
@@ -186,7 +185,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
     public async pickTreeItemImpl(_expectedContextValues: (string | RegExp)[]): Promise<AzExtTreeItem | undefined> {
         const azureAccount: AzureAccountResult = await this._azureAccountTask;
         if (typeof azureAccount !== 'string' && (azureAccount.status === 'LoggingIn' || azureAccount.status === 'Initializing')) {
-            const title: string = localize('waitingForAzureSignin', 'Waiting for Azure sign-in...');
+            const title: string = l10n.t('Waiting for Azure sign-in...');
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             await window.withProgress({ location: ProgressLocation.Notification, title }, async (): Promise<boolean> => await azureAccount!.waitForSubscriptions());
         }
@@ -252,13 +251,13 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
             let stepName: string;
             if (azureAccount === 'notInstalled') {
                 stepName = 'requiresAzureAccount';
-                message = localize('requiresAzureAccount', "This functionality requires installing the Azure Account extension.");
+                message = l10n.t("This functionality requires installing the Azure Account extension.");
             } else {
                 stepName = 'requiresUpdateToAzureAccount';
-                message = localize('requiresUpdateToAzureAccount', 'This functionality requires updating the Azure Account extension to at least version "{0}".', minAccountExtensionVersion);
+                message = l10n.t('This functionality requires updating the Azure Account extension to at least version "{0}".', minAccountExtensionVersion);
             }
 
-            const viewInMarketplace: MessageItem = { title: localize('viewInMarketplace', "View in Marketplace") };
+            const viewInMarketplace: MessageItem = { title: l10n.t("View in Marketplace") };
             if (await context.ui.showWarningMessage(message, { stepName }, viewInMarketplace) === viewInMarketplace) {
                 await commands.executeCommand(extensionOpenCommand, azureAccountExtensionId);
             }
