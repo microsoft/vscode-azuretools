@@ -78,7 +78,17 @@ export namespace AzExtFsExtra {
 
     export async function readJSON<T>(resource: Uri | string): Promise<T> {
         const file = await readFile(resource);
-        return JSON.parse(file) as T;
+        try {
+            return JSON.parse(file) as T;
+        } catch (err) {
+            const pError = parseError(err);
+            if (pError.errorType === 'SyntaxError') {
+                throw new Error(`Error parsing JSON file: ${resource}. ${pError.message}`);
+            }
+            else {
+                throw err;
+            }
+        }
     }
 
     export async function writeJSON(resource: Uri | string, contents: string | unknown, space: string | number = 2): Promise<void> {

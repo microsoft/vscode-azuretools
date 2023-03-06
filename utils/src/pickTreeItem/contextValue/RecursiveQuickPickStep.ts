@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as types from '../../../index';
-import { ContextValueFilterQuickPickOptions, ContextValueQuickPickStep } from './ContextValueQuickPickStep';
+import { ContextValueQuickPickStep } from './ContextValueQuickPickStep';
 import { getLastNode } from '../getLastNode';
 
-export class RecursiveQuickPickStep<TContext extends types.QuickPickWizardContext> extends ContextValueQuickPickStep<TContext, ContextValueFilterQuickPickOptions> {
+export class RecursiveQuickPickStep<TContext extends types.QuickPickWizardContext> extends ContextValueQuickPickStep<TContext, types.ContextValueFilterQuickPickOptions> {
     hideStepCount: boolean = true;
 
     public async getSubWizard(wizardContext: TContext): Promise<types.IWizardOptions<TContext> | undefined> {

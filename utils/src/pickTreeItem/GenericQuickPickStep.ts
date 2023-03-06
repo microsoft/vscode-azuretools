@@ -10,15 +10,7 @@ import { AzureWizardPromptStep } from '../wizard/AzureWizardPromptStep';
 import { PickFilter } from './PickFilter';
 import { localize } from '../localize';
 
-export interface GenericQuickPickOptions {
-    skipIfOne?: boolean;
-}
-
-export interface SkipIfOneQuickPickOptions extends GenericQuickPickOptions {
-    skipIfOne?: true;
-}
-
-export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizardContext, TOptions extends GenericQuickPickOptions> extends AzureWizardPromptStep<TContext> {
+export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizardContext, TOptions extends types.GenericQuickPickOptions> extends AzureWizardPromptStep<TContext> {
     public readonly supportsDuplicateSteps = true;
 
     protected readonly promptOptions: types.IAzureQuickPickOptions;
@@ -53,14 +45,17 @@ export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizar
         const picks = await this.getPicks(wizardContext);
 
         if (picks.length === 1 && this.pickOptions.skipIfOne) {
-            return picks[0].data;
-        } else {
-            const selected = await wizardContext.ui.showQuickPick(picks, {
-                ...(this.promptOptions ?? {})
-            });
-
-            return selected.data;
+            const ti = await this.treeDataProvider.getTreeItem(picks[0].data);
+            if (!ti.command) {
+                return picks[0].data;
+            }
         }
+
+        const selected = await wizardContext.ui.showQuickPick(picks, {
+            ...(this.promptOptions ?? {})
+        });
+
+        return selected.data;
     }
 
     protected async getPicks(wizardContext: TContext): Promise<types.IAzureQuickPickItem<unknown>[]> {

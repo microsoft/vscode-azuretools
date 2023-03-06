@@ -78,7 +78,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
             (context: any): void => {
                 // ... and the call was from within node_modules/ms-rest/lib...
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                if (/node_modules[/\\]ms-rest[/\\]lib/.test(context.context)) {
+                if (/node_modules[/\\]ms-rest[/\\]lib/.test(context.context as string)) {
                     /* CONSIDER: Figure out how to make this work properly.
 
                         // ... tell webpack that the call may be loading any of the package.json files from the 'node_modules/azure-arm*' folders
@@ -241,7 +241,14 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                 // Caller-supplied rules
                 ...(options.loaderRules || [])
             ]
-        }
+        },
+        ignoreWarnings: [
+            {
+                // Ignore a warning from `@vscode/extension-telemetry`
+                module: /node_modules\/@vscode\/extension-telemetry/,
+                message: /Can't resolve 'applicationinsights-native-metrics'/
+            },
+        ]
     };
 
     // Clean the dist folder before webpacking

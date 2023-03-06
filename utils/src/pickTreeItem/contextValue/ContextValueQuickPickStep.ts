@@ -7,18 +7,14 @@ import { TreeItem } from 'vscode';
 import * as types from '../../../index';
 import { parseContextValue } from '../../utils/contextUtils';
 import { PickFilter } from '../PickFilter';
-import { GenericQuickPickOptions, GenericQuickPickStep } from '../GenericQuickPickStep';
+import { GenericQuickPickStep } from '../GenericQuickPickStep';
 
-export interface ContextValueFilterQuickPickOptions extends GenericQuickPickOptions {
-    contextValueFilter: types.ContextValueFilter;
-}
-
-export class ContextValueQuickPickStep<TContext extends types.QuickPickWizardContext, TOptions extends ContextValueFilterQuickPickOptions> extends GenericQuickPickStep<TContext, TOptions> {
+export class ContextValueQuickPickStep<TContext extends types.QuickPickWizardContext, TOptions extends types.ContextValueFilterQuickPickOptions> extends GenericQuickPickStep<TContext, TOptions> {
     protected readonly pickFilter: PickFilter = new ContextValuePickFilter(this.pickOptions);
 }
 
 export class ContextValuePickFilter implements PickFilter {
-    constructor(protected readonly pickOptions: ContextValueFilterQuickPickOptions) { }
+    constructor(protected readonly pickOptions: types.ContextValueFilterQuickPickOptions) { }
 
     isFinalPick(node: TreeItem): boolean {
         const includeOption = this.pickOptions.contextValueFilter.include;

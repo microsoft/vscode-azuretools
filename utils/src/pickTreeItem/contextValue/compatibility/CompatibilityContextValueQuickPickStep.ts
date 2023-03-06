@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as types from "../../../../index";
-import { ContextValueFilterQuickPickOptions, ContextValuePickFilter, ContextValueQuickPickStep } from "../ContextValueQuickPickStep";
+import { ContextValuePickFilter, ContextValueQuickPickStep } from "../ContextValueQuickPickStep";
 import { getLastNode } from "../../getLastNode";
 import { AzExtTreeItem } from "../../../tree/AzExtTreeItem";
 import { AzExtParentTreeItem } from "../../../tree/AzExtParentTreeItem";
@@ -17,7 +17,7 @@ import { localize } from "../../../localize";
 /**
  * Provides compatability with {@link AzExtParentTreeItem.pickTreeItemImpl}
  */
-export class CompatibilityContextValueQuickPickStep<TContext extends types.QuickPickWizardContext, TOptions extends ContextValueFilterQuickPickOptions> extends ContextValueQuickPickStep<TContext, TOptions> {
+export class CompatibilityContextValueQuickPickStep<TContext extends types.QuickPickWizardContext, TOptions extends types.ContextValueFilterQuickPickOptions> extends ContextValueQuickPickStep<TContext, TOptions> {
 
     public override async prompt(wizardContext: TContext): Promise<void> {
         this.setCustomPlaceholder(wizardContext);
