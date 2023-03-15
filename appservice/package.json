@@ -57,7 +57,7 @@
     },
     "devDependencies": {
         "@microsoft/eslint-config-azuretools": "^0.2.0",
-        "@microsoft/vscode-azext-dev": "^0.1.4",
+        "@microsoft/vscode-azext-dev": "^0.2.0",
         "@types/fs-extra": "^9.0.13",
         "@types/mocha": "^9.0.0",
         "@types/node": "^16.0.0",
