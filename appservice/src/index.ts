@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-export * from './IAppSettingsClient';
 export * from './SiteClient';
 export * from './TunnelProxy';
 export * from './confirmOverwriteSettings';
@@ -41,8 +40,6 @@ export * from './remoteDebug/startRemoteDebug';
 export * from './siteFiles';
 export * from './startStreamingLogs';
 export * from './swapSlot';
-export * from './tree/AppSettingTreeItem';
-export * from './tree/AppSettingsTreeItem';
 export * from './tree/DeploymentTreeItem';
 export * from './tree/DeploymentsTreeItem';
 export * from './tree/FileTreeItem';
