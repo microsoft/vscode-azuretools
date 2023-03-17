@@ -19,7 +19,7 @@ suite('request', () => {
 
     async function sendTestRequest(...responses: ResponseData[]): Promise<types.AzExtPipelineResponse> {
         testResponses = responses;
-        return await sendRequestWithTimeout(await createTestActionContext(), { method: 'GET', url, allowInsecureConnection: true }, 2000, undefined);
+        return await sendRequestWithTimeout(await createTestActionContext(), { method: 'GET', url }, 2000, undefined);
     }
 
     suiteSetup(() => {
