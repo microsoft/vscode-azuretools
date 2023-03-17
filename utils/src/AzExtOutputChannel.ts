@@ -3,22 +3,31 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { OutputChannel, ViewColumn, window, workspace, WorkspaceConfiguration } from "vscode";
+import { Event, LogLevel, LogOutputChannel, OutputChannel, ViewColumn, window, workspace, WorkspaceConfiguration } from "vscode";
 import * as types from '../index';
 
-export function createAzExtOutputChannel(name: string, extensionPrefix: string): types.IAzExtOutputChannel {
-    return new AzExtOutputChannel(name, extensionPrefix);
+export function createAzExtLogOutputChannel(name: string): types.IAzExtLogOutputChannel {
+    return new AzExtLogOutputChannel(name);
 }
 
-class AzExtOutputChannel implements types.IAzExtOutputChannel {
-    public readonly name: string;
-    public readonly extensionPrefix: string;
-    private _outputChannel: OutputChannel;
+export function createAzExtOutputChannel(name: string, extensionPrefix: string): types.IAzExtOutputChannel {
+    const outputChannel = new AzExtOutputChannel(name);
+    outputChannel.extensionPrefix = extensionPrefix;
+    return outputChannel;
+}
 
-    constructor(name: string, extensionPrefix: string) {
+export class AzExtOutputChannel implements types.IAzExtOutputChannel {
+    public readonly name: string;
+    public extensionPrefix: string;
+    protected _outputChannel: OutputChannel | LogOutputChannel;
+
+    constructor(name: string) {
         this.name = name;
-        this.extensionPrefix = extensionPrefix;
-        this._outputChannel = window.createOutputChannel(this.name);
+        this._outputChannel = this.createOutputChannel(name);
+    }
+
+    protected createOutputChannel(name: string): OutputChannel {
+        return window.createOutputChannel(name);
     }
 
     public append(value: string): void {
@@ -29,12 +38,14 @@ class AzExtOutputChannel implements types.IAzExtOutputChannel {
         this._outputChannel.appendLine(value);
     }
 
-    public appendLog(value: string, options?: { resourceName?: string, date?: Date }): void {
+    protected shouldIncludeTimestamps(): boolean {
         const enableOutputTimestampsSetting: string = 'enableOutputTimestamps';
         const projectConfiguration: WorkspaceConfiguration = workspace.getConfiguration(this.extensionPrefix);
-        const result: boolean | undefined = projectConfiguration.get<boolean>(enableOutputTimestampsSetting);
+        return !!projectConfiguration.get<boolean>(enableOutputTimestampsSetting);
+    }
 
-        if (!result) {
+    public appendLog(value: string, options?: { resourceName?: string, date?: Date }): void {
+        if (!this.shouldIncludeTimestamps()) {
             this.appendLine(value);
         } else {
             options ||= {};
@@ -65,5 +76,46 @@ class AzExtOutputChannel implements types.IAzExtOutputChannel {
     public dispose(): void {
         this._outputChannel.dispose();
     }
+}
 
+export class AzExtLogOutputChannel extends AzExtOutputChannel implements LogOutputChannel {
+    protected override _outputChannel: LogOutputChannel;
+    readonly logLevel: LogLevel;
+    readonly onDidChangeLogLevel: Event<LogLevel>;
+
+    constructor(name: string) {
+        super(name);
+        this.onDidChangeLogLevel = this._outputChannel.onDidChangeLogLevel;
+        this.logLevel = this._outputChannel.logLevel;
+    }
+
+    protected shouldIncludeTimestamps(): boolean {
+        return false;
+    }
+
+    protected override createOutputChannel(name: string): LogOutputChannel {
+        return window.createOutputChannel(name, {
+            log: true,
+        });
+    }
+
+    trace(message: string, ...args: unknown[]): void {
+        this._outputChannel.trace(message, ...args);
+    }
+
+    debug(message: string, ...args: unknown[]): void {
+        this._outputChannel.debug(message, ...args);
+    }
+
+    info(message: string, ...args: unknown[]): void {
+        this._outputChannel.info(message, ...args);
+    }
+
+    warn(message: string, ...args: unknown[]): void {
+        this._outputChannel.warn(message, ...args);
+    }
+
+    error(error: string | Error, ...args: unknown[]): void {
+        this._outputChannel.error(error, ...args);
+    }
 }
