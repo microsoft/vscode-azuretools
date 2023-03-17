@@ -38,7 +38,6 @@
         "escape-string-regexp": "^2.0.0",
         "html-to-text": "^8.2.0",
         "semver": "^7.3.7",
-        "text-encoding": "^0.7.0",
         "uuid": "^9.0.0",
         "vscode-nls": "^5.0.1",
         "vscode-tas-client": "^0.1.47",

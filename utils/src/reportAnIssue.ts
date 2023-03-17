@@ -70,7 +70,7 @@ Language: ${vscode.env.language}`;
         body += createBodyDetail(propName, String(value));
     }
 
-    const simpleLink: string = await createNewIssueLinkFromBody(body);
+    const simpleLink: string = createNewIssueLinkFromBody(body);
     if (simpleLink.length <= maxUrlLength) {
         return simpleLink;
     }
@@ -80,8 +80,8 @@ Language: ${vscode.env.language}`;
     return createNewIssueLinkFromBody(localize('pasteIssue', "The issue text was copied to the clipboard.  Please paste it into this window."));
 }
 
-async function createNewIssueLinkFromBody(issueBody: string): Promise<string> {
-    const { extensionName, bugsUrl } = await getPackageInfo();
+function createNewIssueLinkFromBody(issueBody: string): string {
+    const { extensionName, bugsUrl } = getPackageInfo();
     const baseUrl: string = bugsUrl || `https://github.com/Microsoft/${extensionName}/issues`;
     return `${baseUrl}/new?body=${encodeURIComponent(issueBody)}`;
 }
