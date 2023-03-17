@@ -10,6 +10,7 @@ import { Agent as HttpsAgent } from 'https';
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import * as types from '../index';
+import { parseJson, removeBom } from './utils/parseJson';
 
 export type InternalAzExtClientContext = ISubscriptionActionContext | [IActionContext, ISubscriptionContext | AzExtTreeItem];
 
@@ -52,7 +53,7 @@ export function createAzureSubscriptionClient<T extends ServiceClient>(clientCon
     return client;
 }
 
-export async function sendRequestWithTimeout(context: IActionContext, options: types.AzExtRequestPrepareOptions, timeout: number, clientInfo: types.AzExtGenericClientInfo): Promise<PipelineResponse> {
+export async function sendRequestWithTimeout(context: IActionContext, options: types.AzExtRequestPrepareOptions, timeout: number, clientInfo: types.AzExtGenericClientInfo): Promise<types.AzExtPipelineResponse> {
     const request: PipelineRequest = createPipelineRequest({
         ...options,
         timeout
@@ -115,10 +116,9 @@ function addAzExtPipeline(context: IActionContext, pipeline: Pipeline, endpoint?
     }
 
     // Policies to apply after the response
-    // pipeline.addPolicy(new MissingContentTypePolicy(), { phase: 'Deserialize' });
+    pipeline.addPolicy(new MissingContentTypePolicy(), { phase: 'Deserialize' });
     // TODO: MissingContentTypePolicy literally conflicts with RemoveBOMPolicy
-    // pipeline.addPolicy(new RemoveBOMPolicy(), { phase: 'Deserialize', beforePolicies: [MissingContentTypePolicy.Name] });
-    // pipeline.addPolicy(new StatusCodePolicy(), { phase: StatusCodePolicy.policyPhase });
+    pipeline.addPolicy(new RemoveBOMPolicy(), { phase: 'Deserialize', beforePolicies: [MissingContentTypePolicy.Name] });
 
     return pipeline;
 }
@@ -143,62 +143,42 @@ export class CorrelationIdPolicy implements PipelinePolicy {
 /**
  * Removes the BOM character if it exists in bodyAsText for a json response, to prevent a parse error
  */
-// class RemoveBOMPolicy implements PipelinePolicy {
-//     public readonly name = 'RemoveBOMPolicy';
+class RemoveBOMPolicy implements PipelinePolicy {
+    public readonly name = 'RemoveBOMPolicy';
 
-//     public async sendRequest(request: PipelineRequest, next: SendRequest): Promise<PipelineResponse> {
-//         const response: PipelineResponse = await next(request);
-//         const contentType: string | undefined = response.headers.get(contentTypeName);
-//         if (contentType && /json/i.test(contentType) && response.bodyAsText) {
-//             response.bodyAsText = removeBom(response.bodyAsText);
-//         }
-//         return response;
-//     }
-// }
+    public async sendRequest(request: PipelineRequest, next: SendRequest): Promise<PipelineResponse> {
+        const response: PipelineResponse = await next(request);
+        const contentType: string | undefined = response.headers.get(contentTypeName);
+        if (contentType && /json/i.test(contentType) && response.bodyAsText) {
+            response.bodyAsText = removeBom(response.bodyAsText);
+        }
+        return response;
+    }
+}
 
-// const contentTypeName: string = 'Content-Type';
+const contentTypeName: string = 'Content-Type';
 
 /**
  * The Azure SDK will assume "JSON" if no content-type is specified, which can cause false-positive parse errors.
  * This will be a little smarter and try to detect if it's json or generic data
  */
-// class MissingContentTypePolicy implements PipelinePolicy {
-//     public static readonly Name = 'MissingContentTypePolicy';
-//     public readonly name = MissingContentTypePolicy.Name;
+class MissingContentTypePolicy implements PipelinePolicy {
+    public static readonly Name = 'MissingContentTypePolicy';
+    public readonly name = MissingContentTypePolicy.Name;
 
-//     public async sendRequest(request: PipelineRequest, next: SendRequest): Promise<PipelineResponse> {
-//         const response: PipelineResponse = await next(request);
-//         if (!response.headers.get(contentTypeName) && response.bodyAsText) {
-//             try {
-//                 parseJson(response.bodyAsText);
-//                 response.headers.set(contentTypeName, 'application/json');
-//             } catch {
-//                 response.headers.set(contentTypeName, 'application/octet-stream');
-//             }
-//         }
-//         return response;
-//     }
-// }
-
-/**
- * The Azure SDK will only throw errors for bad status codes if it has an "operationSpec", but none of our "generic" requests will have that
- */
-// class StatusCodePolicy implements PipelinePolicy {
-//     public readonly name = 'StatusCodePolicy';
-//     public static readonly policyPhase: PipelinePhase = 'Deserialize';
-
-//     public async sendRequest(request: PipelineRequest, next: SendRequest): Promise<PipelineResponse> {
-//         const response: PipelineResponse = await next(request);
-//         if (!request.operationSpec && (response.status < 200 || response.status >= 300)) {
-//             const errorMessage: string = response.bodyAsText ?
-//                 parseError(response.bodyAsText).message :
-//                 localize('unexpectedStatusCode', 'Unexpected status code: {0}', response.status);
-//             throw new RestError(errorMessage, { code: response.status.toString(), statusCode: response.status, request, response });
-//         } else {
-//             return response;
-//         }
-//     }
-// }
+    public async sendRequest(request: PipelineRequest, next: SendRequest): Promise<PipelineResponse> {
+        const response: PipelineResponse = await next(request);
+        if (!response.headers.get(contentTypeName) && response.bodyAsText) {
+            try {
+                parseJson(response.bodyAsText);
+                response.headers.set(contentTypeName, 'application/json');
+            } catch {
+                response.headers.set(contentTypeName, 'application/octet-stream');
+            }
+        }
+        return response;
+    }
+}
 
 // Add the "Accept-Language" header
 class AcceptLanguagePolicy implements PipelinePolicy {

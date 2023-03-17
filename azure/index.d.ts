@@ -365,6 +365,7 @@ export type AzExtGenericClientInfo = AzExtGenericCredentials | { credentials: Az
 export declare function createGenericClient(context: IActionContext, clientInfo: AzExtGenericClientInfo | undefined): Promise<ServiceClient>;
 
 export type AzExtRequestPrepareOptions = PipelineRequestOptions & { rejectUnauthorized?: boolean }
+export type AzExtPipelineResponse = PipelineResponse & { parsedBody?: any }
 
 /**
  * Send request with a timeout specified and turn off retry policy (because retrying could take a lot longer)
