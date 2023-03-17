@@ -4,12 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
+import { InputBoxValidationResult } from '../src/userInput/showInputBox';
 import { validOnTimeoutOrException } from '../src/utils/inputValidation';
 
 suite("inputValidation Tests", () => {
     suite("validOnTimeoutOrException", () => {
         test("executed", async () => {
-            const value: string | undefined | null = await validOnTimeoutOrException(async () => {
+            const value: InputBoxValidationResult = await validOnTimeoutOrException(async () => {
                 return await new Promise<string | undefined>((resolve, _reject) => {
                     setTimeout(() => { resolve("invalid input"); }, 1);
                 });
@@ -19,7 +20,7 @@ suite("inputValidation Tests", () => {
         });
 
         test("timed out", async () => {
-            const value: string | undefined | null = await validOnTimeoutOrException(
+            const value: InputBoxValidationResult = await validOnTimeoutOrException(
                 async () => {
                     return await new Promise<string | undefined>((resolve, _reject) => {
                         setTimeout(() => { resolve("invalid input"); }, 1000);
@@ -32,7 +33,7 @@ suite("inputValidation Tests", () => {
         });
 
         test("exception", async () => {
-            const value: string | undefined | null = await validOnTimeoutOrException(async () => {
+            const value: InputBoxValidationResult = await validOnTimeoutOrException(async () => {
                 return await new Promise<string | undefined>((_resolve, reject) => {
                     setTimeout(() => { reject(new Error("Oh, boy")); }, 1);
                 });
