@@ -42,7 +42,6 @@
         "@microsoft/vscode-azext-utils": "0.4.3-alpha",
         "semver": "^7.3.7",
         "uuid": "^9.0.0",
-        "uuidv4": "^6.2.13",
         "vscode-nls": "^5.0.1"
     },
     "devDependencies": {

@@ -5,12 +5,12 @@
 
 import type { ExtendedLocation } from '@azure/arm-resources';
 import type { Location } from '@azure/arm-resources-subscriptions';
-import { AzureWizardPromptStep, IActionContext, IAzureQuickPickItem, IAzureQuickPickOptions, nonNullProp, nonNullValue } from '@microsoft/vscode-azext-utils';
 import * as types from '../../index';
 import { createResourcesClient, createSubscriptionsClient } from '../clients';
 import { resourcesProvider } from '../constants';
-import { ext } from '../extensionVariables';
+import { AzureWizardPromptStep, IActionContext, IAzureQuickPickItem, IAzureQuickPickOptions, nonNullProp, nonNullValue } from '@microsoft/vscode-azext-utils';
 import { localize } from '../localize';
+import { ext } from '../extensionVariables';
 import { uiUtils } from '../utils/uiUtils';
 
 interface ILocationWizardContextInternal extends types.ILocationWizardContext {

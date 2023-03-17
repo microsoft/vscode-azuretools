@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// import * as dayjs from 'dayjs';
+import * as dayjs from 'dayjs';
 // // eslint-disable-next-line import/no-internal-modules
-// import * as relativeTime from 'dayjs/plugin/relativeTime';
+import * as relativeTime from 'dayjs/plugin/relativeTime';
 import * as types from '../index';
 import { localize } from './localize';
 import { registerCommand } from "./registerCommand";
 import { IReportableIssue, reportAnIssue } from './reportAnIssue';
 import { nonNullValue } from './utils/nonNull';
 
-// dayjs.extend(relativeTime);
+dayjs.extend(relativeTime);
 
 let cachedIssues: IReportableIssue[] | undefined;
 export function cacheIssueForCommand(issue: IReportableIssue): void {
@@ -45,7 +45,7 @@ export function registerReportIssueCommand(commandId: string): void {
                 return {
                     label: i.error.message,
                     description: i.error.errorType,
-                    //detail: `${i.callbackId} - ${dayjs(i.time).fromNow()}`,
+                    detail: `${i.callbackId} - ${dayjs(i.time).fromNow()}`,
                     data: i
                 };
             });

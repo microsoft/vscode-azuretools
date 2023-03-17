@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-utils",
     "author": "Microsoft Corporation",
-    "version": "0.5.2",
+    "version": "1.0.0",
     "description": "Common UI tools for developing Azure extensions for VS Code",
     "tags": [
         "azure",
@@ -34,9 +34,9 @@
     "dependencies": {
         "@microsoft/vscode-azureresources-api": "^2.0.2",
         "@vscode/extension-telemetry": "^0.6.2",
-        "crypto-randomuuid": "^1.0.0",
         "dayjs": "^1.11.2",
         "escape-string-regexp": "^2.0.0",
+        "html-to-text": "^8.2.0",
         "semver": "^7.3.7",
         "text-encoding": "^0.7.0",
         "uuid": "^9.0.0",

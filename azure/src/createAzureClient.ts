@@ -7,7 +7,7 @@ import { ServiceClient } from '@azure/core-client';
 import { createPipelineRequest, defaultRetryPolicy, Pipeline, PipelineOptions, PipelinePolicy, PipelineRequest, PipelineResponse, RetryPolicyOptions, SendRequest, userAgentPolicy } from '@azure/core-rest-pipeline';
 import { appendExtensionUserAgent, AzExtTreeItem, IActionContext, ISubscriptionActionContext, ISubscriptionContext } from '@microsoft/vscode-azext-utils';
 import { Agent as HttpsAgent } from 'https';
-import { uuid } from "uuidv4";
+import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import * as types from '../index';
 
@@ -134,7 +134,7 @@ export class CorrelationIdPolicy implements PipelinePolicy {
 
     public async sendRequest(request: PipelineRequest, next: SendRequest): Promise<PipelineResponse> {
         const headerName = 'x-ms-correlation-request-id';
-        const id: string = this.context.telemetry.properties[headerName] ||= uuid();
+        const id: string = this.context.telemetry.properties[headerName] ||= uuidv4();
         request.headers.set(headerName, id);
         return await next(request);
     }
