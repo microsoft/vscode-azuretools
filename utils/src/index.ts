@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-export * from './activityLog/Activity';
 export * from './activityLog/activities/ExecuteActivity';
+export * from './activityLog/Activity';
 export { createAzExtOutputChannel } from './AzExtOutputChannel';
 export * from './AzExtTreeFileSystem';
-export * from './DialogResponses';
 export * from './callWithTelemetryAndErrorHandling';
 export * from './createApiProvider';
 export { createExperimentationService } from './createExperimentationService';
+export * from './DialogResponses';
 export * from './errors';
 export * from './extensionUserAgent';
 export { registerUIExtensionVariables } from './extensionVariables';
@@ -25,9 +25,9 @@ export * from './pickTreeItem/experiences/subscriptionExperience';
 export * from './pickTreeItem/GenericQuickPickStep';
 export * from './pickTreeItem/contextValue/ContextValueQuickPickStep';
 export * from './pickTreeItem/contextValue/RecursiveQuickPickStep';
-export * from './pickTreeItem/quickPickAzureResource/QuickPickAzureResourceStep';
 export * from './pickTreeItem/quickPickAzureResource/QuickPickAzureSubscriptionStep';
 export * from './pickTreeItem/quickPickAzureResource/QuickPickGroupStep';
+export * from './pickTreeItem/quickPickAzureResource/QuickPickAzureResourceStep';
 export * from './pickTreeItem/runQuickPickWizard';
 export * from './registerCommand';
 export * from './registerCommandWithTreeNodeUnwrapping';
@@ -50,6 +50,6 @@ export * from './wizard/AzureWizardExecuteStep';
 export * from './wizard/AzureWizardPromptStep';
 export * from './wizard/ConfirmPreviousInputStep';
 export * from './wizard/DeleteConfirmationStep';
-// re-export api types and utils	
+// re-export api types and utils
 export { apiUtils, GetApiOptions, AzureExtensionApi } from '@microsoft/vscode-azureresources-api';
 // NOTE: The auto-fix action "source.organizeImports" does weird things with this file, but there doesn't seem to be a way to disable it on a per-file basis so we'll just let it happen
