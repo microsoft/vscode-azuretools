@@ -1295,7 +1295,7 @@ export declare namespace DialogResponses {
 /**
  * Call this to register common variables used throughout the UI package.
  */
-export declare function registerUIExtensionVariables(extVars: UIExtensionVariables): Promise<void>;
+export declare function registerUIExtensionVariables(extVars: UIExtensionVariables): void;
 
 /**
  * Call this to create the experimentation service adapter
