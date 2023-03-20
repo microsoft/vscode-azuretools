@@ -8,8 +8,8 @@ import type { HttpOperationResponse, HttpRequestBody, HttpResponse, RequestPrepa
 import { createGenericClient, uiUtils } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, ISubscriptionContext, nonNullProp, nonNullValue, parseError } from '@microsoft/vscode-azext-utils';
 import { KuduModels } from 'vscode-azurekudu';
-import { AppSettingsClientProvider, IAppSettingsClient } from './IAppSettingsClient';
 import { AppKind } from './createAppService/AppKind';
+import { AppSettingsClientProvider, IAppSettingsClient } from '@microsoft/vscode-azext-azureappsettings';
 import { tryGetAppServicePlan, tryGetWebApp, tryGetWebAppSlot } from './tryGetSiteResource';
 import { createWebSiteClient } from './utils/azureClients';
 import { convertQueryParamsValuesToString } from './utils/kuduUtils';

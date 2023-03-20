@@ -7,7 +7,7 @@
 
 import type { Environment } from '@azure/ms-rest-azure-env';
 import type { AzExtResourceType, AzureResource, AzureSubscription } from '@microsoft/vscode-azureresources-api';
-import { AuthenticationSession, CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, ProviderResult, QuickPickItem, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri, QuickPickOptions as VSCodeQuickPickOptions } from 'vscode';
+import { AuthenticationSession, CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, LogOutputChannel, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, ProviderResult, QuickPickItem, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri, QuickPickOptions as VSCodeQuickPickOptions } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
 
@@ -1387,6 +1387,15 @@ export interface IAzExtOutputChannel extends OutputChannel {
     appendLog(value: string, options?: { resourceName?: string, date?: Date }): void;
 }
 
+export type IAzExtLogOutputChannel = IAzExtOutputChannel & LogOutputChannel;
+
+/**
+ * Create a new AzExtLogOutputChannel
+ *
+ * @param name Human-readable string which will be used to represent the channel in the UI.
+ */
+export declare function createAzExtLogOutputChannel(name: string): IAzExtLogOutputChannel;
+
 /**
  * Create a new AzExtOutputChannel with the given name and the extensionPrefix.
  *
@@ -1686,9 +1695,32 @@ export interface PickExperienceContext extends IActionContext {
     dontUnwrap?: boolean;
 }
 
-export declare function azureResourceExperience<TPick extends unknown>(context: PickExperienceContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: ContextValueFilter): Promise<TPick>;
-export declare function contextValueExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, contextValueFilter: ContextValueFilter): Promise<TPick>;
+/**
+ * Prompts the user to pick a subscription using a quick pick. If there is only one subscription, it will be returned without prompting the user.
+ *
+ * @param context The action context
+ * @param tdp Azure resource tree data provider to perform the pick experience on
+ */
 export declare function subscriptionExperience(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>): Promise<AzureSubscription>;
+
+/**
+ * Prompts the user to pick an Azure resource using a wizard comprised of quick pick steps.
+ *
+ * @param context The action context
+ * @param tdp Azure resource tree data provider to perform the pick experience on
+ * @param resourceTypes the resource types to allow the user to pick from
+ * @param childItemFilter prompt the user to pick children of the Azure resource until an item matching the filter is selected
+ */
+export declare function azureResourceExperience<TPick extends unknown>(context: PickExperienceContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: ContextValueFilter): Promise<TPick>;
+
+/**
+ * Recursively prompts the user to pick a node until a node is packed matching the context value filter.
+ *
+ * @param context The action context
+ * @param tdp tree data provider to pick a node from
+ * @param contextValueFilter the context value filter used to match the deesired node(s)
+ */
+export declare function contextValueExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, contextValueFilter: ContextValueFilter): Promise<TPick>;
 
 interface CompatibilityPickResourceExperienceOptions {
     resourceTypes?: AzExtResourceType | AzExtResourceType[];
@@ -1847,12 +1879,21 @@ export declare interface ContextValueFilterQuickPickOptions extends GenericQuick
     contextValueFilter: ContextValueFilter;
 }
 
+/**
+ * Quick pick step that selects a tree node matching a context value filter.
+ */
 export declare class ContextValueQuickPickStep<TContext extends QuickPickWizardContext, TOptions extends ContextValueFilterQuickPickOptions> extends GenericQuickPickStep<TContext, TOptions> {
     protected readonly pickFilter: PickFilter;
 }
 
+/**
+ * Recursively select tree nodes until a final node is selected that matches the context value filter.
+ */
 export declare class RecursiveQuickPickStep<TContext extends QuickPickWizardContext> extends ContextValueQuickPickStep<TContext, ContextValueFilterQuickPickOptions> { }
 
+/**
+ * Quick pick step to pick an Azure subscription.
+ */
 export declare class QuickPickAzureSubscriptionStep extends GenericQuickPickStepWithCommands<AzureResourceQuickPickWizardContext, SkipIfOneQuickPickOptions> {
     public constructor(tdp: TreeDataProvider<ResourceGroupsItem>, options?: GenericQuickPickOptions);
 }
@@ -1862,6 +1903,11 @@ export declare interface GroupQuickPickOptions extends SkipIfOneQuickPickOptions
     skipIfOne?: true;
 }
 
+/**
+ * Quick pick step that selects a group.
+ *
+ * If view is grouped by Resource Type, and a group matching `options.groupType` is found, it will be auto selected.
+ */
 export declare class QuickPickGroupStep extends GenericQuickPickStep<AzureResourceQuickPickWizardContext, GroupQuickPickOptions> {
     public constructor(tdp: TreeDataProvider<unknown>, options: GroupQuickPickOptions);
 }
@@ -1871,9 +1917,18 @@ export declare interface AzureResourceQuickPickOptions extends GenericQuickPickO
     childItemFilter?: ContextValueFilter;
 }
 
+/**
+ * Quick pick step that selects an Azure resource.
+ */
 export declare class QuickPickAzureResourceStep extends GenericQuickPickStep<AzureResourceQuickPickWizardContext, AzureResourceQuickPickOptions> {
     public constructor(tdp: TreeDataProvider<ResourceGroupsItem>, options?: AzureResourceQuickPickOptions, promptOptions?: IAzureQuickPickOptions);
 }
 
+/**
+ * Creates and runs a quick pick wizard with the given wizard options.
+ *
+ * @param context The action context
+ * @param wizardOptions The options used to construct the wizard
+ */
 export declare function runQuickPickWizard<TPick>(context: PickExperienceContext, wizardOptions?: IWizardOptions<AzureResourceQuickPickWizardContext>): Promise<TPick>;
 //#endregion

@@ -48,7 +48,7 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
     private readonly _settingsToHide: string[] | undefined;
     public readonly contextValuesToAdd: string[];
 
-    constructor(parent: AzExtParentTreeItem, clientProvider: AppSettingsClientProvider, options?: AppSettingsTreeItemOptions) {
+    constructor(parent: AzExtParentTreeItem, clientProvider: AppSettingsClientProvider, public readonly extensionPrefix: string, options?: AppSettingsTreeItemOptions) {
         super(parent);
         this.clientProvider = clientProvider;
         this.supportsSlots = options?.supportsSlots ?? true;

@@ -5,7 +5,7 @@
 
 export * from './activityLog/activities/ExecuteActivity';
 export * from './activityLog/Activity';
-export { createAzExtOutputChannel } from './AzExtOutputChannel';
+export { createAzExtOutputChannel, createAzExtLogOutputChannel } from './AzExtOutputChannel';
 export * from './AzExtTreeFileSystem';
 export * from './callWithTelemetryAndErrorHandling';
 export * from './createApiProvider';
