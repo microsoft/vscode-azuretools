@@ -1928,6 +1928,7 @@ export declare class QuickPickAzureResourceStep extends GenericQuickPickStep<Azu
  *
  * @param context The action context
  * @param wizardOptions The options used to construct the wizard
+ * @param startingNode - The node to start the wizard from. If not specified, the wizard will start from the root.
  */
-export declare function runQuickPickWizard<TPick>(context: PickExperienceContext, wizardOptions?: IWizardOptions<AzureResourceQuickPickWizardContext>): Promise<TPick>;
+export declare function runQuickPickWizard<TPick>(context: PickExperienceContext, wizardOptions?: IWizardOptions<AzureResourceQuickPickWizardContext>, startingNode?: unknown): Promise<TPick>;
 //#endregion

@@ -9,10 +9,10 @@ import { NoResourceFoundError } from '../errors';
 import { AzureWizard } from '../wizard/AzureWizard';
 import { getLastNode } from './getLastNode';
 
-export async function runQuickPickWizard<TPick>(context: types.PickExperienceContext, wizardOptions?: types.IWizardOptions<types.AzureResourceQuickPickWizardContext>): Promise<TPick> {
+export async function runQuickPickWizard<TPick>(context: types.PickExperienceContext, wizardOptions?: types.IWizardOptions<types.AzureResourceQuickPickWizardContext>, startingNode?: unknown): Promise<TPick> {
     // Fill in the `pickedNodes` property
     const wizardContext = { ...context } as types.AzureResourceQuickPickWizardContext;
-    wizardContext.pickedNodes = [];
+    wizardContext.pickedNodes = startingNode ? [startingNode] : [];
 
     const wizard = new AzureWizard(wizardContext, {
         hideStepCount: true,
