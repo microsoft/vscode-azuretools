@@ -4,13 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ServiceClient } from '@azure/core-client';
-import { createPipelineRequest, defaultRetryPolicy, Pipeline, PipelineOptions, PipelinePolicy, PipelineRequest, PipelineResponse, RetryPolicyOptions, SendRequest, userAgentPolicy } from '@azure/core-rest-pipeline';
-import { appendExtensionUserAgent, AzExtTreeItem, IActionContext, ISubscriptionActionContext, ISubscriptionContext } from '@microsoft/vscode-azext-utils';
+import { createPipelineRequest, defaultRetryPolicy, Pipeline, PipelineOptions, PipelinePolicy, PipelineRequest, PipelineResponse, RestError, RetryPolicyOptions, SendRequest, userAgentPolicy } from '@azure/core-rest-pipeline';
+import { appendExtensionUserAgent, AzExtTreeItem, IActionContext, ISubscriptionActionContext, ISubscriptionContext, parseError } from '@microsoft/vscode-azext-utils';
 import { Agent as HttpsAgent } from 'https';
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import * as types from '../index';
 import { parseJson, removeBom } from './utils/parseJson';
+import { localize } from './localize';
 
 export type InternalAzExtClientContext = ISubscriptionActionContext | [IActionContext, ISubscriptionContext | AzExtTreeItem];
 
@@ -119,6 +120,7 @@ function addAzExtPipeline(context: IActionContext, pipeline: Pipeline, endpoint?
     pipeline.addPolicy(new MissingContentTypePolicy(), { phase: 'Deserialize' });
     // TODO: MissingContentTypePolicy literally conflicts with RemoveBOMPolicy
     pipeline.addPolicy(new RemoveBOMPolicy(), { phase: 'Deserialize', beforePolicies: [MissingContentTypePolicy.Name] });
+    pipeline.addPolicy(new StatusCodePolicy() /*intentionally not in a phase*/);
 
     return pipeline;
 }
@@ -208,3 +210,29 @@ class AddEndpointPolicy implements PipelinePolicy {
         return await next(request);
     }
 }
+
+/**
+ * The Azure SDK will only throw errors for bad status codes if it has an "operationSpec", but none of our "generic" requests will have that
+ */
+class StatusCodePolicy implements PipelinePolicy {
+    public readonly name = 'StatusCodePolicy';
+
+    public async sendRequest(request: PipelineRequest, next: SendRequest): Promise<types.AzExtPipelineResponse> {
+        const response: types.AzExtPipelineResponse = await next(request);
+        if (response.status < 200 || response.status >= 300) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            const errorMessage: string = response.bodyAsText ?
+                parseError(response.parsedBody || response.bodyAsText).message :
+                localize('unexpectedStatusCode', 'Unexpected status code: {0}', response.status);
+            throw new RestError(errorMessage, {
+                code: response.bodyAsText || '',
+                statusCode: response.status,
+                request,
+                response
+            });
+        } else {
+            return response;
+        }
+    }
+}
+
