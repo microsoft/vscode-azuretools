@@ -6,9 +6,9 @@
 import assert = require('assert');
 import * as fs from 'fs';
 import * as path from 'path';
-import { v4 as uuidv4 } from 'uuid';
 import { Uri, workspace, WorkspaceFolder } from 'vscode';
 import { AzExtFsExtra } from '../src/utils/AzExtFsExtra';
+import { randomUtils } from '../src/utils/randomUtils';
 import { assertThrowsAsync } from './assertThrowsAsync';
 
 suite('AzExtFsExtra', function (this: Mocha.Suite): void {
@@ -45,7 +45,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
         workspaceFilePath = path.join(workspacePath, indexHtml);
         ensureFile(workspaceFilePath);
 
-        testFolderPath = path.join(workspacePath, `azExtFsExtra${uuidv4()}`)
+        testFolderPath = path.join(workspacePath, `azExtFsExtra${randomUtils.getRandomHexString()}`)
         ensureDir(testFolderPath);
 
         jsonFilePath = path.join(workspacePath, jsonFile);
@@ -80,7 +80,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
     });
 
     test('ensureDir that does not exist', async () => {
-        const fsPath = path.join(testFolderPath, uuidv4());
+        const fsPath = path.join(testFolderPath, randomUtils.getRandomHexString());
         assert.strictEqual(fs.existsSync(fsPath), false);
         await AzExtFsExtra.ensureDir(fsPath);
 
@@ -89,7 +89,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
     });
 
     test('ensureDir that exists as a file errors', async () => {
-        const fsPath = path.join(testFolderPath, uuidv4());
+        const fsPath = path.join(testFolderPath, randomUtils.getRandomHexString());
         assert.strictEqual(fs.existsSync(fsPath), false);
         ensureFile(fsPath);
 
@@ -97,7 +97,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
     });
 
     test('ensureFile where directory exists', async () => {
-        const fsPath = path.join(testFolderPath, uuidv4());
+        const fsPath = path.join(testFolderPath, randomUtils.getRandomHexString());
 
         assert.strictEqual(fs.existsSync(fsPath), false);
         ensureDir(fsPath);
@@ -112,7 +112,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
     });
 
     test('ensureFile where directory does not exist', async () => {
-        const fsPath = path.join(testFolderPath, uuidv4());
+        const fsPath = path.join(testFolderPath, randomUtils.getRandomHexString());
         const filePath = path.join(fsPath, indexHtml);
 
         assert.strictEqual(fs.existsSync(filePath), false);
@@ -123,7 +123,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
     });
 
     test('ensureFile where directory exists with the same name errors', async () => {
-        const fsPath = path.join(testFolderPath, uuidv4());
+        const fsPath = path.join(testFolderPath, randomUtils.getRandomHexString());
         assert.strictEqual(fs.existsSync(fsPath), false);
         ensureDir(fsPath);
 
@@ -138,7 +138,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
     });
 
     test('writeFile', async () => {
-        const fsPath = path.join(testFolderPath, uuidv4());
+        const fsPath = path.join(testFolderPath, randomUtils.getRandomHexString());
         const filePath = path.join(fsPath, indexHtml);
         const contents = 'writeFileTest';
         await AzExtFsExtra.writeFile(filePath, contents);
@@ -153,7 +153,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
     });
 
     test('readJSON (non-JSON file)', async () => {
-        const fsPath = path.join(testFolderPath, uuidv4());
+        const fsPath = path.join(testFolderPath, randomUtils.getRandomHexString());
         ensureDir(fsPath);
         const filePath = path.join(fsPath, jsonFile);
 
@@ -162,7 +162,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
     });
 
     test('writeJSON (from string)', async () => {
-        const fsPath = path.join(testFolderPath, uuidv4());
+        const fsPath = path.join(testFolderPath, randomUtils.getRandomHexString());
         const filePath = path.join(fsPath, indexHtml);
         await AzExtFsExtra.writeJSON(filePath, JSON.stringify(jsonContents));
 
@@ -171,7 +171,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
     });
 
     test('writeJSON (from object)', async () => {
-        const fsPath = path.join(testFolderPath, uuidv4());
+        const fsPath = path.join(testFolderPath, randomUtils.getRandomHexString());
         const filePath = path.join(fsPath, indexHtml);
         await AzExtFsExtra.writeJSON(filePath, jsonContents);
 
@@ -180,7 +180,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
     });
 
     test('writeJSON (non-JSON file)', async () => {
-        const fsPath = path.join(testFolderPath, uuidv4());
+        const fsPath = path.join(testFolderPath, randomUtils.getRandomHexString());
         ensureDir(fsPath);
         const filePath = path.join(fsPath, jsonFile);
 
@@ -188,7 +188,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
     });
 
     test('emptyDir', async () => {
-        const fsPath = path.join(testFolderPath, uuidv4());
+        const fsPath = path.join(testFolderPath, randomUtils.getRandomHexString());
         ensureDir(fsPath);
 
         for (let i = 0; i < 10; i++) {
@@ -208,7 +208,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
     });
 
     test('readDirectory', async () => {
-        const fsPath = path.join(testFolderPath, uuidv4());
+        const fsPath = path.join(testFolderPath, randomUtils.getRandomHexString());
         ensureDir(fsPath);
 
         for (let i = 0; i < 5; i++) {
@@ -230,7 +230,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
     });
 
     test('copy', async () => {
-        const fsPath = path.join(testFolderPath, uuidv4());
+        const fsPath = path.join(testFolderPath, randomUtils.getRandomHexString());
         await AzExtFsExtra.copy(workspaceFilePath, fsPath);
         let fileContents = fs.readFileSync(fsPath).toString();
         const fsFileContents = fs.readFileSync(workspaceFilePath).toString();
@@ -243,7 +243,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
     });
 
     test('deleteFile', async () => {
-        const fsPath = path.join(testFolderPath, uuidv4());
+        const fsPath = path.join(testFolderPath, randomUtils.getRandomHexString());
         ensureFile(fsPath);
 
         assert.strictEqual(fs.existsSync(fsPath), true);
