@@ -9,14 +9,12 @@ import { QuickPickAzureSubscriptionStep } from '../quickPickAzureResource/QuickP
 import { QuickPickGroupStep } from '../quickPickAzureResource/QuickPickGroupStep';
 import { QuickPickAzureResourceStep } from '../quickPickAzureResource/QuickPickAzureResourceStep';
 import { RecursiveQuickPickStep } from '../contextValue/RecursiveQuickPickStep';
-import { getLastNode } from '../getLastNode';
-import { NoResourceFoundError } from '../../errors';
 import { AzureWizardPromptStep } from '../../wizard/AzureWizardPromptStep';
-import { AzureWizard } from '../../wizard/AzureWizard';
 import { AzureResourceQuickPickWizardContext } from '../../../index';
 import { ResourceGroupsItem } from '../quickPickAzureResource/tempTypes';
 import { CompatibilityRecursiveQuickPickStep } from '../contextValue/compatibility/CompatibilityRecursiveQuickPickStep';
-import { AzExtResourceType, isWrapper } from '@microsoft/vscode-azureresources-api';
+import { AzExtResourceType } from '@microsoft/vscode-azureresources-api';
+import { runQuickPickWizard } from '../runQuickPickWizard';
 
 export interface InternalAzureResourceExperienceOptions extends types.PickExperienceContext {
     v1Compatibility?: boolean;
@@ -52,22 +50,9 @@ export async function azureResourceExperience<TPick>(context: InternalAzureResou
         );
     }
 
-    // Fill in the `pickedNodes` property
-    const wizardContext = { ...context } as AzureResourceQuickPickWizardContext;
-    wizardContext.pickedNodes = [];
-
-    const wizard = new AzureWizard(wizardContext, {
+    return await runQuickPickWizard(context, {
         hideStepCount: true,
         promptSteps: promptSteps,
         showLoadingPrompt: true,
     });
-
-    await wizard.prompt();
-
-    const lastPickedItem = getLastNode(wizardContext);
-    if (!lastPickedItem) {
-        throw new NoResourceFoundError(wizardContext);
-    } else {
-        return (!context.dontUnwrap && isWrapper(lastPickedItem)) ? lastPickedItem.unwrap() : lastPickedItem as unknown as TPick;
-    }
 }
