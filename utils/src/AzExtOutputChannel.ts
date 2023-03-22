@@ -80,13 +80,15 @@ class AzExtOutputChannel implements types.IAzExtOutputChannel {
 
 class AzExtLogOutputChannel extends AzExtOutputChannel implements LogOutputChannel {
     protected override _outputChannel: LogOutputChannel;
-    readonly logLevel: LogLevel;
     readonly onDidChangeLogLevel: Event<LogLevel>;
 
     constructor(name: string) {
         super(name);
         this.onDidChangeLogLevel = this._outputChannel.onDidChangeLogLevel;
-        this.logLevel = this._outputChannel.logLevel;
+    }
+
+    get logLevel(): LogLevel {
+        return this._outputChannel.logLevel;
     }
 
     protected shouldIncludeTimestamps(): boolean {
