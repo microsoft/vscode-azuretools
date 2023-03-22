@@ -10,8 +10,8 @@ import { Agent as HttpsAgent } from 'https';
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import * as types from '../index';
-import { parseJson, removeBom } from './utils/parseJson';
 import { localize } from './localize';
+import { parseJson, removeBom } from './utils/parseJson';
 
 export type InternalAzExtClientContext = ISubscriptionActionContext | [IActionContext, ISubscriptionContext | AzExtTreeItem];
 
@@ -212,7 +212,9 @@ class AddEndpointPolicy implements PipelinePolicy {
 }
 
 /**
- * The Azure SDK will only throw errors for bad status codes if it has an "operationSpec", but none of our "generic" requests will have that
+ * When SDK calls error, they'll throw a RestError during the response.
+ * However, with generic requests, it will pass any status code as a resolved response,
+ * so check the status and throw our own RestError
  */
 class StatusCodePolicy implements PipelinePolicy {
     public readonly name = 'StatusCodePolicy';
