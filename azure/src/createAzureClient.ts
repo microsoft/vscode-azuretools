@@ -118,7 +118,6 @@ function addAzExtPipeline(context: IActionContext, pipeline: Pipeline, endpoint?
 
     // Policies to apply after the response
     pipeline.addPolicy(new MissingContentTypePolicy(), { phase: 'Deserialize' });
-    // TODO: MissingContentTypePolicy literally conflicts with RemoveBOMPolicy
     pipeline.addPolicy(new RemoveBOMPolicy(), { phase: 'Deserialize', beforePolicies: [MissingContentTypePolicy.Name] });
     pipeline.addPolicy(new StatusCodePolicy() /*intentionally not in a phase*/);
 
