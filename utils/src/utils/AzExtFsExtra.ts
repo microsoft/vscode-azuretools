@@ -131,6 +131,6 @@ export namespace AzExtFsExtra {
     }
 
     function convertToUri(resource: Uri | string): Uri {
-        return typeof resource === 'string' ? Uri.parse(resource) : resource;
+        return typeof resource === 'string' ? Uri.file(resource) : resource;
     }
 }
