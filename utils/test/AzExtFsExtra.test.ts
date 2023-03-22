@@ -11,7 +11,6 @@ import { AzExtFsExtra } from '../src/utils/AzExtFsExtra';
 import { randomUtils } from '../src/utils/randomUtils';
 import { assertThrowsAsync } from './assertThrowsAsync';
 
-
 suite('AzExtFsExtra', function (this: Mocha.Suite): void {
     let workspacePath: string;
     let testFolderPath: string;

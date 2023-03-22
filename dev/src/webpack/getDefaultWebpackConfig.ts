@@ -194,8 +194,6 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                     // Webpack 5 no longer polyfills Node.js core modules automatically.
                     // see
                     // for the list of Node.js core module polyfills.
-                    "net": require.resolve("net-browserify"),
-                    "crypto": require.resolve("crypto-browserify"),
                     "path": require.resolve("path-browserify"),
                     "os": require.resolve("os-browserify/browser"),
                     "url": require.resolve("url/"),
@@ -211,6 +209,10 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                     "async_hooks": false,
                     "child_process": false,
                     "fs": false,
+                    'html-to-text': false,
+                    // there are browserify versions of these, but they cause more problems than they solve
+                    'net': false,
+                    'crypto': false,
                     //caller-supplied fallbacks
                     ...(options.resolveFallbackAliases || [])
                 } : undefined,

@@ -6,10 +6,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { Environment } from '@azure/ms-rest-azure-env';
-import { AuthenticationSession, CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, LogOutputChannel, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, ProviderResult, QuickPickItem, QuickPickOptions as VSCodeQuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri } from 'vscode';
+import type { AzExtResourceType, AzureResource, AzureSubscription } from '@microsoft/vscode-azureresources-api';
+import { AuthenticationSession, CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, LogOutputChannel, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, ProviderResult, QuickPickItem, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri, QuickPickOptions as VSCodeQuickPickOptions } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
-import type { AzureSubscription, AzureResource, AzExtResourceType } from '@microsoft/vscode-azureresources-api';
 
 export declare interface RunWithTemporaryDescriptionOptions {
     description: string;
@@ -148,12 +148,13 @@ export interface ITreeItemPickerContext extends IActionContext {
 }
 
 /**
- * Loose type to use for T1 and T2 versions of "@azure/ms-rest-js".  The Azure Account extension returns
+ * Loose type to use for T2 versions of Azure credentials.  The Azure Account extension returns
  * credentials that will satisfy both T1 and T2 requirements
  */
 export type AzExtServiceClientCredentials = AzExtServiceClientCredentialsT1 & AzExtServiceClientCredentialsT2;
 
 /**
+ * TODO: Remove from both utils and dev package index.d.ts. Can't do that right now because dev package still has T1 dependencies.
  * Loose interface to allow for the use of different versions of "@azure/ms-rest-js"
  * There's several cases where we don't control which "credentials" interface gets used, causing build errors even though the functionality itself seems to be compatible
  * For example: https://github.com/Azure/azure-sdk-for-js/issues/10045
