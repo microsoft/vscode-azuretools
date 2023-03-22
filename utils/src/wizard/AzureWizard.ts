@@ -85,9 +85,13 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                 this.title = step.effectiveTitle;
                 this._stepHideStepCount = step.hideStepCount;
 
-                if (step.shouldPrompt(this._context)) {
-                    step.propertiesBeforePrompt = Object.keys(this._context).filter(k => !isNullOrUndefined(this._context[k]));
+                step.propertiesBeforePrompt = Object.keys(this._context).filter(k => !isNullOrUndefined(this._context[k]));
 
+                if (step.configureBeforePrompt) {
+                    await step.configureBeforePrompt(this._context);
+                }
+
+                if (step.shouldPrompt(this._context)) {
                     const loadingQuickPick = this._showLoadingPrompt ? createQuickPick(this._context, {
                         loadingPlaceHolder: localize('loading', 'Loading...')
                     }) : undefined;
@@ -221,6 +225,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
         do {
             this._promptSteps.push(step);
             step = this._finishedPromptSteps.pop();
+            step?.undo?.(this._context);
             if (!step) {
                 throw new GoBackError();
             }

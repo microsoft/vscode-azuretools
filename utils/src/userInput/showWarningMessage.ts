@@ -28,7 +28,7 @@ export async function showWarningMessage<T extends MessageItem>(context: IIntern
 
     // eslint-disable-next-line no-constant-condition
     while (true) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument
         const result: T = await window.showWarningMessage(message, ...args);
         if (learnMoreLink && result === DialogResponses.learnMore) {
             context.telemetry.properties.learnMoreStep = context.telemetry.properties.lastStep;

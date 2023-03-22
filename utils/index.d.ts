@@ -6,10 +6,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { Environment } from '@azure/ms-rest-azure-env';
-import { CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, QuickPickItem, QuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri } from 'vscode';
+import { AuthenticationSession, CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, LogOutputChannel, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, ProviderResult, QuickPickItem, QuickPickOptions as VSCodeQuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
-import { AzureExtensionApi, AzureExtensionApiProvider } from './api';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
+import type { AzureSubscription, AzureResource, AzExtResourceType } from '@microsoft/vscode-azureresources-api';
 
 export declare interface RunWithTemporaryDescriptionOptions {
     description: string;
@@ -22,7 +22,7 @@ export declare interface RunWithTemporaryDescriptionOptions {
 /**
  * Tree Data Provider for an *Az*ure *Ext*ension
  */
-export declare class AzExtTreeDataProvider implements TreeDataProvider<AzExtTreeItem> {
+export declare class AzExtTreeDataProvider implements TreeDataProvider<AzExtTreeItem>, Disposable {
     public onDidChangeTreeData: Event<AzExtTreeItem | undefined>;
     public onTreeItemCreate: Event<AzExtTreeItem>;
 
@@ -99,6 +99,8 @@ export declare class AzExtTreeDataProvider implements TreeDataProvider<AzExtTree
      * @param treeView The tree view to watch the collapsible state for. This must be the tree view created from this `AzExtTreeDataProvider`.
      */
     public trackTreeItemCollapsibleState(treeView: TreeView<AzExtTreeItem>): Disposable;
+
+    public dispose(): void;
 }
 
 export interface ILoadingTreeContext extends IActionContext {
@@ -464,6 +466,9 @@ export declare abstract class AzExtTreeItem implements IAzExtTreeItem {
     public resolveTooltip?(): Promise<string | MarkdownString>;
 }
 
+export declare function isAzExtTreeItem(maybeTreeItem: unknown): maybeTreeItem is AzExtTreeItem;
+export declare function isAzExtParentTreeItem(maybeParentTreeItem: unknown): maybeParentTreeItem is AzExtParentTreeItem;
+
 export interface IGenericTreeItemOptions {
     id?: string;
     label: string;
@@ -635,7 +640,9 @@ export declare class UserCancelledError extends Error {
     constructor(stepName?: string);
 }
 
-export declare class NoResourceFoundError extends Error { }
+export declare class NoResourceFoundError extends Error {
+    constructor(context?: ITreeItemPickerContext);
+}
 
 export type CommandCallback = (context: IActionContext, ...args: any[]) => any;
 
@@ -990,7 +997,7 @@ export interface IAzureQuickPickItem<T = undefined> extends QuickPickItem {
 /**
  * Provides additional options for QuickPicks used in Azure Extensions
  */
-export interface IAzureQuickPickOptions extends QuickPickOptions, AzExtUserInputOptions {
+export interface IAzureQuickPickOptions extends VSCodeQuickPickOptions, AzExtUserInputOptions {
     /**
      * An optional id to identify this QuickPick across sessions, used in persisting previous selections
      * If not specified, a hash of the placeHolder will be used
@@ -1047,6 +1054,10 @@ export interface AzExtInputBoxOptions extends InputBoxOptions, AzExtUserInputOpt
      * Optional property that will display a ? button in the input window that opens a url when clicked
      */
     learnMoreLink?: string;
+    /**
+     * Optional async input validation task to run upon triggering 'onDidAccept'
+     */
+    asyncValidationTask?: (value: string) => Promise<string | undefined | null>;
 }
 
 /**
@@ -1201,6 +1212,12 @@ export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
     public getSubWizard?(wizardContext: T): Promise<IWizardOptions<T> | undefined>;
 
     /**
+     * Can be used to optionally configure the wizard context before determining if prompting is required
+     * This method will be called before `shouldPrompt`
+     */
+    public configureBeforePrompt?(wizardContext: T): Promise<void>;
+
+    /**
      * Return true if this step should prompt based on the current state of the wizardContext
      * Used to prevent duplicate prompts from sub wizards, unnecessary prompts for values that had a default, and to accurately describe the number of steps
      */
@@ -1344,11 +1361,16 @@ export interface IAddUserAgent {
  */
 export declare function appendExtensionUserAgent(existingUserAgent?: string): string;
 
+export type AzureExtensionApiFactory<T extends AzureExtensionApi = AzureExtensionApi> = {
+    apiVersion: string,
+    createApi: (options?: GetApiOptions) => T
+};
+
 /**
  * Wraps an Azure Extension's API in a very basic provider that adds versioning.
  * Multiple APIs with different versions can be supplied, but ideally a single backwards-compatible API is all that's necessary.
  */
-export declare function createApiProvider(azExts: AzureExtensionApi[]): AzureExtensionApiProvider;
+export declare function createApiProvider(azExts: (AzureExtensionApiFactory | AzureExtensionApi)[]): apiUtils.AzureExtensionApiProvider;
 
 /**
  * Wrapper for vscode.OutputChannel that handles AzureExtension behavior for outputting messages
@@ -1363,6 +1385,15 @@ export interface IAzExtOutputChannel extends OutputChannel {
      */
     appendLog(value: string, options?: { resourceName?: string, date?: Date }): void;
 }
+
+export type IAzExtLogOutputChannel = IAzExtOutputChannel & LogOutputChannel;
+
+/**
+ * Create a new AzExtLogOutputChannel
+ *
+ * @param name Human-readable string which will be used to represent the channel in the UI.
+ */
+export declare function createAzExtLogOutputChannel(name: string): IAzExtLogOutputChannel;
 
 /**
  * Create a new AzExtOutputChannel with the given name and the extensionPrefix.
@@ -1422,10 +1453,15 @@ export type AzExtItemUriParts = {
     query: AzExtItemQuery;
 };
 
+export interface AzExtTreeFileSystemItem {
+    id: string;
+    refresh?(context: IActionContext): Promise<void>;
+}
+
 /**
- * A virtual file system based around AzExTreeItems that only supports viewing/editing single files.
+ * A virtual file system based around {@link AzExtTreeFileSystemItem} that only supports viewing/editing single files.
  */
-export declare abstract class AzExtTreeFileSystem<TItem extends AzExtTreeItem> implements FileSystemProvider {
+export declare abstract class AzExtTreeFileSystem<TItem extends AzExtTreeFileSystemItem> implements FileSystemProvider {
     public abstract scheme: string;
 
     public constructor(tree: AzExtTreeDataProvider);
@@ -1584,6 +1620,22 @@ export declare function nonNullValueAndProp<TSource, TKey extends keyof TSource>
  */
 export declare function findFreePort(startPort?: number, maxAttempts?: number, timeout?: number): Promise<number>;
 
+export declare interface IConfirmInputOptions {
+    prompt?: string;
+    isPassword?: boolean;
+}
+
+/**
+ * @param key The context key that will be used to retrieve the value for comparison
+ * @param options (Optional) The options to pass when creating the prompt step
+ * ex: 'Please confirm by re-entering the previous value.'
+ */
+export declare class ConfirmPreviousInputStep extends AzureWizardPromptStep<IActionContext> {
+    public constructor(key: string, options?: IConfirmInputOptions);
+    public prompt(wizardContext: IActionContext): Promise<void>;
+    public shouldPrompt(wizardContext: IActionContext): boolean;
+}
+
 /**
  * @param message Message to display in the confirmation modal
  * ex: `Are you sure you want to delete function app "{0}"?`
@@ -1609,70 +1661,274 @@ export function createContextValue(values: string[]): string;
 export declare function getAzExtResourceType(resource: { type: string; kind?: string }): AzExtResourceType | undefined;
 
 /**
- * Normalized type for Azure resources that uniquely identifies resource type for the purposes
- * of the Azure extensions
+ * Gets the exported API from the given extension id and version range.
  *
- * See enum definition in AzExtResourceType.ts
+ * @param extensionId The extension id to get the API from
+ * @param apiVersionRange The version range of the API you need. Any semver syntax is allowed. For example "1" will return any "1.x.x" version or "1.2" will return any "1.2.x" version
+ * @param options The options to pass when creating the API. If `options.extensionId` is left undefined, it's set to the caller extension id.
+ * @throws Error if extension with id is not installed.
  */
-export declare enum AzExtResourceType {
-    AppServices = 'AppServices',
-    AzureCosmosDb = 'AzureCosmosDb',
-    ContainerApps = 'ContainerApps',
-    ContainerAppsEnvironment = 'ContainerAppsEnvironment',
-    FunctionApp = 'FunctionApp',
-    PostgresqlServersFlexible = 'PostgresqlServersFlexible',
-    PostgresqlServersStandard = 'PostgresqlServersStandard',
-    StaticWebApps = 'StaticWebApps',
-    StorageAccounts = 'StorageAccounts',
-    VirtualMachines = 'VirtualMachines',
+export declare function getAzureExtensionApi<T extends AzureExtensionApi>(extensionId: string, apiVersionRange: string, options?: GetApiOptions): Promise<T>;
 
-    // Below are not supported but have icons in the Resources extension
-    ApiManagementService = 'ApiManagementService',
-    ApplicationInsights = 'ApplicationInsights',
-    AppServiceKubernetesEnvironment = 'AppServiceKubernetesEnvironment',
-    AppServicePlans = 'AppServicePlans',
-    AvailabilitySets = 'AvailabilitySets',
-    BatchAccounts = 'BatchAccounts',
-    CacheRedis = 'CacheRedis',
-    ContainerRegistry = 'ContainerRegistry',
-    ContainerServiceManagedClusters = 'ContainerServiceManagedClusters',
-    CustomLocations = 'CustomLocations',
-    DeviceIotHubs = 'DeviceIotHubs',
-    DevTestLabs = 'DevTestLabs',
-    Disks = 'Disks',
-    EventGridDomains = 'EventGridDomains',
-    EventGridEventSubscriptions = 'EventGridEventSubscriptions',
-    EventGridTopics = 'EventGridTopics',
-    EventHubNamespaces = 'EventHubNamespaces',
-    FrontDoorAndCdnProfiles = 'FrontDoorAndCdnProfiles',
-    Images = 'Images',
-    KeyVaults = 'KeyVaults',
-    KubernetesConnectedClusters = 'KubernetesConnectedClusters',
-    LoadBalancers = 'LoadBalancers',
-    LogicApp = 'LogicApp',
-    LogicWorkflows = 'LogicWorkflows',
-    ManagedIdentityUserAssignedIdentities = 'ManagedIdentityUserAssignedIdentities',
-    MysqlServers = 'MysqlServers',
-    NetworkApplicationGateways = 'NetworkApplicationGateways',
-    NetworkApplicationSecurityGroups = 'NetworkApplicationSecurityGroups',
-    NetworkInterfaces = 'NetworkInterfaces',
-    NetworkLocalNetworkGateways = 'NetworkLocalNetworkGateways',
-    NetworkPublicIpPrefixes = 'NetworkPublicIpPrefixes',
-    NetworkRouteTables = 'NetworkRouteTables',
-    NetworkSecurityGroups = 'NetworkSecurityGroups',
-    NetworkVirtualNetworkGateways = 'NetworkVirtualNetworkGateways',
-    NetworkWatchers = 'NetworkWatchers',
-    NotificationHubNamespaces = 'NotificationHubNamespaces',
-    OperationalInsightsWorkspaces = 'OperationalInsightsWorkspaces',
-    OperationsManagementSolutions = 'OperationsManagementSolutions',
-    PublicIpAddresses = 'PublicIpAddresses',
-    ServiceBusNamespaces = 'ServiceBusNamespaces',
-    ServiceFabricClusters = 'ServiceFabricClusters',
-    ServiceFabricMeshApplications = 'ServiceFabricMeshApplications',
-    SignalRService = 'SignalRService',
-    SqlDatabases = 'SqlDatabases',
-    SqlServers = 'SqlServers',
-    VirtualMachineScaleSets = 'VirtualMachineScaleSets',
-    VirtualNetworks = 'VirtualNetworks',
-    WebHostingEnvironments = 'WebHostingEnvironments',
+export type TreeNodeCommandCallback<T> = (context: IActionContext, node?: T, nodes?: T[], ...args: unknown[]) => unknown;
+
+/**
+ * Used to register VSCode tree node context menu commands that are in the host extension's tree. It wraps your callback with consistent error and telemetry handling
+ * Use debounce property if you need a delay between clicks for this particular command
+ * A telemetry event is automatically sent whenever a command is executed. The telemetry event ID will default to the same as the
+ *   commandId passed in, but can be overridden per command with telemetryId
+ * The telemetry event for this command will be named telemetryId if specified, otherwise it defaults to the commandId
+ * NOTE: If the environment variable `DEBUGTELEMETRY` is set to a non-empty, non-zero value, then telemetry will not be sent. If the value is 'verbose' or 'v', telemetry will be displayed in the console window.
+ */
+export declare function registerCommandWithTreeNodeUnwrapping<T>(commandId: string, callback: TreeNodeCommandCallback<T>, debounce?: number, telemetryId?: string): void;
+
+export declare function unwrapTreeNodeCommandCallback<T>(treeNodeCallback: TreeNodeCommandCallback<T>): TreeNodeCommandCallback<T>;
+
+// temporary
+type ResourceGroupsItem = unknown;
+
+export interface PickExperienceContext extends IActionContext {
+    /**
+     * If true, the result will not be unwrapped. Intented for use internally by the Azure Resources extension.
+     */
+    dontUnwrap?: boolean;
 }
+
+/**
+ * Prompts the user to pick a subscription using a quick pick. If there is only one subscription, it will be returned without prompting the user.
+ *
+ * @param context The action context
+ * @param tdp Azure resource tree data provider to perform the pick experience on
+ */
+export declare function subscriptionExperience(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>): Promise<AzureSubscription>;
+
+/**
+ * Prompts the user to pick an Azure resource using a wizard comprised of quick pick steps.
+ *
+ * @param context The action context
+ * @param tdp Azure resource tree data provider to perform the pick experience on
+ * @param resourceTypes the resource types to allow the user to pick from
+ * @param childItemFilter prompt the user to pick children of the Azure resource until an item matching the filter is selected
+ */
+export declare function azureResourceExperience<TPick extends unknown>(context: PickExperienceContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: ContextValueFilter): Promise<TPick>;
+
+/**
+ * Recursively prompts the user to pick a node until a node is packed matching the context value filter.
+ *
+ * @param context The action context
+ * @param tdp tree data provider to pick a node from
+ * @param contextValueFilter the context value filter used to match the deesired node(s)
+ */
+export declare function contextValueExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, contextValueFilter: ContextValueFilter): Promise<TPick>;
+
+interface CompatibilityPickResourceExperienceOptions {
+    resourceTypes?: AzExtResourceType | AzExtResourceType[];
+    childItemFilter?: ContextValueFilter
+}
+
+export declare namespace PickTreeItemWithCompatibility {
+    /**
+     * Provides compatibility for the legacy `pickAppResource` Resource Groups API
+     */
+    export function resource<TPick extends AzExtTreeItem>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, options: CompatibilityPickResourceExperienceOptions): Promise<TPick>;
+    /**
+     * Returns `ISubscriptionContext` instead of `ApplicationSubscription` for compatibility.
+     */
+    export function subscription(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>): Promise<ISubscriptionContext>;
+
+    /**
+     * Helper to provide compatibility for `AzExtParentTreeItem.showTreeItemPicker`.
+     */
+    export function showTreeItemPicker<TPick extends AzExtTreeItem>(context: ITreeItemPickerContext, tdp: TreeDataProvider<ResourceGroupsItem>, expectedContextValues: string | RegExp | (string | RegExp)[], startingTreeItem?: AzExtTreeItem): Promise<TPick>;
+}
+
+export declare interface QuickPickWizardContext extends IActionContext {
+    pickedNodes: unknown[];
+}
+
+/**
+ * Describes filtering based on context value. Items that pass the filter will
+ * match at least one of the `include` filters, but none of the `exclude` filters.
+ */
+export declare interface ContextValueFilter {
+    /**
+     * This filter will include items that match *any* of the values in the array.
+     * When a string is used, exact value comparison is done.
+     */
+    include: string | RegExp | (string | RegExp)[];
+
+    /**
+     * This filter will exclude items that match *any* of the values in the array.
+     * When a string is used, exact value comparison is done.
+     */
+    exclude?: string | RegExp | (string | RegExp)[];
+}
+
+export declare interface PickSubscriptionWizardContext extends QuickPickWizardContext {
+    subscription?: AzureSubscription;
+}
+
+export declare interface AzureResourceQuickPickWizardContext extends QuickPickWizardContext, PickSubscriptionWizardContext {
+    resource?: AzureResource;
+    resourceGroup?: string;
+}
+
+/**
+ * Converts a VS Code authentication session to an Azure Track 1 & 2 compatible compatible credential.
+ */
+export function createCredential(getSession: (scopes?: string[]) => ProviderResult<AuthenticationSession>): AzExtServiceClientCredentials;
+
+/**
+ * Creates a subscription context from an application subscription.
+ *
+ */
+export function createSubscriptionContext(subscription: AzureSubscription): ISubscriptionContext;
+
+
+//#region re-export API types and utils from @microsoft/vscode-azureresources-api
+export declare namespace apiUtils {
+    export interface AzureExtensionApiProvider {
+        /**
+         * Provides the API for an Azure Extension.
+         *
+         * @param apiVersionRange - The version range of the API you need. Any semver syntax is allowed. For example "1" will return any "1.x.x" version or "1.2" will return any "1.2.x" version
+         * @param options - Options for initializing the API. See {@link GetApiOptions}
+         * @throws - Error if a matching version is not found.
+         */
+        getApi<T extends AzureExtensionApi>(apiVersionRange: string, options?: GetApiOptions): T;
+    }
+    export class ExtensionNotFoundError extends Error {
+        constructor(extensionId: string);
+    }
+    /**
+     * Gets the exported API from the given extension id and version range.
+     *
+     * @param extensionId - The extension id to get the API from
+     * @param apiVersionRange - The version range of the API you need. Any semver syntax is allowed. For example "1" will return any "1.x.x" version or "1.2" will return any "1.2.x" version
+     * @param options - The options to pass when creating the API. If `options.extensionId` is left undefined, it's set to the caller extension id.
+     * @throws Error if extension with id is not installed.
+     */
+    export function getAzureExtensionApi<T extends AzureExtensionApi>(context: ExtensionContext, extensionId: string, apiVersionRange: string, options?: GetApiOptions): Promise<T>;
+    /**
+     * Get extension exports for the extension with the given id. Activates extension first if needed.
+     *
+     * @returns `undefined` if the extension is not installed
+     */
+    export function getExtensionExports<T>(extensionId: string): Promise<T | undefined>;
+}
+
+export declare interface GetApiOptions {
+    /**
+     * The ID of the extension requesting the API.
+     *
+     * @remarks This is used for telemetry purposes, to measure which extensions are using the API.
+     */
+    readonly extensionId?: string;
+}
+
+export declare interface AzureExtensionApi {
+    /**
+     * The API version for this extension. It should be versioned separately from the extension and ideally remains backwards compatible.
+     */
+    apiVersion: string;
+}
+//#endregion
+
+//#region Pick tree item steps
+export declare interface GenericQuickPickOptions {
+    skipIfOne?: boolean;
+}
+
+export declare interface SkipIfOneQuickPickOptions extends GenericQuickPickOptions {
+    skipIfOne?: true;
+}
+
+export declare abstract class GenericQuickPickStep<TContext extends QuickPickWizardContext, TOptions extends GenericQuickPickOptions> extends AzureWizardPromptStep<TContext> {
+    constructor(
+        treeDataProvider: TreeDataProvider<unknown>,
+        pickOptions: TOptions,
+        promptOptions?: IAzureQuickPickOptions
+    );
+
+    prompt(wizardContext: TContext): Promise<void>;
+    undo(wizardContext: TContext): void;
+    shouldPrompt(wizardContext: TContext): boolean;
+}
+
+export declare abstract class GenericQuickPickStepWithCommands<TContext extends QuickPickWizardContext, TOptions extends GenericQuickPickOptions> extends GenericQuickPickStep<TContext, TOptions> { }
+
+export declare interface PickFilter<TPick = TreeItem> {
+    /**
+     * Filters for nodes that match the final target.
+     *
+     * @param treeItem - The tree item to apply the filter to
+     * @param element - The element to apply the filter to. May be a `Wrapper`.
+     */
+    isFinalPick(treeItem: TPick, element: unknown): boolean;
+    /**
+     * Filters for nodes that could be an ancestor of a node matching the final target.
+     *
+     * @param treeItem - The tree item to apply the filter to
+     * @param element - The element to apply the filter to. May be a `Wrapper`.
+     */
+    isAncestorPick(treeItem: TPick, element: unknown): boolean;
+}
+
+export declare interface ContextValueFilterQuickPickOptions extends GenericQuickPickOptions {
+    contextValueFilter: ContextValueFilter;
+}
+
+/**
+ * Quick pick step that selects a tree node matching a context value filter.
+ */
+export declare class ContextValueQuickPickStep<TContext extends QuickPickWizardContext, TOptions extends ContextValueFilterQuickPickOptions> extends GenericQuickPickStep<TContext, TOptions> {
+    protected readonly pickFilter: PickFilter;
+}
+
+/**
+ * Recursively select tree nodes until a final node is selected that matches the context value filter.
+ */
+export declare class RecursiveQuickPickStep<TContext extends QuickPickWizardContext> extends ContextValueQuickPickStep<TContext, ContextValueFilterQuickPickOptions> { }
+
+/**
+ * Quick pick step to pick an Azure subscription.
+ */
+export declare class QuickPickAzureSubscriptionStep extends GenericQuickPickStepWithCommands<AzureResourceQuickPickWizardContext, SkipIfOneQuickPickOptions> {
+    public constructor(tdp: TreeDataProvider<ResourceGroupsItem>, options?: GenericQuickPickOptions);
+}
+
+export declare interface GroupQuickPickOptions extends SkipIfOneQuickPickOptions {
+    groupType?: AzExtResourceType[];
+    skipIfOne?: true;
+}
+
+/**
+ * Quick pick step that selects a group.
+ *
+ * If view is grouped by Resource Type, and a group matching `options.groupType` is found, it will be auto selected.
+ */
+export declare class QuickPickGroupStep extends GenericQuickPickStep<AzureResourceQuickPickWizardContext, GroupQuickPickOptions> {
+    public constructor(tdp: TreeDataProvider<unknown>, options: GroupQuickPickOptions);
+}
+
+export declare interface AzureResourceQuickPickOptions extends GenericQuickPickOptions {
+    resourceTypes?: AzExtResourceType[];
+    childItemFilter?: ContextValueFilter;
+}
+
+/**
+ * Quick pick step that selects an Azure resource.
+ */
+export declare class QuickPickAzureResourceStep extends GenericQuickPickStep<AzureResourceQuickPickWizardContext, AzureResourceQuickPickOptions> {
+    public constructor(tdp: TreeDataProvider<ResourceGroupsItem>, options?: AzureResourceQuickPickOptions, promptOptions?: IAzureQuickPickOptions);
+}
+
+/**
+ * Creates and runs a quick pick wizard with the given wizard options.
+ *
+ * @param context The action context
+ * @param wizardOptions The options used to construct the wizard
+ * @param startingNode - The node to start the wizard from. If not specified, the wizard will start from the root.
+ */
+export declare function runQuickPickWizard<TPick>(context: PickExperienceContext, wizardOptions?: IWizardOptions<AzureResourceQuickPickWizardContext>, startingNode?: unknown): Promise<TPick>;
+//#endregion

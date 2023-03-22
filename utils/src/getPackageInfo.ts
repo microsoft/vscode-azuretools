@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ExtensionContext } from "vscode";
-import * as fs from 'fs';
 import { ext } from "./extensionVariables";
 
 interface IPackageInfo {
@@ -23,7 +22,7 @@ export function getPackageInfo(ctx?: ExtensionContext): IPackageInfo {
             ctx = ext.context;
         }
 
-        const packageJson: IPackageJson = <IPackageJson>JSON.parse(fs.readFileSync(ctx.asAbsolutePath('package.json')).toString());
+        const packageJson: IPackageJson = <IPackageJson>ctx.extension.packageJSON;
 
         const extensionName: string | undefined = packageJson.name;
         const extensionVersion: string | undefined = packageJson.version;

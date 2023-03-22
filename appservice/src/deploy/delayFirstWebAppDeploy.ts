@@ -5,7 +5,6 @@
 
 import type { AppServicePlan } from '@azure/arm-appservice';
 import { IActionContext } from '@microsoft/vscode-azext-utils';
-import { createKuduClient } from '../createKuduClient';
 import { ParsedSite } from '../SiteClient';
 
 export async function delayFirstWebAppDeploy(context: IActionContext, site: ParsedSite, aspPromise: Promise<AppServicePlan | undefined>): Promise<void> {
@@ -26,8 +25,8 @@ export async function delayFirstWebAppDeploy(context: IActionContext, site: Pars
                 resolve();
             }
 
-            const kuduClient = await createKuduClient(context, site);
-            const deployments: number = (await kuduClient.deployment.getDeployResults()).length;
+            const kuduClient = await site.createClient(context);
+            const deployments: number = (await kuduClient.getDeployResults(context)).length;
             if (deployments > 1) {
                 resolve();
             }

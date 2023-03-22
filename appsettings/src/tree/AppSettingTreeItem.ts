@@ -6,7 +6,6 @@
 import type { SlotConfigNamesResource, StringDictionary } from '@azure/arm-appservice';
 import { AzExtTreeItem, createContextValue, DialogResponses, IActionContext, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
 import { ThemeIcon } from 'vscode';
-import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { AppSettingsTreeItem, validateAppSettingKey } from './AppSettingsTreeItem';
 
@@ -53,7 +52,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
     }
 
     public get commandId(): string {
-        return ext.prefix + '.toggleAppSettingVisibility';
+        return this.parent.extensionPrefix + '.toggleAppSettingVisibility';
     }
 
     public async edit(context: IActionContext): Promise<void> {

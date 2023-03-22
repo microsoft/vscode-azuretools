@@ -3,8 +3,9 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
+import type { AzExtResourceType } from '@microsoft/vscode-azureresources-api';
 import type * as vscode from 'vscode';
-import type { AbstractAzExtTreeItem, AzExtParentTreeItem, AzExtResourceType, AzExtTreeDataProvider, AzExtTreeItem, IAzureQuickPickOptions, ISubscriptionContext, ITreeItemPickerContext, SealedAzExtTreeItem } from './index'; // This must remain `import type` or else a circular reference will result
+import type { AbstractAzExtTreeItem, AzExtParentTreeItem, AzExtTreeDataProvider, AzExtTreeItem, IAzureQuickPickOptions, ISubscriptionContext, ITreeItemPickerContext, SealedAzExtTreeItem } from './index'; // This must remain `import type` or else a circular reference will result
 
 /**
  * The API implemented by the Azure Resource Groups host extension
@@ -18,7 +19,7 @@ export interface AzureHostExtensionApi {
     /**
      * The VSCode TreeView for the shared app resource view
      */
-    readonly appResourceTreeView: vscode.TreeView<AzExtTreeItem>;
+    readonly appResourceTreeView: vscode.TreeView<unknown>;
 
     /**
      * The `AzExtTreeDataProvider` for the shared workspace resource view
@@ -28,18 +29,12 @@ export interface AzureHostExtensionApi {
     /**
      * The VSCode TreeView for the shared workspace resource view
      */
-    readonly workspaceResourceTreeView: vscode.TreeView<AzExtTreeItem>;
+    readonly workspaceResourceTreeView: vscode.TreeView<unknown>;
 
     /**
      * Version of the API
      */
     readonly apiVersion: string;
-
-    /**
-     * Reveals an item in the shared app resource tree
-     * @param resourceId The ARM resource ID to reveal
-     */
-    revealTreeItem(resourceId: string): Promise<void>;
 
     /**
      * Show a quick picker of app resources. Set `options.type` to filter the picks.
@@ -76,7 +71,7 @@ export interface AzureHostExtensionApi {
     /**
      * @deprecated Use `appResourceTreeView` instead
      */
-    readonly treeView: vscode.TreeView<AzExtTreeItem>;
+    readonly treeView: vscode.TreeView<unknown>;
 
     /**
      * @deprecated Use `registerWorkspaceResourceProvider` instead
