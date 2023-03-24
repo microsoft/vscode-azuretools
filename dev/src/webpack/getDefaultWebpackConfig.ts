@@ -52,7 +52,8 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
             patterns: [
                 // Test files -> dist/test (these files are ignored during packaging)
                 {
-                    from: path.posix.join(options.projectRoot.replace(/\\/g, '/'), 'out', 'test', '*.*'),
+                    from: '**/*',
+                    context: path.posix.join(options.projectRoot.replace(/\\/g, '/'), 'out', 'test'),
                     to: path.posix.join(options.projectRoot.replace(/\\/g, '/'), 'dist', 'test'),
                     noErrorOnMissing: true
                 },
