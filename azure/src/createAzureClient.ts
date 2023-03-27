@@ -220,7 +220,7 @@ class StatusCodePolicy implements PipelinePolicy {
 
     public async sendRequest(request: PipelineRequest, next: SendRequest): Promise<types.AzExtPipelineResponse> {
         const response: types.AzExtPipelineResponse = await next(request);
-        if (response.status < 200 || response.status >= 300) {
+        if (response.parsedBody === undefined && (response.status < 200 || response.status >= 300)) {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             const errorMessage: string = response.bodyAsText ?
                 parseError(response.parsedBody || response.bodyAsText).message :
