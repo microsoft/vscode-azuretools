@@ -1933,3 +1933,12 @@ export declare class QuickPickAzureResourceStep extends GenericQuickPickStep<Azu
  */
 export declare function runQuickPickWizard<TPick>(context: PickExperienceContext, wizardOptions?: IWizardOptions<AzureResourceQuickPickWizardContext>, startingNode?: unknown): Promise<TPick>;
 //#endregion
+
+/**
+ * Registers a namespace for common random utility functions
+ */
+export declare namespace randomUtils {
+    export function getPseudononymousStringHash(s: string): Promise<string>;
+    export function getRandomHexString(length?: number): string;
+    export function getRandomInteger(minimumInclusive: number, maximumExclusive: number): number;
+}

@@ -3,16 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as crypto from "crypto";
+import { crypto } from '../node/crypto';
 
+/* eslint-disable */
 export namespace randomUtils {
-    export function getPseudononymousStringHash(s: string, encoding: crypto.BinaryToTextEncoding = 'base64'): string {
-        return crypto.createHash('sha256').update(s).digest(encoding);
+    export async function getPseudononymousStringHash(s: string): Promise<string> {
+        const buffer = Buffer.from(s);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray
+            .map((b) => b.toString(16).padStart(2, "0"))
+            .join(""); // convert bytes to hex string
+        return hashHex;
     }
 
     export function getRandomHexString(length: number = 6): string {
-        const buffer: Buffer = crypto.randomBytes(Math.ceil(length / 2));
-        return buffer.toString('hex').slice(0, length);
+        return crypto.randomUUID().slice(0, length);
     }
 
     export function getRandomInteger(minimumInclusive: number, maximumExclusive: number): number {
