@@ -5,6 +5,7 @@
 
 import { crypto } from '../node/crypto';
 
+/* eslint-disable */
 export namespace randomUtils {
     export async function getPseudononymousStringHash(s: string): Promise<string> {
         const buffer = Buffer.from(s);
