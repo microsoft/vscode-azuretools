@@ -112,6 +112,14 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
         }));
     }
 
+    // needed to replace the node.js implementation of crypto with the browser implementation
+    // the path is actually in utils and not dev, which is why we need to back up 4 directories
+    const nodeCryptoPath = path.resolve(__dirname, '..', '..', '..', '..', 'vscode-azext-utils', 'out/src/node/crypto');
+    const webCryptoPath = path.resolve(__dirname, '..', '..', '..', '..', 'vscode-azext-utils', 'out/src/browser/crypto')
+
+    const alias: { [key: string]: string } = {};
+    alias[nodeCryptoPath] = webCryptoPath;
+
     const config: webpack.Configuration = {
         context: options.projectRoot,
 
@@ -190,6 +198,8 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
             // Support reading TypeScript and JavaScript files, see https://github.com/TypeStrong/ts-loader
             // These will be automatically transpiled while being placed into dist/extension.bundle.js
             extensions: ['.ts', '.js'],
+            alias:
+                options.target === 'webworker' ? alias : undefined,
             fallback:
                 options.target === 'webworker' ? {
                     // Webpack 5 no longer polyfills Node.js core modules automatically.
