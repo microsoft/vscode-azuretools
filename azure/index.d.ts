@@ -362,7 +362,11 @@ export type AzExtGenericClientInfo = AzExtGenericCredentials | { credentials: Az
  * 2. Uses resourceManagerEndpointUrl to support sovereigns (if clientInfo corresponds to an Azure environment)
  * @param clientInfo The client/credentials info or `undefined` if no credentials are needed
  */
-export declare function createGenericClient(context: IActionContext, clientInfo: AzExtGenericClientInfo | undefined): Promise<ServiceClient>;
+export declare function createGenericClient(context: IActionContext, clientInfo: AzExtGenericClientInfo | undefined, options?: IGenericClientOptions): Promise<ServiceClient>;
+export interface IGenericClientOptions {
+    noRetryPolicy?: boolean;
+    addStatusCodePolicy?: boolean;
+}
 
 export type AzExtRequestPrepareOptions = PipelineRequestOptions & { rejectUnauthorized?: boolean }
 export type AzExtPipelineResponse = PipelineResponse & { parsedBody?: any }

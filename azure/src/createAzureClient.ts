@@ -64,15 +64,12 @@ export async function sendRequestWithTimeout(context: IActionContext, options: t
         request.agent = new HttpsAgent({ rejectUnauthorized: options.rejectUnauthorized });
     }
 
-    const client = await createGenericClient(context, clientInfo, { noRetryPolicy: true });
+    const client = await createGenericClient(context, clientInfo, { noRetryPolicy: true, addStatusCodePolicy: true });
     return await client.sendRequest(request);
 }
 
-interface IGenericClientOptions {
-    noRetryPolicy?: boolean;
-}
 
-export async function createGenericClient(context: IActionContext, clientInfo: types.AzExtGenericClientInfo | undefined, options?: IGenericClientOptions): Promise<ServiceClient> {
+export async function createGenericClient(context: IActionContext, clientInfo: types.AzExtGenericClientInfo | undefined, options?: types.IGenericClientOptions): Promise<ServiceClient> {
     let credentials: types.AzExtGenericCredentials | undefined;
     let endpoint: string | undefined;
     if (clientInfo && 'credentials' in clientInfo) {
@@ -89,11 +86,11 @@ export async function createGenericClient(context: IActionContext, clientInfo: t
         endpoint
     });
 
-    addAzExtPipeline(context, client.pipeline, endpoint, { retryOptions });
+    addAzExtPipeline(context, client.pipeline, endpoint, { retryOptions }, options?.addStatusCodePolicy);
     return client;
 }
 
-function addAzExtPipeline(context: IActionContext, pipeline: Pipeline, endpoint?: string, options?: PipelineOptions): Pipeline {
+function addAzExtPipeline(context: IActionContext, pipeline: Pipeline, endpoint?: string, options?: PipelineOptions, addStatusCodePolicy?: boolean): Pipeline {
     // ServiceClient has default pipeline policies that the core-client SDKs require. Rather than building an entirely custom pipeline,
     // it's easier to just remove the default policies and add ours as-needed
 
@@ -119,7 +116,9 @@ function addAzExtPipeline(context: IActionContext, pipeline: Pipeline, endpoint?
     // Policies to apply after the response
     pipeline.addPolicy(new MissingContentTypePolicy(), { phase: 'Deserialize' });
     pipeline.addPolicy(new RemoveBOMPolicy(), { phase: 'Deserialize', beforePolicies: [MissingContentTypePolicy.Name] });
-    pipeline.addPolicy(new StatusCodePolicy() /*intentionally not in a phase*/);
+    if (addStatusCodePolicy) {
+        pipeline.addPolicy(new StatusCodePolicy() /*intentionally not in a phase*/);
+    }
 
     return pipeline;
 }
