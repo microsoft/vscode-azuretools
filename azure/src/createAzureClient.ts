@@ -68,12 +68,8 @@ export async function sendRequestWithTimeout(context: IActionContext, options: t
     return await client.sendRequest(request);
 }
 
-interface IGenericClientOptions {
-    noRetryPolicy?: boolean;
-    addStatusCodePolicy?: boolean;
-}
 
-export async function createGenericClient(context: IActionContext, clientInfo: types.AzExtGenericClientInfo | undefined, options?: IGenericClientOptions): Promise<ServiceClient> {
+export async function createGenericClient(context: IActionContext, clientInfo: types.AzExtGenericClientInfo | undefined, options?: types.IGenericClientOptions): Promise<ServiceClient> {
     let credentials: types.AzExtGenericCredentials | undefined;
     let endpoint: string | undefined;
     if (clientInfo && 'credentials' in clientInfo) {
