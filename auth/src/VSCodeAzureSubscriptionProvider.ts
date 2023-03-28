@@ -71,7 +71,8 @@ export class VSCodeAzureSubscriptionProvider {
      * @returns A list of subscription IDs that are configured in `azureResourceGroups.selectedSubscriptions`.
      */
     public async getFilters(): Promise<SubscriptionId[]> {
-        return [];
+        const config = vscode.workspace.getConfiguration('azureResourceGroups');
+        return config.get<SubscriptionId[]>('selectedSubscriptions', []);
     }
 
     /**
