@@ -19,6 +19,10 @@ type DependencyEntry = {
 
 export type PackageLock = {
     dependencies?: { [key: string]: DependencyEntry | undefined };
+    /**
+     * lockfile v3: npm 7 and up uses "packages" instead of "dependencies"
+     */
+    packages?: { [key: string]: DependencyEntry };
     [key: string]: unknown;
 };
 
@@ -76,13 +80,18 @@ export function excludeNodeModulesAndDependencies(
  */
 export function getNodeModulesDependencyClosure(packageLock: PackageLock, moduleNames: string[]): string[] {
     const closure: Set<string> = new Set<string>();
-    const dependencies: { [key: string]: DependencyEntry | undefined } = packageLock.dependencies || <{ [key: string]: DependencyEntry }>{};
+    const dependencies: { [key: string]: DependencyEntry | undefined } = packageLock.dependencies || packageLock.packages || <{ [key: string]: DependencyEntry }>{};
+
+    function getDependency(moduleName: string): DependencyEntry | undefined {
+        // lockfile v3 prefixes depdendencies with "node_modules/"
+        return dependencies[moduleName] || dependencies[`node_modules/${moduleName}`];
+    }
 
     for (const moduleName of moduleNames) {
-        if (dependencies[moduleName]) {
+        if (getDependency(moduleName)) {
             closure.add(moduleName);
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            const subdeps: string[] = getDependenciesFromEntry(dependencies[moduleName]!, packageLock);
+            const subdeps: string[] = getDependenciesFromEntry(getDependency(moduleName)!, packageLock);
             for (const subdep of subdeps) {
                 closure.add(subdep);
             }
