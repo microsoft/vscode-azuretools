@@ -64,12 +64,13 @@ export async function sendRequestWithTimeout(context: IActionContext, options: t
         request.agent = new HttpsAgent({ rejectUnauthorized: options.rejectUnauthorized });
     }
 
-    const client = await createGenericClient(context, clientInfo, { noRetryPolicy: true });
+    const client = await createGenericClient(context, clientInfo, { noRetryPolicy: true, addStatusCodePolicy: true });
     return await client.sendRequest(request);
 }
 
 interface IGenericClientOptions {
     noRetryPolicy?: boolean;
+    addStatusCodePolicy?: boolean;
 }
 
 export async function createGenericClient(context: IActionContext, clientInfo: types.AzExtGenericClientInfo | undefined, options?: IGenericClientOptions): Promise<ServiceClient> {
@@ -89,11 +90,11 @@ export async function createGenericClient(context: IActionContext, clientInfo: t
         endpoint
     });
 
-    addAzExtPipeline(context, client.pipeline, endpoint, { retryOptions });
+    addAzExtPipeline(context, client.pipeline, endpoint, { retryOptions }, options?.addStatusCodePolicy);
     return client;
 }
 
-function addAzExtPipeline(context: IActionContext, pipeline: Pipeline, endpoint?: string, options?: PipelineOptions): Pipeline {
+function addAzExtPipeline(context: IActionContext, pipeline: Pipeline, endpoint?: string, options?: PipelineOptions, addStatusCodePolicy?: boolean): Pipeline {
     // ServiceClient has default pipeline policies that the core-client SDKs require. Rather than building an entirely custom pipeline,
     // it's easier to just remove the default policies and add ours as-needed
 
@@ -119,7 +120,9 @@ function addAzExtPipeline(context: IActionContext, pipeline: Pipeline, endpoint?
     // Policies to apply after the response
     pipeline.addPolicy(new MissingContentTypePolicy(), { phase: 'Deserialize' });
     pipeline.addPolicy(new RemoveBOMPolicy(), { phase: 'Deserialize', beforePolicies: [MissingContentTypePolicy.Name] });
-    pipeline.addPolicy(new StatusCodePolicy() /*intentionally not in a phase*/);
+    if (addStatusCodePolicy) {
+        pipeline.addPolicy(new StatusCodePolicy() /*intentionally not in a phase*/);
+    }
 
     return pipeline;
 }
@@ -220,7 +223,7 @@ class StatusCodePolicy implements PipelinePolicy {
 
     public async sendRequest(request: PipelineRequest, next: SendRequest): Promise<types.AzExtPipelineResponse> {
         const response: types.AzExtPipelineResponse = await next(request);
-        if (response.parsedBody === undefined && (response.status < 200 || response.status >= 300)) {
+        if (response.status < 200 || response.status >= 300) {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             const errorMessage: string = response.bodyAsText ?
                 parseError(response.parsedBody || response.bodyAsText).message :
