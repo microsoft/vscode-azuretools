@@ -59,23 +59,6 @@ export class VSCodeAzureSubscriptionProvider {
     }
 
     /**
-     * Gets the filters that are configured in `azureResourceGroups.selectedSubscriptions`. To
-     * override the settings with a custom filter, implement a child class with `getFilters()`
-     * overridden.
-     *
-     * If a tenant to which the user has access does not appear in the list, that tenant will be
-     * ignored.
-     *
-     * If no values are returned by `getFilters()`, then all subscriptions will be returned.
-     *
-     * @returns A list of subscription IDs that are configured in `azureResourceGroups.selectedSubscriptions`.
-     */
-    public async getFilters(): Promise<SubscriptionId[]> {
-        const config = vscode.workspace.getConfiguration('azureResourceGroups');
-        return config.get<SubscriptionId[]>('selectedSubscriptions', []);
-    }
-
-    /**
      * Checks to see if a user is signed in.
      *
      * @returns True if the user is signed in, false otherwise.
@@ -93,6 +76,23 @@ export class VSCodeAzureSubscriptionProvider {
     public async signIn(): Promise<boolean> {
         const session = await vscode.authentication.getSession(this.authProviderId, [DefaultAzureScope], { createIfNone: true, clearSessionPreference: true });
         return !!session;
+    }
+
+    /**
+     * Gets the filters that are configured in `azureResourceGroups.selectedSubscriptions`. To
+     * override the settings with a custom filter, implement a child class with `getFilters()`
+     * overridden.
+     *
+     * If a tenant to which the user has access does not appear in the list, that tenant will be
+     * ignored.
+     *
+     * If no values are returned by `getFilters()`, then all subscriptions will be returned.
+     *
+     * @returns A list of subscription IDs that are configured in `azureResourceGroups.selectedSubscriptions`.
+     */
+    protected async getFilters(): Promise<SubscriptionId[]> {
+        const config = vscode.workspace.getConfiguration('azureResourceGroups');
+        return config.get<SubscriptionId[]>('selectedSubscriptions', []);
     }
 
     /**
