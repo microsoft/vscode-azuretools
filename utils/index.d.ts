@@ -1942,3 +1942,16 @@ export declare namespace randomUtils {
     export function getRandomHexString(length?: number): string;
     export function getRandomInteger(minimumInclusive: number, maximumExclusive: number): number;
 }
+
+export declare class EventCache<T> implements Disposable {
+    public constructor(callback: () => Promise<T[]>, flushEvents?: Event<never>[]);
+    public getValues(): Promise<T[]>;
+    public dispose(): void;
+
+    public flushOn(event: Event<never>): void;
+    public flush(): void;
+}
+
+export declare class IterableEventCache<T> extends EventCache<T> {
+    public constructor(callback: () => AsyncIterable<T>, flushEvents?: Event<never>[]);
+}
