@@ -102,7 +102,9 @@ export interface DefaultWebpackOptions {
          * Redirect only exact matching request.
          */
         onlyModule?: boolean;
-    }[]
+    }[],
+
+    alias?: { [index: string]: string | false | string[] };
 }
 
 export declare function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack.Configuration;

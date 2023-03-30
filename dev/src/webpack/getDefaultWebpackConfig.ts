@@ -117,7 +117,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
     const nodeCryptoPath = path.resolve(__dirname, '..', '..', '..', '..', 'vscode-azext-utils', 'out/src/node/crypto');
     const webCryptoPath = path.resolve(__dirname, '..', '..', '..', '..', 'vscode-azext-utils', 'out/src/browser/crypto')
 
-    const alias: { [key: string]: string } = {};
+    const alias: { [index: string]: string | false | string[] } = options.alias ?? {};
     alias[nodeCryptoPath] = webCryptoPath;
 
     const config: webpack.Configuration = {
