@@ -233,7 +233,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
             rules: [
                 {
                     test: /\.ts$/,
-                    exclude: [/node_modules/],
+                    exclude: /node_modules/,
                     use: [{
                         // Note: the TS loader will transpile the .ts file directly during webpack (i.e., webpack is directly pulling the .ts files, not .js files from out/)
                         loader: require.resolve('ts-loader')
