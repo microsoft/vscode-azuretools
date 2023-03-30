@@ -117,7 +117,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
     const nodeCryptoPath = path.resolve(__dirname, '..', '..', '..', '..', 'vscode-azext-utils', 'out/src/node/crypto');
     const webCryptoPath = path.resolve(__dirname, '..', '..', '..', '..', 'vscode-azext-utils', 'out/src/browser/crypto')
 
-    const alias: { [key: string]: string } = {};
+    const alias: { [index: string]: string | false | string[] } = options.alias ?? {};
     alias[nodeCryptoPath] = webCryptoPath;
 
     const config: webpack.Configuration = {
@@ -233,7 +233,7 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
             rules: [
                 {
                     test: /\.ts$/,
-                    exclude: /node_modules/,
+                    exclude: [/node_modules/],
                     use: [{
                         // Note: the TS loader will transpile the .ts file directly during webpack (i.e., webpack is directly pulling the .ts files, not .js files from out/)
                         loader: require.resolve('ts-loader')
