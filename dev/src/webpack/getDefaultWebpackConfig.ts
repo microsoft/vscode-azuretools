@@ -55,6 +55,8 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                     from: '**/*',
                     context: path.posix.join(options.projectRoot.replace(/\\/g, '/'), 'out', 'test'),
                     to: path.posix.join(options.projectRoot.replace(/\\/g, '/'), 'dist', 'test'),
+                    // Transform resulting file path from dist/test/out/test/index.js to dist/test/index.js
+                    transformPath: (targetPath: string) => targetPath.replace(/out\/test/, ''),
                     noErrorOnMissing: true
                 },
                 {
