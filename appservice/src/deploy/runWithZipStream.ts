@@ -6,7 +6,6 @@
 import { HttpOperationResponse } from '@azure/ms-rest-js';
 import { IActionContext } from '@microsoft/vscode-azext-utils';
 import * as fse from 'fs-extra';
-import { glob as globGitignore } from 'glob-gitignore';
 import * as globby from 'globby';
 import * as path from 'path';
 import * as prettybytes from 'pretty-bytes';
@@ -85,10 +84,9 @@ function getPathFromMap(realPath: string, pathfileMap?: Map<string, string>): st
     return pathfileMap?.get(realPath) || realPath;
 }
 
-const commonGlobSettings: {} = {
+const commonGlobSettings: Partial<globby.GlobbyOptions> = {
     dot: true, // Include paths starting with '.'
-    nodir: true, // required for symlinks https://github.com/archiverjs/node-archiver/issues/311#issuecomment-445924055
-    follow: true // Follow symlinks to get all sub folders https://github.com/microsoft/vscode-azurefunctions/issues/1289
+    followSymbolicLinks: true, // Follow symlinks to get all sub folders https://github.com/microsoft/vscode-azurefunctions/issues/1289
 };
 
 /**
@@ -132,7 +130,12 @@ async function getFilesFromGitignore(folderPath: string, gitignoreName: string):
         ignore = funcIgnoreContents.split('\n').map(l => l.trim());
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
-    const paths: string[] = await globGitignore('**/*', { cwd: folderPath, ignore, ...commonGlobSettings });
-    return paths;
+    return await globby('**/*', {
+        gitignore: true,
+        // We can replace this option and the above logic with `ignoreFiles` if we upgrade to globby^13 (ESM)
+        // see https://github.com/sindresorhus/globby#ignorefiles
+        ignore,
+        cwd: folderPath,
+        ...commonGlobSettings
+    });
 }
