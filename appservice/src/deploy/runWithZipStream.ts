@@ -6,8 +6,7 @@
 import { HttpOperationResponse } from '@azure/ms-rest-js';
 import { IActionContext } from '@microsoft/vscode-azext-utils';
 import * as fse from 'fs-extra';
-import { glob as globGitignore } from 'glob-gitignore';
-import * as globby from 'globby';
+import { globby, Options } from 'globby';
 import * as path from 'path';
 import * as prettybytes from 'pretty-bytes';
 import { Readable } from 'stream';
@@ -85,10 +84,9 @@ function getPathFromMap(realPath: string, pathfileMap?: Map<string, string>): st
     return pathfileMap?.get(realPath) || realPath;
 }
 
-const commonGlobSettings: {} = {
+const commonGlobSettings: Partial<Options> = {
     dot: true, // Include paths starting with '.'
-    nodir: true, // required for symlinks https://github.com/archiverjs/node-archiver/issues/311#issuecomment-445924055
-    follow: true // Follow symlinks to get all sub folders https://github.com/microsoft/vscode-azurefunctions/issues/1289
+    followSymbolicLinks: true, // Follow symlinks to get all sub folders https://github.com/microsoft/vscode-azurefunctions/issues/1289
 };
 
 /**
@@ -125,14 +123,12 @@ async function getFilesFromGlob(folderPath: string, site: ParsedSite): Promise<s
  * Adds files using gitignore filtering
  */
 async function getFilesFromGitignore(folderPath: string, gitignoreName: string): Promise<string[]> {
-    let ignore: string[] = [];
-    const gitignorePath: string = path.join(folderPath, gitignoreName);
-    if (await fse.pathExists(gitignorePath)) {
-        const funcIgnoreContents: string = (await fse.readFile(gitignorePath)).toString();
-        ignore = funcIgnoreContents.split('\n').map(l => l.trim());
-    }
+    const paths: string[] = await globby('**/*', {
+        gitignore: true,
+        ignoreFiles: gitignoreName, // Ignore files matching patterns in the specified ignore file
+        cwd: folderPath,
+        ...commonGlobSettings
+    });
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
-    const paths: string[] = await globGitignore('**/*', { cwd: folderPath, ignore, ...commonGlobSettings });
     return paths;
 }
