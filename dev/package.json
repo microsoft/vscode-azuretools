@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-dev",
     "author": "Microsoft Corporation",
-    "version": "1.0.4",
+    "version": "1.1.0",
     "description": "Common dev dependency tools for developing Azure extensions for VS Code",
     "tags": [
         "azure",
@@ -42,7 +42,7 @@
         "@types/mocha": "^7.0.2",
         "@types/node": "^16.0.0",
         "@types/terser-webpack-plugin": "^5.0.0",
-        "@types/vscode": "1.64.0",
+        "@types/vscode": "^1.77.0",
         "@typescript-eslint/eslint-plugin": "^5.53.0",
         "@vscode/test-electron": "^2.1.5",
         "eslint": "^8.34.0",

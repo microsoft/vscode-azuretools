@@ -5,7 +5,7 @@
 
 import { Environment } from "@azure/ms-rest-azure-env";
 import * as cp from "child_process";
-import { Disposable, Event, InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, Uri } from "vscode";
+import { Disposable, Event, InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, Uri, LogOutputChannel } from "vscode";
 import * as webpack from 'webpack';
 
 /**
@@ -31,7 +31,7 @@ export interface IPackageLintOptions {
 /**
  * Re-routes output to the console instead of a VS Code output channel (which disappears after a test run has finished)
  */
-export class TestOutputChannel implements OutputChannel {
+export class TestOutputChannel implements LogOutputChannel {
     public name: string;
     public append(value: string): void;
     public appendLine(value: string): void;
@@ -41,6 +41,13 @@ export class TestOutputChannel implements OutputChannel {
     public show(): void;
     public hide(): void;
     public dispose(): void;
+    logLevel: LogLevel;
+    onDidChangeLogLevel: Event<LogLevel>;
+    trace(message: string, ...args: any[]): void;
+    debug(message: string, ...args: any[]): void;
+    info(message: string, ...args: any[]): void;
+    warn(message: string, ...args: any[]): void;
+    error(error: string | Error, ...args: any[]): void;
 }
 
 export type Verbosity = 'debug' | 'silent' | 'normal';
