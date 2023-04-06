@@ -1944,10 +1944,15 @@ export declare namespace randomUtils {
     export function getRandomInteger(minimumInclusive: number, maximumExclusive: number): number;
 }
 
+/**
+ * Base element for a tree view (v2)
+ */
 export declare interface TreeElementBase extends ResourceModelBase {
     getChildren?(): ProviderResult<TreeElementBase[]>;
     getTreeItem(): TreeItem | Thenable<TreeItem>;
 }
+
+export type TreeElementWithId = TreeElementBase & { id: string };
 
 export interface GenericElementOptions extends IGenericTreeItemOptions {
     commandArgs?: unknown[];
@@ -1977,13 +1982,10 @@ export declare interface TreeElementStateModel {
     temporaryChildren?: TreeElementBase[];
 }
 
-
-type TreeElementWithId = TreeElementBase & { id: string };
-
 /**
  * Wraps tree elements in a state model that can be used to temporarily override tree element behavior like the description or children.
  */
-export declare class TreeElementStateManager<TElement extends TreeElementWithId> implements Disposable {
+export declare class TreeElementStateManager<TElement extends TreeElementWithId = TreeElementWithId> implements Disposable {
     /**
      * Temporarily override the description of the given element while the callback is running.
      *

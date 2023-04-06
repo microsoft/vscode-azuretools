@@ -8,9 +8,7 @@ import { createGenericElement } from './createGenericElement';
 import * as types from '../../../index';
 import { localize } from '../../localize';
 
-type TreeElementWithId = types.TreeElementBase & { id: string };
-
-export class TreeElementStateManager<TElement extends TreeElementWithId> implements vscode.Disposable {
+export class TreeElementStateManager<TElement extends types.TreeElementWithId = types.TreeElementWithId> implements vscode.Disposable {
     private readonly store: Record<string, types.TreeElementStateModel | undefined> = {};
     private readonly disposables: vscode.Disposable[] = [];
     private readonly onDidUpdateStateEmitter = new vscode.EventEmitter<string>();
