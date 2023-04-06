@@ -14,7 +14,7 @@ import type { PipelineRequestOptions, PipelineResponse } from '@azure/core-rest-
 import type { Environment } from '@azure/ms-rest-azure-env';
 import type { AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtServiceClientCredentialsT2, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IRelatedNameWizardContext, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
 import { AzureSubscription } from '@microsoft/vscode-azureresources-api';
-import { Disposable, Progress, Uri } from 'vscode';
+import { Disposable, LogOutputChannel, Progress, Uri } from 'vscode';
 
 export type OpenInPortalOptions = {
     /**
@@ -422,3 +422,10 @@ export function parseAzureResourceId(id: string): ParsedAzureResourceId;
 export function getResourceGroupFromId(id: string): string;
 
 export declare function createPortalUri(subscription: AzureSubscription, id: string, options?: OpenInPortalOptions): Uri;
+
+/**
+ * Pipe Azure SDK logs into the provided log outptut channel using the @azure/logger package.
+ *
+ * @param logOutputChannel - log output channel to pipe logs into
+ */
+export function setupAzureLogger(logOutputChannel: LogOutputChannel): Disposable;
