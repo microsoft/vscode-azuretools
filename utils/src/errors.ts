@@ -16,7 +16,10 @@ export class UserCancelledError extends Error {
 }
 
 export function isUserCancelledError(error: unknown): error is UserCancelledError {
-    return !!error && typeof error === 'object' && (error as UserCancelledError)._isUserCancelledError;
+    return !!error &&
+        typeof error === 'object' &&
+        '_isUserCancelledError' in error &&
+        error._isUserCancelledError === true;
 }
 
 export class GoBackError extends Error {
