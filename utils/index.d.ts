@@ -641,6 +641,8 @@ export declare class UserCancelledError extends Error {
     constructor(stepName?: string);
 }
 
+export declare function isUserCancelledError(error: unknown): error is UserCancelledError;
+
 export declare class NoResourceFoundError extends Error {
     constructor(context?: ITreeItemPickerContext);
 }

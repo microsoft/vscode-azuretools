@@ -7,11 +7,21 @@ import { ITreeItemPickerContext } from "..";
 import { localize } from "./localize";
 
 export class UserCancelledError extends Error {
+    _isUserCancelledError = true;
     public stepName: string | undefined;
     constructor(stepName?: string) {
         super(localize('userCancelledError', 'Operation cancelled.'));
         this.stepName = stepName;
     }
+}
+
+/**
+ * Checks if the given error is a UserCancelledError.
+ *
+ * Note: only works with errors created by versions >=1.1.1 of this package.
+ */
+export function isUserCancelledError(error: unknown): error is UserCancelledError {
+    return (error as UserCancelledError)._isUserCancelledError;
 }
 
 export class GoBackError extends Error {
