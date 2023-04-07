@@ -3,7 +3,9 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-export class TestOutputChannel {
+import type { LogLevel, LogOutputChannel, Event } from "vscode";
+
+export class TestOutputChannel implements LogOutputChannel {
     public name: string = 'Extension Test Output';
 
     public append(value: string): void {
@@ -42,11 +44,11 @@ export class TestOutputChannel {
         // do nothing
     }
 
-    logLevel = "4"
+    logLevel: LogLevel = 2;
 
     onDidChangeLogLevel = (() => {
         // empty
-    });
+    }) as unknown as Event<LogLevel>;
 
     trace(message: string, ...args: unknown[]): void {
         console.trace(message, args);
