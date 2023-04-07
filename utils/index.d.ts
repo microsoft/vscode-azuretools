@@ -641,6 +641,11 @@ export declare class UserCancelledError extends Error {
     constructor(stepName?: string);
 }
 
+/**
+ * Checks if the given error is a UserCancelledError.
+ *
+ * Note: only works with errors created by versions >=1.1.1 of this package.
+ */
 export declare function isUserCancelledError(error: unknown): error is UserCancelledError;
 
 export declare class NoResourceFoundError extends Error {
