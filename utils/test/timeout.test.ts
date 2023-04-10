@@ -82,9 +82,8 @@ suite("timeout Tests", () => {
                         throw new Error("I threw up");
                     });
                 });
-            } catch (err) {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                error = err;
+            } catch (err: unknown) {
+                error = err as Error;
             }
 
             assert.equal(executed, false);
@@ -121,9 +120,8 @@ suite("timeout Tests", () => {
                         setTimeout(() => { reject(new Error("rejected")); }, 1);
                     });
                 });
-            } catch (err) {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                error = err;
+            } catch (err: unknown) {
+                error = err as Error;
             }
 
             assert.equal(error && error.message, "rejected");

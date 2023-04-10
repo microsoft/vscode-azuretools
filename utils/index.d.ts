@@ -641,6 +641,13 @@ export declare class UserCancelledError extends Error {
     constructor(stepName?: string);
 }
 
+/**
+ * Checks if the given error is a UserCancelledError.
+ *
+ * Note: only works with errors created by versions >=1.1.1 of this package.
+ */
+export declare function isUserCancelledError(error: unknown): error is UserCancelledError;
+
 export declare class NoResourceFoundError extends Error {
     constructor(context?: ITreeItemPickerContext);
 }
@@ -1567,6 +1574,7 @@ export declare function registerReportIssueCommand(commandId: string): void;
  * Registers a namespace that leverages vscode.workspace.fs API to access the file system
  */
 export declare namespace AzExtFsExtra {
+    export function isVirtualWorkspace(): boolean;
     export function isDirectory(resource: Uri | string): Promise<boolean>;
     export function isFile(resource: Uri | string): Promise<boolean>;
     export function ensureDir(resource: Uri | string): Promise<void>;

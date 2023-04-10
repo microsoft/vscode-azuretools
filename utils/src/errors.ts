@@ -7,11 +7,19 @@ import { ITreeItemPickerContext } from "..";
 import { localize } from "./localize";
 
 export class UserCancelledError extends Error {
+    _isUserCancelledError = true;
     public stepName: string | undefined;
     constructor(stepName?: string) {
         super(localize('userCancelledError', 'Operation cancelled.'));
         this.stepName = stepName;
     }
+}
+
+export function isUserCancelledError(error: unknown): error is UserCancelledError {
+    return !!error &&
+        typeof error === 'object' &&
+        '_isUserCancelledError' in error &&
+        error._isUserCancelledError === true;
 }
 
 export class GoBackError extends Error {

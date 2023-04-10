@@ -112,9 +112,13 @@ export class TestUserInput implements types.TestUserInput {
             }
         } else if (typeof input === 'string') {
             if (options.validateInput) {
-                const msg: string | null | undefined = await Promise.resolve(options.validateInput(input));
+                const msg: string | vscodeTypes.InputBoxValidationMessage | null | undefined = await Promise.resolve(options.validateInput(input));
                 if (msg !== null && msg !== undefined) {
-                    throw new Error(msg);
+                    if (typeof msg === 'object' && 'message' in msg) {
+                        throw new Error(msg.message);
+                    } else {
+                        throw new Error(msg);
+                    }
                 }
             }
             result = input;
