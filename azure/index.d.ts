@@ -376,7 +376,7 @@ export type AzExtPipelineResponse = PipelineResponse & { parsedBody?: any }
  * @param timeout The timeout in milliseconds
  * @param clientInfo The client/credentials info or `undefined` if no credentials are needed
  */
-export declare function sendRequestWithTimeout(context: IActionContext, options: AzExtRequestPrepareOptions, timeout: number, clientInfo: AzExtGenericClientInfo): Promise<PipelineResponse>;
+export declare function sendRequestWithTimeout(context: IActionContext, options: AzExtRequestPrepareOptions, timeout: number, clientInfo: AzExtGenericClientInfo): Promise<AzExtPipelineResponse>;
 
 export type AzExtClientType<T extends ServiceClient> = new (credentials: AzExtServiceClientCredentials, subscriptionId: string, options?: ServiceClientOptions) => T;
 
