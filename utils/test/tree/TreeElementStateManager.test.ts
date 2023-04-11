@@ -65,6 +65,15 @@ suite('TreeElementStateManager', () => {
         assert.deepEqual(wrappedTreeItem, originalTreeItem);
     });
 
+    test('wrapItemInStateHandling - throws error if item is wrapped twice', async () => {
+        const testItemWithChildren = getTestItemWithChildren();
+        const wrappedItem = state.wrapItemInStateHandling(testItemWithChildren, async () => { });
+
+        assert.throws(() => {
+            state.wrapItemInStateHandling(wrappedItem, async () => { });
+        });
+    });
+
     test('notifyChildrenChanged - calls the refresh callback', async () => {
         const testItemWithChildren = getTestItemWithChildren();
 

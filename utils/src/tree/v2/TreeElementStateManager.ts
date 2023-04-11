@@ -44,6 +44,13 @@ export class TreeElementStateManager<TElement extends types.TreeElementWithId = 
     }
 
     wrapItemInStateHandling(item: TElement, refresh: (item: TElement) => void): TElement {
+        const wrapKey = '_xWrappedInStateHandling';
+        if (wrapKey in item && item[wrapKey]) {
+            throw new Error('Element is already wrapped in state handling');
+        } else {
+            item[wrapKey] = true;
+        }
+
         const getTreeItem = item.getTreeItem.bind(item) as typeof item.getTreeItem;
         item.getTreeItem = async () => {
             const treeItem = await getTreeItem();
