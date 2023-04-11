@@ -4,11 +4,11 @@ jobs:
       vmImage: ubuntu-latest
     steps:
       - template: ./setup.yml
-      - ${{ if in(variables['Build.Reason'], 'Manual', 'Schedule') }}:
+      - ${{ if in(variables['Build.Reason'], 'Manual', 'Schedule', 'IndividualCI') }}: # TODO: remove CI
         - template: ./compliance/compliance.yml
       - template: ./build.yml
-      # - template: ./test.yml
-      # - template: ./package.yml
+      - template: ./test.yml
+      - template: ./package.yml
     variables:
       Codeql.Enabled: $[in(variables['Build.Reason'], 'Schedule')] # Enable CodeQL only on scheduled builds because it is slow
 
