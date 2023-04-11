@@ -1,9 +1,19 @@
 trigger:
   - main
 
-- jobs:
+jobs:
+  - job: Windows
+    pool:
+      vmImage: windows-latest
+    steps:
+      - template: ./common/stages.yml
   - job: Linux
     pool:
       vmImage: ubuntu-latest
+    steps:
+      - template: ./common/stages.yml
+  - job: macOS
+    pool:
+      vmImage: macOS-latest
     steps:
       - template: ./common/stages.yml
