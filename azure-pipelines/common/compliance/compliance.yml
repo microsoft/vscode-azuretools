@@ -1,0 +1,45 @@
+steps:
+  - task: ComponentGovernanceComponentDetection@0
+    displayName: 'Component Governance Detection'
+
+  - task: securedevelopmentteam.vss-secure-development-tools.build-task-antimalware.AntiMalware@3
+    displayName: 'AntiMalware Scan'
+    inputs:
+      FileDirPath: '$(Build.SourcesDirectory)'
+      EnableServices: true
+    condition: eq(variables['Agent.OS'], 'Windows')
+
+  - task: securedevelopmentteam.vss-secure-development-tools.build-task-policheck.PoliCheck@1
+    displayName: 'PoliCheck'
+    inputs:
+      targetType: F # search files and folders
+      optionsUEPATH: '$(Build.SourcesDirectory)/.azure-pipelines/compliance/PoliCheckExclusions.xml' # Fix
+    continueOnError: true
+
+  - task: securedevelopmentteam.vss-secure-development-tools.build-task-credscan.CredScan@2
+    displayName: 'CredScan'
+    inputs:
+      toolMajorVersion: V2
+      suppressionsFile: '$(Build.SourcesDirectory)/.azure-pipelines/compliance/CredScanSuppressions.json' # Fix
+    continueOnError: true
+
+  - task: securedevelopmentteam.vss-secure-development-tools.build-task-publishsecurityanalysislogs.PublishSecurityAnalysisLogs@2
+    displayName: 'Publish Security Analysis Logs'
+
+  - task: securedevelopmentteam.vss-secure-development-tools.build-task-postanalysis.PostAnalysis@1
+    displayName: 'Post Analysis'
+    inputs:
+      AllTools: false
+      CredScan: true
+      PoliCheck: true
+
+  - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
+    displayName: 'SBoM Generation Task'
+    inputs:
+      BuildDropPath: '$(build.artifactstagingdirectory)'
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish SBoM'
+    inputs:
+      PathtoPublish: '$(build.artifactstagingdirectory)/_manifest'
+      ArtifactName: '_manifest'

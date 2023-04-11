@@ -1,0 +1,21 @@
+trigger:
+  - main
+
+jobs:
+  - job: Windows
+    pool:
+      vmImage: windows-latest
+    steps:
+      - template: stages.yml
+
+  - job: Linux
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+      - template: stages.yml
+
+  - job: macOS
+    pool:
+      vmImage: macOS-latest
+    steps:
+      - template: stages.yml
