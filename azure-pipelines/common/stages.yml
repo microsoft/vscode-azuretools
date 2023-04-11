@@ -6,6 +6,7 @@ stages:
 
   - stage: compliance
     displayName: Compliance
+    steps:
       - template: ./compliance/compliance.yml
     condition: in(variables['Build.Reason'], 'Manual', 'Schedule')
     variables:
@@ -13,12 +14,15 @@ stages:
 
   - stage: build
     displayName: Build
+    steps:
       - template: ./build.yml
 
   - stage: test
     displayName: Test
+    steps:
       - template: ./test.yml
 
   - stage: package
     displayName: Package
+    steps:
       - template: ./package.yml
