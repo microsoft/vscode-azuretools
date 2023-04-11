@@ -1,3 +1,5 @@
+parameters:
+
 stages:
   - stage: setup
     displayName: Setup
