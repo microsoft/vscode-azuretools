@@ -11,10 +11,10 @@ steps:
     displayName: 'Install Dependencies'
 
   # Fix this script
-  - script: |
-      sudo cp ./linux/xvfb.init /etc/init.d/xvfb
-      sudo chmod +x /etc/init.d/xvfb
-      sudo update-rc.d xvfb defaults
-      sudo service xvfb start
-    displayName: 'Start X Virtual Frame Buffer'
-    condition: eq(variables['Agent.OS'], 'Linux')
+  # - script: |
+  #     sudo cp ./linux/xvfb.init /etc/init.d/xvfb
+  #     sudo chmod +x /etc/init.d/xvfb
+  #     sudo update-rc.d xvfb defaults
+  #     sudo service xvfb start
+  #   displayName: 'Start X Virtual Frame Buffer'
+  #   condition: eq(variables['Agent.OS'], 'Linux')
