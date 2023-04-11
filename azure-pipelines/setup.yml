@@ -1,3 +1,7 @@
+parameters:
+  - name: xvfbScriptPath
+    type: string
+
 steps:
   - task: NodeTool@0
     displayName: 'Use Node 16.x'
@@ -11,10 +15,12 @@ steps:
     displayName: 'Install Dependencies'
 
   # Fix this script
-  # - script: |
-  #     sudo cp ./linux/xvfb.init /etc/init.d/xvfb
-  #     sudo chmod +x /etc/init.d/xvfb
-  #     sudo update-rc.d xvfb defaults
-  #     sudo service xvfb start
-  #   displayName: 'Start X Virtual Frame Buffer'
-  #   condition: eq(variables['Agent.OS'], 'Linux')
+  - script: |
+      sudo cp $(xvfbScriptPath) /etc/init.d/xvfb
+      sudo chmod +x /etc/init.d/xvfb
+      sudo update-rc.d xvfb defaults
+      sudo service xvfb start
+    displayName: 'Start X Virtual Frame Buffer'
+    condition: eq(variables['Agent.OS'], 'Linux')
+    variables:
+      xvfbScriptPath: $ {{ parameters.xvfbScriptPath }}
