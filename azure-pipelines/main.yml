@@ -3,7 +3,14 @@ jobs:
     pool:
       vmImage: ubuntu-latest
     steps:
-      - template: ./stages.yml
+      - template: ./setup.yml
+      - template: ./compliance/compliance.yml
+        condition: in(variables['Build.Reason'], 'Manual', 'Schedule')
+        variables:
+          Codeql.Enabled: $[in(variables['Build.Reason'], 'Schedule')] # Enable CodeQL only on scheduled builds because it is slow
+      # - template: ./build.yml
+      # - template: ./test.yml
+      # - template: ./package.yml
 
 # jobs:
 #   # - job: Windows
