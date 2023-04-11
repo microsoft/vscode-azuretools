@@ -1,15 +1,9 @@
-trigger:
-  - main
-
-stages:
-  - stage: setup
-    displayName: Setup
-    jobs:
-      - job: Linux
-        pool:
-          vmImage: ubuntu-latest
-        steps:
-          - template: ./setup.yml
+jobs:
+  - job: Linux
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+      - template: ./stages.yml
 
 # jobs:
 #   # - job: Windows
