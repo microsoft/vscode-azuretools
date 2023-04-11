@@ -6,16 +6,16 @@ jobs:
     pool:
       vmImage: windows-latest
     steps:
-      - template: ./stages.yml
+      - template: ./common/stages.yml
 
   - job: Linux
     pool:
       vmImage: ubuntu-latest
     steps:
-      - template: ./stages.yml
+      - template: ./common/stages.yml
 
   - job: macOS
     pool:
       vmImage: macOS-latest
     steps:
-      - template: ./stages.yml
+      - template: ./common/stages.yml
