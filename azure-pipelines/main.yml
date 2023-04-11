@@ -4,7 +4,7 @@ jobs:
       vmImage: ubuntu-latest
     steps:
       - template: ./setup.yml
-      -  {{ in(variables['Build.Reason'], 'Manual', 'Schedule') }}
+      -  ${{ if in(variables['Build.Reason'], 'Manual', 'Schedule') }}
         - template: ./compliance/compliance.yml
       # - template: ./build.yml
       # - template: ./test.yml
