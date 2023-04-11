@@ -22,3 +22,14 @@ stages:
   - stage: package
     displayName: Package
       - template: ./package.yml
+
+  - jobs:
+    - job: Windows
+      pool:
+        vmImage: windows-latest
+    - job: Linux
+      pool:
+        vmImage: ubuntu-latest
+    - job: macOS
+      pool:
+        vmImage: macOS-latest
