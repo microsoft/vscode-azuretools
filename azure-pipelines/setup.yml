@@ -3,6 +3,7 @@ parameters:
     type: string
 
 steps:
+  - checkout: templates
   - task: NodeTool@0
     displayName: 'Use Node 16.x'
     inputs:
