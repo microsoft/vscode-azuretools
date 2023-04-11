@@ -1,6 +1,5 @@
 steps:
   - checkout: templates
-    path: $(Build.SourcesDirectory)/templates
   - task: NodeTool@0
     displayName: 'Use Node 16.x'
     inputs:
