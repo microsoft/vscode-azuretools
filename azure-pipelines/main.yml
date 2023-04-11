@@ -3,6 +3,7 @@ jobs:
     pool:
       vmImage: ubuntu-latest
     steps:
+      - checkout: self
       - template: ./setup.yml
         parameters:
           xvfbScriptPath: $(Build.SourcesDirectory)/templates/azure-pipelines/linux/xvfb.init
