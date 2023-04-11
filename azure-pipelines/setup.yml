@@ -4,6 +4,7 @@ parameters:
 
 steps:
   - checkout: templates
+    path: $(Build.SourcesDirectory)/templates
   - task: NodeTool@0
     displayName: 'Use Node 16.x'
     inputs:
@@ -17,7 +18,7 @@ steps:
 
   # Fix this script
   - script: |
-      sudo cp ${{ parameters.xvfbScriptPath }} /etc/init.d/xvfb
+      sudo cp ${{ $(Build.SourcesDirectory)/templates/azure-pipelines/linux/xvfb.init }} /etc/init.d/xvfb
       sudo chmod +x /etc/init.d/xvfb
       sudo update-rc.d xvfb defaults
       sudo service xvfb start

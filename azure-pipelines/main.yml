@@ -4,9 +4,8 @@ jobs:
       vmImage: ubuntu-latest
     steps:
       - checkout: self
+        path: $(Build.SourcesDirectory)
       - template: ./setup.yml
-        parameters:
-          xvfbScriptPath: $(Build.SourcesDirectory)/templates/azure-pipelines/linux/xvfb.init
       - ${{ if in(variables['Build.Reason'], 'Manual', 'Schedule') }}:
         - template: ./compliance/compliance.yml
       - template: ./build.yml
