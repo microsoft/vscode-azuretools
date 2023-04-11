@@ -43,3 +43,8 @@ steps:
     inputs:
       PathtoPublish: '$(build.artifactstagingdirectory)/_manifest'
       ArtifactName: '_manifest'
+
+variables:
+  Codeql.Enabled: $[in(variables['Build.Reason'], 'Schedule')] # Enable CodeQL only on scheduled builds because it is slow
+
+condition: in(variables['Build.Reason'], 'Manual', 'Schedule')
