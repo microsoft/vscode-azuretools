@@ -8,7 +8,8 @@ trigger:
   - job: Linux
     pool:
       vmImage: ubuntu-latest
-    template: ./common/stages.yml
+    steps:
+      - template: ./common/stages.yml
   # - job: macOS
   #   pool:
   #     vmImage: macOS-latest
