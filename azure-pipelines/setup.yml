@@ -1,7 +1,3 @@
-parameters:
-  - name: xvfbScriptPath
-    type: string
-
 steps:
   - checkout: templates
     path: $(Build.SourcesDirectory)/templates
