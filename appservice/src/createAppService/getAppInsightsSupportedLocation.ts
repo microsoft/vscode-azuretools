@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { Provider, ProviderResourceType, ResourceManagementClient } from '@azure/arm-resources';
-import type { HttpOperationResponse, ServiceClient } from "@azure/ms-rest-js";
-import { AzExtLocation, createGenericClient } from "@microsoft/vscode-azext-azureutils";
+import { ServiceClient } from '@azure/core-client';
+import { createPipelineRequest } from '@azure/core-rest-pipeline';
+import { AzExtLocation, AzExtPipelineResponse, createGenericClient } from "@microsoft/vscode-azext-azureutils";
 import { IActionContext, nonNullProp } from "@microsoft/vscode-azext-utils";
 import { createResourceClient } from "../utils/azureClients";
 import { areLocationNamesEqual } from "../utils/azureUtils";
@@ -36,10 +37,11 @@ export async function getAppInsightsSupportedLocation(context: IAppServiceWizard
 async function getPairedRegions(context: IActionContext, locationName: string): Promise<string[]> {
     try {
         const client: ServiceClient = await createGenericClient(context, undefined);
-        const response: HttpOperationResponse = await client.sendRequest({
+        const response: AzExtPipelineResponse = await client.sendRequest(createPipelineRequest({
             method: 'GET',
             url: 'https://appinsights.azureedge.net/portal/regionMapping.json'
-        });
+        }));
+
         const regionMappingJson: RegionMappingJsonResponse = <RegionMappingJsonResponse>response.parsedBody;
 
         if (regionMappingJson.regions[locationName]) {

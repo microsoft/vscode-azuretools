@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { ResourceNameAvailability } from '@azure/arm-appservice';
-import { ServiceClient } from '@azure/ms-rest-js';
-import { ResourceGroupListStep, StorageAccountListStep, resourceGroupNamingRules, storageAccountNamingRules, createGenericClient } from '@microsoft/vscode-azext-azureutils';
+import { ServiceClient } from '@azure/core-client';
+import { ResourceGroupListStep, StorageAccountListStep, createGenericClient, resourceGroupNamingRules, storageAccountNamingRules } from '@microsoft/vscode-azext-azureutils';
 import { AzureNameStep, IAzureNamingRules } from '@microsoft/vscode-azext-utils';
 import { localize } from '../localize';
 import { checkNameAvailability } from '../utils/azureUtils';
