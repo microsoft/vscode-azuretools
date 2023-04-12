@@ -10,7 +10,7 @@ jobs:
       vmImage: ${{ parameters.vmImage }}
     steps:
       - template: ./templates/setup.yml
-      - ${{ if in(variables['Build.Reason'], 'Manual', 'Schedule', 'IndividualCI') }}: # TODO: remove CI
+      - ${{ if in(variables['Build.Reason'], 'Manual', 'Schedule') }}:
         - template: ./compliance/compliance.yml
       - template: ./templates/build.yml
       - template: ./templates/test.yml

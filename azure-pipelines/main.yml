@@ -9,7 +9,7 @@ jobs:
       jobName: Linux
       vmImage: ubuntu-latest
 
-  # - template: ./jobs.yml
-  #   parameters:
-  #     jobName: macOS
-  #     vmImage: macOS-latest
+  - template: ./jobs.yml
+    parameters:
+      jobName: macOS
+      vmImage: macOS-latest
