@@ -1,8 +1,8 @@
 jobs:
-  - template: ./jobs.yml
-    parameters:
-      jobName: Windows
-      vmImage: windows-latest
+  # - template: ./jobs.yml
+  #   parameters:
+  #     jobName: Windows
+  #     vmImage: windows-latest
 
   - template: ./jobs.yml
     parameters:
