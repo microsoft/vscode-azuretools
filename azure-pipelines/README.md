@@ -6,16 +6,14 @@ To use these base pipeline templates:
     1. `build`: this should get the code built sufficiently that it is testable. Note, for a VSCode extension, this should include bundling (webpack, esbuild).
     1. `test`: this should run the tests
     1. `package`: this should do whatever packaging is needed of the built code--e.g. into a .vsix, .tar.gz, etc. The resulting package files will be published as build artifacts.
-1. Create an `.azure-pipelines` folder at the root of the repository
-1. Copy `linux/xvfb.init`, `compliance/CredScanSuppressions.json`, and `compliance/PoliCheckExclusions.xml` into that folder, in their respective subfolders, structured as such:
+1. Create a `.azure-pipelines` folder at the root of the repository
+1. Copy `compliance/CredScanSuppressions.json`, and `compliance/PoliCheckExclusions.xml` into `.azure-pipelines/compliance`, structured as such:
 ```
 <RepositoryRoot>
     .azure-pipelines
         compliance
             CredScanSuppressions.json
             PoliCheckExclusions.xml
-        linux
-            xvfb.init
 ```
 3. Create a `main.yml` file in `.azure-pipelines` with the following contents:
 
