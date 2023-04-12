@@ -7,7 +7,7 @@ steps:
     inputs:
       FileDirPath: '$(Build.SourcesDirectory)'
       EnableServices: true
-    condition: eq(variables['Agent.OS'], 'Windows')
+    condition: eq(variables['Agent.OS'], 'Windows_NT')
 
   - task: securedevelopmentteam.vss-secure-development-tools.build-task-policheck.PoliCheck@1
     displayName: 'PoliCheck'
@@ -15,7 +15,7 @@ steps:
       targetType: F # search files and folders
       optionsUEPATH: '$(Build.SourcesDirectory)/.azure-pipelines/compliance/PoliCheckExclusions.xml'
     continueOnError: true
-    condition: eq(variables['Agent.OS'], 'Windows')
+    condition: eq(variables['Agent.OS'], 'Windows_NT')
 
   - task: securedevelopmentteam.vss-secure-development-tools.build-task-credscan.CredScan@2
     displayName: 'CredScan'
@@ -23,11 +23,11 @@ steps:
       toolMajorVersion: V2
       suppressionsFile: '$(Build.SourcesDirectory)/.azure-pipelines/compliance/CredScanSuppressions.json'
     continueOnError: true
-    condition: eq(variables['Agent.OS'], 'Windows')
+    condition: eq(variables['Agent.OS'], 'Windows_NT')
 
   - task: securedevelopmentteam.vss-secure-development-tools.build-task-publishsecurityanalysislogs.PublishSecurityAnalysisLogs@2
     displayName: 'Publish Security Analysis Logs'
-    condition: eq(variables['Agent.OS'], 'Windows')
+    condition: eq(variables['Agent.OS'], 'Windows_NT')
 
   - task: securedevelopmentteam.vss-secure-development-tools.build-task-postanalysis.PostAnalysis@1
     displayName: 'Post Analysis'
@@ -35,7 +35,7 @@ steps:
       AllTools: false
       CredScan: true
       PoliCheck: true
-    condition: eq(variables['Agent.OS'], 'Windows')
+    condition: eq(variables['Agent.OS'], 'Windows_NT')
 
   - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
     displayName: 'SBoM Generation Task'
