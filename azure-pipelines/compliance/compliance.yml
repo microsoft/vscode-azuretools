@@ -13,7 +13,7 @@ steps:
     displayName: 'PoliCheck'
     inputs:
       targetType: F # search files and folders
-      optionsUEPATH: '$(Build.SourcesDirectory)/.azure-pipelines/compliance/PoliCheckExclusions.xml' # Fix
+      optionsUEPATH: '$(Build.SourcesDirectory)/.azure-pipelines/compliance/PoliCheckExclusions.xml'
     continueOnError: true
     condition: eq(variables['Agent.OS'], 'Windows')
 
@@ -21,7 +21,7 @@ steps:
     displayName: 'CredScan'
     inputs:
       toolMajorVersion: V2
-      suppressionsFile: '$(Build.SourcesDirectory)/.azure-pipelines/compliance/CredScanSuppressions.json' # Fix
+      suppressionsFile: '$(Build.SourcesDirectory)/.azure-pipelines/compliance/CredScanSuppressions.json'
     continueOnError: true
     condition: eq(variables['Agent.OS'], 'Windows')
 

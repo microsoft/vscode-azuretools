@@ -1,0 +1,20 @@
+parameters:
+  - name: 'jobName'
+    type: string
+  - name: 'vmImage'
+    type: string
+
+jobs:
+  - job: ${{ parameters.jobName }}
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      steps:
+        - template: ./templates/setup.yml
+        - ${{ if in(variables['Build.Reason'], 'Manual', 'Schedule', 'IndividualCI') }}: # TODO: remove CI
+          - template: ./compliance/compliance.yml
+        - template: ./templates/build.yml
+        - template: ./templates/test.yml
+        - template: ./templates/package.yml
+    variables:
+      Codeql.Enabled: $[and(in(variables['Build.Reason'], 'Schedule', 'Manual'), eq(variables['Agent.OS'], 'Linux'))] # Enable CodeQL only on Linux+scheduled builds because it is slow # TODO: remove manual
