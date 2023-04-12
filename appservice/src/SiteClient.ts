@@ -410,23 +410,21 @@ export class SiteClient implements IAppSettingsClient {
 
     public async vfsGetItem(context: IActionContext, path: string): Promise<AzExtPipelineResponse> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
-        const response: AzExtPipelineResponse = await client.sendRequest(createPipelineRequest({
+        return await client.sendRequest(createPipelineRequest({
             method: 'GET',
             url: `${this._site.kuduUrl}/api/vfs/${path}?api-version=2022-03-01`,
         }));
-        return response;
     }
 
     public async vfsPutItem(context: IActionContext, data: string | ArrayBuffer, path: string, rawHeaders?: {}): Promise<AzExtPipelineResponse> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
         const headers = createHttpHeaders(rawHeaders);
-        const response: AzExtPipelineResponse = await client.sendRequest(createPipelineRequest({
+        return await client.sendRequest(createPipelineRequest({
             method: 'PUT',
             url: `${this._site.kuduUrl}/api/vfs/${path}?api-version=2022-03-01`,
             body: typeof data === 'string' ? data : data.toString(),
             headers
         }));
-        return response;
     }
 
     /**
