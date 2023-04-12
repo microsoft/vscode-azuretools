@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { StringDictionary } from '@azure/arm-appservice';
-import { Environment } from '@azure/ms-rest-azure-env';
+import type { Environment } from '@azure/ms-rest-azure-env';
 import { BlobSASPermissions, BlobServiceClient, BlockBlobClient, ContainerClient, generateBlobSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
 import { IActionContext, parseError } from '@microsoft/vscode-azext-utils';
 import * as dayjs from 'dayjs';

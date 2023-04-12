@@ -414,7 +414,7 @@ export class SiteClient implements IAppSettingsClient {
             method: 'GET',
             url: `${this._site.kuduUrl}/api/vfs/${path}?api-version=2022-03-01`,
         }));
-        return response as AzExtPipelineResponse;
+        return response;
     }
 
     public async vfsPutItem(context: IActionContext, data: string | ArrayBuffer, path: string, rawHeaders?: {}): Promise<AzExtPipelineResponse> {
@@ -426,7 +426,7 @@ export class SiteClient implements IAppSettingsClient {
             body: typeof data === 'string' ? data : data.toString(),
             headers
         }));
-        return response as AzExtPipelineResponse;
+        return response;
     }
 
     /**
