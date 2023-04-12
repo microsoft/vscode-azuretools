@@ -429,3 +429,12 @@ export declare function createPortalUri(subscription: AzureSubscription, id: str
  * @param logOutputChannel - log output channel to pipe logs into
  */
 export function setupAzureLogger(logOutputChannel: LogOutputChannel): Disposable;
+
+/**
+ * Replaces the usage of BasicAuthenticationCredentials for ServiceClients imported from @azure/core-pipelines
+ *
+ * @param client - The service client. This will typically be a generalClient
+ * @param userName - Username to be used with basic authentication login
+ * @param password - Password. Gets encoded before being set in the header
+ */
+export function addBasicAuthenticationCredentialsToClient(client: ServiceClient, userName: string, password: string): void;
