@@ -15,7 +15,7 @@ To use these base pipeline templates:
             CredScanSuppressions.json
             PoliCheckExclusions.xml
 ```
-3. Create a `main.yml` file in `.azure-pipelines` with the following contents:
+5. Create a `main.yml` file in `.azure-pipelines` with the following contents:
 
 ```yaml
 # Trigger the build whenever `main` is updated
