@@ -5,4 +5,4 @@ steps:
       command: custom
       customCommand: test
     env:
-      DISPLAY: :10 # Only necessary for linux tests
+      DISPLAY: :99 # Only necessary for linux tests

@@ -3,7 +3,7 @@
 To use these base pipeline templates:
 1. Your project must be buildable with Node.js 16
 1. Your `package.json` file must contain the following NPM scripts:
-    1. `build`: this should get the code built sufficiently that it is testable
+    1. `build`: this should get the code built sufficiently that it is testable. Note, for a VSCode extension, this should include bundling (webpack, esbuild).
     1. `test`: this should run the tests
     1. `package`: this should do whatever packaging is needed of the built code--e.g. into a .vsix, .tar.gz, etc. The resulting package files will be published as build artifacts.
 1. Create an `.azure-pipelines` folder at the root of the repository
