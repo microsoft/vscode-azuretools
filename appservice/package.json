@@ -41,7 +41,7 @@
         "@azure/core-client": "^1.7.2",
         "@azure/core-rest-pipeline": "^1.10.3",
         "@azure/storage-blob": "^12.3.0",
-        "@microsoft/vscode-azext-azureutils": "file:../azure/microsoft-vscode-azext-azureutils-1.1.3.tgz",
+        "@microsoft/vscode-azext-azureutils": "^1.1.3",
         "@microsoft/vscode-azext-utils": "^1.1.0",
         "dayjs": "^1.11.2",
         "fs-extra": "^10.0.0",
