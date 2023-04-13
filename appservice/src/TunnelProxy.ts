@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { User } from '@azure/arm-appservice';
-import { ServiceClient } from '@azure/core-client';
+import type { ServiceClient } from '@azure/core-client';
 import { RestError, createPipelineRequest } from "@azure/core-rest-pipeline";
 import { AzExtPipelineResponse, addBasicAuthenticationCredentialsToClient, createGenericClient } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, IParsedError, UserCancelledError, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
