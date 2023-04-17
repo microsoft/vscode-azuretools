@@ -12,10 +12,11 @@ steps:
         **/*.vsix
         **/*.tar.gz
       TargetFolder: '$(build.artifactstagingdirectory)'
+    condition: and(eq(variables['Agent.OS'], 'Linux'), ne(variables['System.PullRequest.IsFork'], 'True'))
 
   - task: PublishBuildArtifacts@1
     displayName: 'Publish artifacts: package'
     inputs:
       PathtoPublish: '$(build.artifactstagingdirectory)'
       ArtifactName: package
-    condition: ne(variables['System.PullRequest.IsFork'], 'True')
+    condition: and(eq(variables['Agent.OS'], 'Linux'), ne(variables['System.PullRequest.IsFork'], 'True'))
