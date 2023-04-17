@@ -16,4 +16,4 @@ jobs:
       - template: ./templates/test.yml
       - template: ./templates/package.yml
     variables:
-      Codeql.Enabled: $[and(in(variables['Build.Reason'], 'Schedule', 'Manual'), eq(variables['Agent.OS'], 'Linux'))] # Enable CodeQL only on Linux+scheduled builds because it is slow # TODO: remove manual
+      Codeql.Enabled: $[and(in(variables['Build.Reason'], 'Schedule'), eq(variables['Agent.OS'], 'Linux'))] # Enable CodeQL only on Linux+scheduled builds because it is slow
