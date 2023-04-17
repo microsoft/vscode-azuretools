@@ -6,14 +6,16 @@ steps:
       customCommand: run package
 
   - task: CopyFiles@2
-    displayName: 'Copy vsix to staging directory'
+    displayName: 'Copy package to staging directory'
     inputs:
-      Contents: '**/*.vsix' # TODO: support .tar.gz
+      Contents: |
+        **/*.vsix
+        **/*.tar.gz
       TargetFolder: '$(build.artifactstagingdirectory)'
 
   - task: PublishBuildArtifacts@1
-    displayName: 'Publish artifacts: vsix'
+    displayName: 'Publish artifacts: package'
     inputs:
       PathtoPublish: '$(build.artifactstagingdirectory)'
-      ArtifactName: vsix # TODO: support .tar.gz
+      ArtifactName: package
     condition: ne(variables['System.PullRequest.IsFork'], 'True')
