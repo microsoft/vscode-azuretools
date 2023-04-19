@@ -3,14 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import type { SubscriptionClient } from '@azure/arm-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
+import type { TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
+import * as azureEnv from '@azure/ms-rest-azure-env'; // This package is so small that it's not worth lazy loading
 import * as vscode from 'vscode';
-import type { SubscriptionClient } from '@azure/arm-subscriptions';
-import type { TokenCredential } from '@azure/core-auth';
 import { AzureSubscription, SubscriptionId } from './AzureSubscription';
 import { NotSignedInError } from './NotSignedInError';
 import { caselessIncludes } from './utils/caselessIncludes';
-
-const DefaultAzureScope = 'https://management.azure.com/.default';
 
 /**
  * A class for obtaining Azure subscription information using VSCode's built-in authentication
@@ -32,15 +31,14 @@ export class VSCodeAzureSubscriptionProvider {
         const filterNormalized = filter && !!subscriptionIds.length;
         const tenantIds = subscriptionIds.map(id => id.split('/')[0]);
 
-        let allSubscriptions: AzureSubscription[];
-
         // Get subscriptions and tenant info for the default tenant
         const defaultTenantSubscriptions = await this.getSubscriptionsForTenant();
-        allSubscriptions = defaultTenantSubscriptions.subscriptions;
+        const allSubscriptions = defaultTenantSubscriptions.subscriptions;
 
         // If there are none, then we need to list tenants, and get subscriptions per-tenant
         if (allSubscriptions.length === 0) {
             for await (const tenant of defaultTenantSubscriptions.client.tenants.list()) {
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 if (filterNormalized && !caselessIncludes(tenantIds, tenant.tenantId!)) {
                     // If filters are enabled, and there are items in `tenantIds`, and the current tenant is not in that list, then skip it
                     continue;
@@ -64,7 +62,7 @@ export class VSCodeAzureSubscriptionProvider {
      * @returns True if the user is signed in, false otherwise.
      */
     public async isSignedIn(): Promise<boolean> {
-        const session = await vscode.authentication.getSession(this.authProviderId, [DefaultAzureScope], { createIfNone: false, silent: true });
+        const session = await vscode.authentication.getSession(this.authProviderId, this.getDefaultScopes(), { createIfNone: false, silent: true });
         return !!session;
     }
 
@@ -74,7 +72,7 @@ export class VSCodeAzureSubscriptionProvider {
      * @returns True if the user is signed in, false otherwise.
      */
     public async signIn(): Promise<boolean> {
-        const session = await vscode.authentication.getSession(this.authProviderId, [DefaultAzureScope], { createIfNone: true, clearSessionPreference: true });
+        const session = await vscode.authentication.getSession(this.authProviderId, this.getDefaultScopes(), { createIfNone: true, clearSessionPreference: true });
         return !!session;
     }
 
@@ -96,12 +94,37 @@ export class VSCodeAzureSubscriptionProvider {
     }
 
     /**
+     * Gets the configured Azure environment
+     *
+     * @returns The Azure environment configured to use by the `microsoft-sovereign-cloud.endpoint` setting
+     */
+    private getConfiguredAzureEnv(): azureEnv.Environment {
+        const authProviderConfig = vscode.workspace.getConfiguration('microsoft-sovereign-cloud');
+        const endpoint = authProviderConfig.get<string | undefined>('endpoint')?.toLowerCase();
+
+        // The endpoint setting will accept either the environment name (either 'Azure China' or 'Azure US Government'),
+        // or an endpoint URL. Since the user could configure the same environment either way, we need to check both.
+        // We'll also throw to lowercase just to maximize the chance of success.
+
+        if (endpoint === 'azure china' || endpoint === 'https://login.chinacloudapi.cn/') {
+            return azureEnv.Environment.ChinaCloud;
+        } else if (endpoint === 'azure us government' || endpoint === 'https://login.microsoftonline.us/') {
+            return azureEnv.Environment.USGovernment;
+        } else if (endpoint) {
+            // TODO: support custom clouds
+            throw new Error('Custom clouds are not supported yet');
+        }
+
+        return azureEnv.Environment.AzureCloud;
+    }
+
+    /**
      * Which authentication provider to use. By default it will be 'microsoft', but if there is a value
-     * for the setting `azure-cloud.endpoint` then it will be 'azure-cloud'.
+     * for the setting `microsoft-sovereign-cloud.endpoint` then it will be 'microsoft-sovereign-cloud'.
      */
     private get authProviderId(): string {
-        const authProviderConfig = vscode.workspace.getConfiguration('azure-cloud');
-        return !!authProviderConfig.get<string | undefined>('endpoint') ? 'microsoft' : 'azure-cloud';
+        const configuredEnv = this.getConfiguredAzureEnv();
+        return configuredEnv.name === azureEnv.Environment.AzureCloud.name ? 'microsoft' : 'microsoft-sovereign-cloud';
     }
 
     /**
@@ -113,7 +136,6 @@ export class VSCodeAzureSubscriptionProvider {
      */
     private async getSubscriptionsForTenant(tenantId?: string): Promise<{ client: SubscriptionClient, subscriptions: AzureSubscription[] }> {
         const armSubs = await import('@azure/arm-subscriptions');
-        const azureEnv = await import('@azure/ms-rest-azure-env');
 
         // This will be set below, when the subscription client attempts to list the subscriptions, in the body of `getToken()`
         let session: vscode.AuthenticationSession | undefined;
@@ -141,10 +163,12 @@ export class VSCodeAzureSubscriptionProvider {
                 authentication: {
                     getSession: () => session // Rewrapped to make TS not confused about the weird initialization pattern
                 },
-                environment: azureEnv.Environment.AzureCloud, // TODO: support sovereign clouds
-                isCustomCloud: false, // TODO: support sovereign / custom clouds
-                name: subscription.displayName!, // Won't be undefined
-                subscriptionId: subscription.subscriptionId!, // Won't be undefined
+                environment: this.getConfiguredAzureEnv(),
+                isCustomCloud: false, // TODO: support custom clouds
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                name: subscription.displayName!,
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                subscriptionId: subscription.subscriptionId!,
                 tenantId: subscription.tenantId,
                 credential: credential,
             });
@@ -165,7 +189,7 @@ export class VSCodeAzureSubscriptionProvider {
      * @returns A list of scopes, with the default scope and (optionally) the tenant scope added
      */
     private getScopes(scopes: string | string[] | undefined, tenantId?: string): string[] {
-        const scopeSet = new Set<string>([DefaultAzureScope]);
+        const scopeSet = new Set<string>(this.getDefaultScopes());
 
         if (typeof scopes === 'string') {
             scopeSet.add(scopes);
@@ -178,5 +202,14 @@ export class VSCodeAzureSubscriptionProvider {
         }
 
         return Array.from(scopeSet);
+    }
+
+    /**
+     * Gets the default Azure scopes depending on the configured endpoint
+     *
+     * @returns The default Azure scopes depending on the configured endpoint
+     */
+    private getDefaultScopes(): string[] {
+        return [`${this.getConfiguredAzureEnv().resourceManagerEndpointUrl}/.default}`]
     }
 }

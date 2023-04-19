@@ -33,7 +33,8 @@
     },
     "devDependencies": {
         "@azure/core-auth": "^1.4.0",
-        "@azure/ms-rest-azure-env": "^2.0.0",
+        "@microsoft/eslint-config-azuretools": "^0.2.0",
+        "@types/glob": "^8.1.0",
         "@types/html-to-text": "^8.1.0",
         "@types/mocha": "^7.0.2",
         "@types/node": "^16.0.0",
@@ -51,6 +52,7 @@
         "typescript": "^4.9.4"
     },
     "dependencies": {
-        "@azure/arm-subscriptions": "^5.1.0"
+        "@azure/arm-subscriptions": "^5.1.0",
+        "@azure/ms-rest-azure-env": "^2.0.0"
     }
 }
