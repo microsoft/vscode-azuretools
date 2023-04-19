@@ -237,6 +237,6 @@ function isRecommended(l: types.AzExtLocation): boolean {
 
 class ProviderResourceTypeNotFoundError extends Error {
     constructor(provider: Provider, expectedResourceType: string) {
-        super(localize('noResourceType', 'Provider "{0}" does not have resource type "{1}".', provider.id, expectedResourceType));
+        super(vscode.l10n.t('Provider "{0}" does not have resource type "{1}".', provider.id || 'undefined', expectedResourceType));
     }
 }
