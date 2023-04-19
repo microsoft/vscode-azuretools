@@ -32,7 +32,7 @@ export * from './deploy/showDeployConfirmation';
 export { disconnectRepo } from './disconnectRepo';
 export * from './editScmType';
 export { registerAppServiceExtensionVariables } from './extensionVariables';
-export { IConnectToGitHubWizardContext } from './github/IConnectToGitHubWizardContext';
+// export { IConnectToGitHubWizardContext } from './github/IConnectToGitHubWizardContext';
 export * from './pingFunctionApp';
 export * from './registerSiteCommand';
 export * from './remoteDebug/remoteDebugCommon';

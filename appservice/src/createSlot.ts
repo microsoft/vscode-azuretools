@@ -4,13 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { CheckNameAvailabilityResponse, NameValuePair, Site, StringDictionary, WebSiteManagementClient } from "@azure/arm-appservice";
-import { ServiceClient } from "@azure/ms-rest-js";
+import { ServiceClient } from '@azure/core-client';
 import { createGenericClient } from "@microsoft/vscode-azext-azureutils";
 import { IActionContext, IAzureNamingRules, IAzureQuickPickItem, ICreateChildImplContext } from "@microsoft/vscode-azext-utils";
-import { l10n, ProgressLocation, window } from "vscode";
+import { ProgressLocation, l10n, window } from "vscode";
+import { ParsedSite } from './SiteClient';
 import { getNewFileShareName } from "./createAppService/getNewFileShareName";
 import { ext } from "./extensionVariables";
-import { ParsedSite } from './SiteClient';
 import { createWebSiteClient } from "./utils/azureClients";
 import { checkNameAvailability } from "./utils/azureUtils";
 

@@ -4,14 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { User } from '@azure/arm-appservice';
-import { BasicAuthenticationCredentials, HttpOperationResponse, RestError, ServiceClient } from '@azure/ms-rest-js';
-import { createGenericClient } from '@microsoft/vscode-azext-azureutils';
-import { IActionContext, IParsedError, nonNullProp, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
-import { createServer, Server, Socket } from 'net';
+import type { ServiceClient } from '@azure/core-client';
+import { RestError, createPipelineRequest } from "@azure/core-rest-pipeline";
+import { AzExtPipelineResponse, addBasicAuthenticationCredentialsToClient, createGenericClient } from '@microsoft/vscode-azext-azureutils';
+import { IActionContext, IParsedError, UserCancelledError, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
+import { Server, Socket, createServer } from 'net';
 import { CancellationToken, Disposable, l10n } from 'vscode';
 import * as ws from 'ws';
-import { ext } from './extensionVariables';
 import { ParsedSite } from './SiteClient';
+import { ext } from './extensionVariables';
 import { delay } from './utils/delay';
 
 /**
@@ -81,7 +82,7 @@ export class TunnelProxy {
         const client: ServiceClient = await createGenericClient(context, undefined);
         let statusCode: number | undefined;
         try {
-            const response: HttpOperationResponse = await client.sendRequest({ method: 'GET', url: this._site.defaultHostUrl });
+            const response: AzExtPipelineResponse = await client.sendRequest(createPipelineRequest({ method: 'GET', url: this._site.defaultHostUrl }));
             statusCode = response.status;
         } catch (error) {
             if (error instanceof RestError) {
@@ -96,14 +97,15 @@ export class TunnelProxy {
     private async checkTunnelStatus(context: IActionContext): Promise<void> {
         const publishingUserName: string = nonNullProp(this._publishCredential, 'publishingUserName');
         const password: string = nonNullProp(this._publishCredential, 'publishingPassword');
-        const client: ServiceClient = await createGenericClient(context, new BasicAuthenticationCredentials(publishingUserName, password));
+        const client: ServiceClient = await createGenericClient(context, undefined);
+        addBasicAuthenticationCredentialsToClient(client, publishingUserName, password);
 
         let tunnelStatus: ITunnelStatus;
         try {
-            const response: HttpOperationResponse = await client.sendRequest({
+            const response: AzExtPipelineResponse = await client.sendRequest(createPipelineRequest({
                 method: 'GET',
                 url: `https://${this._site.kuduHostName}/AppServiceTunnel/Tunnel.ashx?GetStatus&GetStatusAPIVer=2`
-            });
+            }));
             ext.outputChannel.appendLog(`[Tunnel] Checking status, body: ${response.bodyAsText}`);
             tunnelStatus = <ITunnelStatus>response.parsedBody;
         } catch (error) {

@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { HttpOperationResponse } from '@azure/ms-rest-js';
+import { AzExtPipelineResponse } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext } from '@microsoft/vscode-azext-utils';
 import * as fse from 'fs-extra';
 import * as globby from 'globby';
@@ -20,8 +20,8 @@ export async function runWithZipStream(context: IActionContext, options: {
     fsPath: string,
     site: ParsedSite,
     pathFileMap?: Map<string, string>
-    callback: (zipStream: Readable) => Promise<HttpOperationResponse | void>
-}): Promise<HttpOperationResponse | void> {
+    callback: (zipStream: Readable) => Promise<AzExtPipelineResponse | void>
+}): Promise<AzExtPipelineResponse | void> {
 
     function onFileSize(size: number): void {
         context.telemetry.measurements.zipFileSize = size;

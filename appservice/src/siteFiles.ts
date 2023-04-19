@@ -3,8 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { HttpOperationResponse, RestError, ServiceClient } from '@azure/ms-rest-js';
-import { createGenericClient } from '@microsoft/vscode-azext-azureutils';
+import { ServiceClient } from '@azure/core-client';
+import { RestError, createPipelineRequest } from '@azure/core-rest-pipeline';
+import { AzExtPipelineResponse, createGenericClient } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, IParsedError, parseError } from '@microsoft/vscode-azext-utils';
 import * as retry from 'p-retry';
 import * as path from 'path';
@@ -22,7 +23,7 @@ export interface ISiteFileMetadata {
 }
 
 export async function getFile(context: IActionContext, site: ParsedSite, filePath: string): Promise<ISiteFile> {
-    let response: HttpOperationResponse;
+    let response: AzExtPipelineResponse;
     try {
         response = await getFsResponse(context, site, filePath);
     } catch (error) {
@@ -37,7 +38,7 @@ export async function getFile(context: IActionContext, site: ParsedSite, filePat
 }
 
 export async function listFiles(context: IActionContext, site: ParsedSite, filePath: string): Promise<ISiteFileMetadata[]> {
-    const response: HttpOperationResponse = await getFsResponse(context, site, filePath);
+    const response: AzExtPipelineResponse = await getFsResponse(context, site, filePath);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return Array.isArray(response.parsedBody) ? response.parsedBody : [];
 }
@@ -49,14 +50,14 @@ export async function listFiles(context: IActionContext, site: ParsedSite, fileP
 export async function putFile(context: IActionContext, site: ParsedSite, data: string | ArrayBuffer, filePath: string, etag: string | undefined): Promise<string> {
     const options: {} = etag ? { ['If-Match']: etag } : {};
     const kuduClient = await site.createClient(context);
-    const result: HttpOperationResponse = (await kuduClient.vfsPutItem(context, data, filePath, options));
+    const result: AzExtPipelineResponse = (await kuduClient.vfsPutItem(context, data, filePath, options));
     return <string>result.headers.get('etag');
 }
 
 /**
  * Kudu APIs don't work for Linux consumption function apps and ARM APIs don't seem to work for web apps. We'll just have to use both
  */
-async function getFsResponse(context: IActionContext, site: ParsedSite, filePath: string): Promise<HttpOperationResponse> {
+async function getFsResponse(context: IActionContext, site: ParsedSite, filePath: string): Promise<AzExtPipelineResponse> {
     try {
         if (site.isFunctionApp) {
             const linuxHome: string = '/home';
@@ -74,13 +75,13 @@ async function getFsResponse(context: IActionContext, site: ParsedSite, filePath
             const serviceUnavailable: RegExp = /ServiceUnavailable/i;
             const client: ServiceClient = await createGenericClient(context, site.subscription);
 
-            return await retry<HttpOperationResponse>(
+            return await retry<AzExtPipelineResponse>(
                 async () => {
                     try {
-                        return await client.sendRequest({
+                        return await client.sendRequest(createPipelineRequest({
                             method: 'GET',
                             url: `${site.id}/hostruntime/admin/vfs/${filePath}/?api-version=2022-03-01`
-                        });
+                        }));
                     } catch (error) {
                         const parsedError: IParsedError = parseError(error);
                         if (!(badGateway.test(parsedError.message) || serviceUnavailable.test(parsedError.message))) {
