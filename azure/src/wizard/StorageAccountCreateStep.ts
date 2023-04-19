@@ -5,12 +5,11 @@
 
 import type { SkuName, StorageManagementClient } from '@azure/arm-storage';
 import { AzureWizardExecuteStep } from '@microsoft/vscode-azext-utils';
-import { Progress } from 'vscode';
+import { l10n, Progress } from 'vscode';
 import * as types from '../../index';
 import { createStorageClient } from '../clients';
 import { storageProvider } from '../constants';
 import { ext } from '../extensionVariables';
-import { localize } from '../localize';
 import { LocationListStep } from './LocationListStep';
 
 export class StorageAccountCreateStep<T extends types.IStorageAccountWizardContext> extends AzureWizardExecuteStep<T> implements types.StorageAccountCreateStep<T> {
@@ -28,7 +27,7 @@ export class StorageAccountCreateStep<T extends types.IStorageAccountWizardConte
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const newName: string = wizardContext.newStorageAccountName!;
         const newSkuName: SkuName = <SkuName>`${this._defaults.performance}_${this._defaults.replication}`;
-        const creatingStorageAccount: string = localize('CreatingStorageAccount', 'Creating storage account "{0}" in location "{1}" with sku "{2}"...', newName, newLocation, newSkuName);
+        const creatingStorageAccount: string = l10n.t('Creating storage account "{0}" in location "{1}" with sku "{2}"...', newName, newLocation, newSkuName);
         ext.outputChannel.appendLog(creatingStorageAccount);
         progress.report({ message: creatingStorageAccount });
         const storageClient: StorageManagementClient = await createStorageClient(wizardContext);
@@ -44,7 +43,7 @@ export class StorageAccountCreateStep<T extends types.IStorageAccountWizardConte
                 defaultToOAuthAuthentication: true,
             }
         );
-        const createdStorageAccount: string = localize('CreatedStorageAccount', 'Successfully created storage account "{0}".', newName);
+        const createdStorageAccount: string = l10n.t('Successfully created storage account "{0}".', newName);
         ext.outputChannel.appendLog(createdStorageAccount);
     }
 

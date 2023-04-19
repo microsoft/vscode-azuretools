@@ -12,7 +12,6 @@
 // import * as vscode from 'vscode';
 // import { ParsedSite } from '../SiteClient';
 // import { ext } from '../extensionVariables';
-// import { localize } from '../localize';
 // import { openUrl } from '../utils/openUrl';
 // import { verifyNoRunFromPackageSetting } from '../verifyNoRunFromPackageSetting';
 // import { GitHubBranchListStep } from './GitHubBranchListStep';
@@ -26,7 +25,7 @@
 // export type gitHubLink = { prev?: string, next?: string, last?: string, first?: string };
 
 // export async function connectToGitHub(site: ParsedSite, context: IConnectToGitHubWizardContext): Promise<void> {
-//     const title: string = localize('connectGitHubRepo', 'Connect GitHub repository');
+//     const title: string = vscode.l10n.t('Connect GitHub repository');
 //     context.site = site;
 
 //     const wizard: AzureWizard<IConnectToGitHubWizardContext> = new AzureWizard(context, {
@@ -52,8 +51,8 @@
 
 //     const client = await site.createClient(context);
 //     try {
-//         const connectingToGithub: string = localize('ConnectingToGithub', '"{0}" is being connected to repo "{1}". This may take several minutes...', site.fullName, repoName);
-//         const connectedToGithub: string = localize('ConnectedToGithub', 'Repo "{0}" is connected and deployed to "{1}".', repoName, site.fullName);
+//         const connectingToGithub: string = vscode.l10n.t('"{0}" is being connected to repo "{1}". This may take several minutes...', site.fullName, repoName);
+//         const connectedToGithub: string = vscode.l10n.t('Repo "{0}" is connected and deployed to "{1}".', repoName, site.fullName);
 //         await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: connectingToGithub }, async (): Promise<void> => {
 //             ext.outputChannel.appendLog(connectingToGithub);
 //             await verifyNoRunFromPackageSetting(context, site);
@@ -77,8 +76,8 @@
 // }
 
 // async function showGitHubAuthPrompt(context: IConnectToGitHubWizardContext, site: ParsedSite): Promise<void> {
-//     const invalidToken: string = localize('tokenExpired', 'Azure\'s GitHub token is invalid.  Authorize in the "Deployment Center"');
-//     const goToPortal: vscode.MessageItem = { title: localize('goToPortal', 'Go to Portal') };
+//     const invalidToken: string = vscode.l10n.t('Azure\'s GitHub token is invalid.  Authorize in the "Deployment Center"');
+//     const goToPortal: vscode.MessageItem = { title: vscode.l10n.t('Go to Portal') };
 //     let input: vscode.MessageItem | undefined = DialogResponses.learnMore;
 //     while (input === DialogResponses.learnMore) {
 //         input = await vscode.window.showErrorMessage(invalidToken, { modal: true }, goToPortal, DialogResponses.learnMore);
@@ -194,7 +193,7 @@
 //     if (!oAuth2Token) {
 //         await showGitHubAuthPrompt(context, site);
 //         context.errorHandling.suppressDisplay = true;
-//         const noToken: string = localize('noToken', 'No oAuth2 Token.');
+//         const noToken: string = vscode.l10n.t('No oAuth2 Token.');
 //         throw new Error(noToken);
 //     }
 

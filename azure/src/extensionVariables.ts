@@ -3,12 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ExtensionContext } from "vscode";
 import { IAzExtOutputChannel, IAzureUserInput, registerUIExtensionVariables, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
-import { localize } from "./localize";
+import { ExtensionContext, l10n } from "vscode";
 
 class UninitializedExtensionVariables implements UIExtensionVariables {
-    private _error: Error = new Error(localize('uninitializedError', '"registerAzureUtilsExtensionVariables" must be called before using the vscode-azext-azureutilsa package.'));
+    private _error: Error = new Error(l10n.t('"registerAzureUtilsExtensionVariables" must be called before using the vscode-azext-azureutilsa package.'));
 
     public get context(): ExtensionContext {
         throw this._error;

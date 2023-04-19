@@ -5,11 +5,11 @@
 
 import type { ExtendedLocation, Provider } from '@azure/arm-resources';
 import type { Location } from '@azure/arm-resources-subscriptions';
+import { AzureWizardPromptStep, IActionContext, IAzureQuickPickItem, IAzureQuickPickOptions, nonNullProp, nonNullValue } from '@microsoft/vscode-azext-utils';
+import * as vscode from 'vscode';
 import * as types from '../../index';
 import { createResourcesClient, createSubscriptionsClient } from '../clients';
 import { resourcesProvider } from '../constants';
-import { AzureWizardPromptStep, IActionContext, IAzureQuickPickItem, IAzureQuickPickOptions, nonNullProp, nonNullValue } from '@microsoft/vscode-azext-utils';
-import { localize } from '../localize';
 import { ext } from '../extensionVariables';
 import { uiUtils } from '../utils/uiUtils';
 
@@ -95,7 +95,8 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
         let location: types.AzExtLocation = nonNullProp(wizardContext, '_location');
 
         function warnAboutRelatedLocation(loc: types.AzExtLocation): void {
-            ext.outputChannel.appendLog(localize('relatedLocWarning', 'WARNING: Provider "{0}" does not support location "{1}". Using "{2}" instead.', provider, location.displayName, loc.displayName));
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            ext.outputChannel.appendLog(vscode.l10n.t('WARNING: Provider "{0}" does not support location "{1}". Using "{2}" instead.', provider!, location.displayName, loc.displayName));
         }
 
         if (location.type === 'EdgeZone') {
@@ -108,7 +109,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
                 const allLocations = await allLocationsTask;
                 const homeLocation = nonNullValue(allLocations.find(l => LocationListStep.locationMatchesName(l, homeLocName)), 'homeLocation');
                 wizardContext.telemetry.properties.relatedLocationSource = 'home';
-                ext.outputChannel.appendLog(localize('homeLocationWarning', 'WARNING: Resource does not support extended location "{0}". Using "{1}" instead.', location.displayName, homeLocation.displayName));
+                ext.outputChannel.appendLog(vscode.l10n.t('WARNING: Resource does not support extended location "{0}". Using "{1}" instead.', location.displayName, homeLocation.displayName));
                 location = homeLocation;
             }
         }
@@ -174,7 +175,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
     }
 
     public async prompt(wizardContext: T): Promise<void> {
-        const options: IAzureQuickPickOptions = { placeHolder: localize('selectLocation', 'Select a location for new resources.'), enableGrouping: true, ...this.options };
+        const options: IAzureQuickPickOptions = { placeHolder: vscode.l10n.t('Select a location for new resources.'), enableGrouping: true, ...this.options };
         wizardContext._location = (await wizardContext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
         wizardContext.telemetry.properties.locationType = wizardContext._location.type;
     }
@@ -236,6 +237,6 @@ function isRecommended(l: types.AzExtLocation): boolean {
 
 class ProviderResourceTypeNotFoundError extends Error {
     constructor(provider: Provider, expectedResourceType: string) {
-        super(localize('noResourceType', 'Provider "{0}" does not have resource type "{1}".', provider.id, expectedResourceType));
+        super(vscode.l10n.t('Provider "{0}" does not have resource type "{1}".', provider.id || 'undefined', expectedResourceType));
     }
 }

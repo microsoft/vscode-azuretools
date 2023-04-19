@@ -4,8 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzExtParentTreeItem, AzExtTreeItem, createContextValue, GenericTreeItem, IActionContext, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
-import { ThemeIcon } from 'vscode';
-import { localize } from '../localize';
+import { l10n, ThemeIcon } from 'vscode';
 import { ParsedSite } from '../SiteClient';
 import { ISiteFileMetadata, listFiles } from '../siteFiles';
 import { FileTreeItem } from './FileTreeItem';
@@ -20,7 +19,7 @@ export interface FolderTreeItemOptions {
 
 export class FolderTreeItem extends AzExtParentTreeItem {
     public static contextValue: string = 'folder';
-    public readonly childTypeLabel: string = localize('fileOrFolder', 'file or folder');
+    public readonly childTypeLabel: string = l10n.t('file or folder');
     public readonly label: string;
     public readonly path: string;
     public readonly isReadOnly: boolean;
@@ -52,7 +51,7 @@ export class FolderTreeItem extends AzExtParentTreeItem {
     }
 
     public get description(): string | undefined {
-        return this._isRoot && this.isReadOnly ? localize('readOnly', 'Read-only') : undefined;
+        return this._isRoot && this.isReadOnly ? l10n.t('Read-only') : undefined;
     }
 
     public async loadMoreChildrenImpl(_clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {

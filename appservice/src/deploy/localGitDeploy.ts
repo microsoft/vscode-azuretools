@@ -8,7 +8,6 @@ import { callWithMaskHandling, IActionContext, nonNullProp } from '@microsoft/vs
 import simpleGit, { Options, SimpleGit, StatusResult } from 'simple-git';
 import * as vscode from 'vscode';
 import { ext } from '../extensionVariables';
-import { localize } from '../localize';
 import { ParsedSite } from '../SiteClient';
 import { openUrl } from '../utils/openUrl';
 import { verifyNoRunFromPackageSetting } from '../verifyNoRunFromPackageSetting';
@@ -40,20 +39,20 @@ export async function localGitDeploy(site: ParsedSite, options: localGitOptions,
             try {
                 status = await localGit.status();
                 if (status.files.length > 0 && !options.commit) {
-                    const message: string = localize('localGitUncommit', '{0} uncommitted change(s) in local repo "{1}"', status.files.length, options.fsPath);
-                    const deployAnyway: vscode.MessageItem = { title: localize('deployAnyway', 'Deploy Anyway') };
+                    const message: string = vscode.l10n.t('{0} uncommitted change(s) in local repo "{1}"', status.files.length, options.fsPath);
+                    const deployAnyway: vscode.MessageItem = { title: vscode.l10n.t('Deploy Anyway') };
                     await context.ui.showWarningMessage(message, { modal: true, stepName: 'pushWithUncommitChanges' }, deployAnyway);
                     context.telemetry.properties.pushWithUncommitChanges = 'true';
                 }
                 await verifyNoRunFromPackageSetting(context, site);
-                ext.outputChannel.appendLog(localize('localGitDeploy', `Deploying Local Git repository to "${site.fullName}"...`), { resourceName: site.fullName });
+                ext.outputChannel.appendLog(vscode.l10n.t(`Deploying Local Git repository to "${site.fullName}"...`), { resourceName: site.fullName });
                 await tryPushAndWaitForDeploymentToComplete();
 
             } catch (err) {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
                 if (err.message.indexOf('spawn git ENOENT') >= 0) {
-                    const installString: string = localize('Install', 'Install');
-                    const input: string | undefined = await vscode.window.showErrorMessage(localize('GitRequired', 'Git must be installed to use Local Git Deploy.'), installString);
+                    const installString: string = vscode.l10n.t('Install');
+                    const input: string | undefined = await vscode.window.showErrorMessage(vscode.l10n.t('Git must be installed to use Local Git Deploy.'), installString);
                     if (input === installString) {
                         await openUrl('https://git-scm.com/downloads');
                     }
@@ -61,8 +60,8 @@ export async function localGitDeploy(site: ParsedSite, options: localGitOptions,
                     return undefined;
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
                 } else if (err.message.indexOf('error: failed to push') >= 0) {
-                    const forcePushMessage: vscode.MessageItem = { title: localize('forcePush', 'Force Push') };
-                    const pushReject: string = localize('localGitPush', 'Push rejected due to Git history diverging.');
+                    const forcePushMessage: vscode.MessageItem = { title: vscode.l10n.t('Force Push') };
+                    const pushReject: string = vscode.l10n.t('Push rejected due to Git history diverging.');
 
                     await context.ui.showWarningMessage(pushReject, { modal: true, stepName: 'forcePush' }, forcePushMessage);
                     context.telemetry.properties.forcePush = 'true';

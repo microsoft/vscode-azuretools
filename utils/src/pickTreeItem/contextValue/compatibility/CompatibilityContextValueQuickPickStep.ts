@@ -3,16 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as types from "../../../../index";
-import { ContextValuePickFilter, ContextValueQuickPickStep } from "../ContextValueQuickPickStep";
-import { getLastNode } from "../../getLastNode";
-import { AzExtTreeItem } from "../../../tree/AzExtTreeItem";
-import { AzExtParentTreeItem } from "../../../tree/AzExtParentTreeItem";
-import { isAzExtParentTreeItem, isAzExtTreeItem } from "../../../tree/isAzExtTreeItem";
-import { TreeItem } from "vscode";
-import { PickFilter } from "../../PickFilter";
 import { isWrapper } from "@microsoft/vscode-azureresources-api";
-import { localize } from "../../../localize";
+import { l10n, TreeItem } from "vscode";
+import * as types from "../../../../index";
+import { AzExtParentTreeItem } from "../../../tree/AzExtParentTreeItem";
+import { AzExtTreeItem } from "../../../tree/AzExtTreeItem";
+import { isAzExtParentTreeItem, isAzExtTreeItem } from "../../../tree/isAzExtTreeItem";
+import { getLastNode } from "../../getLastNode";
+import { PickFilter } from "../../PickFilter";
+import { ContextValuePickFilter, ContextValueQuickPickStep } from "../ContextValueQuickPickStep";
 
 /**
  * Provides compatability with {@link AzExtParentTreeItem.pickTreeItemImpl}
@@ -34,7 +33,7 @@ export class CompatibilityContextValueQuickPickStep<TContext extends types.Quick
         const lastPickedItem = getLastNode(context);
         const lastPickedItemUnwrapped = isWrapper(lastPickedItem) ? lastPickedItem.unwrap() : lastPickedItem;
         if (isAzExtParentTreeItem(lastPickedItemUnwrapped) && lastPickedItemUnwrapped.childTypeLabel) {
-            this.promptOptions.placeHolder = localize('selectTreeItem', 'Select {0}', lastPickedItemUnwrapped.childTypeLabel);
+            this.promptOptions.placeHolder = l10n.t('Select {0}', lastPickedItemUnwrapped.childTypeLabel);
         }
     }
 
