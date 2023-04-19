@@ -4,9 +4,8 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { AzureWizardExecuteStep, nonNullProp } from "@microsoft/vscode-azext-utils";
-import { Progress } from "vscode";
+import { l10n, Progress } from "vscode";
 import { ext } from "../extensionVariables";
-import { localize } from "../localize";
 import { IDeleteSiteWizardContext } from "./IDeleteSiteWizardContext";
 
 export class DeleteSiteStep extends AzureWizardExecuteStep<IDeleteSiteWizardContext> {
@@ -20,14 +19,14 @@ export class DeleteSiteStep extends AzureWizardExecuteStep<IDeleteSiteWizardCont
         let deleteSucceeded: string;
 
         if (site.isSlot) {
-            deleting = localize('DeletingSlot', 'Deleting slot "{0}"...', site.fullName);
-            deleteSucceeded = localize('deletedSlot', 'Successfully deleted slot "{0}".', site.fullName);
+            deleting = l10n.t('Deleting slot "{0}"...', site.fullName);
+            deleteSucceeded = l10n.t('Successfully deleted slot "{0}".', site.fullName);
         } else if (site.isFunctionApp) {
-            deleting = localize('DeletingFunctionApp', 'Deleting function app "{0}"...', site.fullName);
-            deleteSucceeded = localize('deletedFunctionApp', 'Successfully deleted function app "{0}".', site.fullName);
+            deleting = l10n.t('Deleting function app "{0}"...', site.fullName);
+            deleteSucceeded = l10n.t('Successfully deleted function app "{0}".', site.fullName);
         } else {
-            deleting = localize('DeletingWebApp', 'Deleting web app "{0}"...', site.fullName);
-            deleteSucceeded = localize('deletedWebApp', 'Successfully deleted web app "{0}".', site.fullName);
+            deleting = l10n.t('Deleting web app "{0}"...', site.fullName);
+            deleteSucceeded = l10n.t('Successfully deleted web app "{0}".', site.fullName);
         }
 
         ext.outputChannel.appendLog(deleting);

@@ -5,9 +5,8 @@
 
 import type { WebSiteManagementClient } from '@azure/arm-appservice';
 import { IActionContext, IAzureQuickPickItem } from '@microsoft/vscode-azext-utils';
-import { ProgressLocation, window } from 'vscode';
+import { l10n, ProgressLocation, window } from 'vscode';
 import { ext } from './extensionVariables';
-import { localize } from './localize';
 import { ParsedSite } from './SiteClient';
 import { createWebSiteClient } from './utils/azureClients';
 
@@ -31,12 +30,13 @@ export async function swapSlot(context: IActionContext, sourceSlot: ParsedSite, 
         }
     }
 
-    const placeHolder: string = localize('selectSlotToSwap', 'Select which slot to swap with "{0}".', sourceSlot.slotName);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const placeHolder: string = l10n.t('Select which slot to swap with "{0}".', sourceSlot.slotName!);
     const targetSlot = (await context.ui.showQuickPick(otherSlots, { placeHolder, stepName: 'swapSlot' })).data;
 
     const targetSlotLabel: string = targetSlot ? targetSlot.fullName : `${sourceSlot.siteName}-${productionSlotLabel}`;
-    const swappingSlots: string = localize('swapping', 'Swapping "{0}" with "{1}"...', targetSlotLabel, sourceSlot.fullName);
-    const successfullySwapped: string = localize('swapped', 'Successfully swapped "{0}" with "{1}".', targetSlotLabel, sourceSlot.fullName);
+    const swappingSlots: string = l10n.t('Swapping "{0}" with "{1}"...', targetSlotLabel, sourceSlot.fullName);
+    const successfullySwapped: string = l10n.t('Successfully swapped "{0}" with "{1}".', targetSlotLabel, sourceSlot.fullName);
     ext.outputChannel.appendLog(swappingSlots);
     const client: WebSiteManagementClient = await createWebSiteClient([context, sourceSlot.subscription]);
     await window.withProgress({ location: ProgressLocation.Notification, title: swappingSlots }, async () => {

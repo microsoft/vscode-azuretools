@@ -5,9 +5,8 @@
 
 import { AzExtLocation, getResourceGroupFromId, LocationListStep, uiUtils } from "@microsoft/vscode-azext-azureutils";
 import { AzureWizardExecuteStep, nonNullProp, nonNullValueAndProp } from "@microsoft/vscode-azext-utils";
-import { Progress } from "vscode";
+import { l10n, Progress } from "vscode";
 import { ext } from "../extensionVariables";
-import { localize } from "../localize";
 import { createOperationalInsightsManagementClient } from "../utils/azureClients";
 import { getAppInsightsSupportedLocation } from "./getAppInsightsSupportedLocation";
 import { IAppServiceWizardContext } from "./IAppServiceWizardContext";
@@ -21,7 +20,7 @@ export class LogAnalyticsCreateStep extends AzureWizardExecuteStep<IAppServiceWi
         const resourceLocation: AzExtLocation = await LocationListStep.getLocation(context);
         const location = await getAppInsightsSupportedLocation(context, resourceLocation);
 
-        if (!location) { 
+        if (!location) {
             // if there is no supported AI location, then skip this as AppInsightsCreateStep will be skipped
             return;
         }
@@ -33,15 +32,16 @@ export class LogAnalyticsCreateStep extends AzureWizardExecuteStep<IAppServiceWi
         context.logAnalyticsWorkspace = workspacesInSameRg[0] ?? workspacesInSameLoc[0];
 
         if (context.logAnalyticsWorkspace) {
-            const usingLaw: string = localize('usingLogAnalyticsWorkspace', 'Using existing Log Analytics workspace "{0}"', context.logAnalyticsWorkspace.name);
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            const usingLaw: string = l10n.t('Using existing Log Analytics workspace "{0}"', context.logAnalyticsWorkspace.name!);
             progress.report({ message: usingLaw });
             ext.outputChannel.appendLog(usingLaw);
         } else {
-            const creatingLaw: string = localize('creatingLogAnalyticsWorkspace', 'Creating new Log Analytics workspace...');
+            const creatingLaw: string = l10n.t('Creating new Log Analytics workspace...');
             progress.report({ message: creatingLaw });
             ext.outputChannel.appendLog(creatingLaw);
             const workspaceName = `workspace-${context.newAppInsightsName}`
-            const createdLaw: string = localize('createdLogAnalyticWorkspace', 'Successfully created new Log Analytics workspace "{0}".', workspaceName);
+            const createdLaw: string = l10n.t('Successfully created new Log Analytics workspace "{0}".', workspaceName);
             ext.outputChannel.appendLog(createdLaw);
             progress.report({ message: createdLaw });
             context.logAnalyticsWorkspace = await opClient.workspaces.beginCreateOrUpdateAndWait(rgName, workspaceName, { location });

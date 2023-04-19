@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { isWrapper, Wrapper } from "@microsoft/vscode-azureresources-api";
+import * as vscode from "vscode";
 import * as types from "../../../../index";
-import { getLastNode } from "../../getLastNode";
-import { CompatibilityContextValueQuickPickStep } from './CompatibilityContextValueQuickPickStep';
-import { localize } from "../../../localize";
 import { NoResourceFoundError, UserCancelledError } from "../../../errors";
 import { AzExtTreeItem } from "../../../tree/AzExtTreeItem";
 import { isAzExtParentTreeItem, isAzExtTreeItem } from "../../../tree/isAzExtTreeItem";
-import { isWrapper, Wrapper } from "@microsoft/vscode-azureresources-api";
+import { getLastNode } from "../../getLastNode";
+import { CompatibilityContextValueQuickPickStep } from './CompatibilityContextValueQuickPickStep';
 
 type CreateCallback<TNode = unknown> = (context: types.IActionContext) => TNode | Promise<TNode>;
 
@@ -34,7 +34,8 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
         const lastPickedItemTi = isWrapper(lastPickedItem) ? lastPickedItem.unwrap<AzExtTreeItem>() : lastPickedItem;
 
         if (isAzExtParentTreeItem(lastPickedItemTi)) {
-            this.promptOptions.placeHolder = localize('selectTreeItem', 'Select {0}', lastPickedItemTi.childTypeLabel);
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            this.promptOptions.placeHolder = vscode.l10n.t('Select {0}', lastPickedItemTi.childTypeLabel!);
             this.promptOptions.stepName = `treeItemPicker|${lastPickedItemTi.contextValue}`;
             this.promptOptions.noPicksMessage = wizardContext.noItemFoundErrorMessage ?? this.promptOptions.noPicksMessage;
             this.promptOptions.ignoreFocusOut = wizardContext.ignoreFocusOut;
@@ -44,7 +45,8 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
 
         this.pickOptions.create = shouldAddCreatePick ? {
             callback: lastPickedItemTi.createChild.bind(lastPickedItemTi) as typeof lastPickedItemTi.createChild,
-            label: lastPickedItemTi.createNewLabel ?? localize('createNewItem', '$(plus) Create new {0}...', lastPickedItemTi.childTypeLabel)
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            label: lastPickedItemTi.createNewLabel ?? vscode.l10n.t('$(plus) Create new {0}...', lastPickedItemTi.childTypeLabel!)
         } : undefined;
 
         const picks = await this.getPicks(wizardContext) as types.IAzureQuickPickItem<unknown>[];
@@ -129,7 +131,7 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
 
     private getCreatePick(options: CreateOptions): types.IAzureQuickPickItem<CreateCallback> {
         return {
-            label: options.label || localize('createQuickPickLabel', '$(add) Create...'),
+            label: options.label || vscode.l10n.t('$(add) Create...'),
             data: options.callback,
         };
     }

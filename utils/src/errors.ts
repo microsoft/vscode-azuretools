@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import * as vscode from 'vscode';
 import { ITreeItemPickerContext } from "..";
-import { localize } from "./localize";
 
 export class UserCancelledError extends Error {
     _isUserCancelledError = true;
     public stepName: string | undefined;
     constructor(stepName?: string) {
-        super(localize('userCancelledError', 'Operation cancelled.'));
+        super(vscode.l10n.t('Operation cancelled.'));
         this.stepName = stepName;
     }
 }
@@ -24,13 +24,13 @@ export function isUserCancelledError(error: unknown): error is UserCancelledErro
 
 export class GoBackError extends Error {
     constructor() {
-        super(localize('backError', 'Go back.'));
+        super(vscode.l10n.t('Go back.'));
     }
 }
 
 export class NotImplementedError extends Error {
     constructor(methodName: string, obj: object) {
-        super(localize('notImplementedError', '"{0}" is not implemented on "{1}".', methodName, obj.constructor.name));
+        super(vscode.l10n.t('"{0}" is not implemented on "{1}".', methodName, obj.constructor.name));
     }
 }
 
@@ -40,7 +40,7 @@ export class NoResourceFoundError extends Error {
             super(context.noItemFoundErrorMessage);
             context.errorHandling.suppressReportIssue = true;
         } else {
-            super(localize('noResourcesError', 'No matching resources found.'));
+            super(vscode.l10n.t('No matching resources found.'));
         }
     }
 }

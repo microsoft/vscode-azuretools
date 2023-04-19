@@ -4,13 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { parse as parseQuery, ParsedUrlQuery, stringify as stringifyQuery } from "querystring";
-import { Disposable, Event, EventEmitter, FileChangeEvent, FileStat, FileSystemError, FileSystemProvider, FileType, TextDocumentShowOptions, Uri, window } from "vscode";
+import { Disposable, Event, EventEmitter, FileChangeEvent, FileStat, FileSystemError, FileSystemProvider, FileType, l10n, TextDocumentShowOptions, Uri, window } from "vscode";
 import * as types from '../index';
 import { callWithTelemetryAndErrorHandling } from "./callWithTelemetryAndErrorHandling";
-import { localize } from "./localize";
 import { nonNullProp } from "./utils/nonNull";
 
-const unsupportedError: Error = new Error(localize('notSupported', 'This operation is not supported.'));
+const unsupportedError: Error = new Error(l10n.t('This operation is not supported.'));
 
 export abstract class AzExtTreeFileSystem<TItem extends types.AzExtTreeFileSystemItem> implements FileSystemProvider {
 

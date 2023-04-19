@@ -12,9 +12,8 @@ import * as prettybytes from 'pretty-bytes';
 import { Readable } from 'stream';
 import * as vscode from 'vscode';
 import * as yazl from 'yazl';
-import { ParsedSite } from '../SiteClient';
 import { ext } from '../extensionVariables';
-import { localize } from '../localize';
+import { ParsedSite } from '../SiteClient';
 import { getFileExtension } from '../utils/pathUtils';
 
 export async function runWithZipStream(context: IActionContext, options: {
@@ -26,7 +25,7 @@ export async function runWithZipStream(context: IActionContext, options: {
 
     function onFileSize(size: number): void {
         context.telemetry.measurements.zipFileSize = size;
-        ext.outputChannel.appendLog(localize('zipSize', 'Zip package size: {0}', prettybytes(size)), { resourceName: site.fullName });
+        ext.outputChannel.appendLog(vscode.l10n.t('Zip package size: {0}', prettybytes(size)), { resourceName: site.fullName });
     }
 
     let zipStream: Readable;
@@ -42,7 +41,7 @@ export async function runWithZipStream(context: IActionContext, options: {
             onFileSize(stats.size);
         });
     } else {
-        ext.outputChannel.appendLog(localize('zipCreate', 'Creating zip package...'), { resourceName: site.fullName });
+        ext.outputChannel.appendLog(vscode.l10n.t('Creating zip package...'), { resourceName: site.fullName });
         const zipFile: yazl.ZipFile = new yazl.ZipFile();
         let filesToZip: string[] = [];
         let sizeOfZipFile: number = 0;
@@ -107,7 +106,7 @@ async function getFilesFromGlob(folderPath: string, site: ParsedSite): Promise<s
             ignorePatternList = [ignorePatternList];
         }
         if (ignorePatternList.length > 0) {
-            ext.outputChannel.appendLog(localize('zipIgnoreFileMsg', `Ignoring files from \"{0}.{1}\"`, ext.prefix, zipIgnorePatternStr), { resourceName: site.fullName });
+            ext.outputChannel.appendLog(vscode.l10n.t(`Ignoring files from \"{0}.{1}\"`, ext.prefix, zipIgnorePatternStr), { resourceName: site.fullName });
             for (const pattern of ignorePatternList) {
                 ext.outputChannel.appendLine(`\"${pattern}\"`);
             }

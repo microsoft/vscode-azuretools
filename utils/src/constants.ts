@@ -3,10 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { QuickInputButton, ThemeIcon } from "vscode";
-import { localize } from "./localize";
+import { l10n, QuickInputButton, ThemeIcon } from "vscode";
 
-export const learnMore: string = localize('learnMore', "Learn more");
+export const learnMore: string = l10n.t("Learn more");
 
 export const azToolsPrefix: string = "azureTools";
 export const showContextValueSetting: string = "showContextValues";

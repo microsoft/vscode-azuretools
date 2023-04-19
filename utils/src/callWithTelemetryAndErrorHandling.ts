@@ -3,11 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, MessageItem, window } from 'vscode';
+import { Disposable, l10n, MessageItem, window } from 'vscode';
 import * as types from '../index';
 import { DialogResponses } from './DialogResponses';
 import { ext } from './extensionVariables';
-import { localize } from './localize';
 import { getRedactedLabel, maskUserInfo } from './masking';
 import { parseError } from './parseError';
 import { cacheIssueForCommand } from './registerReportIssueCommand';
@@ -157,12 +156,12 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
 
         if (!context.errorHandling.suppressDisplay) {
             // Always append the error to the output channel, but only 'show' the output channel for multiline errors
-            ext.outputChannel.appendLog(localize('outputError', 'Error: {0}', unMaskedMessage));
+            ext.outputChannel.appendLog(l10n.t('Error: {0}', unMaskedMessage));
 
             let message: string;
             if (unMaskedMessage.includes('\n')) {
                 ext.outputChannel.show();
-                message = localize('multilineError', 'An error has occured. Check output window for more details.');
+                message = l10n.t('An error has occured. Check output window for more details.');
             } else {
                 message = unMaskedMessage;
             }

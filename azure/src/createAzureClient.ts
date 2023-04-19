@@ -10,7 +10,6 @@ import { Agent as HttpsAgent } from 'https';
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import * as types from '../index';
-import { localize } from './localize';
 import { parseJson, removeBom } from './utils/parseJson';
 
 export type InternalAzExtClientContext = ISubscriptionActionContext | [IActionContext, ISubscriptionContext | AzExtTreeItem];
@@ -227,7 +226,7 @@ class StatusCodePolicy implements PipelinePolicy {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             const errorMessage: string = response.bodyAsText ?
                 parseError(response.parsedBody || response.bodyAsText).message :
-                localize('unexpectedStatusCode', 'Unexpected status code: {0}', response.status);
+                vscode.l10n.t('Unexpected status code: {0}', response.status);
             throw new RestError(errorMessage, {
                 code: response.bodyAsText || '',
                 statusCode: response.status,

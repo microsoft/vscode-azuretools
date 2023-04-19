@@ -5,11 +5,10 @@
 
 import { sendRequestWithTimeout } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, IParsedError, nonNullProp, nonNullValue, parseError } from '@microsoft/vscode-azext-utils';
-import { CancellationToken, window } from 'vscode';
+import { CancellationToken, l10n, window } from 'vscode';
 import type { KuduModels } from 'vscode-azurekudu';
-import { ParsedSite, SiteClient } from '../SiteClient';
 import { ext } from '../extensionVariables';
-import { localize } from '../localize';
+import { ParsedSite, SiteClient } from '../SiteClient';
 import { delay } from '../utils/delay';
 import { ignore404Error, retryKuduCall } from '../utils/kuduUtils';
 import { IDeployContext } from './IDeployContext';
@@ -57,7 +56,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
                 continue;
             }
 
-            throw new Error(localize('failedToFindDeployment', 'Failed to get status of deployment.'));
+            throw new Error(l10n.t('Failed to get status of deployment.'));
         }
 
         const deploymentId: string = deployment.id;
@@ -101,8 +100,8 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
 
         if (deployment.complete) {
             if (deployment.status === 3 /* Failed */ || deployment.isTemp) { // If the deployment completed without making it to the "permanent" phase, it must have failed
-                const message: string = localize('deploymentFailed', 'Deployment to "{0}" failed.', site.fullName);
-                const viewOutput: string = localize('viewOutput', 'View Output');
+                const message: string = l10n.t('Deployment to "{0}" failed.', site.fullName);
+                const viewOutput: string = l10n.t('View Output');
                 // don't wait
                 void window.showErrorMessage(message, viewOutput).then(result => {
                     if (result === viewOutput) {
@@ -110,7 +109,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
                     }
                 });
 
-                const messageWithoutName: string = localize('deploymentFailedWithoutName', 'Deployment failed.');
+                const messageWithoutName: string = l10n.t('Deployment failed.');
                 ext.outputChannel.appendLog(messageWithoutName, { resourceName: site.fullName });
                 context.errorHandling.suppressDisplay = true;
                 // Hopefully the last line is enough to give us an idea why deployments are failing without excessively tracking everything
