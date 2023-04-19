@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import type { ResourceNameAvailability, WebSiteManagementClient } from '@azure/arm-appservice';
 import { ResourceGroupListStep, StorageAccountListStep, resourceGroupNamingRules, storageAccountNamingRules } from '@microsoft/vscode-azext-azureutils';
 import { AzureNameStep, IAzureNamingRules } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
