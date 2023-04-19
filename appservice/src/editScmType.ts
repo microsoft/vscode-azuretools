@@ -7,7 +7,7 @@ import type { SiteConfigResource, User } from '@azure/arm-appservice';
 import { IActionContext, IAzureQuickPickItem, IAzureQuickPickOptions, ISubscriptionContext, nonNullProp, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import { window } from 'vscode';
 import { ext } from './extensionVariables';
-import { connectToGitHub } from './github/connectToGitHub';
+// import { connectToGitHub } from './github/connectToGitHub';
 import { localize } from './localize';
 import { ScmType } from './ScmType';
 import { ParsedSite } from './SiteClient';
@@ -26,7 +26,7 @@ export async function editScmType(context: IActionContext, site: ParsedSite, sub
             // GitHub cannot be configured if there is an existing configuration source-- a limitation of Azure
             await editScmType(context, site, subscriptionContext, ScmType.None, false);
         }
-        await connectToGitHub(site, Object.assign(context, subscriptionContext));
+        // await connectToGitHub(site, Object.assign(context, subscriptionContext));
     } else {
         config.scmType = newScmType;
         // to update one property, a complete config file must be sent
