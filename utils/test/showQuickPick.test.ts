@@ -38,8 +38,8 @@ suite("showQuickPick", () => {
 
             }
 
-            function getrecentlyUsed(label: string): string {
-                return randomUtils.getPseudononymousStringHash(label);
+            async function getrecentlyUsed(label: string): Promise<string> {
+                return await randomUtils.getPseudononymousStringHash(label);
             }
 
             async function testSorting(
@@ -58,7 +58,7 @@ suite("showQuickPick", () => {
                 });
                 const fakeState = new FakeMemento();
                 if (options.recentlyUsed) {
-                    fakeState.fakeKeys[options.recentlyUsed] = getrecentlyUsed(options.recentlyUsed);
+                    fakeState.fakeKeys[options.recentlyUsed] = await getrecentlyUsed(options.recentlyUsed);
                 }
 
                 // Execute

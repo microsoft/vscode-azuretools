@@ -15,4 +15,7 @@ steps:
   - template: package-steps.yml
     parameters:
       package: 'appservice'
+  - template: package-steps.yml
+    parameters:
+      package: 'appsettings'
   - template: after-all.yml

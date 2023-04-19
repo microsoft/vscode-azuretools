@@ -20,7 +20,7 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
         const quickPick: QuickPick<TPick> = createQuickPick(context, options);
         disposables.push(quickPick);
 
-        const recentlyUsedKey: string | undefined = getRecentlyUsedKey(options);
+        const recentlyUsedKey: string | undefined = await getRecentlyUsedKey(options);
         const groups: QuickPickGroup[] = [];
 
         // eslint-disable-next-line @typescript-eslint/no-misused-promises, no-async-promise-executor
@@ -83,7 +83,8 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
         });
 
         if (recentlyUsedKey && !Array.isArray(result) && !result.suppressPersistence) {
-            await ext.context.globalState.update(recentlyUsedKey, getRecentlyUsedValue(result));
+            const recentlyUsedValue = await getRecentlyUsedValue(result);
+            await ext.context.globalState.update(recentlyUsedKey, recentlyUsedValue);
         }
 
         return result;
@@ -131,11 +132,12 @@ export function createQuickPick<TPick extends types.IAzureQuickPickItem<unknown>
     return quickPick;
 }
 
-function getRecentlyUsedKey(options: types.IAzureQuickPickOptions): string | undefined {
+async function getRecentlyUsedKey(options: types.IAzureQuickPickOptions): Promise<string | undefined> {
     let recentlyUsedKey: string | undefined;
     const unhashedKey: string | undefined = options.id || options.placeHolder;
     if (unhashedKey && !options.canPickMany) {
-        recentlyUsedKey = `showQuickPick.${randomUtils.getPseudononymousStringHash(unhashedKey)}`;
+        const hashKey = await randomUtils.getPseudononymousStringHash(unhashedKey);
+        recentlyUsedKey = `showQuickPick.${hashKey}`;
     }
     return recentlyUsedKey;
 }
@@ -145,7 +147,7 @@ export async function createQuickPickItems<TPick extends types.IAzureQuickPickIt
     picks = await picks;
     globalState ??= ext.context.globalState;
 
-    picks = bumpHighPriorityAndRecentlyUsed(picks, globalState, !!options.suppressPersistence, recentlyUsedKey);
+    picks = await bumpHighPriorityAndRecentlyUsed(picks, globalState, !!options.suppressPersistence, recentlyUsedKey);
 
     if (picks.length === 0) {
         if (options.noPicksMessage) {
@@ -172,11 +174,11 @@ export async function createQuickPickItems<TPick extends types.IAzureQuickPickIt
     }
 }
 
-function bumpHighPriorityAndRecentlyUsed<T extends types.IAzureQuickPickItem<unknown>>(picks: T[], globalState: Memento, suppressPersistance: boolean, recentlyUsedKey: string | undefined): T[] {
+async function bumpHighPriorityAndRecentlyUsed<T extends types.IAzureQuickPickItem<unknown>>(picks: T[], globalState: Memento, suppressPersistance: boolean, recentlyUsedKey: string | undefined): Promise<T[]> {
     const recentlyUsedValue: string | undefined = (suppressPersistance || !recentlyUsedKey) ? undefined : globalState.get(recentlyUsedKey);
     let recentlyUsedIndex: number = -1;
     if (recentlyUsedValue) {
-        recentlyUsedIndex = picks.findIndex(p => getRecentlyUsedValue(p) === recentlyUsedValue);
+        recentlyUsedIndex = await asyncFindIndex(picks, async p => await getRecentlyUsedValue(p) === recentlyUsedValue);
 
         // Update recently used item's description
         if (recentlyUsedIndex >= 0) {
@@ -250,6 +252,32 @@ type QuickPickGroup = {
     picks: types.IAzureQuickPickItem<unknown>[]
 }
 
-function getRecentlyUsedValue(item: types.IAzureQuickPickItem<unknown>): string {
-    return randomUtils.getPseudononymousStringHash(item.id || item.label);
+async function getRecentlyUsedValue(item: types.IAzureQuickPickItem<unknown>): Promise<string> {
+    return await randomUtils.getPseudononymousStringHash(item.id || item.label);
+}
+
+// Signature of the callback
+type CallBackFindIndex<T> = (
+    value: T,
+    index?: number,
+    collection?: T[]
+) => Promise<boolean>;
+
+/**
+ * Async FindIndex function
+ *
+ * @export
+ * @template T
+ * @param {T[]} elements
+ * @param {CallBackFind<T>} cb
+ * @returns {Promise<number>}
+ */
+async function asyncFindIndex<T>(elements: T[], cb: CallBackFindIndex<T>): Promise<number> {
+    for (const [index, element] of elements.entries()) {
+        if (await cb(element, index, elements)) {
+            return index;
+        }
+    }
+
+    return -1;
 }

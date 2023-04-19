@@ -48,6 +48,72 @@ registerEvent(
 );
 ```
 
+## Pick tree items (Azure Resources API V2)
+
+The Azure Resources API exposes a `TreeDataProvider` for both the Azure resources view and the Workspace resources view. `azureResourceTreeDataProvider` and `workspaceResourceTreeDataProvider` are exposed by the Azure Resources API.
+
+We've created a set of utilities to provide a tree node picking experience that uses quick pick steps in a wizards.
+
+#### Pick an Azure subscription
+
+```ts
+const subscription = await subscriptionExperience(context, api.resources.azureResourceTreeDataProvider);
+```
+
+#### Pick an Azure resource
+
+```ts
+// pick an Azure Resource, in this case a Function App
+const functionApp = await azureResourceExperience(context, api.resources.azureResourceTreeDataProvider, AzExtResourceType.FunctionApp);
+```
+
+#### Pick a descendent of an Azure resource
+
+```ts
+// pick an Azure Resource, in this case a Function App, and then select a descendant of the Function App, in this case an App Setting item
+const functionAppAppSetting = await azureResourceExperience(context, api.resources.azureResourceTreeDataProvider, AzExtResourceType.FunctionApp, {
+    include: ['appSettingContextValue']
+});
+```
+
+#### Pick a workspace item
+
+```ts
+// pick an item based on context value
+const item = await contextValueExperience(context, api.resources.workspaceResourceTreeDataProvider, {
+    include: ['itemContextValue']
+});
+```
+
+### Run a wizard with custom pick steps
+
+If you more granular control over the quick pick steps in the wizard, you can use `runQuickPickWizard` to run a fully customizable quick pick wizard. Here's an example of picking a Function App using `runQuickPickWizard`.
+
+```ts
+
+import { runQuickPickWizard, QuickPickAzureSubscriptionStep, QuickPickGroupStep, QuickPickAzureResourceStep } from '@microsoft/vscode-azext-utils';
+
+const tdp = ext.rgApiV2.resources.azureResourceTreeDataProvider;
+
+const functionApp = await runQuickPickWizard(context, {
+    promptSteps: [
+        // first step: pick a subscription
+        new QuickPickAzureSubscriptionStep(tdp),
+        // second step: pick a group, if we are grouped by resource type, pick function apps automatically
+        new QuickPickGroupStep(tdp, {
+            groupType: [AzExtResourceType.FunctionApp],
+        }),
+        // third step: pick a resource, in this case a function app
+        new QuickPickAzureResourceStep(tdp, {
+            resourceTypes: [AzExtResourceType.FunctionApp],
+            skipIfOne: false,
+        }, {
+            placeHolder: 'Select a Function App',
+        }),
+    ]
+});
+```
+
 ## Azure Extension Tree Data Provider
 
 ![ExampleTree](resources/ExampleTree.png)

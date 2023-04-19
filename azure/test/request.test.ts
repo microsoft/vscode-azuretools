@@ -3,23 +3,23 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { BasicAuthenticationCredentials, HttpOperationResponse, Serializer, TokenCredentials, WebResource } from '@azure/ms-rest-js';
+import { createTestActionContext } from '@microsoft/vscode-azext-dev';
 import * as assert from 'assert';
 import * as http from 'http';
-import { createTestActionContext } from '@microsoft/vscode-azext-dev';
-import { createGenericClient, sendRequestWithTimeout } from '../src/createAzureClient';
+import * as types from '../index';
+import { sendRequestWithTimeout } from '../src/createAzureClient';
 import { assertThrowsAsync } from './assertThrowsAsync';
 
-type ResponseData = { status: number; contentType?: string; body?: string; } | ((response: http.ServerResponse) => void);
+type ResponseData = { statusCode: number; contentType?: string; body?: string; } | ((response: http.ServerResponse) => void);
 
 suite('request', () => {
     let url: string;
     let server: http.Server;
     let testResponses: ResponseData[] = [];
 
-    async function sendTestRequest(...responses: ResponseData[]): Promise<HttpOperationResponse> {
+    async function sendTestRequest(...responses: ResponseData[]): Promise<types.AzExtPipelineResponse> {
         testResponses = responses;
-        return await sendRequestWithTimeout(await createTestActionContext(), { method: 'GET', url }, 2000, undefined);
+        return await sendRequestWithTimeout(await createTestActionContext(), { method: 'GET', url, allowInsecureConnection: true }, 2000, undefined);
     }
 
     suiteSetup(() => {
@@ -34,7 +34,7 @@ suite('request', () => {
                 if (testResponse.contentType) {
                     headers["Content-Type"] = testResponse.contentType;
                 }
-                response.writeHead(testResponse.status, headers);
+                response.writeHead(testResponse.statusCode, headers);
                 response.end(testResponse.body);
             }
         });
@@ -52,101 +52,66 @@ suite('request', () => {
     });
 
     test('200', async () => {
-        const response = await sendTestRequest({ status: 200 });
+        const response = await sendTestRequest({ statusCode: 200 });
         assert.strictEqual(response.parsedBody, undefined);
     });
 
     test('200, text body, no content type', async () => {
-        const response = await sendTestRequest({ status: 200, body: 'Hello World!' });
+        const response = await sendTestRequest({ statusCode: 200, body: 'Hello World!' });
         assert.strictEqual(response.parsedBody, undefined);
     });
 
     test('200, json body, no content type', async () => {
-        const response = await sendTestRequest({ status: 200, body: '{ "data": "Hello World!" }' });
+        const response = await sendTestRequest({ statusCode: 200, body: '{ "data": "Hello World!" }' });
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         assert.strictEqual(response.parsedBody.data, 'Hello World!');
     });
 
     test('200, text body, text content type', async () => {
-        const response = await sendTestRequest({ status: 200, body: 'cant parse this', contentType: 'text/plain' });
+        const response = await sendTestRequest({ statusCode: 200, body: 'cant parse this', contentType: 'text/plain' });
         assert.strictEqual(response.parsedBody, undefined);
     });
 
     test('200, text body, json content type', async () => {
-        await assertThrowsAsync(async () => await sendTestRequest({ status: 200, body: 'cant parse this', contentType: 'application/json' }), /SyntaxError.*json/i);
+        await assertThrowsAsync(async () => await sendTestRequest({ statusCode: 200, body: 'cant parse this', contentType: 'application/json' }), /SyntaxError.*json/i);
     });
 
     test('200, json body, text content type', async () => {
-        const response = await sendTestRequest({ status: 200, body: '{ "data": "Hello World!" }', contentType: 'text/plain' });
+        const response = await sendTestRequest({ statusCode: 200, body: '{ "data": "Hello World!" }', contentType: 'text/plain' });
         assert.strictEqual(response.parsedBody, undefined);
     });
 
     test('200, json body, json content type', async () => {
-        const response = await sendTestRequest({ status: 200, body: '{ "data": "Hello World!" }', contentType: 'application/json' });
+        const response = await sendTestRequest({ statusCode: 200, body: '{ "data": "Hello World!" }', contentType: 'application/json' });
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         assert.strictEqual(response.parsedBody.data, 'Hello World!');
     });
 
     test('200, json body, no content type, with bom', async () => {
-        const response = await sendTestRequest({ status: 200, body: `\ufeff{ "data": "Hello World!" }` });
+        const response = await sendTestRequest({ statusCode: 200, body: `\ufeff{ "data": "Hello World!" }` });
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         assert.strictEqual(response.parsedBody.data, 'Hello World!');
     });
 
     test('200, json body, json content type, with bom', async () => {
-        const response = await sendTestRequest({ status: 200, body: `\ufeff{ "data": "Hello World!" }`, contentType: 'application/json' });
+        const response = await sendTestRequest({ statusCode: 200, body: `\ufeff{ "data": "Hello World!" }`, contentType: 'application/json' });
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         assert.strictEqual(response.parsedBody.data, 'Hello World!');
     });
 
     test('400', async () => {
-        await assertThrowsAsync(async () => await sendTestRequest({ status: 400 }), /400/);
+        await assertThrowsAsync(async () => await sendTestRequest({ statusCode: 400 }), /400/);
     });
 
     test('400 with error message', async () => {
-        await assertThrowsAsync(async () => await sendTestRequest({ status: 400, body: 'oops' }), /oops/);
+        await assertThrowsAsync(async () => await sendTestRequest({ statusCode: 400, body: 'oops' }), /oops/);
     });
 
     test('400 with json error message', async () => {
-        await assertThrowsAsync(async () => await sendTestRequest({ status: 400, body: '{ "message": "oops" }' }), (err: Error) => err.message.includes('oops') && !err.message.includes('message'));
+        await assertThrowsAsync(async () => await sendTestRequest({ statusCode: 400, body: '{ "message": "oops" }' }), (err: Error) => err.message.includes('oops') && !err.message.includes('message'));
     });
 
     test('ECONNRESET', async () => {
         await assertThrowsAsync(async () => await sendTestRequest(res => res.destroy()), /socket hang up/i);
-    });
-
-    test('operationSpec with unexpected  error', async () => {
-        testResponses = [{ status: 404, body: 'oops' }];
-
-        const request = new WebResource(url);
-        request.operationSpec = { httpMethod: "GET", responses: { 200: {}, default: {} }, serializer: new Serializer() };
-        const client = await createGenericClient(await createTestActionContext(), undefined);
-        await assertThrowsAsync(async () => await client.sendRequest(request), /oops/);
-    });
-
-    test('operationSpec with expected error', async () => {
-        testResponses = [{ status: 404, body: 'oops' }];
-
-        const request = new WebResource(url);
-        request.operationSpec = { httpMethod: "GET", responses: { 200: {}, 404: {}, default: {} }, serializer: new Serializer() };
-        const client = await createGenericClient(await createTestActionContext(), undefined);
-        const response = await client.sendRequest(request);
-        assert.strictEqual(response.parsedBody, undefined);
-    });
-
-    test('Basic credentials are masked in error message', async () => {
-        const password: string = 'notActuallyCredentials';
-        testResponses = [{ status: 404, body: password }];
-
-        const client = await createGenericClient(await createTestActionContext(), new BasicAuthenticationCredentials('userName', password));
-        await assertThrowsAsync(async () => await client.sendRequest({ method: 'GET', url }), (err: Error) => err.message === '---');
-    });
-
-    test('Token credentials are masked in error message', async () => {
-        const token: string = 'notActuallyCredentials';
-        testResponses = [{ status: 404, body: token }];
-
-        const client = await createGenericClient(await createTestActionContext(), new TokenCredentials(token));
-        await assertThrowsAsync(async () => await client.sendRequest({ method: 'GET', url }), (err: Error) => err.message === '---');
     });
 });

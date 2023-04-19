@@ -35,7 +35,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     public fullIdWithContext?: string;
     public readonly initialCollapsibleState: TreeItemCollapsibleState | undefined;
     public readonly parent: IAzExtParentTreeItemInternal | undefined;
-    public isLoadingMore: boolean;
+    public isLoadingMore!: boolean;
     public readonly valuesToMask: string[] = [];
     protected _subscription: types.ISubscriptionContext | undefined;
 

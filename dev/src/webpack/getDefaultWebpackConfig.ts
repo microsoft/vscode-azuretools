@@ -52,7 +52,8 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
             patterns: [
                 // Test files -> dist/test (these files are ignored during packaging)
                 {
-                    from: path.posix.join(options.projectRoot.replace(/\\/g, '/'), 'out', 'test', '*.*'),
+                    from: '**/*',
+                    context: path.posix.join(options.projectRoot.replace(/\\/g, '/'), 'out', 'test'),
                     to: path.posix.join(options.projectRoot.replace(/\\/g, '/'), 'dist', 'test'),
                     noErrorOnMissing: true
                 },
@@ -110,6 +111,14 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
             process: 'process/browser'
         }));
     }
+
+    // needed to replace the node.js implementation of crypto with the browser implementation
+    // the path is actually in utils and not dev, which is why we need to back up 4 directories
+    const nodeCryptoPath = path.resolve(__dirname, '..', '..', '..', '..', 'vscode-azext-utils', 'out/src/node/crypto');
+    const webCryptoPath = path.resolve(__dirname, '..', '..', '..', '..', 'vscode-azext-utils', 'out/src/browser/crypto')
+
+    const alias: { [index: string]: string | false | string[] } = options.alias ?? {};
+    alias[nodeCryptoPath] = webCryptoPath;
 
     const config: webpack.Configuration = {
         context: options.projectRoot,
@@ -189,13 +198,13 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
             // Support reading TypeScript and JavaScript files, see https://github.com/TypeStrong/ts-loader
             // These will be automatically transpiled while being placed into dist/extension.bundle.js
             extensions: ['.ts', '.js'],
+            alias:
+                options.target === 'webworker' ? alias : undefined,
             fallback:
                 options.target === 'webworker' ? {
                     // Webpack 5 no longer polyfills Node.js core modules automatically.
                     // see
                     // for the list of Node.js core module polyfills.
-                    "net": require.resolve("net-browserify"),
-                    "crypto": require.resolve("crypto-browserify"),
                     "path": require.resolve("path-browserify"),
                     "os": require.resolve("os-browserify/browser"),
                     "url": require.resolve("url/"),
@@ -211,6 +220,10 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                     "async_hooks": false,
                     "child_process": false,
                     "fs": false,
+                    'html-to-text': false,
+                    // there are browserify versions of these, but they cause more problems than they solve
+                    'net': false,
+                    'crypto': false,
                     //caller-supplied fallbacks
                     ...(options.resolveFallbackAliases || [])
                 } : undefined,

@@ -6,10 +6,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { Environment } from '@azure/ms-rest-azure-env';
-import { AuthenticationSession, CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, ProviderResult, QuickPickItem, QuickPickOptions as VSCodeQuickPickOptions, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri } from 'vscode';
+import type { AzExtResourceType, AzureResource, AzureSubscription, ResourceModelBase } from '@microsoft/vscode-azureresources-api';
+import { AuthenticationSession, CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, LogOutputChannel, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, ProviderResult, QuickPickItem, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri, QuickPickOptions as VSCodeQuickPickOptions } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
-import type { AzureSubscription, AzureResource, AzExtResourceType } from '@microsoft/vscode-azureresources-api';
 
 export declare interface RunWithTemporaryDescriptionOptions {
     description: string;
@@ -148,12 +148,13 @@ export interface ITreeItemPickerContext extends IActionContext {
 }
 
 /**
- * Loose type to use for T1 and T2 versions of "@azure/ms-rest-js".  The Azure Account extension returns
+ * Loose type to use for T2 versions of Azure credentials.  The Azure Account extension returns
  * credentials that will satisfy both T1 and T2 requirements
  */
 export type AzExtServiceClientCredentials = AzExtServiceClientCredentialsT1 & AzExtServiceClientCredentialsT2;
 
 /**
+ * TODO: Remove from both utils and dev package index.d.ts. Can't do that right now because dev package still has T1 dependencies.
  * Loose interface to allow for the use of different versions of "@azure/ms-rest-js"
  * There's several cases where we don't control which "credentials" interface gets used, causing build errors even though the functionality itself seems to be compatible
  * For example: https://github.com/Azure/azure-sdk-for-js/issues/10045
@@ -639,6 +640,13 @@ export interface ICreateChildImplContext extends IActionContext {
 export declare class UserCancelledError extends Error {
     constructor(stepName?: string);
 }
+
+/**
+ * Checks if the given error is a UserCancelledError.
+ *
+ * Note: only works with errors created by versions >=1.1.1 of this package.
+ */
+export declare function isUserCancelledError(error: unknown): error is UserCancelledError;
 
 export declare class NoResourceFoundError extends Error {
     constructor(context?: ITreeItemPickerContext);
@@ -1386,6 +1394,15 @@ export interface IAzExtOutputChannel extends OutputChannel {
     appendLog(value: string, options?: { resourceName?: string, date?: Date }): void;
 }
 
+export type IAzExtLogOutputChannel = IAzExtOutputChannel & LogOutputChannel;
+
+/**
+ * Create a new AzExtLogOutputChannel
+ *
+ * @param name Human-readable string which will be used to represent the channel in the UI.
+ */
+export declare function createAzExtLogOutputChannel(name: string): IAzExtLogOutputChannel;
+
 /**
  * Create a new AzExtOutputChannel with the given name and the extensionPrefix.
  *
@@ -1557,6 +1574,7 @@ export declare function registerReportIssueCommand(commandId: string): void;
  * Registers a namespace that leverages vscode.workspace.fs API to access the file system
  */
 export declare namespace AzExtFsExtra {
+    export function isVirtualWorkspace(): boolean;
     export function isDirectory(resource: Uri | string): Promise<boolean>;
     export function isFile(resource: Uri | string): Promise<boolean>;
     export function ensureDir(resource: Uri | string): Promise<void>;
@@ -1685,9 +1703,32 @@ export interface PickExperienceContext extends IActionContext {
     dontUnwrap?: boolean;
 }
 
-export declare function azureResourceExperience<TPick extends unknown>(context: PickExperienceContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: ContextValueFilter): Promise<TPick>;
-export declare function contextValueExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, contextValueFilter: ContextValueFilter): Promise<TPick>;
+/**
+ * Prompts the user to pick a subscription using a quick pick. If there is only one subscription, it will be returned without prompting the user.
+ *
+ * @param context The action context
+ * @param tdp Azure resource tree data provider to perform the pick experience on
+ */
 export declare function subscriptionExperience(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>): Promise<AzureSubscription>;
+
+/**
+ * Prompts the user to pick an Azure resource using a wizard comprised of quick pick steps.
+ *
+ * @param context The action context
+ * @param tdp Azure resource tree data provider to perform the pick experience on
+ * @param resourceTypes the resource types to allow the user to pick from
+ * @param childItemFilter prompt the user to pick children of the Azure resource until an item matching the filter is selected
+ */
+export declare function azureResourceExperience<TPick extends unknown>(context: PickExperienceContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: ContextValueFilter): Promise<TPick>;
+
+/**
+ * Recursively prompts the user to pick a node until a node is packed matching the context value filter.
+ *
+ * @param context The action context
+ * @param tdp tree data provider to pick a node from
+ * @param contextValueFilter the context value filter used to match the deesired node(s)
+ */
+export declare function contextValueExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, contextValueFilter: ContextValueFilter): Promise<TPick>;
 
 interface CompatibilityPickResourceExperienceOptions {
     resourceTypes?: AzExtResourceType | AzExtResourceType[];
@@ -1846,12 +1887,21 @@ export declare interface ContextValueFilterQuickPickOptions extends GenericQuick
     contextValueFilter: ContextValueFilter;
 }
 
+/**
+ * Quick pick step that selects a tree node matching a context value filter.
+ */
 export declare class ContextValueQuickPickStep<TContext extends QuickPickWizardContext, TOptions extends ContextValueFilterQuickPickOptions> extends GenericQuickPickStep<TContext, TOptions> {
     protected readonly pickFilter: PickFilter;
 }
 
+/**
+ * Recursively select tree nodes until a final node is selected that matches the context value filter.
+ */
 export declare class RecursiveQuickPickStep<TContext extends QuickPickWizardContext> extends ContextValueQuickPickStep<TContext, ContextValueFilterQuickPickOptions> { }
 
+/**
+ * Quick pick step to pick an Azure subscription.
+ */
 export declare class QuickPickAzureSubscriptionStep extends GenericQuickPickStepWithCommands<AzureResourceQuickPickWizardContext, SkipIfOneQuickPickOptions> {
     public constructor(tdp: TreeDataProvider<ResourceGroupsItem>, options?: GenericQuickPickOptions);
 }
@@ -1861,6 +1911,11 @@ export declare interface GroupQuickPickOptions extends SkipIfOneQuickPickOptions
     skipIfOne?: true;
 }
 
+/**
+ * Quick pick step that selects a group.
+ *
+ * If view is grouped by Resource Type, and a group matching `options.groupType` is found, it will be auto selected.
+ */
 export declare class QuickPickGroupStep extends GenericQuickPickStep<AzureResourceQuickPickWizardContext, GroupQuickPickOptions> {
     public constructor(tdp: TreeDataProvider<unknown>, options: GroupQuickPickOptions);
 }
@@ -1870,9 +1925,120 @@ export declare interface AzureResourceQuickPickOptions extends GenericQuickPickO
     childItemFilter?: ContextValueFilter;
 }
 
+/**
+ * Quick pick step that selects an Azure resource.
+ */
 export declare class QuickPickAzureResourceStep extends GenericQuickPickStep<AzureResourceQuickPickWizardContext, AzureResourceQuickPickOptions> {
     public constructor(tdp: TreeDataProvider<ResourceGroupsItem>, options?: AzureResourceQuickPickOptions, promptOptions?: IAzureQuickPickOptions);
 }
 
-export declare function runQuickPickWizard<TPick>(context: PickExperienceContext, wizardOptions?: IWizardOptions<AzureResourceQuickPickWizardContext>): Promise<TPick>;
+/**
+ * Creates and runs a quick pick wizard with the given wizard options.
+ *
+ * @param context The action context
+ * @param wizardOptions The options used to construct the wizard
+ * @param startingNode - The node to start the wizard from. If not specified, the wizard will start from the root.
+ */
+export declare function runQuickPickWizard<TPick>(context: PickExperienceContext, wizardOptions?: IWizardOptions<AzureResourceQuickPickWizardContext>, startingNode?: unknown): Promise<TPick>;
 //#endregion
+
+/**
+ * Registers a namespace for common random utility functions
+ */
+export declare namespace randomUtils {
+    export function getPseudononymousStringHash(s: string): Promise<string>;
+    export function getRandomHexString(length?: number): string;
+    export function getRandomInteger(minimumInclusive: number, maximumExclusive: number): number;
+}
+
+/**
+ * Base element for a tree view (v2)
+ */
+export declare interface TreeElementBase extends ResourceModelBase {
+    getChildren?(): ProviderResult<TreeElementBase[]>;
+    getTreeItem(): TreeItem | Thenable<TreeItem>;
+}
+
+export type TreeElementWithId = TreeElementBase & { id: string };
+
+export interface GenericElementOptions extends IGenericTreeItemOptions {
+    commandArgs?: unknown[];
+}
+
+/**
+ * Creates a generic element.
+ *
+ * @param options - options for the generic item
+ *
+ * If `options.commandArgs` is not set, then it will be set to the item itself.
+*/
+export declare function createGenericElement(options: GenericElementOptions): TreeElementBase;
+
+export declare interface TreeElementStateModel {
+    /**
+     * Apply a temporary description to the tree item
+     */
+    temporaryDescription?: string;
+    /**
+     * Set the tree item icon to a spinner
+     */
+    spinner?: boolean;
+    /**
+     * Temporary children to be displayed
+     */
+    temporaryChildren?: TreeElementBase[];
+}
+
+/**
+ * Wraps tree elements in a state model that can be used to temporarily override tree element behavior like the description or children.
+ */
+export declare class TreeElementStateManager<TElement extends TreeElementWithId = TreeElementWithId> implements Disposable {
+    /**
+     * Temporarily override the description of the given element while the callback is running.
+     *
+     * @param id - id of the element to temporarily override the tree item description of
+     * @param description - description to temporarily show
+     * @param callback - callback to run while the temporary description is shown
+     * @param dontRefreshOnRemove - If true, the tree item won't be refreshed after the temporary description is removed.
+     * Useful when the tree item is being deleted. This prevents any time between the tree item description being cleared
+     * and the tree item being removed from the tree.
+     */
+    runWithTemporaryDescription<T = void>(id: string, description: string, callback: () => Promise<T>, dontRefreshOnRemove?: boolean): Promise<T>;
+
+    /**
+     * Shows a deleting state for the given element while the callback is running.
+     * Method calls `runWithTemporaryDescription` and passes options for deleting.
+     *
+     * @param id - id of the element to show a deleting state for
+     * @param callback - callback to run while the deleting state is shown
+     */
+    showDeleting(id: string, callback: () => Promise<void>): Promise<void>;
+
+    /**
+     * Adds a child to the given element while the callback is running. Typically used to show a "Creating..." child.
+     *
+     * @param id - id of the element to add a creating child to
+     * @param label - label of the child
+     * @param callback - callback to run while the creating child is shown
+     */
+    showCreatingChild<T = void>(id: string, label: string, callback: () => Promise<T>): Promise<T>;
+
+    /**
+     * Notify a resource that its children have changed.
+     * Calls the refresh callback with the given id.
+     * @param id - The id of the element for which the children have changed
+     */
+    notifyChildrenChanged(id: string): void;
+
+    /**
+     * Wraps an element in a state model that can be used to update the tree item. An element should only be wrapped once.
+     *
+     * Modifies `element.getChildren()` and `element.getTreeItem()` methods.
+     *
+     * @param element - item to wrap
+     * @param refresh - callback to refresh the item
+     */
+    wrapItemInStateHandling(element: TElement, refresh: (item: TElement) => void): TElement;
+
+    dispose(): void;
+}

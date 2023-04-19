@@ -8,6 +8,7 @@
 import * as htmlToText from 'html-to-text';
 import * as vscode from 'vscode';
 import { IParsedError } from '../index';
+import { isUserCancelledError } from './errors';
 import { parseJson } from './utils/parseJson';
 
 export function parseError(error: any): IParsedError {
@@ -86,7 +87,10 @@ export function parseError(error: any): IParsedError {
         stepName,
         // NOTE: Intentionally not using 'error instanceof UserCancelledError' because that doesn't work if multiple versions of the UI package are used in one extension
         // See https://github.com/Microsoft/vscode-azuretools/issues/51 for more info
-        isUserCancelledError: errorType === 'UserCancelledError'
+        isUserCancelledError:
+            // check using both methods in case error was created before we implemented isUserCancelledError
+            isUserCancelledError(error) ||
+            errorType === 'UserCancelledError'
     };
 }
 
