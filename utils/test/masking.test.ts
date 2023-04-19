@@ -30,7 +30,7 @@ suite("masking", () => {
                 await callWithMaskHandling(async () => {
                     throw new Error(errorMessage);
                 }, credentials);
-            }, (err) => {
+            }, (err: unknown) => {
                 return validateError(err, credentials);
             }, 'Credentials were not properly masked from error string');
         });
@@ -52,7 +52,7 @@ suite("masking", () => {
                 await callWithMaskHandling(async () => {
                     throw new Error(errorMessage);
                 }, credentials);
-            }, (err) => {
+            }, (err: unknown) => {
                 return validateError(err, credentials);
             }, 'Credentials were not properly masked from error string');
         });
@@ -72,7 +72,7 @@ suite("masking", () => {
                 await callWithMaskHandling(async () => {
                     throw errorMessage;
                 }, credentialsSpecialChars);
-            }, (err) => {
+            }, (err: unknown) => {
                 return validateError(err, credentialsSpecialChars);
             }, 'Credentials were not properly masked from error string');
         });

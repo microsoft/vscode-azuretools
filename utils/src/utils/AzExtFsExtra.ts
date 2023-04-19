@@ -8,6 +8,12 @@ import { FileStat, FileType, Uri, workspace } from 'vscode';
 import { parseError } from '../parseError';
 
 export namespace AzExtFsExtra {
+    export function isVirtualWorkspace(): boolean {
+        // based on https://code.visualstudio.com/api/extension-guides/virtual-workspaces#detect-virtual-workspaces-programmatically
+        return !!workspace.workspaceFolders &&
+            workspace.workspaceFolders.every(f => f.uri.scheme !== 'file');
+    }
+
     export async function isDirectory(resource: Uri | string): Promise<boolean> {
         const uri = convertToUri(resource);
         const stats = await workspace.fs.stat(uri);

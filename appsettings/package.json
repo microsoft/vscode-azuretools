@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-azureappsettings",
     "author": "Microsoft Corporation",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "Common features and tools surrounding App Settings for the Azure VS Code extensions",
     "tags": [
         "azure",
@@ -32,7 +32,7 @@
         "test": "node ./out/test/runTest.js"
     },
     "dependencies": {
-        "@microsoft/vscode-azext-utils": "^0.4.0",
+        "@microsoft/vscode-azext-utils": "^1.1.0",
         "vscode-nls": "^5.0.1"
     },
     "devDependencies": {
@@ -42,7 +42,7 @@
         "@types/fs-extra": "^9.0.13",
         "@types/mocha": "^9.0.0",
         "@types/node": "^16.0.0",
-        "@types/vscode": "1.64.0",
+        "@types/vscode": "1.76.0",
         "@typescript-eslint/eslint-plugin": "^5.53.0",
         "@vscode/test-electron": "^2.1.5",
         "eslint": "^8.34.0",

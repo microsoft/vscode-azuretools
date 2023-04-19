@@ -1,0 +1,15 @@
+jobs:
+  - template: ./jobs.yml
+    parameters:
+      jobName: Windows
+      vmImage: windows-latest
+
+  - template: ./jobs.yml
+    parameters:
+      jobName: Linux
+      vmImage: ubuntu-latest
+
+  - template: ./jobs.yml
+    parameters:
+      jobName: macOS
+      vmImage: macOS-latest

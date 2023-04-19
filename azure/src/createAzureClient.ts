@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ServiceClient } from '@azure/core-client';
-import { createPipelineRequest, defaultRetryPolicy, Pipeline, PipelineOptions, PipelinePolicy, PipelineRequest, PipelineResponse, RestError, RetryPolicyOptions, SendRequest, userAgentPolicy } from '@azure/core-rest-pipeline';
+import { createHttpHeaders, createPipelineRequest, defaultRetryPolicy, Pipeline, PipelineOptions, PipelinePolicy, PipelineRequest, PipelineResponse, RestError, RetryPolicyOptions, SendRequest, userAgentPolicy } from '@azure/core-rest-pipeline';
 import { appendExtensionUserAgent, AzExtTreeItem, IActionContext, ISubscriptionActionContext, ISubscriptionContext, parseError } from '@microsoft/vscode-azext-utils';
 import { Agent as HttpsAgent } from 'https';
 import { v4 as uuidv4 } from "uuid";
@@ -64,15 +64,12 @@ export async function sendRequestWithTimeout(context: IActionContext, options: t
         request.agent = new HttpsAgent({ rejectUnauthorized: options.rejectUnauthorized });
     }
 
-    const client = await createGenericClient(context, clientInfo, { noRetryPolicy: true });
+    const client = await createGenericClient(context, clientInfo, { noRetryPolicy: true, addStatusCodePolicy: true });
     return await client.sendRequest(request);
 }
 
-interface IGenericClientOptions {
-    noRetryPolicy?: boolean;
-}
 
-export async function createGenericClient(context: IActionContext, clientInfo: types.AzExtGenericClientInfo | undefined, options?: IGenericClientOptions): Promise<ServiceClient> {
+export async function createGenericClient(context: IActionContext, clientInfo: types.AzExtGenericClientInfo | undefined, options?: types.IGenericClientOptions): Promise<ServiceClient> {
     let credentials: types.AzExtGenericCredentials | undefined;
     let endpoint: string | undefined;
     if (clientInfo && 'credentials' in clientInfo) {
@@ -89,11 +86,11 @@ export async function createGenericClient(context: IActionContext, clientInfo: t
         endpoint
     });
 
-    addAzExtPipeline(context, client.pipeline, endpoint, { retryOptions });
+    addAzExtPipeline(context, client.pipeline, endpoint, { retryOptions }, options?.addStatusCodePolicy);
     return client;
 }
 
-function addAzExtPipeline(context: IActionContext, pipeline: Pipeline, endpoint?: string, options?: PipelineOptions): Pipeline {
+function addAzExtPipeline(context: IActionContext, pipeline: Pipeline, endpoint?: string, options?: PipelineOptions, addStatusCodePolicy?: boolean): Pipeline {
     // ServiceClient has default pipeline policies that the core-client SDKs require. Rather than building an entirely custom pipeline,
     // it's easier to just remove the default policies and add ours as-needed
 
@@ -119,9 +116,15 @@ function addAzExtPipeline(context: IActionContext, pipeline: Pipeline, endpoint?
     // Policies to apply after the response
     pipeline.addPolicy(new MissingContentTypePolicy(), { phase: 'Deserialize' });
     pipeline.addPolicy(new RemoveBOMPolicy(), { phase: 'Deserialize', beforePolicies: [MissingContentTypePolicy.Name] });
-    pipeline.addPolicy(new StatusCodePolicy() /*intentionally not in a phase*/);
+    if (addStatusCodePolicy) {
+        pipeline.addPolicy(new StatusCodePolicy() /*intentionally not in a phase*/);
+    }
 
     return pipeline;
+}
+
+export function addBasicAuthenticationCredentialsToClient(client: ServiceClient, userName: string, password: string): void {
+    client.pipeline.addPolicy(new BasicAuthenticationCredentialsPolicy(userName, password), { phase: 'Serialize' });
 }
 
 /**
@@ -237,3 +240,24 @@ class StatusCodePolicy implements PipelinePolicy {
     }
 }
 
+
+/**
+ * Encodes userName and password and signs a request with the Authentication header.
+ * Imitates BasicAuthenticationCredentials from ms-rest-js
+ */
+class BasicAuthenticationCredentialsPolicy implements PipelinePolicy {
+    public static readonly Name = 'BasicAuthenticationCredentialsPolicy';
+    public readonly name = BasicAuthenticationCredentialsPolicy.Name;
+
+    public constructor(private readonly userName: string, private readonly password: string) { }
+
+    public async sendRequest(request: PipelineRequest, next: SendRequest): Promise<PipelineResponse> {
+        const credentials = `${this.userName}:${this.password}`;
+        const DEFAULT_AUTHORIZATION_SCHEME = "Basic";
+        const encodedCredentials = `${DEFAULT_AUTHORIZATION_SCHEME} ${Buffer.from(credentials).toString("base64")}`;
+        if (!request.headers) request.headers = createHttpHeaders();
+        request.headers.set("authorization", encodedCredentials);
+
+        return await next(request);
+    }
+}

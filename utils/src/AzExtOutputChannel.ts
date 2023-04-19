@@ -18,7 +18,7 @@ export function createAzExtOutputChannel(name: string, extensionPrefix: string):
 
 class AzExtOutputChannel implements types.IAzExtOutputChannel {
     public readonly name: string;
-    public extensionPrefix: string;
+    public extensionPrefix!: string;
     protected _outputChannel: OutputChannel | LogOutputChannel;
 
     constructor(name: string) {
@@ -79,7 +79,8 @@ class AzExtOutputChannel implements types.IAzExtOutputChannel {
 }
 
 class AzExtLogOutputChannel extends AzExtOutputChannel implements LogOutputChannel {
-    protected override _outputChannel: LogOutputChannel;
+    // assigned in AzExtOutputChannel constructor
+    protected override _outputChannel!: LogOutputChannel;
     readonly onDidChangeLogLevel: Event<LogLevel>;
 
     constructor(name: string) {

@@ -14,7 +14,7 @@ import type { PipelineRequestOptions, PipelineResponse } from '@azure/core-rest-
 import type { Environment } from '@azure/ms-rest-azure-env';
 import type { AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtServiceClientCredentialsT2, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IRelatedNameWizardContext, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
 import { AzureSubscription } from '@microsoft/vscode-azureresources-api';
-import { Disposable, Progress, Uri } from 'vscode';
+import { Disposable, LogOutputChannel, Progress, Uri } from 'vscode';
 
 export type OpenInPortalOptions = {
     /**
@@ -362,7 +362,11 @@ export type AzExtGenericClientInfo = AzExtGenericCredentials | { credentials: Az
  * 2. Uses resourceManagerEndpointUrl to support sovereigns (if clientInfo corresponds to an Azure environment)
  * @param clientInfo The client/credentials info or `undefined` if no credentials are needed
  */
-export declare function createGenericClient(context: IActionContext, clientInfo: AzExtGenericClientInfo | undefined): Promise<ServiceClient>;
+export declare function createGenericClient(context: IActionContext, clientInfo: AzExtGenericClientInfo | undefined, options?: IGenericClientOptions): Promise<ServiceClient>;
+export interface IGenericClientOptions {
+    noRetryPolicy?: boolean;
+    addStatusCodePolicy?: boolean;
+}
 
 export type AzExtRequestPrepareOptions = PipelineRequestOptions & { rejectUnauthorized?: boolean }
 export type AzExtPipelineResponse = PipelineResponse & { parsedBody?: any }
@@ -372,7 +376,7 @@ export type AzExtPipelineResponse = PipelineResponse & { parsedBody?: any }
  * @param timeout The timeout in milliseconds
  * @param clientInfo The client/credentials info or `undefined` if no credentials are needed
  */
-export declare function sendRequestWithTimeout(context: IActionContext, options: AzExtRequestPrepareOptions, timeout: number, clientInfo: AzExtGenericClientInfo): Promise<PipelineResponse>;
+export declare function sendRequestWithTimeout(context: IActionContext, options: AzExtRequestPrepareOptions, timeout: number, clientInfo: AzExtGenericClientInfo): Promise<AzExtPipelineResponse>;
 
 export type AzExtClientType<T extends ServiceClient> = new (credentials: AzExtServiceClientCredentials, subscriptionId: string, options?: ServiceClientOptions) => T;
 
@@ -418,3 +422,19 @@ export function parseAzureResourceId(id: string): ParsedAzureResourceId;
 export function getResourceGroupFromId(id: string): string;
 
 export declare function createPortalUri(subscription: AzureSubscription, id: string, options?: OpenInPortalOptions): Uri;
+
+/**
+ * Pipe Azure SDK logs into the provided log outptut channel using the @azure/logger package.
+ *
+ * @param logOutputChannel - log output channel to pipe logs into
+ */
+export function setupAzureLogger(logOutputChannel: LogOutputChannel): Disposable;
+
+/**
+ * Replaces the usage of BasicAuthenticationCredentials for ServiceClients imported from @azure/core-pipelines
+ *
+ * @param client - The service client. This will typically be a generalClient
+ * @param userName - Username to be used with basic authentication login
+ * @param password - Password. Gets encoded before being set in the header
+ */
+export function addBasicAuthenticationCredentialsToClient(client: ServiceClient, userName: string, password: string): void;

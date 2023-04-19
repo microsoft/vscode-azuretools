@@ -44,12 +44,15 @@ export * from './utils/credentialUtils';
 export * from './utils/findFreePort';
 export * from './utils/nonNull';
 export * from './utils/openUrl';
+export * from './utils/randomUtils'
 export * from './wizard/AzureNameStep';
 export * from './wizard/AzureWizard';
 export * from './wizard/AzureWizardExecuteStep';
 export * from './wizard/AzureWizardPromptStep';
 export * from './wizard/ConfirmPreviousInputStep';
 export * from './wizard/DeleteConfirmationStep';
+export * from './tree/v2/TreeElementStateManager';
+export * from './tree/v2/createGenericElement';
 // re-export api types and utils
 export { apiUtils, GetApiOptions, AzureExtensionApi } from '@microsoft/vscode-azureresources-api';
 // NOTE: The auto-fix action "source.organizeImports" does weird things with this file, but there doesn't seem to be a way to disable it on a per-file basis so we'll just let it happen
