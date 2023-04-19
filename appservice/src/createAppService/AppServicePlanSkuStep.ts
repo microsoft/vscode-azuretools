@@ -5,7 +5,7 @@
 
 import type { SkuDescription } from '@azure/arm-appservice';
 import { AzureWizardPromptStep, IAzureQuickPickItem, nonNullProp } from '@microsoft/vscode-azext-utils';
-import { localize } from '../localize';
+import * as vscode from 'vscode';
 import { openUrl } from '../utils/openUrl';
 import { AppKind, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
@@ -32,14 +32,14 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
                 label: s.label || nonNullProp(s, 'name'),
                 description: s.description || s.tier,
                 data: s,
-                group: s.group || localize('additionalOptionsLabel', 'Additional Options')
+                group: s.group || vscode.l10n.t('Additional Options')
             };
         });
 
-        pricingTiers.push({ label: localize('ShowPricingCalculator', '$(link-external) Show pricing information...'), data: undefined, suppressPersistence: true });
+        pricingTiers.push({ label: vscode.l10n.t('$(link-external) Show pricing information...'), data: undefined, suppressPersistence: true });
 
         while (!context.newPlanSku) {
-            const placeHolder = localize('pricingTierPlaceholder', 'Select a pricing tier');
+            const placeHolder = vscode.l10n.t('Select a pricing tier');
             context.newPlanSku = (await context.ui.showQuickPick(pricingTiers, { placeHolder, suppressPersistence: true, enableGrouping: context.advancedCreation })).data;
 
             if (!context.newPlanSku) {
@@ -59,7 +59,7 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
     }
 
     private getRecommendedSkus(): ExtendedSkuDescription[] {
-        const recommendedGroup: string = localize('recommendedGroup', 'Recommended');
+        const recommendedGroup: string = vscode.l10n.t('Recommended');
         return [
             {
                 name: 'F1',
@@ -67,8 +67,8 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
                 size: 'F1',
                 family: 'F',
                 capacity: 1,
-                label: localize('freeLabel', 'Free (F1)'),
-                description: localize('freeDescription', 'Try out Azure at no cost'),
+                label: vscode.l10n.t('Free (F1)'),
+                description: vscode.l10n.t('Try out Azure at no cost'),
                 group: recommendedGroup
             },
             {
@@ -77,8 +77,8 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
                 size: 'B1',
                 family: 'B',
                 capacity: 1,
-                label: localize('basicLabel', 'Basic (B1)'),
-                description: localize('basicDescription', 'Develop and test'),
+                label: vscode.l10n.t('Basic (B1)'),
+                description: vscode.l10n.t('Develop and test'),
                 group: recommendedGroup
             },
             {
@@ -87,8 +87,8 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
                 size: 'P1v2',
                 family: 'Pv2',
                 capacity: 1,
-                label: localize('premiumLabel', 'Premium (P1v2)'),
-                description: localize('premiumDescription', 'Use in production'),
+                label: vscode.l10n.t('Premium (P1v2)'),
+                description: vscode.l10n.t('Use in production'),
                 group: recommendedGroup
             }
         ];

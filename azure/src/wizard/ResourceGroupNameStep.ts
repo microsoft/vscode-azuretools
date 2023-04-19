@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as types from '../../index';
-import { localize } from '../localize';
 import { AzureWizardPromptStep } from '@microsoft/vscode-azext-utils';
+import * as vscode from 'vscode';
+import * as types from '../../index';
 import { ResourceGroupListStep, resourceGroupNamingRules } from './ResourceGroupListStep';
 
 export class ResourceGroupNameStep<T extends types.IResourceGroupWizardContext> extends AzureWizardPromptStep<T> implements types.ResourceGroupNameStep<T> {
@@ -27,13 +27,13 @@ export class ResourceGroupNameStep<T extends types.IResourceGroupWizardContext> 
         name = name.trim();
 
         if (name.length < resourceGroupNamingRules.minLength || name.length > resourceGroupNamingRules.maxLength) {
-            return localize('invalidLength', 'The name must be between {0} and {1} characters.', resourceGroupNamingRules.minLength, resourceGroupNamingRules.maxLength);
+            return vscode.l10n.t('The name must be between {0} and {1} characters.', resourceGroupNamingRules.minLength, resourceGroupNamingRules.maxLength);
         } else if (name.match(resourceGroupNamingRules.invalidCharsRegExp) !== null) {
-            return localize('invalidChars', "The name can only contain alphanumeric characters or the symbols ._-()");
+            return vscode.l10n.t("The name can only contain alphanumeric characters or the symbols ._-()");
         } else if (name.endsWith('.')) {
-            return localize('invalidEndingChar', "The name cannot end in a period.");
+            return vscode.l10n.t("The name cannot end in a period.");
         } else if (!await ResourceGroupListStep.isNameAvailable(wizardContext, name)) {
-            return localize('nameAlreadyExists', 'Resource group "{0}" already exists in subscription "{1}".', name, wizardContext.subscriptionDisplayName);
+            return vscode.l10n.t('Resource group "{0}" already exists in subscription "{1}".', name, wizardContext.subscriptionDisplayName);
         } else {
             return undefined;
         }

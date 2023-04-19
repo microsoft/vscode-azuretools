@@ -5,8 +5,8 @@
 
 import type { StringDictionary } from "@azure/arm-appservice";
 import { IActionContext } from "@microsoft/vscode-azext-utils";
+import * as vscode from 'vscode';
 import { ext } from "./extensionVariables";
-import { localize } from "./localize";
 import { ParsedSite } from "./SiteClient";
 
 // prior to git deploying, these settings must be deleted or it will fail
@@ -18,7 +18,7 @@ export async function verifyNoRunFromPackageSetting(context: IActionContext, sit
     for (const settingName of runFromPackageSettings) {
         if (applicationSettings.properties && applicationSettings.properties[settingName]) {
             delete applicationSettings.properties[settingName];
-            ext.outputChannel.appendLog(localize('deletingSetting', 'Deleting setting "{0}"...', settingName), { resourceName: site.fullName });
+            ext.outputChannel.appendLog(vscode.l10n.t('Deleting setting "{0}"...', settingName), { resourceName: site.fullName });
             updateSettings = true;
         }
     }

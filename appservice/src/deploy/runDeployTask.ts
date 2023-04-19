@@ -6,7 +6,6 @@
 import { IActionContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import { ext } from '../extensionVariables';
-import { localize } from '../localize';
 import { ScmType } from '../ScmType';
 import { taskUtils } from '../utils/taskUtils';
 import { IDeployContext } from './IDeployContext';
@@ -31,7 +30,7 @@ export async function tryRunPreDeployTask(context: IDeployContext, deployFsPath:
         const task: vscode.Task | undefined = await taskUtils.findTask(deployFsPath, taskName);
         context.telemetry.properties.foundPreDeployTask = String(!!task);
         if (task) {
-            const progressMessage: string = localize('runningTask', 'Running preDeployTask "{0}"...', taskName);
+            const progressMessage: string = vscode.l10n.t('Running preDeployTask "{0}"...', taskName);
             await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: progressMessage }, async () => {
                 await taskUtils.executeIfNotActive(task);
                 preDeployTaskResult = await waitForPreDeployTask(task, deployFsPath);
@@ -58,9 +57,9 @@ export async function startPostDeployTask(context: IDeployContext, deployFsPath:
         context.telemetry.properties.foundPostDeployTask = String(!!task);
         if (task) {
             await taskUtils.executeIfNotActive(task);
-            ext.outputChannel.appendLog(localize('startedPostDeployTask', 'Started {0} "{1}".', settingKey, taskName), { resourceName });
+            ext.outputChannel.appendLog(vscode.l10n.t('Started {0} "{1}".', settingKey, taskName), { resourceName });
         } else {
-            ext.outputChannel.appendLog(localize('noPostDeployTask', 'WARNING: Failed to find {0} "{1}".', settingKey, taskName), { resourceName });
+            ext.outputChannel.appendLog(vscode.l10n.t('WARNING: Failed to find {0} "{1}".', settingKey, taskName), { resourceName });
         }
     }
 }
@@ -75,7 +74,7 @@ function shouldExecuteTask(context: IDeployContext, scmType: string | undefined,
     // We don't run deploy tasks for non-zipdeploy since that stuff should be handled by kudu
     const shouldExecute: boolean = context.deployMethod === 'storage' || context.deployMethod === 'zip' || (scmType !== ScmType.LocalGit && scmType !== ScmType.GitHub);
     if (!shouldExecute) {
-        ext.outputChannel.appendLog(localize('ignoringDeployTask', 'WARNING: Ignoring {0} "{1}" for non-zip deploy.', settingKey, taskName));
+        ext.outputChannel.appendLog(vscode.l10n.t('WARNING: Ignoring {0} "{1}" for non-zip deploy.', settingKey, taskName));
     }
     return shouldExecute;
 }
@@ -99,9 +98,10 @@ async function waitForPreDeployTask(preDeployTask: vscode.Task, deployFsPath: st
 }
 
 export async function handleFailedPreDeployTask(context: IActionContext, preDeployResult: IPreDeployTaskResult): Promise<void> {
-    const message: string = localize('taskFailed', 'Errors exist after running preDeployTask "{0}". See task output for more info.', preDeployResult.taskName);
-    const deployAnyway: vscode.MessageItem = { title: localize('deployAnyway', 'Deploy Anyway') };
-    const openSettings: vscode.MessageItem = { title: localize('openSettings', 'Open Settings') };
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const message: string = vscode.l10n.t('Errors exist after running preDeployTask "{0}". See task output for more info.', preDeployResult.taskName!);
+    const deployAnyway: vscode.MessageItem = { title: vscode.l10n.t('Deploy Anyway') };
+    const openSettings: vscode.MessageItem = { title: vscode.l10n.t('Open Settings') };
     const result: vscode.MessageItem | undefined = await vscode.window.showErrorMessage(message, { modal: true }, deployAnyway, openSettings);
     if (result === deployAnyway) {
         context.telemetry.properties.preDeployTaskResponse = 'deployAnyway';

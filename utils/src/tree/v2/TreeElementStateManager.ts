@@ -4,9 +4,8 @@
 *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { createGenericElement } from './createGenericElement';
 import * as types from '../../../index';
-import { localize } from '../../localize';
+import { createGenericElement } from './createGenericElement';
 
 export class TreeElementStateManager<TElement extends types.TreeElementWithId = types.TreeElementWithId> implements vscode.Disposable {
     private readonly store: Record<string, types.TreeElementStateModel | undefined> = {};
@@ -26,7 +25,7 @@ export class TreeElementStateManager<TElement extends types.TreeElementWithId = 
     }
 
     async showDeleting(id: string, callback: () => Promise<void>): Promise<void> {
-        await this.runWithTemporaryDescription(id, localize('deleting', 'Deleting...'), callback, true);
+        await this.runWithTemporaryDescription(id, vscode.l10n.t('Deleting...'), callback, true);
     }
 
     async showCreatingChild<T = void>(id: string, label: string, callback: () => Promise<T>): Promise<T> {

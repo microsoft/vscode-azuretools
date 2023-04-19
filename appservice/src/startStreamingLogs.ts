@@ -13,7 +13,6 @@ import { setInterval } from 'timers';
 import * as vscode from 'vscode';
 import { ParsedSite } from './SiteClient';
 import { ext } from './extensionVariables';
-import { localize } from './localize';
 import { pingFunctionApp } from './pingFunctionApp';
 
 export interface ILogStream extends vscode.Disposable {
@@ -32,15 +31,15 @@ export async function startStreamingLogs(context: IActionContext, site: ParsedSi
     const logStream: ILogStream | undefined = logStreams.get(logStreamId);
     if (logStream && logStream.isConnected) {
         logStream.outputChannel.show();
-        void context.ui.showWarningMessage(localize('logStreamAlreadyActive', 'The log-streaming service for "{0}" is already active.', logStreamLabel));
+        void context.ui.showWarningMessage(vscode.l10n.t('The log-streaming service for "{0}" is already active.', logStreamLabel));
         return logStream;
     } else {
         await verifyLoggingEnabled();
 
-        const outputChannel: vscode.OutputChannel = logStream ? logStream.outputChannel : vscode.window.createOutputChannel(localize('logStreamLabel', '{0} - Log Stream', logStreamLabel));
+        const outputChannel: vscode.OutputChannel = logStream ? logStream.outputChannel : vscode.window.createOutputChannel(vscode.l10n.t('{0} - Log Stream', logStreamLabel));
         ext.context.subscriptions.push(outputChannel);
         outputChannel.show();
-        outputChannel.appendLine(localize('connectingToLogStream', 'Connecting to log stream...'));
+        outputChannel.appendLine(vscode.l10n.t('Connecting to log stream...'));
 
         const client = await site.createClient(context);
         const creds: User = await client.getWebAppPublishCredential();
@@ -78,7 +77,7 @@ export async function startStreamingLogs(context: IActionContext, site: ParsedSi
                             if (timerId) {
                                 clearInterval(timerId);
                             }
-                            outputChannel.appendLine(localize('logStreamDisconnected', 'Disconnected from log-streaming service.'));
+                            outputChannel.appendLine(vscode.l10n.t('Disconnected from log-streaming service.'));
                             newLogStream.isConnected = false;
                             void onLogStreamEnded();
                         },
@@ -94,7 +93,7 @@ export async function startStreamingLogs(context: IActionContext, site: ParsedSi
                         }
                         newLogStream.isConnected = false;
                         outputChannel.show();
-                        outputChannel.appendLine(localize('logStreamError', 'Error connecting to log-streaming service:'));
+                        outputChannel.appendLine(vscode.l10n.t('Error connecting to log-streaming service:'));
                         outputChannel.appendLine(parseError(err).message);
                         reject(err);
                     }).on('complete', () => {
@@ -115,6 +114,6 @@ export async function stopStreamingLogs(site: ParsedSite, logsPath: string = '')
     if (logStream && logStream.isConnected) {
         logStream.dispose();
     } else {
-        await vscode.window.showWarningMessage(localize('alreadyDisconnected', 'The log-streaming service is already disconnected.'));
+        await vscode.window.showWarningMessage(vscode.l10n.t('The log-streaming service is already disconnected.'));
     }
 }

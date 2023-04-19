@@ -3,11 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken, Disposable, Event, EventEmitter, ThemeIcon, TreeItem, TreeView } from 'vscode';
+import { CancellationToken, Disposable, Event, EventEmitter, l10n, ThemeIcon, TreeItem, TreeView } from 'vscode';
 import * as types from '../../index';
 import { callWithTelemetryAndErrorHandling } from '../callWithTelemetryAndErrorHandling';
 import { NoResourceFoundError, UserCancelledError } from '../errors';
-import { localize } from '../localize';
 import { parseError } from '../parseError';
 import { addTreeItemValuesToMask } from './addTreeItemValuesToMask';
 import { AzExtParentTreeItem, InvalidTreeItem } from './AzExtParentTreeItem';
@@ -114,7 +113,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
 
                 const result: AzExtTreeItem[] = Array.from(resultMap.values());
                 result.push(...duplicateChildren.map(c => {
-                    const message: string = localize('elementWithId', 'An element with the following id already exists: {0}', c.fullId);
+                    const message: string = l10n.t('An element with the following id already exists: {0}', c.fullId);
                     return new InvalidTreeItem(treeItem, new Error(message), { contextValue: 'azureextensionui.duplicate', label: c.label });
                 }));
 
@@ -134,7 +133,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
             });
         } catch (error) {
             return [new GenericTreeItem(arg, {
-                label: localize('errorTreeItem', 'Error: {0}', parseError(error).message),
+                label: l10n.t('Error: {0}', parseError(error).message),
                 contextValue: 'azureextensionui.error'
             })];
         }

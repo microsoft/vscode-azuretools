@@ -240,17 +240,6 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                     }]
                 },
 
-                // Note: If you use`vscode-nls` to localize your extension than you likely also use`vscode-nls-dev` to create language bundles at build time.
-                // To support webpack, a loader has been added to vscode-nls-dev .Add the section below to the`modules/rules` configuration.
-                // {
-                //     // vscode-nls-dev loader:
-                //     // * rewrite nls-calls
-                //     loader: require.resolve('vscode-nls-dev/lib/webpack-loader'),
-                //     options: {
-                //         base: path.join(options.projectRoot, 'src')
-                //     }
-                // }
-
                 // Caller-supplied rules
                 ...(options.loaderRules || [])
             ]

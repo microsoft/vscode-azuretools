@@ -5,10 +5,10 @@
 
 import { apiUtils, AzureExtensionApi, GetApiOptions } from '@microsoft/vscode-azureresources-api';
 import * as semver from 'semver';
+import * as vscode from 'vscode';
 import { AzureExtensionApiFactory, IActionContext } from '../index';
 import { callWithTelemetryAndErrorHandlingSync } from './callWithTelemetryAndErrorHandling';
 import { getPackageInfo } from './getPackageInfo';
-import { localize } from './localize';
 
 function isAzureExtensionApiFactory(maybeAzureExtensionApiFactory: AzureExtensionApiFactory | AzureExtensionApi): maybeAzureExtensionApiFactory is AzureExtensionApiFactory {
     return (<AzureExtensionApiFactory>maybeAzureExtensionApiFactory).createApi !== undefined;
@@ -17,7 +17,7 @@ function isAzureExtensionApiFactory(maybeAzureExtensionApiFactory: AzureExtensio
 export function createApiProvider(azExts: (AzureExtensionApiFactory | AzureExtensionApi)[]): apiUtils.AzureExtensionApiProvider {
     for (const azExt of azExts) {
         if (!semver.valid(azExt.apiVersion)) {
-            throw new Error(localize('invalidVersion', 'Invalid semver "{0}".', azExt.apiVersion));
+            throw new Error(vscode.l10n.t('Invalid semver "{0}".', azExt.apiVersion));
         }
     }
     const extensionId: string = getPackageInfo().extensionId;
@@ -68,11 +68,11 @@ function getApiInternal<T extends AzureExtensionApi>(azExts: AzureExtensionApiFa
             let code: ApiVersionCode;
             if (minApiVersion && semver.gtr(minApiVersion, apiVersionRange)) {
                 // This case will hopefully never happen if we maintain backwards compat
-                message = localize('notSupported', 'API version "{0}" for extension id "{1}" is no longer supported. Minimum version is "{2}".', apiVersionRange, extensionId, minApiVersion);
+                message = vscode.l10n.t('API version "{0}" for extension id "{1}" is no longer supported. Minimum version is "{2}".', apiVersionRange, extensionId, minApiVersion);
                 code = 'NoLongerSupported';
             } else {
                 // This case is somewhat likely - so keep the error message simple and just tell user to update their extenion
-                message = localize('updateExtension', 'Extension dependency with id "{0}" must be updated.', extensionId);
+                message = vscode.l10n.t('Extension dependency with id "{0}" must be updated.', extensionId);
                 code = 'NotYetSupported';
             }
 

@@ -13,8 +13,8 @@ import * as relativeTime from 'dayjs/plugin/relativeTime';
 // eslint-disable-next-line import/no-internal-modules
 import * as utc from 'dayjs/plugin/utc';
 import { URL } from 'url';
+import * as vscode from 'vscode';
 import { ext } from '../extensionVariables';
-import { localize } from '../localize';
 import { ParsedSite } from '../SiteClient';
 import { randomUtils } from '../utils/randomUtils';
 import { IDeployContext } from './IDeployContext';
@@ -43,7 +43,7 @@ export async function deployToStorageAccount(context: IDeployContext, fsPath: st
     delete appSettings.properties.WEBSITE_RUN_FROM_ZIP; // delete old app setting name if it exists
     appSettings.properties.WEBSITE_RUN_FROM_PACKAGE = blobUrl;
     await client.updateApplicationSettings(appSettings);
-    ext.outputChannel.appendLog(localize('deploymentSuccessful', 'Deployment successful.'), { resourceName: site.fullName });
+    ext.outputChannel.appendLog(vscode.l10n.t('Deployment successful.'), { resourceName: site.fullName });
 
     context.syncTriggersPostDeploy = true;
 }
@@ -73,7 +73,7 @@ async function createBlobServiceClient(context: IActionContext, site: ParsedSite
             }
         }
     } else {
-        throw new Error(localize('azureWebJobsStorageKey', '"{0}" app setting is required for Run From Package deployment.', azureWebJobsStorageKey));
+        throw new Error(vscode.l10n.t('"{0}" app setting is required for Run From Package deployment.', azureWebJobsStorageKey));
     }
 }
 
@@ -88,7 +88,7 @@ async function createBlobFromZip(context: IActionContext, fsPath: string, site: 
 
     await runWithZipStream(context, {
         fsPath, site, callback: async zipStream => {
-            ext.outputChannel.appendLog(localize('creatingBlob', 'Uploading zip package to storage container...'), { resourceName: site.fullName });
+            ext.outputChannel.appendLog(vscode.l10n.t('Uploading zip package to storage container...'), { resourceName: site.fullName });
             await blobClient.uploadStream(zipStream);
         }
     });

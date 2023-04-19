@@ -3,10 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as vscode from 'vscode';
 import { AzureSubscription } from '@microsoft/vscode-azureresources-api';
+import * as vscode from 'vscode';
 import { AzExtServiceClientCredentials, ISubscriptionContext } from '../../index';
-import { localize } from '../localize';
 
 /**
  * Converts a VS Code authentication session to an Azure Track 1 & 2 compatible compatible credential.
@@ -29,7 +28,7 @@ export function createCredential(getSession: (scopes?: string[]) => vscode.Provi
             }
         },
         signRequest: async () => {
-            throw new Error((localize('signRequestError', 'Track 1 credentials are not (currently) supported.')));
+            throw new Error((vscode.l10n.t('Track 1 credentials are not (currently) supported.')));
         }
     };
 }
