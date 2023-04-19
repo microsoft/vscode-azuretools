@@ -42,7 +42,7 @@
         "@types/fs-extra": "^9.0.13",
         "@types/mocha": "^9.0.0",
         "@types/node": "^16.0.0",
-        "@types/vscode": "1.64.0",
+        "@types/vscode": "1.76.0",
         "@typescript-eslint/eslint-plugin": "^5.53.0",
         "@vscode/test-electron": "^2.1.5",
         "eslint": "^8.34.0",

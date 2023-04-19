@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ExtendedLocation } from '@azure/arm-resources';
+import type { ExtendedLocation, Provider } from '@azure/arm-resources';
 import type { Location } from '@azure/arm-resources-subscriptions';
 import * as types from '../../index';
 import { createResourcesClient, createSubscriptionsClient } from '../clients';
@@ -214,7 +214,10 @@ async function getProviderLocations(wizardContext: types.ILocationWizardContext,
     const rgClient = await createResourcesClient(wizardContext);
     const providerData = await rgClient.providers.get(provider);
     const resourceTypeData = providerData.resourceTypes?.find(rt => rt.resourceType?.toLowerCase() === resourceType.toLowerCase());
-    return nonNullProp(nonNullValue(resourceTypeData, 'resourceTypeData'), 'locations');
+    if (!resourceTypeData) {
+        throw new ProviderResourceTypeNotFoundError(providerData, resourceType);
+    }
+    return nonNullProp(resourceTypeData, 'locations');
 }
 
 function compareLocation(l1: types.AzExtLocation, l2: types.AzExtLocation): number {
@@ -229,4 +232,10 @@ function compareLocation(l1: types.AzExtLocation, l2: types.AzExtLocation): numb
 
 function isRecommended(l: types.AzExtLocation): boolean {
     return l.metadata?.regionCategory?.toLowerCase() === 'recommended';
+}
+
+class ProviderResourceTypeNotFoundError extends Error {
+    constructor(provider: Provider, expectedResourceType: string) {
+        super(localize('noResourceType', 'Provider "{0}" does not have resource type "{1}".', provider.id, expectedResourceType));
+    }
 }

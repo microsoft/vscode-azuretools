@@ -9,11 +9,11 @@ export abstract class AzureWizardPromptStep<T extends types.IActionContext> impl
     public hideStepCount: boolean = false;
     public supportsDuplicateSteps: boolean = false;
     public effectiveTitle: string | undefined;
-    public hasSubWizard: boolean;
-    public numSubPromptSteps: number;
-    public numSubExecuteSteps: number;
-    public propertiesBeforePrompt: string[];
-    public prompted: boolean;
+    public hasSubWizard!: boolean;
+    public numSubPromptSteps!: number;
+    public numSubExecuteSteps!: number;
+    public propertiesBeforePrompt!: string[];
+    public prompted!: boolean;
     public id?: string;
 
     public abstract prompt(wizardContext: T): Promise<void>;

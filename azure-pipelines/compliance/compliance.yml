@@ -1,0 +1,49 @@
+steps:
+  - task: ComponentGovernanceComponentDetection@0
+    displayName: 'Component Governance Detection'
+
+  - task: securedevelopmentteam.vss-secure-development-tools.build-task-antimalware.AntiMalware@4
+    displayName: 'AntiMalware Scan'
+    inputs:
+      FileDirPath: '$(Build.SourcesDirectory)'
+      EnableServices: true
+    condition: eq(variables['Agent.OS'], 'Windows_NT')
+
+  - task: securedevelopmentteam.vss-secure-development-tools.build-task-policheck.PoliCheck@2
+    displayName: 'PoliCheck'
+    inputs:
+      targetType: F # search files and folders
+      optionsUEPATH: '$(Build.SourcesDirectory)/.azure-pipelines/compliance/PoliCheckExclusions.xml'
+    continueOnError: true
+    condition: eq(variables['Agent.OS'], 'Windows_NT')
+
+  - task: securedevelopmentteam.vss-secure-development-tools.build-task-credscan.CredScan@3
+    displayName: 'CredScan'
+    inputs:
+      toolMajorVersion: V2
+      suppressionsFile: '$(Build.SourcesDirectory)/.azure-pipelines/compliance/CredScanSuppressions.json'
+    continueOnError: true
+    condition: eq(variables['Agent.OS'], 'Windows_NT')
+
+  - task: securedevelopmentteam.vss-secure-development-tools.build-task-publishsecurityanalysislogs.PublishSecurityAnalysisLogs@3
+    displayName: 'Publish Security Analysis Logs'
+    condition: eq(variables['Agent.OS'], 'Windows_NT')
+
+  - task: securedevelopmentteam.vss-secure-development-tools.build-task-postanalysis.PostAnalysis@2
+    displayName: 'Post Analysis'
+    inputs:
+      AllTools: false
+      CredScan: true
+      PoliCheck: true
+    condition: eq(variables['Agent.OS'], 'Windows_NT')
+
+  - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
+    displayName: 'SBoM Generation Task'
+    inputs:
+      BuildDropPath: '$(build.artifactstagingdirectory)'
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish SBoM'
+    inputs:
+      PathtoPublish: '$(build.artifactstagingdirectory)/_manifest'
+      ArtifactName: '_manifest'
