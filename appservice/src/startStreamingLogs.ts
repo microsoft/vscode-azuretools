@@ -5,15 +5,16 @@
 
 import { AbortController } from '@azure/abort-controller';
 import type { User } from '@azure/arm-appservice';
-import { BasicAuthenticationCredentials, HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
-import { createGenericClient } from '@microsoft/vscode-azext-azureutils';
-import { callWithTelemetryAndErrorHandling, IActionContext, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
+import { ServiceClient } from '@azure/core-client';
+import { createPipelineRequest } from "@azure/core-rest-pipeline";
+import { AzExtPipelineResponse, addBasicAuthenticationCredentialsToClient, createGenericClient } from '@microsoft/vscode-azext-azureutils';
+import { IActionContext, callWithTelemetryAndErrorHandling, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
 import { setInterval } from 'timers';
 import * as vscode from 'vscode';
+import { ParsedSite } from './SiteClient';
 import { ext } from './extensionVariables';
 import { localize } from './localize';
 import { pingFunctionApp } from './pingFunctionApp';
-import { ParsedSite } from './SiteClient';
 
 export interface ILogStream extends vscode.Disposable {
     isConnected: boolean;
@@ -57,15 +58,16 @@ export async function startStreamingLogs(context: IActionContext, site: ParsedSi
                     timerId = setInterval(async () => await pingFunctionApp(streamContext, site), 60 * 1000);
                 }
 
-                const genericClient: ServiceClient = await createGenericClient(streamContext, new BasicAuthenticationCredentials(nonNullProp(creds, 'publishingUserName'), nonNullProp(creds, 'publishingPassword')));
+                const genericClient: ServiceClient = await createGenericClient(streamContext, undefined);
+
+                addBasicAuthenticationCredentialsToClient(genericClient, nonNullProp(creds, 'publishingUserName'), nonNullProp(creds, 'publishingPassword'));
                 const abortController: AbortController = new AbortController();
 
-                const logsResponse: HttpOperationResponse = await genericClient.sendRequest({
+                const logsResponse: AzExtPipelineResponse = await genericClient.sendRequest(createPipelineRequest({
                     method: 'GET',
                     url: `${site.kuduUrl}/api/logstream/${logsPath}`,
-                    streamResponseBody: true,
                     abortSignal: abortController.signal
-                });
+                }));
 
                 await new Promise<void>((onLogStreamEnded: () => void, reject: (err: Error) => void): void => {
                     const newLogStream: ILogStream = {
