@@ -4,12 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { SiteConfig, SiteSourceControl } from '@azure/arm-appservice';
-import { AzExtParentTreeItem, AzExtTreeItem, createContextValue, GenericTreeItem, IActionContext, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
-import { l10n, ThemeIcon } from 'vscode';
-import { KuduModels } from 'vscode-azurekudu';
-import { ext } from '../extensionVariables';
+import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, TreeItemIconPath, createContextValue } from '@microsoft/vscode-azext-utils';
+import { ThemeIcon, l10n } from 'vscode';
+import type { KuduModels } from 'vscode-azurekudu';
 import { ScmType } from '../ScmType';
 import { ParsedSite } from '../SiteClient';
+import { ext } from '../extensionVariables';
 import { retryKuduCall } from '../utils/kuduUtils';
 import { DeploymentTreeItem } from './DeploymentTreeItem';
 
