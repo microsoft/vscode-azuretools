@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import type { CheckNameAvailabilityResult, StorageManagementClient } from '@azure/arm-storage';
 import { AzureNameStep } from '@microsoft/vscode-azext-utils';
+import * as vscode from 'vscode';
 import * as types from '../../index';
-import type { CheckNameAvailabilityResult, StorageManagementClient, } from '@azure/arm-storage';
 import { createStorageClient } from '../clients';
 import { storageProviderType } from '../constants';
-import { localize } from '../localize';
 import { ResourceGroupListStep, resourceGroupNamingRules } from './ResourceGroupListStep';
 import { storageAccountNamingRules } from './StorageAccountListStep';
 
@@ -40,9 +40,9 @@ export class StorageAccountNameStep<T extends types.IStorageAccountWizardContext
     private async validateStorageAccountName(client: StorageManagementClient, name: string): Promise<string | undefined> {
         name = name.trim();
         if (!name || name.length < storageAccountNamingRules.minLength || name.length > storageAccountNamingRules.maxLength) {
-            return localize('invalidLength', 'The name must be between {0} and {1} characters.', storageAccountNamingRules.minLength, storageAccountNamingRules.maxLength);
+            return vscode.l10n.t('The name must be between {0} and {1} characters.', storageAccountNamingRules.minLength, storageAccountNamingRules.maxLength);
         } else if (name.match(storageAccountNamingRules.invalidCharsRegExp) !== null) {
-            return localize('invalidChars', "The name can only contain lowercase letters and numbers.");
+            return vscode.l10n.t("The name can only contain lowercase letters and numbers.");
         } else {
             const nameAvailabilityResult: CheckNameAvailabilityResult = await client.storageAccounts.checkNameAvailability({ name, type: storageProviderType });
             if (!nameAvailabilityResult.nameAvailable) {

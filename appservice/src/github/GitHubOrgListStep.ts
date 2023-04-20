@@ -4,13 +4,13 @@
 //  *--------------------------------------------------------------------------------------------*/
 
 // import { AzureWizardPromptStep, IAzureQuickPickItem } from '@microsoft/vscode-azext-utils';
-// import { localize } from '../localize';
+// import * as vscode from 'vscode';
 // import { createQuickPickFromJsons, getGitHubJsonResponse, gitHubOrgData } from './connectToGitHub';
 // import { IConnectToGitHubWizardContext } from './IConnectToGitHubWizardContext';
 
 // export class GitHubOrgListStep extends AzureWizardPromptStep<IConnectToGitHubWizardContext> {
 //     public async prompt(context: IConnectToGitHubWizardContext): Promise<void> {
-//         const placeHolder: string = localize('chooseOrg', 'Choose organization.');
+//         const placeHolder: string = vscode.l10n.t('Choose organization.');
 //         context.orgData = (await context.ui.showQuickPick(this.getOrganizations(context), { placeHolder })).data;
 //     }
 

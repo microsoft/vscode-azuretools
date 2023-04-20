@@ -4,8 +4,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CheckNameAvailabilityResponse } from "@azure/arm-appservice";
-import { ServiceClient } from '@azure/core-client';
+import type { CheckNameAvailabilityResponse } from "@azure/arm-appservice";
+import type { ServiceClient } from '@azure/core-client';
 import { createPipelineRequest } from "@azure/core-rest-pipeline";
 import { AzExtPipelineResponse } from "@microsoft/vscode-azext-azureutils";
 

@@ -4,11 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { PickFilter } from '../PickFilter';
-import { ResourceGroupsItem, SubscriptionItem } from './tempTypes';
-import { localize } from '../../localize';
 import { AzureResourceQuickPickWizardContext, GenericQuickPickOptions, SkipIfOneQuickPickOptions } from '../../../index';
 import { GenericQuickPickStepWithCommands } from '../GenericQuickPickStepWithCommands';
+import { PickFilter } from '../PickFilter';
+import { ResourceGroupsItem, SubscriptionItem } from './tempTypes';
 
 export class QuickPickAzureSubscriptionStep extends GenericQuickPickStepWithCommands<AzureResourceQuickPickWizardContext, SkipIfOneQuickPickOptions> {
     public constructor(tdp: vscode.TreeDataProvider<ResourceGroupsItem>, options?: GenericQuickPickOptions) {
@@ -16,8 +15,8 @@ export class QuickPickAzureSubscriptionStep extends GenericQuickPickStepWithComm
             ...options,
             skipIfOne: true, // Subscription is always skip-if-one
         }, {
-            placeHolder: localize('selectSubscription', 'Select subscription'),
-            noPicksMessage: localize('noSubscriptions', 'No subscriptions found'),
+            placeHolder: vscode.l10n.t('Select subscription'),
+            noPicksMessage: vscode.l10n.t('No subscriptions found'),
         });
     }
 

@@ -5,11 +5,10 @@
 
 import { IAzureUtilsExtensionVariables, registerAzureUtilsExtensionVariables } from "@microsoft/vscode-azext-azureutils";
 import { IAzExtOutputChannel, IAzureUserInput, registerUIExtensionVariables, UIExtensionVariables } from "@microsoft/vscode-azext-utils";
-import { ExtensionContext } from "vscode";
-import { localize } from "./localize";
+import { ExtensionContext, l10n } from "vscode";
 
 class UninitializedExtensionVariables implements UIExtensionVariables, IAzureUtilsExtensionVariables {
-    private _error: Error = new Error(localize('uninitializedError', '"registerUIExtensionVariables" must be called before using the vscode-azureappservice package.'));
+    private _error: Error = new Error(l10n.t('"registerUIExtensionVariables" must be called before using the vscode-azureappservice package.'));
 
     public get context(): ExtensionContext {
         throw this._error;

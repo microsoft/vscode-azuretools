@@ -4,11 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { SiteConfigResource, User } from '@azure/arm-appservice';
-import { IActionContext, IAzureQuickPickItem, IAzureQuickPickOptions, ISubscriptionContext, nonNullProp, UserCancelledError } from '@microsoft/vscode-azext-utils';
-import { window } from 'vscode';
+import { IActionContext, IAzureQuickPickItem, IAzureQuickPickOptions, ISubscriptionContext, UserCancelledError, nonNullProp } from '@microsoft/vscode-azext-utils';
+import { l10n, window } from 'vscode';
 import { ext } from './extensionVariables';
 // import { connectToGitHub } from './github/connectToGitHub';
-import { localize } from './localize';
 import { ScmType } from './ScmType';
 import { ParsedSite } from './SiteClient';
 
@@ -16,7 +15,7 @@ export async function editScmType(context: IActionContext, site: ParsedSite, sub
     const client = await site.createClient(context);
     if (site.isLinux && await client.getIsConsumption(context)) {
         context.errorHandling.suppressReportIssue = true;
-        throw new Error(localize('noEditScmOnLinuxCons', 'Linux consumption plans only support zip deploy. See [here](https://aka.ms/AA7avjx) for more information.'));
+        throw new Error(l10n.t('Linux consumption plans only support zip deploy. See [here](https://aka.ms/AA7avjx) for more information.'));
     }
 
     const config: SiteConfigResource = await client.getSiteConfig();
@@ -33,7 +32,7 @@ export async function editScmType(context: IActionContext, site: ParsedSite, sub
         await client.updateConfiguration(config);
     }
     if (showToast) {
-        const scmTypeUpdated: string = localize('deploymentSourceUpdated,', 'Deployment source for "{0}" has been updated to "{1}".', site.fullName, newScmType);
+        const scmTypeUpdated: string = l10n.t('Deployment source for "{0}" has been updated to "{1}".', site.fullName, newScmType);
         ext.outputChannel.appendLog(scmTypeUpdated);
         void window.showInformationMessage(scmTypeUpdated);
     }
@@ -43,7 +42,7 @@ export async function editScmType(context: IActionContext, site: ParsedSite, sub
         if (user.publishingUserName) {
             // first time users must set up deployment credentials via the Portal or they will not have a UserName
             const gitCloneUri: string = `https://${user.publishingUserName}@${site.gitUrl}`;
-            ext.outputChannel.appendLog(localize('gitCloneUri', 'Git Clone Uri for "{0}": "{1}"', site.fullName, gitCloneUri));
+            ext.outputChannel.appendLog(l10n.t('Git Clone Uri for "{0}": "{1}"', site.fullName, gitCloneUri));
         }
     }
     // returns the updated scmType
@@ -51,7 +50,7 @@ export async function editScmType(context: IActionContext, site: ParsedSite, sub
 }
 
 async function showScmPrompt(context: IActionContext, currentScmType: string): Promise<ScmType> {
-    const currentSource: string = localize('currentSource', '(Current source)');
+    const currentSource: string = l10n.t('(Current source)');
     const scmQuickPicks: IAzureQuickPickItem<ScmType | undefined>[] = [];
     // generate quickPicks to not include current type
     for (const key of Object.keys(ScmType)) {
@@ -65,7 +64,7 @@ async function showScmPrompt(context: IActionContext, currentScmType: string): P
     }
 
     const options: IAzureQuickPickOptions = {
-        placeHolder: localize('scmPrompt', 'Select a new source.'),
+        placeHolder: l10n.t('Select a new source.'),
         suppressPersistence: true,
         stepName: 'editScmType'
     };

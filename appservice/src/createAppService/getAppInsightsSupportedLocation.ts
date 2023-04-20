@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { Provider, ProviderResourceType, ResourceManagementClient } from '@azure/arm-resources';
-import { ServiceClient } from '@azure/core-client';
+import type { ServiceClient } from '@azure/core-client';
 import { createPipelineRequest } from '@azure/core-rest-pipeline';
 import { AzExtLocation, AzExtPipelineResponse, createGenericClient } from "@microsoft/vscode-azext-azureutils";
 import { IActionContext, nonNullProp } from "@microsoft/vscode-azext-utils";

@@ -5,9 +5,9 @@
 
 import type { ResourceGroup, ResourceManagementClient } from '@azure/arm-resources';
 import { AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, nonNullProp } from '@microsoft/vscode-azext-utils';
+import * as vscode from 'vscode';
 import * as types from '../../index';
 import { createResourcesClient } from '../clients';
-import { localize } from '../localize';
 import { uiUtils } from '../utils/uiUtils';
 import { LocationListStep } from './LocationListStep';
 import { ResourceGroupCreateStep } from './ResourceGroupCreateStep';
@@ -74,7 +74,7 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
 
         if (!this._suppressCreate) {
             picks.push({
-                label: localize('NewResourceGroup', '$(plus) Create new resource group'),
+                label: vscode.l10n.t('$(plus) Create new resource group'),
                 description: '',
                 data: undefined
             });

@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { nonNullProp, AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, openUrl } from '@microsoft/vscode-azext-utils';
 import type { StorageAccount, StorageManagementClient } from '@azure/arm-storage';
+import { AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, nonNullProp, openUrl } from '@microsoft/vscode-azext-utils';
+import * as vscode from 'vscode';
 import * as types from '../../index';
 import { createStorageClient } from '../clients';
 import { storageProvider, storageProviderType } from '../constants';
-import { localize } from '../localize';
+import { uiUtils } from '../utils/uiUtils';
 import { LocationListStep } from './LocationListStep';
 import { ResourceGroupListStep } from './ResourceGroupListStep';
 import { StorageAccountCreateStep } from './StorageAccountCreateStep';
 import { StorageAccountNameStep } from './StorageAccountNameStep';
-import { uiUtils } from '../utils/uiUtils';
 
 export const storageAccountNamingRules: IAzureNamingRules = {
     minLength: 3,
@@ -105,7 +105,7 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
 
     private async getQuickPicks(wizardContext: T, storageAccountsTask: Promise<StorageAccount[]>): Promise<IAzureQuickPickItem<StorageAccount | undefined>[]> {
         const picks: IAzureQuickPickItem<StorageAccount | undefined>[] = [{
-            label: localize('NewStorageAccount', '$(plus) Create new storage account'),
+            label: vscode.l10n.t('$(plus) Create new storage account'),
             description: '',
             data: undefined
         }];
@@ -144,7 +144,7 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
 
         if (hasFilteredAccountsBySku && this._filters.learnMoreLink) {
             picks.push({
-                label: localize('hasFilteredAccountsBySku', '$(info) Some storage accounts were filtered because of their sku. Learn more...'),
+                label: vscode.l10n.t('$(info) Some storage accounts were filtered because of their sku. Learn more...'),
                 onPicked: async () => {
                     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                     await openUrl(this._filters.learnMoreLink!);
@@ -155,7 +155,7 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
 
         if (hasFilteredAccountsByLocation && location) {
             picks.push({
-                label: localize('hasFilteredAccountsByLocation', '$(warning) Only storage accounts in the region "{0}" are shown.', location.displayName),
+                label: vscode.l10n.t('$(warning) Only storage accounts in the region "{0}" are shown.', location.displayName),
                 onPicked: () => { /* do nothing */ },
                 data: undefined
             });

@@ -9,7 +9,6 @@ import { ProgressLocation } from 'vscode';
 import * as types from '../../index';
 import { ExecuteActivity } from '../activityLog/activities/ExecuteActivity';
 import { GoBackError, UserCancelledError } from '../errors';
-import { localize } from '../localize';
 import { parseError } from '../parseError';
 import { IInternalActionContext, IInternalAzureWizard } from '../userInput/IInternalActionContext';
 import { createQuickPick } from '../userInput/showQuickPick';
@@ -93,7 +92,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
 
                 if (step.shouldPrompt(this._context)) {
                     const loadingQuickPick = this._showLoadingPrompt ? createQuickPick(this._context, {
-                        loadingPlaceHolder: localize('loading', 'Loading...')
+                        loadingPlaceHolder: vscode.l10n.t('Loading...')
                     }) : undefined;
 
                     const disposables: vscode.Disposable[] = [];

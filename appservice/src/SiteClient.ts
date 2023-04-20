@@ -4,12 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { AppServicePlan, FunctionEnvelope, FunctionSecrets, HostKeys, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SlotConfigNamesResource, SourceControl, StringDictionary, User, WebAppsListFunctionKeysResponse, WebJob, WebSiteInstanceStatus, WebSiteManagementClient } from '@azure/arm-appservice';
-import { ServiceClient } from '@azure/core-client';
+import type { ServiceClient } from '@azure/core-client';
 import { RequestBodyType, createHttpHeaders, createPipelineRequest } from '@azure/core-rest-pipeline';
 import { AppSettingsClientProvider, IAppSettingsClient } from '@microsoft/vscode-azext-azureappsettings';
 import { AzExtPipelineResponse, createGenericClient, uiUtils } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, ISubscriptionContext, nonNullProp, nonNullValue, parseError } from '@microsoft/vscode-azext-utils';
-import { KuduModels } from 'vscode-azurekudu';
+import type { KuduModels } from 'vscode-azurekudu';
 import { AppKind } from './createAppService/AppKind';
 import { tryGetAppServicePlan, tryGetWebApp, tryGetWebAppSlot } from './tryGetSiteResource';
 import { createWebSiteClient } from './utils/azureClients';
@@ -410,23 +410,21 @@ export class SiteClient implements IAppSettingsClient {
 
     public async vfsGetItem(context: IActionContext, path: string): Promise<AzExtPipelineResponse> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
-        const response: AzExtPipelineResponse = await client.sendRequest(createPipelineRequest({
+        return await client.sendRequest(createPipelineRequest({
             method: 'GET',
             url: `${this._site.kuduUrl}/api/vfs/${path}?api-version=2022-03-01`,
         }));
-        return response as AzExtPipelineResponse;
     }
 
     public async vfsPutItem(context: IActionContext, data: string | ArrayBuffer, path: string, rawHeaders?: {}): Promise<AzExtPipelineResponse> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
         const headers = createHttpHeaders(rawHeaders);
-        const response: AzExtPipelineResponse = await client.sendRequest(createPipelineRequest({
+        return await client.sendRequest(createPipelineRequest({
             method: 'PUT',
             url: `${this._site.kuduUrl}/api/vfs/${path}?api-version=2022-03-01`,
             body: typeof data === 'string' ? data : data.toString(),
             headers
         }));
-        return response as AzExtPipelineResponse;
     }
 
     /**
