@@ -7,7 +7,7 @@ import type { SiteSourceControl } from '@azure/arm-appservice';
 import { AzExtTreeItem, createContextValue, IActionContext, nonNullProp, openReadOnlyContent, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
 import * as os from 'os';
 import { l10n, ProgressLocation, ThemeIcon, window } from 'vscode';
-import type { KuduModels } from 'vscode-azurekudu';
+import type * as KuduModels from '../KuduModels';
 import { waitForDeploymentToComplete } from '../deploy/waitForDeploymentToComplete';
 import { ext } from '../extensionVariables';
 import { ignore404Error, retryKuduCall } from '../utils/kuduUtils';

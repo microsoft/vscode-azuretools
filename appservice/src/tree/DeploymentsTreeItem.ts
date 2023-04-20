@@ -6,7 +6,7 @@
 import type { SiteConfig, SiteSourceControl } from '@azure/arm-appservice';
 import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, TreeItemIconPath, createContextValue } from '@microsoft/vscode-azext-utils';
 import { ThemeIcon, l10n } from 'vscode';
-import type { KuduModels } from 'vscode-azurekudu';
+import type * as KuduModels from '../KuduModels';
 import { ScmType } from '../ScmType';
 import { ParsedSite } from '../SiteClient';
 import { ext } from '../extensionVariables';

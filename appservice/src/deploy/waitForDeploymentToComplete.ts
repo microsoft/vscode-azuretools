@@ -6,9 +6,9 @@
 import { sendRequestWithTimeout } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, IParsedError, nonNullProp, nonNullValue, parseError } from '@microsoft/vscode-azext-utils';
 import { CancellationToken, l10n, window } from 'vscode';
-import type { KuduModels } from 'vscode-azurekudu';
-import { ext } from '../extensionVariables';
+import type * as KuduModels from '../KuduModels';
 import { ParsedSite, SiteClient } from '../SiteClient';
+import { ext } from '../extensionVariables';
 import { delay } from '../utils/delay';
 import { ignore404Error, retryKuduCall } from '../utils/kuduUtils';
 import { IDeployContext } from './IDeployContext';
