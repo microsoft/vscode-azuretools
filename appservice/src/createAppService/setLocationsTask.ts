@@ -23,7 +23,7 @@ export async function setLocationsTask(context: IAppServiceWizardContext): Promi
 }
 
 export async function getWebLocations(context: IAppServiceWizardContext): Promise<string[]> {
-    let options: ListGeoRegionsOptionalParams = {};
+    const options: ListGeoRegionsOptionalParams = {};
     options['api-version'] = '2020-09-01';
     if (context.newSiteOS === WebsiteOS.linux) {
         if (context.newSiteKind === AppKind.functionapp && context.useConsumptionPlan) {
