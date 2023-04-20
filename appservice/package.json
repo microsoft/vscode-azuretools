@@ -36,7 +36,7 @@
         "@azure/arm-appinsights": "^5.0.0-beta.4",
         "@azure/arm-appservice": "^13.0.2",
         "@azure/arm-operationalinsights": "^8.0.1",
-        "@azure/arm-resourcegraph": "^4.2.1",
+        "@azure/arm-resourcegraph": "^5.0.0-beta.3",
         "@azure/arm-resources-subscriptions": "^2.0.1",
         "@azure/core-client": "^1.7.2",
         "@azure/core-rest-pipeline": "^1.10.3",
