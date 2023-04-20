@@ -4,7 +4,6 @@
 //  *--------------------------------------------------------------------------------------------*/
 
 // import type { SiteSourceControl } from '@azure/arm-appservice';
-// import { AccessToken, GetTokenOptions, TokenCredential } from '@azure/core-auth';
 // import { ServiceClient } from '@azure/core-client';
 // import { AzExtPipelineResponse, createGenericClient, openInPortal } from '@microsoft/vscode-azext-azureutils';
 // import { AzureWizard, DialogResponses, IAzureQuickPickItem, IParsedError, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
