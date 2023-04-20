@@ -27,9 +27,9 @@ export async function getWebLocations(context: IAppServiceWizardContext): Promis
     options['api-version'] = '2020-09-01';
     if (context.newSiteOS === WebsiteOS.linux) {
         if (context.newSiteKind === AppKind.functionapp && context.useConsumptionPlan) {
-            options = { linuxDynamicWorkersEnabled: true };
+            options.linuxDynamicWorkersEnabled = true;
         } else {
-            options = { linuxWorkersEnabled: true };
+            options.linuxWorkersEnabled = true;
         }
     }
 
