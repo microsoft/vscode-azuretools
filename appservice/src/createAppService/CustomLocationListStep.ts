@@ -37,7 +37,7 @@ export class CustomLocationListStep<T extends IAppServiceWizardContext> extends 
                     query: customLocationQuery,
                     subscriptions: [context.subscriptionId]
                 });
-                let customLocations = <CustomLocation[]>response.data;
+                let customLocations = response.data as unknown as CustomLocation[];
                 customLocations = customLocations.sort((a, b) => a.name.localeCompare(b.name));
                 context.telemetry.properties.hasCustomLoc = String(customLocations.length > 0);
                 picks.unshift(...customLocations.map(cl => {
