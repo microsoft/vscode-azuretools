@@ -10,7 +10,7 @@
 /**
  * An interface representing DeployResult.
  */
-export declare interface DeployResult {
+export interface DeployResult {
     id?: string;
     status?: number;
     statusText?: string;
@@ -35,7 +35,7 @@ export declare interface DeployResult {
 /**
  * An interface representing LogEntry.
  */
-export declare interface LogEntry {
+export interface LogEntry {
     logTime?: Date;
     id?: string;
     message?: string;
@@ -46,7 +46,7 @@ export declare interface LogEntry {
 /**
  * Optional Parameters.
  */
-export declare interface PushDeploymentZipPushDeployOptionalParams extends /*msRest.*/RequestOptionsBase {
+export interface PushDeploymentZipPushDeployOptionalParams extends /*msRest.*/RequestOptionsBase {
     isAsync?: boolean;
     author?: string;
     authorEmail?: string;
@@ -58,7 +58,7 @@ export declare interface PushDeploymentZipPushDeployOptionalParams extends /*msR
 /**
  * Optional Parameters.
  */
-export declare interface PushDeploymentWarPushDeployOptionalParams extends /*msRest.*/RequestOptionsBase {
+export interface PushDeploymentWarPushDeployOptionalParams extends /*msRest.*/RequestOptionsBase {
     isAsync?: boolean;
     author?: string;
     authorEmail?: string;
@@ -74,7 +74,7 @@ export declare interface PushDeploymentWarPushDeployOptionalParams extends /*msR
  * Allows the request to be aborted upon firing of the "abort" event.
  * Compatible with the browser built-in AbortSignal and common polyfills.
  */
-export declare interface AbortSignalLike {
+export interface AbortSignalLike {
     readonly aborted: boolean;
     dispatchEvent: (event: Event) => boolean;
     onabort: ((this: AbortSignalLike, ev: Event) => any) | null;
@@ -93,7 +93,7 @@ export declare interface AbortSignalLike {
 /**
  * Describes the base structure of the options object that will be used in every operation.
  */
-export declare interface RequestOptionsBase {
+export interface RequestOptionsBase {
     /**
      * @property {object} [customHeaders] User defined custom request headers that
      * will be applied before the request is sent.
@@ -126,7 +126,7 @@ export declare interface RequestOptionsBase {
 /**
  * Fired in response to upload or download progress.
  */
-export declare type TransferProgressEvent = {
+export type TransferProgressEvent = {
     /**
      * The number of bytes loaded so far.
      */
