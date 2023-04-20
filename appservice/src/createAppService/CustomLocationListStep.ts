@@ -37,10 +37,10 @@ export class CustomLocationListStep<T extends IAppServiceWizardContext> extends 
                     query: customLocationQuery,
                     subscriptions: [context.subscriptionId]
                 });
-                let customLocations = response.data as unknown as CustomLocation[];
-                customLocations = customLocations.sort((a, b) => a.name.localeCompare(b.name));
-                context.telemetry.properties.hasCustomLoc = String(customLocations.length > 0);
-                picks.unshift(...customLocations.map(cl => {
+                const customLocations = response.data as unknown as Record<number, CustomLocation>;
+                const customLocationFlattened = Object.values(customLocations).sort((a, b) => a.name.localeCompare(b.name));
+                context.telemetry.properties.hasCustomLoc = String(customLocationFlattened.length > 0);
+                picks.unshift(...customLocationFlattened.map(cl => {
                     return {
                         label: cl.name,
                         group: vscode.l10n.t('Custom'),
