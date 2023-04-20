@@ -40,7 +40,6 @@
         "@azure/arm-resources-subscriptions": "^2.0.1",
         "@azure/core-client": "^1.7.2",
         "@azure/core-rest-pipeline": "^1.10.3",
-        "@azure/ms-rest-azure-env": "^2.0.0",
         "@azure/storage-blob": "^12.3.0",
         "@microsoft/vscode-azext-azureutils": "^1.1.4",
         "@microsoft/vscode-azext-utils": "^1.2.1",
@@ -55,6 +54,7 @@
     },
     "devDependencies": {
         "@azure/core-auth": "^1.4.0",
+        "@azure/ms-rest-azure-env": "^2.0.0",
         "@microsoft/eslint-config-azuretools": "^0.2.0",
         "@microsoft/vscode-azext-azureappsettings": "^0.1.0",
         "@microsoft/vscode-azext-dev": "^1.2.0",
