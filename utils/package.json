@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-utils",
     "author": "Microsoft Corporation",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "description": "Common UI tools for developing Azure extensions for VS Code",
     "tags": [
         "azure",
@@ -32,7 +32,7 @@
         "test": "node ./out/test/runTest.js"
     },
     "dependencies": {
-        "@microsoft/vscode-azureresources-api": "^2.0.2",
+        "@microsoft/vscode-azureresources-api": "^2.0.4",
         "@vscode/extension-telemetry": "^0.6.2",
         "dayjs": "^1.11.2",
         "escape-string-regexp": "^2.0.0",
@@ -42,8 +42,10 @@
         "vscode-tas-client": "^0.1.47",
         "vscode-uri": "^3.0.6"
     },
+    "peerDependencies": {
+        "@azure/ms-rest-azure-env": "^2.0.0"
+    },
     "devDependencies": {
-        "@azure/ms-rest-azure-env": "^2.0.0",
         "@microsoft/eslint-config-azuretools": "^0.2.0",
         "@microsoft/vscode-azext-dev": "^1.0.0",
         "@types/html-to-text": "^8.1.0",
