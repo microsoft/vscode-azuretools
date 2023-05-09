@@ -12,7 +12,7 @@ To use these base workflow templates:
 1. Create a `main.yml` file in `.github/workflows` with the following contents:
 
 ```yaml
-name: Node CI Lint, Build and Test
+name: Node PR Lint, Build and Test
 
 on:
   push:
@@ -21,7 +21,6 @@ on:
     branches: [main]
 
 jobs:
-  build_and_test:
+  Build:
     uses: microsoft/vscode-azuretools/.github/workflows/main.yml@main
-
 ```
