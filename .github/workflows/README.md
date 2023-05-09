@@ -16,9 +16,13 @@ name: Node PR Lint, Build and Test
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - rel/*
   pull_request:
-    branches: [main]
+    branches:
+      - main
+      - rel/*
 
 jobs:
   Build:

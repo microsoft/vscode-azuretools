@@ -21,6 +21,16 @@ To use these base pipeline templates:
 # Trigger the build whenever `main` is updated
 trigger:
   - main
+  - rel/*
+
+# Scheduled nightly build
+schedules:
+  - cron: "0 0 * * *"
+    displayName: Nightly scheduled build
+    always: false # Don't rebuild if there haven't been changes
+    branches:
+      include:
+        - main
 
 # Grab the base templates from https://github.com/microsoft/vscode-azuretools
 resources:
