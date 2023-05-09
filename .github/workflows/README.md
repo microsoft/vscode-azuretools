@@ -21,5 +21,5 @@ on:
 
 jobs:
   build_and_test:
-    uses: microsoft/vscode-azuretools/github/workflows/main.yml@main
+    uses: microsoft/vscode-azuretools/.github/workflows/main.yml@main
 ```
