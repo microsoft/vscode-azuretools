@@ -1,0 +1,25 @@
+on:
+  workflow_call:
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 16.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16.x
+      - run: npm ci --no-optional
+      - run: xvfb-run -a npm run ci-package
+      - run: npm run lint
+      - run: npm run build
+      - run: npm test
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: Artifact
+          path: |
+            **/*.vsix
+            **/*.tgz
