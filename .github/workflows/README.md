@@ -1,7 +1,7 @@
 ## Usage
 
 To use these base workflow templates:
-1. Your project must be buildable with Node.js 16
+1. Your project must have an `.nvmrc` file with the appropriate Node.js version at the root of the repository
 1. Your `package.json` file must contain the following NPM scripts:
     1. `lint`: This should perform linting and fail if the allowable linter errors/warnings is exceeded
     1. `build`: this should get the code built sufficiently that it is testable. Note, for a VSCode extension, this should include bundling (webpack, esbuild).
