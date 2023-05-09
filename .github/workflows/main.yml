@@ -9,15 +9,16 @@ jobs:
         node-version: [16.x]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm ci --no-optional
       - run: npm run lint
       - run: npm run build
       - run: xvfb-run -a npm test
+      - run: npm run package
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
