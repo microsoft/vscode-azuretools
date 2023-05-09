@@ -8,18 +8,19 @@ To use these base workflow templates:
     1. `test`: this should run the tests
 1. Create a `.github` folder at the root of the repository
 1. Inside it, create a `workflows` folder
-5. Create a `main.yml` file in `.github/workflows` with the following contents:
+1. Create a `main.yml` file in `.github/workflows` with the following contents:
 
 ```yaml
-name: Node CI Build and Test
+name: Node CI Lint, Build and Test
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build_and_test:
     uses: microsoft/vscode-azuretools/.github/workflows/main.yml@main
+
 ```
