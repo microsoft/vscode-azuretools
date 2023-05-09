@@ -12,10 +12,9 @@ jobs:
         with:
           node-version: 16.x
       - run: npm ci --no-optional
-      - run: xvfb-run -a npm run ci-package
       - run: npm run lint
       - run: npm run build
-      - run: npm test
+      - run: xvfb-run -a npm test
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
