@@ -158,7 +158,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
         const filePath = path.join(fsPath, jsonFile);
 
         fs.writeFileSync(filePath, nonJsonContents);
-        await assertThrowsAsync(async () => await AzExtFsExtra.readJSON(filePath), /Unexpected number in JSON/);
+        await assertThrowsAsync(async () => await AzExtFsExtra.readJSON(filePath), /Unexpected number in JSON|Expected ':' after property/);
     });
 
     test('writeJSON (from string)', async () => {
@@ -184,7 +184,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
         ensureDir(fsPath);
         const filePath = path.join(fsPath, jsonFile);
 
-        await assertThrowsAsync(async () => await AzExtFsExtra.writeJSON(filePath, nonJsonContents), /Unexpected number in JSON/);
+        await assertThrowsAsync(async () => await AzExtFsExtra.writeJSON(filePath, nonJsonContents), /Unexpected number in JSON|Expected ':' after property/);
     });
 
     test('emptyDir', async () => {
