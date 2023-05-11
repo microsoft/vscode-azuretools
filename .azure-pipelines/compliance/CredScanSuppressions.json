@@ -6,6 +6,10 @@
             "_justification": "No need to scan external node modules."
         },
         {
+            "folder": "appsettings\\node_modules\\",
+            "_justification": "No need to scan external node modules."
+        },
+        {
             "folder": "dev\\node_modules\\",
             "_justification": "No need to scan external node modules."
         },
@@ -23,6 +27,10 @@
         },
         {
             "folder": "appservice\\.vscode-test\\",
+            "_justification": "No need to scan VS Code test folder."
+        },
+        {
+            "folder": "appsettings\\.vscode-test\\",
             "_justification": "No need to scan VS Code test folder."
         },
         {
