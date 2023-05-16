@@ -6,4 +6,5 @@
 export * from './AzureAuthentication';
 export * from './AzureSubscription';
 export * from './NotSignedInError';
+export * from './utils/configuredAzureEnv';
 export * from './VSCodeAzureSubscriptionProvider';
