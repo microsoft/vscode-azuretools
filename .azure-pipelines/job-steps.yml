@@ -8,10 +8,10 @@ steps:
       package: 'utils'
   - template: package-steps.yml
     parameters:
-      package: 'azure'
+      package: 'auth'
   - template: package-steps.yml
     parameters:
-      package: 'kudu'
+      package: 'azure'
   - template: package-steps.yml
     parameters:
       package: 'appservice'
