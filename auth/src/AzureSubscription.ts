@@ -8,9 +8,14 @@ import type { Environment } from '@azure/ms-rest-azure-env';
 import { AzureAuthentication } from './AzureAuthentication';
 
 /**
- * A type representing an Azure subscription ID.
+ * A type representing an Azure subscription ID, in the form `${tenantId}/${subscriptionId}`.
  */
 export type SubscriptionId = string;
+
+/**
+ * A type representing an Azure tenant ID.
+ */
+export type TenantId = string;
 
 /**
  * Represents an Azure subscription.
@@ -42,9 +47,9 @@ export interface AzureSubscription {
     readonly subscriptionId: SubscriptionId;
 
     /**
-     * The tenant to which this subscription belongs or undefined, if not associated with a specific tenant.
+     * The tenant to which this subscription belongs.
      */
-    readonly tenantId: string | undefined;
+    readonly tenantId: TenantId;
 
     /**
      * The credential for authentication to this subscription. Compatible with Azure track 2 SDKs.

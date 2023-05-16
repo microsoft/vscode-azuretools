@@ -6,9 +6,8 @@
 import type { SubscriptionClient } from '@azure/arm-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
 import type { TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
 import * as vscode from 'vscode';
-import { AzureSubscription, SubscriptionId } from './AzureSubscription';
+import { AzureSubscription, SubscriptionId, TenantId } from './AzureSubscription';
 import { NotSignedInError } from './NotSignedInError';
-import { caselessIncludes } from './utils/caselessIncludes';
 import { tryParseExpiresOnFromToken } from './utils/tryParseExpiresOnFromToken';
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from './utils/configuredAzureEnv';
 
@@ -21,16 +20,15 @@ export class VSCodeAzureSubscriptionProvider {
      * Gets a list of Azure subscriptions available to the user.
      *
      * @param filter - Whether to filter the list returned, according to the list returned
-     * by `getFilters()`.
+     * by `getTenantFilters()` and `getSubscriptionFilters()`.
      *
      * @returns A list of Azure subscriptions.
      * @throws {@link NotSignedInError} If the user is not signed in to Azure.
      */
     public async getSubscriptions(filter: boolean): Promise<AzureSubscription[]> {
         // If there are no items in the filter list, treat filter as if it is false, to simplify later logic
-        const subscriptionIds = await this.getFilters();
-        const filterNormalized = filter && !!subscriptionIds.length;
-        const tenantIds = subscriptionIds.map(id => id.split('/')[0]);
+        const tenantIds = await this.getTenantFilters();
+        const tenantFilterNormalized = filter && !!tenantIds.length;
 
         // Get subscriptions and tenant info for the default tenant
         const defaultTenantSubscriptions = await this.getSubscriptionsForTenant();
@@ -40,8 +38,8 @@ export class VSCodeAzureSubscriptionProvider {
         if (allSubscriptions.length === 0) {
             for await (const tenant of defaultTenantSubscriptions.client.tenants.list()) {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                if (filterNormalized && !caselessIncludes(tenantIds, tenant.tenantId!)) {
-                    // If filters are enabled, and there are items in `tenantIds`, and the current tenant is not in that list, then skip it
+                if (tenantFilterNormalized && !tenantIds.includes(tenant.tenantId!)) {
+                    // If tenant filters are enabled, and there are items in `tenantIds`, and the current tenant is not in that list, then skip it
                     continue;
                 }
 
@@ -50,8 +48,11 @@ export class VSCodeAzureSubscriptionProvider {
             }
         }
 
-        if (filterNormalized) {
-            return allSubscriptions.filter(subscription => caselessIncludes(subscriptionIds, subscription.subscriptionId));
+        const subscriptionIds = await this.getSubscriptionFilters();
+        const subscriptionFilterNormalized = filter && !!subscriptionIds.length;
+
+        if (subscriptionFilterNormalized) {
+            return allSubscriptions.filter(subscription => !subscriptionIds.includes(subscription.subscriptionId));
         } else {
             return allSubscriptions;
         }
@@ -78,20 +79,31 @@ export class VSCodeAzureSubscriptionProvider {
     }
 
     /**
-     * Gets the filters that are configured in `azureResourceGroups.selectedSubscriptions`. To
-     * override the settings with a custom filter, implement a child class with `getFilters()`
-     * overridden.
+     * Gets the subscription filters that are configured in `azureResourceGroups.selectedSubscriptions`. To
+     * override the settings with a custom filter, implement a child class with `getSubscriptionFilters()`
+     * and/or `getTenantFilters()` overridden.
      *
-     * If a tenant to which the user has access does not appear in the list, that tenant will be
-     * ignored.
-     *
-     * If no values are returned by `getFilters()`, then all subscriptions will be returned.
+     * If no values are returned by `getSubscriptionFilters()`, then all subscriptions will be returned.
      *
      * @returns A list of subscription IDs that are configured in `azureResourceGroups.selectedSubscriptions`.
      */
-    protected async getFilters(): Promise<SubscriptionId[]> {
+    protected async getSubscriptionFilters(): Promise<SubscriptionId[]> {
         const config = vscode.workspace.getConfiguration('azureResourceGroups');
         return config.get<SubscriptionId[]>('selectedSubscriptions', []);
+    }
+
+    /**
+     * Gets the tenant filters that are configured in `azureResourceGroups.selectedSubscriptions`. To
+     * override the settings with a custom filter, implement a child class with `getSubscriptionFilters()`
+     * and/or `getTenantFilters()` overridden.
+     *
+     * If no values are returned by `getTenantFilters()`, then all tenants will be scanned for subscriptions.
+     *
+     * @returns A list of tenant IDs that are configured in `azureResourceGroups.selectedSubscriptions`.
+     */
+    protected async getTenantFilters(): Promise<TenantId[]> {
+        const subscriptionIds = await this.getSubscriptionFilters();
+        return subscriptionIds.map(id => id.split('/')[0]);
     }
 
     /**
@@ -137,8 +149,8 @@ export class VSCodeAzureSubscriptionProvider {
                 /* eslint-disable @typescript-eslint/no-non-null-assertion */
                 name: subscription.displayName!,
                 subscriptionId: subscription.subscriptionId!,
+                tenantId: subscription.tenantId!,
                 /* eslint-enable @typescript-eslint/no-non-null-assertion */
-                tenantId: subscription.tenantId,
                 credential: credential,
             });
         }
