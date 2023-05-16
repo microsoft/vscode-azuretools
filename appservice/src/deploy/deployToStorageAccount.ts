@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { StringDictionary } from '@azure/arm-appservice';
-import { Environment } from '@azure/ms-rest-azure-env';
 import { BlobSASPermissions, BlobServiceClient, BlockBlobClient, ContainerClient, generateBlobSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
 import { IActionContext, parseError } from '@microsoft/vscode-azext-utils';
 import * as dayjs from 'dayjs';
@@ -22,6 +21,9 @@ import { runWithZipStream } from './runWithZipStream';
 
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
+
+// From https://github.com/Azure/ms-rest-azure-env/blob/6fa17ce7f36741af6ce64461735e6c7c0125f0ed/lib/azureEnvironment.ts#L280
+const AzureCloudStorageEndpointSuffix = 'core.windows.net';
 
 /**
  * Method of deployment that is only intended to be used for Linux Consumption Function apps because it doesn't support kudu pushDeployment
@@ -66,7 +68,7 @@ async function createBlobServiceClient(context: IActionContext, site: ParsedSite
                 if (!connectionString.endsWith(separator)) {
                     connectionString += separator;
                 }
-                connectionString += `${endpointSuffix}=${Environment.AzureCloud.storageEndpointSuffix}${separator}`;
+                connectionString += `${endpointSuffix}=${AzureCloudStorageEndpointSuffix}${separator}`;
                 return BlobServiceClient.fromConnectionString(connectionString);
             } else {
                 throw error;

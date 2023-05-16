@@ -1,0 +1,34 @@
+on:
+  workflow_call:
+
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Setup
+      - uses: actions/checkout@v3
+      - name: Using Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci --no-optional
+
+      # Lint
+      - run: npm run lint
+
+      # Build
+      - run: npm run build
+
+      # Test
+      - run: xvfb-run -a npm test
+
+      # Package
+      - run: npm run package
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: Artifacts
+          path: |
+            **/*.vsix
+            **/*.tgz

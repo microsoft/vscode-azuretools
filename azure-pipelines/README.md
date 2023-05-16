@@ -1,7 +1,7 @@
 ## Usage
 
 To use these base pipeline templates:
-1. Your project must be buildable with Node.js 16
+1. Your project must have an `.nvmrc` file with the appropriate Node.js version at the root of the repository
 1. Your `package.json` file must contain the following NPM scripts:
     1. `build`: this should get the code built sufficiently that it is testable. Note, for a VSCode extension, this should include bundling (webpack, esbuild).
     1. `test`: this should run the tests
@@ -21,6 +21,16 @@ To use these base pipeline templates:
 # Trigger the build whenever `main` is updated
 trigger:
   - main
+  - rel/*
+
+# Scheduled nightly build
+schedules:
+  - cron: "0 0 * * *"
+    displayName: Nightly scheduled build
+    always: false # Don't rebuild if there haven't been changes
+    branches:
+      include:
+        - main
 
 # Grab the base templates from https://github.com/microsoft/vscode-azuretools
 resources:
