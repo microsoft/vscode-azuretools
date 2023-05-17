@@ -9,6 +9,7 @@ import * as vscode from 'vscode';
 import { AzureSubscription, SubscriptionId, TenantId } from './AzureSubscription';
 import { NotSignedInError } from './NotSignedInError';
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from './utils/configuredAzureEnv';
+import { AzureAuthentication } from './AzureAuthentication';
 
 /**
  * A class for obtaining Azure subscription information using VSCode's built-in authentication
@@ -22,7 +23,8 @@ export class VSCodeAzureSubscriptionProvider {
      * by `getTenantFilters()` and `getSubscriptionFilters()`.
      *
      * @returns A list of Azure subscriptions.
-     * @throws {@link NotSignedInError} If the user is not signed in to Azure.
+     *
+     * @throws A {@link NotSignedInError} If the user is not signed in to Azure.
      */
     public async getSubscriptions(filter: boolean): Promise<AzureSubscription[]> {
         const tenantIds = await this.getTenantFilters();
@@ -78,21 +80,6 @@ export class VSCodeAzureSubscriptionProvider {
     }
 
     /**
-     * Gets the subscription filters that are configured in `azureResourceGroups.selectedSubscriptions`. To
-     * override the settings with a custom filter, implement a child class with `getSubscriptionFilters()`
-     * and/or `getTenantFilters()` overridden.
-     *
-     * If no values are returned by `getSubscriptionFilters()`, then all subscriptions will be returned.
-     *
-     * @returns A list of subscription IDs that are configured in `azureResourceGroups.selectedSubscriptions`.
-     */
-    protected async getSubscriptionFilters(): Promise<SubscriptionId[]> {
-        const config = vscode.workspace.getConfiguration('azureResourceGroups');
-        const fullSubscriptionIds = config.get<SubscriptionId[]>('selectedSubscriptions', []);
-        return fullSubscriptionIds.map(id => id.split('/')[1]);
-    }
-
-    /**
      * Gets the tenant filters that are configured in `azureResourceGroups.selectedSubscriptions`. To
      * override the settings with a custom filter, implement a child class with `getSubscriptionFilters()`
      * and/or `getTenantFilters()` overridden.
@@ -105,6 +92,21 @@ export class VSCodeAzureSubscriptionProvider {
         const config = vscode.workspace.getConfiguration('azureResourceGroups');
         const fullSubscriptionIds = config.get<SubscriptionId[]>('selectedSubscriptions', []);
         return fullSubscriptionIds.map(id => id.split('/')[0]);
+    }
+
+    /**
+     * Gets the subscription filters that are configured in `azureResourceGroups.selectedSubscriptions`. To
+     * override the settings with a custom filter, implement a child class with `getSubscriptionFilters()`
+     * and/or `getTenantFilters()` overridden.
+     *
+     * If no values are returned by `getSubscriptionFilters()`, then all subscriptions will be returned.
+     *
+     * @returns A list of subscription IDs that are configured in `azureResourceGroups.selectedSubscriptions`.
+     */
+    protected async getSubscriptionFilters(): Promise<SubscriptionId[]> {
+        const config = vscode.workspace.getConfiguration('azureResourceGroups');
+        const fullSubscriptionIds = config.get<SubscriptionId[]>('selectedSubscriptions', []);
+        return fullSubscriptionIds.map(id => id.split('/')[1]);
     }
 
     /**
@@ -160,9 +162,10 @@ export class VSCodeAzureSubscriptionProvider {
      *
      * @returns A client, the credential used by the client, and the authentication function
      */
-    private async getSubscriptionClient(tenantId: 'organizations' | string): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: { getSession: () => vscode.ProviderResult<vscode.AuthenticationSession> } }> {
+    private async getSubscriptionClient(tenantId: 'organizations' | string): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
         const armSubs = await import('@azure/arm-subscriptions');
 
+        // This gets filled in when the client calls `getToken`, and then it can be returned in the `authentication` property of `AzureSubscription`
         let session: vscode.AuthenticationSession | undefined;
 
         const credential: TokenCredential = {
