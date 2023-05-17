@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { SubscriptionClient } from '@azure/arm-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
+import type { SubscriptionClient, TenantIdDescription } from '@azure/arm-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
 import type { TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
 import * as vscode from 'vscode';
 import { AzureSubscription, SubscriptionId, TenantId } from './AzureSubscription';
@@ -25,36 +25,36 @@ export class VSCodeAzureSubscriptionProvider {
      * @throws {@link NotSignedInError} If the user is not signed in to Azure.
      */
     public async getSubscriptions(filter: boolean): Promise<AzureSubscription[]> {
-        // If there are no items in the filter list, treat filter as if it is false, to simplify later logic
         const tenantIds = await this.getTenantFilters();
-        const tenantFilterNormalized = filter && !!tenantIds.length;
+        const tenantFilterNormalized = filter && !!tenantIds.length; // If the list is empty it is treated as "no filter"
 
-        // Get subscriptions and tenant info for the default tenant
-        const defaultTenantSubscriptions = await this.getSubscriptionsForTenant();
-        const allSubscriptions = defaultTenantSubscriptions.subscriptions;
+        const subscriptionIds = await this.getSubscriptionFilters();
+        const subscriptionFilterNormalized = filter && !!subscriptionIds.length; // If the list is empty it is treated as "no filter"
 
-        // If there are none, then we need to list tenants, and get subscriptions per-tenant
-        if (allSubscriptions.length === 0) {
-            for await (const tenant of defaultTenantSubscriptions.client.tenants.list()) {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                if (tenantFilterNormalized && !tenantIds.includes(tenant.tenantId!)) {
-                    // If tenant filters are enabled, and there are items in `tenantIds`, and the current tenant is not in that list, then skip it
+        const results: AzureSubscription[] = [];
+
+        // Get the list of tenants
+        for (const tenant of await this.getTenants()) {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            const tenantId = tenant.tenantId!;
+
+            // If filtering is enabled, and the current tenant is not in that list, then skip it
+            if (tenantFilterNormalized && !tenantIds.includes(tenantId)) {
+                continue;
+            }
+
+            // For each tenant, get the list of subscriptions
+            for (const subscription of await this.getSubscriptionsForTenant(tenantId)) {
+                // If filtering is enabled, and the current subscription is not in that list, then skip it
+                if (subscriptionFilterNormalized && !subscriptionIds.includes(subscription.subscriptionId)) {
                     continue;
                 }
 
-                const tenantSubscriptions = await this.getSubscriptionsForTenant(tenant.tenantId);
-                allSubscriptions.push(...tenantSubscriptions.subscriptions);
+                results.push(subscription);
             }
         }
 
-        const subscriptionIds = await this.getSubscriptionFilters();
-        const subscriptionFilterNormalized = filter && !!subscriptionIds.length;
-
-        if (subscriptionFilterNormalized) {
-            return allSubscriptions.filter(subscription => !subscriptionIds.includes(subscription.subscriptionId));
-        } else {
-            return allSubscriptions;
-        }
+        return results;
     }
 
     /**
@@ -88,7 +88,8 @@ export class VSCodeAzureSubscriptionProvider {
      */
     protected async getSubscriptionFilters(): Promise<SubscriptionId[]> {
         const config = vscode.workspace.getConfiguration('azureResourceGroups');
-        return config.get<SubscriptionId[]>('selectedSubscriptions', []);
+        const fullSubscriptionIds = config.get<SubscriptionId[]>('selectedSubscriptions', []);
+        return fullSubscriptionIds.map(id => id.split('/')[1]);
     }
 
     /**
@@ -101,62 +102,90 @@ export class VSCodeAzureSubscriptionProvider {
      * @returns A list of tenant IDs that are configured in `azureResourceGroups.selectedSubscriptions`.
      */
     protected async getTenantFilters(): Promise<TenantId[]> {
-        const subscriptionIds = await this.getSubscriptionFilters();
-        return subscriptionIds.map(id => id.split('/')[0]);
+        const config = vscode.workspace.getConfiguration('azureResourceGroups');
+        const fullSubscriptionIds = config.get<SubscriptionId[]>('selectedSubscriptions', []);
+        return fullSubscriptionIds.map(id => id.split('/')[0]);
     }
 
     /**
-     * Gets the subscriptions for a given tenant, or the default tenant. Also returns the client, which is reused by `getSubscriptions()`.
+     * Gets the tenants available to a user.
      *
-     * @param tenantId (Optional) The tenant ID to get subscriptions for. If not specified, the default tenant will be used.
-     *
-     * @returns The client and list of subscriptions for the tenant.
+     * @returns The list of tenants visible to the user.
      */
-    private async getSubscriptionsForTenant(tenantId?: string): Promise<{ client: SubscriptionClient, subscriptions: AzureSubscription[] }> {
+    private async getTenants(): Promise<TenantIdDescription[]> {
+        const { client } = await this.getSubscriptionClient('organizations');
+        const tenants: TenantIdDescription[] = [];
+
+        for await (const tenant of client.tenants.list()) {
+            tenants.push(tenant);
+        }
+
+        return tenants;
+    }
+
+    /**
+     * Gets the subscriptions for a given tenant.
+     *
+     * @param tenantId The tenant ID to get subscriptions for.
+     *
+     * @returns The list of subscriptions for the tenant.
+     */
+    private async getSubscriptionsForTenant(tenantId: string): Promise<AzureSubscription[]> {
+        const { client, credential, authentication } = await this.getSubscriptionClient(tenantId);
+        const environment = getConfiguredAzureEnv();
+
+        const subscriptions: AzureSubscription[] = [];
+
+        for await (const subscription of client.subscriptions.list()) {
+            subscriptions.push({
+                authentication: authentication,
+                environment: environment,
+                credential: credential,
+                isCustomCloud: environment.isCustomCloud,
+                /* eslint-disable @typescript-eslint/no-non-null-assertion */
+                name: subscription.displayName!,
+                subscriptionId: subscription.subscriptionId!,
+                /* eslint-enable @typescript-eslint/no-non-null-assertion */
+                tenantId: tenantId,
+            });
+        }
+
+        return subscriptions;
+    }
+
+    /**
+     * Gets a fully-configured subscription client for a given tenant ID
+     *
+     * @param tenantId The tenant ID to get a client for
+     *
+     * @returns A client, the credential used by the client, and the authentication function
+     */
+    private async getSubscriptionClient(tenantId: 'organizations' | string): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: { getSession: () => vscode.ProviderResult<vscode.AuthenticationSession> } }> {
         const armSubs = await import('@azure/arm-subscriptions');
 
-        // This will be set below, when the subscription client attempts to list the subscriptions, in the body of `getToken()`
         let session: vscode.AuthenticationSession | undefined;
 
         const credential: TokenCredential = {
             getToken: async (scopes) => {
                 // TODO: change to `getSessions` when that API is available
-                session = await vscode.authentication.getSession(getConfiguredAuthProviderId(), this.getScopes(scopes, tenantId), { createIfNone: true }); // TODO: should this create for the tenant?
+                session = await vscode.authentication.getSession(getConfiguredAuthProviderId(), this.getScopes(scopes, tenantId), { createIfNone: true }); // TODO: should this create
                 if (!session) {
                     throw new NotSignedInError();
                 }
 
                 return {
                     token: session.accessToken,
-                    expiresOnTimestamp: 0 // TODO: is this even needed? The auth provider refreshes tokens on its own
+                    expiresOnTimestamp: 0
                 };
             }
         }
 
-        const client = new armSubs.SubscriptionClient(credential);
-
-        const subscriptions: AzureSubscription[] = [];
-        const environment = getConfiguredAzureEnv();
-
-        for await (const subscription of client.subscriptions.list()) {
-            subscriptions.push({
-                authentication: {
-                    getSession: () => session // Rewrapped to make TS not confused about the weird initialization pattern
-                },
-                environment: environment,
-                isCustomCloud: environment.isCustomCloud,
-                /* eslint-disable @typescript-eslint/no-non-null-assertion */
-                name: subscription.displayName!,
-                subscriptionId: subscription.subscriptionId!,
-                tenantId: subscription.tenantId!,
-                /* eslint-enable @typescript-eslint/no-non-null-assertion */
-                credential: credential,
-            });
-        }
-
         return {
-            client: client,
-            subscriptions: subscriptions,
+            client: new armSubs.SubscriptionClient(credential),
+            credential: credential,
+            authentication: {
+                getSession: () => session // Rewrapped to make TS not confused about the weird initialization pattern
+            }
         };
     }
 
