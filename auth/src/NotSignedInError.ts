@@ -24,5 +24,5 @@ export class NotSignedInError extends Error {
  * @returns True if the object is a NotSignedInError, false otherwise
  */
 export function isNotSignedInError(error: unknown): error is NotSignedInError {
-    return typeof error === 'object' && (error as NotSignedInError).isNotSignedInError === true;
+    return !!error && typeof error === 'object' && (error as NotSignedInError).isNotSignedInError === true;
 }

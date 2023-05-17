@@ -8,7 +8,6 @@ import type { TokenCredential } from '@azure/core-auth'; // Keep this as `import
 import * as vscode from 'vscode';
 import { AzureSubscription, SubscriptionId, TenantId } from './AzureSubscription';
 import { NotSignedInError } from './NotSignedInError';
-import { tryParseExpiresOnFromToken } from './utils/tryParseExpiresOnFromToken';
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from './utils/configuredAzureEnv';
 
 /**
@@ -129,7 +128,7 @@ export class VSCodeAzureSubscriptionProvider {
 
                 return {
                     token: session.accessToken,
-                    expiresOnTimestamp: tryParseExpiresOnFromToken(session.accessToken),
+                    expiresOnTimestamp: 0 // TODO: is this even needed? The auth provider refreshes tokens on its own
                 };
             }
         }
