@@ -191,6 +191,6 @@ export class VSCodeAzureSubscriptionProvider {
      * @returns The default Azure scopes required
      */
     private getDefaultScopes(): string[] {
-        return [`${getConfiguredAzureEnv().resourceManagerEndpointUrl}/.default}`]
+        return [`${getConfiguredAzureEnv().resourceManagerEndpointUrl}.default`]
     }
 }
