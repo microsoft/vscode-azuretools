@@ -86,7 +86,7 @@ export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvide
      * @deprecated Not currently supported by VS Code auth providers
      */
     public signOut(): Promise<void> {
-        throw new Error('Not implemented');
+        throw new Error(vscode.l10n.t('Not implemented'));
     }
 
     /**

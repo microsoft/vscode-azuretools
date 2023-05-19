@@ -17,6 +17,7 @@ CloudNameToEndpointSettingValue[AzureUSGovernmentCloudName] = 'Azure US Governme
 
 /**
  * Gets the configured Azure environment.
+ *
  * @returns The configured Azure environment from the `microsoft-sovereign-cloud.endpoint` setting.
  */
 export function getConfiguredAzureEnv(): azureEnv.Environment & { isCustomCloud: boolean } {
@@ -41,6 +42,10 @@ export function getConfiguredAzureEnv(): azureEnv.Environment & { isCustomCloud:
     } else if (endpointSettingValue) {
         // TODO: support custom clouds
         throw new Error('Custom clouds are not supported yet');
+        // return {
+        //     ...configuredCustomCloud,
+        //     isCustomCloud: true,
+        // };
     }
     /* eslint-enable @typescript-eslint/no-non-null-assertion */
 
@@ -52,17 +57,20 @@ export function getConfiguredAzureEnv(): azureEnv.Environment & { isCustomCloud:
 
 /**
  * Sets the configured Azure cloud.
+ *
  * @param cloud Use `'AzureCloud'` for public Azure cloud, `'AzureChinaCloud'` for Azure China, or `'AzureUSGovernment'` for Azure US Government.
  * These are the same values as the cloud names in `@azure/ms-rest-azure-env`. For a custom cloud, use an instance of the `@azure/ms-rest-azure-env` `Environment` class.
+ *
+ * @param target (Optional) The configuration target to use, by default {@link vscode.ConfigurationTarget.Global}.
  */
-export async function setConfiguredAzureEnv(cloud: string | azureEnv.Environment): Promise<void> {
+export async function setConfiguredAzureEnv(cloud: string | azureEnv.Environment, target: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Global): Promise<void> {
     const authProviderConfig = vscode.workspace.getConfiguration('microsoft-sovereign-cloud');
 
     if (typeof cloud === 'string' && cloud in CloudNameToEndpointSettingValue) {
-        await authProviderConfig.update('endpoint', CloudNameToEndpointSettingValue[cloud]);
+        await authProviderConfig.update('endpoint', CloudNameToEndpointSettingValue[cloud], target);
     } else if (typeof cloud === 'object' && 'activeDirectoryEndpointUrl' in cloud) {
         // TODO: support more custom cloud settings
-        await authProviderConfig.update('endpoint', cloud.activeDirectoryEndpointUrl);
+        await authProviderConfig.update('endpoint', cloud.activeDirectoryEndpointUrl, target);
     } else {
         throw new Error(`Invalid cloud value: ${JSON.stringify(cloud)}`);
     }
