@@ -26,6 +26,8 @@ export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvide
      * @returns A list of Azure subscriptions.
      *
      * @throws A {@link NotSignedInError} If the user is not signed in to Azure.
+     * Use {@link isSignedIn} and/or {@link signIn} before this method to ensure
+     * the user is signed in.
      */
     public async getSubscriptions(filter: boolean = true): Promise<AzureSubscription[]> {
         const tenantIds = await this.getTenantFilters();
@@ -182,7 +184,7 @@ export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvide
         const credential: TokenCredential = {
             getToken: async (scopes) => {
                 // TODO: change to `getSessions` when that API is available
-                session = await vscode.authentication.getSession(getConfiguredAuthProviderId(), this.getScopes(scopes, tenantId), { createIfNone: true }); // TODO: should this create
+                session = await vscode.authentication.getSession(getConfiguredAuthProviderId(), this.getScopes(scopes, tenantId), { createIfNone: false, silent: true });
                 if (!session) {
                     throw new NotSignedInError();
                 }

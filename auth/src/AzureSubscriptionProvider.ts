@@ -18,6 +18,8 @@ export interface AzureSubscriptionProvider {
      * @returns A list of Azure subscriptions.
      *
      * @throws A {@link NotSignedInError} If the user is not signed in to Azure.
+     * Use {@link isSignedIn} and/or {@link signIn} before this method to ensure
+     * the user is signed in.
      */
     getSubscriptions(filter: boolean): Promise<AzureSubscription[]>;
 
