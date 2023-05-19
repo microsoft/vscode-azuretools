@@ -213,7 +213,7 @@ export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvide
      *
      * @returns A list of scopes, with the default scope and (optionally) the tenant scope added
      */
-    private getScopes(scopes: string | string[] | undefined, tenantId?: string): string[] {
+    private getScopes(scopes: string | string[] | undefined, tenantId: 'organizations' | string): string[] {
         const scopeSet = new Set<string>(this.getDefaultScopes());
 
         if (typeof scopes === 'string') {
