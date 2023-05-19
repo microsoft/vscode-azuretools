@@ -102,7 +102,7 @@ export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvide
      */
     protected async getTenantFilters(): Promise<TenantId[]> {
         const config = vscode.workspace.getConfiguration('azureResourceGroups');
-        const fullSubscriptionIds = config.get<SubscriptionId[]>('selectedSubscriptions', []);
+        const fullSubscriptionIds = config.get<string[]>('selectedSubscriptions', []);
 
         return fullSubscriptionIds.map(id => id.split('/')[0]);
     }
@@ -118,7 +118,7 @@ export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvide
      */
     protected async getSubscriptionFilters(): Promise<SubscriptionId[]> {
         const config = vscode.workspace.getConfiguration('azureResourceGroups');
-        const fullSubscriptionIds = config.get<SubscriptionId[]>('selectedSubscriptions', []);
+        const fullSubscriptionIds = config.get<string[]>('selectedSubscriptions', []);
         return fullSubscriptionIds.map(id => id.split('/')[1]);
     }
 
