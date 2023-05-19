@@ -5,7 +5,7 @@
 
 import type { TokenCredential } from '@azure/core-auth';
 import type { Environment } from '@azure/ms-rest-azure-env';
-import { AzureAuthentication } from './AzureAuthentication';
+import type { AzureAuthentication } from './AzureAuthentication';
 
 /**
  * A type representing an Azure subscription ID, in the form `${tenantId}/${subscriptionId}`.
