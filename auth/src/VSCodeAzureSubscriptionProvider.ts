@@ -10,23 +10,24 @@ import { AzureSubscription, SubscriptionId, TenantId } from './AzureSubscription
 import { NotSignedInError } from './NotSignedInError';
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from './utils/configuredAzureEnv';
 import { AzureAuthentication } from './AzureAuthentication';
+import { AzureSubscriptionProvider } from './AzureSubscriptionProvider';
 
 /**
  * A class for obtaining Azure subscription information using VSCode's built-in authentication
  * provider.
  */
-export class VSCodeAzureSubscriptionProvider {
+export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvider {
     /**
      * Gets a list of Azure subscriptions available to the user.
      *
      * @param filter - Whether to filter the list returned, according to the list returned
-     * by `getTenantFilters()` and `getSubscriptionFilters()`.
+     * by `getTenantFilters()` and `getSubscriptionFilters()`. Optional, default true.
      *
      * @returns A list of Azure subscriptions.
      *
      * @throws A {@link NotSignedInError} If the user is not signed in to Azure.
      */
-    public async getSubscriptions(filter: boolean): Promise<AzureSubscription[]> {
+    public async getSubscriptions(filter: boolean = true): Promise<AzureSubscription[]> {
         const tenantIds = await this.getTenantFilters();
         const tenantFilterNormalized = filter && !!tenantIds.length; // If the list is empty it is treated as "no filter"
 
@@ -80,6 +81,15 @@ export class VSCodeAzureSubscriptionProvider {
     }
 
     /**
+     * Signs the user out
+     *
+     * @deprecated Not currently supported by VS Code auth providers
+     */
+    public signOut(): Promise<void> {
+        throw new Error('Not implemented');
+    }
+
+    /**
      * Gets the tenant filters that are configured in `azureResourceGroups.selectedSubscriptions`. To
      * override the settings with a custom filter, implement a child class with `getSubscriptionFilters()`
      * and/or `getTenantFilters()` overridden.
@@ -91,6 +101,7 @@ export class VSCodeAzureSubscriptionProvider {
     protected async getTenantFilters(): Promise<TenantId[]> {
         const config = vscode.workspace.getConfiguration('azureResourceGroups');
         const fullSubscriptionIds = config.get<SubscriptionId[]>('selectedSubscriptions', []);
+
         return fullSubscriptionIds.map(id => id.split('/')[0]);
     }
 
