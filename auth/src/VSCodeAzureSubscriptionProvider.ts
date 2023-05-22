@@ -128,7 +128,7 @@ export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvide
      * @returns The list of tenants visible to the user.
      */
     private async getTenants(): Promise<TenantIdDescription[]> {
-        const { client } = await this.getSubscriptionClient('organizations');
+        const { client } = await this.getSubscriptionClient();
         const tenants: TenantIdDescription[] = [];
 
         for await (const tenant of client.tenants.list()) {
@@ -171,11 +171,11 @@ export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvide
     /**
      * Gets a fully-configured subscription client for a given tenant ID
      *
-     * @param tenantId The tenant ID to get a client for
+     * @param tenantId (Optional) The tenant ID to get a client for
      *
      * @returns A client, the credential used by the client, and the authentication function
      */
-    private async getSubscriptionClient(tenantId: 'organizations' | string): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
+    private async getSubscriptionClient(tenantId?: string): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
         const armSubs = await import('@azure/arm-subscriptions');
 
         // This gets filled in when the client calls `getToken`, and then it can be returned in the `authentication` property of `AzureSubscription`
@@ -213,7 +213,7 @@ export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvide
      *
      * @returns A list of scopes, with the default scope and (optionally) the tenant scope added
      */
-    private getScopes(scopes: string | string[] | undefined, tenantId: 'organizations' | string): string[] {
+    private getScopes(scopes: string | string[] | undefined, tenantId?: string): string[] {
         const scopeSet = new Set<string>(this.getDefaultScopes());
 
         if (typeof scopes === 'string') {
