@@ -183,7 +183,7 @@ export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvide
 
         const credential: TokenCredential = {
             getToken: async (scopes) => {
-                // TODO: change to `getSessions` when that API is available
+                // TODO: change to `getSessions` when that API is available: https://github.com/microsoft/vscode/issues/152399
                 session = await vscode.authentication.getSession(getConfiguredAuthProviderId(), this.getScopes(scopes, tenantId), { createIfNone: false, silent: true });
                 if (!session) {
                     throw new NotSignedInError();

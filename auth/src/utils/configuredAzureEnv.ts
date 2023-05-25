@@ -31,26 +31,31 @@ export function getConfiguredAzureEnv(): azureEnv.Environment & { isCustomCloud:
     /* eslint-disable @typescript-eslint/no-non-null-assertion */
     if (endpointSettingValue === CloudNameToEndpointSettingValue[AzureChinaCloudName]!.toLowerCase() || endpointSettingValue === azureEnv.Environment.ChinaCloud.activeDirectoryEndpointUrl.toLowerCase()) {
         return {
-            ...azureEnv.Environment.ChinaCloud,
+            ...azureEnv.Environment.get(azureEnv.Environment.ChinaCloud.name),
             isCustomCloud: false,
         };
     } else if (endpointSettingValue === CloudNameToEndpointSettingValue[AzureUSGovernmentCloudName]!.toLowerCase() || endpointSettingValue === azureEnv.Environment.USGovernment.activeDirectoryEndpointUrl.toLowerCase()) {
         return {
-            ...azureEnv.Environment.USGovernment,
+            ...azureEnv.Environment.get(azureEnv.Environment.USGovernment.name),
             isCustomCloud: false,
         };
     } else if (endpointSettingValue) {
-        // TODO: support custom clouds
-        throw new Error('Custom clouds are not supported yet');
-        // return {
-        //     ...configuredCustomCloud,
-        //     isCustomCloud: true,
-        // };
+        const rgConfig = vscode.workspace.getConfiguration('azureResourceGroups');
+        const customCloud = rgConfig.get<azureEnv.EnvironmentParameters | undefined>('customCloud'); // TODO: final setting name
+
+        if (customCloud) {
+            return {
+                ...new azureEnv.Environment(customCloud),
+                isCustomCloud: true,
+            };
+        }
+
+        throw new Error(vscode.l10n.t('The custom cloud choice is not configured. Please configure the setting `azureResourceGroups.customCloud`.')); // TODO: final setting name
     }
     /* eslint-enable @typescript-eslint/no-non-null-assertion */
 
     return {
-        ...azureEnv.Environment.AzureCloud,
+        ...azureEnv.Environment.get(azureEnv.Environment.AzureCloud.name),
         isCustomCloud: false,
     };
 }
@@ -59,18 +64,21 @@ export function getConfiguredAzureEnv(): azureEnv.Environment & { isCustomCloud:
  * Sets the configured Azure cloud.
  *
  * @param cloud Use `'AzureCloud'` for public Azure cloud, `'AzureChinaCloud'` for Azure China, or `'AzureUSGovernment'` for Azure US Government.
- * These are the same values as the cloud names in `@azure/ms-rest-azure-env`. For a custom cloud, use an instance of the `@azure/ms-rest-azure-env` `Environment` class.
+ * These are the same values as the cloud names in `@azure/ms-rest-azure-env`. For a custom cloud, use an instance of the `@azure/ms-rest-azure-env` `EnvironmentParameters`.
  *
  * @param target (Optional) The configuration target to use, by default {@link vscode.ConfigurationTarget.Global}.
  */
-export async function setConfiguredAzureEnv(cloud: string | azureEnv.Environment, target: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Global): Promise<void> {
+export async function setConfiguredAzureEnv(cloud: string | azureEnv.EnvironmentParameters, target: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Global): Promise<void> {
     const authProviderConfig = vscode.workspace.getConfiguration('microsoft-sovereign-cloud');
 
     if (typeof cloud === 'string' && cloud in CloudNameToEndpointSettingValue) {
         await authProviderConfig.update('endpoint', CloudNameToEndpointSettingValue[cloud], target);
     } else if (typeof cloud === 'object' && 'activeDirectoryEndpointUrl' in cloud) {
-        // TODO: support more custom cloud settings
         await authProviderConfig.update('endpoint', cloud.activeDirectoryEndpointUrl, target);
+
+        const rgConfig = vscode.workspace.getConfiguration('azureResourceGroups');
+        await rgConfig.update('customCloud', cloud, target); // TODO: final setting name
+
     } else {
         throw new Error(`Invalid cloud value: ${JSON.stringify(cloud)}`);
     }
