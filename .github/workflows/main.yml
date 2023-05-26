@@ -1,5 +1,9 @@
 on:
   workflow_call:
+    inputs:
+      working_directory:
+        required: false
+        type: string
 
 jobs:
   Build:
@@ -12,6 +16,12 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: .nvmrc
+
+      # Change to a subpath if needed
+      - run: cd ${{ inputs.working_directory }}
+        if: ${{ inputs.working_directory }}
+
+      # Install dependencies
       - run: npm ci --no-optional
 
       # Lint
