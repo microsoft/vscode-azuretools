@@ -12,6 +12,7 @@ steps:
       Contents: |
         $(working_directory)/**/*.vsix
         $(working_directory)/**/*.tar.gz
+        $(working_directory)/**/*.tgz
       TargetFolder: "$(build.artifactstagingdirectory)/$(artifact_name)"
     condition: and(eq(variables['Agent.OS'], 'Linux'), ne(variables['System.PullRequest.IsFork'], 'True'))
 
