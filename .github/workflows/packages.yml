@@ -30,8 +30,8 @@ jobs:
       packages: ${{ steps.filter.outputs.changes }}
 
   Build:
-    # Use template from https://github.com/microsoft/vscode-azuretools/blob/main/.github/workflows/main.yml
-    uses: ./.github/workflows/main.yml
+    # Use template from https://github.com/microsoft/vscode-azuretools/blob/main/.github/workflows/jobs.yml
+    uses: ./.github/workflows/jobs.yml
     needs: [ChangedPackages]
     with:
       working_directory: ${{ matrix.package }}
