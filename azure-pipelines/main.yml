@@ -1,5 +1,6 @@
 parameters:
   - name: "working_directories"
+    type: object
 
 jobs:
   - template: ./jobs.yml

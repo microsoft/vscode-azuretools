@@ -4,6 +4,7 @@ parameters:
   - name: "vmImage"
     type: string
   - name: "working_directories"
+    type: object
 
 jobs:
   - job: ${{ parameters.jobName }}
