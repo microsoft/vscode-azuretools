@@ -28,16 +28,16 @@ jobs:
       Codeql.Enabled: $[and(in(variables['Build.Reason'], 'Schedule'), eq(variables['Agent.OS'], 'Linux'))] # Enable CodeQL only on Linux+scheduled builds because it is slow
     strategy:
       matrix:
-        eslint-config-azuretools:
-          artifact_name: eslint-config-azuretools
-          working_directory: eslint-config-azuretools
+        ${{ each working_directory in parameters.working_directories }}:
+          artifact_name: ${{ working_directory }}
+          working_directory: ${{ working_directory }}
 
   - job: ${{ parameters.jobName}}_Compliance
     pool:
       vmImage: ${{ parameters.vmImage }}
     steps:
       - template: ./compliance/compliance.yml
-    condition: or(in(variables['Build.Reason'], 'Manual', 'Schedule'), eq(variables['EnableCompliance'], 'true'))
+    # condition: or(in(variables['Build.Reason'], 'Manual', 'Schedule'), eq(variables['EnableCompliance'], 'true')) TODO
     variables:
       Codeql.Enabled: $[and(in(variables['Build.Reason'], 'Schedule'), eq(variables['Agent.OS'], 'Linux'))] # Enable CodeQL only on Linux+scheduled builds because it is slow
 
