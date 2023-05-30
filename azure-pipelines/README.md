@@ -43,5 +43,5 @@ resources:
 
 # Use those templates
 extends:
-  template: azure-pipelines/main.yml@templates
+  template: azure-pipelines/jobs.yml@templates
 ```

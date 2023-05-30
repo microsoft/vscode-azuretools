@@ -1,39 +1,40 @@
 parameters:
-  - name: "jobName"
-    type: string
-  - name: "vmImage"
-    type: string
-  - name: "working_directories"
+  - name: matrix
     type: object
+    default:
+      Windows:
+        vmImage: windows-latest
+      Linux:
+        vmImage: ubuntu-latest
+      macOS:
+        vmImage: macOS-latest
+
+  - name: "jobs"
+    type: object
+    default:
+      - name: $(Build.Repository.Name)
+        working_directory: .
 
 jobs:
-  - job: ${{ parameters.jobName }}
-    pool:
-      vmImage: ${{ parameters.vmImage }}
-    steps:
-      - template: ./templates/setup.yml
-      - template: ./templates/build.yml
-      - template: ./templates/test.yml
-      - template: ./templates/package.yml
-    variables:
-      Codeql.Enabled: $[and(in(variables['Build.Reason'], 'Schedule'), eq(variables['Agent.OS'], 'Linux'))] # Enable CodeQL only on Linux+scheduled builds because it is slow
-    strategy:
-      matrix:
-        ${{ each working_directory in parameters.working_directories }}:
-          ${{ working_directory }}:
-            working_directory: ${{ working_directory }}
-            ${{ if eq(working_directory, '.') }}:
-              artifact_name: $(Build.Repository.Name)
-            ${{ else }}:
-              artifact_name: ${{ working_directory }}
+  - ${{ each job in jobs }}:
+      - job: ${{ job.name }}
+        pool:
+          vmImage: $(vmImage)
+        steps:
+          - template: ./templates/setup.yml
+          - template: ./templates/build.yml
+          - template: ./templates/test.yml
+          - template: ./templates/package.yml
+          - template: ./compliance/antimalware.yml
+        variables:
+          Codeql.Enabled: $[and(in(variables['Build.Reason'], 'Schedule'), eq(variables['Agent.OS'], 'Linux'))] # Enable CodeQL only on Linux+scheduled builds because it is slow
+        strategy:
+          matrix: ${{ parameters.matrix }}
 
-  - job: ${{ parameters.jobName}}_Compliance
-    dependsOn: ${{ parameters.jobName }}
+  - job: ${{ job.name }}-Compliance
     pool:
-      vmImage: ${{ parameters.vmImage }}
+      vmImage: $(vmImage)
     steps:
       - template: ./compliance/compliance.yml
-    # condition: or(in(variables['Build.Reason'], 'Manual', 'Schedule'), eq(variables['EnableCompliance'], 'true')) TODO
-    variables:
-      Codeql.Enabled: $[and(in(variables['Build.Reason'], 'Schedule'), eq(variables['Agent.OS'], 'Linux'))] # Enable CodeQL only on Linux+scheduled builds because it is slow
-
+    strategy:
+      matrix: ${{ parameters.matrix }}
