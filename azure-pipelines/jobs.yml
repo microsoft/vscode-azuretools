@@ -25,7 +25,7 @@ jobs:
             working_directory: ""
           ${{ else }}:
             artifact_name: ${{ working_directory }}
-            working_directory: ${{ working_directory }
+            working_directory: ${{ working_directory }}
 
   - job: Compliance
     pool:
