@@ -4,6 +4,6 @@ steps:
     inputs:
       command: custom
       customCommand: test
-      workingDir: $(working_directory)
+      workingDir: $(job.working_directory)
     env:
       DISPLAY: :99 # Only necessary for linux tests

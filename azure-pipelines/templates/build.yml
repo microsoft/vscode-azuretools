@@ -4,4 +4,4 @@ steps:
     inputs:
       command: custom
       customCommand: run build
-      workingDir: $(working_directory)
+      workingDir: $(job.working_directory)

@@ -38,3 +38,4 @@ jobs:
       - template: ./compliance/compliance.yml
     strategy:
       matrix: ${{ parameters.matrix }}
+    condition: in(variables['Build.Reason'], 'Schedule', 'IndividualCI')

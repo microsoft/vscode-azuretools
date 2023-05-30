@@ -9,7 +9,7 @@ steps:
     inputs:
       command: custom
       customCommand: ci --no-optional
-      workingDir: $(working_directory)
+      workingDir: $(job.working_directory)
     displayName: Install Dependencies
 
   - bash: |
