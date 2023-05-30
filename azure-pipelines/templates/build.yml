@@ -1,6 +1,10 @@
+parameters:
+  - name: working_directory
+
 steps:
   - task: Npm@1
-    displayName: 'Build'
+    displayName: "Build"
     inputs:
       command: custom
       customCommand: run build
+      workingDir: $(working_directory)

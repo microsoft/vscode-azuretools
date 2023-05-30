@@ -1,8 +1,9 @@
 parameters:
-  - name: 'jobName'
+  - name: "jobName"
     type: string
-  - name: 'vmImage'
+  - name: "vmImage"
     type: string
+  - name: "working_directories"
 
 jobs:
   - job: ${{ parameters.jobName }}
@@ -10,10 +11,27 @@ jobs:
       vmImage: ${{ parameters.vmImage }}
     steps:
       - template: ./templates/setup.yml
-      - ${{ if in(variables['Build.Reason'], 'Manual', 'Schedule') }}:
-        - template: ./compliance/compliance.yml
       - template: ./templates/build.yml
       - template: ./templates/test.yml
       - template: ./templates/package.yml
     variables:
       Codeql.Enabled: $[and(in(variables['Build.Reason'], 'Schedule'), eq(variables['Agent.OS'], 'Linux'))] # Enable CodeQL only on Linux+scheduled builds because it is slow
+    strategy:
+      matrix:
+        ${{ each working_directory in parameters.working_directories }}:
+          ${{ if eq(working_directory, '.') }}:
+            artifact_name: $(Build.Repository.Name)
+            working_directory: ""
+          ${{ else }}:
+            artifact_name: ${{ working_directory }}
+            working_directory: ${{ working_directory }
+
+  - job: Compliance
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      - template: ./compliance/compliance.yml
+    condition: or(in(variables['Build.Reason'], 'Manual', 'Schedule'), variables['EnableCompliance'] == 'true'))
+    variables:
+      Codeql.Enabled: $[and(in(variables['Build.Reason'], 'Schedule'), eq(variables['Agent.OS'], 'Linux'))] # Enable CodeQL only on Linux+scheduled builds because it is slow
+
