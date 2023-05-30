@@ -22,10 +22,21 @@ jobs:
           vmImage: $(vmImage)
         steps:
           - template: ./templates/setup.yml
+            parameters:
+              working_directory: ${{ job.working_directory }}
           - template: ./templates/build.yml
-          - template: ./templates/test.yml
+            parameters:
+              working_directory: ${{ job.working_directory }}
           - template: ./templates/package.yml
+            parameters:
+              artifact_name: ${{ job.name }}
+              working_directory: ${{ job.working_directory }}
+          - template: ./templates/test.yml
+            parameters:
+              working_directory: ${{ job.working_directory }}
           - template: ./compliance/antimalware.yml
+            parameters:
+              working_directory: ${{ job.working_directory }}
         variables:
           Codeql.Enabled: $[and(in(variables['Build.Reason'], 'Schedule'), eq(variables['Agent.OS'], 'Linux'))] # Enable CodeQL only on Linux+scheduled builds because it is slow
         strategy:
@@ -38,4 +49,4 @@ jobs:
       - template: ./compliance/compliance.yml
     strategy:
       matrix: ${{ parameters.matrix }}
-    condition: in(variables['Build.Reason'], 'Schedule', 'IndividualCI')
+    # condition: in(variables['Build.Reason'], 'Schedule', 'IndividualCI') TODO

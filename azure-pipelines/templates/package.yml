@@ -1,24 +1,28 @@
+parameters:
+  - name: "artifact_name"
+  - name: "working_directory"
+
 steps:
   - task: Npm@1
     displayName: "Package"
     inputs:
       command: custom
       customCommand: run package
-      workingDir: $(job.working_directory)
+      workingDir: ${{ parameters.working_directory }}
 
   - task: CopyFiles@2
     displayName: "Copy package to staging directory"
     inputs:
       Contents: |
-        $(job.working_directory)/**/*.vsix
-        $(job.working_directory)/**/*.tar.gz
-        $(job.working_directory)/**/*.tgz
-      TargetFolder: "$(build.artifactstagingdirectory)/$(job.name)"
+        ${{ parameters.working_directory }}/**/*.vsix
+        ${{ parameters.working_directory }}/**/*.tar.gz
+        ${{ parameters.working_directory }}/**/*.tgz
+      TargetFolder: "$(build.artifactstagingdirectory)/${{ parameters.artifact_name }}"
     condition: and(eq(variables['Agent.OS'], 'Linux'), ne(variables['System.PullRequest.IsFork'], 'True'))
 
   - task: PublishBuildArtifacts@1
     displayName: "Publish artifacts: package"
     inputs:
-      PathtoPublish: "$(build.artifactstagingdirectory)/$(job.name)"
+      PathtoPublish: "$(build.artifactstagingdirectory)/${{ parameters.artifact_name }}"
       ArtifactName: $(job.name)
     condition: and(eq(variables['Agent.OS'], 'Linux'), ne(variables['System.PullRequest.IsFork'], 'True'))

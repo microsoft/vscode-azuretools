@@ -1,3 +1,6 @@
+parameters:
+  - name: "working_directory"
+
 steps:
   - task: NodeTool@0
     displayName: Using Node.js
@@ -9,7 +12,7 @@ steps:
     inputs:
       command: custom
       customCommand: ci --no-optional
-      workingDir: $(job.working_directory)
+      workingDir: ${{ parameters.working_directory }}
     displayName: Install Dependencies
 
   - bash: |

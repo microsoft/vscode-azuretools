@@ -26,9 +26,6 @@ jobs:
       # Build
       - run: npm run build
 
-      # Test
-      - run: xvfb-run -a npm test
-
       # Package
       - run: npm run package
       - name: Upload Artifacts
@@ -38,3 +35,6 @@ jobs:
           path: |
             **/*.vsix
             **/*.tgz
+
+      # Test
+      - run: xvfb-run -a npm test
