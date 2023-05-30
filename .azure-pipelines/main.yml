@@ -16,6 +16,6 @@ schedules:
 extends:
   template: ../azure-pipelines/jobs.yml
   parameters:
-    working_directories:
+    jobs:
       - eslint-config-azuretools
       - utils
