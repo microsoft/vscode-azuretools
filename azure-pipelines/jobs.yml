@@ -32,7 +32,7 @@ jobs:
           artifact_name: eslint-config-azuretools
           working_directory: eslint-config-azuretools
 
-  - job: ${{ parameters.jobName}} Compliance
+  - job: ${{ parameters.jobName}}_Compliance
     pool:
       vmImage: ${{ parameters.vmImage }}
     steps:
