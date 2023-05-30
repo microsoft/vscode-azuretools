@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { ITreeItemPickerContext } from "../index";
+import { ITreeItemPickerContext } from "..";
 
 export class UserCancelledError extends Error {
     _isUserCancelledError = true;
