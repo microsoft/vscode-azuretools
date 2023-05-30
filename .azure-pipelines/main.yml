@@ -34,9 +34,9 @@ extends:
       #   working_directory: azure
       # dev:
       #   working_directory: dev
-      eslint-config-azuretools:
-        working_directory: eslint-config-azuretools
+      - eslint-config-azuretools:
+          working_directory: eslint-config-azuretools
       # kudu:
       #   working_directory: kudu
-      utils:
-        working_directory: utils
+      - utils:
+          working_directory: utils
