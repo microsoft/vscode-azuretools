@@ -5,6 +5,7 @@ parameters:
     type: string
   - name: "working_directories"
     type: object
+    default: ["."]
 
 jobs:
   - job: ${{ parameters.jobName }}
@@ -22,7 +23,10 @@ jobs:
         ${{ each working_directory in parameters.working_directories }}:
           ${{ working_directory }}:
             working_directory: ${{ working_directory }}
-            artifact_name: ${{ working_directory }}
+            ${{ if eq(working_directory, '.') }}:
+              artifact_name: $(Build.Repository.Name)
+            ${{ else }}:
+              artifact_name: ${{ working_directory }}
 
   - job: ${{ parameters.jobName}}_Compliance
     dependsOn: ${{ parameters.jobName }}
