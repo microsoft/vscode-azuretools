@@ -29,8 +29,9 @@ jobs:
     strategy:
       matrix:
         ${{ each working_directory in parameters.working_directories }}:
-          artifact_name: ${{ working_directory }}
-          working_directory: ${{ working_directory }}
+          ${{ working_directory }}:
+            working_directory: ${{ working_directory }}
+            artifact_name: ${{ working_directory }}
 
   - job: ${{ parameters.jobName}}_Compliance
     pool:
