@@ -17,7 +17,5 @@ extends:
   template: ../azure-pipelines/main.yml
   parameters:
     working_directories:
-      eslint-config-azuretools:
-        working_directory: eslint-config-azuretools
-      utils:
-        working_directory: utils
+      - working_directory: eslint-config-azuretools
+      - working_directory: utils
