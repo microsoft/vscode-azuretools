@@ -26,17 +26,5 @@ extends:
   template: azure-pipelines/main.yml@templates
   parameters:
     working_directories:
-      # appservice:
-      #   working_directory: appservice
-      # appsettings:
-      #   working_directory: appsettings
-      # azure:
-      #   working_directory: azure
-      # dev:
-      #   working_directory: dev
-      - eslint-config-azuretools:
-          working_directory: eslint-config-azuretools
-      # kudu:
-      #   working_directory: kudu
-      - utils:
-          working_directory: utils
+      - eslint-config-azuretools
+      - utils
