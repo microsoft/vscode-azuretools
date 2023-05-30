@@ -37,7 +37,7 @@ jobs:
       vmImage: ${{ parameters.vmImage }}
     steps:
       - template: ./compliance/compliance.yml
-    condition: or(in(variables['Build.Reason'], 'Manual', 'Schedule'), variables['EnableCompliance'] == 'true'))
+    condition: or(in(variables['Build.Reason'], 'Manual', 'Schedule'), eq(variables['EnableCompliance'], 'true'))
     variables:
       Codeql.Enabled: $[and(in(variables['Build.Reason'], 'Schedule'), eq(variables['Agent.OS'], 'Linux'))] # Enable CodeQL only on Linux+scheduled builds because it is slow
 
