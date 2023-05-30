@@ -12,18 +12,9 @@ schedules:
       include:
         - main
 
-# Grab the base templates from https://github.com/microsoft/vscode-azuretools
-resources:
-  repositories:
-    - repository: templates
-      type: github
-      name: microsoft/vscode-azuretools
-      ref: main
-      endpoint: GitHub
-
 # Use those templates
 extends:
-  template: azure-pipelines/main.yml@templates
+  template: ../azure-pipelines/templates/main.yml
   parameters:
     working_directories:
       - eslint-config-azuretools
