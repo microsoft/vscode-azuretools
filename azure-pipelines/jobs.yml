@@ -1,5 +1,5 @@
 parameters:
-  - name: matrix
+  - name: "matrix"
     type: object
     default:
       Windows:
@@ -16,7 +16,7 @@ parameters:
         working_directory: .
 
 jobs:
-  - ${{ each job in jobs }}:
+  - ${{ each job in parameters.jobs }}:
       - job: ${{ job.name }}
         pool:
           vmImage: $(vmImage)

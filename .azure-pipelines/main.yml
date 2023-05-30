@@ -17,5 +17,7 @@ extends:
   template: ../azure-pipelines/jobs.yml
   parameters:
     jobs:
-      - eslint-config-azuretools
-      - utils
+      - name: eslint-config-azuretools
+        working_directory: eslint-config-azuretools
+      - name: utils
+        working_directory: utils
