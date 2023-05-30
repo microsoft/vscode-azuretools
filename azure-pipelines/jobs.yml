@@ -5,7 +5,6 @@ parameters:
     type: string
   - name: "working_directories"
     type: object
-    default: ["."]
 
 jobs:
   - job: ${{ parameters.jobName }}
