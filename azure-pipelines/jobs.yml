@@ -19,9 +19,9 @@ jobs:
       Codeql.Enabled: $[and(in(variables['Build.Reason'], 'Schedule'), eq(variables['Agent.OS'], 'Linux'))] # Enable CodeQL only on Linux+scheduled builds because it is slow
     strategy:
       matrix:
-        ${{ each working_directory in parameters.working_directories }}:
-          artifact_name: ${{ working_directory }}
-          working_directory: ${{ working_directory }}
+        ${{ each package in parameters.working_directories }}:
+          artifact_name: ${{ package.working_directory }}
+          working_directory: ${{ package.working_directory }}
 
   - job: Compliance
     pool:
