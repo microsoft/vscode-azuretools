@@ -1,5 +1,6 @@
 parameters:
   - name: working_directory
+  - name: artifact_name
 
 steps:
   - task: Npm@1

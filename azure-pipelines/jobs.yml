@@ -12,9 +12,18 @@ jobs:
       vmImage: ${{ parameters.vmImage }}
     steps:
       - template: ./templates/setup.yml
+        parameters:
+          working_directory: $(working_directory)
       - template: ./templates/build.yml
+        parameters:
+          working_directory: $(working_directory)
       - template: ./templates/test.yml
+        parameters:
+          working_directory: $(working_directory)
       - template: ./templates/package.yml
+        parameters:
+          working_directory: $(working_directory)
+          artifact_name: $(artifact_name)
     variables:
       Codeql.Enabled: $[and(in(variables['Build.Reason'], 'Schedule'), eq(variables['Agent.OS'], 'Linux'))] # Enable CodeQL only on Linux+scheduled builds because it is slow
     strategy:
