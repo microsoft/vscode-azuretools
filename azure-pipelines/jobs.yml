@@ -31,7 +31,7 @@ jobs:
         strategy:
           matrix: ${{ parameters.matrix }}
 
-  - job: ${{ job.name }}-Compliance
+  - job: Compliance
     pool:
       vmImage: $(vmImage)
     steps:
