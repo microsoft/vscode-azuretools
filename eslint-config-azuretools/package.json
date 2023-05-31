@@ -1,6 +1,6 @@
 {
   "name": "@microsoft/eslint-config-azuretools",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Shared ESLint configuration used by Azure Tools for VS Code",
   "main": "index.js",
   "repository": {
