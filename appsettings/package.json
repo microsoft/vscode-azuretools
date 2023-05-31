@@ -24,12 +24,11 @@
     "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/appsettings/README.md",
     "scripts": {
         "build": "tsc -p ./",
-        "prepack": "tsc -p ./",
         "compile": "tsc -watch -p ./",
         "lint": "eslint --ext .ts .",
         "lint-fix": "eslint --ext .ts . --fix",
-        "pretest": "npm run build",
-        "test": "node ./out/test/runTest.js"
+        "test": "node ./out/test/runTest.js",
+        "package": "npm pack"
     },
     "dependencies": {
         "@microsoft/vscode-azext-utils": "^1.2.1"

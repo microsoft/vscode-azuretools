@@ -1,44 +1,33 @@
-variables:
-  ${{ if eq(variables['Build.Reason'], 'Schedule') }}:
-    ENABLE_LONG_RUNNING_TESTS: true
-    ENABLE_COMPLIANCE: true
-
-jobs:
-- job: Windows
-  pool:
-    vmImage: windows-latest
-  steps:
-  - template: job-steps.yml
-  - template: compliance/compliance.yml # Only works on Windows
-
-- job: Linux
-  pool:
-    vmImage: ubuntu-latest
-  steps:
-  - template: job-steps.yml
-  variables:
-    Codeql.Enabled: $[in(variables['Build.Reason'], 'Schedule')] # Enable CodeQL only on scheduled builds because it is slow
-
-- job: macOS
-  pool:
-    vmImage: macOS-12
-  steps:
-  - template: job-steps.yml
-
+# Trigger the build whenever `main` is updated
 trigger:
-  branches:
-    include:
-    - '*'
+  - main
+  - rel/*
 
-pr:
-  branches:
-    include:
-    - '*'
-
+# Scheduled nightly build
 schedules:
-- cron: "0 11 * * *"
-  displayName: Nightly at 4:00 PT
-  always: true # Run even when there are no code changes
-  branches:
-    include:
-    - main
+  - cron: "0 0 * * *"
+    displayName: Nightly scheduled build
+    always: false # Don't rebuild if there haven't been changes
+    branches:
+      include:
+        - main
+
+# Use the templates
+extends:
+  template: ../azure-pipelines/jobs.yml
+  parameters:
+    jobs:
+      - name: appservice
+        working_directory: appservice
+      - name: appsettings
+        working_directory: appsettings
+      - name: auth
+        working_directory: auth
+      - name: azure
+        working_directory: azure
+      - name: dev
+        working_directory: dev
+      - name: eslint_config_azuretools
+        working_directory: eslint-config-azuretools
+      - name: utils
+        working_directory: utils

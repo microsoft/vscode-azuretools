@@ -1,9 +1,18 @@
 on:
   workflow_call:
+    inputs:
+      working_directory:
+        required: false
+        type: string
+        default: '.'
 
 jobs:
   Build:
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ${{ inputs.working_directory }}
 
     steps:
       # Setup
@@ -20,9 +29,6 @@ jobs:
       # Build
       - run: npm run build
 
-      # Test
-      - run: xvfb-run -a npm test
-
       # Package
       - run: npm run package
       - name: Upload Artifacts
@@ -32,3 +38,6 @@ jobs:
           path: |
             **/*.vsix
             **/*.tgz
+
+      # Test
+      - run: xvfb-run -a npm test

@@ -1,0 +1,50 @@
+name: Node PR Lint, Build and Test
+
+on:
+  # Trigger on pull requests to `main` or `rel/*`
+  pull_request:
+    branches:
+      - main
+      - rel/*
+
+jobs:
+  ChangedPackages:
+    # Determine changed subpaths to run the matrix on
+    # See https://github.com/dorny/paths-filter/tree/v2/#examples
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine changed packages
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            appservice: "appservice/**"
+            appsettings: "appsettings/**"
+            auth: "auth/**"
+            azure: "azure/**"
+            dev: "dev/**"
+            eslint-config-azuretools: "eslint-config-azuretools/**"
+            utils: "utils/**"
+    outputs:
+      # Expose matched filters as job 'packages' output variable
+      packages: ${{ steps.filter.outputs.changes }}
+
+  Build:
+    # Use template from https://github.com/microsoft/vscode-azuretools/blob/main/.github/workflows/jobs.yml
+    uses: ./.github/workflows/jobs.yml
+    needs: [ChangedPackages]
+    with:
+      working_directory: ${{ matrix.package }}
+    strategy:
+      matrix:
+        package: ${{ fromJson(needs.ChangedPackages.outputs.packages) }}
+
+  CheckResults:
+    # Require all jobs under `build` to have succeeded
+    # See https://github.com/orgs/community/discussions/26822
+    if: ${{ always() }}
+    needs: [Build]
+    runs-on: ubuntu-latest
+    steps:
+      - run: exit 1
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
