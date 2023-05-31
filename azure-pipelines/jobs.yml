@@ -17,7 +17,7 @@ parameters:
 
 jobs:
   - ${{ each job in parameters.jobs }}:
-      - job: ${{ job.name }}
+      - job: $[replace(${{ job.name }}, '-', '_')]
         pool:
           vmImage: $(vmImage)
         steps:
