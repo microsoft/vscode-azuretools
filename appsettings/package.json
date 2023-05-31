@@ -36,7 +36,7 @@
     },
     "devDependencies": {
         "@azure/arm-appservice": "^13.0.2",
-        "@microsoft/eslint-config-azuretools": "^0.2.0",
+        "@microsoft/eslint-config-azuretools": "^0.2.1",
         "@microsoft/vscode-azext-dev": "^1.2.0",
         "@types/fs-extra": "^9.0.13",
         "@types/mocha": "^9.0.0",

@@ -46,7 +46,7 @@
         "@azure/ms-rest-azure-env": "^2.0.0"
     },
     "devDependencies": {
-        "@microsoft/eslint-config-azuretools": "^0.2.0",
+        "@microsoft/eslint-config-azuretools": "^0.2.1",
         "@microsoft/vscode-azext-dev": "^1.0.0",
         "@types/html-to-text": "^8.1.0",
         "@types/mocha": "^7.0.2",
