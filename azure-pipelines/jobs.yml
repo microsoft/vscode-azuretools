@@ -12,7 +12,7 @@ parameters:
   - name: "jobs"
     type: object
     default:
-      - name: default
+      - name: default # TODO: would like this to be repository name but can't use build variables here
         working_directory: .
 
 jobs:
