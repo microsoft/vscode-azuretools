@@ -18,7 +18,7 @@ To use these base pipeline templates:
 5. Create a `main.yml` file in `.azure-pipelines` with the following contents:
 
 ```yaml
-# Trigger the build whenever `main` is updated
+# Trigger the build whenever `main` or `rel/*` is updated
 trigger:
   - main
   - rel/*
@@ -32,7 +32,7 @@ schedules:
       include:
         - main
 
-# Grab the base templates from https://github.com/microsoft/vscode-azuretools
+# Grab the base templates from https://github.com/microsoft/vscode-azuretools/tree/main/azure-pipelines
 resources:
   repositories:
     - repository: templates

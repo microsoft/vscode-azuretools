@@ -15,10 +15,16 @@ To use these base workflow templates:
 name: Node PR Lint, Build and Test
 
 on:
+  # Trigger when manually run
+  workflow_dispatch:
+
+  # Trigger on pushes to `main` or `rel/*`
   push:
     branches:
       - main
       - rel/*
+
+  # Trigger on pull requests to `main` or `rel/*`
   pull_request:
     branches:
       - main
@@ -26,5 +32,6 @@ on:
 
 jobs:
   Build:
+    # Use template from https://github.com/microsoft/vscode-azuretools/tree/main/.github/workflows
     uses: microsoft/vscode-azuretools/.github/workflows/jobs.yml@main
 ```
