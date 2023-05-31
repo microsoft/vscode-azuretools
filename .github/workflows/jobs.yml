@@ -4,6 +4,7 @@ on:
       working_directory:
         required: false
         type: string
+        default: '.'
 
 jobs:
   Build:
