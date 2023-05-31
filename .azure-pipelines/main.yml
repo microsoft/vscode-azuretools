@@ -17,6 +17,16 @@ extends:
   template: ../azure-pipelines/jobs.yml
   parameters:
     jobs:
+      - name: appservice
+        working_directory: appservice
+      - name: appsettings
+        working_directory: appsettings
+      - name: auth
+        working_directory: auth
+      - name: azure
+        working_directory: azure
+      - name: dev
+        working_directory: dev
       - name: eslint_config_azuretools
         working_directory: eslint-config-azuretools
       - name: utils
