@@ -12,7 +12,7 @@ parameters:
   - name: "jobs"
     type: object
     default:
-      - name: $[replace(variables['Build.Repository.Name'], '-', '_')]
+      - name: default
         working_directory: .
 
 jobs:
