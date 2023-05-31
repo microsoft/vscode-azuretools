@@ -12,7 +12,7 @@ schedules:
       include:
         - main
 
-# Use those templates
+# Use the templates
 extends:
   template: ../azure-pipelines/jobs.yml
   parameters:
