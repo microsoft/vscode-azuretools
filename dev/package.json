@@ -35,7 +35,7 @@
         "test": "node ./out/test/runTest.js"
     },
     "devDependencies": {
-        "@microsoft/eslint-config-azuretools": "^0.2.0",
+        "@microsoft/eslint-config-azuretools": "^0.2.1",
         "@types/copy-webpack-plugin": "^6.0.0",
         "@types/fs-extra": "^8.0.0",
         "@types/glob": "^8.1.0",
