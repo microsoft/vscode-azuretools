@@ -12,7 +12,7 @@ parameters:
   - name: "jobs"
     type: object
     default:
-      - name: $(Build.Repository.Name)
+      - name: $(variables['Build.Repository.Name'])
         working_directory: .
 
 jobs:
