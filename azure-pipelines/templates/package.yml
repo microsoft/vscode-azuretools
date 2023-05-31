@@ -8,7 +8,7 @@ steps:
 
   - task: CopyFiles@2
     displayName: "Copy package to staging directory"
-    ${{ if ne(working_directory, '.') }}:
+    ${{ if ne(variables['working_directory'], '.') }}:
       inputs:
         Contents: |
           $(working_directory)/*.vsix
