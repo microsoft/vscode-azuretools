@@ -12,12 +12,12 @@ parameters:
   - name: "jobs"
     type: object
     default:
-      - name: $(variables['Build.Repository.Name'])
+      - name: ${{ replace(variables['Build.Repository.Name'], '-', '_') }}
         working_directory: .
 
 jobs:
   - ${{ each job in parameters.jobs }}:
-      - job: ${{ replace(job.name, '-', '_') }}
+      - job: ${{ job.name }}
         pool:
           vmImage: $(vmImage)
         steps:
