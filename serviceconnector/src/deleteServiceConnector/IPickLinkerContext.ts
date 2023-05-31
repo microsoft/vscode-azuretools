@@ -5,7 +5,6 @@
 
 import { ICreateLinkerContext } from "../createServiceConnector/ICreateLinkerContext";
 
-//also used for validate maybe make more generic and put in another folder?
 export interface IPickLinkerContext extends ICreateLinkerContext {
     linkerName?: string;
 }

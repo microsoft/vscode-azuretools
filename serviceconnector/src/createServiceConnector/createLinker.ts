@@ -5,31 +5,31 @@
 
 import { AzExtTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, createSubscriptionContext, nonNullValue } from "@microsoft/vscode-azext-utils";
 import { AzureSubscription } from "@microsoft/vscode-azureresources-api";
-import { localize } from "../localize";
+import * as vscode from 'vscode';
 import { AuthenticationTypeStep } from "./AuthenticationTypeStep";
 import { ClientTypeStep } from "./ClientTypeStep";
 import { CreateLinkerStep } from "./CreateLinkerStep";
 import { ICreateLinkerContext } from "./ICreateLinkerContext";
 import { LinkerNameStep } from "./LinkerNameStep";
-import { ServiceTypeStep } from "./ServiceTypeStep";
+import { TargetServiceTypeStep } from "./TargetServiceTypeStep";
 
-export interface ServiceConnectorItem {
+export interface LinkerItem {
     subscription: AzureSubscription,
     id: string,
 }
 
-export async function createLinker(context: IActionContext, item: ServiceConnectorItem | AzExtTreeItem): Promise<void> {
+export async function createLinker(context: IActionContext, item: LinkerItem | AzExtTreeItem): Promise<void> {
     const subscription = item instanceof AzExtTreeItem ? item.subscription : createSubscriptionContext(item.subscription);
     const wizardContext: ICreateLinkerContext = {
         ...context,
         ...subscription,
-        resourceUri: nonNullValue(item?.id),
+        sourceResourceUri: nonNullValue(item?.id),
     }
 
-    const title: string = localize('createConnector', 'Create Service Connector');
+    const title: string = vscode.l10n.t('Create Service Connector');
 
     const promptSteps: AzureWizardPromptStep<ICreateLinkerContext>[] = [
-        new ServiceTypeStep(),
+        new TargetServiceTypeStep(),
         new LinkerNameStep(),
         new ClientTypeStep(),
         new AuthenticationTypeStep(),

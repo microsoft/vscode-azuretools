@@ -6,8 +6,9 @@ export { LinkerResource } from "@azure/arm-servicelinker";
 export * from './createServiceConnector/CreateLinkerStep';
 export * from './createServiceConnector/ICreateLinkerContext';
 export * from './createServiceConnector/LinkerNameStep';
-export * from './createServiceConnector/ServiceTypeStep';
-export * from './createServiceConnector/createServiceConnector';
+export * from './createServiceConnector/TargetServiceTypeStep';
+export * from './createServiceConnector/createLinker';
 export * from './deleteServiceConnector/IPickLinkerContext';
-export * from './deleteServiceConnector/deleteServiceConnector';
-export * from './validateServiceConnector/validateServiceConnector';
+export * from './deleteServiceConnector/deleteLinker';
+export * from './validateServiceConnector/validateLinker';
+

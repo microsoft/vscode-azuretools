@@ -4,25 +4,25 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { AzExtTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, createSubscriptionContext } from "@microsoft/vscode-azext-utils";
-import { ServiceConnectorItem } from "../createServiceConnector/createServiceConnector";
+import * as vscode from 'vscode';
+import { LinkerItem } from "../createServiceConnector/createLinker";
 import { IPickLinkerContext } from "../deleteServiceConnector/IPickLinkerContext";
-import { ServiceConnectorsListStep } from "../deleteServiceConnector/ServiceConnectorsListStep";
-import { localize } from "../localize";
+import { LinkerListStep } from "../deleteServiceConnector/LinkerListStep";
 import { ValidateLinkerStep } from "./ValidateLinkerStep";
 
-export async function validateLinker(context: IPickLinkerContext, item: ServiceConnectorItem | AzExtTreeItem): Promise<void> {
+export async function validateLinker(context: IPickLinkerContext, item: LinkerItem | AzExtTreeItem): Promise<void> {
     const subscription = item instanceof AzExtTreeItem ? item.subscription : createSubscriptionContext(item.subscription);
 
     const wizardContext: IPickLinkerContext = {
         ...context,
         ...subscription,
-        resourceUri: item?.id,
+        sourceResourceUri: item?.id,
     }
 
-    const title: string = localize('deleteConnector', 'Validate service connector');
+    const title: string = vscode.l10n.t('Validate service connector');
 
     const promptSteps: AzureWizardPromptStep<IPickLinkerContext>[] = [
-        new ServiceConnectorsListStep()
+        new LinkerListStep()
     ];
 
     const executeSteps: AzureWizardExecuteStep<IPickLinkerContext>[] = [

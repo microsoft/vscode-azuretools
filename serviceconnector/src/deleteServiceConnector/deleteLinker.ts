@@ -4,25 +4,25 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { AzExtTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, createSubscriptionContext } from "@microsoft/vscode-azext-utils";
-import { ServiceConnectorItem } from "../createServiceConnector/createServiceConnector";
-import { localize } from "../localize";
+import * as vscode from 'vscode';
+import { LinkerItem } from "../createServiceConnector/createLinker";
 import { DeleteLinkerStep } from "./DeleteLinkerStep";
 import { IPickLinkerContext } from "./IPickLinkerContext";
-import { ServiceConnectorsListStep } from "./ServiceConnectorsListStep";
+import { LinkerListStep } from "./LinkerListStep";
 
-export async function deleteLinker(context: IActionContext, item: ServiceConnectorItem | AzExtTreeItem): Promise<void> {
+export async function deleteLinker(context: IActionContext, item: LinkerItem | AzExtTreeItem): Promise<void> {
     const subscription = item instanceof AzExtTreeItem ? item.subscription : createSubscriptionContext(item.subscription);
 
     const wizardContext: IPickLinkerContext = {
         ...context,
         ...subscription,
-        resourceUri: item?.id,
+        sourceResourceUri: item?.id,
     }
 
-    const title: string = localize('deleteConnector', 'Delete service connector');
+    const title: string = vscode.l10n.t('Delete service connector');
 
     const promptSteps: AzureWizardPromptStep<IPickLinkerContext>[] = [
-        new ServiceConnectorsListStep()
+        new LinkerListStep()
     ];
 
     const executeSteps: AzureWizardExecuteStep<IPickLinkerContext>[] = [

@@ -3,14 +3,14 @@
 *  Licensed under the MIT License. See License.md in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { ServiceLinkerManagementClient } from "@azure/arm-servicelinker";
 import { uiUtils } from "@microsoft/vscode-azext-azureutils";
 import { AzureWizardPromptStep, IAzureQuickPickItem, nonNullValue } from "@microsoft/vscode-azext-utils";
+import * as vscode from 'vscode';
 import { IPickLinkerContext } from "./IPickLinkerContext";
 
-export class ServiceConnectorsListStep extends AzureWizardPromptStep<IPickLinkerContext>{
+export class LinkerListStep extends AzureWizardPromptStep<IPickLinkerContext>{
     public async prompt(context: IPickLinkerContext): Promise<void> {
-        const placeHolder = "Select a service connector";
+        const placeHolder = vscode.l10n.t("Select a service connector");
         context.linkerName = (await context.ui.showQuickPick(this.getPicks(context), { placeHolder })).data;
     }
 
@@ -26,8 +26,8 @@ export class ServiceConnectorsListStep extends AzureWizardPromptStep<IPickLinker
     }
 
     private async getPicks(context: IPickLinkerContext): Promise<IAzureQuickPickItem<string>[]> {
-        const client = new ServiceLinkerManagementClient(context.credentials);
-        const linkers = (await uiUtils.listAllIterator(client.linker.list(nonNullValue(context.resourceUri))));
+        const client = new (await import('@azure/arm-servicelinker')).ServiceLinkerManagementClient(context.credentials);
+        const linkers = (await uiUtils.listAllIterator(client.linker.list(nonNullValue(context.sourceResourceUri))));
         return linkers.map(l => {
             return { label: nonNullValue(l.name), data: nonNullValue(l.name) }
         });

@@ -5,24 +5,32 @@
 
 import { INewStorageAccountDefaults, StorageAccountKind, StorageAccountListStep, StorageAccountPerformance, StorageAccountReplication } from "@microsoft/vscode-azext-azureutils";
 import { AzureWizardPromptStep, IAzureQuickPickItem, IWizardOptions } from "@microsoft/vscode-azext-utils";
-import { ServiceType, ServiceTypeNames } from "../../constants";
+import * as vscode from 'vscode';
+import { TargetServiceType, TargetServiceTypeName } from "../../constants";
 import { ICreateLinkerContext } from "./ICreateLinkerContext";
 
-export class ServiceTypeStep extends AzureWizardPromptStep<ICreateLinkerContext>{
+export class TargetServiceTypeStep extends AzureWizardPromptStep<ICreateLinkerContext>{
     public async prompt(context: ICreateLinkerContext): Promise<void> {
-        const placeHolder = 'Select Target Service Type';
-        const picks: IAzureQuickPickItem<ServiceType>[] = [
-            { label: 'Azure Storage - Blob', data: { name: "storageBlob", type: ServiceTypeNames.storage, id: '/blobServices/default' } },
-            { label: 'Azure Storage - Queue', data: { name: "storageQueue", type: ServiceTypeNames.storage, id: '/queueServices/default' } },
-            { label: 'Azure Storage - Table', data: { name: "storageTable", type: ServiceTypeNames.storage, id: '/tableServices/default' } },
-            { label: 'Azure Storage - File', data: { name: "storageFile", type: ServiceTypeNames.storage, id: '/fileServices/default' } },
+        const targetServiceLabels: string[] = [
+            vscode.l10n.t('Azure Storage - Blob'),
+            vscode.l10n.t('Azure Storage - Queue'),
+            vscode.l10n.t('Azure Storage - Table'),
+            vscode.l10n.t('Azure Storage - File'),
         ];
 
-        context.serviceType = (await context.ui.showQuickPick(picks, { placeHolder })).data
+        const placeHolder = vscode.l10n.t('Select Target Service Type');
+        const picks: IAzureQuickPickItem<TargetServiceType>[] = [
+            { label: targetServiceLabels[0], data: { name: "storageBlob", type: TargetServiceTypeName.storage, id: '/blobServices/default' } },
+            { label: targetServiceLabels[1], data: { name: "storageQueue", type: TargetServiceTypeName.storage, id: '/queueServices/default' } },
+            { label: targetServiceLabels[2], data: { name: "storageTable", type: TargetServiceTypeName.storage, id: '/tableServices/default' } },
+            { label: targetServiceLabels[3], data: { name: "storageFile", type: TargetServiceTypeName.storage, id: '/fileServices/default' } },
+        ];
+
+        context.targetServiceType = (await context.ui.showQuickPick(picks, { placeHolder })).data
     }
 
     public shouldPrompt(context: ICreateLinkerContext): boolean {
-        return !context.serviceType;
+        return !context.targetServiceType;
     }
 
     public async getSubWizard(context: ICreateLinkerContext): Promise<IWizardOptions<ICreateLinkerContext> | undefined> {
@@ -34,8 +42,8 @@ export class ServiceTypeStep extends AzureWizardPromptStep<ICreateLinkerContext>
             replication: StorageAccountReplication.LRS
         };
 
-        switch (context.serviceType?.type) {
-            case ServiceTypeNames.storage:
+        switch (context.targetServiceType?.type) {
+            case TargetServiceTypeName.storage:
                 promptSteps.push(new StorageAccountListStep(storageAccountCreateOptions));
                 break;
             //case for each database type

@@ -3,13 +3,13 @@
 *  Licensed under the MIT License. See License.md in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-export type ServiceType = {
+export type TargetServiceType = {
     name: string;
     id: string;
-    type: ServiceTypeNames;
+    type: TargetServiceTypeName;
 }
 
-export enum ServiceTypeNames {
+export enum TargetServiceTypeName {
     storage = 'storage',
     //add database types
 }

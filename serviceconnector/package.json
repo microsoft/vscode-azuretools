@@ -33,16 +33,12 @@
     "dependencies": {
         "@microsoft/vscode-azext-utils": "^1.1.0",
         "@microsoft/vscode-azext-azureutils": "^1.0.0",
-        "@azure/arm-servicelinker" : "^2.1.0",
-        "vscode-nls": "^5.0.1"
+        "@azure/arm-servicelinker" : "^2.1.0"
     },
     "devDependencies": {
-        "@types/fs-extra": "^9.0.13",
         "@types/mocha": "^9.0.0",
         "@types/node": "^16.0.0",
         "@types/vscode": "1.76.0",
-        "@types/ws": "^8.5.3",
-        "@types/yazl": "^2.4.2",
         "@typescript-eslint/eslint-plugin": "^5.53.0",
         "@vscode/test-electron": "^2.1.5",
         "eslint": "^8.34.0",
