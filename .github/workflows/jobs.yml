@@ -8,9 +8,11 @@ on:
 jobs:
   Build:
     runs-on: ubuntu-latest
+
     defaults:
       run:
         working-directory: ${{ inputs.working_directory }}
+
     steps:
       # Setup
       - uses: actions/checkout@v3

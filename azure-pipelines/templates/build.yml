@@ -1,10 +1,7 @@
-parameters:
-  - name: "working_directory"
-
 steps:
   - task: Npm@1
     displayName: "Build"
     inputs:
       command: custom
       customCommand: run build
-      workingDir: ${{ parameters.working_directory }}
+      workingDir: $(working_directory)

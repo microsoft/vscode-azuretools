@@ -1,12 +1,9 @@
-parameters:
-  - name: "working_directory"
-
 steps:
   - task: Npm@1
     displayName: "Test"
     inputs:
       command: custom
       customCommand: test
-      workingDir: ${{ parameters.working_directory }}
+      workingDir: $(working_directory)
     env:
       DISPLAY: :99 # Only necessary for linux tests

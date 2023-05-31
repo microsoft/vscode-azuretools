@@ -4,8 +4,8 @@ To use these base pipeline templates:
 1. Your project must have an `.nvmrc` file with the appropriate Node.js version at the root of the repository
 1. Your `package.json` file must contain the following NPM scripts:
     1. `build`: this should get the code built sufficiently that it is testable. Note, for a VSCode extension, this should include bundling (webpack, esbuild).
+    1. `package`: this should do whatever packaging is needed of the built code--e.g. into a .vsix, .tgz, etc. The resulting package files will be published as build artifacts. This will always run after the `build` script, so it is not necessary to have a prepack script.
     1. `test`: this should run the tests. This will always run after the `build` script, so it is not necessary to have a pretest script.
-    1. `package`: this should do whatever packaging is needed of the built code--e.g. into a .vsix, .tar.gz, etc. The resulting package files will be published as build artifacts. This will always run after the `build` script, so it is not necessary to have a prepack script.
 1. Create a `.azure-pipelines` folder at the root of the repository
 1. Copy `compliance/CredScanSuppressions.json`, and `compliance/PoliCheckExclusions.xml` into `.azure-pipelines/compliance`, structured as such:
 ```
