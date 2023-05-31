@@ -8,25 +8,17 @@ steps:
 
   - task: CopyFiles@2
     displayName: "Copy package to staging directory"
-    ${{ if ne(variables['working_directory'], '.') }}:
-      inputs:
-        Contents: |
-          $(working_directory)/*.vsix
-          $(working_directory)/*.tar.gz
-          $(working_directory)/*.tgz
-        TargetFolder: "$(build.artifactstagingdirectory)/$(artifact_name)"
-    ${{ else }}:
-      inputs:
-        Contents: |
-          **/*.vsix
-          **/*.tar.gz
-          **/*.tgz
-        TargetFolder: "$(build.artifactstagingdirectory)"
+    inputs:
+      Contents: |
+        **/*.vsix
+        **/*.tar.gz
+        **/*.tgz
+      TargetFolder: "$(build.artifactstagingdirectory)"
     condition: and(eq(variables['Agent.OS'], 'Linux'), ne(variables['System.PullRequest.IsFork'], 'True'))
 
   - task: PublishBuildArtifacts@1
     displayName: "Publish artifacts: package"
     inputs:
-      PathtoPublish: "$(build.artifactstagingdirectory)/$(artifact_name)"
+      PathtoPublish: "$(build.artifactstagingdirectory)"
       ArtifactName: $(artifact_name)
     condition: and(eq(variables['Agent.OS'], 'Linux'), ne(variables['System.PullRequest.IsFork'], 'True'))
