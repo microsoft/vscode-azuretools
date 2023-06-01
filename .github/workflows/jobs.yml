@@ -38,6 +38,7 @@ jobs:
           path: |
             **/*.vsix
             **/*.tgz
+            !**/node_modules
 
       # Test
       - run: xvfb-run -a npm test
