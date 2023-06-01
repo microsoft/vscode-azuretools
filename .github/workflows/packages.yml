@@ -39,7 +39,7 @@ jobs:
       matrix:
         package: ${{ fromJson(needs.ChangedPackages.outputs.packages) }}
 
-  CheckResults:
+  CheckResults: # TODO: this will fail if no packages have been modified
     # Require all jobs under `build` to have succeeded
     # See https://github.com/orgs/community/discussions/26822
     if: ${{ always() }}
