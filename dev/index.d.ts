@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Environment } from "@azure/ms-rest-azure-env";
+import type { Environment } from "@azure/ms-rest-azure-env";
 import * as cp from "child_process";
 import { Disposable, Event, InputBoxOptions, LogLevel, LogOutputChannel, MessageItem, MessageOptions, OpenDialogOptions, QuickPickItem, QuickPickOptions, Uri } from "vscode";
 import * as webpack from 'webpack';
