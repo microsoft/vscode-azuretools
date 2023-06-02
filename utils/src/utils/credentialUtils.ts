@@ -26,9 +26,6 @@ export function createCredential(getSession: (scopes?: string[]) => vscode.Provi
             } else {
                 return null;
             }
-        },
-        signRequest: async () => {
-            throw new Error((vscode.l10n.t('Track 1 credentials are not (currently) supported.')));
         }
     };
 }
