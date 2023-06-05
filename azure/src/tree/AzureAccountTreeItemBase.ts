@@ -135,8 +135,8 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
                     // these properties don't exist on TokenCredentials, but do exist on DeviceTokenCredentials
                     // addExtensionValueToMask gracefully handles `undefined` input by ignoring it
                     addExtensionValueToMask(
-                        (filter.session.credentials2 as unknown).clientId as string | undefined,
-                        (filter.session.credentials2 as unknown).domain as string | undefined
+                        (filter.session.credentials2 as unknown as { clientId: string | undefined }).clientId,
+                        (filter.session.credentials2 as unknown as { domain: string | undefined }).domain
                     );
 
                     // filter.subscription.id is the The fully qualified ID of the subscription (For example, /subscriptions/00000000-0000-0000-0000-000000000000) and should be used as the tree item's id for the purposes of OpenInPortal
