@@ -33,9 +33,11 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
                 return;
             }
 
-            if (await this.isSignedIn() && !this.suppressSignInEvents && Date.now() > this.lastSignInEventFired + EventDebounce) {
-                this.lastSignInEventFired = Date.now();
-                this.onDidSignInEmitter.fire();
+            if (await this.isSignedIn()) {
+                if (!this.suppressSignInEvents && Date.now() > this.lastSignInEventFired + EventDebounce) {
+                    this.lastSignInEventFired = Date.now();
+                    this.onDidSignInEmitter.fire();
+                }
             } else if (Date.now() > this.lastSignOutEventFired + EventDebounce) {
                 this.lastSignOutEventFired = Date.now();
                 this.onDidSignOutEmitter.fire();
