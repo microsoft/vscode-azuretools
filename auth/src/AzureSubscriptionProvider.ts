@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import type * as vscode from 'vscode';
 import type { AzureSubscription } from './AzureSubscription';
 
 /**
@@ -38,6 +39,11 @@ export interface AzureSubscriptionProvider {
     signIn(): Promise<boolean>;
 
     /**
+     * An event that is fired when the user signs in. Debounced to fire at most once every 5 seconds.
+     */
+    onDidSignIn: vscode.Event<void>;
+
+    /**
      * Signs the user out
      *
      * @deprecated Not currently supported by VS Code auth providers
@@ -45,4 +51,9 @@ export interface AzureSubscriptionProvider {
      * @throws Throws an {@link Error} every time
      */
     signOut(): Promise<void>;
+
+    /**
+     * An event that is fired when the user signs out. Debounced to fire at most once every 5 seconds.
+     */
+    onDidSignOut: vscode.Event<void>;
 }
