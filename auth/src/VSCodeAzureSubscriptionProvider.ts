@@ -21,6 +21,7 @@ const EventDebounce = 5 * 1000; // 5 seconds
 export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implements AzureSubscriptionProvider {
     private readonly onDidSignInEmitter = new vscode.EventEmitter<void>();
     private lastSignInEventFired: number = 0;
+    private suppressSignInEvents: boolean = false;
 
     private readonly onDidSignOutEmitter = new vscode.EventEmitter<void>();
     private lastSignOutEventFired: number = 0;
@@ -32,7 +33,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
                 return;
             }
 
-            if (await this.isSignedIn() && Date.now() > this.lastSignInEventFired + EventDebounce) {
+            if (await this.isSignedIn() && !this.suppressSignInEvents && Date.now() > this.lastSignInEventFired + EventDebounce) {
                 this.lastSignInEventFired = Date.now();
                 this.onDidSignInEmitter.fire();
             } else if (Date.now() > this.lastSignOutEventFired + EventDebounce) {
@@ -69,25 +70,31 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
 
         const results: AzureSubscription[] = [];
 
-        // Get the list of tenants
-        for (const tenant of await this.getTenants()) {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            const tenantId = tenant.tenantId!;
+        try {
+            this.suppressSignInEvents = true;
 
-            // If filtering is enabled, and the current tenant is not in that list, then skip it
-            if (tenantFilterNormalized && !tenantIds.includes(tenantId)) {
-                continue;
-            }
+            // Get the list of tenants
+            for (const tenant of await this.getTenants()) {
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                const tenantId = tenant.tenantId!;
 
-            // For each tenant, get the list of subscriptions
-            for (const subscription of await this.getSubscriptionsForTenant(tenantId)) {
-                // If filtering is enabled, and the current subscription is not in that list, then skip it
-                if (subscriptionFilterNormalized && !subscriptionIds.includes(subscription.subscriptionId)) {
+                // If filtering is enabled, and the current tenant is not in that list, then skip it
+                if (tenantFilterNormalized && !tenantIds.includes(tenantId)) {
                     continue;
                 }
 
-                results.push(subscription);
+                // For each tenant, get the list of subscriptions
+                for (const subscription of await this.getSubscriptionsForTenant(tenantId)) {
+                    // If filtering is enabled, and the current subscription is not in that list, then skip it
+                    if (subscriptionFilterNormalized && !subscriptionIds.includes(subscription.subscriptionId)) {
+                        continue;
+                    }
+
+                    results.push(subscription);
+                }
             }
+        } finally {
+            this.suppressSignInEvents = false;
         }
 
         return results;
