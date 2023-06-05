@@ -6,17 +6,51 @@
 import type { SubscriptionClient, TenantIdDescription } from '@azure/arm-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
 import type { TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
 import * as vscode from 'vscode';
+import type { AzureAuthentication } from './AzureAuthentication';
 import type { AzureSubscription, SubscriptionId, TenantId } from './AzureSubscription';
+import type { AzureSubscriptionProvider } from './AzureSubscriptionProvider';
 import { NotSignedInError } from './NotSignedInError';
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from './utils/configuredAzureEnv';
-import type { AzureAuthentication } from './AzureAuthentication';
-import type { AzureSubscriptionProvider } from './AzureSubscriptionProvider';
+
+const EventDebounce = 5 * 1000; // 5 seconds
 
 /**
  * A class for obtaining Azure subscription information using VSCode's built-in authentication
  * provider.
  */
-export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvider {
+export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implements AzureSubscriptionProvider {
+    private readonly onDidSignInEmitter = new vscode.EventEmitter<void>();
+    private lastSignInEventFired: number = 0;
+    private suppressSignInEvents: boolean = false;
+
+    private readonly onDidSignOutEmitter = new vscode.EventEmitter<void>();
+    private lastSignOutEventFired: number = 0;
+
+    public constructor() {
+        const disposable = vscode.authentication.onDidChangeSessions(async e => {
+            // Ignore any sign in that isn't for the configured auth provider
+            if (e.provider.id !== getConfiguredAuthProviderId()) {
+                return;
+            }
+
+            if (await this.isSignedIn()) {
+                if (!this.suppressSignInEvents && Date.now() > this.lastSignInEventFired + EventDebounce) {
+                    this.lastSignInEventFired = Date.now();
+                    this.onDidSignInEmitter.fire();
+                }
+            } else if (Date.now() > this.lastSignOutEventFired + EventDebounce) {
+                this.lastSignOutEventFired = Date.now();
+                this.onDidSignOutEmitter.fire();
+            }
+        });
+
+        super(() => {
+            this.onDidSignInEmitter.dispose();
+            this.onDidSignOutEmitter.dispose();
+            disposable.dispose();
+        });
+    }
+
     /**
      * Gets a list of Azure subscriptions available to the user.
      *
@@ -38,25 +72,31 @@ export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvide
 
         const results: AzureSubscription[] = [];
 
-        // Get the list of tenants
-        for (const tenant of await this.getTenants()) {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            const tenantId = tenant.tenantId!;
+        try {
+            this.suppressSignInEvents = true;
 
-            // If filtering is enabled, and the current tenant is not in that list, then skip it
-            if (tenantFilterNormalized && !tenantIds.includes(tenantId)) {
-                continue;
-            }
+            // Get the list of tenants
+            for (const tenant of await this.getTenants()) {
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                const tenantId = tenant.tenantId!;
 
-            // For each tenant, get the list of subscriptions
-            for (const subscription of await this.getSubscriptionsForTenant(tenantId)) {
-                // If filtering is enabled, and the current subscription is not in that list, then skip it
-                if (subscriptionFilterNormalized && !subscriptionIds.includes(subscription.subscriptionId)) {
+                // If filtering is enabled, and the current tenant is not in that list, then skip it
+                if (tenantFilterNormalized && !tenantIds.includes(tenantId)) {
                     continue;
                 }
 
-                results.push(subscription);
+                // For each tenant, get the list of subscriptions
+                for (const subscription of await this.getSubscriptionsForTenant(tenantId)) {
+                    // If filtering is enabled, and the current subscription is not in that list, then skip it
+                    if (subscriptionFilterNormalized && !subscriptionIds.includes(subscription.subscriptionId)) {
+                        continue;
+                    }
+
+                    results.push(subscription);
+                }
             }
+        } finally {
+            this.suppressSignInEvents = false;
         }
 
         return results;
@@ -83,13 +123,23 @@ export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvide
     }
 
     /**
+     * An event that is fired when the user signs in. Debounced to fire at most once every 5 seconds.
+     */
+    public readonly onDidSignIn = this.onDidSignInEmitter.event;
+
+    /**
      * Signs the user out
      *
      * @deprecated Not currently supported by VS Code auth providers
      */
     public signOut(): Promise<void> {
-        throw new Error(vscode.l10n.t('Not implemented'));
+        throw new Error(vscode.l10n.t('Signing out programmatically is not supported. You must sign out by selecting the account in the Accounts menu and choosing Sign Out.'));
     }
+
+    /**
+     * An event that is fired when the user signs out. Debounced to fire at most once every 5 seconds.
+     */
+    public readonly onDidSignOut = this.onDidSignOutEmitter.event;
 
     /**
      * Gets the tenant filters that are configured in `azureResourceGroups.selectedSubscriptions`. To
