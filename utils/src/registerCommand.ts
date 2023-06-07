@@ -9,6 +9,11 @@ import { callWithTelemetryAndErrorHandling } from './callWithTelemetryAndErrorHa
 import { ext } from './extensionVariables';
 import { addTreeItemValuesToMask } from './tree/addTreeItemValuesToMask';
 import { AzExtTreeItem } from './tree/AzExtTreeItem';
+import { isAzExtTreeItem } from './tree/isAzExtTreeItem';
+
+function isTreeElementBase(object?: unknown): object is types.TreeElementBase {
+    return typeof object === 'object' && object !== null && 'getTreeItem' in object;
+}
 
 export function registerCommand(commandId: string, callback: (context: types.IActionContext, ...args: unknown[]) => unknown, debounce?: number, telemetryId?: string): void {
     let lastClickTime: number | undefined; /* Used for debounce */
@@ -19,17 +24,18 @@ export function registerCommand(commandId: string, callback: (context: types.IAc
             }
             lastClickTime = Date.now();
         }
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return await callWithTelemetryAndErrorHandling(
             telemetryId || commandId,
-            (context: types.IActionContext) => {
+            async (context: types.IActionContext) => {
                 if (args.length > 0) {
                     const firstArg: unknown = args[0];
 
-                    if (firstArg instanceof AzExtTreeItem) {
-                        context.telemetry.properties.contextValue = firstArg.contextValue;
-                    } else if (firstArg instanceof Uri) {
+                    if (firstArg instanceof Uri) {
                         context.telemetry.properties.contextValue = 'Uri';
+                    } else if (isTreeElementBase(firstArg)) {
+                        context.telemetry.properties.contextValue = (await firstArg.getTreeItem()).contextValue;
+                    } else if (isAzExtTreeItem(firstArg)) {
+                        context.telemetry.properties.contextValue = firstArg.contextValue;
                     }
 
                     for (const arg of args) {
@@ -39,7 +45,6 @@ export function registerCommand(commandId: string, callback: (context: types.IAc
                     }
                 }
 
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
                 return callback(context, ...args);
             }
         );
