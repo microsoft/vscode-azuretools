@@ -9,7 +9,6 @@ import { callWithTelemetryAndErrorHandling } from './callWithTelemetryAndErrorHa
 import { ext } from './extensionVariables';
 import { addTreeItemValuesToMask } from './tree/addTreeItemValuesToMask';
 import { AzExtTreeItem } from './tree/AzExtTreeItem';
-import { isAzExtTreeItem } from './tree/isAzExtTreeItem';
 
 function isTreeElementBase(object?: unknown): object is types.TreeElementBase {
     return typeof object === 'object' && object !== null && 'getTreeItem' in object;
@@ -32,10 +31,10 @@ export function registerCommand(commandId: string, callback: (context: types.IAc
 
                     if (firstArg instanceof Uri) {
                         context.telemetry.properties.contextValue = 'Uri';
+                    } else if (firstArg && typeof firstArg === 'object' && 'contextValue' in firstArg && typeof firstArg.contextValue === 'string') {
+                        context.telemetry.properties.contextValue = firstArg.contextValue;
                     } else if (isTreeElementBase(firstArg)) {
                         context.telemetry.properties.contextValue = (await firstArg.getTreeItem()).contextValue;
-                    } else if (isAzExtTreeItem(firstArg)) {
-                        context.telemetry.properties.contextValue = firstArg.contextValue;
                     }
 
                     for (const arg of args) {
