@@ -6,42 +6,36 @@
 import * as azureEnv from '@azure/ms-rest-azure-env'; // This package is so small that it's not worth lazy loading
 import * as vscode from 'vscode';
 
-const AzureCloudName = azureEnv.Environment.AzureCloud.name;
-const AzureChinaCloudName = azureEnv.Environment.ChinaCloud.name;
-const AzureUSGovernmentCloudName = azureEnv.Environment.USGovernment.name;
+// These strings come from https://github.com/microsoft/vscode/blob/eac16e9b63a11885b538db3e0b533a02a2fb8143/extensions/microsoft-authentication/package.json#L40-L99
+const CustomCloudConfigurationSection = 'microsoft-sovereign-cloud';
+const CloudEnvironmentSettingName = 'environment';
+const CustomEnvironmentSettingName = 'customEnvironment';
 
-const CloudNameToEndpointSettingValue: { [cloudName: string]: string | undefined } = {};
-CloudNameToEndpointSettingValue[AzureCloudName] = undefined;
-CloudNameToEndpointSettingValue[AzureChinaCloudName] = 'Azure China';
-CloudNameToEndpointSettingValue[AzureUSGovernmentCloudName] = 'Azure US Government';
+const ChinaCloudSettingValue = 'ChinaCloud';
+const USGovernmentSettingValue = 'USGovernment';
+const CustomCloudSettingValue = 'custom';
 
 /**
  * Gets the configured Azure environment.
  *
- * @returns The configured Azure environment from the `microsoft-sovereign-cloud.endpoint` setting.
+ * @returns The configured Azure environment from the settings in the built-in authentication provider extension
  */
 export function getConfiguredAzureEnv(): azureEnv.Environment & { isCustomCloud: boolean } {
-    const authProviderConfig = vscode.workspace.getConfiguration('microsoft-sovereign-cloud');
-    const endpointSettingValue = authProviderConfig.get<string | undefined>('endpoint')?.toLowerCase();
+    const authProviderConfig = vscode.workspace.getConfiguration(CustomCloudConfigurationSection);
+    const environmentSettingValue = authProviderConfig.get<string | undefined>(CloudEnvironmentSettingName);
 
-    // The endpoint setting will accept either the environment name (either 'Azure China' or 'Azure US Government'),
-    // or an endpoint URL. Since the user could configure the same environment either way, we need to check both.
-    // We'll also throw to lowercase just to maximize the chance of success.
-
-    /* eslint-disable @typescript-eslint/no-non-null-assertion */
-    if (endpointSettingValue === CloudNameToEndpointSettingValue[AzureChinaCloudName]!.toLowerCase() || endpointSettingValue === azureEnv.Environment.ChinaCloud.activeDirectoryEndpointUrl.toLowerCase()) {
+    if (environmentSettingValue === ChinaCloudSettingValue) {
         return {
             ...azureEnv.Environment.get(azureEnv.Environment.ChinaCloud.name),
             isCustomCloud: false,
         };
-    } else if (endpointSettingValue === CloudNameToEndpointSettingValue[AzureUSGovernmentCloudName]!.toLowerCase() || endpointSettingValue === azureEnv.Environment.USGovernment.activeDirectoryEndpointUrl.toLowerCase()) {
+    } else if (environmentSettingValue === USGovernmentSettingValue) {
         return {
             ...azureEnv.Environment.get(azureEnv.Environment.USGovernment.name),
             isCustomCloud: false,
         };
-    } else if (endpointSettingValue) {
-        const rgConfig = vscode.workspace.getConfiguration('azureResourceGroups');
-        const customCloud = rgConfig.get<azureEnv.EnvironmentParameters | undefined>('customCloud'); // TODO: final setting name
+    } else if (environmentSettingValue === CustomCloudSettingValue) {
+        const customCloud = authProviderConfig.get<azureEnv.EnvironmentParameters | undefined>(CustomEnvironmentSettingName);
 
         if (customCloud) {
             return {
@@ -50,9 +44,8 @@ export function getConfiguredAzureEnv(): azureEnv.Environment & { isCustomCloud:
             };
         }
 
-        throw new Error(vscode.l10n.t('The custom cloud choice is not configured. Please configure the setting `azureResourceGroups.customCloud`.')); // TODO: final setting name
+        throw new Error(vscode.l10n.t('The custom cloud choice is not configured. Please configure the setting `{0}.{1}`.', CustomCloudConfigurationSection, CustomEnvironmentSettingName));
     }
-    /* eslint-enable @typescript-eslint/no-non-null-assertion */
 
     return {
         ...azureEnv.Environment.get(azureEnv.Environment.AzureCloud.name),
@@ -63,22 +56,27 @@ export function getConfiguredAzureEnv(): azureEnv.Environment & { isCustomCloud:
 /**
  * Sets the configured Azure cloud.
  *
- * @param cloud Use `'AzureCloud'` for public Azure cloud, `'AzureChinaCloud'` for Azure China, or `'AzureUSGovernment'` for Azure US Government.
+ * @param cloud Use `'AzureCloud'` or `undefined` for public Azure cloud, `'ChinaCloud'` for Azure China, or `'USGovernment'` for Azure US Government.
  * These are the same values as the cloud names in `@azure/ms-rest-azure-env`. For a custom cloud, use an instance of the `@azure/ms-rest-azure-env` `EnvironmentParameters`.
  *
  * @param target (Optional) The configuration target to use, by default {@link vscode.ConfigurationTarget.Global}.
  */
-export async function setConfiguredAzureEnv(cloud: string | azureEnv.EnvironmentParameters, target: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Global): Promise<void> {
-    const authProviderConfig = vscode.workspace.getConfiguration('microsoft-sovereign-cloud');
+export async function setConfiguredAzureEnv(cloud: 'AzureCloud' | 'ChinaCloud' | 'USGovernment' | undefined | azureEnv.EnvironmentParameters, target: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Global): Promise<void> {
+    const authProviderConfig = vscode.workspace.getConfiguration(CustomCloudConfigurationSection);
 
-    if (typeof cloud === 'string' && cloud in CloudNameToEndpointSettingValue) {
-        await authProviderConfig.update('endpoint', CloudNameToEndpointSettingValue[cloud], target);
-    } else if (typeof cloud === 'object' && 'activeDirectoryEndpointUrl' in cloud) {
-        await authProviderConfig.update('endpoint', cloud.activeDirectoryEndpointUrl, target);
-
-        const rgConfig = vscode.workspace.getConfiguration('azureResourceGroups');
-        await rgConfig.update('customCloud', cloud, target); // TODO: final setting name
-
+    if (typeof cloud === 'undefined' || !cloud) {
+        // Use public cloud implicitly--set `environment` setting to `undefined`
+        await authProviderConfig.update(CloudEnvironmentSettingName, undefined, target);
+    } else if (typeof cloud === 'string' && cloud.toLowerCase() === 'AzureCloud'.toLowerCase()) {
+        // Use public cloud explicitly--set `environment` setting to `undefined`
+        await authProviderConfig.update(CloudEnvironmentSettingName, undefined, target);
+    } else if (typeof cloud === 'string') {
+        // Use a sovereign cloud--set the `environment` setting to the specified value
+        await authProviderConfig.update(CloudEnvironmentSettingName, cloud, target);
+    } else if (typeof cloud === 'object') {
+        // use a custom cloud--set the `environment` setting to `custom` and the `customEnvironment` setting to the specified value
+        await authProviderConfig.update(CloudEnvironmentSettingName, CustomCloudSettingValue, target);
+        await authProviderConfig.update(CustomEnvironmentSettingName, cloud, target);
     } else {
         throw new Error(`Invalid cloud value: ${JSON.stringify(cloud)}`);
     }
@@ -89,5 +87,5 @@ export async function setConfiguredAzureEnv(cloud: string | azureEnv.Environment
  * @returns The provider ID to use, either `'microsoft'` or `'microsoft-sovereign-cloud'`
  */
 export function getConfiguredAuthProviderId(): string {
-    return getConfiguredAzureEnv().name === AzureCloudName ? 'microsoft' : 'microsoft-sovereign-cloud';
+    return getConfiguredAzureEnv().name === azureEnv.Environment.AzureCloud.name ? 'microsoft' : 'microsoft-sovereign-cloud';
 }
