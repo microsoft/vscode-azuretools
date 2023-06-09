@@ -67,7 +67,7 @@ export async function setConfiguredAzureEnv(cloud: 'AzureCloud' | 'ChinaCloud' |
     if (typeof cloud === 'undefined' || !cloud) {
         // Use public cloud implicitly--set `environment` setting to `undefined`
         await authProviderConfig.update(CloudEnvironmentSettingName, undefined, target);
-    } else if (typeof cloud === 'string' && cloud.toLowerCase() === 'AzureCloud'.toLowerCase()) {
+    } else if (typeof cloud === 'string' && cloud === 'AzureCloud') {
         // Use public cloud explicitly--set `environment` setting to `undefined`
         await authProviderConfig.update(CloudEnvironmentSettingName, undefined, target);
     } else if (typeof cloud === 'string') {
