@@ -9,19 +9,12 @@ import { ICreateLinkerContext } from "./ICreateLinkerContext";
 
 export class AuthenticationTypeStep extends AzureWizardPromptStep<ICreateLinkerContext>{
     public async prompt(context: ICreateLinkerContext): Promise<void> {
-        const authInfoLabels: string[] = [
-            vscode.l10n.t('System assigned managed identity'),
-            vscode.l10n.t('User assigned managed identity'),
-            vscode.l10n.t('Service principal'),
-            vscode.l10n.t('Connection string')
-        ];
-
         const placeHolder = vscode.l10n.t('Select Authentication Type');
         const picks: IAzureQuickPickItem<AuthInfoBase>[] = [
-            { label: authInfoLabels[0], data: { authType: KnownAuthType.SystemAssignedIdentity } },
-            { label: authInfoLabels[1], data: { authType: KnownAuthType.UserAssignedIdentity } },
-            { label: authInfoLabels[2], data: { authType: KnownAuthType.ServicePrincipalSecret } },
-            { label: authInfoLabels[3], data: { authType: KnownAuthType.Secret } },
+            { label: vscode.l10n.t('System assigned managed identity'), data: { authType: KnownAuthType.SystemAssignedIdentity } },
+            { label: vscode.l10n.t('User assigned managed identity'), data: { authType: KnownAuthType.UserAssignedIdentity } }, //TODO: add steps for user assigned managed identity
+            { label: vscode.l10n.t('Service principal'), data: { authType: KnownAuthType.ServicePrincipalSecret } }, //TODO: add steps for service principal
+            { label: vscode.l10n.t('Connection string'), data: { authType: KnownAuthType.Secret } },
         ];
 
         context.authType = (await context.ui.showQuickPick(picks, { placeHolder })).data;

@@ -3,14 +3,14 @@
 *  Licensed under the MIT License. See License.md in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { AzExtTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, createSubscriptionContext } from "@microsoft/vscode-azext-utils";
+import { AzExtTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, ExecuteActivityContext, IActionContext, createSubscriptionContext, nonNullValue } from "@microsoft/vscode-azext-utils";
 import * as vscode from 'vscode';
 import { LinkerItem } from "../createServiceConnector/createLinker";
 import { IPickLinkerContext } from "../deleteServiceConnector/IPickLinkerContext";
 import { LinkerListStep } from "../deleteServiceConnector/LinkerListStep";
 import { ValidateLinkerStep } from "./ValidateLinkerStep";
 
-export async function validateLinker(context: IPickLinkerContext, item: LinkerItem | AzExtTreeItem): Promise<void> {
+export async function validateLinker(context: IActionContext & ExecuteActivityContext, item: LinkerItem | AzExtTreeItem, preSteps?: AzureWizardPromptStep<IPickLinkerContext>[]): Promise<void> {
     const subscription = item instanceof AzExtTreeItem ? item.subscription : createSubscriptionContext(item.subscription);
 
     const wizardContext: IPickLinkerContext = {
@@ -24,6 +24,8 @@ export async function validateLinker(context: IPickLinkerContext, item: LinkerIt
     const promptSteps: AzureWizardPromptStep<IPickLinkerContext>[] = [
         new LinkerListStep()
     ];
+
+    promptSteps.unshift(...nonNullValue(preSteps));
 
     const executeSteps: AzureWizardExecuteStep<IPickLinkerContext>[] = [
         new ValidateLinkerStep()

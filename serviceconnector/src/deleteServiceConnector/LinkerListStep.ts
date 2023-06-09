@@ -6,6 +6,7 @@
 import { uiUtils } from "@microsoft/vscode-azext-azureutils";
 import { AzureWizardPromptStep, IAzureQuickPickItem, nonNullValue } from "@microsoft/vscode-azext-utils";
 import * as vscode from 'vscode';
+import { createServiceConnectorClient } from "../serviceConnectorClient";
 import { IPickLinkerContext } from "./IPickLinkerContext";
 
 export class LinkerListStep extends AzureWizardPromptStep<IPickLinkerContext>{
@@ -18,15 +19,8 @@ export class LinkerListStep extends AzureWizardPromptStep<IPickLinkerContext>{
         return !context.linkerName;
     }
 
-    public async configureBeforePrompt(context: IPickLinkerContext): Promise<void> {
-        const picks = await this.getPicks(context);
-        if (picks.length === 1) {
-            context.linkerName = picks[0].data;
-        }
-    }
-
     private async getPicks(context: IPickLinkerContext): Promise<IAzureQuickPickItem<string>[]> {
-        const client = new (await import('@azure/arm-servicelinker')).ServiceLinkerManagementClient(context.credentials);
+        const client = await createServiceConnectorClient(context.credentials);
         const linkers = (await uiUtils.listAllIterator(client.linker.list(nonNullValue(context.sourceResourceUri))));
         return linkers.map(l => {
             return { label: nonNullValue(l.name), data: nonNullValue(l.name) }

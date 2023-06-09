@@ -4,13 +4,14 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { AzureWizardExecuteStep, nonNullValue } from "@microsoft/vscode-azext-utils";
+import { createServiceConnectorClient } from "../serviceConnectorClient";
 import { ICreateLinkerContext } from "./ICreateLinkerContext";
 
 export class CreateLinkerStep extends AzureWizardExecuteStep<ICreateLinkerContext>{
-    public priority: number = 200;
+    public priority: number = 10;
 
     public async execute(context: ICreateLinkerContext): Promise<void> {
-        const client = new (await import('@azure/arm-servicelinker')).ServiceLinkerManagementClient(context.credentials);
+        const client = await createServiceConnectorClient(context.credentials);
 
         context.linker = {
             authInfo: context.authType,

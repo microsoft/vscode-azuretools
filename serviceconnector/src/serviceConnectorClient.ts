@@ -3,14 +3,8 @@
 *  Licensed under the MIT License. See License.md in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-export type TargetServiceType = {
-    name: string;
-    id: string;
-    type: TargetServiceTypeName;
-}
+import { AzExtServiceClientCredentials } from "@microsoft/vscode-azext-utils";
 
-export enum TargetServiceTypeName {
-    Storage = 'storage',
-    //add database types
+export async function createServiceConnectorClient(credentials: AzExtServiceClientCredentials) {
+    return new (await import('@azure/arm-servicelinker')).ServiceLinkerManagementClient(credentials);
 }
-

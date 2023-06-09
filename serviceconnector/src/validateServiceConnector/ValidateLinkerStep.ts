@@ -5,12 +5,13 @@
 
 import { AzureWizardExecuteStep, nonNullValue } from "@microsoft/vscode-azext-utils";
 import { IPickLinkerContext } from "../deleteServiceConnector/IPickLinkerContext";
+import { createServiceConnectorClient } from "../serviceConnectorClient";
 
 export class ValidateLinkerStep extends AzureWizardExecuteStep<IPickLinkerContext> {
-    public priority: number = 200;
+    public priority: number = 10;
 
     public async execute(context: IPickLinkerContext): Promise<void> {
-        const client = new (await import('@azure/arm-servicelinker')).ServiceLinkerManagementClient(context.credentials);
+        const client = await createServiceConnectorClient(context.credentials);
         await client.linker.beginValidateAndWait(nonNullValue(context.sourceResourceUri), nonNullValue(context.linkerName));
     }
 

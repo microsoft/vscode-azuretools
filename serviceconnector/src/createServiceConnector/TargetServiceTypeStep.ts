@@ -11,22 +11,15 @@ import { ICreateLinkerContext } from "./ICreateLinkerContext";
 
 export class TargetServiceTypeStep extends AzureWizardPromptStep<ICreateLinkerContext>{
     public async prompt(context: ICreateLinkerContext): Promise<void> {
-        const targetServiceLabels: string[] = [
-            vscode.l10n.t('Azure Storage - Blob'),
-            vscode.l10n.t('Azure Storage - Queue'),
-            vscode.l10n.t('Azure Storage - Table'),
-            vscode.l10n.t('Azure Storage - File'),
-        ];
-
         const placeHolder = vscode.l10n.t('Select Target Service Type');
         const picks: IAzureQuickPickItem<TargetServiceType>[] = [
-            { label: targetServiceLabels[0], data: { name: "storageBlob", type: TargetServiceTypeName.storage, id: '/blobServices/default' } },
-            { label: targetServiceLabels[1], data: { name: "storageQueue", type: TargetServiceTypeName.storage, id: '/queueServices/default' } },
-            { label: targetServiceLabels[2], data: { name: "storageTable", type: TargetServiceTypeName.storage, id: '/tableServices/default' } },
-            { label: targetServiceLabels[3], data: { name: "storageFile", type: TargetServiceTypeName.storage, id: '/fileServices/default' } },
+            { label: vscode.l10n.t('Blob'), data: { name: "storageBlob", type: TargetServiceTypeName.Storage, id: '/blobServices/default' }, group: TargetServiceTypeName.Storage },
+            { label: vscode.l10n.t('Queue'), data: { name: "storageQueue", type: TargetServiceTypeName.Storage, id: '/queueServices/default' }, group: TargetServiceTypeName.Storage },
+            { label: vscode.l10n.t('Table'), data: { name: "storageTable", type: TargetServiceTypeName.Storage, id: '/tableServices/default' }, group: TargetServiceTypeName.Storage },
+            { label: vscode.l10n.t('File'), data: { name: "storageFile", type: TargetServiceTypeName.Storage, id: '/fileServices/default' }, group: TargetServiceTypeName.Storage },
         ];
 
-        context.targetServiceType = (await context.ui.showQuickPick(picks, { placeHolder })).data
+        context.targetServiceType = (await context.ui.showQuickPick(picks, { placeHolder, enableGrouping: true })).data
     }
 
     public shouldPrompt(context: ICreateLinkerContext): boolean {
@@ -43,7 +36,7 @@ export class TargetServiceTypeStep extends AzureWizardPromptStep<ICreateLinkerCo
         };
 
         switch (context.targetServiceType?.type) {
-            case TargetServiceTypeName.storage:
+            case TargetServiceTypeName.Storage:
                 promptSteps.push(new StorageAccountListStep(storageAccountCreateOptions));
                 break;
             //case for each database type
@@ -51,8 +44,3 @@ export class TargetServiceTypeStep extends AzureWizardPromptStep<ICreateLinkerCo
         return { promptSteps };
     }
 }
-
-
-
-
-

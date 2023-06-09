@@ -4,13 +4,14 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { AzureWizardExecuteStep, nonNullValue } from "@microsoft/vscode-azext-utils";
+import { createServiceConnectorClient } from "../serviceConnectorClient";
 import { IPickLinkerContext } from "./IPickLinkerContext";
 
 export class DeleteLinkerStep extends AzureWizardExecuteStep<IPickLinkerContext> {
-    public priority: number = 200;
+    public priority: number = 10;
 
     public async execute(context: IPickLinkerContext): Promise<void> {
-        const client = new (await import('@azure/arm-servicelinker')).ServiceLinkerManagementClient(context.credentials);
+        const client = await createServiceConnectorClient(context.credentials);
         await client.linker.beginDeleteAndWait(nonNullValue(context.sourceResourceUri), nonNullValue(context.linkerName));
     }
 

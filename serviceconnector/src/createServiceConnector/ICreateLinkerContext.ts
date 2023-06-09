@@ -7,7 +7,6 @@ import { IStorageAccountWizardContext } from "@microsoft/vscode-azext-azureutils
 import { ISubscriptionActionContext } from "@microsoft/vscode-azext-utils";
 import { TargetServiceType } from "../../constants";
 
-
 export interface ICreateLinkerContext extends ISubscriptionActionContext, IStorageAccountWizardContext {
     //Source resource
     sourceResourceUri?: string;

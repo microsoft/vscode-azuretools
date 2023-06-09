@@ -3,7 +3,7 @@
 *  Licensed under the MIT License. See License.md in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { AzExtTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, createSubscriptionContext, nonNullValue } from "@microsoft/vscode-azext-utils";
+import { AzExtTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, ExecuteActivityContext, IActionContext, createSubscriptionContext, nonNullValue } from "@microsoft/vscode-azext-utils";
 import { AzureSubscription } from "@microsoft/vscode-azureresources-api";
 import * as vscode from 'vscode';
 import { AuthenticationTypeStep } from "./AuthenticationTypeStep";
@@ -18,15 +18,14 @@ export interface LinkerItem {
     id: string,
 }
 
-export async function createLinker(context: IActionContext, item: LinkerItem | AzExtTreeItem): Promise<void> {
-    const subscription = item instanceof AzExtTreeItem ? item.subscription : createSubscriptionContext(item.subscription);
+export async function createLinker(context: IActionContext & ExecuteActivityContext, item: LinkerItem | AzExtTreeItem, preSteps?: AzureWizardPromptStep<ICreateLinkerContext>[]): Promise<void> {
+    const subscription = item instanceof AzExtTreeItem ? item.subscription : createSubscriptionContext(item.subscription); // For v1.5 compatibility
+
     const wizardContext: ICreateLinkerContext = {
         ...context,
         ...subscription,
         sourceResourceUri: nonNullValue(item?.id),
     }
-
-    const title: string = vscode.l10n.t('Create Service Connector');
 
     const promptSteps: AzureWizardPromptStep<ICreateLinkerContext>[] = [
         new TargetServiceTypeStep(),
@@ -35,12 +34,14 @@ export async function createLinker(context: IActionContext, item: LinkerItem | A
         new AuthenticationTypeStep(),
     ];
 
+    promptSteps.unshift(...nonNullValue(preSteps));
+
     const executeSteps: AzureWizardExecuteStep<ICreateLinkerContext>[] = [
         new CreateLinkerStep(),
     ];
 
     const wizard: AzureWizard<ICreateLinkerContext> = new AzureWizard(wizardContext, {
-        title,
+        title: vscode.l10n.t('Create Service Connector'),
         promptSteps,
         executeSteps,
     });
@@ -48,4 +49,3 @@ export async function createLinker(context: IActionContext, item: LinkerItem | A
     await wizard.prompt();
     await wizard.execute();
 }
-
