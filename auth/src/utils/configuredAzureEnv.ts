@@ -11,9 +11,11 @@ const CustomCloudConfigurationSection = 'microsoft-sovereign-cloud';
 const CloudEnvironmentSettingName = 'environment';
 const CustomEnvironmentSettingName = 'customEnvironment';
 
-const ChinaCloudSettingValue = 'ChinaCloud';
-const USGovernmentSettingValue = 'USGovernment';
-const CustomCloudSettingValue = 'custom';
+enum CloudEnvironmentSettingValue {
+    ChinaCloud = 'ChinaCloud',
+    USGovernment = 'USGovernment',
+    Custom = 'custom',
+}
 
 /**
  * Gets the configured Azure environment.
@@ -24,17 +26,17 @@ export function getConfiguredAzureEnv(): azureEnv.Environment & { isCustomCloud:
     const authProviderConfig = vscode.workspace.getConfiguration(CustomCloudConfigurationSection);
     const environmentSettingValue = authProviderConfig.get<string | undefined>(CloudEnvironmentSettingName);
 
-    if (environmentSettingValue === ChinaCloudSettingValue) {
+    if (environmentSettingValue === CloudEnvironmentSettingValue.ChinaCloud) {
         return {
             ...azureEnv.Environment.get(azureEnv.Environment.ChinaCloud.name),
             isCustomCloud: false,
         };
-    } else if (environmentSettingValue === USGovernmentSettingValue) {
+    } else if (environmentSettingValue === CloudEnvironmentSettingValue.USGovernment) {
         return {
             ...azureEnv.Environment.get(azureEnv.Environment.USGovernment.name),
             isCustomCloud: false,
         };
-    } else if (environmentSettingValue === CustomCloudSettingValue) {
+    } else if (environmentSettingValue === CloudEnvironmentSettingValue.Custom) {
         const customCloud = authProviderConfig.get<azureEnv.EnvironmentParameters | undefined>(CustomEnvironmentSettingName);
 
         if (customCloud) {
@@ -57,7 +59,7 @@ export function getConfiguredAzureEnv(): azureEnv.Environment & { isCustomCloud:
  * Sets the configured Azure cloud.
  *
  * @param cloud Use `'AzureCloud'` or `undefined` for public Azure cloud, `'ChinaCloud'` for Azure China, or `'USGovernment'` for Azure US Government.
- * These are the same values as the cloud names in `@azure/ms-rest-azure-env`. For a custom cloud, use an instance of the `@azure/ms-rest-azure-env` `EnvironmentParameters`.
+ * These are the same values as the cloud names in `@azure/ms-rest-azure-env`. For a custom cloud, use an instance of the `@azure/ms-rest-azure-env` {@link azureEnv.EnvironmentParameters}.
  *
  * @param target (Optional) The configuration target to use, by default {@link vscode.ConfigurationTarget.Global}.
  */
@@ -75,7 +77,7 @@ export async function setConfiguredAzureEnv(cloud: 'AzureCloud' | 'ChinaCloud' |
         await authProviderConfig.update(CloudEnvironmentSettingName, cloud, target);
     } else if (typeof cloud === 'object') {
         // use a custom cloud--set the `environment` setting to `custom` and the `customEnvironment` setting to the specified value
-        await authProviderConfig.update(CloudEnvironmentSettingName, CustomCloudSettingValue, target);
+        await authProviderConfig.update(CloudEnvironmentSettingName, CloudEnvironmentSettingValue.Custom, target);
         await authProviderConfig.update(CustomEnvironmentSettingName, cloud, target);
     } else {
         throw new Error(`Invalid cloud value: ${JSON.stringify(cloud)}`);
