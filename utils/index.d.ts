@@ -1662,7 +1662,7 @@ export declare function getAzExtResourceType(resource: { type: string; kind?: st
  */
 export declare function getAzureExtensionApi<T extends AzureExtensionApi>(extensionId: string, apiVersionRange: string, options?: GetApiOptions): Promise<T>;
 
-export type TreeNodeCommandCallback<T> = (context: IActionContext, node?: T, nodes?: T[], ...args: unknown[]) => unknown;
+export type TreeNodeCommandCallback<T> = (context: IActionContext, node?: T, nodes?: T[], ...args: any[]) => unknown;
 
 /**
  * Used to register VSCode tree node context menu commands that are in the host extension's tree. It wraps your callback with consistent error and telemetry handling
