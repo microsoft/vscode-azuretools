@@ -1,6 +1,6 @@
 {
   "name": "@microsoft/eslint-config-azuretools",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Shared ESLint configuration used by Azure Tools for VS Code",
   "main": "index.js",
   "repository": {
@@ -24,5 +24,11 @@
   },
   "dependencies": {
     "@typescript-eslint/parser": "^5.51.0"
+  },
+  "scripts": {
+    "lint": "exit 0",
+    "build": "exit 0",
+    "test": "exit 0",
+    "package": "npm pack"
   }
 }

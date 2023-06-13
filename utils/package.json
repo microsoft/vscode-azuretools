@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-utils",
     "author": "Microsoft Corporation",
-    "version": "1.2.2",
+    "version": "2.0.0",
     "description": "Common UI tools for developing Azure extensions for VS Code",
     "tags": [
         "azure",
@@ -24,12 +24,11 @@
     "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/utils/README.md",
     "scripts": {
         "build": "tsc -p ./",
-        "prepack": "tsc -p ./",
         "compile": "tsc -watch -p ./",
         "lint": "eslint --ext .ts .",
         "lint-fix": "eslint --ext .ts . --fix",
-        "pretest": "npm run build",
-        "test": "node ./out/test/runTest.js"
+        "test": "node ./out/test/runTest.js",
+        "package": "npm pack"
     },
     "dependencies": {
         "@microsoft/vscode-azureresources-api": "^2.0.4",
@@ -46,8 +45,8 @@
         "@azure/ms-rest-azure-env": "^2.0.0"
     },
     "devDependencies": {
-        "@microsoft/eslint-config-azuretools": "^0.2.0",
-        "@microsoft/vscode-azext-dev": "^1.0.0",
+        "@microsoft/eslint-config-azuretools": "^0.2.1",
+        "@microsoft/vscode-azext-dev": "^2.0.0",
         "@types/html-to-text": "^8.1.0",
         "@types/mocha": "^7.0.2",
         "@types/node": "^16.0.0",

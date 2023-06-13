@@ -1,19 +1,43 @@
 parameters:
-  - name: 'jobName'
-    type: string
-  - name: 'vmImage'
-    type: string
+  - name: "matrix"
+    type: object
+    default:
+      Windows:
+        vmImage: windows-latest
+      Linux:
+        vmImage: ubuntu-latest
+      macOS:
+        vmImage: macOS-latest
+
+  - name: "jobs"
+    type: object
+    default:
+      - name: Build # TODO: would like this to be repository name but can't use build variables here
+        working_directory: .
 
 jobs:
-  - job: ${{ parameters.jobName }}
+  - ${{ each job in parameters.jobs }}:
+      - job: ${{ job.name }}
+        pool:
+          vmImage: $(vmImage)
+        steps:
+          - template: ./templates/setup.yml
+          - template: ./templates/build.yml
+          - template: ./templates/package.yml
+          - template: ./templates/test.yml
+          - template: ./compliance/antimalware.yml
+        variables:
+          Codeql.Enabled: $[and(in(variables['Build.Reason'], 'Schedule'), eq(variables['Agent.OS'], 'Linux'))] # Enable CodeQL only on Linux+scheduled builds because it is slow
+          artifact_name: ${{ job.name }}
+          working_directory: ${{ job.working_directory }}
+        strategy:
+          matrix: ${{ parameters.matrix }}
+
+  - job: Compliance
     pool:
-      vmImage: ${{ parameters.vmImage }}
+      vmImage: $(vmImage)
     steps:
-      - template: ./templates/setup.yml
-      - ${{ if in(variables['Build.Reason'], 'Manual', 'Schedule') }}:
-        - template: ./compliance/compliance.yml
-      - template: ./templates/build.yml
-      - template: ./templates/test.yml
-      - template: ./templates/package.yml
-    variables:
-      Codeql.Enabled: $[and(in(variables['Build.Reason'], 'Schedule'), eq(variables['Agent.OS'], 'Linux'))] # Enable CodeQL only on Linux+scheduled builds because it is slow
+      - template: ./compliance/compliance.yml
+    strategy:
+      matrix: ${{ parameters.matrix }}
+    condition: in(variables['Build.Reason'], 'Schedule', 'IndividualCI')

@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-dev",
     "author": "Microsoft Corporation",
-    "version": "1.2.0",
+    "version": "2.0.0",
     "description": "Common dev dependency tools for developing Azure extensions for VS Code",
     "tags": [
         "azure",
@@ -27,15 +27,15 @@
     "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/dev/README.md",
     "scripts": {
         "build": "tsc -p ./",
-        "prepack": "tsc -p ./",
         "compile": "tsc -watch -p ./",
         "lint": "eslint --ext .ts .",
         "lint-fix": "eslint --ext .ts . --fix",
-        "pretest": "npm run build",
-        "test": "node ./out/test/runTest.js"
+        "test": "node ./out/test/runTest.js",
+        "package": "npm pack"
     },
     "devDependencies": {
-        "@microsoft/eslint-config-azuretools": "^0.2.0",
+        "@azure/ms-rest-azure-env": "^2.0.0",
+        "@microsoft/eslint-config-azuretools": "^0.2.1",
         "@types/copy-webpack-plugin": "^6.0.0",
         "@types/fs-extra": "^8.0.0",
         "@types/glob": "^8.1.0",
@@ -52,10 +52,6 @@
         "typescript": "^4.9.4"
     },
     "dependencies": {
-        "@azure/arm-subscriptions": "^2.0.0",
-        "@azure/ms-rest-azure-env": "^2.0.0",
-        "@azure/ms-rest-js": "^2.2.1",
-        "@azure/ms-rest-nodeauth": "^3.0.5",
         "assert": "^2.0.0",
         "browserify-zlib": "^0.2.0",
         "clean-webpack-plugin": "^4.0.0",

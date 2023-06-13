@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Environment } from "@azure/ms-rest-azure-env";
+import type { Environment } from "@azure/ms-rest-azure-env";
 import * as cp from "child_process";
-import { Disposable, Event, InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, QuickPickItem, QuickPickOptions, Uri, LogOutputChannel, LogLevel } from "vscode";
+import { Disposable, Event, InputBoxOptions, LogLevel, LogOutputChannel, MessageItem, MessageOptions, OpenDialogOptions, QuickPickItem, QuickPickOptions, Uri } from "vscode";
 import * as webpack from 'webpack';
 
 /**
@@ -138,26 +138,10 @@ export declare function gulp_installVSCodeExtension(publisherId: string, extensi
 export declare function gulp_webpack(mode: string, target?: 'node' | 'webworker'): cp.ChildProcess;
 
 /**
- * Loose type to use for T1 and T2 versions of "@azure/ms-rest-js".  The Azure Account extension returns
- * credentials that will satisfy both T1 and T2 requirements
+ * Loose type to use for T2 versions of Azure SDKs.  The Azure Account extension returns
+ * credentials that will satisfy T2 requirements
  */
-export type AzExtServiceClientCredentials = AzExtServiceClientCredentialsT1 & AzExtServiceClientCredentialsT2;
-
-/**
- * Loose interface to allow for the use of different versions of "@azure/ms-rest-js"
- * There's several cases where we don't control which "credentials" interface gets used, causing build errors even though the functionality itself seems to be compatible
- * For example: https://github.com/Azure/azure-sdk-for-js/issues/10045
- * Used specifically for T1 Azure SDKs
- */
-export interface AzExtServiceClientCredentialsT1 {
-    /**
-     * Signs a request with the Authentication header.
-     *
-     * @param {WebResourceLike} webResource The WebResourceLike/request to be signed.
-     * @returns {Promise<WebResourceLike>} The signed request object;
-     */
-    signRequest(webResource: any): Promise<any>;
-}
+export type AzExtServiceClientCredentials = AzExtServiceClientCredentialsT2;
 
 /**
  * Loose interface to allow for the use of different versions of "@azure/ms-rest-js"
