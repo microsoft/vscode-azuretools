@@ -9,7 +9,7 @@ import * as vscode from 'vscode';
 import { TargetServiceType, TargetServiceTypeName } from "../../constants";
 import { ICreateLinkerContext } from "./ICreateLinkerContext";
 
-export class TargetServiceTypeStep extends AzureWizardPromptStep<ICreateLinkerContext>{
+export class TargetServiceListStep extends AzureWizardPromptStep<ICreateLinkerContext>{
     public async prompt(context: ICreateLinkerContext): Promise<void> {
         const placeHolder = vscode.l10n.t('Select Target Service Type');
         const picks: IAzureQuickPickItem<TargetServiceType>[] = [

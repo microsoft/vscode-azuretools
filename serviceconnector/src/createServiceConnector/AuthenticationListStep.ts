@@ -7,13 +7,11 @@ import { AzureWizardPromptStep, IAzureQuickPickItem } from "@microsoft/vscode-az
 import * as vscode from 'vscode';
 import { ICreateLinkerContext } from "./ICreateLinkerContext";
 
-export class AuthenticationTypeStep extends AzureWizardPromptStep<ICreateLinkerContext>{
+export class AuthenticationListStep extends AzureWizardPromptStep<ICreateLinkerContext>{
     public async prompt(context: ICreateLinkerContext): Promise<void> {
         const placeHolder = vscode.l10n.t('Select Authentication Type');
         const picks: IAzureQuickPickItem<AuthInfoBase>[] = [
             { label: vscode.l10n.t('System assigned managed identity'), data: { authType: KnownAuthType.SystemAssignedIdentity } },
-            { label: vscode.l10n.t('User assigned managed identity'), data: { authType: KnownAuthType.UserAssignedIdentity } }, //TODO: add steps for user assigned managed identity
-            { label: vscode.l10n.t('Service principal'), data: { authType: KnownAuthType.ServicePrincipalSecret } }, //TODO: add steps for service principal
             { label: vscode.l10n.t('Connection string'), data: { authType: KnownAuthType.Secret } },
         ];
 

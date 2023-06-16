@@ -7,7 +7,7 @@ import { AzureWizardExecuteStep, nonNullValue } from "@microsoft/vscode-azext-ut
 import { createServiceConnectorClient } from "../serviceConnectorClient";
 import { ICreateLinkerContext } from "./ICreateLinkerContext";
 
-export class CreateLinkerStep extends AzureWizardExecuteStep<ICreateLinkerContext>{
+export class LinkerCreateStep extends AzureWizardExecuteStep<ICreateLinkerContext>{
     public priority: number = 10;
 
     public async execute(context: ICreateLinkerContext): Promise<void> {
@@ -17,7 +17,7 @@ export class CreateLinkerStep extends AzureWizardExecuteStep<ICreateLinkerContex
             authInfo: context.authType,
             targetService: {
                 type: "AzureResource",
-                id: context.storageAccount?.id + nonNullValue(context.targetServiceType?.id)
+                id: nonNullValue(context.storageAccount?.id) + nonNullValue(context.targetServiceType?.id) // This will change once databases is added
             },
             scope: context.scope,
             clientType: context.clientType

@@ -12,7 +12,12 @@ export class ValidateLinkerStep extends AzureWizardExecuteStep<IPickLinkerContex
 
     public async execute(context: IPickLinkerContext): Promise<void> {
         const client = await createServiceConnectorClient(context.credentials);
-        await client.linker.beginValidateAndWait(nonNullValue(context.sourceResourceUri), nonNullValue(context.linkerName));
+        const response = await client.linker.beginValidateAndWait(nonNullValue(context.sourceResourceUri), nonNullValue(context.linkerName));
+        for (const detail of nonNullValue(response.validationDetail)) {
+            if (detail.result === "failure") {
+                throw new Error(detail.description);
+            }
+        }
     }
 
     public shouldExecute(): boolean {

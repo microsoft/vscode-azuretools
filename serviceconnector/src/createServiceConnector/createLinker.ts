@@ -3,41 +3,43 @@
 *  Licensed under the MIT License. See License.md in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
+import { KnownClientType } from "@azure/arm-servicelinker";
 import { AzExtTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, ExecuteActivityContext, IActionContext, createSubscriptionContext, nonNullValue } from "@microsoft/vscode-azext-utils";
 import { AzureSubscription } from "@microsoft/vscode-azureresources-api";
 import * as vscode from 'vscode';
-import { AuthenticationTypeStep } from "./AuthenticationTypeStep";
-import { ClientTypeStep } from "./ClientTypeStep";
-import { CreateLinkerStep } from "./CreateLinkerStep";
+import { AuthenticationListStep } from "./AuthenticationListStep";
+import { ClientListStep } from "./ClientListStep";
 import { ICreateLinkerContext } from "./ICreateLinkerContext";
+import { LinkerCreateStep } from "./LinkerCreateStep";
 import { LinkerNameStep } from "./LinkerNameStep";
-import { TargetServiceTypeStep } from "./TargetServiceTypeStep";
+import { TargetServiceListStep } from "./TargetServiceListStep";
 
 export interface LinkerItem {
     subscription: AzureSubscription,
     id: string,
 }
 
-export async function createLinker(context: IActionContext & ExecuteActivityContext, item: LinkerItem | AzExtTreeItem, preSteps?: AzureWizardPromptStep<ICreateLinkerContext>[]): Promise<void> {
+export async function createLinker(context: IActionContext & ExecuteActivityContext, item: LinkerItem | AzExtTreeItem, preSteps: AzureWizardPromptStep<ICreateLinkerContext>[] = [], runtime?: KnownClientType[]): Promise<void> {
     const subscription = item instanceof AzExtTreeItem ? item.subscription : createSubscriptionContext(item.subscription); // For v1.5 compatibility
 
     const wizardContext: ICreateLinkerContext = {
         ...context,
         ...subscription,
+        runtime,
         sourceResourceUri: nonNullValue(item?.id),
     }
 
     const promptSteps: AzureWizardPromptStep<ICreateLinkerContext>[] = [
-        new TargetServiceTypeStep(),
+        new TargetServiceListStep(),
         new LinkerNameStep(),
-        new ClientTypeStep(),
-        new AuthenticationTypeStep(),
+        new ClientListStep(),
+        new AuthenticationListStep(),
     ];
 
-    promptSteps.unshift(...nonNullValue(preSteps));
+    preSteps.forEach(step => promptSteps.unshift(step));
 
     const executeSteps: AzureWizardExecuteStep<ICreateLinkerContext>[] = [
-        new CreateLinkerStep(),
+        new LinkerCreateStep(),
     ];
 
     const wizard: AzureWizard<ICreateLinkerContext> = new AzureWizard(wizardContext, {
