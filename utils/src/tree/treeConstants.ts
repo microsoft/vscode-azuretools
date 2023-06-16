@@ -3,6 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../localize';
+import * as vscode from 'vscode';
 
-export const loadMoreLabel: string = localize('LoadMore', 'Load More...');
+export const loadMoreLabel: string = vscode.l10n.t('Load More...');

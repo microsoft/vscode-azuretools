@@ -6,8 +6,8 @@
 import * as dayjs from 'dayjs';
 // eslint-disable-next-line import/no-internal-modules
 import * as relativeTime from 'dayjs/plugin/relativeTime';
+import * as vscode from 'vscode';
 import * as types from '../index';
-import { localize } from './localize';
 import { registerCommand } from "./registerCommand";
 import { IReportableIssue, reportAnIssue } from './reportAnIssue';
 import { nonNullValue } from './utils/nonNull';
@@ -50,10 +50,10 @@ export function registerReportIssueCommand(commandId: string): void {
                 };
             });
             picks.unshift({
-                label: localize('emptyIssue', '$(keyboard) Manually enter error'),
+                label: vscode.l10n.t('$(keyboard) Manually enter error'),
                 data: undefined
             });
-            const placeHolder: string = localize('selectError', 'Select the error you would like to report');
+            const placeHolder: string = vscode.l10n.t('Select the error you would like to report');
             const issue: IReportableIssue | undefined = (await context.ui.showQuickPick(picks, { placeHolder, stepName: 'reportIssue', suppressPersistence: true })).data;
             await reportAnIssue(issue);
         }

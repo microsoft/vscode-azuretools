@@ -6,8 +6,9 @@
 /* eslint-disable */
 
 import * as htmlToText from 'html-to-text';
+import * as vscode from 'vscode';
 import { IParsedError } from '../index';
-import { localize } from './localize';
+import { isUserCancelledError } from './errors';
 import { parseJson } from './utils/parseJson';
 
 export function parseError(error: any): IParsedError {
@@ -71,7 +72,7 @@ export function parseError(error: any): IParsedError {
     [message, errorType] = parseIfFileSystemError(message, errorType);
 
     errorType ||= typeof (error);
-    message ||= localize('unknownError', 'Unknown Error');
+    message ||= vscode.l10n.t('Unknown Error');
 
     message = parseIfHtml(message);
 
@@ -86,7 +87,10 @@ export function parseError(error: any): IParsedError {
         stepName,
         // NOTE: Intentionally not using 'error instanceof UserCancelledError' because that doesn't work if multiple versions of the UI package are used in one extension
         // See https://github.com/Microsoft/vscode-azuretools/issues/51 for more info
-        isUserCancelledError: errorType === 'UserCancelledError'
+        isUserCancelledError:
+            // check using both methods in case error was created before we implemented isUserCancelledError
+            isUserCancelledError(error) ||
+            errorType === 'UserCancelledError'
     };
 }
 
@@ -94,7 +98,7 @@ function convertCodeToError(errorType: string | undefined): string | undefined {
     if (errorType) {
         const code: number = parseInt(errorType, 10);
         if (!isNaN(code)) {
-            return localize('failedWithCode', 'Failed with code "{0}".', code);
+            return vscode.l10n.t('Failed with code "{0}".', code);
         }
     }
 

@@ -6,7 +6,7 @@
 import { SkuDescription } from '@azure/arm-appservice';
 import { AzExtLocation } from '@microsoft/vscode-azext-azureutils';
 import { AzureWizardPromptStep, IAzureQuickPickItem } from '@microsoft/vscode-azext-utils';
-import { localize } from '../localize';
+import * as vscode from 'vscode';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 interface AppServiceWizardContext extends IAppServiceWizardContext {
@@ -16,10 +16,10 @@ interface AppServiceWizardContext extends IAppServiceWizardContext {
 
 export class AppServicePlanRedundancyStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(context: AppServiceWizardContext): Promise<void> {
-        const placeHolder: string = localize('selectZoneRedundancy', 'Select zone redundancy availability');
+        const placeHolder: string = vscode.l10n.t('Select zone redundancy availability');
         const picks: IAzureQuickPickItem<boolean>[] = [
-            { label: localize('enabled', 'Enabled'), data: true },
-            { label: localize('disabled', 'Disabled'), data: false }
+            { label: vscode.l10n.t('Enabled'), data: true },
+            { label: vscode.l10n.t('Disabled'), data: false }
         ];
 
         context.zoneRedundant = (await context.ui.showQuickPick(picks, { placeHolder })).data;

@@ -4,13 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ServiceClient } from '@azure/core-client';
-import { createPipelineRequest, defaultRetryPolicy, Pipeline, PipelineOptions, PipelinePolicy, PipelineRequest, PipelineResponse, RestError, RetryPolicyOptions, SendRequest, userAgentPolicy } from '@azure/core-rest-pipeline';
+import { createHttpHeaders, createPipelineRequest, defaultRetryPolicy, Pipeline, PipelineOptions, PipelinePolicy, PipelineRequest, PipelineResponse, RestError, RetryPolicyOptions, SendRequest, userAgentPolicy } from '@azure/core-rest-pipeline';
 import { appendExtensionUserAgent, AzExtTreeItem, IActionContext, ISubscriptionActionContext, ISubscriptionContext, parseError } from '@microsoft/vscode-azext-utils';
 import { Agent as HttpsAgent } from 'https';
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import * as types from '../index';
-import { localize } from './localize';
 import { parseJson, removeBom } from './utils/parseJson';
 
 export type InternalAzExtClientContext = ISubscriptionActionContext | [IActionContext, ISubscriptionContext | AzExtTreeItem];
@@ -123,6 +122,10 @@ function addAzExtPipeline(context: IActionContext, pipeline: Pipeline, endpoint?
     return pipeline;
 }
 
+export function addBasicAuthenticationCredentialsToClient(client: ServiceClient, userName: string, password: string): void {
+    client.pipeline.addPolicy(new BasicAuthenticationCredentialsPolicy(userName, password), { phase: 'Serialize' });
+}
+
 /**
  * Automatically add id to correlate our telemetry with the platform team's telemetry
  */
@@ -223,7 +226,7 @@ class StatusCodePolicy implements PipelinePolicy {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             const errorMessage: string = response.bodyAsText ?
                 parseError(response.parsedBody || response.bodyAsText).message :
-                localize('unexpectedStatusCode', 'Unexpected status code: {0}', response.status);
+                vscode.l10n.t('Unexpected status code: {0}', response.status);
             throw new RestError(errorMessage, {
                 code: response.bodyAsText || '',
                 statusCode: response.status,
@@ -236,3 +239,24 @@ class StatusCodePolicy implements PipelinePolicy {
     }
 }
 
+
+/**
+ * Encodes userName and password and signs a request with the Authentication header.
+ * Imitates BasicAuthenticationCredentials from ms-rest-js
+ */
+class BasicAuthenticationCredentialsPolicy implements PipelinePolicy {
+    public static readonly Name = 'BasicAuthenticationCredentialsPolicy';
+    public readonly name = BasicAuthenticationCredentialsPolicy.Name;
+
+    public constructor(private readonly userName: string, private readonly password: string) { }
+
+    public async sendRequest(request: PipelineRequest, next: SendRequest): Promise<PipelineResponse> {
+        const credentials = `${this.userName}:${this.password}`;
+        const DEFAULT_AUTHORIZATION_SCHEME = "Basic";
+        const encodedCredentials = `${DEFAULT_AUTHORIZATION_SCHEME} ${Buffer.from(credentials).toString("base64")}`;
+        if (!request.headers) request.headers = createHttpHeaders();
+        request.headers.set("authorization", encodedCredentials);
+
+        return await next(request);
+    }
+}

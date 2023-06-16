@@ -5,13 +5,13 @@
 
 import { AzExtLocation, LocationListStep } from '@microsoft/vscode-azext-azureutils';
 import { IAzureQuickPickItem, IAzureQuickPickOptions, parseError } from '@microsoft/vscode-azext-utils';
-import { localize } from '../localize';
+import * as vscode from 'vscode';
 import { createResourceGraphClient } from '../utils/azureClients';
 import { CustomLocation, IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class CustomLocationListStep<T extends IAppServiceWizardContext> extends LocationListStep<T> {
     public async prompt(context: T): Promise<void> {
-        const options: IAzureQuickPickOptions = { placeHolder: localize('selectLocation', 'Select a location for new resources.'), enableGrouping: true };
+        const options: IAzureQuickPickOptions = { placeHolder: vscode.l10n.t('Select a location for new resources.'), enableGrouping: true };
         const result: AzExtLocation | CustomLocation = (await context.ui.showQuickPick(this.getCustomQuickPicks(context), options)).data;
         if ('kubeEnvironment' in result) {
             context.telemetry.properties.pickedCustomLoc = 'true';
@@ -37,13 +37,13 @@ export class CustomLocationListStep<T extends IAppServiceWizardContext> extends 
                     query: customLocationQuery,
                     subscriptions: [context.subscriptionId]
                 });
-                let customLocations = <CustomLocation[]>response.data;
-                customLocations = customLocations.sort((a, b) => a.name.localeCompare(b.name));
-                context.telemetry.properties.hasCustomLoc = String(customLocations.length > 0);
-                picks.unshift(...customLocations.map(cl => {
+                const customLocations = response.data as unknown as Record<number, CustomLocation>;
+                const customLocationFlattened = Object.values(customLocations).sort((a, b) => a.name.localeCompare(b.name));
+                context.telemetry.properties.hasCustomLoc = String(customLocationFlattened.length > 0);
+                picks.unshift(...customLocationFlattened.map(cl => {
                     return {
                         label: cl.name,
-                        group: localize('custom', 'Custom'),
+                        group: vscode.l10n.t('Custom'),
                         data: cl
                     };
                 }));

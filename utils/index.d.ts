@@ -6,7 +6,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { Environment } from '@azure/ms-rest-azure-env';
-import type { AzExtResourceType, AzureResource, AzureSubscription } from '@microsoft/vscode-azureresources-api';
+import type { AzExtResourceType, AzureResource, AzureSubscription, ResourceModelBase } from '@microsoft/vscode-azureresources-api';
 import { AuthenticationSession, CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, LogOutputChannel, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, ProviderResult, QuickPickItem, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri, QuickPickOptions as VSCodeQuickPickOptions } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
@@ -149,29 +149,12 @@ export interface ITreeItemPickerContext extends IActionContext {
 
 /**
  * Loose type to use for T2 versions of Azure credentials.  The Azure Account extension returns
- * credentials that will satisfy both T1 and T2 requirements
+ * credentials that will satisfy T2 requirements
  */
-export type AzExtServiceClientCredentials = AzExtServiceClientCredentialsT1 & AzExtServiceClientCredentialsT2;
+export type AzExtServiceClientCredentials = AzExtServiceClientCredentialsT2;
 
 /**
- * TODO: Remove from both utils and dev package index.d.ts. Can't do that right now because dev package still has T1 dependencies.
- * Loose interface to allow for the use of different versions of "@azure/ms-rest-js"
- * There's several cases where we don't control which "credentials" interface gets used, causing build errors even though the functionality itself seems to be compatible
- * For example: https://github.com/Azure/azure-sdk-for-js/issues/10045
- * Used specifically for T1 Azure SDKs
- */
-export interface AzExtServiceClientCredentialsT1 {
-    /**
-     * Signs a request with the Authentication header.
-     *
-     * @param {WebResourceLike} webResource The WebResourceLike/request to be signed.
-     * @returns {Promise<WebResourceLike>} The signed request object;
-     */
-    signRequest(webResource: any): Promise<any>;
-}
-
-/**
- * Loose interface to allow for the use of different versions of "@azure/ms-rest-js"
+ * Loose interface to allow for the use of different versions of Azure SDKs
  * Used specifically for T2 Azure SDKs
  */
 export interface AzExtServiceClientCredentialsT2 {
@@ -640,6 +623,13 @@ export interface ICreateChildImplContext extends IActionContext {
 export declare class UserCancelledError extends Error {
     constructor(stepName?: string);
 }
+
+/**
+ * Checks if the given error is a UserCancelledError.
+ *
+ * Note: only works with errors created by versions >=1.1.1 of this package.
+ */
+export declare function isUserCancelledError(error: unknown): error is UserCancelledError;
 
 export declare class NoResourceFoundError extends Error {
     constructor(context?: ITreeItemPickerContext);
@@ -1672,7 +1662,7 @@ export declare function getAzExtResourceType(resource: { type: string; kind?: st
  */
 export declare function getAzureExtensionApi<T extends AzureExtensionApi>(extensionId: string, apiVersionRange: string, options?: GetApiOptions): Promise<T>;
 
-export type TreeNodeCommandCallback<T> = (context: IActionContext, node?: T, nodes?: T[], ...args: unknown[]) => unknown;
+export type TreeNodeCommandCallback<T> = (context: IActionContext, node?: T, nodes?: T[], ...args: any[]) => unknown;
 
 /**
  * Used to register VSCode tree node context menu commands that are in the host extension's tree. It wraps your callback with consistent error and telemetry handling
@@ -1942,4 +1932,96 @@ export declare namespace randomUtils {
     export function getPseudononymousStringHash(s: string): Promise<string>;
     export function getRandomHexString(length?: number): string;
     export function getRandomInteger(minimumInclusive: number, maximumExclusive: number): number;
+}
+
+/**
+ * Base element for a tree view (v2)
+ */
+export declare interface TreeElementBase extends ResourceModelBase {
+    getChildren?(): ProviderResult<TreeElementBase[]>;
+    getTreeItem(): TreeItem | Thenable<TreeItem>;
+}
+
+export type TreeElementWithId = TreeElementBase & { id: string };
+
+export interface GenericElementOptions extends IGenericTreeItemOptions {
+    commandArgs?: unknown[];
+}
+
+/**
+ * Creates a generic element.
+ *
+ * @param options - options for the generic item
+ *
+ * If `options.commandArgs` is not set, then it will be set to the item itself.
+*/
+export declare function createGenericElement(options: GenericElementOptions): TreeElementBase;
+
+export declare interface TreeElementStateModel {
+    /**
+     * Apply a temporary description to the tree item
+     */
+    temporaryDescription?: string;
+    /**
+     * Set the tree item icon to a spinner
+     */
+    spinner?: boolean;
+    /**
+     * Temporary children to be displayed
+     */
+    temporaryChildren?: TreeElementBase[];
+}
+
+/**
+ * Wraps tree elements in a state model that can be used to temporarily override tree element behavior like the description or children.
+ */
+export declare class TreeElementStateManager<TElement extends TreeElementWithId = TreeElementWithId> implements Disposable {
+    /**
+     * Temporarily override the description of the given element while the callback is running.
+     *
+     * @param id - id of the element to temporarily override the tree item description of
+     * @param description - description to temporarily show
+     * @param callback - callback to run while the temporary description is shown
+     * @param dontRefreshOnRemove - If true, the tree item won't be refreshed after the temporary description is removed.
+     * Useful when the tree item is being deleted. This prevents any time between the tree item description being cleared
+     * and the tree item being removed from the tree.
+     */
+    runWithTemporaryDescription<T = void>(id: string, description: string, callback: () => Promise<T>, dontRefreshOnRemove?: boolean): Promise<T>;
+
+    /**
+     * Shows a deleting state for the given element while the callback is running.
+     * Method calls `runWithTemporaryDescription` and passes options for deleting.
+     *
+     * @param id - id of the element to show a deleting state for
+     * @param callback - callback to run while the deleting state is shown
+     */
+    showDeleting(id: string, callback: () => Promise<void>): Promise<void>;
+
+    /**
+     * Adds a child to the given element while the callback is running. Typically used to show a "Creating..." child.
+     *
+     * @param id - id of the element to add a creating child to
+     * @param label - label of the child
+     * @param callback - callback to run while the creating child is shown
+     */
+    showCreatingChild<T = void>(id: string, label: string, callback: () => Promise<T>): Promise<T>;
+
+    /**
+     * Notify a resource that its children have changed.
+     * Calls the refresh callback with the given id.
+     * @param id - The id of the element for which the children have changed
+     */
+    notifyChildrenChanged(id: string): void;
+
+    /**
+     * Wraps an element in a state model that can be used to update the tree item. An element should only be wrapped once.
+     *
+     * Modifies `element.getChildren()` and `element.getTreeItem()` methods.
+     *
+     * @param element - item to wrap
+     * @param refresh - callback to refresh the item
+     */
+    wrapItemInStateHandling(element: TElement, refresh: (item: TElement) => void): TElement;
+
+    dispose(): void;
 }

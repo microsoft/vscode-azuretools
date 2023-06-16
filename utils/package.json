@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-utils",
     "author": "Microsoft Corporation",
-    "version": "1.1.0",
+    "version": "2.0.0",
     "description": "Common UI tools for developing Azure extensions for VS Code",
     "tags": [
         "azure",
@@ -24,29 +24,29 @@
     "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/utils/README.md",
     "scripts": {
         "build": "tsc -p ./",
-        "prepack": "tsc -p ./",
         "compile": "tsc -watch -p ./",
         "lint": "eslint --ext .ts .",
         "lint-fix": "eslint --ext .ts . --fix",
-        "pretest": "npm run build",
-        "test": "node ./out/test/runTest.js"
+        "test": "node ./out/test/runTest.js",
+        "package": "npm pack"
     },
     "dependencies": {
-        "@microsoft/vscode-azureresources-api": "^2.0.2",
+        "@microsoft/vscode-azureresources-api": "^2.0.4",
         "@vscode/extension-telemetry": "^0.6.2",
         "dayjs": "^1.11.2",
         "escape-string-regexp": "^2.0.0",
         "html-to-text": "^8.2.0",
         "semver": "^7.3.7",
         "uuid": "^9.0.0",
-        "vscode-nls": "^5.0.1",
         "vscode-tas-client": "^0.1.47",
         "vscode-uri": "^3.0.6"
     },
+    "peerDependencies": {
+        "@azure/ms-rest-azure-env": "^2.0.0"
+    },
     "devDependencies": {
-        "@azure/ms-rest-azure-env": "^2.0.0",
-        "@microsoft/eslint-config-azuretools": "^0.2.0",
-        "@microsoft/vscode-azext-dev": "^1.0.0",
+        "@microsoft/eslint-config-azuretools": "^0.2.1",
+        "@microsoft/vscode-azext-dev": "^2.0.0",
         "@types/html-to-text": "^8.1.0",
         "@types/mocha": "^7.0.2",
         "@types/node": "^16.0.0",

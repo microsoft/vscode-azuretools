@@ -4,9 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { DialogResponses, IActionContext } from '@microsoft/vscode-azext-utils';
-import { MessageItem } from 'vscode';
+import { l10n, MessageItem } from 'vscode';
 import { ext } from './extensionVariables';
-import { localize } from './localize';
 
 export async function confirmOverwriteSettings(context: IActionContext, sourceSettings: { [key: string]: string }, destinationSettings: { [key: string]: string }, destinationName: string): Promise<void> {
     let suppressPrompt: boolean = false;
@@ -28,9 +27,9 @@ export async function confirmOverwriteSettings(context: IActionContext, sourceSe
             matchingKeys.push(destKey);
         } else if (sourceSettings[srcKey]) { // ignore empty settings
             if (!suppressPrompt) {
-                const yesToAll: MessageItem = { title: localize('yesToAll', 'Yes to all') };
-                const noToAll: MessageItem = { title: localize('noToAll', 'No to all') };
-                const message: string = localize('overwriteSetting', 'Setting "{0}" already exists in "{1}". Overwrite?', destKey, destinationName);
+                const yesToAll: MessageItem = { title: l10n.t('Yes to all') };
+                const noToAll: MessageItem = { title: l10n.t('No to all') };
+                const message: string = l10n.t('Setting "{0}" already exists in "{1}". Overwrite?', destKey, destinationName);
                 const result: MessageItem = await context.ui.showWarningMessage(message, { modal: true, stepName: 'confirmOverwriteSetting' }, DialogResponses.yes, yesToAll, DialogResponses.no, noToAll);
                 if (result === DialogResponses.yes) {
                     overwriteSetting = true;
@@ -55,27 +54,27 @@ export async function confirmOverwriteSettings(context: IActionContext, sourceSe
     }
 
     if (addedKeys.length > 0) {
-        ext.outputChannel.appendLog(localize('addedKeys', 'Added the following settings:'));
+        ext.outputChannel.appendLog(l10n.t('Added the following settings:'));
         addedKeys.forEach(logKey);
     }
 
     if (updatedKeys.length > 0) {
-        ext.outputChannel.appendLog(localize('updatedKeys', 'Updated the following settings:'));
+        ext.outputChannel.appendLog(l10n.t('Updated the following settings:'));
         updatedKeys.forEach(logKey);
     }
 
     if (matchingKeys.length > 0) {
-        ext.outputChannel.appendLog(localize('matchingKeys', 'Ignored the following settings that were already the same:'));
+        ext.outputChannel.appendLog(l10n.t('Ignored the following settings that were already the same:'));
         matchingKeys.forEach(logKey);
     }
 
     if (userIgnoredKeys.length > 0) {
-        ext.outputChannel.appendLog(localize('userIgnoredKeys', 'Ignored the following settings based on user input:'));
+        ext.outputChannel.appendLog(l10n.t('Ignored the following settings based on user input:'));
         userIgnoredKeys.forEach(logKey);
     }
 
     if (Object.keys(destinationSettings).length > Object.keys(sourceSettings).length) {
-        ext.outputChannel.appendLog(localize('noDeleteKey', 'WARNING: This operation will not delete any settings in "{0}". You must manually delete settings if desired.', destinationName));
+        ext.outputChannel.appendLog(l10n.t('WARNING: This operation will not delete any settings in "{0}". You must manually delete settings if desired.', destinationName));
     }
 }
 

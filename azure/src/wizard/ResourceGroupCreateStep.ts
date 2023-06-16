@@ -4,13 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { ResourceGroup, ResourceManagementClient } from '@azure/arm-resources';
-import { MessageItem, Progress } from 'vscode';
 import { AzureWizardExecuteStep, parseError } from '@microsoft/vscode-azext-utils';
+import { l10n, MessageItem, Progress } from 'vscode';
 import * as types from '../../index';
 import { createResourcesClient } from '../clients';
 import { resourcesProvider } from '../constants';
 import { ext } from '../extensionVariables';
-import { localize } from '../localize';
 import { uiUtils } from '../utils/uiUtils';
 import { LocationListStep } from './LocationListStep';
 import { ResourceGroupListStep } from './ResourceGroupListStep';
@@ -27,14 +26,14 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
         try {
             const rgExists: boolean = (await resourceClient.resourceGroups.checkExistence(newName)).body;
             if (rgExists) {
-                ext.outputChannel.appendLog(localize('existingResourceGroup', 'Using existing resource group "{0}".', newName));
+                ext.outputChannel.appendLog(l10n.t('Using existing resource group "{0}".', newName));
                 wizardContext.resourceGroup = await resourceClient.resourceGroups.get(newName);
             } else {
-                const creatingMessage: string = localize('creatingResourceGroup', 'Creating resource group "{0}" in location "{1}"...', newName, newLocationName);
+                const creatingMessage: string = l10n.t('Creating resource group "{0}" in location "{1}"...', newName, newLocationName);
                 ext.outputChannel.appendLog(creatingMessage);
                 progress.report({ message: creatingMessage });
                 wizardContext.resourceGroup = await resourceClient.resourceGroups.createOrUpdate(newName, { location: newLocationName });
-                ext.outputChannel.appendLog(localize('createdResourceGroup', 'Successfully created resource group "{0}".', newName));
+                ext.outputChannel.appendLog(l10n.t('Successfully created resource group "{0}".', newName));
             }
         } catch (error) {
             if (wizardContext.suppress403Handling || parseError(error).errorType !== '403') {
@@ -46,13 +45,14 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
                     if (rgs.length === 1 && rgs[0].name && /^learn/i.test(rgs[0].name)) {
                         wizardContext.resourceGroup = rgs[0];
                         wizardContext.telemetry.properties.forbiddenResponse = 'SelectLearnRg';
-                        ext.outputChannel.appendLog(localize('usedLearnResourceGroup', 'WARNING: Cannot create resource group "{0}" because the selected subscription is a concierge subscription. Using resource group "{1}" instead.', newName, wizardContext.resourceGroup?.name))
+                        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                        ext.outputChannel.appendLog(l10n.t('WARNING: Cannot create resource group "{0}" because the selected subscription is a concierge subscription. Using resource group "{1}" instead.', newName, wizardContext.resourceGroup!.name!))
                         return undefined;
                     }
                 }
 
-                const message: string = localize('rgForbidden', 'You do not have permission to create a resource group in subscription "{0}".', wizardContext.subscriptionDisplayName);
-                const selectExisting: MessageItem = { title: localize('selectExisting', 'Select Existing') };
+                const message: string = l10n.t('You do not have permission to create a resource group in subscription "{0}".', wizardContext.subscriptionDisplayName);
+                const selectExisting: MessageItem = { title: l10n.t('Select Existing') };
                 await wizardContext.ui.showWarningMessage(message, { modal: true, stepName: 'RgNoPermissions' }, selectExisting);
 
                 wizardContext.telemetry.properties.forbiddenResponse = 'SelectExistingRg';

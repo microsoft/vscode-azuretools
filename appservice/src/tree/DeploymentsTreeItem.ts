@@ -5,12 +5,11 @@
 
 import type { SiteConfig, SiteSourceControl } from '@azure/arm-appservice';
 import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, TreeItemIconPath, createContextValue } from '@microsoft/vscode-azext-utils';
-import { ThemeIcon } from 'vscode';
-import { KuduModels } from 'vscode-azurekudu';
+import { ThemeIcon, l10n } from 'vscode';
+import type * as KuduModels from '../KuduModels';
 import { ScmType } from '../ScmType';
 import { ParsedSite } from '../SiteClient';
 import { ext } from '../extensionVariables';
-import { localize } from '../localize';
 import { retryKuduCall } from '../utils/kuduUtils';
 import { DeploymentTreeItem } from './DeploymentTreeItem';
 
@@ -27,8 +26,8 @@ interface DeploymentsTreeItemOptions {
 export class DeploymentsTreeItem extends AzExtParentTreeItem {
     public static contextValueConnected: string = 'deploymentsConnected';
     public static contextValueUnconnected: string = 'deploymentsUnconnected';
-    public readonly label: string = localize('Deployments', 'Deployments');
-    public readonly childTypeLabel: string = localize('Deployment', 'Deployment');
+    public readonly label: string = l10n.t('Deployments');
+    public readonly childTypeLabel: string = l10n.t('Deployment');
     public readonly site: ParsedSite;
     public suppressMaskLabel: boolean = true;
     public readonly contextValuesToAdd: string[];
@@ -51,10 +50,10 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
     public get description(): string {
         switch (this._scmType) {
             case ScmType.LocalGit:
-                return localize('git', 'Git');
+                return l10n.t('Git');
             case ScmType.GitHub:
                 // remove github from the repoUrl which leaves only the org/repo names
-                return this._repoUrl ? this._repoUrl.substring('https://github.com/'.length) : localize('gitHub', 'GitHub');
+                return this._repoUrl ? this._repoUrl.substring('https://github.com/'.length) : l10n.t('GitHub');
             case ScmType.None:
             default:
                 return '';

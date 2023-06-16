@@ -4,9 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzExtParentTreeItem, AzExtTreeItem, createContextValue, GenericTreeItem, IActionContext, parseError } from '@microsoft/vscode-azext-utils';
-import { ThemeIcon } from 'vscode';
+import { l10n, ThemeIcon } from 'vscode';
 import { ext } from '../extensionVariables';
-import { localize } from '../localize';
 import { ParsedSite } from '../SiteClient';
 import { FolderTreeItem } from './FolderTreeItem';
 
@@ -28,7 +27,7 @@ export class LogFilesTreeItem extends FolderTreeItem {
     constructor(parent: AzExtParentTreeItem, options: LogFilesTreeItemOptions) {
         super(parent, {
             site: options.site,
-            label: localize('logFiles', 'Logs'),
+            label: l10n.t('Logs'),
             path: '/LogFiles',
             isReadOnly: true,
             contextValuesToAdd: options.contextValuesToAdd || []
@@ -48,7 +47,7 @@ export class LogFilesTreeItem extends FolderTreeItem {
             const message: string = parseError(error).message;
             context.telemetry.properties.logFilesError = message;
             children = [new GenericTreeItem(this, {
-                label: localize('errorTreeItem', 'Error: {0}', message),
+                label: l10n.t('Error: {0}', message),
                 contextValue: 'logFilesError'
             })];
         }
@@ -58,7 +57,7 @@ export class LogFilesTreeItem extends FolderTreeItem {
                 contextValue: 'logStream',
                 commandId: ext.prefix + '.startStreamingLogs',
                 iconPath: new ThemeIcon('play'),
-                label: localize('connectLogStream', 'Connect to Log Stream...')
+                label: l10n.t('Connect to Log Stream...')
             });
             ti.commandArgs = [this.parent]; // should be the slot tree item
             children.push(ti);

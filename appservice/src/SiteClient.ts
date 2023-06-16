@@ -4,15 +4,17 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { AppServicePlan, FunctionEnvelope, FunctionSecrets, HostKeys, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SlotConfigNamesResource, SourceControl, StringDictionary, User, WebAppsListFunctionKeysResponse, WebJob, WebSiteInstanceStatus, WebSiteManagementClient } from '@azure/arm-appservice';
-import type { HttpOperationResponse, HttpRequestBody, HttpResponse, RequestPrepareOptions, ServiceClient } from '@azure/ms-rest-js';
-import { createGenericClient, uiUtils } from '@microsoft/vscode-azext-azureutils';
+import type { ServiceClient } from '@azure/core-client';
+import { RequestBodyType, createHttpHeaders, createPipelineRequest } from '@azure/core-rest-pipeline';
+import type { AppSettingsClientProvider, IAppSettingsClient } from '@microsoft/vscode-azext-azureappsettings';
+import { AzExtPipelineResponse, createGenericClient, uiUtils } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, ISubscriptionContext, nonNullProp, nonNullValue, parseError } from '@microsoft/vscode-azext-utils';
-import { KuduModels } from 'vscode-azurekudu';
+import type * as KuduModels from './KuduModels';
 import { AppKind } from './createAppService/AppKind';
-import { AppSettingsClientProvider, IAppSettingsClient } from '@microsoft/vscode-azext-azureappsettings';
 import { tryGetAppServicePlan, tryGetWebApp, tryGetWebAppSlot } from './tryGetSiteResource';
 import { createWebSiteClient } from './utils/azureClients';
 import { convertQueryParamsValuesToString } from './utils/kuduUtils';
+
 
 export class ParsedSite implements AppSettingsClientProvider {
     public readonly id: string;
@@ -310,44 +312,47 @@ export class SiteClient implements IAppSettingsClient {
             await this._client.webApps.listFunctionKeys(this._site.resourceGroup, this._site.siteName, functionName);
     }
 
-    public async zipPushDeploy(context: IActionContext, file: HttpRequestBody, queryParameters: KuduModels.PushDeploymentZipPushDeployOptionalParams): Promise<HttpOperationResponse> {
+    public async zipPushDeploy(context: IActionContext, file: RequestBodyType, queryParameters: KuduModels.PushDeploymentZipPushDeployOptionalParams): Promise<AzExtPipelineResponse> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
-        const options: RequestPrepareOptions = {
+        const queryOptions = convertQueryParamsValuesToString(queryParameters);
+        const queryString = Object.keys(queryOptions).map(key => key + '=' + queryOptions[key]).join('&');
+        const request = createPipelineRequest({
             method: 'POST',
-            url: `${this._site.kuduUrl}/api/zipdeploy`,
+            url: `${this._site.kuduUrl}/api/zipdeploy?${queryString}`,
             body: file,
-            bodyIsStream: true,
-            queryParameters: convertQueryParamsValuesToString(queryParameters)
-        };
-
-        return await client.sendRequest(options);
-    }
-
-    public async warPushDeploy(context: IActionContext, file: HttpRequestBody, queryParameters: KuduModels.PushDeploymentWarPushDeployOptionalParams): Promise<HttpOperationResponse> {
-        const client: ServiceClient = await createGenericClient(context, this._site.subscription);
-        return await client.sendRequest({
-            method: 'POST',
-            url: `${this._site.kuduUrl}/api/wardeploy`,
-            body: file,
-            queryParameters: convertQueryParamsValuesToString(queryParameters)
         });
+
+        return await client.sendRequest(request);
     }
 
-    public async deploy(context: IActionContext, id: string): Promise<HttpOperationResponse> {
+    public async warPushDeploy(context: IActionContext, file: RequestBodyType, queryParameters: KuduModels.PushDeploymentWarPushDeployOptionalParams): Promise<AzExtPipelineResponse> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
-        return await client.sendRequest({
+        const queryOptions = convertQueryParamsValuesToString(queryParameters);
+        const queryString = Object.keys(queryOptions).map(key => key + '=' + queryOptions[key]).join('&');
+        const request = createPipelineRequest({
+            method: 'POST',
+            url: `${this._site.kuduUrl}/api/wardeploy?${queryString}`,
+            body: file,
+        });
+
+        return await client.sendRequest(request);
+    }
+
+    public async deploy(context: IActionContext, id: string): Promise<AzExtPipelineResponse> {
+        const client: ServiceClient = await createGenericClient(context, this._site.subscription);
+        return await client.sendRequest(createPipelineRequest({
             method: 'PUT',
             url: `${this._site.kuduUrl}/api/deployments/${id}`
-        });
+        }));
     }
 
     // the ARM call doesn't give all of the metadata we require so ping the scm directly
     public async getDeployResults(context: IActionContext): Promise<KuduModels.DeployResult[]> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
-        const response: HttpOperationResponse = await client.sendRequest({
+        const response: AzExtPipelineResponse = await client.sendRequest(createPipelineRequest({
             method: 'GET',
             url: `${this._site.kuduUrl}/api/deployments`
-        });
+        }));
 
         const results = response.parsedBody as (KuduModels.DeployResult & { received_time: string })[];
         // old kuduClient parsed recived_time: string as receivedTime: Date so we need to do the same
@@ -361,20 +366,20 @@ export class SiteClient implements IAppSettingsClient {
     // the ARM call doesn't give all of the metadata we require so ping the scm directly
     public async getDeployResult(context: IActionContext, deployId: string): Promise<KuduModels.DeployResult> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
-        const response: HttpOperationResponse = await client.sendRequest({
+        const response: AzExtPipelineResponse = await client.sendRequest(createPipelineRequest({
             method: 'GET',
             url: `${this._site.kuduUrl}/api/deployments/${deployId}`
-        });
+        }));
         return response.parsedBody as KuduModels.DeployResult;
     }
 
     // no equivalent ARM call
     public async getLogEntry(context: IActionContext, deployId: string): Promise<KuduModels.LogEntry[]> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
-        const response: HttpOperationResponse = await client.sendRequest({
+        const response: AzExtPipelineResponse = await client.sendRequest(createPipelineRequest({
             method: 'GET',
             url: `${this._site.kuduUrl}/api/deployments/${deployId}/log`
-        });
+        }));
 
         const entries = response.parsedBody as (KuduModels.LogEntry & { log_time: string, details_url: string })[];
         // old kuduClient parsed log_time: string as logTime: Date so we need to do the same
@@ -389,10 +394,10 @@ export class SiteClient implements IAppSettingsClient {
     // no equivalent ARM call
     public async getLogEntryDetails(context: IActionContext, deployId: string, logId: string): Promise<KuduModels.LogEntry[]> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
-        const response: HttpOperationResponse = await client.sendRequest({
+        const response: AzExtPipelineResponse = await client.sendRequest(createPipelineRequest({
             method: 'GET',
             url: `${this._site.kuduUrl}/api/deployments/${deployId}/log/${logId}`
-        });
+        }));
 
         const entries = response.parsedBody as (KuduModels.LogEntry & { log_time: string, details_url: string })[];
         return entries.map(e => {
@@ -403,24 +408,23 @@ export class SiteClient implements IAppSettingsClient {
         }) as KuduModels.LogEntry[];
     }
 
-    public async vfsGetItem(context: IActionContext, path: string): Promise<HttpResponse> {
+    public async vfsGetItem(context: IActionContext, path: string): Promise<AzExtPipelineResponse> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
-        const response: HttpOperationResponse = await client.sendRequest({
+        return await client.sendRequest(createPipelineRequest({
             method: 'GET',
             url: `${this._site.kuduUrl}/api/vfs/${path}?api-version=2022-03-01`,
-        });
-        return response as HttpResponse;
+        }));
     }
 
-    public async vfsPutItem(context: IActionContext, data: string | ArrayBuffer, path: string, headers?: {}): Promise<HttpResponse> {
+    public async vfsPutItem(context: IActionContext, data: string | ArrayBuffer, path: string, rawHeaders?: {}): Promise<AzExtPipelineResponse> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
-        const response: HttpOperationResponse = await client.sendRequest({
+        const headers = createHttpHeaders(rawHeaders);
+        return await client.sendRequest(createPipelineRequest({
             method: 'PUT',
             url: `${this._site.kuduUrl}/api/vfs/${path}?api-version=2022-03-01`,
             body: typeof data === 'string' ? data : data.toString(),
             headers
-        });
-        return response as HttpResponse;
+        }));
     }
 
     /**
@@ -431,7 +435,7 @@ export class SiteClient implements IAppSettingsClient {
     private async getCachedSku(context: IActionContext): Promise<string | undefined> {
         if (!this._cachedSku) {
             const client: ServiceClient = await createGenericClient(context, this._site.subscription);
-            const response: HttpOperationResponse = await client.sendRequest({ method: 'GET', url: `${this._site.id}?api-version=2016-08-01` });
+            const response: AzExtPipelineResponse = await client.sendRequest(createPipelineRequest({ method: 'GET', url: `${this._site.id}?api-version=2016-08-01` }));
             this._cachedSku = (<{ properties: { sku?: string } }>response.parsedBody).properties.sku;
         }
         return this._cachedSku;

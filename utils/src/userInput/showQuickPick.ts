@@ -3,12 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, Memento, QuickInputButton, QuickInputButtons, QuickPick, QuickPickItemKind, window } from 'vscode';
+import { Disposable, l10n, Memento, QuickInputButton, QuickInputButtons, QuickPick, QuickPickItemKind, window } from 'vscode';
 import * as types from '../../index';
 import { AzExtQuickInputButtons } from '../constants';
 import { GoBackError, UserCancelledError } from '../errors';
 import { ext } from '../extensionVariables';
-import { localize } from '../localize';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
 import { randomUtils } from '../utils/randomUtils';
@@ -121,7 +120,7 @@ export function createQuickPick<TPick extends types.IAzureQuickPickItem<unknown>
     }
 
     if (options.canPickMany && options.placeHolder) {
-        options.placeHolder += localize('canPickManyInstructions', " (Press 'Space' to select and 'Enter' to confirm)");
+        options.placeHolder += l10n.t(" (Press 'Space' to select and 'Enter' to confirm)");
     }
 
     // Copy settings that are common between options and quickPick
@@ -185,7 +184,7 @@ async function bumpHighPriorityAndRecentlyUsed<T extends types.IAzureQuickPickIt
         if (recentlyUsedIndex >= 0) {
             const recentlyUsedItem: T = picks[recentlyUsedIndex];
             if (!recentlyUsedItem.suppressPersistence) {
-                const recentlyUsed: string = localize('recentlyUsed', '(recently used)');
+                const recentlyUsed: string = l10n.t('(recently used)');
                 if (!recentlyUsedItem.description) {
                     recentlyUsedItem.description = recentlyUsed;
                 } else if (!recentlyUsedItem.description.includes(recentlyUsed)) {

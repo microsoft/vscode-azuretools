@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzureWizardPromptStep, IAzureQuickPickItem } from '@microsoft/vscode-azext-utils';
-import { localize } from '../localize';
+import * as vscode from 'vscode';
 import { getWebsiteOSDisplayName, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 import { setLocationsTask } from './setLocationsTask';
@@ -16,7 +16,7 @@ export class SiteOSStep extends AzureWizardPromptStep<IAppServiceWizardContext> 
             return { label: getWebsiteOSDisplayName(os), description: '', data: os };
         });
 
-        context.newSiteOS = (await context.ui.showQuickPick(picks, { placeHolder: localize('selectOS', 'Select an OS.') })).data;
+        context.newSiteOS = (await context.ui.showQuickPick(picks, { placeHolder: vscode.l10n.t('Select an OS.') })).data;
         await setLocationsTask(context);
     }
 

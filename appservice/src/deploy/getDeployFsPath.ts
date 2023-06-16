@@ -8,7 +8,6 @@ import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ext } from '../extensionVariables';
-import { localize } from '../localize';
 import { isPathEqual, isSubpath } from '../utils/pathUtils';
 import { getWorkspaceSetting, updateGlobalSetting } from '../utils/settings';
 import * as workspaceUtil from '../utils/workspace';
@@ -49,8 +48,8 @@ export async function getDeployFsPath(context: IActionContext, target: vscode.Ur
             fileExtensions = [fileExtensions];
         }
 
-        const selectFile: string = localize('selectDeployFile', 'Select the {0} file to deploy', fileExtensions ? fileExtensions.join('/') : '');
-        const selectFolder: string = localize('selectDeployFolder', 'Select the folder to deploy');
+        const selectFile: string = vscode.l10n.t('Select the {0} file to deploy', fileExtensions ? fileExtensions.join('/') : '');
+        const selectFolder: string = vscode.l10n.t('Select the folder to deploy');
 
         const selectedItem = fileExtensions ?
             await workspaceUtil.selectWorkspaceFile(context, selectFile, fileExtensions) :
@@ -121,9 +120,9 @@ async function appendDeploySubpathSetting(context: IActionContext, workspaceFold
                     const settingKey: string = 'showDeploySubpathWarning';
                     if (getWorkspaceSetting(settingKey, ext.prefix)) {
                         const selectedFolder: string = path.relative(workspaceFolder.uri.fsPath, targetPath);
-                        const message: string = localize('mismatchDeployPath', 'Deploying "{0}" instead of selected folder "{1}". Use "{2}.{3}" to change this behavior.', deploySubPath, selectedFolder, ext.prefix, deploySubpathSetting);
+                        const message: string = vscode.l10n.t('Deploying "{0}" instead of selected folder "{1}". Use "{2}.{3}" to change this behavior.', deploySubPath, selectedFolder, ext.prefix, deploySubpathSetting);
                         // don't wait
-                        void context.ui.showWarningMessage(message, { title: localize('ok', 'OK') }, DialogResponses.dontWarnAgain).then(async (result: vscode.MessageItem) => {
+                        void context.ui.showWarningMessage(message, { title: vscode.l10n.t('OK') }, DialogResponses.dontWarnAgain).then(async (result: vscode.MessageItem) => {
                             if (result === DialogResponses.dontWarnAgain) {
                                 await updateGlobalSetting(settingKey, false, ext.prefix);
                             }
@@ -149,8 +148,8 @@ export type IDeployPaths = {
 };
 
 function promptToOpenWorkspace(context: IActionContext, originalDeployFsPath: string): never {
-    const openInNewWindow: vscode.MessageItem = { title: localize('openInNewWindow', 'Open in new window') };
-    const message: string = localize('folderOpenWarning', 'Failed to deploy because "{0}" is not part of an open workspace.', path.basename(originalDeployFsPath));
+    const openInNewWindow: vscode.MessageItem = { title: vscode.l10n.t('Open in new window') };
+    const message: string = vscode.l10n.t('Failed to deploy because "{0}" is not part of an open workspace.', path.basename(originalDeployFsPath));
 
     // don't wait
     void context.ui.showWarningMessage(message, openInNewWindow).then(async result => {

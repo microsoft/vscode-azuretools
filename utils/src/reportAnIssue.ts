@@ -7,7 +7,6 @@ import * as os from 'os';
 import * as vscode from 'vscode';
 import * as types from '../index';
 import { getPackageInfo } from "./getPackageInfo";
-import { localize } from './localize';
 import { openUrl } from './utils/openUrl';
 
 // Some browsers don't have very long URLs
@@ -36,11 +35,11 @@ export async function getReportAnIssueLink(issue: IReportableIssue | undefined):
     const stack: string = (issue?.error.stack || '').replace(/\r\n/g, '\n');
 
     let body: string = `
-<!-- ${localize('reportIssue_removePrivateInfo', "IMPORTANT: Please be sure to remove any private information before submitting.")} -->
+<!-- ${vscode.l10n.t("IMPORTANT: Please be sure to remove any private information before submitting.")} -->
 
-${localize('reportIssue_isItConsistent', "Does this occur consistently? <!-- TODO: Type Yes or No -->")}
+${vscode.l10n.t("Does this occur consistently? <!-- TODO: Type Yes or No -->")}
 Repro steps:
-<!-- ${localize('reportIssue_enterReproSteps', "TODO: Share the steps needed to reliably reproduce the problem. Please include actual and expected results.")} -->
+<!-- ${vscode.l10n.t("TODO: Share the steps needed to reliably reproduce the problem. Please include actual and expected results.")} -->
 
 1.
 2.`;
@@ -77,7 +76,7 @@ Language: ${vscode.env.language}`;
 
     // If it's too long, paste it to the clipboard
     await vscode.env.clipboard.writeText(body);
-    return createNewIssueLinkFromBody(localize('pasteIssue', "The issue text was copied to the clipboard.  Please paste it into this window."));
+    return createNewIssueLinkFromBody(vscode.l10n.t("The issue text was copied to the clipboard.  Please paste it into this window."));
 }
 
 function createNewIssueLinkFromBody(issueBody: string): string {

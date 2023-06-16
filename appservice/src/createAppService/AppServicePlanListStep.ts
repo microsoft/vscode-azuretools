@@ -6,8 +6,8 @@
 import type { AppServicePlan, WebSiteManagementClient } from '@azure/arm-appservice';
 import { AzExtLocation, LocationListStep, ResourceGroupListStep, uiUtils } from '@microsoft/vscode-azext-azureutils';
 import { AzureWizardPromptStep, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, nonNullProp } from '@microsoft/vscode-azext-utils';
+import * as vscode from 'vscode';
 import { webProvider } from '../constants';
-import { localize } from '../localize';
 import { tryGetAppServicePlan } from '../tryGetSiteResource';
 import { createWebSiteClient } from '../utils/azureClients';
 import { AppKind, getWebsiteOSDisplayName, WebsiteOS } from './AppKind';
@@ -48,8 +48,8 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
         // Since create is not enabled for isolated skus, we explicitly reference the type of plan picked in the placeHolder.
         const options: IAzureQuickPickOptions = {
             placeHolder: context.newSiteKind?.includes(AppKind.workflowapp) && context.planSkuFamilyFilter?.test('IV2')
-                ? localize('selectV3Plan', 'Select an App Service Environment (v3) Plan')
-                : localize('selectPlan', 'Select a {0} App Service plan.', getWebsiteOSDisplayName(nonNullProp(context, 'newSiteOS'))),
+                ? vscode.l10n.t('Select an App Service Environment (v3) Plan')
+                : vscode.l10n.t('Select a {0} App Service plan.', getWebsiteOSDisplayName(nonNullProp(context, 'newSiteOS'))),
             id: `AppServicePlanListStep/${context.subscriptionId}`
         };
         context.plan = (await context.ui.showQuickPick(this.getQuickPicks(context), options)).data;
@@ -81,7 +81,7 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
     private async getQuickPicks(context: IAppServiceWizardContext): Promise<IAzureQuickPickItem<AppServicePlan | undefined>[]> {
         const picks: IAzureQuickPickItem<AppServicePlan | undefined>[] = !this._suppressCreate
             ? [{
-                label: localize('CreateNewAppServicePlan', '$(plus) Create new App Service plan'),
+                label: vscode.l10n.t('$(plus) Create new App Service plan'),
                 description: '',
                 data: undefined
             }]
@@ -128,7 +128,7 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
 
         if (hasFilteredLocations && location) {
             picks.push({
-                label: localize('hasFilteredLocations', '$(warning) Only plans in the region "{0}" are shown.', location.displayName),
+                label: vscode.l10n.t('$(warning) Only plans in the region "{0}" are shown.', location.displayName),
                 onPicked: () => { /* do nothing */ },
                 data: undefined
             });

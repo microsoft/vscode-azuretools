@@ -4,10 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { isNullOrUndefined } from 'util';
-import { commands, ThemeIcon, TreeItemCollapsibleState } from 'vscode';
+import { commands, l10n, ThemeIcon, TreeItemCollapsibleState } from 'vscode';
 import * as types from '../../index';
 import { NoResourceFoundError, NotImplementedError, UserCancelledError } from '../errors';
-import { localize } from '../localize';
 import { randomUtils } from '../utils/randomUtils';
 import { AzExtTreeItem } from './AzExtTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';
@@ -71,7 +70,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
                     Object.assign(context, {
                         showCreatingTreeItem: (label: string): void => {
                             creatingTreeItem = new GenericTreeItem(this, {
-                                label: localize('creatingLabel', 'Creating {0}...', label),
+                                label: l10n.t('Creating {0}...', label),
                                 contextValue: `azureextensionui.creating${label}`,
                                 iconPath: new ThemeIcon('loading~spin')
                             });
@@ -111,7 +110,8 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
             }
         }
 
-        const placeHolder: string = localize('selectTreeItem', 'Select {0}', this.childTypeLabel);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const placeHolder: string = l10n.t('Select {0}', this.childTypeLabel!);
         const stepName = `treeItemPicker|${this.contextValue}`;
 
         let getTreeItem: GetTreeItemFunction;
@@ -171,7 +171,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
     }
 
     public async loadAllChildren(context: types.ILoadingTreeContext): Promise<AzExtTreeItem[]> {
-        context.loadingMessage ||= localize('loadingTreeItem', 'Loading "{0}"...', this.label);
+        context.loadingMessage ||= l10n.t('Loading "{0}"...', this.label);
         await runWithLoadingNotification(context, async (cancellationToken) => {
             do {
                 if (cancellationToken.isCancellationRequested) {
@@ -230,7 +230,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
 
         if (!isNullOrUndefined(lastUnknownItemError)) {
             // Display a generic error if there are any unknown items. Only the last error will be displayed
-            const label: string = localize('cantShowItems', 'Some items could not be displayed');
+            const label: string = l10n.t('Some items could not be displayed');
             treeItems.push(new InvalidTreeItem(this, lastUnknownItemError, {
                 label,
                 description: '',
@@ -282,7 +282,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
                     id: ti.fullId,
                     data: async (): Promise<AzExtTreeItem> => {
                         if (!ti.commandId) {
-                            throw new Error(localize('noCommand', 'Failed to find commandId on generic tree item.'));
+                            throw new Error(l10n.t('Failed to find commandId on generic tree item.'));
                         } else {
                             const commandArgs: unknown[] = ti.commandArgs || [ti];
                             await commands.executeCommand(ti.commandId, ...commandArgs);
@@ -302,12 +302,12 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         });
 
         if (this.createChildImpl && this.childTypeLabel && !context.suppressCreatePick) {
-            const createNewLabel: string = this.createNewLabel || localize('treePickerCreateNew', 'Create new {0}...', this.childTypeLabel);
+            const createNewLabel: string = this.createNewLabel || l10n.t('Create new {0}...', this.childTypeLabel);
 
             if (this.supportsAdvancedCreation) {
                 picks.unshift({
                     label: `$(plus) ${createNewLabel}`,
-                    description: localize('advanced', 'Advanced'),
+                    description: l10n.t('Advanced'),
                     data: async (): Promise<AzExtTreeItem> => await this.createChild<AzExtTreeItem>(Object.assign(context, { advancedCreation: true }))
                 });
             }
@@ -357,7 +357,7 @@ export class InvalidTreeItem extends AzExtParentTreeItem implements types.Invali
         this._error = error;
         this.contextValue = options.contextValue;
         this.data = options.data;
-        this.description = options.description !== undefined ? options.description : localize('invalid', 'Invalid');
+        this.description = options.description !== undefined ? options.description : l10n.t('Invalid');
     }
 
     public get id(): string {

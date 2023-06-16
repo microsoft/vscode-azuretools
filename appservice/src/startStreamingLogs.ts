@@ -5,15 +5,15 @@
 
 import { AbortController } from '@azure/abort-controller';
 import type { User } from '@azure/arm-appservice';
-import { BasicAuthenticationCredentials, HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
-import { createGenericClient } from '@microsoft/vscode-azext-azureutils';
-import { callWithTelemetryAndErrorHandling, IActionContext, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
+import { ServiceClient } from '@azure/core-client';
+import { createPipelineRequest } from "@azure/core-rest-pipeline";
+import { AzExtPipelineResponse, addBasicAuthenticationCredentialsToClient, createGenericClient } from '@microsoft/vscode-azext-azureutils';
+import { IActionContext, callWithTelemetryAndErrorHandling, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
 import { setInterval } from 'timers';
 import * as vscode from 'vscode';
-import { ext } from './extensionVariables';
-import { localize } from './localize';
-import { pingFunctionApp } from './pingFunctionApp';
 import { ParsedSite } from './SiteClient';
+import { ext } from './extensionVariables';
+import { pingFunctionApp } from './pingFunctionApp';
 
 export interface ILogStream extends vscode.Disposable {
     isConnected: boolean;
@@ -31,15 +31,15 @@ export async function startStreamingLogs(context: IActionContext, site: ParsedSi
     const logStream: ILogStream | undefined = logStreams.get(logStreamId);
     if (logStream && logStream.isConnected) {
         logStream.outputChannel.show();
-        void context.ui.showWarningMessage(localize('logStreamAlreadyActive', 'The log-streaming service for "{0}" is already active.', logStreamLabel));
+        void context.ui.showWarningMessage(vscode.l10n.t('The log-streaming service for "{0}" is already active.', logStreamLabel));
         return logStream;
     } else {
         await verifyLoggingEnabled();
 
-        const outputChannel: vscode.OutputChannel = logStream ? logStream.outputChannel : vscode.window.createOutputChannel(localize('logStreamLabel', '{0} - Log Stream', logStreamLabel));
+        const outputChannel: vscode.OutputChannel = logStream ? logStream.outputChannel : vscode.window.createOutputChannel(vscode.l10n.t('{0} - Log Stream', logStreamLabel));
         ext.context.subscriptions.push(outputChannel);
         outputChannel.show();
-        outputChannel.appendLine(localize('connectingToLogStream', 'Connecting to log stream...'));
+        outputChannel.appendLine(vscode.l10n.t('Connecting to log stream...'));
 
         const client = await site.createClient(context);
         const creds: User = await client.getWebAppPublishCredential();
@@ -57,15 +57,16 @@ export async function startStreamingLogs(context: IActionContext, site: ParsedSi
                     timerId = setInterval(async () => await pingFunctionApp(streamContext, site), 60 * 1000);
                 }
 
-                const genericClient: ServiceClient = await createGenericClient(streamContext, new BasicAuthenticationCredentials(nonNullProp(creds, 'publishingUserName'), nonNullProp(creds, 'publishingPassword')));
+                const genericClient: ServiceClient = await createGenericClient(streamContext, undefined);
+
+                addBasicAuthenticationCredentialsToClient(genericClient, nonNullProp(creds, 'publishingUserName'), nonNullProp(creds, 'publishingPassword'));
                 const abortController: AbortController = new AbortController();
 
-                const logsResponse: HttpOperationResponse = await genericClient.sendRequest({
+                const logsResponse: AzExtPipelineResponse = await genericClient.sendRequest(createPipelineRequest({
                     method: 'GET',
                     url: `${site.kuduUrl}/api/logstream/${logsPath}`,
-                    streamResponseBody: true,
                     abortSignal: abortController.signal
-                });
+                }));
 
                 await new Promise<void>((onLogStreamEnded: () => void, reject: (err: Error) => void): void => {
                     const newLogStream: ILogStream = {
@@ -76,7 +77,7 @@ export async function startStreamingLogs(context: IActionContext, site: ParsedSi
                             if (timerId) {
                                 clearInterval(timerId);
                             }
-                            outputChannel.appendLine(localize('logStreamDisconnected', 'Disconnected from log-streaming service.'));
+                            outputChannel.appendLine(vscode.l10n.t('Disconnected from log-streaming service.'));
                             newLogStream.isConnected = false;
                             void onLogStreamEnded();
                         },
@@ -92,7 +93,7 @@ export async function startStreamingLogs(context: IActionContext, site: ParsedSi
                         }
                         newLogStream.isConnected = false;
                         outputChannel.show();
-                        outputChannel.appendLine(localize('logStreamError', 'Error connecting to log-streaming service:'));
+                        outputChannel.appendLine(vscode.l10n.t('Error connecting to log-streaming service:'));
                         outputChannel.appendLine(parseError(err).message);
                         reject(err);
                     }).on('complete', () => {
@@ -113,6 +114,6 @@ export async function stopStreamingLogs(site: ParsedSite, logsPath: string = '')
     if (logStream && logStream.isConnected) {
         logStream.dispose();
     } else {
-        await vscode.window.showWarningMessage(localize('alreadyDisconnected', 'The log-streaming service is already disconnected.'));
+        await vscode.window.showWarningMessage(vscode.l10n.t('The log-streaming service is already disconnected.'));
     }
 }

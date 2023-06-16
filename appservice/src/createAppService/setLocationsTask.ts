@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { GeoRegion, ListGeoRegionsOptionalParams, SkuName } from '@azure/arm-appservice';
-import { HttpOperationResponse } from '@azure/ms-rest-js';
-import { createGenericClient, LocationListStep } from '@microsoft/vscode-azext-azureutils';
+import { createPipelineRequest } from '@azure/core-rest-pipeline';
+import { AzExtPipelineResponse, LocationListStep, createGenericClient } from '@microsoft/vscode-azext-azureutils';
 import { nonNullProp } from '@microsoft/vscode-azext-utils';
 import { webProvider } from '../constants';
 import { AppKind, WebsiteOS } from './AppKind';
@@ -23,12 +23,13 @@ export async function setLocationsTask(context: IAppServiceWizardContext): Promi
 }
 
 export async function getWebLocations(context: IAppServiceWizardContext): Promise<string[]> {
-    let options: ListGeoRegionsOptionalParams = {};
+    const options: ListGeoRegionsOptionalParams = {};
+    options['api-version'] = '2020-09-01';
     if (context.newSiteOS === WebsiteOS.linux) {
         if (context.newSiteKind === AppKind.functionapp && context.useConsumptionPlan) {
-            options = { linuxDynamicWorkersEnabled: true };
+            options.linuxDynamicWorkersEnabled = true;
         } else {
-            options = { linuxWorkersEnabled: true };
+            options.linuxWorkersEnabled = true;
         }
     }
 
@@ -36,19 +37,13 @@ export async function getWebLocations(context: IAppServiceWizardContext): Promis
         options.sku = <SkuName>context.newPlanSku.tier.replace(/\s/g, '');
     }
 
+    const queryString = Object.keys(options).map(key => `${key}=${options[key]}`).join('&');
     // Temporary fix for https://github.com/Azure/azure-rest-api-specs/issues/18071
     const genericClient = await createGenericClient(context, context);
-    const result: HttpOperationResponse = await genericClient.sendRequest({
+    const result: AzExtPipelineResponse = await genericClient.sendRequest(createPipelineRequest({
         method: 'GET',
-        pathTemplate: `/subscriptions/{subscriptionId}/providers/Microsoft.Web/geoRegions`,
-        queryParameters: {
-            'api-version': '2020-09-01',
-            ...options,
-        },
-        pathParameters: {
-            subscriptionId: context.subscriptionId,
-        }
-    });
+        url: `/subscriptions/${context.subscriptionId}/providers/Microsoft.Web/geoRegions?${queryString}`
+    }));
 
     return (<GeoRegionJsonResponse>result.parsedBody).value.map((l: GeoRegion) => nonNullProp(l, 'name'));
 }

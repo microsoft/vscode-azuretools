@@ -6,11 +6,15 @@
             "_justification": "No need to scan external node modules."
         },
         {
-            "folder": "dev\\node_modules\\",
+            "folder": "appsettings\\node_modules\\",
             "_justification": "No need to scan external node modules."
         },
         {
-            "folder": "kudu\\node_modules\\",
+            "folder": "auth\\node_modules\\",
+            "_justification": "No need to scan external node modules."
+        },
+        {
+            "folder": "dev\\node_modules\\",
             "_justification": "No need to scan external node modules."
         },
         {
@@ -26,11 +30,15 @@
             "_justification": "No need to scan VS Code test folder."
         },
         {
-            "folder": "dev\\.vscode-test\\",
+            "folder": "appsettings\\.vscode-test\\",
             "_justification": "No need to scan VS Code test folder."
         },
         {
-            "folder": "kudu\\.vscode-test\\",
+            "folder": "auth\\.vscode-test\\",
+            "_justification": "No need to scan VS Code test folder."
+        },
+        {
+            "folder": "dev\\.vscode-test\\",
             "_justification": "No need to scan VS Code test folder."
         },
         {

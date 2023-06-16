@@ -6,11 +6,13 @@ This project provides Node.js packages that make it easy to consume and manage A
 
 ## Modules
 
-* [Azure Kudu](kudu/)
 * [Azure App Service](appservice/)
+* [Azure App Settings](appsettings/)
+* [Azure Authentication and Subscription Provider](auth/)
 * [Azure Extension UI++ utilities (no Azure dependencies)](utils/)
 * [Azure Extension UI++ utilities (Azure dependencies)](azure/)
 * [Azure Dev](dev/)
+* [ESLint config for Azure extensions](eslint-config-azuretools/)
 
 ## Developing locally
 

@@ -5,10 +5,9 @@
 
 import type { Provider, ResourceManagementClient } from '@azure/arm-resources';
 import { AzureWizardExecuteStep, ISubscriptionActionContext, parseError } from '@microsoft/vscode-azext-utils';
-import { Progress } from 'vscode';
+import { l10n, Progress } from 'vscode';
 import * as types from '../../index';
 import { createResourcesClient } from '../clients';
-import { localize } from '../localize';
 import { delay } from '../utils/delay';
 
 export class VerifyProvidersStep<T extends ISubscriptionActionContext> extends AzureWizardExecuteStep<T> implements types.VerifyProvidersStep<T> {
@@ -21,7 +20,7 @@ export class VerifyProvidersStep<T extends ISubscriptionActionContext> extends A
     }
 
     public async execute(context: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
-        progress.report({ message: localize('registeringProviders', 'Registering Providers...') });
+        progress.report({ message: l10n.t('Registering Providers...') });
 
         const client: ResourceManagementClient = await createResourcesClient(context);
         await Promise.all(this._providers.map(async providerName => {

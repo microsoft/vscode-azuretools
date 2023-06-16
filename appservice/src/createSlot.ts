@@ -4,14 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { CheckNameAvailabilityResponse, NameValuePair, Site, StringDictionary, WebSiteManagementClient } from "@azure/arm-appservice";
-import { ServiceClient } from "@azure/ms-rest-js";
+import { ServiceClient } from '@azure/core-client';
 import { createGenericClient } from "@microsoft/vscode-azext-azureutils";
 import { IActionContext, IAzureNamingRules, IAzureQuickPickItem, ICreateChildImplContext } from "@microsoft/vscode-azext-utils";
-import { ProgressLocation, window } from "vscode";
+import { ProgressLocation, l10n, window } from "vscode";
+import { ParsedSite } from './SiteClient';
 import { getNewFileShareName } from "./createAppService/getNewFileShareName";
 import { ext } from "./extensionVariables";
-import { localize } from "./localize";
-import { ParsedSite } from './SiteClient';
 import { createWebSiteClient } from "./utils/azureClients";
 import { checkNameAvailability } from "./utils/azureUtils";
 
@@ -19,7 +18,7 @@ export async function createSlot(site: ParsedSite, existingSlots: ParsedSite[], 
     const client: WebSiteManagementClient = await createWebSiteClient([context, site.subscription]);
     const gClient = await createGenericClient(context, site.subscription);
     const slotName: string = (await context.ui.showInputBox({
-        prompt: localize('enterSlotName', 'Enter a unique name for the new deployment slot'),
+        prompt: l10n.t('Enter a unique name for the new deployment slot'),
         stepName: 'slotName',
         validateInput: async (value: string): Promise<string | undefined> => validateSlotName(value, gClient, site)
     })).trim();
@@ -43,7 +42,7 @@ export async function createSlot(site: ParsedSite, existingSlots: ParsedSite[], 
 
     context.showCreatingTreeItem(slotName);
 
-    const creatingSlot: string = localize('creatingSlot', 'Creating slot "{0}"...', slotName);
+    const creatingSlot: string = l10n.t('Creating slot "{0}"...', slotName);
     ext.outputChannel.appendLog(creatingSlot);
     return await window.withProgress({ location: ProgressLocation.Notification, title: creatingSlot }, async () => {
         return await client.webApps.beginCreateOrUpdateSlotAndWait(site.resourceGroup, site.siteName, slotName, newDeploymentSlot);
@@ -60,13 +59,13 @@ async function validateSlotName(value: string, client: ServiceClient, site: Pars
     value = value.trim();
     // Can not have "production" as a slot name, but checkNameAvailability doesn't validate that
     if (value === 'production') {
-        return localize('slotNotAvailable', 'The slot name "{0}" is not available.', value);
+        return l10n.t('The slot name "{0}" is not available.', value);
     } else if (value.length < slotNamingRules.minLength) {
-        return localize('nameTooShort', 'The slot name must be at least {0} characters.', slotNamingRules.minLength);
+        return l10n.t('The slot name must be at least {0} characters.', slotNamingRules.minLength);
     } else if (value.length + site.siteName.length > slotNamingRules.maxLength) {
-        return localize('nameTooLong', 'The combined site name and slot name must be fewer than {0} characters.', slotNamingRules.maxLength);
+        return l10n.t('The combined site name and slot name must be fewer than {0} characters.', slotNamingRules.maxLength);
     } else if (slotNamingRules.invalidCharsRegExp.test(value)) {
-        return localize('invalidChars', "The name can only contain letters, numbers, or hyphens.");
+        return l10n.t("The name can only contain letters, numbers, or hyphens.");
     } else {
         const nameAvailability: CheckNameAvailabilityResponse = await checkNameAvailability(client, site.subscription.subscriptionId, `${site.siteName}-${value}`, 'Slot');
         if (!nameAvailability.nameAvailable) {
@@ -83,7 +82,7 @@ async function chooseConfigurationSource(context: IActionContext, site: ParsedSi
         return site;
     } else {
         const configurationSources: IAzureQuickPickItem<ParsedSite | undefined>[] = [{
-            label: localize('dontClone', "Don't clone configuration from an existing slot"),
+            label: l10n.t("Don't clone configuration from an existing slot"),
             data: undefined
         }];
 
@@ -101,7 +100,7 @@ async function chooseConfigurationSource(context: IActionContext, site: ParsedSi
             });
         }
 
-        const placeHolder: string = localize('chooseSource', 'Choose a configuration source.');
+        const placeHolder: string = l10n.t('Choose a configuration source.');
         return (await context.ui.showQuickPick(configurationSources, { placeHolder, stepName: 'slotConfigSource' })).data;
     }
 }

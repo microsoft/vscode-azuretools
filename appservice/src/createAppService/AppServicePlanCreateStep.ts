@@ -6,10 +6,9 @@
 import { AppServicePlan, WebSiteManagementClient } from '@azure/arm-appservice';
 import { AzExtLocation, LocationListStep } from '@microsoft/vscode-azext-azureutils';
 import { AzureWizardExecuteStep, nonNullProp, nonNullValue, parseError } from '@microsoft/vscode-azext-utils';
-import { MessageItem, Progress } from 'vscode';
+import { l10n, MessageItem, Progress } from 'vscode';
 import { webProvider } from '../constants';
 import { ext } from '../extensionVariables';
-import { localize } from '../localize';
 import { tryGetAppServicePlan } from '../tryGetSiteResource';
 import { createWebSiteClient } from '../utils/azureClients';
 import { AppKind, WebsiteOS } from './AppKind';
@@ -23,10 +22,10 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
         const newPlanName: string = nonNullProp(context, 'newPlanName');
         const rgName: string = nonNullProp(nonNullValue(context.resourceGroup, 'name'), 'name');
 
-        const findingAppServicePlan: string = localize('FindingAppServicePlan', 'Ensuring App Service plan "{0}" exists...', newPlanName);
-        const creatingAppServicePlan: string = localize('CreatingAppServicePlan', 'Creating App Service plan "{0}"...', newPlanName);
-        const foundAppServicePlan: string = localize('FoundAppServicePlan', 'Successfully found App Service plan "{0}".', newPlanName);
-        const createdAppServicePlan: string = localize('CreatedAppServicePlan', 'Successfully created App Service plan "{0}".', newPlanName);
+        const findingAppServicePlan: string = l10n.t('Ensuring App Service plan "{0}" exists...', newPlanName);
+        const creatingAppServicePlan: string = l10n.t('Creating App Service plan "{0}"...', newPlanName);
+        const foundAppServicePlan: string = l10n.t('Successfully found App Service plan "{0}".', newPlanName);
+        const createdAppServicePlan: string = l10n.t('Successfully created App Service plan "{0}".', newPlanName);
         ext.outputChannel.appendLog(findingAppServicePlan);
 
         try {
@@ -53,8 +52,8 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
     }
 
     public async selectExistingPrompt(context: IAppServiceWizardContext): Promise<void> {
-        const message: string = localize('planForbidden', 'You do not have permission to create an app service plan in subscription "{0}".', context.subscriptionDisplayName);
-        const selectExisting: MessageItem = { title: localize('selectExisting', 'Select Existing') };
+        const message: string = l10n.t('You do not have permission to create an app service plan in subscription "{0}".', context.subscriptionDisplayName);
+        const selectExisting: MessageItem = { title: l10n.t('Select Existing') };
         await context.ui.showWarningMessage(message, { modal: true, stepName: 'AspNoPermissions' }, selectExisting);
 
         context.telemetry.properties.forbiddenResponse = 'SelectExistingAsp';

@@ -3,11 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { MessageItem, MessageOptions, window } from 'vscode';
+import { l10n, MessageItem, MessageOptions, window } from 'vscode';
 import * as types from '../../index';
 import { DialogResponses } from '../DialogResponses';
 import { GoBackError, UserCancelledError } from '../errors';
-import { localize } from '../localize';
 import { openUrl } from '../utils/openUrl';
 import { IInternalActionContext } from './IInternalActionContext';
 
@@ -21,7 +20,7 @@ export async function showWarningMessage<T extends MessageItem>(context: IIntern
         args.push(DialogResponses.learnMore);
     }
 
-    const back: MessageItem = { title: localize('back', 'Back') };
+    const back: MessageItem = { title: l10n.t('Back') };
     if (context.ui.wizard?.showBackButton) {
         args.push(back);
     }

@@ -3,11 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ApplicationInsightsManagementClient } from "@azure/arm-appinsights";
-import type { ApplicationInsightsComponent } from "@azure/arm-appinsights";
+import type { ApplicationInsightsComponent, ApplicationInsightsManagementClient } from "@azure/arm-appinsights";
 import { LocationListStep, uiUtils } from "@microsoft/vscode-azext-azureutils";
 import { AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, nonNullProp } from "@microsoft/vscode-azext-utils";
-import { localize } from "../localize";
+import * as vscode from 'vscode';
 import { createAppInsightsClient } from "../utils/azureClients";
 import { AppInsightsCreateStep } from "./AppInsightsCreateStep";
 import { AppInsightsNameStep } from "./AppInsightsNameStep";
@@ -75,12 +74,12 @@ export class AppInsightsListStep extends AzureWizardPromptStep<IAppServiceWizard
     private async getQuickPicks(context: IAppServiceWizardContext): Promise<IAzureQuickPickItem<ApplicationInsightsComponent | undefined>[]> {
 
         const picks: IAzureQuickPickItem<ApplicationInsightsComponent | undefined>[] = !this._suppressCreate ? [{
-            label: localize('newApplicationInsight', '$(plus) Create new Application Insights resource'),
+            label: vscode.l10n.t('$(plus) Create new Application Insights resource'),
             data: undefined
         }] : [];
 
         picks.push({
-            label: localize('skipForNow', skipForNowLabel),
+            label: vscode.l10n.t(skipForNowLabel),
             data: undefined
         });
 

@@ -6,7 +6,6 @@
 import type { SiteConfigResource, User } from '@azure/arm-appservice';
 import { callWithTelemetryAndErrorHandling, findFreePort, IActionContext } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
-import { localize } from '../localize';
 import { ParsedSite } from '../SiteClient';
 import { TunnelProxy } from '../TunnelProxy';
 import { reportMessage, setRemoteDebug } from './remoteDebugCommon';
@@ -22,7 +21,7 @@ export enum RemoteDebugLanguage {
 
 export async function startRemoteDebug(context: IActionContext, site: ParsedSite, siteConfig: SiteConfigResource, language: RemoteDebugLanguage): Promise<void> {
     if (isRemoteDebugging) {
-        throw new Error(localize('remoteDebugAlreadyStarted', 'Azure Remote Debugging is currently starting or already started.'));
+        throw new Error(vscode.l10n.t('Azure Remote Debugging is currently starting or already started.'));
     }
 
     isRemoteDebugging = true;
@@ -39,10 +38,10 @@ async function startRemoteDebugInternal(context: IActionContext, site: ParsedSit
         const localHostPortNumber: number = await findFreePort();
         const debugConfig: vscode.DebugConfiguration = await getDebugConfiguration(language, localHostPortNumber);
 
-        const confirmEnableMessage: string = localize('remoteDebugEnablePrompt', 'The configuration will be updated to enable remote debugging. Would you like to continue? This will restart the app.');
+        const confirmEnableMessage: string = vscode.l10n.t('The configuration will be updated to enable remote debugging. Would you like to continue? This will restart the app.');
         await setRemoteDebug(context, true, confirmEnableMessage, undefined, site, siteConfig, progress, token, remoteDebugLink);
 
-        reportMessage(localize('remoteDebugStartingTunnel', 'Starting tunnel proxy...'), progress, token);
+        reportMessage(vscode.l10n.t('Starting tunnel proxy...'), progress, token);
 
         const client = await site.createClient(context);
         const publishCredential: User = await client.getWebAppPublishCredential();
@@ -53,7 +52,7 @@ async function startRemoteDebugInternal(context: IActionContext, site: ParsedSit
             await tunnelProxy.startProxy(context, token);
         });
 
-        reportMessage(localize('remoteDebugAttaching', 'Attaching debugger...'), progress, token);
+        reportMessage(vscode.l10n.t('Attaching debugger...'), progress, token);
 
         await callWithTelemetryAndErrorHandling('appService.remoteDebugAttach', async (attachContext: IActionContext) => {
             attachContext.errorHandling.suppressDisplay = true;
@@ -61,7 +60,7 @@ async function startRemoteDebugInternal(context: IActionContext, site: ParsedSit
             await vscode.debug.startDebugging(undefined, debugConfig);
         });
 
-        reportMessage(localize('remoteDebugAttached', 'Attached!'), progress, token);
+        reportMessage(vscode.l10n.t('Attached!'), progress, token);
 
         const terminateDebugListener: vscode.Disposable = vscode.debug.onDidTerminateDebugSession(async (event: vscode.DebugSession) => {
             if (event.name === debugConfig.name) {
@@ -72,7 +71,7 @@ async function startRemoteDebugInternal(context: IActionContext, site: ParsedSit
                 }
                 terminateDebugListener.dispose();
 
-                const confirmDisableMessage: string = localize('remoteDebugDisablePrompt', 'Remaining in debugging mode may cause performance issues. Would you like to disable debugging? This will restart the app.');
+                const confirmDisableMessage: string = vscode.l10n.t('Remaining in debugging mode may cause performance issues. Would you like to disable debugging? This will restart the app.');
                 await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, cancellable: true }, async (innerProgress, innerToken): Promise<void> => {
                     await setRemoteDebug(context, false, confirmDisableMessage, undefined, site, siteConfig, innerProgress, innerToken, remoteDebugLink);
                 });
@@ -91,7 +90,7 @@ async function getDebugConfiguration(language: RemoteDebugLanguage, portNumber: 
         case RemoteDebugLanguage.Python:
             return await getPythonDebugConfiguration(sessionId, portNumber, host);
         default:
-            throw new Error(localize('remoteDebugLanguageNotSupported', 'The language "{0}" is not supported for remote debugging.', language));
+            throw new Error(vscode.l10n.t('The language "{0}" is not supported for remote debugging.', language));
     }
 }
 
@@ -107,11 +106,11 @@ async function getDebugPath(): Promise<string> {
             if (root)
                 return root.uri.fsPath;
             else
-                throw new Error(localize('remoteDebugNoFolders', 'Please select a workspace folder before attaching a debugger.'));
+                throw new Error(vscode.l10n.t('Please select a workspace folder before attaching a debugger.'));
         }
     } else {
         // vscode will throw an error if you try to start debugging without any workspace folder open
-        throw new Error(localize('remoteDebugNoFolders', 'Please open a workspace folder before attaching a debugger.'));
+        throw new Error(vscode.l10n.t('Please open a workspace folder before attaching a debugger.'));
     }
 }
 

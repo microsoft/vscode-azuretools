@@ -4,19 +4,18 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { AzureResourceQuickPickWizardContext } from '../../../index';
 import * as types from '../../../index';
+import { AzureResourceQuickPickWizardContext } from '../../../index';
 import { parseContextValue } from '../../utils/contextUtils';
-import { PickFilter } from '../PickFilter';
 import { GenericQuickPickStep } from '../GenericQuickPickStep';
+import { PickFilter } from '../PickFilter';
 import { AzureResourceItem, ResourceGroupsItem } from './tempTypes';
-import { localize } from '../../localize';
 
 export class QuickPickAzureResourceStep extends GenericQuickPickStep<AzureResourceQuickPickWizardContext, types.AzureResourceQuickPickOptions> {
 
     public constructor(tdp: vscode.TreeDataProvider<ResourceGroupsItem>, options?: types.AzureResourceQuickPickOptions, promptOptions?: types.IAzureQuickPickOptions) {
         super(tdp, options ?? {}, {
-            placeHolder: localize('selectResource', 'Select resource'),
+            placeHolder: vscode.l10n.t('Select resource'),
             ...promptOptions,
         });
     }
