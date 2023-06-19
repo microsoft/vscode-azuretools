@@ -27,7 +27,6 @@
         "compile": "tsc -watch -p ./",
         "lint": "eslint --ext .ts .",
         "lint-fix": "eslint --ext .ts . --fix",
-        "pretest": "npm run build",
         "test": "node ./out/test/runTest.js",
         "package": "npm pack"
     },
