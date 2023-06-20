@@ -114,7 +114,6 @@ export declare class GitHubBranchListStep extends AzureWizardPromptStep<GitHubCo
     shouldPrompt(context: GitHubContext): boolean;
 }
 
-
 export interface GitHubContext extends IActionContext {
     gitHubAccessToken?: string;
 
