@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-export * from './createOctokitClient';
 export * from './GitHubContext';
+export * from './createOctokitClient';
 
 // Tree Items
 export * from './tree/ActionTreeItem';
-export * from './tree/ActionsTreeItem';
+export * from './tree/ActionsTreeItemBase';
 export * from './tree/JobTreeItem';
 export * from './tree/StepTreeItem';
 
@@ -24,3 +24,4 @@ export * from './wrappers/getBranches';
 export * from './wrappers/getJobs';
 export * from './wrappers/getOrgs';
 export * from './wrappers/getRepositories';
+

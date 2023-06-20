@@ -10,7 +10,7 @@ import { loadMoreQp } from "../constants";
 import { Branches, GetBranchesParams, getBranches } from "../wrappers/getBranches";
 
 export class GitHubBranchListStep extends AzureWizardPromptStep<GitHubContext> {
-    picks: IAzureQuickPickItem<string>[];
+    private picks: IAzureQuickPickItem<string>[];
 
     public async prompt(context: GitHubContext): Promise<void> {
         // We always want fresh picks before prompting in case the user has pressed the back button

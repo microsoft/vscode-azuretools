@@ -16,7 +16,7 @@ type RepositoryData = {
 }
 
 export class GitHubRepositoryListStep extends AzureWizardPromptStep<GitHubContext> {
-    picks: IAzureQuickPickItem<RepositoryData>[];
+    private picks: IAzureQuickPickItem<RepositoryData>[];
 
     public async prompt(context: GitHubContext): Promise<void> {
         // We always want fresh picks before prompting in case the user has pressed the back button

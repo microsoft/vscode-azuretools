@@ -14,18 +14,18 @@ export interface ConnectToGitHubCommand {
     commandArgs: unknown[] | undefined;
 }
 
-export abstract class ActionsTreeItem implements TreeElementBase {
-    static idSuffix: string = 'actions';
-    static contextValueConnectedSuffix: string = 'ActionsConnected';
-    static contextValueUnconnectedSuffix: string = 'ActionsUnconnected';
+export abstract class ActionsTreeItemBase implements TreeElementBase {
+    static readonly idSuffix: string = 'actions';
+    static readonly contextValueConnectedSuffix: string = 'ActionsConnected';
+    static readonly contextValueUnconnectedSuffix: string = 'ActionsUnconnected';
 
     constructor(readonly parentId: string, readonly contextValueExtensionPrefix: string) { }
 
-    id: string = `${this.parentId}/${ActionsTreeItem.idSuffix}`;
-    label: string = 'Actions';
+    readonly id: string = `${this.parentId}/${ActionsTreeItemBase.idSuffix}`;
+    readonly label: string = 'Actions';
 
-    contextValueConnected: string = `${this.contextValueExtensionPrefix}${ActionsTreeItem.contextValueConnectedSuffix}`;
-    contextValueUnconnected: string = `${this.contextValueExtensionPrefix}${ActionsTreeItem.contextValueUnconnectedSuffix}`;
+    readonly contextValueConnected: string = `${this.contextValueExtensionPrefix}${ActionsTreeItemBase.contextValueConnectedSuffix}`;
+    readonly contextValueUnconnected: string = `${this.contextValueExtensionPrefix}${ActionsTreeItemBase.contextValueUnconnectedSuffix}`;
 
     async getTreeItem(): Promise<TreeItem> {
         const hasSourceControl: boolean = !!await this.getSourceControlUrl();
@@ -93,8 +93,8 @@ export abstract class ActionsTreeItem implements TreeElementBase {
         }
     }
 
-    public getSourceControlBranch?(): Promise<string | undefined>;
-    public getConnectToGitHubCommand?(): Promise<ConnectToGitHubCommand>;
+    getSourceControlBranch?(): Promise<string | undefined>;
+    getConnectToGitHubCommand?(): Promise<ConnectToGitHubCommand>;
 
     abstract getSourceControlUrl(): Promise<string | undefined>;
 }
