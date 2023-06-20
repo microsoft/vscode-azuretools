@@ -29,5 +29,7 @@ extends:
         working_directory: dev
       - name: eslint_config_azuretools
         working_directory: eslint-config-azuretools
+      - name: github
+        working_directory: github
       - name: utils
         working_directory: utils
