@@ -2,6 +2,11 @@ import type { AzureWizardPromptStep, IActionContext, TreeElementBase, TreeItemIc
 import type { Octokit, RestEndpointMethodTypes } from "@octokit/rest";
 import type { TreeItem } from "vscode";
 
+export interface GitHubSourceControl {
+    repoUrl: string;
+    repoBranch?: string;
+}
+
 export interface ConnectToGitHubCommand {
     /**
      * The command id to call for initiating the setup of source control for the client extension.
@@ -61,12 +66,6 @@ export abstract class ActionsTreeItemBase implements TreeElementBase {
     getChildren(): Promise<TreeElementBase[]>;
 
     /**
-     * An optional method used to obtain the GitHub repo's branch
-     * Defaults to 'main' if no method is supplied or undefined is returned
-     */
-    getSourceControlBranch?(): Promise<string | undefined>;
-
-    /**
      * An optional method that the client extension may provide to initiate connection to a GitHub repository.
      *
      * The 'ActionsTreeItem' will display a generic tree item when no connection is detected (e.g. 'Connect to a GitHub Repository...').
@@ -77,12 +76,10 @@ export abstract class ActionsTreeItemBase implements TreeElementBase {
     getConnectToGitHubCommand?(): Promise<ConnectToGitHubCommand>;
 
     /**
-     * A required method for obtaining the connected GitHub repository's url.
+     * A required method for obtaining the connected GitHub repository's data.
      * If no repository is connected, return undefined.
-     *
-     * @example 'https://github.com/microsoft/foo-bar'
      */
-    abstract getSourceControlUrl(): Promise<string | undefined>;
+    abstract getSourceControl(): Promise<GitHubSourceControl | undefined>;
 }
 
 /**

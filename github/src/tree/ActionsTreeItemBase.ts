@@ -9,6 +9,11 @@ import { gitHubUrlParse } from "../utils/gitHubUrlParse";
 import { ActionsListWorkflowRuns, GetActionsListWorkflowRunsParams, getActions } from "../wrappers/getActions";
 import { ActionTreeItem } from "./ActionTreeItem";
 
+export interface GitHubSourceControl {
+    repoUrl: string;
+    repoBranch?: string;
+}
+
 export interface ConnectToGitHubCommand {
     commandId: string;
     commandArgs: unknown[] | undefined;
@@ -28,7 +33,7 @@ export abstract class ActionsTreeItemBase implements TreeElementBase {
     readonly contextValueUnconnected: string = `${this.contextValueExtensionPrefix}${ActionsTreeItemBase.contextValueUnconnectedSuffix}`;
 
     async getTreeItem(): Promise<TreeItem> {
-        const hasSourceControl: boolean = !!await this.getSourceControlUrl();
+        const hasSourceControl: boolean = !!await this.getSourceControl();
         return {
             id: this.id,
             label: this.label,
@@ -40,23 +45,18 @@ export abstract class ActionsTreeItemBase implements TreeElementBase {
     }
 
     async getChildren(): Promise<TreeElementBase[]> {
-        const sourceControlUrl: string | undefined = await this.getSourceControlUrl();
-
-        let sourceControlBranch: string | undefined;
-        if (this.getSourceControlBranch) {
-            sourceControlBranch = await this.getSourceControlBranch();
-        }
+        const sourceControl: GitHubSourceControl | undefined = await this.getSourceControl();
 
         const actionsListWorkflowRuns: ActionsListWorkflowRuns | undefined = await callWithTelemetryAndErrorHandling('getActionsChildren', async (context: IActionContext) => {
-            if (!sourceControlUrl) {
+            if (!sourceControl) {
                 return undefined;
             }
 
-            const { ownerOrOrganization, repositoryName } = gitHubUrlParse(sourceControlUrl);
+            const { ownerOrOrganization, repositoryName } = gitHubUrlParse(sourceControl.repoUrl);
             const actionWorkflowRunsParams: GetActionsListWorkflowRunsParams = {
                 owner: nonNullValue(ownerOrOrganization),
                 repo: nonNullValue(repositoryName),
-                branch: sourceControlBranch ?? 'main',
+                branch: sourceControl.repoBranch ?? 'main',
                 page: -1,
             };
 
@@ -66,7 +66,7 @@ export abstract class ActionsTreeItemBase implements TreeElementBase {
 
         if (actionsListWorkflowRuns?.total_count) {
             return actionsListWorkflowRuns.workflow_runs.map((awr) => new ActionTreeItem(this.id, this.contextValueExtensionPrefix, awr));
-        } else if (sourceControlUrl) {
+        } else if (sourceControl) {
             // If we are able to detect a connection but fail to retrieve a list of actions, return 'noActionsDetected'
             return [
                 createGenericElement({
@@ -93,8 +93,7 @@ export abstract class ActionsTreeItemBase implements TreeElementBase {
         }
     }
 
-    getSourceControlBranch?(): Promise<string | undefined>;
     getConnectToGitHubCommand?(): Promise<ConnectToGitHubCommand>;
 
-    abstract getSourceControlUrl(): Promise<string | undefined>;
+    abstract getSourceControl(): Promise<GitHubSourceControl | undefined>;
 }
