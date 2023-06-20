@@ -26,7 +26,9 @@ export async function run(): Promise<void> {
     const mocha = new Mocha(options);
 
     const files: string[] = await new Promise((resolve, reject) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         glob('**/**.test.js', { cwd: __dirname }, (err, result) => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             err ? reject(err) : resolve(result);
         });
     });
