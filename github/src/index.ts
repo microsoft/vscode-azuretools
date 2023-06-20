@@ -7,10 +7,7 @@ export * from './GitHubContext';
 export * from './createOctokitClient';
 
 // Tree Items
-export * from './tree/ActionTreeItem';
 export * from './tree/ActionsTreeItemBase';
-export * from './tree/JobTreeItem';
-export * from './tree/StepTreeItem';
 
 // Wizard Steps
 export * from './wizard/GitHubBranchListStep';
