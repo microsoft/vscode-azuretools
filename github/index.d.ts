@@ -1,3 +1,8 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
 import type { AzureWizardPromptStep, IActionContext, TreeElementBase, TreeItemIconPath } from "@microsoft/vscode-azext-utils";
 import type { Octokit, RestEndpointMethodTypes } from "@octokit/rest";
 import type { TreeItem } from "vscode";
@@ -125,6 +130,8 @@ export interface GitHubContext extends IActionContext {
     // Branch
     gitHubBranch?: string;
 }
+
+export declare function getGitHubAccessToken(): Promise<string>;
 
 /**
  * Can be used to initialize a new Octokit client.

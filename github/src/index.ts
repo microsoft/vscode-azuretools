@@ -6,6 +6,9 @@
 export * from './GitHubContext';
 export * from './createOctokitClient';
 
+export * from './utils/getGitHubAccessToken';
+export * from './utils/gitHubUrlParse';
+
 // Tree Items
 export * from './tree/ActionsTreeItemBase';
 
