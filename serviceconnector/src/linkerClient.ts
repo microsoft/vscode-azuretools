@@ -5,6 +5,6 @@
 
 import { AzExtServiceClientCredentials } from "@microsoft/vscode-azext-utils";
 
-export async function createServiceConnectorClient(credentials: AzExtServiceClientCredentials) {
+export async function createLinkerClient(credentials: AzExtServiceClientCredentials) {
     return new (await import('@azure/arm-servicelinker')).ServiceLinkerManagementClient(credentials);
 }
