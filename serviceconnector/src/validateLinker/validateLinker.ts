@@ -5,9 +5,9 @@
 
 import { AzExtTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, ExecuteActivityContext, IActionContext, createSubscriptionContext, isAzExtTreeItem } from "@microsoft/vscode-azext-utils";
 import * as vscode from 'vscode';
-import { LinkerItem } from "../createServiceConnector/createLinker";
-import { IPickLinkerContext } from "../deleteServiceConnector/IPickLinkerContext";
-import { LinkerListStep } from "../deleteServiceConnector/LinkerListStep";
+import { LinkerItem } from "../createLinker/createLinker";
+import { IPickLinkerContext } from "../deleteLinker/IPickLinkerContext";
+import { LinkerListStep } from "../deleteLinker/LinkerListStep";
 import { ValidateLinkerStep } from "./ValidateLinkerStep";
 
 export async function validateLinker(context: IActionContext & ExecuteActivityContext, item: LinkerItem | AzExtTreeItem, preSteps: AzureWizardPromptStep<IPickLinkerContext>[] = []): Promise<void> {

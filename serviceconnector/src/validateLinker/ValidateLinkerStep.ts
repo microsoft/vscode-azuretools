@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { AzureWizardExecuteStep, nonNullValue } from "@microsoft/vscode-azext-utils";
-import { IPickLinkerContext } from "../deleteServiceConnector/IPickLinkerContext";
+import { IPickLinkerContext } from "../deleteLinker/IPickLinkerContext";
 import { createServiceConnectorClient } from "../serviceConnectorClient";
 
 export class ValidateLinkerStep extends AzureWizardExecuteStep<IPickLinkerContext> {

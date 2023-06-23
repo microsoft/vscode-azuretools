@@ -5,7 +5,7 @@
 
 import { AzExtTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, DeleteConfirmationStep, ExecuteActivityContext, IActionContext, createSubscriptionContext, isAzExtTreeItem } from "@microsoft/vscode-azext-utils";
 import * as vscode from 'vscode';
-import { LinkerItem } from "../createServiceConnector/createLinker";
+import { LinkerItem } from "../createLinker/createLinker";
 import { DeleteLinkerStep } from "./DeleteLinkerStep";
 import { IPickLinkerContext } from "./IPickLinkerContext";
 import { LinkerListStep } from "./LinkerListStep";
