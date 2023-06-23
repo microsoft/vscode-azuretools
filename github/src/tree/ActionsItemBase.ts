@@ -31,7 +31,7 @@ export abstract class ActionsItemBase implements TreeElementBase {
     readonly id: string = `${this.parentId}/${ActionsItemBase.idSuffix}`;
     readonly label: string = 'Actions';
 
-    getContextValue(isConnected: boolean): string {
+    private getContextValue(isConnected: boolean): string {
         const actionsTreeItemContextValue: string = `${this.contextValueExtensionPrefix}${ActionsItemBase.contextValueSuffix}`;
         const values: string[] = [actionsTreeItemContextValue];
 

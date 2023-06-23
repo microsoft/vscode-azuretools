@@ -31,28 +31,18 @@ export interface ConnectToGitHubCommand {
  * Base tree node for setting up and tracking GitHub Actions in the tree view.
  * Branching children will be automatically setup and included to track actions, jobs, and steps.
  */
-export abstract class ActionsTreeItemBase implements TreeElementBase {
+export abstract class ActionsItemBase implements TreeElementBase {
+    static readonly contextValueSuffix: string;
+    static readonly contextValueConnected: string;
+    static readonly contextValueUnconnected: string;
+
     static readonly idSuffix: string;
-    static readonly contextValueConnectedSuffix: string;
-    static readonly contextValueUnconnectedSuffix: string;
 
     /**
-     * The extension prefix used in constructing tree item context values
-     * @example 'containerApps'
+     * The extension prefix used in constructing context values for the 'ActionsItem' and its children
+     * @example passing 'containerApps' becomes `containerApps${ActionsItemBase.contextValueSuffix}`
      */
     readonly contextValueExtensionPrefix: string;
-
-    /**
-     * Constructed using the format: `${this.contextValueExtensionPrefix}${ActionsTreeItemBase.contextValueConnectedSuffix}`
-     * @example 'containerAppsActionsConnected'
-     */
-    readonly contextValueConnected: string;
-
-    /**
-     * Constructed using the format: `${this.contextValueExtensionPrefix}${ActionsTreeItemBase.contextValueUnconnectedSuffix}`
-     * @example 'containerAppsActionsUnconnected'
-     */
-    readonly contextValueUnconnected: string;
 
     /**
      * Constructed using the format: `${this.parentId}/${ActionsTreeItemBase.idSuffix}`
