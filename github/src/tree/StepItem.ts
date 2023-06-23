@@ -9,8 +9,8 @@ import { TreeItem } from "vscode";
 import { getActionBasedIconPath, getJobBasedDescription } from "../utils/actionUtils";
 import { JobStep } from "../wrappers/getJobs";
 
-export class StepTreeItem implements TreeElementBase {
-    static contextValueSuffix: string = 'Step';
+export class StepItem implements TreeElementBase {
+    static contextValueSuffix: string = 'StepItem';
 
     constructor(
         readonly parentResourceId: string,
@@ -20,7 +20,7 @@ export class StepTreeItem implements TreeElementBase {
     id: string = `${this.parentResourceId}/steps/${this.step.number}`;
     label: string = this.step.name;
 
-    contextValue: string = `${this.contextValueExtensionPrefix}${StepTreeItem.contextValueSuffix}`;
+    contextValue: string = `${this.contextValueExtensionPrefix}${StepItem.contextValueSuffix}`;
 
     viewProperties: ViewPropertiesModel = {
         data: this.step,

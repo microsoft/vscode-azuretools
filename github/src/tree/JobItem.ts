@@ -8,10 +8,10 @@ import type { ViewPropertiesModel } from "@microsoft/vscode-azureresources-api";
 import { TreeItem, TreeItemCollapsibleState } from "vscode";
 import { getActionBasedIconPath, getJobBasedDescription } from "../utils/actionUtils";
 import { Job } from "../wrappers/getJobs";
-import { StepTreeItem } from "./StepTreeItem";
+import { StepItem } from "./StepItem";
 
-export class JobTreeItem implements TreeElementBase {
-    static contextValueSuffix: string = 'Job';
+export class JobItem implements TreeElementBase {
+    static contextValueSuffix: string = 'JobItem';
 
     constructor(
         readonly parentResourceId: string,
@@ -21,7 +21,7 @@ export class JobTreeItem implements TreeElementBase {
     id: string = `${this.parentResourceId}/jobs/${this.job.id}`;
     label: string = this.job.name || this.id;
 
-    contextValue: string = `${this.contextValueExtensionPrefix}${JobTreeItem.contextValueSuffix}`;
+    contextValue: string = `${this.contextValueExtensionPrefix}${JobItem.contextValueSuffix}`;
 
     viewProperties: ViewPropertiesModel = {
         data: this.job,
@@ -40,6 +40,6 @@ export class JobTreeItem implements TreeElementBase {
     }
 
     async getChildren(): Promise<TreeElementBase[]> {
-        return this.job.steps?.map((step) => new StepTreeItem(this.id, this.contextValueExtensionPrefix, step)) ?? [];
+        return this.job.steps?.map((step) => new StepItem(this.id, this.contextValueExtensionPrefix, step)) ?? [];
     }
 }

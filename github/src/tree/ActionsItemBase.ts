@@ -3,11 +3,11 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { IActionContext, TreeElementBase, callWithTelemetryAndErrorHandling, createGenericElement, nonNullValue } from "@microsoft/vscode-azext-utils";
+import { IActionContext, TreeElementBase, callWithTelemetryAndErrorHandling, createContextValue, createGenericElement, nonNullValue } from "@microsoft/vscode-azext-utils";
 import { ThemeIcon, TreeItem, TreeItemCollapsibleState, l10n } from "vscode";
 import { gitHubUrlParse } from "../utils/gitHubUrlParse";
 import { ActionsListWorkflowRuns, GetActionsListWorkflowRunsParams, getActions } from "../wrappers/getActions";
-import { ActionTreeItem } from "./ActionTreeItem";
+import { ActionItem } from "./ActionItem";
 
 export interface GitHubSourceControl {
     repoUrl: string;
@@ -19,27 +19,34 @@ export interface ConnectToGitHubCommand {
     commandArgs: unknown[] | undefined;
 }
 
-export abstract class ActionsTreeItemBase implements TreeElementBase {
+export abstract class ActionsItemBase implements TreeElementBase {
+    static readonly contextValueSuffix: string = 'ActionsItem';
+    static readonly contextValueConnected: string = 'actionsConnected:true';
+    static readonly contextValueUnconnected: string = 'actionsConnected:false';
+
     static readonly idSuffix: string = 'actions';
-    static readonly contextValueConnectedSuffix: string = 'ActionsConnected';
-    static readonly contextValueUnconnectedSuffix: string = 'ActionsUnconnected';
 
     constructor(readonly parentId: string, readonly contextValueExtensionPrefix: string) { }
 
-    readonly id: string = `${this.parentId}/${ActionsTreeItemBase.idSuffix}`;
+    readonly id: string = `${this.parentId}/${ActionsItemBase.idSuffix}`;
     readonly label: string = 'Actions';
 
-    readonly contextValueConnected: string = `${this.contextValueExtensionPrefix}${ActionsTreeItemBase.contextValueConnectedSuffix}`;
-    readonly contextValueUnconnected: string = `${this.contextValueExtensionPrefix}${ActionsTreeItemBase.contextValueUnconnectedSuffix}`;
+    getContextValue(isConnected: boolean): string {
+        const actionsTreeItemContextValue: string = `${this.contextValueExtensionPrefix}${ActionsItemBase.contextValueSuffix}`;
+        const values: string[] = [actionsTreeItemContextValue];
+
+        values.push(isConnected ? ActionsItemBase.contextValueConnected : ActionsItemBase.contextValueUnconnected);
+        return createContextValue(values);
+    }
 
     async getTreeItem(): Promise<TreeItem> {
-        const hasSourceControl: boolean = !!await this.getSourceControl();
+        const isConnected: boolean = !!await this.getSourceControl();
         return {
             id: this.id,
             label: this.label,
-            description: hasSourceControl ? l10n.t('Connected') : '',
+            description: isConnected ? l10n.t('Connected') : '',
             iconPath: new ThemeIcon('github-inverted'),
-            contextValue: hasSourceControl ? this.contextValueConnected : this.contextValueUnconnected,
+            contextValue: this.getContextValue(isConnected),
             collapsibleState: TreeItemCollapsibleState.Collapsed,
         };
     }
@@ -65,9 +72,9 @@ export abstract class ActionsTreeItemBase implements TreeElementBase {
         });
 
         if (actionsListWorkflowRuns?.total_count) {
-            return actionsListWorkflowRuns.workflow_runs.map((awr) => new ActionTreeItem(this.id, this.contextValueExtensionPrefix, awr));
+            return actionsListWorkflowRuns.workflow_runs.map((awr) => new ActionItem(this.id, this.contextValueExtensionPrefix, awr));
         } else if (sourceControl) {
-            // If we are able to detect a connection but fail to retrieve a list of actions, return 'noActionsDetected'
+            // If we are able to detect a connection but fail to retrieve a list of actions
             return [
                 createGenericElement({
                     contextValue: 'noActionsDetected',

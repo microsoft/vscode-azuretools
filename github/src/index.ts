@@ -10,7 +10,7 @@ export * from './utils/getGitHubAccessToken';
 export * from './utils/gitHubUrlParse';
 
 // Tree Items
-export * from './tree/ActionsTreeItemBase';
+export * from './tree/ActionsItemBase';
 
 // Wizard Steps
 export * from './wizard/GitHubBranchListStep';
