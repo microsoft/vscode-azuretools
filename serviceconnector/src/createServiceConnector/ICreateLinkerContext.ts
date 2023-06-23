@@ -10,7 +10,9 @@ import { TargetServiceType } from "../../constants";
 export interface ICreateLinkerContext extends ISubscriptionActionContext, IStorageAccountWizardContext {
     //Source resource
     sourceResourceUri?: string;
-    scope?: string; // This is only assigned when the source resource is a container app to indicate which container is being connected
+    /** This is only assigned when the source resource is a container app to indicate which container is being connected */
+    scope?: string;
+    /** This is only assigned when the source resource is a web app */
     runtime?: KnownClientType[];
     clientType?: KnownClientType;
 

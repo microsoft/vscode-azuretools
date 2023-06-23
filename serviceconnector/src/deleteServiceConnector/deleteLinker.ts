@@ -3,7 +3,7 @@
 *  Licensed under the MIT License. See License.md in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { AzExtTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, DeleteConfirmationStep, ExecuteActivityContext, IActionContext, createSubscriptionContext } from "@microsoft/vscode-azext-utils";
+import { AzExtTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, DeleteConfirmationStep, ExecuteActivityContext, IActionContext, createSubscriptionContext, isAzExtTreeItem } from "@microsoft/vscode-azext-utils";
 import * as vscode from 'vscode';
 import { LinkerItem } from "../createServiceConnector/createLinker";
 import { DeleteLinkerStep } from "./DeleteLinkerStep";
@@ -11,7 +11,7 @@ import { IPickLinkerContext } from "./IPickLinkerContext";
 import { LinkerListStep } from "./LinkerListStep";
 
 export async function deleteLinker(context: IActionContext & ExecuteActivityContext, item: LinkerItem | AzExtTreeItem, preSteps: AzureWizardPromptStep<IPickLinkerContext>[] = []): Promise<void> {
-    const subscription = item instanceof AzExtTreeItem ? item.subscription : createSubscriptionContext(item.subscription); // For v1.5 compatibility
+    const subscription = isAzExtTreeItem(item) ? item.subscription : createSubscriptionContext(item.subscription); // For v1.5 compatibility
 
     const wizardContext: IPickLinkerContext = {
         ...context,

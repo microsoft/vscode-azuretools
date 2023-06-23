@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { KnownClientType } from "@azure/arm-servicelinker";
-import { AzExtTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, ExecuteActivityContext, IActionContext, createSubscriptionContext, nonNullValue } from "@microsoft/vscode-azext-utils";
+import { AzExtTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, ExecuteActivityContext, IActionContext, createSubscriptionContext, isAzExtTreeItem, nonNullValue } from "@microsoft/vscode-azext-utils";
 import { AzureSubscription } from "@microsoft/vscode-azureresources-api";
 import * as vscode from 'vscode';
 import { AuthenticationListStep } from "./AuthenticationListStep";
@@ -20,7 +20,7 @@ export interface LinkerItem {
 }
 
 export async function createLinker(context: IActionContext & ExecuteActivityContext, item: LinkerItem | AzExtTreeItem, preSteps: AzureWizardPromptStep<ICreateLinkerContext>[] = [], runtime?: KnownClientType[]): Promise<void> {
-    const subscription = item instanceof AzExtTreeItem ? item.subscription : createSubscriptionContext(item.subscription); // For v1.5 compatibility
+    const subscription = isAzExtTreeItem(item) ? item.subscription : createSubscriptionContext(item.subscription); // For v1.5 compatibility
 
     const wizardContext: ICreateLinkerContext = {
         ...context,

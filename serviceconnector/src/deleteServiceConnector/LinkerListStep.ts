@@ -11,8 +11,7 @@ import { IPickLinkerContext } from "./IPickLinkerContext";
 
 export class LinkerListStep extends AzureWizardPromptStep<IPickLinkerContext>{
     public async prompt(context: IPickLinkerContext): Promise<void> {
-        const placeHolder = vscode.l10n.t("Select a service connector");
-        context.linkerName = (await context.ui.showQuickPick(this.getPicks(context), { placeHolder })).data;
+        context.linkerName = (await context.ui.showQuickPick(this.getPicks(context), { placeHolder: vscode.l10n.t("Select a service connector") })).data;
     }
 
     public shouldPrompt(context: IPickLinkerContext): boolean {

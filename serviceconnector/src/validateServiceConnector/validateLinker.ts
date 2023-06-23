@@ -3,7 +3,7 @@
 *  Licensed under the MIT License. See License.md in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { AzExtTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, ExecuteActivityContext, IActionContext, createSubscriptionContext } from "@microsoft/vscode-azext-utils";
+import { AzExtTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, ExecuteActivityContext, IActionContext, createSubscriptionContext, isAzExtTreeItem } from "@microsoft/vscode-azext-utils";
 import * as vscode from 'vscode';
 import { LinkerItem } from "../createServiceConnector/createLinker";
 import { IPickLinkerContext } from "../deleteServiceConnector/IPickLinkerContext";
@@ -11,15 +11,13 @@ import { LinkerListStep } from "../deleteServiceConnector/LinkerListStep";
 import { ValidateLinkerStep } from "./ValidateLinkerStep";
 
 export async function validateLinker(context: IActionContext & ExecuteActivityContext, item: LinkerItem | AzExtTreeItem, preSteps: AzureWizardPromptStep<IPickLinkerContext>[] = []): Promise<void> {
-    const subscription = item instanceof AzExtTreeItem ? item.subscription : createSubscriptionContext(item.subscription);
+    const subscription = isAzExtTreeItem(item) ? item.subscription : createSubscriptionContext(item.subscription);
 
     const wizardContext: IPickLinkerContext = {
         ...context,
         ...subscription,
         sourceResourceUri: item?.id,
     }
-
-    const title: string = vscode.l10n.t('Validate service connector');
 
     const promptSteps: AzureWizardPromptStep<IPickLinkerContext>[] = [
         new LinkerListStep()
@@ -32,7 +30,7 @@ export async function validateLinker(context: IActionContext & ExecuteActivityCo
     ];
 
     const wizard: AzureWizard<IPickLinkerContext> = new AzureWizard(wizardContext, {
-        title,
+        title: vscode.l10n.t('Validate service connector'),
         promptSteps,
         executeSteps
     });
