@@ -97,7 +97,7 @@ export declare class GitHubRepositoryListStep extends AzureWizardPromptStep<GitH
 }
 
 /**
- * Used to prompt the user for the GitHub repository
+ * Used to prompt the user for the GitHub repository branch
  * @prerequisites gitHubRepository, gitHubRepositoryOwner
  * @populates gitHubBranch
  */
