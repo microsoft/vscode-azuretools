@@ -24,6 +24,7 @@ jobs:
             azure: "azure/**"
             dev: "dev/**"
             eslint-config-azuretools: "eslint-config-azuretools/**"
+            github: "github/**"
             serviceconnector: "serviceconnector/**"
             utils: "utils/**"
     outputs:
