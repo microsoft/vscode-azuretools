@@ -15,5 +15,11 @@
         ".vscode-test": true
     },
     "typescript.preferences.importModuleSpecifier": "relative",
-    "typescript.tsdk": "node_modules/typescript/lib"
+    "typescript.tsdk": "node_modules/typescript/lib",
+    // Fix "Parsing error: Cannot read file" when repo root is opened in VS Code
+    "eslint.workingDirectories": [
+        {
+            "mode": "auto"
+        }
+    ]
 }
