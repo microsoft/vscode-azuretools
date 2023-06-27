@@ -10,5 +10,8 @@ export * from './createLinker/TargetServiceListStep';
 export * from './createLinker/createLinker';
 export * from './deleteLinker/IPickLinkerContext';
 export * from './deleteLinker/deleteLinker';
+export * from './tree/ServiceConnectorGroupItem';
+export * from './tree/ServiceConnectorGroupTreeItem';
+export * from './tree/extensionVariables';
 export * from './validateLinker/validateLinker';
 
