@@ -52,7 +52,7 @@ export class ServiceConnectorGroupTreeItem extends AzExtParentTreeItem {
     }
 
     public get iconPath(): TreeItemIconPath {
-        return getIconPath('02833-icon-menu-Resource-Connector');
+        return getIconPath('ServiceConnector');
     }
 
     public get contextValue(): string {

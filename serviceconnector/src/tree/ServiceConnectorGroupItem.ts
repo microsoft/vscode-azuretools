@@ -41,7 +41,7 @@ export class ServiceConnectorGroupItem implements TreeElementBase {
         return {
             id: this.id,
             label: vscode.l10n.t('Service Connector'),
-            iconPath: getIconPath('02833-icon-menu-Resource-Connector'),
+            iconPath: getIconPath('ServiceConnector'),
             collapsibleState: TreeItemCollapsibleState.Collapsed,
             contextValue: 'serviceConnectorGroupItem'
         }
