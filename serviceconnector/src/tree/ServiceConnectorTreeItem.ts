@@ -34,5 +34,4 @@ export class ServiceConnectorTreeItem extends AzExtTreeItem {
     public get iconPath(): TreeItemIconPath {
         return connectionIconPath(this.linker) === '' ? new ThemeIcon('dash') : getIconPath(connectionIconPath(this.linker))
     }
-
 }

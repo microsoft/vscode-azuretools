@@ -56,6 +56,6 @@ export class ServiceConnectorGroupTreeItem extends AzExtParentTreeItem {
     }
 
     public get contextValue(): string {
-        return 'serviceConnectorGroup';
+        return 'serviceConnectorGroupItem';
     }
 }

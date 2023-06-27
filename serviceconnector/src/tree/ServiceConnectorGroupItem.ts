@@ -22,10 +22,10 @@ export interface TreeElementBase extends ResourceModelBase {
 export class ServiceConnectorGroupItem implements TreeElementBase {
     id: string = `${this.item.id}/ServiceConnector`;
     subscription: ISubscriptionContext;
+
     constructor(public readonly item: LinkerItem) {
         this.subscription = createSubscriptionContext(item.subscription);
     }
-
 
     async getChildren(): Promise<ServiceConnectorItem[]> {
         const result = await callWithTelemetryAndErrorHandling('getChildren', async () => {
@@ -37,14 +37,13 @@ export class ServiceConnectorGroupItem implements TreeElementBase {
         return nonNullValue(result);
     }
 
-
     getTreeItem(): TreeItem {
         return {
             id: this.id,
             label: vscode.l10n.t('Service Connector'),
             iconPath: getIconPath('02833-icon-menu-Resource-Connector'),
             collapsibleState: TreeItemCollapsibleState.Collapsed,
-            contextValue: 'serviceConnectorGroup'
+            contextValue: 'serviceConnectorGroupItem'
         }
     }
 }

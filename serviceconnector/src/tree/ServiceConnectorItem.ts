@@ -34,7 +34,7 @@ export function createServiceConnectorItem(subscription: ISubscriptionContext, i
             id,
             label: linker.name,
             iconPath: connectionIconPath(linker) === '' ? new ThemeIcon('dash') : getIconPath(connectionIconPath(linker)),
-            contextValue: 'serviceConnector',
+            contextValue: 'serviceConnectorItem',
         }),
     };
 }
