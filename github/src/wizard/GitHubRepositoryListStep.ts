@@ -60,12 +60,11 @@ export class GitHubRepositoryListStep extends AzureWizardPromptStep<GitHubContex
             page
         };
 
-        this.picks.push(
-            ...(context.gitHubOrg ?
-                (await getRepositoriesByOrg(context, orgRepoParams)).map((repo) => { return { label: repo.name, data: { owner: repo.owner.login, repo: repo.name, url: repo.html_url } } }) :
-                (await getRepositoriesByUser(context, userRepoParams)).map((repo) => { return { label: repo.name, data: { owner: repo.owner.login, repo: repo.name, url: repo.html_url } } }))
-        );
+        const repos = context.gitHubOrg ?
+            (await getRepositoriesByOrg(context, orgRepoParams)).map((repo) => { return { label: repo.name, data: { owner: repo.owner.login, repo: repo.name, url: repo.html_url } } }) :
+            (await getRepositoriesByUser(context, userRepoParams)).map((repo) => { return { label: repo.name, data: { owner: repo.owner.login, repo: repo.name, url: repo.html_url } } });
 
+        this.picks.push(...repos);
         this.picks.sort((a: QuickPickItem, b: QuickPickItem) => a.label.localeCompare(b.label));
 
         const maxPicksAvailable: number = perPage * page;

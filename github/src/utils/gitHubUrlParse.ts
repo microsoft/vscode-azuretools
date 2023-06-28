@@ -9,11 +9,7 @@ export interface ParsedGitHubUrl {
     repositoryName?: string;
 }
 
-export function gitHubUrlParse(url?: string): ParsedGitHubUrl {
-    if (!url) {
-        return {};
-    }
-
+export function gitHubUrlParse(url: string): ParsedGitHubUrl {
     const match: RegExpMatchArray | null = url.match(/github\.com\/(?<ownerOrOrganization>[^/]+)\/(?<repositoryName>[^/]+)/i);
     return {
         urlReference: url,

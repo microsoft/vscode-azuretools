@@ -5,13 +5,18 @@
 
 import { UserCancelledError, parseError } from "@microsoft/vscode-azext-utils";
 import { authentication } from "vscode";
-
-// Provide same scopes as the GitHub extension so we don't have to prompt for auth again
-const gitHubScopes: string[] = ['repo', 'workflow', 'user:email', 'read:user'];
+import { gitHubAuthProviderId, gitHubScopes } from "../constants";
 
 export async function getGitHubAccessToken(): Promise<string> {
     try {
-        return (await authentication.getSession('github', gitHubScopes, { createIfNone: true })).accessToken;
+        const token = (await authentication.getSession(gitHubAuthProviderId, gitHubScopes, { createIfNone: true })).accessToken;
+        // Workaround for VS Code returning a different token when connected to a CodeSpace in a browser
+        // see https://github.com/microsoft/vscode-azurestaticwebapps/issues/827#issuecomment-1597881084 for details
+        if (token.startsWith('ghu_')) {
+            // Request a fake scope to force VS Code to give us a token of the right type
+            return (await authentication.getSession(gitHubAuthProviderId, [...gitHubScopes, 'x-AzToolsScope'], { createIfNone: true })).accessToken;
+        }
+        return token;
     } catch (error) {
         if (parseError(error).message === 'User did not consent to login.') {
             throw new UserCancelledError('getGitHubToken');

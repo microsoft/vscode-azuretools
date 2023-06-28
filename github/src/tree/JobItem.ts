@@ -21,8 +21,6 @@ export class JobItem implements TreeElementBase {
     id: string = `${this.parentResourceId}/jobs/${this.job.id}`;
     label: string = this.job.name || this.id;
 
-    contextValue: string = `${this.contextValueExtensionPrefix}${JobItem.contextValueSuffix}`;
-
     viewProperties: ViewPropertiesModel = {
         data: this.job,
         label: this.label,
@@ -34,7 +32,7 @@ export class JobItem implements TreeElementBase {
             label: this.label,
             description: getJobBasedDescription(this.job),
             iconPath: getActionBasedIconPath(this.job),
-            contextValue: this.contextValue,
+            contextValue: `${this.contextValueExtensionPrefix}${JobItem.contextValueSuffix}`,
             collapsibleState: TreeItemCollapsibleState.Collapsed,
         };
     }

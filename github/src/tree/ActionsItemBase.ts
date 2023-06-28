@@ -64,7 +64,7 @@ export abstract class ActionsItemBase implements TreeElementBase {
                 owner: nonNullValue(ownerOrOrganization),
                 repo: nonNullValue(repositoryName),
                 branch: sourceControl.repoBranch ?? 'main',
-                page: -1,
+                page: 1,
             };
 
             context.errorHandling.suppressDisplay = true;

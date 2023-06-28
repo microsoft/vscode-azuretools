@@ -20,8 +20,6 @@ export class StepItem implements TreeElementBase {
     id: string = `${this.parentResourceId}/steps/${this.step.number}`;
     label: string = this.step.name;
 
-    contextValue: string = `${this.contextValueExtensionPrefix}${StepItem.contextValueSuffix}`;
-
     viewProperties: ViewPropertiesModel = {
         data: this.step,
         label: this.step.name,
@@ -33,7 +31,7 @@ export class StepItem implements TreeElementBase {
             label: this.label,
             description: getJobBasedDescription(this.step),
             iconPath: getActionBasedIconPath(this.step),
-            contextValue: this.contextValue
+            contextValue: `${this.contextValueExtensionPrefix}${StepItem.contextValueSuffix}`
         };
     }
 }
