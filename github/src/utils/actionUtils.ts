@@ -30,10 +30,10 @@ export enum Status {
 // Description
 export function getJobBasedDescription(data: Job | JobStep): string {
     if (data.conclusion !== null) {
-        return l10n.t('{0} {1}', convertConclusionToVerb(<Conclusion>nonNullProp(data, 'conclusion')), dayjs(data.completed_at).fromNow());
+        return `${convertConclusionToVerb(<Conclusion>nonNullProp(data, 'conclusion'))} ${dayjs(data.completed_at).fromNow()}`;
     } else {
         const nowStr: string = l10n.t('now');
-        return l10n.t('{0} {1}', convertStatusToVerb(<Status>nonNullProp(data, 'status')), !data.started_at ? nowStr : dayjs(data.started_at).fromNow());
+        return `${convertStatusToVerb(<Status>nonNullProp(data, 'status'))} ${!data.started_at ? nowStr : dayjs(data.started_at).fromNow()}`;
     }
 }
 
