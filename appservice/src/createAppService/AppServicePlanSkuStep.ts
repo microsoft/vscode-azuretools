@@ -23,7 +23,7 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         } else if (context['newSiteJavaStack']?.majorVersion?.value === 'jbosseap') {
             // for jboss eap, only Pv3 plan is supported
-            skus = this.getAdvancedSkus().filter(s => s.family === 'Pv3');
+            skus = this.getPremiumV3Skus();
         }
 
         const regExp: RegExp | undefined = context.planSkuFamilyFilter;
@@ -148,7 +148,12 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
                 size: 'P3v2',
                 family: 'Pv2',
                 capacity: 1
-            },
+            }
+        ];
+    }
+
+    private getPremiumV3Skus(): SkuDescription[] {
+        return [
             {
                 name: 'P1v3',
                 tier: 'Premium V3',
