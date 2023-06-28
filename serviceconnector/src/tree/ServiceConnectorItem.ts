@@ -4,12 +4,11 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { AzureResource, LinkerResource, TargetServiceBaseUnion } from "@azure/arm-servicelinker";
-import { ISubscriptionContext, nonNullValue } from "@microsoft/vscode-azext-utils";
-import * as vscode from 'vscode';
+import { ISubscriptionContext, TreeElementBase, nonNullValue } from "@microsoft/vscode-azext-utils";
 import { ThemeIcon, TreeItem } from "vscode";
 import { LinkerItem } from "../createLinker/createLinker";
 import { getIconPath } from "./IconPath";
-import { TreeElementBase } from "./ServiceConnectorGroupItem";
+import { getTreeId } from "./treeUtils";
 
 
 export interface ServiceConnectorItem extends TreeElementBase {
@@ -19,17 +18,13 @@ export interface ServiceConnectorItem extends TreeElementBase {
 }
 
 export function createServiceConnectorItem(subscription: ISubscriptionContext, item: LinkerItem, linker: LinkerResource): ServiceConnectorItem {
-    const id = `${item.id}/ServiceConnector/${linker.name}`;
+    const id = getTreeId(item, linker);
 
     return {
         id,
         subscription,
         linker,
         item,
-        viewProperties: {
-            data: linker,
-            label: `${item.id} ${vscode.l10n.t('linker', 'Linker')} ${linker.name}`,
-        },
         getTreeItem: (): TreeItem => ({
             id,
             label: linker.name,

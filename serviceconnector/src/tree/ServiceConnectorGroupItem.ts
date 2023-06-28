@@ -4,20 +4,12 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { uiUtils } from "@microsoft/vscode-azext-azureutils";
-import { ISubscriptionContext, callWithTelemetryAndErrorHandling, createSubscriptionContext, nonNullValue } from "@microsoft/vscode-azext-utils";
-import { ResourceModelBase, ViewPropertiesModel } from "@microsoft/vscode-azureresources-api";
+import { ISubscriptionContext, TreeElementBase, callWithTelemetryAndErrorHandling, createSubscriptionContext, nonNullValue } from "@microsoft/vscode-azext-utils";
 import * as vscode from 'vscode';
 import { TreeItem, TreeItemCollapsibleState } from "vscode";
 import { LinkerItem } from "../createLinker/createLinker";
 import { getIconPath } from "./IconPath";
 import { ServiceConnectorItem, createServiceConnectorItem } from "./ServiceConnectorItem";
-
-export interface TreeElementBase extends ResourceModelBase {
-    getChildren?(): vscode.ProviderResult<TreeElementBase[]>;
-    getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem>;
-
-    viewProperties?: ViewPropertiesModel;
-}
 
 export class ServiceConnectorGroupItem implements TreeElementBase {
     id: string = `${this.item.id}/ServiceConnector`;

@@ -8,19 +8,20 @@ import { AzExtParentTreeItem, AzExtTreeItem, TreeItemIconPath, nonNullValue } fr
 import { ThemeIcon } from "vscode";
 import { getIconPath } from "./IconPath";
 import { connectionIconPath } from "./ServiceConnectorItem";
+import { getTreeId } from "./treeUtils";
 
 export class ServiceConnectorTreeItem extends AzExtTreeItem {
     public readonly linker: LinkerResource;
     public readonly item: AzExtTreeItem;
 
-    constructor(parent: AzExtParentTreeItem, linker: LinkerResource, item: AzExtTreeItem) {
+    constructor(linker: LinkerResource, parent: AzExtParentTreeItem) {
         super(parent);
         this.linker = linker;
-        this.item = item;
+        this.item = parent;
     }
 
     public get id(): string {
-        return `${this.item.id}/ServiceConnector/${this.linker.name}`;
+        return getTreeId(this.item, this.linker);
     }
 
     public get label(): string {

@@ -5,17 +5,9 @@
 
 import { uiUtils } from "@microsoft/vscode-azext-azureutils";
 import { AzExtParentTreeItem, AzExtTreeItem, TreeItemIconPath, nonNullValue } from "@microsoft/vscode-azext-utils";
-import { LinkerItem } from "../createLinker/createLinker";
+import * as vscode from 'vscode';
 import { getIconPath } from "./IconPath";
-import { ServiceConnectorGroupItem } from "./ServiceConnectorGroupItem";
 import { ServiceConnectorTreeItem } from "./ServiceConnectorTreeItem";
-
-export function createServiceConnectorGroupItem(item: LinkerItem, parent?: AzExtParentTreeItem): ServiceConnectorGroupItem | AzExtTreeItem {
-    if (parent) {
-        return new ServiceConnectorGroupTreeItem(parent, item.id);
-    }
-    return new ServiceConnectorGroupItem(item);
-}
 
 export class ServiceConnectorGroupTreeItem extends AzExtParentTreeItem {
     constructor(parent: AzExtParentTreeItem, public readonly resourceId: string) {
@@ -30,7 +22,7 @@ export class ServiceConnectorGroupTreeItem extends AzExtParentTreeItem {
             linkers,
             'invalidServiceConnector',
             l => {
-                return new ServiceConnectorTreeItem(nonNullValue(this.parent), l, this)
+                return new ServiceConnectorTreeItem(l, this)
             },
             l => {
                 return l.name;
@@ -48,7 +40,7 @@ export class ServiceConnectorGroupTreeItem extends AzExtParentTreeItem {
     }
 
     public get label(): string {
-        return 'Service Connector';
+        return vscode.l10n.t('Service Connector');
     }
 
     public get iconPath(): TreeItemIconPath {
