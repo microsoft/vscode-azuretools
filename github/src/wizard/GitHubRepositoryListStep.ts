@@ -60,6 +60,7 @@ export class GitHubRepositoryListStep extends AzureWizardPromptStep<GitHubContex
             page
         };
 
+        // Intentionally use the same map callback on two lines below to force TypeScript to infer the proper repo type
         this.picks.push(
             ...(context.gitHubOrg ?
                 (await getRepositoriesByOrg(context, orgRepoParams)).map((repo) => { return { label: repo.name, data: { owner: repo.owner.login, repo: repo.name, url: repo.html_url } } }) :
