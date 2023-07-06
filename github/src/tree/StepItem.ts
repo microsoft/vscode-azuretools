@@ -14,7 +14,7 @@ export class StepItem implements TreeElementBase {
 
     constructor(
         readonly parentResourceId: string,
-        readonly contextValueExtensionPrefix: string,
+        readonly extensionPrefixContextValue: string,
         readonly step: JobStep) { }
 
     id: string = `${this.parentResourceId}/steps/${this.step.number}`;
@@ -31,7 +31,7 @@ export class StepItem implements TreeElementBase {
             label: this.label,
             description: getJobBasedDescription(this.step),
             iconPath: getActionBasedIconPath(this.step),
-            contextValue: `${this.contextValueExtensionPrefix}${StepItem.contextValueSuffix}`
+            contextValue: `${this.extensionPrefixContextValue}${StepItem.contextValueSuffix}`
         };
     }
 }

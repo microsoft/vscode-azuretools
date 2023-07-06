@@ -21,8 +21,8 @@ export interface ConnectToGitHubCommand {
 
 export abstract class ActionsItemBase implements TreeElementBase {
     static readonly contextValueSuffix: string = 'ActionsItem';
-    static readonly contextValueConnected: string = 'actionsConnected:true';
-    static readonly contextValueUnconnected: string = 'actionsConnected:false';
+    static readonly connectedContextValue: string = 'actionsConnected:true';
+    static readonly unconnectedContextValue: string = 'actionsConnected:false';
 
     static readonly idSuffix: string = 'actions';
 
@@ -35,7 +35,7 @@ export abstract class ActionsItemBase implements TreeElementBase {
         const actionsTreeItemContextValue: string = `${this.contextValueExtensionPrefix}${ActionsItemBase.contextValueSuffix}`;
         const values: string[] = [actionsTreeItemContextValue];
 
-        values.push(isConnected ? ActionsItemBase.contextValueConnected : ActionsItemBase.contextValueUnconnected);
+        values.push(isConnected ? ActionsItemBase.connectedContextValue : ActionsItemBase.unconnectedContextValue);
         return createContextValue(values);
     }
 

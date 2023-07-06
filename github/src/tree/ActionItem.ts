@@ -14,12 +14,12 @@ import { JobItem } from "./JobItem";
 
 export class ActionItem implements TreeElementBase {
     static readonly contextValueSuffix: string = 'ActionItem';
-    static readonly contextValueCompleted: string = 'actionState:completed';
-    static readonly contextValueInProgress: string = 'actionState:inProgress';
+    static readonly completedContextValue: string = 'actionState:completed';
+    static readonly inProgressContextValue: string = 'actionState:inProgress';
 
     constructor(
         readonly parentResourceId: string,
-        readonly contextValueExtensionPrefix: string,
+        readonly extensionPrefixContextValue: string,
         readonly actionWorkflowRuns: ActionWorkflowRuns) { }
 
     id: string = `${this.parentResourceId}/${this.actionWorkflowRuns.id}`;
@@ -31,13 +31,13 @@ export class ActionItem implements TreeElementBase {
     }
 
     get contextValue(): string {
-        const actionTreeItemContextValue: string = `${this.contextValueExtensionPrefix}${ActionItem.contextValueSuffix}`;
+        const actionTreeItemContextValue: string = `${this.extensionPrefixContextValue}${ActionItem.contextValueSuffix}`;
         const values: string[] = [actionTreeItemContextValue];
 
         if (<Status>nonNullProp(this.actionWorkflowRuns, 'status') === Status.Completed) {
-            values.push(ActionItem.contextValueCompleted)
+            values.push(ActionItem.completedContextValue)
         } else {
-            values.push(ActionItem.contextValueInProgress);
+            values.push(ActionItem.inProgressContextValue);
         }
 
         return createContextValue(values);
@@ -66,7 +66,7 @@ export class ActionItem implements TreeElementBase {
         });
 
         if (jobsData?.total_count) {
-            return jobsData.jobs.map((job: Job) => new JobItem(this.id, this.contextValueExtensionPrefix, job));
+            return jobsData.jobs.map((job: Job) => new JobItem(this.id, this.extensionPrefixContextValue, job));
         } else {
             return [];
         }

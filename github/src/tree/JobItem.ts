@@ -15,7 +15,7 @@ export class JobItem implements TreeElementBase {
 
     constructor(
         readonly parentResourceId: string,
-        readonly contextValueExtensionPrefix: string,
+        readonly extensionPrefixContextValue: string,
         readonly job: Job) { }
 
     id: string = `${this.parentResourceId}/jobs/${this.job.id}`;
@@ -32,12 +32,12 @@ export class JobItem implements TreeElementBase {
             label: this.label,
             description: getJobBasedDescription(this.job),
             iconPath: getActionBasedIconPath(this.job),
-            contextValue: `${this.contextValueExtensionPrefix}${JobItem.contextValueSuffix}`,
+            contextValue: `${this.extensionPrefixContextValue}${JobItem.contextValueSuffix}`,
             collapsibleState: TreeItemCollapsibleState.Collapsed,
         };
     }
 
     async getChildren(): Promise<TreeElementBase[]> {
-        return this.job.steps?.map((step) => new StepItem(this.id, this.contextValueExtensionPrefix, step)) ?? [];
+        return this.job.steps?.map((step) => new StepItem(this.id, this.extensionPrefixContextValue, step)) ?? [];
     }
 }

@@ -33,8 +33,8 @@ export interface ConnectToGitHubCommand {
  */
 export abstract class ActionsItemBase implements TreeElementBase {
     static readonly contextValueSuffix: string;
-    static readonly contextValueConnected: string;
-    static readonly contextValueUnconnected: string;
+    static readonly connectedContextValue: string;
+    static readonly unconnectedContextValue: string;
 
     static readonly idSuffix: string;
 
@@ -42,7 +42,7 @@ export abstract class ActionsItemBase implements TreeElementBase {
      * The extension prefix used in constructing context values for the 'ActionsItem' and its children
      * @example passing 'containerApps' becomes `containerApps${ActionsItemBase.contextValueSuffix}`
      */
-    readonly contextValueExtensionPrefix: string;
+    readonly extensionPrefixContextValue: string;
 
     /**
      * Constructed using the format: `${this.parentId}/${ActionsTreeItemBase.idSuffix}`
@@ -55,7 +55,7 @@ export abstract class ActionsItemBase implements TreeElementBase {
     readonly parentId: string;
     readonly label: string;
 
-    constructor(parentId: string, contextValueExtensionPrefix: string);
+    constructor(parentId: string, extensionPrefixContextValue: string);
 
     getTreeItem(): Promise<TreeItem>;
     getChildren(): Promise<TreeElementBase[]>;
