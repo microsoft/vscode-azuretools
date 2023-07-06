@@ -30,7 +30,7 @@ export class ActionItem implements TreeElementBase {
         label: this.label,
     }
 
-    get contextValue(): string {
+    private get contextValue(): string {
         const actionTreeItemContextValue: string = `${this.extensionPrefixContextValue}${ActionItem.contextValueSuffix}`;
         const values: string[] = [actionTreeItemContextValue];
 
