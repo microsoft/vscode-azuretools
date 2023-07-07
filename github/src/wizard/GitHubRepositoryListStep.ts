@@ -15,6 +15,11 @@ type RepositoryData = {
     url: string;
 }
 
+/**
+ * Used to prompt the user for the GitHub repository
+ * @prerequisites gitHubOrg
+ * @populates gitHubRepository, gitHubRepositoryOwner, gitHubRepositoryUrl
+ */
 export class GitHubRepositoryListStep extends AzureWizardPromptStep<GitHubContext> {
     private picks: IAzureQuickPickItem<RepositoryData>[];
 

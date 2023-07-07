@@ -8,6 +8,12 @@ import { Octokit } from "@octokit/rest";
 import type { GitHubContext } from "./GitHubContext";
 import { getGitHubAccessToken } from "./utils/getGitHubAccessToken";
 
+/**
+ * Can be used to initialize a new Octokit client.
+ *
+ * Note: Typically does not need to be called directly by client extensions
+ * unless implementing a custom behavior.
+ */
 export async function createOctokitClient(context: GitHubContext): Promise<Octokit> {
     context.gitHubAccessToken ||= await getGitHubAccessToken();
     return new Octokit({

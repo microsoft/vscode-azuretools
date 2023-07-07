@@ -9,6 +9,11 @@ import type { GitHubContext } from "../GitHubContext";
 import { loadMoreQp } from "../constants";
 import { Branches, GetBranchesParams, getBranches } from "../wrappers/getBranches";
 
+/**
+ * Used to prompt the user for the GitHub repository branch
+ * @prerequisites gitHubRepository, gitHubRepositoryOwner
+ * @populates gitHubBranch
+ */
 export class GitHubBranchListStep extends AzureWizardPromptStep<GitHubContext> {
     private picks: IAzureQuickPickItem<string>[];
 

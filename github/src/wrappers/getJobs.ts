@@ -13,6 +13,9 @@ export type JobStep = NonNullable<Job["steps"]>[number];
 
 export type GetJobsParams = RestEndpointMethodTypes["actions"]["listJobsForWorkflowRun"]["parameters"];
 
+/**
+ * A wrapper for Octokit's: `client.actions.listJobsForWorkflowRun`
+ */
 export async function getJobs(context: GitHubContext, params: GetJobsParams): Promise<Jobs> {
     const client: Octokit = await createOctokitClient(context);
     return (await client.actions.listJobsForWorkflowRun(params)).data;

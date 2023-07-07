@@ -13,7 +13,10 @@ import { Job, JobStep } from "../wrappers/getJobs";
 
 dayjs.extend(relativeTime);
 
-// https://developer.github.com/v3/checks/runs/#parameters
+/**
+ * GitHub 'Check Run' - final conclusion of the check
+ * https://developer.github.com/v3/checks/runs/#parameters
+ */
 export enum Conclusion {
     Success = 'success',
     Failure = 'failure',
@@ -21,13 +24,21 @@ export enum Conclusion {
     Cancelled = 'cancelled'
 }
 
+/**
+ * GitHub 'Check Run' - current status of the check
+ */
 export enum Status {
     Queued = 'queued',
     InProgress = 'in_progress',
     Completed = 'completed'
 }
 
-// Description
+/**
+ * Get a tree item description based on its Job-related status.
+ *
+ * Note: Typically does not need to be called directly by client extensions
+ * unless implementing a custom experience.
+ */
 export function getJobBasedDescription(data: Job | JobStep): string {
     if (data.conclusion !== null) {
         const conclusion: string = convertConclusionToVerb(<Conclusion>nonNullProp(data, 'conclusion'));
@@ -40,7 +51,12 @@ export function getJobBasedDescription(data: Job | JobStep): string {
     }
 }
 
-// Icon Path
+/**
+ * Select an icon based on its Action-related status.
+ *
+ * Note: Typically does not need to be called directly by client extensions
+ * unless implementing a custom experience.
+ */
 export function getActionBasedIconPath(data: ActionWorkflowRuns | Job | JobStep): TreeItemIconPath {
     let id: string;
     let colorId: string | undefined;

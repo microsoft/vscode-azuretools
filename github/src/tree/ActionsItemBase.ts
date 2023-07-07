@@ -15,10 +15,23 @@ export interface GitHubSourceControl {
 }
 
 export interface ConnectToGitHubCommand {
+    /**
+     * The command id to call for initiating the setup of source control for the client extension.
+     * The client extension should provide its own connect implementation to call.
+     *
+     * @example 'containerApps.connectToGitHub'
+     */
     commandId: string;
+    /**
+     * The list of corresponding args to provide when the command is called
+     */
     commandArgs: unknown[] | undefined;
 }
 
+/**
+ * Base tree node for setting up and tracking GitHub Actions in the tree view.
+ * Branching children will be automatically setup and included to track actions, jobs, and steps.
+ */
 export abstract class ActionsItemBase implements TreeElementBase {
     static readonly contextValueSuffix: string = 'ActionsItem';
     static readonly connectedContextValue: string = 'actionsConnected:true';
@@ -26,8 +39,16 @@ export abstract class ActionsItemBase implements TreeElementBase {
 
     static readonly idSuffix: string = 'actions';
 
+    /**
+     * @param parentId A unique identifier corresponding to the id of the parent tree node
+     * @param contextValueExtensionPrefix The extension prefix used in constructing context values for the 'ActionsItem'
+     * and its children. Passing 'containerApps' becomes `containerApps${ActionsItemBase.contextValueSuffix}`.
+     */
     constructor(readonly parentId: string, readonly contextValueExtensionPrefix: string) { }
 
+    /**
+     * Constructed using the format: `${this.parentId}/${ActionsTreeItemBase.idSuffix}`
+     */
     readonly id: string = `${this.parentId}/${ActionsItemBase.idSuffix}`;
     readonly label: string = 'Actions';
 
@@ -100,7 +121,19 @@ export abstract class ActionsItemBase implements TreeElementBase {
         }
     }
 
+    /**
+     * An optional method that the client extension may provide to initiate connection to a GitHub repository.
+     *
+     * The 'ActionsTreeItem' will display a generic tree item when no connection is detected (e.g. 'Connect to a GitHub Repository...').
+     * This tree item becomes an entrypoint for initiating a source control connection.
+     *
+     * When no method is supplied, clicking on the generic tree item does nothing.
+     */
     getConnectToGitHubCommand?(): Promise<ConnectToGitHubCommand>;
 
+    /**
+     * A required method for obtaining the connected GitHub repository's data.
+     * If no repository is connected, return undefined.
+     */
     abstract getSourceControl(): Promise<GitHubSourceControl | undefined>;
 }

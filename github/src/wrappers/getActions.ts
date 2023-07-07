@@ -11,6 +11,9 @@ export type ActionsListWorkflowRuns = RestEndpointMethodTypes["actions"]["listWo
 export type ActionWorkflowRuns = ActionsListWorkflowRuns["workflow_runs"][number];
 export type GetActionsListWorkflowRunsParams = RestEndpointMethodTypes["actions"]["listWorkflowRunsForRepo"]["parameters"];
 
+/**
+ * A wrapper for Octokit's: `client.actions.listWorkflowRunsForRepo`
+ */
 export async function getActions(context: GitHubContext, params?: GetActionsListWorkflowRunsParams): Promise<ActionsListWorkflowRuns> {
     const client: Octokit = await createOctokitClient(context);
     return (await client.actions.listWorkflowRunsForRepo(params)).data;

@@ -9,6 +9,9 @@ import { createOctokitClient } from "../createOctokitClient";
 
 export type AuthenticatedUser = RestEndpointMethodTypes["users"]["getAuthenticated"]["response"]["data"];
 
+/**
+ * A wrapper for Octokit's: `client.users.getAuthenticated`
+ */
 export async function getAuthenticatedUser(context: GitHubContext): Promise<AuthenticatedUser> {
     const client: Octokit = await createOctokitClient(context);
     return (await client.users.getAuthenticated()).data;

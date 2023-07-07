@@ -9,6 +9,10 @@ import type { GitHubContext } from "../GitHubContext";
 import { AuthenticatedUser, getAuthenticatedUser } from "../wrappers/getAuthenticatedUser";
 import { Orgs, getOrgs } from "../wrappers/getOrgs";
 
+/**
+ * Used to prompt the user for the repository's GitHub organization
+ * @populates gitHubOrg
+ */
 export class GitHubOrgListStep extends AzureWizardPromptStep<GitHubContext> {
     public async prompt(context: GitHubContext): Promise<void> {
         const placeHolder: string = l10n.t('Select an organization');

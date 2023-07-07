@@ -3,9 +3,11 @@
     "compilerOptions": {
         "outDir": "out",
         "rootDir": ".",
+        "declaration": true
     },
     "exclude": [
         "node_modules",
-        "lib"
+        "lib",
+        "out",
     ]
 }
