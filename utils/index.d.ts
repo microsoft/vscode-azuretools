@@ -2025,3 +2025,18 @@ export declare class TreeElementStateManager<TElement extends TreeElementWithId 
 
     dispose(): void;
 }
+
+/**
+ * Delays the execution of code by a specified amount of time.
+ *
+ * @param ms - The number of milliseconds to delay.
+ */
+export declare function delay(ms: number): Promise<void>;
+
+/**
+ * Checks if two objects are deeply equal (individually comparing nested properties and values)
+ *
+ * @param obj1 - The first object to compare
+ * @param obj2 - The second object to compare
+ */
+export function isDeepEqual(obj1: object, obj2: object): boolean
