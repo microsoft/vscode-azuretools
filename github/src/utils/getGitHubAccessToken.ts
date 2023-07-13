@@ -18,7 +18,8 @@ export async function getGitHubAccessToken(): Promise<string> {
         }
         return token;
     } catch (error) {
-        if (parseError(error).message === 'User did not consent to login.') {
+        // The error message is "User did not consent to login"
+        if (/did not consent/i.test(parseError(error).message)) {
             throw new UserCancelledError('getGitHubToken');
         }
         throw error;
