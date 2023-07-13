@@ -119,6 +119,8 @@ function addAzExtPipeline(context: IActionContext, pipeline: Pipeline, endpoint?
         pipeline.addPolicy(new StatusCodePolicy() /*intentionally not in a phase*/);
     }
 
+    pipeline.addPolicy(new AllowInsecureConnectionPolicy());
+
     return pipeline;
 }
 
@@ -256,6 +258,19 @@ class BasicAuthenticationCredentialsPolicy implements PipelinePolicy {
         const encodedCredentials = `${DEFAULT_AUTHORIZATION_SCHEME} ${Buffer.from(credentials).toString("base64")}`;
         if (!request.headers) request.headers = createHttpHeaders();
         request.headers.set("authorization", encodedCredentials);
+
+        return await next(request);
+    }
+}
+
+class AllowInsecureConnectionPolicy implements PipelinePolicy {
+    public static readonly Name = 'AllowInsecureConnectionPolicy';
+    public readonly name = AllowInsecureConnectionPolicy.Name;
+
+    public async sendRequest(request: PipelineRequest, next: SendRequest): Promise<PipelineResponse> {
+        if (request.url.startsWith('http://')) {
+            request.allowInsecureConnection = true;
+        }
 
         return await next(request);
     }
