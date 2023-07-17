@@ -126,7 +126,10 @@ async function getFilesFromGitignore(folderPath: string, gitignoreName: string):
     const gitignorePath: string = path.join(folderPath, gitignoreName);
     if (await fse.pathExists(gitignorePath)) {
         const funcIgnoreContents: string = (await fse.readFile(gitignorePath)).toString();
-        ignore = funcIgnoreContents.split('\n').map(l => l.trim());
+        ignore = funcIgnoreContents
+            .split('\n')
+            .map(l => l.trim())
+            .filter(s => s !== '');
     }
 
     return await globby('**/*', {
