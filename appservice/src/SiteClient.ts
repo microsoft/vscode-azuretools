@@ -137,6 +137,15 @@ export class SiteClient implements IAppSettingsClient {
         }
     }
 
+    public async getIsConsumptionV2(context: IActionContext): Promise<boolean> {
+        if (this._site.isFunctionApp) {
+            const sku: string | undefined = await this.getCachedSku(context);
+            return !!sku && sku.toLowerCase() === 'flexconsumption';
+        } else {
+            return false;
+        }
+    }
+
     public async stop(): Promise<void> {
         this._site.slotName ?
             await this._client.webApps.stopSlot(this._site.resourceGroup, this._site.siteName, this._site.slotName) :
@@ -332,6 +341,21 @@ export class SiteClient implements IAppSettingsClient {
         const request = createPipelineRequest({
             method: 'POST',
             url: `${this._site.kuduUrl}/api/wardeploy?${queryString}`,
+            body: file,
+        });
+
+        return await client.sendRequest(request);
+    }
+
+    // TODO: only supporting /zip endpoint for now, but should support /zipurl as well
+    public async flexDeploy(context: IActionContext, file: RequestBodyType,
+        queryParameters: { remoteBuild?: boolean, Deployer?: string }): Promise<AzExtPipelineResponse> {
+        const client: ServiceClient = await createGenericClient(context, this._site.subscription);
+        const queryOptions = convertQueryParamsValuesToString(queryParameters);
+        const queryString = Object.keys(queryOptions).map(key => key + '=' + queryOptions[key]).join('&');
+        const request = createPipelineRequest({
+            method: 'POST',
+            url: `${this._site.kuduUrl}/api/deploy/zip?${queryString}`,
             body: file,
         });
 
