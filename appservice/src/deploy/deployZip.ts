@@ -15,7 +15,10 @@ export async function deployZip(context: IDeployContext, site: ParsedSite, fsPat
     const kuduClient = await site.createClient(context);
     const callback = context.deployMethod === 'flexconsumption' ?
         async zipStream => {
-            return await kuduClient.flexDeploy(context, () => zipStream, { remoteBuild: false, Deployer: 'az-code' });
+            return await kuduClient.flexDeploy(context, () => zipStream, {
+                remoteBuild: context.flexConsumptionRemoteBuild,
+                Deployer: 'az-code'
+            });
         } :
         async zipStream => {
             return await kuduClient.zipPushDeploy(context, () => zipStream, {
