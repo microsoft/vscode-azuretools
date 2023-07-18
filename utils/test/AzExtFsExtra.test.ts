@@ -147,6 +147,20 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
         assert.strictEqual(contents, fsFileContents);
     });
 
+    test('appendFile', async () => {
+        const fsPath = path.join(testFolderPath, randomUtils.getRandomHexString());
+        const filePath = path.join(fsPath, indexHtml);
+        const appendContents = 'appendFile';
+        await AzExtFsExtra.appendFile(filePath, appendContents);
+
+        const contents = `writeFileTest
+
+        appendFile`;
+
+        const fsFileContents = fs.readFileSync(filePath).toString();
+        assert.strictEqual(contents, fsFileContents);
+    });
+
     test('readJSON', async () => {
         const fileContents = await AzExtFsExtra.readJSON<any>(jsonFilePath);
         compareObjects(jsonContents, fileContents);
