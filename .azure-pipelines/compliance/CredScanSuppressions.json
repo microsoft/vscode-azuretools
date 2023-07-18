@@ -38,6 +38,10 @@
             "_justification": "No need to scan VS Code test folder."
         },
         {
+            "folder": "github\\.vscode-test\\",
+            "_justification": "No need to scan VS Code test folder."
+        },
+        {
             "folder": "dev\\.vscode-test\\",
             "_justification": "No need to scan VS Code test folder."
         },

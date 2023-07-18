@@ -30,22 +30,29 @@ async function sortPackageJson(path) {
     packageJson.activationEvents = packageJson.activationEvents.sort();
 
     sortCommands(packageJson.contributes.commands);
-    sortMenus(packageJson.contributes.menus);
+    sortMenus(packageJson.contributes.menus, packageJson.contributes.submenus);
 
     await writeJson(path, packageJson);
 }
 
 const sortCommand = (a, b) => a.command?.localeCompare(b.command);
+const sortGroup = (a, b) => a.group?.localeCompare(b.group);
 
 function sortCommands(commands) {
     commands = commands.sort(sortCommand);
 }
 
-function sortMenus(menus) {
+function sortMenus(menus, submenus) {
     const excludedKeys = ['view/item/context'];
+    const submenuIds = submenus?.map(submenu => submenu.id) ?? [];
     Object.keys(menus).forEach((key) => {
         if (!excludedKeys.includes(key)) {
-            menus[key] = menus[key].sort(sortCommand);
+            if (submenuIds.includes(key)) {
+                // sort commands in submenus by group
+                menus[key] = menus[key].sort(sortGroup);
+            } else {
+                menus[key] = menus[key].sort(sortCommand);
+            }
         }
     });
 }
