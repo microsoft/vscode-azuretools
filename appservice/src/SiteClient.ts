@@ -9,6 +9,7 @@ import { RequestBodyType, createHttpHeaders, createPipelineRequest } from '@azur
 import type { AppSettingsClientProvider, IAppSettingsClient } from '@microsoft/vscode-azext-azureappsettings';
 import { AzExtPipelineResponse, createGenericClient, uiUtils } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, ISubscriptionContext, nonNullProp, nonNullValue, parseError } from '@microsoft/vscode-azext-utils';
+import { URLSearchParams } from 'url';
 import type * as KuduModels from './KuduModels';
 import { AppKind } from './createAppService/AppKind';
 import { tryGetAppServicePlan, tryGetWebApp, tryGetWebAppSlot } from './tryGetSiteResource';
@@ -132,6 +133,15 @@ export class SiteClient implements IAppSettingsClient {
         if (this._site.isFunctionApp) {
             const sku: string | undefined = await this.getCachedSku(context);
             return !!sku && sku.toLowerCase() === 'dynamic';
+        } else {
+            return false;
+        }
+    }
+
+    public async getIsConsumptionV2(context: IActionContext): Promise<boolean> {
+        if (this._site.isFunctionApp) {
+            const sku: string | undefined = await this.getCachedSku(context);
+            return !!sku && sku.toLowerCase() === 'flexconsumption';
         } else {
             return false;
         }
@@ -312,10 +322,10 @@ export class SiteClient implements IAppSettingsClient {
             await this._client.webApps.listFunctionKeys(this._site.resourceGroup, this._site.siteName, functionName);
     }
 
-    public async zipPushDeploy(context: IActionContext, file: RequestBodyType, queryParameters: KuduModels.PushDeploymentZipPushDeployOptionalParams): Promise<AzExtPipelineResponse> {
+    public async zipPushDeploy(context: IActionContext, file: RequestBodyType, rawQueryParameters: KuduModels.PushDeploymentZipPushDeployOptionalParams): Promise<AzExtPipelineResponse> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
-        const queryOptions = convertQueryParamsValuesToString(queryParameters);
-        const queryString = Object.keys(queryOptions).map(key => key + '=' + queryOptions[key]).join('&');
+        const queryParameters = convertQueryParamsValuesToString(rawQueryParameters);
+        const queryString = new URLSearchParams(queryParameters).toString();
         const request = createPipelineRequest({
             method: 'POST',
             url: `${this._site.kuduUrl}/api/zipdeploy?${queryString}`,
@@ -325,13 +335,28 @@ export class SiteClient implements IAppSettingsClient {
         return await client.sendRequest(request);
     }
 
-    public async warPushDeploy(context: IActionContext, file: RequestBodyType, queryParameters: KuduModels.PushDeploymentWarPushDeployOptionalParams): Promise<AzExtPipelineResponse> {
+    public async warPushDeploy(context: IActionContext, file: RequestBodyType, rawQueryParameters: KuduModels.PushDeploymentWarPushDeployOptionalParams): Promise<AzExtPipelineResponse> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
-        const queryOptions = convertQueryParamsValuesToString(queryParameters);
-        const queryString = Object.keys(queryOptions).map(key => key + '=' + queryOptions[key]).join('&');
+        const queryParameters = convertQueryParamsValuesToString(rawQueryParameters);
+        const queryString = new URLSearchParams(queryParameters).toString();
         const request = createPipelineRequest({
             method: 'POST',
             url: `${this._site.kuduUrl}/api/wardeploy?${queryString}`,
+            body: file,
+        });
+
+        return await client.sendRequest(request);
+    }
+
+    // TODO: only supporting /zip endpoint for now, but should support /zipurl as well
+    public async flexDeploy(context: IActionContext, file: RequestBodyType,
+        rawQueryParameters: { remoteBuild?: boolean, Deployer?: string }): Promise<AzExtPipelineResponse> {
+        const client: ServiceClient = await createGenericClient(context, this._site.subscription);
+        const queryParameters = convertQueryParamsValuesToString(rawQueryParameters);
+        const queryString = new URLSearchParams(queryParameters).toString();
+        const request = createPipelineRequest({
+            method: 'POST',
+            url: `${this._site.kuduUrl}/api/deploy/zip?${queryString}`,
             body: file,
         });
 

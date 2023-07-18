@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+export * from './KuduModels';
 export * from './SiteClient';
 export * from './TunnelProxy';
 export * from './confirmOverwriteSettings';
@@ -31,7 +32,6 @@ export { IPreDeployTaskResult, handleFailedPreDeployTask, runPreDeployTask, tryR
 export * from './deploy/showDeployConfirmation';
 export { disconnectRepo } from './disconnectRepo';
 export * from './editScmType';
-export * from './KuduModels';
 export { registerAppServiceExtensionVariables } from './extensionVariables';
 // export { IConnectToGitHubWizardContext } from './github/IConnectToGitHubWizardContext';
 export * from './pingFunctionApp';
