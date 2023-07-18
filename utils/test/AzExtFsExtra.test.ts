@@ -11,6 +11,7 @@ import { AzExtFsExtra } from '../src/utils/AzExtFsExtra';
 import { randomUtils } from '../src/utils/randomUtils';
 import { assertThrowsAsync } from './assertThrowsAsync';
 
+
 suite('AzExtFsExtra', function (this: Mocha.Suite): void {
     let workspacePath: string;
     let testFolderPath: string;
@@ -145,6 +146,20 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
 
         const fsFileContents = fs.readFileSync(filePath).toString();
         assert.strictEqual(contents, fsFileContents);
+    });
+
+    test('appendFile', async () => {
+        const fsPath = path.join(testFolderPath, randomUtils.getRandomHexString());
+        const filePath = path.join(fsPath, indexHtml);
+        const contents = 'writeFileTest';
+        await AzExtFsExtra.writeFile(filePath, contents);
+
+        const appendContents = 'appendFile';
+        await AzExtFsExtra.appendFile(filePath, appendContents);
+
+        const fsFileContents = fs.readFileSync(filePath).toString();
+        const expectedContent = `writeFileTest\r\n\r\nappendFile`;
+        assert.strictEqual(expectedContent, fsFileContents);
     });
 
     test('readJSON', async () => {
@@ -283,4 +298,3 @@ function compareObjects(o1, o2): void {
         assert.strictEqual(value, o2[key]);
     }
 }
-
