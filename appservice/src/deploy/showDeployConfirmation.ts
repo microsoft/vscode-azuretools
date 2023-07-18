@@ -30,12 +30,12 @@ export async function showCustomDeployConfirmation(context: IDeployContext, site
         items.push(resetDefault);
     }
 
-    const result: MessageItem = await context.ui.showWarningMessage(placeHolder,
-        {
-            modal: true,
-            stepName: 'confirmDestructiveDeployment',
-            learnMoreLink: options?.learnMoreLink
-        }, ...items);
+    const result: MessageItem = await context.ui.showWarningMessage(placeHolder, {
+        modal: true,
+        stepName: 'confirmDestructiveDeployment',
+        learnMoreLink: options?.learnMoreLink
+    },
+        ...items);
 
     // a temporary workaround for this issue:
     // https://github.com/Microsoft/vscode-azureappservice/issues/844
