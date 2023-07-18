@@ -158,7 +158,8 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
         await AzExtFsExtra.appendFile(filePath, appendContents);
 
         const fsFileContents = fs.readFileSync(filePath).toString();
-        assert.strictEqual(expectedAppendContent, fsFileContents);
+        const expectedContent = `writeFileTest\r\n\r\nappendFile`;
+        assert.strictEqual(expectedContent, fsFileContents);
     });
 
     test('readJSON', async () => {
@@ -297,8 +298,3 @@ function compareObjects(o1, o2): void {
         assert.strictEqual(value, o2[key]);
     }
 }
-
-// down here because it looks super ugly to write this template string in a suite
-const expectedAppendContent = `writeFileTest
-
-appendFile`;
