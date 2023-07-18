@@ -73,6 +73,12 @@ export namespace AzExtFsExtra {
         await workspace.fs.writeFile(uri, Buffer.from(contents));
     }
 
+    export async function appendFile(resource: Uri | string, contents: string): Promise<void> {
+        const uri = convertToUri(resource);
+        const existingContent = await AzExtFsExtra.readFile(uri);
+        await AzExtFsExtra.writeFile(uri, existingContent + '\r\n\r\n' + contents);
+    }
+
     export async function pathExists(resource: Uri | string): Promise<boolean> {
         let stats: FileStat | undefined;
         const uri = convertToUri(resource);
