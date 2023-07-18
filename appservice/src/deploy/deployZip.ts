@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { AppServicePlan } from '@azure/arm-appservice';
+import { RequestBodyType } from '@azure/core-rest-pipeline';
 import { ParsedSite } from '../SiteClient';
 import { publisherName } from '../constants';
 import { IDeployContext } from './IDeployContext';
@@ -15,13 +16,13 @@ export async function deployZip(context: IDeployContext, site: ParsedSite, fsPat
     const kuduClient = await site.createClient(context);
     const callback = context.deployMethod === 'flexconsumption' ?
         async zipStream => {
-            return await kuduClient.flexDeploy(context, () => zipStream, {
+            return await kuduClient.flexDeploy(context, () => zipStream as RequestBodyType, {
                 remoteBuild: context.flexConsumptionRemoteBuild,
                 Deployer: 'az-code'
             });
         } :
         async zipStream => {
-            return await kuduClient.zipPushDeploy(context, () => zipStream, {
+            return await kuduClient.zipPushDeploy(context, () => zipStream as RequestBodyType, {
                 author: publisherName,
                 deployer: publisherName,
                 isAsync: true,
