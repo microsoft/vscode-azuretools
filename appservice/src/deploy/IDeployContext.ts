@@ -25,8 +25,8 @@ export interface IDeployContext extends IActionContext {
     /**
      * Used to overwrite default deploy method based on scm type
      */
-    deployMethod?: 'zip' | 'storage';
-
+    deployMethod?: 'zip' | 'storage' | 'flexconsumption';
+    flexConsumptionRemoteBuild?: boolean;
     stopAppBeforeDeploy?: boolean;
     syncTriggersPostDeploy?: boolean;
 }

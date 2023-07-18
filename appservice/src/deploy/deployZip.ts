@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { AppServicePlan } from '@azure/arm-appservice';
+import { RequestBodyType } from '@azure/core-rest-pipeline';
 import { ParsedSite } from '../SiteClient';
 import { publisherName } from '../constants';
 import { IDeployContext } from './IDeployContext';
@@ -13,17 +14,24 @@ import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
 export async function deployZip(context: IDeployContext, site: ParsedSite, fsPath: string, aspPromise: Promise<AppServicePlan | undefined>, pathFileMap?: Map<string, string>): Promise<void> {
     const kuduClient = await site.createClient(context);
-
-    const response = await runWithZipStream(context, {
-        fsPath, site, pathFileMap,
-        callback: async zipStream => {
-            return await kuduClient.zipPushDeploy(context, () => zipStream, {
+    const callback = context.deployMethod === 'flexconsumption' ?
+        async zipStream => {
+            return await kuduClient.flexDeploy(context, () => zipStream as RequestBodyType, {
+                remoteBuild: context.flexConsumptionRemoteBuild,
+                Deployer: 'az-code'
+            });
+        } :
+        async zipStream => {
+            return await kuduClient.zipPushDeploy(context, () => zipStream as RequestBodyType, {
                 author: publisherName,
                 deployer: publisherName,
                 isAsync: true,
                 trackDeploymentId: true
             });
-        }
+        };
+
+    const response = await runWithZipStream(context, {
+        fsPath, site, pathFileMap, callback
     });
     let locationUrl: string | undefined;
     try {

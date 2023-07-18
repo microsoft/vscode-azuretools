@@ -23,6 +23,9 @@ trigger:
   - main
   - rel/*
 
+# Disable PR trigger
+pr: none
+
 # Scheduled nightly build
 schedules:
   - cron: "0 0 * * *"

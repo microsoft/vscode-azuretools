@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IAzureUtilsExtensionVariables, registerAzureUtilsExtensionVariables } from "@microsoft/vscode-azext-azureutils";
+import { registerGitHubExtensionVariables } from "@microsoft/vscode-azext-github";
 import { IAzExtOutputChannel, IAzureUserInput, registerUIExtensionVariables, UIExtensionVariables } from "@microsoft/vscode-azext-utils";
 import { ExtensionContext, l10n } from "vscode";
 
@@ -48,4 +49,5 @@ export function registerAppServiceExtensionVariables(extVars: IAppServiceExtensi
     ext = extVars;
     registerUIExtensionVariables(extVars);
     registerAzureUtilsExtensionVariables(extVars);
+    registerGitHubExtensionVariables(extVars);
 }
