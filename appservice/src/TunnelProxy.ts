@@ -3,11 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { User } from '@azure/arm-appservice';
 import type { ServiceClient } from '@azure/core-client';
-import { RestError, createPipelineRequest } from "@azure/core-rest-pipeline";
-import { AzExtPipelineResponse, addBasicAuthenticationCredentialsToClient, createGenericClient } from '@microsoft/vscode-azext-azureutils';
-import { IActionContext, IParsedError, UserCancelledError, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
+import { RestError, bearerTokenAuthenticationPolicy, createPipelineRequest } from "@azure/core-rest-pipeline";
+import { AzExtPipelineResponse, createGenericClient } from '@microsoft/vscode-azext-azureutils';
+import { AzExtServiceClientCredentials, IActionContext, IParsedError, UserCancelledError, parseError } from '@microsoft/vscode-azext-utils';
 import { Server, Socket, createServer } from 'net';
 import { CancellationToken, Disposable, l10n } from 'vscode';
 import * as ws from 'ws';
@@ -42,24 +41,25 @@ class RetryableTunnelStatusError extends Error { }
 export class TunnelProxy {
     private _port: number;
     private _site: ParsedSite;
-    private _publishCredential: User;
     private _server: Server;
     private _openSockets: ws.WebSocket[];
     private _isSsh: boolean;
+    private _credentials: AzExtServiceClientCredentials;
 
-    constructor(port: number, site: ParsedSite, publishCredential: User, isSsh: boolean = false) {
+    constructor(port: number, site: ParsedSite, credentials: AzExtServiceClientCredentials, isSsh: boolean = false) {
         this._port = port;
         this._site = site;
-        this._publishCredential = publishCredential;
         this._server = createServer();
         this._openSockets = [];
         this._isSsh = isSsh;
+        this._credentials = credentials;
     }
 
     public async startProxy(context: IActionContext, token: CancellationToken): Promise<void> {
         try {
             await this.checkTunnelStatusWithRetry(context, token);
-            await this.setupTunnelServer(token);
+            const bearerToken = (await this._credentials.getToken() as { token: string }).token;
+            await this.setupTunnelServer(bearerToken, token);
         } catch (error) {
             this.dispose();
             throw error;
@@ -95,16 +95,17 @@ export class TunnelProxy {
     }
 
     private async checkTunnelStatus(context: IActionContext): Promise<void> {
-        const publishingUserName: string = nonNullProp(this._publishCredential, 'publishingUserName');
-        const password: string = nonNullProp(this._publishCredential, 'publishingPassword');
         const client: ServiceClient = await createGenericClient(context, undefined);
-        addBasicAuthenticationCredentialsToClient(client, publishingUserName, password);
+        client.pipeline.addPolicy(bearerTokenAuthenticationPolicy({
+            scopes: [],
+            credential: this._credentials
+        }));
 
         let tunnelStatus: ITunnelStatus;
         try {
             const response: AzExtPipelineResponse = await client.sendRequest(createPipelineRequest({
                 method: 'GET',
-                url: `https://${this._site.kuduHostName}/AppServiceTunnel/Tunnel.ashx?GetStatus&GetStatusAPIVer=2`
+                url: `https://${this._site.kuduHostName}/AppServiceTunnel/Tunnel.ashx?GetStatus&GetStatusAPIVer=2`,
             }));
             ext.outputChannel.appendLog(`[Tunnel] Checking status, body: ${response.bodyAsText}`);
             tunnelStatus = <ITunnelStatus>response.parsedBody;
@@ -159,7 +160,7 @@ export class TunnelProxy {
         throw new Error(l10n.t('Unable to establish connection to application: Timed out'));
     }
 
-    private async setupTunnelServer(token: CancellationToken): Promise<void> {
+    private async setupTunnelServer(bearerToken: string, token: CancellationToken): Promise<void> {
         return new Promise<void>((resolve: () => void, reject: (err: Error) => void): void => {
             const listener: Disposable = token.onCancellationRequested(() => {
                 reject(new UserCancelledError('setupTunnelServer'));
@@ -174,9 +175,9 @@ export class TunnelProxy {
                         headers: {
                             'User-Agent': 'vscode-azuretools',
                             'Cache-Control': 'no-cache',
-                            Pragma: 'no-cache'
+                            Pragma: 'no-cache',
+                            Authorization: `Bearer ${bearerToken}`,
                         },
-                        auth: `${this._publishCredential.publishingUserName}:${this._publishCredential.publishingPassword}`,
                     }
                 );
                 this._openSockets.push(tunnelSocket);
