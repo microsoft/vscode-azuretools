@@ -3,12 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { SiteConfigResource, User } from '@azure/arm-appservice';
+import type { SiteConfigResource } from '@azure/arm-appservice';
 import { callWithTelemetryAndErrorHandling, findFreePort, IActionContext } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import { ParsedSite } from '../SiteClient';
 import { TunnelProxy } from '../TunnelProxy';
 import { reportMessage, setRemoteDebug } from './remoteDebugCommon';
+import { AzExtGenericCredentials } from '@microsoft/vscode-azext-azureutils';
 
 const remoteDebugLink: string = 'https://aka.ms/appsvc-remotedebug';
 
@@ -19,33 +20,38 @@ export enum RemoteDebugLanguage {
     Python
 }
 
-export async function startRemoteDebug(context: IActionContext, site: ParsedSite, siteConfig: SiteConfigResource, language: RemoteDebugLanguage): Promise<void> {
+interface StartRemoteDebuggingOptions {
+    credentials: AzExtGenericCredentials;
+    site: ParsedSite;
+    siteConfig: SiteConfigResource;
+    language: RemoteDebugLanguage;
+}
+
+export async function startRemoteDebug(context: IActionContext, options: StartRemoteDebuggingOptions): Promise<void> {
     if (isRemoteDebugging) {
         throw new Error(vscode.l10n.t('Azure Remote Debugging is currently starting or already started.'));
     }
 
     isRemoteDebugging = true;
     try {
-        await startRemoteDebugInternal(context, site, siteConfig, language);
+        await startRemoteDebugInternal(context, options);
     } catch (error) {
         isRemoteDebugging = false;
         throw error;
     }
 }
 
-async function startRemoteDebugInternal(context: IActionContext, site: ParsedSite, siteConfig: SiteConfigResource, language: RemoteDebugLanguage): Promise<void> {
+async function startRemoteDebugInternal(context: IActionContext, options: StartRemoteDebuggingOptions): Promise<void> {
     await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, cancellable: true }, async (progress, token): Promise<void> => {
         const localHostPortNumber: number = await findFreePort();
-        const debugConfig: vscode.DebugConfiguration = await getDebugConfiguration(language, localHostPortNumber);
+        const debugConfig: vscode.DebugConfiguration = await getDebugConfiguration(options.language, localHostPortNumber);
 
         const confirmEnableMessage: string = vscode.l10n.t('The configuration will be updated to enable remote debugging. Would you like to continue? This will restart the app.');
-        await setRemoteDebug(context, true, confirmEnableMessage, undefined, site, siteConfig, progress, token, remoteDebugLink);
+        await setRemoteDebug(context, true, confirmEnableMessage, undefined, options.site, options.siteConfig, progress, token, remoteDebugLink);
 
         reportMessage(vscode.l10n.t('Starting tunnel proxy...'), progress, token);
 
-        const client = await site.createClient(context);
-        const publishCredential: User = await client.getWebAppPublishCredential();
-        const tunnelProxy: TunnelProxy = new TunnelProxy(localHostPortNumber, site, publishCredential);
+        const tunnelProxy: TunnelProxy = new TunnelProxy(localHostPortNumber, options.site, options.credentials);
         await callWithTelemetryAndErrorHandling('appService.remoteDebugStartProxy', async (startContext: IActionContext) => {
             startContext.errorHandling.suppressDisplay = true;
             startContext.errorHandling.rethrow = true;
@@ -73,7 +79,7 @@ async function startRemoteDebugInternal(context: IActionContext, site: ParsedSit
 
                 const confirmDisableMessage: string = vscode.l10n.t('Remaining in debugging mode may cause performance issues. Would you like to disable debugging? This will restart the app.');
                 await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, cancellable: true }, async (innerProgress, innerToken): Promise<void> => {
-                    await setRemoteDebug(context, false, confirmDisableMessage, undefined, site, siteConfig, innerProgress, innerToken, remoteDebugLink);
+                    await setRemoteDebug(context, false, confirmDisableMessage, undefined, options.site, options.siteConfig, innerProgress, innerToken, remoteDebugLink);
                 });
             }
         });
