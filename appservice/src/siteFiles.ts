@@ -26,7 +26,7 @@ export interface ISiteFileMetadata {
  * @param path - Do not include leading slash. Include trailing slash if path represents a folder.
  */
 export function createSiteFilesUrl(site: ParsedSite, path: string): string {
-    return `${site.kuduUrl}/api/vfs/${path}?api-version=2022=03-01`
+    return `${site.kuduUrl}/api/vfs/${path}`
 }
 
 export async function getFile(context: IActionContext, site: ParsedSite, url: string): Promise<ISiteFile> {
