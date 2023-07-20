@@ -16,16 +16,16 @@ import { FolderTreeItem } from './FolderTreeItem';
 export class FileTreeItem extends AzExtTreeItem {
     public static contextValue: string = 'file';
     public readonly label: string;
-    public readonly path: string;
+    public readonly href: string;
     public readonly isReadOnly: boolean;
     public readonly site: ParsedSite;
     public readonly parent: FolderTreeItem;
 
-    constructor(parent: FolderTreeItem, site: ParsedSite, label: string, path: string, isReadOnly: boolean) {
+    constructor(parent: FolderTreeItem, site: ParsedSite, label: string, href: string, isReadOnly: boolean) {
         super(parent);
         this.site = site;
         this.label = label;
-        this.path = path;
+        this.href = href;
         this.isReadOnly = isReadOnly;
     }
 
@@ -43,7 +43,7 @@ export class FileTreeItem extends AzExtTreeItem {
 
     public async openReadOnly(context: IActionContext): Promise<void> {
         await this.runWithTemporaryDescription(context, l10n.t('Opening...'), async () => {
-            const file: ISiteFile = await getFile(context, this.site, this.path);
+            const file: ISiteFile = await getFile(context, this.site, this.href);
             await openReadOnlyContent(this, file.data, '');
         });
     }

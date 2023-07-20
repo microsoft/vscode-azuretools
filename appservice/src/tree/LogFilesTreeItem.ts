@@ -8,6 +8,7 @@ import { l10n, ThemeIcon } from 'vscode';
 import { ext } from '../extensionVariables';
 import { ParsedSite } from '../SiteClient';
 import { FolderTreeItem } from './FolderTreeItem';
+import { createSiteFilesHref } from '../siteFiles';
 
 interface LogFilesTreeItemOptions {
     site: ParsedSite;
@@ -28,7 +29,7 @@ export class LogFilesTreeItem extends FolderTreeItem {
         super(parent, {
             site: options.site,
             label: l10n.t('Logs'),
-            path: '/LogFiles',
+            href: createSiteFilesHref(options.site, 'LogFiles/'),
             isReadOnly: true,
             contextValuesToAdd: options.contextValuesToAdd || []
         });
