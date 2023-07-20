@@ -12,7 +12,7 @@ import { FileTreeItem } from './FileTreeItem';
 export interface FolderTreeItemOptions {
     site: ParsedSite;
     label: string;
-    href: string;
+    url: string;
     isReadOnly: boolean;
     contextValuesToAdd?: string[];
 }
@@ -21,7 +21,7 @@ export class FolderTreeItem extends AzExtParentTreeItem {
     public static contextValue: string = 'folder';
     public readonly childTypeLabel: string = l10n.t('file or folder');
     public readonly label: string;
-    public readonly href: string;
+    public readonly url: string;
     public readonly isReadOnly: boolean;
 
     public readonly contextValuesToAdd: string[];
@@ -33,7 +33,7 @@ export class FolderTreeItem extends AzExtParentTreeItem {
         super(parent);
         this.site = options.site;
         this.label = options.label;
-        this.href = options.href;
+        this.url = options.url;
         this.isReadOnly = options.isReadOnly;
         this.contextValuesToAdd = options.contextValuesToAdd || [];
     }
@@ -55,7 +55,7 @@ export class FolderTreeItem extends AzExtParentTreeItem {
     }
 
     public async loadMoreChildrenImpl(_clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {
-        let files: ISiteFileMetadata[] = await listFiles(context, this.site, this.href);
+        let files: ISiteFileMetadata[] = await listFiles(context, this.site, this.url);
         // this file is being accessed by Kudu and is not viewable
         files = files.filter(f => f.mime !== 'text/xml' || !f.name.includes('LogFiles-kudu-trace_pending.xml'));
         return files.map(file => {
@@ -63,7 +63,7 @@ export class FolderTreeItem extends AzExtParentTreeItem {
                 site: this.site,
                 label: file.name,
                 isReadOnly: this.isReadOnly,
-                href: file.href,
+                url: file.href,
                 contextValuesToAdd: this.contextValuesToAdd
             }) : new FileTreeItem(this, this.site, file.name, file.href, this.isReadOnly);
         });

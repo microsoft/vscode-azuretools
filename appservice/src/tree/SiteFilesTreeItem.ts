@@ -7,7 +7,7 @@ import { AzExtParentTreeItem, createContextValue } from '@microsoft/vscode-azext
 import * as vscode from 'vscode';
 import { ParsedSite } from '../SiteClient';
 import { FolderTreeItem } from './FolderTreeItem';
-import { createSiteFilesHref } from '../siteFiles';
+import { createSiteFilesUrl } from '../siteFiles';
 
 interface SiteFilesTreeItemOptions {
     site: ParsedSite;
@@ -27,7 +27,7 @@ export class SiteFilesTreeItem extends FolderTreeItem {
         super(parent, {
             site: options.site,
             label: vscode.l10n.t('Files'),
-            href: createSiteFilesHref(options.site, 'site/wwwroot/'),
+            url: createSiteFilesUrl(options.site, 'site/wwwroot/'),
             isReadOnly: options.isReadOnly
         });
         this.contextValuesToAdd = options.contextValuesToAdd || [];

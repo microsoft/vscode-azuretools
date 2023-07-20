@@ -433,20 +433,20 @@ export class SiteClient implements IAppSettingsClient {
         }) as KuduModels.LogEntry[];
     }
 
-    public async vfsGetItem(context: IActionContext, href: string): Promise<AzExtPipelineResponse> {
+    public async vfsGetItem(context: IActionContext, url: string): Promise<AzExtPipelineResponse> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
         return await client.sendRequest(createPipelineRequest({
             method: 'GET',
-            url: href,
+            url,
         }));
     }
 
-    public async vfsPutItem(context: IActionContext, data: string | ArrayBuffer, href: string, rawHeaders?: {}): Promise<AzExtPipelineResponse> {
+    public async vfsPutItem(context: IActionContext, data: string | ArrayBuffer, url: string, rawHeaders?: {}): Promise<AzExtPipelineResponse> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
         const headers = createHttpHeaders(rawHeaders);
         return await client.sendRequest(createPipelineRequest({
             method: 'PUT',
-            url: href,
+            url,
             body: typeof data === 'string' ? data : data.toString(),
             headers
         }));

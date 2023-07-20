@@ -25,14 +25,14 @@ export interface ISiteFileMetadata {
 /**
  * @param path - Do not include leading slash. Include trailing slash if path represents a folder.
  */
-export function createSiteFilesHref(site: ParsedSite, path: string): string {
+export function createSiteFilesUrl(site: ParsedSite, path: string): string {
     return `${site.kuduUrl}/api/vfs/${path}?api-version=2022=03-01`
 }
 
-export async function getFile(context: IActionContext, site: ParsedSite, href: string): Promise<ISiteFile> {
+export async function getFile(context: IActionContext, site: ParsedSite, url: string): Promise<ISiteFile> {
     let response: AzExtPipelineResponse;
     try {
-        response = await getFsResponse(context, site, href);
+        response = await getFsResponse(context, site, url);
     } catch (error) {
         if (error instanceof RestError && error.code === 'PARSE_ERROR' && error.response?.status === 200) {
             // Some files incorrectly list the content-type as json and fail to parse, but we always just want the text itself
@@ -44,8 +44,8 @@ export async function getFile(context: IActionContext, site: ParsedSite, href: s
     return { data: <string>response.bodyAsText, etag: <string>response.headers.get('etag') };
 }
 
-export async function listFiles(context: IActionContext, site: ParsedSite, href: string): Promise<ISiteFileMetadata[]> {
-    const response: AzExtPipelineResponse = await getFsResponse(context, site, href);
+export async function listFiles(context: IActionContext, site: ParsedSite, url: string): Promise<ISiteFileMetadata[]> {
+    const response: AzExtPipelineResponse = await getFsResponse(context, site, url);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return Array.isArray(response.parsedBody) ? response.parsedBody : [];
 }
@@ -54,17 +54,17 @@ export async function listFiles(context: IActionContext, site: ParsedSite, href:
  * Overwrites or creates a file. The etag passed in may be `undefined` if the file is being created
  * Returns the latest etag of the updated file
  */
-export async function putFile(context: IActionContext, site: ParsedSite, data: string | ArrayBuffer, href: string, etag: string | undefined): Promise<string> {
+export async function putFile(context: IActionContext, site: ParsedSite, data: string | ArrayBuffer, url: string, etag: string | undefined): Promise<string> {
     const options: {} = etag ? { ['If-Match']: etag } : {};
     const kuduClient = await site.createClient(context);
-    const result: AzExtPipelineResponse = (await kuduClient.vfsPutItem(context, data, href, options));
+    const result: AzExtPipelineResponse = (await kuduClient.vfsPutItem(context, data, url, options));
     return <string>result.headers.get('etag');
 }
 
 /**
  * Kudu APIs don't work for Linux consumption function apps and ARM APIs don't seem to work for web apps. We'll just have to use both
  */
-async function getFsResponse(context: IActionContext, site: ParsedSite, href: string): Promise<AzExtPipelineResponse> {
+async function getFsResponse(context: IActionContext, site: ParsedSite, url: string): Promise<AzExtPipelineResponse> {
     try {
         if (site.isFunctionApp) {
             /*
@@ -82,7 +82,7 @@ async function getFsResponse(context: IActionContext, site: ParsedSite, href: st
                     try {
                         return await client.sendRequest(createPipelineRequest({
                             method: 'GET',
-                            url: href,
+                            url,
                         }));
                     } catch (error) {
                         const parsedError: IParsedError = parseError(error);
@@ -97,7 +97,7 @@ async function getFsResponse(context: IActionContext, site: ParsedSite, href: st
             );
         } else {
             const kuduClient = await site.createClient(context);
-            return await kuduClient.vfsGetItem(context, href);
+            return await kuduClient.vfsGetItem(context, url);
         }
     } catch (error) {
         context.telemetry.maskEntireErrorMessage = true; // since the error could have the contents of the user's file
