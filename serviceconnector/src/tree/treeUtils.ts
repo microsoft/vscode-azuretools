@@ -8,5 +8,5 @@ import { AzExtTreeItem } from "@microsoft/vscode-azext-utils";
 import { LinkerItem } from "../createLinker/createLinker";
 
 export function getTreeId(item: LinkerItem | AzExtTreeItem, linker: LinkerResource): string {
-    return `${item.id}/ServiceConnector/${linker.name}`;
+    return `${item.id}/${linker.name}`;
 }
