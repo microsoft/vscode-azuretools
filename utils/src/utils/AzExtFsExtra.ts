@@ -73,7 +73,7 @@ export namespace AzExtFsExtra {
         await workspace.fs.writeFile(uri, Buffer.from(contents));
     }
 
-    export async function appendFile(resource: Uri | string, contents: string, seperator: string = '\r\n\r\n'): Promise<void> {
+    export async function appendFile(resource: Uri | string, contents: string, separator: string = '\r\n\r\n'): Promise<void> {
         const uri = convertToUri(resource);
         const existingContent = await AzExtFsExtra.readFile(uri);
         await AzExtFsExtra.writeFile(uri, existingContent + seperator + contents);
