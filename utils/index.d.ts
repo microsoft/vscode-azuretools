@@ -1564,7 +1564,7 @@ export declare namespace AzExtFsExtra {
     export function ensureFile(resource: Uri | string): Promise<void>;
     export function readFile(resource: Uri | string): Promise<string>;
     /**
-     * @param seperator By default, will append "\r\n\r\n" between existing content and new content to be appended
+     * @param separator By default, will append "\r\n\r\n" between existing content and new content to be appended
      */
     export function appendFile(resource: Uri | string, contents: string, separator?: string): Promise<void>;
     export function pathExists(resource: Uri | string): Promise<boolean>;
