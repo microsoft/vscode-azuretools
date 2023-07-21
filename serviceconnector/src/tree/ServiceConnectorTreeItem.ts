@@ -13,15 +13,17 @@ import { getTreeId } from "./treeUtils";
 export class ServiceConnectorTreeItem extends AzExtTreeItem {
     public readonly linker: LinkerResource;
     public readonly item: AzExtTreeItem;
+    public readonly resourceId: string;
 
-    constructor(linker: LinkerResource, parent: AzExtParentTreeItem) {
+    constructor(linker: LinkerResource, parent: AzExtParentTreeItem, resourceId: string) {
         super(parent);
         this.linker = linker;
         this.item = parent;
+        this.resourceId = resourceId;
     }
 
     public get id(): string {
-        return getTreeId(this.item, this.linker);
+        return getTreeId(this.resourceId, this.linker);
     }
 
     public get label(): string {

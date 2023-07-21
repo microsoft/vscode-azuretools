@@ -22,7 +22,7 @@ export class ServiceConnectorGroupTreeItem extends AzExtParentTreeItem {
             linkers,
             'invalidServiceConnector',
             l => {
-                return new ServiceConnectorTreeItem(l, this)
+                return new ServiceConnectorTreeItem(l, this, this.resourceId)
             },
             l => {
                 return l.name;

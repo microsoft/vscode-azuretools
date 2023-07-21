@@ -18,7 +18,7 @@ export interface ServiceConnectorItem extends TreeElementBase {
 }
 
 export function createServiceConnectorItem(subscription: ISubscriptionContext, item: LinkerItem, linker: LinkerResource): ServiceConnectorItem {
-    const id = getTreeId(item, linker);
+    const id = getTreeId(item.id, linker);
 
     return {
         id,

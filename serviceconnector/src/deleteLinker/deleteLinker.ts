@@ -27,9 +27,7 @@ export async function deleteLinker(context: IActionContext & ExecuteActivityCont
         new DeleteConfirmationStep(confirmMessage)
     ];
 
-    if (serviceConnectorName) {
-        wizardContext.linkerName = serviceConnectorName;
-    }
+    wizardContext.linkerName = serviceConnectorName;
 
     preSteps.forEach(step => promptSteps.unshift(step));
 

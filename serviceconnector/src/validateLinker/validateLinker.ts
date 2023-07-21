@@ -24,9 +24,7 @@ export async function validateLinker(context: IActionContext & ExecuteActivityCo
         new LinkerListStep()
     ];
 
-    if (serviceConnectorName) {
-        wizardContext.linkerName = serviceConnectorName;
-    }
+    wizardContext.linkerName = serviceConnectorName;
 
     preSteps.forEach(step => promptSteps.unshift(step));
 
