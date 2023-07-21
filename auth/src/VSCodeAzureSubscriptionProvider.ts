@@ -233,7 +233,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
 
         const credential: TokenCredential = {
             getToken: async (scopes) => {
-                // TODO: change to `getSessions` when that API is available: https://github.com/microsoft/vscode/issues/152399
+                // TODO: if possible, change to `getSessions` when that API is available: https://github.com/microsoft/vscode/issues/152399
                 session = await vscode.authentication.getSession(getConfiguredAuthProviderId(), this.getScopes(scopes, tenantId), { createIfNone: false, silent: true });
                 if (!session) {
                     throw new NotSignedInError();
@@ -266,10 +266,11 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
     private getScopes(scopes: string | string[] | undefined, tenantId?: string): string[] {
         const scopeSet = new Set<string>(this.getDefaultScopes());
 
-        if (typeof scopes === 'string') {
+        // If `.default` is passed in, it will be ignored, in favor of the correct default added by `getDefaultScopes`
+        if (typeof scopes === 'string' && scopes !== '.default') {
             scopeSet.add(scopes);
         } else if (Array.isArray(scopes)) {
-            scopes.forEach(scope => scopeSet.add(scope));
+            scopes.filter(scope => scope !== '.default').forEach(scope => scopeSet.add(scope));
         }
 
         if (tenantId) {
