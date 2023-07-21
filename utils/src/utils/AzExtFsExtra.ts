@@ -76,7 +76,7 @@ export namespace AzExtFsExtra {
     export async function appendFile(resource: Uri | string, contents: string, separator: string = '\r\n\r\n'): Promise<void> {
         const uri = convertToUri(resource);
         const existingContent = await AzExtFsExtra.readFile(uri);
-        await AzExtFsExtra.writeFile(uri, existingContent + seperator + contents);
+        await AzExtFsExtra.writeFile(uri, existingContent + separator + contents);
     }
 
     export async function pathExists(resource: Uri | string): Promise<boolean> {
