@@ -4,6 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { AzureWizardExecuteStep, nonNullValue } from "@microsoft/vscode-azext-utils";
+import { TargetServiceTypeName } from "../../constants";
 import { createLinkerClient } from "../linkerClient";
 import { ICreateLinkerContext } from "./ICreateLinkerContext";
 
@@ -17,7 +18,7 @@ export class LinkerCreateStep extends AzureWizardExecuteStep<ICreateLinkerContex
             authInfo: context.authType,
             targetService: {
                 type: "AzureResource",
-                id: nonNullValue(context.storageAccount?.id) + nonNullValue(context.targetServiceType?.id) // This will change once databases is added
+                id: this.getSourceResourceId(context),
             },
             scope: context.scope,
             clientType: context.clientType
@@ -28,5 +29,18 @@ export class LinkerCreateStep extends AzureWizardExecuteStep<ICreateLinkerContex
 
     public shouldExecute(context: ICreateLinkerContext): boolean {
         return !context.linker;
+    }
+
+    public getSourceResourceId(context: ICreateLinkerContext): string {
+        switch (context.targetServiceType?.type) {
+            case TargetServiceTypeName.Storage:
+                return nonNullValue(context.storageAccount?.id);
+            case TargetServiceTypeName.CosmosDB:
+                return nonNullValue(context.databaseAccount?.id);
+            case TargetServiceTypeName.KeyVault:
+                return nonNullValue(context.keyVaultAccount?.id);
+            default:
+                throw new Error('No target type found');
+        }
     }
 }
