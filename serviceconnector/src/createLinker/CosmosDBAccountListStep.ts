@@ -20,7 +20,7 @@ export interface DatabaseAccountJsonResponse {
 
 export class CosmosDBAccountListStep extends AzureWizardPromptStep<ICreateLinkerContext>{
     public async prompt(context: ICreateLinkerContext): Promise<void> {
-        const placeHolder: string = vscode.l10n.t('selectDatabaseAccount', 'Select a Database Account');
+        const placeHolder: string = vscode.l10n.t('Select a Database Account');
         const accounts = await getCosmosDBDatabaseAccounts(context);
         context.databaseAccount = (await context.ui.showQuickPick(this.getPicks(accounts.value), { placeHolder })).data;
     }
