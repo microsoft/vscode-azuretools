@@ -4,6 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { AzureWizardExecuteStep, nonNullValue } from "@microsoft/vscode-azext-utils";
+import * as vscode from 'vscode';
 import { TargetServiceTypeName } from "../../constants";
 import { createLinkerClient } from "../linkerClient";
 import { ICreateLinkerContext } from "./ICreateLinkerContext";
@@ -40,7 +41,7 @@ export class LinkerCreateStep extends AzureWizardExecuteStep<ICreateLinkerContex
             case TargetServiceTypeName.KeyVault:
                 return nonNullValue(context.keyVaultAccount?.id);
             default:
-                throw new Error('No target type found');
+                throw new Error(vscode.l10n.t('No target type found'));
         }
     }
 }
