@@ -26,6 +26,10 @@ export interface ISiteFileMetadata {
  * @param path - Do not include leading slash. Include trailing slash if path represents a folder.
  */
 export function createSiteFilesUrl(site: ParsedSite, path: string): string {
+    if (site.isFunctionApp) {
+        path = path.replace('/home/', '');
+        return `${site.id}/hostruntime/admin/vfs/home/${path}/?api-version=2022-03-01`;
+    }
     return `${site.kuduUrl}/api/vfs/${path}`
 }
 
