@@ -1708,13 +1708,13 @@ export declare function subscriptionExperience(context: IActionContext, tdp: Tre
 export declare function azureResourceExperience<TPick extends unknown>(context: PickExperienceContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: ContextValueFilter): Promise<TPick>;
 
 /**
- * Recursively prompts the user to pick a node until a node is packed matching the context value filter.
+ * Recursively prompts the user to pick a node until a node is picked matching the context value filter.
  *
  * @param context The action context
  * @param tdp tree data provider to pick a node from
  * @param contextValueFilter the context value filter used to match the deesired node(s)
  */
-export declare function contextValueExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, contextValueFilter: ContextValueFilter): Promise<TPick>;
+export declare function contextValueExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<unknown>, contextValueFilter: ContextValueFilter): Promise<TPick>;
 
 interface CompatibilityPickResourceExperienceOptions {
     resourceTypes?: AzExtResourceType | AzExtResourceType[];
