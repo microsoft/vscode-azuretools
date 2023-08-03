@@ -21,4 +21,10 @@ export class AuthenticationListStep extends AzureWizardPromptStep<ICreateLinkerC
     public shouldPrompt(context: ICreateLinkerContext): boolean {
         return !context.authType;
     }
+
+    public async configureBeforePrompt(context: ICreateLinkerContext): Promise<void> {
+        if (context.keyVaultAccount) {
+            context.authType = { authType: KnownAuthType.SystemAssignedIdentity } // connection string is not supported for key vault
+        }
+    }
 }
