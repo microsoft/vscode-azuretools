@@ -32,7 +32,7 @@ export class LinkerCreateStep extends AzureWizardExecuteStep<ICreateLinkerContex
         return !context.linker;
     }
 
-    public getSourceResourceId(context: ICreateLinkerContext): string {
+    private getSourceResourceId(context: ICreateLinkerContext): string {
         switch (context.targetServiceType?.type) {
             case TargetServiceTypeName.Storage:
                 return nonNullValue(context.storageAccount?.id);

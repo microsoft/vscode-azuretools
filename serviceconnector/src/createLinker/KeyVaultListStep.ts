@@ -28,7 +28,7 @@ export class KeyVaultListStep extends AzureWizardPromptStep<ICreateLinkerContext
         return !context.keyVaultAccount;
     }
 
-    private async getPicks(accounts: KeyVaultAccountJsonResponse[]): Promise<IAzureQuickPickItem<KeyVaultAccountJsonResponse>[]> {
+    private getPicks(accounts: KeyVaultAccountJsonResponse[]): IAzureQuickPickItem<KeyVaultAccountJsonResponse>[] {
         return accounts.map(d => {
             return { label: d.name, data: d };
         });
