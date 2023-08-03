@@ -4,7 +4,9 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { LinkerResource } from "@azure/arm-servicelinker";
+import { AzExtTreeItem } from "@microsoft/vscode-azext-utils";
+import { LinkerItem } from "../createLinker/createLinker";
 
-export function getTreeId(resourceId: string, linker: LinkerResource): string {
-    return `${resourceId}/ServiceConnector/${linker.name}`;
+export function getTreeId(item: LinkerItem | AzExtTreeItem, linker: LinkerResource): string {
+    return `${item.id}/ServiceConnector/${linker.name}`;
 }
