@@ -3,25 +3,28 @@
 *  Licensed under the MIT License. See License.md in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { AzExtTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, ExecuteActivityContext, IActionContext, createSubscriptionContext, isAzExtTreeItem } from "@microsoft/vscode-azext-utils";
+import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, ExecuteActivityContext, IActionContext, ISubscriptionContext, createSubscriptionContext } from "@microsoft/vscode-azext-utils";
+import { AzureSubscription } from "@microsoft/vscode-azureresources-api";
 import * as vscode from 'vscode';
-import { LinkerItem } from "../createLinker/createLinker";
+import { isAzureSubscription } from "../createLinker/createLinker";
 import { IPickLinkerContext } from "../deleteLinker/IPickLinkerContext";
 import { LinkerListStep } from "../deleteLinker/LinkerListStep";
 import { ValidateLinkerStep } from "./ValidateLinkerStep";
 
-export async function validateLinker(context: IActionContext & ExecuteActivityContext, item: LinkerItem | AzExtTreeItem, preSteps: AzureWizardPromptStep<IPickLinkerContext>[] = []): Promise<void> {
-    const subscription = isAzExtTreeItem(item) ? item.subscription : createSubscriptionContext(item.subscription);
+export async function validateLinker(context: IActionContext & ExecuteActivityContext, id: string, subscription: ISubscriptionContext | AzureSubscription, serviceConnectorName?: string, preSteps: AzureWizardPromptStep<IPickLinkerContext>[] = []): Promise<void> {
+    subscription = isAzureSubscription(subscription) ? createSubscriptionContext(subscription) : subscription; // For v1.5 compatibility
 
     const wizardContext: IPickLinkerContext = {
         ...context,
         ...subscription,
-        sourceResourceUri: item?.id,
+        sourceResourceUri: id,
     }
 
     const promptSteps: AzureWizardPromptStep<IPickLinkerContext>[] = [
         new LinkerListStep()
     ];
+
+    wizardContext.linkerName = serviceConnectorName;
 
     preSteps.forEach(step => promptSteps.unshift(step));
 

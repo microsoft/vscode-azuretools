@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { KnownClientType } from "@azure/arm-servicelinker";
-import { AzExtTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, ExecuteActivityContext, IActionContext, createSubscriptionContext, isAzExtTreeItem, nonNullValue } from "@microsoft/vscode-azext-utils";
+import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, ExecuteActivityContext, IActionContext, ISubscriptionContext, createSubscriptionContext } from "@microsoft/vscode-azext-utils";
 import { AzureSubscription } from "@microsoft/vscode-azureresources-api";
 import * as vscode from 'vscode';
 import { AuthenticationListStep } from "./AuthenticationListStep";
@@ -19,14 +19,14 @@ export interface LinkerItem {
     id: string,
 }
 
-export async function createLinker(context: IActionContext & ExecuteActivityContext, item: LinkerItem | AzExtTreeItem, preSteps: AzureWizardPromptStep<ICreateLinkerContext>[] = [], runtime?: KnownClientType[]): Promise<void> {
-    const subscription = isAzExtTreeItem(item) ? item.subscription : createSubscriptionContext(item.subscription); // For v1.5 compatibility
+export async function createLinker(context: IActionContext & ExecuteActivityContext, id: string, subscription: ISubscriptionContext | AzureSubscription, preSteps: AzureWizardPromptStep<ICreateLinkerContext>[] = [], runtime?: KnownClientType[]): Promise<void> {
+    subscription = isAzureSubscription(subscription) ? createSubscriptionContext(subscription) : subscription; // For v1.5 compatibility
 
     const wizardContext: ICreateLinkerContext = {
         ...context,
         ...subscription,
         runtime,
-        sourceResourceUri: nonNullValue(item?.id),
+        sourceResourceUri: id,
     }
 
     const promptSteps: AzureWizardPromptStep<ICreateLinkerContext>[] = [
@@ -50,4 +50,8 @@ export async function createLinker(context: IActionContext & ExecuteActivityCont
 
     await wizard.prompt();
     await wizard.execute();
+}
+
+export function isAzureSubscription(subscription: ISubscriptionContext | AzureSubscription): subscription is AzureSubscription {
+    return 'subscription' in subscription;
 }
