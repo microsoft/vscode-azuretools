@@ -1148,6 +1148,11 @@ export declare interface ExecuteActivityContext {
      * The activity implementation to use, defaults to ExecuteActivity
      */
     wizardActivity?: new <TContext extends ExecuteActivityContext>(context: TContext, task: ActivityTask<void>) => ExecuteActivity;
+
+    /**
+     * Children to show under the activity tree item. Children only appear once the activity is done.
+     */
+    activityChildren?: AzExtTreeItem[];
 }
 
 export declare abstract class AzureWizardExecuteStep<T extends IActionContext> {
