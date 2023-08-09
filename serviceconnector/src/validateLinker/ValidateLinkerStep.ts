@@ -6,6 +6,7 @@
 import { AzureWizardExecuteStep, nonNullValue } from "@microsoft/vscode-azext-utils";
 import { IPickLinkerContext } from "../deleteLinker/IPickLinkerContext";
 import { createLinkerClient } from "../linkerClient";
+import { KnownValidationResultStatus } from "@azure/arm-servicelinker";
 
 export class ValidateLinkerStep extends AzureWizardExecuteStep<IPickLinkerContext> {
     public priority: number = 10;
@@ -14,7 +15,7 @@ export class ValidateLinkerStep extends AzureWizardExecuteStep<IPickLinkerContex
         const client = await createLinkerClient(context.credentials);
         const response = await client.linker.beginValidateAndWait(nonNullValue(context.sourceResourceUri), nonNullValue(context.linkerName));
         for (const detail of nonNullValue(response.validationDetail)) {
-            if (detail.result === "failure") {
+            if (detail.result === KnownValidationResultStatus.Failure) {
                 throw new Error(detail.description);
             }
         }
