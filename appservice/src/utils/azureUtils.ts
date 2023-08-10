@@ -6,7 +6,7 @@
 
 import type { CheckNameAvailabilityResponse } from "@azure/arm-appservice";
 import type { ServiceClient } from '@azure/core-client';
-import { createPipelineRequest } from "@azure/core-rest-pipeline";
+import { createHttpHeaders, createPipelineRequest } from "@azure/core-rest-pipeline";
 import { AzExtPipelineResponse } from "@microsoft/vscode-azext-azureutils";
 
 export function areLocationNamesEqual(name1: string | undefined, name2: string | undefined): boolean {
@@ -22,9 +22,12 @@ export async function checkNameAvailability(client: ServiceClient, subscriptionI
     const result: AzExtPipelineResponse = await client.sendRequest(createPipelineRequest({
         method: 'POST',
         url: `/subscriptions/${subscriptionId}/providers/Microsoft.Web/checknameavailability?api-version=2021-02-01`,
-        body: {
+        headers: createHttpHeaders({
+            'Content-Type': 'application/json',
+        }),
+        body: JSON.stringify({
             name, type
-        }
+        }),
     }));
 
     return <CheckNameAvailabilityResponse>result.parsedBody;
