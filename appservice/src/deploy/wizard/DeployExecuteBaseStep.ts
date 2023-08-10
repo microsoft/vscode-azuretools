@@ -12,15 +12,17 @@ import { InnerDeployContext } from "../IDeployContext";
 export abstract class DeployExecuteBaseStep extends AzureWizardExecuteStep<InnerDeployContext> {
     public priority: number = 200;
     protected progress: Progress<{ message?: string; increment?: number }> | undefined;
+    public constructor() {
+        super();
+    }
 
     public async execute(context: InnerDeployContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         const client = context.client;
         this.progress = progress;
         const config: SiteConfigResource = await client.getSiteConfig();
         // We use the AppServicePlan in a few places, but we don't want to delay deployment, so start the promise now and save as a const
-        const aspPromise: Promise<AppServicePlan | undefined> = client.getAppServicePlan();
         try {
-            await setDeploymentTelemetry(context, config, aspPromise);
+            await setDeploymentTelemetry(context, config, this.aspPromise);
         } catch (error) {
             // Ignore
         }

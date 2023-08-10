@@ -9,7 +9,7 @@ import { InnerDeployContext } from '../../IDeployContext';
 
 export class DelayFirstWebAppDeployStep extends AzureWizardExecuteStep<InnerDeployContext> {
     public priority: number = 300;
-    public constructor(readonly aspPromise: Promise<AppServicePlan | undefined>) {
+    public constructor() {
         super();
     }
 
@@ -23,7 +23,7 @@ export class DelayFirstWebAppDeployStep extends AzureWizardExecuteStep<InnerDepl
                     resolve();
                 }
 
-                const asp: AppServicePlan | undefined = await this.aspPromise;
+                const asp: AppServicePlan | undefined = await context.aspPromise;
                 if (!asp || !asp.sku || !asp.sku.tier || asp.sku.tier.toLowerCase() !== 'basic') {
                     resolve();
                 }

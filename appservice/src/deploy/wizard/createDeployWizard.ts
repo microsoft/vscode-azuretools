@@ -13,6 +13,7 @@ import { PostDeploySyncTriggersExecuteStep } from "./PostDeploySyncTriggersExecu
 import { PostDeployTaskExecuteStep } from "./PostDeployTaskExecuteStep";
 import { StartAppAfterDeployExecuteStep } from "./StartAppAfterDeployExecuteStep";
 import { StopAppBeforeDeployExecuteStep } from "./StopAppBeforeDeployExecuteStep";
+import { DelayFirstWebAppDeployStep } from "./deployZip/DelayFirstWebAppDeployStep";
 import { DeployStorageAccountExecuteStep } from "./deployZip/DeployStorageAccountExecuteStep";
 import { DeployWarExecuteStep } from "./deployZip/DeployWarExecuteStep";
 import { DeployZipPushExecuteStep } from "./deployZip/DeployZipPushExecuteStep";
@@ -48,6 +49,7 @@ export async function createDeployExecuteSteps(context: InnerDeployContext): Pro
             } else {
                 executeSteps.push(new DeployZipPushExecuteStep());
             }
+            executeSteps.push(new DelayFirstWebAppDeployStep());
         }
 
         executeSteps.push(new WaitForDeploymentToCompleteStep());
