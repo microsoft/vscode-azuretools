@@ -230,7 +230,7 @@ class StatusCodePolicy implements PipelinePolicy {
                 parseError(response.parsedBody || response.bodyAsText).message :
                 vscode.l10n.t('Unexpected status code: {0}', response.status);
             throw new RestError(errorMessage, {
-                code: response.bodyAsText || '',
+                code: String(response.status) || response.bodyAsText || '',
                 statusCode: response.status,
                 request,
                 response
