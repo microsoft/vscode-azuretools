@@ -3,8 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IActionContext } from '@microsoft/vscode-azext-utils';
+import { ExecuteActivityContext, IActionContext } from '@microsoft/vscode-azext-utils';
 import { WorkspaceFolder } from 'vscode';
+import { ParsedSite, SiteClient } from '../SiteClient';
 
 export enum AppSource {
     setting = 'setting',
@@ -29,4 +30,15 @@ export interface IDeployContext extends IActionContext {
     flexConsumptionRemoteBuild?: boolean;
     stopAppBeforeDeploy?: boolean;
     syncTriggersPostDeploy?: boolean;
+    /**
+     * id retrieved from scm-deployment-id header to track deployment
+     */
+    locationUrl?: string;
+}
+
+// only used by the tools package facilitate creating the wizard execute steps
+export interface InnerDeployContext extends IDeployContext, ExecuteActivityContext {
+    site: ParsedSite;
+    client: SiteClient;
+    fsPath: string;
 }

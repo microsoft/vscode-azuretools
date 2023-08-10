@@ -12,20 +12,23 @@ import * as prettybytes from 'pretty-bytes';
 import { Readable } from 'stream';
 import * as vscode from 'vscode';
 import * as yazl from 'yazl';
-import { ext } from '../extensionVariables';
 import { ParsedSite } from '../SiteClient';
+import { ext } from '../extensionVariables';
 import { getFileExtension } from '../utils/pathUtils';
 
 export async function runWithZipStream(context: IActionContext, options: {
     fsPath: string,
     site: ParsedSite,
     pathFileMap?: Map<string, string>
+    progress?: vscode.Progress<{ message?: string; increment?: number }>
     callback: (zipStream: Readable) => Promise<AzExtPipelineResponse | void>
 }): Promise<AzExtPipelineResponse | void> {
 
     function onFileSize(size: number): void {
         context.telemetry.measurements.zipFileSize = size;
+        const zipFileSize = vscode.l10n.t('Zip package size: {0}', prettybytes(size));
         ext.outputChannel.appendLog(vscode.l10n.t('Zip package size: {0}', prettybytes(size)), { resourceName: site.fullName });
+        options.progress?.report({ message: zipFileSize });
     }
 
     let zipStream: Readable;
@@ -41,7 +44,10 @@ export async function runWithZipStream(context: IActionContext, options: {
             onFileSize(stats.size);
         });
     } else {
-        ext.outputChannel.appendLog(vscode.l10n.t('Creating zip package...'), { resourceName: site.fullName });
+        const creatingZip = vscode.l10n.t('Creating zip package...')
+        ext.outputChannel.appendLog(creatingZip, { resourceName: site.fullName });
+        options.progress?.report({ message: creatingZip });
+
         const zipFile: yazl.ZipFile = new yazl.ZipFile();
         let filesToZip: string[] = [];
         let sizeOfZipFile: number = 0;
@@ -62,10 +68,12 @@ export async function runWithZipStream(context: IActionContext, options: {
             if (site.isFunctionApp) {
                 filesToZip = await getFilesFromGitignore(fsPath, '.funcignore');
             } else {
-                filesToZip = await getFilesFromGlob(fsPath, site);
+                filesToZip = await getFilesFromGlob(fsPath, site, options.progress);
             }
 
+            ext.outputChannel.appendLog(vscode.l10n.t('Adding {0} files to zip package...', filesToZip.length), { resourceName: site.fullName });
             for (const file of filesToZip) {
+                ext.outputChannel.appendLog(path.join(fsPath, file), { resourceName: site.fullName });
                 zipFile.addFile(path.join(fsPath, file), getPathFromMap(file, pathFileMap));
             }
         } else {
@@ -91,7 +99,7 @@ const commonGlobSettings: Partial<globby.GlobbyOptions> = {
 /**
  * Adds files using glob filtering
  */
-async function getFilesFromGlob(folderPath: string, site: ParsedSite): Promise<string[]> {
+async function getFilesFromGlob(folderPath: string, site: ParsedSite, progress?: vscode.Progress<{ message?: string; increment?: number }>): Promise<string[]> {
     const zipDeployConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration(ext.prefix, vscode.Uri.file(folderPath));
     const globOptions = { cwd: folderPath, followSymbolicLinks: true, dot: true };
     const globPattern: string = zipDeployConfig.get<string>('zipGlobPattern') || '**/*';
@@ -106,7 +114,9 @@ async function getFilesFromGlob(folderPath: string, site: ParsedSite): Promise<s
             ignorePatternList = [ignorePatternList];
         }
         if (ignorePatternList.length > 0) {
-            ext.outputChannel.appendLog(vscode.l10n.t(`Ignoring files from \"{0}.{1}\"`, ext.prefix, zipIgnorePatternStr), { resourceName: site.fullName });
+            const ignoringFiles = vscode.l10n.t(`Ignoring files from \"{0}.{1}\"`, ext.prefix, zipIgnorePatternStr);
+            ext.outputChannel.appendLog(ignoringFiles, { resourceName: site.fullName });
+            progress?.report({ message: ignoringFiles });
             for (const pattern of ignorePatternList) {
                 ext.outputChannel.appendLine(`\"${pattern}\"`);
             }
