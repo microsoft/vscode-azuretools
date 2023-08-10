@@ -11,8 +11,6 @@ import { runWithZipStream } from "../../runWithZipStream";
 import { DeployZipBaseExecuteStep } from "./DeployZipBaseExecuteStep";
 
 export class DeployFlexExecuteStep extends DeployZipBaseExecuteStep {
-    public priority: number = 100;
-
     public async deployZip(context: InnerDeployContext): Promise<AzExtPipelineResponse | void> {
         const kuduClient = await context.site.createClient(context);
         const callback = async zipStream => {

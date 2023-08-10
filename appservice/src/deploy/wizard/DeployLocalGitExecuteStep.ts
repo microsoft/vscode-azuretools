@@ -8,7 +8,6 @@ import { localGitDeploy } from "../localGitDeploy";
 import { DeployExecuteBaseStep } from "./DeployExecuteBaseStep";
 
 export class DeployLocalGitExecuteStep extends DeployExecuteBaseStep {
-    public priority: number = 100;
     public async deployCore(context: InnerDeployContext): Promise<void> {
         await localGitDeploy(context.site, { fsPath: context.workspaceFolder.uri.fsPath }, context);
     }
