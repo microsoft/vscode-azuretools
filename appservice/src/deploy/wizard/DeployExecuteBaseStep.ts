@@ -22,7 +22,7 @@ export abstract class DeployExecuteBaseStep extends AzureWizardExecuteStep<Inner
         const config: SiteConfigResource = await client.getSiteConfig();
         // We use the AppServicePlan in a few places, but we don't want to delay deployment, so start the promise now and save as a const
         try {
-            await setDeploymentTelemetry(context, config, this.aspPromise);
+            await setDeploymentTelemetry(context, config, context.aspPromise);
         } catch (error) {
             // Ignore
         }
