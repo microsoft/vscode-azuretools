@@ -31,16 +31,16 @@
         "package": "npm pack"
     },
     "dependencies": {
-        "@microsoft/vscode-azext-utils": "^2.0.0",
+        "@azure/arm-servicelinker": "^2.1.0",
         "@microsoft/vscode-azext-azureutils": "^2.0.0",
-        "@azure/arm-servicelinker" : "^2.1.0"
+        "@microsoft/vscode-azext-utils": "2.0.5"
     },
     "devDependencies": {
+        "@microsoft/eslint-config-azuretools": "^0.2.0",
         "@types/mocha": "^9.0.0",
         "@types/node": "^16.0.0",
         "@types/vscode": "1.76.0",
         "@typescript-eslint/eslint-plugin": "^5.53.0",
-        "@microsoft/eslint-config-azuretools": "^0.2.0",
         "@vscode/test-electron": "^2.1.5",
         "eslint": "^8.34.0",
         "eslint-plugin-import": "^2.22.1",
