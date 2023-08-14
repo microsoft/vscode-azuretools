@@ -5,7 +5,7 @@
 
 import { InnerDeployContext } from "../IDeployContext";
 import { localGitDeploy } from "../localGitDeploy";
-import { DeployExecuteBaseStep } from "./DeployExecuteStepBase";
+import { DeployExecuteBaseStep } from "./DeployExecuteBaseStep";
 
 export class DeployLocalGitExecuteStep extends DeployExecuteBaseStep {
     public async deployCore(context: InnerDeployContext): Promise<void> {
