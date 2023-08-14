@@ -5,7 +5,7 @@
 
 import { l10n } from "vscode";
 import { InnerDeployContext } from "../IDeployContext";
-import { DeployExecuteBaseStep } from "./DeployExecuteStepBase";
+import { DeployExecuteBaseStep } from "./DeployExecuteBaseStep";
 
 export class DeployGitHubExecuteStep extends DeployExecuteBaseStep {
     public async deployCore(context: InnerDeployContext): Promise<void> {
