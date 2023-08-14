@@ -18,7 +18,7 @@ export async function deploy(site: ParsedSite, fsPath: string, context: IDeployC
     const aspPromise: Promise<AppServicePlan | undefined> = client.getAppServicePlan();
 
     const innerContext: InnerDeployContext = Object.assign(context, { site, fsPath, client, aspPromise });
-    const title: string = l10n.t('Deploying to function app "{0}"', site.fullName);
+    const title: string = l10n.t('Deploying to app "{0}"', site.fullName);
     const executeSteps = await createDeployExecuteSteps(innerContext);
     const wizard: AzureWizard<InnerDeployContext> = new AzureWizard<InnerDeployContext>(innerContext, { executeSteps, title });
     innerContext.activityTitle = title;

@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { l10n } from "vscode";
 import { InnerDeployContext } from "../IDeployContext";
-import { localGitDeploy } from "../localGitDeploy";
 import { DeployExecuteBaseStep } from "./DeployExecuteStepBase";
 
-export class DeployLocalGitExecuteStep extends DeployExecuteBaseStep {
+export class DeployGitHubExecuteStep extends DeployExecuteBaseStep {
     public async deployCore(context: InnerDeployContext): Promise<void> {
-        await localGitDeploy(context.site, { fsPath: context.workspaceFolder.uri.fsPath }, context);
+        throw new Error(l10n.t('"{0}" is connected to a GitHub repository. Push to GitHub repository to deploy.', context.site.fullName));
     }
 }

@@ -27,7 +27,7 @@ export async function runWithZipStream(context: IActionContext, options: {
     function onFileSize(size: number): void {
         context.telemetry.measurements.zipFileSize = size;
         const zipFileSize = vscode.l10n.t('Zip package size: {0}', prettybytes(size));
-        ext.outputChannel.appendLog(vscode.l10n.t('Zip package size: {0}', prettybytes(size)), { resourceName: site.fullName });
+        ext.outputChannel.appendLog(zipFileSize, { resourceName: site.fullName });
         options.progress?.report({ message: zipFileSize });
     }
 

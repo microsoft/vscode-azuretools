@@ -7,7 +7,7 @@ import { AzExtPipelineResponse } from "@microsoft/vscode-azext-azureutils";
 import { AzExtFsExtra } from "@microsoft/vscode-azext-utils";
 import { l10n } from "vscode";
 import { InnerDeployContext } from "../../IDeployContext";
-import { DeployExecuteBaseStep } from "../DeployExecuteBaseStep";
+import { DeployExecuteBaseStep } from "../DeployExecuteStepBase";
 
 
 export abstract class DeployZipBaseExecuteStep extends DeployExecuteBaseStep {
