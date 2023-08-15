@@ -45,6 +45,8 @@ export function connectionIconPath(linker: LinkerResource): string {
             return 'PostgresServer';
         } else if (id.includes('Microsoft.DocumentDB')) {
             return 'CosmosDBAccount';
+        } else if (id.includes('Microsoft.KeyVault')) {
+            return 'KeyVault';
         }
     }
 
