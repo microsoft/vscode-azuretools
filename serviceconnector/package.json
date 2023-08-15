@@ -33,7 +33,7 @@
     "dependencies": {
         "@azure/arm-servicelinker": "^2.1.0",
         "@microsoft/vscode-azext-azureutils": "^2.0.0",
-        "@microsoft/vscode-azext-utils": "2.0.5"
+        "@microsoft/vscode-azext-utils": "^2.0.5"
     },
     "devDependencies": {
         "@microsoft/eslint-config-azuretools": "^0.2.0",
