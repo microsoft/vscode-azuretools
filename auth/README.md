@@ -2,7 +2,7 @@
 
 [![Build Status](https://dev.azure.com/ms-azuretools/AzCode/_apis/build/status/vscode-azuretools)](https://dev.azure.com/ms-azuretools/AzCode/_build/latest?definitionId=17)
 
-This package provides a simple way to authenticate to Azure and receive Azure subscription information.
+This package provides a simple way to authenticate to Azure and receive Azure subscription information. It uses the [built-in Microsoft Authentication extension](https://github.com/microsoft/vscode/tree/main/extensions/microsoft-authentication) and does not rely on the [Azure Account extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.azure-account) in any way.
 
 ## Azure Subscription Provider
 
