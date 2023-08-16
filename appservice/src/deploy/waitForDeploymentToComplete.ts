@@ -129,74 +129,74 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
             await delay(pollingInterval);
         }
     }
+}
 
-    async function tryGetLatestDeployment(context: IActionContext, kuduClient: SiteClient, permanentId: string | undefined, initialStartTime: Date | undefined, expectedId?: string): Promise<[KuduModels.DeployResult | undefined, string | undefined, Date | undefined]> {
-        let deployment: KuduModels.DeployResult | undefined;
+async function tryGetLatestDeployment(context: IActionContext, kuduClient: SiteClient, permanentId: string | undefined, initialStartTime: Date | undefined, expectedId?: string): Promise<[KuduModels.DeployResult | undefined, string | undefined, Date | undefined]> {
+    let deployment: KuduModels.DeployResult | undefined;
 
-        if (permanentId) {
-            // Use "permanentId" to find the deployment during its "permanent" phase
-            deployment = await retryKuduCall(context, 'getResult', async () => {
-                return await kuduClient.getDeployResult(context, nonNullValue(permanentId));
+    if (permanentId) {
+        // Use "permanentId" to find the deployment during its "permanent" phase
+        deployment = await retryKuduCall(context, 'getResult', async () => {
+            return await kuduClient.getDeployResult(context, nonNullValue(permanentId));
+        });
+    } else if (expectedId) {
+        // if we have a "expectedId" we know which deployment we are looking for, so wait until latest id reflects that
+        try {
+            const latestDeployment: KuduModels.DeployResult = await retryKuduCall(context, 'getResult', async () => {
+                return await kuduClient.getDeployResult(context, 'latest');
             });
-        } else if (expectedId) {
-            // if we have a "expectedId" we know which deployment we are looking for, so wait until latest id reflects that
-            try {
-                const latestDeployment: KuduModels.DeployResult = await retryKuduCall(context, 'getResult', async () => {
-                    return await kuduClient.getDeployResult(context, 'latest');
-                });
-                // if the latest deployment is temp, then a deployment has triggered so we should watch it even if it doesn't match the expectedId
-                if (latestDeployment.isTemp) {
-                    deployment = latestDeployment;
-                } else if (latestDeployment.id === expectedId) {
-                    deployment = latestDeployment;
-                    permanentId = latestDeployment.id;
-                } else if (!latestDeployment.status) {
-                    // it is possible that the Kudu instance gets recycled in which case, the response of calling latest would be an empty {}
-                    throw new Error(l10n.t('Failed to retrieve deployment status.'));
-                }
-            } catch (error) {
-                const parsedError: IParsedError = parseError(error);
-                // swallow 404 error since "latest" might not exist on the first deployment
-                if (parsedError.errorType !== '404') {
-                    throw parsedError;
-                }
+            // if the latest deployment is temp, then a deployment has triggered so we should watch it even if it doesn't match the expectedId
+            if (latestDeployment.isTemp) {
+                deployment = latestDeployment;
+            } else if (latestDeployment.id === expectedId) {
+                deployment = latestDeployment;
+                permanentId = latestDeployment.id;
+            } else if (!latestDeployment.status) {
+                // it is possible that the Kudu instance gets recycled in which case, the response of calling latest would be an empty {}
+                throw new Error(l10n.t('Failed to retrieve deployment status.'));
             }
-        } else if (initialStartTime) {
-            // Use "initialReceivedTime" to find the deployment during its "temp" phase
-            const deployments: KuduModels.DeployResult[] = await retryKuduCall(context, 'getDeployResults', async () => {
-                return await kuduClient.getDeployResults(context);
-            });
-            deployment = deployments
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                .filter(deployResult => deployResult.startTime && deployResult.startTime >= initialStartTime!)
-                .sort((a, b) => nonNullProp(b, 'startTime').valueOf() - nonNullProp(a, 'startTime').valueOf())
-                .shift();
-            if (deployment && !deployment.isTemp) {
-                // Make note of the id once the deplyoment has shifted to the "permanent" phase, so that we can use that to find the deployment going forward
-                permanentId = deployment.id;
-            }
-        } else {
-            // Use "latest" to get the deployment before we know the "initialReceivedTime" or "permanentId"
-            try {
-                deployment = await retryKuduCall(context, 'getResult', async () => {
-                    return await kuduClient.getDeployResult(context, 'latest');
-                });
-            } catch (error) {
-                const parsedError: IParsedError = parseError(error);
-                // swallow 404 error since "latest" might not exist on the first deployment
-                if (parsedError.errorType !== '404') {
-                    throw error;
-                }
-            }
-            if (deployment && deployment.startTime) {
-                // Make note of the startTime because that is when kudu has began the deployment process,
-                // so that we can use that to find the deployment going forward
-                initialStartTime = deployment.startTime;
+        } catch (error) {
+            const parsedError: IParsedError = parseError(error);
+            // swallow 404 error since "latest" might not exist on the first deployment
+            if (parsedError.errorType !== '404') {
+                throw parsedError;
             }
         }
-
-        return [deployment, permanentId, initialStartTime];
+    } else if (initialStartTime) {
+        // Use "initialReceivedTime" to find the deployment during its "temp" phase
+        const deployments: KuduModels.DeployResult[] = await retryKuduCall(context, 'getDeployResults', async () => {
+            return await kuduClient.getDeployResults(context);
+        });
+        deployment = deployments
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            .filter(deployResult => deployResult.startTime && deployResult.startTime >= initialStartTime!)
+            .sort((a, b) => nonNullProp(b, 'startTime').valueOf() - nonNullProp(a, 'startTime').valueOf())
+            .shift();
+        if (deployment && !deployment.isTemp) {
+            // Make note of the id once the deplyoment has shifted to the "permanent" phase, so that we can use that to find the deployment going forward
+            permanentId = deployment.id;
+        }
+    } else {
+        // Use "latest" to get the deployment before we know the "initialReceivedTime" or "permanentId"
+        try {
+            deployment = await retryKuduCall(context, 'getResult', async () => {
+                return await kuduClient.getDeployResult(context, 'latest');
+            });
+        } catch (error) {
+            const parsedError: IParsedError = parseError(error);
+            // swallow 404 error since "latest" might not exist on the first deployment
+            if (parsedError.errorType !== '404') {
+                throw error;
+            }
+        }
+        if (deployment && deployment.startTime) {
+            // Make note of the startTime because that is when kudu has began the deployment process,
+            // so that we can use that to find the deployment going forward
+            initialStartTime = deployment.startTime;
+        }
     }
+
+    return [deployment, permanentId, initialStartTime];
 }
 
 /**
