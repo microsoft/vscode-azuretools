@@ -33,5 +33,7 @@ extends:
         working_directory: eslint-config-azuretools
       - name: github
         working_directory: github
+      - name: serviceconnector
+        working_directory: serviceconnector
       - name: utils
         working_directory: utils
