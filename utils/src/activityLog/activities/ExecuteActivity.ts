@@ -27,7 +27,11 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
         const resourceId: string | undefined = typeof activityResult === 'string' ? activityResult : activityResult?.id;
         return {
             label: this.label,
-            getChildren: activityResult ? ((parent: AzExtParentTreeItem) => {
+            getChildren: activityResult || this.context.activityChildren ? ((parent: AzExtParentTreeItem) => {
+
+                if (this.context.activityChildren) {
+                    return this.context.activityChildren.reverse();
+                }
 
                 const ti = new GenericTreeItem(parent, {
                     contextValue: 'executeResult',
@@ -47,6 +51,9 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
         return {
             label: this.label,
             getChildren: (parent: AzExtParentTreeItem) => {
+                if (this.context.activityChildren) {
+                    return this.context.activityChildren.reverse();
+                }
                 return [
                     new GenericTreeItem(parent, {
                         contextValue: 'executeError',

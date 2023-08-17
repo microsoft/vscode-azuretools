@@ -7,7 +7,9 @@ import { INewStorageAccountDefaults, StorageAccountKind, StorageAccountListStep,
 import { AzureWizardPromptStep, IAzureQuickPickItem, IWizardOptions } from "@microsoft/vscode-azext-utils";
 import * as vscode from 'vscode';
 import { TargetServiceType, TargetServiceTypeName } from "../../constants";
+import { CosmosDBAccountListStep } from "./CosmosDBAccountListStep";
 import { ICreateLinkerContext } from "./ICreateLinkerContext";
+import { KeyVaultListStep } from "./KeyVaultListStep";
 
 export class TargetServiceListStep extends AzureWizardPromptStep<ICreateLinkerContext>{
     public async prompt(context: ICreateLinkerContext): Promise<void> {
@@ -17,6 +19,8 @@ export class TargetServiceListStep extends AzureWizardPromptStep<ICreateLinkerCo
             { label: vscode.l10n.t('Queue'), data: { name: "storageQueue", type: TargetServiceTypeName.Storage, id: '/queueServices/default' }, group: TargetServiceTypeName.Storage },
             { label: vscode.l10n.t('Table'), data: { name: "storageTable", type: TargetServiceTypeName.Storage, id: '/tableServices/default' }, group: TargetServiceTypeName.Storage },
             { label: vscode.l10n.t('File'), data: { name: "storageFile", type: TargetServiceTypeName.Storage, id: '/fileServices/default' }, group: TargetServiceTypeName.Storage },
+            { label: vscode.l10n.t('CosmosDB'), data: { name: "cosmosDB", type: TargetServiceTypeName.CosmosDB, id: '/databases' }, group: TargetServiceTypeName.CosmosDB },
+            { label: vscode.l10n.t('Key Vault'), data: { name: "keyVault", type: TargetServiceTypeName.KeyVault, id: '/keyVault' }, group: TargetServiceTypeName.KeyVault },
         ];
 
         context.targetServiceType = (await context.ui.showQuickPick(picks, { placeHolder, enableGrouping: true })).data
@@ -39,7 +43,11 @@ export class TargetServiceListStep extends AzureWizardPromptStep<ICreateLinkerCo
             case TargetServiceTypeName.Storage:
                 promptSteps.push(new StorageAccountListStep(storageAccountCreateOptions));
                 break;
-            //case for each database type
+            case TargetServiceTypeName.CosmosDB:
+                promptSteps.push(new CosmosDBAccountListStep());
+                break;
+            case TargetServiceTypeName.KeyVault:
+                promptSteps.push(new KeyVaultListStep());
         }
         return { promptSteps };
     }

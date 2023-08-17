@@ -4,11 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AbortController } from '@azure/abort-controller';
-import type { User } from '@azure/arm-appservice';
 import { ServiceClient } from '@azure/core-client';
-import { createPipelineRequest } from "@azure/core-rest-pipeline";
-import { AzExtPipelineResponse, addBasicAuthenticationCredentialsToClient, createGenericClient } from '@microsoft/vscode-azext-azureutils';
-import { IActionContext, callWithTelemetryAndErrorHandling, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
+import { createHttpHeaders, createPipelineRequest } from "@azure/core-rest-pipeline";
+import { AzExtPipelineResponse, createGenericClient } from '@microsoft/vscode-azext-azureutils';
+import { IActionContext, callWithTelemetryAndErrorHandling, parseError } from '@microsoft/vscode-azext-utils';
 import { setInterval } from 'timers';
 import * as vscode from 'vscode';
 import { ParsedSite } from './SiteClient';
@@ -41,8 +40,8 @@ export async function startStreamingLogs(context: IActionContext, site: ParsedSi
         outputChannel.show();
         outputChannel.appendLine(vscode.l10n.t('Connecting to log stream...'));
 
-        const client = await site.createClient(context);
-        const creds: User = await client.getWebAppPublishCredential();
+        const credentials = site.subscription.credentials;
+        const bearerToken = (await credentials.getToken() as { token: string }).token;
 
         return await new Promise((onLogStreamCreated: (ls: ILogStream) => void): void => {
             // Intentionally setting up a separate telemetry event and not awaiting the result here since log stream is a long-running action
@@ -59,13 +58,15 @@ export async function startStreamingLogs(context: IActionContext, site: ParsedSi
 
                 const genericClient: ServiceClient = await createGenericClient(streamContext, undefined);
 
-                addBasicAuthenticationCredentialsToClient(genericClient, nonNullProp(creds, 'publishingUserName'), nonNullProp(creds, 'publishingPassword'));
-                const abortController: AbortController = new AbortController();
 
+                const abortController: AbortController = new AbortController();
+                const headers = createHttpHeaders({ Authorization: `Bearer ${bearerToken}` });
                 const logsResponse: AzExtPipelineResponse = await genericClient.sendRequest(createPipelineRequest({
+                    headers,
                     method: 'GET',
                     url: `${site.kuduUrl}/api/logstream/${logsPath}`,
-                    abortSignal: abortController.signal
+                    abortSignal: abortController.signal,
+                    streamResponseStatusCodes: new Set([200, 206])
                 }));
 
                 await new Promise<void>((onLogStreamEnded: () => void, reject: (err: Error) => void): void => {

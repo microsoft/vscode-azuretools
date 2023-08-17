@@ -6,7 +6,7 @@
 import { AzExtParentTreeItem, AzExtTreeItem, createContextValue, GenericTreeItem, IActionContext, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
 import { l10n, ThemeIcon } from 'vscode';
 import { ParsedSite } from '../SiteClient';
-import { ISiteFileMetadata, listFiles } from '../siteFiles';
+import { createSiteFilesUrl, ISiteFileMetadata, listFiles } from '../siteFiles';
 import { FileTreeItem } from './FileTreeItem';
 
 export interface FolderTreeItemOptions {
@@ -59,13 +59,14 @@ export class FolderTreeItem extends AzExtParentTreeItem {
         // this file is being accessed by Kudu and is not viewable
         files = files.filter(f => f.mime !== 'text/xml' || !f.name.includes('LogFiles-kudu-trace_pending.xml'));
         return files.map(file => {
+            const url = this.site.isFunctionApp ? createSiteFilesUrl(this.site, file.path) : file.href;
             return file.mime === 'inode/directory' ? new FolderTreeItem(this, {
                 site: this.site,
                 label: file.name,
                 isReadOnly: this.isReadOnly,
-                url: file.href,
+                url,
                 contextValuesToAdd: this.contextValuesToAdd
-            }) : new FileTreeItem(this, this.site, file.name, file.href, this.isReadOnly);
+            }) : new FileTreeItem(this, this.site, file.name, url, this.isReadOnly);
         });
     }
 

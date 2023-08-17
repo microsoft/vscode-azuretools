@@ -7,10 +7,9 @@ import * as types from '../../../index';
 import * as vscode from 'vscode';
 import { RecursiveQuickPickStep } from '../contextValue/RecursiveQuickPickStep';
 import { AzureWizardPromptStep } from '../../wizard/AzureWizardPromptStep';
-import { ResourceGroupsItem } from '../quickPickAzureResource/tempTypes';
 import { runQuickPickWizard } from '../runQuickPickWizard';
 
-export async function contextValueExperience<TPick>(context: types.IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, contextValueFilter: types.ContextValueFilter): Promise<TPick> {
+export async function contextValueExperience<TPick>(context: types.IActionContext, tdp: vscode.TreeDataProvider<unknown>, contextValueFilter: types.ContextValueFilter): Promise<TPick> {
     const promptSteps: AzureWizardPromptStep<types.QuickPickWizardContext>[] = [
         new RecursiveQuickPickStep(tdp, {
             contextValueFilter: contextValueFilter,

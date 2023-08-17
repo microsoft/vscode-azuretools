@@ -65,10 +65,10 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      */
     public async getSubscriptions(filter: boolean = true): Promise<AzureSubscription[]> {
         const tenantIds = await this.getTenantFilters();
-        const tenantFilterNormalized = filter && !!tenantIds.length; // If the list is empty it is treated as "no filter"
+        const shouldFilterTenants = filter && !!tenantIds.length; // If the list is empty it is treated as "no filter"
 
         const subscriptionIds = await this.getSubscriptionFilters();
-        const subscriptionFilterNormalized = filter && !!subscriptionIds.length; // If the list is empty it is treated as "no filter"
+        const shouldFilterSubscriptions = filter && !!subscriptionIds.length; // If the list is empty it is treated as "no filter"
 
         const results: AzureSubscription[] = [];
 
@@ -81,14 +81,14 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
                 const tenantId = tenant.tenantId!;
 
                 // If filtering is enabled, and the current tenant is not in that list, then skip it
-                if (tenantFilterNormalized && !tenantIds.includes(tenantId)) {
+                if (shouldFilterTenants && !tenantIds.includes(tenantId)) {
                     continue;
                 }
 
                 // For each tenant, get the list of subscriptions
                 for (const subscription of await this.getSubscriptionsForTenant(tenantId)) {
                     // If filtering is enabled, and the current subscription is not in that list, then skip it
-                    if (subscriptionFilterNormalized && !subscriptionIds.includes(subscription.subscriptionId)) {
+                    if (shouldFilterSubscriptions && !subscriptionIds.includes(subscription.subscriptionId)) {
                         continue;
                     }
 
@@ -99,7 +99,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
             this.suppressSignInEvents = false;
         }
 
-        return results;
+        return results.sort((a, b) => a.name.localeCompare(b.name));
     }
 
     /**
@@ -233,7 +233,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
 
         const credential: TokenCredential = {
             getToken: async (scopes) => {
-                // TODO: change to `getSessions` when that API is available: https://github.com/microsoft/vscode/issues/152399
+                // TODO: if possible, change to `getSessions` when that API is available: https://github.com/microsoft/vscode/issues/152399
                 session = await vscode.authentication.getSession(getConfiguredAuthProviderId(), this.getScopes(scopes, tenantId), { createIfNone: false, silent: true });
                 if (!session) {
                     throw new NotSignedInError();
@@ -266,10 +266,11 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
     private getScopes(scopes: string | string[] | undefined, tenantId?: string): string[] {
         const scopeSet = new Set<string>(this.getDefaultScopes());
 
-        if (typeof scopes === 'string') {
+        // If `.default` is passed in, it will be ignored, in favor of the correct default added by `getDefaultScopes`
+        if (typeof scopes === 'string' && scopes !== '.default') {
             scopeSet.add(scopes);
         } else if (Array.isArray(scopes)) {
-            scopes.forEach(scope => scopeSet.add(scope));
+            scopes.filter(scope => scope !== '.default').forEach(scope => scopeSet.add(scope));
         }
 
         if (tenantId) {

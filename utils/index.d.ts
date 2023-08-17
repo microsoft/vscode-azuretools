@@ -1148,6 +1148,11 @@ export declare interface ExecuteActivityContext {
      * The activity implementation to use, defaults to ExecuteActivity
      */
     wizardActivity?: new <TContext extends ExecuteActivityContext>(context: TContext, task: ActivityTask<void>) => ExecuteActivity;
+
+    /**
+     * Children to show under the activity tree item. Children only appear once the activity is done.
+     */
+    activityChildren?: AzExtTreeItem[];
 }
 
 export declare abstract class AzureWizardExecuteStep<T extends IActionContext> {
@@ -1564,6 +1569,10 @@ export declare namespace AzExtFsExtra {
     export function ensureFile(resource: Uri | string): Promise<void>;
     export function readFile(resource: Uri | string): Promise<string>;
     export function writeFile(resource: Uri | string, contents: string): Promise<void>;
+    /**
+     * @param separator By default, will append "\r\n\r\n" between existing content and new content to be appended
+     */
+    export function appendFile(resource: Uri | string, contents: string, separator?: string): Promise<void>;
     export function pathExists(resource: Uri | string): Promise<boolean>;
     export function readJSON<T>(resource: Uri | string): Promise<T>
     /**
@@ -1705,13 +1714,13 @@ export declare function subscriptionExperience(context: IActionContext, tdp: Tre
 export declare function azureResourceExperience<TPick extends unknown>(context: PickExperienceContext, tdp: TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: ContextValueFilter): Promise<TPick>;
 
 /**
- * Recursively prompts the user to pick a node until a node is packed matching the context value filter.
+ * Recursively prompts the user to pick a node until a node is picked matching the context value filter.
  *
  * @param context The action context
  * @param tdp tree data provider to pick a node from
  * @param contextValueFilter the context value filter used to match the deesired node(s)
  */
-export declare function contextValueExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, contextValueFilter: ContextValueFilter): Promise<TPick>;
+export declare function contextValueExperience<TPick extends unknown>(context: IActionContext, tdp: TreeDataProvider<unknown>, contextValueFilter: ContextValueFilter): Promise<TPick>;
 
 interface CompatibilityPickResourceExperienceOptions {
     resourceTypes?: AzExtResourceType | AzExtResourceType[];
