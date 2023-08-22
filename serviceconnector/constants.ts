@@ -10,8 +10,8 @@ export type TargetServiceType = {
 }
 
 export enum TargetServiceTypeName {
-    Storage = 'storage',
-    CosmosDB = 'cosmosDB',
-    KeyVault = 'keyvault',
+    Storage = 'Storage',
+    CosmosDB = 'Cosmos DB',
+    KeyVault = 'Key Vault',
 }
 
