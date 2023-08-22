@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-serviceconnector",
     "author": "Microsoft Corporation",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "Tools surrounding Service Connector for the Azure VS Code extensions",
     "tags": [
         "azure",
