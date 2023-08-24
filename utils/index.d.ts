@@ -1654,14 +1654,6 @@ export declare class DeleteConfirmationStep extends AzureWizardPromptStep<IActio
 export function createContextValue(values: string[]): string;
 
 /**
- * Gets a normalized type for an Azure resource, accounting for the fact that some
- * Azure resources share values for type and/or kind
- * @param resource The resource to check the {@link AzExtResourceType} for
- * @returns The normalized Azure resource type
- */
-export declare function getAzExtResourceType(resource: { type: string; kind?: string }): AzExtResourceType | undefined;
-
-/**
  * Gets the exported API from the given extension id and version range.
  *
  * @param extensionId The extension id to get the API from

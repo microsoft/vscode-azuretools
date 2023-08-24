@@ -14,7 +14,6 @@ export * from './DialogResponses';
 export * from './errors';
 export * from './extensionUserAgent';
 export { registerUIExtensionVariables } from './extensionVariables';
-export * from './getAzExtResourceType';
 export { addExtensionValueToMask, callWithMaskHandling, maskValue } from './masking';
 export * from './openReadOnlyContent';
 export * from './parseError';
