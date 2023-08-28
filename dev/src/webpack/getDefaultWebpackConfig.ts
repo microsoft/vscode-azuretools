@@ -61,6 +61,11 @@ export function getDefaultWebpackConfig(options: DefaultWebpackOptions): webpack
                     from: path.join(options.projectRoot, 'node_modules', '@microsoft', 'vscode-azext-azureutils', 'resources', '**', '*.svg'),
                     to: path.join(options.projectRoot, 'dist'),
                     noErrorOnMissing: true
+                },
+                {
+                    from: path.join(options.projectRoot, 'node_modules', '@microsoft', 'vscode-azext-serviceconnector', 'resources', '**', '*.svg'),
+                    to: path.join(options.projectRoot, 'dist'),
+                    noErrorOnMissing: true
                 }
             ]
         }),
