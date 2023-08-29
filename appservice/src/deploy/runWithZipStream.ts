@@ -133,7 +133,6 @@ async function getFilesFromGitignore(folderPath: string, gitignoreName: string):
     }
 
     return await globby('**/*', {
-        gitignore: true,
         // We can replace this option and the above logic with `ignoreFiles` if we upgrade to globby^13 (ESM)
         // see https://github.com/sindresorhus/globby#ignorefiles
         ignore,
