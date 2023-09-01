@@ -13,8 +13,8 @@ export class DeleteLinkerStep extends AzureWizardExecuteStep<IPickLinkerContext>
     public async execute(context: IPickLinkerContext): Promise<void> {
         const client = await createLinkerClient(context.credentials);
         const config = await client.linker.listConfigurations(nonNullValue(context.sourceResourceUri), nonNullValue(context.linkerName));
-        context.activityChildren = [];
 
+        context.activityChildren = [];
         for (const item of nonNullProp(config, 'configurations')) {
             context.activityChildren.push(new GenericTreeItem(undefined, {
                 contextValue: `createResult-` + randomUtils.getRandomHexString(3),
