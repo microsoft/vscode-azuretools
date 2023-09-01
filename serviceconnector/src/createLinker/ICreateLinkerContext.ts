@@ -4,12 +4,12 @@
 *--------------------------------------------------------------------------------------------*/
 import { AuthInfoBase, KnownClientType, LinkerResource } from "@azure/arm-servicelinker";
 import { IStorageAccountWizardContext } from "@microsoft/vscode-azext-azureutils";
-import { ISubscriptionActionContext } from "@microsoft/vscode-azext-utils";
+import { ExecuteActivityContext, ISubscriptionActionContext } from "@microsoft/vscode-azext-utils";
 import { TargetServiceType } from "../../constants";
 import { DatabaseAccountJsonResponse } from "./CosmosDBAccountListStep";
 import { KeyVaultAccountJsonResponse } from "./KeyVaultListStep";
 
-export interface ICreateLinkerContext extends ISubscriptionActionContext, IStorageAccountWizardContext {
+export interface ICreateLinkerContext extends ISubscriptionActionContext, IStorageAccountWizardContext, ExecuteActivityContext {
     //Source resource
     sourceResourceUri?: string;
     /** This is only assigned when the source resource is a container app to indicate which container is being connected */
