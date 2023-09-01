@@ -14,7 +14,7 @@ export class ServiceConnectorTreeItem extends AzExtTreeItem {
     public readonly linker: LinkerResource;
     public readonly item: AzExtTreeItem;
 
-    constructor(linker: LinkerResource, parent: AzExtParentTreeItem, public readonly contextValuesToAdd: string[]) {
+    constructor(linker: LinkerResource, parent: AzExtParentTreeItem, private readonly contextValuesToAdd: string[]) {
         super(parent);
         this.linker = linker;
         this.item = parent;

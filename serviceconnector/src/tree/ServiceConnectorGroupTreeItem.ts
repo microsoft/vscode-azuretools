@@ -10,7 +10,7 @@ import { getIconPath } from "./IconPath";
 import { ServiceConnectorTreeItem } from "./ServiceConnectorTreeItem";
 
 export class ServiceConnectorGroupTreeItem extends AzExtParentTreeItem {
-    constructor(parent: AzExtParentTreeItem, public readonly resourceId: string, public readonly contextValuesToAdd: string[]) {
+    constructor(parent: AzExtParentTreeItem, public readonly resourceId: string, private readonly contextValuesToAdd: string[]) {
         super(parent);
     }
 
