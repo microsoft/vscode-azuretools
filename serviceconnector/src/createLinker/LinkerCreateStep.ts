@@ -3,7 +3,7 @@
 *  Licensed under the MIT License. See License.md in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { AzureWizardExecuteStep, nonNullValue } from "@microsoft/vscode-azext-utils";
+import { AzureWizardExecuteStep, GenericTreeItem, nonNullProp, nonNullValue, randomUtils } from "@microsoft/vscode-azext-utils";
 import * as vscode from 'vscode';
 import { TargetServiceTypeName } from "../../constants";
 import { createLinkerClient } from "../linkerClient";
@@ -26,6 +26,16 @@ export class LinkerCreateStep extends AzureWizardExecuteStep<ICreateLinkerContex
         };
 
         await client.linker.beginCreateOrUpdateAndWait(nonNullValue(context.sourceResourceUri), nonNullValue(context.linkerName), context.linker);
+        const config = await client.linker.listConfigurations(nonNullValue(context.sourceResourceUri), nonNullValue(context.linkerName));
+
+        context.activityChildren = [];
+        for (const item of nonNullProp(config, 'configurations')) {
+            context.activityChildren.push(new GenericTreeItem(undefined, {
+                contextValue: `createResult-` + randomUtils.getRandomHexString(3),
+                label: `Added application setting: ${nonNullProp(item, 'name')}`,
+
+            }));
+        }
     }
 
     public shouldExecute(context: ICreateLinkerContext): boolean {

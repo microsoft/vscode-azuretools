@@ -4,13 +4,13 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { uiUtils } from "@microsoft/vscode-azext-azureutils";
-import { AzExtParentTreeItem, AzExtTreeItem, TreeItemIconPath, nonNullValue } from "@microsoft/vscode-azext-utils";
+import { AzExtParentTreeItem, AzExtTreeItem, TreeItemIconPath, createContextValue, nonNullValue } from "@microsoft/vscode-azext-utils";
 import * as vscode from 'vscode';
 import { getIconPath } from "./IconPath";
 import { ServiceConnectorTreeItem } from "./ServiceConnectorTreeItem";
 
 export class ServiceConnectorGroupTreeItem extends AzExtParentTreeItem {
-    constructor(parent: AzExtParentTreeItem, public readonly resourceId: string) {
+    constructor(parent: AzExtParentTreeItem, public readonly resourceId: string, private readonly contextValuesToAdd: string[]) {
         super(parent);
     }
 
@@ -22,7 +22,7 @@ export class ServiceConnectorGroupTreeItem extends AzExtParentTreeItem {
             linkers,
             'invalidServiceConnector',
             l => {
-                return new ServiceConnectorTreeItem(l, this)
+                return new ServiceConnectorTreeItem(l, this, this.contextValuesToAdd)
             },
             l => {
                 return l.name;
@@ -48,6 +48,6 @@ export class ServiceConnectorGroupTreeItem extends AzExtParentTreeItem {
     }
 
     public get contextValue(): string {
-        return 'serviceConnectorGroupItem';
+        return createContextValue(['serviceConnectorGroupItem', ...this.contextValuesToAdd]);
     }
 }
