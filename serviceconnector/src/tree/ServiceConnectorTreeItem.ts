@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { LinkerResource } from "@azure/arm-servicelinker";
-import { AzExtParentTreeItem, AzExtTreeItem, TreeItemIconPath, nonNullValue } from "@microsoft/vscode-azext-utils";
+import { AzExtParentTreeItem, AzExtTreeItem, TreeItemIconPath, createContextValue, nonNullValue } from "@microsoft/vscode-azext-utils";
 import { ThemeIcon } from "vscode";
 import { getIconPath } from "./IconPath";
 import { connectionIconPath } from "./ServiceConnectorItem";
@@ -14,7 +14,7 @@ export class ServiceConnectorTreeItem extends AzExtTreeItem {
     public readonly linker: LinkerResource;
     public readonly item: AzExtTreeItem;
 
-    constructor(linker: LinkerResource, parent: AzExtParentTreeItem) {
+    constructor(linker: LinkerResource, parent: AzExtParentTreeItem, private readonly contextValuesToAdd: string[]) {
         super(parent);
         this.linker = linker;
         this.item = parent;
@@ -29,7 +29,7 @@ export class ServiceConnectorTreeItem extends AzExtTreeItem {
     }
 
     public get contextValue(): string {
-        return 'serviceConnectorItem';
+        return createContextValue(['serviceConnectorItem', ...this.contextValuesToAdd]);
     }
 
     public get iconPath(): TreeItemIconPath {
