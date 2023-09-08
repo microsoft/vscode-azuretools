@@ -13,7 +13,7 @@ export class LinkerCreateStep extends AzureWizardExecuteStep<ICreateLinkerContex
     public priority: number = 10;
 
     public async execute(context: ICreateLinkerContext): Promise<void> {
-        const client = await createLinkerClient(context.credentials);
+        const client = await createLinkerClient(context);
 
         context.linker = {
             authInfo: context.authType,
