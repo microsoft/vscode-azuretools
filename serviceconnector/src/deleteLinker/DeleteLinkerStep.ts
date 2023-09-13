@@ -3,7 +3,7 @@
 *  Licensed under the MIT License. See License.md in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { AzureWizardExecuteStep, GenericTreeItem, nonNullProp, nonNullValue, randomUtils } from "@microsoft/vscode-azext-utils";
+import { AzureWizardExecuteStep, GenericTreeItem, nonNullProp, randomUtils } from "@microsoft/vscode-azext-utils";
 import { createLinkerClient } from "../linkerClient";
 import { IPickLinkerContext } from "./IPickLinkerContext";
 
@@ -12,7 +12,7 @@ export class DeleteLinkerStep extends AzureWizardExecuteStep<IPickLinkerContext>
 
     public async execute(context: IPickLinkerContext): Promise<void> {
         const client = await createLinkerClient(context.credentials);
-        const config = await client.linker.listConfigurations(nonNullValue(context.sourceResourceUri), nonNullValue(context.linkerName));
+        const config = await client.linker.listConfigurations(nonNullProp(context, 'sourceResourceUri'), nonNullProp(context, 'linkerName'));
 
         context.activityChildren = [];
         for (const item of nonNullProp(config, 'configurations')) {
@@ -23,7 +23,7 @@ export class DeleteLinkerStep extends AzureWizardExecuteStep<IPickLinkerContext>
             }));
         }
 
-        await client.linker.beginDeleteAndWait(nonNullValue(context.sourceResourceUri), nonNullValue(context.linkerName));
+        await client.linker.beginDeleteAndWait(nonNullProp(context, 'sourceResourceUri'), nonNullProp(context, 'linkerName'));
     }
 
     public shouldExecute(): boolean {

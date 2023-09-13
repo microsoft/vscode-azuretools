@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { AzureResource, LinkerResource, TargetServiceBaseUnion } from "@azure/arm-servicelinker";
-import { ISubscriptionContext, TreeElementBase, nonNullValue } from "@microsoft/vscode-azext-utils";
+import { ISubscriptionContext, TreeElementBase, nonNullProp } from "@microsoft/vscode-azext-utils";
 import { ThemeIcon, TreeItem } from "vscode";
 import { LinkerItem } from "../createLinker/createLinker";
 import { getIconPath } from "./IconPath";
@@ -36,9 +36,9 @@ export function createServiceConnectorItem(subscription: ISubscriptionContext, i
 
 
 export function connectionIconPath(linker: LinkerResource): string {
-    const targetResource = nonNullValue(linker.targetService)
+    const targetResource = nonNullProp(linker, 'targetService')
     if (isAzureResource(targetResource)) {
-        const id: string = nonNullValue(targetResource.id)
+        const id: string = nonNullProp(targetResource, 'id')
         if (id.includes('Microsoft.Storage')) {
             return 'AzureStorageAccount';
         } else if (id.includes('Microsoft.DBforPostgreSQL')) {
