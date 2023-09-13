@@ -12,7 +12,7 @@ export class ValidateLinkerStep extends AzureWizardExecuteStep<IPickLinkerContex
     public priority: number = 10;
 
     public async execute(context: IPickLinkerContext): Promise<void> {
-        const client = await createLinkerClient(context.credentials);
+        const client = await createLinkerClient(context);
         const response = await client.linker.beginValidateAndWait(nonNullProp(context, 'sourceResourceUri'), nonNullProp(context, 'linkerName'));
 
         context.activityChildren = [];

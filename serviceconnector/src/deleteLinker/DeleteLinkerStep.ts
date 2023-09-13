@@ -11,7 +11,7 @@ export class DeleteLinkerStep extends AzureWizardExecuteStep<IPickLinkerContext>
     public priority: number = 10;
 
     public async execute(context: IPickLinkerContext): Promise<void> {
-        const client = await createLinkerClient(context.credentials);
+        const client = await createLinkerClient(context);
         const config = await client.linker.listConfigurations(nonNullProp(context, 'sourceResourceUri'), nonNullProp(context, 'linkerName'));
 
         context.activityChildren = [];
