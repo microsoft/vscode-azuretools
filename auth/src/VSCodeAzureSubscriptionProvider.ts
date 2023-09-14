@@ -85,6 +85,11 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
                     continue;
                 }
 
+                // If the user is not signed in to this tenant, then skip it
+                if (!(await this.isSignedIn(tenantId))) {
+                    continue;
+                }
+
                 // For each tenant, get the list of subscriptions
                 for (const subscription of await this.getSubscriptionsForTenant(tenantId)) {
                     // If filtering is enabled, and the current subscription is not in that list, then skip it
@@ -105,10 +110,12 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
     /**
      * Checks to see if a user is signed in.
      *
+     * @param tenantId (Optional) Provide to check if a user is signed in to a specific tenant.
+     *
      * @returns True if the user is signed in, false otherwise.
      */
-    public async isSignedIn(): Promise<boolean> {
-        const session = await vscode.authentication.getSession(getConfiguredAuthProviderId(), this.getDefaultScopes(), { createIfNone: false, silent: true });
+    public async isSignedIn(tenantId?: string): Promise<boolean> {
+        const session = await vscode.authentication.getSession(getConfiguredAuthProviderId(), this.getScopes([], tenantId), { createIfNone: false, silent: true });
         return !!session;
     }
 
