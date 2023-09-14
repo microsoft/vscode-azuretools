@@ -15,19 +15,20 @@ export class TargetServiceListStep extends AzureWizardPromptStep<ICreateLinkerCo
     public async prompt(context: ICreateLinkerContext): Promise<void> {
         const placeHolder = vscode.l10n.t('Select Target Service Type');
         const picks: IAzureQuickPickItem<TargetServiceType>[] = [
-            { label: vscode.l10n.t('Blob'), data: { name: "storageBlob", type: TargetServiceTypeName.Storage, id: '/blobServices/default', group: TargetServiceTypeName.Storage }, group: TargetServiceTypeName.Storage },
-            { label: vscode.l10n.t('Queue'), data: { name: "storageQueue", type: TargetServiceTypeName.Storage, id: '/queueServices/default', group: TargetServiceTypeName.Storage }, group: TargetServiceTypeName.Storage },
-            { label: vscode.l10n.t('Table'), data: { name: "storageTable", type: TargetServiceTypeName.Storage, id: '/tableServices/default', group: TargetServiceTypeName.Storage }, group: TargetServiceTypeName.Storage },
-            { label: vscode.l10n.t('File'), data: { name: "storageFile", type: TargetServiceTypeName.Storage, id: '/fileServices/default', group: TargetServiceTypeName.Storage }, group: TargetServiceTypeName.Storage },
-            { label: vscode.l10n.t('MongoDB'), data: { name: "mongodb", type: TargetServiceTypeName.MongoDB, id: '/databases', group: TargetServiceTypeName.CosmosDB }, group: TargetServiceTypeName.CosmosDB },
-            { label: vscode.l10n.t('Cassandra'), data: { name: "cassandra", type: TargetServiceTypeName.Cassandra, id: '/databases', group: TargetServiceTypeName.CosmosDB }, group: TargetServiceTypeName.CosmosDB },
-            { label: vscode.l10n.t('Apache Gremlin'), data: { name: "gremlin", type: TargetServiceTypeName.Gremlin, id: '/databases', group: TargetServiceTypeName.CosmosDB }, group: TargetServiceTypeName.CosmosDB },
-            { label: vscode.l10n.t('NoSQL'), data: { name: "sql", type: TargetServiceTypeName.NoSQL, id: '/databases', group: TargetServiceTypeName.CosmosDB }, group: TargetServiceTypeName.CosmosDB },
-            { label: vscode.l10n.t('Table'), data: { name: "table", type: TargetServiceTypeName.Table, id: '/databases', group: TargetServiceTypeName.CosmosDB }, group: TargetServiceTypeName.CosmosDB },
-            { label: vscode.l10n.t('Key Vault'), data: { name: "keyVault", type: TargetServiceTypeName.KeyVault, id: '/keyVault', group: TargetServiceTypeName.KeyVault }, group: TargetServiceTypeName.KeyVault },
+            { label: vscode.l10n.t('Blob'), data: { name: "storageBlob", type: TargetServiceTypeName.Storage, id: '/blobServices/default' }, group: TargetServiceTypeName.Storage },
+            { label: vscode.l10n.t('Queue'), data: { name: "storageQueue", type: TargetServiceTypeName.Storage, id: '/queueServices/default' }, group: TargetServiceTypeName.Storage },
+            { label: vscode.l10n.t('Table'), data: { name: "storageTable", type: TargetServiceTypeName.Storage, id: '/tableServices/default' }, group: TargetServiceTypeName.Storage },
+            { label: vscode.l10n.t('File'), data: { name: "storageFile", type: TargetServiceTypeName.Storage, id: '/fileServices/default' }, group: TargetServiceTypeName.Storage },
+            { label: vscode.l10n.t('MongoDB'), data: { name: "mongodb", type: TargetServiceTypeName.MongoDB, id: '/databases' }, group: TargetServiceTypeName.CosmosDB },
+            { label: vscode.l10n.t('Cassandra'), data: { name: "cassandra", type: TargetServiceTypeName.Cassandra, id: '/databases' }, group: TargetServiceTypeName.CosmosDB },
+            { label: vscode.l10n.t('Apache Gremlin'), data: { name: "gremlin", type: TargetServiceTypeName.Gremlin, id: '/databases' }, group: TargetServiceTypeName.CosmosDB },
+            { label: vscode.l10n.t('NoSQL'), data: { name: "sql", type: TargetServiceTypeName.NoSQL, id: '/databases' }, group: TargetServiceTypeName.CosmosDB },
+            { label: vscode.l10n.t('Table'), data: { name: "table", type: TargetServiceTypeName.Table, id: '/databases' }, group: TargetServiceTypeName.CosmosDB },
+            { label: vscode.l10n.t('Key Vault'), data: { name: "keyVault", type: TargetServiceTypeName.KeyVault, id: '/keyVault' }, group: TargetServiceTypeName.KeyVault },
         ];
 
-        context.targetServiceType = (await context.ui.showQuickPick(picks, { placeHolder, enableGrouping: true })).data
+        context.targetService = (await context.ui.showQuickPick(picks, { placeHolder, enableGrouping: true }));
+        context.targetServiceType = context.targetService.data;
     }
 
     public shouldPrompt(context: ICreateLinkerContext): boolean {
@@ -43,7 +44,7 @@ export class TargetServiceListStep extends AzureWizardPromptStep<ICreateLinkerCo
             replication: StorageAccountReplication.LRS
         };
 
-        switch (context.targetServiceType?.group) {
+        switch (context.targetService?.group) {
             case TargetServiceTypeName.Storage:
                 promptSteps.push(new StorageAccountListStep(storageAccountCreateOptions));
                 break;

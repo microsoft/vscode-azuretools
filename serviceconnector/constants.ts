@@ -7,7 +7,6 @@ export type TargetServiceType = {
     name: string;
     id: string;
     type: TargetServiceTypeName;
-    group: TargetServiceTypeName;
 }
 
 export enum TargetServiceTypeName {
