@@ -10,7 +10,7 @@ import { createLinkerClient } from "../linkerClient";
 import { ICreateLinkerContext } from "./ICreateLinkerContext";
 
 export class LinkerCreateStep extends AzureWizardExecuteStep<ICreateLinkerContext>{
-    public priority: number = 10;
+    public priority: number = 850;
 
     public async execute(context: ICreateLinkerContext): Promise<void> {
         const client = await createLinkerClient(context);
