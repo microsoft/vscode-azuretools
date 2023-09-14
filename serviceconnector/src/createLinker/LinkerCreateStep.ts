@@ -25,7 +25,7 @@ export class LinkerCreateStep extends AzureWizardExecuteStep<ICreateLinkerContex
             clientType: context.clientType
         };
 
-        await client.linker.beginCreateOrUpdate(nonNullValue(context.sourceResourceUri), nonNullValue(context.linkerName), context.linker);
+        await client.linker.beginCreateOrUpdateAndWait(nonNullValue(context.sourceResourceUri), nonNullValue(context.linkerName), context.linker);
         const config = await client.linker.listConfigurations(nonNullValue(context.sourceResourceUri), nonNullValue(context.linkerName));
 
         context.activityChildren = [];
