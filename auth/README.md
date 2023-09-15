@@ -88,6 +88,12 @@ export declare function getConfiguredAzureEnv(): azureEnv.Environment & {
 export declare function setConfiguredAzureEnv(cloud: string | azureEnv.EnvironmentParameters, target?: vscode.ConfigurationTarget): Promise<void>;
 ```
 
+## Logs
+
+View the Microsoft Authentication extension logs by running the `Developer: Show Logs...` command from the VS Code command palette.
+
+Change the log level by running the `Developer: Set Log Level...` command from the VS Code command palette. Select `Microsoft Authentication` from the list of loggers and then select the desired log level.
+
 ## License
 
 [MIT](LICENSE.md)
