@@ -19,11 +19,16 @@ export class TargetServiceListStep extends AzureWizardPromptStep<ICreateLinkerCo
             { label: vscode.l10n.t('Queue'), data: { name: "storageQueue", type: TargetServiceTypeName.Storage, id: '/queueServices/default' }, group: TargetServiceTypeName.Storage },
             { label: vscode.l10n.t('Table'), data: { name: "storageTable", type: TargetServiceTypeName.Storage, id: '/tableServices/default' }, group: TargetServiceTypeName.Storage },
             { label: vscode.l10n.t('File'), data: { name: "storageFile", type: TargetServiceTypeName.Storage, id: '/fileServices/default' }, group: TargetServiceTypeName.Storage },
-            { label: vscode.l10n.t('CosmosDB'), data: { name: "cosmosDB", type: TargetServiceTypeName.CosmosDB, id: '/databases' }, group: TargetServiceTypeName.CosmosDB },
+            { label: vscode.l10n.t('MongoDB'), data: { name: "mongodb", type: TargetServiceTypeName.MongoDB, id: '/databases' }, group: TargetServiceTypeName.CosmosDB },
+            { label: vscode.l10n.t('Cassandra'), data: { name: "cassandra", type: TargetServiceTypeName.Cassandra, id: '/databases' }, group: TargetServiceTypeName.CosmosDB },
+            { label: vscode.l10n.t('Apache Gremlin'), data: { name: "gremlin", type: TargetServiceTypeName.Gremlin, id: '/databases' }, group: TargetServiceTypeName.CosmosDB },
+            { label: vscode.l10n.t('NoSQL'), data: { name: "sql", type: TargetServiceTypeName.NoSQL, id: '/databases' }, group: TargetServiceTypeName.CosmosDB },
+            { label: vscode.l10n.t('Table'), data: { name: "table", type: TargetServiceTypeName.Table, id: '/databases' }, group: TargetServiceTypeName.CosmosDB },
             { label: vscode.l10n.t('Key Vault'), data: { name: "keyVault", type: TargetServiceTypeName.KeyVault, id: '/keyVault' }, group: TargetServiceTypeName.KeyVault },
         ];
 
-        context.targetServiceType = (await context.ui.showQuickPick(picks, { placeHolder, enableGrouping: true })).data
+        context.targetService = (await context.ui.showQuickPick(picks, { placeHolder, enableGrouping: true }));
+        context.targetServiceType = context.targetService.data;
     }
 
     public shouldPrompt(context: ICreateLinkerContext): boolean {
@@ -39,7 +44,7 @@ export class TargetServiceListStep extends AzureWizardPromptStep<ICreateLinkerCo
             replication: StorageAccountReplication.LRS
         };
 
-        switch (context.targetServiceType?.type) {
+        switch (context.targetService?.group) {
             case TargetServiceTypeName.Storage:
                 promptSteps.push(new StorageAccountListStep(storageAccountCreateOptions));
                 break;

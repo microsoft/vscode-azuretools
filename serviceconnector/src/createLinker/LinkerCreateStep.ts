@@ -43,7 +43,7 @@ export class LinkerCreateStep extends AzureWizardExecuteStep<ICreateLinkerContex
     }
 
     private getSourceResourceId(context: ICreateLinkerContext): string {
-        switch (context.targetServiceType?.type) {
+        switch (context.targetService?.group) {
             case TargetServiceTypeName.Storage:
                 return nonNullValue(context.storageAccount?.id);
             case TargetServiceTypeName.CosmosDB:
