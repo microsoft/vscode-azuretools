@@ -54,7 +54,11 @@ suite("AzExtTreeFileSystem", function () {
     test("lookup finds shown item whose id is a valid query parameter", async function () {
         const mockAzExtTreeFileSystem = new MockAzExtTreeFileSystem();
         const id = "mock_id";
-        await mockAzExtTreeFileSystem.showTextDocument({ id: id });
+        try {
+            await mockAzExtTreeFileSystem.showTextDocument({ id: id });
+        } catch (error) {
+            // Ignore error. Only used showTextDocument to add the document to itemsCache.
+        }
         const uri: vscode.Uri = vscode.Uri.parse(`${mockAzExtTreeFileSystem.scheme}://mock_file_path?id=${id}`);
         const item = await mockAzExtTreeFileSystem.lookupPublic(mockContext, uri);
         assert.equal(item?.id, id);
@@ -63,7 +67,11 @@ suite("AzExtTreeFileSystem", function () {
     test("lookup finds shown item whose id contains ?", async function () {
         const mockAzExtTreeFileSystem = new MockAzExtTreeFileSystem();
         const id = "ZTA?AMGB????oaUBAAAAAAAAAA???";
-        await mockAzExtTreeFileSystem.showTextDocument({ id: id });
+        try {
+            await mockAzExtTreeFileSystem.showTextDocument({ id: id });
+        } catch (error) {
+            // Ignore error. Only used showTextDocument to add the document to itemsCache.
+        }
         const uri: vscode.Uri = vscode.Uri.parse(`${mockAzExtTreeFileSystem.scheme}://mock_file_path?id=${id}`);
         const item = await mockAzExtTreeFileSystem.lookupPublic(mockContext, uri);
         assert.equal(item?.id, id);
@@ -72,7 +80,11 @@ suite("AzExtTreeFileSystem", function () {
     test("lookup finds shown item whose id contains =", async function () {
         const mockAzExtTreeFileSystem = new MockAzExtTreeFileSystem();
         const id = "ZTA=AMGBoaUB===AAAAAAAAAA==";
-        await mockAzExtTreeFileSystem.showTextDocument({ id: id });
+        try {
+            await mockAzExtTreeFileSystem.showTextDocument({ id: id });
+        } catch (error) {
+            // Ignore error. Only used showTextDocument to add the document to itemsCache.
+        }
         const uri: vscode.Uri = vscode.Uri.parse(`${mockAzExtTreeFileSystem.scheme}://mock_file_path?id=${id}`);
         const item = await mockAzExtTreeFileSystem.lookupPublic(mockContext, uri);
         assert.equal(item?.id, id);
