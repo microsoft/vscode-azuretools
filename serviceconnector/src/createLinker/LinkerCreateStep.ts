@@ -3,7 +3,7 @@
 *  Licensed under the MIT License. See License.md in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { AzureWizardExecuteStep, GenericTreeItem, nonNullProp, randomUtils } from "@microsoft/vscode-azext-utils";
+import { AzureWizardExecuteStep, GenericTreeItem, nonNullProp, nonNullValueAndProp, randomUtils } from "@microsoft/vscode-azext-utils";
 import * as vscode from 'vscode';
 import { TargetServiceTypeName } from "../../constants";
 import { createLinkerClient } from "../linkerClient";
@@ -45,11 +45,11 @@ export class LinkerCreateStep extends AzureWizardExecuteStep<ICreateLinkerContex
     private getSourceResourceId(context: ICreateLinkerContext): string {
         switch (context.targetServiceType?.type) {
             case TargetServiceTypeName.Storage:
-                return nonNullProp(nonNullProp(context, 'storageAccount'), 'id');
+                return nonNullValueAndProp(context.storageAccount, 'id');
             case TargetServiceTypeName.CosmosDB:
-                return nonNullProp(nonNullProp(context, 'databaseAccount'), 'id');
+                return nonNullValueAndProp(context.databaseAccount, 'id');
             case TargetServiceTypeName.KeyVault:
-                return nonNullProp(nonNullProp(context, 'keyVaultAccount'), 'id');
+                return nonNullValueAndProp(context.keyVaultAccount, 'id');
             default:
                 throw new Error(vscode.l10n.t('No target type found'));
         }
