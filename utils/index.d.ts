@@ -1450,6 +1450,9 @@ export type AzExtItemUriParts = {
 };
 
 export interface AzExtTreeFileSystemItem {
+    /**
+     * Warning: the identifier cannot contain plus sign '+'. No matter if it's exactly '+' or if it's URL encoded "%2B".
+     */
     id: string;
     refresh?(context: IActionContext): Promise<void>;
 }

@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { parse as parseQuery, ParsedUrlQuery, stringify as stringifyQuery } from "querystring";
-import { Disposable, Event, EventEmitter, FileChangeEvent, FileStat, FileSystemError, FileSystemProvider, FileType, l10n, TextDocumentShowOptions, Uri, window } from "vscode";
+import { ParsedUrlQuery, parse as parseQuery, stringify as stringifyQuery } from "querystring";
+import { Disposable, Event, EventEmitter, FileChangeEvent, FileStat, FileSystemError, FileSystemProvider, FileType, TextDocumentShowOptions, Uri, l10n, window } from "vscode";
 import * as types from '../index';
 import { callWithTelemetryAndErrorHandling } from "./callWithTelemetryAndErrorHandling";
 import { nonNullProp } from "./utils/nonNull";
@@ -127,7 +127,7 @@ export abstract class AzExtTreeFileSystem<TItem extends types.AzExtTreeFileSyste
         return Uri.parse(`${this.scheme}:///${filePath}?${query}`);
     }
 
-    private async lookup(context: types.IActionContext, uri: Uri): Promise<TItem> {
+    protected async lookup(context: types.IActionContext, uri: Uri): Promise<TItem> {
         const item: TItem | undefined = this.findItem(this.getQueryFromUri(uri));
         if (!item) {
             context.telemetry.suppressAll = true;
