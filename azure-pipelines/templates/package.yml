@@ -22,3 +22,53 @@ steps:
       PathtoPublish: "$(build.artifactstagingdirectory)"
       ArtifactName: $(artifact_name)
     condition: and(eq(variables['Agent.OS'], 'Linux'), ne(variables['System.PullRequest.IsFork'], 'True'))
+
+  - task: AzureFileCopy@4
+    # If AzureFileCopy ever supports not using account keys we should consider making use of it.
+    # If we do, we should also consider moving to user delegatation SAS in the generate SAS step.
+    # See: https://github.com/microsoft/azure-pipelines-tasks/issues/15610
+    displayName: "Upload web to blob storage"
+    inputs:
+      SourcePath: "$(build.artifactstagingdirectory)/web/*"
+      # This is a service connection for the ADO project. Can be managed under ADO project settings.
+      azureSubscription: ms-azuretools-vscode-dot-dev-connection
+      Destination: AzureBlob
+      storage: $(WEB_BUILDS_STG_ACCT)
+      ContainerName: $(WEB_BUILDS_CONTAINER)
+      BlobPrefix: "$(build.definitionname)/$(build.buildnumber)"
+    # Only do steps for publishing web bits on Windows as AzureFileCopy is only supported on Windows
+    # See: https://github.com/microsoft/azure-pipelines-tasks/issues/8920
+    condition: and(eq(variables['Agent.OS'], 'Windows_NT'), ne(variables['System.PullRequest.IsFork'], 'True'), eq(variables['WEB_BUILDS_ENABLED'], true))
+
+  - task: AzureCLI@2
+    displayName: "Generate SAS to web"
+    inputs:
+      # This is a service connection for the ADO project. Can be managed under ADO project settings.
+      azureSubscription: ms-azuretools-vscode-dot-dev-connection
+      scriptType: "ps"
+      scriptLocation: "inlineScript"
+      inlineScript: |
+        $sasToken = az storage container generate-sas `
+          --account-name $(WEB_BUILDS_STG_ACCT) `
+          --name $(WEB_BUILDS_CONTAINER) `
+          --permissions r `
+          --expiry ((Get-Date).AddDays(30)).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssK") `
+          --auth-mode key `
+          --out tsv
+        # Replace all % with %25 so vscode.dev does not re-encode the URL thus breaking it.
+        $sasToken = $sasToken -replace ("%", "%25")
+        $extensionRootUrl = "https://$(WEB_BUILDS_STG_ACCT).blob.core.windows.net/$(WEB_BUILDS_CONTAINER)/$(build.definitionname)/$(build.buildnumber)/?" + $sasToken
+        $extensionRootUrl | Out-File -FilePath '$(build.artifactstagingdirectory)/web-sas.txt'
+        echo $extensionRootUrl
+    # Only do steps for publishing web bits on Windows as AzureFileCopy is only supported on Windows
+    # See: https://github.com/microsoft/azure-pipelines-tasks/issues/8920
+    condition: and(eq(variables['Agent.OS'], 'Windows_NT'), ne(variables['System.PullRequest.IsFork'], 'True'), eq(variables['WEB_BUILDS_ENABLED'], true))
+
+  - task: PublishBuildArtifacts@1
+    displayName: "Publish artifacts: web-sas"
+    inputs:
+      PathtoPublish: "$(build.artifactstagingdirectory)/web-sas.txt"
+      ArtifactName: web-sas
+    # Only do steps for publishing web bits on Windows as AzureFileCopy is only supported on Windows
+    # See: https://github.com/microsoft/azure-pipelines-tasks/issues/8920
+    condition: and(eq(variables['Agent.OS'], 'Windows_NT'), ne(variables['System.PullRequest.IsFork'], 'True'), eq(variables['WEB_BUILDS_ENABLED'], true))
