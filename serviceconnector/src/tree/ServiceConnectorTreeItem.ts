@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { LinkerResource } from "@azure/arm-servicelinker";
-import { AzExtParentTreeItem, AzExtTreeItem, TreeItemIconPath, createContextValue, nonNullValue } from "@microsoft/vscode-azext-utils";
+import { AzExtParentTreeItem, AzExtTreeItem, TreeItemIconPath, createContextValue, nonNullProp } from "@microsoft/vscode-azext-utils";
 import { ThemeIcon } from "vscode";
 import { getIconPath } from "./IconPath";
 import { connectionIconPath } from "./ServiceConnectorItem";
@@ -25,7 +25,7 @@ export class ServiceConnectorTreeItem extends AzExtTreeItem {
     }
 
     public get label(): string {
-        return nonNullValue(this.linker.name);
+        return nonNullProp(this.linker, 'name');
     }
 
     public get contextValue(): string {

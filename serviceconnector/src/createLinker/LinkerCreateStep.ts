@@ -3,7 +3,7 @@
 *  Licensed under the MIT License. See License.md in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { AzureWizardExecuteStep, GenericTreeItem, nonNullProp, nonNullValue, randomUtils } from "@microsoft/vscode-azext-utils";
+import { AzureWizardExecuteStep, GenericTreeItem, nonNullProp, nonNullValueAndProp, randomUtils } from "@microsoft/vscode-azext-utils";
 import * as vscode from 'vscode';
 import { TargetServiceTypeName } from "../../constants";
 import { createLinkerClient } from "../linkerClient";
@@ -25,8 +25,8 @@ export class LinkerCreateStep extends AzureWizardExecuteStep<ICreateLinkerContex
             clientType: context.clientType
         };
 
-        await client.linker.beginCreateOrUpdateAndWait(nonNullValue(context.sourceResourceUri), nonNullValue(context.linkerName), context.linker);
-        const config = await client.linker.listConfigurations(nonNullValue(context.sourceResourceUri), nonNullValue(context.linkerName));
+        await client.linker.beginCreateOrUpdateAndWait(nonNullProp(context, 'sourceResourceUri'), nonNullProp(context, 'linkerName'), context.linker);
+        const config = await client.linker.listConfigurations(nonNullProp(context, 'sourceResourceUri'), nonNullProp(context, 'linkerName'));
 
         context.activityChildren = [];
         for (const item of nonNullProp(config, 'configurations')) {
@@ -45,11 +45,11 @@ export class LinkerCreateStep extends AzureWizardExecuteStep<ICreateLinkerContex
     private getSourceResourceId(context: ICreateLinkerContext): string {
         switch (context.targetService?.group) {
             case TargetServiceTypeName.Storage:
-                return nonNullValue(context.storageAccount?.id);
+                return nonNullValueAndProp(context.storageAccount, 'id');
             case TargetServiceTypeName.CosmosDB:
-                return nonNullValue(context.databaseAccount?.id);
+                return nonNullValueAndProp(context.databaseAccount, 'id');
             case TargetServiceTypeName.KeyVault:
-                return nonNullValue(context.keyVaultAccount?.id);
+                return nonNullValueAndProp(context.keyVaultAccount, 'id');
             default:
                 throw new Error(vscode.l10n.t('No target type found'));
         }
