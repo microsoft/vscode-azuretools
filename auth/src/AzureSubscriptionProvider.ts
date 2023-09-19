@@ -36,12 +36,16 @@ export interface AzureSubscriptionProvider {
     /**
      * Checks to see if a user is signed in.
      *
+     * @param tenantId (Optional) Provide to check if a user is signed in to a specific tenant.
+     *
      * @returns True if the user is signed in, false otherwise.
      */
     isSignedIn(tenantId?: string): Promise<boolean>;
 
     /**
      * Asks the user to sign in or pick an account to use.
+     *
+     * @param tenantId (Optional) Provide to sign in to a specific tenant.
      *
      * @returns True if the user is signed in, false otherwise.
      */
