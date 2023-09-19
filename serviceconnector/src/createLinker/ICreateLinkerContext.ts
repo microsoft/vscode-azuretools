@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 import { AuthInfoBase, KnownClientType, LinkerResource } from "@azure/arm-servicelinker";
 import { IStorageAccountWizardContext } from "@microsoft/vscode-azext-azureutils";
-import { ExecuteActivityContext, ISubscriptionActionContext } from "@microsoft/vscode-azext-utils";
+import { ExecuteActivityContext, IAzureQuickPickItem, ISubscriptionActionContext } from "@microsoft/vscode-azext-utils";
 import { TargetServiceType } from "../../constants";
 import { DatabaseAccountJsonResponse } from "./CosmosDBAccountListStep";
 import { KeyVaultAccountJsonResponse } from "./KeyVaultListStep";
@@ -20,6 +20,7 @@ export interface ICreateLinkerContext extends ISubscriptionActionContext, IStora
 
     //Target service
     targetServiceType?: TargetServiceType;
+    targetService?: IAzureQuickPickItem<TargetServiceType>;
     databaseAccount?: DatabaseAccountJsonResponse;
     keyVaultAccount?: KeyVaultAccountJsonResponse;
 

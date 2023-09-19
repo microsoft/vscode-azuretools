@@ -10,7 +10,7 @@ import { createLinkerClient } from "../linkerClient";
 import { ICreateLinkerContext } from "./ICreateLinkerContext";
 
 export class LinkerCreateStep extends AzureWizardExecuteStep<ICreateLinkerContext>{
-    public priority: number = 10;
+    public priority: number = 850;
 
     public async execute(context: ICreateLinkerContext): Promise<void> {
         const client = await createLinkerClient(context);
@@ -25,7 +25,7 @@ export class LinkerCreateStep extends AzureWizardExecuteStep<ICreateLinkerContex
             clientType: context.clientType
         };
 
-        await client.linker.beginCreateOrUpdate(nonNullProp(context, 'sourceResourceUri'), nonNullProp(context, 'linkerName'), context.linker);
+        await client.linker.beginCreateOrUpdateAndWait(nonNullProp(context, 'sourceResourceUri'), nonNullProp(context, 'linkerName'), context.linker);
         const config = await client.linker.listConfigurations(nonNullProp(context, 'sourceResourceUri'), nonNullProp(context, 'linkerName'));
 
         context.activityChildren = [];
@@ -43,7 +43,7 @@ export class LinkerCreateStep extends AzureWizardExecuteStep<ICreateLinkerContex
     }
 
     private getSourceResourceId(context: ICreateLinkerContext): string {
-        switch (context.targetServiceType?.type) {
+        switch (context.targetService?.group) {
             case TargetServiceTypeName.Storage:
                 return nonNullValueAndProp(context.storageAccount, 'id');
             case TargetServiceTypeName.CosmosDB:
