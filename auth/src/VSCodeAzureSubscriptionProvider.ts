@@ -11,6 +11,7 @@ import type { AzureSubscription, SubscriptionId, TenantId } from './AzureSubscri
 import type { AzureSubscriptionProvider } from './AzureSubscriptionProvider';
 import { NotSignedInError } from './NotSignedInError';
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from './utils/configuredAzureEnv';
+import fetch from 'cross-fetch';
 
 const EventDebounce = 5 * 1000; // 5 seconds
 
@@ -49,6 +50,22 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
             this.onDidSignOutEmitter.dispose();
             disposable.dispose();
         });
+    }
+
+    /**
+     * Gets a list of tenants available to the user.
+     * Use {@link isSignedIn} to check if the user is signed in to a particular tenant.
+     *
+     * @returns A list of tenants.
+     */
+    public async getTenants(): Promise<TenantIdDescription[]> {
+        const listTenantsResponse = await fetch('https://management.azure.com/tenants?api-version=2022-12-01', {
+            headers: {
+                Authorization: `Bearer ${await this.getToken()}`,
+            }
+        });
+        const listTenantsResponseJson = await listTenantsResponse.json() as { value: TenantIdDescription[] };
+        return listTenantsResponseJson.value.filter(tenant => tenant.displayName?.includes('Directory'));
     }
 
     /**
@@ -124,8 +141,8 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      *
      * @returns True if the user is signed in, false otherwise.
      */
-    public async signIn(): Promise<boolean> {
-        const session = await vscode.authentication.getSession(getConfiguredAuthProviderId(), this.getDefaultScopes(), { createIfNone: true, clearSessionPreference: true });
+    public async signIn(tenantId?: string): Promise<boolean> {
+        const session = await vscode.authentication.getSession(getConfiguredAuthProviderId(), this.getScopes([], tenantId), { createIfNone: true, clearSessionPreference: true });
         return !!session;
     }
 
@@ -177,22 +194,6 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
         const config = vscode.workspace.getConfiguration('azureResourceGroups');
         const fullSubscriptionIds = config.get<string[]>('selectedSubscriptions', []);
         return fullSubscriptionIds.map(id => id.split('/')[1]);
-    }
-
-    /**
-     * Gets the tenants available to a user.
-     *
-     * @returns The list of tenants visible to the user.
-     */
-    private async getTenants(): Promise<TenantIdDescription[]> {
-        const { client } = await this.getSubscriptionClient();
-        const tenants: TenantIdDescription[] = [];
-
-        for await (const tenant of client.tenants.list()) {
-            tenants.push(tenant);
-        }
-
-        return tenants;
     }
 
     /**
@@ -260,6 +261,16 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
                 getSession: () => session // Rewrapped to make TS not confused about the weird initialization pattern
             }
         };
+    }
+
+    private async getToken(tenantId?: string): Promise<string> {
+        const session = await vscode.authentication.getSession(getConfiguredAuthProviderId(), this.getScopes([], tenantId), { createIfNone: false, silent: true });
+
+        if (!session) {
+            throw new NotSignedInError();
+        }
+
+        return session.accessToken;
     }
 
     /**

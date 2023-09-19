@@ -5,11 +5,20 @@
 
 import type * as vscode from 'vscode';
 import type { AzureSubscription } from './AzureSubscription';
+import { TenantIdDescription } from '@azure/arm-subscriptions';
 
 /**
  * An interface for obtaining Azure subscription information
  */
 export interface AzureSubscriptionProvider {
+    /**
+     * Gets a list of tenants available to the user.
+     * Use {@link isSignedIn} to check if the user is signed in to a particular tenant.
+     *
+     * @returns A list of tenants.
+     */
+    getTenants(): Promise<TenantIdDescription[]>;
+
     /**
      * Gets a list of Azure subscriptions available to the user.
      *
@@ -29,14 +38,14 @@ export interface AzureSubscriptionProvider {
      *
      * @returns True if the user is signed in, false otherwise.
      */
-    isSignedIn(): Promise<boolean>;
+    isSignedIn(tenantId?: string): Promise<boolean>;
 
     /**
      * Asks the user to sign in or pick an account to use.
      *
      * @returns True if the user is signed in, false otherwise.
      */
-    signIn(): Promise<boolean>;
+    signIn(tenantId?: string): Promise<boolean>;
 
     /**
      * An event that is fired when the user signs in. Debounced to fire at most once every 5 seconds.

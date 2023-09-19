@@ -52,6 +52,7 @@
     },
     "dependencies": {
         "@azure/arm-subscriptions": "^5.1.0",
-        "@azure/ms-rest-azure-env": "^2.0.0"
+        "@azure/ms-rest-azure-env": "^2.0.0",
+        "cross-fetch": "^4.0.0"
     }
 }
