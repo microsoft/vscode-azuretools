@@ -64,8 +64,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
                 Authorization: `Bearer ${await this.getToken()}`,
             }
         });
-        const listTenantsResponseJson = await listTenantsResponse.json() as { value: TenantIdDescription[] };
-        return listTenantsResponseJson.value.filter(tenant => tenant.displayName?.includes('Directory'));
+        return (await listTenantsResponse.json() as { value: TenantIdDescription[] }).value;
     }
 
     /**
