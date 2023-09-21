@@ -5,13 +5,13 @@
 
 import type { SubscriptionClient, TenantIdDescription } from '@azure/arm-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
 import type { TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
+import fetch from 'cross-fetch';
 import * as vscode from 'vscode';
 import type { AzureAuthentication } from './AzureAuthentication';
 import type { AzureSubscription, SubscriptionId, TenantId } from './AzureSubscription';
 import type { AzureSubscriptionProvider } from './AzureSubscriptionProvider';
 import { NotSignedInError } from './NotSignedInError';
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from './utils/configuredAzureEnv';
-import fetch from 'cross-fetch';
 
 const EventDebounce = 5 * 1000; // 5 seconds
 
@@ -275,27 +275,32 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
     }
 
     /**
-     * Gets a normalized list of scopes
+     * Gets a normalized list of scopes. If no scopes are provided, the return value of {@link getDefaultScope} is used.
+     *
+     * Only supports top-level resource scopes (e.g. http://management.azure.com, http://storage.azure.com) or .default scopes.
+     *
+     * All resources/scopes will be normalized to the `.default` scope for each resource.
      *
      * @param scopes An input scope string, list, or undefined
      * @param tenantId (Optional) The tenant ID, will be added to the scopes
-     *
-     * @returns A list of scopes, with the default scope and (optionally) the tenant scope added
      */
     private getScopes(scopes: string | string[] | undefined, tenantId?: string): string[] {
-        const scopeSet = new Set<string>(this.getDefaultScopes());
-
-        // If `.default` is passed in, it will be ignored, in favor of the correct default added by `getDefaultScopes`
-        if (typeof scopes === 'string' && scopes !== '.default') {
-            scopeSet.add(scopes);
-        } else if (Array.isArray(scopes)) {
-            scopes.filter(scope => scope !== '.default').forEach(scope => scopeSet.add(scope));
+        if (scopes === undefined || scopes === "" || scopes.length === 0) {
+            scopes = this.getDefaultScope();
         }
+        const arrScopes = (Array.isArray(scopes) ? scopes : [scopes])
+            .map((scope) => {
+                if (scope.endsWith('.default')) {
+                    return scope;
+                } else {
+                    return `${scope}.default`;
+                }
+            });
 
+        const scopeSet = new Set<string>([...arrScopes]);
         if (tenantId) {
             scopeSet.add(`VSCODE_TENANT:${tenantId}`);
         }
-
         return Array.from(scopeSet);
     }
 
@@ -305,7 +310,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      *
      * @returns The default Azure scopes required
      */
-    private getDefaultScopes(): string[] {
-        return [`${getConfiguredAzureEnv().resourceManagerEndpointUrl}.default`]
+    private getDefaultScope(): string {
+        return `${getConfiguredAzureEnv().resourceManagerEndpointUrl}.default`;
     }
 }
