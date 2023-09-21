@@ -237,19 +237,18 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
     private async getSubscriptionClient(tenantId?: string): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
         const armSubs = await import('@azure/arm-subscriptions');
 
-        // This gets filled in when the client calls `getToken`, and then it can be returned in the `authentication` property of `AzureSubscription`
-        let session: vscode.AuthenticationSession | undefined;
+        const getSession = async (scopes?: string[]): Promise<vscode.AuthenticationSession> => {
+            const session = await vscode.authentication.getSession(getConfiguredAuthProviderId(), this.getScopes(scopes, tenantId), { createIfNone: false, silent: true });
+            if (!session) {
+                throw new NotSignedInError();
+            }
+            return session;
+        }
 
         const credential: TokenCredential = {
             getToken: async (scopes) => {
-                // TODO: if possible, change to `getSessions` when that API is available: https://github.com/microsoft/vscode/issues/152399
-                session = await vscode.authentication.getSession(getConfiguredAuthProviderId(), this.getScopes(scopes, tenantId), { createIfNone: false, silent: true });
-                if (!session) {
-                    throw new NotSignedInError();
-                }
-
                 return {
-                    token: session.accessToken,
+                    token: (await getSession(this.getScopes(scopes, tenantId))).accessToken,
                     expiresOnTimestamp: 0
                 };
             }
@@ -259,7 +258,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
             client: new armSubs.SubscriptionClient(credential),
             credential: credential,
             authentication: {
-                getSession: () => session // Rewrapped to make TS not confused about the weird initialization pattern
+                getSession
             }
         };
     }
