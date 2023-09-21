@@ -298,7 +298,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
             });
 
         const scopeSet = new Set<string>([...arrScopes]);
-        if (!!tenantId) {
+        if (tenantId) {
             scopeSet.add(`VSCODE_TENANT:${tenantId}`);
         }
         return Array.from(scopeSet);
