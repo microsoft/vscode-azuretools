@@ -40,5 +40,5 @@ jobs:
     strategy:
       matrix: ${{ parameters.matrix }}
     variables:
-      Codeql.Enabled: $[and(in(variables['Build.Reason'], 'Manual'), eq('$(vmImage)', 'Linux'))] # Enable CodeQL only on Linux+scheduled builds because it is slow
+      Codeql.Enabled: $[and(in(variables['Build.Reason'], 'Manual'), eq($(vmImage), 'Linux'))] # Enable CodeQL only on Linux+scheduled builds because it is slow
     condition: in(variables['Build.Reason'], 'Manual', 'IndividualCI')
