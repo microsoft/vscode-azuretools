@@ -44,11 +44,9 @@ jobs:
   CheckResults: # TODO: this will fail if no packages have been modified
     # Require all jobs under `build` to have succeeded
     # See https://github.com/orgs/community/discussions/26822
-    if: ${{ always() }}
+    if: ${{ needs.ChangedPackages.outputs.packages[0] != null }}
     needs: [Build, ChangedPackages]
     runs-on: ubuntu-latest
     steps:
-      - run: exit 0
-        if: ${{ needs.ChangedPackages.outputs.packages[0] == null }}
       - run: exit 1
         if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
