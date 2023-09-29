@@ -32,6 +32,7 @@ jobs:
       packages: ${{ steps.filter.outputs.changes }}
 
   Build:
+    if: ${{ fromJson(needs.ChangedPackages.outputs.packages)[0] != null }}
     # Use template from https://github.com/microsoft/vscode-azuretools/blob/main/.github/workflows/jobs.yml
     uses: ./.github/workflows/jobs.yml
     needs: [ChangedPackages]
@@ -44,8 +45,7 @@ jobs:
   CheckResults:
     # Require all jobs under `build` to have succeeded
     # See https://github.com/orgs/community/discussions/26822
-    if: ${{ needs.ChangedPackages.outputs.packages[0] != null }}
-    needs: [Build, ChangedPackages]
+    needs: [Build]
     runs-on: ubuntu-latest
     steps:
       - run: exit 1
