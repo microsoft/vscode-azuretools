@@ -49,6 +49,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: exit 0
-        if: ${{ needs.ChangedPackages.outputs.packages[0] != null }}
+        if: ${{ needs.ChangedPackages.outputs.packages[0] == null }}
       - run: exit 1
         if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
