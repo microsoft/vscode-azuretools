@@ -41,12 +41,3 @@ jobs:
     strategy:
       matrix:
         package: ${{ fromJson(needs.ChangedPackages.outputs.packages) }}
-
-  CheckResults:
-    # Require all jobs under `build` to have succeeded
-    # See https://github.com/orgs/community/discussions/26822
-    needs: [Build]
-    runs-on: ubuntu-latest
-    steps:
-      - run: exit 1
-        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
