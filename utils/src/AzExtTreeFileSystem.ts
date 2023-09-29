@@ -13,7 +13,6 @@ const unsupportedError: Error = new Error(l10n.t('This operation is not supporte
 
 export abstract class AzExtTreeFileSystem<TItem extends types.AzExtTreeFileSystemItem> implements FileSystemProvider {
 
-    private readonly itemCache: Map<string, TItem> = new Map<string, TItem>();
 
     public abstract scheme: string;
 
