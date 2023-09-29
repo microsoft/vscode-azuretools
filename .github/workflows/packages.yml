@@ -41,3 +41,13 @@ jobs:
     strategy:
       matrix:
         package: ${{ fromJson(needs.ChangedPackages.outputs.packages) }}
+
+  CheckResults: # required for GtiHub PR rules
+    # Require all jobs under `build` to have succeeded
+    # See https://github.com/orgs/community/discussions/26822
+    if: always()
+    needs: [Build, ChangedPackages]
+    runs-on: ubuntu-latest
+    steps:
+      - run: exit 1
+        if: ${{ (fromJson(needs.ChangedPackages.outputs.packages)[0] != null) && contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
