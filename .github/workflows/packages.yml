@@ -45,7 +45,7 @@ jobs:
   CheckResults: # required for GtiHub PR rules
     # Require all jobs under `build` to have succeeded
     # See https://github.com/orgs/community/discussions/26822
-    if: always()
+    if: ${{ always() }}
     needs: [Build, ChangedPackages]
     runs-on: ubuntu-latest
     steps:
