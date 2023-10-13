@@ -4,7 +4,7 @@ parameters:
     type: string
 
 jobs:
-  - job: Release to NPM
+  - job: Release
     pool:
       vmImage: ubuntu-latest
     steps:
