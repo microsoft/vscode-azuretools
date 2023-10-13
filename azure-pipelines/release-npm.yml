@@ -1,0 +1,20 @@
+jobs:
+  - job: Release to NPM
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+      - task: CmdLine@2
+        displayName: Create .npmrc
+        inputs:
+          script: echo "registry=https://registry.npmjs.org" >> .npmrc
+          workingDirectory: $(System.DefaultWorkingDirectory)
+      - task: npmAuthenticate@0
+        displayName: "npm Authenticate"
+        inputs:
+          workingFile: "$(System.DefaultWorkingDirectory)/.npmrc"
+          customEndpoint: "npm token"
+
+      - task: CmdLine@2
+        displayName: NPM Publish
+        inputs:
+          script: npm --userconfig .npmrc publish --access public ${{ parameters.PackageToPublish }}
