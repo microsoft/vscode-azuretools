@@ -5,6 +5,10 @@ parameters:
   - name: PipelineDefinition
     displayName: Pipeline Definition ID
     type: number
+  - name: BranchToPublish
+    displayName: Branch to Publish
+    type: string
+    default: "refs/heads/main"
 
 jobs:
   - job: Release
@@ -17,7 +21,7 @@ jobs:
           project: "AzCode"
           definition: ${{ parameters.PipelineDefinition }}
           buildVersionToDownload: "latestFromBranch"
-          branchName: "refs/heads/main"
+          branchName: ${{ parameters.BranchToPublish }}
           targetPath: $(System.DefaultWorkingDirectory)
       - task: CmdLine@2
         displayName: Validate Artifact
