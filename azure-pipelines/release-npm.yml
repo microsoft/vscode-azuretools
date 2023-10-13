@@ -8,6 +8,14 @@ jobs:
     pool:
       vmImage: ubuntu-latest
     steps:
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          buildType: "specific"
+          project: "AzCode"
+          definition: 33
+          buildVersionToDownload: "latestFromBranch"
+          branchName: "refs/heads/main"
+          targetPath: $(System.DefaultWorkingDirectory)
       - task: CmdLine@2
         displayName: Validate Artifact
         inputs:
