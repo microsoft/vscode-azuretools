@@ -49,7 +49,7 @@ jobs:
       - task: CmdLine@2
         displayName: NPM Publish
         inputs:
-          script: npm --userconfig .npmrc publish --access public --dry-run '$(System.DefaultWorkingDirectory)/$(TarballPath)'
+          script: npm --userconfig .npmrc publish --access public '$(System.DefaultWorkingDirectory)/$(TarballPath)'
       - task: GitHubRelease@1
         displayName: "GitHub release (create)"
         inputs:
