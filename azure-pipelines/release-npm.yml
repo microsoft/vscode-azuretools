@@ -4,7 +4,7 @@ parameters:
     type: string
   - name: PipelineDefinition
     displayName: Pipeline Definition ID
-    type: int
+    type: number
 
 jobs:
   - job: Release
