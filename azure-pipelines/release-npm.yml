@@ -12,6 +12,7 @@ jobs:
         displayName: Validate Artifact
         inputs:
           script: |
+            echo find . -type f -iname "${{ parameters.PackageToPublish }}*.tgz"
             TarballPath=`find . -type f -iname "${{ parameters.PackageToPublish }}*.tgz"`
             if [[ $TarballPath =~ ((microsoft|vscode)-.*)-([0-9]+\.[0-9]+\.[0-9]+) ]]; then
               echo "##vso[task.setvariable variable=PackageName]${BASH_REMATCH[1]}"
