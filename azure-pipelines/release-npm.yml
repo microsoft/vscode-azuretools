@@ -2,6 +2,9 @@ parameters:
   - name: PackageToPublish
     displayName: Package to Publish
     type: string
+  - name: PipelineDefinition
+    displayName: Pipeline Definition ID
+    type: int
 
 jobs:
   - job: Release
@@ -12,7 +15,7 @@ jobs:
         inputs:
           buildType: "specific"
           project: "AzCode"
-          definition: 33
+          definition: ${{ parameters.PipelineDefinition }}
           buildVersionToDownload: "latestFromBranch"
           branchName: "refs/heads/main"
           targetPath: $(System.DefaultWorkingDirectory)
