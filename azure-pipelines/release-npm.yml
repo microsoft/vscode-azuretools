@@ -56,7 +56,7 @@ jobs:
           tag: "$(PackageName)-v$(Version)"
           title: "$(PackageName) v$(Version)"
           releaseNotesSource: inline
-          assets: "$(System.DefaultWorkingDirectory)/$(TarballPath)"
+          # assets: "$(System.DefaultWorkingDirectory)/$(TarballPath)"
           isDraft: true
           isPreRelease: true
           addChangeLog: false
