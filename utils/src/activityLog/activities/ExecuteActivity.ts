@@ -28,6 +28,7 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
         return {
             label: this.label,
             getChildren: activityResult || this.context.activityChildren ? ((parent: AzExtParentTreeItem) => {
+
                 if (this.context.activityChildren) {
                     parent.compareChildrenImpl = () => 0;  // Don't sort
                     return this.context.activityChildren;
