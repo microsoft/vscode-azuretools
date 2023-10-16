@@ -1,5 +1,7 @@
 ## Usage
 
+### Primary pipelines
+
 To use these base pipeline templates:
 1. Your project must have an `.nvmrc` file with the appropriate Node.js version at the root of the repository
 1. Your `package.json` file must contain the following NPM scripts:
@@ -48,3 +50,40 @@ resources:
 extends:
   template: azure-pipelines/jobs.yml@templates
 ```
+
+### Releasing to NPM
+
+1. Releasing to NPM requires only a simple YAML pipeline file, for example this `release-npm.yml` file in `.azure-pipelines`:
+
+```yaml
+trigger: none # Disable the branch trigger
+pr: none # Disable PR trigger
+
+# Grab the base templates from https://github.com/microsoft/vscode-azuretools/tree/main/azure-pipelines
+resources:
+  repositories:
+    - repository: templates
+      type: github
+      name: microsoft/vscode-azuretools
+      ref: main
+      endpoint: GitHub
+
+# Choose a package to publish at the time of job creation
+parameters:
+  - name: PackageToPublish
+    displayName: Package to Publish
+    type: string
+    values:
+      - microsoft-vscode-container-client
+      - microsoft-vscode-docker-registries
+      - your-packages-here
+
+# Use those base templates
+extends:
+  template: azure-pipelines/release-npm.yml@templates
+  parameters:
+    PackageToPublish: ${{ parameters.PackageToPublish }}
+    PipelineDefinition: 33
+
+```
+2. Running the pipeline will release the package to NPM and create a draft GitHub release. Add change notes to the draft release and publish when complete.
