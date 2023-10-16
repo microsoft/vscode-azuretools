@@ -59,15 +59,6 @@ extends:
 trigger: none # Disable the branch trigger
 pr: none # Disable PR trigger
 
-# Grab the base templates from https://github.com/microsoft/vscode-azuretools/tree/main/azure-pipelines
-resources:
-  repositories:
-    - repository: templates
-      type: github
-      name: microsoft/vscode-azuretools
-      ref: main
-      endpoint: GitHub
-
 # Choose a package to publish at the time of job creation
 parameters:
   - name: PackageToPublish
@@ -77,6 +68,15 @@ parameters:
       - microsoft-vscode-container-client
       - microsoft-vscode-docker-registries
       - your-packages-here
+
+# Grab the base templates from https://github.com/microsoft/vscode-azuretools/tree/main/azure-pipelines
+resources:
+  repositories:
+    - repository: templates
+      type: github
+      name: microsoft/vscode-azuretools
+      ref: main
+      endpoint: GitHub
 
 # Use those base templates
 extends:
