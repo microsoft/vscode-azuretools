@@ -28,9 +28,9 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
         return {
             label: this.label,
             getChildren: activityResult || this.context.activityChildren ? ((parent: AzExtParentTreeItem) => {
-
                 if (this.context.activityChildren) {
-                    return this.context.activityChildren.reverse();
+                    parent.compareChildrenImpl = () => 0;  // Don't sort
+                    return this.context.activityChildren;
                 }
 
                 const ti = new GenericTreeItem(parent, {
@@ -52,7 +52,8 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
             label: this.label,
             getChildren: (parent: AzExtParentTreeItem) => {
                 if (this.context.activityChildren) {
-                    return this.context.activityChildren.reverse();
+                    parent.compareChildrenImpl = () => 0;  // Don't sort
+                    return this.context.activityChildren;
                 }
                 return [
                     new GenericTreeItem(parent, {
