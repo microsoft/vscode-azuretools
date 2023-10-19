@@ -23,7 +23,7 @@ resources:
     - repository: templates
       type: github
       name: microsoft/vscode-azuretools
-      ref: bmw/releaseToNpm # TODO main
+      ref: bmw/npmRelease # TODO main
       endpoint: GitHub
 
 # Use those base templates
