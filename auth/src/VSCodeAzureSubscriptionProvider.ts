@@ -265,10 +265,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
     }
 
     private async getToken(tenantId?: string): Promise<string> {
-        const session = await getSessionFromVSCode([], tenantId, {
-            createIfNone: false,
-            silent: true,
-        })
+        const session = await getSessionFromVSCode([], tenantId, { createIfNone: false, silent: true })
 
         if (!session) {
             throw new NotSignedInError();
