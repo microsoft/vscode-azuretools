@@ -11,6 +11,7 @@ import type { AzureAuthentication } from './AzureAuthentication';
 import type { AzureSubscription, SubscriptionId, TenantId } from './AzureSubscription';
 import type { AzureSubscriptionProvider } from './AzureSubscriptionProvider';
 import { NotSignedInError } from './NotSignedInError';
+import { getSessionFromVSCode } from './getSessionFromVSCode';
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from './utils/configuredAzureEnv';
 
 const EventDebounce = 5 * 1000; // 5 seconds
@@ -131,7 +132,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      * @returns True if the user is signed in, false otherwise.
      */
     public async isSignedIn(tenantId?: string): Promise<boolean> {
-        const session = await vscode.authentication.getSession(getConfiguredAuthProviderId(), this.getScopes([], tenantId), { createIfNone: false, silent: true });
+        const session = await getSessionFromVSCode([], tenantId, { createIfNone: false, silent: true });
         return !!session;
     }
 
@@ -143,7 +144,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      * @returns True if the user is signed in, false otherwise.
      */
     public async signIn(tenantId?: string): Promise<boolean> {
-        const session = await vscode.authentication.getSession(getConfiguredAuthProviderId(), this.getScopes([], tenantId), { createIfNone: true, clearSessionPreference: true });
+        const session = await getSessionFromVSCode([], tenantId, { createIfNone: true, clearSessionPreference: true });
         return !!session;
     }
 
@@ -237,8 +238,8 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
     private async getSubscriptionClient(tenantId?: string): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
         const armSubs = await import('@azure/arm-subscriptions');
 
-        const getSession = async (scopes?: string[]): Promise<vscode.AuthenticationSession> => {
-            const session = await vscode.authentication.getSession(getConfiguredAuthProviderId(), this.getScopes(scopes, tenantId), { createIfNone: false, silent: true });
+        const getSession = async (scopes?: string[] | string): Promise<vscode.AuthenticationSession> => {
+            const session = await getSessionFromVSCode(scopes, tenantId, { createIfNone: false, silent: true });
             if (!session) {
                 throw new NotSignedInError();
             }
@@ -248,7 +249,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
         const credential: TokenCredential = {
             getToken: async (scopes) => {
                 return {
-                    token: (await getSession(this.getScopes(scopes, tenantId))).accessToken,
+                    token: (await getSession(scopes)).accessToken,
                     expiresOnTimestamp: 0
                 };
             }
@@ -258,58 +259,18 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
             client: new armSubs.SubscriptionClient(credential),
             credential: credential,
             authentication: {
-                getSession
+                getSession,
             }
         };
     }
 
     private async getToken(tenantId?: string): Promise<string> {
-        const session = await vscode.authentication.getSession(getConfiguredAuthProviderId(), this.getScopes([], tenantId), { createIfNone: false, silent: true });
+        const session = await getSessionFromVSCode([], tenantId, { createIfNone: false, silent: true })
 
         if (!session) {
             throw new NotSignedInError();
         }
 
         return session.accessToken;
-    }
-
-    /**
-     * Gets a normalized list of scopes. If no scopes are provided, the return value of {@link getDefaultScope} is used.
-     *
-     * Only supports top-level resource scopes (e.g. http://management.azure.com, http://storage.azure.com) or .default scopes.
-     *
-     * All resources/scopes will be normalized to the `.default` scope for each resource.
-     *
-     * @param scopes An input scope string, list, or undefined
-     * @param tenantId (Optional) The tenant ID, will be added to the scopes
-     */
-    private getScopes(scopes: string | string[] | undefined, tenantId?: string): string[] {
-        if (scopes === undefined || scopes === "" || scopes.length === 0) {
-            scopes = this.getDefaultScope();
-        }
-        const arrScopes = (Array.isArray(scopes) ? scopes : [scopes])
-            .map((scope) => {
-                if (scope.endsWith('.default')) {
-                    return scope;
-                } else {
-                    return `${scope}.default`;
-                }
-            });
-
-        const scopeSet = new Set<string>(arrScopes);
-        if (tenantId) {
-            scopeSet.add(`VSCODE_TENANT:${tenantId}`);
-        }
-        return Array.from(scopeSet);
-    }
-
-    /**
-     * Gets the default Azure scopes required for resource management,
-     * depending on the configured endpoint
-     *
-     * @returns The default Azure scopes required
-     */
-    private getDefaultScope(): string {
-        return `${getConfiguredAzureEnv().resourceManagerEndpointUrl}.default`;
     }
 }
