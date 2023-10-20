@@ -1,5 +1,10 @@
 # Change Log
 
+Unreleased
+
+* [#1610](https://github.com/microsoft/vscode-azuretools/pull/1610) Add `signInToTenant` command which facilitates signing in to a specific tenant.
+* [#1610](https://github.com/microsoft/vscode-azuretools/pull/1610) Add `getUnauthenticatedTenants` utility.
+
 ## 1.2.2 - 2023-10-19
 
 * [#1608](https://github.com/microsoft/vscode-azuretools/pull/1608) Fix appending `.default` to tenant id scope which caused sign in to fail
