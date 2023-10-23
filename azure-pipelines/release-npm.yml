@@ -62,3 +62,5 @@ jobs:
           isDraft: true
           isPreRelease: true
           addChangeLog: false
+    variables:
+      skipComponentGovernanceDetection: true # The release pipeline does not need CG detection since the primary build pipeline has it
