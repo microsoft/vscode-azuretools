@@ -1,6 +1,6 @@
 # Change Log
 
-Unreleased
+## 1.3.0 - 2023-10-23
 
 * [#1610](https://github.com/microsoft/vscode-azuretools/pull/1610) Add `signInToTenant` command which facilitates signing in to a specific tenant.
 * [#1610](https://github.com/microsoft/vscode-azuretools/pull/1610) Add `getUnauthenticatedTenants` utility.
