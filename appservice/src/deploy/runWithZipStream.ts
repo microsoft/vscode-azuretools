@@ -88,7 +88,6 @@ function getPathFromMap(realPath: string, pathfileMap?: Map<string, string>): st
 export async function getFilesFromGlob(folderPath: string, resourceName: string): Promise<string[]> {
     // App Service is the only extension with the zipIgnorePattern setting, so if ext.prefix is undefined, use 'appService'
     const zipDeployConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration(ext.prefix ?? 'appService', vscode.Uri.file(folderPath));
-    // const globOptions = { cwd: folderPath, followSymbolicLinks: true, dot: true };
     const globPattern: string = zipDeployConfig.get<string>('zipGlobPattern') || '**/*';
     const zipIgnorePatternStr = 'zipIgnorePattern';
     const zipIgnorePattern: string[] | string | undefined = zipDeployConfig.get<string | string[]>(zipIgnorePatternStr);
