@@ -98,6 +98,7 @@ export async function getFilesFromGlob(folderPath: string, resourceName: string)
     let files: vscode.Uri[] = await vscode.workspace.findFiles(globPattern);
     if (ignorePatternList) {
         try {
+            // not all ouptut channels _have_ to support appendLog, so catch the error
             ext.outputChannel.appendLog(vscode.l10n.t(`Ignoring files from \"{0}.{1}\"`, ext.prefix, zipIgnorePatternStr), { resourceName });
         } catch (error) {
             ext.outputChannel.appendLine(vscode.l10n.t(`Ignoring files from \"{0}.{1}\"`, ext.prefix, zipIgnorePatternStr));
