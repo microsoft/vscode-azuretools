@@ -94,7 +94,7 @@ export async function getFilesFromGlob(folderPath: string, resourceName: string)
     const ignorePatternList: string[] | undefined = typeof zipIgnorePattern === 'string' ? [zipIgnorePattern] : zipIgnorePattern;
 
     // first find all files without any ignorePatterns
-    let files: vscode.Uri[] = await vscode.workspace.findFiles(globPattern);
+    let files: vscode.Uri[] = await vscode.workspace.findFiles(new vscode.RelativePattern(folderPath, globPattern));
     if (ignorePatternList) {
         try {
             // not all ouptut channels _have_ to support appendLog, so catch the error
@@ -111,7 +111,7 @@ export async function getFilesFromGlob(folderPath: string, resourceName: string)
             ext.outputChannel.appendLine(`\"${pattern}\"`);
         }
     }
-    return files.filter(f => f.fsPath.includes(folderPath)).map(f => path.relative(folderPath, f.fsPath));
+    return files.map(f => path.relative(folderPath, f.fsPath));
 }
 
 /**
@@ -128,7 +128,6 @@ export async function getFilesFromGitignore(folderPath: string, gitignoreName: s
             .filter(s => s !== '');
     }
 
-    return (await vscode.workspace.findFiles('**/*', `{${ignore.join(',')}}`))
-        .filter(f => f.fsPath.includes(folderPath))
+    return (await vscode.workspace.findFiles(new vscode.RelativePattern(folderPath, '**/*'), `{${ignore.join(',')}}`))
         .map(f => path.relative(folderPath, f.fsPath));
 }
