@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzExtFsExtra } from '@microsoft/vscode-azext-utils';
+import * as path from 'path';
 import { getFilesFromGitignore, getFilesFromGlob } from '../src/deploy/runWithZipStream';
 import { testWorkspaceRoot } from './global.test';
-import * as path from 'path';
 import assert = require('assert');
 
 suite("getDeployFsPath", () => {
@@ -39,7 +39,7 @@ suite("getDeployFsPath", () => {
             const files = await getFilesFromGlob(rootPath, 'testApp');
             assert.strictEqual(files.length, expectedFiles.length);
             for (const file of files) {
-                assert.strictEqual(expectedFiles.includes(file), true);
+                assert.strictEqual(file, expectedFiles.find(f => f === file));
             }
 
         });
@@ -48,7 +48,7 @@ suite("getDeployFsPath", () => {
             const files = await getFilesFromGitignore(rootPath, '.gitignore');
             assert.strictEqual(files.length, expectedFiles.length);
             for (const file of files) {
-                assert.strictEqual(expectedFiles.includes(file), true);
+                assert.strictEqual(file, expectedFiles.find(f => f === file));
             }
         });
     })
