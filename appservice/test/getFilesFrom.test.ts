@@ -61,10 +61,10 @@ const gitignoreContent = `
     `;
 
 const expectedFiles = [
-    path.join(".gitignore"),
-    path.join("dir3, sub2, file.txt"),
-    path.join("dir1, file.txt"),
-    path.join("dir1, sub2, file.txt"),
-    path.join("dir1, sub1, file.txt"),
-    path.join("dir3, file.txt"),
+    path.join('.gitignore'),
+    path.join('dir3', 'sub2', 'file.txt'),
+    path.join('dir1', 'file.txt'),
+    path.join('dir1', 'sub2', 'file.txt'),
+    path.join('dir1', 'sub1', 'file.txt'),
+    path.join('dir3', 'file.txt'),
 ];
