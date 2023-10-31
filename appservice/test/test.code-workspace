@@ -14,7 +14,15 @@
         },
         {
             "path": "../testWorkspace/deploy2"
+        },
+        {
+            "path": "../testWorkspace/getFilesFromTestFolder"
         }
     ],
-    "settings": {}
+    "settings": {
+        "appService.zipIgnorePattern": [
+            "dir2{,/**}",
+            "dir3/sub1{,/**}"
+        ]
+    }
 }
