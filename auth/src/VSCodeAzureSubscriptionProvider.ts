@@ -5,7 +5,7 @@
 
 import type { SubscriptionClient, TenantIdDescription } from '@azure/arm-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
 import type { TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
-import fetch from 'node-fetch'; // have to explicitly use node-fetch v2.6.7 otherwise when @azure/client-core makes a streaming request, it fails on windows
+import { get } from 'https';
 import * as vscode from 'vscode';
 import type { AzureAuthentication } from './AzureAuthentication';
 import type { AzureSubscription, SubscriptionId, TenantId } from './AzureSubscription';
@@ -60,12 +60,31 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      * @returns A list of tenants.
      */
     public async getTenants(): Promise<TenantIdDescription[]> {
-        const listTenantsResponse = await fetch('https://management.azure.com/tenants?api-version=2022-12-01', {
-            headers: {
-                Authorization: `Bearer ${await this.getToken()}`,
-            }
+        const bearerToken = `Bearer ${await this.getToken()}`;
+        return new Promise(function async(resolve, reject) {
+            const req = get('https://management.azure.com/tenants?api-version=2022-12-01', {
+                headers: {
+                    Authorization: bearerToken,
+                }
+            }, function (res) {
+                const body: unknown[] = [];
+                res.on('data', function (chunk: unknown) {
+                    body.push(chunk);
+                });
+                // resolve on end
+                res.on('end', function () {
+                    let response: TenantIdDescription[] = [];
+                    try {
+                        response = (JSON.parse(Buffer.concat(body as Uint8Array[]).toString()) as { value: TenantIdDescription[] }).value;
+                    } catch (e) {
+                        reject(e);
+                    }
+                    resolve(response);
+                });
+            });
+
+            req.end();
         });
-        return (await listTenantsResponse.json() as { value: TenantIdDescription[] }).value;
     }
 
     /**
