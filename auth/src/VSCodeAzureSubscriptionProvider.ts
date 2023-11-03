@@ -5,7 +5,6 @@
 
 import type { SubscriptionClient, TenantIdDescription } from '@azure/arm-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
 import type { TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
-import fetch from 'node-fetch'; // have to explicitly use node-fetch v2.6.7 otherwise when @azure/client-core makes a streaming request, it fails on windows
 import * as vscode from 'vscode';
 import type { AzureAuthentication } from './AzureAuthentication';
 import type { AzureSubscription, SubscriptionId, TenantId } from './AzureSubscription';
@@ -235,21 +234,17 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      *
      * @returns A client, the credential used by the client, and the authentication function
      */
-    private async getSubscriptionClient(tenantId?: string): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
+    private async getSubscriptionClient(tenantId?: string, scopes?: string[]): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
         const armSubs = await import('@azure/arm-subscriptions');
-
-        const getSession = async (scopes?: string[] | string): Promise<vscode.AuthenticationSession> => {
-            const session = await getSessionFromVSCode(scopes, tenantId, { createIfNone: false, silent: true });
-            if (!session) {
-                throw new NotSignedInError();
-            }
-            return session;
+        const session = await getSessionFromVSCode(scopes, tenantId, { createIfNone: false, silent: true });
+        if (!session) {
+            throw new NotSignedInError();
         }
 
         const credential: TokenCredential = {
-            getToken: async (scopes) => {
+            getToken: async () => {
                 return {
-                    token: (await getSession(scopes)).accessToken,
+                    token: session.accessToken,
                     expiresOnTimestamp: 0
                 };
             }
@@ -259,7 +254,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
             client: new armSubs.SubscriptionClient(credential),
             credential: credential,
             authentication: {
-                getSession,
+                getSession: () => session
             }
         };
     }
