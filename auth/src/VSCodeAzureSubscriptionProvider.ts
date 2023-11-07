@@ -83,9 +83,6 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
         const tenantIds = await this.getTenantFilters();
         const shouldFilterTenants = filter && !!tenantIds.length; // If the list is empty it is treated as "no filter"
 
-        const subscriptionIds = await this.getSubscriptionFilters();
-        const shouldFilterSubscriptions = filter && !!subscriptionIds.length; // If the list is empty it is treated as "no filter"
-
         const results: AzureSubscription[] = [];
 
         try {
@@ -107,20 +104,23 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
                 }
 
                 // For each tenant, get the list of subscriptions
-                for (const subscription of await this.getSubscriptionsForTenant(tenantId)) {
-                    // If filtering is enabled, and the current subscription is not in that list, then skip it
-                    if (shouldFilterSubscriptions && !subscriptionIds.includes(subscription.subscriptionId)) {
-                        continue;
-                    }
-
-                    results.push(subscription);
-                }
+                results.push(...await this.getSubscriptionsForTenant(tenantId));
             }
         } finally {
             this.suppressSignInEvents = false;
         }
 
-        return results.sort((a, b) => a.name.localeCompare(b.name));
+        const sortSubscriptions = (subscriptions: AzureSubscription[]): AzureSubscription[] =>
+            subscriptions.sort((a, b) => a.name.localeCompare(b.name));
+
+        const subscriptionIds = await this.getSubscriptionFilters();
+        if (filter && !!subscriptionIds.length) { // If the list is empty it is treated as "no filter"
+            return sortSubscriptions(
+                results.filter(sub => subscriptionIds.includes(sub.subscriptionId))
+            );
+        }
+
+        return sortSubscriptions(results);
     }
 
     /**
