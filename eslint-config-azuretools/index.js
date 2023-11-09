@@ -19,6 +19,7 @@ module.exports = {
     ],
     "rules": {
         "@typescript-eslint/ban-types": "off",
+        "@typescript-eslint/consistent-type-imports": "error",
         "@typescript-eslint/no-inferrable-types": "off",
         "@typescript-eslint/no-namespace": "off",
         "@typescript-eslint/no-unnecessary-type-assertion": "off",
