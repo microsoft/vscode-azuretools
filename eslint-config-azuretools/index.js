@@ -29,6 +29,7 @@ module.exports = {
         "@typescript-eslint/restrict-template-expressions": "off",
         "@typescript-eslint/unbound-method": "off",
         "eqeqeq": ["error", "always"],
+        "import/consistent-type-specifier-style": ["error", "prefer-inline"],
         "import/no-internal-modules": ["error", { "allow": ["yaml/types"] }],
         "no-case-declarations": "off",
         "no-constant-condition": ["error", { "checkLoops": false }],
