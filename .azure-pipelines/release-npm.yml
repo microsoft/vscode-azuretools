@@ -12,7 +12,7 @@ parameters:
       - microsoft-vscode-azext-azureauth
       - microsoft-vscode-azext-azureutils
       - microsoft-vscode-azext-dev
-      - microsoft-vscode-azext-eslint-config-azuretools
+      - microsoft-eslint-config-azuretools
       - microsoft-vscode-azext-github
       - microsoft-vscode-azext-serviceconnector
       - microsoft-vscode-azext-utils
