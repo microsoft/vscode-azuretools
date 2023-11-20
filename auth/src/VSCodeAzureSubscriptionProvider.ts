@@ -150,7 +150,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      * @returns True if the user is signed in, false otherwise.
      */
     public async signIn(tenantId?: string): Promise<boolean> {
-        const armScope = getConfiguredAzureEnv().resourceManagerEndpointUrl.endsWith('/') ? getConfiguredAzureEnv().resourceManagerEndpointUrl : `${getConfiguredAzureEnv().resourceManagerEndpointUrl}/`;
+        const armScope = ensureEndingSlash(getConfiguredAzureEnv().resourceManagerEndpointUrl);
         const session = await getSessionFromVSCode([`${armScope}/.default`], tenantId, { createIfNone: true, clearSessionPreference: true });
         return !!session;
     }
