@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { SubscriptionClient, TenantIdDescription } from '@azure/arm-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
+import type { SubscriptionClient, TenantIdDescription } from '@azure/arm-resources-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
 import type { TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
 import * as vscode from 'vscode';
 import type { AzureAuthentication } from './AzureAuthentication';
@@ -59,12 +59,15 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      * @returns A list of tenants.
      */
     public async getTenants(): Promise<TenantIdDescription[]> {
-        const listTenantsResponse = await fetch('https://management.azure.com/tenants?api-version=2022-12-01', {
-            headers: {
-                Authorization: `Bearer ${await this.getToken()}`,
-            }
-        });
-        return (await listTenantsResponse.json() as { value: TenantIdDescription[] }).value;
+        const { client } = await this.getSubscriptionClient();
+
+        const results: TenantIdDescription[] = [];
+
+        for await (const tenant of client.tenants.list()) {
+            results.push(tenant);
+        }
+
+        return results;
     }
 
     /**
@@ -235,7 +238,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      * @returns A client, the credential used by the client, and the authentication function
      */
     private async getSubscriptionClient(tenantId?: string, scopes?: string[]): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
-        const armSubs = await import('@azure/arm-subscriptions');
+        const armSubs = await import('@azure/arm-resources-subscriptions');
         const session = await getSessionFromVSCode(scopes, tenantId, { createIfNone: false, silent: true });
         if (!session) {
             throw new NotSignedInError();
@@ -250,22 +253,15 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
             }
         }
 
+        const configuredAzureEnv = getConfiguredAzureEnv();
+        const endpoint = configuredAzureEnv.resourceManagerEndpointUrl;
+
         return {
-            client: new armSubs.SubscriptionClient(credential),
+            client: new armSubs.SubscriptionClient(credential, { endpoint }),
             credential: credential,
             authentication: {
                 getSession: () => session
             }
         };
-    }
-
-    private async getToken(tenantId?: string): Promise<string> {
-        const session = await getSessionFromVSCode([], tenantId, { createIfNone: false, silent: true })
-
-        if (!session) {
-            throw new NotSignedInError();
-        }
-
-        return session.accessToken;
     }
 }

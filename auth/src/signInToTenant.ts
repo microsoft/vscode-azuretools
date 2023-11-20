@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from "vscode";
-import type { TenantIdDescription } from "@azure/arm-subscriptions";
+import type { TenantIdDescription } from "@azure/arm-resources-subscriptions";
 import type { AzureSubscriptionProvider } from "./AzureSubscriptionProvider";
 import { getUnauthenticatedTenants } from "./utils/getUnauthenticatedTenants";
 
