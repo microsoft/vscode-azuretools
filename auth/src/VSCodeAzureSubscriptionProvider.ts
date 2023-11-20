@@ -10,7 +10,7 @@ import type { AzureAuthentication } from './AzureAuthentication';
 import type { AzureSubscription, SubscriptionId, TenantId } from './AzureSubscription';
 import type { AzureSubscriptionProvider } from './AzureSubscriptionProvider';
 import { NotSignedInError } from './NotSignedInError';
-import { getSessionFromVSCode } from './getSessionFromVSCode';
+import { ensureEndingSlash, getSessionFromVSCode } from './getSessionFromVSCode';
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from './utils/configuredAzureEnv';
 
 const EventDebounce = 5 * 1000; // 5 seconds
@@ -59,12 +59,18 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      * @returns A list of tenants.
      */
     public async getTenants(): Promise<TenantIdDescription[]> {
-        const listTenantsResponse = await fetch('https://management.azure.com/tenants?api-version=2022-12-01', {
+        const armUrl = ensureEndingSlash(getConfiguredAzureEnv().managementEndpointUrl);
+        const token = await this.getToken();
+        const listTenantsResponse = await fetch(`${armUrl}tenants?api-version=2020-01-01`, {
             headers: {
-                Authorization: `Bearer ${await this.getToken()}`,
+                Authorization: `Bearer ${token}`,
             }
         });
-        return (await listTenantsResponse.json() as { value: TenantIdDescription[] }).value;
+        if (listTenantsResponse.ok) {
+            return (await listTenantsResponse.json() as { value: TenantIdDescription[] }).value;
+        } else {
+            throw new Error(JSON.stringify(await listTenantsResponse.text()));
+        }
     }
 
     /**
@@ -88,8 +94,9 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
         try {
             this.suppressSignInEvents = true;
 
+            const tenants = await this.getTenants();
             // Get the list of tenants
-            for (const tenant of await this.getTenants()) {
+            for (const tenant of tenants) {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 const tenantId = tenant.tenantId!;
 
@@ -143,7 +150,8 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      * @returns True if the user is signed in, false otherwise.
      */
     public async signIn(tenantId?: string): Promise<boolean> {
-        const session = await getSessionFromVSCode([], tenantId, { createIfNone: true, clearSessionPreference: true });
+        const armScope = getConfiguredAzureEnv().resourceManagerEndpointUrl.endsWith('/') ? getConfiguredAzureEnv().resourceManagerEndpointUrl : `${getConfiguredAzureEnv().resourceManagerEndpointUrl}/`;
+        const session = await getSessionFromVSCode([`${armScope}/.default`], tenantId, { createIfNone: true, clearSessionPreference: true });
         return !!session;
     }
 

@@ -6,7 +6,7 @@
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from "./utils/configuredAzureEnv";
 import * as vscode from "vscode";
 
-function ensureEndingSlash(value: string): string {
+export function ensureEndingSlash(value: string): string {
     return value.endsWith('/') ? value : `${value}/`;
 }
 
