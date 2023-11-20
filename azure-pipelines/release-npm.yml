@@ -64,3 +64,4 @@ jobs:
           addChangeLog: false
     variables:
       skipComponentGovernanceDetection: true # The release pipeline does not need CG detection since the primary build pipeline has it
+      Codeql.Enabled: false # Disable CodeQL because it is not needed for NPM release
