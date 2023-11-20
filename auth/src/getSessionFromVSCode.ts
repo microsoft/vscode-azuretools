@@ -6,9 +6,13 @@
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from "./utils/configuredAzureEnv";
 import * as vscode from "vscode";
 
+function ensureEndingSlash(value: string): string {
+    return value.endsWith('/') ? value : `${value}/`;
+}
+
 function getResourceScopes(scopes?: string | string[]): string[] {
     if (scopes === undefined || scopes === "" || scopes.length === 0) {
-        scopes = `${getConfiguredAzureEnv().resourceManagerEndpointUrl}.default`;
+        scopes = ensureEndingSlash(getConfiguredAzureEnv().resourceManagerEndpointUrl);
     }
     const arrScopes = (Array.isArray(scopes) ? scopes : [scopes])
         .map((scope) => {
