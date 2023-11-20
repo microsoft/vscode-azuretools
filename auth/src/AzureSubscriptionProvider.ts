@@ -5,7 +5,7 @@
 
 import type * as vscode from 'vscode';
 import type { AzureSubscription } from './AzureSubscription';
-import { TenantIdDescription } from '@azure/arm-subscriptions';
+import type { TenantIdDescription } from '@azure/arm-resources-subscriptions';
 
 /**
  * An interface for obtaining Azure subscription information
