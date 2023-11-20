@@ -28,12 +28,12 @@ export function getConfiguredAzureEnv(): azureEnv.Environment & { isCustomCloud:
 
     if (environmentSettingValue === CloudEnvironmentSettingValue.ChinaCloud) {
         return {
-            ...azureEnv.Environment.get(azureEnv.Environment.ChinaCloud.name),
+            ...azureEnv.Environment.ChinaCloud,
             isCustomCloud: false,
         };
     } else if (environmentSettingValue === CloudEnvironmentSettingValue.USGovernment) {
         return {
-            ...azureEnv.Environment.get(azureEnv.Environment.USGovernment.name),
+            ...azureEnv.Environment.USGovernment,
             isCustomCloud: false,
         };
     } else if (environmentSettingValue === CloudEnvironmentSettingValue.Custom) {
