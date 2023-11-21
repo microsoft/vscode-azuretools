@@ -5,17 +5,30 @@
 
 import { TreeItemCollapsibleState } from "vscode";
 import * as types from '../../index';
+import { AzExtParentTreeItem } from "./AzExtParentTreeItem";
+import { AzExtTreeItem } from "./AzExtTreeItem";
+import { IAzExtParentTreeItemInternal } from "./InternalInterfaces";
 
-export class GenericParentTreeItem extends types.AzExtParentTreeItem {
+interface GenericParentTreeItemOptions {
+    childTypeLabel?: string;
+    contextValue: string;
+    initialCollapsibleState?: TreeItemCollapsibleState;
+    label: string;
+    suppressMaskLabel?: boolean;
+
+    compareChildrenImpl?(item1: AzExtTreeItem, item2: AzExtTreeItem): number;
+    loadMoreChildrenImpl(clearCache: boolean, context: types.IActionContext): Promise<AzExtTreeItem[]>;
+}
+
+export class GenericParentTreeItem extends AzExtParentTreeItem implements types.GenericParentTreeItem {
     contextValue: string;
     suppressMaskLabel?: boolean;
 
     readonly childTypeLabel?: string;
     readonly label: string;
     readonly initialCollapsibleState: TreeItemCollapsibleState;
-    readonly parent: types.AzExtParentTreeItem | undefined;
 
-    constructor(parent: types.AzExtParentTreeItem | undefined, readonly options: types.GenericParentTreeItemOptions) {
+    constructor(parent: IAzExtParentTreeItemInternal | undefined, readonly options: GenericParentTreeItemOptions) {
         super(parent);
         this.contextValue = options.contextValue;
         this.suppressMaskLabel = options.suppressMaskLabel;
@@ -27,10 +40,10 @@ export class GenericParentTreeItem extends types.AzExtParentTreeItem {
         this.compareChildrenImpl = options.compareChildrenImpl ?? (() => 0);
     }
 
-    async loadMoreChildrenImpl(clearCache: boolean, context: types.IActionContext): Promise<types.AzExtTreeItem[]> {
+    loadMoreChildrenImpl(clearCache: boolean, context: types.IActionContext): Promise<AzExtTreeItem[]> {
         // The abstract class requires that loadMoreChildrenImpl be immediately defined before the constructor is run
         // So just call the options method directly here
-        return await this.options.loadMoreChildrenImpl(clearCache, context);
+        return this.options.loadMoreChildrenImpl(clearCache, context);
     }
 
     hasMoreChildrenImpl(): boolean {

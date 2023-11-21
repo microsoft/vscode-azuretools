@@ -52,7 +52,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
             return undefined;
         }
 
-        if (this.treeDataProvider.collapsibleStateTracker) {
+        if (this.parent && this.treeDataProvider.collapsibleStateTracker) {
             return this.treeDataProvider.collapsibleStateTracker.getCollapsibleState(this);
         }
 

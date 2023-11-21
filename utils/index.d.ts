@@ -461,7 +461,7 @@ export interface GenericParentTreeItemOptions {
     suppressMaskLabel?: boolean;
 
     compareChildrenImpl?(item1: AzExtTreeItem, item2: AzExtTreeItem): number;
-    loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): AzExtTreeItem[] | Promise<AzExtTreeItem[]>;
+    loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]>;
 }
 
 /**
@@ -474,7 +474,8 @@ export declare class GenericParentTreeItem extends AzExtParentTreeItem {
     readonly childTypeLabel?: string;
     readonly label: string;
     readonly initialCollapsibleState: TreeItemCollapsibleState;
-    readonly parent: AzExtParentTreeItem | undefined;
+
+    constructor(parent: AzExtParentTreeItem | undefined, options: GenericParentTreeItemOptions);
 
     compareChildrenImpl(item1: AzExtTreeItem, item2: AzExtTreeItem): number;
     hasMoreChildrenImpl(): boolean;
