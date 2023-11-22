@@ -77,7 +77,7 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
             return;
         }
 
-        // Check if the last activity child was a parent fail item; if so, attach the actual error to it for additional context
+        // Check if the last activity child was a parent fail item; if so, attach the actual error to it for additional user context
         const lastActivityChild = this.context.activityChildren?.at(-1);
         if (isAzExtParentTreeItem(lastActivityChild) && new RegExp(activityFailContext).test(lastActivityChild?.contextValue ?? '')) {
             const previousLoadMoreChildrenImpl = lastActivityChild.loadMoreChildrenImpl.bind(lastActivityChild) as (clearCache: boolean, context: types.IActionContext) => Promise<AzExtTreeItem[]>;
@@ -90,7 +90,7 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
             return;
         }
 
-        // Otherwise append error item to the end
+        // Otherwise append error item to the end of the list
         errorItem.iconPath = activityFailIcon;
         this.context.activityChildren?.push(errorItem);
     }

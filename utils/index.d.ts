@@ -462,7 +462,7 @@ export interface GenericParentTreeItemOptions {
     suppressMaskLabel?: boolean;
 
     compareChildrenImpl?(item1: AzExtTreeItem, item2: AzExtTreeItem): number;
-    loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]>;
+    loadMoreChildrenImpl?(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]>;
 }
 
 /**

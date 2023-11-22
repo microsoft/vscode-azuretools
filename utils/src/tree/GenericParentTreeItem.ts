@@ -18,7 +18,7 @@ interface GenericParentTreeItemOptions {
     suppressMaskLabel?: boolean;
 
     compareChildrenImpl?(item1: AzExtTreeItem, item2: AzExtTreeItem): number;
-    loadMoreChildrenImpl(clearCache: boolean, context: types.IActionContext): Promise<AzExtTreeItem[]>;
+    loadMoreChildrenImpl?(clearCache: boolean, context: types.IActionContext): Promise<AzExtTreeItem[]>;
 }
 
 export class GenericParentTreeItem extends AzExtParentTreeItem implements types.GenericParentTreeItem {
@@ -43,9 +43,9 @@ export class GenericParentTreeItem extends AzExtParentTreeItem implements types.
     }
 
     loadMoreChildrenImpl(clearCache: boolean, context: types.IActionContext): Promise<AzExtTreeItem[]> {
-        // The abstract class requires that loadMoreChildrenImpl be immediately defined before the constructor is run
-        // So just call the options method directly here
-        return this.options.loadMoreChildrenImpl(clearCache, context);
+        // The abstract class requires that loadMoreChildrenImpl be immediately defined
+        // So define and run here rather than trying to set the value within the constructor
+        return this.options.loadMoreChildrenImpl?.(clearCache, context) ?? Promise.resolve([]);
     }
 
     hasMoreChildrenImpl(): boolean {
