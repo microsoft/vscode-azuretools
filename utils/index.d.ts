@@ -456,6 +456,7 @@ export declare function isAzExtParentTreeItem(maybeParentTreeItem: unknown): may
 export interface GenericParentTreeItemOptions {
     childTypeLabel?: string;
     contextValue: string;
+    iconPath?: TreeItemIconPath;
     initialCollapsibleState?: TreeItemCollapsibleState;
     label: string;
     suppressMaskLabel?: boolean;
@@ -468,11 +469,11 @@ export interface GenericParentTreeItemOptions {
  * A convenience class used for very basic parent tree items
  */
 export declare class GenericParentTreeItem extends AzExtParentTreeItem {
+    childTypeLabel?: string;
     contextValue: string;
+    label: string;
     suppressMaskLabel?: boolean;
 
-    readonly childTypeLabel?: string;
-    readonly label: string;
     readonly initialCollapsibleState: TreeItemCollapsibleState;
 
     constructor(parent: AzExtParentTreeItem | undefined, options: GenericParentTreeItemOptions);
@@ -1181,7 +1182,7 @@ export declare interface ExecuteActivityContext {
     /**
      * Children to show under the activity tree item. Children only appear once the activity is done.
      */
-    activityChildren?: AzExtTreeItem[];
+    activityChildren?: (AzExtTreeItem | AzExtParentTreeItem)[];
 }
 
 export declare abstract class AzureWizardExecuteStep<T extends IActionContext> {

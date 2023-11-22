@@ -12,6 +12,7 @@ import { IAzExtParentTreeItemInternal } from "./InternalInterfaces";
 interface GenericParentTreeItemOptions {
     childTypeLabel?: string;
     contextValue: string;
+    iconPath?: types.TreeItemIconPath;
     initialCollapsibleState?: TreeItemCollapsibleState;
     label: string;
     suppressMaskLabel?: boolean;
@@ -21,21 +22,22 @@ interface GenericParentTreeItemOptions {
 }
 
 export class GenericParentTreeItem extends AzExtParentTreeItem implements types.GenericParentTreeItem {
+    childTypeLabel?: string;
     contextValue: string;
+    label: string;
     suppressMaskLabel?: boolean;
 
-    readonly childTypeLabel?: string;
-    readonly label: string;
     readonly initialCollapsibleState: TreeItemCollapsibleState;
 
     constructor(parent: IAzExtParentTreeItemInternal | undefined, readonly options: GenericParentTreeItemOptions) {
         super(parent);
-        this.contextValue = options.contextValue;
-        this.suppressMaskLabel = options.suppressMaskLabel;
         this.childTypeLabel = options.childTypeLabel;
+        this.contextValue = options.contextValue;
+        this.iconPath = options.iconPath;
+        this.initialCollapsibleState = options.initialCollapsibleState === undefined ?
+            TreeItemCollapsibleState.Collapsed : options.initialCollapsibleState;
         this.label = options.label;
-        this.initialCollapsibleState = options.initialCollapsibleState === TreeItemCollapsibleState.Expanded ?
-            TreeItemCollapsibleState.Expanded : TreeItemCollapsibleState.Collapsed;
+        this.suppressMaskLabel = options.suppressMaskLabel;
 
         this.compareChildrenImpl = options.compareChildrenImpl ?? (() => 0);
     }
