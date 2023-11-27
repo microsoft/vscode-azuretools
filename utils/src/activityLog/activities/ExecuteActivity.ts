@@ -62,7 +62,7 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
 
                 if (this.context.activityChildren) {
                     parent.compareChildrenImpl = () => 0;  // Don't sort
-                    this.attachErrorItemToActivityChildren(errorItem);
+                    this.appendErrorItemToActivityChildren(errorItem);
                     return this.context.activityChildren;
                 }
 
@@ -71,7 +71,7 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
         }
     }
 
-    private attachErrorItemToActivityChildren(errorItem: AzExtTreeItem): void {
+    private appendErrorItemToActivityChildren(errorItem: AzExtTreeItem): void {
         // Honor any error suppression flag
         if ((this.context as unknown as types.IActionContext).errorHandling?.suppressDisplay) {
             return;
