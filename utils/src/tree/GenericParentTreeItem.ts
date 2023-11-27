@@ -43,8 +43,8 @@ export class GenericParentTreeItem extends AzExtParentTreeItem implements types.
     }
 
     public loadMoreChildrenImpl(clearCache: boolean, context: types.IActionContext): Promise<AzExtTreeItem[]> {
-        // The abstract class requires that loadMoreChildrenImpl be immediately defined
-        // So define and run here rather than trying to set the value within the constructor
+        // Save and run off the saved tree item constructor options since we cannot assign the value directly during initialization
+        // (Abstract class inheritance requires loadMoreChildrenImpl definition be immediately defined)
         return this.options.loadMoreChildrenImpl?.(clearCache, context) ?? Promise.resolve([]);
     }
 
