@@ -453,6 +453,36 @@ export declare abstract class AzExtTreeItem implements IAzExtTreeItem {
 export declare function isAzExtTreeItem(maybeTreeItem: unknown): maybeTreeItem is AzExtTreeItem;
 export declare function isAzExtParentTreeItem(maybeParentTreeItem: unknown): maybeParentTreeItem is AzExtParentTreeItem;
 
+export interface GenericParentTreeItemOptions {
+    childTypeLabel?: string;
+    contextValue: string;
+    iconPath?: TreeItemIconPath;
+    initialCollapsibleState?: TreeItemCollapsibleState;
+    label: string;
+    suppressMaskLabel?: boolean;
+
+    compareChildrenImpl?(item1: AzExtTreeItem, item2: AzExtTreeItem): number;
+    loadMoreChildrenImpl?(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]>;
+}
+
+/**
+ * A convenience class used for very basic parent tree items
+ */
+export declare class GenericParentTreeItem extends AzExtParentTreeItem {
+    childTypeLabel?: string;
+    contextValue: string;
+    label: string;
+    suppressMaskLabel?: boolean;
+
+    readonly initialCollapsibleState: TreeItemCollapsibleState;
+
+    constructor(parent: AzExtParentTreeItem | undefined, options: GenericParentTreeItemOptions);
+
+    compareChildrenImpl(item1: AzExtTreeItem, item2: AzExtTreeItem): number;
+    hasMoreChildrenImpl(): boolean;
+    loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]>;
+}
+
 export interface IGenericTreeItemOptions {
     id?: string;
     label: string;
