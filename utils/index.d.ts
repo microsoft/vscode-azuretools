@@ -1113,6 +1113,13 @@ export interface IWizardOptions<T extends IActionContext> {
     showLoadingPrompt?: boolean;
 }
 
+export const activitySuccessContext: 'activity:success';
+export const activityFailContext: 'activity:fail';
+
+export const activityInfoIcon: ThemeIcon;
+export const activitySuccessIcon: ThemeIcon;
+export const activityFailIcon: ThemeIcon;
+
 export type ActivityTask<R> = (progress: Progress<{ message?: string, increment?: number }>, cancellationToken: CancellationToken) => Promise<R>;
 
 export declare abstract class ActivityBase<R> implements Activity {

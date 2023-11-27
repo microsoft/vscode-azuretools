@@ -80,7 +80,7 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
         // Check if the last activity child was a parent fail item; if so, attach the actual error to it for additional user context
         const lastActivityChild = this.context.activityChildren?.at(-1);
         if (isAzExtParentTreeItem(lastActivityChild) && new RegExp(activityFailContext).test(lastActivityChild?.contextValue ?? '')) {
-            const previousLoadMoreChildrenImpl = lastActivityChild.loadMoreChildrenImpl.bind(lastActivityChild) as (clearCache: boolean, context: types.IActionContext) => Promise<AzExtTreeItem[]>;
+            const previousLoadMoreChildrenImpl = lastActivityChild.loadMoreChildrenImpl.bind(lastActivityChild) as typeof lastActivityChild.loadMoreChildrenImpl;
             lastActivityChild.loadMoreChildrenImpl = async (clearCache: boolean, context: types.IActionContext) => {
                 return [
                     ...await previousLoadMoreChildrenImpl(clearCache, context),
