@@ -6,9 +6,11 @@
 import * as vscode from 'vscode';
 import * as hTypes from '../../../hostapi';
 import * as types from '../../../index';
-import { activityFailIcon } from '../../constants';
+import { activityFailContext, activityFailIcon } from '../../constants';
 import { AzExtParentTreeItem } from "../../tree/AzExtParentTreeItem";
+import { AzExtTreeItem } from '../../tree/AzExtTreeItem';
 import { GenericTreeItem } from "../../tree/GenericTreeItem";
+import { isAzExtParentTreeItem } from '../../tree/isAzExtTreeItem';
 import { ActivityBase } from "../Activity";
 
 export class ExecuteActivity<TContext extends types.ExecuteActivityContext = types.ExecuteActivityContext> extends ActivityBase<void> {
@@ -60,17 +62,37 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
 
                 if (this.context.activityChildren) {
                     parent.compareChildrenImpl = () => 0;  // Don't sort
-                    errorItem.iconPath = activityFailIcon;
-
-                    return [
-                        ...this.context.activityChildren,
-                        errorItem
-                    ];
+                    this.attachErrorItemToActivityChildren(errorItem);
+                    return this.context.activityChildren;
                 }
 
                 return [errorItem];
             }
         }
+    }
+
+    private attachErrorItemToActivityChildren(errorItem: AzExtTreeItem): void {
+        // Honor any error suppression flag
+        if ((this.context as unknown as types.IActionContext).errorHandling?.suppressDisplay) {
+            return;
+        }
+
+        // Check if the last activity child was a parent fail item; if so, attach the actual error to it for additional user context
+        const lastActivityChild = this.context.activityChildren?.at(-1);
+        if (isAzExtParentTreeItem(lastActivityChild) && new RegExp(activityFailContext).test(lastActivityChild?.contextValue ?? '')) {
+            const previousLoadMoreChildrenImpl = lastActivityChild.loadMoreChildrenImpl.bind(lastActivityChild) as typeof lastActivityChild.loadMoreChildrenImpl;
+            lastActivityChild.loadMoreChildrenImpl = async (clearCache: boolean, context: types.IActionContext) => {
+                return [
+                    ...await previousLoadMoreChildrenImpl(clearCache, context),
+                    errorItem
+                ];
+            }
+            return;
+        }
+
+        // Otherwise append error item to the end of the list
+        errorItem.iconPath = activityFailIcon;
+        this.context.activityChildren?.push(errorItem);
     }
 
     protected get label(): string {

@@ -9,6 +9,7 @@ export * from './DialogResponses';
 export * from './activityLog/Activity';
 export * from './activityLog/activities/ExecuteActivity';
 export * from './callWithTelemetryAndErrorHandling';
+export { activityFailContext, activityFailIcon, activityInfoIcon, activitySuccessContext, activitySuccessIcon } from './constants';
 export * from './createApiProvider';
 export { createExperimentationService } from './createExperimentationService';
 export * from './errors';
