@@ -469,18 +469,18 @@ export interface GenericParentTreeItemOptions {
  * A convenience class used for very basic parent tree items
  */
 export declare class GenericParentTreeItem extends AzExtParentTreeItem {
-    childTypeLabel?: string;
-    contextValue: string;
-    label: string;
-    suppressMaskLabel?: boolean;
+    public childTypeLabel?: string;
+    public contextValue: string;
+    public label: string;
+    public suppressMaskLabel?: boolean;
 
-    readonly initialCollapsibleState: TreeItemCollapsibleState;
+    public readonly initialCollapsibleState: TreeItemCollapsibleState;
 
     constructor(parent: AzExtParentTreeItem | undefined, options: GenericParentTreeItemOptions);
 
-    compareChildrenImpl(item1: AzExtTreeItem, item2: AzExtTreeItem): number;
-    hasMoreChildrenImpl(): boolean;
-    loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]>;
+    public compareChildrenImpl(item1: AzExtTreeItem, item2: AzExtTreeItem): number;
+    public hasMoreChildrenImpl(): boolean;
+    public loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]>;
 }
 
 export interface IGenericTreeItemOptions {

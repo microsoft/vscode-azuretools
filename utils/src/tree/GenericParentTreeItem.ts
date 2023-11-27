@@ -22,12 +22,12 @@ interface GenericParentTreeItemOptions {
 }
 
 export class GenericParentTreeItem extends AzExtParentTreeItem implements types.GenericParentTreeItem {
-    childTypeLabel?: string;
-    contextValue: string;
-    label: string;
-    suppressMaskLabel?: boolean;
+    public childTypeLabel?: string;
+    public contextValue: string;
+    public label: string;
+    public suppressMaskLabel?: boolean;
 
-    readonly initialCollapsibleState: TreeItemCollapsibleState;
+    public readonly initialCollapsibleState: TreeItemCollapsibleState;
 
     constructor(parent: IAzExtParentTreeItemInternal | undefined, readonly options: GenericParentTreeItemOptions) {
         super(parent);
@@ -42,13 +42,13 @@ export class GenericParentTreeItem extends AzExtParentTreeItem implements types.
         this.compareChildrenImpl = options.compareChildrenImpl ?? (() => 0);
     }
 
-    loadMoreChildrenImpl(clearCache: boolean, context: types.IActionContext): Promise<AzExtTreeItem[]> {
+    public loadMoreChildrenImpl(clearCache: boolean, context: types.IActionContext): Promise<AzExtTreeItem[]> {
         // The abstract class requires that loadMoreChildrenImpl be immediately defined
         // So define and run here rather than trying to set the value within the constructor
         return this.options.loadMoreChildrenImpl?.(clearCache, context) ?? Promise.resolve([]);
     }
 
-    hasMoreChildrenImpl(): boolean {
+    public hasMoreChildrenImpl(): boolean {
         return false;
     }
 }
