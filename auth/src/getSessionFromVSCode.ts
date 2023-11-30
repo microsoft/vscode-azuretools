@@ -12,7 +12,7 @@ function ensureEndingSlash(value: string): string {
 
 function getResourceScopes(scopes?: string | string[]): string[] {
     if (scopes === undefined || scopes === "" || scopes.length === 0) {
-        scopes = ensureEndingSlash(getConfiguredAzureEnv().resourceManagerEndpointUrl);
+        scopes = ensureEndingSlash(getConfiguredAzureEnv().managementEndpointUrl);
     }
     const arrScopes = (Array.isArray(scopes) ? scopes : [scopes])
         .map((scope) => {
