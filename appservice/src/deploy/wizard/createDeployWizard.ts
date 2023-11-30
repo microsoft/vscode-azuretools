@@ -14,6 +14,7 @@ import { PostDeployTaskExecuteStep } from "./PostDeployTaskExecuteStep";
 import { StartAppAfterDeployExecuteStep } from "./StartAppAfterDeployExecuteStep";
 import { StopAppBeforeDeployExecuteStep } from "./StopAppBeforeDeployExecuteStep";
 import { DelayFirstWebAppDeployStep } from "./deployZip/DelayFirstWebAppDeployStep";
+import { DeployFlexExecuteStep } from "./deployZip/DeployFlexExecuteStep";
 import { DeployStorageAccountExecuteStep } from "./deployZip/DeployStorageAccountExecuteStep";
 import { DeployWarExecuteStep } from "./deployZip/DeployWarExecuteStep";
 import { DeployZipPushExecuteStep } from "./deployZip/DeployZipPushExecuteStep";
@@ -46,6 +47,8 @@ export async function createDeployExecuteSteps(context: InnerDeployContext): Pro
                 executeSteps.push(new DeployZipPushExecuteStep(pathFileMap));
             } else if (context.deployMethod === 'storage') {
                 executeSteps.push(new DeployStorageAccountExecuteStep());
+            } else if (context.deployMethod === 'flexconsumption') {
+                executeSteps.push(new DeployFlexExecuteStep());
             } else {
                 executeSteps.push(new DeployZipPushExecuteStep());
             }
