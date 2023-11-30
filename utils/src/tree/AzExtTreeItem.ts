@@ -52,7 +52,14 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
             return undefined;
         }
 
-        if (this.parent && this.treeDataProvider.collapsibleStateTracker) {
+        /**
+         * Reference: https://github.com/microsoft/vscode-azuretools/pull/1635/files#r1408222203
+         *
+         * `GenericParentTreeItem` has the option to be defined without a parent or tree data provider (for example, when utilized for the activity log)
+         * To avoid `nonNull` errors from being thrown, don't call the getter for `treeDataProvider` if none of the associated fields are populated.
+         */
+        const hasTreeDataProvider: boolean = !!this._treeDataProvider || !!this.parent?.treeDataProvider;
+        if (hasTreeDataProvider && this.treeDataProvider.collapsibleStateTracker) {
             return this.treeDataProvider.collapsibleStateTracker.getCollapsibleState(this);
         }
 
