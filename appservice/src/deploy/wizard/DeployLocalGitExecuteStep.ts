@@ -5,9 +5,9 @@
 
 import { InnerDeployContext } from "../IDeployContext";
 import { localGitDeploy } from "../localGitDeploy";
-import { DeployExecuteBaseStep } from "./DeployExecuteBaseStep";
+import { DeployExecuteStepBase } from "./DeployExecuteStepBase";
 
-export class DeployLocalGitExecuteStep extends DeployExecuteBaseStep {
+export class DeployLocalGitExecuteStep extends DeployExecuteStepBase {
     public async deployCore(context: InnerDeployContext): Promise<void> {
         await localGitDeploy(context.site, { fsPath: context.workspaceFolder.uri.fsPath }, context);
     }
