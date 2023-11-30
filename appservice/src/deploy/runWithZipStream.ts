@@ -4,9 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzExtPipelineResponse } from '@microsoft/vscode-azext-azureutils';
-import { IActionContext } from '@microsoft/vscode-azext-utils';
+import { AzExtFsExtra, IActionContext } from '@microsoft/vscode-azext-utils';
 import * as fse from 'fs-extra';
-import * as globby from 'globby';
 import * as path from 'path';
 import * as prettybytes from 'pretty-bytes';
 import { Readable } from 'stream';
@@ -68,7 +67,7 @@ export async function runWithZipStream(context: IActionContext, options: {
             if (site.isFunctionApp) {
                 filesToZip = await getFilesFromGitignore(fsPath, '.funcignore');
             } else {
-                filesToZip = await getFilesFromGlob(fsPath, site, options.progress);
+                filesToZip = await getFilesFromGlob(fsPath, site.fullName, options.progress);
             }
 
             ext.outputChannel.appendLog(vscode.l10n.t('Adding {0} files to zip package...', filesToZip.length), { resourceName: site.fullName });
@@ -91,63 +90,55 @@ function getPathFromMap(realPath: string, pathfileMap?: Map<string, string>): st
     return pathfileMap?.get(realPath) || realPath;
 }
 
-const commonGlobSettings: Partial<globby.GlobbyOptions> = {
-    dot: true, // Include paths starting with '.'
-    followSymbolicLinks: true, // Follow symlinks to get all sub folders https://github.com/microsoft/vscode-azurefunctions/issues/1289
-};
-
 /**
  * Adds files using glob filtering
  */
-async function getFilesFromGlob(folderPath: string, site: ParsedSite, progress?: vscode.Progress<{ message?: string; increment?: number }>): Promise<string[]> {
-    const zipDeployConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration(ext.prefix, vscode.Uri.file(folderPath));
-    const globOptions = { cwd: folderPath, followSymbolicLinks: true, dot: true };
+export async function getFilesFromGlob(folderPath: string, resourceName: string, progress?: vscode.Progress<{ message?: string; increment?: number }>): Promise<string[]> {
+    // App Service is the only extension with the zipIgnorePattern setting, so if ext.prefix is undefined, use 'appService'
+    const zipDeployConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration(ext.prefix ?? 'appService', vscode.Uri.file(folderPath));
     const globPattern: string = zipDeployConfig.get<string>('zipGlobPattern') || '**/*';
-    const filesToInclude: string[] = await globby(globPattern, globOptions);
     const zipIgnorePatternStr = 'zipIgnorePattern';
+    const zipIgnorePattern: string[] | string | undefined = zipDeployConfig.get<string | string[]>(zipIgnorePatternStr);
+    const ignorePatternList: string[] | undefined = typeof zipIgnorePattern === 'string' ? [zipIgnorePattern] : zipIgnorePattern;
 
-    let ignorePatternList: string | string[] = zipDeployConfig.get<string | string[]>(zipIgnorePatternStr) || '';
-    const filesToIgnore: string[] = await globby(ignorePatternList, globOptions);
-
+    // first find all files without any ignorePatterns
+    let files: vscode.Uri[] = await vscode.workspace.findFiles(new vscode.RelativePattern(folderPath, globPattern));
+    const ignoringFiles = vscode.l10n.t(`Ignoring files from \"{0}.{1}\"`, ext.prefix, zipIgnorePatternStr);
     if (ignorePatternList) {
-        if (typeof ignorePatternList === 'string') {
-            ignorePatternList = [ignorePatternList];
+        try {
+            // not all ouptut channels _have_ to support appendLog, so catch the error
+            ext.outputChannel.appendLog(ignoringFiles, { resourceName });
+        } catch (error) {
+            ext.outputChannel.appendLine(ignoringFiles);
         }
-        if (ignorePatternList.length > 0) {
-            const ignoringFiles = vscode.l10n.t(`Ignoring files from \"{0}.{1}\"`, ext.prefix, zipIgnorePatternStr);
-            ext.outputChannel.appendLog(ignoringFiles, { resourceName: site.fullName });
-            progress?.report({ message: ignoringFiles });
-            for (const pattern of ignorePatternList) {
-                ext.outputChannel.appendLine(`\"${pattern}\"`);
-            }
+
+        progress?.report({ message: ignoringFiles });
+
+        // if there is anything to ignore, accumulate a list of ignored files and take the union of the lists
+        for (const pattern of ignorePatternList) {
+            const filesIgnored = (await vscode.workspace.findFiles(globPattern, pattern)).map(uri => uri.fsPath);
+            // only leave in files that are in both lists
+            files = files.filter(uri => filesIgnored.includes(uri.fsPath));
+            ext.outputChannel.appendLine(`\"${pattern}\"`);
         }
     }
-
-    return filesToInclude.filter(file => {
-        return !filesToIgnore.includes(file);
-    })
+    return files.map(f => path.relative(folderPath, f.fsPath));
 }
 
 /**
  * Adds files using gitignore filtering
  */
-async function getFilesFromGitignore(folderPath: string, gitignoreName: string): Promise<string[]> {
+export async function getFilesFromGitignore(folderPath: string, gitignoreName: string): Promise<string[]> {
     let ignore: string[] = [];
     const gitignorePath: string = path.join(folderPath, gitignoreName);
-    if (await fse.pathExists(gitignorePath)) {
-        const funcIgnoreContents: string = (await fse.readFile(gitignorePath)).toString();
+    if (await AzExtFsExtra.pathExists(gitignorePath)) {
+        const funcIgnoreContents: string = await AzExtFsExtra.readFile(gitignorePath);
         ignore = funcIgnoreContents
             .split('\n')
             .map(l => l.trim())
             .filter(s => s !== '');
     }
 
-    return await globby('**/*', {
-        gitignore: true,
-        // We can replace this option and the above logic with `ignoreFiles` if we upgrade to globby^13 (ESM)
-        // see https://github.com/sindresorhus/globby#ignorefiles
-        ignore,
-        cwd: folderPath,
-        ...commonGlobSettings
-    });
+    return (await vscode.workspace.findFiles(new vscode.RelativePattern(folderPath, '**/*'), `{${ignore.join(',')}}`))
+        .map(f => path.relative(folderPath, f.fsPath));
 }

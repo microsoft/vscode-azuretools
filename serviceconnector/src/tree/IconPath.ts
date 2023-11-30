@@ -14,6 +14,6 @@ export function getIconPath(iconName: string): TreeItemIconPath {
 function getResourcesPath(): string {
     return ext.ignoreBundle ?
         path.join(__dirname, '..', '..', '..', 'resources') :
-        path.join(__dirname, 'node_modules', '@microsoft', 'vscode-azext-azureutils', 'resources');
+        path.join(__dirname, 'node_modules', '@microsoft', 'vscode-azext-serviceconnector', 'resources');
 }
 

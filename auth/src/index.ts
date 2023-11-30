@@ -8,4 +8,6 @@ export * from './AzureSubscription';
 export * from './AzureSubscriptionProvider';
 export * from './NotSignedInError';
 export * from './utils/configuredAzureEnv';
+export * from './utils/getUnauthenticatedTenants';
 export * from './VSCodeAzureSubscriptionProvider';
+export * from './signInToTenant'

@@ -1450,6 +1450,9 @@ export type AzExtItemUriParts = {
 };
 
 export interface AzExtTreeFileSystemItem {
+    /**
+     * Warning: the identifier cannot contain plus sign '+'. No matter if it's exactly '+' or if it's URL encoded "%2B".
+     */
     id: string;
     refresh?(context: IActionContext): Promise<void>;
 }
@@ -1652,14 +1655,6 @@ export declare class DeleteConfirmationStep extends AzureWizardPromptStep<IActio
  * @returns a sorted, unique string of values separated by `;`
  */
 export function createContextValue(values: string[]): string;
-
-/**
- * Gets a normalized type for an Azure resource, accounting for the fact that some
- * Azure resources share values for type and/or kind
- * @param resource The resource to check the {@link AzExtResourceType} for
- * @returns The normalized Azure resource type
- */
-export declare function getAzExtResourceType(resource: { type: string; kind?: string }): AzExtResourceType | undefined;
 
 /**
  * Gets the exported API from the given extension id and version range.

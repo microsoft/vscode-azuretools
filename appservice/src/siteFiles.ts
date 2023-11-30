@@ -25,14 +25,13 @@ export interface ISiteFileMetadata {
 /**
  * @param path - Do not include leading slash. Include trailing slash if path represents a folder.
  */
-export function createSiteFilesUrl(site: ParsedSite, path: string): string {
-    if (site.isFunctionApp) {
-        if (site.isLinux) {
-            path = path.replace(/^\/home\//, '');
-        }
+export function createSiteFilesUrl(site: ParsedSite, path: string, href?: string): string {
+    // For Linux consumption function apps, the href doesn't work. So we build the url manually
+    if (site.isFunctionApp && site.isLinux) {
+        path = path.replace(/^\/home\//, '');
         return `${site.id}/hostruntime/admin/vfs/home/${path}/?api-version=2022-03-01`;
     }
-    return `${site.kuduUrl}/api/vfs/${path}`
+    return href ?? `${site.kuduUrl}/api/vfs/${path}`
 }
 
 export async function getFile(context: IActionContext, site: ParsedSite, url: string): Promise<ISiteFile> {

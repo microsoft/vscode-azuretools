@@ -11,7 +11,6 @@ export interface AppSettingsClientProvider {
 }
 
 export interface IAppSettingsClient {
-
     fullName: string;
 
     isLinux: boolean;

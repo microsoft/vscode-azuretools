@@ -32,6 +32,7 @@ jobs:
       packages: ${{ steps.filter.outputs.changes }}
 
   Build:
+    if: ${{ fromJson(needs.ChangedPackages.outputs.packages)[0] != null }}
     # Use template from https://github.com/microsoft/vscode-azuretools/blob/main/.github/workflows/jobs.yml
     uses: ./.github/workflows/jobs.yml
     needs: [ChangedPackages]
@@ -41,12 +42,12 @@ jobs:
       matrix:
         package: ${{ fromJson(needs.ChangedPackages.outputs.packages) }}
 
-  CheckResults: # TODO: this will fail if no packages have been modified
+  CheckResults: # required for GtiHub PR rules
     # Require all jobs under `build` to have succeeded
     # See https://github.com/orgs/community/discussions/26822
     if: ${{ always() }}
-    needs: [Build]
+    needs: [Build, ChangedPackages]
     runs-on: ubuntu-latest
     steps:
       - run: exit 1
-        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        if: ${{ (fromJson(needs.ChangedPackages.outputs.packages)[0] != null) && contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}

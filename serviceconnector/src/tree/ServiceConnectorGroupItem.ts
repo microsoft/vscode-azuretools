@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { uiUtils } from "@microsoft/vscode-azext-azureutils";
-import { ISubscriptionContext, TreeElementBase, callWithTelemetryAndErrorHandling, createSubscriptionContext, nonNullValue } from "@microsoft/vscode-azext-utils";
+import { ISubscriptionContext, TreeElementBase, callWithTelemetryAndErrorHandling, createSubscriptionContext, nonNullProp, nonNullValue } from "@microsoft/vscode-azext-utils";
 import * as vscode from 'vscode';
 import { TreeItem, TreeItemCollapsibleState } from "vscode";
 import { LinkerItem } from "../createLinker/createLinker";
@@ -22,11 +22,11 @@ export class ServiceConnectorGroupItem implements TreeElementBase {
     async getChildren(): Promise<ServiceConnectorItem[]> {
         const result = await callWithTelemetryAndErrorHandling('getChildren', async () => {
             const client = new (await import('@azure/arm-servicelinker')).ServiceLinkerManagementClient(this.subscription.credentials);
-            const linkers = (await uiUtils.listAllIterator(client.linker.list(nonNullValue(this.item.id))));
+            const linkers = (await uiUtils.listAllIterator(client.linker.list(nonNullProp(this.item, 'id'))));
             return linkers.map(linker => createServiceConnectorItem(this.subscription, this.item, linker));
         });
 
-        return nonNullValue(result);
+        return nonNullValue(result, 'getChildren');
     }
 
     getTreeItem(): TreeItem {

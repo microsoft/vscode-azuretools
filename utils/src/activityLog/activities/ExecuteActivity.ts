@@ -6,6 +6,7 @@
 import * as vscode from 'vscode';
 import * as hTypes from '../../../hostapi';
 import * as types from '../../../index';
+import { activityFailIcon } from '../../constants';
 import { AzExtParentTreeItem } from "../../tree/AzExtParentTreeItem";
 import { GenericTreeItem } from "../../tree/GenericTreeItem";
 import { ActivityBase } from "../Activity";
@@ -30,7 +31,8 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
             getChildren: activityResult || this.context.activityChildren ? ((parent: AzExtParentTreeItem) => {
 
                 if (this.context.activityChildren) {
-                    return this.context.activityChildren.reverse();
+                    parent.compareChildrenImpl = () => 0;  // Don't sort
+                    return this.context.activityChildren;
                 }
 
                 const ti = new GenericTreeItem(parent, {
@@ -51,15 +53,22 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
         return {
             label: this.label,
             getChildren: (parent: AzExtParentTreeItem) => {
+                const errorItem = new GenericTreeItem(parent, {
+                    contextValue: 'executeError',
+                    label: error.message
+                });
+
                 if (this.context.activityChildren) {
-                    return this.context.activityChildren.reverse();
+                    parent.compareChildrenImpl = () => 0;  // Don't sort
+                    errorItem.iconPath = activityFailIcon;
+
+                    return [
+                        ...this.context.activityChildren,
+                        errorItem
+                    ];
                 }
-                return [
-                    new GenericTreeItem(parent, {
-                        contextValue: 'executeError',
-                        label: error.message
-                    })
-                ];
+
+                return [errorItem];
             }
         }
     }

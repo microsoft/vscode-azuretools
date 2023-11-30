@@ -4,25 +4,25 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { uiUtils } from "@microsoft/vscode-azext-azureutils";
-import { AzExtParentTreeItem, AzExtTreeItem, TreeItemIconPath, nonNullValue } from "@microsoft/vscode-azext-utils";
+import { AzExtParentTreeItem, AzExtTreeItem, TreeItemIconPath, createContextValue, nonNullProp } from "@microsoft/vscode-azext-utils";
 import * as vscode from 'vscode';
 import { getIconPath } from "./IconPath";
 import { ServiceConnectorTreeItem } from "./ServiceConnectorTreeItem";
 
 export class ServiceConnectorGroupTreeItem extends AzExtParentTreeItem {
-    constructor(parent: AzExtParentTreeItem, public readonly resourceId: string) {
+    constructor(parent: AzExtParentTreeItem, public readonly resourceId: string, private readonly contextValuesToAdd: string[]) {
         super(parent);
     }
 
     public async loadMoreChildrenImpl(): Promise<AzExtTreeItem[]> {
         const client = new (await import('@azure/arm-servicelinker')).ServiceLinkerManagementClient(this.subscription.credentials);
-        const linkers = (await uiUtils.listAllIterator(client.linker.list(nonNullValue(this.resourceId))));
+        const linkers = (await uiUtils.listAllIterator(client.linker.list(nonNullProp(this, 'resourceId'))));
 
         const children = await this.createTreeItemsWithErrorHandling(
             linkers,
             'invalidServiceConnector',
             l => {
-                return new ServiceConnectorTreeItem(l, this)
+                return new ServiceConnectorTreeItem(l, this, this.contextValuesToAdd)
             },
             l => {
                 return l.name;
@@ -48,6 +48,6 @@ export class ServiceConnectorGroupTreeItem extends AzExtParentTreeItem {
     }
 
     public get contextValue(): string {
-        return 'serviceConnectorGroupItem';
+        return createContextValue(['serviceConnectorGroupItem', ...this.contextValuesToAdd]);
     }
 }

@@ -3,13 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { SubscriptionClient, TenantIdDescription } from '@azure/arm-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
+import type { SubscriptionClient, TenantIdDescription } from '@azure/arm-resources-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
 import type { TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
 import * as vscode from 'vscode';
 import type { AzureAuthentication } from './AzureAuthentication';
 import type { AzureSubscription, SubscriptionId, TenantId } from './AzureSubscription';
 import type { AzureSubscriptionProvider } from './AzureSubscriptionProvider';
 import { NotSignedInError } from './NotSignedInError';
+import { getSessionFromVSCode } from './getSessionFromVSCode';
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from './utils/configuredAzureEnv';
 
 const EventDebounce = 5 * 1000; // 5 seconds
@@ -52,6 +53,24 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
     }
 
     /**
+     * Gets a list of tenants available to the user.
+     * Use {@link isSignedIn} to check if the user is signed in to a particular tenant.
+     *
+     * @returns A list of tenants.
+     */
+    public async getTenants(): Promise<TenantIdDescription[]> {
+        const { client } = await this.getSubscriptionClient();
+
+        const results: TenantIdDescription[] = [];
+
+        for await (const tenant of client.tenants.list()) {
+            results.push(tenant);
+        }
+
+        return results;
+    }
+
+    /**
      * Gets a list of Azure subscriptions available to the user.
      *
      * @param filter - Whether to filter the list returned, according to the list returned
@@ -66,9 +85,6 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
     public async getSubscriptions(filter: boolean = true): Promise<AzureSubscription[]> {
         const tenantIds = await this.getTenantFilters();
         const shouldFilterTenants = filter && !!tenantIds.length; // If the list is empty it is treated as "no filter"
-
-        const subscriptionIds = await this.getSubscriptionFilters();
-        const shouldFilterSubscriptions = filter && !!subscriptionIds.length; // If the list is empty it is treated as "no filter"
 
         const results: AzureSubscription[] = [];
 
@@ -85,40 +101,52 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
                     continue;
                 }
 
-                // For each tenant, get the list of subscriptions
-                for (const subscription of await this.getSubscriptionsForTenant(tenantId)) {
-                    // If filtering is enabled, and the current subscription is not in that list, then skip it
-                    if (shouldFilterSubscriptions && !subscriptionIds.includes(subscription.subscriptionId)) {
-                        continue;
-                    }
-
-                    results.push(subscription);
+                // If the user is not signed in to this tenant, then skip it
+                if (!(await this.isSignedIn(tenantId))) {
+                    continue;
                 }
+
+                // For each tenant, get the list of subscriptions
+                results.push(...await this.getSubscriptionsForTenant(tenantId));
             }
         } finally {
             this.suppressSignInEvents = false;
         }
 
-        return results.sort((a, b) => a.name.localeCompare(b.name));
+        const sortSubscriptions = (subscriptions: AzureSubscription[]): AzureSubscription[] =>
+            subscriptions.sort((a, b) => a.name.localeCompare(b.name));
+
+        const subscriptionIds = await this.getSubscriptionFilters();
+        if (filter && !!subscriptionIds.length) { // If the list is empty it is treated as "no filter"
+            return sortSubscriptions(
+                results.filter(sub => subscriptionIds.includes(sub.subscriptionId))
+            );
+        }
+
+        return sortSubscriptions(results);
     }
 
     /**
      * Checks to see if a user is signed in.
      *
+     * @param tenantId (Optional) Provide to check if a user is signed in to a specific tenant.
+     *
      * @returns True if the user is signed in, false otherwise.
      */
-    public async isSignedIn(): Promise<boolean> {
-        const session = await vscode.authentication.getSession(getConfiguredAuthProviderId(), this.getDefaultScopes(), { createIfNone: false, silent: true });
+    public async isSignedIn(tenantId?: string): Promise<boolean> {
+        const session = await getSessionFromVSCode([], tenantId, { createIfNone: false, silent: true });
         return !!session;
     }
 
     /**
      * Asks the user to sign in or pick an account to use.
      *
+     * @param tenantId (Optional) Provide to sign in to a specific tenant.
+     *
      * @returns True if the user is signed in, false otherwise.
      */
-    public async signIn(): Promise<boolean> {
-        const session = await vscode.authentication.getSession(getConfiguredAuthProviderId(), this.getDefaultScopes(), { createIfNone: true, clearSessionPreference: true });
+    public async signIn(tenantId?: string): Promise<boolean> {
+        const session = await getSessionFromVSCode([], tenantId, { createIfNone: true, clearSessionPreference: true });
         return !!session;
     }
 
@@ -173,22 +201,6 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
     }
 
     /**
-     * Gets the tenants available to a user.
-     *
-     * @returns The list of tenants visible to the user.
-     */
-    private async getTenants(): Promise<TenantIdDescription[]> {
-        const { client } = await this.getSubscriptionClient();
-        const tenants: TenantIdDescription[] = [];
-
-        for await (const tenant of client.tenants.list()) {
-            tenants.push(tenant);
-        }
-
-        return tenants;
-    }
-
-    /**
      * Gets the subscriptions for a given tenant.
      *
      * @param tenantId The tenant ID to get subscriptions for.
@@ -225,20 +237,15 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      *
      * @returns A client, the credential used by the client, and the authentication function
      */
-    private async getSubscriptionClient(tenantId?: string): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
-        const armSubs = await import('@azure/arm-subscriptions');
-
-        // This gets filled in when the client calls `getToken`, and then it can be returned in the `authentication` property of `AzureSubscription`
-        let session: vscode.AuthenticationSession | undefined;
+    private async getSubscriptionClient(tenantId?: string, scopes?: string[]): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
+        const armSubs = await import('@azure/arm-resources-subscriptions');
+        const session = await getSessionFromVSCode(scopes, tenantId, { createIfNone: false, silent: true });
+        if (!session) {
+            throw new NotSignedInError();
+        }
 
         const credential: TokenCredential = {
-            getToken: async (scopes) => {
-                // TODO: if possible, change to `getSessions` when that API is available: https://github.com/microsoft/vscode/issues/152399
-                session = await vscode.authentication.getSession(getConfiguredAuthProviderId(), this.getScopes(scopes, tenantId), { createIfNone: false, silent: true });
-                if (!session) {
-                    throw new NotSignedInError();
-                }
-
+            getToken: async () => {
                 return {
                     token: session.accessToken,
                     expiresOnTimestamp: 0
@@ -246,47 +253,15 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
             }
         }
 
+        const configuredAzureEnv = getConfiguredAzureEnv();
+        const endpoint = configuredAzureEnv.resourceManagerEndpointUrl;
+
         return {
-            client: new armSubs.SubscriptionClient(credential),
+            client: new armSubs.SubscriptionClient(credential, { endpoint }),
             credential: credential,
             authentication: {
-                getSession: () => session // Rewrapped to make TS not confused about the weird initialization pattern
+                getSession: () => session
             }
         };
-    }
-
-    /**
-     * Gets a normalized list of scopes
-     *
-     * @param scopes An input scope string, list, or undefined
-     * @param tenantId (Optional) The tenant ID, will be added to the scopes
-     *
-     * @returns A list of scopes, with the default scope and (optionally) the tenant scope added
-     */
-    private getScopes(scopes: string | string[] | undefined, tenantId?: string): string[] {
-        const scopeSet = new Set<string>(this.getDefaultScopes());
-
-        // If `.default` is passed in, it will be ignored, in favor of the correct default added by `getDefaultScopes`
-        if (typeof scopes === 'string' && scopes !== '.default') {
-            scopeSet.add(scopes);
-        } else if (Array.isArray(scopes)) {
-            scopes.filter(scope => scope !== '.default').forEach(scope => scopeSet.add(scope));
-        }
-
-        if (tenantId) {
-            scopeSet.add(`VSCODE_TENANT:${tenantId}`);
-        }
-
-        return Array.from(scopeSet);
-    }
-
-    /**
-     * Gets the default Azure scopes required for resource management,
-     * depending on the configured endpoint
-     *
-     * @returns The default Azure scopes required
-     */
-    private getDefaultScopes(): string[] {
-        return [`${getConfiguredAzureEnv().resourceManagerEndpointUrl}.default`]
     }
 }

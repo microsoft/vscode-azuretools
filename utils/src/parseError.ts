@@ -90,7 +90,8 @@ export function parseError(error: any): IParsedError {
         isUserCancelledError:
             // check using both methods in case error was created before we implemented isUserCancelledError
             isUserCancelledError(error) ||
-            errorType === 'UserCancelledError'
+            errorType === 'UserCancelledError' ||
+            error instanceof vscode.CancellationError
     };
 }
 

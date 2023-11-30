@@ -59,7 +59,7 @@ export class FolderTreeItem extends AzExtParentTreeItem {
         // this file is being accessed by Kudu and is not viewable
         files = files.filter(f => f.mime !== 'text/xml' || !f.name.includes('LogFiles-kudu-trace_pending.xml'));
         return files.map(file => {
-            const url = this.site.isFunctionApp ? createSiteFilesUrl(this.site, file.path) : file.href;
+            const url = createSiteFilesUrl(this.site, file.path, file.href);
             return file.mime === 'inode/directory' ? new FolderTreeItem(this, {
                 site: this.site,
                 label: file.name,

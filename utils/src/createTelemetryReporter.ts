@@ -25,7 +25,7 @@ export function createTelemetryReporter(ctx: vscode.ExtensionContext): IInternal
         console.warn(`${extensionName}: DEBUGTELEMETRY mode enabled (${debugTelemetryVerbose ? 'verbose' : 'quiet'}) - not sending telemetry`);
         newReporter = new DebugReporter(extensionName, extensionVersion, debugTelemetryVerbose);
     } else {
-        const reporter: TelemetryReporter = new TelemetryReporter(extensionName, extensionVersion, aiKey);
+        const reporter: TelemetryReporter = new TelemetryReporter(aiKey);
         ctx.subscriptions.push(reporter);
         newReporter = reporter;
     }
