@@ -10,7 +10,7 @@ import { PickFilter } from '../PickFilter';
 import { ResourceGroupsItem, SubscriptionItem } from './tempTypes';
 
 export class QuickPickAzureSubscriptionStep extends GenericQuickPickStepWithCommands<AzureResourceQuickPickWizardContext, SkipIfOneQuickPickOptions> {
-    protected subscriptionId?: string;
+    protected readonly subscriptionId?: string;
 
     public constructor(tdp: vscode.TreeDataProvider<ResourceGroupsItem>, options?: AzureSubscriptionQuickPickOptions) {
         super(tdp, {
