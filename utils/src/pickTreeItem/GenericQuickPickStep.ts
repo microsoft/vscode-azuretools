@@ -6,8 +6,8 @@
 import * as vscode from 'vscode';
 import * as types from '../../index';
 import { AzureWizardPromptStep } from '../wizard/AzureWizardPromptStep';
-import { getLastNode } from './getLastNode';
 import { PickFilter } from './PickFilter';
+import { getLastNode } from './getLastNode';
 
 export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizardContext, TOptions extends types.GenericQuickPickOptions> extends AzureWizardPromptStep<TContext> {
     public readonly supportsDuplicateSteps = true;
@@ -47,6 +47,14 @@ export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizar
             const ti = await this.treeDataProvider.getTreeItem(picks[0].data);
             if (!ti.command) {
                 return picks[0].data;
+            }
+        }
+
+        const pickWithoutPrompt = this.getPickWithoutPrompt?.(picks);
+        if (pickWithoutPrompt) {
+            const ti = await this.treeDataProvider.getTreeItem(pickWithoutPrompt.data);
+            if (!ti.command) {
+                return pickWithoutPrompt.data;
             }
         }
 
@@ -94,4 +102,6 @@ export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizar
             data: element,
         };
     }
+
+    protected getPickWithoutPrompt?(picks: types.IAzureQuickPickItem<unknown>[]): types.IAzureQuickPickItem<unknown> | undefined;
 }

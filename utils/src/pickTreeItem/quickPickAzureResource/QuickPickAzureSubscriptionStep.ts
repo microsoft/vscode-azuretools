@@ -4,13 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { AzureResourceQuickPickWizardContext, GenericQuickPickOptions, SkipIfOneQuickPickOptions } from '../../../index';
+import { AzureResourceQuickPickWizardContext, AzureSubscriptionQuickPickOptions, IAzureQuickPickItem, SkipIfOneQuickPickOptions } from '../../../index';
 import { GenericQuickPickStepWithCommands } from '../GenericQuickPickStepWithCommands';
 import { PickFilter } from '../PickFilter';
 import { ResourceGroupsItem, SubscriptionItem } from './tempTypes';
 
 export class QuickPickAzureSubscriptionStep extends GenericQuickPickStepWithCommands<AzureResourceQuickPickWizardContext, SkipIfOneQuickPickOptions> {
-    public constructor(tdp: vscode.TreeDataProvider<ResourceGroupsItem>, options?: GenericQuickPickOptions) {
+    protected subscriptionId?: string;
+
+    public constructor(tdp: vscode.TreeDataProvider<ResourceGroupsItem>, options?: AzureSubscriptionQuickPickOptions) {
         super(tdp, {
             ...options,
             skipIfOne: true, // Subscription is always skip-if-one
@@ -18,6 +20,8 @@ export class QuickPickAzureSubscriptionStep extends GenericQuickPickStepWithComm
             placeHolder: vscode.l10n.t('Select subscription'),
             noPicksMessage: vscode.l10n.t('No subscriptions found'),
         });
+
+        this.subscriptionId = options?.selectSubscriptionId;
     }
 
     protected readonly pickFilter = new AzureSubscriptionPickFilter();
@@ -29,6 +33,14 @@ export class QuickPickAzureSubscriptionStep extends GenericQuickPickStepWithComm
         wizardContext.subscription = pickedSubscription.subscription;
 
         return pickedSubscription;
+    }
+
+    protected override getPickWithoutPrompt(picks: IAzureQuickPickItem<SubscriptionItem>[]): IAzureQuickPickItem<SubscriptionItem> | undefined {
+        if (!this.subscriptionId) {
+            return undefined;
+        }
+
+        return picks.find(pick => pick.data.subscription.subscriptionId === this.subscriptionId);
     }
 }
 
