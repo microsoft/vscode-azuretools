@@ -453,6 +453,36 @@ export declare abstract class AzExtTreeItem implements IAzExtTreeItem {
 export declare function isAzExtTreeItem(maybeTreeItem: unknown): maybeTreeItem is AzExtTreeItem;
 export declare function isAzExtParentTreeItem(maybeParentTreeItem: unknown): maybeParentTreeItem is AzExtParentTreeItem;
 
+export interface GenericParentTreeItemOptions {
+    childTypeLabel?: string;
+    contextValue: string;
+    iconPath?: TreeItemIconPath;
+    initialCollapsibleState?: TreeItemCollapsibleState;
+    label: string;
+    suppressMaskLabel?: boolean;
+
+    compareChildrenImpl?(item1: AzExtTreeItem, item2: AzExtTreeItem): number;
+    loadMoreChildrenImpl?(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]>;
+}
+
+/**
+ * A convenience class used for very basic parent tree items
+ */
+export declare class GenericParentTreeItem extends AzExtParentTreeItem {
+    public childTypeLabel?: string;
+    public contextValue: string;
+    public label: string;
+    public suppressMaskLabel?: boolean;
+
+    public readonly initialCollapsibleState: TreeItemCollapsibleState;
+
+    constructor(parent: AzExtParentTreeItem | undefined, options: GenericParentTreeItemOptions);
+
+    public compareChildrenImpl(item1: AzExtTreeItem, item2: AzExtTreeItem): number;
+    public hasMoreChildrenImpl(): boolean;
+    public loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]>;
+}
+
 export interface IGenericTreeItemOptions {
     id?: string;
     label: string;
@@ -1083,6 +1113,13 @@ export interface IWizardOptions<T extends IActionContext> {
     showLoadingPrompt?: boolean;
 }
 
+export const activitySuccessContext: string;
+export const activityFailContext: string;
+
+export const activityInfoIcon: ThemeIcon;
+export const activitySuccessIcon: ThemeIcon;
+export const activityFailIcon: ThemeIcon;
+
 export type ActivityTask<R> = (progress: Progress<{ message?: string, increment?: number }>, cancellationToken: CancellationToken) => Promise<R>;
 
 export declare abstract class ActivityBase<R> implements Activity {
@@ -1152,7 +1189,7 @@ export declare interface ExecuteActivityContext {
     /**
      * Children to show under the activity tree item. Children only appear once the activity is done.
      */
-    activityChildren?: AzExtTreeItem[];
+    activityChildren?: (AzExtTreeItem | AzExtParentTreeItem)[];
 }
 
 export declare abstract class AzureWizardExecuteStep<T extends IActionContext> {

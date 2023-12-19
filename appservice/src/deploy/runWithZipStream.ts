@@ -8,7 +8,7 @@ import { AzExtFsExtra, IActionContext } from '@microsoft/vscode-azext-utils';
 import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as prettybytes from 'pretty-bytes';
-import { Readable } from 'stream';
+import { PassThrough, Readable } from 'stream';
 import * as vscode from 'vscode';
 import * as yazl from 'yazl';
 import { ParsedSite } from '../SiteClient';
@@ -51,13 +51,18 @@ export async function runWithZipStream(context: IActionContext, options: {
         let filesToZip: string[] = [];
         let sizeOfZipFile: number = 0;
 
-        zipFile.outputStream.on('data', (chunk) => {
+        const zipByteCounter = new PassThrough();
+        const outputStream = new PassThrough();
+        zipFile.outputStream.pipe(zipByteCounter);
+        zipFile.outputStream.pipe(outputStream);
+        zipByteCounter.on("data", (chunk) => {
             if (typeof chunk === 'string' || Buffer.isBuffer(chunk)) {
                 sizeOfZipFile += chunk.length;
             }
         });
-
-        zipFile.outputStream.on('finish', () => onFileSize(sizeOfZipFile));
+        zipByteCounter.on("finish", () => {
+            onFileSize(sizeOfZipFile);
+        });
 
         if ((await fse.lstat(fsPath)).isDirectory()) {
             if (!fsPath.endsWith(path.sep)) {
@@ -80,7 +85,7 @@ export async function runWithZipStream(context: IActionContext, options: {
         }
 
         zipFile.end();
-        zipStream = zipFile.outputStream as Readable;
+        zipStream = outputStream;
     }
 
     return await callback(zipStream);
