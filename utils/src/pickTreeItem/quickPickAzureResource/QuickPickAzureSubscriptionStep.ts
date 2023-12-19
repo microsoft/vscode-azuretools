@@ -21,7 +21,7 @@ export class QuickPickAzureSubscriptionStep extends GenericQuickPickStepWithComm
             noPicksMessage: vscode.l10n.t('No subscriptions found'),
         });
 
-        this.subscriptionId = options?.selectSubscriptionId;
+        this.subscriptionId = options?.selectBySubscriptionId;
     }
 
     protected readonly pickFilter = new AzureSubscriptionPickFilter();

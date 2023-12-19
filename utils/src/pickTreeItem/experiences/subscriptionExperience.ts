@@ -15,7 +15,7 @@ import { ResourceGroupsItem } from '../quickPickAzureResource/tempTypes';
 export async function subscriptionExperience(
     context: types.IActionContext,
     tdp: vscode.TreeDataProvider<ResourceGroupsItem>,
-    options?: { selectSubscriptionId?: string, showLoadingPrompt?: boolean }
+    options?: { selectBySubscriptionId?: string, showLoadingPrompt?: boolean }
 ): Promise<AzureSubscription> {
 
     const wizardContext = { ...context } as PickSubscriptionWizardContext;
@@ -23,7 +23,7 @@ export async function subscriptionExperience(
 
     const wizard = new AzureWizard(wizardContext, {
         hideStepCount: true,
-        promptSteps: [new QuickPickAzureSubscriptionStep(tdp, { selectSubscriptionId: options?.selectSubscriptionId })],
+        promptSteps: [new QuickPickAzureSubscriptionStep(tdp, { selectBySubscriptionId: options?.selectBySubscriptionId })],
         showLoadingPrompt: options?.showLoadingPrompt ?? true,
     });
 
