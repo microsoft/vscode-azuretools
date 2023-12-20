@@ -50,14 +50,6 @@ export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizar
             }
         }
 
-        const pickWithoutPrompt = this.getPickWithoutPrompt?.(picks);
-        if (pickWithoutPrompt) {
-            const ti = await this.treeDataProvider.getTreeItem(pickWithoutPrompt.data);
-            if (!ti.command) {
-                return pickWithoutPrompt.data;
-            }
-        }
-
         const selected = await wizardContext.ui.showQuickPick(picks, {
             ...(this.promptOptions ?? {})
         });
@@ -102,6 +94,4 @@ export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizar
             data: element,
         };
     }
-
-    protected getPickWithoutPrompt?(picks: types.IAzureQuickPickItem<unknown>[]): types.IAzureQuickPickItem<unknown> | undefined;
 }
