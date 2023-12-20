@@ -4,13 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { AzureResourceQuickPickWizardContext, GenericQuickPickOptions, SkipIfOneQuickPickOptions } from '../../../index';
+import { AzureResourceQuickPickWizardContext, AzureSubscriptionQuickPickOptions, SkipIfOneQuickPickOptions } from '../../../index';
 import { GenericQuickPickStepWithCommands } from '../GenericQuickPickStepWithCommands';
 import { PickFilter } from '../PickFilter';
 import { ResourceGroupsItem, SubscriptionItem } from './tempTypes';
 
 export class QuickPickAzureSubscriptionStep extends GenericQuickPickStepWithCommands<AzureResourceQuickPickWizardContext, SkipIfOneQuickPickOptions> {
-    public constructor(tdp: vscode.TreeDataProvider<ResourceGroupsItem>, options?: GenericQuickPickOptions) {
+    protected readonly pickFilter: PickFilter;
+
+    public constructor(tdp: vscode.TreeDataProvider<ResourceGroupsItem>, options?: AzureSubscriptionQuickPickOptions) {
         super(tdp, {
             ...options,
             skipIfOne: true, // Subscription is always skip-if-one
@@ -18,9 +20,9 @@ export class QuickPickAzureSubscriptionStep extends GenericQuickPickStepWithComm
             placeHolder: vscode.l10n.t('Select subscription'),
             noPicksMessage: vscode.l10n.t('No subscriptions found'),
         });
-    }
 
-    protected readonly pickFilter = new AzureSubscriptionPickFilter();
+        this.pickFilter = new AzureSubscriptionPickFilter(options?.selectBySubscriptionId);
+    }
 
     protected override async promptInternal(wizardContext: AzureResourceQuickPickWizardContext): Promise<SubscriptionItem> {
         const pickedSubscription = await super.promptInternal(wizardContext) as SubscriptionItem;
@@ -33,13 +35,20 @@ export class QuickPickAzureSubscriptionStep extends GenericQuickPickStepWithComm
 }
 
 class AzureSubscriptionPickFilter implements PickFilter {
-    isFinalPick(_node: vscode.TreeItem): boolean {
+    private readonly subscriptionId?: string;
+
+    constructor(subscriptionId?: string) {
+        // Always ensure we are storing the subscriptionId, not the full subscription path
+        this.subscriptionId = subscriptionId?.split('/').pop();
+    }
+
+    isFinalPick(_treeItem: vscode.TreeItem): boolean {
         // Subscription is never a direct pick
         return false;
     }
 
-    isAncestorPick(_node: vscode.TreeItem): boolean {
+    isAncestorPick(_treeItem: vscode.TreeItem, element: SubscriptionItem): boolean {
         // All nodes at this level are always subscription nodes
-        return true;
+        return this.subscriptionId ? element.subscription.subscriptionId === this.subscriptionId : true;
     }
 }

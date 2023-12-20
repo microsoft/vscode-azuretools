@@ -1733,7 +1733,7 @@ export interface PickExperienceContext extends IActionContext {
  * @param context The action context
  * @param tdp Azure resource tree data provider to perform the pick experience on
  */
-export declare function subscriptionExperience(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>): Promise<AzureSubscription>;
+export declare function subscriptionExperience(context: IActionContext, tdp: TreeDataProvider<ResourceGroupsItem>, options?: { selectBySubscriptionId?: string, showLoadingPrompt?: boolean }): Promise<AzureSubscription>;
 
 /**
  * Prompts the user to pick an Azure resource using a wizard comprised of quick pick steps.
@@ -1874,6 +1874,10 @@ export declare interface GenericQuickPickOptions {
 
 export declare interface SkipIfOneQuickPickOptions extends GenericQuickPickOptions {
     skipIfOne?: true;
+}
+
+export declare interface AzureSubscriptionQuickPickOptions extends GenericQuickPickOptions {
+    selectBySubscriptionId?: string;
 }
 
 export declare abstract class GenericQuickPickStep<TContext extends QuickPickWizardContext, TOptions extends GenericQuickPickOptions> extends AzureWizardPromptStep<TContext> {
