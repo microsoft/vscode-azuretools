@@ -22,6 +22,24 @@ export function parseAzureResourceId(id: string): types.ParsedAzureResourceId {
     }
 }
 
+/**
+ * Parses the `subscriptionId` and `resourceGroup` off of an Azure Resource Group Id
+ * (also compatible with generic Azure Resource Ids)
+ */
+export function parseAzureResourceGroupId(id: string): types.ParsedAzureResourceGroupId {
+    const matches: RegExpMatchArray | null = id.match(/\/subscriptions\/(.*)\/resourceGroups\/([^\/]*)/i);
+
+    if (matches === null || matches.length < 3) {
+        throw new Error(vscode.l10n.t('Invalid Azure Resource Group Id.'));
+    }
+
+    return {
+        rawId: id,
+        subscriptionId: matches[1],
+        resourceGroup: matches[2],
+    };
+}
+
 export function getResourceGroupFromId(id: string): string {
     return parseAzureResourceId(id).resourceGroup;
 }

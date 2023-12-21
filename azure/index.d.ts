@@ -418,7 +418,14 @@ interface ParsedAzureResourceId {
     resourceName: string;
 }
 
+interface ParsedAzureResourceGroupId {
+    rawId: string;
+    subscriptionId: string;
+    resourceGroup: string;
+}
+
 export function parseAzureResourceId(id: string): ParsedAzureResourceId;
+export function parseAzureResourceGroupId(id: string): ParsedAzureResourceGroupId;
 export function getResourceGroupFromId(id: string): string;
 
 export declare function createPortalUri(subscription: AzureSubscription, id: string, options?: OpenInPortalOptions): Uri;
