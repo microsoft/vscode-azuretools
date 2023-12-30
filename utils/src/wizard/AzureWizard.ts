@@ -215,7 +215,12 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
             await activity.run();
 
         } else {
-            await vscode.window.withProgress(options, task);
+            if (this._context.suppressNotification) {
+                const internalProgress = { report: (): void => { return; } };
+                await task(internalProgress, this._cancellationTokenSource.token);
+            } else {
+                await vscode.window.withProgress(options, task);
+            }
         }
     }
 
