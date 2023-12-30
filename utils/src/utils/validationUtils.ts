@@ -5,44 +5,27 @@
 
 import * as vscode from 'vscode';
 
-/**
- * Input string validation utilities for Azure Tools
- */
 export namespace validationUtils {
-    /**
-     * A generic set of validation utilities that can be used for most input strings
-     */
-    export namespace General {
-        /**
-         * Checks if the given input string has a valid length as determined by the optional lower and upper limit parameters
-         * @related getInvalidCharLengthMessage
-         */
-        export function hasValidCharLength(value: string, lowerLimitIncl?: number, upperLimitIncl?: number): boolean {
-            lowerLimitIncl = (!lowerLimitIncl || lowerLimitIncl < 1) ? 1 : lowerLimitIncl;
-            upperLimitIncl = (!upperLimitIncl || upperLimitIncl > Number.MAX_SAFE_INTEGER) ? Number.MAX_SAFE_INTEGER : upperLimitIncl;
-            return lowerLimitIncl <= upperLimitIncl && value.length >= lowerLimitIncl && value.length <= upperLimitIncl;
-        }
-
-        /**
-         * Provides a message that can be used to inform the user of invalid string length as determined by the optional lower and upper limit parameters
-         * @related hasValidCharLength
-         */
-        export function getInvalidCharLengthMessage(lowerLimitIncl?: number, upperLimitIncl?: number): string {
-            if (!lowerLimitIncl && !upperLimitIncl) {
-                return vscode.l10n.t('A value is required to proceed.');
-            } else if (lowerLimitIncl && !upperLimitIncl) {
-                return vscode.l10n.t('The value must be {0} characters or greater.', lowerLimitIncl);
-            } else if (!lowerLimitIncl && upperLimitIncl) {
-                return vscode.l10n.t('The value must be {0} characters or less.', upperLimitIncl);
-            } else {
-                return vscode.l10n.t('The value must be between {0} and {1} characters long.', <number>lowerLimitIncl, <number>upperLimitIncl);
-            }
-        }
+    export interface RangeConstraints {
+        lowerLimitIncl?: number;
+        upperLimitIncl?: number;
     }
 
-    // Todo..
-    /**
-     * Validation for strings representing an int or float
-     */
-    // export namespace Numerical {}
+    export function hasValidCharLength(value: string, c?: RangeConstraints): boolean {
+        const lowerLimitIncl = (!c?.lowerLimitIncl || c.lowerLimitIncl < 1) ? 1 : c.lowerLimitIncl;
+        const upperLimitIncl = (!c?.upperLimitIncl || c.upperLimitIncl > Number.MAX_SAFE_INTEGER) ? Number.MAX_SAFE_INTEGER : c.upperLimitIncl;
+        return lowerLimitIncl <= upperLimitIncl && value.length >= lowerLimitIncl && value.length <= upperLimitIncl;
+    }
+
+    export function getInvalidCharLengthMessage(c?: RangeConstraints): string {
+        if (!c?.lowerLimitIncl && !c?.upperLimitIncl) {
+            return vscode.l10n.t('A value is required to proceed.');
+        } else if (c?.lowerLimitIncl && !c?.upperLimitIncl) {
+            return vscode.l10n.t('The value must be {0} characters or greater.', c.lowerLimitIncl);
+        } else if (!c?.lowerLimitIncl && c?.upperLimitIncl) {
+            return vscode.l10n.t('The value must be {0} characters or less.', c.upperLimitIncl);
+        } else {
+            return vscode.l10n.t('The value must be between {0} and {1} characters long.', <number>c.lowerLimitIncl, <number>c.upperLimitIncl);
+        }
+    }
 }

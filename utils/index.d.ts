@@ -2076,24 +2076,27 @@ export declare class TreeElementStateManager<TElement extends TreeElementWithId 
  */
 export declare namespace validationUtils {
     /**
-     * A generic set of validation utilities that can be used for most input strings
+     *  Defines the constraints for a valid size range
+     *  @property `lowerLimitIncl`: The minimum size of the range (inclusive)
+     *  @property `upperLimitIncl`: The maximum size of the range (inclusive)
      */
-    export namespace General {
-        /**
-         * Checks if the given input string has a valid length as determined by the optional lower and upper limit parameters
-         * @param value The input string to validate
-         * @param lowerLimitIncl The minimum string length requirement (inclusive)
-         * @param upperLimitIncl The maximum string length requirement (inclusive)
-         * @related getInvalidCharLengthMessage
-         */
-        export function hasValidCharLength(value: string, lowerLimitIncl?: number, upperLimitIncl?: number): boolean;
-
-        /**
-         * Provides a message that can be used to inform the user of invalid string length as determined by the optional lower and upper limit parameters
-         * @param lowerLimitIncl The minimum string length requirement (inclusive)
-         * @param upperLimitIncl The maximum string length requirement (inclusive)
-         * @related hasValidCharLength
-         */
-        export function getInvalidCharLengthMessage(lowerLimitIncl?: number, upperLimitIncl?: number): string;
+    export interface RangeConstraints {
+        lowerLimitIncl?: number;
+        upperLimitIncl?: number;
     }
+
+    /**
+     * Checks if the given input string has a valid character length as determined by the optional lower and upper limit parameters
+     * @param value The input string to validate
+     * @param constraints An object defining the range of character lengths that are considered valid
+     * @related getInvalidCharLengthMessage
+     */
+    export function hasValidCharLength(value: string, constraints?: RangeConstraints): boolean;
+
+    /**
+     * Provides a message that can be used to inform the user of invalid character length as determined by the optional lower and upper limit parameters
+     * @param constraints An object defining the range of character lengths that are considered valid
+     * @related hasValidCharLength
+     */
+    export function getInvalidCharLengthMessage(constraints?: RangeConstraints): string;
 }
