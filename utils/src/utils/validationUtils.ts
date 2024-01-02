@@ -11,21 +11,21 @@ export namespace validationUtils {
         upperLimitIncl?: number;
     }
 
-    export function hasValidCharLength(value: string, c?: RangeConstraints): boolean {
-        const lowerLimitIncl = (!c?.lowerLimitIncl || c.lowerLimitIncl < 1) ? 1 : c.lowerLimitIncl;
-        const upperLimitIncl = (!c?.upperLimitIncl || c.upperLimitIncl > Number.MAX_SAFE_INTEGER) ? Number.MAX_SAFE_INTEGER : c.upperLimitIncl;
+    export function hasValidCharLength(value: string, rc?: RangeConstraints): boolean {
+        const lowerLimitIncl = (!rc?.lowerLimitIncl || rc.lowerLimitIncl < 1) ? 1 : rc.lowerLimitIncl;
+        const upperLimitIncl = (!rc?.upperLimitIncl || rc.upperLimitIncl > Number.MAX_SAFE_INTEGER) ? Number.MAX_SAFE_INTEGER : rc.upperLimitIncl;
         return lowerLimitIncl <= upperLimitIncl && value.length >= lowerLimitIncl && value.length <= upperLimitIncl;
     }
 
-    export function getInvalidCharLengthMessage(c?: RangeConstraints): string {
-        if (!c?.lowerLimitIncl && !c?.upperLimitIncl) {
+    export function getInvalidCharLengthMessage(rc?: RangeConstraints): string {
+        if (!rc?.lowerLimitIncl && !rc?.upperLimitIncl) {
             return vscode.l10n.t('A value is required to proceed.');
-        } else if (c?.lowerLimitIncl && !c?.upperLimitIncl) {
-            return vscode.l10n.t('The value must be {0} characters or greater.', c.lowerLimitIncl);
-        } else if (!c?.lowerLimitIncl && c?.upperLimitIncl) {
-            return vscode.l10n.t('The value must be {0} characters or less.', c.upperLimitIncl);
+        } else if (rc?.lowerLimitIncl && !rc?.upperLimitIncl) {
+            return vscode.l10n.t('The value must be {0} characters or greater.', rc.lowerLimitIncl);
+        } else if (!rc?.lowerLimitIncl && rc?.upperLimitIncl) {
+            return vscode.l10n.t('The value must be {0} characters or less.', rc.upperLimitIncl);
         } else {
-            return vscode.l10n.t('The value must be between {0} and {1} characters long.', <number>c.lowerLimitIncl, <number>c.upperLimitIncl);
+            return vscode.l10n.t('The value must be between {0} and {1} characters long.', <number>rc.lowerLimitIncl, <number>rc.upperLimitIncl);
         }
     }
 }
