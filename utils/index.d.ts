@@ -2086,7 +2086,7 @@ export declare namespace validationUtils {
     }
 
     /**
-     * Checks if the given input string has a valid character length as determined by the optional lower and upper limit parameters
+     * Checks if the given input string falls within a valid character length range
      * @param value The input string to validate
      * @param constraints An object defining the range of character lengths that are considered valid
      * @related getInvalidCharLengthMessage
@@ -2094,7 +2094,7 @@ export declare namespace validationUtils {
     export function hasValidCharLength(value: string, constraints?: RangeConstraints): boolean;
 
     /**
-     * Provides a message that can be used to inform the user of invalid character length as determined by the optional lower and upper limit parameters
+     * Provides a message that can be used to inform the user of invalid character length
      * @param constraints An object defining the range of character lengths that are considered valid
      * @related hasValidCharLength
      */
