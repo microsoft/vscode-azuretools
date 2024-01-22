@@ -41,6 +41,7 @@ export * from './tree/GenericTreeItem';
 export * from './tree/isAzExtTreeItem';
 export * from './tree/v2/TreeElementStateManager';
 export * from './tree/v2/createGenericElement';
+export * from './userInput/AzExtUserInputWithInputQueue';
 export * from './utils/AzExtFsExtra';
 export * from './utils/contextUtils';
 export * from './utils/credentialUtils';
