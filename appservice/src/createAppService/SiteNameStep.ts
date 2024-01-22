@@ -5,7 +5,7 @@
 
 import type { ResourceNameAvailability, WebSiteManagementClient } from '@azure/arm-appservice';
 import { ResourceGroupListStep, StorageAccountListStep, resourceGroupNamingRules, storageAccountNamingRules } from '@microsoft/vscode-azext-azureutils';
-import { AzureNameStep, IAzureNamingRules } from '@microsoft/vscode-azext-utils';
+import { AgentInputBoxOptions, AzureNameStep, IAzureAgentInput, IAzureNamingRules, ParameterAgentMetadata } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import { createWebSiteClient } from '../utils/azureClients';
 import { appInsightsNamingRules } from './AppInsightsListStep';
@@ -14,14 +14,27 @@ import { AppServicePlanListStep } from './AppServicePlanListStep';
 import { appServicePlanNamingRules } from './AppServicePlanNameStep';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
+interface SiteNameStepWizardContext extends IAppServiceWizardContext {
+    ui: IAzureAgentInput;
+}
+
 const siteNamingRules: IAzureNamingRules = {
     minLength: 2,
     maxLength: 60,
     invalidCharsRegExp: /[^a-zA-Z0-9\-]/
 };
 
-export class SiteNameStep extends AzureNameStep<IAppServiceWizardContext> {
-    public async prompt(context: IAppServiceWizardContext): Promise<void> {
+export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
+    private _skipValidation: boolean;
+    private _inputBoxOptionsAgentMetadata: ParameterAgentMetadata | undefined;
+
+    constructor(skipValidation?: boolean, inputBoxOptionsAgentMetadata?: ParameterAgentMetadata) {
+        super();
+        this._skipValidation = skipValidation ?? false;
+        this._inputBoxOptionsAgentMetadata = inputBoxOptionsAgentMetadata;
+    }
+
+    public async prompt(context: SiteNameStepWizardContext): Promise<void> {
         const client = await createWebSiteClient(context);
 
         let placeHolder: string | undefined;
@@ -48,12 +61,24 @@ export class SiteNameStep extends AzureNameStep<IAppServiceWizardContext> {
             prompt = vscode.l10n.t('Enter a globally unique name for the new web app.');
         }
 
-        context.newSiteName = (await context.ui.showInputBox({
+        const options: AgentInputBoxOptions = {
             prompt,
             placeHolder,
             validateInput: (name: string): string | undefined => this.validateSiteName(name),
-            asyncValidationTask: async (name: string): Promise<string | undefined> => await this.asyncValidateSiteName(client, name)
-        })).trim();
+            asyncValidationTask: async (name: string): Promise<string | undefined> => await this.asyncValidateSiteName(client, name),
+            agentMetadata: this._inputBoxOptionsAgentMetadata ?? {
+                parameterName: "siteName",
+                parameterDisplayTitle: "Site Name",
+                parameterDisplayDescription: "The name of the app service site.",
+            }
+        };
+
+        if (this._skipValidation) {
+            options.validateInput = undefined;
+            options.asyncValidationTask = undefined;
+        }
+
+        context.newSiteName = (await context.ui.showInputBox(options)).trim();
         context.valuesToMask.push(context.newSiteName);
 
         const namingRules: IAzureNamingRules[] = [resourceGroupNamingRules];
