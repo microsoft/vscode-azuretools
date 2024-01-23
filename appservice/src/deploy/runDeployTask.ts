@@ -5,8 +5,8 @@
 
 import { IActionContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
-import { ext } from '../extensionVariables';
 import { ScmType } from '../ScmType';
+import { ext } from '../extensionVariables';
 import { taskUtils } from '../utils/taskUtils';
 import { IDeployContext } from './IDeployContext';
 
@@ -44,33 +44,13 @@ export async function tryRunPreDeployTask(context: IDeployContext, deployFsPath:
     return preDeployTaskResult;
 }
 
-/**
- * Starts the post deploy task, but doesn't wait for the result (not worth it)
- */
-export async function startPostDeployTask(context: IDeployContext, deployFsPath: string, scmType: string | undefined, resourceName: string): Promise<void> {
-    const settingKey: string = 'postDeployTask';
-    const taskName: string | undefined = vscode.workspace.getConfiguration(ext.prefix, vscode.Uri.file(deployFsPath)).get(settingKey);
-    context.telemetry.properties.hasPostDeployTask = String(!!taskName);
-
-    if (taskName && shouldExecuteTask(context, scmType, settingKey, taskName)) {
-        const task: vscode.Task | undefined = await taskUtils.findTask(deployFsPath, taskName);
-        context.telemetry.properties.foundPostDeployTask = String(!!task);
-        if (task) {
-            await taskUtils.executeIfNotActive(task);
-            ext.outputChannel.appendLog(vscode.l10n.t('Started {0} "{1}".', settingKey, taskName), { resourceName });
-        } else {
-            ext.outputChannel.appendLog(vscode.l10n.t('WARNING: Failed to find {0} "{1}".', settingKey, taskName), { resourceName });
-        }
-    }
-}
-
 export interface IPreDeployTaskResult {
     taskName: string | undefined;
     exitCode: number | undefined;
     failedToFindTask: boolean;
 }
 
-function shouldExecuteTask(context: IDeployContext, scmType: string | undefined, settingKey: string, taskName: string): boolean {
+export function shouldExecuteTask(context: IDeployContext, scmType: string | undefined, settingKey: string, taskName: string): boolean {
     // We don't run deploy tasks for non-zipdeploy since that stuff should be handled by kudu
     const shouldExecute: boolean = context.deployMethod === 'storage' || context.deployMethod === 'zip' || (scmType !== ScmType.LocalGit && scmType !== ScmType.GitHub);
     if (!shouldExecute) {
