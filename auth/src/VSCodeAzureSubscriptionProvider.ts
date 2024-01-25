@@ -237,30 +237,37 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      *
      * @returns A client, the credential used by the client, and the authentication function
      */
-    private async getSubscriptionClient(tenantId?: string, scopes?: string[]): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
-        const armSubs = await import('@azure/arm-resources-subscriptions');
-        const session = await getSessionFromVSCode(scopes, tenantId, { createIfNone: false, silent: true });
-        if (!session) {
+    private async getSubscriptionClient(tenantId?: string): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
+        const initialSession = await getSessionFromVSCode(undefined, tenantId, { createIfNone: false, silent: true });
+        if (!initialSession) {
             throw new NotSignedInError();
         }
 
         const credential: TokenCredential = {
-            getToken: async () => {
-                return {
-                    token: session.accessToken,
-                    expiresOnTimestamp: 0
-                };
+            getToken: async (scopes, _options) => {
+                const session = await getSessionFromVSCode(scopes, tenantId, { createIfNone: false, silent: true });
+                if (session?.accessToken) {
+                    return {
+                        token: session.accessToken,
+                        expiresOnTimestamp: 0
+                    };
+                } else {
+                    return null;
+                }
             }
         }
 
         const configuredAzureEnv = getConfiguredAzureEnv();
         const endpoint = configuredAzureEnv.resourceManagerEndpointUrl;
 
+        const armSubs = await import('@azure/arm-resources-subscriptions');
         return {
             client: new armSubs.SubscriptionClient(credential, { endpoint }),
             credential: credential,
             authentication: {
-                getSession: () => session
+                getSession: async (scopes) => {
+                    return await getSessionFromVSCode(scopes, tenantId, { createIfNone: false, silent: true });
+                }
             }
         };
     }
