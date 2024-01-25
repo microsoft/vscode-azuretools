@@ -16,6 +16,7 @@ export function getInvalidCharLengthMessageTest() {
         { output: 'A value is required to proceed.' },
         { output: 'The value must be 5 characters or greater.', constraints: { lowerLimitIncl: 5 } },
         { output: 'The value must be 5 characters or less.', constraints: { upperLimitIncl: 5 } },
+        { output: 'The value must be 5 characters long.', constraints: { lowerLimitIncl: 5, upperLimitIncl: 5 } },
         { output: 'The value must be between 2 and 5 characters long.', constraints: { lowerLimitIncl: 2, upperLimitIncl: 5 } },
     ];
 
