@@ -5,22 +5,23 @@
 
 import { sendRequestWithTimeout } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, IParsedError, nonNullProp, nonNullValue, parseError } from '@microsoft/vscode-azext-utils';
-import { CancellationToken, l10n, window } from 'vscode';
+import { CancellationToken, Progress, l10n, window } from 'vscode';
 import type * as KuduModels from '../KuduModels';
 import { ParsedSite, SiteClient } from '../SiteClient';
 import { ext } from '../extensionVariables';
 import { delay } from '../utils/delay';
 import { ignore404Error, retryKuduCall } from '../utils/kuduUtils';
-import { IDeployContext } from './IDeployContext';
+import { InnerDeployContext } from './IDeployContext';
 
 type DeploymentOptions = {
     expectedId?: string,
     token?: CancellationToken,
     pollingInterval?: number,
     locationUrl?: string
+    progress?: Progress<{ message?: string; increment?: number }>;
 }
 
-export async function waitForDeploymentToComplete(context: IActionContext & Partial<IDeployContext>, site: ParsedSite, options: DeploymentOptions = {}): Promise<void> {
+export async function waitForDeploymentToComplete(context: IActionContext & Partial<InnerDeployContext>, site: ParsedSite, options: DeploymentOptions = {}): Promise<void> {
     let fullLog: string = '';
 
     let lastLogTime: Date = new Date(0);
@@ -77,6 +78,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
 
             if (newEntry.message && newEntry.logTime && newEntry.logTime > lastLogTime) {
                 fullLog = fullLog.concat(newEntry.message);
+                options.progress?.report({ message: newEntry.message });
                 ext.outputChannel.appendLog(newEntry.message, { date: newEntry.logTime, resourceName: site.fullName });
                 lastLogTimeForThisPoll = newEntry.logTime;
                 if (/error/i.test(newEntry.message)) {
