@@ -28,7 +28,6 @@ export function hasValidCharLengthTest() {
     const falseValues: CharLengthParams[] = [
         { value: '' },
         { value: '', constraints: { lowerLimitIncl: 0, upperLimitIncl: 1 } },
-        { value: 'abcdefg', constraints: { lowerLimitIncl: 5, upperLimitIncl: -5 } },
         { value: 'abc', constraints: { lowerLimitIncl: 4, upperLimitIncl: 10 } },
         { value: '12345678901', constraints: { lowerLimitIncl: 1, upperLimitIncl: 10 } },
     ];
@@ -36,4 +35,6 @@ export function hasValidCharLengthTest() {
     for (const { value, constraints } of falseValues) {
         assert.equal(validationUtils.hasValidCharLength(value, constraints), false);
     }
+
+    assert.throws(() => validationUtils.hasValidCharLength('abcdefg', { lowerLimitIncl: 5, upperLimitIncl: -5 }));
 }

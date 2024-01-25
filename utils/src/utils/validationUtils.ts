@@ -14,7 +14,11 @@ export namespace validationUtils {
     export function hasValidCharLength(value: string, rc?: RangeConstraints): boolean {
         const lowerLimitIncl = (!rc?.lowerLimitIncl || rc.lowerLimitIncl < 1) ? 1 : rc.lowerLimitIncl;
         const upperLimitIncl = (!rc?.upperLimitIncl || rc.upperLimitIncl > Number.MAX_SAFE_INTEGER) ? Number.MAX_SAFE_INTEGER : rc.upperLimitIncl;
-        return lowerLimitIncl <= upperLimitIncl && value.length >= lowerLimitIncl && value.length <= upperLimitIncl;
+        if (lowerLimitIncl > upperLimitIncl) {
+            throw new Error(vscode.l10n.t('The minimum specified character length should not exceed the maximum specified character length.'));
+        }
+
+        return value.length >= lowerLimitIncl && value.length <= upperLimitIncl;
     }
 
     export function getInvalidCharLengthMessage(rc?: RangeConstraints): string {
