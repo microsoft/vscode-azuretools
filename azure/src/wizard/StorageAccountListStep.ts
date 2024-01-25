@@ -121,7 +121,8 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
 
         let hasFilteredAccountsBySku: boolean = false;
         let hasFilteredAccountsByLocation: boolean = false;
-        const storageAccounts: StorageAccount[] = await storageAccountsTask;
+        const storageAccounts: StorageAccount[] = (await storageAccountsTask)
+            .sort((a: StorageAccount, b: StorageAccount) => nonNullProp(a, 'name').localeCompare(nonNullProp(b, 'name')));
         for (const sa of storageAccounts) {
             if (!sa.kind || sa.kind.match(kindRegExp) || !sa.sku || sa.sku.name.match(performanceRegExp) || sa.sku.name.match(replicationRegExp)) {
                 hasFilteredAccountsBySku = true;
