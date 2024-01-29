@@ -48,6 +48,7 @@ export * from './utils/findFreePort';
 export * from './utils/nonNull';
 export * from './utils/openUrl';
 export * from './utils/randomUtils';
+export * from './utils/validationUtils';
 export * from './wizard/AzureNameStep';
 export * from './wizard/AzureWizard';
 export * from './wizard/AzureWizardExecuteStep';

@@ -2070,3 +2070,33 @@ export declare class TreeElementStateManager<TElement extends TreeElementWithId 
 
     dispose(): void;
 }
+
+/**
+ * Input string validation utilities for Azure Tools
+ */
+export declare namespace validationUtils {
+    /**
+     *  Defines the constraints for a valid size range
+     *  @property `lowerLimitIncl`: The minimum size of the range (inclusive)
+     *  @property `upperLimitIncl`: The maximum size of the range (inclusive)
+     */
+    export interface RangeConstraints {
+        lowerLimitIncl?: number;
+        upperLimitIncl?: number;
+    }
+
+    /**
+     * Checks if the given input string falls within a valid character length range
+     * @param value The input string to validate
+     * @param constraints An object defining the range of character lengths that are considered valid
+     * @related getInvalidCharLengthMessage
+     */
+    export function hasValidCharLength(value: string, constraints?: RangeConstraints): boolean;
+
+    /**
+     * Provides a message that can be used to inform the user of invalid character length
+     * @param constraints An object defining the range of character lengths that are considered valid
+     * @related hasValidCharLength
+     */
+    export function getInvalidCharLengthMessage(constraints?: RangeConstraints): string;
+}
