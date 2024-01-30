@@ -38,7 +38,7 @@ export interface IDeployContext extends IActionContext {
 }
 
 // only used by the tools package facilitate creating the wizard execute steps
-export interface InnerDeployContext extends IDeployContext, ExecuteActivityContext {
+export interface InnerDeployContext extends IDeployContext, Partial<ExecuteActivityContext> {
     site: ParsedSite;
     client: SiteClient;
     fsPath: string;

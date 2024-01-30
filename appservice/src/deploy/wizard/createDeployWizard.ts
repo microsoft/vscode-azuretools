@@ -31,31 +31,27 @@ export async function createDeployExecuteSteps(context: InnerDeployContext): Pro
 
     if (!context.deployMethod && config.scmType === ScmType.GitHub) {
         executeSteps.push(new DeployGitHubExecuteStep());
+    } else if (context.deployMethod === 'storage') {
+        executeSteps.push(new DeployStorageAccountExecuteStep());
+    } else if (!context.deployMethod && config.scmType === ScmType.LocalGit) {
+        executeSteps.push(new DeployLocalGitExecuteStep());
     } else {
-        // deployments that are handled by kudu
-        if (!context.deployMethod && config.scmType === ScmType.LocalGit) {
-            executeSteps.push(new DeployLocalGitExecuteStep());
+        /** KUDU DEPLOYMENT STEPS */
+        const javaRuntime = context.site.isLinux ? config.linuxFxVersion : config.javaContainer;
+        if (javaRuntime && /^(tomcat|wildfly|jboss)/i.test(javaRuntime)) {
+            executeSteps.push(new DeployWarExecuteStep());
+        } else if (javaRuntime && /^java/i.test(javaRuntime) && !context.site.isFunctionApp) {
+            const pathFileMap = new Map<string, string>([
+                [path.basename(context.workspaceFolder.uri.fsPath), 'app.jar']
+            ]);
+            executeSteps.push(new DeployZipPushExecuteStep(pathFileMap));
+        } else if (context.deployMethod === 'flexconsumption') {
+            executeSteps.push(new DeployFlexExecuteStep());
         } else {
-            // all zip-based deployments
-            const javaRuntime = context.site.isLinux ? config.linuxFxVersion : config.javaContainer;
-            if (javaRuntime && /^(tomcat|wildfly|jboss)/i.test(javaRuntime)) {
-                executeSteps.push(new DeployWarExecuteStep());
-            } else if (javaRuntime && /^java/i.test(javaRuntime) && !context.site.isFunctionApp) {
-                const pathFileMap = new Map<string, string>([
-                    [path.basename(context.workspaceFolder.uri.fsPath), 'app.jar']
-                ]);
-                executeSteps.push(new DeployZipPushExecuteStep(pathFileMap));
-            } else if (context.deployMethod === 'storage') {
-                executeSteps.push(new DeployStorageAccountExecuteStep());
-            } else if (context.deployMethod === 'flexconsumption') {
-                executeSteps.push(new DeployFlexExecuteStep());
-            } else {
-                executeSteps.push(new DeployZipPushExecuteStep());
-            }
-            executeSteps.push(new DelayFirstWebAppDeployStep());
+            executeSteps.push(new DeployZipPushExecuteStep());
         }
-
         executeSteps.push(new WaitForDeploymentToCompleteStep());
+        executeSteps.push(new DelayFirstWebAppDeployStep());
     }
 
     executeSteps.push(new PostDeployTaskExecuteStep(config))
