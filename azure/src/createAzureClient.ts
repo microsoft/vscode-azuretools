@@ -73,9 +73,7 @@ export async function createGenericClient(context: IActionContext, clientInfo: t
     let endpoint: string | undefined;
     if (clientInfo && 'credentials' in clientInfo) {
         credentials = clientInfo.credentials;
-        // managementEndpointUrl needs to be used instead of resourceManagerEndpointUrl to fix soverign cloud support
-        // see https://github.com/microsoft/vscode-azuretools/pull/1669
-        endpoint = clientInfo.environment.managementEndpointUrl;
+        endpoint = clientInfo.environment.resourceManagerEndpointUrl;
     } else {
         credentials = clientInfo;
     }
