@@ -16,7 +16,7 @@ export abstract class DeployZipBaseExecuteStep extends DeployExecuteStepBase {
     }
 
     public async deployCore(context: InnerDeployContext): Promise<void> {
-        const fsPath = context.workspaceFolder.uri.fsPath;
+        const fsPath = context.fsPath;
         if (!(await AzExtFsExtra.pathExists(fsPath))) {
             throw new Error(l10n.t('Failed to deploy path that does not exist: {0}', fsPath));
         }
