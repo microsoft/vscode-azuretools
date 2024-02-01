@@ -21,7 +21,7 @@ export class DeployFlexExecuteStep extends DeployZipBaseExecuteStep {
         };
 
         return await runWithZipStream(context, {
-            fsPath: context.workspaceFolder.uri.fsPath,
+            fsPath: context.fsPath,
             site: context.site,
             pathFileMap: this.pathFileMap,
             callback,

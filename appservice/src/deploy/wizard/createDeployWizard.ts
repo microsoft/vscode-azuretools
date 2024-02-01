@@ -42,7 +42,7 @@ export async function createDeployExecuteSteps(context: InnerDeployContext): Pro
             executeSteps.push(new DeployWarExecuteStep());
         } else if (javaRuntime && /^java/i.test(javaRuntime) && !context.site.isFunctionApp) {
             const pathFileMap = new Map<string, string>([
-                [path.basename(context.workspaceFolder.uri.fsPath), 'app.jar']
+                [path.basename(context.fsPath), 'app.jar']
             ]);
             executeSteps.push(new DeployZipPushExecuteStep(pathFileMap));
         } else if (context.deployMethod === 'flexconsumption') {
