@@ -17,7 +17,8 @@ export class PostDeploySyncTriggersExecuteStep extends AzureWizardExecuteStep<In
         }
     }
 
-    public shouldExecute(_context: InnerDeployContext): boolean {
-        return true;
+    public shouldExecute(context: InnerDeployContext): boolean {
+        // this gets set in `waitForDeploymentToComplete` for consumption plans or storage account deployments
+        return !!context.syncTriggersPostDeploy;
     }
 }

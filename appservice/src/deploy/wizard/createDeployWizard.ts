@@ -55,9 +55,7 @@ export async function createDeployExecuteSteps(context: InnerDeployContext): Pro
     }
 
     executeSteps.push(new PostDeployTaskExecuteStep(config))
-    if (context.syncTriggersPostDeploy) {
-        executeSteps.push(new PostDeploySyncTriggersExecuteStep());
-    }
+    executeSteps.push(new PostDeploySyncTriggersExecuteStep());
 
     return executeSteps;
 }
