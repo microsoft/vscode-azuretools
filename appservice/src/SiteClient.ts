@@ -323,7 +323,9 @@ export class SiteClient implements IAppSettingsClient {
     }
 
     public async zipPushDeploy(context: IActionContext, file: RequestBodyType, rawQueryParameters: KuduModels.PushDeploymentZipPushDeployOptionalParams): Promise<AzExtPipelineResponse> {
-        const client: ServiceClient = await createGenericClient(context, this._site.subscription);
+        const client: ServiceClient = await createGenericClient(context, this._site.subscription, {
+            endpoint: this._site.subscription.environment.managementEndpointUrl,
+        });
         const queryParameters = convertQueryParamsValuesToString(rawQueryParameters);
         const queryString = new URLSearchParams(queryParameters).toString();
         const request = createPipelineRequest({
@@ -336,7 +338,9 @@ export class SiteClient implements IAppSettingsClient {
     }
 
     public async warPushDeploy(context: IActionContext, file: RequestBodyType, rawQueryParameters: KuduModels.PushDeploymentWarPushDeployOptionalParams): Promise<AzExtPipelineResponse> {
-        const client: ServiceClient = await createGenericClient(context, this._site.subscription);
+        const client: ServiceClient = await createGenericClient(context, this._site.subscription, {
+            endpoint: this._site.subscription.environment.managementEndpointUrl,
+        });
         const queryParameters = convertQueryParamsValuesToString(rawQueryParameters);
         const queryString = new URLSearchParams(queryParameters).toString();
         const request = createPipelineRequest({
@@ -351,7 +355,9 @@ export class SiteClient implements IAppSettingsClient {
     // TODO: only supporting /zip endpoint for now, but should support /zipurl as well
     public async flexDeploy(context: IActionContext, file: RequestBodyType,
         rawQueryParameters: { remoteBuild?: boolean, Deployer?: string }): Promise<AzExtPipelineResponse> {
-        const client: ServiceClient = await createGenericClient(context, this._site.subscription);
+        const client: ServiceClient = await createGenericClient(context, this._site.subscription, {
+            endpoint: this._site.subscription.environment.managementEndpointUrl,
+        });
         const queryParameters = convertQueryParamsValuesToString(rawQueryParameters);
         const queryString = new URLSearchParams(queryParameters).toString();
         const request = createPipelineRequest({
@@ -364,7 +370,9 @@ export class SiteClient implements IAppSettingsClient {
     }
 
     public async deploy(context: IActionContext, id: string): Promise<AzExtPipelineResponse> {
-        const client: ServiceClient = await createGenericClient(context, this._site.subscription);
+        const client: ServiceClient = await createGenericClient(context, this._site.subscription, {
+            endpoint: this._site.subscription.environment.managementEndpointUrl,
+        });
         return await client.sendRequest(createPipelineRequest({
             method: 'PUT',
             url: `${this._site.kuduUrl}/api/deployments/${id}`
@@ -375,6 +383,7 @@ export class SiteClient implements IAppSettingsClient {
     public async getDeployResults(context: IActionContext): Promise<KuduModels.DeployResult[]> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription, {
             addStatusCodePolicy: true,
+            endpoint: this._site.subscription.environment.managementEndpointUrl,
         });
         const response: AzExtPipelineResponse = await client.sendRequest(createPipelineRequest({
             method: 'GET',
@@ -394,6 +403,7 @@ export class SiteClient implements IAppSettingsClient {
     public async getDeployResult(context: IActionContext, deployId: string): Promise<KuduModels.DeployResult> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription, {
             addStatusCodePolicy: true,
+            endpoint: this._site.subscription.environment.managementEndpointUrl,
         });
         const response: AzExtPipelineResponse = await client.sendRequest(createPipelineRequest({
             method: 'GET',
@@ -406,6 +416,7 @@ export class SiteClient implements IAppSettingsClient {
     public async getLogEntry(context: IActionContext, deployId: string): Promise<KuduModels.LogEntry[]> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription, {
             addStatusCodePolicy: true,
+            endpoint: this._site.subscription.environment.managementEndpointUrl,
         });
         const response: AzExtPipelineResponse = await client.sendRequest(createPipelineRequest({
             method: 'GET',
@@ -426,6 +437,7 @@ export class SiteClient implements IAppSettingsClient {
     public async getLogEntryDetails(context: IActionContext, deployId: string, logId: string): Promise<KuduModels.LogEntry[]> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription, {
             addStatusCodePolicy: true,
+            endpoint: this._site.subscription.environment.managementEndpointUrl,
         });
         const response: AzExtPipelineResponse = await client.sendRequest(createPipelineRequest({
             method: 'GET',
@@ -442,7 +454,9 @@ export class SiteClient implements IAppSettingsClient {
     }
 
     public async vfsGetItem(context: IActionContext, url: string): Promise<AzExtPipelineResponse> {
-        const client: ServiceClient = await createGenericClient(context, this._site.subscription);
+        const client: ServiceClient = await createGenericClient(context, this._site.subscription, {
+            endpoint: this._site.subscription.environment.managementEndpointUrl,
+        });
         return await client.sendRequest(createPipelineRequest({
             method: 'GET',
             url,
@@ -450,7 +464,9 @@ export class SiteClient implements IAppSettingsClient {
     }
 
     public async vfsPutItem(context: IActionContext, data: string | ArrayBuffer, url: string, rawHeaders?: {}): Promise<AzExtPipelineResponse> {
-        const client: ServiceClient = await createGenericClient(context, this._site.subscription);
+        const client: ServiceClient = await createGenericClient(context, this._site.subscription, {
+            endpoint: this._site.subscription.environment.managementEndpointUrl,
+        });
         const headers = createHttpHeaders(rawHeaders);
         return await client.sendRequest(createPipelineRequest({
             method: 'PUT',

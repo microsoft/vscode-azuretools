@@ -18,6 +18,7 @@ parameters:
   - name: PackageToBuild
     displayName: Package to Build
     type: string
+    default: "all"
     values:
       - all
       - microsoft-vscode-azext-azureappservice

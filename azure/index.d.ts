@@ -366,6 +366,7 @@ export declare function createGenericClient(context: IActionContext, clientInfo:
 export interface IGenericClientOptions {
     noRetryPolicy?: boolean;
     addStatusCodePolicy?: boolean;
+    endpoint?: string;
 }
 
 export type AzExtRequestPrepareOptions = PipelineRequestOptions & { rejectUnauthorized?: boolean }

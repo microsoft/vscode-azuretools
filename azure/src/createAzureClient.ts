@@ -79,7 +79,7 @@ export async function createGenericClient(context: IActionContext, clientInfo: t
     }
 
     const retryOptions: RetryPolicyOptions | undefined = options?.noRetryPolicy ? { maxRetries: 0 } : undefined;
-
+    endpoint = options?.endpoint ?? endpoint;
     const client = new ServiceClient({
         credential: credentials,
         endpoint
