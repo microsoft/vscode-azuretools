@@ -1,0 +1,53 @@
+parameters:
+  - name: "jobs"
+    type: object
+    default:
+      - name: Build # TODO: would like this to be repository name but can't use build variables here
+        working_directory: .
+
+stages:
+  - stage: BuildStage
+    jobs:
+      - ${{ each job in parameters.jobs }}:
+          - job: ${{ job.name }}
+            steps:
+              - template: ./templates/setup.yml
+              - template: ./templates/build.yml
+              - template: ./templates/1espackage.yml
+              - template: ./templates/test.yml
+            variables:
+              artifact_name: ${{ job.name }}
+              working_directory: ${{ job.working_directory }}
+      # - job: BuildJob
+      #   # If the pipeline publishes artifacts, use `templateContext` to define the artifacts.
+      #   # This will enable 1ES PT to run SDL analysis tools on the artifacts and then upload them.
+      #   templateContext:
+      #     outputs:
+      #       - output: pipelineArtifact
+      #         targetPath: $(build.artifactstagingdirectory)/build
+      #         artifactName: Build
+
+      #   variables:
+      #     - working_directory: ${{ parameters.working_directory }}
+      #   steps:
+      #     - template: ./templates/setup.yml
+
+      #     - template: ./templates/build.yml
+
+      #     - task: Npm@1
+      #       displayName: "Package"
+      #       inputs:
+      #         command: custom
+      #         customCommand: run package
+
+      #     - task: CopyFiles@2
+      #       displayName: "Copy packages and vsix to staging directory"
+      #       inputs:
+      #         Contents: |
+      #           **/*.vsix
+      #           **/*.tar.gz
+      #           **/*.tgz
+      #         TargetFolder: "$(build.artifactstagingdirectory)/build/$(artifact_name)"
+      #       condition: and(succeeded(), ne(variables['System.PullRequest.IsFork'], 'True'))
+
+      #     - template: ./templates/test.yml
