@@ -12,5 +12,5 @@ steps:
         **/*.vsix
         **/*.tar.gz
         **/*.tgz
-      TargetFolder: "$(build.artifactstagingdirectory)/build"
+      TargetFolder: "$(build.artifactstagingdirectory)/build/$(artifact_name)"
     condition: and(succeeded(), ne(variables['System.PullRequest.IsFork'], 'True'))

@@ -10,6 +10,11 @@ stages:
     jobs:
       - ${{ each job in parameters.jobs }}:
           - job: ${{ job.name }}
+            templateContext:
+              outputs:
+                - output: pipelineArtifact
+                  targetPath: $(build.artifactstagingdirectory)/build/${{ job.name }}
+                  artifactName: Build
             steps:
               - template: ./templates/setup.yml
               - template: ./templates/build.yml
