@@ -2276,14 +2276,13 @@ export type ExtensionAgentMetadata = {
     /**
      * The VS Code command ID of a command that the extension implements which can be used to get the list
      * of {@link WizardBasedCommandConfig}s that the extension implements and wishes to expose via the agent.
-     *
-     * Note: the function type is only for testing in the agent extension itself.
      */
     getWizardCommandsCommandId: string;
 
     /**
-     * The VS Code command ID of a command that the extension implements which can be used to run, without performing
-     * execution, any of the commands returned by the command with the ID {@link getWizardCommandsCommandId}.
+     * The VS Code command ID of a command that the extension implements which can be used to run any of the
+     * commands returned by the command with the ID {@link getWizardCommandsCommandId}, while only performing
+     * prompting/without actually executing the intent of the command.
      *
      * The command should take two parameters:
      * - A {@link WizardBasedCommandConfig}: the command that should be run.
@@ -2292,8 +2291,9 @@ export type ExtensionAgentMetadata = {
     runWizardCommandWithoutExecutionCommandId: string;
 
     /**
-     * The VS Code command ID of a command that the extension implements which can be used to run, with a predefined
-     * queue of inputs, any of the commands returned by the command with the ID {@link getWizardCommandsCommandId}.
+     * The VS Code command ID of a command that the extension implements which can be used to run any of the
+     * commands returned by the command with the ID {@link getWizardCommandsCommandId} with a {@link AzureUserInputQueue}
+     * of inputs,
      *
      * The command should take two parameters:
      * - A {@link WizardBasedCommandConfig}: the command that should be run.
