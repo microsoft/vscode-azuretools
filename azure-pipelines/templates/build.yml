@@ -5,3 +5,4 @@ steps:
       command: custom
       customCommand: run build
       workingDir: $(working_directory)
+    condition: succeeded()
