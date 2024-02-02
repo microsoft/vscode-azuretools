@@ -51,7 +51,7 @@ function getLinuxFxVersionForTelemetry(config: SiteConfigResource): string {
 }
 
 async function setDeploymentTelemetry(context: InnerDeployContext, config: SiteConfigResource, aspPromise: Promise<AppServicePlan | undefined>): Promise<void> {
-    context.telemetry.properties.sourceHash = await randomUtils.getPseudononymousStringHash(context.workspaceFolder.uri.fsPath);
+    context.telemetry.properties.sourceHash = await randomUtils.getPseudononymousStringHash(context.fsPath);
     context.telemetry.properties.destHash = await randomUtils.getPseudononymousStringHash(context.site.fullName);
     context.telemetry.properties.scmType = String(config.scmType);
     context.telemetry.properties.isSlot = context.site.isSlot ? 'true' : 'false';

@@ -12,12 +12,12 @@ import { DeployZipBaseExecuteStep } from "./DeployZipBaseExecuteStep";
 
 export class DeployWarExecuteStep extends DeployZipBaseExecuteStep {
     public async deployZip(context: InnerDeployContext): Promise<void> {
-        if (getFileExtension(context.workspaceFolder.uri.fsPath) !== 'war') {
+        if (getFileExtension(context.fsPath) !== 'war') {
             throw new Error(l10n.t('Path specified is not a war file'));
         }
 
         const kuduClient = await context.site.createClient(context);
-        await kuduClient.warPushDeploy(context, () => fs.createReadStream(context.workspaceFolder.uri.fsPath), {
+        await kuduClient.warPushDeploy(context, () => fs.createReadStream(context.fsPath), {
             isAsync: true,
             author: publisherName,
             deployer: publisherName,
