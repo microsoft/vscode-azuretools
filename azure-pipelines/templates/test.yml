@@ -1,6 +1,6 @@
 steps:
   - task: Npm@1
-    displayName: "Test"
+    displayName: "\U0001F449 Test"
     inputs:
       command: custom
       customCommand: test
