@@ -1,13 +1,13 @@
 steps:
   - task: Npm@1
-    displayName: "Package"
+    displayName: "\U0001F449 Package"
     inputs:
       command: custom
       customCommand: run package
       workingDir: $(working_directory)
 
   - task: CopyFiles@2
-    displayName: "Copy packages and vsix to staging directory"
+    displayName: "\U0001F449 Copy packages and vsix to staging directory"
     inputs:
       Contents: |
         **/*.vsix
@@ -17,14 +17,14 @@ steps:
     condition: and(eq(variables['Agent.OS'], 'Linux'), ne(variables['System.PullRequest.IsFork'], 'True'))
 
   - task: PublishBuildArtifacts@1
-    displayName: "Publish artifacts: packages and vsix"
+    displayName: "\U0001F449 Publish artifacts: packages and vsix"
     inputs:
       PathtoPublish: "$(build.artifactstagingdirectory)/build"
       ArtifactName: $(artifact_name)
     condition: and(eq(variables['Agent.OS'], 'Linux'), ne(variables['System.PullRequest.IsFork'], 'True'))
 
   - task: CopyFiles@2
-    displayName: "Copy web to staging directory"
+    displayName: "\U0001F449 Copy web to staging directory"
     inputs:
       Contents: |
         dist/web/*.js*
@@ -38,7 +38,7 @@ steps:
     # If AzureFileCopy ever supports not using account keys we should consider making use of it.
     # If we do, we should also consider moving to user delegatation SAS in the generate SAS step.
     # See: https://github.com/microsoft/azure-pipelines-tasks/issues/15610
-    displayName: "Upload web to blob storage"
+    displayName: "\U0001F449 Upload web to blob storage"
     inputs:
       SourcePath: "$(build.artifactstagingdirectory)/web/*"
       # This is a service connection for the ADO project. Can be managed under ADO project settings.
@@ -52,7 +52,7 @@ steps:
     condition: and(eq(variables['Agent.OS'], 'Windows_NT'), ne(variables['System.PullRequest.IsFork'], 'True'), eq(variables['WEB_BUILDS_ENABLED'], true))
 
   - task: AzureCLI@2
-    displayName: "Generate SAS to web"
+    displayName: "\U0001F449 Generate SAS to web"
     inputs:
       # This is a service connection for the ADO project. Can be managed under ADO project settings.
       azureSubscription: ms-azuretools-vscode-dot-dev-connection
@@ -76,7 +76,7 @@ steps:
     condition: and(eq(variables['Agent.OS'], 'Windows_NT'), ne(variables['System.PullRequest.IsFork'], 'True'), eq(variables['WEB_BUILDS_ENABLED'], true))
 
   - task: PublishBuildArtifacts@1
-    displayName: "Publish artifacts: web-sas"
+    displayName: "\U0001F449 Publish artifacts: web-sas"
     inputs:
       PathtoPublish: "$(build.artifactstagingdirectory)/web-sas.txt"
       ArtifactName: web-sas
