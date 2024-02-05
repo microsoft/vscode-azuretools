@@ -50,7 +50,7 @@ extends:
       os: windows # OS of the image. Allowed values: windows, linux, macOS
     stages:
       # Execute stages from the AzExt template
-      - template: azure-pipelines/1esjobs.yml
+      - template: ../azure-pipelines/1esjobs.yml
         parameters:
           jobs:
             - ${{ if or(eq(parameters.PackageToBuild, 'microsoft-vscode-azext-azureappservice'), eq(parameters.PackageToBuild, 'all')) }}:
