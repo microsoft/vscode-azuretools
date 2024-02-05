@@ -1,0 +1,17 @@
+steps:
+  - task: Npm@1
+    displayName: "\U0001F449 Package"
+    inputs:
+      command: custom
+      customCommand: run package
+    condition: succeeded()
+
+  - task: CopyFiles@2
+    displayName: "\U0001F449 Copy packages and vsix to staging directory"
+    inputs:
+      Contents: |
+        **/*.vsix
+        **/*.tar.gz
+        **/*.tgz
+      TargetFolder: "$(build.artifactstagingdirectory)/build/$(artifact_name)"
+    condition: and(succeeded(), ne(variables['System.PullRequest.IsFork'], 'True'))

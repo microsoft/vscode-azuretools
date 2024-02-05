@@ -1,9 +1,10 @@
 steps:
   - task: Npm@1
-    displayName: "Test"
+    displayName: "\U0001F449 Test"
     inputs:
       command: custom
       customCommand: test
       workingDir: $(working_directory)
+    condition: succeeded()
     env:
       DISPLAY: :99 # Only necessary for linux tests

@@ -1,0 +1,25 @@
+parameters:
+  - name: "jobs"
+    type: object
+    default:
+      - name: Build # TODO: would like this to be repository name but can't use build variables here
+        working_directory: .
+
+stages:
+  - stage: BuildStage
+    jobs:
+      - ${{ each job in parameters.jobs }}:
+          - job: ${{ job.name }}
+            templateContext:
+              outputs:
+                - output: pipelineArtifact
+                  targetPath: $(build.artifactstagingdirectory)/build/${{ job.name }}
+                  artifactName: Build
+            steps:
+              - template: ./templates/setup.yml
+              - template: ./templates/build.yml
+              - template: ./templates/1espackage.yml
+              - template: ./templates/test.yml
+            variables:
+              artifact_name: ${{ job.name }}
+              working_directory: ${{ job.working_directory }}
