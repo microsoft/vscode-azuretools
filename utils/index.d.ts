@@ -2167,7 +2167,7 @@ export type AgentQuickPickItem<T extends QuickPickItem = QuickPickItem> = {
         /**
          * If this quick pick item should not be picked by the agent.
          *
-         * @example If an item exists as a way to link a user to some information about the other items in the quick pick, this
+         * @example If an item is a web link which is provided so a user can read some information about the quick pick/items in the quick pick, this
          * is not something the agent would pick.
          */
         notApplicableToAgentPick?: boolean;
