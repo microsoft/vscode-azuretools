@@ -4,6 +4,7 @@ steps:
     inputs:
       command: custom
       customCommand: run package
+      workingDir: $(working_directory)
     condition: succeeded()
 
   - task: CopyFiles@2

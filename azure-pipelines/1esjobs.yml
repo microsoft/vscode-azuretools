@@ -14,7 +14,7 @@ stages:
               outputs:
                 - output: pipelineArtifact
                   targetPath: $(build.artifactstagingdirectory)/build/${{ job.name }}
-                  artifactName: Build
+                  artifactName: Build ${{ job.name }}
             steps:
               - template: ./templates/setup.yml
               - template: ./templates/build.yml
