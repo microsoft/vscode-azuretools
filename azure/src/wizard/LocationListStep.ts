@@ -5,7 +5,7 @@
 
 import type { ExtendedLocation, Provider } from '@azure/arm-resources';
 import type { Location } from '@azure/arm-resources-subscriptions';
-import { AzureWizardPromptStep, IActionContext, IAzureQuickPickItem, IAzureQuickPickOptions, nonNullProp, nonNullValue } from '@microsoft/vscode-azext-utils';
+import { AgentQuickPickItem, AgentQuickPickOptions, AzureWizardPromptStep, IActionContext, IAzureAgentInput, IAzureQuickPickItem, IAzureQuickPickOptions, nonNullProp, nonNullValue } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import * as types from '../../index';
 import { createResourcesClient, createSubscriptionsClient } from '../clients';
@@ -31,6 +31,11 @@ interface ILocationWizardContextInternal extends types.ILocationWizardContext {
      * The selected location. There's a small chance it's not supported by all providers if `setLocation` was used
      */
     _location?: types.AzExtLocation;
+
+    /**
+     * Location list step is intended to be compatible with an {@link IAzureAgentInput}, so we re-type `ui`.
+     */
+    ui: IAzureAgentInput;
 }
 
 export class LocationListStep<T extends ILocationWizardContextInternal> extends AzureWizardPromptStep<T> {
@@ -175,7 +180,15 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
     }
 
     public async prompt(wizardContext: T): Promise<void> {
-        const options: IAzureQuickPickOptions = { placeHolder: vscode.l10n.t('Select a location for new resources.'), enableGrouping: true, ...this.options };
+        const options: AgentQuickPickOptions = {
+            placeHolder: vscode.l10n.t('Select a location for new resources.'),
+            enableGrouping: true,
+            agentMetadata: {
+                parameterDisplayTitle: vscode.l10n.t('Location'),
+                parameterDisplayDescription: vscode.l10n.t('The location where resources will be deployed.')
+            },
+            ...this.options
+        };
         wizardContext._location = (await wizardContext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
         wizardContext.telemetry.properties.locationType = wizardContext._location.type;
     }
@@ -184,7 +197,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
         return !wizardContext._location;
     }
 
-    protected async getQuickPicks(wizardContext: T): Promise<IAzureQuickPickItem<types.AzExtLocation>[]> {
+    protected async getQuickPicks(wizardContext: T): Promise<AgentQuickPickItem<IAzureQuickPickItem<types.AzExtLocation>>[]> {
         let locations: types.AzExtLocation[] = await LocationListStep.getLocations(wizardContext);
         locations = locations.sort(compareLocation);
 
@@ -193,7 +206,8 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
                 label: nonNullProp(l, 'displayName'),
                 group: l.metadata?.regionCategory,
                 data: l,
-                description: LocationListStep.getQuickPickDescription?.(l)
+                description: LocationListStep.getQuickPickDescription?.(l),
+                agentMetadata: {}
             };
         });
     }

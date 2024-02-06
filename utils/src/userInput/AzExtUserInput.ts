@@ -14,12 +14,13 @@ import { showWarningMessage } from './showWarningMessage';
 
 export class AzExtUserInput implements types.IAzureUserInput {
     public wizard?: IInternalAzureWizard;
-    private _onDidFinishPromptEmitter: EventEmitter<types.PromptResult> = new EventEmitter<types.PromptResult>();
+    private _onDidFinishPromptEmitter: EventEmitter<types.PromptResult>;
     private _context: IInternalActionContext;
     private _isPrompting: boolean = false;
 
-    public constructor(context: IInternalActionContext) {
+    public constructor(context: IInternalActionContext, onDidFinishPromptEmitter?: EventEmitter<types.PromptResult>) {
         this._context = context;
+        this._onDidFinishPromptEmitter = onDidFinishPromptEmitter || new EventEmitter<types.PromptResult>();
     }
 
     public get onDidFinishPrompt(): Event<types.PromptResult> {
@@ -104,7 +105,7 @@ export class AzExtUserInput implements types.IAzureUserInput {
     }
 }
 
-function addStepTelemetry(context: IInternalActionContext, stepName: string | undefined, stepType: string, description: string | undefined): void {
+export function addStepTelemetry(context: IInternalActionContext, stepName: string | undefined, stepType: string, description: string | undefined): void {
     if (!stepName) {
         stepName = context.ui.wizard?.currentStepId;
     }
