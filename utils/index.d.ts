@@ -2343,13 +2343,19 @@ export type AgentBenchmarkConfig = {
 
     /**
      * Follow ups that are required/optional to be returned by the agent given the {@link AgentBenchmarkConfig.prompt}.
-     * - For command follow ups, it will be verified that at least one follow up exists where the`commandId` matches EXACTLY.
-     * - For reply follow ups, it will be verified that at least one follow up exists where the `message` contains the expected message.
      */
     followUps?: {
-        required: ({ type: "command", commandId: string } | { type: "reply", message: string })[],
-        optional: ({ type: "command", commandId: string } | { type: "reply", message: string })[],
+        required: { type: "message", messageContains: string }[],
+        optional: { type: "message", messageContains: string }[],
     };
+
+    /**
+     * Buttons that are required/optional to be returned by the agent given the {@link AgentBenchmarkConfig.prompt}.
+     */
+    buttons?: {
+        required: { type: "command", commandId: string }[],
+        optional: { type: "command", commandId: string }[],
+    }
 };
 
 // #endregion
