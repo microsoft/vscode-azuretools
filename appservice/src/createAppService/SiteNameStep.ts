@@ -65,7 +65,6 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
             validateInput: (name: string): string | undefined => this.validateSiteName(name),
             asyncValidationTask: async (name: string): Promise<string | undefined> => await this.asyncValidateSiteName(client, name),
             agentMetadata: this._inputBoxOptionsAgentMetadata ?? {
-                parameterName: "siteName",
                 parameterDisplayTitle: "Site Name",
                 parameterDisplayDescription: "The name of the app service site.",
             }

@@ -184,7 +184,6 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
             placeHolder: vscode.l10n.t('Select a location for new resources.'),
             enableGrouping: true,
             agentMetadata: {
-                parameterName: 'location',
                 parameterDisplayTitle: vscode.l10n.t('Location'),
                 parameterDisplayDescription: vscode.l10n.t('The location where resources will be deployed.')
             },
