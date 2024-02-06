@@ -2128,18 +2128,6 @@ export declare namespace validationUtils {
 
 export type ParameterAgentMetadata = {
     /**
-     * A camel cased string that names the parameter this quick pick is for. Will be given to a LLM to identify the
-     * parameter that it needs to pick a value for.
-     *
-     * For example:
-     * - "subscription"
-     * - "resourceGroup"
-     * - "runtime"
-     * - "name"
-     */
-    parameterName: string;
-
-    /**
      * A title cased string for the parameter this quick pick is for. Will be displayed to the user.
      *
      * For example:
