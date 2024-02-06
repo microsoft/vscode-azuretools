@@ -2166,6 +2166,9 @@ export type AgentQuickPickItem<T extends QuickPickItem = QuickPickItem> = {
     agentMetadata: {
         /**
          * If this quick pick item should not be picked by the agent.
+         *
+         * @example If an item exists as a way to link a user to some information about the other items in the quick pick, this
+         * is not something the agent would pick.
          */
         notApplicableToAgentPick?: boolean;
 
@@ -2174,6 +2177,13 @@ export type AgentQuickPickItem<T extends QuickPickItem = QuickPickItem> = {
          * pick prompt this item is associated with. This is useful for quick picks that don't have any dependents, as the
          * agent can avoid getting stuck trying to answer them. Once the user chooses to go with the parameters that the agent
          * has picked, they will be asked to pick an item for the pick quick pick prompt this item is associated with.
+         *
+         * For quick picks, the "skip" decision is on an item, unlike how there is {@link AgentInputBoxOptions.skipValue}, because ultimately
+         * to "skip" a quick pick, the agent still has to pick an item.
+         *
+         * @example If what subscription is picked when creating a storage account doesn't matter, then the "create storage account" wizard
+         * can choose an arbitrary subscription for the agent to use as a default value for the "pick a subscription" prompt. This allows
+         * the agent to move onto more important prompts like the "choose a storage account type" prompt.
          */
         useAsSkipValue?: boolean;
     };
