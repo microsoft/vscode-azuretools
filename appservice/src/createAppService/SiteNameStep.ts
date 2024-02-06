@@ -25,12 +25,10 @@ const siteNamingRules: IAzureNamingRules = {
 };
 
 export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
-    private _skipValidation: boolean;
     private _inputBoxOptionsAgentMetadata: ParameterAgentMetadata | undefined;
 
-    constructor(skipValidation?: boolean, inputBoxOptionsAgentMetadata?: ParameterAgentMetadata) {
+    constructor(inputBoxOptionsAgentMetadata?: ParameterAgentMetadata) {
         super();
-        this._skipValidation = skipValidation ?? false;
         this._inputBoxOptionsAgentMetadata = inputBoxOptionsAgentMetadata;
     }
 
@@ -72,11 +70,6 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
                 parameterDisplayDescription: "The name of the app service site.",
             }
         };
-
-        if (this._skipValidation) {
-            options.validateInput = undefined;
-            options.asyncValidationTask = undefined;
-        }
 
         context.newSiteName = (await context.ui.showInputBox(options)).trim();
         context.valuesToMask.push(context.newSiteName);
