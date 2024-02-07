@@ -2,7 +2,7 @@ parameters:
   - name: "jobs"
     type: object
     default:
-      - name: Build # TODO: would like this to be repository name but can't use build variables here
+      - name: Root # TODO: would like this to be repository name but can't use build variables here
         working_directory: .
 
 stages:
