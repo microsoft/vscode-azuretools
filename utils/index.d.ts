@@ -1137,6 +1137,8 @@ export interface IWizardOptions<T extends IActionContext> {
 
     /**
      * If true, all execute steps will be removed, and instead a single execute step will be added that throws a UserCancelledError.
+     * Additionally, any execute activity context properties will be replaced with one which avoids having activities show up in the Azure output
+     * window.
      */
     skipExecute?: boolean;
 }
