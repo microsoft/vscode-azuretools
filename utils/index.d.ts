@@ -2286,7 +2286,7 @@ export type ExtensionAgentMetadata = {
 
     /**
      * The VS Code command ID of a command that the extension implements which can be used to get the list
-     * of {@link WizardCommandConfig}s that the extension implements and wishes to expose via the agent.
+     * of command configs that the extension implements and wishes to expose via the agent.
      */
     getCommandsCommandId: string;
 
