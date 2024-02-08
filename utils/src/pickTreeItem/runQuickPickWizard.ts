@@ -16,7 +16,7 @@ export async function runQuickPickWizard<TPick>(context: types.PickExperienceCon
 
     const wizard = new AzureWizard(wizardContext, {
         hideStepCount: true,
-        showLoadingPrompt: true,
+        showLoadingPrompt: wizardOptions?.showLoadingPrompt ?? true,
         ...wizardOptions
     });
 
