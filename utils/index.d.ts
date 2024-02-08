@@ -2223,13 +2223,7 @@ export interface IAzureAgentInput {
 
 // #region Agent integration types
 
-/**
- * A config that describes a command that the extension implements which makes use of wizards that use
- * an {@link IAzureAgentInput}/{@link IAzureUserInput} to get user input.
- */
-export type WizardBasedCommandConfig = {
-    type: "wizard";
-
+export type BaseCommandConfig = {
     /**
      * A camel cased string that names the command.
      * @example "createNewFunctionProject"
@@ -2274,7 +2268,19 @@ export type WizardBasedCommandConfig = {
      * If the command requires that the user is logged into Azure.
      */
     requiresAzureLogin?: boolean;
-};
+}
+
+/**
+ * A config that describes a command that the extension implements which makes use of wizards that use
+ * an {@link IAzureAgentInput}/{@link IAzureUserInput} to get user input.
+ */
+export type WizardBasedCommandConfig = BaseCommandConfig & { type: "wizard"; };
+
+/**
+ * A config that describes a command that the extension implements which doesn't involve any additonal agent interaction
+ * other than suggesting the command.
+ */
+export type SimpleCommandConfig = BaseCommandConfig & { type: "simple"; };
 
 /**
  * Information that should be available on the package.json of an extension which is compabitible with the Azure agent.
