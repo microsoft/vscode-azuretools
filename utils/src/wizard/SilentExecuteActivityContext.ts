@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ExecuteActivityContext } from "../..";
+import { ExecuteActivityContext } from "../../index";
 
 /**
  * A context that can be used to execute an activity without actually executing it
