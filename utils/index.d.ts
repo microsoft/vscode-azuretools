@@ -2218,13 +2218,7 @@ export interface IAzureAgentInput {
 
 // #region Agent integration types
 
-/**
- * A config that describes a command that the extension implements which makes use of wizards that use
- * an {@link IAzureAgentInput}/{@link IAzureUserInput} to get user input.
- */
-export type WizardBasedCommandConfig = {
-    type: "wizard";
-
+export type BaseCommandConfig = {
     /**
      * A camel cased string that names the command.
      * @example "createNewFunctionProject"
@@ -2269,7 +2263,19 @@ export type WizardBasedCommandConfig = {
      * If the command requires that the user is logged into Azure.
      */
     requiresAzureLogin?: boolean;
-};
+}
+
+/**
+ * A config that describes a command that the extension implements which makes use of wizards that use
+ * an {@link IAzureAgentInput}/{@link IAzureUserInput} to get user input.
+ */
+export type WizardCommandConfig = BaseCommandConfig & { type: "wizard"; };
+
+/**
+ * A config that describes a command that the extension implements which doesn't involve any additonal agent interaction
+ * other than suggesting the command.
+ */
+export type SimpleCommandConfig = BaseCommandConfig & { type: "simple"; };
 
 /**
  * Information that should be available on the package.json of an extension which is compabitible with the Azure agent.
@@ -2280,28 +2286,26 @@ export type ExtensionAgentMetadata = {
 
     /**
      * The VS Code command ID of a command that the extension implements which can be used to get the list
-     * of {@link WizardBasedCommandConfig}s that the extension implements and wishes to expose via the agent.
+     * of {@link WizardCommandConfig}s that the extension implements and wishes to expose via the agent.
      */
-    getWizardCommandsCommandId: string;
+    getCommandsCommandId: string;
 
     /**
-     * The VS Code command ID of a command that the extension implements which can be used to run any of the
-     * commands returned by the command with the ID {@link getWizardCommandsCommandId}, while only performing
-     * prompting/without actually executing the intent of the command.
+     * The VS Code command ID of a command that the extension implements which can be used to run any of the {@link WizardCommandConfig}
+     * commands the extension exposes, while only performing prompting/without actually executing the intent of the command.
      *
      * The command should take two parameters:
-     * - A {@link WizardBasedCommandConfig}: the command that should be run.
+     * - A {@link WizardCommandConfig}: the command that should be run.
      * - A {@link IAzureAgentInput}: the input interface that the command should use.
      */
     runWizardCommandWithoutExecutionCommandId: string;
 
     /**
-     * The VS Code command ID of a command that the extension implements which can be used to run any of the
-     * commands returned by the command with the ID {@link getWizardCommandsCommandId} with a {@link AzureUserInputQueue}
-     * of inputs,
+     * The VS Code command ID of a command that the extension implements which can be used to run any of the {@link WizardCommandConfig}
+     * commands the extension exposes, with a {@link AzureUserInputQueue} of inputs,
      *
      * The command should take two parameters:
-     * - A {@link WizardBasedCommandConfig}: the command that should be run.
+     * - A {@link WizardCommandConfig}: the command that should be run.
      * - A {@link AzureUserInputQueue}: the inputs that the command should use when needing to present user input.
      */
     runWizardCommandWithInputsCommandId: string;
@@ -2331,7 +2335,7 @@ export type AgentBenchmarkConfig = {
 
     /**
      * Acceptable handler chains for the `prompt`. Each entry in a handler chain is a string that represents a handler, in the
-     * order that the handlers are called. For {@link WizardBasedCommandConfig} related subcommands, the {@link WizardBasedCommandConfig.name}
+     * order that the handlers are called. For {@link WizardCommandConfig} related subcommands, the {@link WizardCommandConfig.name}
      * is the handler name.
      */
     acceptableHandlerChains: string[][];
