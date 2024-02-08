@@ -1134,6 +1134,11 @@ export interface IWizardOptions<T extends IActionContext> {
     * If true, a loading prompt will be displayed if there are long delays between wizard steps.
     */
     showLoadingPrompt?: boolean;
+
+    /**
+     * If true, all execute steps will be removed, and instead a single execute step will be added that throws a UserCancelledError.
+     */
+    skipExecute?: boolean;
 }
 
 export const activitySuccessContext: string;

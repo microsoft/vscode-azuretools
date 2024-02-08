@@ -14,6 +14,7 @@ import { IInternalActionContext, IInternalAzureWizard } from '../userInput/IInte
 import { createQuickPick } from '../userInput/showQuickPick';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
+import { NoExecuteStep } from './NoExecuteStep';
 
 export class AzureWizard<T extends (IInternalActionContext & Partial<types.ExecuteActivityContext>)> implements types.AzureWizard<T>, IInternalAzureWizard {
     public title: string | undefined;
@@ -38,6 +39,11 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
         this._wizardHideStepCount = options.hideStepCount;
         this._showLoadingPrompt = options.showLoadingPrompt;
         this._cancellationTokenSource = new vscode.CancellationTokenSource();
+
+        if (options.skipExecute === true) {
+            this._executeSteps.splice(0);
+            this._executeSteps.push(new NoExecuteStep());
+        }
     }
 
     public getCachedInputBoxValue(): string | undefined {
