@@ -8,7 +8,14 @@ To use these base pipeline templates:
     1. `package`: this should do whatever packaging is needed of the built code--e.g. into a .vsix, .tgz, etc. The resulting package files will be published as build artifacts. This will always run after the `build` script, so it is not necessary to have a prepack script.
     1. `test`: this should run the tests. This will always run after the `build` script, so it is not necessary to have a pretest script.
 1. Create a `.azure-pipelines` folder at the root of the repository
-1. Create a `1esmain.yml` file in `.azure-pipelines` with the following contents:
+1. Copy `compliance/CredScanSuppressions.json` into `.azure-pipelines/compliance`, structured as such:
+```
+<RepositoryRoot>
+    .azure-pipelines
+        compliance
+            CredScanSuppressions.json
+```
+5. Create a `1esmain.yml` file in `.azure-pipelines` with the following contents:
 
 ```yaml
 # Trigger the build whenever `main` or `rel/*` is updated
