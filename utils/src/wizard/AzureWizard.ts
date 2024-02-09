@@ -44,7 +44,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
         if (options.skipExecute === true) {
             this._executeSteps.splice(0);
             this._executeSteps.push(new NoExecuteStep());
-            context = { ...context, ...getSilentExecuteActivityContext() };
+            this._context = { ...this._context, ...getSilentExecuteActivityContext() };
         }
     }
 
