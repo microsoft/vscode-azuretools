@@ -144,6 +144,7 @@ export async function getFilesFromGitignore(folderPath: string, gitignoreName: s
             .filter(s => s !== '');
     }
 
-    return (await vscode.workspace.findFiles(new vscode.RelativePattern(folderPath, '**/*'), `{${ignore.join(',')}}`))
+    const exclude: vscode.GlobPattern | null = ignore.length > 0 ? `{${ignore.join(',')}}` : null;
+    return (await vscode.workspace.findFiles(new vscode.RelativePattern(folderPath, '**/*'), exclude))
         .map(f => path.relative(folderPath, f.fsPath));
 }
