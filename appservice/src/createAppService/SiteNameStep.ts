@@ -5,7 +5,7 @@
 
 import type { ResourceNameAvailability, WebSiteManagementClient } from '@azure/arm-appservice';
 import { ResourceGroupListStep, StorageAccountListStep, resourceGroupNamingRules, storageAccountNamingRules } from '@microsoft/vscode-azext-azureutils';
-import { AgentInputBoxOptions, AzureNameStep, IAzureAgentInput, IAzureNamingRules, ParameterAgentMetadata } from '@microsoft/vscode-azext-utils';
+import { AgentInputBoxOptions, AzureNameStep, IAzureAgentInput, IAzureNamingRules } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import { createWebSiteClient } from '../utils/azureClients';
 import { appInsightsNamingRules } from './AppInsightsListStep';
@@ -25,11 +25,11 @@ const siteNamingRules: IAzureNamingRules = {
 };
 
 export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
-    private _inputBoxOptionsAgentMetadata: ParameterAgentMetadata | undefined;
+    private _siteFor: "functionApp" | undefined;
 
-    constructor(inputBoxOptionsAgentMetadata?: ParameterAgentMetadata) {
+    constructor(siteFor?: "functionApp" | undefined) {
         super();
-        this._inputBoxOptionsAgentMetadata = inputBoxOptionsAgentMetadata;
+        this._siteFor = siteFor;
     }
 
     public async prompt(context: SiteNameStepWizardContext): Promise<void> {
@@ -59,15 +59,16 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
             prompt = vscode.l10n.t('Enter a globally unique name for the new web app.');
         }
 
+        const agentMetadata = this._siteFor === "functionApp" ?
+            { parameterDisplayTitle: "Function App Name", parameterDisplayDescription: "The name of the new function app." } :
+            { parameterDisplayTitle: "Site Name", parameterDisplayDescription: "The name of the app service site.", };
+
         const options: AgentInputBoxOptions = {
             prompt,
             placeHolder,
             validateInput: (name: string): string | undefined => this.validateSiteName(name),
             asyncValidationTask: async (name: string): Promise<string | undefined> => await this.asyncValidateSiteName(client, name),
-            agentMetadata: this._inputBoxOptionsAgentMetadata ?? {
-                parameterDisplayTitle: "Site Name",
-                parameterDisplayDescription: "The name of the app service site.",
-            }
+            agentMetadata: agentMetadata
         };
 
         context.newSiteName = (await context.ui.showInputBox(options)).trim();
