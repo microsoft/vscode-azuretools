@@ -60,8 +60,8 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
         }
 
         const agentMetadata = this._siteFor === "functionApp" ?
-            { parameterDisplayTitle: "Function App Name", parameterDisplayDescription: "The name of the new function app." } :
-            { parameterDisplayTitle: "Site Name", parameterDisplayDescription: "The name of the app service site.", };
+            { parameterDisplayTitle: vscode.l10n.t('Function App Name'), parameterDisplayDescription: vscode.l10n.t('The name of the new function app.') } :
+            { parameterDisplayTitle: vscode.l10n.t('Site Name'), parameterDisplayDescription: vscode.l10n.t('The name of the app service site.'), };
 
         const options: AgentInputBoxOptions = {
             prompt,
