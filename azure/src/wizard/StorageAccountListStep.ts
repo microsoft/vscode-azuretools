@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { StorageAccount, StorageManagementClient } from '@azure/arm-storage';
+import type { NetworkRuleSet, StorageAccount, StorageManagementClient } from '@azure/arm-storage';
 import { AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, nonNullProp, openUrl } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import * as types from '../../index';
@@ -121,7 +121,8 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
 
         let hasFilteredAccountsBySku: boolean = false;
         let hasFilteredAccountsByLocation: boolean = false;
-        const storageAccounts: StorageAccount[] = (await storageAccountsTask)
+        let hasFilteredAccountsByNetwork = false;
+        const storageAccounts: (StorageAccount & { networkAcls?: NetworkRuleSet })[] = (await storageAccountsTask)
             .sort((a: StorageAccount, b: StorageAccount) => nonNullProp(a, 'name').localeCompare(nonNullProp(b, 'name')));
         for (const sa of storageAccounts) {
             if (!sa.kind || sa.kind.match(kindRegExp) || !sa.sku || sa.sku.name.match(performanceRegExp) || sa.sku.name.match(replicationRegExp)) {
@@ -131,6 +132,14 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
 
             if (location && !LocationListStep.locationMatchesName(location, sa.location)) {
                 hasFilteredAccountsByLocation = true;
+                continue;
+            }
+
+            // old storage accounts (and the typings) use `networkRuleSet` but newer storage accounts have `networkAcls`
+            const networkDefaultAction = sa.networkRuleSet?.defaultAction ?? sa.networkAcls?.defaultAction;
+            if (sa.publicNetworkAccess?.toLocaleLowerCase() === 'disabled' ||
+                sa.publicNetworkAccess?.toLocaleLowerCase() === 'enabled' && networkDefaultAction === 'Deny') {
+                hasFilteredAccountsByNetwork = true;
                 continue;
             }
 
@@ -161,6 +170,15 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
                 data: undefined
             });
         }
+
+        if (hasFilteredAccountsByNetwork) {
+            picks.push({
+                label: vscode.l10n.t('$(warning) Some storage accounts were filtered because of their network configurations.'),
+                onPicked: () => { /* do nothing */ },
+                data: undefined
+            });
+        }
+
 
         return picks;
     }
