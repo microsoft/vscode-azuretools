@@ -19,6 +19,8 @@ export interface IAppSettingsClient {
 
     updateApplicationSettings(appSettings: StringDictionary): Promise<StringDictionary>;
 
+    isContainer?: boolean;
+
     listSlotConfigurationNames?(): Promise<SlotConfigNamesResource>;
 
     updateSlotConfigurationNames?(appSettings: SlotConfigNamesResource): Promise<SlotConfigNamesResource>;
