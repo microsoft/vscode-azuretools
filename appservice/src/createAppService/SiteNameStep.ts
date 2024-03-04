@@ -25,9 +25,9 @@ const siteNamingRules: IAzureNamingRules = {
 };
 
 export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
-    private _siteFor: "functionApp" | "containerizedFunctionApp" | undefined;
+    private _siteFor: "functionApp" | "containerizedfunctionApp" | undefined;
 
-    constructor(siteFor?: "functionApp" | "containerizedFunctionApp" | undefined) {
+    constructor(siteFor?: "functionApp" | "containerizedfunctionApp" | undefined) {
         super();
         this._siteFor = siteFor;
     }
@@ -63,7 +63,7 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
             { parameterDisplayTitle: vscode.l10n.t('Function App Name'), parameterDisplayDescription: vscode.l10n.t('The name of the new function app.') } :
             { parameterDisplayTitle: vscode.l10n.t('Site Name'), parameterDisplayDescription: vscode.l10n.t('The name of the app service site.'), };
 
-        if (this._siteFor === "containerizedFunctionApp") {
+        if (this._siteFor === "containerizedfunctionApp") {
             siteNamingRules.maxLength = 32;
         }
 
