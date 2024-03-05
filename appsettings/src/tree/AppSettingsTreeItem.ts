@@ -5,6 +5,7 @@
 
 import type { StringDictionary } from '@azure/arm-appservice';
 import { AzExtParentTreeItem, AzExtTreeItem, createContextValue, IActionContext, ICreateChildImplContext, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
+import * as vscode from 'vscode';
 import { ThemeIcon } from 'vscode';
 import { AppSettingsClientProvider, IAppSettingsClient } from '../IAppSettingsClient';
 import { AppSettingTreeItem } from './AppSettingTreeItem';
@@ -34,6 +35,15 @@ export function validateAppSettingKey(settings: StringDictionary, client: IAppSe
 
     return undefined;
 }
+
+export function validateAppSettingValue(value: string, client: IAppSettingsClient): string | undefined {
+    if (client.isContainer && value === (null || undefined || ' ')) {
+        return vscode.l10n.t('App setting values cannot be null, undefined or an empty string.');
+    }
+
+    return undefined;
+}
+
 
 interface AppSettingsTreeItemOptions {
     supportsSlots?: boolean;
@@ -131,7 +141,8 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
 
         const newValue: string = await context.ui.showInputBox({
             prompt: `Enter value for "${newKey}"`,
-            stepName: 'appSettingValue'
+            stepName: 'appSettingValue',
+            validateInput: (v: string): string | undefined => validateAppSettingValue(v, client)
         });
 
         if (!settings.properties) {
