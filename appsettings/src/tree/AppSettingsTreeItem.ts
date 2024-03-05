@@ -131,7 +131,7 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
 
         const newValue: string = await context.ui.showInputBox({
             prompt: `Enter value for "${newKey}"`,
-            stepName: 'appSettingValue',
+            stepName: 'appSettingValue'
         });
 
         if (!settings.properties) {
