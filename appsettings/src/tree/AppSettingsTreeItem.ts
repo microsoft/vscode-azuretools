@@ -35,6 +35,14 @@ export function validateAppSettingKey(settings: StringDictionary, client: IAppSe
     return undefined;
 }
 
+export function validateAppSettingValue(value: string, client: IAppSettingsClient): string | undefined {
+    if (client.isContainer && value === (null || undefined || ' ')) {
+        return 'App setting values cannot be null, undefined or an empty string.';
+    }
+
+    return undefined;
+}
+
 interface AppSettingsTreeItemOptions {
     supportsSlots?: boolean;
     settingsToHide?: string[];
@@ -131,7 +139,8 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
 
         const newValue: string = await context.ui.showInputBox({
             prompt: `Enter value for "${newKey}"`,
-            stepName: 'appSettingValue'
+            stepName: 'appSettingValue',
+            validateInput: (v: string): string | undefined => validateAppSettingValue(v, client)
         });
 
         if (!settings.properties) {
