@@ -3,7 +3,7 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import type { AzExtResourceType } from '@microsoft/vscode-azureresources-api';
+import type { AzExtResourceType, AzureSubscription } from '@microsoft/vscode-azureresources-api';
 import type * as vscode from 'vscode';
 import type { AbstractAzExtTreeItem, AzExtParentTreeItem, AzExtTreeDataProvider, AzExtTreeItem, IAzureQuickPickOptions, ISubscriptionContext, ITreeItemPickerContext, SealedAzExtTreeItem } from './index'; // This must remain `import type` or else a circular reference will result
 
@@ -60,6 +60,13 @@ export interface AzureHostExtensionApi {
      * @param activity The activity information to show
      */
     registerActivity(activity: Activity): Promise<void>;
+
+    /**
+     *
+     * @param filter Whether to filter the list returned, according to the list returned
+     * by `getTenantFilters()` and `getSubscriptionFilters()`.
+     */
+    getSubscriptions: (filter: boolean) => Promise<AzureSubscription[]>;
 
     //#region Deprecated things that will be removed soon
 
