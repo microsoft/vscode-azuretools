@@ -64,7 +64,7 @@ export interface AzureHostExtensionApi {
     /**
      *
      * @param filter Whether to filter the list returned, according to the list returned
-     * by `getTenantFilters()` and `getSubscriptionFilters()`. Optional, default true.
+     * by `getTenantFilters()` and `getSubscriptionFilters()`.
      */
     getSubscriptions: (filter: boolean) => Promise<AzureSubscription[]>;
 
