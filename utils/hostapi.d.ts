@@ -61,13 +61,6 @@ export interface AzureHostExtensionApi {
      */
     registerActivity(activity: Activity): Promise<void>;
 
-    /**
-     *
-     * @param filter Whether to filter the list returned, according to the list returned
-     * by `getTenantFilters()` and `getSubscriptionFilters()`.
-     */
-    getSubscriptions: (filter: boolean) => Promise<AzureSubscription[]>;
-
     //#region Deprecated things that will be removed soon
 
     /**
@@ -86,6 +79,13 @@ export interface AzureHostExtensionApi {
     registerLocalResourceProvider(id: string, provider: LocalResourceProvider): vscode.Disposable;
 
     //#endregion
+
+    /**
+     * @deprecated For internal usage only
+     * @param filter Whether to filter the list returned, according to the list returned
+     * by `getTenantFilters()` and `getSubscriptionFilters()`.
+     */
+    getSubscriptions: (filter: boolean) => Promise<AzureSubscription[]>;
 }
 
 export interface AppResourceFilter {
