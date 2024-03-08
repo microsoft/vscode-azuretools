@@ -37,7 +37,7 @@ export function validateAppSettingKey(settings: StringDictionary, client: IAppSe
 }
 
 export function validateAppSettingValue(value: string): string | undefined {
-    if (!value || value === ' ') {
+    if (!value.trim()) {
         return vscode.l10n.t('App setting values cannot be null, undefined or an empty string.');
     }
 
