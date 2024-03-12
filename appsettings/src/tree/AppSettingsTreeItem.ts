@@ -44,7 +44,6 @@ export function validateAppSettingValue(value: string): string | undefined {
     return undefined;
 }
 
-
 interface AppSettingsTreeItemOptions {
     supportsSlots?: boolean;
     settingsToHide?: string[];
