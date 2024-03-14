@@ -16,7 +16,7 @@ export function validateAppSettingKey(settings: StringDictionary, client: IAppSe
     }
 
     if (client.isContainer && !(/^[-._a-zA-Z][-._a-zA-Z0-9]*$/.test(newKey))) {
-        return 'App setting names must begin with a letter, number, period ("."), or underscore ("_") and can only contain letters, numbers (0-9), periods ("."), and underscores ("_")';
+        return 'App setting names must begin with a letter, period ("."), or underscore ("_") and can only contain letters, numbers (0-9), periods ("."), and underscores ("_")';
     }
 
     newKey = newKey.trim();
