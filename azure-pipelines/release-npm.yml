@@ -30,6 +30,7 @@ jobs:
           buildVersionToDownload: "latestFromBranch"
           branchName: ${{ parameters.BranchToPublish }}
           targetPath: $(System.DefaultWorkingDirectory)
+          itemPattern: "**/*.tgz"
       - task: CmdLine@2
         displayName: Validate Artifact
         inputs:
