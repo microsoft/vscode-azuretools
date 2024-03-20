@@ -44,7 +44,7 @@ jobs:
               exit 1
             fi
           workingDirectory: $(System.DefaultWorkingDirectory)
-      - task: MicroBuildAuthorizePublishPlugin@0
+      # - task: MicroBuildAuthorizePublishPlugin@0
       - task: EsrpRelease@6
         inputs:
           ConnectedServiceName: "DevDivEsrpAzDoSrvConn"
