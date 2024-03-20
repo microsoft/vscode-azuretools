@@ -56,7 +56,7 @@ jobs:
       - task: GitHubRelease@1
         displayName: "GitHub release (create)"
         inputs:
-          gitHubConnection: "AzCode-Bot"
+          gitHubConnection: "GitHub-AzureTools"
           tagSource: userSpecifiedTag
           tag: "${{ parameters.PackageToPublish }}-v$(Version)"
           title: "${{ parameters.PackageToPublish }} v$(Version)"
