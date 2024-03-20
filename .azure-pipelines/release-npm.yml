@@ -36,4 +36,4 @@ extends:
   parameters:
     PackageToPublish: ${{ parameters.PackageToPublish }}
     BranchToPublish: ${{ parameters.BranchToPublish }}
-    PipelineDefinition: 17
+    PipelineDefinition: 9274351
