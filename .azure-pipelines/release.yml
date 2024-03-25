@@ -28,7 +28,7 @@ resources:
       type: github
       name: microsoft/vscode-azuretools
       ref: bmw/1esnpm
-      endpoint: GitHub
+      endpoint: GitHub-AzureTools
 
 # Use those base templates
 extends:
