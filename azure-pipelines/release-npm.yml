@@ -45,28 +45,28 @@ jobs:
             fi
           workingDirectory: $(System.DefaultWorkingDirectory)
       # - task: MicroBuildAuthorizePublishPlugin@0
-      - task: EsrpRelease@6
-        inputs:
-          ConnectedServiceName: "DevDivEsrpAzDoSrvConn"
-          Intent: "PackageDistribution"
-          ContentType: "npm"
-          ContentSource: "Blobs"
-          Blobs: $(System.DefaultWorkingDirectory)/$(TarballPath)
-          WaitForReleaseCompletion: false
-          Owners: "jinglou@microsoft.com"
-          Approvers: "bwater@microsoft.com"
-          ServiceEndpointUrl: "https://api.esrp.microsoft.com"
-          MainPublisher: "ESRPRELPACMAN"
-          DomainTenantId: "72f988bf-86f1-41af-91ab-2d7cd011db47"
-      # - template: azure-pipelines/MicroBuild.Publish.yml@MicroBuildTemplate
-      #   parameters:
-      #     intent: "PackageDistribution"
-      #     contentType: "npm"
-      #     contentSource: "Blobs"
-      #     blobs: "$(System.DefaultWorkingDirectory)/$(TarballPath)"
-      #     waitForReleaseCompletion: false
-      #     owners: "jinglou@microsoft.com"
-      #     approvers: "bwater@microsoft.com"
+      # - task: EsrpRelease@6
+      #   inputs:
+      #     ConnectedServiceName: "DevDivEsrpAzDoSrvConn"
+      #     Intent: "PackageDistribution"
+      #     ContentType: "npm"
+      #     ContentSource: "Blobs"
+      #     Blobs: $(System.DefaultWorkingDirectory)/$(TarballPath)
+      #     WaitForReleaseCompletion: false
+      #     Owners: "jinglou@microsoft.com"
+      #     Approvers: "bwater@microsoft.com"
+      #     ServiceEndpointUrl: "https://api.esrp.microsoft.com"
+      #     MainPublisher: "ESRPRELPACMAN"
+      #     DomainTenantId: "72f988bf-86f1-41af-91ab-2d7cd011db47"
+      - template: azure-pipelines/MicroBuild.Publish.yml@MicroBuildTemplate
+        parameters:
+          intent: "PackageDistribution"
+          contentType: "npm"
+          contentSource: "Blobs"
+          blobs: "$(System.DefaultWorkingDirectory)/$(TarballPath)"
+          waitForReleaseCompletion: false
+          owners: "jinglou@microsoft.com"
+          approvers: "bwater@microsoft.com"
       - task: GitHubRelease@1
         displayName: "GitHub release (create)"
         inputs:
