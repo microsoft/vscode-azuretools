@@ -10,12 +10,12 @@ parameters:
     type: string
     default: "refs/heads/main"
 
-resources:
-  repositories:
-    - repository: MicroBuildTemplate
-      type: git
-      name: MicroBuildTemplates/MicroBuildTemplates
-      ref: refs/heads/release
+# resources:
+#   repositories:
+#     - repository: MicroBuildTemplate
+#       type: git
+#       name: MicroBuildTemplates/MicroBuildTemplates
+#       ref: refs/heads/release
 
 jobs:
   - job: Release
@@ -58,15 +58,15 @@ jobs:
       #     ServiceEndpointUrl: "https://api.esrp.microsoft.com"
       #     MainPublisher: "ESRPRELPACMAN"
       #     DomainTenantId: "72f988bf-86f1-41af-91ab-2d7cd011db47"
-      - template: azure-pipelines/MicroBuild.Publish.yml@MicroBuildTemplate
-        parameters:
-          intent: "PackageDistribution"
-          contentType: "npm"
-          contentSource: "Blobs"
-          blobs: "$(System.DefaultWorkingDirectory)/$(TarballPath)"
-          waitForReleaseCompletion: false
-          owners: "jinglou@microsoft.com"
-          approvers: "bwater@microsoft.com"
+      # - template: azure-pipelines/MicroBuild.Publish.yml@MicroBuildTemplate
+      #   parameters:
+      #     intent: "PackageDistribution"
+      #     contentType: "npm"
+      #     contentSource: "Blobs"
+      #     blobs: "$(System.DefaultWorkingDirectory)/$(TarballPath)"
+      #     waitForReleaseCompletion: false
+      #     owners: "jinglou@microsoft.com"
+      #     approvers: "bwater@microsoft.com"
       - task: GitHubRelease@1
         displayName: "GitHub release (create)"
         inputs:
