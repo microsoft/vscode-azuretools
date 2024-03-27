@@ -13,29 +13,15 @@ import { updateWorkspaceSetting } from '../utils/settings';
 import { AppSource, IDeployContext } from './IDeployContext';
 
 export async function showDeployConfirmation(context: IDeployContext, site: ParsedSite, deployCommandId: string): Promise<void> {
-    await showCustomDeployConfirmation(context, site, deployCommandId);
-}
-
-export async function showCustomDeployConfirmation(context: IDeployContext, site: ParsedSite, deployCommandId: string,
-    options?: {
-        placeHolder?: string,
-        items?: MessageItem[],
-        learnMoreLink?: string
-    }): Promise<MessageItem> {
-    const placeHolder: string = options?.placeHolder || l10n.t('Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', site.fullName);
-    const items: MessageItem[] = [{ title: l10n.t('Deploy') }].concat(options?.items || []);
+    const warning: string = l10n.t('Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', site.fullName);
+    const items: MessageItem[] = [{ title: l10n.t('Deploy') }];
 
     const resetDefault: MessageItem = { title: 'Reset default' };
     if (context.appSource === AppSource.setting) {
         items.push(resetDefault);
     }
 
-    const result: MessageItem = await context.ui.showWarningMessage(placeHolder, {
-        modal: true,
-        stepName: 'confirmDestructiveDeployment',
-        learnMoreLink: options?.learnMoreLink
-    },
-        ...items);
+    const result: MessageItem = await context.ui.showWarningMessage(warning, { modal: true, stepName: 'confirmDestructiveDeployment' }, ...items);
 
     // a temporary workaround for this issue:
     // https://github.com/Microsoft/vscode-azureappservice/issues/844
@@ -51,6 +37,4 @@ export async function showCustomDeployConfirmation(context: IDeployContext, site
         void commands.executeCommand(deployCommandId);
         throw new UserCancelledError('resetDefault');
     }
-
-    return result;
 }
