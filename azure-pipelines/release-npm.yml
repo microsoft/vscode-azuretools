@@ -62,9 +62,9 @@ jobs:
         parameters:
           intent: "PackageDistribution"
           contentType: "npm"
-          contentSource: "Blobs"
-          blobs: "$(System.DefaultWorkingDirectory)/$(TarballPath)"
-          waitForReleaseCompletion: false
+          contentSource: "Folder"
+          folderLocation: "$(System.DefaultWorkingDirectory)/$(TarballPath)"
+          waitForReleaseCompletion: true
           owners: "jinglou@microsoft.com"
           approvers: "bwater@microsoft.com"
       - task: GitHubRelease@1
