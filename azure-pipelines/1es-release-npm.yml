@@ -36,7 +36,7 @@ extends:
     stages:
       - stage: ReleaseStage
         jobs:
-          - name: ReleaseJob
+          - job: ReleaseJob
             steps:
               - task: DownloadPipelineArtifact@2
                 inputs:
