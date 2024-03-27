@@ -48,7 +48,6 @@ export class DeployFlexExecuteStep extends DeployZipBaseExecuteStep {
                 const client = blobClient.getContainerClient(containerName);
                 if (!await client.exists()) {
                     await blobClient.createContainer(containerName, { access: "container" });
-
                 }
             }
         }
