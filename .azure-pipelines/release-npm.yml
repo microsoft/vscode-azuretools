@@ -32,7 +32,7 @@ resources:
 
 # Use those base templates
 extends:
-  template: azure-pipelines/release-npm.yml@templates
+  template: azure-pipelines/1es-release-npm.yml@templates
   parameters:
     PackageToPublish: ${{ parameters.PackageToPublish }}
     BranchToPublish: ${{ parameters.BranchToPublish }}
