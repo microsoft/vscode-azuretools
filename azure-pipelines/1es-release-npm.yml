@@ -44,6 +44,7 @@ extends:
           - job: ReleaseJob
             steps:
               - task: DownloadPipelineArtifact@2
+                displayName: "\U0001F449 Download Artifact"
                 inputs:
                   buildType: "specific"
                   project: "DevDiv"
@@ -53,7 +54,7 @@ extends:
                   targetPath: $(System.DefaultWorkingDirectory)
                   itemPattern: "**/*.tgz"
               - task: CmdLine@2
-                displayName: Validate Artifact
+                displayName: "\U0001F449 Validate Artifact"
                 inputs:
                   script: |
                     TarballPath=`find . -type f -iname "${{ parameters.PackageToPublish }}*.tgz"`
@@ -77,7 +78,7 @@ extends:
                   owners: "${{ parameters.OwnerAlias }}@microsoft.com"
                   approvers: "${{ parameters.ApproverAlias }}@microsoft.com"
               - task: GitHubRelease@1
-                displayName: "GitHub release (create)"
+                displayName: "\U0001F449 GitHub release (create)"
                 inputs:
                   gitHubConnection: "GitHub-AzureTools"
                   tagSource: userSpecifiedTag
