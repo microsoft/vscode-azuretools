@@ -27,7 +27,7 @@ resources:
     - repository: templates
       type: github
       name: microsoft/vscode-azuretools
-      ref: bmw/1esnpm # TODO
+      ref: main
       endpoint: GitHub-AzureTools
 
 # Use those base templates
@@ -37,3 +37,5 @@ extends:
     PackageToPublish: ${{ parameters.PackageToPublish }}
     BranchToPublish: ${{ parameters.BranchToPublish }}
     PipelineDefinition: 20425
+    OwnerAlias: "jinglou"
+    ApproverAlias: "bwater"

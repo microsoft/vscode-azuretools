@@ -9,6 +9,12 @@ parameters:
     displayName: Branch to Publish
     type: string
     default: "refs/heads/main"
+  - name: OwnerAlias
+    displayName: Owner Alias
+    type: string
+  - name: ApproverAlias
+    displayName: Approver Alias
+    type: string
 
 resources:
   repositories:
@@ -53,8 +59,8 @@ jobs:
           contentSource: "Folder"
           folderLocation: "$(System.DefaultWorkingDirectory)/$(TarballFolder)"
           waitForReleaseCompletion: true
-          owners: "jinglou@microsoft.com"
-          approvers: "bwater@microsoft.com"
+          owners: "${{ parameters.OwnerAlias }}@microsoft.com"
+          approvers: "${{ parameters.ApproverAlias }}@microsoft.com"
       - task: GitHubRelease@1
         displayName: "GitHub release (create)"
         inputs:
