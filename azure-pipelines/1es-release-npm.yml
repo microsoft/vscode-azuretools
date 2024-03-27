@@ -22,6 +22,10 @@ resources:
       type: git
       name: 1ESPipelineTemplates/1ESPipelineTemplates
       ref: refs/tags/release
+    - repository: MicroBuildTemplate
+      type: git
+      name: MicroBuildTemplates/MicroBuildTemplates
+      ref: refs/heads/release
 
 extends:
   template: v1/1ES.Official.PipelineTemplate.yml@1esPipelines
