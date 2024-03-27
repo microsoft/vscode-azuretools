@@ -9,6 +9,19 @@ parameters:
     displayName: Branch to Publish
     type: string
     default: "refs/heads/main"
+  - name: OwnerAlias
+    displayName: Owner Alias
+    type: string
+  - name: ApproverAlias
+    displayName: Approver Alias
+    type: string
+
+resources:
+  repositories:
+    - repository: MicroBuildTemplate
+      type: git
+      name: MicroBuildTemplates/MicroBuildTemplates
+      ref: refs/heads/release
 
 jobs:
   - job: Release
@@ -18,11 +31,12 @@ jobs:
       - task: DownloadPipelineArtifact@2
         inputs:
           buildType: "specific"
-          project: "AzCode"
+          project: "DevDiv"
           definition: ${{ parameters.PipelineDefinition }}
           buildVersionToDownload: "latestFromBranch"
           branchName: ${{ parameters.BranchToPublish }}
           targetPath: $(System.DefaultWorkingDirectory)
+          itemPattern: "**/*.tgz"
       - task: CmdLine@2
         displayName: Validate Artifact
         inputs:
@@ -31,29 +45,26 @@ jobs:
             if [[ $TarballPath =~ ((microsoft|vscode)-.*)-([0-9]+\.[0-9]+\.[0-9]+) ]]; then
               echo "##vso[task.setvariable variable=Version]${BASH_REMATCH[3]}"
               echo "##vso[task.setvariable variable=TarballPath]$TarballPath"
+              echo "##vso[task.setvariable variable=TarballFolder]$(dirname "$TarballPath")"
+              echo "Found tarball \"$(basename "$TarballPath")\" in folder \"$(dirname "$TarballPath")\""
             else
               echo "Failed to parse tarball path \"$TarballPath\""
               exit 1
             fi
           workingDirectory: $(System.DefaultWorkingDirectory)
-      - task: CmdLine@2
-        displayName: Create .npmrc
-        inputs:
-          script: echo "registry=https://registry.npmjs.org" >> .npmrc
-          workingDirectory: $(System.DefaultWorkingDirectory)
-      - task: npmAuthenticate@0
-        displayName: "npm Authenticate"
-        inputs:
-          workingFile: "$(System.DefaultWorkingDirectory)/.npmrc"
-          customEndpoint: "npm token"
-      - task: CmdLine@2
-        displayName: NPM Publish
-        inputs:
-          script: npm --userconfig .npmrc publish --access public '$(System.DefaultWorkingDirectory)/$(TarballPath)'
+      - template: azure-pipelines/MicroBuild.Publish.yml@MicroBuildTemplate
+        parameters:
+          intent: "PackageDistribution"
+          contentType: "npm"
+          contentSource: "Folder"
+          folderLocation: "$(System.DefaultWorkingDirectory)/$(TarballFolder)"
+          waitForReleaseCompletion: true
+          owners: "${{ parameters.OwnerAlias }}@microsoft.com"
+          approvers: "${{ parameters.ApproverAlias }}@microsoft.com"
       - task: GitHubRelease@1
         displayName: "GitHub release (create)"
         inputs:
-          gitHubConnection: "AzCode-Bot"
+          gitHubConnection: "GitHub-AzureTools"
           tagSource: userSpecifiedTag
           tag: "${{ parameters.PackageToPublish }}-v$(Version)"
           title: "${{ parameters.PackageToPublish }} v$(Version)"
