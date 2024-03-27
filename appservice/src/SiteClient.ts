@@ -350,13 +350,18 @@ export class SiteClient implements IAppSettingsClient {
 
     // TODO: only supporting /zip endpoint for now, but should support /zipurl as well
     public async flexDeploy(context: IActionContext, file: RequestBodyType,
-        rawQueryParameters: { remoteBuild?: boolean, Deployer?: string }): Promise<AzExtPipelineResponse> {
+        rawQueryParameters: { RemoteBuild?: boolean, Deployer?: string }): Promise<AzExtPipelineResponse> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
         const queryParameters = convertQueryParamsValuesToString(rawQueryParameters);
         const queryString = new URLSearchParams(queryParameters).toString();
+        const headers = createHttpHeaders({
+            'Content-Type': 'application/zip',
+            'Cache-Control': 'no-cache'
+        });
         const request = createPipelineRequest({
+            headers,
             method: 'POST',
-            url: `${this._site.kuduUrl}/api/deploy/zip?${queryString}`,
+            url: `${this._site.kuduUrl}/api/publish?${queryString}`,
             body: file,
         });
 
