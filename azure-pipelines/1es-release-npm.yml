@@ -1,3 +1,20 @@
+parameters:
+  - name: PackageToPublish
+    displayName: Package to Publish
+    type: string
+  - name: BranchToPublish
+    displayName: Branch to Publish
+    type: string
+  - name: PipelineDefinition
+    displayName: Pipeline Definition
+    type: number
+  - name: OwnerAlias
+    displayName: Owner Alias
+    type: string
+  - name: ApproverAlias
+    displayName: Approver Alias
+    type: string
+
 # `resources` specifies the location of templates to pick up, use it to get 1ES templates
 resources:
   repositories:
