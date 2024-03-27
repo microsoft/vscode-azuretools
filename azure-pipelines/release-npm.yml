@@ -39,6 +39,7 @@ jobs:
             if [[ $TarballPath =~ ((microsoft|vscode)-.*)-([0-9]+\.[0-9]+\.[0-9]+) ]]; then
               echo "##vso[task.setvariable variable=Version]${BASH_REMATCH[3]}"
               echo "##vso[task.setvariable variable=TarballPath]$TarballPath"
+              echo "##vso[task.setvariable variable=TarballFolder]$(dirname $TarballPath)"
             else
               echo "Failed to parse tarball path \"$TarballPath\""
               exit 1
@@ -63,7 +64,7 @@ jobs:
           intent: "PackageDistribution"
           contentType: "npm"
           contentSource: "Folder"
-          folderLocation: "$(System.DefaultWorkingDirectory)/$(TarballPath)"
+          folderLocation: "$(System.DefaultWorkingDirectory)/$(TarballFolder)"
           waitForReleaseCompletion: true
           owners: "jinglou@microsoft.com"
           approvers: "bwater@microsoft.com"
