@@ -28,12 +28,14 @@ resources:
       type: github
       name: microsoft/vscode-azuretools
       ref: main
-      endpoint: GitHub
+      endpoint: GitHub-AzureTools
 
 # Use those base templates
 extends:
-  template: azure-pipelines/release-npm.yml@templates
+  template: azure-pipelines/1es-release-npm.yml@templates
   parameters:
     PackageToPublish: ${{ parameters.PackageToPublish }}
     BranchToPublish: ${{ parameters.BranchToPublish }}
-    PipelineDefinition: 17
+    PipelineDefinition: 20425
+    OwnerAlias: "jinglou"
+    ApproverAlias: "bwater"

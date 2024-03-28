@@ -1,0 +1,95 @@
+parameters:
+  - name: PackageToPublish
+    displayName: Package to Publish
+    type: string
+  - name: BranchToPublish
+    displayName: Branch to Publish
+    type: string
+  - name: PipelineDefinition
+    displayName: Pipeline Definition
+    type: number
+  - name: OwnerAlias
+    displayName: Owner Alias
+    type: string
+  - name: ApproverAlias
+    displayName: Approver Alias
+    type: string
+
+# `resources` specifies the location of templates to pick up, use it to get 1ES templates
+resources:
+  repositories:
+    - repository: 1esPipelines
+      type: git
+      name: 1ESPipelineTemplates/1ESPipelineTemplates
+      ref: refs/tags/release
+    - repository: MicroBuildTemplate
+      type: git
+      name: MicroBuildTemplates/MicroBuildTemplates
+      ref: refs/heads/release
+
+extends:
+  template: v1/1ES.Official.PipelineTemplate.yml@1esPipelines
+  parameters:
+    sdl:
+      credscan:
+        suppressionsFile: $(Build.SourcesDirectory)\.azure-pipelines\compliance\CredScanSuppressions.json
+      sourceAnalysisPool:
+        name: AzurePipelines-EO
+        image: 1ESPT-Windows2022
+      # codeql:
+      #   enabled: true # TODO: would like to enable only on scheduled builds but CodeQL cannot currently be disabled per https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/codeql/1es-codeql
+    pool:
+      name: AzurePipelines-EO # Name of your hosted pool
+      image: 1ESPT-Ubuntu20.04 # Name of the image in your pool. If not specified, first image of the pool is used
+      os: linux # OS of the image. Allowed values: windows, linux, macOS
+    stages:
+      - stage: ReleaseStage
+        jobs:
+          - job: ReleaseJob
+            steps:
+              - task: DownloadPipelineArtifact@2
+                displayName: "\U0001F449 Download Artifact"
+                inputs:
+                  buildType: "specific"
+                  project: "DevDiv"
+                  definition: ${{ parameters.PipelineDefinition }}
+                  buildVersionToDownload: "latestFromBranch"
+                  branchName: ${{ parameters.BranchToPublish }}
+                  targetPath: $(System.DefaultWorkingDirectory)
+                  itemPattern: "**/*.tgz"
+              - task: CmdLine@2
+                displayName: "\U0001F449 Validate Artifact"
+                inputs:
+                  script: |
+                    TarballPath=`find . -type f -iname "${{ parameters.PackageToPublish }}*.tgz"`
+                    if [[ $TarballPath =~ ((microsoft|vscode)-.*)-([0-9]+\.[0-9]+\.[0-9]+) ]]; then
+                      echo "##vso[task.setvariable variable=Version]${BASH_REMATCH[3]}"
+                      echo "##vso[task.setvariable variable=TarballPath]$TarballPath"
+                      echo "##vso[task.setvariable variable=TarballFolder]$(dirname "$TarballPath")"
+                      echo "Found tarball \"$(basename "$TarballPath")\" in folder \"$(dirname "$TarballPath")\""
+                    else
+                      echo "Failed to parse tarball path \"$TarballPath\""
+                      exit 1
+                    fi
+                  workingDirectory: $(System.DefaultWorkingDirectory)
+              - template: azure-pipelines/MicroBuild.Publish.yml@MicroBuildTemplate
+                parameters:
+                  intent: "PackageDistribution"
+                  contentType: "npm"
+                  contentSource: "Folder"
+                  folderLocation: "$(System.DefaultWorkingDirectory)/$(TarballFolder)"
+                  waitForReleaseCompletion: true
+                  owners: "${{ parameters.OwnerAlias }}@microsoft.com"
+                  approvers: "${{ parameters.ApproverAlias }}@microsoft.com"
+              - task: GitHubRelease@1
+                displayName: "\U0001F449 GitHub release (create)"
+                inputs:
+                  gitHubConnection: "GitHub-AzureTools"
+                  tagSource: userSpecifiedTag
+                  tag: "${{ parameters.PackageToPublish }}-v$(Version)"
+                  title: "${{ parameters.PackageToPublish }} v$(Version)"
+                  releaseNotesSource: inline
+                  assets: "$(System.DefaultWorkingDirectory)/$(TarballPath)"
+                  isDraft: true
+                  isPreRelease: true
+                  addChangeLog: false
