@@ -9,7 +9,6 @@ import { ext } from "./extensionVariables";
 import { nonNullValue } from "./utils/nonNull";
 import { randomUtils } from "./utils/randomUtils";
 
-
 let _cachedScheme: string | undefined;
 function getScheme(): string {
     if (!_cachedScheme) {
@@ -45,20 +44,30 @@ export async function openReadOnlyJson(node: { label: string, fullId: string }, 
     await openReadOnlyContent(node, content, '.json');
 }
 
+export async function stashReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string): Promise<ReadOnlyContent> {
+    const contentProvider = getContentProvider();
+    return await contentProvider.stashReadOnlyContent(node, content, fileExtension);
+}
+
 export async function openReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string, options?: TextDocumentShowOptions): Promise<ReadOnlyContent> {
     const contentProvider = getContentProvider();
     return await contentProvider.openReadOnlyContent(node, content, fileExtension, options);
 }
 
+export async function disposeReadOnlyContents(): Promise<void> {
+    const contentProvider = getContentProvider();
+    contentProvider.disposeAll();
+}
+
 export class ReadOnlyContent {
-    private _uri: Uri;
     private _emitter: EventEmitter<Uri>;
     private _content: string;
+    public uri: Uri;
 
     constructor(uri: Uri, emitter: EventEmitter<Uri>, content: string) {
-        this._uri = uri;
         this._emitter = emitter;
         this._content = content;
+        this.uri = uri;
     }
 
     public get content(): string {
@@ -67,12 +76,12 @@ export class ReadOnlyContent {
 
     public async append(content: string): Promise<void> {
         this._content += content;
-        this._emitter.fire(this._uri);
+        this._emitter.fire(this.uri);
     }
 
     public clear(): void {
         this._content = '';
-        this._emitter.fire(this._uri);
+        this._emitter.fire(this.uri);
     }
 }
 
@@ -84,7 +93,7 @@ class ReadOnlyContentProvider implements TextDocumentContentProvider {
         return this._onDidChangeEmitter.event;
     }
 
-    public async openReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string, options?: TextDocumentShowOptions): Promise<ReadOnlyContent> {
+    public async stashReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string): Promise<ReadOnlyContent> {
         const scheme = getScheme();
         const idHash: string = await randomUtils.getPseudononymousStringHash(node.fullId);
         // Remove special characters which may prove troublesome when parsing the uri. We'll allow the same set as `encodeUriComponent`
@@ -92,13 +101,22 @@ class ReadOnlyContentProvider implements TextDocumentContentProvider {
         const uri: Uri = Uri.parse(`${scheme}:///${idHash}/${fileName}${fileExtension}`);
         const readOnlyContent: ReadOnlyContent = new ReadOnlyContent(uri, this._onDidChangeEmitter, content);
         this._contentMap.set(uri.toString(), readOnlyContent);
-        await window.showTextDocument(uri, options);
-        this._onDidChangeEmitter.fire(uri);
+        return readOnlyContent;
+    }
+
+    public async openReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string, options?: TextDocumentShowOptions): Promise<ReadOnlyContent> {
+        const readOnlyContent = await this.stashReadOnlyContent(node, content, fileExtension);
+        await window.showTextDocument(readOnlyContent.uri, options);
+        this._onDidChangeEmitter.fire(readOnlyContent.uri);
         return readOnlyContent;
     }
 
     public async provideTextDocumentContent(uri: Uri, _token: CancellationToken): Promise<string> {
         const readOnlyContent: ReadOnlyContent = nonNullValue(this._contentMap.get(uri.toString()), 'ReadOnlyContentProvider._contentMap.get');
         return readOnlyContent.content;
+    }
+
+    public disposeAll() {
+        this._contentMap.clear();
     }
 }
