@@ -1474,6 +1474,7 @@ export declare function createAzExtOutputChannel(name: string, extensionPrefix: 
 export declare function openReadOnlyJson(node: { label: string, fullId: string }, data: {}): Promise<void>;
 
 export declare class ReadOnlyContent {
+    public uri: Uri;
     public append(content: string): Promise<void>;
     public clear(): void;
 }
@@ -1486,6 +1487,19 @@ export declare class ReadOnlyContent {
  * @param options Options for showing the text document
  */
 export declare function openReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string, options?: TextDocumentShowOptions): Promise<ReadOnlyContent>;
+
+/**
+ * Stash a read-only editor so it can be opened by its uri later.
+ * @param node Typically (but not strictly) an `AzExtTreeItem`. `label` is used for the file name displayed in VS Code and `fullId` is used to uniquely identify this file
+ * @param content The content to display
+ * @param fileExtension The file extension
+ */
+export declare function stashReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string): Promise<ReadOnlyContent>;
+
+/**
+ * Disposes all the read-only contents stashed in memory.
+ */
+export declare function disposeReadOnlyContents(): Promise<void>;
 
 /**
  * The event used to signal an item change for `AzExtTreeFileSystem`
