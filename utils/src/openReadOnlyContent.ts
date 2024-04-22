@@ -59,6 +59,11 @@ export async function disposeReadOnlyContents(): Promise<void> {
     contentProvider.disposeAll();
 }
 
+export async function disposeReadOnlyContent(uri: Uri): Promise<void> {
+    const contentProvider = getContentProvider();
+    contentProvider.dispose(uri);
+}
+
 export class ReadOnlyContent {
     private _emitter: EventEmitter<Uri>;
     private _content: string;
@@ -116,7 +121,11 @@ class ReadOnlyContentProvider implements TextDocumentContentProvider {
         return readOnlyContent.content;
     }
 
-    public disposeAll() {
+    public dispose(uri: Uri): void {
+        this._contentMap.delete(uri.toString());
+    }
+
+    public disposeAll(): void {
         this._contentMap.clear();
     }
 }

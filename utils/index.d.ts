@@ -1502,6 +1502,11 @@ export declare function stashReadOnlyContent(node: { label: string, fullId: stri
 export declare function disposeReadOnlyContents(): Promise<void>;
 
 /**
+ * Disposes the read-only content stashed in memory matching the specified uri.
+ */
+export declare function disposeReadOnlyContent(uri: Uri): Promise<void>;
+
+/**
  * The event used to signal an item change for `AzExtTreeFileSystem`
  */
 export type AzExtItemChangeEvent<TItem> = { type: FileChangeType; item: TItem };
