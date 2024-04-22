@@ -1502,7 +1502,7 @@ export declare function stashReadOnlyContent(node: { label: string, fullId: stri
 export declare function disposeReadOnlyContents(): Promise<void>;
 
 /**
- * Disposes the read-only contents stashed in memory matching the specified uri.
+ * Disposes the read-only content stashed in memory matching the specified uri.
  */
 export declare function disposeReadOnlyContent(uri: Uri): Promise<void>;
 
