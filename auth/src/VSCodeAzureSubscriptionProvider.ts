@@ -260,8 +260,9 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
             client: new armSubs.SubscriptionClient(credential, { endpoint }),
             credential: credential,
             authentication: {
-                getSession: () => session
-            }
+                getSession: () => session,
+                getCustomSession: () => getSessionFromVSCode(scopes, tenantId, { createIfNone: false, silent: true })
+            } as AzureAuthentication
         };
     }
 }
