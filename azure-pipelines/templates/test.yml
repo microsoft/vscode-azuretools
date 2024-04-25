@@ -8,6 +8,7 @@ steps:
     condition: succeeded()
     env:
       DISPLAY: :99 # Only necessary for linux tests
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
   # This gives the AZFuncTest service connection access to this pipeline.
   - task: AzureKeyVault@1
@@ -15,3 +16,5 @@ steps:
     inputs:
       azureSubscription: 'AZFuncTest'
       KeyVaultName: 'AzFuncExtTestDummyKV'
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
