@@ -8,3 +8,10 @@ steps:
     condition: succeeded()
     env:
       DISPLAY: :99 # Only necessary for linux tests
+
+  # This gives the AZFuncTest service connection access to this pipeline.
+  - task: AzureKeyVault@1
+    displayName: 'Authorize AZFuncTest service connection'
+    inputs:
+      azureSubscription: 'AZFuncTest'
+      KeyVaultName: 'AzFuncExtTestDummyKV'
