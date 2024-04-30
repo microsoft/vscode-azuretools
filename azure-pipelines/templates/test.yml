@@ -16,7 +16,7 @@ steps:
       azureSubscription: 'AzCodeE2ETests'
       KeyVaultName: 'AzCodeE2ETestsCredsKV'
       SecretsFilter: 'AzCodeServiceConnectionID, AzCodeServiceConnectionDomain, AzCodeServiceConnectionClientID'
-      RunAsPreJob: false
+      RunAsPreJob: true
 
   # This gives the AzCodeE2ETests service connection access to this pipeline.
   - task: AzureKeyVault@1
