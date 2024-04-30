@@ -19,9 +19,6 @@ steps:
       RunAsPreJob: true
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-      AzCodeServiceConnectionID: $(AzCodeServiceConnectionID)
-      AzCodeServiceConnectionDomain: $(AzCodeServiceConnectionDomain)
-      AzCodeServiceConnectionClientID: $(AzCodeServiceConnectionClientID)
 
   - task: Npm@1
     displayName: "\U0001F449 Test"
