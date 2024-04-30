@@ -10,11 +10,19 @@ steps:
       DISPLAY: :99 # Only necessary for linux tests
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
-  # This gives the AZFuncTest service connection access to this pipeline.
-  - task: AzureKeyVault@1
-    displayName: 'Authorize AZFuncTest service connection'
+  # This task obtains the values necessary to connect to the AzCodeE2ETests service connection from the AzCodeE2ETestsCredKV key vault.
+  - task: AzureKeyVault@2
     inputs:
-      azureSubscription: 'AZFuncTest'
-      KeyVaultName: 'AzFuncExtTestDummyKV'
+      azureSubscription: 'AzCodeE2ETests'
+      KeyVaultName: 'AzCodeE2ETestsCredsKV'
+      SecretsFilter: 'AzCodeServiceConnectionID, AzCodeServiceConnectionDomain, AzCodeServiceConnectionClientID'
+      RunAsPreJob: false
+
+  # This gives the AzCodeE2ETests service connection access to this pipeline.
+  - task: AzureKeyVault@1
+    displayName: 'Authorize AzCodeE2ETests service connection'
+    inputs:
+      azureSubscription: 'AzCodeE2ETests'
+      KeyVaultName: 'AzCodeE2ETestsDummyKV'
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
