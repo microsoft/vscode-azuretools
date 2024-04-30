@@ -1,4 +1,13 @@
 steps:
+# This task obtains the values necessary to connect to the AzCodeE2ETests service connection from the AzCodeE2ETestsCredKV key vault.
+  - task: AzureKeyVault@2
+    displayName: 'Get AzCodeE2ETests service connection secrets'
+    inputs:
+      azureSubscription: 'AzCodeE2ETests'
+      KeyVaultName: 'AzCodeE2ETestsCredsKV'
+      SecretsFilter: 'AzCodeServiceConnectionID, AzCodeServiceConnectionDomain, AzCodeServiceConnectionClientID'
+      RunAsPreJob: false
+
   - task: Npm@1
     displayName: "\U0001F449 Test"
     inputs:
@@ -9,15 +18,6 @@ steps:
     env:
       DISPLAY: :99 # Only necessary for linux tests
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-
-  # This task obtains the values necessary to connect to the AzCodeE2ETests service connection from the AzCodeE2ETestsCredKV key vault.
-  - task: AzureKeyVault@2
-    displayName: 'Get AzCodeE2ETests service connection secrets'
-    inputs:
-      azureSubscription: 'AzCodeE2ETests'
-      KeyVaultName: 'AzCodeE2ETestsCredsKV'
-      SecretsFilter: 'AzCodeServiceConnectionID, AzCodeServiceConnectionDomain, AzCodeServiceConnectionClientID'
-      RunAsPreJob: true
 
   # This gives the AzCodeE2ETests service connection access to this pipeline.
   - task: AzureKeyVault@1
