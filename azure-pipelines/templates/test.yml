@@ -16,7 +16,7 @@ steps:
       azureSubscription: 'AzCodeE2ETestsCreds'
       KeyVaultName: 'AzCodeE2ETestsCredsKV'
       SecretsFilter: 'AzCodeServiceConnectionID, AzCodeServiceConnectionDomain, AzCodeServiceConnectionClientID'
-      RunAsPreJob: false
+      RunAsPreJob: true
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
