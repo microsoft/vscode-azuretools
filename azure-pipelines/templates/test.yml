@@ -12,6 +12,7 @@ steps:
 
   # This task obtains the values necessary to connect to the AzCodeE2ETests service connection from the AzCodeE2ETestsCredKV key vault.
   - task: AzureKeyVault@2
+    displayName: 'Get AzCodeE2ETests service connection secrets'
     inputs:
       azureSubscription: 'AzCodeE2ETests'
       KeyVaultName: 'AzCodeE2ETestsCredsKV'
