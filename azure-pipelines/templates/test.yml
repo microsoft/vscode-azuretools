@@ -17,6 +17,8 @@ steps:
       KeyVaultName: 'AzCodeE2ETestsCredsKV'
       SecretsFilter: 'AzCodeServiceConnectionID, AzCodeServiceConnectionDomain, AzCodeServiceConnectionClientID'
       RunAsPreJob: false
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
   - task: Npm@1
     displayName: "\U0001F449 Test"
