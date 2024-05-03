@@ -1,7 +1,7 @@
 import { SubscriptionClient } from '@azure/arm-resources-subscriptions';
-import { TokenCredential } from '@azure/core-auth';
-import { AuthenticationSession } from 'vscode';
-import { AzureAuthentication } from '../AzureAuthentication';
+import { type TokenCredential } from '@azure/core-auth';
+import { type AuthenticationSession } from 'vscode';
+import { type AzureAuthentication } from '../AzureAuthentication';
 import { getConfiguredAzureEnv } from './configuredAzureEnv';
 
 /**

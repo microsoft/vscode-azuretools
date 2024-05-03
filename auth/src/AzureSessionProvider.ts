@@ -1,5 +1,5 @@
-import { TenantIdDescription } from "@azure/arm-resources-subscriptions";
-import { AuthenticationSession, Event } from "vscode";
+import { type TenantIdDescription } from "@azure/arm-resources-subscriptions";
+import { type AuthenticationSession, type Event } from "vscode";
 
 export type SignInStatus = "Initializing" | "SigningIn" | "SignedIn" | "SignedOut";
 

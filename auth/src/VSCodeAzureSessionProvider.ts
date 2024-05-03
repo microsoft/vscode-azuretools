@@ -1,4 +1,4 @@
-import { TenantIdDescription } from "@azure/arm-resources-subscriptions";
+import { type TenantIdDescription } from "@azure/arm-resources-subscriptions";
 import { AuthenticationGetSessionOptions, AuthenticationSession, Event, EventEmitter, Disposable as VSCodeDisposable, authentication } from "vscode";
 import { AzureAuthenticationSession, AzureSessionProvider, DefinedTenant, GetSessionBehavior, SignInStatus } from "./AzureSessionProvider";
 import { NotSignedInError } from "./NotSignedInError";
