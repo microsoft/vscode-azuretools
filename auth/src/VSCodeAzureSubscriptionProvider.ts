@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { SubscriptionClient, TenantIdDescription } from '@azure/arm-resources-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
-import type { TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
+import type { TenantIdDescription } from '@azure/arm-resources-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
 import * as vscode from 'vscode';
-import type { AzureAuthentication } from './AzureAuthentication';
+import { AzureSessionProvider, GetSessionBehavior } from './AzureSessionProvider';
 import type { AzureSubscription, SubscriptionId, TenantId } from './AzureSubscription';
 import type { AzureSubscriptionProvider } from './AzureSubscriptionProvider';
 import { NotSignedInError } from './NotSignedInError';
-import { getSessionFromVSCode } from './getSessionFromVSCode';
-import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from './utils/configuredAzureEnv';
+import { VSCodeAzureSessionProvider } from './VSCodeAzureSessionProvider';
+import { getConfiguredAzureEnv } from './utils/configuredAzureEnv';
+import { getSubscriptionClient } from './utils/resourceManagement';
 
 const EventDebounce = 5 * 1000; // 5 seconds
 
@@ -27,19 +27,17 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
     private readonly onDidSignOutEmitter = new vscode.EventEmitter<void>();
     private lastSignOutEventFired: number = 0;
 
-    public constructor() {
-        const disposable = vscode.authentication.onDidChangeSessions(async e => {
-            // Ignore any sign in that isn't for the configured auth provider
-            if (e.provider.id !== getConfiguredAuthProviderId()) {
-                return;
-            }
+    private readonly sessionProvider: AzureSessionProvider;
 
-            if (await this.isSignedIn()) {
+    public constructor() {
+        const sessionProvider = new VSCodeAzureSessionProvider();
+        const disposable = sessionProvider.signInStatusChangeEvent((status) => {
+            if (status === "SignedIn") {
                 if (!this.suppressSignInEvents && Date.now() > this.lastSignInEventFired + EventDebounce) {
                     this.lastSignInEventFired = Date.now();
                     this.onDidSignInEmitter.fire();
                 }
-            } else if (Date.now() > this.lastSignOutEventFired + EventDebounce) {
+            } else if (status === "SignedOut" && Date.now() > this.lastSignOutEventFired + EventDebounce) {
                 this.lastSignOutEventFired = Date.now();
                 this.onDidSignOutEmitter.fire();
             }
@@ -50,6 +48,8 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
             this.onDidSignOutEmitter.dispose();
             disposable.dispose();
         });
+
+        this.sessionProvider = sessionProvider;
     }
 
     /**
@@ -59,15 +59,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      * @returns A list of tenants.
      */
     public async getTenants(): Promise<TenantIdDescription[]> {
-        const { client } = await this.getSubscriptionClient();
-
-        const results: TenantIdDescription[] = [];
-
-        for await (const tenant of client.tenants.list()) {
-            results.push(tenant);
-        }
-
-        return results;
+        return this.sessionProvider.tenants;
     }
 
     /**
@@ -134,8 +126,11 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      * @returns True if the user is signed in, false otherwise.
      */
     public async isSignedIn(tenantId?: string): Promise<boolean> {
-        const session = await getSessionFromVSCode([], tenantId, { createIfNone: false, silent: true });
-        return !!session;
+        if (this.sessionProvider.signInStatus !== "SignedIn") {
+            return false;
+        }
+
+        return tenantId ? this.sessionProvider.isSignedInToTenant(tenantId) : true;
     }
 
     /**
@@ -146,8 +141,13 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      * @returns True if the user is signed in, false otherwise.
      */
     public async signIn(tenantId?: string): Promise<boolean> {
-        const session = await getSessionFromVSCode([], tenantId, { createIfNone: true, clearSessionPreference: true });
-        return !!session;
+        await this.sessionProvider.signIn();
+        if (!tenantId) {
+            return this.sessionProvider.signInStatus === "SignedIn";
+        }
+
+        await this.sessionProvider.getAuthSession(tenantId, GetSessionBehavior.PromptIfRequired);
+        return this.sessionProvider.isSignedInToTenant(tenantId);
     }
 
     /**
@@ -208,7 +208,12 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      * @returns The list of subscriptions for the tenant.
      */
     private async getSubscriptionsForTenant(tenantId: string): Promise<AzureSubscription[]> {
-        const { client, credential, authentication } = await this.getSubscriptionClient(tenantId);
+        const session = await this.sessionProvider.getAuthSession(tenantId, GetSessionBehavior.Silent);
+        if (!session) {
+            throw new NotSignedInError();
+        }
+
+        const { client, credential, authentication } = await getSubscriptionClient(session);
         const environment = getConfiguredAzureEnv();
 
         const subscriptions: AzureSubscription[] = [];
@@ -228,40 +233,5 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
         }
 
         return subscriptions;
-    }
-
-    /**
-     * Gets a fully-configured subscription client for a given tenant ID
-     *
-     * @param tenantId (Optional) The tenant ID to get a client for
-     *
-     * @returns A client, the credential used by the client, and the authentication function
-     */
-    private async getSubscriptionClient(tenantId?: string, scopes?: string[]): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
-        const armSubs = await import('@azure/arm-resources-subscriptions');
-        const session = await getSessionFromVSCode(scopes, tenantId, { createIfNone: false, silent: true });
-        if (!session) {
-            throw new NotSignedInError();
-        }
-
-        const credential: TokenCredential = {
-            getToken: async () => {
-                return {
-                    token: session.accessToken,
-                    expiresOnTimestamp: 0
-                };
-            }
-        }
-
-        const configuredAzureEnv = getConfiguredAzureEnv();
-        const endpoint = configuredAzureEnv.resourceManagerEndpointUrl;
-
-        return {
-            client: new armSubs.SubscriptionClient(credential, { endpoint }),
-            credential: credential,
-            authentication: {
-                getSession: () => session
-            }
-        };
     }
 }
