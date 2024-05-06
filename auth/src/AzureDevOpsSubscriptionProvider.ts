@@ -5,13 +5,12 @@
 
 import type { SubscriptionClient, TenantIdDescription } from '@azure/arm-resources-subscriptions';
 import type { TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
-import { ServiceClient } from '@azure/core-client';
-import { createHttpHeaders, createPipelineRequest, type PipelineRequest } from '@azure/core-rest-pipeline';
 import { Disposable, Event } from 'vscode';
 import { AzureAuthentication } from './AzureAuthentication';
 import { AzureSubscription } from './AzureSubscription';
 import { AzureSubscriptionProvider } from './AzureSubscriptionProvider';
 import { getConfiguredAzureEnv } from './utils/configuredAzureEnv';
+import type { PipelineRequest } from '@azure/core-rest-pipeline';
 
 let azureDevOpsSubscriptionProvider: AzureDevOpsSubscriptionProvider | undefined;
 export function createAzureDevOpsSubscriptionProviderFactory(): () => Promise<AzureDevOpsSubscriptionProvider> {
@@ -208,6 +207,8 @@ async function getTokenCredential(serviceConnectionId: string, domain: string, c
  * API reference: https://learn.microsoft.com/en-us/rest/api/azure/devops/distributedtask/oidctoken/create
  */
 async function requestOidcToken(oidcRequestUrl: string, systemAccessToken: string): Promise<string> {
+    const { ServiceClient } = await import('@azure/core-client');
+    const { createHttpHeaders, createPipelineRequest } = await import('@azure/core-rest-pipeline');
     const genericClient = new ServiceClient();
     const request: PipelineRequest = createPipelineRequest({
         url: oidcRequestUrl,
