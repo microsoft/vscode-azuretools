@@ -4,10 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 export * from './AzureAuthentication';
+export * from './AzureDevOpsSubscriptionProvider';
 export * from './AzureSubscription';
 export * from './AzureSubscriptionProvider';
 export * from './NotSignedInError';
+export * from './signInToTenant';
 export * from './utils/configuredAzureEnv';
 export * from './utils/getUnauthenticatedTenants';
 export * from './VSCodeAzureSubscriptionProvider';
-export * from './signInToTenant'
+
