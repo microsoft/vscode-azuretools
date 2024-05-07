@@ -43,9 +43,9 @@ extends:
       image: 1ESPT-Ubuntu20.04 # Name of the image in your pool. If not specified, first image of the pool is used
       os: linux # OS of the image. Allowed values: windows, linux, macOS
     stages:
-      - stage: ReleaseStage
+      - stage: PublishStage
         jobs:
-          - job: ReleaseJob
+          - job: PublishJob
             steps:
               - task: DownloadPipelineArtifact@2
                 displayName: "\U0001F449 Download Artifact"
