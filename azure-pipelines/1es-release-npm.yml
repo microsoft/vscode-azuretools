@@ -39,9 +39,9 @@ extends:
       image: 1ESPT-Ubuntu20.04 # Name of the image in your pool. If not specified, first image of the pool is used
       os: linux # OS of the image. Allowed values: windows, linux, macOS
     stages:
-      - stage: PublishStage
+      - stage: ReleaseStage
         jobs:
-          - job: PublishJob
+          - job: ReleaseJob
             steps:
               - task: DownloadPipelineArtifact@2
                 displayName: "\U0001F449 Download Artifact"
@@ -68,7 +68,7 @@ extends:
                       exit 1
                     fi
                   workingDirectory: $(System.DefaultWorkingDirectory)
-              - template: azure-pipelines/MicroBuild.1ES.Official.Publish.yml@MicroBuildTemplate
+              - template: azure-pipelines/MicroBuild.Publish.yml@MicroBuildTemplate
                 parameters:
                   intent: "PackageDistribution"
                   contentType: "npm"
