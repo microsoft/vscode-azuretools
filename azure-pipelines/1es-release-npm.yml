@@ -68,7 +68,7 @@ extends:
                       exit 1
                     fi
                   workingDirectory: $(System.DefaultWorkingDirectory)
-              - template: azure-pipelines/MicroBuild.Publish.yml@MicroBuildTemplate
+              - template: MicroBuild.Publish.yml@MicroBuildTemplate
                 parameters:
                   intent: "PackageDistribution"
                   contentType: "npm"
