@@ -130,7 +130,7 @@ const subscriptions = await subscriptionProvider.getSubscriptions();
 In the following section, we will describe how to set up your ADO and Azure environment to leverage [workflow identity federation](https://learn.microsoft.com/entra/workload-id/workload-identity-federation), enabling you to use
 `AzureDevOpsSubscriptionProvider` as in the code above.
 
-**1. Create a new service principal (in this example, an App Registration):**
+1. Create a new service principal (in this example, an App Registration):
     1. Navigate to the [App Registrations](https://ms.portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade) page on the Azure portal
     2. Click on `New Registration`
     3. Assign any name
@@ -138,7 +138,7 @@ In the following section, we will describe how to set up your ADO and Azure envi
     5. Leave the Redirect URI and Service Tree ID fields empty
     6. Click on `Register`
 
-**2. Create a new Azure DevOps (ADO) "Service Connection" (in this example, create it under the DevDiv organization):**
+2. Create a new Azure DevOps (ADO) "Service Connection" (in this example, create it under the DevDiv organization):
     1. Navigate to the [organization's (DevDiv) ADO page](https://devdiv.visualstudio.com/DevDiv)
     2. Navigate to the settings page by clicking on the gear icon on the bottom left
     3. Select the ["service connections"](https://devdiv.visualstudio.com/DevDiv/_settings/adminservices) blade from the panel on the left
@@ -150,7 +150,7 @@ In the following section, we will describe how to set up your ADO and Azure envi
     9. This will create a new draft service connection, with the `issuer` and `subject identifier` fields already filled in.
     10. Leave this window open while you finish the next step, which will require those `issuer` and `subject identifier` fields, then you will return to this window to finish creating the service principal
 
-**3. Add a federated credential to connect your service principal to your new service connection**
+3. Add a federated credential to connect your service principal to your new service connection
     1. Navigate back to the Azure Portal page for your service connection (app registration) from step 1
     2. Navigate to the `Certificates & secrets` blade
     3. Navigate to the `Federated credentials` tab
@@ -160,7 +160,7 @@ In the following section, we will describe how to set up your ADO and Azure envi
     7. Select a new name for your new federated credential
     8. Click on `Add`
 
-**4. (Temporary but required) Grant your service principal reader role on the desired subscription**
+4. (Temporary but required) Grant your service principal reader role on the desired subscription
     1. This is not required for testing, but required to finish creating the service connection. This should be revoked after successful creation of the service connection and only necessary roles applied to the service principal.
     2. On the Azure Portal, navigate to the page for the subscription you want the service principal to have access to.
     3. Navigate to the `Access control (IAM)` blade
@@ -171,7 +171,7 @@ In the following section, we will describe how to set up your ADO and Azure envi
     8. Select your service principal from step 1
     9. Click on `Review and assign`
 
-**5. Finish creating your service connection:**
+5. Finish creating your service connection:
     1. Navigate back to your draft service connection from step 2
     2. For Environment, select `Azure Cloud`
     3. For Scope Level, choose `Subscription`
@@ -180,19 +180,19 @@ In the following section, we will describe how to set up your ADO and Azure envi
     6. For the `Tenant ID`, provide the `Directory (tenant) ID` of your app registration from step 1 (can be found in `Overview` blade)
     7. Click on `Verify and save`
 
-**6. Revoke unnecessary read access and assign only necessary roles**
+6. Revoke unnecessary read access and assign only necessary roles
     1. Revoke the `Reader` role on the subscription for the service connection after it is created. This is no longer necessary.
     2. Navigate to `Access control (IAM)` blade.
     3. Under the `Role assignments` tab, find the role assignment corresponding to the App registered on step 1
     4. Click on `Remove` then `Yes`
     5. You can then assign the required roles to specific resources only if required, instead of assigning `Reader` role to the entire subscription.
 
-**7. Create a dummy Key Vault**
+7. Create a dummy Key Vault
     1. A dummy Key vault step is required to propagate the necessary environment variables in the context of the pipeline
     2. Create a new Key Vault resource in the subscription you want to test on
     3. Give it a new name as appropriate. You can keep the default settings
 
-**8. Assign your service principal "key vault reader" role on the dummy Key Vault**
+8. Assign your service principal "key vault reader" role on the dummy Key Vault
     1. Navigate to `Access control (IAM)` blade
     2. Navigate to the `Roles` tab
     3. Click on the `+ Add` button, and choose `Add role assignment`
@@ -201,7 +201,7 @@ In the following section, we will describe how to set up your ADO and Azure envi
     6. Select your app registration from step 1
     7. Click on `Review and assign`
 
-**9. Add the dummy Key Vault step in the pipeline**
+9. Add the dummy Key Vault step in the pipeline
     1. To ensure that the appropriate env variables are propagated in the context of running the pipeline, a dummy Key Vault step is required in that pipeline
     2. In the desired pipeline's `.yml` file, add a step as below. The `azureSubscription` field should correspond to the name of your service connection from step 2, while the `keyVaultName` field should correspond to the dummy key vault created in step 7:
 
@@ -230,7 +230,7 @@ In the following section, we will describe how to set up your ADO and Azure envi
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
         ```
 
-**10. Set the appropriate environment variables to identify your service connection**
+10. Set the appropriate environment variables to identify your service connection
     - The `AzureDevOpsSubscriptionProvider` expects three additional environment variables to be set in order to identify your service connection you setup in step 5.
     - These are:
       - `AzCodeServiceConnectionID`: The resource ID of the service connection created in step 2, which can be found on the `resourceId` field of the URL at the address bar, when viewing the service connection in the Azure DevOps portal
