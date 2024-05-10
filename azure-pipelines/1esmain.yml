@@ -21,3 +21,8 @@ extends:
     stages:
       # Execute stages from the AzExt stages template
       - template: ./1esstages.yml
+
+variables:
+  ${{ if eq(variables['Build.Reason'], 'Schedule') }}:
+    AzCode_UseAzureFederatedCredentials: true
+    ENABLE_COMPLIANCE: true
