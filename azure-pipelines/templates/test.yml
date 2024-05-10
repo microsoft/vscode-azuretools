@@ -5,7 +5,7 @@ steps:
     inputs:
       azureSubscription: 'AzCodeE2ETests'
       KeyVaultName: 'AzCodeE2ETestsDummyKV'
-    condition: eq($(AzCode_UseAzureFederatedCredentials), true)
+    condition: eq($AzCode_UseAzureFederatedCredentials, true)
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
@@ -17,7 +17,7 @@ steps:
       KeyVaultName: 'AzCodeE2ETestsCredsKV'
       SecretsFilter: 'AzCodeServiceConnectionID, AzCodeServiceConnectionDomain, AzCodeServiceConnectionClientID'
       RunAsPreJob: true
-    condition: eq($(AzCode_UseAzureFederatedCredentials), true)
+    condition: eq($AzCode_UseAzureFederatedCredentials, true)
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
