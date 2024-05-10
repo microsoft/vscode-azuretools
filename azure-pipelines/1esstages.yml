@@ -20,6 +20,8 @@ stages:
               - template: ./templates/build.yml
               - template: ./templates/1espackage.yml
               - template: ./templates/test.yml
+              - template: ./templates/nightly.yml
+                condition: $[eq(variables['Build.Reason'], 'Schedule')]
             variables:
               artifact_name: ${{ job.name }}
               working_directory: ${{ job.working_directory }}
