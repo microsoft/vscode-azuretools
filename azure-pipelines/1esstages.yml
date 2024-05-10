@@ -23,3 +23,6 @@ stages:
             variables:
               artifact_name: ${{ job.name }}
               working_directory: ${{ job.working_directory }}
+              ${{ if eq(variables['Build.Reason'], 'Schedule') }}:
+                AzCode_UseAzureFederatedCredentials: true
+                ENABLE_COMPLIANCE: true
