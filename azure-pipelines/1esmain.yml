@@ -1,3 +1,8 @@
+variables:
+  ${{ if eq(variables['Build.Reason'], 'Schedule') }}:
+    AzCode_UseAzureFederatedCredentials: true
+    ENABLE_COMPLIANCE: true
+
 # `resources` specifies the location of templates to pick up, use it to get 1ES templates
 resources:
   repositories:
@@ -21,8 +26,3 @@ extends:
     stages:
       # Execute stages from the AzExt stages template
       - template: ./1esstages.yml
-
-variables:
-  ${{ if eq(variables['Build.Reason'], 'Schedule') }}:
-    AzCode_UseAzureFederatedCredentials: true
-    ENABLE_COMPLIANCE: true
