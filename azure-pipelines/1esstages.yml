@@ -22,7 +22,7 @@ stages:
               - template: ./templates/setup.yml
               - template: ./templates/build.yml
               - template: ./templates/1espackage.yml
-              - ${{ if neq(parameters['useAzureFederatedCredentials'], true) }}:
+              - ${{ if ne(parameters['useAzureFederatedCredentials'], true) }}:
                   - template: ./templates/test.yml
               - ${{ if eq(parameters['useAzureFederatedCredentials'], true) }}:
                   - template: ./templates/test.nightly.yml
