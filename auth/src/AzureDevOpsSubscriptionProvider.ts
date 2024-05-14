@@ -5,17 +5,34 @@
 
 import type { SubscriptionClient, TenantIdDescription } from '@azure/arm-resources-subscriptions';
 import type { TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
+import type { PipelineRequest } from '@azure/core-rest-pipeline';
 import { Disposable, Event } from 'vscode';
 import { AzureAuthentication } from './AzureAuthentication';
 import { AzureSubscription } from './AzureSubscription';
 import { AzureSubscriptionProvider } from './AzureSubscriptionProvider';
 import { getConfiguredAzureEnv } from './utils/configuredAzureEnv';
-import type { PipelineRequest } from '@azure/core-rest-pipeline';
+
+export interface AzureDevOpsSubscriptionProviderInitializer {
+    /**
+    * The resource ID of the Azure DevOps federated service connection,
+    *   which can be found on the `resourceId` field of the URL at the address bar
+    *   when viewing the service connection in the Azure DevOps portal
+    */
+    serviceConnectionId: string,
+    /**
+    * The `Tenant ID` field of the service connection properties
+    */
+    domain: string,
+    /**
+    * The `Service Principal Id` field of the service connection properties
+    */
+    clientId: string;
+}
 
 let azureDevOpsSubscriptionProvider: AzureDevOpsSubscriptionProvider | undefined;
-export function createAzureDevOpsSubscriptionProviderFactory(): () => Promise<AzureDevOpsSubscriptionProvider> {
+export function createAzureDevOpsSubscriptionProviderFactory(initializer: AzureDevOpsSubscriptionProviderInitializer): () => Promise<AzureDevOpsSubscriptionProvider> {
     return async (): Promise<AzureDevOpsSubscriptionProvider> => {
-        azureDevOpsSubscriptionProvider ??= new AzureDevOpsSubscriptionProvider();
+        azureDevOpsSubscriptionProvider ??= new AzureDevOpsSubscriptionProvider(initializer);
         return azureDevOpsSubscriptionProvider;
     }
 }
@@ -43,22 +60,19 @@ export class AzureDevOpsSubscriptionProvider implements AzureSubscriptionProvide
     */
     private _CLIENT_ID: string;
 
-    public constructor() {
-        const SERVICE_CONNECTION_ID = process.env.AzCodeServiceConnectionID;
-        const DOMAIN = process.env.AzCodeServiceConnectionDomain;
-        const CLIENT_ID = process.env.AzCodeServiceConnectionClientID;
-
-        if (!SERVICE_CONNECTION_ID || !DOMAIN || !CLIENT_ID) {
-            throw new Error(`Azure DevOps federated service connection is not configured\n
-            process.env.AzCodeServiceConnectionID: ${SERVICE_CONNECTION_ID ? "✅" : "❌"}\n
-            process.env.AzCodeServiceConnectionDomain: ${DOMAIN ? "✅" : "❌"}\n
-            process.env.AzCodeServiceConnectionClientID: ${CLIENT_ID ? "✅" : "❌"}\n
-        `);
+    public constructor({ serviceConnectionId, domain, clientId }: AzureDevOpsSubscriptionProviderInitializer) {
+        if (!serviceConnectionId || !domain || !clientId) {
+            throw new Error(`Missing initializer values to identify Azure DevOps federated service connection\n
+                Values provided:\n
+                serviceConnectionId: ${serviceConnectionId ? "✅" : "❌"}\n
+                domain: ${domain ? "✅" : "❌"}\n
+                clientId: ${clientId ? "✅" : "❌"}\n
+            `);
         }
 
-        this._SERVICE_CONNECTION_ID = SERVICE_CONNECTION_ID;
-        this._DOMAIN = DOMAIN;
-        this._CLIENT_ID = CLIENT_ID;
+        this._SERVICE_CONNECTION_ID = serviceConnectionId;
+        this._DOMAIN = domain;
+        this._CLIENT_ID = clientId;
     }
 
     async getSubscriptions(_filter: boolean): Promise<AzureSubscription[]> {
