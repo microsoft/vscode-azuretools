@@ -1,3 +1,8 @@
+parameters:
+- name: useAzureFederatedCredentials
+  type: boolean
+  default: false
+
 # `resources` specifies the location of templates to pick up, use it to get 1ES templates
 resources:
   repositories:
@@ -21,3 +26,5 @@ extends:
     stages:
       # Execute stages from the AzExt stages template
       - template: ./1esstages.yml
+        parameters:
+          useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
