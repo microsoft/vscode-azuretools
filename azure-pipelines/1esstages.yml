@@ -22,10 +22,13 @@ stages:
               - template: ./templates/setup.yml
               - template: ./templates/build.yml
               - template: ./templates/1espackage.yml
-              - ${{ if ne(parameters['useAzureFederatedCredentials'], true) }}:
-                  - template: ./templates/test.yml
-              - ${{ if eq(parameters['useAzureFederatedCredentials'], true) }}:
-                  - template: ./templates/test.nightly.yml
+              - template: ./templates/test.nightly.yml
+                parameters:
+                  useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
+              # - ${{ if ne(parameters.useAzureFederatedCredentials, true) }}:
+              #     - template: ./templates/test.yml
+              # - ${{ if eq(parameters.useAzureFederatedCredentials, true) }}:
+              #     - template: ./templates/test.nightly.yml
             variables:
               artifact_name: ${{ job.name }}
               working_directory: ${{ job.working_directory }}
