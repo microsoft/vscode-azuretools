@@ -1,3 +1,12 @@
+parameters:
+  # Set this to `true` to use workflow identity federation with ADO service connections
+  # to authenticate this pipeline to run tests that require logging into Azure
+  # Setting this to `true` will require granting the pipeline permissions to
+  # AzCodeE2ETests and AzCodeE2ETestsCreds service connections
+  - name: useAzureFederatedCredentials
+    type: boolean
+    default: false
+
 # `resources` specifies the location of templates to pick up, use it to get 1ES templates
 resources:
   repositories:
@@ -21,3 +30,5 @@ extends:
     stages:
       # Execute stages from the AzExt stages template
       - template: ./1esstages.yml
+        parameters:
+          useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
