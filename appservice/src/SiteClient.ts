@@ -17,7 +17,7 @@ import { createWebSiteClient } from './utils/azureClients';
 import { convertQueryParamsValuesToString } from './utils/kuduUtils';
 
 
-export class ParsedSite implements AppSettingsClientProvider {
+class InnerParsedSite implements AppSettingsClientProvider {
     public readonly id: string;
     public readonly isSlot: boolean;
     /**
@@ -43,7 +43,7 @@ export class ParsedSite implements AppSettingsClientProvider {
     public readonly planResourceGroup: string;
     public readonly planName: string;
 
-    public readonly defaultHostName: string;
+    public defaultHostName: string | undefined;
     public readonly defaultHostUrl: string;
     public readonly kuduHostName: string | undefined;
     public readonly kuduUrl: string | undefined;
@@ -81,7 +81,7 @@ export class ParsedSite implements AppSettingsClientProvider {
         this.planName = matches![3];
         /* eslint-enable @typescript-eslint/no-non-null-assertion */
 
-        this.defaultHostName = nonNullProp(site, 'defaultHostName');
+        this.defaultHostName = site.defaultHostName;
         this.defaultHostUrl = `https://${this.defaultHostName}`;
         const kuduRepositoryUrl: HostNameSslState | undefined = nonNullProp(site, 'hostNameSslStates').find(h => !!h.hostType && h.hostType.toLowerCase() === 'repository');
         if (kuduRepositoryUrl) {
@@ -106,6 +106,20 @@ export class ParsedSite implements AppSettingsClientProvider {
         return client;
     }
 }
+export class ParsedSite extends InnerParsedSite {
+    public defaultHostName: string;
+
+    public static async createParsedSite(context: IActionContext, site: Site, subscription: ISubscriptionContext): Promise<ParsedSite> {
+        const parsedSite = new InnerParsedSite(site, subscription);
+        // defaultHostName sometimes will return undefined in a LIST API call, so we need to get it from the site itself
+        if (!parsedSite.defaultHostName) {
+            const client = await parsedSite.createClient(context);
+            parsedSite.defaultHostName = (await client.getSite())?.defaultHostName;
+        }
+
+        return parsedSite as ParsedSite;
+    }
+}
 
 /**
  * Wrapper of a WebSiteManagementClient for use with a specific Site
@@ -113,10 +127,10 @@ export class ParsedSite implements AppSettingsClientProvider {
  */
 export class SiteClient implements IAppSettingsClient {
     private _client: WebSiteManagementClient;
-    private _site: ParsedSite;
+    private _site: InnerParsedSite;
     private _cachedSku: string | undefined;
 
-    constructor(internalClient: WebSiteManagementClient, site: ParsedSite) {
+    constructor(internalClient: WebSiteManagementClient, site: InnerParsedSite) {
         this._client = internalClient;
         this._site = site;
     }
