@@ -44,7 +44,7 @@ class InnerParsedSite implements AppSettingsClientProvider {
     public readonly planName: string;
 
     public defaultHostName: string | undefined;
-    public readonly defaultHostUrl: string;
+    public defaultHostUrl: string;
     public readonly kuduHostName: string | undefined;
     public readonly kuduUrl: string | undefined;
     public readonly gitUrl: string | undefined;
@@ -115,6 +115,7 @@ export class ParsedSite extends InnerParsedSite {
         if (!parsedSite.defaultHostName) {
             const client = await parsedSite.createClient(context);
             parsedSite.defaultHostName = (await client.getSite())?.defaultHostName;
+            parsedSite.defaultHostUrl = `https://${parsedSite.defaultHostName}`;
         }
 
         return parsedSite as ParsedSite;
