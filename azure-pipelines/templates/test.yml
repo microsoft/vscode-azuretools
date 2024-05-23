@@ -37,6 +37,7 @@ steps:
       DISPLAY: :99 # Only necessary for linux tests
       ${{ if eq(parameters.useAzureFederatedCredentials, true) }}:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+        AzCode_UseAzureFederatedCredentials: true
         AzCode_ServiceConnectionID: $(AzCodeServiceConnectionID)
         AzCode_ServiceConnectionDomain: $(AzCodeServiceConnectionDomain)
         AzCode_ServiceConnectionClientID: $(AzCodeServiceConnectionClientID)
