@@ -16,6 +16,7 @@ Create a new service principal on which you will assign the necessary permission
 4. Make sure to select the first option for the account type (`Accounts in this organization directory only (Microsoft only - Single tenant)`)
 5. Leave the Redirect URI and Service Tree ID fields empty
 6. Click on `Register`
+
     ![Register an application](guide-imgs/app_registration_2.jpg)
 
 ## 2. Create a new Azure DevOps (ADO) Service Connection:
