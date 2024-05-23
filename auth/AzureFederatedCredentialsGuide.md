@@ -9,7 +9,9 @@ Create a new service principal on which you will assign the necessary permission
 
 1. Navigate to the [App Registrations](https://ms.portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade) page on the Azure portal
 2. Click on `New Registration`
+
     ![New Registration](guide-imgs/app_registration.jpg)
+
 3. Assign any name
 4. Make sure to select the first option for the account type (`Accounts in this organization directory only (Microsoft only - Single tenant)`)
 5. Leave the Redirect URI and Service Tree ID fields empty
@@ -23,15 +25,20 @@ Create a new ADO service connection under your organization's project. In this e
  1. Navigate to the [organization's (DevDiv) ADO page](https://devdiv.visualstudio.com/DevDiv)
  2. Navigate to the settings page by clicking on the gear icon on the bottom left
  3. Select the ["service connections"](https://devdiv.visualstudio.com/DevDiv/_settings/adminservices) blade from the panel on the left
+
     ![Select service connection](guide-imgs/service_connection_1.jpg)
+
  4. Create a new service connection by clicking on the `New service connection` button
+
    ![Click on new service connection](guide-imgs/service_connection_2.jpg)
+
  5. Select `Azure Resource Manager` as the type
  6. Select `Workload Identity federation (manual)` for the authentication type
  7. Provide a new name for your new service connection
  8. Click on `Next`
- 9. This will create a new draft service connection, with the `issuer` and `subject identifier` fields already filled in.
+ 9.  This will create a new draft service connection, with the `issuer` and `subject identifier` fields already filled in.
  10. Leave this window open while you finish the next step, which will require those `issuer` and `subject identifier` fields, then you will return to this window to finish creating the service principal
+
    ![Draft service connectoin screen](guide-imgs/service_connection_3.jpg)
 
 ## 3. Create a federated credential:
@@ -42,11 +49,15 @@ Create a new "federated credential" on your service principal to connect it to y
  2. Navigate to the `Certificates & secrets` blade
  3. Navigate to the `Federated credentials` tab
  4. Click on the `Add credential` button
+
    ![Add federated credential](guide-imgs/credential_1.jpg)
+
  5. For the scenario, select `Other issuer`
  6. For the `issuer` and `subject identifier` fields, fill in with the details of your draft service connection from the previous step
  7. Select a new name for your new federated credential
+
     ![Fill in issuer, subject identifier, and name fields](guide-imgs/credential_2.jpg)
+
  8. Click on `Add`
 
 ## 4. (Temporary but required) Grant your service principal reader role on the desired subscription:
@@ -55,13 +66,19 @@ This step is not required for running your tests, but _is_ required to finish cr
 
  1. On the Azure Portal, navigate to the page for the subscription you want the service principal to have access to.
  2. Navigate to the `Access control (IAM)` blade
+
     ![access control tab](guide-imgs/subscription_1.jpg)
+
  3. Navigate to the `Roles` tab
  4. Click on the `+ Add` button, and choose `Add role assignment`
+
    ![add role](guide-imgs/subscription_2.jpg)
+
  5. Choose `Reader` and click `Next`
  6. Choose `User, group, or service principal`, then click on `+ Select members`
+
    ![select members](guide-imgs/subscription_3.jpg)
+
  7. Select your service principal from step 1
  8. Click on `Review and assign`
 
@@ -92,18 +109,25 @@ A dummy Key vault step is required to propagate the necessary environment variab
 
  1. Create a new Key Vault resource in the subscription you want to test on
  2. Give it a new name as appropriate. You can keep the default settings
+
     ![Create key vault](guide-imgs/dummy_kv.jpg)
 
 ## 8. Assign your service principal "key vault reader" role on the dummy Key Vault:
 
  1. Navigate to `Access control (IAM)` blade on your newly created dummy key vault
+
    ![access control tab](guide-imgs/subscription_1.jpg)
+
  2. Navigate to the `Roles` tab
  3. Click on the `+ Add` button, and choose `Add role assignment`
+
    ![add role](guide-imgs/subscription_2.jpg)
+
  4. Choose `Key Vault Reader` (**NOT** `Reader`) and click `Next`
  5. Choose `User, group, or service principal`, then click on `+ Select members`
+
    ![select members](guide-imgs/subscription_3.jpg)
+
  6. Select your app registration from step 1
  7. Click on `Review and assign`
 
