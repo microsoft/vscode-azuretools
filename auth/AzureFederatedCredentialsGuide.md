@@ -170,4 +170,4 @@ These are:
 
   ![identifier values for service connection](guide-imgs/identifier_values.jpg)
 
-Make you pass an object containing these variables for the `new AzureDevOpsServiceProvider()` constructor. These values are _not_ secrets, so they can be set as environment variables, assigned as pipeline variables in ADO, accessed and assigned using an Azure Key Vault step, or even manually hardcoded in code (not recommended).
+Make sure you pass an object containing these variables for the `new AzureDevOpsServiceProvider()` constructor. These values are _not_ secrets, so they can be set as environment variables, assigned as pipeline variables in ADO, accessed and assigned using an Azure Key Vault step, or even manually hardcoded in code (not recommended).
