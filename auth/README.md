@@ -100,6 +100,47 @@ export declare function getConfiguredAzureEnv(): azureEnv.Environment & {
 export declare function setConfiguredAzureEnv(cloud: string | azureEnv.EnvironmentParameters, target?: vscode.ConfigurationTarget): Promise<void>;
 ```
 
+## Azure DevOps Subscription Provider
+
+The auth package also exports `AzureDevOpsSubscriptionProvider`, a class which implements the `AzureSubscriptionProvider` interface, which authenticates via
+a federated Azure DevOps service connection, using [workflow identity federation](https://learn.microsoft.com/entra/workload-id/workload-identity-federation).
+
+This provider only works when running in the context of an Azure DevOps pipeline. It can be used to run end-to-end tests that require authentication to Azure,
+without having to manage any secrets, passwords or connection strings.
+
+The constructor expects an initializer object with three values set to identify your ADO service connection to be used for authentication.
+These are:
+
+- `serviceConnectionId`: The resource ID of your service connection, which can be found on the `resourceId` field of the URL at the address bar, when viewing the service connection in the Azure DevOps portal
+- `domain`: The `Tenant ID` field of the service connection properties, which can be accessed by clicking "Edit" on the service connection page
+- `clientId`: The `Service Principal Id` field of the service connection properties, which can be accessed by clicking "Edit" on the service connection page
+
+Here is an example code of how you might use `AzureDevOpsSubscriptionProvider`:
+
+```typescript
+import { AzureDevOpsSubscriptionProviderInitializer, AzureDevOpsSubscriptionProvider } from "@microsoft/vscode-azext-azureauth";
+
+const initializer: AzureDevOpsSubscriptionProviderInitializer = {
+    serviceConnectionId: "<REPLACE_WITH_SERVICE_CONNECTION_ID>",
+    domain: "<REPLACE_WITH_DOMAIN>",
+    clientId: "<REPLACE_WITH_CLIENT_ID>",
+}
+
+const subscriptionProvider = new AzureDevOpsSubscriptionProvider(initializer);
+
+const signedIn = await subscriptionProvider.signIn();
+if (!signedIn) {
+    throw new Error("Couldn't sign in");
+}
+
+const subscriptions = await subscriptionProvider.getSubscriptions();
+
+// logic on the subscriptions object
+```
+
+For more detailed steps on how to setup your Azure environment to use workflow identity federation and use this `AzureDevOpsSubscriptionProvider` object effectively,
+as well as the values needed to pass to `new AzureDevOpsSubscriptionProvider()`, please navigate to the workflow identity federation [guide](AzureFederatedCredentialsGuide.md).
+
 ## Logs
 
 View the Microsoft Authentication extension logs by running the `Developer: Show Logs...` command from the VS Code command palette.
