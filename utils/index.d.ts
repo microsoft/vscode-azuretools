@@ -7,7 +7,7 @@
 
 import type { Environment } from '@azure/ms-rest-azure-env';
 import type { AzExtResourceType, AzureResource, AzureSubscription, ResourceModelBase } from '@microsoft/vscode-azureresources-api';
-import { AuthenticationSession, CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, LogOutputChannel, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, ProviderResult, QuickPickItem, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri, QuickPickOptions as VSCodeQuickPickOptions, WorkspaceFolder, WorkspaceFolderPickOptions } from 'vscode';
+import { AuthenticationSession, CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, LogOutputChannel, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, ProviderResult, QuickPickItem, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri, QuickPickOptions as VSCodeQuickPickOptions } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
 
@@ -884,7 +884,7 @@ export interface IParsedError {
 }
 
 export type PromptResult = {
-    value: string | QuickPickItem | QuickPickItem[] | MessageItem | Uri[] | WorkspaceFolder;
+    value: string | QuickPickItem | QuickPickItem[] | MessageItem | Uri[];
 
     /**
      * True if the user did not change from the default value, currently only supported for `showInputBox`
@@ -959,15 +959,6 @@ export interface IAzureUserInput {
      * @returns A promise that resolves to the selected resources.
      */
     showOpenDialog(options: AzExtOpenDialogOptions): Promise<Uri[]>;
-
-    /**
-     * Shows a selection list of existing workspace folders to choose from.
-     *
-     * @param options Configures the behavior of the workspace folder list.
-     * @throws `UserCancelledError` if the user cancels.
-     * @returns A promise that resolves to the selected `WorkspaceFolder`.
-     */
-    showWorkspaceFolderPick(options: AzExtWorkspaceFolderPickOptions): Promise<WorkspaceFolder>;
 }
 
 /**
@@ -1096,11 +1087,6 @@ export interface AzExtInputBoxOptions extends InputBoxOptions, AzExtUserInputOpt
 export interface AzExtOpenDialogOptions extends OpenDialogOptions, AzExtUserInputOptions { }
 
 /**
-* Provides additional options for workspace folder picks used in Azure Extensions
-*/
-export type AzExtWorkspaceFolderPickOptions = WorkspaceFolderPickOptions & AzExtUserInputOptions;
-
-/**
  * A queue of inputs that should be used by an {@link IAzureUserInput} implementation to answer prompts instead of showing prompts to the user.
  * If the head of the queue is undefined or null, then the {@link IAzureUserInput} implementation should show a prompt to the user.
  */
@@ -1121,7 +1107,6 @@ export declare class AzExtUserInputWithInputQueue implements IAzureUserInput {
     showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
     showWarningMessage<T extends MessageItem>(message: string, options: IAzureMessageOptions, ...items: T[]): Promise<T>;
     showOpenDialog(options: AzExtOpenDialogOptions): Promise<Uri[]>;
-    showWorkspaceFolderPick(options: AzExtWorkspaceFolderPickOptions): Promise<WorkspaceFolder>;
 }
 
 export interface IWizardOptions<T extends IActionContext> {
@@ -2246,7 +2231,6 @@ export interface IAzureAgentInput {
     showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
     showWarningMessage<T extends MessageItem>(message: string, options: IAzureMessageOptions, ...items: T[]): Promise<T>;
     showOpenDialog(options: AzExtOpenDialogOptions): Promise<Uri[]>;
-    showWorkspaceFolderPick(options: AzExtWorkspaceFolderPickOptions): Promise<WorkspaceFolder>;
 }
 
 // #endregion
