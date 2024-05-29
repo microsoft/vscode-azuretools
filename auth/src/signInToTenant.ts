@@ -3,8 +3,8 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import * as vscode from "vscode";
 import type { TenantIdDescription } from "@azure/arm-resources-subscriptions";
+import * as vscode from "vscode";
 import type { AzureSubscriptionProvider } from "./AzureSubscriptionProvider";
 import { getUnauthenticatedTenants } from "./utils/getUnauthenticatedTenants";
 
@@ -12,8 +12,8 @@ import { getUnauthenticatedTenants } from "./utils/getUnauthenticatedTenants";
  * Prompts user to select from a list of unauthenticated tenants.
  * Once selected, requests a new session from VS Code specifially for this tenant.
  */
-export async function signInToTenant(subscriptionProvider: AzureSubscriptionProvider): Promise<void> {
-    const tenantId = await pickTenant(subscriptionProvider);
+export async function signInToTenant(subscriptionProvider: AzureSubscriptionProvider, tenant?: string): Promise<void> {
+    const tenantId = tenant ? tenant : await pickTenant(subscriptionProvider);
     if (tenantId) {
         await subscriptionProvider.signIn(tenantId);
     }
