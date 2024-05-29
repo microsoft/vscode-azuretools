@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from "assert";
-import { Event, MessageItem, QuickPickItem, Uri } from "vscode";
-import { AgentInputBoxOptions, AgentQuickPickItem, AgentQuickPickOptions, AzExtInputBoxOptions, AzExtOpenDialogOptions, IAzureAgentInput, IAzureMessageOptions, IAzureQuickPickOptions, IAzureUserInput, PromptResult } from "..";
+import { Event, MessageItem, QuickPickItem, Uri, WorkspaceFolder } from "vscode";
+import { AgentInputBoxOptions, AgentQuickPickItem, AgentQuickPickOptions, AzExtInputBoxOptions, AzExtOpenDialogOptions, AzExtWorkspaceFolderPickOptions, IAzureAgentInput, IAzureMessageOptions, IAzureQuickPickOptions, IAzureUserInput, PromptResult } from "..";
 
 class MockAzureUserInput implements IAzureUserInput {
     onDidFinishPrompt: Event<PromptResult>;
@@ -23,6 +23,9 @@ class MockAzureUserInput implements IAzureUserInput {
         throw new Error("Method not implemented.");
     }
     showOpenDialog(_options: AzExtOpenDialogOptions): Promise<Uri[]> {
+        throw new Error("Method not implemented.");
+    }
+    showWorkspaceFolderPick(_options: AzExtWorkspaceFolderPickOptions): Promise<WorkspaceFolder> {
         throw new Error("Method not implemented.");
     }
 }
@@ -43,6 +46,9 @@ class MockAzureAgentInput implements IAzureAgentInput {
         throw new Error("Method not implemented.");
     }
     showOpenDialog(_options: AzExtOpenDialogOptions): Promise<Uri[]> {
+        throw new Error("Method not implemented.");
+    }
+    showWorkspaceFolderPick(_options: AzExtWorkspaceFolderPickOptions): Promise<WorkspaceFolder> {
         throw new Error("Method not implemented.");
     }
 }
