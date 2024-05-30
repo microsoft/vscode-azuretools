@@ -9,11 +9,11 @@ import { UserCancelledError } from "../errors";
 export async function showWorkspaceFolderPick(options?: WorkspaceFolderPickOptions): Promise<WorkspaceFolder> {
     const folder: WorkspaceFolder | undefined = await window.showWorkspaceFolderPick({
         ...options,
-        placeHolder: options?.placeHolder ?? l10n.t('Select a root workspace folder')
+        placeHolder: options?.placeHolder ?? l10n.t('Select a workspace folder')
     });
 
     if (!folder) {
-        throw new UserCancelledError('selectRootWorkspaceFolder');
+        throw new UserCancelledError('selectWorkspaceFolder');
     }
 
     return folder;
