@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event, EventEmitter, MessageItem, Uri, WorkspaceFolder } from 'vscode';
+import { Event, EventEmitter, MessageItem, Uri } from 'vscode';
 import * as types from '../../index';
 import { UserCancelledError } from '../errors';
 import { IInternalActionContext, IInternalAzureWizard } from './IInternalActionContext';
@@ -11,7 +11,6 @@ import { showInputBox } from './showInputBox';
 import { showOpenDialog } from './showOpenDialog';
 import { showQuickPick } from './showQuickPick';
 import { showWarningMessage } from './showWarningMessage';
-import { showWorkspaceFolderPick } from './showWorkspaceFolderPick';
 
 export class AzExtUserInput implements types.IAzureUserInput {
     public wizard?: IInternalAzureWizard;
@@ -73,21 +72,6 @@ export class AzExtUserInput implements types.IAzureUserInput {
         try {
             this._isPrompting = true;
             const result = await showOpenDialog(options);
-            this._onDidFinishPromptEmitter.fire({ value: result });
-            return result;
-        } finally {
-            this._isPrompting = false;
-        }
-    }
-
-    public async showWorkspaceFolderPick(options: types.AzExtWorkspaceFolderPickOptions): Promise<WorkspaceFolder> {
-        addStepTelemetry(this._context, options.stepName, 'WorkspaceFolderPick', options.placeHolder);
-        if (this._context.ui.wizard?.cancellationToken.isCancellationRequested) {
-            throw new UserCancelledError();
-        }
-        try {
-            this._isPrompting = true;
-            const result = await showWorkspaceFolderPick(options);
             this._onDidFinishPromptEmitter.fire({ value: result });
             return result;
         } finally {
