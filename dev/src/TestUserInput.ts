@@ -171,6 +171,35 @@ export class TestUserInput implements types.TestUserInput {
         this._onDidFinishPromptEmitter.fire({ value: result });
         return result;
     }
+
+    public async showWorkspaceFolderPick(options: vscodeTypes.WorkspaceFolderPickOptions): Promise<vscodeTypes.WorkspaceFolder> {
+        let result: vscodeTypes.WorkspaceFolder;
+        const input: string | RegExp | TestInput | undefined = this._inputs.shift();
+
+        if (input === undefined) {
+            throw new Error(`No more inputs left for call to showWorkspaceFolderPick. Placeholder: ${options.placeHolder}`);
+        } else if (typeof input === 'string' || input instanceof RegExp) {
+            const workspaceFolders: readonly vscodeTypes.WorkspaceFolder[] | undefined = this._vscode.workspace.workspaceFolders;
+            const workspaceFolder: vscodeTypes.WorkspaceFolder | undefined = workspaceFolders?.find(workspace => {
+                const valuesToTest: string[] = [workspace.name, workspace.uri.path];
+                if (typeof input === 'string') {
+                    return !!valuesToTest.find(v => v === input);
+                } else {
+                    return !!valuesToTest.find(v => v.match(input));
+                }
+            });
+
+            if (!workspaceFolder) {
+                throw new Error(`Did not find workspace folder with name matching '${input}'.`);
+            }
+            result = workspaceFolder;
+        } else {
+            throw new Error(`Unexpected input '${input}' for showWorkspaceFolderPick.`);
+        }
+
+        this._onDidFinishPromptEmitter.fire({ value: result });
+        return result;
+    }
 }
 
 
