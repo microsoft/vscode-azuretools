@@ -5,7 +5,7 @@
 
 import type { Environment } from "@azure/ms-rest-azure-env";
 import * as cp from "child_process";
-import { Disposable, Event, InputBoxOptions, LogLevel, LogOutputChannel, MessageItem, MessageOptions, OpenDialogOptions, QuickPickItem, QuickPickOptions, Uri, WorkspaceFolderPickOptions } from "vscode";
+import { Disposable, Event, InputBoxOptions, LogLevel, LogOutputChannel, MessageItem, MessageOptions, OpenDialogOptions, QuickPickItem, QuickPickOptions, Uri, WorkspaceFolder, WorkspaceFolderPickOptions } from "vscode";
 import * as webpack from 'webpack';
 
 /**
