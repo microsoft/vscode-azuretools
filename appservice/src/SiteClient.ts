@@ -81,9 +81,10 @@ export class ParsedSite implements AppSettingsClientProvider {
         this.planName = matches![3];
         /* eslint-enable @typescript-eslint/no-non-null-assertion */
 
-        this.defaultHostName = nonNullProp(site, 'defaultHostName');
+        this.defaultHostName = nonNullValue(site.hostNames)[0];
         this.defaultHostUrl = `https://${this.defaultHostName}`;
-        const kuduRepositoryUrl: HostNameSslState | undefined = nonNullProp(site, 'hostNameSslStates').find(h => !!h.hostType && h.hostType.toLowerCase() === 'repository');
+        const hostNameSslState = site.hostNameSslStates ?? [];
+        const kuduRepositoryUrl: HostNameSslState | undefined = hostNameSslState.find(h => !!h.hostType && h.hostType.toLowerCase() === 'repository');
         if (kuduRepositoryUrl) {
             this.kuduHostName = kuduRepositoryUrl.name;
             this.kuduUrl = `https://${this.kuduHostName}`;
