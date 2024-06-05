@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from "vscode";
-import { AzExtInputBoxOptions, AzExtOpenDialogOptions, AzureUserInputQueue, IAzureMessageOptions, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, PromptResult, type AzExtUserInputWithInputQueue as AzExtUserInputWithInputQueueType } from "../../";
+import { AzExtInputBoxOptions, AzExtOpenDialogOptions, AzExtWorkspaceFolderPickOptions, AzureUserInputQueue, IAzureMessageOptions, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, PromptResult, type AzExtUserInputWithInputQueue as AzExtUserInputWithInputQueueType } from "../../";
 import { UserCancelledError } from "../errors";
 import { AzExtUserInput, addStepTelemetry } from "./AzExtUserInput";
 import { IInternalActionContext } from "./IInternalActionContext";
@@ -91,6 +91,26 @@ export class AzExtUserInputWithInputQueue implements AzExtUserInputWithInputQueu
         const nextItemInQueue = (this._inputsQueue.shift() as vscode.Uri[] | null | undefined);
         if (!nextItemInQueue) {
             result = await this._realAzureUserInput.showOpenDialog(options);
+        } else {
+            result = nextItemInQueue;
+            this._onDidFinishPromptEmitter.fire({ value: result });
+        }
+
+        this._isPrompting = false;
+        return result;
+    }
+
+    public async showWorkspaceFolderPick(options: AzExtWorkspaceFolderPickOptions): Promise<vscode.WorkspaceFolder> {
+        addStepTelemetry(this._context, options.stepName, 'WorkspaceFolderPick', options.placeHolder);
+        if (this._context.ui.wizard?.cancellationToken.isCancellationRequested) {
+            throw new UserCancelledError();
+        }
+        this._isPrompting = true;
+
+        let result: vscode.WorkspaceFolder;
+        const nextItemInQueue = (this._inputsQueue.shift() as vscode.WorkspaceFolder | null | undefined);
+        if (!nextItemInQueue) {
+            result = await this._realAzureUserInput.showWorkspaceFolderPick(options);
         } else {
             result = nextItemInQueue;
             this._onDidFinishPromptEmitter.fire({ value: result });
