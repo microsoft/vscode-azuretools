@@ -4,12 +4,12 @@ parameters:
     default:
       - name: Root # TODO: would like this to be repository name but can't use build variables here
         working_directory: .
-  - name: "useAzureFederatedCredentials"
-    type: boolean
-    default: false
-  - name: "ENABLE_LONG_RUNNING_TESTS"
-    type: boolean
-    default: false
+  # - name: "useAzureFederatedCredentials"
+  #   type: boolean
+  #   default: false
+  # - name: "ENABLE_LONG_RUNNING_TESTS"
+  #   type: boolean
+  #   default: false
 
 stages:
   - stage: TestStage
@@ -32,3 +32,5 @@ stages:
             variables:
               artifact_name: ${{ job.name }}
               working_directory: ${{ job.working_directory }}
+              useAzureFederatedCredentials: true
+              ENABLE_LONG_RUNNING_TESTS: true
