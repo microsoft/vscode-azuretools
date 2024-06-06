@@ -34,7 +34,8 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
     const kuduClient = await site.createClient(context);
 
     const { expectedId, token, locationUrl } = options;
-    const pollingInterval = options.pollingInterval ?? 5000;
+    // recommended to poll every second or the deployment id can be recycled before we find it
+    const pollingInterval = options.pollingInterval ?? 1000;
 
     while (!token?.isCancellationRequested) {
         if (locationUrl) {
