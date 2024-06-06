@@ -7,6 +7,9 @@ parameters:
   - name: "useAzureFederatedCredentials"
     type: boolean
     default: false
+  - name: "ENABLE_LONG_RUNNING_TESTS"
+    type: boolean
+    default: false
 
 stages:
   - stage: BuildStage
