@@ -38,6 +38,7 @@ steps:
     condition: succeeded()
     env:
       DISPLAY: :99 # Only necessary for linux tests
+      AzCode_EnableLongRunningTests: ${{ parameters.ENABLE_LONG_RUNNING_TESTS }}
       ${{ if eq(parameters.useAzureFederatedCredentials, true) }}:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
         AzCode_UseAzureFederatedCredentials: true
