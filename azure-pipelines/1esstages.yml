@@ -30,14 +30,14 @@ stages:
               artifact_name: ${{ job.name }}
               working_directory: ${{ job.working_directory }}
   - stage: NightlyStage
-    condition: eq(variables['Build.Reason'], 'Manual')
+    condition: eq(variables['Build.Reason'], 'Automatic')
     jobs:
       - ${{ each job in parameters.jobs }}:
           - job: ${{ job.name }}
             templateContext:
               outputs:
                 - output: pipelineArtifact
-                  targetPath: $(build.artifactstagingdirectory)/build/${{ job.name }}
+                  targetPath: $(build.artifactstagingdirectory)/nightly/${{ job.name }}
                   artifactName: Build ${{ job.name }}
             steps:
               - template: ./templates/setup.yml
