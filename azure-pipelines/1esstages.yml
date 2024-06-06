@@ -9,26 +9,6 @@ parameters:
     default: true
 
 stages:
-  - stage: NightlyStage
-    jobs:
-      - ${{ each job in parameters.jobs }}:
-          - job: ${{ job.name }}
-            templateContext:
-              outputs:
-                - output: pipelineArtifact
-                  targetPath: $(build.artifactstagingdirectory)/build/${{ job.name }}
-                  artifactName: Build ${{ job.name }}
-            steps:
-              - template: ./templates/setup.yml
-              - template: ./templates/build.yml
-              - template: ./templates/1espackage.yml
-              - template: ./templates/test.yml
-                parameters:
-                  useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
-                  enableLongRunningTests: true
-            variables:
-              artifact_name: ${{ job.name }}
-              working_directory: ${{ job.working_directory }}
   - stage: BuildStage
     jobs:
       - ${{ each job in parameters.jobs }}:
@@ -46,6 +26,26 @@ stages:
                 parameters:
                   useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
                   enableLongRunningTests: false
+            variables:
+              artifact_name: ${{ job.name }}
+              working_directory: ${{ job.working_directory }}
+  - stage: NightlyStage
+    jobs:
+      - ${{ each job in parameters.jobs }}:
+          - job: ${{ job.name }}
+            templateContext:
+              outputs:
+                - output: pipelineArtifact
+                  targetPath: $(build.artifactstagingdirectory)/build/${{ job.name }}
+                  artifactName: Build ${{ job.name }}
+            steps:
+              - template: ./templates/setup.yml
+              - template: ./templates/build.yml
+              - template: ./templates/1espackage.yml
+              - template: ./templates/test.yml
+                parameters:
+                  useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
+                  enableLongRunningTests: true
             variables:
               artifact_name: ${{ job.name }}
               working_directory: ${{ job.working_directory }}
