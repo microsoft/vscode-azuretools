@@ -38,7 +38,7 @@ stages:
               outputs:
                 - output: pipelineArtifact
                   targetPath: $(build.artifactstagingdirectory)/nightly/${{ job.name }}
-                  artifactName: Build ${{ job.name }}
+                  artifactName: Nightly ${{ job.name }}
             steps:
               - template: ./templates/setup.yml
               - template: ./templates/build.yml
