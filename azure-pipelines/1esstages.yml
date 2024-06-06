@@ -42,7 +42,6 @@ stages:
             steps:
               - template: ./templates/setup.yml
               - template: ./templates/build.yml
-              - template: ./templates/1espackage.yml
               - template: ./templates/test.yml
                 parameters:
                   useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
