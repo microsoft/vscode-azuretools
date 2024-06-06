@@ -6,7 +6,7 @@ parameters:
         working_directory: .
   - name: "useAzureFederatedCredentials"
     type: boolean
-    default: false
+    default: true
 
 stages:
   - stage: BuildStage
