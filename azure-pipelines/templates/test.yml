@@ -1,10 +1,10 @@
 parameters:
   - name: useAzureFederatedCredentials
     type: boolean
-    default: true
+    default: false
   - name: enableLongRunningTests
     type: boolean
-    default: true
+    default: false
 
 steps:
   # This gives the AzCodeE2ETests service connection access to this pipeline.
