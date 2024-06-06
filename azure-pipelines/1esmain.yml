@@ -6,9 +6,6 @@ parameters:
   - name: useAzureFederatedCredentials
     type: boolean
     default: true
-  - name: ENABLE_LONG_RUNNING_TESTS
-    type: boolean
-    default: true
 
 # `resources` specifies the location of templates to pick up, use it to get 1ES templates
 resources:
@@ -35,4 +32,3 @@ extends:
       - template: ./1esstages.yml
         parameters:
           useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
-          ENABLE_LONG_RUNNING_TESTS: ${{ parameters.ENABLE_LONG_RUNNING_TESTS }}

@@ -45,4 +45,3 @@ steps:
         AzCode_ServiceConnectionID: $(AzCodeServiceConnectionID)
         AzCode_ServiceConnectionDomain: $(AzCodeServiceConnectionDomain)
         AzCode_ServiceConnectionClientID: $(AzCodeServiceConnectionClientID)
-
