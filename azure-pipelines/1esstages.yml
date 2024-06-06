@@ -17,35 +17,15 @@ stages:
               outputs:
                 - output: pipelineArtifact
                   targetPath: $(build.artifactstagingdirectory)/build/${{ job.name }}
-                  artifactName: Build ${{ job.name }}
+                  artifactName: Nightly ${{ job.name }}
             steps:
               - template: ./templates/setup.yml
               - template: ./templates/build.yml
               - template: ./templates/1espackage.yml
               - template: ./templates/test.yml
                 parameters:
-                  useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
-            variables:
-              artifact_name: ${{ job.name }}
-              working_directory: ${{ job.working_directory }}
-  - stage: NightlyStage
-    jobs:
-      - ${{ each job in parameters.jobs }}:
-          - job: ${{ job.name }}
-            templateContext:
-              outputs:
-                - output: pipelineArtifact
-                  targetPath: $(build.artifactstagingdirectory)/build/${{ job.name }}
-                  artifactName: Build ${{ job.name }}
-            steps:
-              - template: ./templates/setup.yml
-              - template: ./templates/build.yml
-              - template: ./templates/1espackage.yml
-              - template: ./templates/test.yml
-                parameters:
-                  useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
+                  useAzureFederatedCredentials: true
                   ENABLE_LONG_RUNNING_TESTS: true
-
             variables:
               artifact_name: ${{ job.name }}
               working_directory: ${{ job.working_directory }}
