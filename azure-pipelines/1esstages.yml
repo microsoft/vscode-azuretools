@@ -26,9 +26,6 @@ stages:
               - template: ./templates/build.yml
               - template: ./templates/1espackage.yml
               - template: ./templates/test.yml
-                parameters:
-                  - useAzureFederatedCredentials: true
-                  - ENABLE_LONG_RUNNING_TESTS: true
             variables:
               artifact_name: ${{ job.name }}
               working_directory: ${{ job.working_directory }}
