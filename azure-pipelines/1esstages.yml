@@ -12,7 +12,7 @@ parameters:
     default: false
 
 stages:
-  - stage: BuildStage
+  - stage: TestStage
     jobs:
       - ${{ each job in parameters.jobs }}:
           - job: ${{ job.name }}
