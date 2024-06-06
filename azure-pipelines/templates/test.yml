@@ -2,7 +2,7 @@ parameters:
   - name: useAzureFederatedCredentials
     type: boolean
     default: true
-  - name: ENABLE_LONG_RUNNING_TESTS
+  - name: enableLongRunningTests
     type: boolean
     default: true
 
@@ -38,7 +38,7 @@ steps:
     condition: succeeded()
     env:
       DISPLAY: :99 # Only necessary for linux tests
-      AzCode_EnableLongRunningTests: ${{ parameters.ENABLE_LONG_RUNNING_TESTS }}
+      AzCode_EnableLongRunningTests: ${{ parameters.enableLongRunningTests }}
       ${{ if eq(parameters.useAzureFederatedCredentials, true) }}:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
         AzCode_UseAzureFederatedCredentials: true
