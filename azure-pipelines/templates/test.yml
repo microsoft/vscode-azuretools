@@ -1,7 +1,7 @@
 parameters:
   - name: useAzureFederatedCredentials
     type: boolean
-    default: false
+    default: true
 
 steps:
   # This gives the AzCodeE2ETests service connection access to this pipeline.
