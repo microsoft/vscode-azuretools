@@ -5,7 +5,7 @@ parameters:
   # AzCodeE2ETests and AzCodeE2ETestsCreds service connections
   - name: useAzureFederatedCredentials
     type: boolean
-    default: true
+    default: false
 
 # `resources` specifies the location of templates to pick up, use it to get 1ES templates
 resources:
