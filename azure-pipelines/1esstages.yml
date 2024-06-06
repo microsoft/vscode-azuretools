@@ -7,9 +7,6 @@ parameters:
   - name: "useAzureFederatedCredentials"
     type: boolean
     default: false
-  - name: "ENABLE_LONG_RUNNING_TESTS"
-    type: boolean
-    default: true
 
 stages:
   - stage: BuildStage
@@ -28,7 +25,6 @@ stages:
               - template: ./templates/test.yml
                 parameters:
                   useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
-                  ENABLE_LONG_RUNNING_TESTS: ${{ parameters.ENABLE_LONG_RUNNING_TESTS }}
             variables:
               artifact_name: ${{ job.name }}
               working_directory: ${{ job.working_directory }}
