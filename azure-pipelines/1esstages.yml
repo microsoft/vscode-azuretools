@@ -4,7 +4,7 @@ parameters:
     default:
       - name: Root # TODO: would like this to be repository name but can't use build variables here
         working_directory: .
-  - name: enableLongRunningTests
+  - name: "enableLongRunningTests"
     type: boolean
     default: false
   - name: "useAzureFederatedCredentials"
