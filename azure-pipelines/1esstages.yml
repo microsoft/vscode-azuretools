@@ -4,6 +4,9 @@ parameters:
     default:
       - name: Root # TODO: would like this to be repository name but can't use build variables here
         working_directory: .
+  - name: enableLongRunningTests
+    type: boolean
+    default: false
   - name: "useAzureFederatedCredentials"
     type: boolean
     default: false
@@ -30,7 +33,7 @@ stages:
               artifact_name: ${{ job.name }}
               working_directory: ${{ job.working_directory }}
   - stage: NightlyStage
-    condition: eq(variables['Build.Reason'], 'Manual')
+    condition: eq(parameters.enableLongRunningTests, true)
     jobs:
       - ${{ each job in parameters.jobs }}:
           - job: ${{ job.name }}

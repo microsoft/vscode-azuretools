@@ -1,8 +1,8 @@
 parameters:
-  - name: useAzureFederatedCredentials
+  - name: enableLongRunningTests
     type: boolean
     default: false
-  - name: enableLongRunningTests
+  - name: useAzureFederatedCredentials
     type: boolean
     default: false
 

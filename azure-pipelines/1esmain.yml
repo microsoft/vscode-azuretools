@@ -1,4 +1,8 @@
 parameters:
+  - name: enableLongRunningTests
+    displayName: Enable Long Running Tests
+    type: boolean
+    default: false
   # Set this to `true` to use workflow identity federation with ADO service connections
   # to authenticate this pipeline to run tests that require logging into Azure
   # Setting this to `true` will require granting the pipeline permissions to
@@ -32,3 +36,4 @@ extends:
       - template: ./1esstages.yml
         parameters:
           useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
+          enableLongRunningTests: ${{ parameters.enableLongRunningTests }}
