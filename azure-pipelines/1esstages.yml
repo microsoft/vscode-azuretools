@@ -33,7 +33,7 @@ stages:
               artifact_name: ${{ job.name }}
               working_directory: ${{ job.working_directory }}
   - stage: NightlyStage
-    condition: eq(parameters.enableLongRunningTests, true)
+    # condition: eq(parameters.enableLongRunningTests, true)
     jobs:
       - ${{ each job in parameters.jobs }}:
           - job: ${{ job.name }}
