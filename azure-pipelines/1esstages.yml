@@ -28,27 +28,7 @@ stages:
               - template: ./templates/test.yml
                 parameters:
                   useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
-                  enableLongRunningTests: false
-            variables:
-              artifact_name: ${{ job.name }}
-              working_directory: ${{ job.working_directory }}
-  - stage: NightlyStage
-    # condition: eq(parameters.enableLongRunningTests, true)
-    jobs:
-      - ${{ each job in parameters.jobs }}:
-          - job: ${{ job.name }}
-            templateContext:
-              outputs:
-                - output: pipelineArtifact
-                  targetPath: $(build.artifactstagingdirectory)/nightly/${{ job.name }}
-                  artifactName: Nightly ${{ job.name }}
-            steps:
-              - template: ./templates/setup.yml
-              - template: ./templates/build.yml
-              - template: ./templates/test.yml
-                parameters:
-                  useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
-                  enableLongRunningTests: true
+                  enableLongRunningTests: ${{ parameters.enableLongRunningTests }}
             variables:
               artifact_name: ${{ job.name }}
               working_directory: ${{ job.working_directory }}
