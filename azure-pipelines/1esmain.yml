@@ -1,12 +1,12 @@
 parameters:
-  - name: enableLongRunningTests
+  - name: "enableLongRunningTests"
     type: boolean
     default: false
   # Set this to `true` to use workflow identity federation with ADO service connections
   # to authenticate this pipeline to run tests that require logging into Azure
   # Setting this to `true` will require granting the pipeline permissions to
   # AzCodeE2ETests and AzCodeE2ETestsCreds service connections
-  - name: useAzureFederatedCredentials
+  - name: "useAzureFederatedCredentials"
     type: boolean
     default: false
 
