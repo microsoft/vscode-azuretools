@@ -2,6 +2,9 @@ parameters:
   - name: useAzureFederatedCredentials
     type: boolean
     default: false
+  - name: enableLongRunningTests
+    type: boolean
+    default: false
 
 steps:
   # This gives the AzCodeE2ETests service connection access to this pipeline.
@@ -35,10 +38,10 @@ steps:
     condition: succeeded()
     env:
       DISPLAY: :99 # Only necessary for linux tests
+      AzCode_EnableLongRunningTests: ${{ parameters.enableLongRunningTests }}
       ${{ if eq(parameters.useAzureFederatedCredentials, true) }}:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
         AzCode_UseAzureFederatedCredentials: true
         AzCode_ServiceConnectionID: $(AzCodeServiceConnectionID)
         AzCode_ServiceConnectionDomain: $(AzCodeServiceConnectionDomain)
         AzCode_ServiceConnectionClientID: $(AzCodeServiceConnectionClientID)
-
