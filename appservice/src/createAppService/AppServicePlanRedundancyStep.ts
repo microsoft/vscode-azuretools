@@ -49,7 +49,7 @@ export class AppServicePlanRedundancyStep extends AzureWizardPromptStep<IAppServ
         return zoneRedundancySupportedLocations.includes(location);
     }
 
-    public static isZoneRedundancyAllowedServicePlan(newPlanSku: SkuDescription | string | RegExp): boolean {
+    public static isZoneRedundancySupportedServicePlan(newPlanSku: SkuDescription | string | RegExp): boolean {
         const allowedServicePlans: string[] = [
             'Pv2',
             'Pv3',
@@ -72,7 +72,7 @@ export class AppServicePlanRedundancyStep extends AzureWizardPromptStep<IAppServ
     }
 
     public static isZoneRedundancySupported(location: string, newPlanSku: SkuDescription): boolean {
-        return this.isZoneRedundancySupportedLocation(location) && this.isZoneRedundancyAllowedServicePlan(newPlanSku);
+        return this.isZoneRedundancySupportedLocation(location) && this.isZoneRedundancySupportedServicePlan(newPlanSku);
     }
 
     public shouldPrompt(context: AppServiceWizardContext): boolean {
