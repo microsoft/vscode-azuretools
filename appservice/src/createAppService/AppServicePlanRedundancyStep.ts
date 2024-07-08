@@ -46,6 +46,7 @@ export class AppServicePlanRedundancyStep extends AzureWizardPromptStep<IAppServ
             'eastus2euap',
         ];
 
+        location = location.replace(/\s/, "").toLowerCase();
         return zoneRedundancySupportedLocations.includes(location);
     }
 
@@ -64,14 +65,12 @@ export class AppServicePlanRedundancyStep extends AzureWizardPromptStep<IAppServ
             plan = newPlanSku as string | RegExp;
         }
 
-        if (plan instanceof RegExp) {
-            return !!allowedServicePlans.find(p => p.match(plan));
-        } else {
-            return !!allowedServicePlans.find(p => p === plan);
-        }
+        return plan instanceof RegExp ?
+            !!allowedServicePlans.find(p => p.match(plan)) :
+            !!allowedServicePlans.find(p => p === plan);
     }
 
-    public static isZoneRedundancySupported(location: string, newPlanSku: SkuDescription): boolean {
+    public static isZoneRedundancySupported(location: string, newPlanSku: SkuDescription | string | RegExp): boolean {
         return this.isZoneRedundancySupportedLocation(location) && this.isZoneRedundancySupportedServicePlan(newPlanSku);
     }
 
