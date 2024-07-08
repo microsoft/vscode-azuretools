@@ -65,7 +65,6 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
 
         if (this._siteFor === "containerizedFunctionApp") {
             siteNamingRules.maxLength = 32;
-            siteNamingRules.invalidCharsRegExp = /[^a-z0-9\-]/
         }
 
         const options: AgentInputBoxOptions = {
@@ -114,8 +113,8 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
 
         if (name.length < siteNamingRules.minLength || name.length > siteNamingRules.maxLength) {
             return vscode.l10n.t('The name must be between {0} and {1} characters.', siteNamingRules.minLength, siteNamingRules.maxLength);
-        } else if ((siteNamingRules.invalidCharsRegExp.test(name)) && this._siteFor === "containerizedFunctionApp") {
-            return vscode.l10n.t("The name can only contain lowercase letters, numbers, or hyphens.");
+        } else if ((!/^[a-z]([-a-z0-9]*[a-z0-9])?$/.test(name)) && this._siteFor === "containerizedFunctionApp") {
+            return vscode.l10n.t("A name must consist of lower case alphanumeric characters or '-', start with an alphabetic character, and end with an alphanumeric character and cannot have '--'.");
         } else if (siteNamingRules.invalidCharsRegExp.test(name)) {
             return vscode.l10n.t("The name can only contain letters, numbers, or hyphens.");
         }
