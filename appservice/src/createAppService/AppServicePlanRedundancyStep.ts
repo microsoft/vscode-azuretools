@@ -50,27 +50,25 @@ export class AppServicePlanRedundancyStep extends AzureWizardPromptStep<IAppServ
         return zoneRedundancySupportedLocations.includes(location);
     }
 
-    public static isZoneRedundancySupportedServicePlan(newPlanSku: SkuDescription | string | RegExp): boolean {
+    public static isZoneRedundancySupportedServicePlan(newPlanSku: SkuDescription | string): boolean {
         const allowedServicePlans: string[] = [
             'Pv2',
             'Pv3',
             'WS',
         ];
 
-        let plan: string | RegExp;
+        let plan: string;
         if ((newPlanSku as SkuDescription)?.family) {
             // Nullish coallescing operator should be logically unnecessary, but helps TS compiler understand that this value won't be undefined
             plan = (newPlanSku as SkuDescription).family ?? '';
         } else {
-            plan = newPlanSku as string | RegExp;
+            plan = newPlanSku as string;
         }
 
-        return plan instanceof RegExp ?
-            !!allowedServicePlans.find(p => p.match(plan)) :
-            !!allowedServicePlans.find(p => p === plan);
+        return allowedServicePlans.includes(plan);
     }
 
-    public static isZoneRedundancySupported(location: string, newPlanSku: SkuDescription | string | RegExp): boolean {
+    public static isZoneRedundancySupported(location: string, newPlanSku: SkuDescription | string): boolean {
         return this.isZoneRedundancySupportedLocation(location) && this.isZoneRedundancySupportedServicePlan(newPlanSku);
     }
 
