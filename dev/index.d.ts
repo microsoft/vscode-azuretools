@@ -5,7 +5,7 @@
 
 import type { Environment } from "@azure/ms-rest-azure-env";
 import * as cp from "child_process";
-import { Disposable, Event, InputBoxOptions, LogLevel, LogOutputChannel, MessageItem, MessageOptions, OpenDialogOptions, QuickPickItem, QuickPickOptions, Uri } from "vscode";
+import { Disposable, Event, InputBoxOptions, LogLevel, LogOutputChannel, MessageItem, MessageOptions, OpenDialogOptions, QuickPickItem, QuickPickOptions, Uri, WorkspaceFolder, WorkspaceFolderPickOptions } from "vscode";
 import * as webpack from 'webpack';
 
 /**
@@ -206,7 +206,7 @@ export declare enum TestInput {
 }
 
 export type PromptResult = {
-    value: string | QuickPickItem | QuickPickItem[] | MessageItem | Uri[];
+    value: string | QuickPickItem | QuickPickItem[] | MessageItem | Uri[] | WorkspaceFolder;
 
     /**
      * True if the user did not change from the default value, currently only supported for `showInputBox`
@@ -234,6 +234,7 @@ export declare class TestUserInput {
     public showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
     public showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Promise<MessageItem>;
     public showOpenDialog(options: OpenDialogOptions): Promise<Uri[]>;
+    public showWorkspaceFolderPick(options: WorkspaceFolderPickOptions): Promise<WorkspaceFolder>;
 }
 
 export interface TestActionContext {
