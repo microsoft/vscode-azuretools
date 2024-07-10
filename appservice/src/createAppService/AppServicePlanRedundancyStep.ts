@@ -76,7 +76,7 @@ export class AppServicePlanRedundancyStep extends AzureWizardPromptStep<IAppServ
         const { customLocation, _location, plan, newPlanSku } = context;
         const { name } = _location || {};
         if (plan === undefined && customLocation === undefined && name && newPlanSku) {
-            return AppServicePlanRedundancyStep.isZoneRedundancySupported(name, newPlanSku)
+            return AppServicePlanRedundancyStep.isZoneRedundancySupported(name, newPlanSku);
         }
         return false;
     }
