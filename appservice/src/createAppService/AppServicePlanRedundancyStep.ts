@@ -46,7 +46,7 @@ export class AppServicePlanRedundancyStep extends AzureWizardPromptStep<IAppServ
             'eastus2euap',
         ];
 
-        location = location.replace(/\s/, "").toLowerCase();
+        location = location.replace(/\s/, "").toLowerCase(); // Todo: Replace with LocationListStep's `generalizeLocationName` once exported and released
         return zoneRedundancySupportedLocations.includes(location);
     }
 
