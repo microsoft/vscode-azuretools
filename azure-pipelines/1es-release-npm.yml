@@ -18,13 +18,13 @@ parameters:
 # `resources` specifies the location of templates to pick up, use it to get 1ES templates
 resources:
   repositories:
-    - repository: MicroBuildTemplate
+    - repository: CustomPipelineTemplates
       type: git
       name: MicroBuildTemplates/MicroBuildTemplates
-      ref: refs/heads/release
+      ref: refs/heads/dev/trevors/release/updateesrprelver240708
 
 extends:
-  template: azure-pipelines/1ES.Official.Publish.yml@MicroBuildTemplate
+  template: azure-pipelines/1ES.Official.Publish.yml@CustomPipelineTemplates
   parameters:
     sdl:
       credscan:
@@ -68,7 +68,7 @@ extends:
                       exit 1
                     fi
                   workingDirectory: $(System.DefaultWorkingDirectory)
-              - template: MicroBuild.Publish.yml@MicroBuildTemplate
+              - template: azure-pipelines/MicroBuild.Publish.yml@CustomPipelineTemplates
                 parameters:
                   intent: "PackageDistribution"
                   contentType: "npm"
