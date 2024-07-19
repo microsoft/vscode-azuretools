@@ -5,6 +5,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { Identity } from '@azure/arm-msi';
 import type { ExtendedLocation, ResourceGroup } from '@azure/arm-resources';
 import type { Location } from '@azure/arm-resources-subscriptions';
 import type { StorageAccount } from '@azure/arm-storage';
@@ -212,6 +213,12 @@ export interface IResourceGroupWizardContext extends ILocationWizardContext, IRe
      */
     suppress403Handling?: boolean;
 
+    /**
+     * The managed identity to be used for the new target resource
+     * Service resource, such as storage, should be add a role assignment
+     */
+    managedIdentity?: Identity;
+
     ui: IAzureUserInput;
 }
 
@@ -343,6 +350,40 @@ export declare class StorageAccountCreateStep<T extends IStorageAccountWizardCon
     public shouldExecute(wizardContext: T): boolean;
 }
 
+export declare class UserAssignedIdentityListStep<T extends IResourceGroupWizardContext> extends AzureWizardPromptStep<T> {
+    public constructor(suppressCreate?: boolean);
+
+    public prompt(wizardContext: T): Promise<void>;
+    public shouldPrompt(wizardContext: T): boolean;
+}
+
+export declare class UserAssignedIdentityCreateStep<T extends IResourceGroupWizardContext> extends AzureWizardExecuteStep<T> {
+    /**
+     * 140
+     */
+    public priority: number;
+    public constructor();
+
+    public execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
+    public shouldExecute(wizardContext: T): boolean;
+}
+
+export declare class RoleAssignmentExecuteStep<T extends IResourceGroupWizardContext, TKey extends keyof T> extends AzureWizardExecuteStep<T> {
+    /**
+     * 900
+     */
+    public priority: number;
+    /**
+    * @param getScopeId A function that returns the scope id for the role assignment. This typically won't exist until _after_ the resource is created,
+    * which is why it's a function that returns a string. If the scope id is undefined, the step will throw an error.
+    * @param roleDefinitionId The id of the role definition to assign. Use RoleDefinitionId enum for common role definitions
+    * */
+    public constructor(getScopeId: () => string | undefined, roleDefinitionId: RoleDefinitionId);
+
+    public execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
+    public shouldExecute(wizardContext: T): boolean;
+}
+
 export interface IAzureUtilsExtensionVariables extends UIExtensionVariables {
     prefix: string;
 }
@@ -448,3 +489,7 @@ export function setupAzureLogger(logOutputChannel: LogOutputChannel): Disposable
  * @param password - Password. Gets encoded before being set in the header
  */
 export function addBasicAuthenticationCredentialsToClient(client: ServiceClient, userName: string, password: string): void;
+
+export declare enum RoleDefinitionId {
+    StorageBlobDataContributor = '/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+}
