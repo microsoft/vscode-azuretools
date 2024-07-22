@@ -20,8 +20,8 @@ resources:
   repositories:
     - repository: MicroBuildTemplate
       type: git
-      name: MicroBuildTemplates/MicroBuildTemplates
-      ref: refs/heads/release
+      name: 1ESPipelineTemplates/MicroBuildTemplate
+      ref: refs/heads/dev/trevors/release/updateesrprelver240708
 
 extends:
   template: azure-pipelines/1ES.Official.Publish.yml@MicroBuildTemplate
