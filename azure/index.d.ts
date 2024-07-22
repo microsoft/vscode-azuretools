@@ -491,5 +491,5 @@ export function setupAzureLogger(logOutputChannel: LogOutputChannel): Disposable
 export function addBasicAuthenticationCredentialsToClient(client: ServiceClient, userName: string, password: string): void;
 
 export declare enum RoleDefinitionId {
-    StorageBlobDataContributor = '/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+    'Storage Blob Data Contributor' = '/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe'
 }
