@@ -4,12 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Identity } from '@azure/arm-msi';
-import { AzureWizardPromptStep, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, nonNullProp } from '@microsoft/vscode-azext-utils';
+import { AzureWizardPromptStep, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import * as types from '../../index';
 import { createManagedServiceIdentityClient } from '../clients';
 import { uiUtils } from '../utils/uiUtils';
-import { LocationListStep } from './LocationListStep';
 import { UserAssignedIdentityCreateStep } from './UserAssignedIdentityCreateStep';
 
 export class UserAssignedIdentityListStep<T extends types.IResourceGroupWizardContext> extends AzureWizardPromptStep<T> {
@@ -21,12 +20,8 @@ export class UserAssignedIdentityListStep<T extends types.IResourceGroupWizardCo
     }
 
     public async prompt(wizardContext: T): Promise<void> {
-        // Cache resource group separately per subscription
         const options: IAzureQuickPickOptions = { placeHolder: 'Select a user assigned identity.', id: `UserAssignedIdentityListStep` };
         wizardContext.managedIdentity = (await wizardContext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
-        if (wizardContext.managedIdentity && !LocationListStep.hasLocation(wizardContext)) {
-            await LocationListStep.setLocation(wizardContext, nonNullProp(wizardContext.managedIdentity, 'location'));
-        }
     }
 
     public shouldPrompt(wizardContext: T): boolean {
