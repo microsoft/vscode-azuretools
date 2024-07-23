@@ -32,9 +32,9 @@ export class RoleAssignmentExecuteStep<T extends types.IResourceGroupWizardConte
         const resourceType = scopeSplitArr[scopeSplitArr.length - 2] ?? '';
 
         const guid = randomUUID();
-
         const roleDefinitionId = this._roleDefinition.id as string;
         const principalId = nonNullValueAndProp(wizardContext.managedIdentity, 'principalId');
+
         await amClient.roleAssignments.create(scope, guid, { roleDefinitionId, principalId });
         const roleAssignmentCreated = l10n.t('Role assignment "{0}" created for the {2} resource "{1}".', this._roleDefinition.roleName ?? '', resourceName, resourceType);
         progress.report({ message: roleAssignmentCreated });
