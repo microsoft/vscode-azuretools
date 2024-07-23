@@ -376,9 +376,12 @@ export declare class RoleAssignmentExecuteStep<T extends IResourceGroupWizardCon
      */
     public priority: number;
     /**
-    * @param getScopeId A function that returns the scope id for the role assignment. This typically won't exist until _after_ the resource is created,
-    * which is why it's a function that returns a string. If the scope id is undefined, the step will throw an error.
-    * @param roleDefinitionId The id of the role definition to assign. Use RoleDefinitionId enum for common role definitions
+    * @param getScopeId A function that returns the scope id for the role assignment.
+    * The scope ID is the Azure id of the resource that we are granting access to such as a storage account.
+    * Example: `/subscriptions/xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx/resourceGroups/rgName/providers/Microsoft.Storage/storageAccounts/resourceName`
+    * This typically won't exist until _after_ the resource is created, which is why it's a function that returns a string.
+    * If the scope ID is undefined, the step will throw an error.
+    * @param roleDefinition The ARM role definition to assign. Use CommonRoleDefinition constant for role defintions that don't require user input.
     * */
     public constructor(getScopeId: () => string | undefined, roleDefinition: RoleDefinition);
 
