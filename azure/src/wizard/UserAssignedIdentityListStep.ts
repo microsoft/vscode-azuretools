@@ -22,7 +22,7 @@ export class UserAssignedIdentityListStep<T extends types.IResourceGroupWizardCo
 
     public async prompt(wizardContext: T): Promise<void> {
         // Cache resource group separately per subscription
-        const options: IAzureQuickPickOptions = { placeHolder: 'Select a resource group for new resources.', id: `ResourceGroupListStep/${wizardContext.subscriptionId}` };
+        const options: IAzureQuickPickOptions = { placeHolder: 'Select a user assigned identity.', id: `UserAssignedIdentityListStep` };
         wizardContext.managedIdentity = (await wizardContext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
         if (wizardContext.managedIdentity && !LocationListStep.hasLocation(wizardContext)) {
             await LocationListStep.setLocation(wizardContext, nonNullProp(wizardContext.managedIdentity, 'location'));
