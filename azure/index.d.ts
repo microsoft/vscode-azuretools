@@ -5,6 +5,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { type RoleDefinition } from '@azure/arm-authorization';
 import { Identity } from '@azure/arm-msi';
 import type { ExtendedLocation, ResourceGroup } from '@azure/arm-resources';
 import type { Location } from '@azure/arm-resources-subscriptions';
@@ -214,8 +215,9 @@ export interface IResourceGroupWizardContext extends ILocationWizardContext, IRe
     suppress403Handling?: boolean;
 
     /**
-     * The managed identity to be used for the new target resource
-     * Service resource, such as storage, should be add a role assignment
+     * The managed identity that will be assigned to the resource such as a function app or container app
+     * If you need to grant access to a resource, such as a storage account or SQL database, you can use this managed identity to create a role assignment
+     * with the RoleAssignmentExecuteStep
      */
     managedIdentity?: Identity;
 
@@ -378,7 +380,7 @@ export declare class RoleAssignmentExecuteStep<T extends IResourceGroupWizardCon
     * which is why it's a function that returns a string. If the scope id is undefined, the step will throw an error.
     * @param roleDefinitionId The id of the role definition to assign. Use RoleDefinitionId enum for common role definitions
     * */
-    public constructor(getScopeId: () => string | undefined, roleDefinitionId: RoleDefinitionId);
+    public constructor(getScopeId: () => string | undefined, roleDefinition: RoleDefinition);
 
     public execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
     public shouldExecute(wizardContext: T): boolean;
@@ -490,6 +492,13 @@ export function setupAzureLogger(logOutputChannel: LogOutputChannel): Disposable
  */
 export function addBasicAuthenticationCredentialsToClient(client: ServiceClient, userName: string, password: string): void;
 
-export declare enum RoleDefinitionId {
-    'Storage Blob Data Contributor' = '/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe'
-}
+export declare const CommonRoleDefinitions: {
+    readonly storageBlobDataContributor: {
+        readonly id: "/subscriptions/9b5c7ccb-9857-4307-843b-8875e83f65e9/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe";
+        readonly name: "ba92f5b4-2d11-453d-a403-e96b0029c9fe";
+        readonly type: "Microsoft.Authorization/roleDefinitions";
+        readonly roleName: "Storage Blob Data Contributor";
+        readonly description: "Allows for read, write and delete access to Azure Storage blob containers and data";
+        readonly roleType: "BuiltInRole";
+    };
+};
