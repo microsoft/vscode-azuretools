@@ -12,6 +12,7 @@ export * from './createAppService/AppInsightsListStep';
 export { AppKind, WebsiteOS } from './createAppService/AppKind';
 export * from './createAppService/AppServicePlanCreateStep';
 export * from './createAppService/AppServicePlanListStep';
+export * from './createAppService/AppServicePlanRedundancyStep';
 export * from './createAppService/AppServicePlanSkuStep';
 export * from './createAppService/CustomLocationListStep';
 export * from './createAppService/IAppServiceWizardContext';
@@ -49,4 +50,3 @@ export * from './tree/LogFilesTreeItem';
 export * from './tree/SiteFilesTreeItem';
 export * from './tryGetSiteResource';
 export * from './utils/azureClients';
-

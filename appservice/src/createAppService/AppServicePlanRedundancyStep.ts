@@ -26,7 +26,7 @@ export class AppServicePlanRedundancyStep extends AzureWizardPromptStep<IAppServ
     }
 
     // TODO(ccastrotrejo): This will be changed to use orgdomain with WI 12845265 once georegions API is updated with ANT78.
-    private isZoneRedundancyEnabled(location: string): boolean {
+    public static isZoneRedundancySupportedLocation(location: string): boolean {
         const zoneRedundancySupportedLocations = [
             'westus2',
             'westus3',
@@ -46,25 +46,37 @@ export class AppServicePlanRedundancyStep extends AzureWizardPromptStep<IAppServ
             'eastus2euap',
         ];
 
+        location = location.replace(/\s/, "").toLowerCase(); // Todo: Replace with LocationListStep's `generalizeLocationName` once exported and released
         return zoneRedundancySupportedLocations.includes(location);
     }
 
-    private isAllowedServicePlan(newPlanSku: SkuDescription): boolean {
-        const { family } = newPlanSku;
-        const allowedServicePlan = [
+    public static isZoneRedundancySupportedServicePlan(newPlanSkuOrFamily: SkuDescription | string): boolean {
+        const allowedServicePlans: string[] = [
             'Pv2',
             'Pv3',
             'WS',
         ];
 
-        return !!family && allowedServicePlan.includes(family);
+        let family: string;
+        if ((newPlanSkuOrFamily as SkuDescription)?.family) {
+            // Nullish coallescing operator should be logically unnecessary, but helps TS compiler understand that this value won't be undefined
+            family = (newPlanSkuOrFamily as SkuDescription).family ?? '';
+        } else {
+            family = newPlanSkuOrFamily as string;
+        }
+
+        return allowedServicePlans.includes(family);
+    }
+
+    public static isZoneRedundancySupported(location: string, newPlanSkuOrFamily: SkuDescription | string): boolean {
+        return this.isZoneRedundancySupportedLocation(location) && this.isZoneRedundancySupportedServicePlan(newPlanSkuOrFamily);
     }
 
     public shouldPrompt(context: AppServiceWizardContext): boolean {
         const { customLocation, _location, plan, newPlanSku } = context;
         const { name } = _location || {};
         if (plan === undefined && customLocation === undefined && name && newPlanSku) {
-            return this.isZoneRedundancyEnabled(name) && this.isAllowedServicePlan(newPlanSku);
+            return AppServicePlanRedundancyStep.isZoneRedundancySupported(name, newPlanSku);
         }
         return false;
     }
