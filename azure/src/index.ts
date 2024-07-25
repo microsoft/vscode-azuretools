@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+export { CommonRoleDefinitions as const } from './constants';
 export * from './createAzureClient';
 export * from './openInPortal';
 export * from './tree/AzureAccountTreeItemBase';
@@ -14,9 +15,12 @@ export * from './wizard/LocationListStep';
 export * from './wizard/ResourceGroupCreateStep';
 export * from './wizard/ResourceGroupListStep';
 export * from './wizard/ResourceGroupNameStep';
+export * from './wizard/RoleAssignmentExecuteStep';
 export * from './wizard/StorageAccountCreateStep';
 export * from './wizard/StorageAccountListStep';
 export * from './wizard/StorageAccountNameStep';
+export * from './wizard/UserAssignedIdentityCreateStep';
+export * from './wizard/UserAssignedIdentityListStep';
 export * from './wizard/VerifyProvidersStep';
 export * from './utils/setupAzureLogger';
 export { registerAzureUtilsExtensionVariables } from './extensionVariables';

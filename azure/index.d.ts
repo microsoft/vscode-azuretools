@@ -5,6 +5,8 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { type RoleDefinition } from '@azure/arm-authorization';
+import { Identity } from '@azure/arm-msi';
 import type { ExtendedLocation, ResourceGroup } from '@azure/arm-resources';
 import type { Location } from '@azure/arm-resources-subscriptions';
 import type { StorageAccount } from '@azure/arm-storage';
@@ -212,6 +214,13 @@ export interface IResourceGroupWizardContext extends ILocationWizardContext, IRe
      */
     suppress403Handling?: boolean;
 
+    /**
+     * The managed identity that will be assigned to the resource such as a function app or container app
+     * If you need to grant access to a resource, such as a storage account or SQL database, you can use this managed identity to create a role assignment
+     * with the RoleAssignmentExecuteStep
+     */
+    managedIdentity?: Identity;
+
     ui: IAzureUserInput;
 }
 
@@ -343,6 +352,43 @@ export declare class StorageAccountCreateStep<T extends IStorageAccountWizardCon
     public shouldExecute(wizardContext: T): boolean;
 }
 
+export declare class UserAssignedIdentityListStep<T extends IResourceGroupWizardContext> extends AzureWizardPromptStep<T> {
+    public constructor(suppressCreate?: boolean);
+
+    public prompt(wizardContext: T): Promise<void>;
+    public shouldPrompt(wizardContext: T): boolean;
+}
+
+export declare class UserAssignedIdentityCreateStep<T extends IResourceGroupWizardContext> extends AzureWizardExecuteStep<T> {
+    /**
+     * 140
+     */
+    public priority: number;
+    public constructor();
+
+    public execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
+    public shouldExecute(wizardContext: T): boolean;
+}
+
+export declare class RoleAssignmentExecuteStep<T extends IResourceGroupWizardContext, TKey extends keyof T> extends AzureWizardExecuteStep<T> {
+    /**
+     * 900
+     */
+    public priority: number;
+    /**
+    * @param getScopeId A function that returns the scope id for the role assignment.
+    * The scope ID is the Azure ID of the resource that we are granting access to such as a storage account.
+    * Example: `/subscriptions/xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx/resourceGroups/rgName/providers/Microsoft.Storage/storageAccounts/resourceName`
+    * This typically won't exist until _after_ the wizard executes and the resource is created, so we need to pass in a function that returns the ID.
+    * If the scope ID is undefined, the step will throw an error.
+    * @param roleDefinition The ARM role definition to assign. Use CommonRoleDefinition constant for role defintions that don't require user input.
+    * */
+    public constructor(getScopeId: () => string | undefined, roleDefinition: RoleDefinition);
+
+    public execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
+    public shouldExecute(wizardContext: T): boolean;
+}
+
 export interface IAzureUtilsExtensionVariables extends UIExtensionVariables {
     prefix: string;
 }
@@ -448,3 +494,14 @@ export function setupAzureLogger(logOutputChannel: LogOutputChannel): Disposable
  * @param password - Password. Gets encoded before being set in the header
  */
 export function addBasicAuthenticationCredentialsToClient(client: ServiceClient, userName: string, password: string): void;
+
+export declare const CommonRoleDefinitions: {
+    readonly storageBlobDataContributor: {
+        readonly id: "/subscriptions/9b5c7ccb-9857-4307-843b-8875e83f65e9/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe";
+        readonly name: "ba92f5b4-2d11-453d-a403-e96b0029c9fe";
+        readonly type: "Microsoft.Authorization/roleDefinitions";
+        readonly roleName: "Storage Blob Data Contributor";
+        readonly description: "Allows for read, write and delete access to Azure Storage blob containers and data";
+        readonly roleType: "BuiltInRole";
+    };
+};
