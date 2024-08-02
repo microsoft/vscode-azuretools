@@ -18,7 +18,6 @@ resources:
 extends:
   template: azure-pipelines/MicroBuild.1ES.Official.yml@1esPipelines
   parameters:
-    TeamName: "AzureTools"
     sdl:
       credscan:
         suppressionsFile: $(Build.SourcesDirectory)\.azure-pipelines\compliance\CredScanSuppressions.json
