@@ -170,13 +170,13 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
         const locationSubsets: string[][] = await Promise.all(providerLocationsMap.values());
         // Filter to locations supported by every provider
         return (await allLocationsTask).filter(l1 => (l1.type === 'EdgeZone' && wizardContext.includeExtendedLocations) || locationSubsets.every(subset =>
-            subset.find(l2 => generalizeLocationName(l1.name) === generalizeLocationName(l2))
+            subset.find(l2 => LocationListStep.generalizeLocationName(l1.name) === LocationListStep.generalizeLocationName(l2))
         ));
     }
 
     public static locationMatchesName(location: types.AzExtLocation, name: string): boolean {
-        name = generalizeLocationName(name);
-        return name === generalizeLocationName(location.name) || name === generalizeLocationName(location.displayName);
+        name = LocationListStep.generalizeLocationName(name);
+        return name === LocationListStep.generalizeLocationName(location.name) || name === LocationListStep.generalizeLocationName(location.displayName);
     }
 
     public async prompt(wizardContext: T): Promise<void> {
@@ -212,11 +212,11 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
         });
     }
 
-    public static getQuickPickDescription?: (location: types.AzExtLocation) => string | undefined;
-}
+    public static generalizeLocationName(name: string | undefined): string {
+        return (name || '').toLowerCase().replace(/[^a-z0-9]/gi, '');
+    }
 
-function generalizeLocationName(name: string | undefined): string {
-    return (name || '').toLowerCase().replace(/[^a-z0-9]/gi, '');
+    public static getQuickPickDescription?: (location: types.AzExtLocation) => string | undefined;
 }
 
 async function getAllLocations(wizardContext: types.ILocationWizardContext): Promise<types.AzExtLocation[]> {
