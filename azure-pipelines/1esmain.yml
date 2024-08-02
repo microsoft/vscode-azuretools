@@ -1,3 +1,8 @@
+variables:
+  # Required by MicroBuild template
+  - name: TeamName
+    value: "Azure Tools for VS Code"
+
 parameters:
   # Set this to `true` to use workflow identity federation with ADO service connections
   # to authenticate this pipeline to run tests that require logging into Azure
