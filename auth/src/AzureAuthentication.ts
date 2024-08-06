@@ -15,7 +15,7 @@ export interface AzureAuthentication {
      *
      * @returns A VS Code authentication session or undefined, if none could be obtained.
      */
-    getSession(scopes?: string[]): vscode.ProviderResult<vscode.AuthenticationSession>;
+    getSession(): vscode.ProviderResult<vscode.AuthenticationSession>;
     /**
      * Gets a VS Code authentication session for an Azure subscription.
      *
