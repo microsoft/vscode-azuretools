@@ -10,7 +10,7 @@ steps:
   - script: npx @vscode/vsce@latest generate-manifest -i $(Build.SourcesDirectory)/extension.vsix -o $(Build.SourcesDirectory)/extension.manifest
     displayName: 'Generate extension manifest'
 
-  - script: copy $(Build.SourcesDirectory)/extension.manifest $(Build.SourcesDirectory)/extension.signature.p7s
+  - script: copy $(Build.SourcesDirectory)\extension.manifest $(Build.SourcesDirectory)\extension.signature.p7s
     displayName: 'Prepare manifest for signing'
 
   - script: node $(Build.SourcesDirectory)/build/sign.js
