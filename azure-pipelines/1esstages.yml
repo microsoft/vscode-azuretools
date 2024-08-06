@@ -14,6 +14,11 @@ stages:
       - ${{ each job in parameters.jobs }}:
           - job: ${{ job.name }}
             templateContext:
+              mb: # Enable the MicroBuild Signing toolset
+                signing:
+                  enabled: true
+                  signType: real # options are 'real' & 'test'
+                  zipSources: false
               outputs:
                 - output: pipelineArtifact
                   targetPath: $(build.artifactstagingdirectory)/build/${{ job.name }}
