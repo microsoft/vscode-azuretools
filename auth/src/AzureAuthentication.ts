@@ -11,7 +11,7 @@ import type * as vscode from 'vscode';
 export interface AzureAuthentication {
     /**
      * Gets a VS Code authentication session for an Azure subscription.
-     * Always uses the default scope, `https://management.azure.com/.default/.default.`
+     * Always uses the default scope, `https://management.azure.com/.default/` and respects `managementEndpointUrl` from the configured Azure environment.
      *
      * @returns A VS Code authentication session or undefined, if none could be obtained.
      */

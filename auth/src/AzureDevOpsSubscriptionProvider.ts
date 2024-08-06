@@ -152,7 +152,7 @@ export class AzureDevOpsSubscriptionProvider implements AzureSubscriptionProvide
         }
 
         const accessToken = (await this._tokenCredential?.getToken("https://management.azure.com/.default"))?.token || '';
-        const getSession = (_scopes: string[] | undefined) => {
+        const getSession = () => {
             return {
                 accessToken,
                 id: this._tokenCredential?.tenantId || '',
