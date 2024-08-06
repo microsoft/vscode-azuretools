@@ -1156,6 +1156,11 @@ export interface IWizardOptions<T extends IActionContext> {
      * window.
      */
     skipExecute?: boolean;
+
+    /**
+     * A reference to the client output channel for use by the wizard when providing automated log messages
+     */
+    outputChannel?: IAzExtOutputChannel;
 }
 
 export const activitySuccessContext: string;
@@ -1237,11 +1242,38 @@ export declare interface ExecuteActivityContext {
     activityChildren?: (AzExtTreeItem | AzExtParentTreeItem)[];
 }
 
-export declare abstract class AzureWizardExecuteStep<T extends IActionContext> {
+export interface ExecuteActivityOutput {
+    /**
+     * The activity child item to display on success or fail
+     */
+    item?: AzExtTreeItem;
+    /**
+     * The output log message(s) to display on success or fail
+     */
+    message?: string | string[];
+}
+
+export enum ActivityOutputType {
+    ActivityChild,
+    Message,
+    All,
+}
+
+export interface AzureWizardExecuteStepOptions {
+    suppressActivityOutput?: ActivityOutputType;
+    continueOnFail?: boolean;
+}
+
+export declare abstract class AzureWizardExecuteStep<T extends IActionContext & Partial<ExecuteActivityContext>> {
     /**
      * The priority of this step. A smaller value will be executed first.
      */
     public abstract priority: number;
+
+    /**
+     * Options for executing the step
+     */
+    public options: AzureWizardExecuteStepOptions;
 
     /**
      * Optional id used to determine if this step is unique, for things like caching values and telemetry
@@ -1259,6 +1291,9 @@ export declare abstract class AzureWizardExecuteStep<T extends IActionContext> {
      * Used to prevent duplicate executions from sub wizards and unnecessary executions for values that had a default
      */
     public abstract shouldExecute(wizardContext: T): boolean;
+
+    public createSuccessOutput?(context: T): ExecuteActivityOutput;
+    public createFailOutput?(context: T): ExecuteActivityOutput;
 }
 
 export declare abstract class AzureWizardPromptStep<T extends IActionContext> {

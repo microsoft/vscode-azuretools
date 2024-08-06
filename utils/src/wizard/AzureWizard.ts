@@ -23,6 +23,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
     private readonly _executeSteps: AzureWizardExecuteStep<T>[];
     private readonly _finishedPromptSteps: AzureWizardPromptStep<T>[] = [];
     private readonly _context: T;
+    private readonly _outputChannel?: types.IAzExtOutputChannel;
     private _stepHideStepCount?: boolean;
     private _wizardHideStepCount?: boolean;
     private _showLoadingPrompt?: boolean;
@@ -40,6 +41,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
         this._wizardHideStepCount = options.hideStepCount;
         this._showLoadingPrompt = options.showLoadingPrompt;
         this._cancellationTokenSource = new vscode.CancellationTokenSource();
+        this._outputChannel = options.outputChannel;
 
         if (options.skipExecute === true) {
             this._executeSteps.splice(0);
@@ -180,14 +182,51 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
 
             let step: AzureWizardExecuteStep<T> | undefined = steps.pop();
             while (step) {
-                if (step.shouldExecute(this._context)) {
+                if (!step.shouldExecute(this._context)) {
+                    step = steps.pop();
+                    continue;
+                }
+
+                let output: types.ExecuteActivityOutput | undefined;
+                try {
                     this._context.telemetry.properties.lastStep = `execute-${getEffectiveStepId(step)}`;
                     await step.execute(this._context, internalProgress);
+                    output = step.createSuccessOutput?.(this._context);
+                } catch (e) {
+                    output = step.createFailOutput?.(this._context);
+                    if (step.options.continueOnFail) {
+                        throw e;
+                    }
+                } finally {
+                    output ??= {};
+                    this.displayActivityOutput(output, step.options);
+
                     currentStep += 1;
+                    step = steps.pop();
                 }
-                step = steps.pop();
             }
         });
+    }
+
+    private displayActivityOutput(output: types.ExecuteActivityOutput, options: types.AzureWizardExecuteStepOptions): void {
+        if (output.item &&
+            options.suppressActivityOutput !== types.ActivityOutputType.ActivityChild &&
+            options.suppressActivityOutput !== types.ActivityOutputType.All
+        ) {
+            this._context.activityChildren?.push(output.item);
+        }
+
+        if (!output.message ||
+            options.suppressActivityOutput === types.ActivityOutputType.Message ||
+            options.suppressActivityOutput === types.ActivityOutputType.All
+        ) {
+            return;
+        }
+
+        output.message = Array.isArray(output.message) ? output.message : [output.message];
+        for (const message of output.message) {
+            this._outputChannel?.appendLog(message);
+        }
     }
 
     private async withProgress(options: vscode.ProgressOptions, task: (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) => Promise<void>): Promise<void> {
