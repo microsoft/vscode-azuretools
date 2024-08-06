@@ -7,6 +7,12 @@ steps:
       workingDir: $(working_directory)
     condition: succeeded()
 
+  # Cert 4014052 aka VSCodePublisher cert
+  - script: |
+      dotnet $MBSIGN_APPFOLDER/ddsignfiles.dll /file:$(Build.SourcesDirectory)/extension.vsix /certs:4014052
+    displayName: Sign VSIX
+    # condition: and(succeeded(), eq(variables['SigningType'], 'Real'))
+
   - task: CopyFiles@2
     displayName: "\U0001F449 Copy packages and vsix to staging directory"
     inputs:
