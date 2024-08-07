@@ -1255,7 +1255,13 @@ export declare enum ActivityOutputType {
 }
 
 export interface AzureWizardExecuteStepOptions {
+    /**
+     * Used to indicate whether any `ExecuteActivityOutput` properties should be suppressed from display
+     */
     suppressActivityOutput?: ActivityOutputType;
+    /**
+     * If enabled, the Azure Wizard will continue running and swallow any errors thrown during step execution
+     */
     continueOnFail?: boolean;
 }
 
@@ -1287,7 +1293,14 @@ export declare abstract class AzureWizardExecuteStep<T extends IActionContext & 
      */
     public abstract shouldExecute(wizardContext: T): boolean;
 
+    /**
+     * Defines the output for display after successful execution of the step
+     */
     public createSuccessOutput?(context: T): ExecuteActivityOutput;
+
+    /**
+     * Defines the output for display after unsuccessful execution of the step
+     */
     public createFailOutput?(context: T): ExecuteActivityOutput;
 }
 
