@@ -1243,7 +1243,7 @@ export interface ExecuteActivityOutput {
      */
     item?: AzExtTreeItem;
     /**
-     * The output log message(s) to display on success or fail
+     * The output log message to display on success or fail
      */
     message?: string;
 }
