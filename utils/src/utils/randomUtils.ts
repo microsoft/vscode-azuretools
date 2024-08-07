@@ -18,7 +18,8 @@ export namespace randomUtils {
     }
 
     export function getRandomHexString(length: number = 6): string {
-        return crypto.randomUUID().slice(0, length);
+        const buffer: Buffer = crypto.randomBytes(Math.ceil(length / 2));
+        return buffer.toString('hex').slice(0, length);
     }
 
     export function getRandomInteger(minimumInclusive: number, maximumExclusive: number): number {
