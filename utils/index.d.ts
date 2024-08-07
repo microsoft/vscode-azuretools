@@ -1793,6 +1793,12 @@ export declare class DeleteConfirmationStep extends AzureWizardPromptStep<IActio
 export function createContextValue(values: string[]): string;
 
 /**
+ * @param values
+ * @returns a sorted, universally unique string of values separated by `;`
+ */
+export function createUniversallyUniqueContextValue(values: string[]): string;
+
+/**
  * Gets the exported API from the given extension id and version range.
  *
  * @param extensionId The extension id to get the API from
