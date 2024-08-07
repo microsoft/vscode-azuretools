@@ -20,8 +20,8 @@ resources:
   repositories:
     - repository: MicroBuildTemplate
       type: git
-      name: MicroBuildTemplates/MicroBuildTemplates
-      ref: refs/heads/release
+      name: 1ESPipelineTemplates/MicroBuildTemplate
+      ref: refs/tags/release
 
 extends:
   template: azure-pipelines/1ES.Official.Publish.yml@MicroBuildTemplate
