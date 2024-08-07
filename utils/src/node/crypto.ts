@@ -5,4 +5,4 @@
 
 /* eslint-disable */
 import * as nodeCrypto from 'crypto';
-export const crypto = nodeCrypto.webcrypto as any;
+export const crypto = nodeCrypto.webcrypto;
