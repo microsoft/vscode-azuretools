@@ -176,6 +176,7 @@ export interface AzExtServiceClientCredentialsT2 {
  */
 export interface ISubscriptionContext {
     credentials: AzExtServiceClientCredentials;
+    createCredentialsForScopes: (scopes: string[]) => Promise<AzExtServiceClientCredentialsT2>;
     subscriptionDisplayName: string;
     subscriptionId: string;
     subscriptionPath: string;
