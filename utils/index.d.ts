@@ -1156,11 +1156,6 @@ export interface IWizardOptions<T extends IActionContext> {
      * window.
      */
     skipExecute?: boolean;
-
-    /**
-     * A reference to the client output channel for use by the wizard when providing automated log messages
-     */
-    outputChannel?: IAzExtOutputChannel;
 }
 
 export const activitySuccessContext: string;
@@ -1253,10 +1248,10 @@ export interface ExecuteActivityOutput {
     message?: string | string[];
 }
 
-export enum ActivityOutputType {
-    ActivityChild,
-    Message,
-    All,
+export declare enum ActivityOutputType {
+    ActivityChild = 'activityChild',
+    Message = 'message',
+    All = 'all',
 }
 
 export interface AzureWizardExecuteStepOptions {

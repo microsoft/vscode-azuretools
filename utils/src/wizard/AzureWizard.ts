@@ -9,6 +9,7 @@ import { ProgressLocation } from 'vscode';
 import * as types from '../../index';
 import { ExecuteActivity } from '../activityLog/activities/ExecuteActivity';
 import { GoBackError, UserCancelledError } from '../errors';
+import { ext } from '../extensionVariables';
 import { parseError } from '../parseError';
 import { IInternalActionContext, IInternalAzureWizard } from '../userInput/IInternalActionContext';
 import { createQuickPick } from '../userInput/showQuickPick';
@@ -17,13 +18,18 @@ import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 import { NoExecuteStep } from './NoExecuteStep';
 import { getSilentExecuteActivityContext } from './SilentExecuteActivityContext';
 
+export enum ActivityOutputType {
+    ActivityChild = 'activityChild',
+    Message = 'message',
+    All = 'all',
+}
+
 export class AzureWizard<T extends (IInternalActionContext & Partial<types.ExecuteActivityContext>)> implements types.AzureWizard<T>, IInternalAzureWizard {
     public title: string | undefined;
     private readonly _promptSteps: AzureWizardPromptStep<T>[];
     private readonly _executeSteps: AzureWizardExecuteStep<T>[];
     private readonly _finishedPromptSteps: AzureWizardPromptStep<T>[] = [];
     private readonly _context: T;
-    private readonly _outputChannel?: types.IAzExtOutputChannel;
     private _stepHideStepCount?: boolean;
     private _wizardHideStepCount?: boolean;
     private _showLoadingPrompt?: boolean;
@@ -41,7 +47,6 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
         this._wizardHideStepCount = options.hideStepCount;
         this._showLoadingPrompt = options.showLoadingPrompt;
         this._cancellationTokenSource = new vscode.CancellationTokenSource();
-        this._outputChannel = options.outputChannel;
 
         if (options.skipExecute === true) {
             this._executeSteps.splice(0);
@@ -194,7 +199,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                     output = step.createSuccessOutput?.(this._context);
                 } catch (e) {
                     output = step.createFailOutput?.(this._context);
-                    if (step.options.continueOnFail) {
+                    if (!step.options.continueOnFail) {
                         throw e;
                     }
                 } finally {
@@ -210,22 +215,22 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
 
     private displayActivityOutput(output: types.ExecuteActivityOutput, options: types.AzureWizardExecuteStepOptions): void {
         if (output.item &&
-            options.suppressActivityOutput !== types.ActivityOutputType.ActivityChild &&
-            options.suppressActivityOutput !== types.ActivityOutputType.All
+            options.suppressActivityOutput !== ActivityOutputType.ActivityChild &&
+            options.suppressActivityOutput !== ActivityOutputType.All
         ) {
             this._context.activityChildren?.push(output.item);
         }
 
         if (!output.message ||
-            options.suppressActivityOutput === types.ActivityOutputType.Message ||
-            options.suppressActivityOutput === types.ActivityOutputType.All
+            options.suppressActivityOutput === ActivityOutputType.Message ||
+            options.suppressActivityOutput === ActivityOutputType.All
         ) {
             return;
         }
 
         output.message = Array.isArray(output.message) ? output.message : [output.message];
         for (const message of output.message) {
-            this._outputChannel?.appendLog(message);
+            ext.outputChannel?.appendLog(message);
         }
     }
 
