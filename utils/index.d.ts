@@ -1245,7 +1245,7 @@ export interface ExecuteActivityOutput {
     /**
      * The output log message(s) to display on success or fail
      */
-    message?: string | string[];
+    message?: string;
 }
 
 export declare enum ActivityOutputType {

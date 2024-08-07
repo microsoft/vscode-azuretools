@@ -221,16 +221,11 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
             this._context.activityChildren?.push(output.item);
         }
 
-        if (!output.message ||
-            options.suppressActivityOutput === ActivityOutputType.Message ||
-            options.suppressActivityOutput === ActivityOutputType.All
+        if (output.message &&
+            options.suppressActivityOutput !== ActivityOutputType.Message &&
+            options.suppressActivityOutput !== ActivityOutputType.All
         ) {
-            return;
-        }
-
-        output.message = Array.isArray(output.message) ? output.message : [output.message];
-        for (const message of output.message) {
-            ext.outputChannel?.appendLog(message);
+            ext.outputChannel?.appendLog(output.message);
         }
     }
 
