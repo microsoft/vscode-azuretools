@@ -1238,11 +1238,47 @@ export declare interface ExecuteActivityContext {
     activityChildren?: (AzExtTreeItem | AzExtParentTreeItem)[];
 }
 
-export declare abstract class AzureWizardExecuteStep<T extends IActionContext> {
+export interface ExecuteActivityOutput {
+    /**
+     * The activity child item to display on success or fail
+     */
+    item?: AzExtTreeItem;
+    /**
+     * The output log message to display on success or fail
+     */
+    message?: string;
+}
+
+/**
+ * Output types corresponding to the `ExecuteActivityOutput` properties
+ */
+export declare enum ActivityOutputType {
+    Item = 'item',
+    Message = 'message',
+    All = 'all',
+}
+
+export interface AzureWizardExecuteStepOptions {
+    /**
+     * Used to indicate whether any `ExecuteActivityOutput` properties should be suppressed from display
+     */
+    suppressActivityOutput?: ActivityOutputType;
+    /**
+     * If enabled, the Azure Wizard will continue running and swallow any errors thrown during step execution
+     */
+    continueOnFail?: boolean;
+}
+
+export declare abstract class AzureWizardExecuteStep<T extends IActionContext & Partial<ExecuteActivityContext>> {
     /**
      * The priority of this step. A smaller value will be executed first.
      */
     public abstract priority: number;
+
+    /**
+     * Options for executing the step
+     */
+    public options: AzureWizardExecuteStepOptions;
 
     /**
      * Optional id used to determine if this step is unique, for things like caching values and telemetry
@@ -1260,6 +1296,16 @@ export declare abstract class AzureWizardExecuteStep<T extends IActionContext> {
      * Used to prevent duplicate executions from sub wizards and unnecessary executions for values that had a default
      */
     public abstract shouldExecute(wizardContext: T): boolean;
+
+    /**
+     * Defines the output for display after successful execution of the step
+     */
+    public createSuccessOutput?(context: T): ExecuteActivityOutput;
+
+    /**
+     * Defines the output for display after unsuccessful execution of the step
+     */
+    public createFailOutput?(context: T): ExecuteActivityOutput;
 }
 
 export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
@@ -1757,6 +1803,12 @@ export declare class DeleteConfirmationStep extends AzureWizardPromptStep<IActio
  * @returns a sorted, unique string of values separated by `;`
  */
 export function createContextValue(values: string[]): string;
+
+/**
+ * @param values
+ * @returns a sorted, universally unique string of values separated by `;`
+ */
+export function createUniversallyUniqueContextValue(values: string[]): string;
 
 /**
  * Gets the exported API from the given extension id and version range.
