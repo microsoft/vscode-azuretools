@@ -1248,8 +1248,11 @@ export interface ExecuteActivityOutput {
     message?: string;
 }
 
+/**
+ * Output types corresponding to the `ExecuteActivityOutput` properties
+ */
 export declare enum ActivityOutputType {
-    ActivityChild = 'activityChild',
+    Item = 'item',
     Message = 'message',
     All = 'all',
 }

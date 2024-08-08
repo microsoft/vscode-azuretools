@@ -19,7 +19,7 @@ import { NoExecuteStep } from './NoExecuteStep';
 import { getSilentExecuteActivityContext } from './SilentExecuteActivityContext';
 
 export enum ActivityOutputType {
-    ActivityChild = 'activityChild',
+    Item = 'item',
     Message = 'message',
     All = 'all',
 }
@@ -215,7 +215,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
 
     private displayActivityOutput(output: types.ExecuteActivityOutput, options: types.AzureWizardExecuteStepOptions): void {
         if (output.item &&
-            options.suppressActivityOutput !== ActivityOutputType.ActivityChild &&
+            options.suppressActivityOutput !== ActivityOutputType.Item &&
             options.suppressActivityOutput !== ActivityOutputType.All
         ) {
             this._context.activityChildren?.push(output.item);
