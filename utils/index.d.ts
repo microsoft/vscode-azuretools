@@ -1307,6 +1307,11 @@ export declare abstract class AzureWizardExecuteStep<T extends IActionContext & 
     public createSuccessOutput?(context: T): ExecuteActivityOutput;
 
     /**
+     * Defines the output for display during execution of the step
+     */
+    public createProgressOutput?(context: T): ExecuteActivityOutput;
+
+    /**
      * Defines the output for display after unsuccessful execution of the step
      */
     public createFailOutput?(context: T): ExecuteActivityOutput;
