@@ -193,6 +193,9 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                 }
 
                 let output: types.ExecuteActivityOutput | undefined;
+                const progressOutput = step.createProgressOutput?.(this._context) ?? {};
+                this.displayActivityOutput(progressOutput, step.options);
+
                 try {
                     this._context.telemetry.properties.lastStep = `execute-${getEffectiveStepId(step)}`;
                     await step.execute(this._context, internalProgress);
@@ -204,6 +207,9 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                     }
                 } finally {
                     output ??= {};
+
+                    // always remove the progress item from the activity log
+                    this._context.activityChildren = this._context.activityChildren?.filter(t => t !== progressOutput.item)
                     this.displayActivityOutput(output, step.options);
 
                     currentStep += 1;

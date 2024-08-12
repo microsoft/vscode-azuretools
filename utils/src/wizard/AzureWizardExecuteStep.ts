@@ -16,4 +16,6 @@ export abstract class AzureWizardExecuteStep<T extends types.IActionContext & Pa
 
     public createSuccessOutput?(context: T): types.ExecuteActivityOutput;
     public createFailOutput?(context: T): types.ExecuteActivityOutput;
+    public createProgressOutput?(context: T): types.ExecuteActivityOutput;
+
 }
