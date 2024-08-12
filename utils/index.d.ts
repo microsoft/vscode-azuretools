@@ -1165,6 +1165,7 @@ export const activityProgressContext: string;
 
 export const activityInfoIcon: ThemeIcon;
 export const activitySuccessIcon: ThemeIcon;
+export const activityProgressIcon: ThemeIcon;
 export const activityFailIcon: ThemeIcon;
 
 export type ActivityTask<R> = (progress: Progress<{ message?: string, increment?: number }>, cancellationToken: CancellationToken) => Promise<R>;
