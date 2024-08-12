@@ -1209,6 +1209,7 @@ export class ExecuteActivity<C extends ExecuteActivityContext = ExecuteActivityC
     public constructor(context: C, task: ActivityTask<void>);
     public initialState(): ActivityTreeItemOptions;
     public successState(): ActivityTreeItemOptions;
+    public progressState(): ActivityTreeItemOptions;
     public errorState(error: IParsedError): ActivityTreeItemOptions;
     protected get label(): string;
 }
