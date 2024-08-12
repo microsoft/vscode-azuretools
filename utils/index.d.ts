@@ -1182,6 +1182,7 @@ export declare abstract class ActivityBase<R> implements Activity {
 
     abstract initialState(): ActivityTreeItemOptions;
     abstract successState(): ActivityTreeItemOptions;
+    abstract progressState(): ActivityTreeItemOptions;
     abstract errorState(error: IParsedError): ActivityTreeItemOptions;
 
     public constructor(task: ActivityTask<R>);
