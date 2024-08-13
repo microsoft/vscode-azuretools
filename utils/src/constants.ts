@@ -21,4 +21,4 @@ export const activityProgressContext: string = 'activity:progress';
 export const activityInfoIcon: ThemeIcon = new ThemeIcon('info', new ThemeColor('charts.blue'));
 export const activitySuccessIcon: ThemeIcon = new ThemeIcon('pass', new ThemeColor('testing.iconPassed'));
 export const activityFailIcon: ThemeIcon = new ThemeIcon('error', new ThemeColor('testing.iconFailed'));
-export const activityProgressIcon: ThemeIcon = new ThemeIcon('loading~spin', new ThemeColor('testing.iconQueued'));
+export const activityProgressIcon: ThemeIcon = new ThemeIcon('loading~spin');
