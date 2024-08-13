@@ -108,6 +108,7 @@ export function maskUserInfo(unknownArg: unknown, actionValuesToMask: string[], 
     data = data.replace(/[a-z]+:\/\/\S*/gi, getRedactedLabel('url'));
     data = data.replace(/\S+(?<!(?<!\-)\basp)\.(com|org|net)\S*/gi, getRedactedLabel('url'));
     data = data.replace(/\S*(key|token|sig|password|passwd|pwd)[="':\s]+\S*/gi, getRedactedLabel('key'));
+    data = data.replace(/e[^\.\s]*\.e[^\.\s]*\.[^\.\s]+/gi, getRedactedLabel('jwt'));
 
     const usernameMask = getUsernameMask(getUsername);
     if (usernameMask) {

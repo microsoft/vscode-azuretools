@@ -210,6 +210,15 @@ suite("masking", () => {
             assert.strictEqual(maskUserInfo('pwd: "ddddddd!@#$%^&*()_+"', []), 'redacted:key');
         });
 
+        test('jwt', async () => {
+            const mockJwtOne: string = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
+            const mockJwtTwo: string = 'eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkphbmUgRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.bmgFNnfHiZ1my09OnrZaconwIkp2RH94jjJWXavLTugEsxvwCM-3IJPakw7y5-3aLLZq1eA9NxEZK0a3ZjHc2A';
+
+            assert.strictEqual(maskUserInfo(`Bearer ${mockJwtOne}`, []), 'Bearer redacted:jwt');
+            assert.strictEqual(maskUserInfo(`redacted:url ${mockJwtTwo}`, []), 'redacted:url redacted:jwt');
+            assert.strictEqual(maskUserInfo(`This error references two JWT's: ${mockJwtOne} and ${mockJwtTwo}.`, []), 'This error references two JWT\'s: redacted:jwt and redacted:jwt.');
+        });
+
         test('lessAggressive', async () => {
             const valueToMask = 'valueToMask';
             assert.strictEqual(maskUserInfo('https://microsoft.com c35d6342-5917-46f8-953e-9d3faffd1c72 hello@world accountkey=1234 valueToMask', [valueToMask], true /* lessAggressive */), 'redacted:url c35d6342-5917-46f8-953e-9d3faffd1c72 hello@world redacted:key ---');
