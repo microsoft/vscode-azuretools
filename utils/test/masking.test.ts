@@ -216,7 +216,7 @@ suite("masking", () => {
 
             assert.strictEqual(maskUserInfo(`Bearer ${mockJwtOne}`, []), 'Bearer redacted:jwt');
             assert.strictEqual(maskUserInfo(`redacted:url ${mockJwtTwo}`, []), 'redacted:url redacted:jwt');
-            assert.strictEqual(maskUserInfo(`This error references two JWT's: ${mockJwtOne} and ${mockJwtTwo}.`, []), 'This error references two JWT\'s: redacted:jwt and redacted:jwt.');
+            assert.strictEqual(maskUserInfo(`This message references two JWT's: ${mockJwtOne} and ${mockJwtTwo}.`, []), 'This message references two JWT\'s: redacted:jwt and redacted:jwt.');
         });
 
         test('lessAggressive', async () => {
