@@ -210,7 +210,7 @@ suite("masking", () => {
             assert.strictEqual(maskUserInfo('pwd: "ddddddd!@#$%^&*()_+"', []), 'redacted:key');
         });
 
-        test('jwt', async () => {
+        test('jwt', () => {
             const mockJwtOne: string = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
             const mockJwtTwo: string = 'eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkphbmUgRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.bmgFNnfHiZ1my09OnrZaconwIkp2RH94jjJWXavLTugEsxvwCM-3IJPakw7y5-3aLLZq1eA9NxEZK0a3ZjHc2A';
 
