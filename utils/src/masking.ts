@@ -101,7 +101,7 @@ export function maskUserInfo(unknownArg: unknown, actionValuesToMask: string[], 
     }
 
     // Loose pattern matching to identify any JWT-like character sequences; prevents any accidental inclusions to telemetry
-    // The first and second JWT sections begin with `e` since the header and payload represent encoded json values that always begin with "{"
+    // The first and second JWT sections begin with "e" since the header and payload represent encoded json values that always begin with "{"
     data = data.replace(/e[^\.\s]*\.e[^\.\s]*\.[^\.\s]+/gi, getRedactedLabel('jwt'));
 
     if (!lessAggressive) {
