@@ -113,7 +113,7 @@ class ReadOnlyContentProvider implements TextDocumentContentProvider {
         return this.stashReadOnlyContentCore(node.label, idHash, fileExtension, content);
     }
 
-    public stashReadOnlyContentSync(node: { label: string, fullId: string }, content: string, fileExtension: string): ReadOnlyContent {
+    public stashReadOnlyContentSync(node: { label: string }, content: string, fileExtension: string): ReadOnlyContent {
         const randomId: string = randomUtils.getRandomHexString(16);
         return this.stashReadOnlyContentCore(node.label, randomId, fileExtension, content);
     }
