@@ -98,15 +98,24 @@ class ReadOnlyContentProvider implements TextDocumentContentProvider {
         return this._onDidChangeEmitter.event;
     }
 
-    public async stashReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string): Promise<ReadOnlyContent> {
+    private stashReadOnlyContentCore(label: string, fileId: string, fileExtension: string, content: string): ReadOnlyContent {
         const scheme = getScheme();
-        const idHash: string = await randomUtils.getPseudononymousStringHash(node.fullId);
         // Remove special characters which may prove troublesome when parsing the uri. We'll allow the same set as `encodeUriComponent`
-        const fileName = node.label.replace(/[^a-z0-9\-\_\.\!\~\*\'\(\)]/gi, '_');
-        const uri: Uri = Uri.parse(`${scheme}:///${idHash}/${fileName}${fileExtension}`);
+        const fileName = label.replace(/[^a-z0-9\-\_\.\!\~\*\'\(\)]/gi, '_');
+        const uri: Uri = Uri.parse(`${scheme}:///${fileId}/${fileName}${fileExtension}`);
         const readOnlyContent: ReadOnlyContent = new ReadOnlyContent(uri, this._onDidChangeEmitter, content);
         this._contentMap.set(uri.toString(), readOnlyContent);
         return readOnlyContent;
+    }
+
+    public async stashReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string): Promise<ReadOnlyContent> {
+        const idHash: string = await randomUtils.getPseudononymousStringHash(node.fullId);
+        return this.stashReadOnlyContentCore(node.label, idHash, fileExtension, content);
+    }
+
+    public stashReadOnlyContentSync(node: { label: string, fullId: string }, content: string, fileExtension: string): ReadOnlyContent {
+        const randomId: string = randomUtils.getRandomHexString(16);
+        return this.stashReadOnlyContentCore(node.label, randomId, fileExtension, content);
     }
 
     public async openReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string, options?: TextDocumentShowOptions): Promise<ReadOnlyContent> {
