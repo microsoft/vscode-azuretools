@@ -100,6 +100,10 @@ export function maskUserInfo(unknownArg: unknown, actionValuesToMask: string[], 
         data = maskValue(data, value);
     }
 
+    // Loose pattern matching to identify any JWT-like character sequences; prevents any accidental inclusions to telemetry
+    // The first and second JWT sections begin with `e` since the header and payload represent encoded json values that always begin with "{"
+    data = data.replace(/e[^\.\s]*\.e[^\.\s]*\.[^\.\s]+/gi, getRedactedLabel('jwt'));
+
     if (!lessAggressive) {
         data = data.replace(/\S+@\S+/gi, getRedactedLabel('email'));
         data = data.replace(/\b[0-9a-f\-\:\.]{4,}\b/gi, getRedactedLabel('id')); // should cover guids, ip addresses, etc.
@@ -108,10 +112,6 @@ export function maskUserInfo(unknownArg: unknown, actionValuesToMask: string[], 
     data = data.replace(/[a-z]+:\/\/\S*/gi, getRedactedLabel('url'));
     data = data.replace(/\S+(?<!(?<!\-)\basp)\.(com|org|net)\S*/gi, getRedactedLabel('url'));
     data = data.replace(/\S*(key|token|sig|password|passwd|pwd)[="':\s]+\S*/gi, getRedactedLabel('key'));
-
-    // Loose pattern matching to identify any JWT-like character sequences; prevents any accidental inclusions to telemetry
-    // The first and second JWT sections begin with `e` since the header and payload represent encoded json values that always begin with "{"
-    data = data.replace(/e[^\.\s]*\.e[^\.\s]*\.[^\.\s]+/gi, getRedactedLabel('jwt'));
 
     const usernameMask = getUsernameMask(getUsername);
     if (usernameMask) {
