@@ -49,6 +49,11 @@ export async function stashReadOnlyContent(node: { label: string, fullId: string
     return await contentProvider.stashReadOnlyContent(node, content, fileExtension);
 }
 
+export function stashReadOnlyContentSync(node: { label: string }, content: string, fileExtension: string): ReadOnlyContent {
+    const contentProvider = getContentProvider();
+    return contentProvider.stashReadOnlyContentSync(node, content, fileExtension);
+}
+
 export async function openReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string, options?: TextDocumentShowOptions): Promise<ReadOnlyContent> {
     const contentProvider = getContentProvider();
     return await contentProvider.openReadOnlyContent(node, content, fileExtension, options);
