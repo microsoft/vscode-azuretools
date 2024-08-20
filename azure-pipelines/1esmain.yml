@@ -6,6 +6,9 @@ parameters:
   - name: useAzureFederatedCredentials
     type: boolean
     default: false
+  - name: additionalSetupSteps
+    type: stepList
+    default: []
 
 # `resources` specifies the location of templates to pick up, use it to get 1ES templates
 resources:
@@ -32,3 +35,4 @@ extends:
       - template: ./1esstages.yml
         parameters:
           useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
+          additionalSetupSteps: ${{ parameters.additionalSetupSteps }}
