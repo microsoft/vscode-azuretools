@@ -12,15 +12,14 @@ steps:
       # Assuming the repo name is in the format 'owner/repoName'
       $repoNameOnly = $repoName -split '/' | Select-Object -Last 1
       # Set the pipeline variable
-      Write-Output "##vso[task.setvariable variable=name;]$repoNameOnly"
+      Write-Output "##vso[task.setvariable variable=repoName;]$repoNameOnly"
     displayName: 'Extract and Set Repository Name'
-    name: repo
 
   - pwsh: Write-Output "##vso[task.setvariable variable=version;isOutput=true]$((Get-Content -Raw -Path package.json | ConvertFrom-Json).version)"
     name: package
     displayName: Get version from package.json
 
-  - script: npx @vscode/vsce@latest generate-manifest -i $(repo.name)-$(package.version).vsix -o $(Build.SourcesDirectory)/extension.manifest
+  - script: npx @vscode/vsce@latest generate-manifest -i $(repoName)-$(package.version).vsix -o $(Build.SourcesDirectory)/extension.manifest
     displayName: 'Generate extension manifest'
 
   - script: copy $(Build.SourcesDirectory)\extension.manifest $(Build.SourcesDirectory)\extension.signature.p7s
