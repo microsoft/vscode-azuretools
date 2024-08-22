@@ -71,6 +71,16 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
         }
     }
 
+    public progressState(): hTypes.ActivityTreeItemOptions {
+        return {
+            label: this.label,
+            getChildren: this.context.activityChildren ? ((parent: AzExtParentTreeItem) => {
+                parent.compareChildrenImpl = () => 0;  // Don't sort
+                return this.context.activityChildren || [];
+            }) : undefined
+        }
+    }
+
     private appendErrorItemToActivityChildren(errorItem: AzExtTreeItem): void {
         // Honor any error suppression flag
         if ((this.context as unknown as types.IActionContext).errorHandling?.suppressDisplay) {
