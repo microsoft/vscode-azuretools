@@ -7,17 +7,13 @@ steps:
       workingDir: $(working_directory)
     condition: succeeded()
 
-  - pwsh: |
-      $repoName = "$(Build.Repository.Name)"
-      # Assuming the repo name is in the format 'owner/repoName'
-      $repoNameOnly = $repoName -split '/' | Select-Object -Last 1
-      # Set the pipeline variable
-      Write-Output "##vso[task.setvariable variable=repoName;]$repoNameOnly"
-    displayName: 'Extract and Set Repository Name'
+  - pwsh: Write-Output "##vso[task.setvariable variable=version;isOutput=true]$((Get-Content -Raw -Path package.json | ConvertFrom-Json).name)"
+    name: name
+    displayName: Get extension name from package.json
 
   - pwsh: Write-Output "##vso[task.setvariable variable=version;isOutput=true]$((Get-Content -Raw -Path package.json | ConvertFrom-Json).version)"
     name: package
-    displayName: Get version from package.json
+    displayName: Get extension version from package.json
 
   - script: npx @vscode/vsce@latest generate-manifest -i $(repoName)-$(package.version).vsix -o $(Build.SourcesDirectory)/extension.manifest
     displayName: 'Generate extension manifest'
@@ -37,5 +33,6 @@ steps:
         **/*.p7s
         **/*.tar.gz
         **/*.tgz
+        package.json
       TargetFolder: "$(build.artifactstagingdirectory)/build/$(artifact_name)"
     condition: and(succeeded(), ne(variables['System.PullRequest.IsFork'], 'True'))
