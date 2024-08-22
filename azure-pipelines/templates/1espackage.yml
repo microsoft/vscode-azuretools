@@ -11,16 +11,16 @@ steps:
       Write-Output "##vso[task.setvariable variable=name;isOutput=true]$((Get-Content -Raw -Path package.json | ConvertFrom-Json).name)"
       Write-Output "##vso[task.setvariable variable=version;isOutput=true]$((Get-Content -Raw -Path package.json | ConvertFrom-Json).version)"
     name: package
-    displayName: Get extension info package.json
+    displayName: "\U0001F449 Get extension info from package.json"
 
   - script: npx @vscode/vsce@latest generate-manifest -i $(package.name)-$(package.version).vsix -o $(Build.SourcesDirectory)/extension.manifest
-    displayName: 'Generate extension manifest'
+    displayName: "\U0001F449 Generate extension manifest"
 
   - script: copy $(Build.SourcesDirectory)\extension.manifest $(Build.SourcesDirectory)\extension.signature.p7s
-    displayName: 'Prepare manifest for signing'
+    displayName: "\U0001F449 Prepare manifest for signing"
 
   - script: node $(Build.SourcesDirectory)/build/sign.js
-    displayName: 'Sign extension manifest'
+    displayName: "\U0001F449 Sign extension manifest"
 
   - task: CopyFiles@2
     displayName: "\U0001F449 Copy packages and vsix to staging directory"
@@ -29,8 +29,8 @@ steps:
         **/*.vsix
         **/*.manifest
         **/*.p7s
+        package.json
         **/*.tar.gz
         **/*.tgz
-        package.json
       TargetFolder: "$(build.artifactstagingdirectory)/build/$(artifact_name)"
     condition: and(succeeded(), ne(variables['System.PullRequest.IsFork'], 'True'))
