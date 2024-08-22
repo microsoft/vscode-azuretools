@@ -11,7 +11,7 @@ steps:
     name: package
     displayName: Get version from package.json
 
-  - script: npx @vscode/vsce@latest generate-manifest -i $(Build.Repository.Name)-$(version).vsix -o $(Build.SourcesDirectory)/extension.manifest
+  - script: npx @vscode/vsce@latest generate-manifest -i $(Build.Repository.Name)-$(package.version).vsix -o $(Build.SourcesDirectory)/extension.manifest
     displayName: 'Generate extension manifest'
 
   - script: copy $(Build.SourcesDirectory)\extension.manifest $(Build.SourcesDirectory)\extension.signature.p7s
