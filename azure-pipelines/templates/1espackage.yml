@@ -33,5 +33,6 @@ steps:
         **/*.p7s
         **/*.tar.gz
         **/*.tgz
+        package.json
       TargetFolder: "$(build.artifactstagingdirectory)/build/$(artifact_name)"
     condition: and(succeeded(), ne(variables['System.PullRequest.IsFork'], 'True'))
