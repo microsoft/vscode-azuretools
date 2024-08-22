@@ -7,6 +7,9 @@ parameters:
   - name: "useAzureFederatedCredentials"
     type: boolean
     default: false
+  - name: additionalSetupSteps
+    type: stepList
+    default: []
 
 stages:
   - stage: BuildStage
@@ -20,6 +23,8 @@ stages:
                   artifactName: Build ${{ job.name }}
             steps:
               - template: ./templates/setup.yml
+                parameters:
+                  additionalSetupSteps: ${{ parameters.additionalSetupSteps }}
               - template: ./templates/build.yml
               - template: ./templates/1espackage.yml
               - template: ./templates/test.yml
