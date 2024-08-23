@@ -1,0 +1,15 @@
+steps:
+  - pwsh: | 
+      Write-Output "##vso[task.setvariable variable=name;isOutput=true]$((Get-Content -Raw -Path package.json | ConvertFrom-Json).name)"
+      Write-Output "##vso[task.setvariable variable=version;isOutput=true]$((Get-Content -Raw -Path package.json | ConvertFrom-Json).version)"
+    name: package
+    displayName: "\U0001F449 Get extension info from package.json"
+
+  - script: npx @vscode/vsce@latest generate-manifest -i $(package.name)-$(package.version).vsix -o $(Build.SourcesDirectory)/extension.manifest
+    displayName: "\U0001F449 Generate extension manifest"
+
+  - task: DotNetCoreCLI@2
+    displayName: "\U0001F449 Sign with MSBuild"
+    inputs:
+      command: 'build'
+      projects: 'SignExtension.signproj'

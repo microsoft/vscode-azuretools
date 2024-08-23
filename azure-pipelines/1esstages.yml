@@ -27,6 +27,22 @@ stages:
               - template: ./templates/setup.yml
               - template: ./templates/build.yml
               - template: ./templates/1espackage.yml
+
+              # Check if the sign.js file exists and set a variable
+              - script: |
+                  if [ -f "$(Build.SourcesDirectory)/SignExtension.signproj" ]; then
+                    echo "##vso[task.setvariable variable=signprojExists]true"
+                  else
+                    echo "##vso[task.setvariable variable=signprojExists]false"
+                  fi
+                name: CheckSignFile
+                displayName: 'Check for sign.js File'
+
+              # Conditionally include the sign.yml template if the SignExtension.signproj file exists
+              - ${{ if eq(variables['signprojExists'], 'true') }}:
+                - template: ./templates/sign.yml
+
+              - template: ./templates/stage-artifacts.yml
               - template: ./templates/test.yml
                 parameters:
                   useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
