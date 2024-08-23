@@ -28,15 +28,16 @@ stages:
               - template: ./templates/build.yml
               - template: ./templates/1espackage.yml
 
-              # Check if the sign.js file exists and set a variable
-              - bash: |
-                  if [ -f "$(Build.SourcesDirectory)/SignExtension.signproj" ]; then
-                    echo "##vso[task.setvariable variable=signprojExists]true"
-                  else
-                    echo "##vso[task.setvariable variable=signprojExists]false"
-                  fi
+              # Check if the SignExtension.signproj file exists and set a variable using PowerShell
+              - powershell: |
+                  $filePath = "$(Build.SourcesDirectory)\SignExtension.signproj"
+                  if (Test-Path $filePath) {
+                      Write-Output "##vso[task.setvariable variable=signprojExists]true"
+                  } else {
+                      Write-Output "##vso[task.setvariable variable=signprojExists]false"
+                  }
                 name: CheckSignFile
-                displayName: 'Check for sign.js File'
+                displayName: 'Check for SignExtension.signproj File'
 
               # Conditionally include the sign.yml template if the SignExtension.signproj file exists
               - ${{ if eq(variables['signprojExists'], 'true') }}:
