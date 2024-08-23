@@ -7,11 +7,6 @@ parameters:
     type: boolean
     default: false
 
-variables:
-  # Required by MicroBuild template
-  - name: TeamName
-    value: "Azure Tools for VS Code"
-
 # `resources` specifies the location of templates to pick up, use it to get 1ES templates
 resources:
   repositories:
@@ -37,3 +32,7 @@ extends:
       - template: ./1esstages.yml
         parameters:
           useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
+        variables:
+          # Required by MicroBuild template
+          - name: TeamName
+            value: "Azure Tools for VS Code"  
