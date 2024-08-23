@@ -27,6 +27,7 @@ stages:
                   additionalSetupSteps: ${{ parameters.additionalSetupSteps }}
               - template: ./templates/build.yml
               - template: ./templates/1espackage.yml
+              - template: ./templates/sign.yml
               - template: ./templates/test.yml
                 parameters:
                   useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
