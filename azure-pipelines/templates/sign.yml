@@ -2,7 +2,7 @@ steps:
   # Check if the SignExtension.signproj file exists and set a variable using PowerShell
   # All other steps in this template will only run if the file exists
   - powershell: |
-      $fileExists = Test-Path -Path "$(Build.SourcesDirectory)/SignExtension.signproj"
+      $fileExists = Test-Path -Path "$(Build.SourcesDirectory)/.azure-pipelines/SignExtension.signproj"
       Write-Output "##vso[task.setvariable variable=signprojExists]$fileExists"
       
       if ($fileExists) {
@@ -29,4 +29,4 @@ steps:
     displayName: "\U0001F449 Sign with MSBuild"
     inputs:
       command: 'build'
-      projects: 'SignExtension.signproj'
+      projects: $(Build.SourcesDirectory)/.azure-pipelines/SignExtension.signproj
