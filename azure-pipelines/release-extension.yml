@@ -1,0 +1,109 @@
+parameters:
+  - name: PipelineID
+    displayName: PipelineID of the Build Pipeline to download artifacts from for publishing
+    type: string
+  - name: RunID
+    displayName: RunID of the Build Pipeline to download artifacts from for publishing
+    type: number
+
+# `resources` specifies the location of templates to pick up, use it to get 1ES templates
+resources:
+  repositories:
+    - repository: MicroBuildTemplate
+      type: git
+      name: MicroBuildTemplates/MicroBuildTemplates
+      ref: refs/heads/release
+
+extends:
+  template: azure-pipelines/1ES.Official.Publish.yml@MicroBuildTemplate
+  parameters:
+    sdl:
+      credscan:
+        suppressionsFile: $(Build.SourcesDirectory)\.azure-pipelines\compliance\CredScanSuppressions.json
+      sourceAnalysisPool:
+        name: AzurePipelines-EO
+        image: 1ESPT-Windows2022
+      # codeql:
+      #   enabled: true # TODO: would like to enable only on scheduled builds but CodeQL cannot currently be disabled per https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/codeql/1es-codeql
+    pool:
+      name: AzurePipelines-EO # Name of your hosted pool
+      image: 1ESPT-Ubuntu20.04 # Name of the image in your pool. If not specified, first image of the pool is used
+      os: linux # OS of the image. Allowed values: windows, linux, macOS
+    stages:
+      - stage: ReleaseStage
+        jobs:
+          - job: ReleaseJob
+            steps:
+              trigger: none # Only run this pipeline when manually triggered
+
+resources:
+  pipelines:
+    - pipeline: vscode-azurevirtualmachines # identifier to use in pipeline resource variables
+      source: \Azure Tools\VSCode\Extensions\vscode-azurevirtualmachines # name of the pipeline that produces the artifacts
+
+steps:
+  - checkout: none
+
+  - task: DownloadPipelineArtifact@2
+    displayName: Download artifacts from Build pipeline
+    inputs:
+      source: specific # download from a different run
+      project: DevDiv
+      definition: ${{ parameters.PipelineID }}
+      buildVersionToDownload: specific
+      runId: ${{ parameters.RunID }}
+      artifact: Build Root
+      targetPath: $(System.DefaultWorkingDirectory)
+
+  - script: npm i -g @vscode/vsce
+    displayName: "Install vsce"
+
+  - script: |
+      # Find all .vsix files in the working directory
+      vsixFiles="$(find $(Build.SourcesDirectory) -maxdepth 1 -type f -name '*.vsix')"
+
+      # Count the number of .vsix files
+      count=$(echo "$vsixFiles" | wc -l)
+
+      # Check if more than one .vsix file is found. We don't want to accidentially release the wrong .vsix.
+      if [ "$count" -gt 1 ]; then
+        echo "More than one .vsix file found. There should be only one .vsix present in the build artifacts."
+        ls
+        exit 1
+      elif [ "$count" -eq 0 ]; then
+        echo "No .vsix files found. The pipeline will fail."
+        ls
+        exit 1
+      else
+        # Set the pipeline variable
+        vsixFileName=$(basename "$vsixFiles")
+        echo "##vso[task.setvariable variable=vsixFileName;]$vsixFileName"
+        echo "Found .vsix file: $vsixFileName"
+      fi
+    displayName: "Find and Set .vsix File Variable"
+
+  - task: AzureCLI@2
+    displayName: Run vsce verify-pat
+    inputs:
+      azureSubscription: AzCodeReleases
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        vsce verify-pat ms-azuretools --azure-credential
+
+  # requires package.json to be present
+  # - task: AzureCLI@2
+  #   displayName: Run vsce publish
+  #   inputs:
+  #     azureSubscription: AzCodeReleases
+  #     scriptType: pscore
+  #     scriptLocation: inlineScript
+  #     inlineScript: |
+  #       $publishArgs = @(
+  #         '--azure-credential'
+  #         '--packagePath'
+  #         '$(vsixFileName)'
+  #         '--manifestPath extension.manifest'
+  #         '--signaturePath extension.signature.p7s'
+  #       )
+  #       vsce publish -- @publishArgs
