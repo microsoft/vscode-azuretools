@@ -47,9 +47,8 @@ stages:
 
               - template: ./templates/1espackage.yml
 
-              # Conditionally include the sign.yml template if the SignExtension.signproj file exists
-              - ${{ if eq(variables['signprojExists'], True) }}:
-                - template: ./templates/sign.yml
+              - template: ./templates/sign.yml
+                condition: eq(variables['signprojExists'], True)
 
               - template: ./templates/stage-artifacts.yml
               - template: ./templates/test.yml
