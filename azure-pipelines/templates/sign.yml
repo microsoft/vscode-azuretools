@@ -1,6 +1,6 @@
 steps:
-
   # Check if the SignExtension.signproj file exists and set a variable using PowerShell
+  # All other steps in this template will only run if the file exists
   - powershell: |
       $fileExists = Test-Path -Path "$(Build.SourcesDirectory)/SignExtension.signproj"
       Write-Output "##vso[task.setvariable variable=signprojExists]$fileExists"
@@ -16,13 +16,13 @@ steps:
   - pwsh: | 
       Write-Output "##vso[task.setvariable variable=name;isOutput=true]$((Get-Content -Raw -Path package.json | ConvertFrom-Json).name)"
       Write-Output "##vso[task.setvariable variable=version;isOutput=true]$((Get-Content -Raw -Path package.json | ConvertFrom-Json).version)"
+    condition: eq(variables['signprojExists'], True)
     name: package
     displayName: "\U0001F449 Get extension info from package.json"
-    condition: eq(variables['signprojExists'], True)
 
   - script: npx @vscode/vsce@latest generate-manifest -i $(package.name)-$(package.version).vsix -o $(Build.SourcesDirectory)/extension.manifest
-    displayName: "\U0001F449 Generate extension manifest"
     condition: eq(variables['signprojExists'], True)
+    displayName: "\U0001F449 Generate extension manifest"
 
   - task: DotNetCoreCLI@2
     condition: eq(variables['signprojExists'], True)
