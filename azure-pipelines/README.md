@@ -44,9 +44,22 @@ resources:
       ref: main
       endpoint: GitHub-AzureTools # The service connection to use when accessing this repository
 
+parameters:
+  - name: enableLongRunningTests
+    displayName: Enable Long Running Tests
+    type: boolean
+    default: true
+
+variables:
+  # Required by MicroBuild template
+  - name: TeamName
+    value: "Azure Tools for VS Code"
+
 # Use those templates
 extends:
   template: azure-pipelines/1esmain.yml@azExtTemplates
+  parameters:
+    useAzureFederatedCredentials: ${{ parameters.enableLongRunningTests }}
 ```
 
 ### (DEPRECATED) Primary pipelines
