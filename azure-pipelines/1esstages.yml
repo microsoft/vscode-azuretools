@@ -33,8 +33,10 @@ stages:
                   $filePath = "$(Build.SourcesDirectory)\SignExtension.signproj"
                   if (Test-Path $filePath) {
                       Write-Output "##vso[task.setvariable variable=signprojExists]true"
+                      Write-Output "SignExtension.signproj file found. Signing extension."
                   } else {
                       Write-Output "##vso[task.setvariable variable=signprojExists]false"
+                      Write-Output "SignExtension.signproj file not found. Skipping signing."
                   }
                 name: CheckSignFile
                 displayName: 'Check for SignExtension.signproj File'
