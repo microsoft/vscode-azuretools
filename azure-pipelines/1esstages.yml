@@ -31,6 +31,7 @@ stages:
               # Check if the SignExtension.signproj file exists and set a variable using PowerShell
               - powershell: |
                   $filePath = "$(Build.SourcesDirectory)\SignExtension.signproj"
+                  dir $(Build.SourcesDirectory)
                   if (Test-Path $filePath) {
                       Write-Output "##vso[task.setvariable variable=signprojExists]true"
                       Write-Output "SignExtension.signproj file found. Signing extension."
