@@ -1,3 +1,8 @@
+parameters:
+  - name: additionalSetupSteps
+    type: stepList
+    default: []
+
 steps:
   - task: NodeTool@0
     displayName: "\U0001F449 Using Node.js"
@@ -19,3 +24,5 @@ steps:
       echo ">>> Started xvfb"
     displayName: "\U0001F449 Start X Virtual Frame Buffer"
     condition: and(succeeded(), eq(variables['Agent.OS'], 'Linux'))
+
+  - ${{ parameters.additionalSetupSteps }}

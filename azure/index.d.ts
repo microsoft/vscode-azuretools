@@ -169,6 +169,8 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
 
     protected getQuickPicks(wizardContext: T): Promise<IAzureQuickPickItem<AzExtLocation>[]>;
 
+    public static generalizeLocationName(name: string | undefined): string;
+
     /**
      * Implement this to set descriptions on location quick pick items.
      */

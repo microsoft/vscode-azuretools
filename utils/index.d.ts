@@ -176,6 +176,7 @@ export interface AzExtServiceClientCredentialsT2 {
  */
 export interface ISubscriptionContext {
     credentials: AzExtServiceClientCredentials;
+    createCredentialsForScopes: (scopes: string[]) => Promise<AzExtServiceClientCredentials>;
     subscriptionDisplayName: string;
     subscriptionId: string;
     subscriptionPath: string;
@@ -1160,9 +1161,11 @@ export interface IWizardOptions<T extends IActionContext> {
 
 export const activitySuccessContext: string;
 export const activityFailContext: string;
+export const activityProgressContext: string;
 
 export const activityInfoIcon: ThemeIcon;
 export const activitySuccessIcon: ThemeIcon;
+export const activityProgressIcon: ThemeIcon;
 export const activityFailIcon: ThemeIcon;
 
 export type ActivityTask<R> = (progress: Progress<{ message?: string, increment?: number }>, cancellationToken: CancellationToken) => Promise<R>;
@@ -1179,6 +1182,7 @@ export declare abstract class ActivityBase<R> implements Activity {
 
     abstract initialState(): ActivityTreeItemOptions;
     abstract successState(): ActivityTreeItemOptions;
+    abstract progressState(): ActivityTreeItemOptions;
     abstract errorState(error: IParsedError): ActivityTreeItemOptions;
 
     public constructor(task: ActivityTask<R>);
@@ -1205,6 +1209,7 @@ export class ExecuteActivity<C extends ExecuteActivityContext = ExecuteActivityC
     public constructor(context: C, task: ActivityTask<void>);
     public initialState(): ActivityTreeItemOptions;
     public successState(): ActivityTreeItemOptions;
+    public progressState(): ActivityTreeItemOptions;
     public errorState(error: IParsedError): ActivityTreeItemOptions;
     protected get label(): string;
 }
@@ -1237,11 +1242,47 @@ export declare interface ExecuteActivityContext {
     activityChildren?: (AzExtTreeItem | AzExtParentTreeItem)[];
 }
 
-export declare abstract class AzureWizardExecuteStep<T extends IActionContext> {
+export interface ExecuteActivityOutput {
+    /**
+     * The activity child item to display on success or fail
+     */
+    item?: AzExtTreeItem;
+    /**
+     * The output log message to display on success or fail
+     */
+    message?: string;
+}
+
+/**
+ * Output types corresponding to the `ExecuteActivityOutput` properties
+ */
+export declare enum ActivityOutputType {
+    Item = 'item',
+    Message = 'message',
+    All = 'all',
+}
+
+export interface AzureWizardExecuteStepOptions {
+    /**
+     * Used to indicate whether any `ExecuteActivityOutput` properties should be suppressed from display
+     */
+    suppressActivityOutput?: ActivityOutputType;
+    /**
+     * If enabled, the Azure Wizard will continue running and swallow any errors thrown during step execution
+     */
+    continueOnFail?: boolean;
+}
+
+export declare abstract class AzureWizardExecuteStep<T extends IActionContext & Partial<ExecuteActivityContext>> {
     /**
      * The priority of this step. A smaller value will be executed first.
      */
     public abstract priority: number;
+
+    /**
+     * Options for executing the step
+     */
+    public options: AzureWizardExecuteStepOptions;
 
     /**
      * Optional id used to determine if this step is unique, for things like caching values and telemetry
@@ -1259,6 +1300,21 @@ export declare abstract class AzureWizardExecuteStep<T extends IActionContext> {
      * Used to prevent duplicate executions from sub wizards and unnecessary executions for values that had a default
      */
     public abstract shouldExecute(wizardContext: T): boolean;
+
+    /**
+     * Defines the output for display after successful execution of the step
+     */
+    public createSuccessOutput?(context: T): ExecuteActivityOutput;
+
+    /**
+     * Defines the output for display during execution of the step
+     */
+    public createProgressOutput?(context: T): ExecuteActivityOutput;
+
+    /**
+     * Defines the output for display after unsuccessful execution of the step
+     */
+    public createFailOutput?(context: T): ExecuteActivityOutput;
 }
 
 export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
@@ -1293,7 +1349,7 @@ export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
      * Can be used to optionally configure the wizard context before determining if prompting is required
      * This method will be called before `shouldPrompt`
      */
-    public configureBeforePrompt?(wizardContext: T): Promise<void>;
+    public configureBeforePrompt?(wizardContext: T): void | Promise<void>;
 
     /**
      * Return true if this step should prompt based on the current state of the wizardContext
@@ -1510,6 +1566,14 @@ export declare function openReadOnlyContent(node: { label: string, fullId: strin
  * @param fileExtension The file extension
  */
 export declare function stashReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string): Promise<ReadOnlyContent>;
+
+/**
+ * Stash a read-only editor so it can be opened by its uri later.
+ * @param node Typically (but not strictly) an `AzExtTreeItem`. `label` is used for the file name displayed in VS Code and a random id will be generated to uniquely identify this file
+ * @param content The content to display
+ * @param fileExtension The file extension
+ */
+export declare function stashReadOnlyContentSync(node: { label: string }, content: string, fileExtension: string): ReadOnlyContent;
 
 /**
  * Disposes all the read-only contents stashed in memory.
@@ -1756,6 +1820,12 @@ export declare class DeleteConfirmationStep extends AzureWizardPromptStep<IActio
  * @returns a sorted, unique string of values separated by `;`
  */
 export function createContextValue(values: string[]): string;
+
+/**
+ * @param values
+ * @returns a sorted, universally unique string of values separated by `;`
+ */
+export function createUniversallyUniqueContextValue(values: string[]): string;
 
 /**
  * Gets the exported API from the given extension id and version range.

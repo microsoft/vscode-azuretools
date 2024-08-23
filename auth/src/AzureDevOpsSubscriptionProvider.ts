@@ -152,25 +152,26 @@ export class AzureDevOpsSubscriptionProvider implements AzureSubscriptionProvide
         }
 
         const accessToken = (await this._tokenCredential?.getToken("https://management.azure.com/.default"))?.token || '';
+        const getSession = () => {
+            return {
+                accessToken,
+                id: this._tokenCredential?.tenantId || '',
+                account: {
+                    id: this._tokenCredential?.tenantId || '',
+                    label: this._tokenCredential?.tenantId || '',
+                },
+                tenantId: this._tokenCredential?.tenantId || '',
+                scopes: scopes || [],
+            };
+        };
         return {
             client: new armSubs.SubscriptionClient(this._tokenCredential,),
             credential: this._tokenCredential,
             authentication: {
-                getSession: (_scopes: string[] | undefined) => {
-                    return {
-                        accessToken,
-                        id: this._tokenCredential?.tenantId || '',
-                        account: {
-                            id: this._tokenCredential?.tenantId || '',
-                            label: this._tokenCredential?.tenantId || '',
-                        },
-                        tenantId: this._tokenCredential?.tenantId || '',
-                        scopes: scopes || [],
-                    };
-
-                }
+                getSession,
+                getSessionWithScopes: getSession,
             }
-        };
+        }
     }
 
     public onDidSignIn: Event<void> = () => { return new Disposable(() => { /*empty*/ }) };
