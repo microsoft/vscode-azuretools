@@ -1,4 +1,5 @@
 steps:
+  # put the extension name and version from the package.json into variables to use later. Variables can be used in later steps as $(package.name) and $(package.version)
   - pwsh: | 
       Write-Output "##vso[task.setvariable variable=name;isOutput=true]$((Get-Content -Raw -Path package.json | ConvertFrom-Json).name)"
       Write-Output "##vso[task.setvariable variable=version;isOutput=true]$((Get-Content -Raw -Path package.json | ConvertFrom-Json).version)"
