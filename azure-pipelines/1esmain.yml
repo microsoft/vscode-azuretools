@@ -32,7 +32,3 @@ extends:
       - template: ./1esstages.yml
         parameters:
           useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
-        variables:
-          # Required by MicroBuild template
-          - name: TeamName
-            value: "Azure Tools for VS Code"  
