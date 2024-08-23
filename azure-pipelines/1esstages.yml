@@ -25,13 +25,10 @@ stages:
                   artifactName: Build ${{ job.name }}
             steps:
               - template: ./templates/setup.yml
-              - template: ./templates/build.yml
-              - template: ./templates/1espackage.yml
 
               # Check if the SignExtension.signproj file exists and set a variable using PowerShell
               - powershell: |
                   $filePath = "$(Build.SourcesDirectory)\SignExtension.signproj"
-                  dir $(Build.SourcesDirectory)
                   if (Test-Path $filePath) {
                       Write-Output "##vso[task.setvariable variable=signprojExists]true"
                       Write-Output "SignExtension.signproj file found. Signing extension."
@@ -40,6 +37,15 @@ stages:
                       Write-Output "SignExtension.signproj file not found. Skipping signing."
                   }
                 displayName: 'Check for SignExtension.signproj File'
+
+                            # Debug: Output the value of signprojExists variable
+              - script: |
+                  echo "signprojExists value is: $(signprojExists)"
+                displayName: 'Debug: Output signprojExists Variable'
+
+              - template: ./templates/build.yml
+
+              - template: ./templates/1espackage.yml
 
               # Conditionally include the sign.yml template if the SignExtension.signproj file exists
               - ${{ if eq(variables['signprojExists'], 'true') }}:
