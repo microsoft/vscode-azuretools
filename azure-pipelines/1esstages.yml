@@ -39,7 +39,6 @@ stages:
                       Write-Output "##vso[task.setvariable variable=signprojExists]false"
                       Write-Output "SignExtension.signproj file not found. Skipping signing."
                   }
-                name: CheckSignFile
                 displayName: 'Check for SignExtension.signproj File'
 
               # Conditionally include the sign.yml template if the SignExtension.signproj file exists
