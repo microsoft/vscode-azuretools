@@ -140,10 +140,10 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
             /**
              * @param errorMessage
              * @deprecated
-             * Continue to emit telemetry for clients who are still using this property.
+             * Continue to emit telemetry for clients who are still using this property. You should suppress this property if you need to migrate to the new replacement.
              *
              * @param errorMessage2
-             * A duplicate replacement of the `errorMessage` telemetry property.
+             * A duplicate replacement of the `errorMessage` telemetry property which should be used instead.
              */
             context.telemetry.properties.errorMessage = errorData.message;
             context.telemetry.properties.errorMessage2 = errorData.message;
