@@ -1754,6 +1754,7 @@ export declare namespace AzExtFsExtra {
 }
 
 export declare function maskValue(data: string, valueToMask: string | undefined): string;
+export declare function maskUserInfo(unknownArg: unknown, actionValuesToMask: string[], lessAggressive?: boolean, getUsername?: () => string): string;
 
 export declare function openUrl(url: string): Promise<void>;
 
