@@ -44,9 +44,56 @@ resources:
       ref: main
       endpoint: GitHub-AzureTools # The service connection to use when accessing this repository
 
+parameters:
+  - name: enableLongRunningTests
+    displayName: Enable Long Running Tests
+    type: boolean
+    default: true
+
+variables:
+  # Required by MicroBuild template
+  - name: TeamName
+    value: "Azure Tools for VS Code"
+
 # Use those templates
 extends:
   template: azure-pipelines/1esmain.yml@azExtTemplates
+  parameters:
+    useAzureFederatedCredentials: ${{ parameters.enableLongRunningTests }}
+```
+
+6. To enable extension signing, add a `SignExtension.signproj` file in the `.azure-pipelines` folder with the following contents:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" Sdk="Microsoft.Build.NoTargets/3.7.56">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- FilesToSign needs to be inside $(OutDir) hence we copy it into
+    $(OutDir) before (from CWD) and move it back outside after the signing -->
+    <FilesToSign Include="$(OutDir)\extension.signature.p7s">
+      <!-- Add the certificate friendly name below -->
+      <Authenticode>VSCodePublisher</Authenticode>
+    </FilesToSign>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="1.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <Target Name="CopySignatureFile" BeforeTargets="SignFiles">
+    <Copy SourceFiles="$(ProjectDir)\..\extension.manifest" DestinationFiles="$(OutDir)\extension.signature.p7s" />
+  </Target>
+
+  <Target Name="CopyBackSignatureFile" AfterTargets="SignFiles">
+    <Copy SourceFiles="$(OutDir)\extension.signature.p7s" DestinationFiles="$(ProjectDir)\..\extension.signature.p7s" />
+  </Target>
+</Project>
 ```
 
 ### (DEPRECATED) Primary pipelines
