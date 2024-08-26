@@ -8,7 +8,7 @@ export * from './activityLog/Activity';
 export { createAzExtLogOutputChannel, createAzExtOutputChannel } from './AzExtOutputChannel';
 export * from './AzExtTreeFileSystem';
 export * from './callWithTelemetryAndErrorHandling';
-export { activityFailContext, activityFailIcon, activityInfoIcon, activitySuccessContext, activitySuccessIcon } from './constants';
+export { activityFailContext, activityFailIcon, activityInfoIcon, activityProgressContext, activityProgressIcon, activitySuccessContext, activitySuccessIcon } from './constants';
 export * from './createApiProvider';
 export { createExperimentationService } from './createExperimentationService';
 export * from './DialogResponses';

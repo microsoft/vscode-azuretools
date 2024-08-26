@@ -37,6 +37,7 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
 
     abstract initialState(): hTypes.ActivityTreeItemOptions;
     abstract successState(): hTypes.ActivityTreeItemOptions;
+    abstract progressState(): hTypes.ActivityTreeItemOptions;
     abstract errorState(error?: types.IParsedError): hTypes.ActivityTreeItemOptions;
 
     public constructor(task: types.ActivityTask<R>) {
@@ -51,6 +52,7 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
 
     private report(progress: { message?: string; increment?: number }): void {
         this._onProgressEmitter.fire({ ...this.getState(), message: progress.message });
+        this.status = ActivityStatus.Running;
     }
 
     public async run(): Promise<R> {
@@ -74,6 +76,8 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
                 return this.errorState(this.error);
             case ActivityStatus.Succeeded:
                 return this.successState();
+            case ActivityStatus.Running:
+                return this.progressState();
             default:
                 return this.initialState();
         }
