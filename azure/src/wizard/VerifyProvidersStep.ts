@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { Provider, ResourceManagementClient } from '@azure/arm-resources';
-import { AzureWizardExecuteStep, IParsedError, ISubscriptionActionContext, parseError } from '@microsoft/vscode-azext-utils';
+import { AzureWizardExecuteStep, IParsedError, ISubscriptionActionContext, maskUserInfo, parseError } from '@microsoft/vscode-azext-utils';
 import { l10n, Progress } from 'vscode';
 import * as types from '../../index';
 import { createResourcesClient } from '../clients';
@@ -40,6 +40,7 @@ export class VerifyProvidersStep<T extends ISubscriptionActionContext> extends A
             } catch (error) {
                 // ignore and continue with wizard. An error here would likely be confusing and un-actionable
                 const perror: IParsedError = parseError(error);
+                const maskedErrorMessage: string = maskUserInfo(perror.message, []);
 
                 /**
                  * @param providerError
@@ -49,8 +50,8 @@ export class VerifyProvidersStep<T extends ISubscriptionActionContext> extends A
                  * @param providerErrorV2
                  * A duplicate replacement of the `providerError` telemetry property.
                  */
-                context.telemetry.properties.providerError = perror.message;
-                context.telemetry.properties.providerErrorV2 = perror.message;
+                context.telemetry.properties.providerError = maskedErrorMessage
+                context.telemetry.properties.providerErrorV2 = maskedErrorMessage
             }
         }));
     }
