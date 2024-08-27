@@ -46,11 +46,11 @@ export class VerifyProvidersStep<T extends ISubscriptionActionContext> extends A
                  * @deprecated
                  * Continue to emit telemetry for clients who are still using this property. You should suppress this property if you need to migrate to the new replacement.
                  *
-                 * @param providerError2
+                 * @param providerErrorV2
                  * A duplicate replacement of the `providerError` telemetry property.
                  */
                 context.telemetry.properties.providerError = perror.message;
-                context.telemetry.properties.providerError2 = perror.message;
+                context.telemetry.properties.providerErrorV2 = perror.message;
             }
         }));
     }
