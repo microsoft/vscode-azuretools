@@ -12,7 +12,7 @@ parameters:
     default: []
   - name: enableSigning
     type: boolean
-    default: $[eq(variables['Build.Reason'], 'PullRequest')]
+    default: eq(variables['Build.Reason'], 'PullRequest')
 
 stages:
   - stage: BuildStage
