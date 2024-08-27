@@ -36,3 +36,5 @@ extends:
         parameters:
           useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
           additionalSetupSteps: ${{ parameters.additionalSetupSteps }}
+          # Enable the signing toolset when the build is not a PR and the branch is main or starts with rel/
+          enableSigning: $[and(ne(variables['Build.Reason'], 'PullRequest'), or(equals(variables['Build.SourceBranchName'], 'main'), startsWith(variables['Build.SourceBranchName'], 'rel/')))]
