@@ -11,6 +11,7 @@ steps:
           Write-Output "SignExtension.signproj file not found. Skipping signing."
       }
     displayName: "\U0001F449 Check for SignExtension.signproj File"
+    # Run this step when the build is not a PR and the branch is main or starts with rel/
     condition: and(ne(variables['Build.Reason'], 'PullRequest'), or(eq(variables['Build.SourceBranchName'], 'main'), startsWith(variables['Build.SourceBranchName'], 'rel/')))
 
   # put the extension name and version from the package.json into variables to use later. Variables can be used in later steps as $(package.name) and $(package.version)

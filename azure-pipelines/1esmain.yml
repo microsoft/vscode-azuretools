@@ -36,4 +36,3 @@ extends:
         parameters:
           useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
           additionalSetupSteps: ${{ parameters.additionalSetupSteps }}
-          # Enable the signing toolset when the build is not a PR and the branch is main or starts with rel/
