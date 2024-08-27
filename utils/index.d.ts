@@ -1754,6 +1754,15 @@ export declare namespace AzExtFsExtra {
 }
 
 export declare function maskValue(data: string, valueToMask: string | undefined): string;
+
+/**
+ * Best effort to mask all data that could potentially identify a user
+ *
+ * @param unknownArg Any unknown value.  This value will be cast to a string and then masked before returning.
+ * @param actionValuesToMask An array of strings indicating additional values to mask.
+ * @param lessAggressive A boolean value that defaults to false.  If set to true, the most aggressive masking will be skipped.
+ * @param getUsername To be used ONLY by test code.  Function used to get the username.
+ */
 export declare function maskUserInfo(unknownArg: unknown, actionValuesToMask: string[], lessAggressive?: boolean, getUsername?: () => string): string;
 
 export declare function openUrl(url: string): Promise<void>;
