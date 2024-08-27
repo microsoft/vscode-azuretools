@@ -1,3 +1,8 @@
+parameters:
+  - name: enableSigning
+    type: boolean
+    default: true
+
 steps:
   # Check if the SignExtension.signproj file exists and set a variable using PowerShell
   # All other steps in this template will only run if the file exists
@@ -12,7 +17,7 @@ steps:
       }
     displayName: "\U0001F449 Check for SignExtension.signproj File"
     # Run this step when the build is not a PR and the branch is main or starts with rel/
-    condition: and(ne(variables['Build.Reason'], 'PullRequest'), or(eq(variables['Build.SourceBranchName'], 'main'), startsWith(variables['Build.SourceBranchName'], 'rel/')))
+    condition: ${{ parameters.enableSigning }}
 
   # put the extension name and version from the package.json into variables to use later. Variables can be used in later steps as $(package.name) and $(package.version)
   - pwsh: | 
