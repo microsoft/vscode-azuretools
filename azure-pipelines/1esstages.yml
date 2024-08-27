@@ -12,7 +12,6 @@ parameters:
     default: []
   - name: enableSigning
     type: boolean
-    default: true
 
 stages:
   - stage: BuildStage
