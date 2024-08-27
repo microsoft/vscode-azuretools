@@ -1,6 +1,7 @@
 parameters:
   - name: enableSigning
     type: boolean
+    default: True
 
 steps:
   # Check if the SignExtension.signproj file exists and set a variable using PowerShell
