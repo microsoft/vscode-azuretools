@@ -50,8 +50,8 @@ export class VerifyProvidersStep<T extends ISubscriptionActionContext> extends A
                  * @param providerErrorV2
                  * A duplicate replacement of the `providerError` telemetry property.
                  */
-                context.telemetry.properties.providerError = maskedErrorMessage
-                context.telemetry.properties.providerErrorV2 = maskedErrorMessage
+                context.telemetry.properties.providerError = maskedErrorMessage;
+                context.telemetry.properties.providerErrorV2 = maskedErrorMessage;
             }
         }));
     }
