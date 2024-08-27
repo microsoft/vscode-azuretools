@@ -22,8 +22,6 @@ stages:
             templateContext:
               mb: # Enable the MicroBuild Signing toolset
                 signing:
-                  # Enable the signing toolset when the build is not a PR and the branch is main or starts with rel/
-                  # enabled: and(ne(variables['Build.Reason'], 'PullRequest'), or(eq(variables['Build.SourceBranchName'], 'main'), startsWith(variables['Build.SourceBranchName'], 'rel/')))
                   enabled: ${{ parameters.enableSigning }}
                   signType: real # options are 'real' & 'test'
                   zipSources: false
