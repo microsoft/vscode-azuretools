@@ -33,8 +33,6 @@ stages:
               - template: ./templates/build.yml
               - template: ./templates/1espackage.yml
               - template: ./templates/sign.yml
-                parameters:
-                  enableSigning: $[and(ne(variables['Build.Reason'], 'PullRequest'), or(equals(variables['Build.SourceBranchName'], 'main'), startsWith(variables['Build.SourceBranchName'], 'rel/')))]
               - template: ./templates/stage-artifacts.yml
               - template: ./templates/test.yml
                 parameters:
