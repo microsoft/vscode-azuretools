@@ -19,7 +19,7 @@ stages:
             templateContext:
               mb: # Enable the MicroBuild Signing toolset
                 signing:
-                  enabled: $[and(ne(variables['Build.Reason'], 'PullRequest'), or(equals(variables['Build.SourceBranchName'], 'main'), startsWith(variables['Build.SourceBranchName'], 'rel/')))]
+                  enabled: $[and(ne(variables['Build.Reason'], 'PullRequest'), or(eq(variables['Build.SourceBranchName'], 'main'), startsWith(variables['Build.SourceBranchName'], 'rel/')))]
                   signType: real # options are 'real' & 'test'
                   zipSources: false
               outputs:
