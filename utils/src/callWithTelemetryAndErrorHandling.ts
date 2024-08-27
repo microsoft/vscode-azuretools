@@ -136,7 +136,18 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
         } else {
             context.telemetry.properties.result = 'Failed';
             context.telemetry.properties.error = errorData.errorType;
+
+            /**
+             * @param errorMessage
+             * @deprecated
+             * Continue to emit telemetry for clients who are still using this property. You should suppress this property if you need to migrate to the new replacement.
+             *
+             * @param errorMessageV2
+             * A duplicate replacement of the `errorMessage` telemetry property which should be used instead.
+             */
             context.telemetry.properties.errorMessage = errorData.message;
+            context.telemetry.properties.errorMessageV2 = errorData.message;
+
             context.telemetry.properties.stack = errorData.stack ? limitLines(errorData.stack, maxStackLines) : undefined;
             if (context.telemetry.suppressIfSuccessful || context.telemetry.suppressAll) {
                 context.telemetry.properties.suppressTelemetry = 'true';

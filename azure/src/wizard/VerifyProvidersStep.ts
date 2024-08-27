@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { Provider, ResourceManagementClient } from '@azure/arm-resources';
-import { AzureWizardExecuteStep, ISubscriptionActionContext, parseError } from '@microsoft/vscode-azext-utils';
+import { AzureWizardExecuteStep, IParsedError, ISubscriptionActionContext, parseError } from '@microsoft/vscode-azext-utils';
 import { l10n, Progress } from 'vscode';
 import * as types from '../../index';
 import { createResourcesClient } from '../clients';
@@ -39,7 +39,18 @@ export class VerifyProvidersStep<T extends ISubscriptionActionContext> extends A
                 }
             } catch (error) {
                 // ignore and continue with wizard. An error here would likely be confusing and un-actionable
-                context.telemetry.properties.providerError = parseError(error).message;
+                const perror: IParsedError = parseError(error);
+
+                /**
+                 * @param providerError
+                 * @deprecated
+                 * Continue to emit telemetry for clients who are still using this property. You should suppress this property if you need to migrate to the new replacement.
+                 *
+                 * @param providerErrorV2
+                 * A duplicate replacement of the `providerError` telemetry property.
+                 */
+                context.telemetry.properties.providerError = perror.message;
+                context.telemetry.properties.providerErrorV2 = perror.message;
             }
         }));
     }
