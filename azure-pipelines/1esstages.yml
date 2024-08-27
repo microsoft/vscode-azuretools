@@ -11,6 +11,9 @@ parameters:
     type: stepList
     default: []
 
+variables:
+  isPR: $[eq(variables['Build.Reason'], 'PullRequest')]
+
 stages:
   - stage: BuildStage
     jobs:
