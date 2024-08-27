@@ -10,9 +10,6 @@ parameters:
   - name: additionalSetupSteps
     type: stepList
     default: []
-  - name: enableSigning
-    type: boolean
-    default: eq(variables['Build.Reason'], 'PullRequest')
 
 stages:
   - stage: BuildStage
@@ -22,7 +19,8 @@ stages:
             templateContext:
               mb: # Enable the MicroBuild Signing toolset
                 signing:
-                  enabled: ${{ parameters.enableSigning }}
+                  # Enable the signing toolset when the build is not a PR and the branch is main or starts with rel/
+                  enabled: $[and(ne(variables['Build.Reason'], 'PullRequest'), or(equals(variables['Build.SourceBranchName'], 'main'), startsWith(variables['Build.SourceBranchName'], 'rel/')))]
                   signType: real # options are 'real' & 'test'
                   zipSources: false
               outputs:
