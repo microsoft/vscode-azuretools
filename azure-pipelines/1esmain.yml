@@ -11,7 +11,7 @@ parameters:
     default: []
   - name: enableSigning
     type: boolean
-    default: true
+    default: True
 
 # `resources` specifies the location of templates to pick up, use it to get 1ES templates
 resources:
