@@ -10,9 +10,9 @@ parameters:
   - name: additionalSetupSteps
     type: stepList
     default: []
-
-variables:
-  isPR: $[eq(variables['Build.Reason'], 'PullRequest')]
+  - name: enableSigning
+    type: boolean
+    default: $[eq(variables['Build.Reason'], 'PullRequest')]
 
 stages:
   - stage: BuildStage
@@ -22,7 +22,7 @@ stages:
             templateContext:
               mb: # Enable the MicroBuild Signing toolset
                 signing:
-                  enabled: true
+                  enabled: ${{ parameters.enableSigning }}
                   signType: real # options are 'real' & 'test'
                   zipSources: false
               outputs:
