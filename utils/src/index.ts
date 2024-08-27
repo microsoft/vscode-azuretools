@@ -15,7 +15,7 @@ export * from './DialogResponses';
 export * from './errors';
 export * from './extensionUserAgent';
 export { registerUIExtensionVariables } from './extensionVariables';
-export { addExtensionValueToMask, callWithMaskHandling, maskValue } from './masking';
+export { addExtensionValueToMask, callWithMaskHandling, maskUserInfo, maskValue } from './masking';
 export * from './openReadOnlyContent';
 export * from './parseError';
 export * from './pickTreeItem/contextValue/ContextValueQuickPickStep';
