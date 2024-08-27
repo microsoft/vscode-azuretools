@@ -9,6 +9,9 @@ parameters:
   - name: additionalSetupSteps
     type: stepList
     default: []
+  - name: enableSigning
+    type: boolean
+    default: false
 
 # `resources` specifies the location of templates to pick up, use it to get 1ES templates
 resources:
