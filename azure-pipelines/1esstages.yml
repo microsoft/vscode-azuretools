@@ -10,6 +10,9 @@ parameters:
   - name: additionalSetupSteps
     type: stepList
     default: []
+  - name: enableSigning
+    type: boolean
+    default: True
 
 stages:
   - stage: BuildStage
@@ -19,8 +22,7 @@ stages:
             templateContext:
               mb: # Enable the MicroBuild Signing toolset
                 signing:
-                  # Enable the signing toolset when the build is not a PR and the branch is main or starts with rel/
-                  enabled: $[and(ne(variables['Build.Reason'], 'PullRequest'), or(eq(variables['Build.SourceBranchName'], 'main'), startsWith(variables['Build.SourceBranchName'], 'rel/')))]
+                  enabled: ${{ parameters.enableSigning }}
                   signType: real # options are 'real' & 'test'
                   zipSources: false
               outputs:
@@ -34,6 +36,8 @@ stages:
               - template: ./templates/build.yml
               - template: ./templates/1espackage.yml
               - template: ./templates/sign.yml
+                parameters:
+                  enableSigning: ${{ parameters.enableSigning }}
               - template: ./templates/stage-artifacts.yml
               - template: ./templates/test.yml
                 parameters:
