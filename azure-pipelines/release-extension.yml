@@ -24,80 +24,79 @@ extends:
       os: windows # OS of the image. Allowed values: windows, linux, macOS
 
     stages:
-      - stage: Release
+      - stage: deploy
+        jobs:
+        - deployment: PublishExtension   # name of the deployment job, A-Z, a-z, 0-9, and underscore. The word "deploy" is a keyword and is unsupported as the deployment name.
+          displayName: Publish extension  # friendly name to display in the UI
+          variables: # several syntaxes, see specific section
+          environment: AzCodeDeploy # target environment name and optionally a resource name to record the deployment history; format: <environment-name>.<resource-name>
+          strategy:
+            runOnce:    #rolling, canary are the other strategies that are supported
+              deploy:
+                steps:
+                  - checkout: none
+                  - task: DownloadPipelineArtifact@2
+                    displayName: Download artifacts from Build pipeline
+                    inputs:
+                      source: specific # download from a specific pipelines run
+                      project: DevDiv
+                      definition: ${{ parameters.pipelineID }}
+                      buildVersionToDownload: specific
+                      runId: ${{ parameters.runID }}
+                      artifact: Build Root
+                      targetPath: $(System.DefaultWorkingDirectory)
 
-jobs:
-- deployment: PublishExtension   # name of the deployment job, A-Z, a-z, 0-9, and underscore. The word "deploy" is a keyword and is unsupported as the deployment name.
-  displayName: Publish extension  # friendly name to display in the UI
-  variables: # several syntaxes, see specific section
-  environment: AzCodeDeploy # target environment name and optionally a resource name to record the deployment history; format: <environment-name>.<resource-name>
-  strategy:
-    runOnce:    #rolling, canary are the other strategies that are supported
-      deploy:
-        steps:
-          - checkout: none
-          - task: DownloadPipelineArtifact@2
-            displayName: Download artifacts from Build pipeline
-            inputs:
-              source: specific # download from a specific pipelines run
-              project: DevDiv
-              definition: ${{ parameters.pipelineID }}
-              buildVersionToDownload: specific
-              runId: ${{ parameters.runID }}
-              artifact: Build Root
-              targetPath: $(System.DefaultWorkingDirectory)
+                  - powershell: |
+                      # Get all .vsix files in the current directory
+                      $vsixFiles = Get-ChildItem -Path $(Build.SourcesDirectory) -Filter *.vsix -File
 
-          - powershell: |
-              # Get all .vsix files in the current directory
-              $vsixFiles = Get-ChildItem -Path $(Build.SourcesDirectory) -Filter *.vsix -File
+                      # Check if more than one .vsix file is found
+                      if ($vsixFiles.Count -gt 1) {
+                        Write-Error "More than one .vsix file found."
+                        exit 1
+                      } elseif ($vsixFiles.Count -eq 0) {
+                        Write-Error "No .vsix files found."
+                        exit 1
+                      } else {
+                        # Set the pipeline variable
+                        $vsixFileName = $vsixFiles.Name
+                        Write-Output "##vso[task.setvariable variable=vsixFileName;]$vsixFileName"
+                        Write-Output "Found .vsix file: $vsixFileName"
+                      }
+                    displayName: "Find and Set .vsix File Variable"
 
-              # Check if more than one .vsix file is found
-              if ($vsixFiles.Count -gt 1) {
-                Write-Error "More than one .vsix file found."
-                exit 1
-              } elseif ($vsixFiles.Count -eq 0) {
-                Write-Error "No .vsix files found."
-                exit 1
-              } else {
-                # Set the pipeline variable
-                $vsixFileName = $vsixFiles.Name
-                Write-Output "##vso[task.setvariable variable=vsixFileName;]$vsixFileName"
-                Write-Output "Found .vsix file: $vsixFileName"
-              }
-            displayName: "Find and Set .vsix File Variable"
+                  - task: UseNode@1
+                    inputs:
+                      version: "20.x"
+                    displayName: "Install Node.js"
 
-          - task: UseNode@1
-            inputs:
-              version: "20.x"
-            displayName: "Install Node.js"
+                  - script: npm i -g @vscode/vsce
+                    displayName: "Install vsce"
 
-          - script: npm i -g @vscode/vsce
-            displayName: "Install vsce"
+                  # - task: AzureCLI@2
+                  #   displayName: Get WIF user Id
+                  #   inputs:
+                  #     azureSubscription: AzCodeReleases
+                  #     scriptType: pscore
+                  #     scriptLocation: inlineScript
+                  #     inlineScript: |
+                  #       az rest -u https://app.vssps.visualstudio.com/_apis/profile/profiles/me --resource 499b84ac-1321-427f-aa17-267ca6975798
 
-          # - task: AzureCLI@2
-          #   displayName: Get WIF user Id
-          #   inputs:
-          #     azureSubscription: AzCodeReleases
-          #     scriptType: pscore
-          #     scriptLocation: inlineScript
-          #     inlineScript: |
-          #       az rest -u https://app.vssps.visualstudio.com/_apis/profile/profiles/me --resource 499b84ac-1321-427f-aa17-267ca6975798
+                  - task: AzureCLI@2
+                    displayName: Verify PAT
+                    inputs:
+                      azureSubscription: AzCodeReleases
+                      scriptType: pscore
+                      scriptLocation: inlineScript
+                      inlineScript: |
+                        vsce verify-pat ms-azuretools --azure-credential
 
-          - task: AzureCLI@2
-            displayName: Verify PAT
-            inputs:
-              azureSubscription: AzCodeReleases
-              scriptType: pscore
-              scriptLocation: inlineScript
-              inlineScript: |
-                vsce verify-pat ms-azuretools --azure-credential
-
-          # requires package.json to be present
-          # - task: AzureCLI@2
-          #   displayName: Run vsce publish
-          #   inputs:
-          #     azureSubscription: AzCodeReleases
-          #     scriptType: pscore
-          #     scriptLocation: inlineScript
-          #     inlineScript: |
-          #       vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s
+                  # requires package.json to be present
+                  # - task: AzureCLI@2
+                  #   displayName: Run vsce publish
+                  #   inputs:
+                  #     azureSubscription: AzCodeReleases
+                  #     scriptType: pscore
+                  #     scriptLocation: inlineScript
+                  #     inlineScript: |
+                  #       vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s
