@@ -1,8 +1,4 @@
 parameters:
-  # Set this to `true` to use workflow identity federation with ADO service connections
-  # to authenticate this pipeline to run tests that require logging into Azure
-  # Setting this to `true` will require granting the pipeline permissions to
-  # AzCodeE2ETests and AzCodeE2ETestsCreds service connections
   - name: pipelineID
     type: string
   - name: runID
@@ -71,31 +67,12 @@ extends:
               - script: npm i -g @vscode/vsce
                 displayName: "Install vsce"
 
-              # - task: AzureCLI@2
-              #   displayName: Get WIF user Id
-              #   inputs:
-              #     azureSubscription: AzCodeReleases
-              #     scriptType: pscore
-              #     scriptLocation: inlineScript
-              #     inlineScript: |
-              #       az rest -u https://app.vssps.visualstudio.com/_apis/profile/profiles/me --resource 499b84ac-1321-427f-aa17-267ca6975798
-
+              # requires package.json to be present
               - task: AzureCLI@2
-                displayName: Verify PAT
+                displayName: Run vsce publish
                 inputs:
                   azureSubscription: AzCodeReleases
                   scriptType: pscore
                   scriptLocation: inlineScript
                   inlineScript: |
-                    vsce verify-pat ms-azuretools --azure-credential
-
-              # requires package.json to be present
-              # enable this once we can verify our credentials above
-              # - task: AzureCLI@2
-              #   displayName: Run vsce publish
-              #   inputs:
-              #     azureSubscription: AzCodeReleases
-              #     scriptType: pscore
-              #     scriptLocation: inlineScript
-              #     inlineScript: |
-              #       vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s
+                    vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s
