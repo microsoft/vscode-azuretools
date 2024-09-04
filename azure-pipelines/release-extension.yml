@@ -67,6 +67,15 @@ extends:
               - script: npm i -g @vscode/vsce
                 displayName: "Install vsce"
 
+              - task: AzureCLI@2
+                displayName: Verify PAT
+                inputs:
+                  azureSubscription: AzCodeReleases
+                  scriptType: pscore
+                  scriptLocation: inlineScript
+                  inlineScript: |
+                    vsce verify-pat ms-azuretools --azure-credential
+
               # requires package.json to be present
               - task: AzureCLI@2
                 displayName: Run vsce publish
