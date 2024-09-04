@@ -67,30 +67,30 @@ extends:
               - script: npm i -g @vscode/vsce
                 displayName: "Install vsce"
 
-              - task: AzureCLI@2
-                displayName: Get WIF user Id
-                inputs:
-                  azureSubscription: AzCodeReleases
-                  scriptType: pscore
-                  scriptLocation: inlineScript
-                  inlineScript: |
-                    az rest -u https://app.vssps.visualstudio.com/_apis/profile/profiles/me --resource 499b84ac-1321-427f-aa17-267ca6975798
-
-              - task: AzureCLI@2
-                displayName: Verify PAT
-                inputs:
-                  azureSubscription: AzCodeReleases
-                  scriptType: pscore
-                  scriptLocation: inlineScript
-                  inlineScript: |
-                    vsce verify-pat ms-azuretools --azure-credential
-
-              # requires package.json to be present
               # - task: AzureCLI@2
-              #   displayName: Run vsce publish
+              #   displayName: Get WIF user Id
               #   inputs:
               #     azureSubscription: AzCodeReleases
               #     scriptType: pscore
               #     scriptLocation: inlineScript
               #     inlineScript: |
-              #       vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s
+              #       az rest -u https://app.vssps.visualstudio.com/_apis/profile/profiles/me --resource 499b84ac-1321-427f-aa17-267ca6975798
+
+              # - task: AzureCLI@2
+              #   displayName: Verify PAT
+              #   inputs:
+              #     azureSubscription: AzCodeReleases
+              #     scriptType: pscore
+              #     scriptLocation: inlineScript
+              #     inlineScript: |
+              #       vsce verify-pat ms-azuretools --azure-credential
+
+              # requires package.json to be present
+              - task: AzureCLI@2
+                displayName: Run vsce publish
+                inputs:
+                  azureSubscription: AzCodeReleases
+                  scriptType: pscore
+                  scriptLocation: inlineScript
+                  inlineScript: |
+                    vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s
