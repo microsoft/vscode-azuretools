@@ -28,7 +28,6 @@ extends:
         jobs:
           - deployment: PublishExtension   # name of the deployment job, A-Z, a-z, 0-9, and underscore. The word "deploy" is a keyword and is unsupported as the deployment name.
             displayName: Publish extension  # friendly name to display in the UI
-            variables: # several syntaxes, see specific section
             environment: AzCodeDeploy # target environment name and optionally a resource name to record the deployment history; format: <environment-name>.<resource-name>
             strategy:
               runOnce:    #rolling, canary are the other strategies that are supported
