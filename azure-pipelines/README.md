@@ -96,6 +96,45 @@ extends:
 </Project>
 ```
 
+### Extension release pipeline
+
+This pipeline only downloads and releases signed VSIX artifacts from the specified build pipeline.
+
+The build pipeline needs to upload the following artifacts for this pipeline to work:
+1. extension.vsix
+2. package.json (needed to verify the extension name and version when publishing)
+3. extension.manifest (created with `vsce generate-manifest`)
+4. extension.signature.p7s (result of signing the manifest)
+
+Use and modify the following YAML file to use the extension release pipeline template. Make sure to replace the `source` field with the name of the pipeline that produces the artifacts you want to release. 
+
+```yaml
+trigger: none # Only run this pipeline when manually triggered
+
+resources:
+  pipelines:
+    - pipeline: build # identifier to use in pipeline resource variables
+      source: \Azure Tools\VSCode\Extensions\vscode-azurecontainerapps # name of the pipeline that produces the artifacts REPLACE THIS WITH YOUR PIPELINE NAME
+  repositories:
+    - repository: azExtTemplates
+      type: github
+      name: microsoft/vscode-azuretools
+      ref: alex/release-template
+      endpoint: GitHub-AzureTools # The service connection to use when accessing this repository
+
+variables:
+  # Required by MicroBuild template
+  - name: TeamName
+    value: "Azure Tools for VS Code"
+
+# Use those templates
+extends:
+  template: azure-pipelines/release-extension.yml@azExtTemplates
+  parameters:
+    pipelineID: $(resources.pipeline.build.pipelineID)
+    runID: $(resources.pipeline.build.runID)
+```
+
 ### (DEPRECATED) Primary pipelines
 
 To use these base pipeline templates:
