@@ -1,0 +1,79 @@
+parameters:
+  - name: pipelineID
+    type: string
+  - name: runID
+    type: string
+
+# `resources` specifies the location of templates to pick up, use it to get 1ES templates
+resources:
+  repositories:
+    - repository: 1esPipelines
+      type: git
+      name: 1ESPipelineTemplates/MicroBuildTemplate
+      ref: refs/tags/release
+
+extends:
+  template: azure-pipelines/MicroBuild.1ES.Official.yml@1esPipelines
+  parameters:
+    sdl:
+      codeql:
+        enabled: false
+    pool:
+      name: VSEngSS-MicroBuild2022-1ES # Name of your hosted pool
+      image: server2022-microbuildVS2022-1es # Name of the image in your pool. If not specified, first image of the pool is used
+      os: windows # OS of the image. Allowed values: windows, linux, macOS
+
+    stages:
+      - stage: Release
+        jobs:
+          - job: Release
+            steps:
+              - checkout: none
+              - task: DownloadPipelineArtifact@2
+                displayName: Download artifacts from Build pipeline
+                inputs:
+                  source: specific # download from a specific pipelines run
+                  project: DevDiv
+                  definition: ${{ parameters.pipelineID }}
+                  buildVersionToDownload: specific
+                  runId: ${{ parameters.runID }}
+                  artifact: Build Root
+                  targetPath: $(System.DefaultWorkingDirectory)
+
+              # Find the vsix to release and set the vsix file name variable
+              - powershell: |
+                  # Get all .vsix files in the current directory
+                  $vsixFiles = Get-ChildItem -Path $(Build.SourcesDirectory) -Filter *.vsix -File
+
+                  # Check if more than one .vsix file is found
+                  if ($vsixFiles.Count -gt 1) {
+                    Write-Error "More than one .vsix file found."
+                    exit 1
+                  } elseif ($vsixFiles.Count -eq 0) {
+                    Write-Error "No .vsix files found."
+                    exit 1
+                  } else {
+                    # Set the pipeline variable
+                    $vsixFileName = $vsixFiles.Name
+                    Write-Output "##vso[task.setvariable variable=vsixFileName;]$vsixFileName"
+                    Write-Output "Found .vsix file: $vsixFileName"
+                  }
+                displayName: "Find and Set .vsix File Variable"
+
+              - task: UseNode@1
+                inputs:
+                  version: "20.x"
+                displayName: "Install Node.js"
+
+              - script: npm i -g @vscode/vsce
+                displayName: "Install vsce"
+
+              # requires package.json to be present
+              - task: AzureCLI@2
+                displayName: Run vsce publish
+                inputs:
+                  azureSubscription: AzCodeReleases
+                  scriptType: pscore
+                  scriptLocation: inlineScript
+                  inlineScript: |
+                    vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s
