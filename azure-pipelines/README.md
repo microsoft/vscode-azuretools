@@ -101,7 +101,7 @@ extends:
 This pipeline only downloads and releases signed VSIX artifacts from the specified build pipeline.
 
 The build pipeline needs to upload the following artifacts for this pipeline to work:
-1. extension.vsix
+1. extension.vsix (name can vary, pipeline looks for a single *.vsix file)
 2. package.json (needed to verify the extension name and version when publishing)
 3. extension.manifest (created with `vsce generate-manifest`)
 4. extension.signature.p7s (result of signing the manifest)
