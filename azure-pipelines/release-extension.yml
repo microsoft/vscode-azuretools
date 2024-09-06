@@ -54,16 +54,26 @@ extends:
                   # Get the version from package.json
                   $packageJsonPath = "$(Build.SourcesDirectory)/package.json"
                   $npmVersionString = (Get-Content $packageJsonPath | ConvertFrom-Json).version
+
+                  $isDryRun = "$env:dryRun"
                   
                   # Get the current build number
                   $currentBuildNumber = "$(Build.BuildId)"
                   
                   # Create the new build number by prepending the version
-                  $newBuildNumber = "$npmVersionString-$currentBuildNumber"
+                  $dry = ""
+
+                  if ($isDryRun -eq true) {
+                    $dry = "dry"
+                  }
+
+                  $newBuildNumber = "$npmVersionString-$dry-$currentBuildNumber"
                   
                   # Update the build number in Azure DevOps
                   Write-Output "##vso[build.updatebuildnumber]$newBuildNumber"
                 displayName: 'Prepend version from package.json to build number'
+                env:
+                  dryRun: ${{ parameters.dryRun }}
 
               - powershell: |
                   # Get the version from package.json
@@ -119,12 +129,12 @@ extends:
                     - script: npm i -g @vscode/vsce
                       displayName: "Install vsce"
 
-                    # # requires package.json to be present
-                    # - task: AzureCLI@2
-                    #   displayName: Run vsce publish
-                    #   inputs:
-                    #     azureSubscription: AzCodeReleases
-                    #     scriptType: pscore
-                    #     scriptLocation: inlineScript
-                    #     inlineScript: |
-                    #       vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s
+                    # requires package.json to be present
+                    - task: AzureCLI@2
+                      displayName: Run vsce publish
+                      inputs:
+                        azureSubscription: AzCodeReleases
+                        scriptType: pscore
+                        scriptLocation: inlineScript
+                        inlineScript: |
+                          vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s
