@@ -63,6 +63,16 @@ extends:
                 displayName: 'Prepend version from package.json to build number'
 
               - powershell: |
+                  # Echo the parameter value
+                  Write-Output "The parameter value is: $(publishVersion)"
+                displayName: 'Echo Parameter Value'
+
+              - powershell: |
+                  # Echo the parameter value
+                  Write-Output "The parameter value is: $(parameters.publishVersion)"
+                displayName: 'Echo Parameter Value 2'
+
+              - powershell: |
                   # Get the version from package.json
                   $packageJsonPath = "$(Build.SourcesDirectory)/package.json"
                   $npmVersionString = (Get-Content $packageJsonPath | ConvertFrom-Json).version
