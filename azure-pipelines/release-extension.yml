@@ -72,7 +72,7 @@ extends:
                   if ($npmVersionString -eq $publishVersion) {
                     Write-Error "Publish version matches package.json version. Proceeding with release."
                   } else {
-                    Write-Error "Publish version doesn't match version found in package.json. Cancelling release."
+                    Write-Error "Publish version $publishVersion doesn't match version found in package.json ($npmVersionString). Cancelling release."
                     exit 1
                   }
                 displayName: 'Verify publish version'
