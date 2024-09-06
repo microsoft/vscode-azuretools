@@ -60,41 +60,19 @@ extends:
                 displayName: 'Prepend version from package.json to build number'
 
               - powershell: |
-                  # Access the parameter directly if passed in YAML
-                  param(
-                    [string]$publishVersion
-                  )
-
-                  Write-Host "Publish Version: $publishVersion"
-
-                  # Compare with a version obtained from a file or other source
+                  # Get the version from package.json
                   $packageJsonPath = "$(Build.SourcesDirectory)/package.json"
                   $npmVersionString = (Get-Content $packageJsonPath | ConvertFrom-Json).version
-
+                  $publishVersion = "${{ parameters.publishVersion }}"
+                  
+                   # Check if more than one .vsix file is found
                   if ($npmVersionString -eq $publishVersion) {
-                    Write-Host "Publish version $publishVersion matches package.json version. Proceeding with release."
+                    Write-Error "Publish version matches package.json version. Proceeding with release."
                   } else {
-                    Write-Error "Publish version $publishVersion doesn't match version found in package.json ($npmVersionString). Cancelling release."
+                    Write-Error "Publish version doesn't match version found in package.json. Cancelling release."
                     exit 1
                   }
                 displayName: 'Verify publish version'
-                inputs:
-                  publishVersion: ${{ parameters.publishVersion }}
-
-              # - powershell: |
-              #     # Get the version from package.json
-              #     $packageJsonPath = "$(Build.SourcesDirectory)/package.json"
-              #     $npmVersionString = (Get-Content $packageJsonPath | ConvertFrom-Json).version
-              #     $publishVersion = "$(parameters.publishVersion)"
-                  
-              #      # Check if more than one .vsix file is found
-              #     if ($npmVersionString -eq $publishVersion) {
-              #       Write-Error "Publish version matches package.json version. Proceeding with release."
-              #     } else {
-              #       Write-Error "Publish version doesn't match version found in package.json. Cancelling release."
-              #       exit 1
-              #     }
-              #   displayName: 'Verify publish version'
 
               # Find the vsix to release and set the vsix file name variable
               - powershell: |
