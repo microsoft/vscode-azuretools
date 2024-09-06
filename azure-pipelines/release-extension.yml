@@ -27,7 +27,7 @@ extends:
 
     stages:
       - stage: Release
-        displayName: Release extension ${{ Build.Repository.Name }}
+        displayName: Release extension
         jobs:
           - job: downloadArtifacts_job
             displayName: Download artifacts
