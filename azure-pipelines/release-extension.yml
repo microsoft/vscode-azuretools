@@ -105,8 +105,8 @@ extends:
           - deployment: Publish
             dependsOn: downloadArtifacts_job
             displayName: Publish extension
-            environment: ${{ parameters.environmentName }}
-            condition: eq(parameters.dryRun, false)
+            environment: and(succeeded(), ${{ eq(parameters.dryRun, false) }})
+            condition: eq($(parameters.dryRun, false)
             strategy:
               runOnce:
                 deploy:
