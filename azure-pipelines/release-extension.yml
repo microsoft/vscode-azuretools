@@ -4,9 +4,6 @@ parameters:
     type: string
   - name: runID
     type: string
-  - name: extensionName
-    type: string
-    default: ''
 
   # The intended extension version to publish. 
   # This is used to verify the version in package.json matches the version to publish to avoid accidental publishing.
@@ -44,7 +41,7 @@ extends:
       os: windows # OS of the image. Allowed values: windows, linux, macOS
 
     stages:
-      - stage: Release_${{ parameters.extensionName }}_${{ parameters.publishVersion }}
+      - stage: Release
         displayName: Release extension
         jobs:
           - job: downloadArtifacts_job
