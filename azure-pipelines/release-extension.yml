@@ -3,6 +3,8 @@ parameters:
     type: string
   - name: runID
     type: string
+  - name: publishVersion
+    type: string
 
 # `resources` specifies the location of templates to pick up, use it to get 1ES templates
 resources:
@@ -24,7 +26,7 @@ extends:
       os: windows # OS of the image. Allowed values: windows, linux, macOS
 
     stages:
-      - stage: Release
+      - stage: Release extension
         jobs:
           - job: downloadArtifacts_job
             displayName: Download artifacts
@@ -56,6 +58,20 @@ extends:
                   Write-Output "##vso[build.updatebuildnumber]$newBuildNumber"
                 displayName: 'Prepend version from package.json to build number'
 
+              - powershell: |
+                  # Get the version from package.json
+                  $packageJsonPath = "$(Build.SourcesDirectory)/package.json"
+                  $npmVersionString = (Get-Content $packageJsonPath | ConvertFrom-Json).version
+                  
+                   # Check if more than one .vsix file is found
+                  if (npmVersionString -eq ${{ parameters.publishVersion }}) {
+                    Write-Error "Publish version matches package.json version. Proceeding with release."
+                  } else {
+                    Write-Error "Publish version doesn't match version found in package.json. Cancelling release."
+                    exit 1
+                  }
+                displayName: 'Verify publish version'
+
               # Find the vsix to release and set the vsix file name variable
               - powershell: |
                   # Get all .vsix files in the current directory
@@ -75,8 +91,6 @@ extends:
                     Write-Output "Found .vsix file: $vsixFileName"
                   }
                 displayName: "Find and Set .vsix File Variable"
-
-
 
           - deployment: Publish
             dependsOn: downloadArtifacts_job
