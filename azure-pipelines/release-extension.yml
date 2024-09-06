@@ -8,6 +8,9 @@ parameters:
   - name: environmentName
     type: string
     default: AzCodeDeploy
+  - name: dryRun
+    type: boolean
+    default: false
 
 # `resources` specifies the location of templates to pick up, use it to get 1ES templates
 resources:
@@ -103,6 +106,7 @@ extends:
             dependsOn: downloadArtifacts_job
             displayName: Publish extension
             environment: ${{ parameters.environmentName }}
+            condition: eq(parameters.dryRun, false)
             strategy:
               runOnce:
                 deploy:
