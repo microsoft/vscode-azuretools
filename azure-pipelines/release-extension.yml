@@ -66,11 +66,14 @@ extends:
                   # Echo the parameter value
                   Write-Output "The parameter value is: $(publishVersion)"
                 displayName: 'Echo Parameter Value'
+                continueOnError: true
+
 
               - powershell: |
                   # Echo the parameter value
                   Write-Output "The parameter value is: $(parameters.publishVersion)"
                 displayName: 'Echo Parameter Value 2'
+                continueOnError: true
 
               - powershell: |
                   # Get the version from package.json
