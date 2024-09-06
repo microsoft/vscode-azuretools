@@ -67,7 +67,7 @@ extends:
                   $packageJsonPath = "$(Build.SourcesDirectory)/package.json"
                   $npmVersionString = (Get-Content $packageJsonPath | ConvertFrom-Json).version
                   $publishVersion = "$env:publishVersion"
-                  
+                  Write-Output "Publishing version: $publishVersion"
                    # Check if more than one .vsix file is found
                   if ($npmVersionString -eq $publishVersion) {
                     Write-Error "Publish version matches package.json version. Proceeding with release."
