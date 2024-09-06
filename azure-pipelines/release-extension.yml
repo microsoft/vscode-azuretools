@@ -8,9 +8,6 @@ parameters:
   - name: extensionName
     type: string
 
-  - name: repositoryName
-    type: string
-
   # The intended extension version to publish. 
   # This is used to verify the version in package.json matches the version to publish to avoid accidental publishing.
   - name: publishVersion
