@@ -94,7 +94,7 @@ extends:
 
           - deployment: Publish
             dependsOn: downloadArtifacts_job
-            displayName: Publish ${{ Build.Repository.Name }}
+            displayName: Publish extension
             environment: AzCodeDeploy
             strategy:
               runOnce:
