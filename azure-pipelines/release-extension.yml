@@ -1,13 +1,22 @@
 parameters:
+  # pipelineID and runID are used to download the artifacts from a specific build pipeline
   - name: pipelineID
     type: string
   - name: runID
     type: string
+
+  # The intended extension version to publish. 
+  # This is used to verify the version in package.json matches the version to publish to avoid accidental publishing.
   - name: publishVersion
     type: string
+
+  # Customize the environment to associate the deployment with. 
+  # Useful to control which group of people should be required to approve the deployment.
   - name: environmentName
     type: string
     default: AzCodeDeploy
+
+    # When true, skips the deployment job which actually publishes the extension
   - name: dryRun
     type: boolean
     default: false
@@ -52,24 +61,19 @@ extends:
 
               - powershell: |
                   # Get the version from package.json
+                  $repoName = "$(Build.Repository.Name)"
                   $packageJsonPath = "$(Build.SourcesDirectory)/package.json"
                   $npmVersionString = (Get-Content $packageJsonPath | ConvertFrom-Json).version
-
                   $isDryRun = "$env:dryRun"
-                  
-                  # Get the current build number
                   $currentBuildNumber = "$(Build.BuildId)"
-                  
-                  # Create the new build number by prepending the version
+                
                   $dry = ""
-                  Write-Output "Is dry run: $isDryRun"
                   if ($isDryRun -eq 'True') {
+                    Write-Output "Dry run was set to True. Adding 'dry' to the build number."
                     $dry = "dry"
                   }
 
-                  $newBuildNumber = "$npmVersionString-$dry-$currentBuildNumber"
-                  
-                  # Update the build number in Azure DevOps
+                  $newBuildNumber = "$repoName-$npmVersionString-$dry-$currentBuildNumber"
                   Write-Output "##vso[build.updatebuildnumber]$newBuildNumber"
                 displayName: 'Prepend version from package.json to build number'
                 env:
