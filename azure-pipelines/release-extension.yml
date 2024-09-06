@@ -5,6 +5,12 @@ parameters:
   - name: runID
     type: string
 
+  - name: extensionName
+    type: string
+
+  - name: repositoryName
+    type: string
+
   # The intended extension version to publish. 
   # This is used to verify the version in package.json matches the version to publish to avoid accidental publishing.
   - name: publishVersion
@@ -41,7 +47,7 @@ extends:
       os: windows # OS of the image. Allowed values: windows, linux, macOS
 
     stages:
-      - stage: Release_${{ parameters.environmentName }}
+      - stage: Release_${{ parameters.extensionName }}_${{ parameters.publishVersion }}
         displayName: Release extension
         jobs:
           - job: downloadArtifacts_job
@@ -119,8 +125,6 @@ extends:
                     Write-Output "Found .vsix file: $vsixFileName"
                   }
                 displayName: "Find and Set .vsix File Variable"
-
-
 
           - deployment: Publish
             dependsOn: downloadArtifacts_job
