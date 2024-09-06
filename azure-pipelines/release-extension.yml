@@ -63,9 +63,10 @@ extends:
                   # Get the version from package.json
                   $packageJsonPath = "$(Build.SourcesDirectory)/package.json"
                   $npmVersionString = (Get-Content $packageJsonPath | ConvertFrom-Json).version
+                  $publishVersion = "$(parameters.publishVersion)"
                   
                    # Check if more than one .vsix file is found
-                  if (npmVersionString -eq ${{ parameters.publishVersion }}) {
+                  if ($npmVersionString -eq $publishVersion) {
                     Write-Error "Publish version matches package.json version. Proceeding with release."
                   } else {
                     Write-Error "Publish version doesn't match version found in package.json. Cancelling release."
