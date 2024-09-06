@@ -71,9 +71,7 @@ extends:
           - deployment: Publish
             dependsOn: downloadArtifacts_job
             displayName: Publish $(Build.Repository.Name)
-            environment:
-              name: AzCodeDeploy
-              resourceName: $(Build.Repository.Name)
+            environment: AzCodeDeploy
             strategy:
               runOnce:
                 deploy:
