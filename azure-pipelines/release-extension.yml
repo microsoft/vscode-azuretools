@@ -122,7 +122,7 @@ extends:
 
 
 
-          - deployment: Publish_${{ parameters.pipelineID }}
+          - deployment: Publish_${{ parameters.environmentName }}
             dependsOn: downloadArtifacts_job
             displayName: Publish extension
             environment: ${{ parameters.environmentName }}
