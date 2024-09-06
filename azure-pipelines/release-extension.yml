@@ -66,7 +66,7 @@ extends:
                   # Get the version from package.json
                   $packageJsonPath = "$(Build.SourcesDirectory)/package.json"
                   $npmVersionString = (Get-Content $packageJsonPath | ConvertFrom-Json).version
-                  $publishVersion = "$(parameters.publishVersion)"
+                  $publishVersion = "$env:publishVersion"
                   
                    # Check if more than one .vsix file is found
                   if ($npmVersionString -eq $publishVersion) {
@@ -76,6 +76,8 @@ extends:
                     exit 1
                   }
                 displayName: 'Verify publish version'
+                env:
+                  publishVersion: ${{ parameters.publishVersion }}
 
               # Find the vsix to release and set the vsix file name variable
               - powershell: |
