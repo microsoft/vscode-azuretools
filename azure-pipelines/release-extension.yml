@@ -13,7 +13,7 @@ resources:
       ref: refs/tags/release
 
 extends:
-  template: azure-pipelines/MicroBuild.1ES.Official.yml@1esPipelines
+  template: azure-pipelines/MicroBuild.1ES.Official.Publish.yml@1esPipelines
   parameters:
     sdl:
       codeql:
