@@ -41,7 +41,7 @@ extends:
       os: windows # OS of the image. Allowed values: windows, linux, macOS
 
     stages:
-      - stage: Release_${{ parameters.pipelineID }}
+      - stage: Release_${{ parameters.environmentName }}
         displayName: Release extension
         jobs:
           - job: downloadArtifacts_job
@@ -122,7 +122,7 @@ extends:
 
 
 
-          - deployment: Publish_${{ parameters.environmentName }}
+          - deployment: Publish
             dependsOn: downloadArtifacts_job
             displayName: Publish extension
             environment: ${{ parameters.environmentName }}
