@@ -63,19 +63,6 @@ extends:
                 displayName: 'Prepend version from package.json to build number'
 
               - powershell: |
-                  # Echo the parameter value
-                  Write-Output "The parameter value is: $(publishVersion)"
-                displayName: 'Echo Parameter Value'
-                continueOnError: true
-
-
-              - powershell: |
-                  # Echo the parameter value
-                  Write-Output "The parameter value is: $(parameters.publishVersion)"
-                displayName: 'Echo Parameter Value 2'
-                continueOnError: true
-
-              - powershell: |
                   # Get the version from package.json
                   $packageJsonPath = "$(Build.SourcesDirectory)/package.json"
                   $npmVersionString = (Get-Content $packageJsonPath | ConvertFrom-Json).version
@@ -85,7 +72,7 @@ extends:
                   if ($npmVersionString -eq $publishVersion) {
                     Write-Error "Publish version matches package.json version. Proceeding with release."
                   } else {
-                    Write-Error "Publish version $publishVersion doesn't match version found in package.json ($npmVersionString). Cancelling release."
+                    Write-Error "Publish version $publishVersion doesn't match version found in package.json $npmVersionString. Cancelling release."
                     exit 1
                   }
                 displayName: 'Verify publish version'
