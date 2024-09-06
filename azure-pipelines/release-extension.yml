@@ -61,6 +61,30 @@ extends:
 
               - powershell: |
                   # Get the version from package.json
+                  
+                  $packageJsonPath = "$(Build.SourcesDirectory)/package.json"
+                  $npmVersionString = (Get-Content $packageJsonPath | ConvertFrom-Json).version
+                  $isDryRun = "$env:dryRun"
+                  $currentBuildNumber = "$(Build.BuildId)"
+
+                  $repoName = "$(Build.Repository.Name)"
+                  $repoNameParts = $repoName -split '/'
+                  $repoNameWithoutOwner = $repoNameParts[-1]
+                
+                  $dry = ""
+                  if ($isDryRun -eq 'True') {
+                    Write-Output "Dry run was set to True. Adding 'dry' to the build number."
+                    $dry = "dry"
+                  }
+
+                  $newBuildNumber = "$repoNameWithoutOwner-$npmVersionString-$dry-$currentBuildNumber"
+                  Write-Output "##vso[build.updatebuildnumber]$newBuildNumber"
+                displayName: 'Prepend version from package.json to build number'
+                env:
+                  dryRun: ${{ parameters.dryRun }}
+
+              - powershell: |
+                  # Get the version from package.json
                   $packageJsonPath = "$(Build.SourcesDirectory)/package.json"
                   $npmVersionString = (Get-Content $packageJsonPath | ConvertFrom-Json).version
                   $publishVersion = "$env:publishVersion"
@@ -96,29 +120,7 @@ extends:
                   }
                 displayName: "Find and Set .vsix File Variable"
 
-              - powershell: |
-                  # Get the version from package.json
-                  
-                  $packageJsonPath = "$(Build.SourcesDirectory)/package.json"
-                  $npmVersionString = (Get-Content $packageJsonPath | ConvertFrom-Json).version
-                  $isDryRun = "$env:dryRun"
-                  $currentBuildNumber = "$(Build.BuildId)"
 
-                  $repoName = "$(Build.Repository.Name)"
-                  $repoNameParts = $repoName -split '/'
-                  $repoNameWithoutOwner = $repoNameParts[-1]
-                
-                  $dry = ""
-                  if ($isDryRun -eq 'True') {
-                    Write-Output "Dry run was set to True. Adding 'dry' to the build number."
-                    $dry = "dry"
-                  }
-
-                  $newBuildNumber = "$repoNameWithoutOwner-$npmVersionString-$dry-$currentBuildNumber"
-                  Write-Output "##vso[build.updatebuildnumber]$newBuildNumber"
-                displayName: 'Prepend version from package.json to build number'
-                env:
-                  dryRun: ${{ parameters.dryRun }}
 
           - deployment: Publish
             dependsOn: downloadArtifacts_job
