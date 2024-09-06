@@ -73,7 +73,7 @@ extends:
             displayName: Publish $(Build.Repository.Name)
             environment:
               name: AzCodeDeploy
-              resourceName: ${{ Build.Repository.Name }}
+              resourceName: $(Build.Repository.Name)
             strategy:
               runOnce:
                 deploy:
