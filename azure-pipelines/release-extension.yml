@@ -41,6 +41,21 @@ extends:
                   artifact: Build Root
                   targetPath: $(System.DefaultWorkingDirectory)
 
+              - powershell: |
+                  # Get the version from package.json
+                  $packageJsonPath = "$(Build.SourcesDirectory)/package.json"
+                  $npmVersionString = (Get-Content $packageJsonPath | ConvertFrom-Json).version
+                  
+                  # Get the current build number
+                  $currentBuildNumber = "$(Build.BuildId)"
+                  
+                  # Create the new build number by prepending the version
+                  $newBuildNumber = "$npmVersionString-$currentBuildNumber"
+                  
+                  # Update the build number in Azure DevOps
+                  Write-Output "##vso[build.updatebuildnumber]$newBuildNumber"
+                displayName: 'Prepend version from package.json to build number'
+
               # Find the vsix to release and set the vsix file name variable
               - powershell: |
                   # Get all .vsix files in the current directory
@@ -61,16 +76,11 @@ extends:
                   }
                 displayName: "Find and Set .vsix File Variable"
 
-              - script: |
-                  npmVersionString=$(node -p "require('./package.json').version") 
-                  currentBuildNumber=$(Build.BuildId)
-                  echo "##vso[task.setvariable variable=packageVersion;isOutput=true]$npmVersionString"
-                  echo "##vso[build.updatebuildnumber]$npmVersionString-$currentBuildNumber"
-                displayName: 'Add package.json version to build number'
+
 
           - deployment: Publish
             dependsOn: downloadArtifacts_job
-            displayName: Publish $(Build.Repository.Name)
+            displayName: Publish ${{ Build.Repository.Name }}
             environment: AzCodeDeploy
             strategy:
               runOnce:
