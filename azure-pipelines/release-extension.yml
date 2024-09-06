@@ -62,8 +62,8 @@ extends:
                   
                   # Create the new build number by prepending the version
                   $dry = ""
-
-                  if ($isDryRun -eq true) {
+                  Write-Output "Is dry run: $isDryRun"
+                  if ($isDryRun -eq 'True') {
                     $dry = "dry"
                   }
 
