@@ -26,7 +26,8 @@ extends:
       os: windows # OS of the image. Allowed values: windows, linux, macOS
 
     stages:
-      - stage: Release extension
+      - stage: Release
+        displayName: Release extension
         jobs:
           - job: downloadArtifacts_job
             displayName: Download artifacts
