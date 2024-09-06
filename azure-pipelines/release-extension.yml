@@ -73,7 +73,7 @@ extends:
                   Write-Output "Publishing version: $publishVersion"
                    # Check if more than one .vsix file is found
                   if ($npmVersionString -eq $publishVersion) {
-                    Write-Error "Publish version matches package.json version. Proceeding with release."
+                    Write-Output "Publish version matches package.json version. Proceeding with release."
                   } else {
                     Write-Error "Publish version $publishVersion doesn't match version found in package.json $npmVersionString. Cancelling release."
                     exit 1
