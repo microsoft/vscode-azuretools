@@ -133,7 +133,7 @@ resources:
     - repository: azExtTemplates
       type: github
       name: microsoft/vscode-azuretools
-      ref: alex/release-testing
+      ref: main
       endpoint: GitHub-AzureTools
 
 variables:
