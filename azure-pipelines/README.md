@@ -100,13 +100,18 @@ extends:
 
 This pipeline downloads and releases signed VSIX artifacts from the specified build pipeline.
 
+Some safety features have been added to this pipeline to prevent accidental releases:
+1. Releases will require approval from an environment. The environment can be specified and every environment can have a different group of members that can approve releases. Self approval can be enabled/disabled.
+2. A version string is required at pipeline run time that will be matched against the version present in the package.json downloaded from the build pipeline artifacts.
+3. Added a "Dry Run" parameter that when set will skip the last step that actually publishes the extension.
+
 The build pipeline needs to upload the following artifacts for this pipeline to work:
 1. extension.vsix (name can vary, pipeline looks for a single *.vsix file)
 2. package.json (needed to verify the extension name and version when publishing)
 3. extension.manifest (created with `vsce generate-manifest`)
 4. extension.signature.p7s (result of signing the manifest)
 
-Use and modify the following YAML file to use the extension release pipeline template. Make sure to replace the `source` field with the name of the pipeline that produces the artifacts you want to release. 
+Use and modify the following YAML file to use the extension release pipeline template. Make sure to replace the `source` field with the name of the pipeline that produces the artifacts you want to release. Lines that should/could be customized will be marked with `# CUSTOMIZE`.
 
 ```yaml
 trigger: none
@@ -123,7 +128,7 @@ parameters:
 resources:
   pipelines:
     - pipeline: build
-      source: \Azure Tools\VSCode\Extensions\vscode-azurecontainerapps # name of the pipeline that produces the artifacts
+      source: \Azure Tools\VSCode\Extensions\vscode-azurecontainerapps # CUSTOMIZE - location of the pipeline that produces the artifacts
   repositories:
     - repository: azExtTemplates
       type: github
@@ -134,7 +139,7 @@ resources:
 variables:
   # Required by MicroBuild template
   - name: TeamName
-    value: "Azure Tools for VS Code"
+    value: "Azure Tools for VS Code" # CUSTOMIZE
 
 # Use those templates
 extends:
@@ -144,7 +149,7 @@ extends:
     runID: $(resources.pipeline.build.runID)
     publishVersion: ${{ parameters.publishVersion }}
     dryRun: ${{ parameters.dryRun }}
-    environmentName: AzCodeDeploy
+    environmentName: AzCodeDeploy # CUSTOMIZE
 ```
 
 The extension release pipeline has the following parameters.
