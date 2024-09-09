@@ -59,6 +59,7 @@ extends:
                   artifact: Build Root
                   targetPath: $(System.DefaultWorkingDirectory)
 
+              # Modify the build number to include repo name, extension version, and if dry run is true
               - powershell: |
                   # Get the version from package.json
                   
@@ -83,6 +84,8 @@ extends:
                 env:
                   dryRun: ${{ parameters.dryRun }}
 
+              # For safety, verify the version in package.json matches the version to publish entered by the releaser
+              # If they don't match, this step fails
               - powershell: |
                   # Get the version from package.json
                   $packageJsonPath = "$(Build.SourcesDirectory)/package.json"
@@ -101,6 +104,7 @@ extends:
                   publishVersion: ${{ parameters.publishVersion }}
 
               # Find the vsix to release and set the vsix file name variable
+              # Fails with an error if more than one .vsix file is found, or if no .vsix file is found
               - powershell: |
                   # Get all .vsix files in the current directory
                   $vsixFiles = Get-ChildItem -Path $(Build.SourcesDirectory) -Filter *.vsix -File
