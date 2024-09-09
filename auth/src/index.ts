@@ -7,6 +7,7 @@ export * from './AzureAuthentication';
 export * from './AzureDevOpsSubscriptionProvider';
 export * from './AzureSubscription';
 export * from './AzureSubscriptionProvider';
+export * from './getSessionFromVSCode';
 export * from './NotSignedInError';
 export * from './signInToTenant';
 export * from './utils/configuredAzureEnv';

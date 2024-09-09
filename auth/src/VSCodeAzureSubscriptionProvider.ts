@@ -6,11 +6,11 @@
 import type { SubscriptionClient, TenantIdDescription } from '@azure/arm-resources-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
 import type { TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
 import * as vscode from 'vscode';
-import type { AzureAuthentication } from './AzureAuthentication';
-import type { AzureSubscription, SubscriptionId, TenantId } from './AzureSubscription';
-import type { AzureSubscriptionProvider } from './AzureSubscriptionProvider';
-import { NotSignedInError } from './NotSignedInError';
+import { AzureAuthentication } from './AzureAuthentication';
+import { AzureSubscription, SubscriptionId, TenantId } from './AzureSubscription';
+import { AzureSubscriptionProvider } from './AzureSubscriptionProvider';
 import { getSessionFromVSCode } from './getSessionFromVSCode';
+import { NotSignedInError } from './NotSignedInError';
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from './utils/configuredAzureEnv';
 
 const EventDebounce = 5 * 1000; // 5 seconds
@@ -58,8 +58,8 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      *
      * @returns A list of tenants.
      */
-    public async getTenants(): Promise<TenantIdDescription[]> {
-        const { client } = await this.getSubscriptionClient();
+    public async getTenants(session?: vscode.AuthenticationSession): Promise<TenantIdDescription[]> {
+        const { client } = await this.getSubscriptionClient(undefined, undefined, session);
 
         const results: TenantIdDescription[] = [];
 
@@ -91,24 +91,29 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
         try {
             this.suppressSignInEvents = true;
 
-            // Get the list of tenants
-            for (const tenant of await this.getTenants()) {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                const tenantId = tenant.tenantId!;
+            // Get the list of tenants from each account
+            const accounts = await vscode.authentication.getAccounts(getConfiguredAuthProviderId());
+            for (const account of accounts) {
+                const session = await vscode.authentication.getSession(getConfiguredAuthProviderId(), ['https://management.azure.com/.default'], { account: account }); //not sure about this due to scope
+                for (const tenant of await this.getTenants(session)) {
+                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                    const tenantId = tenant.tenantId!;
 
-                // If filtering is enabled, and the current tenant is not in that list, then skip it
-                if (shouldFilterTenants && !tenantIds.includes(tenantId)) {
-                    continue;
+                    // If filtering is enabled, and the current tenant is not in that list, then skip it
+                    if (shouldFilterTenants && !tenantIds.includes(tenantId)) {
+                        continue;
+                    }
+
+                    // If the user is not signed in to this tenant, then skip it
+                    if (!(await this.isSignedIn(tenantId))) {
+                        continue;
+                    }
+
+                    // For each tenant, get the list of subscriptions
+                    results.push(...await this.getSubscriptionsForTenant(tenantId, account));
                 }
-
-                // If the user is not signed in to this tenant, then skip it
-                if (!(await this.isSignedIn(tenantId))) {
-                    continue;
-                }
-
-                // For each tenant, get the list of subscriptions
-                results.push(...await this.getSubscriptionsForTenant(tenantId));
             }
+
         } finally {
             this.suppressSignInEvents = false;
         }
@@ -207,8 +212,8 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      *
      * @returns The list of subscriptions for the tenant.
      */
-    private async getSubscriptionsForTenant(tenantId: string): Promise<AzureSubscription[]> {
-        const { client, credential, authentication } = await this.getSubscriptionClient(tenantId);
+    private async getSubscriptionsForTenant(tenantId: string, account: vscode.AuthenticationSessionAccountInformation): Promise<AzureSubscription[]> {
+        const { client, credential, authentication } = await this.getSubscriptionClient(tenantId, undefined, undefined, account);
         const environment = getConfiguredAzureEnv();
 
         const subscriptions: AzureSubscription[] = [];
@@ -224,6 +229,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
                 subscriptionId: subscription.subscriptionId!,
                 /* eslint-enable @typescript-eslint/no-non-null-assertion */
                 tenantId: tenantId,
+                account: account
             });
         }
 
@@ -237,9 +243,16 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      *
      * @returns A client, the credential used by the client, and the authentication function
      */
-    private async getSubscriptionClient(tenantId?: string, scopes?: string[]): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
+    private async getSubscriptionClient(tenantId?: string, scopes?: string[], session?: vscode.AuthenticationSession, account?: vscode.AuthenticationSessionAccountInformation): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
         const armSubs = await import('@azure/arm-resources-subscriptions');
-        const session = await getSessionFromVSCode(scopes, tenantId, { createIfNone: false, silent: true });
+        if (!session) {
+            if (account) {
+                session = await getSessionFromVSCode(scopes, tenantId, { createIfNone: false, silent: true, account: account }); //pass in account
+            } else {
+                session = await getSessionFromVSCode(scopes, tenantId, { createIfNone: false, silent: true });
+            }
+        }
+
         if (!session) {
             throw new NotSignedInError();
         }

@@ -41,7 +41,7 @@
         "@types/node-fetch": "2.6.7",
         "@types/semver": "^7.3.9",
         "@types/uuid": "^9.0.1",
-        "@types/vscode": "1.76.0",
+        "@types/vscode": "1.93.0",
         "@typescript-eslint/eslint-plugin": "^5.53.0",
         "@vscode/test-electron": "^2.3.8",
         "eslint": "^8.34.0",
