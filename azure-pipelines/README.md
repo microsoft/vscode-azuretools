@@ -98,7 +98,7 @@ extends:
 
 ### Extension release pipeline
 
-This pipeline only downloads and releases signed VSIX artifacts from the specified build pipeline.
+This pipeline downloads and releases signed VSIX artifacts from the specified build pipeline.
 
 The build pipeline needs to upload the following artifacts for this pipeline to work:
 1. extension.vsix (name can vary, pipeline looks for a single *.vsix file)
@@ -109,18 +109,27 @@ The build pipeline needs to upload the following artifacts for this pipeline to 
 Use and modify the following YAML file to use the extension release pipeline template. Make sure to replace the `source` field with the name of the pipeline that produces the artifacts you want to release. 
 
 ```yaml
-trigger: none # Only run this pipeline when manually triggered
+trigger: none
+
+parameters:
+  - name: publishVersion
+    displayName: Version to publish
+    type: string
+  - name: dryRun
+    displayName: Dry run
+    type: boolean
+    default: false
 
 resources:
   pipelines:
-    - pipeline: build # identifier to use in pipeline resource variables
-      source: \Azure Tools\VSCode\Extensions\vscode-azurecontainerapps # name of the pipeline that produces the artifacts REPLACE THIS WITH YOUR PIPELINE NAME
+    - pipeline: build
+      source: \Azure Tools\VSCode\Extensions\vscode-azurecontainerapps # name of the pipeline that produces the artifacts
   repositories:
     - repository: azExtTemplates
       type: github
       name: microsoft/vscode-azuretools
-      ref: alex/release-template
-      endpoint: GitHub-AzureTools # The service connection to use when accessing this repository
+      ref: alex/release-testing
+      endpoint: GitHub-AzureTools
 
 variables:
   # Required by MicroBuild template
@@ -133,6 +142,37 @@ extends:
   parameters:
     pipelineID: $(resources.pipeline.build.pipelineID)
     runID: $(resources.pipeline.build.runID)
+    publishVersion: ${{ parameters.publishVersion }}
+    dryRun: ${{ parameters.dryRun }}
+    environmentName: AzCodeDeploy
+```
+
+The extension release pipeline has the following parameters.
+
+```yaml
+# pipelineID and runID are used to download the artifacts from a specific build pipeline
+- name: pipelineID
+  type: string
+- name: runID
+  type: string
+
+# Customize the environment to associate the deployment with. 
+# Useful to control which group of people should be required to approve the deployment.
+- name: environmentName
+  type: string
+  default: AzCodeDeploy
+
+# The following parameters are meant to be provded by the user when initiating a pipeline run
+
+# The intended extension version to publish. 
+# This is used to verify the version in package.json matches the version to publish to avoid accidental publishing.
+- name: publishVersion
+  type: string
+
+  # When true, skips the deployment job which actually publishes the extension
+- name: dryRun
+  type: boolean
+  default: false
 ```
 
 ### (DEPRECATED) Primary pipelines
