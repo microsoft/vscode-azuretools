@@ -94,7 +94,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
             // Get the list of tenants from each account
             const accounts = await vscode.authentication.getAccounts(getConfiguredAuthProviderId());
             for (const account of accounts) {
-                const session = await vscode.authentication.getSession(getConfiguredAuthProviderId(), ['https://management.azure.com/.default'], { account: account }); //not sure about this due to scope
+                const session = await vscode.authentication.getSession(getConfiguredAuthProviderId(), ['https://management.azure.com/.default'], { account: account });
                 for (const tenant of await this.getTenants(session)) {
                     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                     const tenantId = tenant.tenantId!;
