@@ -144,14 +144,4 @@ extends:
                         scriptType: pscore
                         scriptLocation: inlineScript
                         inlineScript: |
-                           vsce verify-pat ms-azuretools --azure-credential
-
-                    # requires package.json to be present
-                    # - task: AzureCLI@2
-                    #   displayName: Run vsce publish
-                    #   inputs:
-                    #     azureSubscription: AzCodeReleases
-                    #     scriptType: pscore
-                    #     scriptLocation: inlineScript
-                    #     inlineScript: |
-                    #       vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s
+                          vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s
