@@ -138,12 +138,12 @@ extends:
                     - script: npm i -g @vscode/vsce
                       displayName: "Install vsce"
 
-                    # requires package.json to be present
-                    - task: AzureCLI@2
-                      displayName: Run vsce publish
-                      inputs:
-                        azureSubscription: AzCodeReleases
-                        scriptType: pscore
-                        scriptLocation: inlineScript
-                        inlineScript: |
-                          vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s
+                    # # requires package.json to be present
+                    # - task: AzureCLI@2
+                    #   displayName: Run vsce publish
+                    #   inputs:
+                    #     azureSubscription: AzCodeReleases
+                    #     scriptType: pscore
+                    #     scriptLocation: inlineScript
+                    #     inlineScript: |
+                    #       vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s
