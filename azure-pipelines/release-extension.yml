@@ -45,7 +45,6 @@ extends:
         displayName: Release extension
         jobs:
           - deployment: Publish
-            dependsOn: downloadArtifacts_job
             displayName: Publish extension
             environment: ${{ parameters.environmentName }}
             condition: and(succeeded(), ${{ eq(parameters.dryRun, false) }})
