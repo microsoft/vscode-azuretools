@@ -47,7 +47,6 @@ extends:
           - deployment: Publish
             displayName: Publish extension
             environment: ${{ parameters.environmentName }}
-            condition: and(succeeded(), ${{ eq(parameters.dryRun, false) }})
             strategy:
               runOnce:
                 deploy:
@@ -137,7 +136,17 @@ extends:
                     - script: npm i -g @vscode/vsce
                       displayName: "Install vsce"
 
-                    # # requires package.json to be present
+                    - task: AzureCLI@2
+                      displayName: Run vsce publish
+                      condition: and(succeeded(), ${{ eq(parameters.dryRun, false) }})
+                      inputs:
+                        azureSubscription: AzCodeReleases
+                        scriptType: pscore
+                        scriptLocation: inlineScript
+                        inlineScript: |
+                           vsce verify-pat ms-azuretools --azure-credential
+
+                    # requires package.json to be present
                     # - task: AzureCLI@2
                     #   displayName: Run vsce publish
                     #   inputs:
