@@ -59,7 +59,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      * @returns A list of tenants.
      */
     public async getTenants(account?: vscode.AuthenticationSessionAccountInformation): Promise<TenantIdDescription[]> {
-        const session = await vscode.authentication.getSession(getConfiguredAuthProviderId(), ['https://management.azure.com/.default'], { account: account });
+        const session = await getSessionFromVSCode(undefined, undefined, { account });
         const { client } = await this.getSubscriptionClient(undefined, undefined, session);
 
         const results: TenantIdDescription[] = [];
