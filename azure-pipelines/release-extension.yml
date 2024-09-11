@@ -48,6 +48,7 @@ extends:
             displayName: Publish extension
             environment: ${{ parameters.environmentName }}
             condition: and(succeeded(), ${{ eq(parameters.dryRun, false) }})
+            download: none
             strategy:
               runOnce:
                 deploy:
