@@ -19,7 +19,7 @@ export interface AzureSubscriptionProvider {
      *
      * @returns A list of tenants.
      */
-    getTenants(session?: vscode.AuthenticationSession): Promise<TenantIdDescription[]>;
+    getTenants(account?: vscode.AuthenticationSessionAccountInformation): Promise<TenantIdDescription[]>;
 
     /**
      * Gets a list of Azure subscriptions available to the user.
