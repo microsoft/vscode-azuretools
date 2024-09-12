@@ -30,6 +30,8 @@ steps:
     condition: eq(variables['signprojExists'], True)
     displayName: "\U0001F449 Generate extension manifest"
 
+  - script: dir
+
   - task: DotNetCoreCLI@2
     condition: eq(variables['signprojExists'], True)
     displayName: "\U0001F449 Sign with MSBuild"
