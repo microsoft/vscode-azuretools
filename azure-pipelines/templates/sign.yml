@@ -34,5 +34,6 @@ steps:
     condition: eq(variables['signprojExists'], True)
     displayName: "\U0001F449 Sign with MSBuild"
     inputs:
-      command: 'build -v diag'
+      command: 'build'
+      arguments: '-v diag'
       projects: $(Build.SourcesDirectory)/.azure-pipelines/SignExtension.signproj
