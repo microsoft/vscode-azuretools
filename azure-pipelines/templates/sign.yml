@@ -37,5 +37,7 @@ steps:
     displayName: "\U0001F449 Sign with MSBuild"
     inputs:
       command: 'build'
-      arguments: '-v diag'
+      arguments: '-v d'
       projects: $(Build.SourcesDirectory)/.azure-pipelines/SignExtension.signproj
+
+  - script: dir
