@@ -113,7 +113,6 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
                     results.push(...await this.getSubscriptionsForTenant(tenantId, account));
                 }
             }
-
         } finally {
             this.suppressSignInEvents = false;
         }

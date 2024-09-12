@@ -15,7 +15,7 @@ export interface AzureSubscriptionProvider {
      * Gets a list of tenants available to the user.
      * Use {@link isSignedIn} to check if the user is signed in to a particular tenant.
      *
-     * @param session - Optionally pass in a specific vscode sesssion to get tenants for.
+     * @param account - Optionally pass in a specific account to get tenants for.
      *
      * @returns A list of tenants.
      */
