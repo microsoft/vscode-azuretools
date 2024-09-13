@@ -36,3 +36,16 @@ steps:
     inputs:
       command: 'build'
       projects: $(Build.SourcesDirectory)/.azure-pipelines/SignExtension.signproj
+
+  - pwsh: |
+      $filePath = "extension.signature.p7s"
+
+      if (-Not (Test-Path $filePath)) {
+          Write-Error "The file '$filePath' does not exist."
+          exit 1
+      }
+
+      Write-Output "The file '$filePath' exists."
+      exit 0
+    displayName: "\U0001F449 Verify extension.signature.p7s file was created"
+    condition: eq(variables['signprojExists'], True)
