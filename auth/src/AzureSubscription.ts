@@ -58,7 +58,7 @@ export interface AzureSubscription {
     readonly credential: TokenCredential;
 
     /**
-     * The account associated with this subscription. This is optional as we only need the account if there are duplicate subscriptions.
+     * The account associated with this subscription.
      */
-    readonly account?: vscode.AuthenticationSessionAccountInformation;
+    readonly account: vscode.AuthenticationSessionAccountInformation;
 }
