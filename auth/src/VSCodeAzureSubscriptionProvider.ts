@@ -246,18 +246,17 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
         const armSubs = await import('@azure/arm-resources-subscriptions');
         if (!session) {
             if (account) {
-                session = await getSessionFromVSCode(scopes, tenantId, { createIfNone: false, silent: true, account: account });
+                session = await getSessionFromVSCode(scopes, tenantId, { createIfNone: false, silent: true, account });
             } else {
                 session = await getSessionFromVSCode(scopes, tenantId, { createIfNone: false, silent: true });
             }
         }
 
-        if (!session) {
-            throw new NotSignedInError();
-        }
-
         const credential: TokenCredential = {
             getToken: async () => {
+                if (!session) {
+                    throw new NotSignedInError();
+                }
                 return {
                     token: session.accessToken,
                     expiresOnTimestamp: 0
