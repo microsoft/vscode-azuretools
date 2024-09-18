@@ -56,6 +56,8 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      * Gets a list of tenants available to the user.
      * Use {@link isSignedIn} to check if the user is signed in to a particular tenant.
      *
+     * @param account (Optional) A specific account to get tenants for. If not provided, all accounts will be used.
+     *
      * @returns A list of tenants.
      */
     public async getTenants(account?: vscode.AuthenticationSessionAccountInformation): Promise<TenantIdDescription[]> {
@@ -209,6 +211,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      * Gets the subscriptions for a given tenant.
      *
      * @param tenantId The tenant ID to get subscriptions for.
+     * @param account The account to get the subscriptions for.
      *
      * @returns The list of subscriptions for the tenant.
      */
@@ -240,6 +243,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      * Gets a fully-configured subscription client for a given tenant ID
      *
      * @param tenantId (Optional) The tenant ID to get a client for
+     * @param account The account that you would like to get the session for
      *
      * @returns A client, the credential used by the client, and the authentication function
      */
