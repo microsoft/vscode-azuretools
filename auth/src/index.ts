@@ -12,4 +12,5 @@ export * from './signInToTenant';
 export * from './utils/configuredAzureEnv';
 export * from './utils/getUnauthenticatedTenants';
 export * from './VSCodeAzureSubscriptionProvider';
+export * from './getSessionFromVSCode';
 
