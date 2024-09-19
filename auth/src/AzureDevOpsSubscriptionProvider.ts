@@ -132,6 +132,10 @@ export class AzureDevOpsSubscriptionProvider implements AzureSubscriptionProvide
                 subscriptionId: subscription.subscriptionId!,
                 /* eslint-enable @typescript-eslint/no-non-null-assertion */
                 tenantId,
+                account: {
+                    id: "test-account-id",
+                    label: "test-account",
+                },
             });
         }
 

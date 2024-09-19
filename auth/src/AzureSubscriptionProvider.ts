@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import type { TenantIdDescription } from '@azure/arm-resources-subscriptions';
 import type * as vscode from 'vscode';
 import type { AzureSubscription } from './AzureSubscription';
-import type { TenantIdDescription } from '@azure/arm-resources-subscriptions';
 
 /**
  * An interface for obtaining Azure subscription information
@@ -15,9 +15,11 @@ export interface AzureSubscriptionProvider {
      * Gets a list of tenants available to the user.
      * Use {@link isSignedIn} to check if the user is signed in to a particular tenant.
      *
+     * @param account - Optionally pass in a specific account to get tenants for.
+     *
      * @returns A list of tenants.
      */
-    getTenants(): Promise<TenantIdDescription[]>;
+    getTenants(account?: vscode.AuthenticationSessionAccountInformation): Promise<TenantIdDescription[]>;
 
     /**
      * Gets a list of Azure subscriptions available to the user.

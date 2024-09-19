@@ -6,11 +6,11 @@
 import type { SubscriptionClient, TenantIdDescription } from '@azure/arm-resources-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
 import type { TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
 import * as vscode from 'vscode';
-import type { AzureAuthentication } from './AzureAuthentication';
-import type { AzureSubscription, SubscriptionId, TenantId } from './AzureSubscription';
-import type { AzureSubscriptionProvider } from './AzureSubscriptionProvider';
-import { NotSignedInError } from './NotSignedInError';
+import { AzureAuthentication } from './AzureAuthentication';
+import { AzureSubscription, SubscriptionId, TenantId } from './AzureSubscription';
+import { AzureSubscriptionProvider } from './AzureSubscriptionProvider';
 import { getSessionFromVSCode } from './getSessionFromVSCode';
+import { NotSignedInError } from './NotSignedInError';
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from './utils/configuredAzureEnv';
 
 const EventDebounce = 5 * 1000; // 5 seconds
@@ -56,15 +56,19 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      * Gets a list of tenants available to the user.
      * Use {@link isSignedIn} to check if the user is signed in to a particular tenant.
      *
+     * @param account (Optional) A specific account to get tenants for. If not provided, all accounts will be used.
+     *
      * @returns A list of tenants.
      */
-    public async getTenants(): Promise<TenantIdDescription[]> {
-        const { client } = await this.getSubscriptionClient();
-
+    public async getTenants(account?: vscode.AuthenticationSessionAccountInformation): Promise<TenantIdDescription[]> {
         const results: TenantIdDescription[] = [];
 
-        for await (const tenant of client.tenants.list()) {
-            results.push(tenant);
+        for await (account of account ? [account] : await vscode.authentication.getAccounts(getConfiguredAuthProviderId())) {
+            const { client } = await this.getSubscriptionClient(account, undefined, undefined);
+
+            for await (const tenant of client.tenants.list()) {
+                results.push(tenant);
+            }
         }
 
         return results;
@@ -91,23 +95,26 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
         try {
             this.suppressSignInEvents = true;
 
-            // Get the list of tenants
-            for (const tenant of await this.getTenants()) {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                const tenantId = tenant.tenantId!;
+            // Get the list of tenants from each account
+            const accounts = await vscode.authentication.getAccounts(getConfiguredAuthProviderId());
+            for (const account of accounts) {
+                for (const tenant of await this.getTenants(account)) {
+                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                    const tenantId = tenant.tenantId!;
 
-                // If filtering is enabled, and the current tenant is not in that list, then skip it
-                if (shouldFilterTenants && !tenantIds.includes(tenantId)) {
-                    continue;
+                    // If filtering is enabled, and the current tenant is not in that list, then skip it
+                    if (shouldFilterTenants && !tenantIds.includes(tenantId)) {
+                        continue;
+                    }
+
+                    // If the user is not signed in to this tenant, then skip it
+                    if (!(await this.isSignedIn(tenantId))) {
+                        continue;
+                    }
+
+                    // For each tenant, get the list of subscriptions
+                    results.push(...await this.getSubscriptionsForTenant(tenantId, account));
                 }
-
-                // If the user is not signed in to this tenant, then skip it
-                if (!(await this.isSignedIn(tenantId))) {
-                    continue;
-                }
-
-                // For each tenant, get the list of subscriptions
-                results.push(...await this.getSubscriptionsForTenant(tenantId));
             }
         } finally {
             this.suppressSignInEvents = false;
@@ -204,11 +211,12 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      * Gets the subscriptions for a given tenant.
      *
      * @param tenantId The tenant ID to get subscriptions for.
+     * @param account The account to get the subscriptions for.
      *
      * @returns The list of subscriptions for the tenant.
      */
-    private async getSubscriptionsForTenant(tenantId: string): Promise<AzureSubscription[]> {
-        const { client, credential, authentication } = await this.getSubscriptionClient(tenantId);
+    private async getSubscriptionsForTenant(tenantId: string, account: vscode.AuthenticationSessionAccountInformation): Promise<AzureSubscription[]> {
+        const { client, credential, authentication } = await this.getSubscriptionClient(account, tenantId, undefined);
         const environment = getConfiguredAzureEnv();
 
         const subscriptions: AzureSubscription[] = [];
@@ -224,6 +232,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
                 subscriptionId: subscription.subscriptionId!,
                 /* eslint-enable @typescript-eslint/no-non-null-assertion */
                 tenantId: tenantId,
+                account: account
             });
         }
 
@@ -234,12 +243,15 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      * Gets a fully-configured subscription client for a given tenant ID
      *
      * @param tenantId (Optional) The tenant ID to get a client for
+     * @param account The account that you would like to get the session for
      *
      * @returns A client, the credential used by the client, and the authentication function
      */
-    private async getSubscriptionClient(tenantId?: string, scopes?: string[]): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
+    private async getSubscriptionClient(account: vscode.AuthenticationSessionAccountInformation, tenantId?: string, scopes?: string[]): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
         const armSubs = await import('@azure/arm-resources-subscriptions');
-        const session = await getSessionFromVSCode(scopes, tenantId, { createIfNone: false, silent: true });
+
+        const session = await getSessionFromVSCode(scopes, tenantId, { createIfNone: false, silent: true, account });
+
         if (!session) {
             throw new NotSignedInError();
         }
@@ -262,7 +274,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
             authentication: {
                 getSession: () => session,
                 getSessionWithScopes: (scopes) => {
-                    return getSessionFromVSCode(scopes, tenantId, { createIfNone: false, silent: true })
+                    return getSessionFromVSCode(scopes, tenantId, { createIfNone: false, silent: true, account });
                 },
             }
         };
