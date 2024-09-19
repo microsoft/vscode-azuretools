@@ -1,5 +1,8 @@
 # Change Log
 
+## 3.0.0 - 2024-09-19
+* [#1789](https://github.com/microsoft/vscode-azuretools/pull/1789) Change `getTenants` to be compatible with the new Azure Resources tenants view
+
 ## 2.5.0 - 2024-08-06
 
 * Add `getSessionWithScopes` to get a session that has the proper scoping instead of always the default management plane
