@@ -38,7 +38,7 @@
         "html-to-text": "^8.2.0",
         "semver": "^7.3.7",
         "uuid": "^9.0.0",
-        "vscode-tas-client": "^0.1.47",
+        "vscode-tas-client": "^0.1.84",
         "vscode-uri": "^3.0.6"
     },
     "peerDependencies": {
