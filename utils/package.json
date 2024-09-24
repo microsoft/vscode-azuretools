@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-utils",
     "author": "Microsoft Corporation",
-    "version": "2.5.8",
+    "version": "2.5.9",
     "description": "Common UI tools for developing Azure extensions for VS Code",
     "tags": [
         "azure",
