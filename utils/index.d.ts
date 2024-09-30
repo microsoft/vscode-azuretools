@@ -2075,7 +2075,7 @@ export declare class RecursiveQuickPickStep<TContext extends QuickPickWizardCont
  * Quick pick step to pick an Azure subscription.
  */
 export declare class QuickPickAzureSubscriptionStep extends GenericQuickPickStepWithCommands<AzureResourceQuickPickWizardContext, SkipIfOneQuickPickOptions> {
-    public constructor(tdp: TreeDataProvider<ResourceGroupsItem>, options?: GenericQuickPickOptions);
+    public constructor(tdp: TreeDataProvider<ResourceGroupsItem>, options?: AzureSubscriptionQuickPickOptions);
 }
 
 export declare interface GroupQuickPickOptions extends SkipIfOneQuickPickOptions {
