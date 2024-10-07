@@ -144,4 +144,4 @@ extends:
                         scriptType: pscore
                         scriptLocation: inlineScript
                         inlineScript: |
-                          vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s
+                          vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s --allow-all-proposed-apis
