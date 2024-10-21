@@ -142,6 +142,8 @@ extends:
                     - script: npm i -g @vscode/vsce
                       displayName: "Install vsce"
 
+                    - script: echo "vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s ${{ parameters.publishParameters }}"
+
                     - task: AzureCLI@2
                       displayName: Run vsce publish
                       condition: and(succeeded(), ${{ eq(parameters.dryRun, false) }})
