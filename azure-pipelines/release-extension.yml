@@ -150,4 +150,4 @@ extends:
                         scriptType: pscore
                         scriptLocation: inlineScript
                         inlineScript: |
-                          vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s ${{ paremeters.publishParameters }}
+                          vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s ${{ parameters.publishParameters }}
