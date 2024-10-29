@@ -23,6 +23,8 @@ export class TestUserInput implements types.TestUserInput {
     private readonly _vscode: typeof vscodeTypes;
     private _inputs: (string | RegExp | TestInput)[] = [];
 
+    readonly isTesting: boolean = true;
+
     constructor(vscode: typeof vscodeTypes) {
         this._vscode = vscode;
         this._onDidFinishPromptEmitter = new this._vscode.EventEmitter<types.PromptResult>();

@@ -222,6 +222,7 @@ export declare class TestUserInput {
     public readonly onDidFinishPrompt: Event<PromptResult>;
 
     public constructor(vscode: typeof import('vscode'));
+    readonly isTesting: boolean;
 
     /**
      * An ordered array of inputs that will be used instead of interactively prompting in VS Code. RegExp is only applicable for QuickPicks and will pick the first input that matches the RegExp.

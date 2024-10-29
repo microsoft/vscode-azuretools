@@ -727,7 +727,7 @@ export interface IActionContext {
      * Provides additional functionality to support wizards, grouping, 'recently used', telemetry, etc.
      * For more information, see the docs on each method and on each `options` object
      */
-    ui: IAzureUserInput;
+    ui: IAzureUserInput & { isTesting?: boolean };
 
     /**
      * Add a value to mask for this action

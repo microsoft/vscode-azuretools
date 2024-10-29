@@ -114,7 +114,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
 
                     if (loadingQuickPick) {
                         disposables.push(loadingQuickPick?.onDidHide(() => {
-                            if (!this._context.ui.isPrompting) {
+                            if (!this._context.ui.isPrompting && !this._context.ui.isTesting) {
                                 this._cancellationTokenSource.cancel();
                             }
                         }));
