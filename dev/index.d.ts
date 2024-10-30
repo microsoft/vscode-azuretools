@@ -224,6 +224,12 @@ export declare class TestUserInput {
     public constructor(vscode: typeof import('vscode'));
 
     /**
+     * Boolean set to indicate whether the UI is being used for test inputs. For`TestUserInput`, this will always default to true.
+     * See: https://github.com/microsoft/vscode-azuretools/pull/1807
+     */
+    readonly isTesting: boolean;
+
+    /**
      * An ordered array of inputs that will be used instead of interactively prompting in VS Code. RegExp is only applicable for QuickPicks and will pick the first input that matches the RegExp.
      */
     public runWithInputs<T>(inputs: (string | RegExp | TestInput)[], callback: () => Promise<T>): Promise<T>;
