@@ -28,6 +28,7 @@ export function gulp_webpack(mode: string): cp.ChildProcess {
         ],
         {
             stdio: 'inherit',
+            shell: true,
             env
         });
 }
