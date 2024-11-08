@@ -89,7 +89,7 @@ export interface DefaultWebpackOptions {
     verbosity?: Verbosity;
 
     /**
-     * Webpack target
+     * Webpack target (defaults to 'node')
      */
     target?: 'node' | 'webworker'
 
@@ -135,7 +135,7 @@ export declare function gulp_installVSCodeExtension(publisherId: string, extensi
 /**
  * Spawns a webpack process
  */
-export declare function gulp_webpack(mode: string, target?: 'node' | 'webworker'): cp.ChildProcess;
+export declare function gulp_webpack(mode: 'development' | 'production'): cp.ChildProcess;
 
 /**
  * Loose type to use for T2 versions of Azure SDKs.  The Azure Account extension returns
