@@ -39,9 +39,13 @@ stages:
                 parameters:
                   enableSigning: ${{ parameters.enableSigning }}
               - template: ./templates/stage-artifacts.yml
-              - template: ./templates/test.yml
-                parameters:
-                  useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
             variables:
               artifact_name: ${{ job.name }}
               working_directory: ${{ job.working_directory }}
+  - stage: TestStage
+    jobs:
+      - job: Test
+        steps:
+          - template: ./templates/test.yml
+            parameters:
+              useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
