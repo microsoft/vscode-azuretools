@@ -5,12 +5,12 @@ parameters:
   - name: runID
     type: string
 
-  # The intended extension version to publish. 
+  # The intended extension version to publish.
   # This is used to verify the version in package.json matches the version to publish to avoid accidental publishing.
   - name: publishVersion
     type: string
 
-  # Customize the environment to associate the deployment with. 
+  # Customize the environment to associate the deployment with.
   # Useful to control which group of people should be required to approve the deployment.
   - name: environmentName
     type: string
@@ -33,6 +33,8 @@ extends:
   template: v1/1ES.Official.PipelineTemplate.yml@1esPipelines
   parameters:
     sdl:
+      suppression:
+        suppressionFile: $(Build.SourcesDirectory)\.config\guardian\.gdnsuppress
       credscan:
         suppressionsFile: $(Build.SourcesDirectory)\.azure-pipelines\compliance\CredScanSuppressions.json
       codeql:
@@ -69,7 +71,7 @@ extends:
                     # Modify the build number to include repo name, extension version, and if dry run is true
                     - powershell: |
                         # Get the version from package.json
-                        
+
                         $packageJsonPath = "$(Build.SourcesDirectory)/package.json"
                         $npmVersionString = (Get-Content $packageJsonPath | ConvertFrom-Json).version
                         $isDryRun = "$env:dryRun"
@@ -78,7 +80,7 @@ extends:
                         $repoName = "$(Build.Repository.Name)"
                         $repoNameParts = $repoName -split '/'
                         $repoNameWithoutOwner = $repoNameParts[-1]
-                      
+
                         $dry = ""
                         if ($isDryRun -eq 'True') {
                           Write-Output "Dry run was set to True. Adding 'dry' to the build number."
@@ -87,7 +89,7 @@ extends:
 
                         $newBuildNumber = "$repoNameWithoutOwner-$npmVersionString-$dry-$currentBuildNumber"
                         Write-Output "##vso[build.updatebuildnumber]$newBuildNumber"
-                      displayName: 'Prepend version from package.json to build number'
+                      displayName: "Prepend version from package.json to build number"
                       env:
                         dryRun: ${{ parameters.dryRun }}
 
@@ -106,7 +108,7 @@ extends:
                           Write-Error "Publish version $publishVersion doesn't match version found in package.json $npmVersionString. Cancelling release."
                           exit 1
                         }
-                      displayName: 'Verify publish version'
+                      displayName: "Verify publish version"
                       env:
                         publishVersion: ${{ parameters.publishVersion }}
 
