@@ -52,7 +52,7 @@ export interface AzureSubscriptionProvider {
      *
      * @returns True if the user is signed in, false otherwise.
      */
-    signIn(tenantId?: string): Promise<boolean>;
+    signIn(tenantId?: string, account?: vscode.AuthenticationSessionAccountInformation): Promise<boolean>;
 
     /**
      * An event that is fired when the user signs in. Debounced to fire at most once every 5 seconds.

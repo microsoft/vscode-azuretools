@@ -157,8 +157,8 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      *
      * @returns True if the user is signed in, false otherwise.
      */
-    public async signIn(tenantId?: string): Promise<boolean> {
-        const session = await getSessionFromVSCode([], tenantId, { createIfNone: true, clearSessionPreference: true });
+    public async signIn(tenantId?: string, account?: vscode.AuthenticationSessionAccountInformation): Promise<boolean> {
+        const session = await getSessionFromVSCode([], tenantId, { createIfNone: true, clearSessionPreference: !account, account });
         return !!session;
     }
 
