@@ -108,7 +108,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
                     }
 
                     // If the user is not signed in to this tenant, then skip it
-                    if (!(await this.isSignedIn(tenantId))) {
+                    if (!(await this.isSignedIn(tenantId, account))) {
                         continue;
                     }
 
@@ -140,8 +140,8 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      *
      * @returns True if the user is signed in, false otherwise.
      */
-    public async isSignedIn(tenantId?: string): Promise<boolean> {
-        const session = await getSessionFromVSCode([], tenantId, { createIfNone: false, silent: true });
+    public async isSignedIn(tenantId?: string, account?: vscode.AuthenticationSessionAccountInformation): Promise<boolean> {
+        const session = await getSessionFromVSCode([], tenantId, { createIfNone: false, silent: true, account });
         return !!session;
     }
 
