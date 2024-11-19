@@ -1,5 +1,9 @@
 # Change Log
 
+## 3.0.1 - 2024-11-19
+* [#1819](https://github.com/microsoft/vscode-azuretools/pull/1819) Add account parameter to `AzureSubscriptionProvider.isSignedIn()` function to fix a multi-account issue [#1809](https://github.com/microsoft/vscode-azuretools/issues/1809)
+* [#1822](https://github.com/microsoft/vscode-azuretools/pull/1822) Add check in `VSCodeAzureSubscriptionProvider.getTenants()` to fix a multi-account issue [#1809](https://github.com/microsoft/vscode-azuretools/issues/1809)
+
 ## 3.0.0 - 2024-09-19
 * [#1789](https://github.com/microsoft/vscode-azuretools/pull/1789) Change `getTenants` to be compatible with the new Azure Resources tenants view. This also includes a possible breaking change where an optional parameter `account` which when passed in `getTenants` will return the tenants associated with that single account. Otherwise `getTenants` will return the tenants for all authenticated accounts.
 
