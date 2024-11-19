@@ -42,7 +42,7 @@ export interface AzureSubscriptionProvider {
      *
      * @returns True if the user is signed in, false otherwise.
      */
-    isSignedIn(tenantId?: string): Promise<boolean>;
+    isSignedIn(tenantId?: string, account?: vscode.AuthenticationSessionAccountInformation): Promise<boolean>;
 
     /**
      * Asks the user to sign in or pick an account to use.
