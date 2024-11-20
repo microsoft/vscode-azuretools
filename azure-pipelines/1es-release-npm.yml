@@ -27,6 +27,9 @@ extends:
   template: azure-pipelines/1ES.Official.Publish.yml@MicroBuildTemplate
   parameters:
     sdl:
+      tsa:
+        enabled: true
+        configFile: '$(Build.SourcesDirectory)\.azure-pipelines\compliance\tsaoptions.json'
       credscan:
         suppressionsFile: $(Build.SourcesDirectory)\.azure-pipelines\compliance\CredScanSuppressions.json
       sourceAnalysisPool:

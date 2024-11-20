@@ -67,7 +67,6 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
 
             // Added check. Without this the getSubscriptionClient function throws the NotSignedInError
             if (await this.isSignedIn(undefined, account)) {
-
                 const { client } = await this.getSubscriptionClient(account, undefined, undefined);
 
                 for await (const tenant of client.tenants.list()) {

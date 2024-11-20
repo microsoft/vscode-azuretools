@@ -89,7 +89,7 @@ export interface DefaultWebpackOptions {
     verbosity?: Verbosity;
 
     /**
-     * Webpack target
+     * Webpack target (defaults to 'node')
      */
     target?: 'node' | 'webworker'
 
@@ -135,7 +135,7 @@ export declare function gulp_installVSCodeExtension(publisherId: string, extensi
 /**
  * Spawns a webpack process
  */
-export declare function gulp_webpack(mode: string, target?: 'node' | 'webworker'): cp.ChildProcess;
+export declare function gulp_webpack(mode: 'development' | 'production'): cp.ChildProcess;
 
 /**
  * Loose type to use for T2 versions of Azure SDKs.  The Azure Account extension returns
@@ -222,6 +222,12 @@ export declare class TestUserInput {
     public readonly onDidFinishPrompt: Event<PromptResult>;
 
     public constructor(vscode: typeof import('vscode'));
+
+    /**
+     * Boolean set to indicate whether the UI is being used for test inputs. For`TestUserInput`, this will always default to true.
+     * See: https://github.com/microsoft/vscode-azuretools/pull/1807
+     */
+    readonly isTesting: boolean;
 
     /**
      * An ordered array of inputs that will be used instead of interactively prompting in VS Code. RegExp is only applicable for QuickPicks and will pick the first input that matches the RegExp.

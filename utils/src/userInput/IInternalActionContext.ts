@@ -7,7 +7,7 @@ import { CancellationToken } from 'vscode';
 import * as types from '../../index';
 
 export interface IInternalActionContext extends types.IActionContext {
-    ui: types.IAzureUserInput & { wizard?: IInternalAzureWizard, isPrompting?: boolean }
+    ui: types.IAzureUserInput & { wizard?: IInternalAzureWizard, isPrompting?: boolean, isTesting?: boolean };
 }
 
 export interface IInternalAzureWizard {

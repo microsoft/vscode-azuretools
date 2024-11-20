@@ -8,14 +8,38 @@ To use these base pipeline templates:
     1. `package`: this should do whatever packaging is needed of the built code--e.g. into a .vsix, .tgz, etc. The resulting package files will be published as build artifacts. This will always run after the `build` script, so it is not necessary to have a prepack script.
     1. `test`: this should run the tests. This will always run after the `build` script, so it is not necessary to have a pretest script.
 1. Create a `.azure-pipelines` folder at the root of the repository
-1. Copy `compliance/CredScanSuppressions.json` into `.azure-pipelines/compliance`, structured as such:
+1. Create a `tsaoptions.json` file in `.azure-pipelines/compliance/` for configuring [TSA](https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/trust-services-automation-tsa/tsa-overview). The file should be structured as such:
+```json
+{
+    "tsaVersion": "TsaV2",
+    "codeBase": "NewOrUpdate",
+    "codeBaseName": "vscode-azureresourcegroups",
+    "tsaStamp": "DevDiv",
+    "notificationAliases": [
+        "<email address>",
+        "email@microsoft.com"
+    ],
+    "codebaseAdmins": [
+        "REDMOND\\<alias or security group>",
+    ],
+    "instanceUrl": "https://devdiv.visualstudio.com",
+    "projectName": "DevDiv",
+    "areaPath": "DevDiv\\VS Azure Tools\\AzCode Extensions",
+    "iterationPath": "DevDiv",
+    "allTools": true
+}
+```
+> [Options reference](https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/trust-services-automation-tsa/tsa-upload-build-task) and
+> [TSA 1es pipeline docs](https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/1es-pipeline-templates/features/sdlanalysis/tsasupport)
+
+5. Copy `compliance/CredScanSuppressions.json` into `.azure-pipelines/compliance`, structured as such:
 ```
 <RepositoryRoot>
     .azure-pipelines
         compliance
             CredScanSuppressions.json
 ```
-5. Create a `1esmain.yml` file in `.azure-pipelines` with the following contents:
+6. Create a `1esmain.yml` file in `.azure-pipelines` with the following contents:
 
 ```yaml
 # Trigger the build whenever `main` or `rel/*` is updated
@@ -62,7 +86,7 @@ extends:
     useAzureFederatedCredentials: ${{ parameters.enableLongRunningTests }}
 ```
 
-6. To enable extension signing, add a `SignExtension.signproj` file in the `.azure-pipelines` folder with the following contents:
+7. To enable extension signing, add a `SignExtension.signproj` file in the `.azure-pipelines` folder with the following contents:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
