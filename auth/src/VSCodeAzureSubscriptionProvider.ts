@@ -117,8 +117,10 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
                     }
 
                     // For each tenant, get the list of subscriptions
-                    results.push(...await this.getSubscriptionsForTenant(tenantId, account));
+                    results.push(...await this.getSubscriptionsForTenant(account, tenantId));
                 }
+
+                results.push(...await this.getSubscriptionsForTenant(account))
             }
         } finally {
             this.suppressSignInEvents = false;
@@ -219,7 +221,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      *
      * @returns The list of subscriptions for the tenant.
      */
-    private async getSubscriptionsForTenant(tenantId: string, account: vscode.AuthenticationSessionAccountInformation): Promise<AzureSubscription[]> {
+    private async getSubscriptionsForTenant(account: vscode.AuthenticationSessionAccountInformation, tenantId?: string): Promise<AzureSubscription[]> {
         const { client, credential, authentication } = await this.getSubscriptionClient(account, tenantId, undefined);
         const environment = getConfiguredAzureEnv();
 
@@ -235,7 +237,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
                 name: subscription.displayName!,
                 subscriptionId: subscription.subscriptionId!,
                 /* eslint-enable @typescript-eslint/no-non-null-assertion */
-                tenantId: tenantId,
+                tenantId: tenantId ?? '',
                 account: account
             });
         }
