@@ -30,6 +30,8 @@ extends:
         configFile: '$(Build.SourcesDirectory)\.azure-pipelines\compliance\tsaoptions.json'
       suppression:
         suppressionFile: $(Build.SourcesDirectory)\.config\guardian\.gdnsuppress
+      componentgovernance:
+        ignoreDirectories: $(Build.SourcesDirectory)\.vscode-test
       credscan:
         suppressionsFile: $(Build.SourcesDirectory)\.azure-pipelines\compliance\CredScanSuppressions.json
       # codeql:
