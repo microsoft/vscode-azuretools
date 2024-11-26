@@ -84,7 +84,8 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      * @param filter - Whether to filter the list returned, according to the list returned
      * by `getTenantFilters()` and `getSubscriptionFilters()`. Optional, default true.
      *
-     * @returns A list of Azure subscriptions.
+     * @returns A list of Azure subscriptions. The list is sorted by subscription name.
+     * The list can contain duplicate subscriptions if they come from different accounts.
      *
      * @throws A {@link NotSignedInError} If the user is not signed in to Azure.
      * Use {@link isSignedIn} and/or {@link signIn} before this method to ensure
@@ -122,7 +123,8 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
             this.suppressSignInEvents = false;
         }
 
-        // remove duplicate subscriptions
+        // It's possible that by listing subscriptions in all tenants and the "home" tenant there could be duplicate subscriptions
+        // Thus, we remove duplicate subscriptions. However, if multiple accounts have the same subscription, we keep them.
         const subscriptionMap = new Map<string, AzureSubscription>();
         allSubscriptions.forEach(sub => subscriptionMap.set(`${sub.account.id}/${sub.subscriptionId}`, sub));
         const uniqueSubscriptions = Array.from(subscriptionMap.values());
