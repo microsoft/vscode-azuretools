@@ -252,6 +252,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      */
     private async getSubscriptionsForTenant(account: vscode.AuthenticationSessionAccountInformation, tenantId?: string): Promise<AzureSubscription[]> {
         // If the user is not signed in to this tenant or account, then return an empty list
+        // This is to prevent the NotSignedInError from being thrown in getSubscriptionClient
         if (!await this.isSignedIn(tenantId, account)) {
             return [];
         }
