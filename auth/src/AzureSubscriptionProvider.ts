@@ -42,7 +42,6 @@ export interface AzureSubscriptionProvider {
      *
      * @returns True if the user is signed in, false otherwise.
      */
-    // we might need to make account a required param. since i cant think of cases where it shouldn't be provided
     isSignedIn(tenantId?: string, account?: vscode.AuthenticationSessionAccountInformation): Promise<boolean>;
 
     /**
