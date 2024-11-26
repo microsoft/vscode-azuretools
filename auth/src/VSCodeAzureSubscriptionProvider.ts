@@ -144,10 +144,29 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      * Checks to see if a user is signed in.
      *
      * @param tenantId (Optional) Provide to check if a user is signed in to a specific tenant.
+     * @param account (Optional) Provide to check if a user is signed in to a specific account.
      *
      * @returns True if the user is signed in, false otherwise.
+     *
+     * If no tenant or account is provided, then
+     * checks all accounts for a session.
      */
     public async isSignedIn(tenantId?: string, account?: vscode.AuthenticationSessionAccountInformation): Promise<boolean> {
+
+        // If no tenant or account is provided, then check all accounts for a session
+        if (!account && !tenantId) {
+            const accounts = await vscode.authentication.getAccounts(getConfiguredAuthProviderId());
+            if (accounts.length === 0) {
+                return false;
+            }
+
+            for (const account of accounts) {
+                if (await this.isSignedIn(undefined, account)) {
+                    return true;
+                }
+            }
+        }
+
         const session = await getSessionFromVSCode([], tenantId, { createIfNone: false, silent: true, account });
         return !!session;
     }
