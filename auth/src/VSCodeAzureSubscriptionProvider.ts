@@ -64,9 +64,9 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
         const results: TenantIdDescription[] = [];
 
         for await (account of account ? [account] : await vscode.authentication.getAccounts(getConfiguredAuthProviderId())) {
-
             // Added check. Without this the getSubscriptionClient function throws the NotSignedInError
             if (await this.isSignedIn(undefined, account)) {
+
                 const { client } = await this.getSubscriptionClient(account, undefined, undefined);
 
                 for await (const tenant of client.tenants.list()) {
