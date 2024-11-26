@@ -94,7 +94,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
         const tenantIds = await this.getTenantFilters();
         const shouldFilterTenants = filter && !!tenantIds.length; // If the list is empty it is treated as "no filter"
 
-        const results: AzureSubscription[] = [];
+        const allSubscriptions: AzureSubscription[] = [];
 
         try {
             this.suppressSignInEvents = true;
@@ -111,20 +111,21 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
                         continue;
                     }
 
-                    // If the user is not signed in to this tenant, then skip it
-                    if (!(await this.isSignedIn(tenantId, account))) {
-                        continue;
-                    }
-
                     // For each tenant, get the list of subscriptions
-                    results.push(...await this.getSubscriptionsForTenant(account, tenantId));
+                    allSubscriptions.push(...await this.getSubscriptionsForTenant(account, tenantId));
                 }
 
-                results.push(...await this.getSubscriptionsForTenant(account))
+                // list subscriptions for the home tenant
+                allSubscriptions.push(...await this.getSubscriptionsForTenant(account))
             }
         } finally {
             this.suppressSignInEvents = false;
         }
+
+        // remove duplicate subscriptions
+        const subscriptionMap = new Map<string, AzureSubscription>();
+        allSubscriptions.forEach(sub => subscriptionMap.set(sub.subscriptionId, sub));
+        const uniqueSubscriptions = Array.from(subscriptionMap.values());
 
         const sortSubscriptions = (subscriptions: AzureSubscription[]): AzureSubscription[] =>
             subscriptions.sort((a, b) => a.name.localeCompare(b.name));
@@ -132,11 +133,11 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
         const subscriptionIds = await this.getSubscriptionFilters();
         if (filter && !!subscriptionIds.length) { // If the list is empty it is treated as "no filter"
             return sortSubscriptions(
-                results.filter(sub => subscriptionIds.includes(sub.subscriptionId))
+                uniqueSubscriptions.filter(sub => subscriptionIds.includes(sub.subscriptionId))
             );
         }
 
-        return sortSubscriptions(results);
+        return sortSubscriptions(uniqueSubscriptions);
     }
 
     /**
@@ -222,6 +223,11 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      * @returns The list of subscriptions for the tenant.
      */
     private async getSubscriptionsForTenant(account: vscode.AuthenticationSessionAccountInformation, tenantId?: string): Promise<AzureSubscription[]> {
+        // If the user is not signed in to this tenant or account, then return an empty list
+        if (!await this.isSignedIn(tenantId, account)) {
+            return [];
+        }
+
         const { client, credential, authentication } = await this.getSubscriptionClient(account, tenantId, undefined);
         const environment = getConfiguredAzureEnv();
 
@@ -237,7 +243,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
                 name: subscription.displayName!,
                 subscriptionId: subscription.subscriptionId!,
                 /* eslint-enable @typescript-eslint/no-non-null-assertion */
-                tenantId: tenantId ?? '',
+                tenantId: tenantId ?? subscription.tenantId ?? '',
                 account: account
             });
         }
