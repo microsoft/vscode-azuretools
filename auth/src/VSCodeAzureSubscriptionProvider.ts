@@ -124,7 +124,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
 
         // remove duplicate subscriptions
         const subscriptionMap = new Map<string, AzureSubscription>();
-        allSubscriptions.forEach(sub => subscriptionMap.set(sub.subscriptionId, sub));
+        allSubscriptions.forEach(sub => subscriptionMap.set(`${sub.account.id}/${sub.subscriptionId}`, sub));
         const uniqueSubscriptions = Array.from(subscriptionMap.values());
 
         const sortSubscriptions = (subscriptions: AzureSubscription[]): AzureSubscription[] =>
