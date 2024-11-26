@@ -272,6 +272,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
                 name: subscription.displayName!,
                 subscriptionId: subscription.subscriptionId!,
                 tenantId: tenantId ?? subscription.tenantId!,
+                /* eslint-enable @typescript-eslint/no-non-null-assertion */
                 account: account
             });
         }
