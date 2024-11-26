@@ -84,7 +84,8 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      * @param filter - Whether to filter the list returned, according to the list returned
      * by `getTenantFilters()` and `getSubscriptionFilters()`. Optional, default true.
      *
-     * @returns A list of Azure subscriptions.
+     * @returns A list of Azure subscriptions. The list is sorted by subscription name.
+     * The list can contain duplicate subscriptions if they come from different accounts.
      *
      * @throws A {@link NotSignedInError} If the user is not signed in to Azure.
      * Use {@link isSignedIn} and/or {@link signIn} before this method to ensure
@@ -94,7 +95,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
         const tenantIds = await this.getTenantFilters();
         const shouldFilterTenants = filter && !!tenantIds.length; // If the list is empty it is treated as "no filter"
 
-        const results: AzureSubscription[] = [];
+        const allSubscriptions: AzureSubscription[] = [];
 
         try {
             this.suppressSignInEvents = true;
@@ -111,18 +112,22 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
                         continue;
                     }
 
-                    // If the user is not signed in to this tenant, then skip it
-                    if (!(await this.isSignedIn(tenantId, account))) {
-                        continue;
-                    }
-
                     // For each tenant, get the list of subscriptions
-                    results.push(...await this.getSubscriptionsForTenant(tenantId, account));
+                    allSubscriptions.push(...await this.getSubscriptionsForTenant(account, tenantId));
                 }
+
+                // list subscriptions for the home tenant
+                allSubscriptions.push(...await this.getSubscriptionsForTenant(account))
             }
         } finally {
             this.suppressSignInEvents = false;
         }
+
+        // It's possible that by listing subscriptions in all tenants and the "home" tenant there could be duplicate subscriptions
+        // Thus, we remove duplicate subscriptions. However, if multiple accounts have the same subscription, we keep them.
+        const subscriptionMap = new Map<string, AzureSubscription>();
+        allSubscriptions.forEach(sub => subscriptionMap.set(`${sub.account.id}/${sub.subscriptionId}`, sub));
+        const uniqueSubscriptions = Array.from(subscriptionMap.values());
 
         const sortSubscriptions = (subscriptions: AzureSubscription[]): AzureSubscription[] =>
             subscriptions.sort((a, b) => a.name.localeCompare(b.name));
@@ -130,21 +135,40 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
         const subscriptionIds = await this.getSubscriptionFilters();
         if (filter && !!subscriptionIds.length) { // If the list is empty it is treated as "no filter"
             return sortSubscriptions(
-                results.filter(sub => subscriptionIds.includes(sub.subscriptionId))
+                uniqueSubscriptions.filter(sub => subscriptionIds.includes(sub.subscriptionId))
             );
         }
 
-        return sortSubscriptions(results);
+        return sortSubscriptions(uniqueSubscriptions);
     }
 
     /**
      * Checks to see if a user is signed in.
      *
      * @param tenantId (Optional) Provide to check if a user is signed in to a specific tenant.
+     * @param account (Optional) Provide to check if a user is signed in to a specific account.
      *
      * @returns True if the user is signed in, false otherwise.
+     *
+     * If no tenant or account is provided, then
+     * checks all accounts for a session.
      */
     public async isSignedIn(tenantId?: string, account?: vscode.AuthenticationSessionAccountInformation): Promise<boolean> {
+
+        // If no tenant or account is provided, then check all accounts for a session
+        if (!account && !tenantId) {
+            const accounts = await vscode.authentication.getAccounts(getConfiguredAuthProviderId());
+            if (accounts.length === 0) {
+                return false;
+            }
+
+            for (const account of accounts) {
+                if (await this.isSignedIn(undefined, account)) {
+                    return true;
+                }
+            }
+        }
+
         const session = await getSessionFromVSCode([], tenantId, { createIfNone: false, silent: true, account });
         return !!session;
     }
@@ -153,11 +177,18 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      * Asks the user to sign in or pick an account to use.
      *
      * @param tenantId (Optional) Provide to sign in to a specific tenant.
+     * @param account (Optional) Provide to sign in to a specific account.
      *
      * @returns True if the user is signed in, false otherwise.
      */
-    public async signIn(tenantId?: string): Promise<boolean> {
-        const session = await getSessionFromVSCode([], tenantId, { createIfNone: true, clearSessionPreference: true });
+    public async signIn(tenantId?: string, account?: vscode.AuthenticationSessionAccountInformation): Promise<boolean> {
+
+        const session = await getSessionFromVSCode([], tenantId, {
+            createIfNone: true,
+            // If no account is provided, then clear the session preference which tells VS Code to show the account picker
+            clearSessionPreference: !account,
+            account,
+        });
         return !!session;
     }
 
@@ -219,7 +250,13 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      *
      * @returns The list of subscriptions for the tenant.
      */
-    private async getSubscriptionsForTenant(tenantId: string, account: vscode.AuthenticationSessionAccountInformation): Promise<AzureSubscription[]> {
+    private async getSubscriptionsForTenant(account: vscode.AuthenticationSessionAccountInformation, tenantId?: string): Promise<AzureSubscription[]> {
+        // If the user is not signed in to this tenant or account, then return an empty list
+        // This is to prevent the NotSignedInError from being thrown in getSubscriptionClient
+        if (!await this.isSignedIn(tenantId, account)) {
+            return [];
+        }
+
         const { client, credential, authentication } = await this.getSubscriptionClient(account, tenantId, undefined);
         const environment = getConfiguredAzureEnv();
 
@@ -234,8 +271,8 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
                 /* eslint-disable @typescript-eslint/no-non-null-assertion */
                 name: subscription.displayName!,
                 subscriptionId: subscription.subscriptionId!,
+                tenantId: tenantId ?? subscription.tenantId!,
                 /* eslint-enable @typescript-eslint/no-non-null-assertion */
-                tenantId: tenantId,
                 account: account
             });
         }

@@ -48,10 +48,11 @@ export interface AzureSubscriptionProvider {
      * Asks the user to sign in or pick an account to use.
      *
      * @param tenantId (Optional) Provide to sign in to a specific tenant.
+     * @param account (Optional) Provide to sign in to a specific account.
      *
      * @returns True if the user is signed in, false otherwise.
      */
-    signIn(tenantId?: string): Promise<boolean>;
+    signIn(tenantId?: string, account?: vscode.AuthenticationSessionAccountInformation): Promise<boolean>;
 
     /**
      * An event that is fired when the user signs in. Debounced to fire at most once every 5 seconds.
