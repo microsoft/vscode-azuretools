@@ -48,6 +48,7 @@ export interface AzureSubscriptionProvider {
      * Asks the user to sign in or pick an account to use.
      *
      * @param tenantId (Optional) Provide to sign in to a specific tenant.
+     * @param account (Optional) Provide to sign in to a specific account.
      *
      * @returns True if the user is signed in, false otherwise.
      */
