@@ -1,5 +1,10 @@
 # Change Log
 
+## 3.1.0 - 2024-11-26
+
+* [#1827](https://github.com/microsoft/vscode-azuretools/pull/1827) Add more comprehensive support for multi-account scenarios 
+* [#1815](https://github.com/microsoft/vscode-azuretools/issues/1815) Fix `VSCodeAzureSubscriptionProvider.getSubscriptions()` returning empty 
+
 ## 3.0.1 - 2024-11-19
 * [#1819](https://github.com/microsoft/vscode-azuretools/pull/1819) Add account parameter to `AzureSubscriptionProvider.isSignedIn()` function to fix a multi-account issue [#1809](https://github.com/microsoft/vscode-azuretools/issues/1809)
 * [#1822](https://github.com/microsoft/vscode-azuretools/pull/1822) Add check in `VSCodeAzureSubscriptionProvider.getTenants()` to fix a multi-account issue [#1809](https://github.com/microsoft/vscode-azuretools/issues/1809)
