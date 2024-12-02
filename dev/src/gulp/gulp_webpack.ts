@@ -7,7 +7,12 @@ import * as cp from 'child_process';
 import * as path from 'path';
 import * as process from 'process';
 
-export function gulp_webpack(mode: string): cp.ChildProcess {
+export function gulp_webpack(mode: 'development' | 'production'): cp.ChildProcess {
+
+    if (mode !== 'development' && mode !== 'production') {
+        throw new Error('Invalid mode. Must be either "development" or "production"');
+    }
+
     const env: {
         [key: string]: string | undefined;
     } = process.env;
