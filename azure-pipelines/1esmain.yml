@@ -47,5 +47,5 @@ extends:
           useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
           additionalSetupSteps: ${{ parameters.additionalSetupSteps }}
           enableSigning: ${{ parameters.enableSigning }}
-  variables:
-    Codeql.ExcludePathPatterns: .vscode-test # Exclude .vscode-test directory from CodeQL alerting
+        variables:
+          Codeql.ExcludePathPatterns: .vscode-test # Exclude .vscode-test directory from CodeQL alerting
