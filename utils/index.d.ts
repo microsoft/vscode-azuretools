@@ -1047,7 +1047,6 @@ export interface IAzureQuickPickOptions extends VSCodeQuickPickOptions, AzExtUse
 
     /**
      * If true, you must specify a `group` property on each `IAzureQuickPickItem` and the picks will be grouped into collapsible sections
-     * This is not compatible with `canPickMany`
      */
     enableGrouping?: boolean;
 

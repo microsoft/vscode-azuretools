@@ -157,10 +157,6 @@ export async function createQuickPickItems<TPick extends types.IAzureQuickPickIt
     } else if (!options.enableGrouping) {
         return picks;
     } else {
-        if (options.canPickMany) {
-            throw new Error('Internal error: "canPickMany" and "enableGrouping" are not supported at the same time.')
-        }
-
         for (const pick of picks) {
             const groupName: string | undefined = pick.group;
             const group = groups.find(g => g.name === groupName);
