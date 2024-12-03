@@ -23,6 +23,9 @@ resources:
       name: 1ESPipelineTemplates/1ESPipelineTemplates
       ref: refs/tags/release
 
+variables:
+  Codeql.ExcludePathPatterns: "**\\.vscode-test" # Exclude .vscode-test directory in any subpath from CodeQL alerting
+
 parameters:
   - name: PackageToBuild
     displayName: Package to Build

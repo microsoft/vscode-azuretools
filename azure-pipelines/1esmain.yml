@@ -21,6 +21,9 @@ resources:
       name: 1ESPipelineTemplates/MicroBuildTemplate
       ref: refs/tags/release
 
+variables:
+  Codeql.ExcludePathPatterns: .vscode-test # Exclude .vscode-test directory from CodeQL alerting
+
 extends:
   template: azure-pipelines/MicroBuild.1ES.Official.yml@1esPipelines
   parameters:
