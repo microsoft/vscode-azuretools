@@ -12,6 +12,7 @@ import { AzureSubscriptionProvider } from './AzureSubscriptionProvider';
 import { getSessionFromVSCode } from './getSessionFromVSCode';
 import { NotSignedInError } from './NotSignedInError';
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from './utils/configuredAzureEnv';
+import { getUnselectedTenants } from './utils/getUnselectedTenants';
 
 const EventDebounce = 5 * 1000; // 5 seconds
 
@@ -108,7 +109,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
                     const tenantId = tenant.tenantId!;
 
                     // If filtering is enabled, and the current tenant is not in that list, then skip it
-                    if (shouldFilterTenants && !tenantIds.includes(tenantId)) {
+                    if (shouldFilterTenants && tenantIds.includes(`${account.id}/${tenantId}`)) {
                         continue;
                     }
 
@@ -212,19 +213,17 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
     public readonly onDidSignOut = this.onDidSignOutEmitter.event;
 
     /**
-     * Gets the tenant filters that are configured in `azureResourceGroups.selectedSubscriptions`. To
+     * Gets the tenant filters that are configured in `azureResourceGroups.unselectedTenants`. To
      * override the settings with a custom filter, implement a child class with `getSubscriptionFilters()`
      * and/or `getTenantFilters()` overridden.
      *
-     * If no values are returned by `getTenantFilters()`, then all tenants will be scanned for subscriptions.
+     * The strings returned by this method should be in the format `${account.id}/${tenantId}`. Tenants returned
+     * will be excluded from the list of tenants scanned for subscriptions in `getSubscriptions`.
      *
      * @returns A list of tenant IDs that are configured in `azureResourceGroups.selectedSubscriptions`.
      */
     protected async getTenantFilters(): Promise<TenantId[]> {
-        const config = vscode.workspace.getConfiguration('azureResourceGroups');
-        const fullSubscriptionIds = config.get<string[]>('selectedSubscriptions', []);
-
-        return fullSubscriptionIds.map(id => id.split('/')[0]);
+        return getUnselectedTenants();
     }
 
     /**
