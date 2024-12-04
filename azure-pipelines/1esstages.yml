@@ -45,3 +45,4 @@ stages:
             variables:
               artifact_name: ${{ job.name }}
               working_directory: ${{ job.working_directory }}
+              Codeql.ExcludePathPatterns: "**\\.vscode-test,dist" # Exclude .vscode-test and dist directories from CodeQL alerting
