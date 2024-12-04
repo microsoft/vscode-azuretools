@@ -23,9 +23,6 @@ resources:
       name: 1ESPipelineTemplates/1ESPipelineTemplates
       ref: refs/tags/release
 
-variables:
-  Codeql.ExcludePathPatterns: "**\\.vscode-test" # Exclude .vscode-test directory in any subpath from CodeQL alerting
-
 parameters:
   - name: PackageToBuild
     displayName: Package to Build
@@ -62,29 +59,29 @@ extends:
         parameters:
           jobs:
             - ${{ if or(eq(parameters.PackageToBuild, 'microsoft-vscode-azext-azureappservice'), eq(parameters.PackageToBuild, 'all')) }}:
-              - name: appservice
-                working_directory: appservice
+                - name: appservice
+                  working_directory: appservice
             - ${{ if or(eq(parameters.PackageToBuild, 'microsoft-vscode-azext-azureappsettings'), eq(parameters.PackageToBuild, 'all')) }}:
-              - name: appsettings
-                working_directory: appsettings
+                - name: appsettings
+                  working_directory: appsettings
             - ${{ if or(eq(parameters.PackageToBuild, 'microsoft-vscode-azext-azureauth'), eq(parameters.PackageToBuild, 'all')) }}:
-              - name: auth
-                working_directory: auth
+                - name: auth
+                  working_directory: auth
             - ${{ if or(eq(parameters.PackageToBuild, 'microsoft-vscode-azext-azureutils'), eq(parameters.PackageToBuild, 'all')) }}:
-              - name: azure
-                working_directory: azure
+                - name: azure
+                  working_directory: azure
             - ${{ if or(eq(parameters.PackageToBuild, 'microsoft-vscode-azext-dev'), eq(parameters.PackageToBuild, 'all')) }}:
-              - name: dev
-                working_directory: dev
+                - name: dev
+                  working_directory: dev
             - ${{ if or(eq(parameters.PackageToBuild, 'microsoft-eslint-config-azuretools'), eq(parameters.PackageToBuild, 'all')) }}:
-              - name: eslint_config_azuretools
-                working_directory: eslint-config-azuretools
+                - name: eslint_config_azuretools
+                  working_directory: eslint-config-azuretools
             - ${{ if or(eq(parameters.PackageToBuild, 'microsoft-vscode-azext-github'), eq(parameters.PackageToBuild, 'all')) }}:
-              - name: github
-                working_directory: github
+                - name: github
+                  working_directory: github
             - ${{ if or(eq(parameters.PackageToBuild, 'microsoft-vscode-azext-serviceconnector'), eq(parameters.PackageToBuild, 'all')) }}:
-              - name: serviceconnector
-                working_directory: serviceconnector
+                - name: serviceconnector
+                  working_directory: serviceconnector
             - ${{ if or(eq(parameters.PackageToBuild, 'microsoft-vscode-azext-utils'), eq(parameters.PackageToBuild, 'all')) }}:
-              - name: utils
-                working_directory: utils
+                - name: utils
+                  working_directory: utils
