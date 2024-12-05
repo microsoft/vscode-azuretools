@@ -11,7 +11,10 @@ parameters:
     default: []
   - name: enableSigning
     type: boolean
-    default: True
+    default: true
+  - name: isOfficialBuild
+    type: boolean
+    default: true
 
 # `resources` specifies the location of templates to pick up, use it to get 1ES templates
 resources:
@@ -22,12 +25,16 @@ resources:
       ref: refs/tags/release
 
 extends:
-  template: azure-pipelines/MicroBuild.1ES.Official.yml@1esPipelines
+  ${{ if eq(parameters.isOfficialBuild, true) }}:
+    template: azure-pipelines/MicroBuild.1ES.Official.yml@1esPipelines
+  ${{ else }}:
+    template: azure-pipelines/MicroBuild.1ES.Unofficial.yml@1esPipelines
   parameters:
     sdl:
-      tsa:
-        enabled: true
-        configFile: '$(Build.SourcesDirectory)\.azure-pipelines\compliance\tsaoptions.json'
+      ${{ if eq(parameters.IsOfficialBuild, true) }}:
+        tsa:
+          enabled: true
+          configFile: '$(Build.SourcesDirectory)\.azure-pipelines\compliance\tsaoptions.json'
       suppression:
         suppressionFile: $(Build.SourcesDirectory)\.config\guardian\.gdnsuppress
       credscan:
