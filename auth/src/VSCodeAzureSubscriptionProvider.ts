@@ -101,7 +101,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
         const shouldFilterTenants = filter && !!tenantIds.length; // If the list is empty it is treated as "no filter"
 
         const allSubscriptions: AzureSubscription[] = [];
-        let accountCount: number;
+        let accountCount: number; // only used for logging
         try {
             this.suppressSignInEvents = true;
 
