@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { SubscriptionClient, TenantIdDescription } from '@azure/arm-resources-subscriptions';
+import type { SubscriptionClient } from '@azure/arm-resources-subscriptions';
 import type { TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
 import type { PipelineRequest } from '@azure/core-rest-pipeline';
 import { Disposable, Event } from 'vscode';
@@ -11,6 +11,7 @@ import { AzureAuthentication } from './AzureAuthentication';
 import { AzureSubscription } from './AzureSubscription';
 import { AzureSubscriptionProvider } from './AzureSubscriptionProvider';
 import { getConfiguredAzureEnv } from './utils/configuredAzureEnv';
+import { AzureTenant } from './AzureTenant';
 
 export interface AzureDevOpsSubscriptionProviderInitializer {
     /**
@@ -102,9 +103,13 @@ export class AzureDevOpsSubscriptionProvider implements AzureSubscriptionProvide
         this._tokenCredential = undefined;
     }
 
-    public async getTenants(): Promise<TenantIdDescription[]> {
+    public async getTenants(): Promise<AzureTenant[]> {
         return [{
             tenantId: this._tokenCredential?.tenantId,
+            account: {
+                id: "test-account-id",
+                label: "test-account",
+            }
         }];
     }
 
