@@ -103,6 +103,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
         try {
             this.suppressSignInEvents = true;
 
+            const listSubscriptionCalls: Promise<AzureSubscription[]>[] = [];
             // Get the list of tenants from each account
             const accounts = await vscode.authentication.getAccounts(getConfiguredAuthProviderId());
             for (const account of accounts) {
@@ -116,13 +117,15 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
                     }
 
                     // For each tenant, get the list of subscriptions
-                    allSubscriptions.push(...await this.getSubscriptionsForTenant(account, tenantId));
+                    listSubscriptionCalls.push(this.getSubscriptionsForTenant(account, tenantId));
                 }
 
                 // list subscriptions for the home tenant
-                allSubscriptions.push(...await this.getSubscriptionsForTenant(account));
+                listSubscriptionCalls.push(this.getSubscriptionsForTenant(account));
             }
 
+            // Make all the list subscription calls in parallel
+            allSubscriptions.push(...(await Promise.all(listSubscriptionCalls)).flat());
             const endTime = Date.now();
             this.logger?.debug(`auth: Got ${allSubscriptions.length} subscriptions from ${accounts.length} accounts in ${endTime - startTime}ms`);
         } finally {
