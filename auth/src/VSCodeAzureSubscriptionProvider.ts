@@ -154,23 +154,29 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      * checks all accounts for a session.
      */
     public async isSignedIn(tenantId?: string, account?: vscode.AuthenticationSessionAccountInformation): Promise<boolean> {
+        async function silentlyCheckForSession(tenantId?: string, account?: vscode.AuthenticationSessionAccountInformation): Promise<boolean> {
+            return !!await getSessionFromVSCode([], tenantId, { createIfNone: false, silent: true, account });
+        }
+        const innerIsSignedIn = async () => {
+            // If no tenant or account is provided, then check all accounts for a session
+            if (!account && !tenantId) {
+                const accounts = await vscode.authentication.getAccounts(getConfiguredAuthProviderId());
+                if (accounts.length === 0) {
+                    return false;
+                }
 
-        // If no tenant or account is provided, then check all accounts for a session
-        if (!account && !tenantId) {
-            const accounts = await vscode.authentication.getAccounts(getConfiguredAuthProviderId());
-            if (accounts.length === 0) {
-                return false;
-            }
-
-            for (const account of accounts) {
-                if (await this.isSignedIn(undefined, account)) {
-                    return true;
+                for (const account of accounts) {
+                    if (await silentlyCheckForSession(tenantId, account)) {
+                        // If any account has a session, then return true because the user is signed in
+                        return true;
+                    }
                 }
             }
+
+            return silentlyCheckForSession(tenantId, account);
         }
 
-        const session = await getSessionFromVSCode([], tenantId, { createIfNone: false, silent: true, account });
-        return !!session;
+        return await innerIsSignedIn();
     }
 
     /**
