@@ -1,5 +1,17 @@
 # Change Log
 
+## 4.0.0 - 2024-12-06
+
+### What's new
+Pass in a `vscode.LogOutputChannel` to the `VSCodeAzureSubscriptionProvider` constructor to enable logging. [#1851](https://github.com/microsoft/vscode-azuretools/pull/1851)
+
+`AzureSubscriptionProvider.getTenants()` now returns `AzureTenant[]` instead of `TenantIdDescription[]`. This is a breaking change for implementors of `AzureSubscriptionProvider`. [#1849](https://github.com/microsoft/vscode-azuretools/pull/1849)
+
+### All Changes
+* [#1849](https://github.com/microsoft/vscode-azuretools/pull/1849) Create `AzureTenant` interface which includes account property
+* [#1850](https://github.com/microsoft/vscode-azuretools/pull/1850) Clean up `isSignedIn` implementation
+* [#1851](https://github.com/microsoft/vscode-azuretools/pull/1851) Add logging to `VSCodeAzureSubscriptionProvider`
+
 ## 3.1.0 - 2024-11-26
 
 * [#1827](https://github.com/microsoft/vscode-azuretools/pull/1827) Add more comprehensive support for multi-account scenarios 
