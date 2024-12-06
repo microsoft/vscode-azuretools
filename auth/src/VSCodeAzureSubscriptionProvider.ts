@@ -101,11 +101,13 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
         const shouldFilterTenants = filter && !!tenantIds.length; // If the list is empty it is treated as "no filter"
 
         const allSubscriptions: AzureSubscription[] = [];
+        let accountCount: number;
         try {
             this.suppressSignInEvents = true;
 
             // Get the list of tenants from each account
             const accounts = await vscode.authentication.getAccounts(getConfiguredAuthProviderId());
+            accountCount = accounts.length;
             for (const account of accounts) {
                 for (const tenant of await this.getTenants(account)) {
                     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -123,9 +125,6 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
                 // list subscriptions for the home tenant
                 allSubscriptions.push(...await this.getSubscriptionsForTenant(account));
             }
-
-            const endTime = Date.now();
-            this.logger?.debug(`auth: Got ${allSubscriptions.length} subscriptions from ${accounts.length} accounts in ${endTime - startTime}ms`);
         } finally {
             this.suppressSignInEvents = false;
         }
@@ -135,6 +134,9 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
         const subscriptionMap = new Map<string, AzureSubscription>();
         allSubscriptions.forEach(sub => subscriptionMap.set(`${sub.account.id}/${sub.subscriptionId}`, sub));
         const uniqueSubscriptions = Array.from(subscriptionMap.values());
+
+        const endTime = Date.now();
+        this.logger?.debug(`auth: Got ${uniqueSubscriptions.length} subscriptions from ${accountCount} accounts in ${endTime - startTime}ms`);
 
         const sortSubscriptions = (subscriptions: AzureSubscription[]): AzureSubscription[] =>
             subscriptions.sort((a, b) => a.name.localeCompare(b.name));
