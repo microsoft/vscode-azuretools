@@ -5,6 +5,7 @@
 
 import * as vscode from "vscode";
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from "./utils/configuredAzureEnv";
+import { VSCodeAuthentication } from "./VSCodeAzureSubscriptionProvider";
 
 function ensureEndingSlash(value: string): string {
     return value.endsWith('/') ? value : `${value}/`;
@@ -49,6 +50,6 @@ function getScopes(scopes: string | string[] | undefined, tenantId?: string): st
  * @param options - see {@link vscode.AuthenticationGetSessionOptions}
  * @returns An authentication session if available, or undefined if there are no sessions
  */
-export async function getSessionFromVSCode(scopes?: string | string[], tenantId?: string, options?: vscode.AuthenticationGetSessionOptions): Promise<vscode.AuthenticationSession | undefined> {
-    return await vscode.authentication.getSession(getConfiguredAuthProviderId(), getScopes(scopes, tenantId), options);
+export async function getSessionFromVSCode(scopes?: string | string[], tenantId?: string, options?: vscode.AuthenticationGetSessionOptions, auth?: VSCodeAuthentication): Promise<vscode.AuthenticationSession | undefined> {
+    return await (auth ?? vscode.authentication).getSession(getConfiguredAuthProviderId(), getScopes(scopes, tenantId), options);
 }
