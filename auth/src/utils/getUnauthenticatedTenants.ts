@@ -10,8 +10,8 @@ import type { AzureSubscriptionProvider } from "../AzureSubscriptionProvider";
  * @returns list of tenants that VS Code doesn't have sessions for
  */
 export async function getUnauthenticatedTenants(subscriptionProvider: AzureSubscriptionProvider): Promise<TenantIdDescription[]> {
-    const unauthenticatedTenants: TenantIdDescription[] = [];
     const tenants = await subscriptionProvider.getTenants();
+    const unauthenticatedTenants: TenantIdDescription[] = [];
     for await (const tenant of tenants) {
         if (tenant) {
             if (!await subscriptionProvider.isSignedIn(tenant.tenantId, tenant.account)) {
