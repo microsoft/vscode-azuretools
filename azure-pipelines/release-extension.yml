@@ -59,9 +59,11 @@ extends:
                 deploy:
                   steps:
                     - download: none
+
                     - checkout: none
+
                     - task: DownloadPipelineArtifact@2
-                      displayName: Download artifacts from Build pipeline
+                      displayName: "\U0001F449 Download artifacts from Build pipeline"
                       inputs:
                         source: specific # download from a specific pipelines run
                         project: DevDiv
@@ -92,7 +94,7 @@ extends:
 
                         $newBuildNumber = "$repoNameWithoutOwner-$npmVersionString-$dry-$currentBuildNumber"
                         Write-Output "##vso[build.updatebuildnumber]$newBuildNumber"
-                      displayName: "Prepend version from package.json to build number"
+                      displayName: "\U0001F449 Prepend version from package.json to build number"
                       env:
                         dryRun: ${{ parameters.dryRun }}
 
@@ -111,7 +113,7 @@ extends:
                           Write-Error "Publish version $publishVersion doesn't match version found in package.json $npmVersionString. Cancelling release."
                           exit 1
                         }
-                      displayName: "Verify publish version"
+                      displayName: "\U0001F449 Verify publish version"
                       env:
                         publishVersion: ${{ parameters.publishVersion }}
 
@@ -134,17 +136,18 @@ extends:
                           Write-Output "##vso[task.setvariable variable=vsixFileName;]$vsixFileName"
                           Write-Output "Found .vsix file: $vsixFileName"
                         }
-                      displayName: "Find and Set .vsix File Variable"
+                      displayName: "\U0001F449 Find and Set .vsix File Variable"
+
                     - task: UseNode@1
                       inputs:
                         version: "20.x"
-                      displayName: "Install Node.js"
+                      displayName: "\U0001F449 Install Node.js"
 
                     - script: npm i -g @vscode/vsce
-                      displayName: "Install vsce"
+                      displayName: "\U0001F449 Install vsce"
 
                     - task: AzureCLI@2
-                      displayName: Run vsce publish
+                      displayName: "\U0001F449 Run vsce publish"
                       condition: and(succeeded(), ${{ eq(parameters.dryRun, false) }})
                       inputs:
                         azureSubscription: AzCodeReleases
