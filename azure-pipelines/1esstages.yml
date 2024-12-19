@@ -35,6 +35,7 @@ stages:
                   enabled: ${{ parameters.enableSigning }}
                   signType: real # options are 'real' & 'test'
                   zipSources: false
+                  connectedServiceName: ${{ parameters.ConnectedServiceName }}
               outputs:
                 - output: pipelineArtifact
                   targetPath: $(build.artifactstagingdirectory)/build/${{ job.name }}
