@@ -18,9 +18,11 @@ parameters:
     default: True
 
 stages:
+  - inputs:
+    ConnectedServiceName: "Azure Pipelines"
   - stage: BuildStage
     pool:
-      name: VSEngSS-MicroBuild2022-1ES
+      name: VSEngSS-AzurePipelines-EO
       image: 1ESPT-Ubuntu22.04
       os: linux
     jobs:
