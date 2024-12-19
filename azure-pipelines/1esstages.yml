@@ -16,10 +16,11 @@ parameters:
   - name: enableSigning
     type: boolean
     default: True
+  - name: ConnectedServiceName
+    type: string
+    default: "Azure Pipelines"
 
 stages:
-  - inputs:
-    ConnectedServiceName: "Azure Pipelines"
   - stage: BuildStage
     pool:
       name: VSEngSS-AzurePipelines-EO
