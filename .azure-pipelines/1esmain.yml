@@ -50,9 +50,9 @@ extends:
       componentgovernance:
         ignoreDirectories: $(Build.SourcesDirectory)\appservice\.vscode-test,$(Build.SourcesDirectory)\appsettings\.vscode-test,$(Build.SourcesDirectory)\auth\.vscode-test,$(Build.SourcesDirectory)\azure\.vscode-test,$(Build.SourcesDirectory)\dev\.vscode-test,$(Build.SourcesDirectory)\eslint-config-azuretools\.vscode-test,$(Build.SourcesDirectory)\github\.vscode-test,$(Build.SourcesDirectory)\serviceconnector\.vscode-test,$(Build.SourcesDirectory)\utils\.vscode-test
     pool:
-      name: VSEngSS-MicroBuild2022-1ES # Name of your hosted pool
-      image: server2022-microbuildVS2022-1es # Name of the image in your pool. If not specified, first image of the pool is used
-      os: windows # OS of the image. Allowed values: windows, linux, macOS
+      name: AzurePipelines-EO
+      image: 1ESPT-Ubuntu22.04
+      os: linux
     stages:
       # Execute stages from the AzExt template
       - template: ../azure-pipelines/1esstages.yml
