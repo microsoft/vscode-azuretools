@@ -21,7 +21,7 @@ export async function signInToTenant(subscriptionProvider: AzureSubscriptionProv
 
 async function pickTenant(subscriptionProvider: AzureSubscriptionProvider): Promise<string | undefined> {
     const pick = await vscode.window.showQuickPick(getPicks(subscriptionProvider), {
-        placeHolder: 'Select Directory to Sign In To', // TODO: localize
+        placeHolder: 'Select a Tenant (Directory) to Sign In To', // TODO: localize
         matchOnDescription: true, // allow searching by tenantId
         ignoreFocusOut: true,
     });
@@ -34,12 +34,15 @@ interface TenantQuickPickItem extends vscode.QuickPickItem {
 
 async function getPicks(subscriptionProvider: AzureSubscriptionProvider): Promise<TenantQuickPickItem[]> {
     const unauthenticatedTenants = await getUnauthenticatedTenants(subscriptionProvider);
-    const picks: TenantQuickPickItem[] = unauthenticatedTenants.map(tenant => ({
-        label: tenant.displayName ?? '',
-        description: tenant.tenantId ?? '',
-        detail: tenant.defaultDomain ?? '',
-        tenant,
-    }));
+    const picks: TenantQuickPickItem[] = unauthenticatedTenants
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        .sort((a, b) => (a.displayName!).localeCompare(b.displayName!))
+        .map(tenant => ({
+            label: tenant.displayName ?? '',
+            description: tenant.tenantId ?? '',
+            detail: tenant.defaultDomain ?? '',
+            tenant,
+        }));
 
     return picks;
 }

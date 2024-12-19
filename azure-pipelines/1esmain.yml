@@ -9,6 +9,9 @@ parameters:
   - name: additionalSetupSteps
     type: stepList
     default: []
+  - name: additionalPostPackageSteps
+    type: stepList
+    default: []
   - name: enableSigning
     type: boolean
     default: true
@@ -53,4 +56,5 @@ extends:
         parameters:
           useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
           additionalSetupSteps: ${{ parameters.additionalSetupSteps }}
+          additionalPostPackageSteps: ${{ parameters.additionalPostPackageSteps }}
           enableSigning: ${{ parameters.enableSigning }}
