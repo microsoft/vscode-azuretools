@@ -10,6 +10,9 @@ parameters:
   - name: additionalSetupSteps
     type: stepList
     default: []
+  - name: additionalPostPackageSteps
+    type: stepList
+    default: []
   - name: enableSigning
     type: boolean
     default: True
@@ -35,6 +38,8 @@ stages:
                   additionalSetupSteps: ${{ parameters.additionalSetupSteps }}
               - template: ./templates/build.yml
               - template: ./templates/1espackage.yml
+                parameters:
+                  additionalPostPackageSteps: ${{ parameters.additionalPostPackageSteps }}
               - template: ./templates/sign.yml
                 parameters:
                   enableSigning: ${{ parameters.enableSigning }}
