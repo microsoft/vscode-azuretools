@@ -1,5 +1,9 @@
 # Change Log
 
+## 4.0.2 - 2024-12-19
+
+* [#1861](https://github.com/microsoft/vscode-azuretools/pull/1861) Remove unecessary if statement
+
 ## 4.0.1 - 2024-12-17
 
 * [#1856](https://github.com/microsoft/vscode-azuretools/pull/1856) Fix tenantId undefined error
