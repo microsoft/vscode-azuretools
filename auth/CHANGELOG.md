@@ -1,5 +1,8 @@
 # Change Log
 
+## 4.0.3 - 2024-12-20
+* [#1862](https://github.com/microsoft/vscode-azuretools/pull/1862) Display account name on duplicate tenant picks
+
 ## 4.0.2 - 2024-12-19
 
 * [#1861](https://github.com/microsoft/vscode-azuretools/pull/1861) Remove unecessary if statement

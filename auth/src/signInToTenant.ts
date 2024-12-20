@@ -34,12 +34,20 @@ interface TenantQuickPickItem extends vscode.QuickPickItem {
 
 async function getPicks(subscriptionProvider: AzureSubscriptionProvider): Promise<TenantQuickPickItem[]> {
     const unauthenticatedTenants = await getUnauthenticatedTenants(subscriptionProvider);
+    const duplicateTenants: Set<string | undefined> = new Set(
+        unauthenticatedTenants
+            .filter((tenant, index, self) => index !== self.findIndex(t => t.tenantId === tenant.tenantId))
+            .map(tenant => tenant.tenantId)
+    );
+    const isDuplicate = (tenantId: string) => duplicateTenants.has(tenantId);
+
     const picks: TenantQuickPickItem[] = unauthenticatedTenants
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         .sort((a, b) => (a.displayName!).localeCompare(b.displayName!))
         .map(tenant => ({
             label: tenant.displayName ?? '',
-            description: tenant.tenantId ?? '',
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            description: `${tenant.tenantId!}${isDuplicate(tenant.tenantId!) ? ` (${tenant.account.label})` : ''}`,
             detail: tenant.defaultDomain ?? '',
             tenant,
         }));
