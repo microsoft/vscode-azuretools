@@ -37,10 +37,6 @@ extends:
         image: 1ESPT-Windows2022
       # codeql:
       #   enabled: true # TODO: would like to enable only on scheduled builds but CodeQL cannot currently be disabled per https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/codeql/1es-codeql
-    pool:
-      name: AzurePipelines-EO # Name of your hosted pool
-      image: 1ESPT-Ubuntu20.04 # Name of the image in your pool. If not specified, first image of the pool is used
-      os: linux # OS of the image. Allowed values: windows, linux, macOS
     stages:
       - stage: ReleaseStage
         jobs:

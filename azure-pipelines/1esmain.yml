@@ -47,9 +47,9 @@ extends:
       # codeql:
       #   enabled: true # TODO: would like to enable only on scheduled builds but CodeQL cannot currently be disabled per https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/codeql/1es-codeql
     pool:
-      name: VSEngSS-MicroBuild2022-1ES # Name of your hosted pool
-      image: server2022-microbuildVS2022-1es # Name of the image in your pool. If not specified, first image of the pool is used
-      os: windows # OS of the image. Allowed values: windows, linux, macOS
+      name: AzurePipelines-EO
+      image: 1ESPT-Ubuntu20.04
+      os: linux # OS of the image. Allowed values: windows, linux, macOS
     stages:
       # Execute stages from the AzExt stages template
       - template: ./1esstages.yml
