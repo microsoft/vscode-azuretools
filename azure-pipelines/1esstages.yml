@@ -24,7 +24,7 @@ stages:
   - stage: BuildStage
     pool:
       name: AzurePipelines-EO
-      image: 1ESPT-Ubuntu22.04
+      image: 1ESPT-Ubuntu20.04
       os: linux
     jobs:
       - ${{ each job in parameters.jobs }}:
@@ -35,8 +35,6 @@ stages:
                   enabled: ${{ parameters.enableSigning }}
                   signType: "real"
                   zipSources: false
-                  azureSubscription: "AzCodeE2ETests"
-                  feedSource: "https://devdiv.pkgs.visualstudio.com/DefaultCollection/_packaging/MicroBuildToolset/nuget/v3/index.json"
               outputs:
                 - output: pipelineArtifact
                   targetPath: $(build.artifactstagingdirectory)/build/${{ job.name }}
