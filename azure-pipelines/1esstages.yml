@@ -31,6 +31,7 @@ stages:
           - job: ${{ job.name }}
             templateContext:
               mb: # Enable the MicroBuild Signing toolset
+                azureSubscription: 'MicroBuild Signing Task (DevDiv)'
                 signing:
                   enabled: ${{ parameters.enableSigning }}
                   signType: "real"
