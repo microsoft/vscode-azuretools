@@ -32,10 +32,10 @@ stages:
             templateContext:
               mb: # Enable the MicroBuild Signing toolset
                 signing:
-                    azureSubscription: 'MicroBuild Signing Task (DevDiv)'
                     enabled: ${{ parameters.enableSigning }}
                     signType: "real"
                     zipSources: false
+                azureSubscription: 'MicroBuild Signing Task (DevDiv)'
               outputs:
                 - output: pipelineArtifact
                   targetPath: $(build.artifactstagingdirectory)/build/${{ job.name }}
