@@ -102,14 +102,18 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
 
         const allSubscriptions: AzureSubscription[] = [];
         let accountCount: number; // only used for logging
+        let tenantCount: number = 0; // only used for logging
         try {
             this.suppressSignInEvents = true;
+            const listSubscriptionCalls: Promise<AzureSubscription[]>[] = [];
 
             // Get the list of tenants from each account
             const accounts = await vscode.authentication.getAccounts(getConfiguredAuthProviderId());
             accountCount = accounts.length;
             for (const account of accounts) {
-                for (const tenant of await this.getTenants(account)) {
+                const tenantsInAccount = await this.getTenants(account);
+                tenantCount += tenantsInAccount.length;
+                for (const tenant of tenantsInAccount) {
                     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                     const tenantId = tenant.tenantId!;
 
@@ -118,13 +122,16 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
                         continue;
                     }
 
-                    // For each tenant, get the list of subscriptions
-                    allSubscriptions.push(...await this.getSubscriptionsForTenant(account, tenantId));
+                    listSubscriptionCalls.push(this.getSubscriptionsForTenant(account, tenant.tenantId))
                 }
-
                 // list subscriptions for the home tenant
-                allSubscriptions.push(...await this.getSubscriptionsForTenant(account));
+                listSubscriptionCalls.push(this.getSubscriptionsForTenant(account))
             }
+
+            allSubscriptions.push(...(await Promise.all(listSubscriptionCalls)).flat());
+
+            const endTime = Date.now();
+            this.logger?.debug(`auth: Got ${allSubscriptions.length} subscriptions from ${tenantCount} tenants and ${accounts.length} accounts in ${endTime - startTime}ms`);
         } finally {
             this.suppressSignInEvents = false;
         }
