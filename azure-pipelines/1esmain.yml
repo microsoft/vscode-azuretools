@@ -44,7 +44,8 @@ extends:
         suppressionsFile: $(Build.SourcesDirectory)\.azure-pipelines\compliance\CredScanSuppressions.json
       componentgovernance:
         ignoreDirectories: $(Build.SourcesDirectory)\.vscode-test
-      # codeql:
+      codeql:
+        excludePathPatterns: "**/.vscode-test, dist" # Exclude .vscode-test and dist directories from CodeQL alerting
       #   enabled: true # TODO: would like to enable only on scheduled builds but CodeQL cannot currently be disabled per https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/codeql/1es-codeql
     pool:
       name: VSEngSS-MicroBuild2022-1ES # Name of your hosted pool
