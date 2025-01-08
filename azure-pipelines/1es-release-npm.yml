@@ -70,8 +70,8 @@ extends:
                     exit 1
                   } else {
                     # Set the pipeline variable
-                    $tgzFileName = $tgzFiles.Name
-                    $tgzFolderName = Split-Path -Path $tgzFileName -Parent
+                    $tgzFileName = $tgzFiles.FullName
+                    $tgzFolderName = $tgzFiles.DirectoryName
                     Write-Output "##vso[task.setvariable variable=tgzFileName;]$tgzFileName"
                     Write-Output "##vso[task.setvariable variable=tgzFolderName;]$tgzFolderName"
                     Write-Output "Found .tgz file: $tgzFileName"
@@ -144,7 +144,7 @@ extends:
                   tag: "${{ parameters.PackageToPublish }}-v$(Version)"
                   title: "${{ parameters.PackageToPublish }} v$(Version)"
                   releaseNotesSource: inline
-                  assets: "$(tgzFolderName)/$(tgzFileName)"
+                  assets: "$(tgzFileName)"
                   isDraft: true
                   isPreRelease: true
                   addChangeLog: false
