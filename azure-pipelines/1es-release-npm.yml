@@ -12,12 +12,6 @@ parameters:
   - name: publishVersion
     type: string
 
-  # Customize the environment to associate the deployment with.
-  # Useful to control which group of people should be required to approve the deployment.
-  - name: environmentName
-    type: string
-    default: AzCodeDeploy
-
     # When true, skips the deployment job which actually publishes the extension
   - name: dryRun
     type: boolean
@@ -52,7 +46,6 @@ extends:
         jobs:
           - job: Publish
             displayName: Publish package
-            #environment: ${{ parameters.environmentName }}
             templateContext:
               type: releaseJob
               isProduction: true
@@ -61,12 +54,7 @@ extends:
                   pipeline: build
                   targetPath: $(System.DefaultWorkingDirectory)
                   artifactName: ${{ parameters.artifactName }}
-            # strategy:
-            #   runOnce:
-            #     deploy:
             steps:
-
-              # - checkout: none
 
               # Locate the desired .tgz file and set the relevant variables
               - powershell: |
@@ -135,29 +123,29 @@ extends:
                   publishVersion: ${{ parameters.publishVersion }}
 
               # Publish the package to NPM
-              # - ${{ if eq(parameters.dryRun, true) }}:
-              #   - template: MicroBuild.Publish.yml@MicroBuildTemplate
-              #     parameters:
-              #       intent: "PackageDistribution"
-              #       contentType: "npm"
-              #       contentSource: "Folder"
-              #       folderLocation: "$(tgzFolderName)"
-              #       waitForReleaseCompletion: true
-              #       owners: "${{ parameters.OwnerAlias }}@microsoft.com"
-              #       approvers: "${{ parameters.ApproverAlias }}@microsoft.com"
+              - ${{ if eq(parameters.dryRun, true) }}:
+                - template: MicroBuild.Publish.yml@MicroBuildTemplate
+                  parameters:
+                    intent: "PackageDistribution"
+                    contentType: "npm"
+                    contentSource: "Folder"
+                    folderLocation: "$(tgzFolderName)"
+                    waitForReleaseCompletion: true
+                    owners: "${{ parameters.OwnerAlias }}@microsoft.com"
+                    approvers: "${{ parameters.ApproverAlias }}@microsoft.com"
 
               # Create a release on GitHub containing the package
-              # - task: GitHubRelease@1
-              #   displayName: "\U0001F449 GitHub release (create)"
-              #   condition: and(succeeded(), ${{ eq(parameters.dryRun, false) }})
-              #   inputs:
-              #     gitHubConnection: "GitHub-AzureTools"
-              #     tagSource: userSpecifiedTag
-              #     tag: "${{ parameters.PackageToPublish }}-v$(Version)"
-              #     title: "${{ parameters.PackageToPublish }} v$(Version)"
-              #     releaseNotesSource: inline
-              #     assets: "$(tgzFileName)"
-              #     isDraft: true
-              #     isPreRelease: true
-              #     addChangeLog: false
+              - task: GitHubRelease@1
+                displayName: "\U0001F449 GitHub release (create)"
+                condition: and(succeeded(), ${{ eq(parameters.dryRun, false) }})
+                inputs:
+                  gitHubConnection: "GitHub-AzureTools"
+                  tagSource: userSpecifiedTag
+                  tag: "${{ parameters.PackageToPublish }}-v$(Version)"
+                  title: "${{ parameters.PackageToPublish }} v$(Version)"
+                  releaseNotesSource: inline
+                  assets: "$(tgzFolderName)/$(tgzFileName)"
+                  isDraft: true
+                  isPreRelease: true
+                  addChangeLog: false
 
