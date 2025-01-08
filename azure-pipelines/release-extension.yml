@@ -1,9 +1,9 @@
 parameters:
   # pipelineID and runID are used to download the artifacts from a specific build pipeline
-  # - name: pipelineID
-  #   type: string
-  # - name: runID
-  #   type: string
+  - name: pipelineID
+    type: string
+  - name: runID
+    type: string
 
   # The intended extension version to publish.
   # This is used to verify the version in package.json matches the version to publish to avoid accidental publishing.
