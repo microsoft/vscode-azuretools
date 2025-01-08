@@ -1,9 +1,9 @@
 parameters:
   # pipelineID and runID are used to download the artifacts from a specific build pipeline
-  - name: pipelineID
-    type: string
-  - name: runID
-    type: string
+  # - name: pipelineID
+  #   type: string
+  # - name: runID
+  #   type: string
 
   # The intended extension version to publish.
   # This is used to verify the version in package.json matches the version to publish to avoid accidental publishing.
@@ -53,17 +53,18 @@ extends:
         jobs:
           - deployment: Publish
             displayName: Publish extension
-            environment: ${{ parameters.environmentName }}
+            #environment: ${{ parameters.environmentName }}
             templateContext:
               type: releaseJob
               isProduction: true
               inputs:
                 - input: pipelineArtifact
+                  pipeline: build
                   targetPath: $(System.DefaultWorkingDirectory)
                   artifactName: Build Root
             strategy:
               runOnce:
-                deploy:
+                #deploy:
                   steps:
                     # - download: none
 
@@ -84,7 +85,7 @@ extends:
                     - powershell: |
                         # Get the version from package.json
 
-                        $packageJsonPath = "$(Build.SourcesDirectory)/package.json"
+                        $packageJsonPath = "$(System.DefaultWorkingDirectory)/package.json"
                         $npmVersionString = (Get-Content $packageJsonPath | ConvertFrom-Json).version
                         $isDryRun = "$env:dryRun"
                         $currentBuildNumber = "$(Build.BuildId)"
@@ -109,7 +110,7 @@ extends:
                     # If they don't match, this step fails
                     - powershell: |
                         # Get the version from package.json
-                        $packageJsonPath = "$(Build.SourcesDirectory)/package.json"
+                        $packageJsonPath = "$(System.DefaultWorkingDirectory)/package.json"
                         $npmVersionString = (Get-Content $packageJsonPath | ConvertFrom-Json).version
                         $publishVersion = "$env:publishVersion"
                         Write-Output "Publishing version: $publishVersion"
@@ -128,7 +129,7 @@ extends:
                     # Fails with an error if more than one .vsix file is found, or if no .vsix file is found
                     - powershell: |
                         # Get all .vsix files in the current directory
-                        $vsixFiles = Get-ChildItem -Path $(Build.SourcesDirectory) -Filter *.vsix -File
+                        $vsixFiles = Get-ChildItem -Path $(System.DefaultWorkingDirectory) -Filter *.vsix -File
 
                         # Check if more than one .vsix file is found
                         if ($vsixFiles.Count -gt 1) {
