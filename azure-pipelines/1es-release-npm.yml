@@ -52,7 +52,7 @@ extends:
         jobs:
           - job: Publish
             displayName: Publish package
-            environment: ${{ parameters.environmentName }}
+            #environment: ${{ parameters.environmentName }}
             templateContext:
               type: releaseJob
               isProduction: true
