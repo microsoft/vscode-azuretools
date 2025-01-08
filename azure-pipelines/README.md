@@ -151,7 +151,7 @@ parameters:
 
 resources:
   pipelines:
-    - pipeline: build
+    - pipeline: build # This *must* be exactly "build"
       source: \Azure Tools\VSCode\Extensions\vscode-azurecontainerapps # CUSTOMIZE - location of the pipeline that produces the artifacts
   repositories:
     - repository: azExtTemplates
@@ -169,8 +169,6 @@ variables:
 extends:
   template: azure-pipelines/release-extension.yml@azExtTemplates
   parameters:
-    pipelineID: $(resources.pipeline.build.pipelineID)
-    runID: $(resources.pipeline.build.runID)
     publishVersion: ${{ parameters.publishVersion }}
     dryRun: ${{ parameters.dryRun }}
     environmentName: AzCodeDeploy # CUSTOMIZE
@@ -179,13 +177,14 @@ extends:
 The extension release pipeline has the following parameters.
 
 ```yaml
-# pipelineID and runID are used to download the artifacts from a specific build pipeline
-- name: pipelineID
+- name: pipelineID # No longer used
   type: string
-- name: runID
+  default: unused
+- name: runID # No longer used
   type: string
+  default: unused
 
-# Customize the environment to associate the deployment with. 
+# Customize the environment to associate the deployment with.
 # Useful to control which group of people should be required to approve the deployment.
 - name: environmentName
   type: string
@@ -193,7 +192,7 @@ The extension release pipeline has the following parameters.
 
 # The following parameters are meant to be provded by the user when initiating a pipeline run
 
-# The intended extension version to publish. 
+# The intended extension version to publish.
 # This is used to verify the version in package.json matches the version to publish to avoid accidental publishing.
 - name: publishVersion
   type: string
