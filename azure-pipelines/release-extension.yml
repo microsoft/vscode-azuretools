@@ -53,7 +53,7 @@ extends:
         jobs:
           - deployment: Publish
             displayName: Publish extension
-            environment: ${{ parameters.environmentName }}
+            # environment: ${{ parameters.environmentName }}
             templateContext:
               type: releaseJob
               isProduction: true
@@ -65,7 +65,7 @@ extends:
               runOnce:
                 deploy:
                   steps:
-                    - download: none
+                    # - download: none
 
                     - checkout: none
 
