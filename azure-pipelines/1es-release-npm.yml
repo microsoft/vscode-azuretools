@@ -50,7 +50,7 @@ extends:
       - stage: ReleaseStage
         displayName: Release package
         jobs:
-          - deployment: Publish
+          - job: Publish
             displayName: Publish package
             environment: ${{ parameters.environmentName }}
             templateContext:
