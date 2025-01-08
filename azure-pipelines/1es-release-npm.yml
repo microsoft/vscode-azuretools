@@ -123,7 +123,7 @@ extends:
                   publishVersion: ${{ parameters.publishVersion }}
 
               # Publish the package to NPM
-              - ${{ if eq(parameters.dryRun, true) }}:
+              - ${{ if ne(parameters.dryRun, true) }}:
                 - template: MicroBuild.Publish.yml@MicroBuildTemplate
                   parameters:
                     intent: "PackageDistribution"
