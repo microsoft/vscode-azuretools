@@ -135,29 +135,29 @@ extends:
                         publishVersion: ${{ parameters.publishVersion }}
 
                     # Publish the package to NPM
-                    - ${{ if eq(parameters.dryRun, true) }}:
-                      - template: MicroBuild.Publish.yml@MicroBuildTemplate
-                        parameters:
-                          intent: "PackageDistribution"
-                          contentType: "npm"
-                          contentSource: "Folder"
-                          folderLocation: "$(tgzFolderName)"
-                          waitForReleaseCompletion: true
-                          owners: "${{ parameters.OwnerAlias }}@microsoft.com"
-                          approvers: "${{ parameters.ApproverAlias }}@microsoft.com"
+                    # - ${{ if eq(parameters.dryRun, true) }}:
+                    #   - template: MicroBuild.Publish.yml@MicroBuildTemplate
+                    #     parameters:
+                    #       intent: "PackageDistribution"
+                    #       contentType: "npm"
+                    #       contentSource: "Folder"
+                    #       folderLocation: "$(tgzFolderName)"
+                    #       waitForReleaseCompletion: true
+                    #       owners: "${{ parameters.OwnerAlias }}@microsoft.com"
+                    #       approvers: "${{ parameters.ApproverAlias }}@microsoft.com"
 
                     # Create a release on GitHub containing the package
-                    - task: GitHubRelease@1
-                      displayName: "\U0001F449 GitHub release (create)"
-                      condition: and(succeeded(), ${{ eq(parameters.dryRun, false) }})
-                      inputs:
-                        gitHubConnection: "GitHub-AzureTools"
-                        tagSource: userSpecifiedTag
-                        tag: "${{ parameters.PackageToPublish }}-v$(Version)"
-                        title: "${{ parameters.PackageToPublish }} v$(Version)"
-                        releaseNotesSource: inline
-                        assets: "$(tgzFileName)"
-                        isDraft: true
-                        isPreRelease: true
-                        addChangeLog: false
+                    # - task: GitHubRelease@1
+                    #   displayName: "\U0001F449 GitHub release (create)"
+                    #   condition: and(succeeded(), ${{ eq(parameters.dryRun, false) }})
+                    #   inputs:
+                    #     gitHubConnection: "GitHub-AzureTools"
+                    #     tagSource: userSpecifiedTag
+                    #     tag: "${{ parameters.PackageToPublish }}-v$(Version)"
+                    #     title: "${{ parameters.PackageToPublish }} v$(Version)"
+                    #     releaseNotesSource: inline
+                    #     assets: "$(tgzFileName)"
+                    #     isDraft: true
+                    #     isPreRelease: true
+                    #     addChangeLog: false
 
