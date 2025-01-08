@@ -54,6 +54,13 @@ extends:
           - deployment: Publish
             displayName: Publish extension
             environment: ${{ parameters.environmentName }}
+            templateContext:
+              type: releaseJob
+              isProduction: true
+              inputs:
+                - input: pipelineArtifact
+                  targetPath: $(System.DefaultWorkingDirectory)
+                  artifactName: Build Root
             strategy:
               runOnce:
                 deploy:
@@ -62,16 +69,16 @@ extends:
 
                     - checkout: none
 
-                    - task: DownloadPipelineArtifact@2
-                      displayName: "\U0001F449 Download artifacts from Build pipeline"
-                      inputs:
-                        source: specific # download from a specific pipelines run
-                        project: DevDiv
-                        definition: ${{ parameters.pipelineID }}
-                        buildVersionToDownload: specific
-                        runId: ${{ parameters.runID }}
-                        artifact: Build Root
-                        targetPath: $(System.DefaultWorkingDirectory)
+                    # - task: DownloadPipelineArtifact@2
+                    #   displayName: "\U0001F449 Download artifacts from Build pipeline"
+                    #   inputs:
+                    #     source: specific # download from a specific pipelines run
+                    #     project: DevDiv
+                    #     definition: ${{ parameters.pipelineID }}
+                    #     buildVersionToDownload: specific
+                    #     runId: ${{ parameters.runID }}
+                    #     artifact: Build Root
+                    #     targetPath: $(System.DefaultWorkingDirectory)
 
                     # Modify the build number to include repo name, extension version, and if dry run is true
                     - powershell: |
