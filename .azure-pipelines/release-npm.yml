@@ -3,7 +3,7 @@ pr: none # Disable PR trigger
 
 # Choose a package to publish at the time of job creation
 parameters:
-  - name: PackageToPublish
+  - name: packageToPublish
     displayName: Package to Publish
     type: string
     values:
@@ -16,10 +16,13 @@ parameters:
       - microsoft-vscode-azext-github
       - microsoft-vscode-azext-serviceconnector
       - microsoft-vscode-azext-utils
-  - name: BranchToPublish
-    displayName: Branch to Publish
+  - name: publishVersion
+    displayName: Publish Version
     type: string
-    default: "refs/heads/main"
+  - name: dryRun
+    displayName: Dry Run
+    type: boolean
+    default: true
 
 # Grab the base templates from https://github.com/microsoft/vscode-azuretools/tree/main/azure-pipelines
 resources:
@@ -29,13 +32,17 @@ resources:
       name: microsoft/vscode-azuretools
       ref: main
       endpoint: GitHub-AzureTools
+  pipelines:
+    - pipeline: build # This must be "build"
+      source: \Azure Tools\VSCode\Packages\vscode-azuretools # name of the pipeline that produces the artifacts
 
 # Use those base templates
 extends:
   template: azure-pipelines/1es-release-npm.yml@templates
   parameters:
-    PackageToPublish: ${{ parameters.PackageToPublish }}
-    BranchToPublish: ${{ parameters.BranchToPublish }}
-    PipelineDefinition: 20425
+    packageToPublish: ${{ parameters.packageToPublish }}
+    artifactName: Build ${{ parameters.packageToPublish}}
+    publishVersion: ${{ parameters.publishVersion }}
+    dryRun: ${{ parameters.dryRun }}
     OwnerAlias: "jinglou"
     ApproverAlias: "bwater"
