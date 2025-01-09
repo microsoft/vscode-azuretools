@@ -2,7 +2,7 @@ parameters:
   - name: "jobs"
     type: object
     default:
-      - name: Root # TODO: would like this to be repository name but can't use build variables here
+      - name: Root
         working_directory: .
   - name: "useAzureFederatedCredentials"
     type: boolean
@@ -31,7 +31,7 @@ stages:
               outputs:
                 - output: pipelineArtifact
                   targetPath: $(build.artifactstagingdirectory)/build/${{ job.name }}
-                  artifactName: Build ${{ job.name }}
+                  artifactName: Build ${{ replace(job.name, '_', '-' }}
             steps:
               - template: ./templates/setup.yml
                 parameters:
@@ -48,5 +48,4 @@ stages:
                 parameters:
                   useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
             variables:
-              artifact_name: ${{ job.name }}
               working_directory: ${{ job.working_directory }}
