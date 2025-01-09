@@ -22,7 +22,7 @@ parameters:
   - name: dryRun
     displayName: Dry Run
     type: boolean
-    default: true # TODO
+    default: false
 
 # Grab the base templates from https://github.com/microsoft/vscode-azuretools/tree/main/azure-pipelines
 resources:
@@ -30,7 +30,7 @@ resources:
     - repository: templates
       type: github
       name: microsoft/vscode-azuretools
-      ref: bmw/npmReleasePipeline # TODO
+      ref: main
       endpoint: GitHub-AzureTools
   pipelines:
     - pipeline: build # This must be "build"
