@@ -30,7 +30,7 @@ resources:
     - repository: templates
       type: github
       name: microsoft/vscode-azuretools
-      ref: main
+      ref: bmw/npmReleasePipeline # TODO
       endpoint: GitHub-AzureTools
   pipelines:
     - pipeline: build # This must be "build"
