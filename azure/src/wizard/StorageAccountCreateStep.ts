@@ -40,6 +40,7 @@ export class StorageAccountCreateStep<T extends types.IStorageAccountWizardConte
                 kind: this._defaults.kind,
                 location: newLocation,
                 enableHttpsTrafficOnly: true,
+                allowBlobPublicAccess: false,
                 defaultToOAuthAuthentication: true,
             }
         );
