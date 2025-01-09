@@ -48,5 +48,5 @@ stages:
                 parameters:
                   useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
             variables:
-              working_directory: ${{ job.working_directory }}
               artifact_name: ${{ replace(job.name, '_', '-') }}
+              working_directory: ${{ job.working_directory }}
