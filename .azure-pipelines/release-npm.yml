@@ -22,7 +22,7 @@ parameters:
   - name: dryRun
     displayName: Dry Run
     type: boolean
-    default: true
+    default: true # TODO
 
 # Grab the base templates from https://github.com/microsoft/vscode-azuretools/tree/main/azure-pipelines
 resources:
