@@ -31,7 +31,7 @@ stages:
               outputs:
                 - output: pipelineArtifact
                   targetPath: $(build.artifactstagingdirectory)/build/${{ job.name }}
-                  artifactName: Build ${{ replace(job.name, '_', '-' }}
+                  artifactName: Build ${{ replace(job.name, '_', '-') }}
             steps:
               - template: ./templates/setup.yml
                 parameters:
