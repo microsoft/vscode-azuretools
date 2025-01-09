@@ -14,5 +14,5 @@ steps:
         **/*.tar.gz
         **/*.tgz
         !**/node_modules/**
-      TargetFolder: "$(build.artifactstagingdirectory)/build/${{ job.name }}"
+      TargetFolder: "$(build.artifactstagingdirectory)/build/$(artifact_name)"
     condition: and(succeeded(), ne(variables['System.PullRequest.IsFork'], 'True'))

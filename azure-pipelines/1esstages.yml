@@ -30,8 +30,8 @@ stages:
                   zipSources: false
               outputs:
                 - output: pipelineArtifact
-                  targetPath: $(build.artifactstagingdirectory)/build/${{ job.name }}
-                  artifactName: Build ${{ replace(job.name, '_', '-') }}
+                  targetPath: $(build.artifactstagingdirectory)/build/$(artifact_name)
+                  artifactName: Build $(artifact_name)
             steps:
               - template: ./templates/setup.yml
                 parameters:
@@ -49,3 +49,4 @@ stages:
                   useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
             variables:
               working_directory: ${{ job.working_directory }}
+              artifact_name: ${{ replace(job.name, '_', '-') }}
