@@ -1,13 +1,22 @@
 parameters:
-  - name: PackageToPublish
-    displayName: Package to Publish
+  # The name of the package to publish
+  - name: packageToPublish
     type: string
-  - name: BranchToPublish
-    displayName: Branch to Publish
+  # In the build artifacts, the name of the artifact containing the package to publish
+  - name: artifactName
     type: string
-  - name: PipelineDefinition
-    displayName: Pipeline Definition
-    type: number
+    default: Build Root
+
+  # The intended package version to publish.
+  # This is used to verify the version in package.json matches the version to publish to avoid accidental publishing.
+  - name: publishVersion
+    type: string
+
+    # When true, skips the deployment job which actually publishes the package
+  - name: dryRun
+    type: boolean
+    default: false
+
   - name: OwnerAlias
     displayName: Owner Alias
     type: string
@@ -26,69 +35,113 @@ resources:
 extends:
   template: azure-pipelines/1ES.Official.Publish.yml@MicroBuildTemplate
   parameters:
-    sdl:
-      tsa:
-        enabled: true
-        configFile: '$(Build.SourcesDirectory)\.azure-pipelines\compliance\tsaoptions.json'
-      credscan:
-        suppressionsFile: $(Build.SourcesDirectory)\.azure-pipelines\compliance\CredScanSuppressions.json
-      sourceAnalysisPool:
-        name: AzurePipelines-EO
-        image: 1ESPT-Windows2022
-      # codeql:
-      #   enabled: true # TODO: would like to enable only on scheduled builds but CodeQL cannot currently be disabled per https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/codeql/1es-codeql
     pool:
-      name: AzurePipelines-EO # Name of your hosted pool
-      image: 1ESPT-Ubuntu20.04 # Name of the image in your pool. If not specified, first image of the pool is used
-      os: linux # OS of the image. Allowed values: windows, linux, macOS
+      name: VSEngSS-MicroBuild2022-1ES # Name of your hosted pool
+      image: server2022-microbuildVS2022-1es # Name of the image in your pool. If not specified, first image of the pool is used
+      os: windows # OS of the image. Allowed values: windows, linux, macOS
+
     stages:
       - stage: ReleaseStage
+        displayName: Release package
         jobs:
-          - job: ReleaseJob
-            steps:
-              - task: DownloadPipelineArtifact@2
-                displayName: "\U0001F449 Download Artifact"
-                inputs:
-                  buildType: "specific"
-                  project: "DevDiv"
-                  definition: ${{ parameters.PipelineDefinition }}
-                  buildVersionToDownload: "latestFromBranch"
-                  branchName: ${{ parameters.BranchToPublish }}
+          - job: Publish
+            displayName: Publish package
+            templateContext:
+              type: releaseJob
+              isProduction: true
+              inputs:
+                - input: pipelineArtifact
+                  pipeline: build
                   targetPath: $(System.DefaultWorkingDirectory)
-                  itemPattern: "**/*.tgz"
-              - task: CmdLine@2
-                displayName: "\U0001F449 Validate Artifact"
-                inputs:
-                  script: |
-                    TarballPath=`find . -type f -iname "${{ parameters.PackageToPublish }}*.tgz"`
-                    if [[ $TarballPath =~ ((microsoft|vscode)-.*)-([0-9]+\.[0-9]+\.[0-9]+) ]]; then
-                      echo "##vso[task.setvariable variable=Version]${BASH_REMATCH[3]}"
-                      echo "##vso[task.setvariable variable=TarballPath]$TarballPath"
-                      echo "##vso[task.setvariable variable=TarballFolder]$(dirname "$TarballPath")"
-                      echo "Found tarball \"$(basename "$TarballPath")\" in folder \"$(dirname "$TarballPath")\""
-                    else
-                      echo "Failed to parse tarball path \"$TarballPath\""
-                      exit 1
-                    fi
-                  workingDirectory: $(System.DefaultWorkingDirectory)
-              - template: MicroBuild.Publish.yml@MicroBuildTemplate
-                parameters:
-                  intent: "PackageDistribution"
-                  contentType: "npm"
-                  contentSource: "Folder"
-                  folderLocation: "$(System.DefaultWorkingDirectory)/$(TarballFolder)"
-                  waitForReleaseCompletion: true
-                  owners: "${{ parameters.OwnerAlias }}@microsoft.com"
-                  approvers: "${{ parameters.ApproverAlias }}@microsoft.com"
+                  artifactName: ${{ parameters.artifactName }}
+            steps:
+
+              # Locate the desired .tgz file and set the relevant variables
+              - powershell: |
+                  # Find the desired .tgz file
+                  $tgzFiles = Get-ChildItem -Path $(System.DefaultWorkingDirectory) -Filter ${{ parameters.packageToPublish }}*.tgz -File -Recurse
+
+                  # Check if more than one .tgz file is found
+                  if ($tgzFiles.Count -gt 1) {
+                    Write-Error "More than one .tgz file found."
+                    exit 1
+                  } elseif ($tgzFiles.Count -eq 0) {
+                    Write-Error "No .tgz files found."
+                    exit 1
+                  } else {
+                    # Set the pipeline variable
+                    $tgzFileName = $tgzFiles.FullName
+                    $tgzFolderName = $tgzFiles.DirectoryName
+                    Write-Output "##vso[task.setvariable variable=tgzFileName;]$tgzFileName"
+                    Write-Output "##vso[task.setvariable variable=tgzFolderName;]$tgzFolderName"
+                    Write-Output "Found .tgz file: $tgzFileName"
+                  }
+                displayName: "\U0001F449 Find and Set .tgz File/Folder Variables"
+
+              # Modify the build number to include package name, package version, and if dry run is true
+              - powershell: |
+                  # Get the version from package.json
+
+                  $packageJsonPath = "$(tgzFolderName)/package.json"
+                  $npmVersionString = (Get-Content $packageJsonPath | ConvertFrom-Json).version
+                  $isDryRun = "$env:dryRun"
+                  $currentBuildNumber = "$(Build.BuildId)"
+
+                  $dry = ""
+                  if ($isDryRun -eq 'True') {
+                    Write-Output "Dry run was set to True. Adding 'dry' to the build number."
+                    $dry = "dry"
+                  }
+
+                  $newBuildNumber = "$env:packageToPublish-$npmVersionString-$dry-$currentBuildNumber"
+                  Write-Output "##vso[build.updatebuildnumber]$newBuildNumber"
+                displayName: "\U0001F449 Prepend version from package.json to build number"
+                env:
+                  dryRun: ${{ parameters.dryRun }}
+                  packageToPublish: ${{ parameters.packageToPublish }}
+
+              # For safety, verify the version in package.json matches the version to publish entered by the releaser
+              # If they don't match, this step fails
+              - powershell: |
+                  # Get the version from package.json
+                  $packageJsonPath = "$(tgzFolderName)/package.json"
+                  $npmVersionString = (Get-Content $packageJsonPath | ConvertFrom-Json).version
+                  $publishVersion = "$env:publishVersion"
+                  Write-Output "Publishing version: $publishVersion"
+                  if ($npmVersionString -eq $publishVersion) {
+                    Write-Output "Publish version matches package.json version. Proceeding with release."
+                  } else {
+                    Write-Error "Publish version $publishVersion doesn't match version found in package.json $npmVersionString. Cancelling release."
+                    exit 1
+                  }
+                displayName: "\U0001F449 Verify publish version"
+                env:
+                  publishVersion: ${{ parameters.publishVersion }}
+
+              # Publish the package to NPM
+              - ${{ if eq(parameters.dryRun, false) }}:
+                - template: MicroBuild.Publish.yml@MicroBuildTemplate
+                  parameters:
+                    intent: "PackageDistribution"
+                    contentType: "npm"
+                    contentSource: "Folder"
+                    folderLocation: "$(tgzFolderName)"
+                    waitForReleaseCompletion: true
+                    owners: "${{ parameters.OwnerAlias }}@microsoft.com"
+                    approvers: "${{ parameters.ApproverAlias }}@microsoft.com"
+
+              # Create a release on GitHub containing the package
               - task: GitHubRelease@1
                 displayName: "\U0001F449 GitHub release (create)"
+                condition: and(succeeded(), ${{ eq(parameters.dryRun, false) }})
                 inputs:
                   gitHubConnection: "GitHub-AzureTools"
                   tagSource: userSpecifiedTag
                   tag: "${{ parameters.PackageToPublish }}-v$(Version)"
                   title: "${{ parameters.PackageToPublish }} v$(Version)"
                   releaseNotesSource: inline
-                  assets: "$(System.DefaultWorkingDirectory)/$(TarballPath)"
+                  assets: "$(tgzFileName)"
                   isDraft: true
                   isPreRelease: true
                   addChangeLog: false
+
