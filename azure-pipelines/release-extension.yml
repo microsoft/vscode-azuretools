@@ -18,7 +18,7 @@ parameters:
     default: AzCodeDeploy
 
   # The service connection to use to authenticate the vsce to publish the extension.
-  - name: serviceConnection
+  - name: ExtensionReleaseServiceConnection
     type: string
     default: AzCodeReleases
 
@@ -142,7 +142,7 @@ extends:
                       displayName: "\U0001F449 Run vsce publish"
                       condition: and(succeeded(), ${{ eq(parameters.dryRun, false) }})
                       inputs:
-                        azureSubscription: ${{ parameters.serviceConnection }}
+                        azureSubscription: ${{ parameters.ExtensionReleaseServiceConnection }}
                         scriptType: pscore
                         scriptLocation: inlineScript
                         inlineScript: |
