@@ -24,6 +24,11 @@ parameters:
     displayName: Approver Alias
     type: string
 
+  - name: GitHubServiceConnection
+    displayName: GitHub Service Connection
+    type: string
+    default: GitHub-AzureTools
+
 # `resources` specifies the location of templates to pick up, use it to get 1ES templates
 resources:
   repositories:
@@ -135,7 +140,7 @@ extends:
                 displayName: "\U0001F449 GitHub release (create)"
                 condition: and(succeeded(), ${{ eq(parameters.dryRun, false) }})
                 inputs:
-                  gitHubConnection: "GitHub-AzureTools"
+                  gitHubConnection: ${{ parameters.GitHubServiceConnection }}
                   tagSource: userSpecifiedTag
                   tag: "${{ parameters.PackageToPublish }}-v$(Version)"
                   title: "${{ parameters.PackageToPublish }} v$(Version)"

@@ -66,7 +66,7 @@ resources:
       type: github
       name: microsoft/vscode-azuretools
       ref: main
-      endpoint: GitHub-AzureTools # The service connection to use when accessing this repository
+      endpoint: GitHub-AzureTools # CUSTOMIZE: The service connection to use when accessing this repository
 
 parameters:
   - name: enableLongRunningTests
@@ -158,7 +158,7 @@ resources:
       type: github
       name: microsoft/vscode-azuretools
       ref: main
-      endpoint: GitHub-AzureTools
+      endpoint: GitHub-AzureTools # CUSTOMIZE - service connection to use when accessing this repository
 
 variables:
   # Required by MicroBuild template
