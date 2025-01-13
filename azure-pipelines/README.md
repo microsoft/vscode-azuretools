@@ -172,6 +172,7 @@ extends:
     publishVersion: ${{ parameters.publishVersion }}
     dryRun: ${{ parameters.dryRun }}
     environmentName: AzCodeDeploy # CUSTOMIZE
+    ExtensionReleaseServiceConnection: AzCodeReleases # CUSTOMIZE
 ```
 
 The extension release pipeline has the following parameters.
