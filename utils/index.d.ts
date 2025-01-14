@@ -1947,6 +1947,7 @@ export declare interface PickSubscriptionWizardContext extends QuickPickWizardCo
 export declare interface AzureResourceQuickPickWizardContext extends QuickPickWizardContext, PickSubscriptionWizardContext {
     resource?: AzureResource;
     resourceGroup?: string;
+    id?: string;
 }
 
 /**
