@@ -29,9 +29,9 @@ extends:
     sdl:
       tsa:
         enabled: true
-        configFile: '$(Build.SourcesDirectory)\.azure-pipelines\compliance\tsaoptions.json'
+        configFile: "$(Build.SourcesDirectory)/.azure-pipelines/compliance/tsaoptions.json"
       credscan:
-        suppressionsFile: $(Build.SourcesDirectory)\.azure-pipelines\compliance\CredScanSuppressions.json
+        suppressionsFile: $(Build.SourcesDirectory)/.azure-pipelines/compliance/CredScanSuppressions.json
       sourceAnalysisPool:
         name: AzurePipelines-EO
         image: 1ESPT-Windows2022
