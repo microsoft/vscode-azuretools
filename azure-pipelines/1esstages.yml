@@ -29,9 +29,9 @@ stages:
                   signType: real # options are 'real' & 'test'
                   zipSources: false
               outputs:
-                - output: pipelineArtifact
-                  targetPath: $(build.artifactstagingdirectory)/build/$(artifact_name)
-                  artifactName: Build $(artifact_name)
+                # - output: pipelineArtifact
+                #   targetPath: $(build.artifactstagingdirectory)/build/$(artifact_name)
+                #   artifactName: Build $(artifact_name)
                 - output: pipelineArtifact
                   targetPath: $(build.artifactstagingdirectory)/build/npm-logs
                   artifactName: npm logs
