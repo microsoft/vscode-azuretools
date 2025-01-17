@@ -33,7 +33,7 @@ stages:
                 #   targetPath: $(build.artifactstagingdirectory)/build/$(artifact_name)
                 #   artifactName: Build $(artifact_name)
                 - output: pipelineArtifact
-                  targetPath: $(build.artifactstagingdirectory)/build/npm-logs
+                  targetPath: $(build.artifactstagingdirectory)/npm-logs
                   artifactName: npm logs
             steps:
               - template: ./templates/setup.yml
