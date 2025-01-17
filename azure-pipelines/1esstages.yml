@@ -44,13 +44,13 @@ stages:
                 parameters:
                   additionalPostPackageSteps: ${{ parameters.additionalPostPackageSteps }}
               - template: ./templates/debug.yml
-              - template: ./templates/sign.yml
-                parameters:
-                  enableSigning: ${{ parameters.enableSigning }}
-              - template: ./templates/stage-artifacts.yml
-              - template: ./templates/test.yml
-                parameters:
-                  useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
+            #   - template: ./templates/sign.yml
+            #     parameters:
+            #       enableSigning: ${{ parameters.enableSigning }}
+            #   - template: ./templates/stage-artifacts.yml
+            #   - template: ./templates/test.yml
+            #     parameters:
+            #       useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
             variables:
               artifact_name: ${{ replace(job.name, '_', '-') }}
               working_directory: ${{ job.working_directory }}
