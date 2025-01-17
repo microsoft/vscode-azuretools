@@ -1,0 +1,19 @@
+# Add any additional tasks to debug issue that happens earlier in the pipeline.
+# For example, publish logs of a failed task, or run a script to gather more information.
+
+steps:
+  - task: CopyFiles@1
+    displayName: Copy npm logs to artifacts
+    inputs:
+      SourceFolder: "C:\\Users\\cloudtest\\AppData\\Local\\npm-cache\\_logs"
+      Contents: "*.log"
+      TargetFolder: "$(Build.ArtifactStagingDirectory)/npm-logs"
+      CleanTargetFolder: true
+      flattenFolders: true
+
+  # Temporary tasks to export the npm logs to help me debug
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)/npm-logs'
+      ArtifactName: 'drop'
+      publishLocation: 'Container'
