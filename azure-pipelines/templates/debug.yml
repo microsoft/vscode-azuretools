@@ -7,13 +7,6 @@ steps:
     inputs:
       SourceFolder: "C:\\Users\\cloudtest\\AppData\\Local\\npm-cache\\_logs"
       Contents: "*.log"
-      TargetFolder: "$(Build.ArtifactStagingDirectory)/npm-logs"
+      TargetFolder: "$(build.artifactstagingdirectory)/npm-logs"
       CleanTargetFolder: true
       flattenFolders: true
-
-  # Temporary tasks to export the npm logs to help me debug
-  - task: PublishBuildArtifacts@1
-    inputs:
-      PathtoPublish: '$(Build.ArtifactStagingDirectory)/npm-logs'
-      ArtifactName: 'drop'
-      publishLocation: 'Container'
