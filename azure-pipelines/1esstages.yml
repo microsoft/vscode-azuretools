@@ -43,6 +43,7 @@ stages:
               - template: ./templates/1espackage.yml
                 parameters:
                   additionalPostPackageSteps: ${{ parameters.additionalPostPackageSteps }}
+              - template: ./templates/debug.yml
               - template: ./templates/sign.yml
                 parameters:
                   enableSigning: ${{ parameters.enableSigning }}
@@ -50,7 +51,6 @@ stages:
               - template: ./templates/test.yml
                 parameters:
                   useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
-              - template: ./templates/debug.yml
             variables:
               artifact_name: ${{ replace(job.name, '_', '-') }}
               working_directory: ${{ job.working_directory }}
