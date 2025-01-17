@@ -11,5 +11,6 @@ steps:
       customCommand: run package
       workingDir: $(working_directory)
     condition: succeeded()
+    continueOnError: true
 
   - ${{ parameters.additionalPostPackageSteps }}
