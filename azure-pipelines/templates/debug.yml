@@ -4,6 +4,7 @@
 steps:
   - task: CopyFiles@1
     displayName: Copy npm logs to artifacts
+    condition: always()
     inputs:
       SourceFolder: "C:\\Users\\cloudtest\\AppData\\Local\\npm-cache\\_logs"
       Contents: "*.log"
