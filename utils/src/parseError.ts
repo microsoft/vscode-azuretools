@@ -123,6 +123,10 @@ function parseIfHtml(message: string): string {
         try {
             var headerOptions = { leadingLineBreaks: 1, trailingLineBreaks: 1, uppercase: false };
 
+
+
+
+
             return htmlToText.convert(
                 message,
                 {
