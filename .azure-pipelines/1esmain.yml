@@ -29,9 +29,9 @@ extends:
   parameters:
     sdl:
       credscan:
-        suppressionsFile: $(Build.SourcesDirectory)\.azure-pipelines\compliance\CredScanSuppressions.json
+        suppressionsFile: $(Build.SourcesDirectory)/.azure-pipelines/compliance/CredScanSuppressions.json
       componentgovernance:
-        ignoreDirectories: $(Build.SourcesDirectory)\appservice\.vscode-test,$(Build.SourcesDirectory)\appsettings\.vscode-test,$(Build.SourcesDirectory)\auth\.vscode-test,$(Build.SourcesDirectory)\azure\.vscode-test,$(Build.SourcesDirectory)\dev\.vscode-test,$(Build.SourcesDirectory)\eslint-config-azuretools\.vscode-test,$(Build.SourcesDirectory)\github\.vscode-test,$(Build.SourcesDirectory)\serviceconnector\.vscode-test,$(Build.SourcesDirectory)\utils\.vscode-test
+        ignoreDirectories: $(Build.SourcesDirectory)/appservice/.vscode-test,$(Build.SourcesDirectory)/appsettings/.vscode-test,$(Build.SourcesDirectory)/auth/.vscode-test,$(Build.SourcesDirectory)/azure/.vscode-test,$(Build.SourcesDirectory)/dev/.vscode-test,$(Build.SourcesDirectory)/eslint-config-azuretools/.vscode-test,$(Build.SourcesDirectory)/github/.vscode-test,$(Build.SourcesDirectory)/serviceconnector/.vscode-test,$(Build.SourcesDirectory)/utils/.vscode-test
       codeql:
         excludePathPatterns: "**/.vscode-test, dist" # Exclude .vscode-test and dist directories from CodeQL alerting
     pool:
