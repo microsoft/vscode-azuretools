@@ -34,6 +34,7 @@ extends:
         ignoreDirectories: $(Build.SourcesDirectory)/appservice/.vscode-test,$(Build.SourcesDirectory)/appsettings/.vscode-test,$(Build.SourcesDirectory)/auth/.vscode-test,$(Build.SourcesDirectory)/azure/.vscode-test,$(Build.SourcesDirectory)/dev/.vscode-test,$(Build.SourcesDirectory)/eslint-config-azuretools/.vscode-test,$(Build.SourcesDirectory)/github/.vscode-test,$(Build.SourcesDirectory)/serviceconnector/.vscode-test,$(Build.SourcesDirectory)/utils/.vscode-test
       codeql:
         excludePathPatterns: "**/.vscode-test, dist" # Exclude .vscode-test and dist directories from CodeQL alerting
+    #   We need to keep this pool defined because SDLSources stage requires us to specify a windows pool
     pool:
       name: VSEngSS-MicroBuild2022-1ES # Name of your hosted pool
       image: server2022-microbuildVS2022-1es # Name of the image in your pool. If not specified, first image of the pool is used

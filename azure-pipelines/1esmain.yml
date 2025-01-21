@@ -47,6 +47,7 @@ extends:
       codeql:
         excludePathPatterns: "**/.vscode-test, dist" # Exclude .vscode-test and dist directories from CodeQL alerting
       #   enabled: true # TODO: would like to enable only on scheduled builds but CodeQL cannot currently be disabled per https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/codeql/1es-codeql
+    #   We need to keep this pool SDLSources stage requires us to specify a windows pool
     pool:
       name: VSEngSS-MicroBuild2022-1ES # Name of your hosted pool
       image: server2022-microbuildVS2022-1es # Name of the image in your pool. If not specified, first image of the pool is used
