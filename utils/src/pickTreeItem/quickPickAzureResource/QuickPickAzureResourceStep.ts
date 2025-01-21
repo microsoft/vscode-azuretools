@@ -21,12 +21,11 @@ export class QuickPickAzureResourceStep extends GenericQuickPickStep<AzureResour
     }
 
     protected override async promptInternal(wizardContext: AzureResourceQuickPickWizardContext): Promise<AzureResourceItem> {
-        const pickedAzureResource = (await super.promptInternal(wizardContext)) as unknown as AzureResourceItem & { id: string };
+        const pickedAzureResource = (await super.promptInternal(wizardContext)) as unknown as AzureResourceItem;
 
         // TODO
         wizardContext.resource = pickedAzureResource.resource;
         wizardContext.resourceGroup = pickedAzureResource.resource.resourceGroup;
-        wizardContext.id = pickedAzureResource.id;
 
         return pickedAzureResource;
     }

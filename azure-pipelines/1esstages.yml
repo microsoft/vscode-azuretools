@@ -16,9 +16,6 @@ parameters:
   - name: enableSigning
     type: boolean
     default: True
-  - name: ConnectedServiceName
-    type: string
-    default: "Azure Pipelines"
 
 stages:
   - stage: BuildStage
@@ -33,7 +30,7 @@ stages:
               mb: # Enable the MicroBuild Signing toolset
                 signing:
                   enabled: ${{ parameters.enableSigning }}
-                  signType: "real"
+                  signType: real # options are 'real' & 'test'
                   zipSources: false
                   azureSubscription: "MicroBuild Signing Task (DevDiv)"
               outputs:

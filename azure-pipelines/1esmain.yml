@@ -37,7 +37,7 @@ extends:
       ${{ if eq(parameters.IsOfficialBuild, true) }}:
         tsa:
           enabled: true
-          configFile: "$(Build.SourcesDirectory)/.azure-pipelines/compliance/tsaoptions.json"
+          configFile: '$(Build.SourcesDirectory)/.azure-pipelines/compliance/tsaoptions.json'
       suppression:
         suppressionFile: $(Build.SourcesDirectory)/.config/guardian/.gdnsuppress
       credscan:

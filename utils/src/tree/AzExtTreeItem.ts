@@ -130,7 +130,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
 
     public get tooltip(): string | undefined {
         if (process.env.DEBUGTELEMETRY === 'v' && !!settingUtils.getWorkspaceSetting<unknown>(showContextValueSetting)) {
-            return `Id: "${this.id}"`;
+            return `Context: "${this.contextValue}"`;
         } else {
             return this._tooltip;
         }
