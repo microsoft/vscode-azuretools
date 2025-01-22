@@ -54,11 +54,11 @@ extends:
     stages:
       # Execute stages from the AzExt stages template
       - template: ./1esstages.yml
+        pool:
+          name: AzurePipelines-EO
+          image: 1ESPT-Ubuntu22.04
+          os: linux
         parameters:
-          pool:
-            name: AzurePipelines-EO
-            image: 1ESPT-Ubuntu22.04
-            os: linux
           useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
           additionalSetupSteps: ${{ parameters.additionalSetupSteps }}
           additionalPostPackageSteps: ${{ parameters.additionalPostPackageSteps }}
