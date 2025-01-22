@@ -33,10 +33,6 @@ extends:
   ${{ else }}:
     template: azure-pipelines/MicroBuild.1ES.Unofficial.yml@1esPipelines
   parameters:
-    pool:
-      name: AzurePipelines-EO
-      image: 1ESPT-Ubuntu22.04
-      os: linux
     sdl:
       ${{ if eq(parameters.IsOfficialBuild, true) }}:
         tsa:
@@ -59,6 +55,10 @@ extends:
       # Execute stages from the AzExt stages template
       - template: ./1esstages.yml
         parameters:
+          pool:
+            name: AzurePipelines-EO
+            image: 1ESPT-Ubuntu22.04
+            os: linux
           useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
           additionalSetupSteps: ${{ parameters.additionalSetupSteps }}
           additionalPostPackageSteps: ${{ parameters.additionalPostPackageSteps }}

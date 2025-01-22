@@ -27,10 +27,6 @@ resources:
 extends:
   template: v1/1ES.Official.PipelineTemplate.yml@1esPipelines
   parameters:
-    pool:
-      name: AzurePipelines-EO
-      image: 1ESPT-Ubuntu22.04
-      os: linux
     sdl:
       credscan:
         suppressionsFile: $(Build.SourcesDirectory)/.azure-pipelines/compliance/CredScanSuppressions.json
@@ -45,6 +41,10 @@ extends:
     stages:
       # Execute stages from the AzExt template
       - template: ../azure-pipelines/1esstages.yml
+        pool:
+          name: AzurePipelines-EO
+          image: 1ESPT-Ubuntu22.04
+          os: linux
         parameters:
           jobs:
             - name: microsoft_vscode_azext_azureappservice
