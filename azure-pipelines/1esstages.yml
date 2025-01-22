@@ -2,7 +2,7 @@ parameters:
   - name: "jobs"
     type: object
     default:
-      - name: Root
+      - name: Root # TODO: would like this to be repository name but can't use build variables here
         working_directory: .
   - name: "useAzureFederatedCredentials"
     type: boolean
@@ -28,11 +28,10 @@ stages:
                   enabled: ${{ parameters.enableSigning }}
                   signType: real # options are 'real' & 'test'
                   zipSources: false
-                  azureSubscription: "MicroBuild Signing Task (DevDiv)"
               outputs:
                 - output: pipelineArtifact
-                  targetPath: $(build.artifactstagingdirectory)/build/$(artifact_name)
-                  artifactName: Build $(artifact_name)
+                  targetPath: $(build.artifactstagingdirectory)/build/${{ job.name }}
+                  artifactName: Build ${{ job.name }}
             steps:
               - template: ./templates/setup.yml
                 parameters:
@@ -49,5 +48,5 @@ stages:
                 parameters:
                   useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
             variables:
-              artifact_name: ${{ replace(job.name, '_', '-') }}
+              artifact_name: ${{ job.name }}
               working_directory: ${{ job.working_directory }}
