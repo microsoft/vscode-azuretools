@@ -32,7 +32,6 @@ stages:
                   enabled: ${{ parameters.enableSigning }}
                   signType: real # options are 'real' & 'test'
                   zipSources: false
-                  azureSubscription: "MicroBuild Signing Task (DevDiv)"
               outputs:
                 - output: pipelineArtifact
                   targetPath: $(build.artifactstagingdirectory)/build/$(artifact_name)
