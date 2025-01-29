@@ -52,7 +52,7 @@ interface AppSettingsTreeItemOptions {
 
 export class AppSettingsTreeItem extends AzExtParentTreeItem {
     public static contextValue: string = 'applicationSettings';
-    public label: string = 'Application Settings';
+    public label: string = vscode.l10n.t('Application Settings');
     public readonly childTypeLabel: string = 'App Setting';
     public readonly clientProvider: AppSettingsClientProvider;
     public readonly supportsSlots: boolean;
@@ -70,7 +70,7 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
         this.contextValuesToAdd = options?.contextValuesToAdd || [];
         this.isLocalSetting = this.contextValuesToAdd.includes('localSettings');
         if (this.isLocalSetting) {
-            this.label = 'Local Settings';
+            this.label = vscode.l10n.t('Local Settings');
         }
     }
 
