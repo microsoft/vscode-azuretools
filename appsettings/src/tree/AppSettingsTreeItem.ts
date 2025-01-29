@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { StringDictionary } from '@azure/arm-appservice';
-import { AzExtParentTreeItem, AzExtTreeItem, createContextValue, IActionContext, ICreateChildImplContext, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
+import { AzExtParentTreeItem, AzExtTreeItem, createContextValue, GenericTreeItem, IActionContext, ICreateChildImplContext, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import { ThemeIcon } from 'vscode';
 import { AppSettingsClientProvider, IAppSettingsClient } from '../IAppSettingsClient';
@@ -52,7 +52,7 @@ interface AppSettingsTreeItemOptions {
 
 export class AppSettingsTreeItem extends AzExtParentTreeItem {
     public static contextValue: string = 'applicationSettings';
-    public readonly label: string = 'Application Settings';
+    public label: string = 'Application Settings';
     public readonly childTypeLabel: string = 'App Setting';
     public readonly clientProvider: AppSettingsClientProvider;
     public readonly supportsSlots: boolean;
@@ -60,6 +60,7 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
     private _settings: StringDictionary | undefined;
     private readonly _settingsToHide: string[] | undefined;
     public readonly contextValuesToAdd: string[];
+    public isLocalSetting: boolean;
 
     constructor(parent: AzExtParentTreeItem, clientProvider: AppSettingsClientProvider, public readonly extensionPrefix: string, options?: AppSettingsTreeItemOptions) {
         super(parent);
@@ -67,6 +68,10 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
         this.supportsSlots = options?.supportsSlots ?? true;
         this._settingsToHide = options?.settingsToHide;
         this.contextValuesToAdd = options?.contextValuesToAdd || [];
+        this.isLocalSetting = this.contextValuesToAdd.includes('localSettings');
+        if (this.isLocalSetting) {
+            this.label = 'Local Settings';
+        }
     }
 
     public get id(): string {
@@ -87,6 +92,14 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
     public async loadMoreChildrenImpl(_clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {
         const client = await this.clientProvider.createClient(context);
         this._settings = await client.listApplicationSettings();
+        if (this._settings.properties && Object.keys(this._settings.properties).length === 0 && this.isLocalSetting) {
+            return [new GenericTreeItem(this, {
+                label: vscode.l10n.t('No local settings found'),
+                iconPath: new ThemeIcon('info'),
+                contextValue: 'noLocalSettings'
+            })];
+        }
+
         const treeItems: AppSettingTreeItem[] = [];
         const properties: { [name: string]: string } = this._settings.properties || {};
         await Promise.all(Object.keys(properties).map(async (key: string) => {
