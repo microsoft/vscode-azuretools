@@ -7,6 +7,7 @@ import { Disposable, InputBox, InputBoxOptions, QuickInputButton, QuickInputButt
 import * as types from '../../index';
 import { AzExtQuickInputButtons } from '../constants';
 import { GoBackError, UserCancelledError } from '../errors';
+import { parseError } from '../parseError';
 import { validOnTimeoutOrException } from '../utils/inputValidation';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
@@ -38,14 +39,19 @@ export async function showInputBox(context: IInternalActionContext, options: typ
                     inputBox.enabled = false;
                     inputBox.busy = true;
 
-                    const validateInputResult: InputBoxValidationResult = await latestValidation;
-                    const asyncValidationResult: string | undefined | null = options.asyncValidationTask ? await options.asyncValidationTask(inputBox.value) : undefined;
-                    if (!validateInputResult && !asyncValidationResult) {
-                        resolve(inputBox.value);
-                    } else if (validateInputResult) {
-                        inputBox.validationMessage = validateInputResult;
-                    } else if (asyncValidationResult) {
-                        inputBox.validationMessage = asyncValidationResult;
+                    try {
+                        const validateInputResult: InputBoxValidationResult = await latestValidation;
+                        const asyncValidationResult: string | undefined | null = options.asyncValidationTask ? await options.asyncValidationTask(inputBox.value) : undefined;
+                        if (!validateInputResult && !asyncValidationResult) {
+                            resolve(inputBox.value);
+                        } else if (validateInputResult) {
+                            inputBox.validationMessage = validateInputResult;
+                        } else if (asyncValidationResult) {
+                            inputBox.validationMessage = asyncValidationResult;
+                        }
+                    } catch (e) {
+                        const pe: types.IParsedError = parseError(e);
+                        reject(pe.message);
                     }
 
                     inputBox.enabled = true;
