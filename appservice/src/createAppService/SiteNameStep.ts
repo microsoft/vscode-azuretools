@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { ResourceNameAvailability, WebSiteManagementClient } from '@azure/arm-appservice';
-import { ResourceGroupListStep, StorageAccountListStep, resourceGroupNamingRules, storageAccountNamingRules } from '@microsoft/vscode-azext-azureutils';
-import { AgentInputBoxOptions, AzureNameStep, IAzureAgentInput, IAzureNamingRules } from '@microsoft/vscode-azext-utils';
+import { createHttpHeaders, createPipelineRequest } from '@azure/core-rest-pipeline';
+import { AzExtLocation, AzExtPipelineResponse, AzExtRequestPrepareOptions, LocationListStep, ResourceGroupListStep, StorageAccountListStep, createGenericClient, resourceGroupNamingRules, storageAccountNamingRules } from '@microsoft/vscode-azext-azureutils';
+import { AgentInputBoxOptions, AzureNameStep, IAzureAgentInput, IAzureNamingRules, nonNullValueAndProp } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import { createWebSiteClient } from '../utils/azureClients';
 import { appInsightsNamingRules } from './AppInsightsListStep';
@@ -13,6 +14,7 @@ import { AppKind } from './AppKind';
 import { AppServicePlanListStep } from './AppServicePlanListStep';
 import { appServicePlanNamingRules } from './AppServicePlanNameStep';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
+import { DomainNameLabelScope } from './SiteDomainNameLabelScopeStep';
 
 interface SiteNameStepWizardContext extends IAppServiceWizardContext {
     ui: IAzureAgentInput;
@@ -56,7 +58,7 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
         } else if (context.newSiteKind?.includes(AppKind.workflowapp)) {
             prompt = vscode.l10n.t('Enter a globally unique name for the new logic app.');
         } else {
-            prompt = vscode.l10n.t('Enter a globally unique name for the new web app.');
+            prompt = vscode.l10n.t('Enter a name for the new web app.');
         }
 
         const agentMetadata = this._siteFor === ("functionApp") || this._siteFor === ("containerizedFunctionApp") ?
@@ -71,7 +73,7 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
             prompt,
             placeHolder,
             validateInput: (name: string): string | undefined => this.validateSiteName(name),
-            asyncValidationTask: async (name: string): Promise<string | undefined> => await this.asyncValidateSiteName(client, name),
+            asyncValidationTask: async (name: string): Promise<string | undefined> => await this.asyncValidateSiteName(context, client, name),
             agentMetadata: agentMetadata
         };
 
@@ -122,7 +124,53 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
         return undefined;
     }
 
-    private async asyncValidateSiteName(client: WebSiteManagementClient, name: string): Promise<string | undefined> {
+    private async asyncValidateSiteName(context: IAppServiceWizardContext, sdkClient: WebSiteManagementClient, name: string): Promise<string | undefined> {
+        return context.newSiteDomainNameLabelScope && context.newSiteDomainNameLabelScope !== DomainNameLabelScope.Global ?
+            await this.asyncValidateSiteNameByDomainScope(context, context.newSiteDomainNameLabelScope, name, context.resourceGroup?.name ?? context.newResourceGroupName) :
+            await this.asyncValidateSiteNameByGlobalScope(sdkClient, name);
+    }
+
+    private async asyncValidateSiteNameByDomainScope(context: IAppServiceWizardContext, domainNameScope: DomainNameLabelScope, siteName: string, resourceGroupName?: string): Promise<string | undefined> {
+        if (!LocationListStep.hasLocation(context)) {
+            throw new Error(vscode.l10n.t('Internal Error: A location is required when validating a site name with non-global domain scope.'));
+        }
+        if (domainNameScope === DomainNameLabelScope.ResourceGroup && !resourceGroupName) {
+            throw new Error(vscode.l10n.t('Internal Error: A resource group name is required when validating a site name with resource group level domain scope.'));
+        }
+
+        const apiVersion: string = '2024-04-01';
+        const location: AzExtLocation = await LocationListStep.getLocation(context);
+        const authToken: string = nonNullValueAndProp((await context.credentials.getToken() as { token?: string }), 'token');
+
+        // Todo: Can replace with call to SDK once updated version is out
+        const options: AzExtRequestPrepareOptions = {
+            url: `https://management.azure.com/subscriptions/${context.subscriptionId}/providers/Microsoft.Web/locations/${location.name}/checknameavailability?api-version=${apiVersion}`,
+            method: 'POST',
+            headers: createHttpHeaders({
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`,
+            }),
+            body: JSON.stringify({
+                name: siteName,
+                type: 'Site',
+                autoGeneratedDomainNameLabelScope: domainNameScope,
+                resourceGroupName: domainNameScope === DomainNameLabelScope.ResourceGroup ? resourceGroupName : undefined,
+            }),
+        };
+
+        const client = await createGenericClient(context, undefined);
+        const pipelineResponse = await client.sendRequest(createPipelineRequest(options)) as AzExtPipelineResponse;
+
+        const checkNameResponse = pipelineResponse.parsedBody as {
+            hostName?: string;
+            message?: string;
+            nameAvailable?: boolean;
+            reason?: string;
+        };
+        return !checkNameResponse.nameAvailable ? checkNameResponse.message : undefined;
+    }
+
+    private async asyncValidateSiteNameByGlobalScope(client: WebSiteManagementClient, name: string): Promise<string | undefined> {
         const nameAvailability: ResourceNameAvailability = await client.checkNameAvailability(name, 'Site');
         if (!nameAvailability.nameAvailable) {
             return nameAvailability.message;

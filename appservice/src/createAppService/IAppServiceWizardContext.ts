@@ -8,6 +8,7 @@ import type { AppServicePlan, Site, SkuDescription } from '@azure/arm-appservice
 import type { Workspace } from '@azure/arm-operationalinsights';
 import { IResourceGroupWizardContext, IStorageAccountWizardContext } from '@microsoft/vscode-azext-azureutils';
 import { AppKind, WebsiteOS } from './AppKind';
+import { DomainNameLabelScope } from './SiteDomainNameLabelScopeStep';
 
 export interface IAppServiceWizardContext extends IResourceGroupWizardContext, IStorageAccountWizardContext {
     newSiteKind: AppKind;
@@ -29,6 +30,18 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
      * This will be defined after `SiteNameStep.prompt` occurs.
      */
     newSiteName?: string;
+
+    /**
+     * The domain name label scope for the new site
+     * This will be defined after `SiteDomainLabelScopeStep.prompt` occurs.
+     */
+    newSiteDomainNameLabelScope?: DomainNameLabelScope;
+
+    /**
+     * Specifies whether or not to display DomainNameLabelScope.ResourceGroup as a pick option.
+     * This will be defined during `SiteDomainLabelScopeStep.prompt`
+     */
+    omitResourceGroupDomainNameScope?: boolean;
 
     /**
      * The App Service plan to use.
