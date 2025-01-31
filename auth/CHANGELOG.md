@@ -1,5 +1,9 @@
 # Change Log
 
+## 4.1.0 - 2024-12-20
+
+* Add filtering `getSubscriptions` by a specific account and/or tenant.
+
 ## 4.0.3 - 2024-12-20
 * [#1862](https://github.com/microsoft/vscode-azuretools/pull/1862) Display account name on duplicate tenant picks
 
