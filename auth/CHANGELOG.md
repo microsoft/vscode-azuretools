@@ -1,6 +1,6 @@
 # Change Log
 
-## 4.1.0 - 2024-12-20
+## 4.1.0 - 2025-01-31
 
 * Add filtering `getSubscriptions` by a specific account and/or tenant.
 
