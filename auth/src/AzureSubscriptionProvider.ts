@@ -8,6 +8,22 @@ import type { AzureSubscription } from './AzureSubscription';
 import type { AzureTenant } from './AzureTenant';
 
 /**
+ * A filter for {@link AzureSubscriptionProvider.getSubscriptions}
+ */
+export type GetSubscriptionsFilter = {
+    /**
+     * The account to get subscriptions for. If not provided, all accounts the extension
+     * currently has access to are used.
+     */
+    account?: vscode.AuthenticationSessionAccountInformation;
+    /**
+     * The tenant to get subscriptions for. If not provided, all tenants for each account
+     * are used.
+     */
+    tenantId?: string;
+};
+
+/**
  * An interface for obtaining Azure subscription information
  */
 export interface AzureSubscriptionProvider {
@@ -24,8 +40,12 @@ export interface AzureSubscriptionProvider {
     /**
      * Gets a list of Azure subscriptions available to the user.
      *
-     * @param filter - Whether to filter the list returned, according to the list returned
-     * by `getTenantFilters()` and `getSubscriptionFilters()`. Optional, default true.
+     * @param filter - Whether to filter the list returned. When:
+     * - `true`: according to the list returned by `getTenantFilters()` and `getSubscriptionFilters()`.
+     * - `false`: return all subscriptions.
+     * - `GetSubscriptionsFilter`: according to the values in the filter.
+     *
+     * Optional, default true.
      *
      * @returns A list of Azure subscriptions.
      *
@@ -33,7 +53,7 @@ export interface AzureSubscriptionProvider {
      * Use {@link isSignedIn} and/or {@link signIn} before this method to ensure
      * the user is signed in.
      */
-    getSubscriptions(filter: boolean): Promise<AzureSubscription[]>;
+    getSubscriptions(filter: boolean | GetSubscriptionsFilter): Promise<AzureSubscription[]>;
 
     /**
      * Checks to see if a user is signed in.

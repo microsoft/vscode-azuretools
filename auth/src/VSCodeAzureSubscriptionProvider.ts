@@ -8,11 +8,11 @@ import type { TokenCredential } from '@azure/core-auth'; // Keep this as `import
 import * as vscode from 'vscode';
 import { AzureAuthentication } from './AzureAuthentication';
 import { AzureSubscription, SubscriptionId, TenantId } from './AzureSubscription';
-import { AzureSubscriptionProvider } from './AzureSubscriptionProvider';
+import { AzureSubscriptionProvider, GetSubscriptionsFilter } from './AzureSubscriptionProvider';
+import { AzureTenant } from './AzureTenant';
 import { getSessionFromVSCode } from './getSessionFromVSCode';
 import { NotSignedInError } from './NotSignedInError';
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from './utils/configuredAzureEnv';
-import { AzureTenant } from './AzureTenant';
 
 const EventDebounce = 5 * 1000; // 5 seconds
 
@@ -84,8 +84,12 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
     /**
      * Gets a list of Azure subscriptions available to the user.
      *
-     * @param filter - Whether to filter the list returned, according to the list returned
-     * by `getTenantFilters()` and `getSubscriptionFilters()`. Optional, default true.
+     * @param filter - Whether to filter the list returned. When:
+     * - `true`: according to the list returned by `getTenantFilters()` and `getSubscriptionFilters()`.
+     * - `false`: return all subscriptions.
+     * - `GetSubscriptionsFilter`: according to the values in the filter.
+     *
+     * Optional, default true.
      *
      * @returns A list of Azure subscriptions. The list is sorted by subscription name.
      * The list can contain duplicate subscriptions if they come from different accounts.
@@ -94,27 +98,32 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      * Use {@link isSignedIn} and/or {@link signIn} before this method to ensure
      * the user is signed in.
      */
-    public async getSubscriptions(filter: boolean = true): Promise<AzureSubscription[]> {
+    public async getSubscriptions(filter: boolean | GetSubscriptionsFilter = true): Promise<AzureSubscription[]> {
         this.logger?.debug('auth: Loading subscriptions...');
         const startTime = Date.now();
-        const tenantIds = await this.getTenantFilters();
-        const shouldFilterTenants = filter && !!tenantIds.length; // If the list is empty it is treated as "no filter"
+
+        const configuredTenantFilter = await this.getTenantFilters();
+        const tenantIdsToFilterBy =
+            // Only filter by the tenant ID option if it is provided
+            (typeof filter === 'object' && filter.tenantId ? [filter.tenantId] :
+                // Only filter by the configured filter if `filter` is true AND there are tenants in the configured filter
+                filter === true && configuredTenantFilter.length > 0 ? configuredTenantFilter :
+                    undefined);
+
 
         const allSubscriptions: AzureSubscription[] = [];
         let accountCount: number; // only used for logging
         try {
             this.suppressSignInEvents = true;
-
-            // Get the list of tenants from each account
-            const accounts = await vscode.authentication.getAccounts(getConfiguredAuthProviderId());
+            // Get the list of tenants from each account (filtered or all)
+            const accounts = typeof filter === 'object' && filter.account ? [filter.account] : await vscode.authentication.getAccounts(getConfiguredAuthProviderId());
             accountCount = accounts.length;
             for (const account of accounts) {
                 for (const tenant of await this.getTenants(account)) {
                     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                     const tenantId = tenant.tenantId!;
 
-                    // If filtering is enabled, and the current tenant is not in that list, then skip it
-                    if (shouldFilterTenants && !tenantIds.includes(tenantId)) {
+                    if (tenantIdsToFilterBy?.includes(tenantId) === false) {
                         continue;
                     }
 
