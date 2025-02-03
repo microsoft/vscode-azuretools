@@ -200,7 +200,7 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
         try {
             const site: Site = await client.webApps.get(
                 nonNullValue(resourceGroupName, vscode.l10n.t('Internal Error: A resource group name must be provided to verify unique site ID.')),
-                siteName
+                siteName,
             );
             if (site) {
                 return vscode.l10n.t('A site with name "{0}" already exists.', siteName);
