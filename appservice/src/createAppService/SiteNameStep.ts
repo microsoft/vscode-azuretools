@@ -136,7 +136,7 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
         }
         if (context.newSiteDomainNameLabelScope) {
             validationMessage ??= await this.asyncValidateSiteNameByDomainScope(context, context.newSiteDomainNameLabelScope, name, context.resourceGroup?.name ?? context.newResourceGroupName);
-            validationMessage ??= await this.asyncValidateUniqueResourceId(context, sdkClient, name, context.resourceGroup?.name ?? context.newResourceGroupName);
+            validationMessage ??= await this.asyncValidateUniqueARMId(context, sdkClient, name, context.resourceGroup?.name ?? context.newResourceGroupName);
         }
 
         return validationMessage;
@@ -144,7 +144,7 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
 
     private async asyncValidateSiteNameByDomainScope(context: SiteNameStepWizardContext, domainNameScope: DomainNameLabelScope, siteName: string, resourceGroupName?: string): Promise<string | undefined> {
         if (!LocationListStep.hasLocation(context)) {
-            throw new Error(vscode.l10n.t('Internal Error: A location is required when validating a site name with non-global domain scope.'));
+            throw new Error(vscode.l10n.t('Internal Error: A location is required when validating a site name with domain scope.'));
         }
         if (domainNameScope === DomainNameLabelScope.ResourceGroup && !resourceGroupName) {
             throw new Error(vscode.l10n.t('Internal Error: A resource group name is required when validating a site name with resource group level domain scope.'));
@@ -191,7 +191,7 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
         }
     }
 
-    private async asyncValidateUniqueResourceId(context: SiteNameStepWizardContext, client: WebSiteManagementClient, siteName: string, resourceGroupName?: string): Promise<string | undefined> {
+    private async asyncValidateUniqueARMId(context: SiteNameStepWizardContext, client: WebSiteManagementClient, siteName: string, resourceGroupName?: string): Promise<string | undefined> {
         if (!resourceGroupName) {
             context.relatedNameTask = this.generateRelatedName(context, siteName, this.getRelatedResourceNamingRules(context));
             resourceGroupName = await context.relatedNameTask;
@@ -199,7 +199,7 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
 
         try {
             const site: Site = await client.webApps.get(
-                nonNullValue(resourceGroupName, vscode.l10n.t('Internal Error: A resource group name must be provided to verify a unique Site ID.')),
+                nonNullValue(resourceGroupName, vscode.l10n.t('Internal Error: A resource group name must be provided to verify unique site ID.')),
                 siteName
             );
             if (site) {
@@ -208,7 +208,7 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
         } catch (e) {
             const statusCode = (e as { statusCode?: number })?.statusCode;
             if (statusCode !== 404) {
-                return vscode.l10n.t('Failed to validate unique site with name "{0}".  Please try another name.', siteName);
+                return vscode.l10n.t('Failed to validate name availability for "{0}".  Please try another name.', siteName);
             }
         }
 
