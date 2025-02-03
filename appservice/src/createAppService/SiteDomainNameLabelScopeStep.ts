@@ -31,7 +31,7 @@ export class SiteDomainNameLabelScopeStep<T extends IAppServiceWizardContext> ex
             })).data;
 
             if (!result) {
-                await openUrl('https://aka.ms/AAu2xga');
+                await openUrl('https://aka.ms/AAu7lhs');
             }
         } while (!result);
 
