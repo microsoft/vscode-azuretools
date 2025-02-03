@@ -17,17 +17,16 @@ export enum DomainNameLabelScope {
 export class SiteDomainNameLabelScopeStep<T extends IAppServiceWizardContext> extends AzureWizardPromptStep<T> {
     public async prompt(context: T): Promise<void> {
         const picks: IAzureQuickPickItem<DomainNameLabelScope | undefined>[] = [
-            { label: vscode.l10n.t('Tenant'), description: vscode.l10n.t('(recommended)'), data: DomainNameLabelScope.Tenant },
-            { label: vscode.l10n.t('Global'), data: DomainNameLabelScope.Global },
-            { label: vscode.l10n.t('Subscription'), data: DomainNameLabelScope.Subscription },
-            { label: vscode.l10n.t('Resource group'), data: DomainNameLabelScope.ResourceGroup },
-            { label: vscode.l10n.t('$(link-external) Learn more about domain name label scopes'), data: undefined },
+            // Matching the portal which doesn't yet offer ResourceGroup and Subscription level domain scope
+            { label: vscode.l10n.t('Secure unique default hostname'), description: vscode.l10n.t('Tenant'), data: DomainNameLabelScope.Tenant },
+            { label: vscode.l10n.t('Global default hostname'), description: vscode.l10n.t('Global'), data: DomainNameLabelScope.Global },
+            { label: vscode.l10n.t('$(link-external) Learn more about unique default hostname'), data: undefined },
         ];
 
         let result: DomainNameLabelScope | undefined;
         do {
             result = (await context.ui.showQuickPick(picks, {
-                placeHolder: vscode.l10n.t('Select a domain name label scope'),
+                placeHolder: vscode.l10n.t('Select default hostname format'),
                 suppressPersistence: true,
             })).data;
 

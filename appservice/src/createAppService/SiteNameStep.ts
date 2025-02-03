@@ -154,7 +154,7 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
         const location: AzExtLocation = await LocationListStep.getLocation(context);
         const authToken: string = nonNullValueAndProp((await context.credentials.getToken() as { token?: string }), 'token');
 
-        // Todo: Can potentially replace with call using SDK once the update is available
+        // Todo: Can replace with call using SDK once the update is available
         const options: AzExtRequestPrepareOptions = {
             url: `https://management.azure.com/subscriptions/${context.subscriptionId}/providers/Microsoft.Web/locations/${location.name}/checknameavailability?api-version=${apiVersion}`,
             method: 'POST',
