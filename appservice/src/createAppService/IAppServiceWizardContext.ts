@@ -38,12 +38,6 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
     newSiteDomainNameLabelScope?: DomainNameLabelScope;
 
     /**
-     * Specifies whether or not to display DomainNameLabelScope.ResourceGroup as a pick option.
-     * This will be defined during `SiteDomainLabelScopeStep.prompt`
-     */
-    omitResourceGroupDomainNameScope?: boolean;
-
-    /**
      * The App Service plan to use.
      * If an existing plan is picked, this value will be defined after `AppServicePlanListStep.prompt` occurs
      * If a new plan is picked, this value will be defined after the `execute` phase of the 'create' subwizard

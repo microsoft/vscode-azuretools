@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ResourceNameAvailability, WebSiteManagementClient } from '@azure/arm-appservice';
+import type { ResourceNameAvailability, Site, WebSiteManagementClient } from '@azure/arm-appservice';
 import { createHttpHeaders, createPipelineRequest } from '@azure/core-rest-pipeline';
 import { AzExtLocation, AzExtPipelineResponse, AzExtRequestPrepareOptions, LocationListStep, ResourceGroupListStep, StorageAccountListStep, createGenericClient, resourceGroupNamingRules, storageAccountNamingRules } from '@microsoft/vscode-azext-azureutils';
-import { AgentInputBoxOptions, AzureNameStep, IAzureAgentInput, IAzureNamingRules, nonNullValueAndProp } from '@microsoft/vscode-azext-utils';
+import { AgentInputBoxOptions, AzureNameStep, IAzureAgentInput, IAzureNamingRules, nonNullValue, nonNullValueAndProp } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import { createWebSiteClient } from '../utils/azureClients';
 import { appInsightsNamingRules } from './AppInsightsListStep';
@@ -79,7 +79,10 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
 
         context.newSiteName = (await context.ui.showInputBox(options)).trim();
         context.valuesToMask.push(context.newSiteName);
+        context.relatedNameTask ??= this.generateRelatedName(context, context.newSiteName, this.getRelatedResourceNamingRules(context));
+    }
 
+    private getRelatedResourceNamingRules(context: SiteNameStepWizardContext): IAzureNamingRules[] {
         const namingRules: IAzureNamingRules[] = [resourceGroupNamingRules];
         if (context.newSiteKind === AppKind.functionapp) {
             namingRules.push(storageAccountNamingRules);
@@ -88,18 +91,18 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
         }
 
         namingRules.push(appInsightsNamingRules);
-        context.relatedNameTask = this.generateRelatedName(context, context.newSiteName, namingRules);
+        return namingRules;
     }
 
-    public async getRelatedName(context: IAppServiceWizardContext, name: string): Promise<string | undefined> {
+    public async getRelatedName(context: SiteNameStepWizardContext, name: string): Promise<string | undefined> {
         return await this.generateRelatedName(context, name, appServicePlanNamingRules);
     }
 
-    public shouldPrompt(context: IAppServiceWizardContext): boolean {
+    public shouldPrompt(context: SiteNameStepWizardContext): boolean {
         return !context.newSiteName;
     }
 
-    protected async isRelatedNameAvailable(context: IAppServiceWizardContext, name: string): Promise<boolean> {
+    protected async isRelatedNameAvailable(context: SiteNameStepWizardContext, name: string): Promise<boolean> {
         const tasks: Promise<boolean>[] = [ResourceGroupListStep.isNameAvailable(context, name)];
         if (context.newSiteKind === AppKind.functionapp) {
             tasks.push(StorageAccountListStep.isNameAvailable(context, name));
@@ -124,13 +127,22 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
         return undefined;
     }
 
-    private async asyncValidateSiteName(context: IAppServiceWizardContext, sdkClient: WebSiteManagementClient, name: string): Promise<string | undefined> {
-        return context.newSiteDomainNameLabelScope && context.newSiteDomainNameLabelScope !== DomainNameLabelScope.Global ?
-            await this.asyncValidateSiteNameByDomainScope(context, context.newSiteDomainNameLabelScope, name, context.resourceGroup?.name ?? context.newResourceGroupName) :
-            await this.asyncValidateSiteNameByGlobalScope(sdkClient, name);
+    // Todo: Leave reference to GitHub comment
+    private async asyncValidateSiteName(context: SiteNameStepWizardContext, sdkClient: WebSiteManagementClient, name: string): Promise<string | undefined> {
+        let validationMessage: string | undefined;
+
+        if (!context.newSiteDomainNameLabelScope || context.newSiteDomainNameLabelScope === DomainNameLabelScope.Global) {
+            validationMessage ??= await this.asyncValidateGlobalSiteName(sdkClient, name);
+        }
+        if (context.newSiteDomainNameLabelScope) {
+            validationMessage ??= await this.asyncValidateSiteNameByDomainScope(context, context.newSiteDomainNameLabelScope, name, context.resourceGroup?.name ?? context.newResourceGroupName);
+            validationMessage ??= await this.asyncValidateUniqueResourceId(context, sdkClient, name, context.resourceGroup?.name ?? context.newResourceGroupName);
+        }
+
+        return validationMessage;
     }
 
-    private async asyncValidateSiteNameByDomainScope(context: IAppServiceWizardContext, domainNameScope: DomainNameLabelScope, siteName: string, resourceGroupName?: string): Promise<string | undefined> {
+    private async asyncValidateSiteNameByDomainScope(context: SiteNameStepWizardContext, domainNameScope: DomainNameLabelScope, siteName: string, resourceGroupName?: string): Promise<string | undefined> {
         if (!LocationListStep.hasLocation(context)) {
             throw new Error(vscode.l10n.t('Internal Error: A location is required when validating a site name with non-global domain scope.'));
         }
@@ -142,7 +154,7 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
         const location: AzExtLocation = await LocationListStep.getLocation(context);
         const authToken: string = nonNullValueAndProp((await context.credentials.getToken() as { token?: string }), 'token');
 
-        // Todo: Can replace with call to SDK once updated version is out
+        // Todo: Can potentially replace with call using SDK once the update is available
         const options: AzExtRequestPrepareOptions = {
             url: `https://management.azure.com/subscriptions/${context.subscriptionId}/providers/Microsoft.Web/locations/${location.name}/checknameavailability?api-version=${apiVersion}`,
             method: 'POST',
@@ -170,12 +182,36 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
         return !checkNameResponse.nameAvailable ? checkNameResponse.message : undefined;
     }
 
-    private async asyncValidateSiteNameByGlobalScope(client: WebSiteManagementClient, name: string): Promise<string | undefined> {
+    private async asyncValidateGlobalSiteName(client: WebSiteManagementClient, name: string): Promise<string | undefined> {
         const nameAvailability: ResourceNameAvailability = await client.checkNameAvailability(name, 'Site');
         if (!nameAvailability.nameAvailable) {
             return nameAvailability.message;
         } else {
             return undefined;
         }
+    }
+
+    private async asyncValidateUniqueResourceId(context: SiteNameStepWizardContext, client: WebSiteManagementClient, siteName: string, resourceGroupName?: string): Promise<string | undefined> {
+        if (!resourceGroupName) {
+            context.relatedNameTask = this.generateRelatedName(context, siteName, this.getRelatedResourceNamingRules(context));
+            resourceGroupName = await context.relatedNameTask;
+        }
+
+        try {
+            const site: Site = await client.webApps.get(
+                nonNullValue(resourceGroupName, vscode.l10n.t('Internal Error: A resource group name must be provided to verify a unique Site ID.')),
+                siteName
+            );
+            if (site) {
+                return vscode.l10n.t('A site with name "{0}" already exists.', siteName);
+            }
+        } catch (e) {
+            const statusCode = (e as { statusCode?: number })?.statusCode;
+            if (statusCode !== 404) {
+                return vscode.l10n.t('Failed to validate unique site with name "{0}".  Please try another name.', siteName);
+            }
+        }
+
+        return undefined;
     }
 }
