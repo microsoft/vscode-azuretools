@@ -151,7 +151,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
             subscriptions.sort((a, b) => a.name.localeCompare(b.name));
 
         const subscriptionIds = await this.getSubscriptionFilters();
-        if (filter && !!subscriptionIds.length) { // If the list is empty it is treated as "no filter"
+        if (filter === true && !!subscriptionIds.length) { // If the list is empty it is treated as "no filter"
             return sortSubscriptions(
                 uniqueSubscriptions.filter(sub => subscriptionIds.includes(sub.subscriptionId))
             );
