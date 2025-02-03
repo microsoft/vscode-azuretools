@@ -33,7 +33,7 @@ export interface IAppServiceWizardContext extends IResourceGroupWizardContext, I
 
     /**
      * The domain name label scope for the new site
-     * This will be defined after `SiteDomainLabelScopeStep.prompt` occurs.
+     * This will be defined after `SiteDomainNameLabelScopeStep.prompt` occurs.
      */
     newSiteDomainNameLabelScope?: DomainNameLabelScope;
 
