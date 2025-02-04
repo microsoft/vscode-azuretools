@@ -24,8 +24,12 @@ export interface AzureSubscriptionProvider {
     /**
      * Gets a list of Azure subscriptions available to the user.
      *
-     * @param filter - Whether to filter the list returned, according to the list returned
-     * by `getTenantFilters()` and `getSubscriptionFilters()`. Optional, default true.
+     * @param filter - Whether to filter the list returned. When:
+     * - `true`: according to the list returned by `getTenantFilters()` and `getSubscriptionFilters()`.
+     * - `false`: return all subscriptions.
+     * - `GetSubscriptionsFilter`: according to the values in the filter.
+     *
+     * Optional, default true.
      *
      * @returns A list of Azure subscriptions.
      *

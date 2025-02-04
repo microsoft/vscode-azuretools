@@ -19,6 +19,10 @@ parameters:
 
 stages:
   - stage: BuildStage
+    pool:
+      name: AzurePipelines-EO
+      image: 1ESPT-Ubuntu22.04
+      os: linux
     jobs:
       - ${{ each job in parameters.jobs }}:
           - job: ${{ job.name }}
@@ -28,6 +32,7 @@ stages:
                   enabled: ${{ parameters.enableSigning }}
                   signType: real # options are 'real' & 'test'
                   zipSources: false
+                  azureSubscription: "MicroBuild Signing Task (DevDiv)"
               outputs:
                 - output: pipelineArtifact
                   targetPath: $(build.artifactstagingdirectory)/build/$(artifact_name)

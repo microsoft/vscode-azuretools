@@ -1,5 +1,13 @@
 # Change Log
 
+## 4.1.1 - 2025-02-03
+
+* Fix `VSCodeAzureSubscriptionProvider` implementation of `getSubscriptions` filtering returned subscriptions by `getSubscriptionFilters()` when the `filter` parameter is a `GetSubscriptionsFilter` object.
+
+## 4.1.0 - 2025-01-31
+
+* Add filtering `getSubscriptions` by a specific account and/or tenant.
+
 ## 4.0.3 - 2024-12-20
 * [#1862](https://github.com/microsoft/vscode-azuretools/pull/1862) Display account name on duplicate tenant picks
 

@@ -9,9 +9,9 @@ import type { PipelineRequest } from '@azure/core-rest-pipeline';
 import { Disposable, Event } from 'vscode';
 import { AzureAuthentication } from './AzureAuthentication';
 import { AzureSubscription } from './AzureSubscription';
-import { AzureSubscriptionProvider } from './AzureSubscriptionProvider';
-import { getConfiguredAzureEnv } from './utils/configuredAzureEnv';
+import { AzureSubscriptionProvider, GetSubscriptionsFilter } from './AzureSubscriptionProvider';
 import { AzureTenant } from './AzureTenant';
+import { getConfiguredAzureEnv } from './utils/configuredAzureEnv';
 
 export interface AzureDevOpsSubscriptionProviderInitializer {
     /**
@@ -76,7 +76,7 @@ export class AzureDevOpsSubscriptionProvider implements AzureSubscriptionProvide
         this._CLIENT_ID = clientId;
     }
 
-    async getSubscriptions(_filter: boolean): Promise<AzureSubscription[]> {
+    async getSubscriptions(_filter: boolean | GetSubscriptionsFilter): Promise<AzureSubscription[]> {
         // ignore the filter setting because not every consumer of this provider will use the Resources extension
         const results: AzureSubscription[] = [];
         for (const tenant of await this.getTenants()) {
