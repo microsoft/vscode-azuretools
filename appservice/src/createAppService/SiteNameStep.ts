@@ -155,10 +155,10 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
 
     private async asyncValidateRegionalCNA(context: SiteNameStepWizardContext, domainNameScope: DomainNameLabelScope, siteName: string, resourceGroupName?: string): Promise<string | undefined> {
         if (!LocationListStep.hasLocation(context)) {
-            throw new Error(vscode.l10n.t('Internal Error: A location is required when validating a site name with domain scope.'));
+            throw new Error(vscode.l10n.t('Internal Error: A location is required when validating a site name with regional CNA.'));
         }
         if (domainNameScope === DomainNameLabelScope.ResourceGroup && !resourceGroupName) {
-            throw new Error(vscode.l10n.t('Internal Error: A resource group name is required when validating a site name with resource group level domain scope.'));
+            throw new Error(vscode.l10n.t('Internal Error: A resource group name is required when validating a site name via regional CNA.'));
         }
 
         const apiVersion: string = '2024-04-01';
