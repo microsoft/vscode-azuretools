@@ -192,13 +192,9 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
 
         if (!checkNameResponse.nameAvailable) {
             // If site name input is >=47 chars, ignore result of regional CNA because it inherently has a shorter character limit than Global CNA
-            if (
-                domainNameScope === DomainNameLabelScope.Global &&
-                checkNameResponse.message &&
-                siteName.length >= 47
-            ) {
+            if (domainNameScope === DomainNameLabelScope.Global && siteName.length >= 47) {
                 // Ensure the error message is the expected character validation error message before ignoring it
-                if (/must be less than \d{2} chars/i.test(checkNameResponse.message)) {
+                if (checkNameResponse.message && /must be less than \d{2} chars/i.test(checkNameResponse.message)) {
                     return undefined;
                 }
             }
