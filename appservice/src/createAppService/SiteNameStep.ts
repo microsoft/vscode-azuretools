@@ -133,18 +133,18 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
 
         let validationMessage: string | undefined;
         if (!context.newSiteDomainNameLabelScope || context.newSiteDomainNameLabelScope === DomainNameLabelScope.Global) {
-            validationMessage ??= await this.asyncValidateGlobalSiteName(sdkClient, name);
+            validationMessage ??= await this.asyncValidateGlobalCNA(sdkClient, name);
         }
 
         if (context.newSiteDomainNameLabelScope) {
-            validationMessage ??= await this.asyncValidateSiteNameByDomainScope(context, context.newSiteDomainNameLabelScope, name, context.resourceGroup?.name ?? context.newResourceGroupName);
+            validationMessage ??= await this.asyncValidateRegionalCNA(context, context.newSiteDomainNameLabelScope, name, context.resourceGroup?.name ?? context.newResourceGroupName);
             validationMessage ??= await this.asyncValidateUniqueARMId(context, sdkClient, name, context.resourceGroup?.name ?? context.newResourceGroupName);
         }
 
         return validationMessage;
     }
 
-    private async asyncValidateSiteNameByDomainScope(context: SiteNameStepWizardContext, domainNameScope: DomainNameLabelScope, siteName: string, resourceGroupName?: string): Promise<string | undefined> {
+    private async asyncValidateRegionalCNA(context: SiteNameStepWizardContext, domainNameScope: DomainNameLabelScope, siteName: string, resourceGroupName?: string): Promise<string | undefined> {
         if (!LocationListStep.hasLocation(context)) {
             throw new Error(vscode.l10n.t('Internal Error: A location is required when validating a site name with domain scope.'));
         }
@@ -185,6 +185,7 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
         if (!checkNameResponse.nameAvailable) {
             // If site name input is >=47 chars, ignore result of regional CNA because it inherently has a shorter character limit than Global CNA
             if (domainNameScope === DomainNameLabelScope.Global && checkNameResponse.message && checkNameResponse.message.length >= 47) {
+                // Ensure the error message is the expected character validation error message before ignoring it
                 if (/must be less than \d{2} chars/i.test(checkNameResponse.message)) {
                     return undefined;
                 }
@@ -195,7 +196,7 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
         return undefined;
     }
 
-    private async asyncValidateGlobalSiteName(client: WebSiteManagementClient, name: string): Promise<string | undefined> {
+    private async asyncValidateGlobalCNA(client: WebSiteManagementClient, name: string): Promise<string | undefined> {
         const nameAvailability: ResourceNameAvailability = await client.checkNameAvailability(name, 'Site');
         if (!nameAvailability.nameAvailable) {
             return nameAvailability.message;
