@@ -129,11 +129,13 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
 
     // Todo: Leave reference to GitHub comment
     private async asyncValidateSiteName(context: SiteNameStepWizardContext, sdkClient: WebSiteManagementClient, name: string): Promise<string | undefined> {
-        let validationMessage: string | undefined;
+        name = name.trim();
 
+        let validationMessage: string | undefined;
         if (!context.newSiteDomainNameLabelScope || context.newSiteDomainNameLabelScope === DomainNameLabelScope.Global) {
             validationMessage ??= await this.asyncValidateGlobalSiteName(sdkClient, name);
         }
+
         if (context.newSiteDomainNameLabelScope) {
             validationMessage ??= await this.asyncValidateSiteNameByDomainScope(context, context.newSiteDomainNameLabelScope, name, context.resourceGroup?.name ?? context.newResourceGroupName);
             validationMessage ??= await this.asyncValidateUniqueARMId(context, sdkClient, name, context.resourceGroup?.name ?? context.newResourceGroupName);
@@ -179,7 +181,18 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
             nameAvailable?: boolean;
             reason?: string;
         };
-        return !checkNameResponse.nameAvailable ? checkNameResponse.message : undefined;
+
+        if (!checkNameResponse.nameAvailable) {
+            // If site name input is >=47 chars, ignore result of regional CNA because it inherently has a shorter character limit than Global CNA
+            if (domainNameScope === DomainNameLabelScope.Global && checkNameResponse.message && checkNameResponse.message.length >= 47) {
+                if (/must be less than \d{2} chars/i.test(checkNameResponse.message)) {
+                    return undefined;
+                }
+            }
+            return checkNameResponse.message;
+        }
+
+        return undefined;
     }
 
     private async asyncValidateGlobalSiteName(client: WebSiteManagementClient, name: string): Promise<string | undefined> {
