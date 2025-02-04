@@ -144,6 +144,15 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
         return validationMessage;
     }
 
+    private async asyncValidateGlobalCNA(client: WebSiteManagementClient, name: string): Promise<string | undefined> {
+        const nameAvailability: ResourceNameAvailability = await client.checkNameAvailability(name, 'Site');
+        if (!nameAvailability.nameAvailable) {
+            return nameAvailability.message;
+        } else {
+            return undefined;
+        }
+    }
+
     private async asyncValidateRegionalCNA(context: SiteNameStepWizardContext, domainNameScope: DomainNameLabelScope, siteName: string, resourceGroupName?: string): Promise<string | undefined> {
         if (!LocationListStep.hasLocation(context)) {
             throw new Error(vscode.l10n.t('Internal Error: A location is required when validating a site name with domain scope.'));
@@ -174,7 +183,6 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
 
         const client = await createGenericClient(context, undefined);
         const pipelineResponse = await client.sendRequest(createPipelineRequest(options)) as AzExtPipelineResponse;
-
         const checkNameResponse = pipelineResponse.parsedBody as {
             hostName?: string;
             message?: string;
@@ -194,15 +202,6 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
         }
 
         return undefined;
-    }
-
-    private async asyncValidateGlobalCNA(client: WebSiteManagementClient, name: string): Promise<string | undefined> {
-        const nameAvailability: ResourceNameAvailability = await client.checkNameAvailability(name, 'Site');
-        if (!nameAvailability.nameAvailable) {
-            return nameAvailability.message;
-        } else {
-            return undefined;
-        }
     }
 
     private async asyncValidateUniqueARMId(context: SiteNameStepWizardContext, client: WebSiteManagementClient, siteName: string, resourceGroupName?: string): Promise<string | undefined> {
