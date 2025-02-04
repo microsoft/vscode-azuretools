@@ -127,7 +127,7 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
         return undefined;
     }
 
-    // Todo: Leave reference to GitHub comment
+    // For comprehensive breakdown of validation logic, please refer to: https://github.com/microsoft/vscode-azuretools/pull/1882#issue-2828801875
     private async asyncValidateSiteName(context: SiteNameStepWizardContext, sdkClient: WebSiteManagementClient, name: string): Promise<string | undefined> {
         name = name.trim();
 
