@@ -22,16 +22,18 @@ export class SiteDomainNameLabelScopeStep<T extends IAppServiceWizardContext> ex
             { label: vscode.l10n.t('Global default hostname'), description: vscode.l10n.t('Global'), data: DomainNameLabelScope.Global },
             { label: vscode.l10n.t('$(link-external) Learn more about unique default hostname'), data: undefined },
         ];
+        const learnMoreUrl: string = 'https://aka.ms/AAu7lhs';
 
         let result: DomainNameLabelScope | undefined;
         do {
             result = (await context.ui.showQuickPick(picks, {
                 placeHolder: vscode.l10n.t('Select default hostname format'),
                 suppressPersistence: true,
+                learnMoreLink: learnMoreUrl,
             })).data;
 
             if (!result) {
-                await openUrl('https://aka.ms/AAu7lhs');
+                await openUrl(learnMoreUrl);
             }
         } while (!result);
 
