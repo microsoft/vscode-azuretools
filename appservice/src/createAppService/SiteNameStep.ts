@@ -156,8 +156,7 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
     private async asyncValidateRegionalCNA(context: SiteNameStepWizardContext, domainNameScope: DomainNameLabelScope, siteName: string, resourceGroupName?: string): Promise<string | undefined> {
         if (!LocationListStep.hasLocation(context)) {
             throw new Error(vscode.l10n.t('Internal Error: A location is required when validating a site name with regional CNA.'));
-        }
-        if (domainNameScope === DomainNameLabelScope.ResourceGroup && !resourceGroupName) {
+        } else if (domainNameScope === DomainNameLabelScope.ResourceGroup && !resourceGroupName) {
             throw new Error(vscode.l10n.t('Internal Error: A resource group name is required for validating this level of domain name scope.'));
         }
 
@@ -167,7 +166,7 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
 
         // Todo: Can replace with call using SDK once the update is available
         const options: AzExtRequestPrepareOptions = {
-            url: `https://management.azure.com/subscriptions/${context.subscriptionId}/providers/Microsoft.Web/locations/${location.name}/checknameavailability?api-version=${apiVersion}`,
+            url: `${context.environment.resourceManagerEndpointUrl}subscriptions/${context.subscriptionId}/providers/Microsoft.Web/locations/${location.name}/checknameavailability?api-version=${apiVersion}`,
             method: 'POST',
             headers: createHttpHeaders({
                 'Content-Type': 'application/json',
