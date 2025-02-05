@@ -26,6 +26,8 @@ const siteNamingRules: IAzureNamingRules = {
     invalidCharsRegExp: /[^a-zA-Z0-9\-]/
 };
 
+const regionalCNAMaxLength: number = 46;
+
 export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
     private _siteFor: "functionApp" | "containerizedFunctionApp" | undefined;
 
@@ -72,7 +74,7 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
         const options: AgentInputBoxOptions = {
             prompt,
             placeHolder,
-            validateInput: (name: string): string | undefined => this.validateSiteName(name),
+            validateInput: (name: string): string | undefined => this.validateSiteName(context, name),
             asyncValidationTask: async (name: string): Promise<string | undefined> => await this.asyncValidateSiteName(context, client, name),
             agentMetadata: agentMetadata
         };
@@ -113,11 +115,16 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
         return (await Promise.all(tasks)).every((v: boolean) => v);
     }
 
-    private validateSiteName(name: string): string | undefined {
+    private validateSiteName(context: SiteNameStepWizardContext, name: string): string | undefined {
         name = name.trim();
 
-        if (name.length < siteNamingRules.minLength || name.length > siteNamingRules.maxLength) {
-            return vscode.l10n.t('The name must be between {0} and {1} characters.', siteNamingRules.minLength, siteNamingRules.maxLength);
+        let maxLength: number = siteNamingRules.maxLength;
+        if (context.newSiteDomainNameLabelScope && context.newSiteDomainNameLabelScope !== DomainNameLabelScope.Global) {
+            maxLength = regionalCNAMaxLength;
+        }
+
+        if (name.length < siteNamingRules.minLength || name.length > maxLength) {
+            return vscode.l10n.t('The name must be between {0} and {1} characters.', siteNamingRules.minLength, maxLength);
         } else if (this._siteFor === "containerizedFunctionApp" && (!/^[a-z][a-z0-9]*(-[a-z0-9]+)*$/.test(name))) {
             return vscode.l10n.t("A name must consist of lower case alphanumeric characters or '-', start with an alphabetic character, and end with an alphanumeric character and cannot have '--'.");
         } else if (siteNamingRules.invalidCharsRegExp.test(name)) {
@@ -190,8 +197,8 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
         };
 
         if (!checkNameResponse.nameAvailable) {
-            // If site name input is >=47 chars, ignore result of regional CNA because it inherently has a shorter character limit than Global CNA
-            if (domainNameScope === DomainNameLabelScope.Global && siteName.length >= 47) {
+            // If site name input is greater than 46 chars, ignore result of regional CNA because it inherently has a shorter character limit than Global CNA
+            if (domainNameScope === DomainNameLabelScope.Global && siteName.length > regionalCNAMaxLength) {
                 // Ensure the error message is the expected character validation error message before ignoring it
                 if (checkNameResponse.message && /must be less than \d{2} chars/i.test(checkNameResponse.message)) {
                     return undefined;
