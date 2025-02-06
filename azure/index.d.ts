@@ -14,9 +14,9 @@ import type { ServiceClient, ServiceClientOptions } from '@azure/core-client';
 import type { PagedAsyncIterableIterator } from '@azure/core-paging';
 import type { PipelineRequestOptions, PipelineResponse } from '@azure/core-rest-pipeline';
 import type { Environment } from '@azure/ms-rest-azure-env';
-import type { AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtServiceClientCredentialsT2, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, IRelatedNameWizardContext, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
+import type { AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtServiceClientCredentialsT2, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, IRelatedNameWizardContext, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, TreeElementBase, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
 import { AzureSubscription } from '@microsoft/vscode-azureresources-api';
-import { Disposable, LogOutputChannel, Progress, Uri } from 'vscode';
+import { Disposable, LogOutputChannel, Progress, TreeItem, Uri } from 'vscode';
 
 export type OpenInPortalOptions = {
     /**
@@ -507,3 +507,10 @@ export declare const CommonRoleDefinitions: {
         readonly roleType: "BuiltInRole";
     };
 };
+
+export class TargetServiceRoleAssignmentItem implements TreeElementBase {
+    static createTargetServiceRoleAssignmentItem(context: IActionContext, subscription: AzureSubscription, msi: Identity): Promise<TargetServiceRoleAssignmentItem>
+    getTreeItem(): TreeItem
+    loadAllSubscriptionRoleAssignments(context: IActionContext): Promise<undefined>;
+}
+
