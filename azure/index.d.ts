@@ -511,6 +511,7 @@ export declare const CommonRoleDefinitions: {
 export class TargetServiceRoleAssignmentItem implements TreeElementBase {
     static createTargetServiceRoleAssignmentItem(context: IActionContext, subscription: AzureSubscription, msi: Identity): Promise<TargetServiceRoleAssignmentItem>
     getTreeItem(): TreeItem
+    getChildren(): TreeElementBase[]
     loadAllSubscriptionRoleAssignments(context: IActionContext): Promise<undefined>;
 }
 
