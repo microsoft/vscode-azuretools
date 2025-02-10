@@ -26,7 +26,7 @@ const siteNamingRules: IAzureNamingRules = {
     invalidCharsRegExp: /[^a-zA-Z0-9\-]/
 };
 
-const regionalCNAMaxLength: number = 46;
+const regionalCNAMaxLength: number = 43;
 
 export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
     private _siteFor: "functionApp" | "containerizedFunctionApp" | undefined;
