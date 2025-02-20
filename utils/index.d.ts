@@ -491,6 +491,7 @@ export interface IGenericTreeItemOptions {
     iconPath?: TreeItemIconPath;
     commandId?: string;
     contextValue: string;
+    tooltip?: string;
 
     /**
      * If true, the tree item picker will execute `commandId`, refresh the tree, and re-prompt at the same level of the tree.
