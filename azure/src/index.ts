@@ -9,7 +9,7 @@ export * from './createAzureClient';
 export { registerAzureUtilsExtensionVariables } from './extensionVariables';
 export * from './openInPortal';
 export * from './tree/AzureAccountTreeItemBase';
-export * from './tree/RoleDefinitionsItem';
+export * from './tree/RoleDefinitionItem';
 export * from './tree/SubscriptionTreeItemBase';
 export * from './utils/createPortalUri';
 export * from './utils/parseAzureResourceId';
