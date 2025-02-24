@@ -5,7 +5,6 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { type RoleDefinition } from '@azure/arm-authorization';
 import { Identity } from '@azure/arm-msi';
 import type { ExtendedLocation, ResourceGroup } from '@azure/arm-resources';
 import type { Location } from '@azure/arm-resources-subscriptions';
@@ -383,12 +382,18 @@ export declare class RoleAssignmentExecuteStep<T extends IResourceGroupWizardCon
     * Example: `/subscriptions/xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx/resourceGroups/rgName/providers/Microsoft.Storage/storageAccounts/resourceName`
     * This typically won't exist until _after_ the wizard executes and the resource is created, so we need to pass in a function that returns the ID.
     * If the scope ID is undefined, the step will throw an error.
-    * @param roleDefinition The ARM role definition to assign. Use CommonRoleDefinition constant for role defintions that don't require user input.
+    * @param roles An array of roles. Each role is an object and include the ARM role definition id and name of the role definition.
     * */
-    public constructor(getScopeId: () => string | undefined, roleDefinition: RoleDefinition);
+    public constructor(roles: () => Roles[] | undefined);
 
     public execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
     public shouldExecute(wizardContext: T): boolean;
+}
+
+export interface Roles {
+    scopeId: string | undefined;
+    roleDefinitionId: string;
+    roleDefinitionName: string;
 }
 
 export interface IAzureUtilsExtensionVariables extends UIExtensionVariables {
@@ -506,4 +511,69 @@ export declare const CommonRoleDefinitions: {
         readonly description: "Allows for read, write and delete access to Azure Storage blob containers and data";
         readonly roleType: "BuiltInRole";
     };
+    readonly storageBlobDataOwner: {
+        readonly name: "b7e6dc6d-f1e8-4753-8033-0f276bb0955b",
+        readonly type: "Microsoft.Authorization/roleDefinitions",
+        readonly roleName: "Storage Blob Data Owner",
+        readonly description: "Allows for full access to Azure Storage blob containers and data, including assigning POSIX access control.",
+        readonly roleType: "BuiltInRole"
+    };
+    readonly storageQueueDataContributor: {
+        readonly name: "974c5e8b-45b9-4653-ba55-5f855dd0fb88",
+        readonly type: "Microsoft.Authorization/roleDefinitions",
+        readonly roleName: "Storage Queue Data Contributor",
+        readonly description: "Read, write, and delete Azure Storage queues and queue messages.",
+        readonly roleType: "BuiltInRole"
+    };
+    readonly azureServiceBusDataReceiver: {
+        readonly name: "4f6d3b9b-027b-4f4c-9142-0e5a2a2247e0",
+        readonly type: "Microsoft.Authorization/roleDefinitions",
+        readonly roleName: "Azure Service Bus Data Receiver",
+        readonly description: "Allows for receive access to Azure Service Bus resources.",
+        readonly sroleType: "BuiltInRole"
+    };
+    readonly azureServiceBusDataOwner: {
+        readonly name: "090c5cfd-751d-490a-894a-3ce6f1109419",
+        readonly type: "Microsoft.Authorization/roleDefinitions",
+        readonly roleName: "Azure Service Bus Data Owner",
+        readonly description: "Allows for full access to Azure Service Bus resources.",
+        readonly roleType: "BuiltInRole"
+    };
+    readonly azureEventHubsDataReceiver: {
+        readonly name: "a638d3c7-ab3a-418d-83e6-5f17a39d4fde",
+        readonly type: "Microsoft.Authorization/roleDefinitions",
+        readonly roleName: "Azure Event Hubs Data Receiver",
+        readonly description: "Allows receive access to Azure Event Hubs resources.",
+        readonly roleType: "BuiltInRole"
+    };
+    readonly azureEventHubsDataOwner: {
+        readonly name: "f526a384-b230-433a-b45c-95f59c4a2dec",
+        readonly type: "Microsoft.Authorization/roleDefinitions",
+        readonly roleName: "Azure Event Hubs Data Owner",
+        readonly description: "Allows for full access to Azure Event Hubs resources.",
+        readonly roleType: "BuiltInRole"
+    };
+    readonly cosmosDBAccountReader: {
+        readonly name: "fbdf93bf-df7d-467e-a4d2-9458aa1360c8",
+        readonly type: "Microsoft.Authorization/roleDefinitions",
+        readonly roleName: "Cosmos DB Account Reader",
+        readonly description: "Can read Azure Cosmos DB account data.",
+        readonly roleType: "BuiltInRole"
+    };
+    readonly documentDBAccountContributor: {
+        readonly name: "5bd9cd88-fe45-4216-938b-f97437e15450",
+        readonly type: "Microsoft.Authorization/roleDefinitions",
+        readonly roleName: "DocumentDB Account Contributor",
+        readonly description: "Can manage Azure Cosmos DB accounts.",
+        readonly roleType: "BuiltInRole"
+    }
 };
+/**
+ * Constructs the role id for a given subscription and role name id
+ *
+ * @param subscriptionId - Id for the subscription
+ * @param roleId - Name id for the role to be assigned (i.e CommonRoleDefinitions.storageBlobDataContributor.name)
+ */
+export function createRoleId(subscriptionId: string, roleId: string): string;
+
+
