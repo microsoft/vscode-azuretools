@@ -17,7 +17,7 @@ import { parseAzureResourceGroupId, parseAzureResourceId } from "../utils/parseA
 import { uiUtils } from "../utils/uiUtils";
 import { getAzureIconPath } from "./IconPath";
 
-export async function createRoleDefinitionItems(context: IActionContext, subscription: AzureSubscription | ISubscriptionContext, msi: Identity): Promise<RoleDefinitionsItem[]> {
+export async function createRoleDefinitionsItems(context: IActionContext, subscription: AzureSubscription | ISubscriptionContext, msi: Identity): Promise<RoleDefinitionsItem[]> {
     const subContext = isAzureSubscription(subscription) ? createSubscriptionContext(subscription) : subscription;
     const authClient = await createAuthorizationManagementClient([context, subContext]);
     const roleAssignment = await uiUtils.listAllIterator(authClient.roleAssignments.listForSubscription());

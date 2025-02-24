@@ -517,13 +517,13 @@ export declare const CommonRoleDefinitions: {
 /**
  * creates all RoleDefinitionsItem for an entire managed identity object
  */
-export function createRoleDefinitionItems(
+export function createRoleDefinitionsItems(
     context: IActionContext,
     subscription: AzureSubscription | ISubscriptionContext,
     msi: Identity): Promise<RoleDefinitionsItem[]>
 
 /**
- * should not be created directly; use `createRoleDefinitionItems` instead
+ * should not be created directly; use `createRoleDefinitionsItems` instead
  */
 export type RoleDefinitionsItem = {
     getChildren?(): ProviderResult<TreeElementBase[]>;
