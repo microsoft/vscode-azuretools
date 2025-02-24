@@ -520,12 +520,12 @@ export declare const CommonRoleDefinitions: {
 export function createRoleDefinitionItems(
     context: IActionContext,
     subscription: AzureSubscription | ISubscriptionContext,
-    msi: Identity): Promise<RoleDefinitionItem[]>
+    msi: Identity): Promise<RoleDefinitionsItem[]>
 
 /**
  * should not be created directly; use `createRoleDefinitionItems` instead
  */
-export type RoleDefinitionItem = {
+export type RoleDefinitionsItem = {
     getChildren?(): ProviderResult<TreeElementBase[]>;
     getTreeItem(): TreeItem | Thenable<TreeItem>;
     id?: string | undefined;
@@ -535,7 +535,7 @@ export type RoleDefinitionItem = {
  * Requires a RoleDefinitionsItem as a data model in its constructor. Used for v1.5 API versions of the extensions
  */
 export class RoleDefinitionsTreeItem extends AzExtParentTreeItem {
-    constructor(parent: AzExtParentTreeItem, roleDefinitionsItem: RoleDefinitionItem);
+    constructor(parent: AzExtParentTreeItem, roleDefinitionsItem: RoleDefinitionsItem);
     public loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]>;
     public hasMoreChildrenImpl(): boolean;
     public label: string;

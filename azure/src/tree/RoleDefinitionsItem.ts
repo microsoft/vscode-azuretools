@@ -17,7 +17,7 @@ import { parseAzureResourceGroupId, parseAzureResourceId } from "../utils/parseA
 import { uiUtils } from "../utils/uiUtils";
 import { getAzureIconPath } from "./IconPath";
 
-export async function createRoleDefinitionItems(context: IActionContext, subscription: AzureSubscription | ISubscriptionContext, msi: Identity): Promise<RoleDefinitionItem[]> {
+export async function createRoleDefinitionItems(context: IActionContext, subscription: AzureSubscription | ISubscriptionContext, msi: Identity): Promise<RoleDefinitionsItem[]> {
     const subContext = isAzureSubscription(subscription) ? createSubscriptionContext(subscription) : subscription;
     const authClient = await createAuthorizationManagementClient([context, subContext]);
     const roleAssignment = await uiUtils.listAllIterator(authClient.roleAssignments.listForSubscription());
@@ -26,7 +26,7 @@ export async function createRoleDefinitionItems(context: IActionContext, subscri
     const subClient = await createSubscriptionsClient([context, subContext]);
     const subscriptions = await uiUtils.listAllIterator(subClient.subscriptions.list());
 
-    const roleDefinitionItems: RoleDefinitionItem[] = [];
+    const roleDefinitionsItems: RoleDefinitionsItem[] = [];
     await Promise.all(roleAssignments
         .map(async (ra) => {
             if (!ra.scope || !ra.roleDefinitionId) {
@@ -38,20 +38,20 @@ export async function createRoleDefinitionItems(context: IActionContext, subscri
             if (name) {
                 const roleDefinition = await authClient.roleDefinitions.getById(ra.roleDefinitionId);
                 // if the role defition is not found, create a new one and push the role definition to it
-                if (!roleDefinitionItems.some((rdi) => rdi.label === name)) {
-                    const rdi = await RoleDefinitionItem.createRoleDefinitionItem(ra.scope, roleDefinition, msi.id, subscription, subscriptions);
-                    roleDefinitionItems.push(rdi);
+                if (!roleDefinitionsItems.some((rdi) => rdi.label === name)) {
+                    const rdi = await RoleDefinitionsItem.createRoleDefinitionsItem(ra.scope, roleDefinition, msi.id, subscription, subscriptions);
+                    roleDefinitionsItems.push(rdi);
                 } else {
                     // if the role definition is found, add the role definition to the existing role definition item
-                    roleDefinitionItems.find((rdi) => rdi.label === name)?.addRoleDefinition(roleDefinition);
+                    roleDefinitionsItems.find((rdi) => rdi.label === name)?.addRoleDefinition(roleDefinition);
                 }
             }
         }));
 
-    return roleDefinitionItems;
+    return roleDefinitionsItems;
 }
 
-export class RoleDefinitionItem implements TreeElementBase {
+export class RoleDefinitionsItem implements TreeElementBase {
     public id: string;
     public label: string;
     public iconPath: TreeItemIconPath;
@@ -76,12 +76,12 @@ export class RoleDefinitionItem implements TreeElementBase {
         this.portalUrl = createPortalUri(options.subscription, options.scope);
     }
 
-    public static async createRoleDefinitionItem(
+    public static async createRoleDefinitionsItem(
         scope: string,
         roleDefinition: RoleDefinition,
         msiId: string | undefined,
         subscription: AzureSubscription | ISubscriptionContext,
-        allSubscriptions: Subscription[]): Promise<RoleDefinitionItem> {
+        allSubscriptions: Subscription[]): Promise<RoleDefinitionsItem> {
 
         let parsedAzureResourceId: types.ParsedAzureResourceId | undefined;
         let parsedAzureResourceGroupId: types.ParsedAzureResourceGroupId | undefined;
@@ -120,7 +120,7 @@ export class RoleDefinitionItem implements TreeElementBase {
             description = allSubscriptions.find(s => s.subscriptionId === (parsedAzureResourceGroupId?.subscriptionId ?? parsedAzureResourceId?.subscriptionId))?.displayName;
         }
 
-        return new RoleDefinitionItem({
+        return new RoleDefinitionsItem({
             id: `${msiId}/${scope}`,
             label,
             iconPath,
@@ -160,22 +160,22 @@ export class RoleDefinitionItem implements TreeElementBase {
     }
 }
 
-// v1.5 implementation of RoleDefinitionItem that uses RoleDefinitionItem in the constructor
+// v1.5 implementation of RoleDefinitionsItem that uses RoleDefinitionsItem in the constructor
 export class RoleDefinitionsTreeItem extends AzExtParentTreeItem {
     public label: string;
     public static contextValue: string = 'azureRoleDefinitions';
     public readonly contextValue: string = RoleDefinitionsTreeItem.contextValue;
 
 
-    constructor(parent: AzExtParentTreeItem, readonly roleDefinitionItem: RoleDefinitionItem) {
+    constructor(parent: AzExtParentTreeItem, readonly roleDefinitionsItem: RoleDefinitionsItem) {
         super(parent);
-        this.label = roleDefinitionItem.label;
-        this.iconPath = roleDefinitionItem.iconPath;
-        this.description = roleDefinitionItem.description;
+        this.label = roleDefinitionsItem.label;
+        this.iconPath = roleDefinitionsItem.iconPath;
+        this.description = roleDefinitionsItem.description;
     }
 
     public async loadMoreChildrenImpl(_clearCache: boolean, _context: IActionContext): Promise<AzExtTreeItem[]> {
-        return this.roleDefinitionItem.roleDefintions.map((rd) => {
+        return this.roleDefinitionsItem.roleDefintions.map((rd) => {
             return new GenericTreeItem(this, {
                 label: "",
                 id: `${this.id}/${rd.id}`,
