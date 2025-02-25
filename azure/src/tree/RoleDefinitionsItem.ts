@@ -114,10 +114,15 @@ export class RoleDefinitionsItem implements TreeElementBase {
                 iconPath = getAzureIconPath(AzExtResourceType.ResourceGroup);
             } catch (error) {
                 // if it's not a resource group, then it's a subscription
-                subscriptionId = options.scope.split('/').pop();
+                subscriptionId = options.scope.split('/').pop() as string;
                 const subClient = await createSubscriptionsClient([options.context, options.subContext]);
-                const subscriptions = await uiUtils.listAllIterator(subClient.subscriptions.list());
-                label = subscriptions.find(s => s.subscriptionId === subscriptionId)?.displayName ?? options.scope;
+                try {
+                    const subscription = await subClient.subscriptions.get(subscriptionId);
+                    label = subscription.displayName as string;
+                } catch (err) {
+                    // no access to subscription, just display the id
+                    label = subscriptionId;
+                }
                 iconPath = getAzureIconPath('Subscription');
             }
         }
