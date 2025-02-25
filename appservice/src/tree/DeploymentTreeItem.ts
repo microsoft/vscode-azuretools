@@ -95,7 +95,7 @@ export class DeploymentTreeItem extends AzExtTreeItem {
             void kuduClient.deploy(context, this.id);
 
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
-            const refreshingInteveral: NodeJS.Timer = setInterval(async () => { await this.refresh(context); }, 1000); /* the status of the label changes during deployment so poll for that*/
+            const refreshingInteveral: NodeJS.Timeout = setInterval(async () => { await this.refresh(context); }, 1000); /* the status of the label changes during deployment so poll for that*/
             try {
                 await waitForDeploymentToComplete(context, this.parent.site, { expectedId: this.id });
                 await this.parent.refresh(context); /* refresh entire node because active statuses has changed */

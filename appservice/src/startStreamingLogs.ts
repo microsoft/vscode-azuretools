@@ -47,7 +47,7 @@ export async function startStreamingLogs(context: IActionContext, site: ParsedSi
             // Intentionally setting up a separate telemetry event and not awaiting the result here since log stream is a long-running action
             void callWithTelemetryAndErrorHandling('appService.streamingLogs', async (streamContext: IActionContext) => {
                 streamContext.errorHandling.suppressDisplay = true;
-                let timerId: NodeJS.Timer | undefined;
+                let timerId: NodeJS.Timeout | undefined;
                 if (site.isFunctionApp) {
                     // For Function Apps, we have to ping "/admin/host/status" every minute for logging to work
                     // https://github.com/Microsoft/vscode-azurefunctions/issues/227

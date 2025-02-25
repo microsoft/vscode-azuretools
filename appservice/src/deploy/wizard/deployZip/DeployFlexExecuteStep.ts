@@ -19,8 +19,8 @@ export class DeployFlexExecuteStep extends DeployZipBaseExecuteStep {
         const kuduClient = await context.site.createClient(context);
 
         const RemoteBuild: boolean = site.properties?.functionAppConfig?.runtime.name === 'python';
-        const callback = async zipStream => {
-            return await kuduClient.flexDeploy(context, () => zipStream as RequestBodyType, {
+        const callback = async (zipStream: NodeJS.ReadableStream) => {
+            return await kuduClient.flexDeploy(context, (() => zipStream) as RequestBodyType, {
                 RemoteBuild,
                 Deployer: publisherName
             });
