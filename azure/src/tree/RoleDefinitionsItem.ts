@@ -6,7 +6,6 @@
 
 import { RoleDefinition } from "@azure/arm-authorization";
 import { Identity } from "@azure/arm-msi";
-import { Subscription } from "@azure/arm-resources-subscriptions";
 import { AzExtParentTreeItem, AzExtTreeItem, createGenericElement, createSubscriptionContext, GenericTreeItem, IActionContext, ISubscriptionContext, TreeElementBase, TreeItemIconPath } from "@microsoft/vscode-azext-utils";
 import { AzExtResourceType, AzureSubscription, getAzExtResourceType } from "@microsoft/vscode-azureresources-api";
 import { ThemeIcon, TreeItem, TreeItemCollapsibleState, Uri } from "vscode";
@@ -23,8 +22,6 @@ export async function createRoleDefinitionsItems(context: IActionContext, subscr
     const roleAssignment = await uiUtils.listAllIterator(authClient.roleAssignments.listForSubscription());
     // filter the role assignments to only show the ones that are assigned to the msi
     const roleAssignments = roleAssignment.filter((ra) => ra.principalId === msi.principalId);
-    const subClient = await createSubscriptionsClient([context, subContext]);
-    const subscriptions = await uiUtils.listAllIterator(subClient.subscriptions.list());
 
     const roleDefinitionsItems: RoleDefinitionsItem[] = [];
     await Promise.all(roleAssignments
@@ -39,7 +36,15 @@ export async function createRoleDefinitionsItems(context: IActionContext, subscr
                 const roleDefinition = await authClient.roleDefinitions.getById(ra.roleDefinitionId);
                 // if the role defition is not found, create a new one and push the role definition to it
                 if (!roleDefinitionsItems.some((rdi) => rdi.label === name)) {
-                    const rdi = await RoleDefinitionsItem.createRoleDefinitionsItem(ra.scope, roleDefinition, msi.id, subscription, subscriptions);
+                    const rdi = await RoleDefinitionsItem.createRoleDefinitionsItem({
+                        context,
+                        subContext,
+                        roleDefinition,
+                        scope: ra.scope,
+                        msiId: msi.id,
+                        // if the msi resource id doesn't contain the subscription id, it's from another subscription
+                        withDescription: !msi.id?.includes(subContext.subscriptionId)
+                    });
                     roleDefinitionsItems.push(rdi);
                 } else {
                     // if the role definition is found, add the role definition to the existing role definition item
@@ -77,22 +82,24 @@ export class RoleDefinitionsItem implements TreeElementBase {
     }
 
     public static async createRoleDefinitionsItem(
-        scope: string,
-        roleDefinition: RoleDefinition,
-        msiId: string | undefined,
-        subscription: AzureSubscription | ISubscriptionContext,
-        allSubscriptions: Subscription[]): Promise<RoleDefinitionsItem> {
+        options: {
+            context: IActionContext,
+            scope: string,
+            roleDefinition: RoleDefinition,
+            msiId: string | undefined,
+            subContext: ISubscriptionContext,
+            withDescription?: boolean
+        }): Promise<RoleDefinitionsItem> {
 
         let parsedAzureResourceId: types.ParsedAzureResourceId | undefined;
         let parsedAzureResourceGroupId: types.ParsedAzureResourceGroupId | undefined;
         let label: string;
         let iconPath: TreeItemIconPath;
         let subscriptionId: string | undefined;
-        let description: string | undefined;
-        let fromOtherSub = false;
+        const description: string | undefined = options.withDescription ? options.subContext.subscriptionDisplayName : undefined;
 
         try {
-            parsedAzureResourceId = parseAzureResourceId(scope);
+            parsedAzureResourceId = parseAzureResourceId(options.scope);
             subscriptionId = parsedAzureResourceId.subscriptionId;
             label = parsedAzureResourceId.resourceName;
             const resourceIconPath = getAzExtResourceType({ type: parsedAzureResourceId.provider });
@@ -101,33 +108,28 @@ export class RoleDefinitionsItem implements TreeElementBase {
         catch (error) {
             try {
                 // if it's not a resource, then it's possibly a resource group or subscription
-                parsedAzureResourceGroupId = parseAzureResourceGroupId(scope);
+                parsedAzureResourceGroupId = parseAzureResourceGroupId(options.scope);
                 subscriptionId = parsedAzureResourceGroupId.subscriptionId;
                 label = parsedAzureResourceGroupId.resourceGroup;
                 iconPath = getAzureIconPath(AzExtResourceType.ResourceGroup);
             } catch (error) {
                 // if it's not a resource group, then it's a subscription
-                subscriptionId = scope.split('/').pop();
-
-                label = allSubscriptions.find(s => s.subscriptionId === subscriptionId)?.displayName ?? scope;
+                subscriptionId = options.scope.split('/').pop();
+                const subClient = await createSubscriptionsClient([options.context, options.subContext]);
+                const subscriptions = await uiUtils.listAllIterator(subClient.subscriptions.list());
+                label = subscriptions.find(s => s.subscriptionId === subscriptionId)?.displayName ?? options.scope;
                 iconPath = getAzureIconPath('Subscription');
             }
         }
 
-        fromOtherSub = subscriptionId !== subscription.subscriptionId;
-        if (fromOtherSub) {
-            // look for display name if it's from another subscription
-            description = allSubscriptions.find(s => s.subscriptionId === (parsedAzureResourceGroupId?.subscriptionId ?? parsedAzureResourceId?.subscriptionId))?.displayName;
-        }
-
         return new RoleDefinitionsItem({
-            id: `${msiId}/${scope}`,
+            id: `${options.msiId}/${options.scope}`,
             label,
             iconPath,
             description,
-            roleDefinition,
-            subscription,
-            scope
+            roleDefinition: options.roleDefinition,
+            subscription: options.subContext,
+            scope: options.scope
         });
     }
 
@@ -192,5 +194,5 @@ export class RoleDefinitionsTreeItem extends AzExtParentTreeItem {
 }
 
 function isAzureSubscription(subscription: ISubscriptionContext | AzureSubscription): subscription is AzureSubscription {
-    return 'subscription' in subscription;
+    return 'authentication' in subscription;
 }
