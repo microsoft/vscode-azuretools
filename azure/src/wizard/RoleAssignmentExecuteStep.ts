@@ -10,7 +10,7 @@ import * as types from '../../index';
 import { createAuthorizationManagementClient } from '../clients';
 import { ext } from '../extensionVariables';
 
-export interface Roles {
+export interface Role {
     scopeId: string | undefined;
     roleDefinitionId: string;
     roleDefinitionName: string;
@@ -18,8 +18,8 @@ export interface Roles {
 
 export class RoleAssignmentExecuteStep<T extends types.IResourceGroupWizardContext> extends AzureWizardExecuteStep<T> {
     public priority: number = 900;
-    private roles: () => Roles[] | undefined;
-    public constructor(roles: () => Roles[] | undefined) {
+    private roles: () => Role[] | undefined;
+    public constructor(roles: () => Role[] | undefined) {
         super();
         this.roles = roles;
     }

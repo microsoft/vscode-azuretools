@@ -384,13 +384,13 @@ export declare class RoleAssignmentExecuteStep<T extends IResourceGroupWizardCon
     * If the scope ID is undefined, the step will throw an error.
     * @param roles An array of roles. Each role is an object and include the ARM role definition id and name of the role definition.
     * */
-    public constructor(roles: () => Roles[] | undefined);
+    public constructor(roles: () => Role[] | undefined);
 
     public execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
     public shouldExecute(wizardContext: T): boolean;
 }
 
-export interface Roles {
+export interface Role {
     scopeId: string | undefined;
     roleDefinitionId: string;
     roleDefinitionName: string;
@@ -502,6 +502,10 @@ export function setupAzureLogger(logOutputChannel: LogOutputChannel): Disposable
  */
 export function addBasicAuthenticationCredentialsToClient(client: ServiceClient, userName: string, password: string): void;
 
+/**
+ * Common Roles that should be used to assign permissions to resources
+ * The role definitions can be found here: https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles
+ */
 export declare const CommonRoleDefinitions: {
     readonly storageBlobDataContributor: {
         readonly id: "/subscriptions/9b5c7ccb-9857-4307-843b-8875e83f65e9/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe";
