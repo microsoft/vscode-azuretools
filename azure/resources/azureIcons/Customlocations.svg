@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+  <defs>
+    <linearGradient id="a0be8925-0b1c-40fa-a989-8867861f7a91" x1="8.261" y1="791.007" x2="8.261" y2="776.771" gradientTransform="matrix(1, 0, 0, -1, 0, 791.516)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#b77af4" />
+      <stop offset="0.621" stop-color="#8c4fe4" />
+      <stop offset="0.997" stop-color="#773adc" />
+    </linearGradient>
+    <linearGradient id="f4936617-8bbc-43b1-8dbc-649a562f26aa" x1="8.916" y1="-7.396" x2="2.19" y2="-18.003" gradientTransform="translate(6.77 25.118) rotate(3.262)" gradientUnits="userSpaceOnUse">
+      <stop offset="0.301" stop-color="#198ab3" />
+      <stop offset="0.997" stop-color="#50e6ff" />
+    </linearGradient>
+  </defs>
+  <g id="b02abca1-5563-487a-a6d8-85f355872f10">
+    <g>
+      <path d="M2.948,12.334l-1.312,3.42H15.15l-1.312-3.42a.45.45,0,0,0-.414-.3H3.361A.448.448,0,0,0,2.948,12.334Z" fill="#50e6ff" />
+      <path d="M8.262.508A4.328,4.328,0,0,0,4.068,4.965l0,.059c0,1.969,2.5,6.585,3.638,9.35a.594.594,0,0,0,1.1,0c1.137-2.787,3.642-7.441,3.642-9.349A4.381,4.381,0,0,0,8.262.508Zm0,6.118a1.863,1.863,0,1,1,1.863-1.863h0A1.863,1.863,0,0,1,8.262,6.626Z" fill="url(#a0be8925-0b1c-40fa-a989-8867861f7a91)" />
+      <path d="M1.636,15.754H15.15a0,0,0,0,1,0,0v1.272a.465.465,0,0,1-.465.465H2.1a.465.465,0,0,1-.465-.465V15.754A0,0,0,0,1,1.636,15.754Z" fill="#32bedd" />
+      <path d="M11.051,16.135,8.806,8.981A.311.311,0,0,1,9.225,8.6l6.95,2.962a.311.311,0,0,1,.023.561L13.4,13.6a.323.323,0,0,0-.114.1l-1.68,2.515A.311.311,0,0,1,11.051,16.135Z" fill="url(#f4936617-8bbc-43b1-8dbc-649a562f26aa)" />
+    </g>
+  </g>
+  <metadata>
+    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+      <rdf:li>public:true</rdf:li>
+      <rdf:li>sdk:false</rdf:li>
+      <rdf:li>category: New Icons</rdf:li>
+    </rdf:RDF>
+  </metadata>
+</svg>
