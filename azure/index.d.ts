@@ -5,8 +5,8 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { type RoleDefinition } from '@azure/arm-authorization';
-import { Identity } from '@azure/arm-msi';
+import { AuthorizationManagementClient, type RoleDefinition } from '@azure/arm-authorization';
+import { Identity, ManagedServiceIdentityClient } from '@azure/arm-msi';
 import type { ExtendedLocation, ResourceGroup } from '@azure/arm-resources';
 import type { Location } from '@azure/arm-resources-subscriptions';
 import type { StorageAccount } from '@azure/arm-storage';
@@ -14,9 +14,9 @@ import type { ServiceClient, ServiceClientOptions } from '@azure/core-client';
 import type { PagedAsyncIterableIterator } from '@azure/core-paging';
 import type { PipelineRequestOptions, PipelineResponse } from '@azure/core-rest-pipeline';
 import type { Environment } from '@azure/ms-rest-azure-env';
-import type { AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtServiceClientCredentialsT2, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, IRelatedNameWizardContext, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
+import type { AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtServiceClientCredentialsT2, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, IRelatedNameWizardContext, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, TreeElementBase, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
 import { AzureSubscription } from '@microsoft/vscode-azureresources-api';
-import { Disposable, LogOutputChannel, Progress, Uri } from 'vscode';
+import { Disposable, LogOutputChannel, Progress, ProviderResult, TreeItem, Uri } from 'vscode';
 
 export type OpenInPortalOptions = {
     /**
@@ -419,6 +419,12 @@ export interface IGenericClientOptions {
     endpoint?: string;
 }
 
+/**
+ * Used to create Azure clients for managed identity without having to install the sdk into client extension package.json
+ */
+export function createManagedServiceIdentityClient(context: AzExtClientContext): Promise<ManagedServiceIdentityClient>
+export function createAuthorizationManagementClient(context: AzExtClientContext): Promise<AuthorizationManagementClient>
+
 export type AzExtRequestPrepareOptions = PipelineRequestOptions & { rejectUnauthorized?: boolean }
 export type AzExtPipelineResponse = PipelineResponse & { parsedBody?: any }
 
@@ -507,3 +513,31 @@ export declare const CommonRoleDefinitions: {
         readonly roleType: "BuiltInRole";
     };
 };
+
+/**
+ * creates all RoleDefinitionsItem for an entire managed identity object
+ */
+export function createRoleDefinitionsItems(
+    context: IActionContext,
+    subscription: AzureSubscription | ISubscriptionContext,
+    msi: Identity): Promise<RoleDefinitionsItem[]>
+
+/**
+ * should not be created directly; use `createRoleDefinitionsItems` instead
+ */
+export type RoleDefinitionsItem = {
+    getChildren?(): ProviderResult<TreeElementBase[]>;
+    getTreeItem(): TreeItem | Thenable<TreeItem>;
+    id?: string | undefined;
+}
+
+/**
+ * Requires a RoleDefinitionsItem as a data model in its constructor. Used for v1.5 API versions of the extensions
+ */
+export class RoleDefinitionsTreeItem extends AzExtParentTreeItem {
+    constructor(parent: AzExtParentTreeItem, roleDefinitionsItem: RoleDefinitionsItem);
+    public loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]>;
+    public hasMoreChildrenImpl(): boolean;
+    public label: string;
+    public contextValue: string;
+}

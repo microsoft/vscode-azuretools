@@ -22,6 +22,7 @@ export class GenericTreeItem extends AzExtTreeItem implements types.GenericTreeI
         this.commandId = options.commandId;
         this.iconPath = options.iconPath;
         this.description = options.description;
+        this.tooltip = options.tooltip;
         this._includeInTreeItemPicker = !!options.includeInTreeItemPicker;
     }
 
