@@ -217,12 +217,10 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
         }
 
         try {
-            const site: Site = await client.webApps.get(
-                nonNullValue(resourceGroupName, vscode.l10n.t('Internal Error: A resource group name must be provided to verify unique site ID.')),
-                siteName,
-            );
+            const rgName: string = nonNullValue(resourceGroupName, vscode.l10n.t('Internal Error: A resource group name must be provided to verify unique site ID.'));
+            const site: Site = await client.webApps.get(rgName, siteName);
             if (site) {
-                return vscode.l10n.t('A site with name "{0}" already exists.', siteName);
+                return vscode.l10n.t('A site with name "{0}" already exists in resource group "{1}".', siteName, rgName);
             }
         } catch (e) {
             const statusCode = (e as { statusCode?: number })?.statusCode;
