@@ -52,7 +52,7 @@
         "@types/node": "^16.0.0",
         "@types/semver": "^7.3.9",
         "@types/uuid": "^9.0.1",
-        "@types/vscode": "^1.82.0",
+        "@types/vscode": "^1.94.0",
         "@typescript-eslint/eslint-plugin": "^5.53.0",
         "@vscode/test-electron": "^2.3.8",
         "eslint": "^8.34.0",
