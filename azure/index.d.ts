@@ -5,6 +5,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { type RoleDefinition } from "@azure/arm-authorization";
 import { Identity } from '@azure/arm-msi';
 import type { ExtendedLocation, ResourceGroup } from '@azure/arm-resources';
 import type { Location } from '@azure/arm-resources-subscriptions';
@@ -578,6 +579,6 @@ export declare const CommonRoleDefinitions: {
  * @param subscriptionId - Id for the subscription
  * @param roleId - Name id for the role to be assigned (i.e CommonRoleDefinitions.storageBlobDataContributor.name)
  */
-export function createRoleId(subscriptionId: string, roleId: string): string;
+export function createRoleId(subscriptionId: string, RoleDefinition: RoleDefinition): string;
 
 
