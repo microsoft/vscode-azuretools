@@ -26,7 +26,7 @@ const siteNamingRules: IAzureNamingRules = {
     invalidCharsRegExp: /[^a-zA-Z0-9\-]/
 };
 
-// Selecting the Tenant domain label scope actually fails if over 43 chars long, even though the CNA validation would otherwise say it's fine.
+// Selecting a regional domain name label scope actually fails if over 43 chars long, even though the CNA validation would otherwise say it's fine.
 // Setting the limit to 43 chars seems to completely fix the issue and is the same number the portal is using.
 // See: https://github.com/microsoft/vscode-azuretools/pull/1882#issue-2828801875
 const regionalCNAMaxLength: number = 43;
