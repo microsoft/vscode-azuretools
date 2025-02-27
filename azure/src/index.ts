@@ -3,11 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+export * from './clients';
 export { CommonRoleDefinitions, createRoleId } from './constants';
 export * from './createAzureClient';
 export { registerAzureUtilsExtensionVariables } from './extensionVariables';
 export * from './openInPortal';
 export * from './tree/AzureAccountTreeItemBase';
+export * from './tree/RoleDefinitionsItem';
 export * from './tree/SubscriptionTreeItemBase';
 export * from './utils/createPortalUri';
 export * from './utils/parseAzureResourceId';
