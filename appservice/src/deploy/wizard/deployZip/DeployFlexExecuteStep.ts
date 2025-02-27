@@ -3,9 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Site, StringDictionary } from "@azure/arm-appservice";
+import { Site } from "@azure/arm-appservice";
 import { RequestBodyType, createHttpHeaders, createPipelineRequest } from "@azure/core-rest-pipeline";
-import { BlobServiceClient } from "@azure/storage-blob";
 import { AzExtPipelineResponse, AzExtRequestPrepareOptions, createGenericClient } from "@microsoft/vscode-azext-azureutils";
 import { publisherName } from "../../../constants";
 import { InnerDeployContext } from "../../IDeployContext";
@@ -15,7 +14,6 @@ import { DeployZipBaseExecuteStep } from "./DeployZipBaseExecuteStep";
 export class DeployFlexExecuteStep extends DeployZipBaseExecuteStep {
     public async deployZip(context: InnerDeployContext): Promise<AzExtPipelineResponse | void> {
         const site = await this.getFlexSite(context, context.site.subscription.subscriptionId, context.site.resourceGroup, context.site.siteName);
-        await this.tryCreateStorageContainer(context, site);
         const kuduClient = await context.site.createClient(context);
 
         const RemoteBuild: boolean = site.properties?.functionAppConfig?.runtime.name === 'python';
@@ -33,24 +31,6 @@ export class DeployFlexExecuteStep extends DeployZipBaseExecuteStep {
             callback,
             progress: this.progress
         });
-    }
-
-    // storage container is needed for flex deployment, but it is not created automatically
-    private async tryCreateStorageContainer(context: InnerDeployContext, site: Site & { properties?: { functionAppConfig: FunctionAppConfig } }): Promise<void> {
-        const connectionStringAppSettingName = site.properties?.functionAppConfig?.deployment.storage.authentication.storageAccountConnectionStringName as unknown as string;
-        const siteClient = await context.site.createClient(context);
-        const settings: StringDictionary = await siteClient.listApplicationSettings();
-        const connectionString = settings.properties && settings.properties[connectionStringAppSettingName];
-        if (connectionString) {
-            const blobClient = BlobServiceClient.fromConnectionString(connectionString);
-            const containerName = site.properties?.functionAppConfig?.deployment.storage.value.split('/').pop();
-            if (containerName) {
-                const client = blobClient.getContainerClient(containerName);
-                if (!await client.exists()) {
-                    await blobClient.createContainer(containerName);
-                }
-            }
-        }
     }
 
     private async getFlexSite(context: InnerDeployContext, subscriptionId: string, rgName: string, siteName: string): Promise<Site & { properties?: { functionAppConfig: FunctionAppConfig } }> {
