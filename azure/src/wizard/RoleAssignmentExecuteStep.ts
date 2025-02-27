@@ -48,7 +48,7 @@ export class RoleAssignmentExecuteStep<T extends types.IResourceGroupWizardConte
                     if (wizardContext.activityChildren) {
                         wizardContext.activityChildren.push(
                             new GenericTreeItem(undefined, {
-                                contextValue: createUniversallyUniqueContextValue(['useExistingResourceGroupInfoItem', activitySuccessContext]),
+                                contextValue: createUniversallyUniqueContextValue(['successfullRoleAssignment', activitySuccessContext]),
                                 label: l10n.t(`Role Assignment ${role.roleDefinitionName} created for ${resourceName}`),
                                 iconPath: activitySuccessIcon
                             })
@@ -62,13 +62,21 @@ export class RoleAssignmentExecuteStep<T extends types.IResourceGroupWizardConte
                     ext.outputChannel.appendLog(parsedError.message);
                     if (wizardContext.activityChildren) {
                         wizardContext.activityChildren.push(new GenericTreeItem(undefined, {
-                            contextValue: createUniversallyUniqueContextValue(['useExistingResourceGroupInfoItem', activitySuccessContext]),
+                            contextValue: createUniversallyUniqueContextValue(['failedRoleAssignment', activitySuccessContext]),
                             label: l10n.t(`Role Assignment ${role.roleDefinitionName} failed for ${resourceName}`),
                             iconPath: activityFailIcon
                         }));
                     }
                 }
 
+            }
+
+            if (wizardContext.activityChildren) {
+                for (const child of wizardContext.activityChildren) {
+                    if (child.contextValue.includes('failedRoleAssignment')) {
+                        throw new Error(l10n.t('Failed to create role assignment(s).'));
+                    }
+                }
             }
         }
     }
