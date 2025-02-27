@@ -26,6 +26,9 @@ const siteNamingRules: IAzureNamingRules = {
     invalidCharsRegExp: /[^a-zA-Z0-9\-]/
 };
 
+// Selecting the Tenant domain label scope actually fails if over 43 chars long, even though the CNA validation would otherwise say it's fine.
+// Setting the limit to 43 chars seems to completely fix the issue and is the same number the portal is using.
+// See: https://github.com/microsoft/vscode-azuretools/pull/1882#issue-2828801875
 const regionalCNAMaxLength: number = 43;
 
 export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
@@ -197,7 +200,7 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
         };
 
         if (!checkNameResponse.nameAvailable) {
-            // If site name input is greater than 46 chars, ignore result of regional CNA because it inherently has a shorter character limit than Global CNA
+            // For global domain scope, if site name input is greater than regionalCNAMaxLength, ignore result of regional CNA because it inherently has a shorter character limit than Global CNA
             if (domainNameScope === DomainNameLabelScope.Global && siteName.length > regionalCNAMaxLength) {
                 // Ensure the error message is the expected character validation error message before ignoring it
                 if (checkNameResponse.message && /must be less than \d{2} chars/i.test(checkNameResponse.message)) {
@@ -212,7 +215,7 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
 
     private async asyncValidateUniqueARMId(context: SiteNameStepWizardContext, client: WebSiteManagementClient, siteName: string, resourceGroupName?: string): Promise<string | undefined> {
         if (!resourceGroupName) {
-            context.relatedNameTask = this.generateRelatedName(context, siteName, this.getRelatedResourceNamingRules(context));
+            context.relatedNameTask ??= this.generateRelatedName(context, siteName, this.getRelatedResourceNamingRules(context));
             resourceGroupName = await context.relatedNameTask;
         }
 
