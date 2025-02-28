@@ -16,6 +16,10 @@ export class AppSettingTreeItem extends AzExtTreeItem {
     public static contextValueNoSlots: string = 'applicationSettingItemNoSlots';
     public get contextValue(): string {
         const contextValue = this.parent.supportsSlots ? AppSettingTreeItem.contextValue : AppSettingTreeItem.contextValueNoSlots;
+        if (convertibleSetting(this._key, this._value)) {
+            return createContextValue([contextValue, ...this.parent.contextValuesToAdd, 'convert']);
+        }
+
         return createContextValue([contextValue, ...this.parent.contextValuesToAdd]);
     }
     public readonly parent: AppSettingsTreeItem;
@@ -38,6 +42,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
         await ti.refreshImpl(context);
         return ti;
     }
+
     public get id(): string {
         return this._key;
     }
@@ -47,11 +52,27 @@ export class AppSettingTreeItem extends AzExtTreeItem {
     }
 
     public get iconPath(): TreeItemIconPath {
+        // Change symbol to warning if the settings uses connection strings
+        if (convertibleSetting(this._key, this._value)) {
+            return new ThemeIcon('warning');
+        }
         return new ThemeIcon('symbol-constant');
+    }
+
+    public get tooltip(): string | undefined {
+        // Only add tooltip if the setting uses connection strings
+        if (convertibleSetting(this._key, this._value)) {
+            return l10n.t('This setting contains a connection string for safety reasons please convert to managed identity.');
+        }
+        return undefined;
     }
 
     public get commandId(): string {
         return this.parent.extensionPrefix + '.toggleAppSettingVisibility';
+    }
+
+    public get value(): string {
+        return this._value;
     }
 
     public async edit(context: IActionContext): Promise<void> {
@@ -126,4 +147,15 @@ export class AppSettingTreeItem extends AzExtTreeItem {
             }
         }
     }
+}
+
+export function convertibleSetting(key: string, value: string): boolean {
+    if (key.includes('STORAGE') || key.includes('DOCUMENTDB') || key.includes('EVENTHUB') || key.includes('SERVICEBUS') || key === ('AzureWebJobsStorage')) {
+        if (key === 'AzureWebJobsStorage' && (value === 'UseDevelopmentStorage=true' || value === '')) {
+            return false;
+        }
+        return true;
+    }
+
+    return false;
 }
