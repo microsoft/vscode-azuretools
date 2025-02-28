@@ -9,6 +9,7 @@ import * as vscode from 'vscode';
 import * as types from '../../index';
 import { createManagedServiceIdentityClient } from '../clients';
 import { uiUtils } from '../utils/uiUtils';
+import { ResourceGroupListStep } from './ResourceGroupListStep';
 import { UserAssignedIdentityCreateStep } from './UserAssignedIdentityCreateStep';
 
 export class UserAssignedIdentityListStep<T extends types.IResourceGroupWizardContext> extends AzureWizardPromptStep<T> {
@@ -31,6 +32,7 @@ export class UserAssignedIdentityListStep<T extends types.IResourceGroupWizardCo
     public async getSubWizard(wizardContext: T): Promise<IWizardOptions<T> | undefined> {
         if (!wizardContext.managedIdentity) {
             return {
+                promptSteps: [new ResourceGroupListStep()],
                 executeSteps: [new UserAssignedIdentityCreateStep()]
             }
         }

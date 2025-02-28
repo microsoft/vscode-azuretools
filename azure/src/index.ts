@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 export * from './clients';
-export { CommonRoleDefinitions as const } from './constants';
+export { CommonRoleDefinitions, createRoleId } from './constants';
 export * from './createAzureClient';
 export { registerAzureUtilsExtensionVariables } from './extensionVariables';
 export * from './openInPortal';
@@ -26,5 +26,4 @@ export * from './wizard/StorageAccountNameStep';
 export * from './wizard/UserAssignedIdentityCreateStep';
 export * from './wizard/UserAssignedIdentityListStep';
 export * from './wizard/VerifyProvidersStep';
-
 // NOTE: The auto-fix action "source.organizeImports" does weird things with this file, but there doesn't seem to be a way to disable it on a per-file basis so we'll just let it happen
