@@ -227,7 +227,7 @@ function handleTelemetry(context: types.IActionContext, callbackId: string, star
         if (shouldSendTelemtry(context)) {
             const end: number = Date.now();
             context.telemetry.measurements.duration = (end - start) / 1000;
-            context.telemetry.properties.azureSubscriptionId = context.subscriptionId
+            context.telemetry.properties.azureSubscriptionId = context.subscriptionId;
             context.telemetry.properties.azureResourceId = context.resourceId;
 
             // de-dupe
