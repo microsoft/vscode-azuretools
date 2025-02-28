@@ -14,6 +14,19 @@ function isTreeElementBase(object?: unknown): object is types.TreeElementBase {
     return typeof object === 'object' && object !== null && 'getTreeItem' in object;
 }
 
+// if the firstArg has a resource property, it is a ResourceGroupsItem from the resource groups extension
+function isResourceGroupsItem(object?: unknown): object is types.ResourceGroupsItem {
+    return typeof object === 'object' && object !== null && 'resource' in object;
+}
+
+// resource has a lot of properties but for the sake of telemetry, we are interested in the id and subscriptionId
+type Resource = {
+    id?: string;
+    subscription?: {
+        subscriptionId?: string;
+    };
+}
+
 export function registerCommand(commandId: string, callback: (context: types.IActionContext, ...args: unknown[]) => unknown, debounce?: number, telemetryId?: string): void {
     let lastClickTime: number | undefined; /* Used for debounce */
     ext.context.subscriptions.push(commands.registerCommand(commandId, async (...args: unknown[]): Promise<unknown> => {
@@ -35,6 +48,11 @@ export function registerCommand(commandId: string, callback: (context: types.IAc
                         context.telemetry.properties.contextValue = firstArg.contextValue;
                     } else if (isTreeElementBase(firstArg)) {
                         context.telemetry.properties.contextValue = (await firstArg.getTreeItem()).contextValue;
+                    }
+
+                    if (isResourceGroupsItem(firstArg)) {
+                        context.resourceId = (firstArg as { resource: Resource })?.resource?.id;
+                        context.subscriptionId = (firstArg as { resource: Resource })?.resource?.subscription?.subscriptionId;
                     }
 
                     for (const arg of args) {

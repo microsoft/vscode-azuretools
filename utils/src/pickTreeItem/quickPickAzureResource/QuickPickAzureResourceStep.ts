@@ -26,6 +26,8 @@ export class QuickPickAzureResourceStep extends GenericQuickPickStep<AzureResour
         // TODO
         wizardContext.resource = pickedAzureResource.resource;
         wizardContext.resourceGroup = pickedAzureResource.resource.resourceGroup;
+        wizardContext.resourceId = pickedAzureResource.resource.id;
+        wizardContext.subscriptionId = pickedAzureResource.resource.subscription.subscriptionId;
 
         return pickedAzureResource;
     }
