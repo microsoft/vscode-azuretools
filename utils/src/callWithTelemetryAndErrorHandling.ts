@@ -125,7 +125,7 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
         const errorData: types.IParsedError = parseError(errorContext.error);
         const unMaskedMessage: string = errorData.message;
         errorData.message = maskUserInfo(errorData.message, context.valuesToMask);
-        context.telemetry.properties.azureSubscriptionId = context.subscriptionId
+        context.telemetry.properties.azureSubscriptionId = context.subscriptionId;
         context.telemetry.properties.azureResourceId = context.resourceId;
 
         if (errorData.stepName) {
