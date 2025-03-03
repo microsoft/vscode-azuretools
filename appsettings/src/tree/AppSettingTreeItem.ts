@@ -16,7 +16,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
     public static contextValueNoSlots: string = 'applicationSettingItemNoSlots';
     public get contextValue(): string {
         const contextValue = this.parent.supportsSlots ? AppSettingTreeItem.contextValue : AppSettingTreeItem.contextValueNoSlots;
-        if (convertibleSetting(this._key, this._value)) {
+        if (isSettingConvertible(this._key, this._value)) {
             return createContextValue([contextValue, ...this.parent.contextValuesToAdd, 'convert']);
         }
 
@@ -53,7 +53,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
 
     public get iconPath(): TreeItemIconPath {
         // Change symbol to warning if the settings uses connection strings
-        if (convertibleSetting(this._key, this._value)) {
+        if (isSettingConvertible(this._key, this._value)) {
             return new ThemeIcon('warning');
         }
         return new ThemeIcon('symbol-constant');
@@ -61,8 +61,8 @@ export class AppSettingTreeItem extends AzExtTreeItem {
 
     public get tooltip(): string | undefined {
         // Only add tooltip if the setting uses connection strings
-        if (convertibleSetting(this._key, this._value)) {
-            return l10n.t('This setting contains a connection string for safety reasons please convert to managed identity.');
+        if (isSettingConvertible(this._key, this._value)) {
+            return l10n.t('This setting contains a connection string. For improved security, please convert to a managed identity.');
         }
         return undefined;
     }
@@ -149,7 +149,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
     }
 }
 
-export function convertibleSetting(key: string, value: string): boolean {
+export function isSettingConvertible(key: string, value: string): boolean {
     if (key.includes('STORAGE') || key.includes('DOCUMENTDB') || key.includes('EVENTHUB') || key.includes('SERVICEBUS') || key === ('AzureWebJobsStorage')) {
         if (key === 'AzureWebJobsStorage' && (value === 'UseDevelopmentStorage=true' || value === '')) {
             return false;
