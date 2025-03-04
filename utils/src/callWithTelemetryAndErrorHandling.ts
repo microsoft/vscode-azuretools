@@ -125,8 +125,6 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
         const errorData: types.IParsedError = parseError(errorContext.error);
         const unMaskedMessage: string = errorData.message;
         errorData.message = maskUserInfo(errorData.message, context.valuesToMask);
-        context.telemetry.properties.azureSubscriptionId = context.subscriptionId;
-        context.telemetry.properties.azureResourceId = context.resourceId;
 
         if (errorData.stepName) {
             context.telemetry.properties.lastStep = errorData.stepName;
@@ -227,8 +225,6 @@ function handleTelemetry(context: types.IActionContext, callbackId: string, star
         if (shouldSendTelemtry(context)) {
             const end: number = Date.now();
             context.telemetry.measurements.duration = (end - start) / 1000;
-            context.telemetry.properties.azureSubscriptionId = context.subscriptionId;
-            context.telemetry.properties.azureResourceId = context.resourceId;
 
             // de-dupe
             context.valuesToMask = context.valuesToMask.filter((v, index) => context.valuesToMask.indexOf(v) === index);

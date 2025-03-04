@@ -9,6 +9,7 @@ import { callWithTelemetryAndErrorHandling } from './callWithTelemetryAndErrorHa
 import { ext } from './extensionVariables';
 import { addTreeItemValuesToMask } from './tree/addTreeItemValuesToMask';
 import { AzExtTreeItem } from './tree/AzExtTreeItem';
+import { unwrapArgs } from '@microsoft/vscode-azureresources-api';
 
 function isTreeElementBase(object?: unknown): object is types.TreeElementBase {
     return typeof object === 'object' && object !== null && 'getTreeItem' in object;
@@ -67,14 +68,36 @@ async function setTelemetryProperties(context: types.IActionContext, args: unkno
         context.telemetry.properties.contextValue = (await firstArg.getTreeItem()).contextValue;
     }
 
+    // handles items from the resource groups extension
     if (isResourceGroupsItem(firstArg)) {
-        context.resourceId = (firstArg as { resource: Resource })?.resource?.id;
-        context.subscriptionId = (firstArg as { resource: Resource })?.resource?.subscription?.subscriptionId;
+        context.telemetry.properties.resourceId = (firstArg as { resource: Resource })?.resource?.id;
+        context.telemetry.properties.subscriptionId = (firstArg as { resource: Resource })?.resource?.subscription?.subscriptionId;
     }
 
+    // handles items from v1 extensions
     for (const arg of args) {
         if (arg instanceof AzExtTreeItem) {
+            context.telemetry.properties.resourceId = arg.id;
+            context.telemetry.properties.subscriptionId = arg.subscription.subscriptionId;
             addTreeItemValuesToMask(context, arg, 'command');
+        }
+    }
+
+    // handles items from v2 extensions that are shaped like:
+    // id: string;
+    // subscription: {
+    //     subscriptionId: string;
+    // }
+    // we don't enforce this shape so it won't work in all cases, but for ACA we mostly follow this pattern
+    const [node, nodes] = unwrapArgs(args);
+    const allNodes = [node, ...nodes ?? []];
+    for (const node of allNodes) {
+        if (node && typeof node === 'object' && 'id' in node && typeof node.id === 'string') {
+            context.telemetry.properties.resourceId = node.id;
+
+            if ('subscription' in node && node.subscription && typeof node.subscription === 'object' && 'subscriptionId' in node.subscription && typeof node.subscription.subscriptionId === 'string') {
+                context.telemetry.properties.subscriptionId = node.subscription.subscriptionId;
+            }
         }
     }
 }
