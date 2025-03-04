@@ -40,26 +40,7 @@ export function registerCommand(commandId: string, callback: (context: types.IAc
             telemetryId || commandId,
             async (context: types.IActionContext) => {
                 if (args.length > 0) {
-                    const firstArg: unknown = args[0];
-
-                    if (firstArg instanceof Uri) {
-                        context.telemetry.properties.contextValue = 'Uri';
-                    } else if (firstArg && typeof firstArg === 'object' && 'contextValue' in firstArg && typeof firstArg.contextValue === 'string') {
-                        context.telemetry.properties.contextValue = firstArg.contextValue;
-                    } else if (isTreeElementBase(firstArg)) {
-                        context.telemetry.properties.contextValue = (await firstArg.getTreeItem()).contextValue;
-                    }
-
-                    if (isResourceGroupsItem(firstArg)) {
-                        context.resourceId = (firstArg as { resource: Resource })?.resource?.id;
-                        context.subscriptionId = (firstArg as { resource: Resource })?.resource?.subscription?.subscriptionId;
-                    }
-
-                    for (const arg of args) {
-                        if (arg instanceof AzExtTreeItem) {
-                            addTreeItemValuesToMask(context, arg, 'command');
-                        }
-                    }
+                    await setTelemetryProperties(context, args);
                 }
 
                 return callback(context, ...args);
@@ -73,4 +54,27 @@ function debounceCommand(debounce: number, lastClickTime?: number): boolean {
         return true;
     }
     return false;
+}
+
+async function setTelemetryProperties(context: types.IActionContext, args: unknown[]): Promise<void> {
+    const firstArg: unknown = args[0];
+
+    if (firstArg instanceof Uri) {
+        context.telemetry.properties.contextValue = 'Uri';
+    } else if (firstArg && typeof firstArg === 'object' && 'contextValue' in firstArg && typeof firstArg.contextValue === 'string') {
+        context.telemetry.properties.contextValue = firstArg.contextValue;
+    } else if (isTreeElementBase(firstArg)) {
+        context.telemetry.properties.contextValue = (await firstArg.getTreeItem()).contextValue;
+    }
+
+    if (isResourceGroupsItem(firstArg)) {
+        context.resourceId = (firstArg as { resource: Resource })?.resource?.id;
+        context.subscriptionId = (firstArg as { resource: Resource })?.resource?.subscription?.subscriptionId;
+    }
+
+    for (const arg of args) {
+        if (arg instanceof AzExtTreeItem) {
+            addTreeItemValuesToMask(context, arg, 'command');
+        }
+    }
 }
