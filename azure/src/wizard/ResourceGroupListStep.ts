@@ -19,10 +19,21 @@ export const resourceGroupNamingRules: IAzureNamingRules = {
     invalidCharsRegExp: /[^a-zA-Z0-9\.\_\-\(\)]/
 };
 
+export type ResourceGroupListStepOptions = {
+    suppressPersistence?: boolean;
+    pickUpdateStrategy?: ResourceGroupPickUpdateStrategy;
+};
+
+export type ResourceGroupPick = IAzureQuickPickItem<ResourceGroup>;
+
+export interface ResourceGroupPickUpdateStrategy {
+    updatePicks(context: types.IResourceGroupWizardContext, picks: ResourceGroupPick[]): ResourceGroupPick[] | Promise<ResourceGroupPick[]>;
+}
+
 export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> extends AzureWizardPromptStep<T> implements types.ResourceGroupListStep<T> {
     private _suppressCreate: boolean | undefined;
 
-    public constructor(suppressCreate?: boolean) {
+    public constructor(suppressCreate?: boolean, readonly options: ResourceGroupListStepOptions = {}) {
         super();
         this._suppressCreate = suppressCreate;
     }
@@ -43,7 +54,12 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
 
     public async prompt(wizardContext: T): Promise<void> {
         // Cache resource group separately per subscription
-        const options: IAzureQuickPickOptions = { placeHolder: 'Select a resource group for new resources.', id: `ResourceGroupListStep/${wizardContext.subscriptionId}` };
+        const options: IAzureQuickPickOptions = {
+            id: `ResourceGroupListStep/${wizardContext.subscriptionId}`,
+            placeHolder: vscode.l10n.t('Select a resource group for new resources.'),
+            suppressPersistence: this.options.suppressPersistence,
+            enableGrouping: true,
+        };
         wizardContext.resourceGroup = (await wizardContext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
         if (wizardContext.resourceGroup && !LocationListStep.hasLocation(wizardContext)) {
             await LocationListStep.setLocation(wizardContext, nonNullProp(wizardContext.resourceGroup, 'location'));
@@ -70,36 +86,36 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
     }
 
     private async getQuickPicks(wizardContext: T): Promise<IAzureQuickPickItem<ResourceGroup | undefined>[]> {
-        const picks: IAzureQuickPickItem<ResourceGroup | undefined>[] = [];
+        const rgPicks: IAzureQuickPickItem<ResourceGroup>[] = (await ResourceGroupListStep.getResourceGroups(wizardContext))
+            .sort((a, b) => {
+                const nameA: string = nonNullProp(a, 'name');
+                const nameB: string = nonNullProp(b, 'name');
+                if (nameA > nameB) {
+                    return 1;
+                } else if (nameA < nameB) {
+                    return -1;
+                } else {
+                    return 0;
+                }
+            })
+            .map(rg => {
+                return {
+                    id: rg.id,
+                    label: nonNullProp(rg, 'name'),
+                    description: rg.location,
+                    data: rg,
+                };
+            });
 
+        const picks: IAzureQuickPickItem<ResourceGroup | undefined>[] = await this.options.pickUpdateStrategy?.updatePicks(wizardContext, rgPicks) ?? rgPicks;
         if (!this._suppressCreate) {
-            picks.push({
+            picks.unshift({
                 label: vscode.l10n.t('$(plus) Create new resource group'),
                 description: '',
                 data: undefined
             });
         }
 
-        const resourceGroups: ResourceGroup[] = (await ResourceGroupListStep.getResourceGroups(wizardContext)).sort((a, b) => {
-            const nameA: string = nonNullProp(a, 'name');
-            const nameB: string = nonNullProp(b, 'name');
-            if (nameA > nameB) {
-                return 1;
-            } else if (nameA < nameB) {
-                return -1;
-            } else {
-                return 0;
-            }
-        });
-
-        return picks.concat(resourceGroups.map((rg: ResourceGroup) => {
-            return {
-                id: rg.id,
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                label: rg.name!,
-                description: rg.location,
-                data: rg
-            };
-        }));
+        return picks;
     }
 }
