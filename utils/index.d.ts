@@ -736,16 +736,6 @@ export interface IActionContext {
      * IMPORTANT: For the most sensitive information, `callWithMaskHandling` should be used instead
      */
     valuesToMask: string[];
-
-    /**
-     * If applicable, it is the id of the resource that is being acted upon. Actions that are not against Azure resources will leave this undefined.
-     */
-    resourceId?: string;
-
-    /**
-     * If applicable, it is the id of the subscription of the resource that is being acted upon. Actions that are not against Azure resources will leave this undefined.
-     */
-    subscriptionId?: string;
 }
 
 export interface ITelemetryContext {
@@ -820,6 +810,14 @@ export interface IErrorHandlingContext {
 }
 
 export interface TelemetryProperties {
+    /**
+     * If applicable, it is the id of the resource that is being acted upon.
+     */
+    resourceId?: string;
+    /**
+     * If applicable, it is the id of the subscription of the resource that is being acted upon.
+     */
+    subscriptionId?: string;
     /**
      * Defaults to `false`
      * This is used to more accurately track usage, since activation events generally shouldn't 'count' as usage
