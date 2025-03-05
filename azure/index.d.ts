@@ -392,8 +392,20 @@ export declare class RoleAssignmentExecuteStep<T extends IResourceGroupWizardCon
 }
 
 export interface Role {
+    /**
+     * The scope of the operation or resource. Valid scopes are: subscription (format:
+     *    '/subscriptions/{subscriptionId}'), resource group (format:
+     *    '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}', or resource (format:
+     *    '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/[{parentResourcePath}/]{resourceType}/{resourceName}'
+     */
     scopeId: string | undefined;
+    /**
+     * The role definition id of the role to assign. This can be created using `createRoleId`
+     */
     roleDefinitionId: string;
+    /**
+     *  The name of the role definition to assign
+     */
     roleDefinitionName: string;
 }
 
