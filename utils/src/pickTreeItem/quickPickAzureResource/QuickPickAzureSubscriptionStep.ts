@@ -30,6 +30,8 @@ export class QuickPickAzureSubscriptionStep extends GenericQuickPickStepWithComm
         // TODO
         wizardContext.subscription = pickedSubscription.subscription;
 
+        wizardContext.telemetry.properties.subscriptionId = pickedSubscription.subscription.subscriptionId;
+
         return pickedSubscription;
     }
 }
