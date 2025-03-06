@@ -2488,10 +2488,10 @@ export type AgentBenchmarkConfig = {
 
 /**
  * Registers a language model tool, wrapping it with telemetry and error handling
- * @param toolName The name of the tool
+ * @param name The name of the tool. Must match what is in package.json.
  * @param tool The tool itself
  */
-export declare function registerLMTool<T>(toolName: string, tool: AzExtLMTool<T>): void;
+export declare function registerLMTool<T>(name: string, tool: AzExtLMTool<T>): void;
 
 /**
  * An LM tool that additionally passes IActionContext and records telemetry for both invoke and prepareInvocation
