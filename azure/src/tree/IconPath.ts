@@ -11,7 +11,7 @@ export function getIconPath(iconName: string): TreeItemIconPath {
     return path.join(getResourcesPath(), `${iconName}.svg`);
 }
 
-export function getAzureIconPath(iconName: string): TreeItemIconPath {
+export function getAzureIconPath(iconName: string): string {
     return path.join(getResourcesPath(), 'azureIcons', `${iconName}.svg`);
 }
 
