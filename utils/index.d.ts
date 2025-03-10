@@ -2498,7 +2498,8 @@ export declare function registerLMTool<T>(name: string, tool: AzExtLMTool<T>): v
  */
 export declare interface AzExtLMTool<T> {
     /**
-     * Prepare for invocation, which can be used to provide confirmation prompts etc. If the tool has side effects, this should be implemented.
+     * Prepare for invocation, which can be used to provide confirmation prompts etc. If the tool invocation has side effects, this should be implemented.
+     * `prepareInvocation` should *not* have side effects.
      * @param context The action context
      * @param options The LM tool prepare invocation options
      * @param token A cancellation token
