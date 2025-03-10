@@ -10,6 +10,7 @@ import { ext } from './extensionVariables';
 import { addTreeItemValuesToMask } from './tree/addTreeItemValuesToMask';
 import { AzExtTreeItem } from './tree/AzExtTreeItem';
 import { unwrapArgs } from '@microsoft/vscode-azureresources-api';
+import { parseError } from './parseError';
 
 function isTreeElementBase(object?: unknown): object is types.TreeElementBase {
     return typeof object === 'object' && object !== null && 'getTreeItem' in object;
@@ -41,7 +42,14 @@ export function registerCommand(commandId: string, callback: (context: types.IAc
             telemetryId || commandId,
             async (context: types.IActionContext) => {
                 if (args.length > 0) {
-                    await setTelemetryProperties(context, args);
+                    try {
+                        await setTelemetryProperties(context, args);
+                    } catch (e: unknown) {
+                        const error = parseError(e);
+                        // if we fail to set telemetry properties, we don't want to throw an error and prevent the command from executing
+                        ext.outputChannel.appendLine(`registerCommand: Failed to set telemetry properties: ${e}`);
+                        context.telemetry.properties.telemetryError = error.message;
+                    }
                 }
 
                 return callback(context, ...args);
@@ -77,8 +85,15 @@ async function setTelemetryProperties(context: types.IActionContext, args: unkno
     // handles items from v1 extensions
     for (const arg of args) {
         if (arg instanceof AzExtTreeItem) {
-            context.telemetry.properties.resourceId = arg.id;
-            context.telemetry.properties.subscriptionId = arg.subscription.subscriptionId;
+            try {
+                context.telemetry.properties.resourceId = arg.id;
+                // it's possible that if subscription is not set on AzExtTreeItems, an error is thrown
+                // see https://github.com/microsoft/vscode-azuretools/blob/cc1feb3a819dd503eb59ebcc1a70051d4e9a3432/utils/src/tree/AzExtTreeItem.ts#L154
+                context.telemetry.properties.subscriptionId = arg.subscription.subscriptionId;
+            } catch (e) {
+                // we don't want to block execution of the command just because we can't set the telemetry properties
+                // see https://github.com/microsoft/vscode-azureresourcegroups/issues/1080
+            }
             addTreeItemValuesToMask(context, arg, 'command');
         }
     }
