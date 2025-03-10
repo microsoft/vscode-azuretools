@@ -13,7 +13,7 @@ export function registerLMTool<T>(name: string, tool: types.AzExtLMTool<T>): voi
         invoke: async (options, token) => {
             return await callWithTelemetryAndErrorHandling(`${name}.invoke`, async (context: types.IActionContext) => {
                 return await tool.invoke(context, options, token);
-            }) as vscode.LanguageModelToolResult;
+            });
         }
     };
 
@@ -22,7 +22,7 @@ export function registerLMTool<T>(name: string, tool: types.AzExtLMTool<T>): voi
             return await callWithTelemetryAndErrorHandling(`${name}.prepareInvocation`, async (context: types.IActionContext) => {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 return await tool.prepareInvocation!(context, options, token);
-            })
+            });
         }
     }
 
