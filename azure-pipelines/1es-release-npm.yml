@@ -142,8 +142,8 @@ extends:
                 inputs:
                   gitHubConnection: ${{ parameters.GitHubServiceConnection }}
                   tagSource: userSpecifiedTag
-                  tag: "${{ parameters.PackageToPublish }}-v$(Version)"
-                  title: "${{ parameters.PackageToPublish }} v$(Version)"
+                  tag: "${{ parameters.PackageToPublish }}-v${{ parameters.publishVersion }}"
+                  title: "${{ parameters.PackageToPublish }} v${{ parameters.publishVersion }}"
                   releaseNotesSource: inline
                   assets: "$(tgzFileName)"
                   isDraft: true
