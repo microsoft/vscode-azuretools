@@ -29,7 +29,7 @@ export class UserAssignedIdentityCreateStep<T extends types.IResourceGroupWizard
 
     public async execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         const newLocation: string = (await LocationListStep.getLocation(wizardContext, storageProvider)).name;
-        const rgName: string = nonNullValueAndProp(wizardContext.resourceGroup, 'name');
+        const rgName: string = wizardContext.newResourceGroupName ?? nonNullValueAndProp(wizardContext.resourceGroup, 'name');
         const newName: string = `${rgName}-identities`;
         const creatingUserAssignedIdentity: string = l10n.t('Creating user assigned identity "{0}" in location "{1}""...', newName, newLocation);
         ext.outputChannel.appendLog(creatingUserAssignedIdentity);
