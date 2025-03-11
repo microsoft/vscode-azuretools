@@ -59,9 +59,9 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
 
         let prompt: string;
         if (context.newSiteKind === AppKind.functionapp) {
-            prompt = vscode.l10n.t('Enter a globally unique name for the new function app.');
+            prompt = vscode.l10n.t('Enter a name for the new function app.');
         } else if (context.newSiteKind?.includes(AppKind.workflowapp)) {
-            prompt = vscode.l10n.t('Enter a globally unique name for the new logic app.');
+            prompt = vscode.l10n.t('Enter a name for the new logic app.');
         } else {
             prompt = vscode.l10n.t('Enter a name for the new web app.');
         }
