@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-azureappservice",
     "author": "Microsoft Corporation",
-    "version": "3.3.2",
+    "version": "3.5.0",
     "description": "Common tools for developing Azure App Service extensions for VS Code",
     "tags": [
         "azure",
@@ -42,7 +42,7 @@
         "@azure/storage-blob": "^12.3.0",
         "@microsoft/vscode-azext-azureutils": "^3.0.0",
         "@microsoft/vscode-azext-github": "^1.0.0",
-        "@microsoft/vscode-azext-utils": "^2.5.0",
+        "@microsoft/vscode-azext-utils": "^2.6.2",
         "dayjs": "^1.11.2",
         "fs-extra": "^10.0.0",
         "p-retry": "^3.0.1",
@@ -63,7 +63,7 @@
         "@types/mocha": "^9.0.0",
         "@types/node": "^18.0.0",
         "@types/p-retry": "^2.0.0",
-        "@types/vscode": "1.82.0",
+        "@types/vscode": "^1.94.0",
         "@types/ws": "^8.5.3",
         "@types/yazl": "^2.4.2",
         "@typescript-eslint/eslint-plugin": "^5.53.0",

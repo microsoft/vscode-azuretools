@@ -30,6 +30,15 @@ export class QuickPickAzureSubscriptionStep extends GenericQuickPickStepWithComm
         // TODO
         wizardContext.subscription = pickedSubscription.subscription;
 
+        try {
+            // it's possible that if subscription is not set on AzExtTreeItems, an error is thrown
+            // see https://github.com/microsoft/vscode-azuretools/blob/cc1feb3a819dd503eb59ebcc1a70051d4e9a3432/utils/src/tree/AzExtTreeItem.ts#L154
+            wizardContext.telemetry.properties.subscriptionId = pickedSubscription.subscription.subscriptionId;
+        } catch (e) {
+            // we don't want to block execution just because we can't set the telemetry property
+            // see https://github.com/microsoft/vscode-azureresourcegroups/issues/1081
+        }
+
         return pickedSubscription;
     }
 }

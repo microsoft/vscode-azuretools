@@ -113,7 +113,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
 
                 const result: AzExtTreeItem[] = Array.from(resultMap.values());
                 result.push(...duplicateChildren.map(c => {
-                    const message: string = l10n.t('An element with the following id already exists: {0}', c.fullId);
+                    const message: string = l10n.t('An element with the following id already exists: {id}', { id: c.fullId });
                     return new InvalidTreeItem(treeItem, new Error(message), { contextValue: 'azureextensionui.duplicate', label: c.label });
                 }));
 

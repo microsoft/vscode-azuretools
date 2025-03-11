@@ -31,6 +31,7 @@ export * from './pickTreeItem/quickPickAzureResource/QuickPickGroupStep';
 export * from './pickTreeItem/runQuickPickWizard';
 export * from './registerCommand';
 export * from './registerCommandWithTreeNodeUnwrapping';
+export * from './registerLMTool';
 export * from './registerEvent';
 export { registerReportIssueCommand } from './registerReportIssueCommand';
 export * from './tree/AzExtParentTreeItem';
