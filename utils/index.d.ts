@@ -7,7 +7,7 @@
 
 import type { Environment } from '@azure/ms-rest-azure-env';
 import type { AzExtResourceType, AzureResource, AzureSubscription, ResourceModelBase } from '@microsoft/vscode-azureresources-api';
-import { AuthenticationSession, CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, LogOutputChannel, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, ProviderResult, QuickPickItem, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri, QuickPickOptions as VSCodeQuickPickOptions, WorkspaceFolder, WorkspaceFolderPickOptions } from 'vscode';
+import { AuthenticationSession, CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, LanguageModelToolInvocationOptions, LanguageModelToolInvocationPrepareOptions, LanguageModelToolResult, LogOutputChannel, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, PreparedToolInvocation, Progress, ProviderResult, QuickPickItem, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri, QuickPickOptions as VSCodeQuickPickOptions, WorkspaceFolder, WorkspaceFolderPickOptions } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
 
@@ -810,6 +810,14 @@ export interface IErrorHandlingContext {
 }
 
 export interface TelemetryProperties {
+    /**
+     * If applicable, it is the id of the resource that is being acted upon.
+     */
+    resourceId?: string;
+    /**
+     * If applicable, it is the id of the subscription of the resource that is being acted upon.
+     */
+    subscriptionId?: string;
     /**
      * Defaults to `false`
      * This is used to more accurately track usage, since activation events generally shouldn't 'count' as usage
@@ -1948,6 +1956,8 @@ export declare interface PickSubscriptionWizardContext extends QuickPickWizardCo
 export declare interface AzureResourceQuickPickWizardContext extends QuickPickWizardContext, PickSubscriptionWizardContext {
     resource?: AzureResource;
     resourceGroup?: string;
+    resourceId?: string;
+    subscriptionId?: string;
 }
 
 /**
@@ -2471,5 +2481,38 @@ export type AgentBenchmarkConfig = {
         optional: { type: "command", commandId: string }[],
     }
 };
+
+// #endregion
+
+// #region Copilot features
+
+/**
+ * Registers a language model tool, wrapping it with telemetry and error handling
+ * @param name The name of the tool. Must match what is in package.json.
+ * @param tool The tool itself
+ */
+export declare function registerLMTool<T>(name: string, tool: AzExtLMTool<T>): void;
+
+/**
+ * An LM tool that additionally passes IActionContext and records telemetry for both invoke and prepareInvocation
+ */
+export declare interface AzExtLMTool<T> {
+    /**
+     * Prepare for invocation, which can be used to provide confirmation prompts etc. If the tool invocation has side effects, this should be implemented.
+     * `prepareInvocation` should *not* have side effects.
+     * @param context The action context
+     * @param options The LM tool prepare invocation options
+     * @param token A cancellation token
+     */
+    prepareInvocation?(context: IActionContext, options: LanguageModelToolInvocationPrepareOptions<T>, token: CancellationToken): ProviderResult<PreparedToolInvocation>;
+
+    /**
+     * Invokes the LM tool.
+     * @param context The action context
+     * @param options The LM tool invocation options
+     * @param token A cancellation token
+     */
+    invoke(context: IActionContext, options: LanguageModelToolInvocationOptions<T>, token: CancellationToken): ProviderResult<LanguageModelToolResult>;
+}
 
 // #endregion

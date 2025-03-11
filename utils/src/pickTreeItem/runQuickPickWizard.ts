@@ -11,10 +11,9 @@ import { getLastNode } from './getLastNode';
 
 export async function runQuickPickWizard<TPick>(context: types.PickExperienceContext, wizardOptions?: types.IWizardOptions<types.AzureResourceQuickPickWizardContext>, startingNode?: unknown): Promise<TPick> {
     // Fill in the `pickedNodes` property
-    const wizardContext = { ...context } as types.AzureResourceQuickPickWizardContext;
-    wizardContext.pickedNodes = startingNode ? [startingNode] : [];
+    (context as types.AzureResourceQuickPickWizardContext).pickedNodes = startingNode ? [startingNode] : [];
 
-    const wizard = new AzureWizard(wizardContext, {
+    const wizard = new AzureWizard(context, {
         hideStepCount: true,
         showLoadingPrompt: wizardOptions?.showLoadingPrompt ?? true,
         ...wizardOptions
@@ -22,9 +21,9 @@ export async function runQuickPickWizard<TPick>(context: types.PickExperienceCon
 
     await wizard.prompt();
 
-    const lastPickedItem = getLastNode(wizardContext);
+    const lastPickedItem = getLastNode(context as types.AzureResourceQuickPickWizardContext);
     if (!lastPickedItem) {
-        throw new NoResourceFoundError(wizardContext);
+        throw new NoResourceFoundError(context);
     } else {
         return (!context.dontUnwrap && isWrapper(lastPickedItem)) ? lastPickedItem.unwrap() : lastPickedItem as unknown as TPick;
     }

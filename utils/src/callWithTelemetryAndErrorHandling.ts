@@ -125,6 +125,7 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
         const errorData: types.IParsedError = parseError(errorContext.error);
         const unMaskedMessage: string = errorData.message;
         errorData.message = maskUserInfo(errorData.message, context.valuesToMask);
+
         if (errorData.stepName) {
             context.telemetry.properties.lastStep = errorData.stepName;
         }
@@ -224,6 +225,7 @@ function handleTelemetry(context: types.IActionContext, callbackId: string, star
         if (shouldSendTelemtry(context)) {
             const end: number = Date.now();
             context.telemetry.measurements.duration = (end - start) / 1000;
+
             // de-dupe
             context.valuesToMask = context.valuesToMask.filter((v, index) => context.valuesToMask.indexOf(v) === index);
             for (const [key, value] of Object.entries(context.telemetry.properties)) {
