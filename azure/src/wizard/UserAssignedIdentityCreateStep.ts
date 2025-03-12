@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ManagedServiceIdentityClient } from '@azure/arm-msi';
+import { type ManagedServiceIdentityClient } from '@azure/arm-msi';
 import { AzureWizardExecuteStep, nonNullValueAndProp, randomUtils } from '@microsoft/vscode-azext-utils';
 import { l10n, Progress } from 'vscode';
 import * as types from '../../index';
