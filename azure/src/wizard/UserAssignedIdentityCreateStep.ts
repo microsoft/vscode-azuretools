@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ManagedServiceIdentityClient } from '@azure/arm-msi';
-import { AzureWizardExecuteStep, nonNullValueAndProp } from '@microsoft/vscode-azext-utils';
+import { type ManagedServiceIdentityClient } from '@azure/arm-msi';
+import { AzureWizardExecuteStep, nonNullValueAndProp, randomUtils } from '@microsoft/vscode-azext-utils';
 import { l10n, Progress } from 'vscode';
 import * as types from '../../index';
 import { createManagedServiceIdentityClient } from '../clients';
@@ -29,8 +29,12 @@ export class UserAssignedIdentityCreateStep<T extends types.IResourceGroupWizard
 
     public async execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         const newLocation: string = (await LocationListStep.getLocation(wizardContext, storageProvider)).name;
-        const rgName: string = nonNullValueAndProp(wizardContext.resourceGroup, 'name');
-        const newName: string = `${rgName}-identities`;
+        const rgName: string = wizardContext.newResourceGroupName ?? nonNullValueAndProp(wizardContext.resourceGroup, 'name');
+        let newName: string | undefined = undefined;
+        while (!newName) {
+            newName = await this.generateRelatedName(wizardContext, rgName);
+        }
+
         const creatingUserAssignedIdentity: string = l10n.t('Creating user assigned identity "{0}" in location "{1}""...', newName, newLocation);
         ext.outputChannel.appendLog(creatingUserAssignedIdentity);
         progress.report({ message: creatingUserAssignedIdentity });
@@ -48,5 +52,18 @@ export class UserAssignedIdentityCreateStep<T extends types.IResourceGroupWizard
 
     public shouldExecute(wizardContext: T): boolean {
         return !wizardContext.managedIdentity;
+    }
+
+    private async generateRelatedName(wizardContext: types.IResourceGroupWizardContext, rgName: string): Promise<string | undefined> {
+        const newName: string = `${rgName}-identities-${randomUtils.getRandomHexString(6)}`;
+        try {
+            const msiClient: ManagedServiceIdentityClient = await createManagedServiceIdentityClient(wizardContext);
+            await msiClient.userAssignedIdentities.get(rgName, newName);
+        } catch (err) {
+            return newName;
+        }
+
+        // If we get here, the name is already taken. We need to generate a new name.
+        return undefined;
     }
 }
