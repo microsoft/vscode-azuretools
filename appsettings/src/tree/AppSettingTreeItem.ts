@@ -17,7 +17,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
     public get contextValue(): string {
         const contextValue = this.parent.supportsSlots ? AppSettingTreeItem.contextValue : AppSettingTreeItem.contextValueNoSlots;
         if (isSettingConvertible(this._key, this._value)) {
-            return createContextValue([contextValue, ...this.parent.contextValuesToAdd, 'convert']);
+            return createContextValue([contextValue, ...this.parent.contextValuesToAdd, 'convertSetting']);
         }
 
         return createContextValue([contextValue, ...this.parent.contextValuesToAdd]);

@@ -75,16 +75,9 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
     }
 
     static async createAppSettingsTreeItem(context: IActionContext, parent: AzExtParentTreeItem, clientProvider: AppSettingsClientProvider, extensionPrefix: string, options?: AppSettingsTreeItemOptions): Promise<AppSettingsTreeItem> {
-        const client = await clientProvider.createClient(context);
-        const appSettings = await client.listApplicationSettings();
-        if (appSettings.properties) {
-            for (const [key, value] of Object.entries(appSettings.properties)) {
-                if (isSettingConvertible(key, value)) {
-                    options?.contextValuesToAdd?.push('convert');
-                }
-            }
-        }
-        return new AppSettingsTreeItem(parent, clientProvider, extensionPrefix, options);
+        const ti: AppSettingsTreeItem = new AppSettingsTreeItem(parent, clientProvider, extensionPrefix, options);
+        await ti.refreshImpl(context);
+        return ti;
     }
 
     public get id(): string {
@@ -188,5 +181,17 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
         }
 
         return <StringDictionary>this._settings;
+    }
+
+    public async refreshImpl(context: IActionContext): Promise<void> {
+        const client = await this.clientProvider.createClient(context);
+        const appSettings = await client.listApplicationSettings();
+        if (appSettings.properties) {
+            for (const [key, value] of Object.entries(appSettings.properties)) {
+                if (isSettingConvertible(key, value)) {
+                    this.contextValuesToAdd?.push('convert');
+                }
+            }
+        }
     }
 }
