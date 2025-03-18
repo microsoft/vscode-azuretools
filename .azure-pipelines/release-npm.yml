@@ -14,7 +14,6 @@ parameters:
       - microsoft-vscode-azext-dev
       - microsoft-eslint-config-azuretools
       - microsoft-vscode-azext-github
-      - microsoft-vscode-azext-serviceconnector
       - microsoft-vscode-azext-utils
   - name: publishVersion
     displayName: Publish Version

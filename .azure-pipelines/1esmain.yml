@@ -31,7 +31,7 @@ extends:
       credscan:
         suppressionsFile: $(Build.SourcesDirectory)/.azure-pipelines/compliance/CredScanSuppressions.json
       componentgovernance:
-        ignoreDirectories: $(Build.SourcesDirectory)/appservice/.vscode-test,$(Build.SourcesDirectory)/appsettings/.vscode-test,$(Build.SourcesDirectory)/auth/.vscode-test,$(Build.SourcesDirectory)/azure/.vscode-test,$(Build.SourcesDirectory)/dev/.vscode-test,$(Build.SourcesDirectory)/eslint-config-azuretools/.vscode-test,$(Build.SourcesDirectory)/github/.vscode-test,$(Build.SourcesDirectory)/serviceconnector/.vscode-test,$(Build.SourcesDirectory)/utils/.vscode-test
+        ignoreDirectories: $(Build.SourcesDirectory)/appservice/.vscode-test,$(Build.SourcesDirectory)/appsettings/.vscode-test,$(Build.SourcesDirectory)/auth/.vscode-test,$(Build.SourcesDirectory)/azure/.vscode-test,$(Build.SourcesDirectory)/dev/.vscode-test,$(Build.SourcesDirectory)/eslint-config-azuretools/.vscode-test,$(Build.SourcesDirectory)/github/.vscode-test,$(Build.SourcesDirectory)/utils/.vscode-test
       codeql:
         excludePathPatterns: "**/.vscode-test, dist" # Exclude .vscode-test and dist directories from CodeQL alerting
     #   We need to keep this pool defined because SDLSources stage requires us to specify a windows pool
@@ -58,7 +58,5 @@ extends:
               working_directory: eslint-config-azuretools
             - name: microsoft_vscode_azext_github
               working_directory: github
-            - name: microsoft_vscode_azext_serviceconnector
-              working_directory: serviceconnector
             - name: microsoft_vscode_azext_utils
               working_directory: utils
