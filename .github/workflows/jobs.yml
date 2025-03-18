@@ -4,7 +4,7 @@ on:
       working_directory:
         required: false
         type: string
-        default: '.'
+        default: "."
 
 jobs:
   Build:
@@ -34,7 +34,7 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Artifacts
+          name: "Artifacts-${{ inputs.working_directory }}"
           path: |
             **/*.vsix
             **/*.tgz

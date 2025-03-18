@@ -1,7 +1,5 @@
 # VSCode Azure SDK for Node.js - UI Tools (Preview)
 
-[![Build Status](https://dev.azure.com/ms-azuretools/AzCode/_apis/build/status/vscode-azuretools)](https://dev.azure.com/ms-azuretools/AzCode/_build/latest?definitionId=17)
-
 This package provides common Azure UI elements for VS Code extensions:
 
 - [Telemetry and Error Handling](#telemetry-and-error-handling): Displays error messages and adds telemetry to commands/events.
