@@ -1,7 +1,5 @@
 # VSCode Azure SDK for Node.js - Azure Utils (Preview)
 
-[![Build Status](https://dev.azure.com/ms-azuretools/AzCode/_apis/build/status/vscode-azuretools)](https://dev.azure.com/ms-azuretools/AzCode/_build/latest?definitionId=17)
-
 This package provides common Azure utilities for Azure VS Code extensions, and is intented to be used alongside @microsoft/vscode-azext-utils.
 
 ## Usage
