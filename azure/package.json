@@ -55,7 +55,7 @@
         "@microsoft/eslint-config-azuretools": "^0.2.1",
         "@microsoft/vscode-azext-dev": "^2.0.4",
         "@microsoft/vscode-azureresources-api": "^2.0.3",
-        "@types/mocha": "^10.0.10",
+        "@types/mocha": "^7.0.2",
         "@types/node": "^16.0.0",
         "@types/semver": "^7.3.9",
         "@types/uuid": "^9.0.1",
@@ -65,7 +65,7 @@
         "eslint": "^8.34.0",
         "eslint-plugin-import": "^2.22.1",
         "glob": "^7.1.6",
-        "mocha": "^11.1.0",
+        "mocha": "^10.8.2",
         "mocha-junit-reporter": "^2.0.2",
         "mocha-multi-reporters": "^1.1.7",
         "typescript": "^4.9.4"
