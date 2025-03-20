@@ -108,7 +108,7 @@ export async function getFilesFromGlob(folderPath: string, resourceName: string,
 
     // first find all files without any ignorePatterns
     let files: vscode.Uri[] = await vscode.workspace.findFiles(new vscode.RelativePattern(folderPath, globPattern));
-    const ignoringFiles = vscode.l10n.t(`Ignoring files from \"{0}.{1}\"`, ext.prefix, zipIgnorePatternStr);
+    const ignoringFiles = vscode.l10n.t('Ignoring files from \"{0}.{1}\"', ext.prefix, zipIgnorePatternStr);
     if (ignorePatternList) {
         try {
             // not all ouptut channels _have_ to support appendLog, so catch the error

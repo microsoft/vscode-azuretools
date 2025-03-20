@@ -1,0 +1,9 @@
+{
+  "This setting contains a connection string. For improved security, please convert to a managed identity.": "This setting contains a connection string. For improved security, please convert to a managed identity.",
+  "Toggling slot settings is not supported.": "Toggling slot settings is not supported.",
+  "Slot Setting": "Slot Setting",
+  "App setting values cannot be null, undefined or an empty string.": "App setting values cannot be null, undefined or an empty string.",
+  "Application Settings": "Application Settings",
+  "Local Settings": "Local Settings",
+  "No local settings found": "No local settings found"
+}

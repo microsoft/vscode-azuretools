@@ -1,0 +1,18 @@
+{
+  "\"registerGitHubExtensionVariables\" must be called before using the vscode-azext-github package.": "\"registerGitHubExtensionVariables\" must be called before using the vscode-azext-github package.",
+  "$(sync) Load More": "$(sync) Load More",
+  "Select a repository": "Select a repository",
+  "Select an organization": "Select an organization",
+  "Select a branch": "Select a branch",
+  "now": "now",
+  "succeeded": "succeeded",
+  "cancelled": "cancelled",
+  "failed": "failed",
+  "skipped": "skipped",
+  "started": "started",
+  "queued": "queued",
+  "completed": "completed",
+  "Connected": "Connected",
+  "No actions detected": "No actions detected",
+  "Connect to a GitHub Repository...": "Connect to a GitHub Repository..."
+}
