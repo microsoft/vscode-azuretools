@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AppServicePlan, SiteConfigResource } from "@azure/arm-appservice";
-import { ext } from "@microsoft/vscode-azext-github";
 import { AzureWizardExecuteStep, randomUtils } from "@microsoft/vscode-azext-utils";
 import { Progress, ProgressLocation, l10n, window } from "vscode";
+import { ext } from "../../extensionVariables";
 import { InnerDeployContext } from "../IDeployContext";
 
 export abstract class DeployExecuteStepBase extends AzureWizardExecuteStep<InnerDeployContext> {

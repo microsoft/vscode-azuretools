@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-github",
     "author": "Microsoft Corporation",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "Common GitHub tools for VS Code",
     "tags": [
         "azure",
@@ -48,6 +48,6 @@
     },
     "dependencies": {
         "@microsoft/vscode-azext-utils": "^2.0.0",
-        "@octokit/rest": "^21.1.0"
+        "@octokit/rest": "^20.1.2"
     }
 }
