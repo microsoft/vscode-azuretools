@@ -14,10 +14,10 @@ import { AppSource, IDeployContext } from './IDeployContext';
 
 export async function showDeployConfirmation(context: IDeployContext, site: ParsedSite, deployCommandId: string, warningMessages?: string[]): Promise<void> {
     const warning: string = l10n.t('Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', site.fullName);
-    let details = ''
+    let addedWarnings = ''
     if (warningMessages) {
         const warningMessagesString: string = warningMessages.map((message) => `${message}`).join('\n\n');
-        details = warningMessagesString;
+        addedWarnings = warningMessagesString;
     }
     const items: MessageItem[] = [{ title: l10n.t('Deploy') }];
 
@@ -26,7 +26,7 @@ export async function showDeployConfirmation(context: IDeployContext, site: Pars
         items.push(resetDefault);
     }
 
-    const result: MessageItem = await context.ui.showWarningMessage(warning, { modal: true, stepName: 'confirmDestructiveDeployment', detail: details }, ...items);
+    const result: MessageItem = await context.ui.showWarningMessage(warning, { modal: true, stepName: 'confirmDestructiveDeployment', detail: addedWarnings }, ...items);
 
     // a temporary workaround for this issue:
     // https://github.com/Microsoft/vscode-azureappservice/issues/844
