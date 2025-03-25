@@ -2507,7 +2507,7 @@ export declare interface AzExtLMTool<T> {
     prepareInvocation?(context: IActionContext, options: LanguageModelToolInvocationPrepareOptions<T>, token: CancellationToken): ProviderResult<PreparedToolInvocation>;
 
     /**
-     * Invokes the LM tool.
+     * Invokes the LM tool. If this throws an error, it will be recorded in telemetry appropriately, but the error will be caught and converted into a message to give to the LM.
      * @param context The action context
      * @param options The LM tool invocation options
      * @param token A cancellation token

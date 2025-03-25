@@ -17,7 +17,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
     public get contextValue(): string {
         const contextValue = this.parent.supportsSlots ? AppSettingTreeItem.contextValue : AppSettingTreeItem.contextValueNoSlots;
         if (isSettingConvertible(this._key, this._value)) {
-            return createContextValue([contextValue, ...this.parent.contextValuesToAdd, 'convert']);
+            return createContextValue([contextValue, ...this.parent.contextValuesToAdd, 'convertSetting']);
         }
 
         return createContextValue([contextValue, ...this.parent.contextValuesToAdd]);
@@ -151,7 +151,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
 
 export function isSettingConvertible(key: string, value: string): boolean {
     if (key.includes('STORAGE') || key.includes('DOCUMENTDB') || key.includes('EVENTHUB') || key.includes('SERVICEBUS') || key === ('AzureWebJobsStorage')) {
-        if (key === 'AzureWebJobsStorage' && (value === 'UseDevelopmentStorage=true' || value === '')) {
+        if ((key === 'AzureWebJobsStorage' && (value === 'UseDevelopmentStorage=true' || value === '')) || key === 'DEPLOYMENT_STORAGE_CONNECTION_STRING') {
             return false;
         }
         return true;

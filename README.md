@@ -1,7 +1,5 @@
 # VSCode Azure SDK for Node.js
 
-[![Build Status](https://dev.azure.com/ms-azuretools/AzCode/_apis/build/status/vscode-azuretools)](https://dev.azure.com/ms-azuretools/AzCode/_build/latest?definitionId=17)
-
 This project provides Node.js packages that make it easy to consume and manage Azure Services in Visual Studio Code.
 
 ## Modules

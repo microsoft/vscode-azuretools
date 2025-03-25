@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ext } from "@microsoft/vscode-azext-github";
 import { AzureWizardExecuteStep } from "@microsoft/vscode-azext-utils";
 import { Progress, l10n } from "vscode";
+import { ext } from "../../extensionVariables";
 import { InnerDeployContext } from "../IDeployContext";
 
 export class StartAppAfterDeployExecuteStep extends AzureWizardExecuteStep<InnerDeployContext> {

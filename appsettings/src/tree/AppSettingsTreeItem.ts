@@ -8,7 +8,7 @@ import { AzExtParentTreeItem, AzExtTreeItem, createContextValue, GenericTreeItem
 import * as vscode from 'vscode';
 import { ThemeIcon } from 'vscode';
 import { AppSettingsClientProvider, IAppSettingsClient } from '../IAppSettingsClient';
-import { AppSettingTreeItem } from './AppSettingTreeItem';
+import { AppSettingTreeItem, isSettingConvertible } from './AppSettingTreeItem';
 
 export function validateAppSettingKey(settings: StringDictionary, client: IAppSettingsClient, newKey: string, oldKey?: string): string | undefined {
     if (client.isLinux && /[^\w\.]+/.test(newKey)) {
@@ -72,6 +72,12 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
         if (this.isLocalSetting) {
             this.label = vscode.l10n.t('Local Settings');
         }
+    }
+
+    static async createAppSettingsTreeItem(context: IActionContext, parent: AzExtParentTreeItem, clientProvider: AppSettingsClientProvider, extensionPrefix: string, options?: AppSettingsTreeItemOptions): Promise<AppSettingsTreeItem> {
+        const ti: AppSettingsTreeItem = new AppSettingsTreeItem(parent, clientProvider, extensionPrefix, options);
+        await ti.refreshImpl(context);
+        return ti;
     }
 
     public get id(): string {
@@ -175,5 +181,17 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
         }
 
         return <StringDictionary>this._settings;
+    }
+
+    public async refreshImpl(context: IActionContext): Promise<void> {
+        const client = await this.clientProvider.createClient(context);
+        const appSettings = await client.listApplicationSettings();
+        if (appSettings.properties) {
+            for (const [key, value] of Object.entries(appSettings.properties)) {
+                if (isSettingConvertible(key, value)) {
+                    this.contextValuesToAdd?.push('convert');
+                }
+            }
+        }
     }
 }

@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-github",
     "author": "Microsoft Corporation",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "description": "Common GitHub tools for VS Code",
     "tags": [
         "azure",
@@ -41,13 +41,13 @@
         "eslint": "^8.34.0",
         "eslint-plugin-import": "^2.22.1",
         "glob": "^7.1.6",
-        "mocha": "^11.1.0",
+        "mocha": "^10.8.2",
         "mocha-junit-reporter": "^2.0.2",
         "mocha-multi-reporters": "^1.1.7",
         "typescript": "^5.1.3"
     },
     "dependencies": {
         "@microsoft/vscode-azext-utils": "^2.0.0",
-        "@octokit/rest": "^21.1.0"
+        "@octokit/rest": "^20.1.2"
     }
 }
