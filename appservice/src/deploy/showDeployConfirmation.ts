@@ -16,7 +16,7 @@ export async function showDeployConfirmation(context: IDeployContext, site: Pars
     const warning: string = l10n.t('Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', site.fullName);
     let addedWarnings = ''
     if (warningMessages) {
-        const warningMessagesString: string = warningMessages.map((message) => `${message}`).join('\n\n');
+        const warningMessagesString = warningMessages.join('\n\n');
         addedWarnings = warningMessagesString;
     }
     const items: MessageItem[] = [{ title: l10n.t('Deploy') }];
