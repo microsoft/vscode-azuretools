@@ -458,6 +458,7 @@ export interface GenericParentTreeItemOptions {
     childTypeLabel?: string;
     contextValue: string;
     iconPath?: TreeItemIconPath;
+    id?: string;
     initialCollapsibleState?: TreeItemCollapsibleState;
     label: string;
     suppressMaskLabel?: boolean;
@@ -1170,6 +1171,7 @@ export interface IWizardOptions<T extends IActionContext> {
 export const activitySuccessContext: string;
 export const activityFailContext: string;
 export const activityProgressContext: string;
+export const activityInfoContext: string;
 
 export const activityInfoIcon: ThemeIcon;
 export const activitySuccessIcon: ThemeIcon;
@@ -1252,19 +1254,62 @@ export declare interface ExecuteActivityContext {
 
 export interface ExecuteActivityOutput {
     /**
-     * The activity child item to display on success or fail
+     * The activity child item to display on success, fail, or progress
      */
     item?: AzExtTreeItem;
     /**
-     * The output log message to display on success or fail
+     * The output log message to display on success, fail, or progress
      */
     message?: string;
 }
 
 /**
+ * An execute step variant that automatically creates all activity output types
+ * based on defined step properties.
+ *
+ * These output types are automatically provided to the output log and
+ * to the activity log upon completion of each step.
+ */
+export declare abstract class AzureWizardStepWithActivityOutput<T extends IActionContext> extends AzureWizardExecuteStep<T> {
+    /**
+     * The name of the step.
+     */
+    abstract stepName: string;
+    /**
+     * Abstract method to get the success string for the output log and activity log.
+     */
+    protected abstract getSuccessString(context: T): string;
+    /**
+     * Abstract method to get the fail string for the output log and activity log.
+     */
+    protected abstract getFailString(context: T): string;
+    /**
+     * Optional method to get the progress string for the output log and activity log.
+     */
+    protected getProgressString?(context: T): string;
+    /**
+     * Optional method to get a custom label for the tree item (overrides all others).
+     */
+    protected getTreeItemLabel?(context: T): string;
+
+    public createSuccessOutput(context: T): ExecuteActivityOutput;
+    public createProgressOutput(context: T): ExecuteActivityOutput;
+    public createFailOutput(context: T): ExecuteActivityOutput;
+}
+
+/**
+ * An enum representing the potential `ExecuteActivityOutput` states
+ */
+export enum ActivityOutputState {
+    Success = 'success',
+    Fail = 'fail',
+    Progress = 'progress',
+}
+
+/**
  * Output types corresponding to the `ExecuteActivityOutput` properties
  */
-export declare enum ActivityOutputType {
+export declare enum ActivityOutputTarget {
     Item = 'item',
     Message = 'message',
     All = 'all',
@@ -1274,7 +1319,7 @@ export interface AzureWizardExecuteStepOptions {
     /**
      * Used to indicate whether any `ExecuteActivityOutput` properties should be suppressed from display
      */
-    suppressActivityOutput?: ActivityOutputType;
+    suppressActivityOutput?: ActivityOutputTarget;
     /**
      * If enabled, the Azure Wizard will continue running and swallow any errors thrown during step execution
      */

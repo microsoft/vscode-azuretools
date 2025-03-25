@@ -17,6 +17,7 @@ export namespace AzExtQuickInputButtons {
 export const activitySuccessContext: string = 'activity:success';
 export const activityFailContext: string = 'activity:fail';
 export const activityProgressContext: string = 'activity:progress';
+export const activityInfoContext: string = 'activity:info';
 
 export const activityInfoIcon: ThemeIcon = new ThemeIcon('info', new ThemeColor('charts.blue'));
 export const activitySuccessIcon: ThemeIcon = new ThemeIcon('pass', new ThemeColor('testing.iconPassed'));

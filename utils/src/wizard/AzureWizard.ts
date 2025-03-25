@@ -18,7 +18,7 @@ import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 import { NoExecuteStep } from './NoExecuteStep';
 import { getSilentExecuteActivityContext } from './SilentExecuteActivityContext';
 
-export enum ActivityOutputType {
+export enum ActivityOutputTarget {
     Item = 'item',
     Message = 'message',
     All = 'all',
@@ -193,12 +193,12 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                     continue;
                 }
 
-                let output: types.ExecuteActivityOutput | undefined;
                 const progressOutput: types.ExecuteActivityOutput | undefined = step.createProgressOutput?.(this._context);
                 if (progressOutput) {
                     this.displayActivityOutput(progressOutput, step.options);
                 }
 
+                let output: types.ExecuteActivityOutput | undefined;
                 try {
                     this._context.telemetry.properties.lastStep = `execute-${getEffectiveStepId(step)}`;
                     await step.execute(this._context, internalProgress);
@@ -227,15 +227,15 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
 
     private displayActivityOutput(output: types.ExecuteActivityOutput, options: types.AzureWizardExecuteStepOptions): void {
         if (output.item &&
-            options.suppressActivityOutput !== ActivityOutputType.Item &&
-            options.suppressActivityOutput !== ActivityOutputType.All
+            options.suppressActivityOutput !== ActivityOutputTarget.Item &&
+            options.suppressActivityOutput !== ActivityOutputTarget.All
         ) {
             this._context.activityChildren?.push(output.item);
         }
 
         if (output.message &&
-            options.suppressActivityOutput !== ActivityOutputType.Message &&
-            options.suppressActivityOutput !== ActivityOutputType.All
+            options.suppressActivityOutput !== ActivityOutputTarget.Message &&
+            options.suppressActivityOutput !== ActivityOutputTarget.All
         ) {
             ext.outputChannel?.appendLog(output.message);
         }
