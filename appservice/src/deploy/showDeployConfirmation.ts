@@ -12,8 +12,13 @@ import { delay } from '../utils/delay';
 import { updateWorkspaceSetting } from '../utils/settings';
 import { AppSource, IDeployContext } from './IDeployContext';
 
-export async function showDeployConfirmation(context: IDeployContext, site: ParsedSite, deployCommandId: string): Promise<void> {
+export async function showDeployConfirmation(context: IDeployContext, site: ParsedSite, deployCommandId: string, warningMessages?: string[]): Promise<void> {
     const warning: string = l10n.t('Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', site.fullName);
+    let addedWarnings = ''
+    if (warningMessages) {
+        const warningMessagesString = warningMessages.join('\n\n');
+        addedWarnings = warningMessagesString;
+    }
     const items: MessageItem[] = [{ title: l10n.t('Deploy') }];
 
     const resetDefault: MessageItem = { title: 'Reset default' };
@@ -21,7 +26,7 @@ export async function showDeployConfirmation(context: IDeployContext, site: Pars
         items.push(resetDefault);
     }
 
-    const result: MessageItem = await context.ui.showWarningMessage(warning, { modal: true, stepName: 'confirmDestructiveDeployment' }, ...items);
+    const result: MessageItem = await context.ui.showWarningMessage(warning, { modal: true, stepName: 'confirmDestructiveDeployment', detail: addedWarnings }, ...items);
 
     // a temporary workaround for this issue:
     // https://github.com/Microsoft/vscode-azureappservice/issues/844
