@@ -1288,7 +1288,7 @@ export declare abstract class AzureWizardStepWithActivityOutput<T extends IActio
      */
     protected getProgressString?(context: T): string;
     /**
-     * Optional method to get a custom label for the tree item (overrides all others).
+     * Optional method to get a custom label for the tree item (has highest priority).
      */
     protected getTreeItemLabel?(context: T): string;
 
