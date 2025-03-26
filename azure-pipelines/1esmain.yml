@@ -18,9 +18,6 @@ parameters:
   - name: isOfficialBuild
     type: boolean
     default: true
-  - name: os # OS of the image. Allowed values: windows, linux, macOS
-    type: string
-    default: windows
 
 # `resources` specifies the location of templates to pick up, use it to get 1ES templates
 resources:
@@ -54,7 +51,7 @@ extends:
     pool:
       name: VSEngSS-MicroBuild2022-1ES # Name of your hosted pool
       image: server2022-microbuildVS2022-1es # Name of the image in your pool. If not specified, first image of the pool is used
-      os: ${{ parameters.os }} # OS of the image. Allowed values: windows, linux, macOS
+      os: windows # OS of the image. Allowed values: windows, linux, macOS
     stages:
       # Execute stages from the AzExt stages template
       - template: ./1esstages.yml
