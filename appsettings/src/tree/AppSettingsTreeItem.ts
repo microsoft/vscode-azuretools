@@ -8,7 +8,7 @@ import { AzExtParentTreeItem, AzExtTreeItem, createContextValue, GenericTreeItem
 import * as vscode from 'vscode';
 import { ThemeIcon } from 'vscode';
 import { AppSettingsClientProvider, IAppSettingsClient } from '../IAppSettingsClient';
-import { AppSettingTreeItem, isSettingConvertible } from './AppSettingTreeItem';
+import { AppSettingTreeItem, isSettingConnectionString } from './AppSettingTreeItem';
 
 export function validateAppSettingKey(settings: StringDictionary, client: IAppSettingsClient, newKey: string, oldKey?: string): string | undefined {
     if (client.isLinux && /[^\w\.]+/.test(newKey)) {
@@ -187,8 +187,8 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
         const client = await this.clientProvider.createClient(context);
         const appSettings = await client.listApplicationSettings();
         if (appSettings.properties) {
-            for (const [key, value] of Object.entries(appSettings.properties)) {
-                if (isSettingConvertible(key, value)) {
+            for (const [value] of Object.entries(appSettings.properties)) {
+                if (isSettingConnectionString(value)) {
                     this.contextValuesToAdd?.push('convert');
                 }
             }
