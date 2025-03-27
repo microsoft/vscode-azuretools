@@ -5,7 +5,7 @@
 
 import * as process from 'process';
 import * as vscode from 'vscode';
-import TelemetryReporter from '@vscode/extension-telemetry';
+import TelemetryReporter, { TelemetryEventProperties } from '@vscode/extension-telemetry';
 import { DebugReporter } from './DebugReporter';
 import { getPackageInfo } from './getPackageInfo';
 
@@ -13,7 +13,7 @@ const debugTelemetryEnabled: boolean = !/^(false|0)?$/i.test(process.env.DEBUGTE
 const debugTelemetryVerbose: boolean = /^(verbose|v)$/i.test(process.env.DEBUGTELEMETRY || '');
 
 export interface IInternalTelemetryReporter {
-    sendTelemetryErrorEvent(eventName: string, properties?: { [key: string]: string | undefined }, measurements?: { [key: string]: number | undefined }, errorProps?: string[]): void;
+    sendTelemetryErrorEvent(eventName: string, properties?: TelemetryEventProperties, measurements?: { [key: string]: number | undefined }, errorProps?: string[]): void;
 }
 
 export function createTelemetryReporter(ctx: vscode.ExtensionContext): IInternalTelemetryReporter {
