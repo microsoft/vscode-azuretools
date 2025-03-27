@@ -74,13 +74,14 @@ function createExecuteActivityOutput(_: types.IActionContext, options: ActivityO
     const iconPath = options.outputType === ActivityOutputState.Success ? activitySuccessIcon : options.outputType === ActivityOutputState.Fail ? activityFailIcon : activityProgressIcon;
 
     const item = options.outputType === ActivityOutputState.Fail ?
-        // Logic is in place to automatically attach an error item as child if thrown during a registered execute step -- therefore, return fails with a parent tree item
+        // If the output type is "Fail", return a parent tree item to allow attaching error details as children for better user context.
         new GenericParentTreeItem(undefined, {
             id: uuidv4(),
             contextValue,
             label,
             iconPath
         }) :
+        // Otherwise, return a simple tree item for "Success" or "Progress" states.
         new GenericTreeItem(undefined, {
             id: uuidv4(),
             contextValue,
