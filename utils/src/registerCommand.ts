@@ -112,15 +112,24 @@ async function setTelemetryProperties(context: types.IActionContext, args: unkno
     //     subscriptionId: string;
     // }
     // we don't enforce this shape so it won't work in all cases, but for ACA we mostly follow this pattern
-    const [node, nodes] = unwrapArgs(args);
-    const allNodes = [node, ...nodes ?? []];
-    for (const node of allNodes) {
-        if (node && typeof node === 'object' && 'id' in node && typeof node.id === 'string') {
-            context.telemetry.properties.resourceId = new TelemetryTrustedValue(node.id);
+    const [node] = unwrapArgs(args);
+    try {
+        // Only record telemetry if subscription is defined. Prevents trying to record resourceId/subId on items unrelated to Azure.
+        // See: https://github.com/microsoft/vscode-azuretools/pull/1941#discussion_r2016824347
+        if (node && typeof node === 'object' && 'subscription' in node && node.subscription) {
 
-            if ('subscription' in node && node.subscription && typeof node.subscription === 'object' && 'subscriptionId' in node.subscription && typeof node.subscription.subscriptionId === 'string') {
+            if (node && typeof node === 'object' && 'id' in node && typeof node.id === 'string') {
+                context.telemetry.properties.resourceId = new TelemetryTrustedValue(node.id);
+            }
+
+            // it's possible that if subscription is not set on AzExtTreeItems, an error is thrown from just accessing it
+            // see https://github.com/microsoft/vscode-azuretools/blob/cc1feb3a819dd503eb59ebcc1a70051d4e9a3432/utils/src/tree/AzExtTreeItem.ts#L154
+            if (typeof node.subscription === 'object' && 'subscriptionId' in node.subscription && typeof node.subscription.subscriptionId === 'string') {
                 context.telemetry.properties.subscriptionId = node.subscription.subscriptionId;
             }
         }
+    } catch (e) {
+        // we don't want to block execution of the command just because we can't set the telemetry properties
+        // see https://github.com/microsoft/vscode-azureresourcegroups/issues/1080
     }
 }
