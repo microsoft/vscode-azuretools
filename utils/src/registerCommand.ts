@@ -89,12 +89,15 @@ async function setTelemetryProperties(context: types.IActionContext, args: unkno
     for (const arg of args) {
         if (arg instanceof AzExtTreeItem) {
             try {
-                if (arg.id) {
-                    context.telemetry.properties.resourceId = new TelemetryTrustedValue(arg.id);
+                // Only record telemetry if subscription is defined. See: https://github.com/microsoft/vscode-azuretools/pull/1941#discussion_r2016824347
+                if (arg.subscription) {
+                    if (arg.id) {
+                        context.telemetry.properties.resourceId = new TelemetryTrustedValue(arg.id);
+                    }
+                    // it's possible that if subscription is not set on AzExtTreeItems, an error is thrown from just accessing it
+                    // see https://github.com/microsoft/vscode-azuretools/blob/cc1feb3a819dd503eb59ebcc1a70051d4e9a3432/utils/src/tree/AzExtTreeItem.ts#L154
+                    context.telemetry.properties.subscriptionId = arg.subscription.subscriptionId;
                 }
-                // it's possible that if subscription is not set on AzExtTreeItems, an error is thrown
-                // see https://github.com/microsoft/vscode-azuretools/blob/cc1feb3a819dd503eb59ebcc1a70051d4e9a3432/utils/src/tree/AzExtTreeItem.ts#L154
-                context.telemetry.properties.subscriptionId = arg.subscription.subscriptionId;
             } catch (e) {
                 // we don't want to block execution of the command just because we can't set the telemetry properties
                 // see https://github.com/microsoft/vscode-azureresourcegroups/issues/1080
