@@ -93,7 +93,6 @@ export class ParsedSite implements AppSettingsClientProvider {
         }
 
         this.subscription = subscription;
-
     }
 
     public async createClient(context: IActionContext & { _parsedSiteClients?: { [id: string]: SiteClient | undefined } }): Promise<SiteClient> {
