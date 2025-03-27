@@ -5,7 +5,6 @@
 
 export * from './activityLog/activities/ExecuteActivity';
 export * from './activityLog/Activity';
-export * from './activityLog/AzureWizardStepWithActivityOutput';
 export { createAzExtLogOutputChannel, createAzExtOutputChannel } from './AzExtOutputChannel';
 export * from './AzExtTreeFileSystem';
 export * from './callWithTelemetryAndErrorHandling';
@@ -56,6 +55,7 @@ export * from './wizard/AzureNameStep';
 export * from './wizard/AzureWizard';
 export * from './wizard/AzureWizardExecuteStep';
 export * from './wizard/AzureWizardPromptStep';
+export * from './wizard/AzureWizardStepWithActivityOutput';
 export * from './wizard/ConfirmPreviousInputStep';
 export * from './wizard/DeleteConfirmationStep';
 // re-export api types and utils

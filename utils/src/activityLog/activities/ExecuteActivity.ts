@@ -17,6 +17,7 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
 
     public constructor(protected readonly context: TContext, task: types.ActivityTask<void>) {
         super(task);
+        this.context.reportActivityProgress = this.report.bind(this) as typeof this.report;
     }
 
     public initialState(): hTypes.ActivityTreeItemOptions {

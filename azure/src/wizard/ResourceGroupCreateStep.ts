@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { ResourceGroup, ResourceManagementClient } from '@azure/arm-resources';
-import { AzureWizardExecuteStep, parseError } from '@microsoft/vscode-azext-utils';
+import { AzureWizardStepWithActivityOutput, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
 import { l10n, MessageItem, Progress } from 'vscode';
 import * as types from '../../index';
 import { createResourcesClient } from '../clients';
@@ -14,27 +14,31 @@ import { uiUtils } from '../utils/uiUtils';
 import { LocationListStep } from './LocationListStep';
 import { ResourceGroupListStep } from './ResourceGroupListStep';
 
-export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext> extends AzureWizardExecuteStep<T> implements types.ResourceGroupCreateStep<T> {
+export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext> extends AzureWizardStepWithActivityOutput<T> {
     public priority: number = 100;
+    public stepName: string = 'resourceGroupCreateStep';
+    protected getSuccessString = (context: T) => l10n.t('Successfully created resource group "{0}"', nonNullProp(context, 'newResourceGroupName'));
+    protected getFailString = (context: T) => l10n.t('Failed to create resource group "{0}"', nonNullProp(context, 'newResourceGroupName'));
+    protected getTreeItemLabel = (context: T) => l10n.t('Create resource group "{0}"', nonNullProp(context, 'newResourceGroupName'));
+
+    public async configureBeforeExecute(context: T): Promise<void> {
+        const client: ResourceManagementClient = await createResourcesClient(context);
+        const newResourceGroupName: string = nonNullProp(context, 'newResourceGroupName');
+
+        if ((await client.resourceGroups.checkExistence(newResourceGroupName)).body) {
+            ext.outputChannel.appendLog(l10n.t('Using existing resource group "{0}".', newResourceGroupName));
+            context.resourceGroup = await client.resourceGroups.get(newResourceGroupName);
+        }
+    }
 
     public async execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const newName: string = wizardContext.newResourceGroupName!;
+        const newName: string = nonNullProp(wizardContext, 'newResourceGroupName');
         const newLocation = await LocationListStep.getLocation(wizardContext, resourcesProvider, false);
         const newLocationName: string = newLocation.name;
         const resourceClient: ResourceManagementClient = await createResourcesClient(wizardContext);
         try {
-            const rgExists: boolean = (await resourceClient.resourceGroups.checkExistence(newName)).body;
-            if (rgExists) {
-                ext.outputChannel.appendLog(l10n.t('Using existing resource group "{0}".', newName));
-                wizardContext.resourceGroup = await resourceClient.resourceGroups.get(newName);
-            } else {
-                const creatingMessage: string = l10n.t('Creating resource group "{0}" in location "{1}"...', newName, newLocationName);
-                ext.outputChannel.appendLog(creatingMessage);
-                progress.report({ message: creatingMessage });
-                wizardContext.resourceGroup = await resourceClient.resourceGroups.createOrUpdate(newName, { location: newLocationName });
-                ext.outputChannel.appendLog(l10n.t('Successfully created resource group "{0}".', newName));
-            }
+            progress.report({ message: l10n.t('Creating resource group...') });
+            wizardContext.resourceGroup = await resourceClient.resourceGroups.createOrUpdate(newName, { location: newLocationName });
         } catch (error) {
             if (wizardContext.suppress403Handling || parseError(error).errorType !== '403') {
                 throw error;
@@ -47,7 +51,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
                         wizardContext.telemetry.properties.forbiddenResponse = 'SelectLearnRg';
                         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                         ext.outputChannel.appendLog(l10n.t('WARNING: Cannot create resource group "{0}" because the selected subscription is a concierge subscription. Using resource group "{1}" instead.', newName, wizardContext.resourceGroup!.name!))
-                        return undefined;
+                        return;
                     }
                 }
 

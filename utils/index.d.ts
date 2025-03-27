@@ -1226,16 +1226,24 @@ export class ExecuteActivity<C extends ExecuteActivityContext = ExecuteActivityC
 
 export declare interface ExecuteActivityContext {
     registerActivity: (activity: Activity) => Promise<void>;
+
+    /**
+     * Report progress updates for the activity. Triggers a refresh on the activity tree item.
+     */
+    reportActivityProgress?: (progress?: { message?: string; increment?: number }) => void;
+
     /**
      * Becomes label of activity tree item, defaults to wizard title or "Azure Activity"
      */
     activityTitle?: string;
+
     /**
      * Resource or resourceId
      *
      * Set to show a "Click to view resource" child on success.
      */
     activityResult?: AppResource | string;
+
     /**
      * Hide activity notifications
      */
@@ -1342,6 +1350,12 @@ export declare abstract class AzureWizardExecuteStep<T extends IActionContext & 
      * If not specified, the class name will be used instead
      */
     public id?: string;
+
+    /**
+     * Can be used to optionally configure the wizard context before determining if execution is required
+     * This method will be called before `shouldExecute`
+     */
+    public configureBeforeExecute?(wizardContext: T): void | Promise<void>;
 
     /**
      * Execute the step

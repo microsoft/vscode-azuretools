@@ -14,7 +14,7 @@ import type { ServiceClient, ServiceClientOptions } from '@azure/core-client';
 import type { PagedAsyncIterableIterator } from '@azure/core-paging';
 import type { PipelineRequestOptions, PipelineResponse } from '@azure/core-rest-pipeline';
 import type { Environment } from '@azure/ms-rest-azure-env';
-import type { AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtServiceClientCredentialsT2, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, IRelatedNameWizardContext, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, TreeElementBase, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
+import type { AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtServiceClientCredentialsT2, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardPromptStep, AzureWizardStepWithActivityOutput, ExecuteActivityOutput, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, IRelatedNameWizardContext, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, TreeElementBase, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
 import { AzureSubscription } from '@microsoft/vscode-azureresources-api';
 import { Disposable, LogOutputChannel, Progress, ProviderResult, TreeItem, Uri } from 'vscode';
 
@@ -251,13 +251,21 @@ export declare class ResourceGroupNameStep<T extends IResourceGroupWizardContext
     public shouldPrompt(wizardContext: T): boolean;
 }
 
-export declare class ResourceGroupCreateStep<T extends IResourceGroupWizardContext> extends AzureWizardExecuteStep<T> {
+export declare class ResourceGroupCreateStep<T extends IResourceGroupWizardContext> extends AzureWizardStepWithActivityOutput<T> {
     /**
      * 100
      */
     public priority: number;
     public execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
     public shouldExecute(wizardContext: T): boolean;
+
+    public stepName: string;
+    protected getSuccessString(context: T): string;
+    protected getFailString(context: T): string;
+    protected getTreeItemLabel(context: T): string;
+    public createSuccessOutput(context: T): ExecuteActivityOutput;
+    public createProgressOutput(context: T): ExecuteActivityOutput;
+    public createFailOutput(context: T): ExecuteActivityOutput;
 }
 
 export interface IStorageAccountWizardContext extends IResourceGroupWizardContext {

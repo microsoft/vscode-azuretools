@@ -11,6 +11,7 @@ import { GenericParentTreeItem } from '../tree/GenericParentTreeItem';
 import { GenericTreeItem } from '../tree/GenericTreeItem';
 import { createContextValue } from '../utils/contextUtils';
 import { nonNullValue } from '../utils/nonNull';
+import { AzureWizardExecuteStep } from "./AzureWizardExecuteStep";
 
 export enum ActivityOutputState {
     Success = 'success',
@@ -18,7 +19,7 @@ export enum ActivityOutputState {
     Progress = 'progress',
 }
 
-export abstract class AzureWizardStepWithActivityOutput<T extends types.IActionContext> extends types.AzureWizardExecuteStep<T> {
+export abstract class AzureWizardStepWithActivityOutput<T extends types.IActionContext> extends AzureWizardExecuteStep<T> {
     abstract stepName: string;
     protected abstract getSuccessString(context: T): string;
     protected abstract getFailString(context: T): string;
