@@ -139,7 +139,7 @@ Note: Your first time using the release pipeline, you are required to use a serv
 Your pipeline will have show this message:
 ![image](https://github.com/user-attachments/assets/7fcac66d-98f1-447d-b886-b813e9ce7f9a)
 
-Please contact <a href="mailto:trevors@microsoft.com">Trevor Short</a> to acquire permission.
+Please contact TrevorS to acquire permission.
 
 
 Use and modify the following YAML file to use the extension release pipeline template. Make sure to replace the `source` field with the name of the pipeline that produces the artifacts you want to release. Lines that should/could be customized will be marked with `# CUSTOMIZE`.
