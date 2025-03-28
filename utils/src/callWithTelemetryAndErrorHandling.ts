@@ -173,7 +173,7 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
             let message: string;
             if (unMaskedMessage.includes('\n')) {
                 ext.outputChannel.show();
-                message = l10n.t('An error has occured. Check output window for more details.');
+                message = l10n.t('An error has occurred. Check output window for more details.');
             } else {
                 message = unMaskedMessage;
             }

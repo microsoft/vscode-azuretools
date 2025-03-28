@@ -50,7 +50,7 @@ export class RoleAssignmentExecuteStep<T extends types.IResourceGroupWizardConte
                         wizardContext.activityChildren.push(
                             new GenericTreeItem(undefined, {
                                 contextValue: createUniversallyUniqueContextValue(['successfullRoleAssignment', activitySuccessContext]),
-                                label: l10n.t(`Role Assignment ${role.roleDefinitionName} created for ${resourceName}`),
+                                label: l10n.t('Role Assignment {0} created for {1}', role.roleDefinitionName, resourceName),
                                 iconPath: activitySuccessIcon
                             })
                         );
@@ -73,7 +73,7 @@ export class RoleAssignmentExecuteStep<T extends types.IResourceGroupWizardConte
                     if (wizardContext.activityChildren) {
                         wizardContext.activityChildren.push(new GenericTreeItem(undefined, {
                             contextValue: createUniversallyUniqueContextValue(['failedRoleAssignment', activitySuccessContext]),
-                            label: l10n.t(`Role Assignment ${role.roleDefinitionName} failed for ${resourceName}`),
+                            label: l10n.t('Role Assignment {0} failed for {1}', role.roleDefinitionName, resourceName),
                             iconPath: activityFailIcon
                         }));
                     }

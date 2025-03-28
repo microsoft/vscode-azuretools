@@ -45,7 +45,7 @@ export async function localGitDeploy(site: ParsedSite, options: localGitOptions,
                     context.telemetry.properties.pushWithUncommitChanges = 'true';
                 }
                 await verifyNoRunFromPackageSetting(context, site);
-                ext.outputChannel.appendLog(vscode.l10n.t(`Deploying Local Git repository to "${site.fullName}"...`), { resourceName: site.fullName });
+                ext.outputChannel.appendLog(vscode.l10n.t('Deploying Local Git repository to "{resourceName}"...'), { resourceName: site.fullName });
                 await tryPushAndWaitForDeploymentToComplete();
 
             } catch (err) {

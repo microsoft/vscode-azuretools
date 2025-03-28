@@ -28,7 +28,8 @@
         "lint": "eslint --ext .ts .",
         "lint-fix": "eslint --ext .ts . --fix",
         "test": "node ./out/test/runTest.js",
-        "package": "npm pack"
+        "package": "npm pack",
+        "l10n": "npx @vscode/l10n-dev export --outDir ./l10n ./src"
     },
     "dependencies": {
         "@microsoft/vscode-azureresources-api": "^2.3.1",

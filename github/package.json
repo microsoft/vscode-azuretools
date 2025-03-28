@@ -28,7 +28,8 @@
         "lint": "eslint --ext .ts .",
         "lint-fix": "eslint --ext .ts . --fix",
         "package": "npm pack",
-        "test": "node ./out/test/runTest.js"
+        "test": "node ./out/test/runTest.js",
+        "l10n": "npx @vscode/l10n-dev export --outDir ./l10n ./src"
     },
     "devDependencies": {
         "@microsoft/eslint-config-azuretools": "^0.2.1",
