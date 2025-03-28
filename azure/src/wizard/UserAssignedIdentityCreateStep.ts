@@ -21,7 +21,8 @@ import { LocationListStep } from './LocationListStep';
  * we don't need to do any verification
  **/
 export class UserAssignedIdentityCreateStep<T extends types.IResourceGroupWizardContext> extends AzureWizardExecuteStep<T> {
-    public priority: number = 140;
+    // We should create this immediately after the resource group is created
+    public priority: number = 101;
 
     public constructor() {
         super();
