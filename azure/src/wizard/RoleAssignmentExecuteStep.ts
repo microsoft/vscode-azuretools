@@ -57,10 +57,12 @@ export class RoleAssignmentExecuteStep<T extends types.IResourceGroupWizardConte
                     }
                 } catch (error) {
                     const parsedError = parseError(error);
+                    const maxRetries = 5;
                     // if this error is due to a replication delay, we can retry the operation and it should resolve it
                     if (parsedError.message.includes('If you are creating this principal and then immediately assigning a role, this error might be related to a replication delay.')
-                        && this._retries < 5) {
+                        && this._retries < maxRetries) {
                         this._retries++;
+                        wizardContext.telemetry.properties.roleAssignmentCreateRetryCount = this._retries.toString();
                         return await this.executeCore(wizardContext, progress);
                     }
 
