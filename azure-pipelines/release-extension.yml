@@ -31,7 +31,6 @@ parameters:
   - name: publishCommands
     type: object
     default: ['vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s']
-    required: true  # Makes the parameter required
 
 # `resources` specifies the location of templates to pick up, use it to get 1ES templates
 resources:
