@@ -13,7 +13,7 @@ import { createContextValue } from '../utils/contextUtils';
 import { nonNullValue } from '../utils/nonNull';
 import { AzureWizardExecuteStep } from "./AzureWizardExecuteStep";
 
-export enum ActivityOutputState {
+enum ActivityOutputState {
     Success = 'success',
     Fail = 'fail',
     Progress = 'progress',
@@ -64,12 +64,12 @@ type ActivityOutputCreateOptions = {
     stepName: string;
     treeItemLabel: string;
     outputLogMessage?: string;
-    outputType: types.ActivityOutputState;
+    outputType: ActivityOutputState;
 };
 
 function createExecuteActivityOutput(_: types.IActionContext, options: ActivityOutputCreateOptions): types.ExecuteActivityOutput {
     const activityContext = options.outputType === ActivityOutputState.Success ? activitySuccessContext : options.outputType === ActivityOutputState.Fail ? activityFailContext : activityProgressContext;
-    const contextValue = createContextValue([`${options.stepName}${options.outputType}Item`, activityContext]);
+    const contextValue = createContextValue([`${options.stepName}Item`, activityContext]);
     const label = options.treeItemLabel;
     const iconPath = options.outputType === ActivityOutputState.Success ? activitySuccessIcon : options.outputType === ActivityOutputState.Fail ? activityFailIcon : activityProgressIcon;
 

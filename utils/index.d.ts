@@ -1298,15 +1298,6 @@ export declare abstract class AzureWizardExecuteStepWithActivityOutput<T extends
 }
 
 /**
- * An enum representing the potential `ExecuteActivityOutput` states
- */
-export enum ActivityOutputState {
-    Success = 'success',
-    Fail = 'fail',
-    Progress = 'progress',
-}
-
-/**
  * Output types corresponding to the `ExecuteActivityOutput` properties
  */
 export declare enum ActivityOutputType {
