@@ -1269,7 +1269,7 @@ export interface ExecuteActivityOutput {
  * These output types are automatically provided to the output log and
  * to the activity log upon completion of each step.
  */
-export declare abstract class AzureWizardStepWithActivityOutput<T extends IActionContext> extends AzureWizardExecuteStep<T> {
+export declare abstract class AzureWizardExecuteStepWithActivityOutput<T extends IActionContext> extends AzureWizardExecuteStep<T> {
     /**
      * The name of the step, provided as part of the activity tree item context value.
      */
@@ -1309,7 +1309,7 @@ export enum ActivityOutputState {
 /**
  * Output types corresponding to the `ExecuteActivityOutput` properties
  */
-export declare enum ActivityOutputTarget {
+export declare enum ActivityOutputType {
     Item = 'item',
     Message = 'message',
     All = 'all',
@@ -1319,7 +1319,7 @@ export interface AzureWizardExecuteStepOptions {
     /**
      * Used to indicate whether any `ExecuteActivityOutput` properties should be suppressed from display
      */
-    suppressActivityOutput?: ActivityOutputTarget;
+    suppressActivityOutput?: ActivityOutputType;
     /**
      * If enabled, the Azure Wizard will continue running and swallow any errors thrown during step execution
      */

@@ -19,7 +19,7 @@ export enum ActivityOutputState {
     Progress = 'progress',
 }
 
-export abstract class AzureWizardStepWithActivityOutput<T extends types.IActionContext> extends AzureWizardExecuteStep<T> {
+export abstract class AzureWizardExecuteStepWithActivityOutput<T extends types.IActionContext> extends AzureWizardExecuteStep<T> {
     abstract stepName: string;
     protected abstract getSuccessString(context: T): string;
     protected abstract getFailString(context: T): string;

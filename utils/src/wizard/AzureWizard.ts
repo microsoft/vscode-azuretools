@@ -18,7 +18,7 @@ import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 import { NoExecuteStep } from './NoExecuteStep';
 import { getSilentExecuteActivityContext } from './SilentExecuteActivityContext';
 
-export enum ActivityOutputTarget {
+export enum ActivityOutputType {
     Item = 'item',
     Message = 'message',
     All = 'all',
@@ -227,15 +227,15 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
 
     private displayActivityOutput(output: types.ExecuteActivityOutput, options: types.AzureWizardExecuteStepOptions): void {
         if (output.item &&
-            options.suppressActivityOutput !== ActivityOutputTarget.Item &&
-            options.suppressActivityOutput !== ActivityOutputTarget.All
+            options.suppressActivityOutput !== ActivityOutputType.Item &&
+            options.suppressActivityOutput !== ActivityOutputType.All
         ) {
             this._context.activityChildren?.push(output.item);
         }
 
         if (output.message &&
-            options.suppressActivityOutput !== ActivityOutputTarget.Message &&
-            options.suppressActivityOutput !== ActivityOutputTarget.All
+            options.suppressActivityOutput !== ActivityOutputType.Message &&
+            options.suppressActivityOutput !== ActivityOutputType.All
         ) {
             ext.outputChannel?.appendLog(output.message);
         }
