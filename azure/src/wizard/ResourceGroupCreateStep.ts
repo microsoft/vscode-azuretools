@@ -21,13 +21,14 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
     protected getFailString = (context: T) => l10n.t('Failed to create resource group "{0}"', nonNullProp(context, 'newResourceGroupName'));
     protected getTreeItemLabel = (context: T) => l10n.t('Create resource group "{0}"', nonNullProp(context, 'newResourceGroupName'));
 
-    public async configureBeforeExecute(context: T): Promise<void> {
-        const client: ResourceManagementClient = await createResourcesClient(context);
-        const newResourceGroupName: string = nonNullProp(context, 'newResourceGroupName');
+    public async configureBeforeExecute(wizardContext: T): Promise<void> {
+        const client: ResourceManagementClient = await createResourcesClient(wizardContext);
+        const newResourceGroupName: string = nonNullProp(wizardContext, 'newResourceGroupName');
 
-        if ((await client.resourceGroups.checkExistence(newResourceGroupName)).body) {
+        const rgExists: boolean = (await client.resourceGroups.checkExistence(newResourceGroupName)).body;
+        if (rgExists) {
             ext.outputChannel.appendLog(l10n.t('Using existing resource group "{0}".', newResourceGroupName));
-            context.resourceGroup = await client.resourceGroups.get(newResourceGroupName);
+            wizardContext.resourceGroup = await client.resourceGroups.get(newResourceGroupName);
         }
     }
 
