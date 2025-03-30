@@ -12,7 +12,8 @@ export class PostDeploySyncTriggersExecuteStep extends AzureWizardExecuteStep<In
     public async execute(context: InnerDeployContext): Promise<void> {
         // Don't sync triggers if app is stopped https://github.com/microsoft/vscode-azurefunctions/issues/1608
         const state: string | undefined = await context.client.getState();
-        if (state?.toLowerCase() === 'running') {
+        // If the app is connected to a user assigned identity, we can't sync triggers
+        if (state?.toLowerCase() === 'running' && !context.site.identity) {
             await syncTriggersPostDeploy(context, context.site);
         }
     }

@@ -35,7 +35,7 @@ export class UserAssignedIdentityCreateStep<T extends types.IResourceGroupWizard
             newName = await this.generateRelatedName(wizardContext, rgName);
         }
 
-        const creatingUserAssignedIdentity: string = l10n.t('Creating user assigned identity "{0}" in location "{1}""...', newName, newLocation);
+        const creatingUserAssignedIdentity: string = l10n.t('Creating user assigned identity "{0}" in location "{1}"...', newName, newLocation);
         ext.outputChannel.appendLog(creatingUserAssignedIdentity);
         progress.report({ message: creatingUserAssignedIdentity });
         const msiClient: ManagedServiceIdentityClient = await createManagedServiceIdentityClient(wizardContext);
