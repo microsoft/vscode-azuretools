@@ -13,6 +13,7 @@ import { ext } from '../extensionVariables';
 import { parseError } from '../parseError';
 import { IInternalActionContext, IInternalAzureWizard } from '../userInput/IInternalActionContext';
 import { createQuickPick } from '../userInput/showQuickPick';
+import { dateUtils } from '../utils/dateUtils';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 import { NoExecuteStep } from './NoExecuteStep';
@@ -188,6 +189,8 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
 
             let step: AzureWizardExecuteStep<T> | undefined = steps.pop();
             while (step) {
+                const start: Date = new Date();
+
                 if (!step.shouldExecute(this._context)) {
                     step = steps.pop();
                     continue;
@@ -214,6 +217,15 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                     // always remove the progress item from the activity log
                     if (progressOutput?.item) {
                         this._context.activityChildren = this._context.activityChildren?.filter(t => t !== progressOutput.item);
+                    }
+
+                    const end: Date = new Date();
+                    const duration: string = dateUtils.getDurationInMinutesAndSeconds(start, end);
+                    const timeFinished: string = dateUtils.get12HourTimeFormatted(end);
+
+                    if (output.item && !output.item?.description) {
+                        output.item.description = `${timeFinished} (${duration})`;
+                        output.item.description = duration;
                     }
 
                     this.displayActivityOutput(output, step.options);
