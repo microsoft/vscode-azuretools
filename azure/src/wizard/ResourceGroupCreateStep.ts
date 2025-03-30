@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { ResourceGroup, ResourceManagementClient } from '@azure/arm-resources';
-import { AzureWizardStepWithActivityOutput, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
+import { AzureWizardExecuteStepWithActivityOutput, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
 import { l10n, MessageItem, Progress } from 'vscode';
 import * as types from '../../index';
 import { createResourcesClient } from '../clients';
@@ -14,7 +14,7 @@ import { uiUtils } from '../utils/uiUtils';
 import { LocationListStep } from './LocationListStep';
 import { ResourceGroupListStep } from './ResourceGroupListStep';
 
-export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext> extends AzureWizardStepWithActivityOutput<T> {
+export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext> extends AzureWizardExecuteStepWithActivityOutput<T> {
     public priority: number = 100;
     public stepName: string = 'resourceGroupCreateStep';
     protected getSuccessString = (context: T) => l10n.t('Successfully created resource group "{0}"', nonNullProp(context, 'newResourceGroupName'));
