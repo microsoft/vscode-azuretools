@@ -84,5 +84,5 @@ function createExecuteActivityOutput(_: types.IActionContext, options: ActivityO
     return {
         item,
         message: options.outputLogMessage,
-    }
+    };
 }
