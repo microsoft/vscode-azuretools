@@ -2,6 +2,9 @@ parameters:
   - name: enableSigning
     type: boolean
     default: True
+  - name: vsixFileName
+    type: string
+    default: ''
 
 steps:
   # Check if the SignExtension.signproj file exists and set a variable using PowerShell
@@ -26,8 +29,14 @@ steps:
     name: package
     displayName: "\U0001F449 Get extension info from package.json"
 
+  # run this script if vsixFileName is not set
   - script: npx @vscode/vsce@latest generate-manifest -i $(package.name)-$(package.version).vsix -o $(Build.SourcesDirectory)/extension.manifest
-    condition: eq(variables['signprojExists'], True)
+    condition: and(eq(variables['signprojExists'], True), eq(variables['vsixFileName'], ''))
+    displayName: "\U0001F449 Generate extension manifest"
+
+  # run this script if vsixFileName is set
+  - script: npx @vscode/vsce@latest generate-manifest -i $(vsixFileName) -o $(Build.SourcesDirectory)/extension.manifest
+    condition: and(eq(variables['signprojExists'], True), ne(variables['vsixFileName'], ''))
     displayName: "\U0001F449 Generate extension manifest"
 
   # this task will pass even if signing fails, so we follow it up with a check to see if the signature file was created
