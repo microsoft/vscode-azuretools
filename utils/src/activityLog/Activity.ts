@@ -50,8 +50,8 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
         this.onError = this._onErrorEmitter.event;
     }
 
-    private report(progress: { message?: string; increment?: number }): void {
-        this._onProgressEmitter.fire({ ...this.getState(), message: progress.message });
+    protected report(progress?: { message?: string; increment?: number }): void {
+        this._onProgressEmitter.fire({ ...this.getState(), message: progress?.message });
         this.status = ActivityStatus.Running;
     }
 

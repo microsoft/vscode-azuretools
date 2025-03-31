@@ -1167,6 +1167,7 @@ export interface IWizardOptions<T extends IActionContext> {
     skipExecute?: boolean;
 }
 
+export const activityInfoContext: string;
 export const activitySuccessContext: string;
 export const activityFailContext: string;
 export const activityProgressContext: string;
@@ -1175,6 +1176,11 @@ export const activityInfoIcon: ThemeIcon;
 export const activitySuccessIcon: ThemeIcon;
 export const activityProgressIcon: ThemeIcon;
 export const activityFailIcon: ThemeIcon;
+
+/**
+* Adds a new activity child above the live progress item; required when adding new activity children during the middle of an execute step.
+*/
+export function insertActivityChildDuringProgress(context: ExecuteActivityContext, activityChild: AzExtTreeItem | AzExtParentTreeItem): void;
 
 export type ActivityTask<R> = (progress: Progress<{ message?: string, increment?: number }>, cancellationToken: CancellationToken) => Promise<R>;
 
@@ -1224,6 +1230,10 @@ export class ExecuteActivity<C extends ExecuteActivityContext = ExecuteActivityC
 
 export declare interface ExecuteActivityContext {
     registerActivity: (activity: Activity) => Promise<void>;
+    /**
+     * Report progress updates for the activity. Triggers a refresh on the activity tree item.
+     */
+    reportActivityProgress?: (progress?: { message?: string; increment?: number }) => void;
     /**
      * Becomes label of activity tree item, defaults to wizard title or "Azure Activity"
      */
