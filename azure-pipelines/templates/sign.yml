@@ -29,28 +29,13 @@ steps:
     name: package
     displayName: "\U0001F449 Get extension info from package.json"
 
-  # echo the vsixFileName parameter
-  - script: | 
-      echo vsixFileName: ${{ parameters.vsixFileName }}
-    displayName: "\U0001F449 Echo vsixFileName parameter 1"
-
-  # echo the vsixFileName parameter
-  - script: | 
-      echo vsixFileName: $(parameters.vsixFileName)
-    displayName: "\U0001F449 Echo vsixFileName parameter 2"
-
-  # echo the vsixFileName parameter
-  - script: | 
-      echo "vsixFileName: $(parameters.vsixFileName)"
-    displayName: "\U0001F449 Echo vsixFileName parameter 3"
-
   # run this script if vsixFileName is not set
   - script: npx @vscode/vsce@latest generate-manifest -i $(package.name)-$(package.version).vsix -o $(Build.SourcesDirectory)/extension.manifest
     condition: and(eq(variables['signprojExists'], True), eq('${{ parameters.vsixFileName }}', ''))
     displayName: "\U0001F449 Generate extension manifest"
 
   # run this script if vsixFileName is set
-  - script: npx @vscode/vsce@latest generate-manifest -i $(vsixFileName)-$(package.version).vsix -o $(Build.SourcesDirectory)/extension.manifest
+  - script: npx @vscode/vsce@latest generate-manifest -i ${{ parameters.vsixFileName }}-$(package.version).vsix -o $(Build.SourcesDirectory)/extension.manifest
     condition: and(eq(variables['signprojExists'], True), ne('${{ parameters.vsixFileName }}', ''))
     displayName: "\U0001F449 Generate extension manifest"
 
