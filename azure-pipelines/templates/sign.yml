@@ -31,7 +31,7 @@ steps:
 
   # echo the vsixFileName parameter
   - script: | 
-      echo "vsixFileName: $(vsixFileName)"
+      echo vsixFileName: $(vsixFileName)
     displayName: "\U0001F449 Echo vsixFileName parameter"
 
   # run this script if vsixFileName is not set
