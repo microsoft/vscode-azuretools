@@ -18,7 +18,7 @@ enum ActivityOutputState {
 }
 
 export abstract class AzureWizardExecuteStepWithActivityOutput<T extends types.IActionContext> extends AzureWizardExecuteStep<T> {
-    abstract stepName: string;
+    abstract readonly stepName: string;
     protected abstract getTreeItemLabel(context: T): string;
     protected abstract getOutputLogSuccess(context: T): string;
     protected abstract getOutputLogFail(context: T): string;

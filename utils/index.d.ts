@@ -1273,7 +1273,7 @@ export declare abstract class AzureWizardExecuteStepWithActivityOutput<T extends
     /**
      * The name of the step, provided as part of the activity child item's context value.
      */
-    abstract stepName: string;
+    abstract readonly stepName: string;
     /**
      * Abstract method to get the activity child tree item label.
      */
