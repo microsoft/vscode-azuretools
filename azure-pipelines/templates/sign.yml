@@ -29,6 +29,11 @@ steps:
     name: package
     displayName: "\U0001F449 Get extension info from package.json"
 
+  # echo the vsixFileName parameter
+  - script: | 
+      echo "vsixFileName: $(vsixFileName)"
+    displayName: "\U0001F449 Echo vsixFileName parameter"
+
   # run this script if vsixFileName is not set
   - script: npx @vscode/vsce@latest generate-manifest -i $(package.name)-$(package.version).vsix -o $(Build.SourcesDirectory)/extension.manifest
     condition: and(eq(variables['signprojExists'], True), eq(variables['vsixFileName'], ''))
