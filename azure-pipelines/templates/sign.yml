@@ -31,6 +31,11 @@ steps:
 
   # echo the vsixFileName parameter
   - script: | 
+      echo vsixFileName: ${{ parameters.vsixFileName }}
+    displayName: "\U0001F449 Echo vsixFileName parameter"
+
+  # echo the vsixFileName parameter
+  - script: | 
       echo vsixFileName: $(parameters.vsixFileName)
     displayName: "\U0001F449 Echo vsixFileName parameter"
 
