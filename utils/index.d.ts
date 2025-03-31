@@ -1271,26 +1271,25 @@ export interface ExecuteActivityOutput {
  */
 export declare abstract class AzureWizardExecuteStepWithActivityOutput<T extends IActionContext> extends AzureWizardExecuteStep<T> {
     /**
-     * The name of the step, provided as part of the activity tree item context value.
+     * The name of the step, provided as part of the activity child item's context value.
      */
     abstract stepName: string;
     /**
-     * Abstract method to get the success string for the output log and activity log.
+     * Abstract method to get the activity child tree item label.
      */
-    protected abstract getSuccessString(context: T): string;
+    protected abstract getTreeItemLabel(context: T): string;
     /**
-     * Abstract method to get the fail string for the output log and activity log.
+     * Abstract method to get the success string for the output log.
      */
-    protected abstract getFailString(context: T): string;
+    protected abstract getOutputLogSuccess(context: T): string;
     /**
-     * Optional method to get the progress string for the output log and activity log.
-     * You can omit this property and implement `getTreeItemLabel` instead if you prefer only showing updates for tree item progress
+     * Abstract method to get the fail string for the output log.
      */
-    protected getProgressString?(context: T): string;
+    protected abstract getOutputLogFail(context: T): string;
     /**
-     * Optional method to get a custom label for the tree item (has highest priority).
+     * Optional method to get the progress string for the output log.
      */
-    protected getTreeItemLabel?(context: T): string;
+    protected getOutputLogProgress?(context: T): string;
 
     public createSuccessOutput(context: T): ExecuteActivityOutput;
     public createProgressOutput(context: T): ExecuteActivityOutput;

@@ -4,13 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { v4 as uuidv4 } from "uuid";
-import { l10n } from 'vscode';
 import * as types from '../../index';
 import { activityFailContext, activityFailIcon, activityProgressContext, activityProgressIcon, activitySuccessContext, activitySuccessIcon } from '../constants';
 import { GenericParentTreeItem } from '../tree/GenericParentTreeItem';
 import { GenericTreeItem } from '../tree/GenericTreeItem';
 import { createContextValue } from '../utils/contextUtils';
-import { nonNullValue } from '../utils/nonNull';
 import { AzureWizardExecuteStep } from "./AzureWizardExecuteStep";
 
 enum ActivityOutputState {
@@ -21,41 +19,35 @@ enum ActivityOutputState {
 
 export abstract class AzureWizardExecuteStepWithActivityOutput<T extends types.IActionContext> extends AzureWizardExecuteStep<T> {
     abstract stepName: string;
-    protected abstract getSuccessString(context: T): string;
-    protected abstract getFailString(context: T): string;
-    protected getProgressString?(context: T): string;
-    protected getTreeItemLabel?(context: T): string;
+    protected abstract getTreeItemLabel(context: T): string;
+    protected abstract getOutputLogSuccess(context: T): string;
+    protected abstract getOutputLogFail(context: T): string;
+    protected getOutputLogProgress?(context: T): string;
 
     public createSuccessOutput(context: T): types.ExecuteActivityOutput {
-        const success: string = this.getSuccessString(context);
-
         return createExecuteActivityOutput(context, {
             outputType: ActivityOutputState.Success,
             stepName: this.stepName,
-            treeItemLabel: this.getTreeItemLabel ? this.getTreeItemLabel(context) : success,
-            outputLogMessage: success,
+            treeItemLabel: this.getTreeItemLabel(context),
+            outputLogMessage: this.getOutputLogSuccess(context),
         });
     }
 
     public createProgressOutput(context: T): types.ExecuteActivityOutput {
-        const progress: string | undefined = this.getProgressString?.(context);
-
         return createExecuteActivityOutput(context, {
             outputType: ActivityOutputState.Progress,
             stepName: this.stepName,
-            treeItemLabel: this.getTreeItemLabel ? this.getTreeItemLabel(context) : nonNullValue(progress, l10n.t('If getTreeItemLabel is not provided, then getProgressString must be set.')),
-            outputLogMessage: progress,
+            treeItemLabel: this.getTreeItemLabel(context),
+            outputLogMessage: this.getOutputLogProgress?.(context),
         });
     }
 
     public createFailOutput(context: T): types.ExecuteActivityOutput {
-        const fail: string = this.getFailString(context);
-
         return createExecuteActivityOutput(context, {
             outputType: ActivityOutputState.Fail,
             stepName: this.stepName,
-            treeItemLabel: this.getTreeItemLabel ? this.getTreeItemLabel(context) : fail,
-            outputLogMessage: fail,
+            treeItemLabel: this.getTreeItemLabel(context),
+            outputLogMessage: this.getOutputLogFail(context),
         });
     }
 }
@@ -63,7 +55,7 @@ export abstract class AzureWizardExecuteStepWithActivityOutput<T extends types.I
 type ActivityOutputCreateOptions = {
     stepName: string;
     treeItemLabel: string;
-    outputLogMessage?: string;
+    outputLogMessage: string | undefined;
     outputType: ActivityOutputState;
 };
 
