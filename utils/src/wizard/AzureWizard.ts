@@ -221,11 +221,9 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
 
                     const end: Date = new Date();
                     const duration: string = dateUtils.getDurationInMinutesAndSeconds(start, end);
-                    const timeFinished: string = dateUtils.get12HourTimeFormatted(end);
 
                     if (output.item && !output.item?.description) {
-                        output.item.description = `${timeFinished} (${duration})`;
-                        output.item.description = duration;
+                        output.item.description = `${duration}`;
                     }
 
                     this.displayActivityOutput(output, step.options);
