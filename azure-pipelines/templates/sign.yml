@@ -35,7 +35,7 @@ steps:
     displayName: "\U0001F449 Generate extension manifest"
 
   # run this script if vsixFileName is set
-  - script: npx @vscode/vsce@latest generate-manifest -i $(vsixFileName) -o $(Build.SourcesDirectory)/extension.manifest
+  - script: npx @vscode/vsce@latest generate-manifest -i $(vsixFileName)-$(package.version).vsix -o $(Build.SourcesDirectory)/extension.manifest
     condition: and(eq(variables['signprojExists'], True), ne(variables['vsixFileName'], ''))
     displayName: "\U0001F449 Generate extension manifest"
 
