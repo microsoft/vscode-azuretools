@@ -1188,6 +1188,9 @@ export declare abstract class ActivityBase<R> implements Activity {
     public readonly id: string;
     public readonly cancellationTokenSource: CancellationTokenSource;
 
+    public get startTime(): Date | undefined;
+    public get endTime(): Date | undefined;
+
     abstract initialState(): ActivityTreeItemOptions;
     abstract successState(): ActivityTreeItemOptions;
     abstract progressState(): ActivityTreeItemOptions;

@@ -266,12 +266,12 @@ export interface Activity {
     id: string;
 
     /**
-     * A date representing when the activity started.
+     * A date representing the time when the activity started.
      */
     startTime?: Date;
 
     /**
-     * A date representing when the activity finished.
+     * A date representing the time when the activity finished.
      */
     endTime?: Date;
 
