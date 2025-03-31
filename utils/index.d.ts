@@ -2136,7 +2136,7 @@ export declare namespace randomUtils {
 export declare namespace dateUtils {
     /**
      * Takes the start and end date duration and converts the value
-     * to a formatted string with the minutes and seconds `e.g. 1m 12s`
+     * to a formatted minutes and seconds string `e.g. 1m 12s`
      */
     export function getFormattedDurationInMinutesAndSeconds(start: Date, end: Date): string;
 }
