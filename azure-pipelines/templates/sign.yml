@@ -37,8 +37,8 @@ steps:
 
   # run this script if vsixFileName is set
   - ${{ each vsixFileName in parameters.vsixFileNames }}:
-    - script: npx @vscode/vsce@latest generate-manifest -i $(vsixFileName)-$(package.version).vsix -o $(Build.SourcesDirectory)/extension.manifest
-      condition: and(eq(variables['signprojExists'], True), ne('$(vsixFileName)', ''))
+    - script: npx @vscode/vsce@latest generate-manifest -i $vsixFileName-$(package.version).vsix -o $(Build.SourcesDirectory)/extension.manifest
+      condition: and(eq(variables['signprojExists'], True), ne('$vsixFileName', ''))
       displayName: "\U0001F449 Generate extension manifest"
 
     # this task will pass even if signing fails, so we follow it up with a check to see if the signature file was created
@@ -63,12 +63,12 @@ steps:
       condition: eq(variables['signprojExists'], True)
 
     - pwsh: |
-        $targetDir = "$(vsixFileName)"
+        $targetDir = "$vsixFileName"
         New-Item -ItemType Directory -Force -Path $targetDir
         Move-Item -Path "extension.signature.p7s" -Destination "$targetDir/extension.signature.p7s" -Force
         Move-Item -Path "extension.manifest" -Destination "$targetDir/extension.manifest" -Force
         Write-Output "Moved signature files to $targetDir directory"
-      displayName: "\U0001F449 Move signature files to $(vsixFileName) directory"
+      displayName: "\U0001F449 Move signature files to $vsixFileName directory"
       condition: eq(variables['signprojExists'], True)
 
 
