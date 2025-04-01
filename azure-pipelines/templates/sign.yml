@@ -29,22 +29,22 @@ steps:
     name: package
     displayName: "\U0001F449 Get extension info from package.json"
 
-  # run this script if vsixFileName is not set
+  # run this script if vsixFileNames is empty
   - script: npx @vscode/vsce@latest generate-manifest -i $(package.name)-$(package.version).vsix -o $(Build.SourcesDirectory)/extension.manifest
-    condition: and(eq(variables['signprojExists'], True), eq('${{ parameters.vsixFileName }}', ''))
+    condition: and(eq(variables['signprojExists'], True), eq(length('${{ join('','', parameters.vsixFileNames) }}'), 0))
     displayName: "\U0001F449 Generate extension manifest"
 
 
-  # run this script if vsixFileName is set
+  # run this script for each item in vsixFileNames
   - ${{ each vsixFileName in parameters.vsixFileNames }}:
-    - script: npx @vscode/vsce@latest generate-manifest -i $vsixFileName-$(package.version).vsix -o $(Build.SourcesDirectory)/extension.manifest
-      condition: and(eq(variables['signprojExists'], True), ne('$vsixFileName', ''))
-      displayName: "\U0001F449 Generate extension manifest"
+    - script: npx @vscode/vsce@latest generate-manifest -i ${{ vsixFileName }}-$(package.version).vsix -o $(Build.SourcesDirectory)/${{ vsixFileName }}_extension.manifest
+      condition: and(eq(variables['signprojExists'], True), ne('${{ vsixFileName }}', ''))
+      displayName: "\U0001F449 Generate extension manifest for ${{ vsixFileName }}"
 
     # this task will pass even if signing fails, so we follow it up with a check to see if the signature file was created
     - task: DotNetCoreCLI@2
-      condition: eq(variables['signprojExists'], True)
-      displayName: "\U0001F449 Sign with MSBuild"
+      condition: and(eq(variables['signprojExists'], True), ne('${{ vsixFileName }}', ''))
+      displayName: "\U0001F449 Sign with MSBuild for ${{ vsixFileName }}"
       inputs:
         command: 'build'
         projects: $(Build.SourcesDirectory)/.azure-pipelines/SignExtension.signproj
@@ -59,16 +59,16 @@ steps:
 
         Write-Output "The file '$filePath' exists."
         exit 0
-      displayName: "\U0001F449 Verify extension.signature.p7s file was created"
-      condition: eq(variables['signprojExists'], True)
+      displayName: "\U0001F449 Verify extension.signature.p7s file was created for ${{ vsixFileName }}"
+      condition: and(eq(variables['signprojExists'], True), ne('${{ vsixFileName }}', ''))
 
     - pwsh: |
-        $targetDir = "$vsixFileName"
+        $targetDir = "${{ vsixFileName }}"
         New-Item -ItemType Directory -Force -Path $targetDir
         Move-Item -Path "extension.signature.p7s" -Destination "$targetDir/extension.signature.p7s" -Force
-        Move-Item -Path "extension.manifest" -Destination "$targetDir/extension.manifest" -Force
+        Move-Item -Path "${{ vsixFileName }}_extension.manifest" -Destination "$targetDir/extension.manifest" -Force
         Write-Output "Moved signature files to $targetDir directory"
-      displayName: "\U0001F449 Move signature files to $vsixFileName directory"
-      condition: eq(variables['signprojExists'], True)
+      displayName: "\U0001F449 Move signature files to ${{ vsixFileName }} directory"
+      condition: and(eq(variables['signprojExists'], True), ne('${{ vsixFileName }}', ''))
 
 
