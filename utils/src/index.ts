@@ -31,8 +31,8 @@ export * from './pickTreeItem/quickPickAzureResource/QuickPickGroupStep';
 export * from './pickTreeItem/runQuickPickWizard';
 export * from './registerCommand';
 export * from './registerCommandWithTreeNodeUnwrapping';
-export * from './registerLMTool';
 export * from './registerEvent';
+export * from './registerLMTool';
 export { registerReportIssueCommand } from './registerReportIssueCommand';
 export * from './tree/AzExtParentTreeItem';
 export * from './tree/AzExtTreeDataProvider';
@@ -54,9 +54,10 @@ export * from './utils/validationUtils';
 export * from './wizard/AzureNameStep';
 export * from './wizard/AzureWizard';
 export * from './wizard/AzureWizardExecuteStep';
+export * from './wizard/AzureWizardExecuteStepWithActivityOutput';
 export * from './wizard/AzureWizardPromptStep';
 export * from './wizard/ConfirmPreviousInputStep';
 export * from './wizard/DeleteConfirmationStep';
 // re-export api types and utils
-export { AzureExtensionApi, GetApiOptions, apiUtils } from '@microsoft/vscode-azureresources-api';
+export { apiUtils, AzureExtensionApi, GetApiOptions } from '@microsoft/vscode-azureresources-api';
 // NOTE: The auto-fix action "source.organizeImports" does weird things with this file, but there doesn't seem to be a way to disable it on a per-file basis so we'll just let it happen
