@@ -56,9 +56,9 @@ steps:
 
     - pwsh: |
         $targetDir = "${{ vsixFileName }}"
-        New-Item -ItemType Directory -Force -Path $targetDir
-        Move-Item -Path "extension.signature.p7s" -Destination "$targetDir/extension.signature.p7s" -Force
-        Move-Item -Path "extension.manifest" -Destination "$targetDir/extension.manifest" -Force
+        New-Item -ItemType Directory -Force -Path "$(Build.SourcesDirectory)/$targetDir"
+        Move-Item -Path "extension.signature.p7s" -Destination "$(Build.SourcesDirectory)/$targetDir/extension.signature.p7s" -Force
+        Move-Item -Path "extension.manifest" -Destination "$(Build.SourcesDirectory)/$targetDir/extension.manifest" -Force
         Write-Output "Moved signature files to $targetDir directory"
       displayName: "\U0001F449 Move signature files to ${{ vsixFileName }} directory"
 
