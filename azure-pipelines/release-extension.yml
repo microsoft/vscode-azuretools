@@ -114,27 +114,6 @@ extends:
                       env:
                         publishVersion: ${{ parameters.publishVersion }}
 
-                    # Find the vsix to release and set the vsix file name variable
-                    # Fails with an error if more than one .vsix file is found, or if no .vsix file is found
-                    - powershell: |
-                        # Get all .vsix files in the current directory
-                        $vsixFiles = Get-ChildItem -Path $(System.DefaultWorkingDirectory) -Filter *.vsix -File
-
-                        # Check if more than one .vsix file is found
-                        if ($vsixFiles.Count -gt 1) {
-                          Write-Error "More than one .vsix file found."
-                          exit 1
-                        } elseif ($vsixFiles.Count -eq 0) {
-                          Write-Error "No .vsix files found."
-                          exit 1
-                        } else {
-                          # Set the pipeline variable
-                          $vsixFileName = $vsixFiles.Name
-                          Write-Output "##vso[task.setvariable variable=vsixFileName;]$vsixFileName"
-                          Write-Output "Found .vsix file: $vsixFileName"
-                        }
-                      displayName: "\U0001F449 Find and Set .vsix File Variable"
-
                     - task: UseNode@1
                       inputs:
                         version: "20.x"
