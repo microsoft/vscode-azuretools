@@ -32,7 +32,7 @@ steps:
 
   # run this script for each item in vsixFileNames
   - ${{ each vsixFileName in parameters.vsixFileNames }}:
-    - script: npx @vscode/vsce@latest generate-manifest -i ${{ vsixFileName }}-$(package.version).vsix -o $(Build.SourcesDirectory)/${{ vsixFileName }}_extension.manifest
+    - script: npx @vscode/vsce@latest generate-manifest -i ${{ vsixFileName }}-$(package.version).vsix -o $(Build.SourcesDirectory)/extension.manifest
       displayName: "\U0001F449 Generate extension manifest for ${{ vsixFileName }}"
 
     # this task will pass even if signing fails, so we follow it up with a check to see if the signature file was created
