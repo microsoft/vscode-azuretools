@@ -16,9 +16,9 @@ parameters:
   - name: enableSigning
     type: boolean
     default: True
-  - name: vsixFileName
-    type: string
-    default: ''
+  - name: vsixFileNames
+    type: object
+    default: [""]
 stages:
   - stage: BuildStage
     pool:
@@ -50,7 +50,7 @@ stages:
               - template: ./templates/sign.yml
                 parameters:
                   enableSigning: ${{ parameters.enableSigning }}
-                  vsixFileName: ${{ parameters.vsixFileName }}
+                  vsixFileNames: ${{ parameters.vsixFileNames }}
               - template: ./templates/stage-artifacts.yml
               - template: ./templates/test.yml
                 parameters:

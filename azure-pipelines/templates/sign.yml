@@ -2,9 +2,9 @@ parameters:
   - name: enableSigning
     type: boolean
     default: True
-  - name: vsixFileName
-    type: string
-    default: ''
+  - name: vsixFileNames
+    type: object
+    default: ['']
 
 steps:
   # Check if the SignExtension.signproj file exists and set a variable using PowerShell
@@ -12,7 +12,7 @@ steps:
   - powershell: |
       $fileExists = Test-Path -Path "$(Build.SourcesDirectory)/.azure-pipelines/SignExtension.signproj"
       Write-Output "##vso[task.setvariable variable=signprojExists]$fileExists"
-      
+
       if ($fileExists) {
           Write-Output "SignExtension.signproj file found. Signing extension."
       } else {
@@ -22,7 +22,7 @@ steps:
     condition: ${{ parameters.enableSigning }}
 
   # put the extension name and version from the package.json into variables to use later. Variables can be used in later steps as $(package.name) and $(package.version)
-  - pwsh: | 
+  - pwsh: |
       Write-Output "##vso[task.setvariable variable=name;isOutput=true]$((Get-Content -Raw -Path package.json | ConvertFrom-Json).name)"
       Write-Output "##vso[task.setvariable variable=version;isOutput=true]$((Get-Content -Raw -Path package.json | ConvertFrom-Json).version)"
     condition: eq(variables['signprojExists'], True)
@@ -34,28 +34,40 @@ steps:
     condition: and(eq(variables['signprojExists'], True), eq('${{ parameters.vsixFileName }}', ''))
     displayName: "\U0001F449 Generate extension manifest"
 
+
   # run this script if vsixFileName is set
-  - script: npx @vscode/vsce@latest generate-manifest -i ${{ parameters.vsixFileName }}-$(package.version).vsix -o $(Build.SourcesDirectory)/extension.manifest
-    condition: and(eq(variables['signprojExists'], True), ne('${{ parameters.vsixFileName }}', ''))
-    displayName: "\U0001F449 Generate extension manifest"
+  - ${{ each vsixFileName in parameters.vsixFileNames }}:
+    - script: npx @vscode/vsce@latest generate-manifest -i $(vsixFileName)-$(package.version).vsix -o $(Build.SourcesDirectory)/extension.manifest
+        condition: and(eq(variables['signprojExists'], True), ne('$(vsixFileName)', ''))
+        displayName: "\U0001F449 Generate extension manifest"
 
-  # this task will pass even if signing fails, so we follow it up with a check to see if the signature file was created
-  - task: DotNetCoreCLI@2
-    condition: eq(variables['signprojExists'], True)
-    displayName: "\U0001F449 Sign with MSBuild"
-    inputs:
-      command: 'build'
-      projects: $(Build.SourcesDirectory)/.azure-pipelines/SignExtension.signproj
+    # this task will pass even if signing fails, so we follow it up with a check to see if the signature file was created
+    - task: DotNetCoreCLI@2
+        condition: eq(variables['signprojExists'], True)
+        displayName: "\U0001F449 Sign with MSBuild"
+        inputs:
+        command: 'build'
+        projects: $(Build.SourcesDirectory)/.azure-pipelines/SignExtension.signproj
 
-  - pwsh: |
-      $filePath = "extension.signature.p7s"
+    - pwsh: |
+        $filePath = "extension.signature.p7s"
 
-      if (-Not (Test-Path $filePath)) {
-          Write-Error "The file '$filePath' does not exist."
-          exit 1
-      }
+        if (-Not (Test-Path $filePath)) {
+            Write-Error "The file '$filePath' does not exist."
+            exit 1
+        }
 
-      Write-Output "The file '$filePath' exists."
-      exit 0
-    displayName: "\U0001F449 Verify extension.signature.p7s file was created"
-    condition: eq(variables['signprojExists'], True)
+        Write-Output "The file '$filePath' exists."
+        exit 0
+        displayName: "\U0001F449 Verify extension.signature.p7s file was created"
+        condition: eq(variables['signprojExists'], True)
+
+    - pwsh: |
+            $targetDir = "$(vsixFileName)
+            New-Item -ItemType Directory -Force -Path $targetDir
+            Move-Item -Path "extension.signature.p7s" -Destination "$targetDir/extension.signature.p7s" -Force
+            Move-Item -Path "extension.manifest" -Destination "$targetDir/extension.manifest" -Force
+            Write-Output "Moved signature files to $targetDir directory"
+        displayName: "\U0001F449 Move signature files to $(vsixFileName) directory"
+
+

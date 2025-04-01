@@ -18,9 +18,9 @@ parameters:
   - name: isOfficialBuild
     type: boolean
     default: true
-  - name: vsixFileName
-    type: string
-    default: ''
+  - name: vsixFileNames
+    type: object
+    default: [""]
 
 # `resources` specifies the location of templates to pick up, use it to get 1ES templates
 resources:
@@ -40,7 +40,7 @@ extends:
       ${{ if eq(parameters.IsOfficialBuild, true) }}:
         tsa:
           enabled: true
-          configFile: '$(Build.SourcesDirectory)/.azure-pipelines/compliance/tsaoptions.json'
+          configFile: "$(Build.SourcesDirectory)/.azure-pipelines/compliance/tsaoptions.json"
       suppression:
         suppressionFile: $(Build.SourcesDirectory)/.config/guardian/.gdnsuppress
       credscan:
@@ -63,4 +63,4 @@ extends:
           additionalSetupSteps: ${{ parameters.additionalSetupSteps }}
           additionalPostPackageSteps: ${{ parameters.additionalPostPackageSteps }}
           enableSigning: ${{ parameters.enableSigning }}
-          vsixFileName: ${{ parameters.vsixFileName }}
+          vsixFileNames: ${{ parameters.vsixFileNames }}
