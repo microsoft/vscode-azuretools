@@ -53,15 +53,13 @@ steps:
         Write-Output "The file '$filePath' exists."
         exit 0
       displayName: "\U0001F449 Verify extension.signature.p7s file was created for ${{ vsixFileName }}"
-      condition: and(eq(variables['signprojExists'], True), ne('${{ vsixFileName }}', ''))
 
     - pwsh: |
         $targetDir = "${{ vsixFileName }}"
         New-Item -ItemType Directory -Force -Path $targetDir
         Move-Item -Path "extension.signature.p7s" -Destination "$targetDir/extension.signature.p7s" -Force
-        Move-Item -Path "${{ vsixFileName }}_extension.manifest" -Destination "$targetDir/extension.manifest" -Force
+        Move-Item -Path "$extension.manifest" -Destination "$targetDir/extension.manifest" -Force
         Write-Output "Moved signature files to $targetDir directory"
       displayName: "\U0001F449 Move signature files to ${{ vsixFileName }} directory"
-      condition: and(eq(variables['signprojExists'], True), ne('${{ vsixFileName }}', ''))
 
 
