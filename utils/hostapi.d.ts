@@ -266,6 +266,16 @@ export interface Activity {
     id: string;
 
     /**
+     * A date representing the time when the activity started.
+     */
+    startTime?: Date;
+
+    /**
+     * A date representing the time when the activity finished.
+     */
+    endTime?: Date;
+
+    /**
      * If the activity supports cancellation, provide this `CancellationTokenSource`. The Activity Log will add a cancel button that will trigger this CTS.
      */
     cancellationTokenSource?: vscode.CancellationTokenSource;
