@@ -3,12 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-export namespace dateUtils {
-    export function getFormattedDurationInMinutesAndSeconds(start: Date, end: Date): string {
-        const durationSeconds: number = Math.round((end.getTime() - start.getTime()) / 1000);
+import * as dayjs from 'dayjs';
+// eslint-disable-next-line import/no-internal-modules
+import * as duration from 'dayjs/plugin/duration';
 
-        const minutes: number = Math.floor(durationSeconds / 60);
-        const seconds: number = durationSeconds - minutes * 60;
-        return minutes ? `${minutes}m ${seconds}s` : `${seconds}s`;
+dayjs.extend(duration);
+
+export namespace dateUtils {
+    /**
+     * Takes the start and end date duration and converts the value
+     * to a formatted string with the minutes and seconds `e.g. 1m 12s`
+     */
+    export function getFormattedDurationInMinutesAndSeconds(start: Date, end: Date): string {
+        const d: duration.Duration = dayjs.duration(end.getTime() - start.getTime());
+        return `${d.minutes()}m ${d.seconds()}s`
+            .replace(/\b0m\b/, '')
+            .replace(/\b0s\b/, '');
     }
 }
