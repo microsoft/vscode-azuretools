@@ -14,6 +14,7 @@ export namespace AzExtQuickInputButtons {
     export const LearnMore: QuickInputButton = { iconPath: new ThemeIcon('question'), tooltip: learnMore }
 }
 
+export const activityInfoContext: string = 'activity:info';
 export const activitySuccessContext: string = 'activity:success';
 export const activityFailContext: string = 'activity:fail';
 export const activityProgressContext: string = 'activity:progress';
