@@ -191,6 +191,10 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
             while (step) {
                 const start: Date = new Date();
 
+                if (step.configureBeforeExecute) {
+                    await step.configureBeforeExecute(this._context);
+                }
+
                 if (!step.shouldExecute(this._context)) {
                     step = steps.pop();
                     continue;

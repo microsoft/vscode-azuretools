@@ -1302,6 +1302,12 @@ export declare abstract class AzureWizardExecuteStep<T extends IActionContext & 
     public id?: string;
 
     /**
+    * Can be used to optionally configure the wizard context before determining if execution is required
+    * This method will be called before `shouldExecute`
+    */
+    public configureBeforeExecute?(wizardContext: T): void | Promise<void>;
+
+    /**
      * Execute the step
      */
     public abstract execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
