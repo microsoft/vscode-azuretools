@@ -188,6 +188,10 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
 
             let step: AzureWizardExecuteStep<T> | undefined = steps.pop();
             while (step) {
+                if (step.configureBeforeExecute) {
+                    await step.configureBeforeExecute(this._context);
+                }
+
                 if (!step.shouldExecute(this._context)) {
                     step = steps.pop();
                     continue;
