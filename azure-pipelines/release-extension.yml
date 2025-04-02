@@ -30,7 +30,15 @@ parameters:
   # A list of publish commands to run. It defaults to publishing a single .vsix file. If you want to publish multiple .vsix files (platform specifc), you can add mutliple commands to this list.
   - name: publishCommands
     type: object
-    default: ['vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s']
+    default:
+      [
+        "vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s",
+      ]
+
+  # When true, skips check to make sure there are not multiple .vsix files found in the build directory
+  - name: publishMultipleVsixFiles
+    type: boolean
+    default: false
 
 # `resources` specifies the location of templates to pick up, use it to get 1ES templates
 resources:
@@ -67,7 +75,6 @@ extends:
               runOnce:
                 deploy:
                   steps:
-
                     - checkout: none
 
                     # Modify the build number to include repo name, extension version, and if dry run is true
@@ -114,6 +121,30 @@ extends:
                       env:
                         publishVersion: ${{ parameters.publishVersion }}
 
+                    # Find the vsix to release and set the vsix file name variable
+                    # Fails with an error if more than one .vsix file is found, or if no .vsix file is found
+                    - powershell: |
+                        # Get all .vsix files in the current directory
+                        $vsixFiles = Get-ChildItem -Path $(System.DefaultWorkingDirectory) -Filter *.vsix -File
+
+                        $publishMultipleVsixFiles = "$env:publishMultipleVsixFiles"
+                        # Check if more than one .vsix file is found
+                        if ($vsixFiles.Count -gt 1 && $publishMultipleVsixFiles -eq 'False') {
+                          Write-Error "More than one .vsix file found."
+                          exit 1
+                        } elseif ($vsixFiles.Count -eq 0) {
+                          Write-Error "No .vsix files found."
+                          exit 1
+                        } else {
+                          # Set the pipeline variable
+                          $vsixFileName = $vsixFiles.Name
+                          Write-Output "##vso[task.setvariable variable=vsixFileName;]$vsixFileName"
+                          Write-Output "Found .vsix file: $vsixFileName"
+                        }
+                      displayName: "\U0001F449 Find and Set .vsix File Variable"
+                      env:
+                        publishMultipleVsixFiles: ${{ parameters.publishMultipleVsixFiles }}
+
                     - task: UseNode@1
                       inputs:
                         version: "20.x"
@@ -123,15 +154,15 @@ extends:
                       displayName: "\U0001F449 Install vsce"
 
                     - ${{ each publishCommand in parameters.publishCommands }}:
-                      # log the publishCommand
-                      - powershell: |
-                          Write-Output "Publish command: $publishCommand"
-                        displayName: "\U0001F449 Log publish command"
-                      - task: AzureCLI@2
-                        displayName: "\U0001F449 Run vsce publish"
-                        condition: and(succeeded(), ${{ eq(parameters.dryRun, false) }})
-                        inputs:
-                          azureSubscription: ${{ parameters.ExtensionReleaseServiceConnection }}
-                          scriptType: pscore
-                          scriptLocation: inlineScript
-                          inlineScript: ${{ publishCommand }}
+                        # log the publishCommand
+                        - powershell: |
+                            Write-Output "Publish command: $publishCommand"
+                          displayName: "\U0001F449 Log publish command"
+                        - task: AzureCLI@2
+                          displayName: "\U0001F449 Run vsce publish"
+                          condition: and(succeeded(), ${{ eq(parameters.dryRun, false) }})
+                          inputs:
+                            azureSubscription: ${{ parameters.ExtensionReleaseServiceConnection }}
+                            scriptType: pscore
+                            scriptLocation: inlineScript
+                            inlineScript: ${{ publishCommand }}
