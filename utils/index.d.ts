@@ -1189,6 +1189,9 @@ export declare abstract class ActivityBase<R> implements Activity {
     public readonly id: string;
     public readonly cancellationTokenSource: CancellationTokenSource;
 
+    public get startTime(): Date | undefined;
+    public get endTime(): Date | undefined;
+
     abstract initialState(): ActivityTreeItemOptions;
     abstract successState(): ActivityTreeItemOptions;
     abstract progressState(): ActivityTreeItemOptions;
@@ -2138,6 +2141,14 @@ export declare namespace randomUtils {
     export function getPseudononymousStringHash(s: string): Promise<string>;
     export function getRandomHexString(length?: number): string;
     export function getRandomInteger(minimumInclusive: number, maximumExclusive: number): number;
+}
+
+export declare namespace dateUtils {
+    /**
+     * Takes the start and end date duration and converts the value
+     * to a formatted minutes and seconds string `e.g. 1m 12s`
+     */
+    export function getFormattedDurationInMinutesAndSeconds(start: Date, end: Date): string;
 }
 
 /**

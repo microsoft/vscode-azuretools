@@ -13,6 +13,7 @@ import { ext } from '../extensionVariables';
 import { parseError } from '../parseError';
 import { IInternalActionContext, IInternalAzureWizard } from '../userInput/IInternalActionContext';
 import { createQuickPick } from '../userInput/showQuickPick';
+import { dateUtils } from '../utils/dateUtils';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 import { NoExecuteStep } from './NoExecuteStep';
@@ -188,6 +189,8 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
 
             let step: AzureWizardExecuteStep<T> | undefined = steps.pop();
             while (step) {
+                const start: Date = new Date();
+
                 if (step.configureBeforeExecute) {
                     await step.configureBeforeExecute(this._context);
                 }
@@ -197,12 +200,12 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                     continue;
                 }
 
-                let output: types.ExecuteActivityOutput | undefined;
                 const progressOutput: types.ExecuteActivityOutput | undefined = step.createProgressOutput?.(this._context);
                 if (progressOutput) {
                     this.displayActivityOutput(progressOutput, step.options);
                 }
 
+                let output: types.ExecuteActivityOutput | undefined;
                 try {
                     this._context.telemetry.properties.lastStep = `execute-${getEffectiveStepId(step)}`;
                     await step.execute(this._context, internalProgress);
@@ -218,6 +221,11 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                     // always remove the progress item from the activity log
                     if (progressOutput?.item) {
                         this._context.activityChildren = this._context.activityChildren?.filter(t => t !== progressOutput.item);
+                    }
+
+                    const end: Date = new Date();
+                    if (output.item && !output.item?.description) {
+                        output.item.description = dateUtils.getFormattedDurationInMinutesAndSeconds(start, end);
                     }
 
                     this.displayActivityOutput(output, step.options);
