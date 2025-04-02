@@ -224,10 +224,8 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                     }
 
                     const end: Date = new Date();
-                    const duration: string = dateUtils.getFormattedDurationInMinutesAndSeconds(start, end);
-
                     if (output.item && !output.item?.description) {
-                        output.item.description = duration;
+                        output.item.description = dateUtils.getFormattedDurationInMinutesAndSeconds(start, end);
                     }
 
                     this.displayActivityOutput(output, step.options);
