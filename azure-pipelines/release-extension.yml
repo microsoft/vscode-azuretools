@@ -129,7 +129,7 @@ extends:
 
                         $publishMultipleVsixFiles = "$env:publishMultipleVsixFiles"
                         # Check if more than one .vsix file is found
-                        if ($vsixFiles.Count -gt 1 && $publishMultipleVsixFiles -eq 'False') {
+                        if (($vsixFiles.Count -gt) 1 -and ($publishMultipleVsixFiles -eq 'False')) {
                           Write-Error "More than one .vsix file found."
                           exit 1
                         } elseif ($vsixFiles.Count -eq 0) {
