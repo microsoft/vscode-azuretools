@@ -14,6 +14,7 @@ export namespace dateUtils {
         return dayjs
             .duration(end.getTime() - start.getTime())
             .format('m[m] s[s]')
-            .replace(/\b0m\b/, '');
+            .replace(/\b0m\b/, '')
+            .trim();
     }
 }
