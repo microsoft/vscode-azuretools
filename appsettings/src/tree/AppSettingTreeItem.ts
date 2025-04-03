@@ -53,7 +53,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
 
     public get iconPath(): TreeItemIconPath {
         // Change symbol to warning if the settings uses connection strings
-        if (isSettingConnectionString(this._key, this._value)) {
+        if (isSettingConnectionString(this._key, this._value) && !(this.contextValue.includes('container'))) {
             return new ThemeIcon('warning');
         }
         return new ThemeIcon('symbol-constant');

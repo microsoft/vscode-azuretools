@@ -1168,6 +1168,7 @@ export interface IWizardOptions<T extends IActionContext> {
     skipExecute?: boolean;
 }
 
+export const activityInfoContext: string;
 export const activitySuccessContext: string;
 export const activityFailContext: string;
 export const activityProgressContext: string;
