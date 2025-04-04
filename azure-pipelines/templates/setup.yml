@@ -15,7 +15,7 @@ steps:
     displayName: "\U0001F449 Install Dependencies"
     inputs:
       command: custom
-      customCommand: ci
+      customCommand: ci --loglevel verbose
       workingDir: $(working_directory)
     condition: succeeded()
 
