@@ -13,7 +13,7 @@ import { ext } from '../extensionVariables';
 import { parseError } from '../parseError';
 import { IInternalActionContext, IInternalAzureWizard } from '../userInput/IInternalActionContext';
 import { createQuickPick } from '../userInput/showQuickPick';
-import { dateUtils } from '../utils/dateUtils';
+import { dateTimeUtils } from '../utils/dateTimeUtils';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 import { NoExecuteStep } from './NoExecuteStep';
@@ -225,7 +225,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
 
                     const end: Date = new Date();
                     if (output.item && !output.item?.description) {
-                        output.item.description = dateUtils.getFormattedDurationInMinutesAndSeconds(start, end);
+                        output.item.description = dateTimeUtils.getFormattedDurationInMinutesAndSeconds(end.getTime() - start.getTime());
                     }
 
                     this.displayActivityOutput(output, step.options);

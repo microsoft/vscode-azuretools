@@ -9,11 +9,12 @@ import * as duration from 'dayjs/plugin/duration';
 
 dayjs.extend(duration);
 
-export namespace dateUtils {
-    export function getFormattedDurationInMinutesAndSeconds(start: Date, end: Date): string {
+export namespace dateTimeUtils {
+    export function getFormattedDurationInMinutesAndSeconds(durationTime: number, units?: duration.DurationUnitType): string {
         return dayjs
-            .duration(end.getTime() - start.getTime())
+            .duration(durationTime, units)
             .format('m[m] s[s]')
-            .replace(/\b0m\b/, '');
+            .replace(/\b0m\b/, '')
+            .trim();
     }
 }

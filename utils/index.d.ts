@@ -7,6 +7,7 @@
 
 import type { Environment } from '@azure/ms-rest-azure-env';
 import type { AzExtResourceType, AzureResource, AzureSubscription, ResourceModelBase } from '@microsoft/vscode-azureresources-api';
+import type * as duration from 'dayjs/plugin/duration';
 import { AuthenticationSession, CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, LanguageModelToolInvocationOptions, LanguageModelToolInvocationPrepareOptions, LanguageModelToolResult, LogOutputChannel, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, PreparedToolInvocation, Progress, ProviderResult, QuickPickItem, TelemetryTrustedValue, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri, QuickPickOptions as VSCodeQuickPickOptions, WorkspaceFolder, WorkspaceFolderPickOptions } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
@@ -2143,12 +2144,15 @@ export declare namespace randomUtils {
     export function getRandomInteger(minimumInclusive: number, maximumExclusive: number): number;
 }
 
-export declare namespace dateUtils {
+export declare namespace dateTimeUtils {
     /**
-     * Takes the start and end date duration and converts the value
+     * Takes a time duration and converts the value
      * to a formatted minutes and seconds string `e.g. 1m 12s`
+     *
+     * @param durationTime The numeric portion of the time component.
+     * @param units (Optional) The unit of measure for the time component.  Defaults to milliseconds.
      */
-    export function getFormattedDurationInMinutesAndSeconds(start: Date, end: Date): string;
+    export function getFormattedDurationInMinutesAndSeconds(durationTime: number, units?: duration.DurationUnitType): string;
 }
 
 /**
