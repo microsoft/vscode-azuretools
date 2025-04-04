@@ -7,7 +7,7 @@
 
 import type { Environment } from '@azure/ms-rest-azure-env';
 import type { AzExtResourceType, AzureResource, AzureSubscription, ResourceModelBase } from '@microsoft/vscode-azureresources-api';
-import * as duration from 'dayjs/plugin/duration';
+import type * as duration from 'dayjs/plugin/duration';
 import { AuthenticationSession, CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, LanguageModelToolInvocationOptions, LanguageModelToolInvocationPrepareOptions, LanguageModelToolResult, LogOutputChannel, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, PreparedToolInvocation, Progress, ProviderResult, QuickPickItem, TelemetryTrustedValue, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri, QuickPickOptions as VSCodeQuickPickOptions, WorkspaceFolder, WorkspaceFolderPickOptions } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
