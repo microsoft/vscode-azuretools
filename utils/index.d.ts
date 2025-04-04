@@ -2184,10 +2184,10 @@ export declare namespace dateTimeUtils {
      * Takes a time duration and converts the value
      * to a formatted minutes and seconds string `e.g. 1m 12s`
      *
-     * @param time The numeric portion of the time component. If no units are supplied for the second parameter, milliseconds are assumed as the unit.
-     * @param unit (Optional) The unit of measure for the time component.  Defaults to milliseconds.
+     * @param durationTime The numeric portion of the time component.
+     * @param units (Optional) The unit of measure for the time component.  Defaults to milliseconds.
      */
-    export function getFormattedDurationInMinutesAndSeconds(time: number, unit?: duration.DurationUnitType): string;
+    export function getFormattedDurationInMinutesAndSeconds(durationTime: number, units?: duration.DurationUnitType): string;
 }
 
 /**
