@@ -46,7 +46,7 @@ export * from './userInput/AzExtUserInputWithInputQueue';
 export * from './utils/AzExtFsExtra';
 export * from './utils/contextUtils';
 export * from './utils/credentialUtils';
-export * from './utils/dateUtils';
+export * from './utils/dateTimeUtils';
 export * from './utils/findFreePort';
 export * from './utils/nonNull';
 export * from './utils/openUrl';
