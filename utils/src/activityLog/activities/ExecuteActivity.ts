@@ -27,7 +27,7 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
         const resourceId: string | undefined = typeof activityResult === 'string' ? activityResult : activityResult?.id;
         return {
             label: this.label,
-            getChildren: activityResult || this.context.activityChildren ? ((_parent: types.ActivityItemBase) => {
+            getChildren: activityResult || this.context.activityChildren ? ((_parent: types.ActivityChildItemBase) => {
 
                 if (this.context.activityChildren) {
                     return this.context.activityChildren;
@@ -49,18 +49,18 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
     public errorState(error: types.IParsedError): hTypes.ActivityTreeItemOptions {
         return {
             label: this.label,
-            getChildren: (_parent: types.ActivityItemBase) => {
-                const errorItem = createGenericElement({
+            getChildren: (_parent: types.ActivityChildItemBase) => {
+                const errorItemOptions: types.GenericElementOptions = {
                     contextValue: 'executeError',
                     label: error.message
-                });
+                };
 
                 if (this.context.activityChildren) {
-                    this.appendErrorItemToActivityChildren(errorItem);
+                    this.appendErrorItemToActivityChildren(errorItemOptions);
                     return this.context.activityChildren;
                 }
 
-                return [errorItem];
+                return [createGenericElement(errorItemOptions)];
             }
         }
     }
@@ -68,13 +68,13 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
     public progressState(): hTypes.ActivityTreeItemOptions {
         return {
             label: this.label,
-            getChildren: this.context.activityChildren ? ((_parent: types.ActivityItemBase) => {
+            getChildren: this.context.activityChildren ? ((_parent: types.ActivityChildItemBase) => {
                 return this.context.activityChildren || [];
             }) : undefined
         }
     }
 
-    private appendErrorItemToActivityChildren(errorItem: types.ActivityItemBase): void {
+    private appendErrorItemToActivityChildren(errorItemOptions: types.GenericElementOptions): void {
         // Honor any error suppression flag
         if ((this.context as unknown as types.IActionContext).errorHandling?.suppressDisplay) {
             return;
@@ -82,7 +82,7 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
 
         // Check if the last activity child was a parent fail item; if so, attach the actual error to it for additional user context
         const lastActivityChild = this.context.activityChildren?.at(-1);
-        const previousGetChildrenImpl = lastActivityChild?.getChildren?.bind(lastActivityChild) as types.TreeElementBase['getChildren'];
+        const previousGetChildrenImpl = lastActivityChild?.getChildren?.bind(lastActivityChild) as types.ActivityChildItemBase['getChildren'];
         if (
             lastActivityChild &&
             previousGetChildrenImpl &&
@@ -91,15 +91,15 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
             lastActivityChild.getChildren = async () => {
                 return [
                     ...await previousGetChildrenImpl() ?? [],
-                    errorItem
+                    createGenericElement(errorItemOptions)
                 ];
             }
             return;
         }
 
         // Otherwise append error item to the end of the list
-        errorItem.iconPath = activityFailIcon;
-        this.context.activityChildren?.push(errorItem);
+        errorItemOptions.iconPath = activityFailIcon;
+        this.context.activityChildren?.push(createGenericElement(errorItemOptions));
     }
 
     protected get label(): string {

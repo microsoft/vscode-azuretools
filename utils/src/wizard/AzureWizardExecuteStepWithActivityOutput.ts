@@ -6,8 +6,7 @@
 import { v4 as uuidv4 } from "uuid";
 import * as types from '../../index';
 import { activityFailContext, activityFailIcon, activityProgressContext, activityProgressIcon, activitySuccessContext, activitySuccessIcon } from '../constants';
-import { GenericParentTreeItem } from '../tree/GenericParentTreeItem';
-import { GenericTreeItem } from '../tree/GenericTreeItem';
+import { ActivityChildItem } from "../tree/v2/ActivityChildItem";
 import { createContextValue } from '../utils/contextUtils';
 import { AzureWizardExecuteStep } from "./AzureWizardExecuteStep";
 
@@ -65,24 +64,13 @@ function createExecuteActivityOutput(_: types.IActionContext, options: ActivityO
     const label = options.treeItemLabel;
     const iconPath = options.outputType === ActivityOutputState.Success ? activitySuccessIcon : options.outputType === ActivityOutputState.Fail ? activityFailIcon : activityProgressIcon;
 
-    const item = options.outputType === ActivityOutputState.Fail ?
-        // If the output type is "Fail", return a parent tree item to allow attaching error details as children for better user context.
-        new GenericParentTreeItem(undefined, {
-            id: uuidv4(),
-            contextValue,
-            label,
-            iconPath
-        }) :
-        // Otherwise, return a simple tree item for "Success" or "Progress" states.
-        new GenericTreeItem(undefined, {
-            id: uuidv4(),
-            contextValue,
-            label,
-            iconPath
-        });
-
     return {
-        item,
+        item: new ActivityChildItem({
+            id: uuidv4(),
+            label,
+            contextValue,
+            iconPath,
+        }),
         message: options.outputLogMessage,
     };
 }

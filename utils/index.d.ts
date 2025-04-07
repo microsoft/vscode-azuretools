@@ -1204,21 +1204,26 @@ export declare abstract class ActivityBase<R> implements Activity {
     public run(): Promise<void>;
 }
 
-export interface ActivityItemBase extends TreeElementBase {
+export interface ActivityChildItemBase extends TreeElementBase {
     contextValue?: string;
+    description?: string;
 }
 
-export type ActivityItemOptions = {
+export type ActivityChildItemOptions = {
     id: string;
+    label: string;
     contextValue: string;
+    description?: string;
+    iconPath?: TreeItemIconPath;
+    initialCollapsibleState?: TreeItemCollapsibleState;
 };
 
-export declare class ActivityItem implements ActivityItemBase {
+export declare class ActivityChildItem implements ActivityChildItemBase {
     id: string;
     contextValue: string;
-    public constructor(options: ActivityItemOptions);
+    public constructor(options: ActivityChildItemOptions);
     public getTreeItem(): TreeItem | Thenable<TreeItem>;
-    public getChildren(): ProviderResult<TreeElementBase[]>;
+    public getChildren(): ProviderResult<ActivityChildItemBase[]>;
 }
 
 /**
@@ -1270,14 +1275,14 @@ export declare interface ExecuteActivityContext {
     /**
      * Children to show under the activity tree item. Children only appear once the activity is done.
      */
-    activityChildren?: (ActivityItemBase | ActivityItemBase)[];
+    activityChildren?: (ActivityChildItemBase | ActivityChildItemBase)[];
 }
 
 export interface ExecuteActivityOutput {
     /**
      * The activity child item to display on success, fail, or progress
      */
-    item?: AzExtTreeItem;
+    item?: ActivityChildItemBase;
     /**
      * The output log message to display on success, fail, or progress
      */
