@@ -18,13 +18,14 @@ export interface Role {
 
 export class RoleAssignmentExecuteStep<T extends types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>> extends AzureWizardExecuteStep<T> {
     public priority: number = 900;
+    private _retries: number = 0;
     private roles: () => Role[] | undefined;
     public constructor(roles: () => Role[] | undefined) {
         super();
         this.roles = roles;
     }
 
-    public async execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
+    public async executeCore(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         const amClient = await createAuthorizationManagementClient(wizardContext)
         const roles = this.roles();
         if (roles) {
@@ -49,21 +50,30 @@ export class RoleAssignmentExecuteStep<T extends types.IResourceGroupWizardConte
                         wizardContext.activityChildren.push(
                             new GenericTreeItem(undefined, {
                                 contextValue: createUniversallyUniqueContextValue(['successfullRoleAssignment', activitySuccessContext]),
-                                label: l10n.t(`Role Assignment ${role.roleDefinitionName} created for ${resourceName}`),
+                                label: l10n.t('Role Assignment {0} created for {1}', role.roleDefinitionName, resourceName),
                                 iconPath: activitySuccessIcon
                             })
                         );
                     }
                 } catch (error) {
+                    const parsedError = parseError(error);
+                    const maxRetries = 5;
+                    // if this error is due to a replication delay, we can retry the operation and it should resolve it
+                    if (parsedError.message.includes('If you are creating this principal and then immediately assigning a role, this error might be related to a replication delay.')
+                        && this._retries < maxRetries) {
+                        this._retries++;
+                        wizardContext.telemetry.properties.roleAssignmentCreateRetryCount = this._retries.toString();
+                        return await this.executeCore(wizardContext, progress);
+                    }
+
                     const roleAssignmentFailed = l10n.t('Failed to create role assignment "{0}" for the {2} resource "{1}".', role.roleDefinitionName ?? '', resourceName, resourceType);
                     progress.report({ message: roleAssignmentFailed });
                     ext.outputChannel.appendLog(roleAssignmentFailed);
-                    const parsedError = parseError(error);
                     ext.outputChannel.appendLog(parsedError.message);
                     if (wizardContext.activityChildren) {
                         wizardContext.activityChildren.push(new GenericTreeItem(undefined, {
                             contextValue: createUniversallyUniqueContextValue(['failedRoleAssignment', activitySuccessContext]),
-                            label: l10n.t(`Role Assignment ${role.roleDefinitionName} failed for ${resourceName}`),
+                            label: l10n.t('Role Assignment {0} failed for {1}', role.roleDefinitionName, resourceName),
                             iconPath: activityFailIcon
                         }));
                     }
@@ -79,6 +89,10 @@ export class RoleAssignmentExecuteStep<T extends types.IResourceGroupWizardConte
                 }
             }
         }
+    }
+
+    public async execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
+        return await this.executeCore(wizardContext, progress);
     }
 
     public shouldExecute(wizardContext: T): boolean {

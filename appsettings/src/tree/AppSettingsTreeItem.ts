@@ -187,8 +187,8 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
         const client = await this.clientProvider.createClient(context);
         const appSettings = await client.listApplicationSettings();
         if (appSettings.properties) {
-            for (const [value] of Object.entries(appSettings.properties)) {
-                if (isSettingConnectionString(value)) {
+            for (const [key, value] of Object.entries(appSettings.properties)) {
+                if (isSettingConnectionString(key, value)) {
                     this.contextValuesToAdd?.push('convert');
                 }
             }

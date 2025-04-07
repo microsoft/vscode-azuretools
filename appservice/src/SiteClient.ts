@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { AppServicePlan, FunctionEnvelope, FunctionSecrets, HostKeys, HostNameSslState, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SlotConfigNamesResource, SourceControl, StringDictionary, User, WebAppsListFunctionKeysResponse, WebJob, WebSiteInstanceStatus, WebSiteManagementClient } from '@azure/arm-appservice';
+import type { AppServicePlan, FunctionEnvelope, FunctionSecrets, HostKeys, HostNameSslState, ManagedServiceIdentity, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SlotConfigNamesResource, SourceControl, StringDictionary, User, WebAppsListFunctionKeysResponse, WebJob, WebSiteInstanceStatus, WebSiteManagementClient } from '@azure/arm-appservice';
 import type { ServiceClient } from '@azure/core-client';
 import { RequestBodyType, createHttpHeaders, createPipelineRequest } from '@azure/core-rest-pipeline';
 import type { AppSettingsClientProvider, IAppSettingsClient } from '@microsoft/vscode-azext-azureappsettings';
@@ -48,6 +48,7 @@ export class ParsedSite implements AppSettingsClientProvider {
     public readonly kuduHostName: string | undefined;
     public readonly kuduUrl: string | undefined;
     public readonly gitUrl: string | undefined;
+    public readonly identity: ManagedServiceIdentity | undefined;
 
     public readonly subscription: ISubscriptionContext;
 
@@ -75,6 +76,7 @@ export class ParsedSite implements AppSettingsClientProvider {
         this.isWorkflowApp = kind.includes(AppKind.workflowapp);
         this.isKubernetesApp = kind.includes('kubernetes');
         this.isLinux = kind.includes('linux');
+        this.identity = site.identity;
 
         /* eslint-disable @typescript-eslint/no-non-null-assertion */
         this.planResourceGroup = matches![2];
