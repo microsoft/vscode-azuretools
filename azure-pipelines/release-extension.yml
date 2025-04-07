@@ -133,8 +133,6 @@ extends:
                           Write-Output "Found .vsix file: $vsixFileName"
                         }
                       displayName: "\U0001F449 Find and Set .vsix File Variable"
-                      env:
-                        publishMultipleVsixFiles: ${{ parameters.publishMultipleVsixFiles }}
 
                     - task: UseNode@1
                       inputs:
