@@ -7,10 +7,7 @@ import * as vscode from 'vscode';
 import * as hTypes from '../../../hostapi';
 import * as types from '../../../index';
 import { activityFailContext, activityFailIcon } from '../../constants';
-import { AzExtParentTreeItem } from "../../tree/AzExtParentTreeItem";
-import { AzExtTreeItem } from '../../tree/AzExtTreeItem';
-import { GenericTreeItem } from "../../tree/GenericTreeItem";
-import { isAzExtParentTreeItem } from '../../tree/isAzExtTreeItem';
+import { createGenericElement } from '../../tree/v2/createGenericElement';
 import { ActivityBase } from "../Activity";
 
 export class ExecuteActivity<TContext extends types.ExecuteActivityContext = types.ExecuteActivityContext> extends ActivityBase<void> {
@@ -30,20 +27,18 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
         const resourceId: string | undefined = typeof activityResult === 'string' ? activityResult : activityResult?.id;
         return {
             label: this.label,
-            getChildren: activityResult || this.context.activityChildren ? ((parent: AzExtParentTreeItem) => {
+            getChildren: activityResult || this.context.activityChildren ? ((_parent: types.ActivityItemBase) => {
 
                 if (this.context.activityChildren) {
-                    parent.compareChildrenImpl = () => 0;  // Don't sort
                     return this.context.activityChildren;
                 }
 
-                const ti = new GenericTreeItem(parent, {
+                const ti = createGenericElement({
                     contextValue: 'executeResult',
                     label: vscode.l10n.t("Click to view resource"),
                     commandId: 'azureResourceGroups.revealResource',
+                    commandArgs: [resourceId],
                 });
-
-                ti.commandArgs = [resourceId];
 
                 return [ti];
 
@@ -54,14 +49,13 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
     public errorState(error: types.IParsedError): hTypes.ActivityTreeItemOptions {
         return {
             label: this.label,
-            getChildren: (parent: AzExtParentTreeItem) => {
-                const errorItem = new GenericTreeItem(parent, {
+            getChildren: (_parent: types.ActivityItemBase) => {
+                const errorItem = createGenericElement({
                     contextValue: 'executeError',
                     label: error.message
                 });
 
                 if (this.context.activityChildren) {
-                    parent.compareChildrenImpl = () => 0;  // Don't sort
                     this.appendErrorItemToActivityChildren(errorItem);
                     return this.context.activityChildren;
                 }
@@ -74,14 +68,13 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
     public progressState(): hTypes.ActivityTreeItemOptions {
         return {
             label: this.label,
-            getChildren: this.context.activityChildren ? ((parent: AzExtParentTreeItem) => {
-                parent.compareChildrenImpl = () => 0;  // Don't sort
+            getChildren: this.context.activityChildren ? ((_parent: types.ActivityItemBase) => {
                 return this.context.activityChildren || [];
             }) : undefined
         }
     }
 
-    private appendErrorItemToActivityChildren(errorItem: AzExtTreeItem): void {
+    private appendErrorItemToActivityChildren(errorItem: types.ActivityItemBase): void {
         // Honor any error suppression flag
         if ((this.context as unknown as types.IActionContext).errorHandling?.suppressDisplay) {
             return;
@@ -89,11 +82,15 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
 
         // Check if the last activity child was a parent fail item; if so, attach the actual error to it for additional user context
         const lastActivityChild = this.context.activityChildren?.at(-1);
-        if (isAzExtParentTreeItem(lastActivityChild) && new RegExp(activityFailContext).test(lastActivityChild?.contextValue ?? '')) {
-            const previousLoadMoreChildrenImpl = lastActivityChild.loadMoreChildrenImpl.bind(lastActivityChild) as typeof lastActivityChild.loadMoreChildrenImpl;
-            lastActivityChild.loadMoreChildrenImpl = async (clearCache: boolean, context: types.IActionContext) => {
+        const previousGetChildrenImpl = lastActivityChild?.getChildren?.bind(lastActivityChild) as types.TreeElementBase['getChildren'];
+        if (
+            lastActivityChild &&
+            previousGetChildrenImpl &&
+            new RegExp(activityFailContext).test(lastActivityChild.contextValue ?? '')
+        ) {
+            lastActivityChild.getChildren = async () => {
                 return [
-                    ...await previousLoadMoreChildrenImpl(clearCache, context),
+                    ...await previousGetChildrenImpl() ?? [],
                     errorItem
                 ];
             }

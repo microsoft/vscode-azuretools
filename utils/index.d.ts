@@ -1204,6 +1204,23 @@ export declare abstract class ActivityBase<R> implements Activity {
     public run(): Promise<void>;
 }
 
+export interface ActivityItemBase extends TreeElementBase {
+    contextValue?: string;
+}
+
+export type ActivityItemOptions = {
+    id: string;
+    contextValue: string;
+};
+
+export declare class ActivityItem implements ActivityItemBase {
+    id: string;
+    contextValue: string;
+    public constructor(options: ActivityItemOptions);
+    public getTreeItem(): TreeItem | Thenable<TreeItem>;
+    public getChildren(): ProviderResult<TreeElementBase[]>;
+}
+
 /**
  * A wizard that links several user input steps together
  */
@@ -1253,7 +1270,7 @@ export declare interface ExecuteActivityContext {
     /**
      * Children to show under the activity tree item. Children only appear once the activity is done.
      */
-    activityChildren?: (AzExtTreeItem | AzExtParentTreeItem)[];
+    activityChildren?: (ActivityItemBase | ActivityItemBase)[];
 }
 
 export interface ExecuteActivityOutput {
