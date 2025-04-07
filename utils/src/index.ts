@@ -40,6 +40,7 @@ export * from './tree/AzExtTreeItem';
 export * from './tree/GenericParentTreeItem';
 export * from './tree/GenericTreeItem';
 export * from './tree/isAzExtTreeItem';
+export * from './tree/v2/ActivityChildItem';
 export * from './tree/v2/createGenericElement';
 export * from './tree/v2/TreeElementStateManager';
 export * from './userInput/AzExtUserInputWithInputQueue';

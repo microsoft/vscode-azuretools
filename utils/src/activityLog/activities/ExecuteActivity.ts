@@ -7,10 +7,8 @@ import * as vscode from 'vscode';
 import * as hTypes from '../../../hostapi';
 import * as types from '../../../index';
 import { activityFailContext, activityFailIcon } from '../../constants';
-import { AzExtParentTreeItem } from "../../tree/AzExtParentTreeItem";
-import { AzExtTreeItem } from '../../tree/AzExtTreeItem';
-import { GenericTreeItem } from "../../tree/GenericTreeItem";
-import { isAzExtParentTreeItem } from '../../tree/isAzExtTreeItem';
+import { ResourceGroupsItem } from '../../pickTreeItem/quickPickAzureResource/tempTypes';
+import { createGenericElement } from '../../tree/v2/createGenericElement';
 import { ActivityBase } from "../Activity";
 
 export class ExecuteActivity<TContext extends types.ExecuteActivityContext = types.ExecuteActivityContext> extends ActivityBase<void> {
@@ -30,22 +28,20 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
         const resourceId: string | undefined = typeof activityResult === 'string' ? activityResult : activityResult?.id;
         return {
             label: this.label,
-            getChildren: activityResult || this.context.activityChildren ? ((parent: AzExtParentTreeItem) => {
+            getChildren: activityResult || this.context.activityChildren ? ((_parent: ResourceGroupsItem) => {
 
                 if (this.context.activityChildren) {
-                    parent.compareChildrenImpl = () => 0;  // Don't sort
                     return this.context.activityChildren;
                 }
 
-                const ti = new GenericTreeItem(parent, {
-                    contextValue: 'executeResult',
-                    label: vscode.l10n.t("Click to view resource"),
-                    commandId: 'azureResourceGroups.revealResource',
-                });
-
-                ti.commandArgs = [resourceId];
-
-                return [ti];
+                return [
+                    createGenericElement({
+                        contextValue: 'executeResult',
+                        label: vscode.l10n.t("Click to view resource"),
+                        commandId: 'azureResourceGroups.revealResource',
+                        commandArgs: [resourceId],
+                    }),
+                ];
 
             }) : undefined
         }
@@ -54,19 +50,18 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
     public errorState(error: types.IParsedError): hTypes.ActivityTreeItemOptions {
         return {
             label: this.label,
-            getChildren: (parent: AzExtParentTreeItem) => {
-                const errorItem = new GenericTreeItem(parent, {
+            getChildren: (_parent: ResourceGroupsItem) => {
+                const errorItemOptions: types.GenericElementOptions = {
                     contextValue: 'executeError',
                     label: error.message
-                });
+                };
 
                 if (this.context.activityChildren) {
-                    parent.compareChildrenImpl = () => 0;  // Don't sort
-                    this.appendErrorItemToActivityChildren(errorItem);
+                    this.appendErrorItemToActivityChildren(errorItemOptions);
                     return this.context.activityChildren;
                 }
 
-                return [errorItem];
+                return [createGenericElement(errorItemOptions)];
             }
         }
     }
@@ -74,14 +69,13 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
     public progressState(): hTypes.ActivityTreeItemOptions {
         return {
             label: this.label,
-            getChildren: this.context.activityChildren ? ((parent: AzExtParentTreeItem) => {
-                parent.compareChildrenImpl = () => 0;  // Don't sort
+            getChildren: this.context.activityChildren ? ((_parent: ResourceGroupsItem) => {
                 return this.context.activityChildren || [];
             }) : undefined
         }
     }
 
-    private appendErrorItemToActivityChildren(errorItem: AzExtTreeItem): void {
+    private appendErrorItemToActivityChildren(errorItemOptions: types.GenericElementOptions): void {
         // Honor any error suppression flag
         if ((this.context as unknown as types.IActionContext).errorHandling?.suppressDisplay) {
             return;
@@ -89,20 +83,24 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
 
         // Check if the last activity child was a parent fail item; if so, attach the actual error to it for additional user context
         const lastActivityChild = this.context.activityChildren?.at(-1);
-        if (isAzExtParentTreeItem(lastActivityChild) && new RegExp(activityFailContext).test(lastActivityChild?.contextValue ?? '')) {
-            const previousLoadMoreChildrenImpl = lastActivityChild.loadMoreChildrenImpl.bind(lastActivityChild) as typeof lastActivityChild.loadMoreChildrenImpl;
-            lastActivityChild.loadMoreChildrenImpl = async (clearCache: boolean, context: types.IActionContext) => {
+        const previousGetChildrenImpl = lastActivityChild?.getChildren?.bind(lastActivityChild) as types.ActivityChildItemBase['getChildren'];
+        if (
+            lastActivityChild &&
+            previousGetChildrenImpl &&
+            new RegExp(activityFailContext).test(lastActivityChild.contextValue ?? '')
+        ) {
+            lastActivityChild.getChildren = async () => {
                 return [
-                    ...await previousLoadMoreChildrenImpl(clearCache, context),
-                    errorItem
+                    ...await previousGetChildrenImpl() ?? [],
+                    createGenericElement(errorItemOptions)
                 ];
             }
             return;
         }
 
         // Otherwise append error item to the end of the list
-        errorItem.iconPath = activityFailIcon;
-        this.context.activityChildren?.push(errorItem);
+        errorItemOptions.iconPath = activityFailIcon;
+        this.context.activityChildren?.push(createGenericElement(errorItemOptions));
     }
 
     protected get label(): string {
