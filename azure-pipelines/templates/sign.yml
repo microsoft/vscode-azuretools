@@ -39,7 +39,7 @@ steps:
     - task: DotNetCoreCLI@2
       condition: eq(variables['signprojExists'], True)
       displayName: "\U0001F449 Sign with MSBuild"
-        inputs:
+      inputs:
         command: 'build'
         projects: $(Build.SourcesDirectory)/.azure-pipelines/SignExtension.signproj
 
