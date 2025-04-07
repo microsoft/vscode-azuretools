@@ -30,8 +30,6 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
     private readonly _onErrorEmitter = new EventEmitter<hTypes.OnErrorActivityData>();
 
     private status: ActivityStatus = ActivityStatus.NotStarted;
-    private _startTime: Date | undefined;
-    private _endTime: Date | undefined;
 
     public error?: types.IParsedError;
     public readonly task: types.ActivityTask<R>;
@@ -43,18 +41,9 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
     abstract progressState(): hTypes.ActivityTreeItemOptions;
     abstract errorState(error?: types.IParsedError): hTypes.ActivityTreeItemOptions;
 
-    public get startTime(): Date | undefined {
-        return this._startTime;
-    }
-
-    public get endTime(): Date | undefined {
-        return this._endTime;
-    }
-
     public constructor(task: types.ActivityTask<R>) {
         this.id = uuidv4();
         this.task = task;
-
         this.onStart = this._onStartEmitter.event;
         this.onProgress = this._onProgressEmitter.event;
         this.onSuccess = this._onSuccessEmitter.event;
@@ -68,7 +57,6 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
 
     public async run(): Promise<R> {
         try {
-            this._startTime = new Date();
             this._onStartEmitter.fire(this.getState());
             const result = await this.task({ report: this.report.bind(this) as typeof this.report }, this.cancellationTokenSource.token);
             this.status = ActivityStatus.Succeeded;
@@ -79,8 +67,6 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
             this.status = ActivityStatus.Failed;
             this._onErrorEmitter.fire({ ...this.getState(), error: e });
             throw e;
-        } finally {
-            this._endTime = new Date();
         }
     }
 

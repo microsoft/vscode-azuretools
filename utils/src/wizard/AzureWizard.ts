@@ -171,21 +171,8 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
 
     public async execute(): Promise<void> {
         await this.withProgress({ location: ProgressLocation.Notification }, async progress => {
-            let currentStep: number = 1;
 
             const steps: AzureWizardExecuteStep<T>[] = this._executeSteps.sort((a, b) => b.priority - a.priority);
-
-            const internalProgress: vscode.Progress<{ message?: string; increment?: number }> = {
-                report: (value: { message?: string; increment?: number }): void => {
-                    if (value.message) {
-                        const totalSteps: number = currentStep + steps.filter(s => s.shouldExecute(this._context)).length;
-                        if (totalSteps > 1) {
-                            value.message += ` (${currentStep}/${totalSteps})`;
-                        }
-                    }
-                    progress.report(value);
-                }
-            };
 
             let step: AzureWizardExecuteStep<T> | undefined = steps.pop();
             while (step) {
@@ -208,7 +195,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                 let output: types.ExecuteActivityOutput | undefined;
                 try {
                     this._context.telemetry.properties.lastStep = `execute-${getEffectiveStepId(step)}`;
-                    await step.execute(this._context, internalProgress);
+                    await step.execute(this._context, progress);
                     output = step.createSuccessOutput?.(this._context);
                 } catch (e) {
                     output = step.createFailOutput?.(this._context);
@@ -224,13 +211,12 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                     }
 
                     const end: Date = new Date();
-                    if (output.item && !output.item?.description) {
-                        output.item.description = dateTimeUtils.getFormattedDurationInMinutesAndSeconds(end.getTime() - start.getTime());
+                    if (output.item) {
+                        const duration: string = dateTimeUtils.getFormattedDurationInMinutesAndSeconds(end.getTime() - start.getTime());
+                        output.item.description = output.item.description ? `${output.item.description} (${duration})` : duration;
                     }
 
                     this.displayActivityOutput(output, step.options);
-
-                    currentStep += 1;
                     step = steps.pop();
                 }
             }
