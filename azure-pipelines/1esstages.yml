@@ -47,15 +47,11 @@ stages:
               - template: ./templates/1espackage.yml
                 parameters:
                   additionalPostPackageSteps: ${{ parameters.additionalPostPackageSteps }}
-              - ${{ if eq(join('', parameters.vsixFileNames), '') }}:
-                  - template: ./templates/sign.yml
-                    parameters:
-                      enableSigning: ${{ parameters.enableSigning }}
-              - ${{ if ne(join('', parameters.vsixFileNames), '') }}:
-                  - template: ./templates/signMultiple.yml
-                    parameters:
-                      enableSigning: ${{ parameters.enableSigning }}
-                      vsixFileNames: ${{ parameters.vsixFileNames }}
+              - template: ./templates/sign.yml
+                parameters:
+                  enableSigning: ${{ parameters.enableSigning }}
+                  vsixFileNames: ${{ parameters.vsixFileNames }}
+
               - template: ./templates/stage-artifacts.yml
               - template: ./templates/test.yml
                 parameters:
