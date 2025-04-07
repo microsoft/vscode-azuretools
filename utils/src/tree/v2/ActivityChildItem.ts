@@ -4,23 +4,10 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { TreeItem, TreeItemCollapsibleState } from "vscode";
-import { TreeElementBase, TreeItemIconPath } from "../../..";
+import { TreeItemIconPath } from "../../..";
+import * as types from '../../../index';
 
-export interface ActivityChildItemBase extends TreeElementBase {
-    contextValue?: string;
-    description?: string;
-}
-
-export type ActivityChildItemOptions = {
-    id: string;
-    label: string;
-    contextValue: string;
-    description?: string;
-    iconPath?: TreeItemIconPath;
-    initialCollapsibleState?: TreeItemCollapsibleState;
-};
-
-export class ActivityChildItem implements ActivityChildItemBase {
+export class ActivityChildItem implements types.ActivityChildItemBase {
     readonly id: string;
     label: string;
     contextValue: string;
@@ -28,7 +15,7 @@ export class ActivityChildItem implements ActivityChildItemBase {
     iconPath?: TreeItemIconPath;
     initialCollapsibleState?: TreeItemCollapsibleState;
 
-    constructor(options: ActivityChildItemOptions) {
+    constructor(options: types.ActivityChildItemOptions) {
         this.id = options.id;
         this.label = options.label;
         this.contextValue = options.contextValue;
