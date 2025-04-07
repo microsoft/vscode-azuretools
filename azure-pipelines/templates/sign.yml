@@ -29,12 +29,12 @@ steps:
     name: package
     displayName: "\U0001F449 Get extension info from package.json"
 
-  - script: npx @vscode/vsce@latest generate-manifest -i $(package.name)-$(package.version).vsix -o $(Build.SourcesDirectory)/extension.manifest
-    condition: eq(variables['signprojExists'], True)
-    displayName: "\U0001F449 Generate extension manifest"
-
   # Sign single vsix file if vsixFileNames are not provided
   - ${{ if eq(join('', parameters.vsixFileNames), '') }}:
+    - script: npx @vscode/vsce@latest generate-manifest -i $(package.name)-$(package.version).vsix -o $(Build.SourcesDirectory)/extension.manifest
+      condition: eq(variables['signprojExists'], True)
+      displayName: "\U0001F449 Generate extension manifest"
+
     # this task will pass even if signing fails, so we follow it up with a check to see if the signature file was created
     - task: DotNetCoreCLI@2
       condition: eq(variables['signprojExists'], True)
