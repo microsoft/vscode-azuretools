@@ -207,11 +207,6 @@ The extension release pipeline has the following parameters.
 - name: publishCommands
   type: object
   default: ['vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s']
-
-# When true, skips the check that ensures there is only one Vsix file in the directory.
-- name: publishMultipleVsixFiles
-  type: boolean
-  default: false
 ```
 
 ### (DEPRECATED) Primary pipelines

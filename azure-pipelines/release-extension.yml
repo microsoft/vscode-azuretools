@@ -35,11 +35,6 @@ parameters:
         "vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s",
       ]
 
-  # When true, skips check to make sure there are not multiple .vsix files found in the build directory
-  - name: publishMultipleVsixFiles
-    type: boolean
-    default: false
-
 # `resources` specifies the location of templates to pick up, use it to get 1ES templates
 resources:
   repositories:
@@ -127,12 +122,8 @@ extends:
                         # Get all .vsix files in the current directory
                         $vsixFiles = Get-ChildItem -Path $(System.DefaultWorkingDirectory) -Filter *.vsix -File
 
-                        $publishMultipleVsixFiles = "$env:publishMultipleVsixFiles"
-                        # Check if more than one .vsix file is found
-                        if (($vsixFiles.Count -gt 1)  -and ($publishMultipleVsixFiles -eq 'False')) {
-                          Write-Error "More than one .vsix file found."
-                          exit 1
-                        } elseif ($vsixFiles.Count -eq 0) {
+                        # Check if no .vsix file is found
+                        if ($vsixFiles.Count -eq 0) {
                           Write-Error "No .vsix files found."
                           exit 1
                         } else {
