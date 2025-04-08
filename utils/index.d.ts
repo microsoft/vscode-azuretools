@@ -1233,7 +1233,7 @@ export declare class ActivityChildItem implements ActivityChildItemBase {
     initialCollapsibleState?: TreeItemCollapsibleState;
     public constructor(options: ActivityChildItemOptions);
     public getTreeItem(): TreeItem | Thenable<TreeItem>;
-    public getChildren(): ProviderResult<ActivityChildItemBase[]>;
+    public getChildren?(): ProviderResult<ActivityChildItemBase[]>;
 }
 
 /**
