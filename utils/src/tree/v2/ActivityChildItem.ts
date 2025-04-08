@@ -3,8 +3,8 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { TreeItem, TreeItemCollapsibleState } from "vscode";
-import { TreeItemIconPath } from "../../..";
+import { ProviderResult, TreeItem, TreeItemCollapsibleState } from "vscode";
+import { TreeElementBase, TreeItemIconPath } from "../../..";
 import * as types from '../../../index';
 
 export class ActivityChildItem implements types.ActivityChildItemBase {
@@ -22,6 +22,10 @@ export class ActivityChildItem implements types.ActivityChildItemBase {
         this.description = options.description;
         this.iconPath = options.iconPath;
         this.initialCollapsibleState = options.initialCollapsibleState;
+
+        if (options.initWithEmptyChildren) {
+            this.getChildren = () => [];
+        }
     }
 
     getTreeItem(): TreeItem | Thenable<TreeItem> {
@@ -33,4 +37,6 @@ export class ActivityChildItem implements types.ActivityChildItemBase {
             collapsibleState: this.initialCollapsibleState,
         }
     }
+
+    getChildren?(): ProviderResult<TreeElementBase[]>;
 }
