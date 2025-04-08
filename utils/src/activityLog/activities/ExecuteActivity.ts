@@ -84,8 +84,8 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
         }
 
         const lastActivityChild = activityChildren?.at(-1);
-        // Skip if not writeable; we've already updated and locked `getChildren`
-        if (!Object.getOwnPropertyDescriptor(lastActivityChild, 'getChildren')?.writable) {
+        // Skip if we've already modified this item
+        if (lastActivityChild?._hasBeenModified) {
             return;
         }
 
@@ -103,12 +103,8 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
                 ];
             };
 
-            // Freeze the `getChildren` method to prevent further modifications (make this operation idempotent)
-            Object.defineProperty(lastActivityChild, 'getChildren', {
-                writable: false,
-                configurable: false
-            });
-
+            // Mark as modified so we don't update again if `getChildren` is called (i.e. ensure this operation remains idempotent)
+            lastActivityChild._hasBeenModified = true;
             return;
         }
 
