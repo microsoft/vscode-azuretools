@@ -57,8 +57,10 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
                 };
 
                 if (this.context.activityChildren) {
-                    this.appendErrorItemToActivityChildren(errorItemOptions);
-                    return this.context.activityChildren;
+                    // Operate on a copied array to ensure the operation remains idempotent
+                    const activityChildren: types.ActivityChildItemBase[] = this.context.activityChildren.slice();
+                    this.appendErrorItemToActivityChildren(activityChildren, errorItemOptions);
+                    return activityChildren;
                 }
 
                 return [createGenericElement(errorItemOptions)];
@@ -75,14 +77,19 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
         }
     }
 
-    private appendErrorItemToActivityChildren(errorItemOptions: types.GenericElementOptions): void {
+    private appendErrorItemToActivityChildren(activityChildren: types.ActivityChildItemBase[], errorItemOptions: types.GenericElementOptions): void {
         // Honor any error suppression flag
         if ((this.context as unknown as types.IActionContext).errorHandling?.suppressDisplay) {
             return;
         }
 
+        const lastActivityChild = activityChildren?.at(-1);
+        // Skip if not writeable; we've already updated and locked `getChildren`
+        if (!Object.getOwnPropertyDescriptor(lastActivityChild, 'getChildren')?.writable) {
+            return;
+        }
+
         // Check if the last activity child was a parent fail item; if so, attach the actual error to it for additional user context
-        const lastActivityChild = this.context.activityChildren?.at(-1);
         const previousGetChildrenImpl = lastActivityChild?.getChildren?.bind(lastActivityChild) as types.ActivityChildItemBase['getChildren'];
         if (
             lastActivityChild &&
@@ -94,13 +101,20 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
                     ...await previousGetChildrenImpl() ?? [],
                     createGenericElement(errorItemOptions)
                 ];
-            }
+            };
+
+            // Freeze the `getChildren` method to prevent further modifications (make this operation idempotent)
+            Object.defineProperty(lastActivityChild, 'getChildren', {
+                writable: false,
+                configurable: false
+            });
+
             return;
         }
 
         // Otherwise append error item to the end of the list
         errorItemOptions.iconPath = activityFailIcon;
-        this.context.activityChildren?.push(createGenericElement(errorItemOptions));
+        activityChildren.push(createGenericElement(errorItemOptions));
     }
 
     protected get label(): string {
