@@ -1207,6 +1207,12 @@ export declare abstract class ActivityBase<R> implements Activity {
  * Represents the base structure for an activity child item in the activity log.
  */
 export interface ActivityChildItemBase extends TreeElementBase {
+    /**
+     * An internal flag that is sometimes used to determine whether this item has been modified by the activity log API.
+     * This flag is checked to ensure that the item is only modified once.
+     */
+    _hasBeenModified?: boolean;
+
     contextValue?: string;
     description?: string;
 }
