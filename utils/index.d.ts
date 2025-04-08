@@ -1224,6 +1224,10 @@ export type ActivityChildItemOptions = {
     description?: string;
     iconPath?: TreeItemIconPath;
     initialCollapsibleState?: TreeItemCollapsibleState;
+    /**
+     * Whether to initialize `getChildren` to return an empty array.
+     */
+    initWithEmptyChildren?: boolean;
 };
 
 /**
