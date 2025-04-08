@@ -27,6 +27,14 @@ parameters:
     type: boolean
     default: false
 
+  # A list of publish commands to run. It defaults to publishing a single .vsix file. If you want to publish multiple .vsix files (platform specifc), you can add mutliple commands to this list.
+  - name: publishCommands
+    type: object
+    default:
+      [
+        "vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s",
+      ]
+
 # `resources` specifies the location of templates to pick up, use it to get 1ES templates
 resources:
   repositories:
@@ -62,7 +70,6 @@ extends:
               runOnce:
                 deploy:
                   steps:
-
                     - checkout: none
 
                     # Modify the build number to include repo name, extension version, and if dry run is true
@@ -115,11 +122,8 @@ extends:
                         # Get all .vsix files in the current directory
                         $vsixFiles = Get-ChildItem -Path $(System.DefaultWorkingDirectory) -Filter *.vsix -File
 
-                        # Check if more than one .vsix file is found
-                        if ($vsixFiles.Count -gt 1) {
-                          Write-Error "More than one .vsix file found."
-                          exit 1
-                        } elseif ($vsixFiles.Count -eq 0) {
+                        # Check if no .vsix file is found
+                        if ($vsixFiles.Count -eq 0) {
                           Write-Error "No .vsix files found."
                           exit 1
                         } else {
@@ -138,12 +142,16 @@ extends:
                     - script: npm i -g @vscode/vsce
                       displayName: "\U0001F449 Install vsce"
 
-                    - task: AzureCLI@2
-                      displayName: "\U0001F449 Run vsce publish"
-                      condition: and(succeeded(), ${{ eq(parameters.dryRun, false) }})
-                      inputs:
-                        azureSubscription: ${{ parameters.ExtensionReleaseServiceConnection }}
-                        scriptType: pscore
-                        scriptLocation: inlineScript
-                        inlineScript: |
-                          vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s
+                    - ${{ each publishCommand in parameters.publishCommands }}:
+                        # log the publishCommand
+                        - powershell: |
+                            Write-Output "Publish command: $publishCommand"
+                          displayName: "\U0001F449 Log publish command"
+                        - task: AzureCLI@2
+                          displayName: "\U0001F449 Run vsce publish"
+                          condition: and(succeeded(), ${{ eq(parameters.dryRun, false) }})
+                          inputs:
+                            azureSubscription: ${{ parameters.ExtensionReleaseServiceConnection }}
+                            scriptType: pscore
+                            scriptLocation: inlineScript
+                            inlineScript: ${{ publishCommand }}

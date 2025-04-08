@@ -209,6 +209,11 @@ The extension release pipeline has the following parameters.
 - name: dryRun
   type: boolean
   default: false
+
+# A list of publish commands to run. It defaults to publishing a single .vsix file. If you want to publish multiple .vsix files (platform specifc), you can add mutliple commands to this list.
+- name: publishCommands
+  type: object
+  default: ['vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s']
 ```
 
 ### (DEPRECATED) Primary pipelines
