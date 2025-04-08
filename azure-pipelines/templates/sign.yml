@@ -53,8 +53,8 @@ steps:
 
         Write-Output "The file '$filePath' exists."
         exit 0
-        displayName: "\U0001F449 Verify extension.signature.p7s file was created"
-        condition: eq(variables['signprojExists'], True)
+      displayName: "\U0001F449 Verify extension.signature.p7s file was created"
+      condition: eq(variables['signprojExists'], True)
 
   # If vsixFileNames are provided, sign each file in list and move to corresponding directory
   - ${{ if ne(join('', parameters.vsixFileNames), '') }}:
