@@ -1204,6 +1204,9 @@ export declare abstract class ActivityBase<R> implements Activity {
     public run(): Promise<void>;
 }
 
+/**
+ * Represents the base structure for an activity child item in the activity log.
+ */
 export interface ActivityChildItemBase extends TreeElementBase {
     contextValue?: string;
     description?: string;
@@ -1218,9 +1221,17 @@ export type ActivityChildItemOptions = {
     initialCollapsibleState?: TreeItemCollapsibleState;
 };
 
+/**
+ * A class for quickly creating activity children.
+ * Adheres to the `ActivityChildItemBase` structure required for all activity log child items.
+ */
 export declare class ActivityChildItem implements ActivityChildItemBase {
-    id: string;
+    readonly id: string;
+    label: string;
     contextValue: string;
+    description?: string;
+    iconPath?: TreeItemIconPath;
+    initialCollapsibleState?: TreeItemCollapsibleState;
     public constructor(options: ActivityChildItemOptions);
     public getTreeItem(): TreeItem | Thenable<TreeItem>;
     public getChildren(): ProviderResult<ActivityChildItemBase[]>;
