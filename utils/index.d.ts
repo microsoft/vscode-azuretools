@@ -8,7 +8,7 @@
 import type { Environment } from '@azure/ms-rest-azure-env';
 import type { AzExtResourceType, AzureResource, AzureSubscription, ResourceModelBase } from '@microsoft/vscode-azureresources-api';
 import type * as duration from 'dayjs/plugin/duration';
-import { AuthenticationSession, CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, LanguageModelToolInvocationOptions, LanguageModelToolInvocationPrepareOptions, LanguageModelToolResult, LogOutputChannel, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, PreparedToolInvocation, Progress, ProviderResult, QuickPickItem, TelemetryTrustedValue, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri, QuickPickOptions as VSCodeQuickPickOptions, WorkspaceFolder, WorkspaceFolderPickOptions } from 'vscode';
+import { AuthenticationSession, CancellationToken, CancellationTokenSource, Command, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, LanguageModelToolInvocationOptions, LanguageModelToolInvocationPrepareOptions, LanguageModelToolResult, LogOutputChannel, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, PreparedToolInvocation, Progress, ProviderResult, QuickPickItem, TelemetryTrustedValue, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri, QuickPickOptions as VSCodeQuickPickOptions, WorkspaceFolder, WorkspaceFolderPickOptions } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
 
@@ -1205,6 +1205,36 @@ export declare abstract class ActivityBase<R> implements Activity {
 }
 
 /**
+ * An enum representing the different categories of activity children
+ */
+export declare enum ActivityChildType {
+    /**
+     * A child type representing the successful run of an `AzureWizardExecuteStep`
+     */
+    Success = 'success',
+    /**
+     * A child type representing the failed run of an `AzureWizardExecuteStep`
+     */
+    Fail = 'fail',
+    /**
+     * A child type indicating an actively running `AzureWizardExecuteStep`
+     */
+    Progress = 'progress',
+    /**
+     * A child type for displaying informational data
+     */
+    Info = 'info',
+    /**
+     * A child type for displaying a thrown error
+     */
+    Error = 'error',
+    /**
+     * A child type with a command attached
+     */
+    Command = 'command',
+}
+
+/**
  * Represents the base structure for an activity child item in the activity log.
  */
 export interface ActivityChildItemBase extends TreeElementBase {
@@ -1214,16 +1244,20 @@ export interface ActivityChildItemBase extends TreeElementBase {
      */
     _hasBeenModified?: boolean;
 
+    activityType: ActivityChildType;
     contextValue?: string;
     description?: string;
 }
 
 export type ActivityChildItemOptions = {
-    id: string;
+    id?: string;
     label: string;
     contextValue: string;
+    activityType: ActivityChildType;
+    command?: Command;
     description?: string;
     iconPath?: TreeItemIconPath;
+    tooltip?: string | MarkdownString | undefined;
     initialCollapsibleState?: TreeItemCollapsibleState;
     /**
      * Whether to initialize `getChildren` to return an empty array.
@@ -1237,11 +1271,9 @@ export type ActivityChildItemOptions = {
  */
 export declare class ActivityChildItem implements ActivityChildItemBase {
     readonly id: string;
-    label: string;
     contextValue: string;
+    activityType: ActivityChildType;
     description?: string;
-    iconPath?: TreeItemIconPath;
-    initialCollapsibleState?: TreeItemCollapsibleState;
     public constructor(options: ActivityChildItemOptions);
     public getTreeItem(): TreeItem | Thenable<TreeItem>;
     public getChildren?(): ProviderResult<ActivityChildItemBase[]>;

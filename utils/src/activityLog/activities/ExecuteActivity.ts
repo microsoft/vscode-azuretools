@@ -6,9 +6,9 @@
 import * as vscode from 'vscode';
 import * as hTypes from '../../../hostapi';
 import * as types from '../../../index';
-import { activityFailContext, activityFailIcon } from '../../constants';
+import { activityErrorContext, activityFailContext, activityFailIcon } from '../../constants';
 import { ResourceGroupsItem } from '../../pickTreeItem/quickPickAzureResource/tempTypes';
-import { createGenericElement } from '../../tree/v2/createGenericElement';
+import { ActivityChildItem, ActivityChildType } from '../../tree/v2/ActivityChildItem';
 import { ActivityBase } from "../Activity";
 
 export class ExecuteActivity<TContext extends types.ExecuteActivityContext = types.ExecuteActivityContext> extends ActivityBase<void> {
@@ -35,11 +35,15 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
                 }
 
                 return [
-                    createGenericElement({
+                    new ActivityChildItem({
                         contextValue: 'executeResult',
                         label: vscode.l10n.t("Click to view resource"),
-                        commandId: 'azureResourceGroups.revealResource',
-                        commandArgs: [resourceId],
+                        activityType: ActivityChildType.Command,
+                        command: {
+                            title: '',
+                            command: 'azureResourceGroups.revealResource',
+                            arguments: [resourceId],
+                        },
                     }),
                 ];
 
@@ -51,9 +55,10 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
         return {
             label: this.label,
             getChildren: (_parent: ResourceGroupsItem) => {
-                const errorItemOptions: types.GenericElementOptions = {
-                    contextValue: 'executeError',
-                    label: error.message
+                const errorItemOptions: types.ActivityChildItemOptions = {
+                    label: error.message,
+                    contextValue: activityErrorContext,
+                    activityType: ActivityChildType.Error,
                 };
 
                 if (this.context.activityChildren) {
@@ -63,7 +68,7 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
                     return activityChildren;
                 }
 
-                return [createGenericElement(errorItemOptions)];
+                return [new ActivityChildItem(errorItemOptions)];
             }
         }
     }
@@ -77,7 +82,7 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
         }
     }
 
-    private appendErrorItemToActivityChildren(activityChildren: types.ActivityChildItemBase[], errorItemOptions: types.GenericElementOptions): void {
+    private appendErrorItemToActivityChildren(activityChildren: types.ActivityChildItemBase[], errorItemOptions: types.ActivityChildItemOptions): void {
         // Honor any error suppression flag
         if ((this.context as unknown as types.IActionContext).errorHandling?.suppressDisplay) {
             return;
@@ -99,7 +104,7 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
             lastActivityChild.getChildren = async () => {
                 return [
                     ...await previousGetChildrenImpl() ?? [],
-                    createGenericElement(errorItemOptions)
+                    new ActivityChildItem(errorItemOptions),
                 ];
             };
 
@@ -110,7 +115,7 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
 
         // Otherwise append error item to the end of the list
         errorItemOptions.iconPath = activityFailIcon;
-        activityChildren.push(createGenericElement(errorItemOptions));
+        activityChildren.push(new ActivityChildItem(errorItemOptions));
     }
 
     protected get label(): string {
