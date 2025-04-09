@@ -7,7 +7,7 @@ import { IAzExtOutputChannel, IAzureUserInput, registerUIExtensionVariables, UIE
 import { ExtensionContext, l10n } from "vscode";
 
 class UninitializedExtensionVariables implements UIExtensionVariables {
-    private _error: Error = new Error(l10n.t('"registerAzureUtilsExtensionVariables" must be called before using the vscode-azext-azureutilsa package.'));
+    private _error: Error = new Error(l10n.t('"registerAzureUtilsExtensionVariables" must be called before using the vscode-azext-azureutils package.'));
 
     public get context(): ExtensionContext {
         throw this._error;
