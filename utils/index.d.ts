@@ -459,6 +459,7 @@ export interface GenericParentTreeItemOptions {
     childTypeLabel?: string;
     contextValue: string;
     iconPath?: TreeItemIconPath;
+    id?: string;
     initialCollapsibleState?: TreeItemCollapsibleState;
     label: string;
     suppressMaskLabel?: boolean;
@@ -1332,13 +1333,47 @@ export declare interface ExecuteActivityContext {
 
 export interface ExecuteActivityOutput {
     /**
-     * The activity child item to display on success or fail
+     * The activity child item to display on success, fail, or progress
      */
     item?: ActivityChildItemBase;
     /**
-     * The output log message to display on success or fail
+     * The output log message to display on success, fail, or progress
      */
     message?: string;
+}
+
+/**
+ * An execute step variant that automatically creates all activity output types
+ * based on defined step properties.
+ *
+ * These output types are automatically provided to the output log and
+ * to the activity log upon completion of each step.
+ */
+export declare abstract class AzureWizardExecuteStepWithActivityOutput<T extends IActionContext> extends AzureWizardExecuteStep<T> {
+    /**
+     * The name of the step, provided as part of the activity child item's context value.
+     */
+    abstract readonly stepName: string;
+    /**
+     * Abstract method to get the activity child tree item label.
+     */
+    protected abstract getTreeItemLabel(context: T): string;
+    /**
+     * Abstract method to get the success string for the output log.
+     */
+    protected abstract getOutputLogSuccess(context: T): string;
+    /**
+     * Abstract method to get the fail string for the output log.
+     */
+    protected abstract getOutputLogFail(context: T): string;
+    /**
+     * Optional method to get the progress string for the output log.
+     */
+    protected getOutputLogProgress?(context: T): string;
+
+    public createSuccessOutput(context: T): ExecuteActivityOutput;
+    public createProgressOutput(context: T): ExecuteActivityOutput;
+    public createFailOutput(context: T): ExecuteActivityOutput;
 }
 
 /**

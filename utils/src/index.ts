@@ -56,6 +56,7 @@ export * from './utils/validationUtils';
 export * from './wizard/AzureNameStep';
 export * from './wizard/AzureWizard';
 export * from './wizard/AzureWizardExecuteStep';
+export * from './wizard/AzureWizardExecuteStepWithActivityOutput';
 export * from './wizard/AzureWizardPromptStep';
 export * from './wizard/ConfirmPreviousInputStep';
 export * from './wizard/DeleteConfirmationStep';
