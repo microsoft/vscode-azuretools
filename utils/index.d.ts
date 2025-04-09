@@ -1207,11 +1207,29 @@ export declare abstract class ActivityBase<R> implements Activity {
  * An enum representing the different categories of activity children
  */
 export declare enum ActivityChildType {
+    /**
+     * A child type representing the successful run of an `AzureWizardExecuteStep`
+     */
     Success = 'success',
+    /**
+     * A child type representing the failed run of an `AzureWizardExecuteStep`
+     */
     Fail = 'fail',
+    /**
+     * A child type indicating an actively running `AzureWizardExecuteStep`
+     */
     Progress = 'progress',
+    /**
+     * A child type for displaying informational data
+     */
     Info = 'info',
+    /**
+     * A child type for displaying a thrown error
+     */
     Error = 'error',
+    /**
+     * A child type with a command attached
+     */
     Command = 'command',
 }
 
