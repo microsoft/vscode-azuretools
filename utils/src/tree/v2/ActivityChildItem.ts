@@ -3,25 +3,31 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { ProviderResult, TreeItem, TreeItemCollapsibleState } from "vscode";
-import { TreeElementBase, TreeItemIconPath } from "../../..";
+import { v4 as uuidv4 } from "uuid";
+import { ProviderResult, TreeItem } from "vscode";
+import { TreeElementBase } from "../../..";
 import * as types from '../../../index';
+
+export enum ActivityChildType {
+    Success = 'success',
+    Fail = 'fail',
+    Progress = 'progress',
+    Info = 'info',
+    Error = 'error',
+    Command = 'command',
+}
 
 export class ActivityChildItem implements types.ActivityChildItemBase {
     readonly id: string;
-    label: string;
     contextValue: string;
+    activityType: ActivityChildType;
     description?: string;
-    iconPath?: TreeItemIconPath;
-    initialCollapsibleState?: TreeItemCollapsibleState;
 
-    constructor(options: types.ActivityChildItemOptions) {
-        this.id = options.id;
-        this.label = options.label;
+    constructor(readonly options: types.ActivityChildItemOptions) {
+        this.id = options.id ?? uuidv4();
+        this.activityType = options.activityType;
         this.contextValue = options.contextValue;
         this.description = options.description;
-        this.iconPath = options.iconPath;
-        this.initialCollapsibleState = options.initialCollapsibleState;
 
         if (options.initWithEmptyChildren) {
             this.getChildren = () => [];
@@ -30,12 +36,15 @@ export class ActivityChildItem implements types.ActivityChildItemBase {
 
     getTreeItem(): TreeItem | Thenable<TreeItem> {
         return {
-            label: this.label,
+            id: this.id,
+            label: this.options.label,
             description: this.description,
-            iconPath: this.iconPath,
             contextValue: this.contextValue,
-            collapsibleState: this.initialCollapsibleState,
-        }
+            iconPath: this.options.iconPath,
+            collapsibleState: this.options.initialCollapsibleState,
+            tooltip: this.options.tooltip,
+            command: this.options.command,
+        };
     }
 
     getChildren?(): ProviderResult<TreeElementBase[]>;
