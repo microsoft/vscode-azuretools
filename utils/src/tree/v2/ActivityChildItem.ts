@@ -29,7 +29,7 @@ export class ActivityChildItem implements types.ActivityChildItemBase {
         this.contextValue = options.contextValue;
         this.description = options.description;
 
-        if (options.initWithEmptyChildren) {
+        if (options.isParent) {
             this.getChildren = () => [];
         }
     }
