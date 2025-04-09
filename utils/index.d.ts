@@ -1260,9 +1260,9 @@ export type ActivityChildItemOptions = {
     tooltip?: string | MarkdownString | undefined;
     initialCollapsibleState?: TreeItemCollapsibleState;
     /**
-     * Whether to initialize `getChildren` to return an empty array.
+     * If set to true, will initialize `getChildren` with an empty array.
      */
-    initWithEmptyChildren?: boolean;
+    isParent?: boolean;
 };
 
 /**
