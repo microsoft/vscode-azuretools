@@ -3,10 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { v4 as uuidv4 } from "uuid";
 import * as types from '../../index';
 import { activityFailContext, activityFailIcon, activityProgressContext, activityProgressIcon, activitySuccessContext, activitySuccessIcon } from '../constants';
-import { ActivityChildItem } from "../tree/v2/ActivityChildItem";
+import { ActivityChildItem, ActivityChildType } from "../tree/v2/ActivityChildItem";
 import { createContextValue } from '../utils/contextUtils';
 import { AzureWizardExecuteStep } from "./AzureWizardExecuteStep";
 
@@ -59,6 +58,7 @@ type ActivityOutputCreateOptions = {
 };
 
 function createExecuteActivityOutput(_: types.IActionContext, options: ActivityOutputCreateOptions): types.ExecuteActivityOutput {
+    const activityType = options.outputType === ActivityOutputState.Success ? ActivityChildType.Success : options.outputType === ActivityOutputState.Fail ? ActivityChildType.Fail : ActivityChildType.Progress;
     const activityContext = options.outputType === ActivityOutputState.Success ? activitySuccessContext : options.outputType === ActivityOutputState.Fail ? activityFailContext : activityProgressContext;
     const contextValue = createContextValue([`${options.stepName}Item`, activityContext]);
     const label = options.treeItemLabel;
@@ -66,10 +66,10 @@ function createExecuteActivityOutput(_: types.IActionContext, options: ActivityO
 
     return {
         item: new ActivityChildItem({
-            id: uuidv4(),
             contextValue,
             label,
             iconPath,
+            activityType,
         }),
         message: options.outputLogMessage,
     };
