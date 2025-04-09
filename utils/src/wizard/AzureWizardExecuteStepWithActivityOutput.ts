@@ -70,6 +70,7 @@ function createExecuteActivityOutput(_: types.IActionContext, options: ActivityO
             label,
             iconPath,
             activityType,
+            isParent: activityType === ActivityChildType.Fail,
         }),
         message: options.outputLogMessage,
     };
