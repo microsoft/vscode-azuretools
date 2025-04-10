@@ -47,6 +47,7 @@ export class RoleAssignmentExecuteStep<T extends types.IResourceGroupWizardConte
                     progress.report({ message: roleAssignmentCreated });
                     ext.outputChannel.appendLog(roleAssignmentCreated);
                     if (wizardContext.activityChildren) {
+                        // Todo: Leverage createSuccessOutput
                         wizardContext.activityChildren.push(
                             new ActivityChildItem({
                                 activityType: ActivityChildType.Success,
@@ -72,6 +73,7 @@ export class RoleAssignmentExecuteStep<T extends types.IResourceGroupWizardConte
                     ext.outputChannel.appendLog(roleAssignmentFailed);
                     ext.outputChannel.appendLog(parsedError.message);
                     if (wizardContext.activityChildren) {
+                        // Todo: Leverage createFailOutput
                         wizardContext.activityChildren.push(new ActivityChildItem({
                             activityType: ActivityChildType.Fail,
                             contextValue: createContextValue(['failedRoleAssignment', activityFailContext]),
