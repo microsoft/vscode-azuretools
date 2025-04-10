@@ -140,7 +140,7 @@ export class CorrelationIdPolicy implements PipelinePolicy {
 
     public async sendRequest(request: PipelineRequest, next: SendRequest): Promise<PipelineResponse> {
         const headerName = 'x-ms-correlation-request-id';
-        const id: string = (this.context.telemetry.properties[headerName] as string) ||= uuidv4();
+        const id: string = (this.context.telemetry.properties[headerName] as string | undefined) ||= uuidv4();
         request.headers.set(headerName, id);
         return await next(request);
     }
