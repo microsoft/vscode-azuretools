@@ -31,7 +31,6 @@ export abstract class ActivityBase<R> implements hTypes.Activity, Disposable {
     private readonly _onErrorEmitter = new EventEmitter<hTypes.OnErrorActivityData>();
 
     private status: ActivityStatus = ActivityStatus.NotStarted;
-    private latestMessage: string;
     private timerMessage: string = '0s';
 
     private timer: NodeJS.Timeout;
@@ -66,15 +65,8 @@ export abstract class ActivityBase<R> implements hTypes.Activity, Disposable {
         this.onError = this._onErrorEmitter.event;
     }
 
-    private report(progress?: { message?: string; increment?: number }): void {
-        if (progress?.message !== undefined) {
-            this.latestMessage = progress.message;
-        }
-
-        this._onProgressEmitter.fire({
-            ...this.getState(),
-            message: this.latestMessage ? `${this.latestMessage} (${this.timerMessage})` : this.timerMessage,
-        });
+    private report(_progress?: { message?: string; increment?: number }): void {
+        this._onProgressEmitter.fire({ ...this.getState(), message: this.timerMessage });
         this.status = ActivityStatus.Running;
     }
 
