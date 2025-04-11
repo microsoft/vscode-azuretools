@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { v4 as uuidv4 } from "uuid";
-import { CancellationTokenSource, EventEmitter } from "vscode";
+import { CancellationTokenSource, Disposable, EventEmitter } from "vscode";
 import * as hTypes from '../../hostapi';
 import * as types from '../../index';
 import { parseError } from "../parseError";
@@ -18,7 +18,7 @@ export enum ActivityStatus {
     Cancelled = 'Cancelled',
 }
 
-export abstract class ActivityBase<R> implements hTypes.Activity {
+export abstract class ActivityBase<R> implements hTypes.Activity, Disposable {
 
     public readonly onStart: typeof this._onStartEmitter.event;
     public readonly onProgress: typeof this._onProgressEmitter.event;
@@ -93,7 +93,7 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
             this._onErrorEmitter.fire({ ...this.getState(), error: e });
             throw e;
         } finally {
-            clearInterval(this.timer);
+            this.dispose();
             this._endTime = new Date();
         }
     }
@@ -116,5 +116,10 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
             this.timerMessage = dateTimeUtils.getFormattedDurationInMinutesAndSeconds(Date.now() - startTimeMs);
             this.report();
         }, 1000);
+    }
+
+    public dispose(): void {
+        clearInterval(this.timer);
+        this.cancellationTokenSource.dispose();
     }
 }
