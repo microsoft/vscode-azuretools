@@ -1243,10 +1243,11 @@ export interface ActivityChildItemBase extends TreeElementBase {
      * This flag is checked to ensure that the item is only modified once.
      */
     _hasBeenModified?: boolean;
-
+    label?: string;
     activityType: ActivityChildType;
     contextValue?: string;
     description?: string;
+    getChildren?(): ProviderResult<ActivityChildItemBase[]>;
 }
 
 export type ActivityChildItemOptions = {
@@ -1271,6 +1272,7 @@ export type ActivityChildItemOptions = {
  */
 export declare class ActivityChildItem implements ActivityChildItemBase {
     readonly id: string;
+    label: string;
     contextValue: string;
     activityType: ActivityChildType;
     description?: string;
@@ -1316,10 +1318,13 @@ export declare interface ExecuteActivityContext {
      */
     activityResult?: AppResource | string;
     /**
+     * Command metadata to attach to the `ActivityItem`, useable by copilot
+     */
+    commandMetadata?: CommandMetadata;
+    /**
      * Hide activity notifications
      */
     suppressNotification?: boolean;
-
     /**
      * The activity implementation to use, defaults to ExecuteActivity
      */
@@ -1330,6 +1335,73 @@ export declare interface ExecuteActivityContext {
      */
     activityChildren?: ActivityChildItemBase[];
 }
+
+export interface CommandMetadata {
+    commandId?: string;
+    description?: string;
+    faq?: FaqMetadata[];
+    nextSteps?: NextStepMetadata[];
+    knownIssues?: GitHubIssueMetadata[];
+    logs?: LogsMetadata[];
+    userSettings?: UserSettingMetadata[];
+    dependencies?: DependencyMetadata[];
+
+    // Populated automatically by the Azure Wizard if available
+    startTime?: string;
+    endTime?: string;
+
+    propertiesChanged?: string[];
+    promptSteps?: string[];
+    executeSteps?: string[];
+
+    stackTrace?: string;
+
+    environment?: {
+        name?: string;
+        portalUrl?: string;
+    }
+    isCustomCloud?: boolean;
+    tenantId?: string;
+    subscriptionId?: string;
+}
+
+export type FaqMetadata = {
+    question?: string;
+    answer?: string;
+    suggestWhen?: string;
+};
+
+export type GitHubIssueMetadata = {
+    url?: string;
+    title?: string;
+    description?: string;
+    hasWorkaround?: boolean;
+    suggestWhen?: string;
+};
+
+export type NextStepMetadata = {
+    commandId?: string;
+    commandName?: string;
+    suggestWhen?: string;
+};
+
+export type LogsMetadata = {
+    name?: string;
+    description?: string;
+    content?: string;
+};
+
+export type UserSettingMetadata = {
+    name?: string;
+    description?: string;
+    path?: string;
+    content?: string;
+};
+
+export type DependencyMetadata = {
+    name?: string;
+    description?: string;
+};
 
 export interface ExecuteActivityOutput {
     /**
