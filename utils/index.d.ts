@@ -1337,16 +1337,18 @@ export declare interface ExecuteActivityContext {
 }
 
 export interface CommandMetadata {
-    commandId?: string;
     description?: string;
     faq?: FaqMetadata[];
     nextSteps?: NextStepMetadata[];
-    knownIssues?: GitHubIssueMetadata[];
+    knownIssues?: IssueMetadata[];
     logs?: LogsMetadata[];
     userSettings?: UserSettingMetadata[];
     dependencies?: DependencyMetadata[];
+    azureResourceTreeId?: string;
+    azureWorkspaceTreeId?: string;
 
     // Populated automatically by the Azure Wizard if available
+    commandId?: string;
     startTime?: string;
     endTime?: string;
 
@@ -1371,7 +1373,7 @@ export type FaqMetadata = {
     suggestWhen?: string;
 };
 
-export type GitHubIssueMetadata = {
+export type IssueMetadata = {
     url?: string;
     title?: string;
     description?: string;
