@@ -1352,11 +1352,11 @@ export interface CommandMetadata {
     startTime?: string;
     endTime?: string;
 
-    propertiesChanged?: string[];
-    promptSteps?: string[];
-    executeSteps?: string[];
+    propertiesChanged?: string[]; // As the wizard prompts the user, we could automatically record any changed properties here
+    promptSteps?: string[];  // New idea - maybe we can include the list of prompt steps names?
+    executeSteps?: string[];  // New idea - maybe we can include the list of execute step names?
 
-    stackTrace?: string;
+    stackTrace?: string;  // Concerns?
 
     environment?: {
         name?: string;
