@@ -1403,6 +1403,8 @@ export type UserSettingMetadata = {
 export type DependencyMetadata = {
     name?: string;
     description?: string;
+    installed?: boolean;
+    active?: boolean;
 };
 
 export interface ExecuteActivityOutput {
