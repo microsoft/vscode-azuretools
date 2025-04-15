@@ -85,7 +85,7 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
             this._onErrorEmitter.fire({ ...this.getState(), error: e });
             throw e;
         } finally {
-            this.dispose();
+            clearInterval(this.timer);
             this._endTime = new Date();
         }
     }
@@ -108,10 +108,5 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
             this.timerMessage = dateTimeUtils.getFormattedDurationInMinutesAndSeconds(Date.now() - startTimeMs);
             this.report();
         }, 1000);
-    }
-
-    public dispose(): void {
-        clearInterval(this.timer);
-        this.cancellationTokenSource.dispose();
     }
 }
