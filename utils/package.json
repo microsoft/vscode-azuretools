@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-utils",
     "author": "Microsoft Corporation",
-    "version": "2.6.6",
+    "version": "3.0.0",
     "description": "Common UI tools for developing Azure extensions for VS Code",
     "tags": [
         "azure",
@@ -28,7 +28,8 @@
         "lint": "eslint --ext .ts .",
         "lint-fix": "eslint --ext .ts . --fix",
         "test": "node ./out/test/runTest.js",
-        "package": "npm pack"
+        "package": "npm pack",
+        "l10n": "npx @vscode/l10n-dev export --outDir ./l10n ./src"
     },
     "dependencies": {
         "@microsoft/vscode-azureresources-api": "^2.3.1",

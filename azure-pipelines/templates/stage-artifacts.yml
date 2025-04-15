@@ -9,10 +9,11 @@ steps:
       Contents: |
         **/*.vsix
         **/package.json
-        extension.manifest
-        extension.signature.p7s
+        **/*extension.manifest
+        **/*extension.signature.p7s
         **/*.tar.gz
         **/*.tgz
         !**/node_modules/**
       TargetFolder: "$(build.artifactstagingdirectory)/build/$(artifact_name)"
+      FlattenFolders: false
     condition: and(succeeded(), ne(variables['System.PullRequest.IsFork'], 'True'))
