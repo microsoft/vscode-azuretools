@@ -259,7 +259,7 @@ export type LocalResourceProvider = WorkspaceResourceProvider;
 /**
  * Represents an Activity to display in the Activity Log
  */
-export interface Activity {
+export interface Activity extends vscode.Disposable {
     /**
      * An ID for the activity. Must be unique.
      */

@@ -1202,6 +1202,7 @@ export declare abstract class ActivityBase<R> implements Activity {
     public constructor(task: ActivityTask<R>);
     public report(progress: { message?: string; increment?: number }): void;
     public run(): Promise<void>;
+    public dispose(): void;
 }
 
 /**

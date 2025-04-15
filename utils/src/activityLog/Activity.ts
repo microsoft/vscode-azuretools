@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { v4 as uuidv4 } from "uuid";
-import { CancellationTokenSource, Disposable, EventEmitter } from "vscode";
+import { CancellationTokenSource, EventEmitter } from "vscode";
 import * as hTypes from '../../hostapi';
 import * as types from '../../index';
 import { parseError } from "../parseError";
@@ -18,7 +18,7 @@ export enum ActivityStatus {
     Cancelled = 'Cancelled',
 }
 
-export abstract class ActivityBase<R> implements hTypes.Activity, Disposable {
+export abstract class ActivityBase<R> implements hTypes.Activity {
 
     public readonly onStart: typeof this._onStartEmitter.event;
     public readonly onProgress: typeof this._onProgressEmitter.event;
