@@ -8,7 +8,7 @@
 import type { Environment } from '@azure/ms-rest-azure-env';
 import type { AzExtResourceType, AzureResource, AzureSubscription, ResourceModelBase } from '@microsoft/vscode-azureresources-api';
 import type * as duration from 'dayjs/plugin/duration';
-import { AuthenticationSession, CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, LanguageModelToolInvocationOptions, LanguageModelToolInvocationPrepareOptions, LanguageModelToolResult, LogOutputChannel, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, PreparedToolInvocation, Progress, ProviderResult, QuickPickItem, TelemetryTrustedValue, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri, QuickPickOptions as VSCodeQuickPickOptions, WorkspaceFolder, WorkspaceFolderPickOptions } from 'vscode';
+import { AuthenticationSession, CancellationToken, CancellationTokenSource, Command, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, LanguageModelToolInvocationOptions, LanguageModelToolInvocationPrepareOptions, LanguageModelToolResult, LogOutputChannel, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, PreparedToolInvocation, Progress, ProviderResult, QuickPickItem, TelemetryTrustedValue, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri, QuickPickOptions as VSCodeQuickPickOptions, WorkspaceFolder, WorkspaceFolderPickOptions } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
 
@@ -459,6 +459,7 @@ export interface GenericParentTreeItemOptions {
     childTypeLabel?: string;
     contextValue: string;
     iconPath?: TreeItemIconPath;
+    id?: string;
     initialCollapsibleState?: TreeItemCollapsibleState;
     label: string;
     suppressMaskLabel?: boolean;
@@ -1204,6 +1205,81 @@ export declare abstract class ActivityBase<R> implements Activity {
 }
 
 /**
+ * An enum representing the different categories of activity children
+ */
+export declare enum ActivityChildType {
+    /**
+     * A child type representing the successful run of an `AzureWizardExecuteStep`
+     */
+    Success = 'success',
+    /**
+     * A child type representing the failed run of an `AzureWizardExecuteStep`
+     */
+    Fail = 'fail',
+    /**
+     * A child type indicating an actively running `AzureWizardExecuteStep`
+     */
+    Progress = 'progress',
+    /**
+     * A child type for displaying informational data
+     */
+    Info = 'info',
+    /**
+     * A child type for displaying a thrown error
+     */
+    Error = 'error',
+    /**
+     * A child type with a command attached
+     */
+    Command = 'command',
+}
+
+/**
+ * Represents the base structure for an activity child item in the activity log.
+ */
+export interface ActivityChildItemBase extends TreeElementBase {
+    /**
+     * An internal flag that is sometimes used to determine whether this item has been modified by the activity log API.
+     * This flag is checked to ensure that the item is only modified once.
+     */
+    _hasBeenModified?: boolean;
+
+    activityType: ActivityChildType;
+    contextValue?: string;
+    description?: string;
+}
+
+export type ActivityChildItemOptions = {
+    id?: string;
+    label: string;
+    contextValue: string;
+    activityType: ActivityChildType;
+    command?: Command;
+    description?: string;
+    iconPath?: TreeItemIconPath;
+    tooltip?: string | MarkdownString | undefined;
+    initialCollapsibleState?: TreeItemCollapsibleState;
+    /**
+     * If set to true, will initialize `getChildren` with an empty array.
+     */
+    isParent?: boolean;
+};
+
+/**
+ * A class for quickly creating activity children.
+ * Adheres to the `ActivityChildItemBase` structure required for all activity log child items.
+ */
+export declare class ActivityChildItem implements ActivityChildItemBase {
+    readonly id: string;
+    contextValue: string;
+    activityType: ActivityChildType;
+    description?: string;
+    public constructor(options: ActivityChildItemOptions);
+    public getTreeItem(): TreeItem | Thenable<TreeItem>;
+    public getChildren?(): ProviderResult<ActivityChildItemBase[]>;
+}
+
+/**
  * A wizard that links several user input steps together
  */
 export declare class AzureWizard<T extends IActionContext & Partial<ExecuteActivityContext>> {
@@ -1252,18 +1328,52 @@ export declare interface ExecuteActivityContext {
     /**
      * Children to show under the activity tree item. Children only appear once the activity is done.
      */
-    activityChildren?: (AzExtTreeItem | AzExtParentTreeItem)[];
+    activityChildren?: ActivityChildItemBase[];
 }
 
 export interface ExecuteActivityOutput {
     /**
-     * The activity child item to display on success or fail
+     * The activity child item to display on success, fail, or progress
      */
-    item?: AzExtTreeItem;
+    item?: ActivityChildItemBase;
     /**
-     * The output log message to display on success or fail
+     * The output log message to display on success, fail, or progress
      */
     message?: string;
+}
+
+/**
+ * An execute step variant that automatically creates all activity output types
+ * based on defined step properties.
+ *
+ * These output types are automatically provided to the output log and
+ * to the activity log upon completion of each step.
+ */
+export declare abstract class AzureWizardExecuteStepWithActivityOutput<T extends IActionContext> extends AzureWizardExecuteStep<T> {
+    /**
+     * The name of the step, provided as part of the activity child item's context value.
+     */
+    abstract readonly stepName: string;
+    /**
+     * Abstract method to get the activity child tree item label.
+     */
+    protected abstract getTreeItemLabel(context: T): string;
+    /**
+     * Abstract method to get the success string for the output log.
+     */
+    protected abstract getOutputLogSuccess(context: T): string;
+    /**
+     * Abstract method to get the fail string for the output log.
+     */
+    protected abstract getOutputLogFail(context: T): string;
+    /**
+     * Optional method to get the progress string for the output log.
+     */
+    protected getOutputLogProgress?(context: T): string;
+
+    public createSuccessOutput(context: T): ExecuteActivityOutput;
+    public createProgressOutput(context: T): ExecuteActivityOutput;
+    public createFailOutput(context: T): ExecuteActivityOutput;
 }
 
 /**

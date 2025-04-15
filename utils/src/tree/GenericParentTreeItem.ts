@@ -13,6 +13,7 @@ interface GenericParentTreeItemOptions {
     childTypeLabel?: string;
     contextValue: string;
     iconPath?: types.TreeItemIconPath;
+    id?: string;
     initialCollapsibleState?: TreeItemCollapsibleState;
     label: string;
     suppressMaskLabel?: boolean;
@@ -31,6 +32,7 @@ export class GenericParentTreeItem extends AzExtParentTreeItem implements types.
 
     constructor(parent: IAzExtParentTreeItemInternal | undefined, readonly options: GenericParentTreeItemOptions) {
         super(parent);
+        this.id = options.id;
         this.childTypeLabel = options.childTypeLabel;
         this.contextValue = options.contextValue;
         this.iconPath = options.iconPath;

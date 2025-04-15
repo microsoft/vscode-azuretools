@@ -5,7 +5,7 @@
 
 import type { AzExtResourceType, AzureSubscription } from '@microsoft/vscode-azureresources-api';
 import type * as vscode from 'vscode';
-import type { AbstractAzExtTreeItem, AzExtParentTreeItem, AzExtTreeDataProvider, AzExtTreeItem, IAzureQuickPickOptions, ISubscriptionContext, ITreeItemPickerContext, SealedAzExtTreeItem } from './index'; // This must remain `import type` or else a circular reference will result
+import type { AbstractAzExtTreeItem, ActivityChildItemBase, AzExtParentTreeItem, AzExtTreeDataProvider, AzExtTreeItem, IAzureQuickPickOptions, ISubscriptionContext, ITreeItemPickerContext, ResourceGroupsItem, SealedAzExtTreeItem } from './index'; // This must remain `import type` or else a circular reference will result
 
 /**
  * The API implemented by the Azure Resource Groups host extension
@@ -318,7 +318,7 @@ export interface ActivityTreeItemOptions {
     /**
      * If the activity should have child tree items, implement this
      */
-    getChildren?: (parent: AzExtParentTreeItem) => AzExtTreeItem[] | Promise<AzExtTreeItem[]>;
+    getChildren?: (parent: ResourceGroupsItem) => ActivityChildItemBase[] | Promise<ActivityChildItemBase[]>;
 }
 
 type ActivityEventData<T> = ActivityTreeItemOptions & T;
