@@ -5,7 +5,6 @@
 
 import { v4 as uuidv4 } from "uuid";
 import { ProviderResult, TreeItem } from "vscode";
-import { TreeElementBase } from "../../..";
 import * as types from '../../../index';
 
 export enum ActivityChildType {
@@ -19,12 +18,14 @@ export enum ActivityChildType {
 
 export class ActivityChildItem implements types.ActivityChildItemBase {
     readonly id: string;
+    label: string;
     contextValue: string;
     activityType: ActivityChildType;
     description?: string;
 
     constructor(readonly options: types.ActivityChildItemOptions) {
         this.id = options.id ?? uuidv4();
+        this.label = options.label;
         this.activityType = options.activityType;
         this.contextValue = options.contextValue;
         this.description = options.description;
@@ -37,7 +38,7 @@ export class ActivityChildItem implements types.ActivityChildItemBase {
     getTreeItem(): TreeItem | Thenable<TreeItem> {
         return {
             id: this.id,
-            label: this.options.label,
+            label: this.label,
             description: this.description,
             contextValue: this.contextValue,
             iconPath: this.options.iconPath,
@@ -47,5 +48,5 @@ export class ActivityChildItem implements types.ActivityChildItemBase {
         };
     }
 
-    getChildren?(): ProviderResult<TreeElementBase[]>;
+    getChildren?(): ProviderResult<types.ActivityChildItemBase[]>;
 }

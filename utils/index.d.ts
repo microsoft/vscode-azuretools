@@ -1243,10 +1243,11 @@ export interface ActivityChildItemBase extends TreeElementBase {
      * This flag is checked to ensure that the item is only modified once.
      */
     _hasBeenModified?: boolean;
-
+    label?: string;
     activityType: ActivityChildType;
     contextValue?: string;
     description?: string;
+    getChildren?(): ProviderResult<ActivityChildItemBase[]>;
 }
 
 export type ActivityChildItemOptions = {
