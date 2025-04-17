@@ -233,8 +233,8 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                     // if execute steps are added during execution, we need to sort them again
                     if (step.addExecuteSteps) {
                         const newSteps: types.AzureWizardExecuteStep<T>[] = await step.addExecuteSteps(this._context) ?? [];
-                        this._executeSteps.push(...newSteps);
-                        steps = this._executeSteps.sort((a, b) => b.priority - a.priority);
+                        steps.push(...newSteps);
+                        steps = steps.sort((a, b) => b.priority - a.priority);
                     }
 
                     currentStep += 1;
