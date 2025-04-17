@@ -1431,6 +1431,11 @@ export declare abstract class AzureWizardExecuteStep<T extends IActionContext & 
     public abstract shouldExecute(wizardContext: T): boolean;
 
     /**
+     * Optionally returns AzureWizardExecuteSteps that will be injected and sorted into the Azure Wizard executeSteps array by priority
+     */
+    public addExecuteSteps?(wizardContext: T): AzureWizardExecuteStep<T>[] | Promise<AzureWizardExecuteStep<T>[]>;
+
+    /**
      * Defines the output for display after successful execution of the step
      */
     public createSuccessOutput?(context: T): ExecuteActivityOutput;
