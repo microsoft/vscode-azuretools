@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { activityFailIcon, activitySuccessContext, activitySuccessIcon, AzureWizardExecuteStep, createUniversallyUniqueContextValue, ExecuteActivityContext, GenericTreeItem, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
+import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, activitySuccessContext, activitySuccessIcon, AzureWizardExecuteStep, createContextValue, ExecuteActivityContext, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
 import { randomUUID } from 'crypto';
 import { l10n, Progress } from 'vscode';
 import * as types from '../../index';
@@ -47,9 +47,11 @@ export class RoleAssignmentExecuteStep<T extends types.IResourceGroupWizardConte
                     progress.report({ message: roleAssignmentCreated });
                     ext.outputChannel.appendLog(roleAssignmentCreated);
                     if (wizardContext.activityChildren) {
+                        // Todo: Leverage createSuccessOutput
                         wizardContext.activityChildren.push(
-                            new GenericTreeItem(undefined, {
-                                contextValue: createUniversallyUniqueContextValue(['successfullRoleAssignment', activitySuccessContext]),
+                            new ActivityChildItem({
+                                activityType: ActivityChildType.Success,
+                                contextValue: createContextValue(['successfulRoleAssignment', activitySuccessContext]),
                                 label: l10n.t('Role Assignment {0} created for {1}', role.roleDefinitionName, resourceName),
                                 iconPath: activitySuccessIcon
                             })
@@ -71,8 +73,10 @@ export class RoleAssignmentExecuteStep<T extends types.IResourceGroupWizardConte
                     ext.outputChannel.appendLog(roleAssignmentFailed);
                     ext.outputChannel.appendLog(parsedError.message);
                     if (wizardContext.activityChildren) {
-                        wizardContext.activityChildren.push(new GenericTreeItem(undefined, {
-                            contextValue: createUniversallyUniqueContextValue(['failedRoleAssignment', activitySuccessContext]),
+                        // Todo: Leverage createFailOutput
+                        wizardContext.activityChildren.push(new ActivityChildItem({
+                            activityType: ActivityChildType.Fail,
+                            contextValue: createContextValue(['failedRoleAssignment', activityFailContext]),
                             label: l10n.t('Role Assignment {0} failed for {1}', role.roleDefinitionName, resourceName),
                             iconPath: activityFailIcon
                         }));
@@ -83,7 +87,7 @@ export class RoleAssignmentExecuteStep<T extends types.IResourceGroupWizardConte
 
             if (wizardContext.activityChildren) {
                 for (const child of wizardContext.activityChildren) {
-                    if (child.contextValue.includes('failedRoleAssignment')) {
+                    if (child.contextValue?.includes('failedRoleAssignment')) {
                         throw new Error(l10n.t('Failed to create role assignment(s).'));
                     }
                 }

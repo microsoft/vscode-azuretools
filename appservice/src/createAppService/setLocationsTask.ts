@@ -24,7 +24,7 @@ export async function setLocationsTask(context: IAppServiceWizardContext): Promi
 
 export async function getWebLocations(context: IAppServiceWizardContext): Promise<string[]> {
     const options: ListGeoRegionsOptionalParams = {};
-    options['api-version'] = '2020-09-01';
+    options['api-version'] = '2024-04-01';
     if (context.newSiteOS === WebsiteOS.linux) {
         if (context.newSiteKind === AppKind.functionapp && context.useConsumptionPlan) {
             options.linuxDynamicWorkersEnabled = true;
