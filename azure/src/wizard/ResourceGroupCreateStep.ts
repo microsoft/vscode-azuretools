@@ -17,11 +17,15 @@ import { ResourceGroupListStep } from './ResourceGroupListStep';
 export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext> extends AzureWizardExecuteStepWithActivityOutput<T> implements types.ResourceGroupCreateStep<T> {
     protected getTreeItemLabel(context: T): string {
         const newName: string = nonNullProp(context, 'newResourceGroupName');
-        return l10n.t('Create resource group "{0}"', newName);
+        return this._usedExistingResourceGroup ?
+            l10n.t('Using existing resource group "{0}".', newName) :
+            l10n.t('Create resource group "{0}"', newName);
     }
     protected getOutputLogSuccess(context: T): string {
         const newName: string = nonNullProp(context, 'newResourceGroupName');
-        return l10n.t('Successfully created resource group "{0}".', newName);
+        return this._usedExistingResourceGroup ?
+            l10n.t('Successfully used existing resource group "{0}".', newName) :
+            l10n.t('Successfully created resource group "{0}".', newName);
     }
     protected getOutputLogFail(context: T): string {
         const newName: string = nonNullProp(context, 'newResourceGroupName');
@@ -34,8 +38,9 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
 
     public priority: number = 100;
     public stepName: string = 'CreateResourceGroupStep';
+    private _usedExistingResourceGroup: boolean = false;
 
-    public async execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
+    public async execute(wizardContext: T, _progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const newName: string = wizardContext.newResourceGroupName!;
         const newLocation = await LocationListStep.getLocation(wizardContext, resourcesProvider, false);
@@ -44,14 +49,10 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
         try {
             const rgExists: boolean = (await resourceClient.resourceGroups.checkExistence(newName)).body;
             if (rgExists) {
-                ext.outputChannel.appendLog(l10n.t('Using existing resource group "{0}".', newName));
                 wizardContext.resourceGroup = await resourceClient.resourceGroups.get(newName);
+                this._usedExistingResourceGroup = true;
             } else {
-                const creatingMessage: string = l10n.t('Creating resource group "{0}" in location "{1}"...', newName, newLocationName);
-                ext.outputChannel.appendLog(creatingMessage);
-                progress.report({ message: creatingMessage });
                 wizardContext.resourceGroup = await resourceClient.resourceGroups.createOrUpdate(newName, { location: newLocationName });
-                ext.outputChannel.appendLog(l10n.t('Successfully created resource group "{0}".', newName));
             }
         } catch (error) {
             if (wizardContext.suppress403Handling || parseError(error).errorType !== '403') {

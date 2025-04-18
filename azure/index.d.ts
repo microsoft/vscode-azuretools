@@ -14,7 +14,7 @@ import type { ServiceClient, ServiceClientOptions } from '@azure/core-client';
 import type { PagedAsyncIterableIterator } from '@azure/core-paging';
 import type { PipelineRequestOptions, PipelineResponse } from '@azure/core-rest-pipeline';
 import type { Environment } from '@azure/ms-rest-azure-env';
-import type { AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtServiceClientCredentialsT2, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardPromptStep, ExecuteActivityContext, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, IRelatedNameWizardContext, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, TreeElementBase, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
+import type { AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtServiceClientCredentialsT2, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, IRelatedNameWizardContext, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, TreeElementBase, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
 import { AzureSubscription } from '@microsoft/vscode-azureresources-api';
 import { Disposable, LogOutputChannel, Progress, ProviderResult, TreeItem, Uri } from 'vscode';
 
@@ -94,7 +94,6 @@ export type AzExtLocation = Location & {
  */
 export interface ILocationWizardContext extends ISubscriptionActionContext {
     includeExtendedLocations?: boolean;
-    locationName?: string;
 }
 
 export declare class LocationListStep<T extends ILocationWizardContext> extends AzureWizardPromptStep<T> {
@@ -377,19 +376,6 @@ export declare class UserAssignedIdentityCreateStep<T extends IResourceGroupWiza
     public execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
     public shouldExecute(wizardContext: T): boolean;
 }
-
-export class CreateRoleAssignmentExecuteStepsStep<T extends IResourceGroupWizardContext, TKey extends keyof T> extends AzureWizardExecuteStep<T> {
-    /**
-    * 901
-    */
-    public priority: number;
-    public constructor(roles: () => Role[] | undefined);
-
-    public execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
-    public shouldExecute(wizardContext: T): boolean;
-    public addExecuteSteps(_context: IResourceGroupWizardContext & Partial<ExecuteActivityContext>): AzureWizardExecuteStep<IResourceGroupWizardContext & Partial<ExecuteActivityContext>>[]
-}
-
 export declare class RoleAssignmentExecuteStep<T extends IResourceGroupWizardContext, TKey extends keyof T> extends AzureWizardExecuteStep<T> {
     /**
      * 900
