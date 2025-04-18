@@ -14,6 +14,7 @@ export abstract class AzureWizardExecuteStep<T extends types.IActionContext & Pa
     public configureBeforeExecute?(wizardContext: T): void | Promise<void>;
     public abstract execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
     public abstract shouldExecute(wizardContext: T): boolean;
+    public addExecuteSteps?(wizardContext: T): types.AzureWizardExecuteStep<T>[] | Promise<types.AzureWizardExecuteStep<T>[]>;
 
     public createSuccessOutput?(context: T): types.ExecuteActivityOutput;
     public createFailOutput?(context: T): types.ExecuteActivityOutput;

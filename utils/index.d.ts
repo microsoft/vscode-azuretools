@@ -1432,6 +1432,13 @@ export declare abstract class AzureWizardExecuteStep<T extends IActionContext & 
     public abstract shouldExecute(wizardContext: T): boolean;
 
     /**
+     * Optionally returns AzureWizardExecuteSteps that will be injected and sorted into the Azure Wizard executeSteps array by priority.
+     * Note: This gets invoked _after_ execute. So if the step that is added has a priority of 90, but the current step adding steps has
+     * a priority of 100, the 100 priority step will be executed first.
+     */
+    public addExecuteSteps?(wizardContext: T): AzureWizardExecuteStep<T>[] | Promise<AzureWizardExecuteStep<T>[]>;
+
+    /**
      * Defines the output for display after successful execution of the step
      */
     public createSuccessOutput?(context: T): ExecuteActivityOutput;

@@ -173,7 +173,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
         await this.withProgress({ location: ProgressLocation.Notification }, async progress => {
             let currentStep: number = 1;
 
-            const steps: AzureWizardExecuteStep<T>[] = this._executeSteps.sort((a, b) => b.priority - a.priority);
+            let steps: AzureWizardExecuteStep<T>[] = this._executeSteps.sort((a, b) => b.priority - a.priority);
 
             const internalProgress: vscode.Progress<{ message?: string; increment?: number }> = {
                 report: (value: { message?: string; increment?: number }): void => {
@@ -229,6 +229,13 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                     }
 
                     this.displayActivityOutput(output, step.options);
+
+                    // if execute steps are added during execution, we need to sort them again
+                    if (step.addExecuteSteps) {
+                        const newSteps: types.AzureWizardExecuteStep<T>[] = await step.addExecuteSteps(this._context) ?? [];
+                        steps.push(...newSteps);
+                        steps = steps.sort((a, b) => b.priority - a.priority);
+                    }
 
                     currentStep += 1;
                     step = steps.pop();
