@@ -3,12 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, activitySuccessContext, activitySuccessIcon, AzureWizardExecuteStep, createContextValue, ExecuteActivityContext, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
+import { AzureWizardExecuteStep, AzureWizardExecuteStepWithActivityOutput, ExecuteActivityContext, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
 import { randomUUID } from 'crypto';
 import { l10n, Progress } from 'vscode';
 import * as types from '../../index';
 import { createAuthorizationManagementClient } from '../clients';
-import { ext } from '../extensionVariables';
 
 export interface Role {
     scopeId: string | undefined;
@@ -16,82 +15,82 @@ export interface Role {
     roleDefinitionName: string;
 }
 
-export class RoleAssignmentExecuteStep<T extends types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>> extends AzureWizardExecuteStep<T> {
-    public priority: number = 900;
-    private _retries: number = 0;
+export class RoleAssignmentExecuteStep extends AzureWizardExecuteStep<types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>> {
+    public async execute(_wiardContext: types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>, _progress: Progress<{ message?: string; increment?: number; }>): Promise<void> {
+        // nothing should execute, but we need shouldExecute to be true so that addExecuteSteps is called
+        return undefined;
+    }
+    public shouldExecute(_wizardContext: types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>): boolean {
+        return true;
+    }
+
     private roles: () => Role[] | undefined;
     public constructor(roles: () => Role[] | undefined) {
         super();
         this.roles = roles;
     }
+    public priority: number = 900;
+    public addExecuteSteps(_context: types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>): AzureWizardExecuteStep<types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>>[] {
+        const roles = this.roles();
+        const steps = [];
+        for (const role of roles ?? []) {
+            steps.push(new SingleRoleAssignmentExecuteStep(role));
+        }
+
+        return steps;
+    }
+}
+
+class SingleRoleAssignmentExecuteStep<T extends types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>> extends AzureWizardExecuteStepWithActivityOutput<T> {
+    stepName: string = 'RoleAssignmentExecuteStep';
+    protected getTreeItemLabel(_context: T): string {
+        const { resourceName, resourceType } = this.resourceNameAndType;
+        return l10n.t('Create role assignment "{0}" for the {1} resource "{2}"', this.role.roleDefinitionName, resourceType, resourceName);
+    }
+    protected getOutputLogSuccess(_context: T): string {
+        const { resourceName, resourceType } = this.resourceNameAndType;
+        return l10n.t('Successfully created role assignment "{0}" for the {1} resource "{2}".', this.role.roleDefinitionName, resourceType, resourceName);
+    }
+    protected getOutputLogFail(_context: T): string {
+        const { resourceName, resourceType } = this.resourceNameAndType;
+        return l10n.t('Failed to create role assignment "{0}" for the {1} resource "{2}".', this.role.roleDefinitionName, resourceType, resourceName);
+        throw new Error('Method not implemented.');
+    }
+    protected getOutputLogProgress(_context: T): string {
+        const { resourceName, resourceType } = this.resourceNameAndType;
+        return l10n.t('Creating role assignment "{0}" for the {1} resource "{2}"...', this.role.roleDefinitionName, resourceType, resourceName);
+    }
+    public priority: number = 901;
+    private _retries: number = 0;
+    public constructor(readonly role: Role) {
+        super();
+    }
 
     public async executeCore(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         const amClient = await createAuthorizationManagementClient(wizardContext)
-        const roles = this.roles();
-        if (roles) {
-            for (const role of roles) {
-                const scope = role.scopeId;
-                if (!scope) {
-                    throw new Error(l10n.t('No scope was provided for the role assignment.'));
-                }
-                const scopeSplitArr = scope.split('/');
-                const resourceName = scopeSplitArr[scopeSplitArr.length - 1] ?? '';
-                const resourceType = scopeSplitArr[scopeSplitArr.length - 2] ?? '';
-                try {
-                    const guid = randomUUID();
-                    const roleDefinitionId = role.roleDefinitionId;
-                    const principalId = nonNullValueAndProp(wizardContext.managedIdentity, 'principalId');
+        const scope = this.role.scopeId;
+        if (!scope) {
+            throw new Error(l10n.t('No scope was provided for the role assignment.'));
+        }
 
-                    await amClient.roleAssignments.create(scope, guid, { roleDefinitionId, principalId });
-                    const roleAssignmentCreated = l10n.t('Role assignment "{0}" created for the {2} resource "{1}".', role.roleDefinitionName ?? '', resourceName, resourceType);
-                    progress.report({ message: roleAssignmentCreated });
-                    ext.outputChannel.appendLog(roleAssignmentCreated);
-                    if (wizardContext.activityChildren) {
-                        // Todo: Leverage createSuccessOutput
-                        wizardContext.activityChildren.push(
-                            new ActivityChildItem({
-                                activityType: ActivityChildType.Success,
-                                contextValue: createContextValue(['successfulRoleAssignment', activitySuccessContext]),
-                                label: l10n.t('Role Assignment {0} created for {1}', role.roleDefinitionName, resourceName),
-                                iconPath: activitySuccessIcon
-                            })
-                        );
-                    }
-                } catch (error) {
-                    const parsedError = parseError(error);
-                    const maxRetries = 5;
-                    // if this error is due to a replication delay, we can retry the operation and it should resolve it
-                    if (parsedError.message.includes('If you are creating this principal and then immediately assigning a role, this error might be related to a replication delay.')
-                        && this._retries < maxRetries) {
-                        this._retries++;
-                        wizardContext.telemetry.properties.roleAssignmentCreateRetryCount = this._retries.toString();
-                        return await this.executeCore(wizardContext, progress);
-                    }
+        try {
+            const guid = randomUUID();
+            const roleDefinitionId = this.role.roleDefinitionId;
+            const principalId = nonNullValueAndProp(wizardContext.managedIdentity, 'principalId');
 
-                    const roleAssignmentFailed = l10n.t('Failed to create role assignment "{0}" for the {2} resource "{1}".', role.roleDefinitionName ?? '', resourceName, resourceType);
-                    progress.report({ message: roleAssignmentFailed });
-                    ext.outputChannel.appendLog(roleAssignmentFailed);
-                    ext.outputChannel.appendLog(parsedError.message);
-                    if (wizardContext.activityChildren) {
-                        // Todo: Leverage createFailOutput
-                        wizardContext.activityChildren.push(new ActivityChildItem({
-                            activityType: ActivityChildType.Fail,
-                            contextValue: createContextValue(['failedRoleAssignment', activityFailContext]),
-                            label: l10n.t('Role Assignment {0} failed for {1}', role.roleDefinitionName, resourceName),
-                            iconPath: activityFailIcon
-                        }));
-                    }
-                }
-
+            await amClient.roleAssignments.create(scope, guid, { roleDefinitionId, principalId });
+        } catch (error) {
+            const parsedError = parseError(error);
+            const maxRetries = 5;
+            // if this error is due to a replication delay, we can retry the operation and it should resolve it
+            if (parsedError.message.includes('If you are creating this principal and then immediately assigning a role, this error might be related to a replication delay.')
+                && this._retries < maxRetries) {
+                this._retries++;
+                wizardContext.telemetry.properties.roleAssignmentCreateRetryCount = this._retries.toString();
+                return await this.executeCore(wizardContext, progress);
             }
 
-            if (wizardContext.activityChildren) {
-                for (const child of wizardContext.activityChildren) {
-                    if (child.contextValue?.includes('failedRoleAssignment')) {
-                        throw new Error(l10n.t('Failed to create role assignment(s).'));
-                    }
-                }
-            }
+            throw parsedError;
         }
     }
 
@@ -101,5 +100,16 @@ export class RoleAssignmentExecuteStep<T extends types.IResourceGroupWizardConte
 
     public shouldExecute(wizardContext: T): boolean {
         return !!wizardContext.managedIdentity;
+    }
+
+    private get resourceNameAndType(): { resourceName: string; resourceType: string } {
+        const scope = this.role.scopeId;
+        if (!scope) {
+            throw new Error(l10n.t('No scope was provided for the role assignment.'));
+        }
+        const scopeSplitArr = scope.split('/');
+        const resourceName = scopeSplitArr[scopeSplitArr.length - 1] ?? '';
+        const resourceType = scopeSplitArr[scopeSplitArr.length - 2] ?? '';
+        return { resourceName, resourceType };
     }
 }
