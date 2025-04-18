@@ -376,6 +376,7 @@ export declare class UserAssignedIdentityCreateStep<T extends IResourceGroupWiza
     public execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
     public shouldExecute(wizardContext: T): boolean;
 }
+
 export declare class RoleAssignmentExecuteStep<T extends IResourceGroupWizardContext, TKey extends keyof T> extends AzureWizardExecuteStep<T> {
     /**
      * 900
