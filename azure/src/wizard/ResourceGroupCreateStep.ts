@@ -77,6 +77,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
                 wizardContext.telemetry.properties.forbiddenResponse = 'SelectExistingRg';
                 const step: ResourceGroupListStep<T> = new ResourceGroupListStep(true /* suppressCreate */);
                 await step.prompt(wizardContext);
+                this._usedExistingResourceGroup = true;
             }
         }
     }
