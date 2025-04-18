@@ -1337,15 +1337,16 @@ export declare interface ExecuteActivityContext {
 }
 
 export interface CommandMetadata {
-    description?: string;
-    faq?: FaqMetadata[];
-    nextSteps?: NextStepMetadata[];
-    knownIssues?: IssueMetadata[];
-    logs?: LogsMetadata[];
-    userSettings?: UserSettingMetadata[];
-    dependencies?: DependencyMetadata[];
-    azureResourceTreeId?: string;
-    azureWorkspaceTreeId?: string;
+    description?: string;  // MS Learn
+    faq?: FaqMetadata[];  // MS Learn
+    nextSteps?: NextStepMetadata[]; // MS Learn
+    knownIssues?: IssueMetadata[];  // ?
+    logs?: LogsMetadata[];  // Runtime
+    userSettings?: UserSettingMetadata[];  // Runtime
+    dependencies?: DependencyMetadata[];  // Runtime
+    // Relevant files??
+    azureResourceTreeId?: string; // Runtime
+    azureWorkspaceTreeId?: string; // Runtime
 
     // Populated automatically by the Azure Wizard if available
     commandId?: string;
@@ -1403,6 +1404,7 @@ export type UserSettingMetadata = {
 export type DependencyMetadata = {
     name?: string;
     description?: string;
+    required?: boolean;
     installed?: boolean;
     active?: boolean;
 };
