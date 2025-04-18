@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { SiteSourceControl } from '@azure/arm-appservice';
-import { GitHubContext } from '@microsoft/vscode-azext-github';
+import { GitHubBranchListStep, GitHubContext, GitHubOrgListStep, GitHubRepositoryListStep } from '@microsoft/vscode-azext-github';
 import { AzureWizard, IActionContext, IParsedError, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import { ParsedSite } from '../SiteClient';

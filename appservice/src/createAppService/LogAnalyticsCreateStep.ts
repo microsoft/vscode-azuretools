@@ -45,7 +45,7 @@ export class LogAnalyticsCreateStep extends AzureWizardExecuteStep<IAppServiceWi
         return l10n.t('Creating log analytics workspace "{0}"...', workspaceName);
     }
 
-    public async execute(context: IAppServiceWizardContext, progress: Progress<{ message?: string | undefined; increment?: number | undefined }>): Promise<void> {
+    public async execute(context: IAppServiceWizardContext, _progress: Progress<{ message?: string | undefined; increment?: number | undefined }>): Promise<void> {
         const opClient = await createOperationalInsightsManagementClient(context);
         const rgName = nonNullValueAndProp(context.resourceGroup, 'name');
         const resourceLocation: AzExtLocation = await LocationListStep.getLocation(context);
