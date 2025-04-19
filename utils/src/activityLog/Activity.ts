@@ -32,6 +32,7 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
     private status: ActivityStatus = ActivityStatus.NotStarted;
     private _startTime: Date | undefined;
     private _endTime: Date | undefined;
+    protected _commandMetadata?: types.CommandMetadata;
 
     public error?: types.IParsedError;
     public readonly task: types.ActivityTask<R>;
@@ -43,6 +44,10 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
     abstract progressState(): hTypes.ActivityTreeItemOptions;
     abstract errorState(error?: types.IParsedError): hTypes.ActivityTreeItemOptions;
 
+    public get commandMetadata(): types.CommandMetadata | undefined {
+        return this._commandMetadata;
+    }
+
     public get startTime(): Date | undefined {
         return this._startTime;
     }
@@ -51,9 +56,10 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
         return this._endTime;
     }
 
-    public constructor(task: types.ActivityTask<R>) {
+    public constructor(task: types.ActivityTask<R>, commandMetadata?: types.CommandMetadata) {
         this.id = uuidv4();
         this.task = task;
+        this._commandMetadata = commandMetadata;
 
         this.onStart = this._onStartEmitter.event;
         this.onProgress = this._onProgressEmitter.event;

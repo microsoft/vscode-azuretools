@@ -1317,10 +1317,13 @@ export declare interface ExecuteActivityContext {
      */
     activityResult?: AppResource | string;
     /**
+     * Extra metadata about the command that is running the activity, for use by Copilot
+     */
+    commandMetadata?: CommandMetadata;
+    /**
      * Hide activity notifications
      */
     suppressNotification?: boolean;
-
     /**
      * The activity implementation to use, defaults to ExecuteActivity
      */
@@ -1330,6 +1333,86 @@ export declare interface ExecuteActivityContext {
      * Children to show under the activity tree item. Children only appear once the activity is done.
      */
     activityChildren?: ActivityChildItemBase[];
+}
+
+export interface CommandMetadata {
+    description?: string;  // MS Learn
+    faq?: FaqMetadata[];  // MS Learn
+    nextSteps?: NextStepMetadata[]; // MS Learn
+    knownIssues?: IssueMetadata[];  // ?
+    logs?: LogsMetadata[];  // Runtime
+    userSettings?: UserSettingMetadata[];  // Runtime
+    dependencies?: DependencyMetadata[];  // Runtime
+    relevantFiles?: RelevantFileMetadata[]; // Runtime
+    azureResourceTreeId?: string; // Runtime
+    azureWorkspaceTreeId?: string; // Runtime
+
+    // Populated automatically by the Azure Wizard if available
+    commandId?: string;
+    startTime?: string;
+    endTime?: string;
+
+    propertiesChanged?: string[]; // As the wizard prompts the user, we could automatically record any changed properties here
+    promptSteps?: string[];  // New idea - maybe we can include the list of prompt steps names?
+    executeSteps?: string[];  // New idea - maybe we can include the list of execute step names?
+
+    stackTrace?: string;  // Concerns?
+
+    environment?: {
+        name?: string;
+        portalUrl?: string;
+    }
+    isCustomCloud?: boolean;
+    tenantId?: string;
+    subscriptionId?: string;
+}
+
+export type FaqMetadata = {
+    question?: string;
+    answer?: string;
+    suggestWhen?: string;
+};
+
+export type IssueMetadata = {
+    url?: string;
+    title?: string;
+    description?: string;
+    hasWorkaround?: boolean;
+    suggestWhen?: string;
+};
+
+export type NextStepMetadata = {
+    commandId?: string;
+    commandName?: string;
+    suggestWhen?: string;
+};
+
+export type LogsMetadata = {
+    name?: string;
+    description?: string;
+    content?: string;
+};
+
+export type UserSettingMetadata = {
+    name?: string;
+    description?: string;
+    path?: string;
+    content?: string;
+};
+
+export type DependencyMetadata = {
+    name?: string;
+    description?: string;
+    required?: boolean;
+    installed?: boolean;
+    active?: boolean;
+};
+
+export type RelevantFileMetadata = {
+    name?: string;
+    path?: string;
+    description?: string;
+    content?: string;
 }
 
 export interface ExecuteActivityOutput {
