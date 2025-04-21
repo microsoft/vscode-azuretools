@@ -3,6 +3,7 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
+import { v4 as uuidv4 } from "uuid";
 import * as vscode from 'vscode';
 import * as hTypes from '../../../hostapi';
 import * as types from '../../../index';
@@ -23,6 +24,7 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
         }
     }
 
+    private _successItemId: string = uuidv4();
     public successState(): hTypes.ActivityTreeItemOptions {
         const activityResult = this.context.activityResult;
         const resourceId: string | undefined = typeof activityResult === 'string' ? activityResult : activityResult?.id;
@@ -36,6 +38,7 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
 
                 return [
                     new ActivityChildItem({
+                        id: this._successItemId,
                         contextValue: 'executeResult',
                         label: vscode.l10n.t("Click to view resource"),
                         activityType: ActivityChildType.Command,
@@ -51,11 +54,13 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
         }
     }
 
+    private _errorItemId: string = uuidv4();
     public errorState(error: types.IParsedError): hTypes.ActivityTreeItemOptions {
         return {
             label: this.label,
             getChildren: (_parent: ResourceGroupsItem) => {
                 const errorItemOptions: types.ActivityChildItemOptions = {
+                    id: this._errorItemId,
                     label: error.message,
                     contextValue: activityErrorContext,
                     activityType: ActivityChildType.Error,
