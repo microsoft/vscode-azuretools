@@ -40,6 +40,7 @@ export function createAzureClient<T extends ServiceClient>(clientContext: Intern
         endpoint: context.environment.resourceManagerEndpointUrl,
     });
 
+    context.telemetry.properties.subscriptionId = context.subscriptionId;
     addAzExtPipeline(context, client.pipeline);
     return client;
 }
@@ -50,6 +51,7 @@ export function createAzureSubscriptionClient<T extends ServiceClient>(clientCon
         endpoint: context.environment.resourceManagerEndpointUrl
     });
 
+    context.telemetry.properties.subscriptionId = context.subscriptionId;
     addAzExtPipeline(context, client.pipeline);
     return client;
 }
