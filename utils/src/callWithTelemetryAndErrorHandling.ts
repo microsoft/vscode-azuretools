@@ -237,6 +237,13 @@ function handleTelemetry(context: types.IActionContext, callbackId: string, star
                     }
                 }
             }
+            if (context.telemetry.properties.subscriptionId) {
+                // set the lastReported subscription id to the current one if it exists
+                ext._internalReporter.lastReportedAzureSubscriptionId = context.telemetry.properties.subscriptionId;
+            } else {
+                // use the last reported subscription id if no subscription id was set on the telemetry properties
+                context.telemetry.properties.subscriptionId = ext._internalReporter.lastReportedAzureSubscriptionId;
+            }
 
             // Note: The id of the extension is automatically prepended to the given callbackId (e.g. "vscode-cosmosdb/")
             ext._internalReporter.sendTelemetryErrorEvent(getTelemetryEventName(handlerContext), context.telemetry.properties, context.telemetry.measurements);

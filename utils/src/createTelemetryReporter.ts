@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import TelemetryReporter, { TelemetryEventProperties } from '@vscode/extension-telemetry';
 import * as process from 'process';
 import * as vscode from 'vscode';
-import TelemetryReporter, { TelemetryEventProperties } from '@vscode/extension-telemetry';
 import { DebugReporter } from './DebugReporter';
 import { getPackageInfo } from './getPackageInfo';
 
@@ -14,6 +14,8 @@ const debugTelemetryVerbose: boolean = /^(verbose|v)$/i.test(process.env.DEBUGTE
 
 export interface IInternalTelemetryReporter {
     sendTelemetryErrorEvent(eventName: string, properties?: TelemetryEventProperties, measurements?: { [key: string]: number | undefined }, errorProps?: string[]): void;
+    // record the last reported Azure subscription id to use if a command doesn't have a target subscription id
+    lastReportedAzureSubscriptionId?: string;
 }
 
 export function createTelemetryReporter(ctx: vscode.ExtensionContext): IInternalTelemetryReporter {
