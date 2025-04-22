@@ -81,6 +81,11 @@ export async function createGenericClient(context: IActionContext, clientInfo: t
         credentials = clientInfo;
     }
 
+    // not all generic clients have a subscription id, so check if it exists before adding it to telemetry
+    if ('subscriptionId' in context) {
+        context.telemetry.properties.subscriptionId = (context as { subscriptionId: string }).subscriptionId;
+    }
+
     const retryOptions: RetryPolicyOptions | undefined = options?.noRetryPolicy ? { maxRetries: 0 } : undefined;
     endpoint = options?.endpoint ?? endpoint;
     const client = new ServiceClient({
