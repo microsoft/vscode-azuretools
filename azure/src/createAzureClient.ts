@@ -40,6 +40,7 @@ export function createAzureClient<T extends ServiceClient>(clientContext: Intern
         endpoint: context.environment.resourceManagerEndpointUrl,
     });
 
+    context.telemetry.properties.subscriptionId = context.subscriptionId;
     addAzExtPipeline(context, client.pipeline);
     return client;
 }
@@ -50,6 +51,7 @@ export function createAzureSubscriptionClient<T extends ServiceClient>(clientCon
         endpoint: context.environment.resourceManagerEndpointUrl
     });
 
+    context.telemetry.properties.subscriptionId = context.subscriptionId;
     addAzExtPipeline(context, client.pipeline);
     return client;
 }
@@ -77,6 +79,11 @@ export async function createGenericClient(context: IActionContext, clientInfo: t
         endpoint = clientInfo.environment.resourceManagerEndpointUrl;
     } else {
         credentials = clientInfo;
+    }
+
+    // not all generic clients have a subscription id, so check if it exists before adding it to telemetry
+    if ('subscriptionId' in context) {
+        context.telemetry.properties.subscriptionId = (context as { subscriptionId: string }).subscriptionId;
     }
 
     const retryOptions: RetryPolicyOptions | undefined = options?.noRetryPolicy ? { maxRetries: 0 } : undefined;
