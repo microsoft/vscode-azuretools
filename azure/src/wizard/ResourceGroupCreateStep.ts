@@ -57,6 +57,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
             } else {
                 this.options.continueOnFail = true;
                 this.addExecuteSteps = () => [new ResourceGroupNoCreatePermissionsSelectStep()];
+
                 // Todo: Throw a descriptive error
             }
         }
@@ -69,13 +70,14 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
 
 class ResourceGroupNoCreatePermissionsSelectStep<T extends types.IResourceGroupWizardContext> extends AzureWizardExecuteStepWithActivityOutput<T> {
     public priority: number = 101;
-    public stepName: string = 'resourceGroupNoPermissionsSelectStep';
+    public stepName: string = 'resourceGroupNoCreatePermissionsSelectStep';
     protected getOutputLogSuccess = (context: T) => l10n.t('Successfully created resource group "{0}"', nonNullProp(context, 'newResourceGroupName'));
     protected getOutputLogFail = (context: T) => l10n.t('Failed to create resource group "{0}"', nonNullProp(context, 'newResourceGroupName'));
     protected getTreeItemLabel = (context: T) => l10n.t('Create resource group "{0}"', nonNullProp(context, 'newResourceGroupName'));
 
     public async execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number; }>): Promise<void> {
         progress.report({ message: '' });
+        const resourceClient: ResourceManagementClient = await createResourcesClient(wizardContext);
 
         // if we suspect that this is a Concierge account, only pick the rg if it begins with "learn" and there is only 1
         if (/concierge/i.test(wizardContext.subscriptionDisplayName)) {
@@ -85,7 +87,7 @@ class ResourceGroupNoCreatePermissionsSelectStep<T extends types.IResourceGroupW
                 wizardContext.telemetry.properties.forbiddenResponse = 'SelectLearnRg';
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 ext.outputChannel.appendLog(l10n.t('WARNING: Cannot create resource group "{0}" because the selected subscription is a concierge subscription. Using resource group "{1}" instead.', newName, wizardContext.resourceGroup!.name!))
-                return undefined;
+                return;
             }
         }
 
