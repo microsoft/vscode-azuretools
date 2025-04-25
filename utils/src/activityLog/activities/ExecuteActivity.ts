@@ -18,16 +18,16 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
         super(task);
     }
 
-    protected override report(progress?: { message?: string; increment?: number }): void {
-        const message: string | undefined = this.context.activityChildren?.length ? this.timerMessage : progress?.message;
-        this._onProgressEmitter.fire({ ...this.getState(), message });
-        this.status = ActivityStatus.Running;
-    }
-
     public initialState(): hTypes.ActivityTreeItemOptions {
         return {
             label: this.label,
         }
+    }
+
+    protected override report(progress?: { message?: string; increment?: number }): void {
+        const message: string | undefined = this.context.activityChildren?.length ? this.timerMessage : progress?.message;
+        this._onProgressEmitter.fire({ ...this.getState(), message });
+        this.status = ActivityStatus.Running;
     }
 
     private _successItemId: string = uuidv4();
