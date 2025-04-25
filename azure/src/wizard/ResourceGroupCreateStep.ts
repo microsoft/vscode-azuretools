@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { ResourceGroup, ResourceManagementClient } from '@azure/arm-resources';
-import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, AzureWizardExecuteStep, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityOutput, nonNullProp, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
+import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityOutput, nonNullProp, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
 import { v4 as uuidv4 } from "uuid";
 import { l10n, MessageItem, Progress, TreeItemCollapsibleState } from 'vscode';
 import * as types from '../../index';
@@ -91,7 +91,6 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
                 id: this._errorItemId,
                 activityType: ActivityChildType.Error,
                 contextValue: 'activity:error', // Todo: Replace with exported constant
-                iconPath: activityFailIcon,
                 label: l10n.t('Unable to create resource group "{0}" in subscription "{1}" due to a lack of permissions.', nonNullProp(context, 'newResourceGroupName'), context.subscriptionDisplayName),
             })];
         }
@@ -103,7 +102,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
     }
 }
 
-class ResourceGroupNoCreatePermissionsSelectStep<T extends types.IResourceGroupWizardContext> extends AzureWizardExecuteStep<T> {
+class ResourceGroupNoCreatePermissionsSelectStep<T extends types.IResourceGroupWizardContext> extends AzureWizardExecuteStepWithActivityOutput<T> {
     public priority: number = 101;
     public stepName: string = 'resourceGroupNoCreatePermissionsSelectStep';
     protected getOutputLogSuccess = (context: T) => l10n.t('Successfully selected existing resource group "{0}"', nonNullValueAndProp(context.resourceGroup, 'name'));
