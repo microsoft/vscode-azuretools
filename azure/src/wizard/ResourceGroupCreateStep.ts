@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { ResourceGroup, ResourceManagementClient } from '@azure/arm-resources';
-import { AzureWizardExecuteStepWithActivityOutput, nonNullProp, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
-import { l10n, MessageItem, Progress } from 'vscode';
+import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, AzureWizardExecuteStep, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityOutput, nonNullProp, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
+import { v4 as uuidv4 } from "uuid";
+import { l10n, MessageItem, Progress, TreeItemCollapsibleState } from 'vscode';
 import * as types from '../../index';
 import { createResourcesClient } from '../clients';
 import { resourcesProvider } from '../constants';
@@ -17,9 +18,12 @@ import { ResourceGroupListStep } from './ResourceGroupListStep';
 export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext> extends AzureWizardExecuteStepWithActivityOutput<T> {
     public priority: number = 100;
     public stepName: string = 'resourceGroupCreateStep';
+
     protected getOutputLogSuccess = (context: T) => l10n.t('Successfully created resource group "{0}"', nonNullProp(context, 'newResourceGroupName'));
     protected getOutputLogFail = (context: T) => l10n.t('Failed to create resource group "{0}"', nonNullProp(context, 'newResourceGroupName'));
     protected getTreeItemLabel = (context: T) => l10n.t('Create resource group "{0}"', nonNullProp(context, 'newResourceGroupName'));
+
+    private isMissingCreatePermissions: boolean = false;
 
     // Verify if a resource group with the same name already exists
     public async configureBeforeExecute(context: T): Promise<void> {
@@ -55,6 +59,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
             if (wizardContext.suppress403Handling || parseError(error).errorType !== '403') {
                 throw error;
             } else {
+                this.isMissingCreatePermissions = true;
                 this.options.continueOnFail = true;
                 this.addExecuteSteps = () => [new ResourceGroupNoCreatePermissionsSelectStep()];
 
@@ -69,9 +74,36 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
     public shouldExecute(wizardContext: T): boolean {
         return !wizardContext.resourceGroup;
     }
+
+    private _errorItemId = uuidv4();
+    public override createFailOutput(context: T): ExecuteActivityOutput {
+        const item: ActivityChildItem = new ActivityChildItem({
+            label: this.getTreeItemLabel(context),
+            activityType: ActivityChildType.Fail,
+            contextValue: createContextValue([this.stepName, activityFailContext]),
+            iconPath: activityFailIcon,
+            isParent: true,
+            initialCollapsibleState: TreeItemCollapsibleState.Expanded,
+        });
+
+        if (this.isMissingCreatePermissions) {
+            item.getChildren = () => [new ActivityChildItem({
+                id: this._errorItemId,
+                activityType: ActivityChildType.Error,
+                contextValue: 'activity:error', // Todo: Replace with exported constant
+                iconPath: activityFailIcon,
+                label: l10n.t('Unable to create resource group "{0}" in subscription "{1}" due to a lack of permissions.', nonNullProp(context, 'newResourceGroupName'), context.subscriptionDisplayName),
+            })];
+        }
+
+        return {
+            item,
+            message: this.getOutputLogFail(context),
+        }
+    }
 }
 
-class ResourceGroupNoCreatePermissionsSelectStep<T extends types.IResourceGroupWizardContext> extends AzureWizardExecuteStepWithActivityOutput<T> {
+class ResourceGroupNoCreatePermissionsSelectStep<T extends types.IResourceGroupWizardContext> extends AzureWizardExecuteStep<T> {
     public priority: number = 101;
     public stepName: string = 'resourceGroupNoCreatePermissionsSelectStep';
     protected getOutputLogSuccess = (context: T) => l10n.t('Successfully selected existing resource group "{0}"', nonNullValueAndProp(context.resourceGroup, 'name'));
