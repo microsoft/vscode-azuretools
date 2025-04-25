@@ -54,11 +54,9 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
         const resourceClient: ResourceManagementClient = await createResourcesClient(wizardContext);
 
         try {
-            throw new Error('insufficient create permissions')
             wizardContext.resourceGroup = await resourceClient.resourceGroups.createOrUpdate(newName, { location: newLocationName });
         } catch (error) {
             const err = parseError(error);
-            err.errorType = '403';
             if (wizardContext.suppress403Handling || err.errorType !== '403') {
                 throw error;
             } else {
