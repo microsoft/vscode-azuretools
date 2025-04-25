@@ -26,12 +26,12 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
     public readonly onError: typeof this._onErrorEmitter.event;
 
     private readonly _onStartEmitter = new EventEmitter<hTypes.OnStartActivityData>();
-    private readonly _onProgressEmitter = new EventEmitter<hTypes.OnProgressActivityData>();
     private readonly _onSuccessEmitter = new EventEmitter<hTypes.OnSuccessActivityData>();
     private readonly _onErrorEmitter = new EventEmitter<hTypes.OnErrorActivityData>();
+    protected readonly _onProgressEmitter = new EventEmitter<hTypes.OnProgressActivityData>();
 
-    private status: ActivityStatus = ActivityStatus.NotStarted;
-    private timerMessage: string = '0s';
+    protected status: ActivityStatus = ActivityStatus.NotStarted;
+    protected timerMessage: string = '0s';
 
     private timer: NodeJS.Timeout;
     private _startTime: Date | undefined;
@@ -65,7 +65,7 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
         this.onError = this._onErrorEmitter.event;
     }
 
-    private report(_progress?: { message?: string; increment?: number }): void {
+    protected report(_progress?: { message?: string; increment?: number }): void {
         this._onProgressEmitter.fire({ ...this.getState(), message: this.timerMessage });
         this.status = ActivityStatus.Running;
     }

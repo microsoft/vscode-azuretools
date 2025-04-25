@@ -9,12 +9,18 @@ import * as types from '../../../index';
 import { activityErrorContext, activityFailContext, activityFailIcon } from '../../constants';
 import { ResourceGroupsItem } from '../../pickTreeItem/quickPickAzureResource/tempTypes';
 import { ActivityChildItem, ActivityChildType } from '../../tree/v2/ActivityChildItem';
-import { ActivityBase } from "../Activity";
+import { ActivityBase, ActivityStatus } from "../Activity";
 
 export class ExecuteActivity<TContext extends types.ExecuteActivityContext = types.ExecuteActivityContext> extends ActivityBase<void> {
 
     public constructor(protected readonly context: TContext, task: types.ActivityTask<void>) {
         super(task);
+    }
+
+    protected override report(progress?: { message?: string; increment?: number }): void {
+        const message: string | undefined = this.context.activityChildren?.length ? this.timerMessage : progress?.message;
+        this._onProgressEmitter.fire({ ...this.getState(), message });
+        this.status = ActivityStatus.Running;
     }
 
     public initialState(): hTypes.ActivityTreeItemOptions {
