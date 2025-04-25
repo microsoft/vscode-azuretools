@@ -6,7 +6,7 @@
 import type { ApplicationInsightsManagementClient } from '@azure/arm-appinsights';
 import type { ResourceGroup } from '@azure/arm-resources';
 import { AzExtLocation, LocationListStep } from '@microsoft/vscode-azext-azureutils';
-import { AzureWizardExecuteStep, ExecuteActivityContext, IParsedError, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
+import { AzureWizardExecuteStepWithActivityOutput, ExecuteActivityContext, IParsedError, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
 import { l10n, MessageItem, Progress } from 'vscode';
 import { ext } from '../extensionVariables';
 import { createAppInsightsClient } from '../utils/azureClients';
@@ -14,7 +14,7 @@ import { AppInsightsListStep } from './AppInsightsListStep';
 import { getAppInsightsSupportedLocation } from './getAppInsightsSupportedLocation';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
-export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext & Partial<ExecuteActivityContext>> {
+export class AppInsightsCreateStep extends AzureWizardExecuteStepWithActivityOutput<IAppServiceWizardContext & Partial<ExecuteActivityContext>> {
     public priority: number = 135;
     public stepName: string = 'AppInsightsCreateStep';
     private _usedExistingAppInsights: boolean = false;
