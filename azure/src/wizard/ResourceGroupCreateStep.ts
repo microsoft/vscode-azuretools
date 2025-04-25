@@ -48,7 +48,9 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
         }
     }
 
-    public async execute(wizardContext: T, _progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
+    public async execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
+        progress.report({ message: l10n.t('Creating resource group...') });
+
         const newName: string = nonNullProp(wizardContext, 'newResourceGroupName');
         const newLocationName: string = (await LocationListStep.getLocation(wizardContext, resourcesProvider, false)).name;
         const resourceClient: ResourceManagementClient = await createResourcesClient(wizardContext);
