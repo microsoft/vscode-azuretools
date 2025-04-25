@@ -39,7 +39,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
             }
         } catch (error) {
             if (context.suppress403Handling || parseError(error).errorType !== '403') {
-                ext.outputChannel.appendLog(l10n.t(`Error occurred while trying to verify whether the given resource group already exists: `));
+                ext.outputChannel.appendLog(l10n.t('Error occurred while trying to verify whether the given resource group already exists: '));
                 ext.outputChannel.appendLog(parseError(error).message);
                 throw error;
             } else {
