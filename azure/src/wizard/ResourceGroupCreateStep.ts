@@ -39,7 +39,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
             }
         } catch (error) {
             if (context.suppress403Handling || parseError(error).errorType !== '403') {
-                ext.outputChannel.appendLog(l10n.t(`Error occurred while trying to verify whether the given resource group name already exists: `));
+                ext.outputChannel.appendLog(l10n.t(`Error occurred while trying to verify whether the given resource group already exists: `));
                 ext.outputChannel.appendLog(parseError(error).message);
                 throw error;
             } else {
@@ -54,9 +54,12 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
         const resourceClient: ResourceManagementClient = await createResourcesClient(wizardContext);
 
         try {
+            throw new Error('insufficient create permissions')
             wizardContext.resourceGroup = await resourceClient.resourceGroups.createOrUpdate(newName, { location: newLocationName });
         } catch (error) {
-            if (wizardContext.suppress403Handling || parseError(error).errorType !== '403') {
+            const err = parseError(error);
+            err.errorType = '403';
+            if (wizardContext.suppress403Handling || err.errorType !== '403') {
                 throw error;
             } else {
                 this.isMissingCreatePermissions = true;
@@ -65,7 +68,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
 
                 const message: string = l10n.t('Unable to create resource group "{0}" in subscription "{1}" due to a lack of permissions.', newName, wizardContext.subscriptionDisplayName);
                 ext.outputChannel.appendLog(message);
-                ext.outputChannel.appendLog(parseError(error).message);
+                ext.outputChannel.appendLog(err.message);
                 throw new Error(message);
             }
         }
