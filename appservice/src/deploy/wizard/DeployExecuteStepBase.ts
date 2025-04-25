@@ -4,12 +4,52 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AppServicePlan, SiteConfigResource } from "@azure/arm-appservice";
-import { AzureWizardExecuteStep, randomUtils } from "@microsoft/vscode-azext-utils";
-import { Progress, ProgressLocation, l10n, window } from "vscode";
+import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, activityProgressContext, activityProgressIcon, activitySuccessContext, activitySuccessIcon, AzureWizardExecuteStep, createContextValue, ExecuteActivityOutput, randomUtils } from "@microsoft/vscode-azext-utils";
+import { l10n, Progress } from "vscode";
 import { ext } from "../../extensionVariables";
 import { InnerDeployContext } from "../IDeployContext";
 
 export abstract class DeployExecuteStepBase extends AzureWizardExecuteStep<InnerDeployContext> {
+    stepName: string = 'DeployExecuteStepBase';
+    private command = {
+        title: '',
+        command: ext.prefix + '.showOutputChannel'
+    };
+
+    public createSuccessOutput(context: InnerDeployContext): ExecuteActivityOutput {
+        return {
+            item: new ActivityChildItem({
+                contextValue: createContextValue([activitySuccessContext, context.site.id]),
+                label: l10n.t('Successfully deployed package. Click to view output window.', context.site.fullName),
+                iconPath: activitySuccessIcon,
+                activityType: ActivityChildType.Success,
+                command: this.command
+            })
+        };
+    }
+    public createProgressOutput(context: InnerDeployContext): ExecuteActivityOutput {
+        return {
+            item: new ActivityChildItem({
+                contextValue: createContextValue([activityProgressContext, context.site.id]),
+                label: l10n.t('Deploying package... Click to view output window.', context.site.fullName),
+                iconPath: activityProgressIcon,
+                activityType: ActivityChildType.Progress,
+                command: this.command
+            })
+        };
+    }
+    public createFailOutput(context: InnerDeployContext): ExecuteActivityOutput {
+        return {
+            item: new ActivityChildItem({
+                contextValue: createContextValue([activityFailContext, context.site.id]),
+                label: l10n.t('Failed to deploy package. Click to view output window.', context.site.fullName),
+                iconPath: activityFailIcon,
+                activityType: ActivityChildType.Fail,
+                command: this.command
+            })
+        };
+    }
+
     public priority: number = 200;
     protected progress: Progress<{ message?: string; increment?: number }> | undefined;
     public constructor() {
@@ -26,15 +66,7 @@ export abstract class DeployExecuteStepBase extends AzureWizardExecuteStep<Inner
         } catch (error) {
             // Ignore
         }
-
-        const title: string = l10n.t('Deploying to "{0}"... Check [output window](command:{1}) for status.', context.site.fullName, ext.prefix + '.showOutputChannel');
-        await window.withProgress({ location: ProgressLocation.Notification, title }, async () => {
-            const startingDeployment = l10n.t('Starting deployment...')
-
-            ext.outputChannel.appendLog(startingDeployment, { resourceName: context.site.fullName });
-            progress.report({ message: startingDeployment });
-            await this.deployCore(context, config);
-        });
+        await this.deployCore(context, config);
     }
 
     public shouldExecute(_context: InnerDeployContext): boolean {
