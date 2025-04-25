@@ -21,7 +21,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
     protected getOutputLogFail = (context: T) => l10n.t('Failed to create resource group "{0}"', nonNullProp(context, 'newResourceGroupName'));
     protected getTreeItemLabel = (context: T) => l10n.t('Create resource group "{0}"', nonNullProp(context, 'newResourceGroupName'));
 
-    // Verify if a resource group with the same new name already exists
+    // Verify if a resource group with the same name already exists
     public async configureBeforeExecute(context: T): Promise<void> {
         const newName: string = nonNullProp(context, 'newResourceGroupName');
         const resourceClient: ResourceManagementClient = await createResourcesClient(context);
