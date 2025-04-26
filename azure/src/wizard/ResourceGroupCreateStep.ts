@@ -78,7 +78,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
         return !wizardContext.resourceGroup;
     }
 
-    private _errorItemId = uuidv4();
+    private _errorItemId: string = uuidv4();
     public override createFailOutput(context: T): ExecuteActivityOutput {
         const item: ActivityChildItem = new ActivityChildItem({
             label: this.getTreeItemLabel(context),
