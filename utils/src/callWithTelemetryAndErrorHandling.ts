@@ -265,5 +265,3 @@ function sendHandlerFailedEvent(context: types.IHandlerContext, handlerName: str
 function getTelemetryEventName(context: types.IHandlerContext): string {
     return context.telemetry.eventVersion ? `${context.callbackId}V${context.telemetry.eventVersion}` : context.callbackId;
 }
-
-const callbackIdMap = {};
