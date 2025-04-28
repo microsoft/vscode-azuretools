@@ -6,6 +6,7 @@
 import * as vscode from 'vscode';
 import * as types from '../../../index';
 import { AzureResourceQuickPickWizardContext } from '../../../index';
+import { setAzureResourceIdTelemetryProperties } from '../../utils/AzureResourceIdTelemetry';
 import { parseContextValue } from '../../utils/contextUtils';
 import { GenericQuickPickStep } from '../GenericQuickPickStep';
 import { PickFilter } from '../PickFilter';
@@ -31,7 +32,7 @@ export class QuickPickAzureResourceStep extends GenericQuickPickStep<AzureResour
             // it's possible that if subscription is not set on AzExtTreeItems, an error is thrown
             // see https://github.com/microsoft/vscode-azuretools/blob/cc1feb3a819dd503eb59ebcc1a70051d4e9a3432/utils/src/tree/AzExtTreeItem.ts#L154
             wizardContext.telemetry.properties.subscriptionId = pickedAzureResource.resource.subscription.subscriptionId;
-            wizardContext.telemetry.properties.resourceId = new vscode.TelemetryTrustedValue(pickedAzureResource.resource.id);
+            setAzureResourceIdTelemetryProperties(wizardContext, pickedAzureResource.resource.id);
         } catch (e) {
             // we don't want to block execution just because we can't set the telemetry property
             // see https://github.com/microsoft/vscode-azureresourcegroups/issues/1081
