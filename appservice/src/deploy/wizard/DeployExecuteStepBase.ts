@@ -6,24 +6,17 @@
 import { AppServicePlan, SiteConfigResource } from "@azure/arm-appservice";
 import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, activityProgressContext, activityProgressIcon, activitySuccessContext, activitySuccessIcon, AzureWizardExecuteStep, createContextValue, ExecuteActivityOutput, randomUtils } from "@microsoft/vscode-azext-utils";
 import { l10n, Progress } from "vscode";
-import { ext } from "../../extensionVariables";
 import { InnerDeployContext } from "../IDeployContext";
 
 export abstract class DeployExecuteStepBase extends AzureWizardExecuteStep<InnerDeployContext> {
     stepName: string = 'DeployExecuteStepBase';
-    private command = {
-        title: '',
-        command: ext.prefix + '.showOutputChannel'
-    };
-
     public createSuccessOutput(context: InnerDeployContext): ExecuteActivityOutput {
         return {
             item: new ActivityChildItem({
                 contextValue: createContextValue([activitySuccessContext, context.site.id]),
-                label: l10n.t('Successfully deployed package. Click to view output window.', context.site.fullName),
+                label: l10n.t('Zip and deploy workspace "{0}"', context.effectiveDeployFsPath),
                 iconPath: activitySuccessIcon,
                 activityType: ActivityChildType.Success,
-                command: this.command
             })
         };
     }
@@ -31,10 +24,9 @@ export abstract class DeployExecuteStepBase extends AzureWizardExecuteStep<Inner
         return {
             item: new ActivityChildItem({
                 contextValue: createContextValue([activityProgressContext, context.site.id]),
-                label: l10n.t('Deploying package... Click to view output window.', context.site.fullName),
+                label: l10n.t('Zip and deploy workspace "{0}"', context.effectiveDeployFsPath),
                 iconPath: activityProgressIcon,
                 activityType: ActivityChildType.Progress,
-                command: this.command
             })
         };
     }
@@ -42,10 +34,9 @@ export abstract class DeployExecuteStepBase extends AzureWizardExecuteStep<Inner
         return {
             item: new ActivityChildItem({
                 contextValue: createContextValue([activityFailContext, context.site.id]),
-                label: l10n.t('Failed to deploy package. Click to view output window.', context.site.fullName),
+                label: l10n.t('Zip and deploy workspace "{0}"', context.effectiveDeployFsPath),
                 iconPath: activityFailIcon,
                 activityType: ActivityChildType.Fail,
-                command: this.command
             })
         };
     }

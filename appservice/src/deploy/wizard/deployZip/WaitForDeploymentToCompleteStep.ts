@@ -4,18 +4,24 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, activityProgressContext, activityProgressIcon, activitySuccessContext, activitySuccessIcon, AzureWizardExecuteStep, createContextValue, ExecuteActivityOutput, nonNullProp } from "@microsoft/vscode-azext-utils";
-import { l10n, Progress } from "vscode";
+import { l10n, Progress, ThemeIcon, TreeItemCollapsibleState } from "vscode";
+import { ext } from "../../../extensionVariables";
 import { InnerDeployContext } from "../../IDeployContext";
 import { waitForDeploymentToComplete } from "../../waitForDeploymentToComplete";
 
 export class WaitForDeploymentToCompleteStep extends AzureWizardExecuteStep<InnerDeployContext> {
     public stepName: string = 'WaitForDeploymentToCompleteStep';
     public priority: number = 210;
+    private _command: { title: string; command: string } = {
+        title: '',
+        command: ext.prefix + '.showOutputChannel'
+    };
     public createSuccessOutput(context: InnerDeployContext): ExecuteActivityOutput {
+        const label = l10n.t('Build app "{0}" in Azure', context.site.fullName);
         return {
             item: new ActivityChildItem({
                 contextValue: createContextValue([activitySuccessContext, context.site.id]),
-                label: l10n.t('Finished deployment pipeline.'),
+                label,
                 iconPath: activitySuccessIcon,
                 activityType: ActivityChildType.Success,
 
@@ -23,25 +29,57 @@ export class WaitForDeploymentToCompleteStep extends AzureWizardExecuteStep<Inne
         };
     }
     public createProgressOutput(context: InnerDeployContext): ExecuteActivityOutput {
-        return {
-            item: new ActivityChildItem({
-                contextValue: createContextValue([activityProgressContext, context.site.id]),
-                label: l10n.t('Waiting for deployment to complete...', context.site.fullName),
-                iconPath: activityProgressIcon,
-                activityType: ActivityChildType.Progress,
+        const label = l10n.t('Build app "{0}" in Azure', context.site.fullName);
+        const item = new ActivityChildItem({
+            contextValue: createContextValue([activityProgressContext, context.site.id]),
+            label,
+            iconPath: activityProgressIcon,
+            activityType: ActivityChildType.Progress,
+            isParent: true,
+            initialCollapsibleState: TreeItemCollapsibleState.Expanded
+        });
 
-            })
+        item.getChildren = () => {
+            return [
+                new ActivityChildItem({
+                    label: l10n.t('Click to view output channel'),
+                    command: this._command,
+                    activityType: ActivityChildType.Info,
+                    contextValue: createContextValue([activityProgressContext, 'viewOutputChannel']),
+                    iconPath: new ThemeIcon('output')
+                })
+            ];
+        };
+
+        return {
+            item
         };
     }
     public createFailOutput(context: InnerDeployContext): ExecuteActivityOutput {
-        return {
-            item: new ActivityChildItem({
-                contextValue: createContextValue([activityFailContext, context.site.id]),
-                label: l10n.t('Deployment failed.'),
-                iconPath: activityFailIcon,
-                activityType: ActivityChildType.Fail,
+        const label = l10n.t('Build app "{0}" in Azure', context.site.fullName);
+        const item = new ActivityChildItem({
+            contextValue: createContextValue([activityFailContext, context.site.id]),
+            label,
+            iconPath: activityFailIcon,
+            activityType: ActivityChildType.Fail,
+            isParent: true,
+            initialCollapsibleState: TreeItemCollapsibleState.Expanded
+        });
 
-            })
+        item.getChildren = () => {
+            return [
+                new ActivityChildItem({
+                    label: l10n.t('Click to view output channel'),
+                    command: this._command,
+                    activityType: ActivityChildType.Info,
+                    contextValue: createContextValue([activityProgressContext, 'viewOutputChannel']),
+                    iconPath: new ThemeIcon('output')
+                })
+            ];
+        };
+
+        return {
+            item
         };
     }
 

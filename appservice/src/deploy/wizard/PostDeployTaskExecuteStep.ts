@@ -20,7 +20,7 @@ export class PostDeployTaskExecuteStep extends AzureWizardExecuteStep<InnerDeplo
     public createSuccessOutput(context: InnerDeployContext): ExecuteActivityOutput {
         const settingKey: string = 'postDeployTask';
         const taskName: string | undefined = workspace.getConfiguration(ext.prefix, Uri.file(context.fsPath)).get(settingKey) ?? '';
-        const label = l10n.t('Started {0} "{1}".', settingKey, taskName);
+        const label = l10n.t('Start {0} "{1}".', settingKey, taskName);
         return {
             item: new ActivityChildItem({
                 contextValue: createContextValue([activitySuccessContext, context.site.id]),
