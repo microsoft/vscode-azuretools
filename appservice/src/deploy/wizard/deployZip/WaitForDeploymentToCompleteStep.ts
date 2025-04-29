@@ -16,6 +16,7 @@ export class WaitForDeploymentToCompleteStep extends AzureWizardExecuteStep<Inne
         title: '',
         command: ext.prefix + '.showOutputChannel'
     };
+    private _childId: string = uuidv4(); // create child id in class to make it idempotent
     public createSuccessOutput(context: InnerDeployContext): ExecuteActivityOutput {
         const label = l10n.t('Build app "{0}" in Azure', context.site.fullName);
         return {
@@ -43,6 +44,7 @@ export class WaitForDeploymentToCompleteStep extends AzureWizardExecuteStep<Inne
             return [
                 new ActivityChildItem({
                     label: l10n.t('Click to view output channel'),
+                    id: this._childId,
                     command: this._command,
                     activityType: ActivityChildType.Info,
                     contextValue: createContextValue([activityProgressContext, 'viewOutputChannel']),
@@ -70,6 +72,7 @@ export class WaitForDeploymentToCompleteStep extends AzureWizardExecuteStep<Inne
             return [
                 new ActivityChildItem({
                     label: l10n.t('Click to view output channel'),
+                    id: this._childId,
                     command: this._command,
                     activityType: ActivityChildType.Info,
                     contextValue: createContextValue([activityProgressContext, 'viewOutputChannel']),
@@ -91,3 +94,7 @@ export class WaitForDeploymentToCompleteStep extends AzureWizardExecuteStep<Inne
         return true;
     }
 }
+function uuidv4(): string {
+    throw new Error("Function not implemented.");
+}
+
