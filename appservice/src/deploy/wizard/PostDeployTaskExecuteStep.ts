@@ -58,6 +58,7 @@ export class PostDeployTaskExecuteStep extends AzureWizardExecuteStep<InnerDeplo
                 ext.outputChannel.appendLog(startedTask, { resourceName: context.site.fullName });
             } else {
                 const failedToFindTask = l10n.t('Failed to find {0} "{1}".', settingKey, taskName);
+                progress.report({ message: failedToFindTask });
                 throw new Error(failedToFindTask);
             }
         }

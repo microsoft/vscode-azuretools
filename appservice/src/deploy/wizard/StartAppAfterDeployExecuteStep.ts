@@ -22,9 +22,11 @@ export class StartAppAfterDeployExecuteStep extends AzureWizardExecuteStepWithAc
     protected getOutputLogProgress(context: InnerDeployContext): string {
         return l10n.t('Starting app "{0}"...', context.site.fullName);
     }
-    public async execute(context: InnerDeployContext, _progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
+    public async execute(context: InnerDeployContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         const site = context.site;
 
+        const startingApp = l10n.t('Starting app...');
+        progress.report({ message: startingApp });
         const client = await site.createClient(context);
         await client.start();
     }
