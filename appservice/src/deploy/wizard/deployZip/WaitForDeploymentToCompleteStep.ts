@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, activityProgressContext, activityProgressIcon, activitySuccessContext, activitySuccessIcon, AzureWizardExecuteStep, createContextValue, ExecuteActivityOutput, nonNullProp } from "@microsoft/vscode-azext-utils";
+import { v4 as uuidv4 } from "uuid";
 import { l10n, Progress, ThemeIcon, TreeItemCollapsibleState } from "vscode";
 import { ext } from "../../../extensionVariables";
 import { InnerDeployContext } from "../../IDeployContext";
@@ -94,7 +95,3 @@ export class WaitForDeploymentToCompleteStep extends AzureWizardExecuteStep<Inne
         return true;
     }
 }
-function uuidv4(): string {
-    throw new Error("Function not implemented.");
-}
-
