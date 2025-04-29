@@ -3,14 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { commands, Uri, TelemetryTrustedValue } from 'vscode';
+import { unwrapArgs } from '@microsoft/vscode-azureresources-api';
+import { commands, Uri } from 'vscode';
 import * as types from '../index';
 import { callWithTelemetryAndErrorHandling } from './callWithTelemetryAndErrorHandling';
 import { ext } from './extensionVariables';
+import { parseError } from './parseError';
 import { addTreeItemValuesToMask } from './tree/addTreeItemValuesToMask';
 import { AzExtTreeItem } from './tree/AzExtTreeItem';
-import { unwrapArgs } from '@microsoft/vscode-azureresources-api';
-import { parseError } from './parseError';
+import { setAzureResourceIdTelemetryProperties } from './utils/AzureResourceIdTelemetry';
 
 function isTreeElementBase(object?: unknown): object is types.TreeElementBase {
     return typeof object === 'object' && object !== null && 'getTreeItem' in object;
@@ -80,7 +81,7 @@ async function setTelemetryProperties(context: types.IActionContext, args: unkno
     if (isResourceGroupsItem(firstArg)) {
         const resourceId = (firstArg as { resource: Resource })?.resource?.id;
         if (resourceId) {
-            context.telemetry.properties.resourceId = new TelemetryTrustedValue(resourceId);
+            setAzureResourceIdTelemetryProperties(context, resourceId)
         }
         context.telemetry.properties.subscriptionId = (firstArg as { resource: Resource })?.resource?.subscription?.subscriptionId;
     }
@@ -92,7 +93,7 @@ async function setTelemetryProperties(context: types.IActionContext, args: unkno
                 // Only record telemetry if subscription is defined. See: https://github.com/microsoft/vscode-azuretools/pull/1941#discussion_r2016824347
                 if (arg.subscription) {
                     if (arg.id) {
-                        context.telemetry.properties.resourceId = new TelemetryTrustedValue(arg.id);
+                        setAzureResourceIdTelemetryProperties(context, arg.id)
                     }
                     // it's possible that if subscription is not set on AzExtTreeItems, an error is thrown from just accessing it
                     // see https://github.com/microsoft/vscode-azuretools/blob/cc1feb3a819dd503eb59ebcc1a70051d4e9a3432/utils/src/tree/AzExtTreeItem.ts#L154
@@ -119,7 +120,7 @@ async function setTelemetryProperties(context: types.IActionContext, args: unkno
         if (node && typeof node === 'object' && 'subscription' in node && node.subscription) {
 
             if (node && typeof node === 'object' && 'id' in node && typeof node.id === 'string') {
-                context.telemetry.properties.resourceId = new TelemetryTrustedValue(node.id);
+                setAzureResourceIdTelemetryProperties(context, node.id)
             }
 
             // it's possible that if subscription is not set on AzExtTreeItems, an error is thrown from just accessing it
