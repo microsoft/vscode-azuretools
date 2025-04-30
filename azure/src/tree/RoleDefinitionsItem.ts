@@ -6,9 +6,9 @@
 
 import { RoleDefinition } from "@azure/arm-authorization";
 import { Identity } from "@azure/arm-msi";
-import { AzExtParentTreeItem, AzExtTreeItem, createGenericElement, createSubscriptionContext, GenericTreeItem, IActionContext, ISubscriptionContext, TreeElementBase, TreeItemIconPath } from "@microsoft/vscode-azext-utils";
+import { AzExtParentTreeItem, AzExtTreeItem, createGenericElement, createSubscriptionContext, GenericTreeItem, IActionContext, ISubscriptionContext, TreeElementBase } from "@microsoft/vscode-azext-utils";
 import { AzExtResourceType, AzureSubscription, getAzExtResourceType } from "@microsoft/vscode-azureresources-api";
-import { IconPath, ThemeIcon, TreeItem, TreeItemCollapsibleState, Uri } from "vscode";
+import { ThemeIcon, TreeItem, TreeItemCollapsibleState, Uri } from "vscode";
 import * as types from '../../index';
 import { createAuthorizationManagementClient, createSubscriptionsClient } from "../clients";
 import { createPortalUri } from "../utils/createPortalUri";
@@ -59,7 +59,7 @@ export async function createRoleDefinitionsItems(context: IActionContext, subscr
 export class RoleDefinitionsItem implements TreeElementBase {
     public id: string;
     public label: string;
-    public iconPath: IconPath;
+    public iconPath: ThemeIcon;
     public description: string | undefined;
     public roleDefintions: RoleDefinition[] = [];
     public readonly portalUrl: Uri;
@@ -67,7 +67,7 @@ export class RoleDefinitionsItem implements TreeElementBase {
     constructor(options: {
         label: string,
         id: string,
-        iconPath: IconPath,
+        iconPath: ThemeIcon,
         description: string | undefined,
         roleDefinition: RoleDefinition,
         subscription: AzureSubscription | ISubscriptionContext,
@@ -94,7 +94,7 @@ export class RoleDefinitionsItem implements TreeElementBase {
         let parsedAzureResourceId: types.ParsedAzureResourceId | undefined;
         let parsedAzureResourceGroupId: types.ParsedAzureResourceGroupId | undefined;
         let label: string;
-        let iconPath: TreeItemIconPath;
+        let iconPath: ThemeIcon;
         let subscriptionId: string | undefined;
         const description: string | undefined = options.withDescription ? options.subContext.subscriptionDisplayName : undefined;
 
@@ -103,7 +103,7 @@ export class RoleDefinitionsItem implements TreeElementBase {
             subscriptionId = parsedAzureResourceId.subscriptionId;
             label = parsedAzureResourceId.resourceName;
             const resourceIconPath = getAzExtResourceType({ type: parsedAzureResourceId.provider });
-            iconPath = resourceIconPath ? getAzureIconPath(resourceIconPath) : new ThemeIcon('symbol-field');
+            iconPath = (resourceIconPath ? getAzureIconPath(resourceIconPath) : new ThemeIcon('symbol-field')) as ThemeIcon;
         }
         catch (error) {
             try {
@@ -111,7 +111,7 @@ export class RoleDefinitionsItem implements TreeElementBase {
                 parsedAzureResourceGroupId = parseAzureResourceGroupId(options.scope);
                 subscriptionId = parsedAzureResourceGroupId.subscriptionId;
                 label = parsedAzureResourceGroupId.resourceGroup;
-                iconPath = getAzureIconPath(AzExtResourceType.ResourceGroup);
+                iconPath = getAzureIconPath(AzExtResourceType.ResourceGroup) as ThemeIcon;
             } catch (error) {
                 // if it's not a resource group, then it's a subscription
                 subscriptionId = options.scope.split('/').pop() as string;
@@ -123,7 +123,7 @@ export class RoleDefinitionsItem implements TreeElementBase {
                     // no access to subscription, just display the id
                     label = subscriptionId;
                 }
-                iconPath = getAzureIconPath('Subscription');
+                iconPath = getAzureIconPath('Subscription') as ThemeIcon;
             }
         }
 
