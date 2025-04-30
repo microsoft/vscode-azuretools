@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, l10n, MessageItem, window } from 'vscode';
+import { Disposable, l10n, MessageItem, TelemetryTrustedValue, window } from 'vscode';
 import * as types from '../index';
 import { DialogResponses } from './DialogResponses';
 import { ext } from './extensionVariables';
@@ -232,6 +232,8 @@ function handleTelemetry(context: types.IActionContext, callbackId: string, star
                 if (value) {
                     if (/(error|exception)/i.test(key)) {
                         context.telemetry.properties[key] = context.telemetry.maskEntireErrorMessage ? getRedactedLabel('action') : maskUserInfo(value, context.valuesToMask);
+                    } else if (value instanceof TelemetryTrustedValue) {
+                        // don't mask trusted values
                     } else {
                         context.telemetry.properties[key] = maskUserInfo(value, context.valuesToMask, true /* lessAggressive */);
                     }
