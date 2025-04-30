@@ -8,7 +8,7 @@ import { RoleDefinition } from "@azure/arm-authorization";
 import { Identity } from "@azure/arm-msi";
 import { AzExtParentTreeItem, AzExtTreeItem, createGenericElement, createSubscriptionContext, GenericTreeItem, IActionContext, ISubscriptionContext, TreeElementBase, TreeItemIconPath } from "@microsoft/vscode-azext-utils";
 import { AzExtResourceType, AzureSubscription, getAzExtResourceType } from "@microsoft/vscode-azureresources-api";
-import { ThemeIcon, TreeItem, TreeItemCollapsibleState, Uri } from "vscode";
+import { IconPath, ThemeIcon, TreeItem, TreeItemCollapsibleState, Uri } from "vscode";
 import * as types from '../../index';
 import { createAuthorizationManagementClient, createSubscriptionsClient } from "../clients";
 import { createPortalUri } from "../utils/createPortalUri";
@@ -59,7 +59,7 @@ export async function createRoleDefinitionsItems(context: IActionContext, subscr
 export class RoleDefinitionsItem implements TreeElementBase {
     public id: string;
     public label: string;
-    public iconPath: TreeItemIconPath;
+    public iconPath: IconPath;
     public description: string | undefined;
     public roleDefintions: RoleDefinition[] = [];
     public readonly portalUrl: Uri;
@@ -67,7 +67,7 @@ export class RoleDefinitionsItem implements TreeElementBase {
     constructor(options: {
         label: string,
         id: string,
-        iconPath: TreeItemIconPath,
+        iconPath: IconPath,
         description: string | undefined,
         roleDefinition: RoleDefinition,
         subscription: AzureSubscription | ISubscriptionContext,
