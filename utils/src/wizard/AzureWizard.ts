@@ -13,6 +13,7 @@ import { ext } from '../extensionVariables';
 import { parseError } from '../parseError';
 import { IInternalActionContext, IInternalAzureWizard } from '../userInput/IInternalActionContext';
 import { createQuickPick } from '../userInput/showQuickPick';
+import { dateTimeUtils } from '../utils/dateTimeUtils';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 import { NoExecuteStep } from './NoExecuteStep';
@@ -172,7 +173,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
         await this.withProgress({ location: ProgressLocation.Notification }, async progress => {
             let currentStep: number = 1;
 
-            const steps: AzureWizardExecuteStep<T>[] = this._executeSteps.sort((a, b) => b.priority - a.priority);
+            let steps: AzureWizardExecuteStep<T>[] = this._executeSteps.sort((a, b) => b.priority - a.priority);
 
             const internalProgress: vscode.Progress<{ message?: string; increment?: number }> = {
                 report: (value: { message?: string; increment?: number }): void => {
@@ -188,17 +189,23 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
 
             let step: AzureWizardExecuteStep<T> | undefined = steps.pop();
             while (step) {
+                const start: Date = new Date();
+
+                if (step.configureBeforeExecute) {
+                    await step.configureBeforeExecute(this._context);
+                }
+
                 if (!step.shouldExecute(this._context)) {
                     step = steps.pop();
                     continue;
                 }
 
-                let output: types.ExecuteActivityOutput | undefined;
                 const progressOutput: types.ExecuteActivityOutput | undefined = step.createProgressOutput?.(this._context);
                 if (progressOutput) {
                     this.displayActivityOutput(progressOutput, step.options);
                 }
 
+                let output: types.ExecuteActivityOutput | undefined;
                 try {
                     this._context.telemetry.properties.lastStep = `execute-${getEffectiveStepId(step)}`;
                     await step.execute(this._context, internalProgress);
@@ -216,7 +223,19 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                         this._context.activityChildren = this._context.activityChildren?.filter(t => t !== progressOutput.item);
                     }
 
+                    const end: Date = new Date();
+                    if (output.item && !output.item?.description) {
+                        output.item.description = dateTimeUtils.getFormattedDurationInMinutesAndSeconds(end.getTime() - start.getTime());
+                    }
+
                     this.displayActivityOutput(output, step.options);
+
+                    // if execute steps are added during execution, we need to sort them again
+                    if (step.addExecuteSteps) {
+                        const newSteps: types.AzureWizardExecuteStep<T>[] = await step.addExecuteSteps(this._context) ?? [];
+                        steps.push(...newSteps);
+                        steps = steps.sort((a, b) => b.priority - a.priority);
+                    }
 
                     currentStep += 1;
                     step = steps.pop();

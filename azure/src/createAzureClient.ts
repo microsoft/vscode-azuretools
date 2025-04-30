@@ -40,6 +40,7 @@ export function createAzureClient<T extends ServiceClient>(clientContext: Intern
         endpoint: context.environment.resourceManagerEndpointUrl,
     });
 
+    context.telemetry.properties.subscriptionId = context.subscriptionId;
     addAzExtPipeline(context, client.pipeline);
     return client;
 }
@@ -50,6 +51,7 @@ export function createAzureSubscriptionClient<T extends ServiceClient>(clientCon
         endpoint: context.environment.resourceManagerEndpointUrl
     });
 
+    context.telemetry.properties.subscriptionId = context.subscriptionId;
     addAzExtPipeline(context, client.pipeline);
     return client;
 }
@@ -77,6 +79,11 @@ export async function createGenericClient(context: IActionContext, clientInfo: t
         endpoint = clientInfo.environment.resourceManagerEndpointUrl;
     } else {
         credentials = clientInfo;
+    }
+
+    // not all generic clients have a subscription id, so check if it exists before adding it to telemetry
+    if ('subscriptionId' in context) {
+        context.telemetry.properties.subscriptionId = (context as { subscriptionId: string }).subscriptionId;
     }
 
     const retryOptions: RetryPolicyOptions | undefined = options?.noRetryPolicy ? { maxRetries: 0 } : undefined;
@@ -140,7 +147,7 @@ export class CorrelationIdPolicy implements PipelinePolicy {
 
     public async sendRequest(request: PipelineRequest, next: SendRequest): Promise<PipelineResponse> {
         const headerName = 'x-ms-correlation-request-id';
-        const id: string = this.context.telemetry.properties[headerName] ||= uuidv4();
+        const id: string = (this.context.telemetry.properties[headerName] as string | undefined) ||= uuidv4();
         request.headers.set(headerName, id);
         return await next(request);
     }

@@ -5,28 +5,45 @@
 
 import { AppServicePlan, WebSiteManagementClient } from '@azure/arm-appservice';
 import { AzExtLocation, LocationListStep } from '@microsoft/vscode-azext-azureutils';
-import { AzureWizardExecuteStep, nonNullProp, nonNullValue, parseError } from '@microsoft/vscode-azext-utils';
+import { AzureWizardExecuteStepWithActivityOutput, ExecuteActivityContext, nonNullProp, nonNullValue, parseError } from '@microsoft/vscode-azext-utils';
 import { l10n, MessageItem, Progress } from 'vscode';
 import { webProvider } from '../constants';
-import { ext } from '../extensionVariables';
 import { tryGetAppServicePlan } from '../tryGetSiteResource';
 import { createWebSiteClient } from '../utils/azureClients';
 import { AppKind, WebsiteOS } from './AppKind';
 import { AppServicePlanListStep } from './AppServicePlanListStep';
 import { CustomLocation, IAppServiceWizardContext } from './IAppServiceWizardContext';
 
-export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext> {
+export class AppServicePlanCreateStep extends AzureWizardExecuteStepWithActivityOutput<IAppServiceWizardContext & Partial<ExecuteActivityContext>> {
     public priority: number = 120;
+    public stepName = 'AppServicePlanCreateStep';
+    private _usedExistingPlan: boolean = false;
 
-    public async execute(context: IAppServiceWizardContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
+    protected getTreeItemLabel(context: IAppServiceWizardContext): string {
+        const newPlanName: string = nonNullProp(context, 'newPlanName');
+        return this._usedExistingPlan ?
+            l10n.t('Using existing app service plan "{0}"', newPlanName) :
+            l10n.t('Create app service plan "{0}"', newPlanName);
+    }
+    protected getOutputLogSuccess(context: IAppServiceWizardContext): string {
+        const newPlanName: string = nonNullProp(context, 'newPlanName');
+        return this._usedExistingPlan ?
+            l10n.t('Successfully found existing app service plan "{0}".', newPlanName) :
+            l10n.t('Successfully created app service plan "{0}".', newPlanName);
+    }
+    protected getOutputLogFail(context: IAppServiceWizardContext): string {
+        const newPlanName: string = nonNullProp(context, 'newPlanName');
+        return l10n.t('Failed to create app service plan "{0}".', newPlanName);
+    }
+    protected getOutputLogProgress(context: IAppServiceWizardContext): string {
+        const newPlanName: string = nonNullProp(context, 'newPlanName');
+        return l10n.t('Creating app service plan "{0}"...', newPlanName);
+    }
+
+    public async execute(context: IAppServiceWizardContext, _progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         const newPlanName: string = nonNullProp(context, 'newPlanName');
         const rgName: string = nonNullProp(nonNullValue(context.resourceGroup, 'name'), 'name');
 
-        const findingAppServicePlan: string = l10n.t('Ensuring App Service plan "{0}" exists...', newPlanName);
-        const creatingAppServicePlan: string = l10n.t('Creating App Service plan "{0}"...', newPlanName);
-        const foundAppServicePlan: string = l10n.t('Successfully found App Service plan "{0}".', newPlanName);
-        const createdAppServicePlan: string = l10n.t('Successfully created App Service plan "{0}".', newPlanName);
-        ext.outputChannel.appendLog(findingAppServicePlan);
 
         try {
             const client: WebSiteManagementClient = await createWebSiteClient(context);
@@ -34,13 +51,9 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
 
             if (existingPlan) {
                 context.plan = existingPlan;
-                ext.outputChannel.appendLog(foundAppServicePlan);
             } else {
-                ext.outputChannel.appendLog(creatingAppServicePlan);
-                progress.report({ message: creatingAppServicePlan });
 
                 context.plan = await client.appServicePlans.beginCreateOrUpdateAndWait(rgName, newPlanName, await getNewPlan(context));
-                ext.outputChannel.appendLog(createdAppServicePlan);
             }
         } catch (e) {
             if (parseError(e).errorType === 'AuthorizationFailed') {
@@ -59,6 +72,7 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStep<IAppService
         context.telemetry.properties.forbiddenResponse = 'SelectExistingAsp';
         const step: AppServicePlanListStep = new AppServicePlanListStep(true /* suppressCreate */);
         await step.prompt(context);
+        this._usedExistingPlan = true;
     }
 
     public shouldExecute(context: IAppServiceWizardContext): boolean {

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { ResourceGroup, ResourceManagementClient } from '@azure/arm-resources';
-import { AzureWizardExecuteStep, parseError } from '@microsoft/vscode-azext-utils';
+import { AzureWizardExecuteStepWithActivityOutput, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
 import { l10n, MessageItem, Progress } from 'vscode';
 import * as types from '../../index';
 import { createResourcesClient } from '../clients';
@@ -14,10 +14,33 @@ import { uiUtils } from '../utils/uiUtils';
 import { LocationListStep } from './LocationListStep';
 import { ResourceGroupListStep } from './ResourceGroupListStep';
 
-export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext> extends AzureWizardExecuteStep<T> implements types.ResourceGroupCreateStep<T> {
-    public priority: number = 100;
+export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext> extends AzureWizardExecuteStepWithActivityOutput<T> implements types.ResourceGroupCreateStep<T> {
+    protected getTreeItemLabel(context: T): string {
+        const newName: string = nonNullProp(context, 'newResourceGroupName');
+        return this._usedExistingResourceGroup ?
+            l10n.t('Using existing resource group "{0}".', newName) :
+            l10n.t('Create resource group "{0}"', newName);
+    }
+    protected getOutputLogSuccess(context: T): string {
+        const newName: string = nonNullProp(context, 'newResourceGroupName');
+        return this._usedExistingResourceGroup ?
+            l10n.t('Successfully used existing resource group "{0}".', newName) :
+            l10n.t('Successfully created resource group "{0}".', newName);
+    }
+    protected getOutputLogFail(context: T): string {
+        const newName: string = nonNullProp(context, 'newResourceGroupName');
+        return l10n.t('Failed to create resource group "{0}".', newName);
+    }
+    protected getOutputLogProgress(context: T): string {
+        const newName: string = nonNullProp(context, 'newResourceGroupName');
+        return l10n.t('Creating resource group "{0}"...', newName);
+    }
 
-    public async execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
+    public priority: number = 100;
+    public stepName: string = 'CreateResourceGroupStep';
+    private _usedExistingResourceGroup: boolean = false;
+
+    public async execute(wizardContext: T, _progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const newName: string = wizardContext.newResourceGroupName!;
         const newLocation = await LocationListStep.getLocation(wizardContext, resourcesProvider, false);
@@ -26,14 +49,10 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
         try {
             const rgExists: boolean = (await resourceClient.resourceGroups.checkExistence(newName)).body;
             if (rgExists) {
-                ext.outputChannel.appendLog(l10n.t('Using existing resource group "{0}".', newName));
                 wizardContext.resourceGroup = await resourceClient.resourceGroups.get(newName);
+                this._usedExistingResourceGroup = true;
             } else {
-                const creatingMessage: string = l10n.t('Creating resource group "{0}" in location "{1}"...', newName, newLocationName);
-                ext.outputChannel.appendLog(creatingMessage);
-                progress.report({ message: creatingMessage });
                 wizardContext.resourceGroup = await resourceClient.resourceGroups.createOrUpdate(newName, { location: newLocationName });
-                ext.outputChannel.appendLog(l10n.t('Successfully created resource group "{0}".', newName));
             }
         } catch (error) {
             if (wizardContext.suppress403Handling || parseError(error).errorType !== '403') {
@@ -58,6 +77,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
                 wizardContext.telemetry.properties.forbiddenResponse = 'SelectExistingRg';
                 const step: ResourceGroupListStep<T> = new ResourceGroupListStep(true /* suppressCreate */);
                 await step.prompt(wizardContext);
+                this._usedExistingResourceGroup = true;
             }
         }
     }

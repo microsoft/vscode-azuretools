@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { TreeItemIconPath, nonNullProp } from "@microsoft/vscode-azext-utils";
+import { nonNullProp } from "@microsoft/vscode-azext-utils";
 import * as dayjs from "dayjs";
 // eslint-disable-next-line import/no-internal-modules
 import * as relativeTime from 'dayjs/plugin/relativeTime';
@@ -57,7 +57,7 @@ export function getJobBasedDescription(data: Job | JobStep): string {
  * Note: Typically does not need to be called directly by client extensions
  * unless implementing a custom experience.
  */
-export function getActionBasedIconPath(data: ActionWorkflowRuns | Job | JobStep): TreeItemIconPath {
+export function getActionBasedIconPath(data: ActionWorkflowRuns | Job | JobStep): ThemeIcon {
     let id: string;
     let colorId: string | undefined;
     if (data.conclusion !== null) {

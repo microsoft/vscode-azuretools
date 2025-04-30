@@ -7,7 +7,8 @@
 
 import type { Environment } from '@azure/ms-rest-azure-env';
 import type { AzExtResourceType, AzureResource, AzureSubscription, ResourceModelBase } from '@microsoft/vscode-azureresources-api';
-import { AuthenticationSession, CancellationToken, CancellationTokenSource, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, LanguageModelToolInvocationOptions, LanguageModelToolInvocationPrepareOptions, LanguageModelToolResult, LogOutputChannel, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, PreparedToolInvocation, Progress, ProviderResult, QuickPickItem, TelemetryTrustedValue, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri, QuickPickOptions as VSCodeQuickPickOptions, WorkspaceFolder, WorkspaceFolderPickOptions } from 'vscode';
+import type * as duration from 'dayjs/plugin/duration';
+import { AuthenticationSession, CancellationToken, CancellationTokenSource, Command, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, LanguageModelToolInvocationOptions, LanguageModelToolInvocationPrepareOptions, LanguageModelToolResult, LogOutputChannel, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, PreparedToolInvocation, Progress, ProviderResult, QuickPickItem, TelemetryTrustedValue, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri, QuickPickOptions as VSCodeQuickPickOptions, WorkspaceFolder, WorkspaceFolderPickOptions } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
 
@@ -458,6 +459,7 @@ export interface GenericParentTreeItemOptions {
     childTypeLabel?: string;
     contextValue: string;
     iconPath?: TreeItemIconPath;
+    id?: string;
     initialCollapsibleState?: TreeItemCollapsibleState;
     label: string;
     suppressMaskLabel?: boolean;
@@ -1167,6 +1169,7 @@ export interface IWizardOptions<T extends IActionContext> {
     skipExecute?: boolean;
 }
 
+export const activityInfoContext: string;
 export const activitySuccessContext: string;
 export const activityFailContext: string;
 export const activityProgressContext: string;
@@ -1188,6 +1191,9 @@ export declare abstract class ActivityBase<R> implements Activity {
     public readonly id: string;
     public readonly cancellationTokenSource: CancellationTokenSource;
 
+    public get startTime(): Date | undefined;
+    public get endTime(): Date | undefined;
+
     abstract initialState(): ActivityTreeItemOptions;
     abstract successState(): ActivityTreeItemOptions;
     abstract progressState(): ActivityTreeItemOptions;
@@ -1196,6 +1202,82 @@ export declare abstract class ActivityBase<R> implements Activity {
     public constructor(task: ActivityTask<R>);
     public report(progress: { message?: string; increment?: number }): void;
     public run(): Promise<void>;
+}
+
+/**
+ * An enum representing the different categories of activity children
+ */
+export declare enum ActivityChildType {
+    /**
+     * A child type representing the successful run of an `AzureWizardExecuteStep`
+     */
+    Success = 'success',
+    /**
+     * A child type representing the failed run of an `AzureWizardExecuteStep`
+     */
+    Fail = 'fail',
+    /**
+     * A child type indicating an actively running `AzureWizardExecuteStep`
+     */
+    Progress = 'progress',
+    /**
+     * A child type for displaying informational data
+     */
+    Info = 'info',
+    /**
+     * A child type for displaying a thrown error
+     */
+    Error = 'error',
+    /**
+     * A child type with a command attached
+     */
+    Command = 'command',
+}
+
+/**
+ * Represents the base structure for an activity child item in the activity log.
+ */
+export interface ActivityChildItemBase extends TreeElementBase {
+    /**
+     * An internal flag that is sometimes used to determine whether this item has been modified by the activity log API.
+     * This flag is checked to ensure that the item is only modified once.
+     */
+    _hasBeenModified?: boolean;
+    label?: string;
+    activityType: ActivityChildType;
+    contextValue?: string;
+    description?: string;
+    getChildren?(): ProviderResult<ActivityChildItemBase[]>;
+}
+
+export type ActivityChildItemOptions = {
+    id?: string;
+    label: string;
+    contextValue: string;
+    activityType: ActivityChildType;
+    command?: Command;
+    description?: string;
+    iconPath?: TreeItemIconPath;
+    tooltip?: string | MarkdownString | undefined;
+    initialCollapsibleState?: TreeItemCollapsibleState;
+    /**
+     * If set to true, will initialize `getChildren` with an empty array.
+     */
+    isParent?: boolean;
+};
+
+/**
+ * A class for quickly creating activity children.
+ * Adheres to the `ActivityChildItemBase` structure required for all activity log child items.
+ */
+export declare class ActivityChildItem implements ActivityChildItemBase {
+    readonly id: string;
+    contextValue: string;
+    activityType: ActivityChildType;
+    description?: string;
+    public constructor(options: ActivityChildItemOptions);
+    public getTreeItem(): TreeItem | Thenable<TreeItem>;
+    public getChildren?(): ProviderResult<ActivityChildItemBase[]>;
 }
 
 /**
@@ -1247,18 +1329,52 @@ export declare interface ExecuteActivityContext {
     /**
      * Children to show under the activity tree item. Children only appear once the activity is done.
      */
-    activityChildren?: (AzExtTreeItem | AzExtParentTreeItem)[];
+    activityChildren?: ActivityChildItemBase[];
 }
 
 export interface ExecuteActivityOutput {
     /**
-     * The activity child item to display on success or fail
+     * The activity child item to display on success, fail, or progress
      */
-    item?: AzExtTreeItem;
+    item?: ActivityChildItemBase;
     /**
-     * The output log message to display on success or fail
+     * The output log message to display on success, fail, or progress
      */
     message?: string;
+}
+
+/**
+ * An execute step variant that automatically creates all activity output types
+ * based on defined step properties.
+ *
+ * These output types are automatically provided to the output log and
+ * to the activity log upon completion of each step.
+ */
+export declare abstract class AzureWizardExecuteStepWithActivityOutput<T extends IActionContext> extends AzureWizardExecuteStep<T> {
+    /**
+     * The name of the step, provided as part of the activity child item's context value.
+     */
+    abstract readonly stepName: string;
+    /**
+     * Abstract method to get the activity child tree item label.
+     */
+    protected abstract getTreeItemLabel(context: T): string;
+    /**
+     * Abstract method to get the success string for the output log.
+     */
+    protected abstract getOutputLogSuccess(context: T): string;
+    /**
+     * Abstract method to get the fail string for the output log.
+     */
+    protected abstract getOutputLogFail(context: T): string;
+    /**
+     * Optional method to get the progress string for the output log.
+     */
+    protected getOutputLogProgress?(context: T): string;
+
+    public createSuccessOutput(context: T): ExecuteActivityOutput;
+    public createProgressOutput(context: T): ExecuteActivityOutput;
+    public createFailOutput(context: T): ExecuteActivityOutput;
 }
 
 /**
@@ -1299,6 +1415,12 @@ export declare abstract class AzureWizardExecuteStep<T extends IActionContext & 
     public id?: string;
 
     /**
+    * Can be used to optionally configure the wizard context before determining if execution is required
+    * This method will be called before `shouldExecute`
+    */
+    public configureBeforeExecute?(wizardContext: T): void | Promise<void>;
+
+    /**
      * Execute the step
      */
     public abstract execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
@@ -1308,6 +1430,13 @@ export declare abstract class AzureWizardExecuteStep<T extends IActionContext & 
      * Used to prevent duplicate executions from sub wizards and unnecessary executions for values that had a default
      */
     public abstract shouldExecute(wizardContext: T): boolean;
+
+    /**
+     * Optionally returns AzureWizardExecuteSteps that will be injected and sorted into the Azure Wizard executeSteps array by priority.
+     * Note: This gets invoked _after_ execute. So if the step that is added has a priority of 90, but the current step adding steps has
+     * a priority of 100, the 100 priority step will be executed first.
+     */
+    public addExecuteSteps?(wizardContext: T): AzureWizardExecuteStep<T>[] | Promise<AzureWizardExecuteStep<T>[]>;
 
     /**
      * Defines the output for display after successful execution of the step
@@ -2132,6 +2261,24 @@ export declare namespace randomUtils {
     export function getRandomHexString(length?: number): string;
     export function getRandomInteger(minimumInclusive: number, maximumExclusive: number): number;
 }
+
+export declare namespace dateTimeUtils {
+    /**
+     * Takes a time duration and converts the value
+     * to a formatted minutes and seconds string `e.g. 1m 12s`
+     *
+     * @param durationTime The numeric portion of the time component.
+     * @param units (Optional) The unit of measure for the time component.  Defaults to milliseconds.
+     */
+    export function getFormattedDurationInMinutesAndSeconds(durationTime: number, units?: duration.DurationUnitType): string;
+}
+
+/**
+ * Verifies that the given resourceId is a valid Azure resource ID and sets telemetry properties for the resourceId as a TrustedTelemetryValue property.
+ * @param context The action context
+ * @param resourceId The resource ID to set telemetry properties for
+ */
+export declare function setAzureResourceIdTelemetryProperties(context: IActionContext, resourceId: string): void;
 
 /**
  * Verifies that the given resourceId is a valid Azure resource ID and sets telemetry properties for the resourceId as a TrustedTelemetryValue property.

@@ -3,14 +3,13 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
+import { v4 as uuidv4 } from "uuid";
 import * as vscode from 'vscode';
 import * as hTypes from '../../../hostapi';
 import * as types from '../../../index';
-import { activityFailContext, activityFailIcon } from '../../constants';
-import { AzExtParentTreeItem } from "../../tree/AzExtParentTreeItem";
-import { AzExtTreeItem } from '../../tree/AzExtTreeItem';
-import { GenericTreeItem } from "../../tree/GenericTreeItem";
-import { isAzExtParentTreeItem } from '../../tree/isAzExtTreeItem';
+import { activityErrorContext, activityFailContext, activityFailIcon } from '../../constants';
+import { ResourceGroupsItem } from '../../pickTreeItem/quickPickAzureResource/tempTypes';
+import { ActivityChildItem, ActivityChildType } from '../../tree/v2/ActivityChildItem';
 import { ActivityBase } from "../Activity";
 
 export class ExecuteActivity<TContext extends types.ExecuteActivityContext = types.ExecuteActivityContext> extends ActivityBase<void> {
@@ -25,48 +24,56 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
         }
     }
 
+    private _successItemId: string = uuidv4();
     public successState(): hTypes.ActivityTreeItemOptions {
         const activityResult = this.context.activityResult;
         const resourceId: string | undefined = typeof activityResult === 'string' ? activityResult : activityResult?.id;
         return {
             label: this.label,
-            getChildren: activityResult || this.context.activityChildren ? ((parent: AzExtParentTreeItem) => {
+            getChildren: activityResult || this.context.activityChildren ? ((_parent: ResourceGroupsItem) => {
 
                 if (this.context.activityChildren) {
-                    parent.compareChildrenImpl = () => 0;  // Don't sort
                     return this.context.activityChildren;
                 }
 
-                const ti = new GenericTreeItem(parent, {
-                    contextValue: 'executeResult',
-                    label: vscode.l10n.t("Click to view resource"),
-                    commandId: 'azureResourceGroups.revealResource',
-                });
-
-                ti.commandArgs = [resourceId];
-
-                return [ti];
+                return [
+                    new ActivityChildItem({
+                        id: this._successItemId,
+                        contextValue: 'executeResult',
+                        label: vscode.l10n.t("Click to view resource"),
+                        activityType: ActivityChildType.Command,
+                        command: {
+                            title: '',
+                            command: 'azureResourceGroups.revealResource',
+                            arguments: [resourceId],
+                        },
+                    }),
+                ];
 
             }) : undefined
         }
     }
 
+    private _errorItemId: string = uuidv4();
     public errorState(error: types.IParsedError): hTypes.ActivityTreeItemOptions {
         return {
             label: this.label,
-            getChildren: (parent: AzExtParentTreeItem) => {
-                const errorItem = new GenericTreeItem(parent, {
-                    contextValue: 'executeError',
-                    label: error.message
-                });
+            getChildren: (_parent: ResourceGroupsItem) => {
+                const errorItemOptions: types.ActivityChildItemOptions = {
+                    id: this._errorItemId,
+                    label: error.message,
+                    contextValue: activityErrorContext,
+                    activityType: ActivityChildType.Error,
+                };
 
                 if (this.context.activityChildren) {
-                    parent.compareChildrenImpl = () => 0;  // Don't sort
-                    this.appendErrorItemToActivityChildren(errorItem);
-                    return this.context.activityChildren;
+                    // Operate on a copied array to ensure the operation remains idempotent
+                    const activityChildren: types.ActivityChildItemBase[] = this.context.activityChildren.slice();
+                    this.appendErrorItemToActivityChildren(activityChildren, errorItemOptions);
+                    return activityChildren;
                 }
 
-                return [errorItem];
+                return [new ActivityChildItem(errorItemOptions)];
             }
         }
     }
@@ -74,35 +81,46 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
     public progressState(): hTypes.ActivityTreeItemOptions {
         return {
             label: this.label,
-            getChildren: this.context.activityChildren ? ((parent: AzExtParentTreeItem) => {
-                parent.compareChildrenImpl = () => 0;  // Don't sort
+            getChildren: this.context.activityChildren ? ((_parent: ResourceGroupsItem) => {
                 return this.context.activityChildren || [];
             }) : undefined
         }
     }
 
-    private appendErrorItemToActivityChildren(errorItem: AzExtTreeItem): void {
+    private appendErrorItemToActivityChildren(activityChildren: types.ActivityChildItemBase[], errorItemOptions: types.ActivityChildItemOptions): void {
         // Honor any error suppression flag
         if ((this.context as unknown as types.IActionContext).errorHandling?.suppressDisplay) {
             return;
         }
 
+        const lastActivityChild = activityChildren?.at(-1);
+        // Skip if we've already modified this item
+        if (lastActivityChild?._hasBeenModified) {
+            return;
+        }
+
         // Check if the last activity child was a parent fail item; if so, attach the actual error to it for additional user context
-        const lastActivityChild = this.context.activityChildren?.at(-1);
-        if (isAzExtParentTreeItem(lastActivityChild) && new RegExp(activityFailContext).test(lastActivityChild?.contextValue ?? '')) {
-            const previousLoadMoreChildrenImpl = lastActivityChild.loadMoreChildrenImpl.bind(lastActivityChild) as typeof lastActivityChild.loadMoreChildrenImpl;
-            lastActivityChild.loadMoreChildrenImpl = async (clearCache: boolean, context: types.IActionContext) => {
+        const previousGetChildrenImpl = lastActivityChild?.getChildren?.bind(lastActivityChild) as types.ActivityChildItemBase['getChildren'];
+        if (
+            lastActivityChild &&
+            previousGetChildrenImpl &&
+            new RegExp(activityFailContext).test(lastActivityChild.contextValue ?? '')
+        ) {
+            lastActivityChild.getChildren = async () => {
                 return [
-                    ...await previousLoadMoreChildrenImpl(clearCache, context),
-                    errorItem
+                    ...await previousGetChildrenImpl() ?? [],
+                    new ActivityChildItem(errorItemOptions),
                 ];
-            }
+            };
+
+            // Mark as modified so we don't update again if `getChildren` is called (i.e. ensure this operation remains idempotent)
+            lastActivityChild._hasBeenModified = true;
             return;
         }
 
         // Otherwise append error item to the end of the list
-        errorItem.iconPath = activityFailIcon;
-        this.context.activityChildren?.push(errorItem);
+        errorItemOptions.iconPath = activityFailIcon;
+        activityChildren.push(new ActivityChildItem(errorItemOptions));
     }
 
     protected get label(): string {
