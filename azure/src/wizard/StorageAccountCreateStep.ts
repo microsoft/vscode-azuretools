@@ -22,7 +22,9 @@ export class StorageAccountCreateStep<T extends types.IStorageAccountWizardConte
         this._defaults = defaults;
     }
 
-    public async execute(wizardContext: T, _progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
+    public async execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
+        progress.report({ message: l10n.t('Creating storage account...') });
+
         const newLocation: string = (await LocationListStep.getLocation(wizardContext, storageProvider)).name;
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const newName: string = wizardContext.newStorageAccountName!;
