@@ -28,14 +28,7 @@ export class ResourceGroupVerifyStep<T extends types.IResourceGroupWizardContext
 
     public async execute(context: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         progress.report({ message: l10n.t('Checking for resource group...') });
-        await ResourceGroupVerifyStep.checkAvailability(context);
-    }
 
-    public shouldExecute(context: T): boolean {
-        return !context.resourceGroup;
-    }
-
-    public static async checkAvailability(context: types.IResourceGroupWizardContext): Promise<void> {
         const newName: string = nonNullProp(context, 'newResourceGroupName');
         const resourceClient: ResourceManagementClient = await createResourcesClient(context);
 
@@ -47,13 +40,15 @@ export class ResourceGroupVerifyStep<T extends types.IResourceGroupWizardContext
                 ext.outputChannel.appendLog(l10n.t('Using resource group "{0}".', newName));
             }
         } catch (error) {
-            if (context.suppress403Handling || parseError(error).errorType !== '403') {
-                ext.outputChannel.appendLog(l10n.t('Error occurred while trying to verify whether the given resource group already exists: '));
-                ext.outputChannel.appendLog(parseError(error).message);
-                throw error;
-            } else {
-                // Don't throw yet, we might still be able to handle this condition
+            if (!context.suppress403Handling && parseError(error).errorType === '403') {
+                // Continue - we might still be able to handle missing create permissions in the create step
+                this.options.continueOnFail = true;
             }
+            throw error;
         }
+    }
+
+    public shouldExecute(context: T): boolean {
+        return !context.resourceGroup;
     }
 }
