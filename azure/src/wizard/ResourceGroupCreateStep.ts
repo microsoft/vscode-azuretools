@@ -14,6 +14,7 @@ import { ext } from '../extensionVariables';
 import { uiUtils } from '../utils/uiUtils';
 import { LocationListStep } from './LocationListStep';
 import { ResourceGroupListStep } from './ResourceGroupListStep';
+import { ResourceGroupVerifyStep } from './ResourceGroupVerifyStep';
 
 export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext> extends AzureWizardExecuteStepWithActivityOutput<T> {
     public priority: number = 100;
@@ -25,27 +26,11 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
 
     private isMissingCreatePermissions: boolean = false;
 
-    // Verify if a resource group with the same name already exists
     public async configureBeforeExecute(context: T): Promise<void> {
-        const newName: string = nonNullProp(context, 'newResourceGroupName');
-        const resourceClient: ResourceManagementClient = await createResourcesClient(context);
-
-        try {
-            const rgExists: boolean = (await resourceClient.resourceGroups.checkExistence(newName)).body;
-            if (rgExists) {
-                context.resourceGroup = await resourceClient.resourceGroups.get(newName);
-                ext.outputChannel.appendLog(l10n.t('Found an existing resource group with name "{0}".', newName));
-                ext.outputChannel.appendLog(l10n.t('Using resource group "{0}".', newName));
-            }
-        } catch (error) {
-            if (context.suppress403Handling || parseError(error).errorType !== '403') {
-                ext.outputChannel.appendLog(l10n.t('Error occurred while trying to verify whether the given resource group already exists: '));
-                ext.outputChannel.appendLog(parseError(error).message);
-                throw error;
-            } else {
-                // Don't throw yet, we might still be able to handle this condition in the following methods
-            }
+        if (context.resourceGroup) {
+            return;
         }
+        await ResourceGroupVerifyStep.checkAvailability(context);
     }
 
     public async execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {

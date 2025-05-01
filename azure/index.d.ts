@@ -271,6 +271,21 @@ export declare class ResourceGroupCreateStep<T extends IResourceGroupWizardConte
     public shouldExecute(wizardContext: T): boolean;
 }
 
+export declare class ResourceGroupVerifyStep<T extends IResourceGroupWizardContext> extends AzureWizardExecuteStepWithActivityOutput<T> {
+    public stepName: string;
+    protected getOutputLogSuccess(context: T): string;
+    protected getOutputLogFail(context: T): string;
+    protected getTreeItemLabel(context: T): string;
+
+    /**
+     * 95
+     */
+    public priority: number;
+    public configureBeforeExecute(wizardContext: T): void | Promise<void>;
+    public execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
+    public shouldExecute(wizardContext: T): boolean;
+}
+
 export interface IStorageAccountWizardContext extends IResourceGroupWizardContext {
     /**
      * The storage account to use.
