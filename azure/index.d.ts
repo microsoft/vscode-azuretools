@@ -256,21 +256,6 @@ export declare class ResourceGroupNameStep<T extends IResourceGroupWizardContext
     public shouldPrompt(wizardContext: T): boolean;
 }
 
-export declare class ResourceGroupCreateStep<T extends IResourceGroupWizardContext> extends AzureWizardExecuteStepWithActivityOutput<T> {
-    public stepName: string;
-    protected getOutputLogSuccess(context: T): string;
-    protected getOutputLogFail(context: T): string;
-    protected getTreeItemLabel(context: T): string;
-
-    /**
-     * 100
-     */
-    public priority: number;
-    public configureBeforeExecute(wizardContext: T): void | Promise<void>;
-    public execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
-    public shouldExecute(wizardContext: T): boolean;
-}
-
 export declare class ResourceGroupVerifyStep<T extends IResourceGroupWizardContext> extends AzureWizardExecuteStepWithActivityOutput<T> {
     public stepName: string;
     protected getOutputLogSuccess(context: T): string;
@@ -279,6 +264,21 @@ export declare class ResourceGroupVerifyStep<T extends IResourceGroupWizardConte
 
     /**
      * 95
+     */
+    public priority: number;
+    public configureBeforeExecute(wizardContext: T): void | Promise<void>;
+    public execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
+    public shouldExecute(wizardContext: T): boolean;
+}
+
+export declare class ResourceGroupCreateStep<T extends IResourceGroupWizardContext> extends AzureWizardExecuteStepWithActivityOutput<T> {
+    public stepName: string;
+    protected getOutputLogSuccess(context: T): string;
+    protected getOutputLogFail(context: T): string;
+    protected getTreeItemLabel(context: T): string;
+
+    /**
+     * 100
      */
     public priority: number;
     public configureBeforeExecute(wizardContext: T): void | Promise<void>;
