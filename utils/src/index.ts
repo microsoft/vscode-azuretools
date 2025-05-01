@@ -45,6 +45,7 @@ export * from './tree/v2/createGenericElement';
 export * from './tree/v2/TreeElementStateManager';
 export * from './userInput/AzExtUserInputWithInputQueue';
 export * from './utils/AzExtFsExtra';
+export * from './utils/AzureResourceIdTelemetry';
 export * from './utils/contextUtils';
 export * from './utils/credentialUtils';
 export * from './utils/dateTimeUtils';

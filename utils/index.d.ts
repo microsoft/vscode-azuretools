@@ -2274,6 +2274,13 @@ export declare namespace dateTimeUtils {
 }
 
 /**
+ * Verifies that the given resourceId is a valid Azure resource ID and sets telemetry properties for the resourceId as a TrustedTelemetryValue property.
+ * @param context The action context
+ * @param resourceId The resource ID to set telemetry properties for
+ */
+export declare function setAzureResourceIdTelemetryProperties(context: IActionContext, resourceId: string): void;
+
+/**
  * Base element for a tree view (v2)
  */
 export declare interface TreeElementBase extends ResourceModelBase {
