@@ -11,6 +11,7 @@ import * as types from '../../index';
 import { createResourcesClient } from '../clients';
 import { ext } from '../extensionVariables';
 
+// See for more background: https://github.com/microsoft/vscode-azuretools/pull/1992#issue-3034841865
 export class ResourceGroupVerifyStep<T extends types.IResourceGroupWizardContext> extends AzureWizardExecuteStepWithActivityOutput<T> {
     public priority: number = 95;
     public stepName: string = 'resourceGroupVerifyStep';
