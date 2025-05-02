@@ -29,7 +29,7 @@ export class ResourceGroupVerifyStep<T extends types.IResourceGroupWizardContext
     }
 
     public async execute(context: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
-        progress.report({ message: l10n.t('Checking for resource group...') });
+        progress.report({ message: l10n.t('Checking resource group availability...') });
 
         const newName: string = nonNullProp(context, 'newResourceGroupName');
         const resourceClient: ResourceManagementClient = await createResourcesClient(context);
