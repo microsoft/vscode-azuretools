@@ -1172,6 +1172,7 @@ export interface IWizardOptions<T extends IActionContext> {
 export const activityInfoContext: string;
 export const activitySuccessContext: string;
 export const activityFailContext: string;
+export const activityErrorContext: string;
 export const activityProgressContext: string;
 
 export const activityInfoIcon: ThemeIcon;
