@@ -5,9 +5,11 @@
 
 import { AppServicePlan, WebSiteManagementClient } from '@azure/arm-appservice';
 import { AzExtLocation, LocationListStep } from '@microsoft/vscode-azext-azureutils';
-import { AzureWizardExecuteStepWithActivityOutput, ExecuteActivityContext, nonNullProp, nonNullValue, parseError } from '@microsoft/vscode-azext-utils';
-import { l10n, MessageItem, Progress } from 'vscode';
+import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityContext, ExecuteActivityOutput, nonNullProp, nonNullValue, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
+import { v4 as uuidv4 } from "uuid";
+import { l10n, MessageItem, Progress, TreeItemCollapsibleState } from 'vscode';
 import { webProvider } from '../constants';
+import { ext } from '../extensionVariables';
 import { tryGetAppServicePlan } from '../tryGetSiteResource';
 import { createWebSiteClient } from '../utils/azureClients';
 import { AppKind, WebsiteOS } from './AppKind';
@@ -17,33 +19,15 @@ import { CustomLocation, IAppServiceWizardContext } from './IAppServiceWizardCon
 export class AppServicePlanCreateStep extends AzureWizardExecuteStepWithActivityOutput<IAppServiceWizardContext & Partial<ExecuteActivityContext>> {
     public priority: number = 120;
     public stepName = 'AppServicePlanCreateStep';
-    private _usedExistingPlan: boolean = false;
+    private isMissingCreatePermissions: boolean = false;
 
-    protected getTreeItemLabel(context: IAppServiceWizardContext): string {
-        const newPlanName: string = nonNullProp(context, 'newPlanName');
-        return this._usedExistingPlan ?
-            l10n.t('Using existing app service plan "{0}"', newPlanName) :
-            l10n.t('Create app service plan "{0}"', newPlanName);
-    }
-    protected getOutputLogSuccess(context: IAppServiceWizardContext): string {
-        const newPlanName: string = nonNullProp(context, 'newPlanName');
-        return this._usedExistingPlan ?
-            l10n.t('Successfully found existing app service plan "{0}".', newPlanName) :
-            l10n.t('Successfully created app service plan "{0}".', newPlanName);
-    }
-    protected getOutputLogFail(context: IAppServiceWizardContext): string {
-        const newPlanName: string = nonNullProp(context, 'newPlanName');
-        return l10n.t('Failed to create app service plan "{0}".', newPlanName);
-    }
-    protected getOutputLogProgress(context: IAppServiceWizardContext): string {
-        const newPlanName: string = nonNullProp(context, 'newPlanName');
-        return l10n.t('Creating app service plan "{0}"...', newPlanName);
-    }
+    protected getOutputLogSuccess = (context: IAppServiceWizardContext) => l10n.t('Successfully created app service plan "{0}".', nonNullProp(context, 'newPlanName'));
+    protected getOutputLogFail = (context: IAppServiceWizardContext) => l10n.t('Failed to create app service plan "{0}"', nonNullProp(context, 'newPlanName'));
+    protected getTreeItemLabel = (context: IAppServiceWizardContext) => l10n.t('Create app service plan "{0}"', nonNullProp(context, 'newPlanName'));
 
-    public async execute(context: IAppServiceWizardContext, _progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
+    public async configureBeforeExecute(context: IAppServiceWizardContext & Partial<ExecuteActivityContext>): Promise<void> {
         const newPlanName: string = nonNullProp(context, 'newPlanName');
         const rgName: string = nonNullProp(nonNullValue(context.resourceGroup, 'name'), 'name');
-
 
         try {
             const client: WebSiteManagementClient = await createWebSiteClient(context);
@@ -51,20 +35,84 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStepWithActivity
 
             if (existingPlan) {
                 context.plan = existingPlan;
-            } else {
-
-                context.plan = await client.appServicePlans.beginCreateOrUpdateAndWait(rgName, newPlanName, await getNewPlan(context));
+                ext.outputChannel.appendLog(l10n.t('Found existing app service plan "{0}".', newPlanName));
+                ext.outputChannel.appendLog(l10n.t('Using existing app service plan "{0}".', newPlanName));
             }
+        } catch (error) {
+            // Don't throw error yet we might still be able to handle this condition in the following methods
+        }
+    }
+
+    public async execute(context: IAppServiceWizardContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
+        progress.report({ message: l10n.t('Creating app service plan') });
+
+        const newPlanName: string = nonNullProp(context, 'newPlanName');
+        const rgName: string = nonNullValueAndProp(context.resourceGroup, 'name');
+
+        try {
+            const client: WebSiteManagementClient = await createWebSiteClient(context);
+            context.plan = await client.appServicePlans.beginCreateOrUpdateAndWait(rgName, newPlanName, await getNewPlan(context));
         } catch (e) {
             if (parseError(e).errorType === 'AuthorizationFailed') {
-                await this.selectExistingPrompt(context);
+                ext.outputChannel.appendLog(l10n.t('Failed to create app service plan "{0}".', newPlanName));
+                ext.outputChannel.appendLog(l10n.t('Unable to create app service plan "{0}" in subscription "{1}" due to a lack of permissions.', newPlanName, context.subscriptionDisplayName));
+                this.isMissingCreatePermissions = true;
+                this.options.continueOnFail = true;
+                this.addExecuteSteps = () => [new AppServicePlanNoCreatePermissionsStep()];
             } else {
+                ext.outputChannel.appendLog(l10n.t('Failed to create app service plan "{0}".', newPlanName));
+                ext.outputChannel.appendLog(l10n.t('Error: {0}', parseError(e).message));
                 throw e;
             }
         }
     }
 
-    public async selectExistingPrompt(context: IAppServiceWizardContext): Promise<void> {
+    public shouldExecute(context: IAppServiceWizardContext): boolean {
+        return !context.plan;
+    }
+
+    private _errorItemId: string = uuidv4();
+
+    public override createFailOutput(context: IAppServiceWizardContext & Partial<ExecuteActivityContext>): ExecuteActivityOutput {
+        const item: ActivityChildItem = new ActivityChildItem({
+            label: this.getTreeItemLabel(context),
+            activityType: ActivityChildType.Fail,
+            contextValue: createContextValue([this.stepName, activityFailContext]),
+            iconPath: activityFailIcon,
+            isParent: true,
+            initialCollapsibleState: TreeItemCollapsibleState.Expanded,
+        });
+
+        if (this.isMissingCreatePermissions) {
+            item.getChildren = () => [new ActivityChildItem({
+                id: this._errorItemId,
+                activityType: ActivityChildType.Error,
+                contextValue: 'activity:error', // Todo: Replace with exported constant
+                label: l10n.t('Unable to create app service plan "{0}" in subscription "{1}" due to a lack of permissions.', nonNullProp(context, 'newPlanName'), context.subscriptionDisplayName),
+            })];
+        }
+
+        return {
+            item,
+            message: this.getOutputLogFail(context),
+        }
+    }
+}
+
+class AppServicePlanNoCreatePermissionsStep extends AzureWizardExecuteStepWithActivityOutput<IAppServiceWizardContext & Partial<ExecuteActivityContext>> {
+    public priority: number = 121;
+    public stepName: string = 'appserviceplanNoCreatePermissionsSelectStep';
+    protected getOutputLogSuccess = (context: IAppServiceWizardContext) => l10n.t('Successfully selected existing app service plan "{0}"', nonNullValueAndProp(context.plan, 'name'));
+    protected getOutputLogFail = () => l10n.t('Failed to select an existing app service plan.');
+    protected getTreeItemLabel = (context: IAppServiceWizardContext) => {
+        return context.plan?.name ?
+            l10n.t('Select app service plan "{0}"', context.plan?.name) :
+            l10n.t('Select app service plan');
+    }
+
+    public async execute(context: IAppServiceWizardContext, progress: Progress<{ message?: string; increment?: number; }>): Promise<void> {
+        progress.report({ message: l10n.t('Selecting app service plan...') });
+
         const message: string = l10n.t('You do not have permission to create an app service plan in subscription "{0}".', context.subscriptionDisplayName);
         const selectExisting: MessageItem = { title: l10n.t('Select Existing') };
         await context.ui.showWarningMessage(message, { modal: true, stepName: 'AspNoPermissions' }, selectExisting);
@@ -72,7 +120,6 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStepWithActivity
         context.telemetry.properties.forbiddenResponse = 'SelectExistingAsp';
         const step: AppServicePlanListStep = new AppServicePlanListStep(true /* suppressCreate */);
         await step.prompt(context);
-        this._usedExistingPlan = true;
     }
 
     public shouldExecute(context: IAppServiceWizardContext): boolean {
