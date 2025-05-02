@@ -14,7 +14,6 @@ import { ext } from '../extensionVariables';
 export class ResourceGroupVerifyStep<T extends types.IResourceGroupWizardContext> extends AzureWizardExecuteStepWithActivityOutput<T> {
     public priority: number = 95;
     public stepName: string = 'resourceGroupVerifyStep';
-    private error: unknown;
 
     protected getOutputLogFail = (context: T) => l10n.t('Failed to verify whether resource group with name "{0}" already exists.', nonNullProp(context, 'newResourceGroupName'));
     protected getOutputLogSuccess(context: T) {
@@ -46,7 +45,6 @@ export class ResourceGroupVerifyStep<T extends types.IResourceGroupWizardContext
                 // Continue - we might still be able to handle missing create permissions in the create step
                 this.options.continueOnFail = true;
             }
-            this.error = error;
             throw error;
         }
     }
@@ -73,15 +71,6 @@ export class ResourceGroupVerifyStep<T extends types.IResourceGroupWizardContext
                     activityType: ActivityChildType.Error,
                     contextValue: createContextValue([this.stepName, 'activity:error']), // Todo: Replace with exported constant
                     label: l10n.t('Unable to verify resource group "{0}" in subscription "{1}" due to a lack of permissions.', nonNullProp(context, 'newResourceGroupName'), context.subscriptionDisplayName),
-                })
-            ];
-        } else if (this.error) {
-            item.getChildren = () => [
-                new ActivityChildItem({
-                    id: this._errorItemId,
-                    activityType: ActivityChildType.Error,
-                    contextValue: createContextValue([this.stepName, 'activity:error']), // Todo: Replace with exported constant
-                    label: parseError(this.error).message,
                 })
             ];
         }
