@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { ResourceGroup, ResourceManagementClient } from '@azure/arm-resources';
-import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityOutput, nonNullProp, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
+import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, ActivityOutputType, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityOutput, nonNullProp, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
 import { v4 as uuidv4 } from "uuid";
 import { l10n, MessageItem, Progress, TreeItemCollapsibleState } from 'vscode';
 import * as types from '../../index';
@@ -65,10 +65,12 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
             if (wizardContext.suppress403Handling || perr.errorType !== '403') {
                 throw error;
             } else {
-                this.isMissingCreatePermissions = true;
                 this.options.continueOnFail = true;
+                this.isMissingCreatePermissions = true;
                 this.addExecuteSteps = () => [new ResourceGroupNoCreatePermissionsSelectStep()];
 
+                // Suppress generic output and replace with custom logs
+                this.options.suppressActivityOutput = ActivityOutputType.Message;
                 const message: string = l10n.t('Unable to create resource group "{0}" in subscription "{1}" due to a lack of permissions.', newName, wizardContext.subscriptionDisplayName);
                 ext.outputChannel.appendLog(message);
                 ext.outputChannel.appendLog(perr.message);
