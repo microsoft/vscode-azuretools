@@ -62,9 +62,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
             wizardContext.resourceGroup = await resourceClient.resourceGroups.createOrUpdate(newName, { location: newLocationName });
         } catch (error) {
             const perr = parseError(error);
-            if (wizardContext.suppress403Handling || perr.errorType !== '403') {
-                throw error;
-            } else {
+            if (!wizardContext.suppress403Handling && perr.errorType === '403') {
                 this.options.continueOnFail = true;
                 this.isMissingCreatePermissions = true;
                 this.addExecuteSteps = () => [new ResourceGroupNoCreatePermissionsSelectStep()];
@@ -74,8 +72,8 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
                 const message: string = l10n.t('Unable to create resource group "{0}" in subscription "{1}" due to a lack of permissions.', newName, wizardContext.subscriptionDisplayName);
                 ext.outputChannel.appendLog(message);
                 ext.outputChannel.appendLog(perr.message);
-                throw new Error(message);
             }
+            throw error;
         }
     }
 
