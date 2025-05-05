@@ -15,7 +15,7 @@ export class ResourceGroupNameStep<T extends types.IResourceGroupWizardContext> 
             value: suggestedName,
             prompt: 'Enter the name of the new resource group.',
             validateInput: this.validateResourceGroupName,
-            asyncValidationTask: (value: string): Promise<string | undefined> => this.asyncValidateResourceGroupAvailable(wizardContext, value),
+            asyncValidationTask: (name: string): Promise<string | undefined> => this.asyncValidateResourceGroupAvailable(wizardContext, name),
         })).trim();
         wizardContext.valuesToMask.push(wizardContext.newResourceGroupName);
     }
