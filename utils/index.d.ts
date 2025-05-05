@@ -1364,11 +1364,13 @@ export declare abstract class AzureWizardExecuteStepWithActivityOutput<T extends
     protected abstract getTreeItemLabel(context: T): string;
     /**
      * Abstract method to get the success string for the output log.
+     * Will be called once upon a successful run.
      * Only gets run if `shouldExecute` returns `true`.
      */
     protected abstract getOutputLogSuccess(context: T): string;
     /**
      * Abstract method to get the fail string for the output log.
+     * Will be called once upon a failed run.
      * Only gets run if `shouldExecute` returns `true`.
      */
     protected abstract getOutputLogFail(context: T): string;
