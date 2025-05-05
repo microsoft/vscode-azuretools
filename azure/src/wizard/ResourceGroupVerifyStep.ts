@@ -24,8 +24,8 @@ export class ResourceGroupVerifyStep<T extends types.IResourceGroupWizardContext
     }
     protected getTreeItemLabel(context: T) {
         return context.resourceGroup?.name ?
-            l10n.t('Verify resource group "{0}" (exists)', context.resourceGroup.name) :
-            l10n.t('Verify resource group "{0}" (available)', nonNullProp(context, 'newResourceGroupName'));
+            l10n.t('Verify resource group "{0}" exists', context.resourceGroup.name) :
+            l10n.t('Verify resource group "{0}" available', nonNullProp(context, 'newResourceGroupName'));
     }
 
     public async execute(context: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
