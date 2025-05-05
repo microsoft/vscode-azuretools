@@ -1358,18 +1358,25 @@ export declare abstract class AzureWizardExecuteStepWithActivityOutput<T extends
     abstract readonly stepName: string;
     /**
      * Abstract method to get the activity child tree item label.
+     * Will be called twice - once during progress and another during success or fail.
+     * Only gets run if `shouldExecute` returns `true`.
      */
     protected abstract getTreeItemLabel(context: T): string;
     /**
      * Abstract method to get the success string for the output log.
+     * Will be called once upon a successful run.
+     * Only gets run if `shouldExecute` returns `true`.
      */
     protected abstract getOutputLogSuccess(context: T): string;
     /**
      * Abstract method to get the fail string for the output log.
+     * Will be called once upon a failed run.
+     * Only gets run if `shouldExecute` returns `true`.
      */
     protected abstract getOutputLogFail(context: T): string;
     /**
      * Optional method to get the progress string for the output log.
+     * Only gets run if `shouldExecute` returns `true`.
      */
     protected getOutputLogProgress?(context: T): string;
 
