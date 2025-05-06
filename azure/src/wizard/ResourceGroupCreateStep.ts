@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { ResourceGroup, ResourceManagementClient } from '@azure/arm-resources';
-import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityOutput, nonNullProp, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
+import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, ActivityOutputType, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityOutput, nonNullProp, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
 import { v4 as uuidv4 } from "uuid";
 import { l10n, MessageItem, Progress, TreeItemCollapsibleState } from 'vscode';
 import * as types from '../../index';
@@ -25,8 +25,11 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
 
     private isMissingCreatePermissions: boolean = false;
 
-    // Verify if a resource group with the same name already exists
     public async configureBeforeExecute(context: T): Promise<void> {
+        if (context.resourceGroup) {
+            return;
+        }
+
         const newName: string = nonNullProp(context, 'newResourceGroupName');
         const resourceClient: ResourceManagementClient = await createResourcesClient(context);
 
@@ -43,7 +46,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
                 ext.outputChannel.appendLog(parseError(error).message);
                 throw error;
             } else {
-                // Don't throw yet, we might still be able to handle this condition in the following methods
+                // Don't throw yet, we might still be able to handle this condition
             }
         }
     }
@@ -59,18 +62,18 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
             wizardContext.resourceGroup = await resourceClient.resourceGroups.createOrUpdate(newName, { location: newLocationName });
         } catch (error) {
             const perr = parseError(error);
-            if (wizardContext.suppress403Handling || perr.errorType !== '403') {
-                throw error;
-            } else {
-                this.isMissingCreatePermissions = true;
+            if (!wizardContext.suppress403Handling && perr.errorType === '403') {
                 this.options.continueOnFail = true;
+                this.isMissingCreatePermissions = true;
                 this.addExecuteSteps = () => [new ResourceGroupNoCreatePermissionsSelectStep()];
 
+                // Suppress generic output and replace with custom logs
+                this.options.suppressActivityOutput = ActivityOutputType.Message;
                 const message: string = l10n.t('Unable to create resource group "{0}" in subscription "{1}" due to a lack of permissions.', newName, wizardContext.subscriptionDisplayName);
                 ext.outputChannel.appendLog(message);
                 ext.outputChannel.appendLog(perr.message);
-                throw new Error(message);
             }
+            throw error;
         }
     }
 
