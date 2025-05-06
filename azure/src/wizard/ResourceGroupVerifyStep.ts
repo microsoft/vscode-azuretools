@@ -25,7 +25,7 @@ export class ResourceGroupVerifyStep<T extends types.IResourceGroupWizardContext
     protected getTreeItemLabel(context: T) {
         return context.resourceGroup?.name ?
             l10n.t('Verify resource group "{0}" exists', context.resourceGroup.name) :
-            l10n.t('Verify resource group "{0}" available', nonNullProp(context, 'newResourceGroupName'));
+            l10n.t('Verify resource group "{0}" is available', context.newResourceGroupName ?? '');
     }
 
     public async execute(context: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
@@ -59,7 +59,7 @@ export class ResourceGroupVerifyStep<T extends types.IResourceGroupWizardContext
         const item: ActivityChildItem = new ActivityChildItem({
             label: this.getTreeItemLabel(context),
             activityType: ActivityChildType.Fail,
-            contextValue: createContextValue([this.stepName, activityFailContext]),
+            contextValue: createContextValue([`${this.stepName}Item`, activityFailContext]),
             iconPath: activityFailIcon,
             isParent: true,
             initialCollapsibleState: TreeItemCollapsibleState.Expanded,
@@ -70,7 +70,7 @@ export class ResourceGroupVerifyStep<T extends types.IResourceGroupWizardContext
                 new ActivityChildItem({
                     id: this._errorItemId,
                     activityType: ActivityChildType.Error,
-                    contextValue: createContextValue([this.stepName, 'activity:error']), // Todo: Replace with exported constant
+                    contextValue: createContextValue([`${this.stepName}Item`, 'activity:error']), // Todo: Replace with exported constant
                     label: l10n.t('Unable to verify resource group "{0}" in subscription "{1}" due to a lack of permissions.', nonNullProp(context, 'newResourceGroupName'), context.subscriptionDisplayName),
                 })
             ];
