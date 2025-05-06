@@ -86,19 +86,21 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
         const item: ActivityChildItem = new ActivityChildItem({
             label: this.getTreeItemLabel(context),
             activityType: ActivityChildType.Fail,
-            contextValue: createContextValue([this.stepName, activityFailContext]),
+            contextValue: createContextValue([`${this.stepName}Item`, activityFailContext]),
             iconPath: activityFailIcon,
             isParent: true,
             initialCollapsibleState: TreeItemCollapsibleState.Expanded,
         });
 
         if (this.isMissingCreatePermissions) {
-            item.getChildren = () => [new ActivityChildItem({
-                id: this._errorItemId,
-                activityType: ActivityChildType.Error,
-                contextValue: 'activity:error', // Todo: Replace with exported constant
-                label: l10n.t('Unable to create resource group "{0}" in subscription "{1}" due to a lack of permissions.', nonNullProp(context, 'newResourceGroupName'), context.subscriptionDisplayName),
-            })];
+            item.getChildren = () => [
+                new ActivityChildItem({
+                    id: this._errorItemId,
+                    activityType: ActivityChildType.Error,
+                    contextValue: createContextValue([`${this.stepName}Item`, 'activity:error']), // Todo: Replace with exported constant
+                    label: l10n.t('Unable to create resource group "{0}" in subscription "{1}" due to a lack of permissions.', nonNullProp(context, 'newResourceGroupName'), context.subscriptionDisplayName),
+                })
+            ];
         }
 
         return {
