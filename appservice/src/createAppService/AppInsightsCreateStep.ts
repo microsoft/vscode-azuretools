@@ -6,7 +6,7 @@
 import type { ApplicationInsightsManagementClient } from '@azure/arm-appinsights';
 import type { ResourceGroup } from '@azure/arm-resources';
 import { AzExtLocation, LocationListStep } from '@microsoft/vscode-azext-azureutils';
-import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityContext, ExecuteActivityOutput, nonNullProp, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
+import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, ActivityOutputType, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityContext, ExecuteActivityOutput, nonNullProp, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
 import { v4 as uuidv4 } from "uuid";
 import { l10n, MessageItem, Progress, TreeItemCollapsibleState } from 'vscode';
 import { ext } from '../extensionVariables';
@@ -79,18 +79,19 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStepWithActivityOut
                 if (pError.errorType === 'AuthorizationFailed') {
                     if (!context.advancedCreation) {
                         this._skippedCreate = true;
-                    } else {
-                        ext.outputChannel.appendLog(l10n.t('Failed to create application insights "{0}".', aiName));
-                        ext.outputChannel.appendLog(l10n.t('Unable to create application insights "{0}" in subscription "{1}" due to a lack of permissions.', aiName, context.subscriptionDisplayName));
-                        this.isMissingCreatePermissions = true;
-                        this.options.continueOnFail = true;
-                        this.addExecuteSteps = () => [new AppInsightsNoCreatePermissionsStep()];
+                        return;
                     }
-                } else {
-                    ext.outputChannel.appendLog(l10n.t('Failed to create application insights "{0}".', aiName));
-                    ext.outputChannel.appendLog(l10n.t('Error: {0}', parseError(error).message));
+
+                    this.isMissingCreatePermissions = true;
+                    this.options.continueOnFail = true;
+                    this.addExecuteSteps = () => [new AppInsightsNoCreatePermissionsStep()];
+                    // Suppress generic output and replace with custom logs
+                    this.options.suppressActivityOutput = ActivityOutputType.Message;
+                    ext.outputChannel.appendLog(l10n.t('Unable to create application insights "{0}" in subscription "{1}" due to a lack of permissions.', aiName, context.subscriptionDisplayName));
+                    ext.outputChannel.appendLog(pError.message);
                     throw error;
                 }
+                throw error;
             }
         }
     }

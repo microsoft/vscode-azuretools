@@ -5,7 +5,7 @@
 
 import { AppServicePlan, WebSiteManagementClient } from '@azure/arm-appservice';
 import { AzExtLocation, LocationListStep } from '@microsoft/vscode-azext-azureutils';
-import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityContext, ExecuteActivityOutput, nonNullProp, nonNullValue, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
+import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, ActivityOutputType, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityContext, ExecuteActivityOutput, nonNullProp, nonNullValue, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
 import { v4 as uuidv4 } from "uuid";
 import { l10n, MessageItem, Progress, TreeItemCollapsibleState } from 'vscode';
 import { webProvider } from '../constants';
@@ -53,17 +53,17 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStepWithActivity
             const client: WebSiteManagementClient = await createWebSiteClient(context);
             context.plan = await client.appServicePlans.beginCreateOrUpdateAndWait(rgName, newPlanName, await getNewPlan(context));
         } catch (e) {
-            if (parseError(e).errorType === 'AuthorizationFailed') {
-                ext.outputChannel.appendLog(l10n.t('Failed to create app service plan "{0}".', newPlanName));
-                ext.outputChannel.appendLog(l10n.t('Unable to create app service plan "{0}" in subscription "{1}" due to a lack of permissions.', newPlanName, context.subscriptionDisplayName));
+            const pError = parseError(e);
+            if (pError.errorType === 'AuthorizationFailed') {
                 this.isMissingCreatePermissions = true;
                 this.options.continueOnFail = true;
                 this.addExecuteSteps = () => [new AppServicePlanNoCreatePermissionsStep()];
-            } else {
-                ext.outputChannel.appendLog(l10n.t('Failed to create app service plan "{0}".', newPlanName));
-                ext.outputChannel.appendLog(l10n.t('Error: {0}', parseError(e).message));
-                throw e;
+                // Suppress generic output and replace with custom logs
+                this.options.suppressActivityOutput = ActivityOutputType.Message;
+                ext.outputChannel.appendLog(l10n.t('Unable to create app service plan "{0}" in subscription "{1}" due to a lack of permissions.', newPlanName, context.subscriptionDisplayName));
+                ext.outputChannel.appendLog(pError.message);
             }
+            throw e;
         }
     }
 
