@@ -12,6 +12,7 @@ import { uiUtils } from '../utils/uiUtils';
 import { LocationListStep } from './LocationListStep';
 import { ResourceGroupCreateStep } from './ResourceGroupCreateStep';
 import { ResourceGroupNameStep } from './ResourceGroupNameStep';
+import { ResourceGroupVerifyStep } from './ResourceGroupVerifyStep';
 
 export const resourceGroupNamingRules: IAzureNamingRules = {
     minLength: 1,
@@ -57,7 +58,10 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
 
             return {
                 promptSteps,
-                executeSteps: [new ResourceGroupCreateStep()]
+                executeSteps: [
+                    new ResourceGroupVerifyStep(),
+                    new ResourceGroupCreateStep(),
+                ],
             };
         } else {
             wizardContext.valuesToMask.push(nonNullProp(wizardContext.resourceGroup, 'name'));
