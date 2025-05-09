@@ -10,7 +10,7 @@ import * as types from '../../../index';
 import { activityErrorContext, activityFailContext, activityFailIcon } from '../../constants';
 import { ResourceGroupsItem } from '../../pickTreeItem/quickPickAzureResource/tempTypes';
 import { ActivityChildItem, ActivityChildType } from '../../tree/v2/ActivityChildItem';
-import { ActivityBase } from "../Activity";
+import { ActivityBase, ActivityStatus } from "../Activity";
 
 export class ExecuteActivity<TContext extends types.ExecuteActivityContext = types.ExecuteActivityContext> extends ActivityBase<void> {
 
@@ -22,6 +22,14 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
         return {
             label: this.label,
         }
+    }
+
+    protected override report(progress?: { message?: string; increment?: number }): void {
+        // If an activity has children, only show a timer as the description since we can offload the responsibility of showing what's happening to the activity children.
+        // If no children, default to showing any progress report messages to indicate to the user what is happening.
+        const message: string | undefined = this.context.activityChildren?.length ? this.timerMessage : progress?.message;
+        this._onProgressEmitter.fire({ ...this.getState(), message });
+        this.status = ActivityStatus.Running;
     }
 
     private _successItemId: string = uuidv4();
