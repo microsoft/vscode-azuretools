@@ -140,7 +140,7 @@ extends:
                         scriptType: pscore
                         scriptLocation: inlineScript
                         inlineScript:  |
-                          az rest -u https://app.vssps.visualstudio.com/_apis/profile/profiles/me --resource 499b84ac-1321-427f-aa17-267ca6975798
+                          az rest -u https://app.vssps.visualstudio.com/_apis/profile/profiles/me --resource cc78c2ae-0989-6ccb-aa25-cb3cec565aad
                     - task: UseNode@1
                       inputs:
                         version: "20.x"
