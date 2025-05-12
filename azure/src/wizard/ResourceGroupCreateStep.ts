@@ -19,9 +19,9 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
     public priority: number = 100;
     public stepName: string = 'resourceGroupCreateStep';
 
-    protected getOutputLogSuccess = (context: T) => l10n.t('Successfully created resource group "{0}"', nonNullProp(context, 'newResourceGroupName'));
-    protected getOutputLogFail = (context: T) => l10n.t('Failed to create resource group "{0}"', nonNullProp(context, 'newResourceGroupName'));
-    protected getTreeItemLabel = (context: T) => l10n.t('Create resource group "{0}"', nonNullProp(context, 'newResourceGroupName'));
+    protected getOutputLogSuccess = (context: T) => l10n.t('Successfully created resource group "{0}"', nonNullValueAndProp(context.resourceGroup, 'name'));
+    protected getOutputLogFail = (context: T) => l10n.t('Failed to create resource group "{0}"', context.newResourceGroupName ?? '');
+    protected getTreeItemLabel = (context: T) => l10n.t('Create resource group "{0}"', context.newResourceGroupName ?? '');
 
     private isMissingCreatePermissions: boolean = false;
 
