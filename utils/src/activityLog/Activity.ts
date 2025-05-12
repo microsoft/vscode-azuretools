@@ -8,6 +8,7 @@ import { CancellationTokenSource, EventEmitter } from "vscode";
 import * as hTypes from '../../hostapi';
 import * as types from '../../index';
 import { parseError } from "../parseError";
+import { dateTimeUtils } from "../utils/dateTimeUtils";
 
 export enum ActivityStatus {
     NotStarted = 'NotStarted',
@@ -25,11 +26,14 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
     public readonly onError: typeof this._onErrorEmitter.event;
 
     private readonly _onStartEmitter = new EventEmitter<hTypes.OnStartActivityData>();
-    private readonly _onProgressEmitter = new EventEmitter<hTypes.OnProgressActivityData>();
     private readonly _onSuccessEmitter = new EventEmitter<hTypes.OnSuccessActivityData>();
     private readonly _onErrorEmitter = new EventEmitter<hTypes.OnErrorActivityData>();
+    protected readonly _onProgressEmitter = new EventEmitter<hTypes.OnProgressActivityData>();
 
-    private status: ActivityStatus = ActivityStatus.NotStarted;
+    protected status: ActivityStatus = ActivityStatus.NotStarted;
+    protected timerMessage: string = '0s';
+
+    private timer: NodeJS.Timeout;
     private _startTime: Date | undefined;
     private _endTime: Date | undefined;
 
@@ -61,8 +65,8 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
         this.onError = this._onErrorEmitter.event;
     }
 
-    private report(progress: { message?: string; increment?: number }): void {
-        this._onProgressEmitter.fire({ ...this.getState(), message: progress.message });
+    protected report(_progress?: { message?: string; increment?: number }): void {
+        this._onProgressEmitter.fire({ ...this.getState(), message: this.timerMessage });
         this.status = ActivityStatus.Running;
     }
 
@@ -70,6 +74,7 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
         try {
             this._startTime = new Date();
             this._onStartEmitter.fire(this.getState());
+            this.startTimer(this._startTime.getTime());
             const result = await this.task({ report: this.report.bind(this) as typeof this.report }, this.cancellationTokenSource.token);
             this.status = ActivityStatus.Succeeded;
             this._onSuccessEmitter.fire(this.getState());
@@ -80,6 +85,7 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
             this._onErrorEmitter.fire({ ...this.getState(), error: e });
             throw e;
         } finally {
+            clearInterval(this.timer);
             this._endTime = new Date();
         }
     }
@@ -95,5 +101,12 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
             default:
                 return this.initialState();
         }
+    }
+
+    private startTimer(startTimeMs: number): void {
+        this.timer = setInterval(() => {
+            this.timerMessage = dateTimeUtils.getFormattedDurationInMinutesAndSeconds(Date.now() - startTimeMs);
+            this.report();
+        }, 1000);
     }
 }
