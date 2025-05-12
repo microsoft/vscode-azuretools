@@ -21,6 +21,6 @@ export async function deploy(site: ParsedSite, fsPath: string, context: IDeployC
     const title: string = l10n.t('Deploying to app "{0}"', site.fullName);
     const executeSteps = await createDeployExecuteSteps(innerContext);
     const wizard: AzureWizard<InnerDeployContext> = new AzureWizard<InnerDeployContext>(innerContext, { executeSteps, title });
-    innerContext.activityTitle = l10n.t('Deploy to App "{0}"', site.fullName);
+    innerContext.activityTitle = l10n.t('Deploy to app "{0}"', site.fullName);
     await wizard.execute();
 }

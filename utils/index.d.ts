@@ -1172,6 +1172,7 @@ export interface IWizardOptions<T extends IActionContext> {
 export const activityInfoContext: string;
 export const activitySuccessContext: string;
 export const activityFailContext: string;
+export const activityErrorContext: string;
 export const activityProgressContext: string;
 
 export const activityInfoIcon: ThemeIcon;
@@ -1440,18 +1441,25 @@ export declare abstract class AzureWizardExecuteStepWithActivityOutput<T extends
     abstract readonly stepName: string;
     /**
      * Abstract method to get the activity child tree item label.
+     * Will be called twice - once during progress and another during success or fail.
+     * Only gets run if `shouldExecute` returns `true`.
      */
     protected abstract getTreeItemLabel(context: T): string;
     /**
      * Abstract method to get the success string for the output log.
+     * Will be called once upon a successful run.
+     * Only gets run if `shouldExecute` returns `true`.
      */
     protected abstract getOutputLogSuccess(context: T): string;
     /**
      * Abstract method to get the fail string for the output log.
+     * Will be called once upon a failed run.
+     * Only gets run if `shouldExecute` returns `true`.
      */
     protected abstract getOutputLogFail(context: T): string;
     /**
      * Optional method to get the progress string for the output log.
+     * Only gets run if `shouldExecute` returns `true`.
      */
     protected getOutputLogProgress?(context: T): string;
 
@@ -2355,6 +2363,13 @@ export declare namespace dateTimeUtils {
      */
     export function getFormattedDurationInMinutesAndSeconds(durationTime: number, units?: duration.DurationUnitType): string;
 }
+
+/**
+ * Verifies that the given resourceId is a valid Azure resource ID and sets telemetry properties for the resourceId as a TrustedTelemetryValue property.
+ * @param context The action context
+ * @param resourceId The resource ID to set telemetry properties for
+ */
+export declare function setAzureResourceIdTelemetryProperties(context: IActionContext, resourceId: string): void;
 
 /**
  * Base element for a tree view (v2)

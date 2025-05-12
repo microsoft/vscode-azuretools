@@ -6,47 +6,51 @@
 import type { ApplicationInsightsManagementClient } from '@azure/arm-appinsights';
 import type { ResourceGroup } from '@azure/arm-resources';
 import { AzExtLocation, LocationListStep } from '@microsoft/vscode-azext-azureutils';
-import { AzureWizardExecuteStep, ExecuteActivityContext, IParsedError, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
-import { l10n, MessageItem, Progress } from 'vscode';
+import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, ActivityOutputType, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityContext, ExecuteActivityOutput, nonNullProp, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
+import { v4 as uuidv4 } from "uuid";
+import { l10n, MessageItem, Progress, TreeItemCollapsibleState } from 'vscode';
 import { ext } from '../extensionVariables';
 import { createAppInsightsClient } from '../utils/azureClients';
 import { AppInsightsListStep } from './AppInsightsListStep';
 import { getAppInsightsSupportedLocation } from './getAppInsightsSupportedLocation';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
-export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext & Partial<ExecuteActivityContext>> {
+export class AppInsightsCreateStep extends AzureWizardExecuteStepWithActivityOutput<IAppServiceWizardContext & Partial<ExecuteActivityContext>> {
     public priority: number = 135;
     public stepName: string = 'AppInsightsCreateStep';
-    private _usedExistingAppInsights: boolean = false;
     private _skippedCreate: boolean = false;
 
-    protected getTreeItemLabel(context: IAppServiceWizardContext): string {
-        const aiName: string = nonNullProp(context, 'newAppInsightsName');
-        let message: string = l10n.t('Create application insights "{0}"', aiName);
-        if (this._skippedCreate) {
-            message = l10n.t('Skipping application insights creation.');
-        } else if (this._usedExistingAppInsights) {
-            message = l10n.t('Using existing application insights "{0}"', aiName);
-        }
-        return message;
-    }
     protected getOutputLogSuccess(context: IAppServiceWizardContext): string {
-        const aiName: string = nonNullProp(context, 'newAppInsightsName');
-        let message: string = l10n.t('Successfully created application insights "{0}".', aiName);
+        let message: string = l10n.t('Successfully created application insights "{0}".', nonNullProp(context, 'newAppInsightsName'));
         if (this._skippedCreate) {
             message = l10n.t('Skipped creating application insights due to account restrictions or location compatibility.');
-        } else if (this._usedExistingAppInsights) {
-            message = l10n.t('Successfully found existing application insights "{0}".', aiName);
         }
         return message;
     }
-    protected getOutputLogFail(context: IAppServiceWizardContext): string {
-        const aiName: string = nonNullProp(context, 'newAppInsightsName');
-        return l10n.t('Failed to create application insights "{0}".', aiName);
+    protected getOutputLogFail = (context: IAppServiceWizardContext) => l10n.t('Failed to create application insights "{0}"', nonNullProp(context, 'newAppInsightsName'));
+    protected getTreeItemLabel(context: IAppServiceWizardContext): string {
+        let message: string = l10n.t('Create application insights "{0}"', nonNullProp(context, 'newAppInsightsName'));
+        if (this._skippedCreate) {
+            message = l10n.t('Skipping application insights creation.');
+        }
+
+        return message;
     }
-    protected getOutputLogProgress(context: IAppServiceWizardContext): string {
-        const aiName: string = nonNullProp(context, 'newAppInsightsName');
-        return l10n.t('Creating application insights "{0}"...', aiName);
+
+    private isMissingCreatePermissions: boolean = false;
+
+    public async configureBeforeExecute(context: IAppServiceWizardContext): Promise<void> {
+        const newAppInsightsName: string = nonNullProp(context, 'newAppInsightsName');
+        const rgName: string = nonNullValueAndProp(context.resourceGroup, 'name');
+
+        try {
+            const client: ApplicationInsightsManagementClient = await createAppInsightsClient(context);
+            context.appInsightsComponent = await client.components.get(rgName, newAppInsightsName);
+            ext.outputChannel.appendLog(l10n.t('Found existing application insights "{0}".', newAppInsightsName));
+            ext.outputChannel.appendLog(l10n.t('Using existing application insights "{0}".', newAppInsightsName));
+        } catch (error) {
+            // Don't throw error yet we might still be able to handle this condition in the following methods
+        }
     }
 
     public async execute(context: IAppServiceWizardContext, _progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
@@ -61,56 +65,93 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStep<IAppServiceWiz
             const aiName: string = nonNullProp(context, 'newAppInsightsName');
 
             try {
-                context.appInsightsComponent = await client.components.get(rgName, aiName);
-                this._usedExistingAppInsights = true;
+                context.appInsightsComponent = await client.components.createOrUpdate(
+                    rgName,
+                    aiName,
+                    {
+                        kind: 'web',
+                        applicationType: 'web',
+                        location: appInsightsLocation,
+                        workspaceResourceId: context.logAnalyticsWorkspace?.id
+                    });
             } catch (error) {
-                const pError: IParsedError = parseError(error);
-                // Only expecting a resource not found error if this is a new component
-                if (pError.errorType === 'ResourceNotFound') {
-
-                    context.appInsightsComponent = await client.components.createOrUpdate(
-                        rgName,
-                        aiName,
-                        {
-                            kind: 'web',
-                            applicationType: 'web',
-                            location: appInsightsLocation,
-                            workspaceResourceId: context.logAnalyticsWorkspace?.id
-                        });
-                } else if (pError.errorType === 'AuthorizationFailed') {
+                const pError = parseError(error);
+                if (pError.errorType === 'AuthorizationFailed') {
                     if (!context.advancedCreation) {
                         this._skippedCreate = true;
-                    } else {
-                        await this.selectExistingPrompt(context);
-                        this._usedExistingAppInsights = true;
+                        return;
                     }
-                } else {
-                    throw error;
+
+                    this.isMissingCreatePermissions = true;
+                    this.options.continueOnFail = true;
+                    this.addExecuteSteps = () => [new AppInsightsNoCreatePermissionsStep()];
+                    // Suppress generic output and replace with custom logs
+                    this.options.suppressActivityOutput = ActivityOutputType.Message;
+                    ext.outputChannel.appendLog(l10n.t('Unable to create application insights "{0}" in subscription "{1}" due to a lack of permissions.', aiName, context.subscriptionDisplayName));
+                    ext.outputChannel.appendLog(pError.message);
                 }
+                throw error;
             }
         } else {
             this._skippedCreate = true;
         }
     }
 
-    public async selectExistingPrompt(context: IAppServiceWizardContext): Promise<void> {
-        const message: string = l10n.t('You do not have permission to create an app insights resource in subscription "{0}".', context.subscriptionDisplayName);
-        const selectExisting: MessageItem = { title: l10n.t('Select Existing') };
-        const skipForNow: MessageItem = { title: l10n.t('Skip for Now') };
-        const result = await context.ui.showWarningMessage(message, { modal: true, stepName: 'AppInsightsNoPermissions' }, selectExisting, skipForNow);
-        if (result === skipForNow) {
-            context.telemetry.properties.aiSkipForNow = 'true';
-            context.appInsightsSkip = true;
-            this._skippedCreate = true;
-            context.telemetry.properties.forbiddenResponse = 'SkipAppInsights';
-        } else {
-            context.telemetry.properties.forbiddenResponse = 'SelectExistingAppInsights';
-            const step: AppInsightsListStep = new AppInsightsListStep(true /* suppressCreate */);
-            await step.prompt(context);
-            this._usedExistingAppInsights = true;
-        }
+    public shouldExecute(context: IAppServiceWizardContext): boolean {
+        return !context.appInsightsComponent && !!context.newAppInsightsName;
     }
 
+    private _errorItemId: string = uuidv4();
+
+    public override createFailOutput(context: IAppServiceWizardContext & Partial<ExecuteActivityContext>): ExecuteActivityOutput {
+        const item: ActivityChildItem = new ActivityChildItem({
+            label: this.getTreeItemLabel(context),
+            activityType: ActivityChildType.Fail,
+            contextValue: createContextValue([this.stepName, activityFailContext]),
+            iconPath: activityFailIcon,
+            isParent: true,
+            initialCollapsibleState: TreeItemCollapsibleState.Expanded,
+        });
+
+        if (this.isMissingCreatePermissions) {
+            item.getChildren = () => [new ActivityChildItem({
+                id: this._errorItemId,
+                activityType: ActivityChildType.Error,
+                contextValue: 'activity:error', // Todo: Replace with exported constant
+                label: l10n.t('Unable to create application insights "{0}" in subscription "{1}" due to a lack of permissions.', nonNullProp(context, 'newAppInsightsName'), context.subscriptionDisplayName),
+            })];
+        }
+
+        return {
+            item,
+            message: this.getOutputLogFail(context),
+        }
+    }
+}
+
+class AppInsightsNoCreatePermissionsStep extends AzureWizardExecuteStepWithActivityOutput<IAppServiceWizardContext & Partial<ExecuteActivityContext>> {
+    public priority: number = 136;
+    public stepName: string = 'AppInsightsNoCreatePermissionsStep';
+
+    protected getOutputLogSuccess = (context: IAppServiceWizardContext) => l10n.t('Successfully selected existing application insights "{0}"', nonNullValueAndProp(context.appInsightsComponent, 'name'));
+    protected getOutputLogFail = () => l10n.t('Failed to select existing application insights');
+    protected getTreeItemLabel = (context: IAppServiceWizardContext) => {
+        return context.appInsightsComponent?.name ?
+            l10n.t('Select application insights "{0}"', context.appInsightsComponent?.name) :
+            l10n.t('Select application insights...');
+    }
+
+    public async execute(context: IAppServiceWizardContext, progress: Progress<{ message?: string; increment?: number; }>): Promise<void> {
+        progress.report({ message: l10n.t('Selecting application insights...') });
+
+        const message: string = l10n.t('You do not have permission to create an application insights in subscription "{0}".', context.subscriptionDisplayName);
+        const selectExisting: MessageItem = { title: l10n.t('Select Existing') };
+        await context.ui.showWarningMessage(message, { modal: true, stepName: 'AspNoPermissions' }, selectExisting);
+
+        context.telemetry.properties.forbiddenResponse = 'SelectExistingAppInsights';
+        const step: AppInsightsListStep = new AppInsightsListStep(true /* suppressCreate */);
+        await step.prompt(context);
+    }
 
     public shouldExecute(context: IAppServiceWizardContext): boolean {
         return !context.appInsightsComponent && !!context.newAppInsightsName;

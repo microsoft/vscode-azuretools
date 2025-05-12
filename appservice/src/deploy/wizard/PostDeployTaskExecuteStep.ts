@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { SiteConfig } from "@azure/arm-appservice";
-import { AzureWizardExecuteStep } from "@microsoft/vscode-azext-utils";
-import { Progress, Task, Uri, l10n, workspace } from "vscode";
+import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, activitySuccessContext, activitySuccessIcon, AzureWizardExecuteStep, createContextValue, ExecuteActivityOutput } from "@microsoft/vscode-azext-utils";
+import { l10n, Progress, Task, Uri, workspace } from "vscode";
 import { ext } from "../../extensionVariables";
 import { taskUtils } from "../../utils/taskUtils";
 import { InnerDeployContext } from "../IDeployContext";
@@ -16,13 +16,39 @@ export class PostDeployTaskExecuteStep extends AzureWizardExecuteStep<InnerDeplo
     public constructor(readonly config: SiteConfig) {
         super();
     }
+    public stepName: string = 'PostDeployTaskExecuteStep';
+    public createSuccessOutput(context: InnerDeployContext): ExecuteActivityOutput {
+        const settingKey: string = 'postDeployTask';
+        const taskName: string | undefined = workspace.getConfiguration(ext.prefix, Uri.file(context.fsPath)).get(settingKey) ?? '';
+        const label = l10n.t('Start {0} "{1}".', settingKey, taskName);
+        return {
+            item: new ActivityChildItem({
+                contextValue: createContextValue([activitySuccessContext, context.site.id]),
+                label,
+                iconPath: activitySuccessIcon,
+                activityType: ActivityChildType.Success,
+
+            })
+        };
+    }
+    public createFailOutput(context: InnerDeployContext): ExecuteActivityOutput {
+        return {
+            item: new ActivityChildItem({
+                contextValue: createContextValue([activityFailContext, context.site.id]),
+                label: l10n.t('Post deploy task failed.'),
+                iconPath: activityFailIcon,
+                activityType: ActivityChildType.Fail,
+
+            })
+        };
+    }
 
     public async execute(context: InnerDeployContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         const settingKey: string = 'postDeployTask';
         const taskName: string | undefined = workspace.getConfiguration(ext.prefix, Uri.file(context.fsPath)).get(settingKey);
         context.telemetry.properties.hasPostDeployTask = String(!!taskName);
 
-        if (taskName && shouldExecuteTask(context, this.config.scmType, settingKey, taskName)) {
+        if (taskName) {
             const task: Task | undefined = await taskUtils.findTask(context.fsPath, taskName);
             context.telemetry.properties.foundPostDeployTask = String(!!task);
             if (task) {
@@ -33,12 +59,14 @@ export class PostDeployTaskExecuteStep extends AzureWizardExecuteStep<InnerDeplo
             } else {
                 const failedToFindTask = l10n.t('Failed to find {0} "{1}".', settingKey, taskName);
                 progress.report({ message: failedToFindTask });
-                ext.outputChannel.appendLog(failedToFindTask, { resourceName: context.site.fullName });
+                throw new Error(failedToFindTask);
             }
         }
     }
 
-    public shouldExecute(_context: InnerDeployContext): boolean {
-        return true;
+    public shouldExecute(context: InnerDeployContext): boolean {
+        const settingKey: string = 'postDeployTask';
+        const taskName: string | undefined = workspace.getConfiguration(ext.prefix, Uri.file(context.fsPath)).get(settingKey);
+        return !!(taskName && shouldExecuteTask(context, this.config.scmType, settingKey, taskName))
     }
 }

@@ -22,7 +22,9 @@ export class StorageAccountCreateStep<T extends types.IStorageAccountWizardConte
         this._defaults = defaults;
     }
 
-    public async execute(wizardContext: T, _progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
+    public async execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
+        progress.report({ message: l10n.t('Creating storage account...') });
+
         const newLocation: string = (await LocationListStep.getLocation(wizardContext, storageProvider)).name;
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const newName: string = wizardContext.newStorageAccountName!;
@@ -46,17 +48,17 @@ export class StorageAccountCreateStep<T extends types.IStorageAccountWizardConte
     protected getTreeItemLabel(context: T): string {
         const newName: string = nonNullProp(context, 'newStorageAccountName');
         const newSkuName: SkuName = <SkuName>`${this._defaults.performance}_${this._defaults.replication}`;
-        return l10n.t('Create storage account "{0}" with sku "{1}"...', newName, newSkuName);
+        return l10n.t('Create storage account "{0}" with sku "{1}"', newName, newSkuName);
     }
     protected getOutputLogSuccess(context: T): string {
         const newName: string = nonNullProp(context, 'newStorageAccountName');
         const newSkuName: SkuName = <SkuName>`${this._defaults.performance}_${this._defaults.replication}`;
-        return l10n.t('Successfully created storage account "{0}" with sku "{1}"...', newName, newSkuName);
+        return l10n.t('Successfully created storage account "{0}" with sku "{1}".', newName, newSkuName);
     }
     protected getOutputLogFail(context: T): string {
         const newName: string = nonNullProp(context, 'newStorageAccountName');
         const newSkuName: SkuName = <SkuName>`${this._defaults.performance}_${this._defaults.replication}`;
-        return l10n.t('Failed to create storage account "{0}" with sku "{1}"...', newName, newSkuName);
+        return l10n.t('Failed to create storage account "{0}" with sku "{1}".', newName, newSkuName);
     }
 
     protected getOutputLogProgress(context: T): string {

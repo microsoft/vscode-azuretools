@@ -4,12 +4,43 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AppServicePlan, SiteConfigResource } from "@azure/arm-appservice";
-import { AzureWizardExecuteStep, randomUtils } from "@microsoft/vscode-azext-utils";
-import { Progress, ProgressLocation, l10n, window } from "vscode";
-import { ext } from "../../extensionVariables";
+import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, activityProgressContext, activityProgressIcon, activitySuccessContext, activitySuccessIcon, AzureWizardExecuteStep, createContextValue, ExecuteActivityOutput, randomUtils } from "@microsoft/vscode-azext-utils";
+import { l10n, Progress } from "vscode";
 import { InnerDeployContext } from "../IDeployContext";
 
 export abstract class DeployExecuteStepBase extends AzureWizardExecuteStep<InnerDeployContext> {
+    stepName: string = 'DeployExecuteStepBase';
+    public createSuccessOutput(context: InnerDeployContext): ExecuteActivityOutput {
+        return {
+            item: new ActivityChildItem({
+                contextValue: createContextValue([activitySuccessContext, context.site.id]),
+                label: l10n.t('Zip and deploy workspace "{0}"', context.effectiveDeployFsPath),
+                iconPath: activitySuccessIcon,
+                activityType: ActivityChildType.Success,
+            })
+        };
+    }
+    public createProgressOutput(context: InnerDeployContext): ExecuteActivityOutput {
+        return {
+            item: new ActivityChildItem({
+                contextValue: createContextValue([activityProgressContext, context.site.id]),
+                label: l10n.t('Zip and deploy workspace "{0}"', context.effectiveDeployFsPath),
+                iconPath: activityProgressIcon,
+                activityType: ActivityChildType.Progress,
+            })
+        };
+    }
+    public createFailOutput(context: InnerDeployContext): ExecuteActivityOutput {
+        return {
+            item: new ActivityChildItem({
+                contextValue: createContextValue([activityFailContext, context.site.id]),
+                label: l10n.t('Zip and deploy workspace "{0}"', context.effectiveDeployFsPath),
+                iconPath: activityFailIcon,
+                activityType: ActivityChildType.Fail,
+            })
+        };
+    }
+
     public priority: number = 200;
     protected progress: Progress<{ message?: string; increment?: number }> | undefined;
     public constructor() {
@@ -20,21 +51,15 @@ export abstract class DeployExecuteStepBase extends AzureWizardExecuteStep<Inner
         const client = context.client;
         this.progress = progress;
         const config: SiteConfigResource = await client.getSiteConfig();
+        const startingDeployment = l10n.t('Starting deployment...')
+        progress.report({ message: startingDeployment });
         // We use the AppServicePlan in a few places, but we don't want to delay deployment, so start the promise now and save as a const
         try {
             await setDeploymentTelemetry(context, config, context.aspPromise);
         } catch (error) {
             // Ignore
         }
-
-        const title: string = l10n.t('Deploying to "{0}"... Check [output window](command:{1}) for status.', context.site.fullName, ext.prefix + '.showOutputChannel');
-        await window.withProgress({ location: ProgressLocation.Notification, title }, async () => {
-            const startingDeployment = l10n.t('Starting deployment...')
-
-            ext.outputChannel.appendLog(startingDeployment, { resourceName: context.site.fullName });
-            progress.report({ message: startingDeployment });
-            await this.deployCore(context, config);
-        });
+        await this.deployCore(context, config);
     }
 
     public shouldExecute(_context: InnerDeployContext): boolean {
