@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ResourceManagementClient } from '@azure/arm-resources';
-import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityOutput, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
+import { ActivityChildItem, ActivityChildType, activityErrorContext, activityFailContext, activityFailIcon, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityOutput, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
 import { v4 as uuidv4 } from "uuid";
 import { l10n, Progress, TreeItemCollapsibleState } from 'vscode';
 import * as types from '../../index';
@@ -70,7 +70,7 @@ export class ResourceGroupVerifyStep<T extends types.IResourceGroupWizardContext
                 new ActivityChildItem({
                     id: this._errorItemId,
                     activityType: ActivityChildType.Error,
-                    contextValue: createContextValue([`${this.stepName}Item`, 'activity:error']), // Todo: Replace with exported constant
+                    contextValue: createContextValue([`${this.stepName}Item`, activityErrorContext]),
                     label: l10n.t('Unable to verify resource group "{0}" in subscription "{1}" due to a lack of permissions.', nonNullProp(context, 'newResourceGroupName'), context.subscriptionDisplayName),
                 })
             ];

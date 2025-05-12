@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { ResourceGroup, ResourceManagementClient } from '@azure/arm-resources';
-import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, ActivityOutputType, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityOutput, nonNullProp, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
+import { ActivityChildItem, ActivityChildType, activityErrorContext, activityFailContext, activityFailIcon, ActivityOutputType, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityOutput, nonNullProp, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
 import { v4 as uuidv4 } from "uuid";
 import { l10n, MessageItem, Progress, TreeItemCollapsibleState } from 'vscode';
 import * as types from '../../index';
@@ -97,7 +97,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
                 new ActivityChildItem({
                     id: this._errorItemId,
                     activityType: ActivityChildType.Error,
-                    contextValue: createContextValue([`${this.stepName}Item`, 'activity:error']), // Todo: Replace with exported constant
+                    contextValue: createContextValue([`${this.stepName}Item`, activityErrorContext]),
                     label: l10n.t('Unable to create resource group "{0}" in subscription "{1}" due to a lack of permissions.', nonNullProp(context, 'newResourceGroupName'), context.subscriptionDisplayName),
                 })
             ];
