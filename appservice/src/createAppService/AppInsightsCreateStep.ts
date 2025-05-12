@@ -92,6 +92,8 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStepWithActivityOut
                 }
                 throw error;
             }
+        } else {
+            this._skippedCreate = true;
         }
     }
 
