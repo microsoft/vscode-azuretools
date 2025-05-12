@@ -6,7 +6,7 @@
 import type { ApplicationInsightsManagementClient } from '@azure/arm-appinsights';
 import type { ResourceGroup } from '@azure/arm-resources';
 import { AzExtLocation, LocationListStep } from '@microsoft/vscode-azext-azureutils';
-import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, ActivityOutputType, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityContext, ExecuteActivityOutput, nonNullProp, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
+import { ActivityChildItem, ActivityChildType, activityErrorContext, activityFailContext, activityFailIcon, ActivityOutputType, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityContext, ExecuteActivityOutput, nonNullProp, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
 import { v4 as uuidv4 } from "uuid";
 import { l10n, MessageItem, Progress, TreeItemCollapsibleState } from 'vscode';
 import { ext } from '../extensionVariables';
@@ -117,7 +117,7 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStepWithActivityOut
             item.getChildren = () => [new ActivityChildItem({
                 id: this._errorItemId,
                 activityType: ActivityChildType.Error,
-                contextValue: 'activity:error', // Todo: Replace with exported constant
+                contextValue: createContextValue([`${this.stepName}Item`, activityErrorContext]),
                 label: l10n.t('Unable to create application insights "{0}" in subscription "{1}" due to a lack of permissions.', nonNullProp(context, 'newAppInsightsName'), context.subscriptionDisplayName),
             })];
         }

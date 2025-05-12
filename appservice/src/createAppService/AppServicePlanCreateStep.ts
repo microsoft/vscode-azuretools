@@ -5,7 +5,7 @@
 
 import { AppServicePlan, WebSiteManagementClient } from '@azure/arm-appservice';
 import { AzExtLocation, LocationListStep } from '@microsoft/vscode-azext-azureutils';
-import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, ActivityOutputType, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityContext, ExecuteActivityOutput, nonNullProp, nonNullValue, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
+import { ActivityChildItem, ActivityChildType, activityErrorContext, activityFailContext, activityFailIcon, ActivityOutputType, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityContext, ExecuteActivityOutput, nonNullProp, nonNullValue, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
 import { v4 as uuidv4 } from "uuid";
 import { l10n, MessageItem, Progress, TreeItemCollapsibleState } from 'vscode';
 import { webProvider } from '../constants';
@@ -87,7 +87,7 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStepWithActivity
             item.getChildren = () => [new ActivityChildItem({
                 id: this._errorItemId,
                 activityType: ActivityChildType.Error,
-                contextValue: 'activity:error', // Todo: Replace with exported constant
+                contextValue: createContextValue([`${this.stepName}Item`, activityErrorContext]),
                 label: l10n.t('Unable to create app service plan "{0}" in subscription "{1}" due to a lack of permissions.', nonNullProp(context, 'newPlanName'), context.subscriptionDisplayName),
             })];
         }
