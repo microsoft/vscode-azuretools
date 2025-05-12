@@ -89,7 +89,6 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStepWithActivityOut
                     this.options.suppressActivityOutput = ActivityOutputType.Message;
                     ext.outputChannel.appendLog(l10n.t('Unable to create application insights "{0}" in subscription "{1}" due to a lack of permissions.', aiName, context.subscriptionDisplayName));
                     ext.outputChannel.appendLog(pError.message);
-                    throw error;
                 }
                 throw error;
             }
