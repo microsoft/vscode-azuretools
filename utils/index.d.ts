@@ -2282,6 +2282,14 @@ export declare namespace dateTimeUtils {
 }
 
 /**
+ * Adds a new activity child after the last info child in the `activityChildren` array.
+ * If no info child already exists, the new child is prepended to the front of the array.
+ * (This utility function is useful for keeping the info children grouped at the front of the list)
+ */
+export function insertAfterLastInfoChild(context: Partial<ExecuteActivityContext>, infoChild: ActivityInfoChild): void;
+export type ActivityInfoChild = ActivityChildItemBase & { activityType: ActivityChildType.Info };
+
+/**
  * Verifies that the given resourceId is a valid Azure resource ID and sets telemetry properties for the resourceId as a TrustedTelemetryValue property.
  * @param context The action context
  * @param resourceId The resource ID to set telemetry properties for
