@@ -19,8 +19,9 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
     public priority: number = 100;
     public stepName: string = 'resourceGroupCreateStep';
 
-    protected getOutputLogSuccess = (context: T) => l10n.t('Successfully created resource group "{0}"', nonNullValueAndProp(context.resourceGroup, 'name'));
-    protected getOutputLogFail = (context: T) => l10n.t('Failed to create resource group "{0}"', context.newResourceGroupName ?? '');
+    protected getOutputLogSuccess = (context: T) => l10n.t('Successfully created resource group "{0}".', nonNullValueAndProp(context.resourceGroup, 'name'));
+    protected getOutputLogFail = (context: T) => l10n.t('Failed to create resource group "{0}".', context.newResourceGroupName ?? '');
+    protected getOutputLogProgress = (context: T) => l10n.t('Creating resource group "{0}"...', context.newResourceGroupName ?? '');
     protected getTreeItemLabel = (context: T) => l10n.t('Create resource group "{0}"', context.newResourceGroupName ?? '');
 
     private isMissingCreatePermissions: boolean = false;
@@ -113,7 +114,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
 class ResourceGroupNoCreatePermissionsSelectStep<T extends types.IResourceGroupWizardContext> extends AzureWizardExecuteStepWithActivityOutput<T> {
     public priority: number = 101;
     public stepName: string = 'resourceGroupNoCreatePermissionsSelectStep';
-    protected getOutputLogSuccess = (context: T) => l10n.t('Successfully selected existing resource group "{0}"', nonNullValueAndProp(context.resourceGroup, 'name'));
+    protected getOutputLogSuccess = (context: T) => l10n.t('Successfully selected existing resource group "{0}".', nonNullValueAndProp(context.resourceGroup, 'name'));
     protected getOutputLogFail = () => l10n.t('Failed to select an existing resource group.');
     protected getTreeItemLabel = (context: T) => {
         return context.resourceGroup?.name ?
