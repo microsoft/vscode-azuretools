@@ -14,7 +14,8 @@ export class ResourceGroupNameStep<T extends types.IResourceGroupWizardContext> 
         wizardContext.newResourceGroupName = (await wizardContext.ui.showInputBox({
             value: suggestedName,
             prompt: 'Enter the name of the new resource group.',
-            validateInput: async (value: string): Promise<string | undefined> => await this.validateResourceGroupName(wizardContext, value)
+            validateInput: this.validateResourceGroupName,
+            asyncValidationTask: (name: string): Promise<string | undefined> => this.asyncValidateResourceGroupAvailable(wizardContext, name),
         })).trim();
         wizardContext.valuesToMask.push(wizardContext.newResourceGroupName);
     }
@@ -23,7 +24,7 @@ export class ResourceGroupNameStep<T extends types.IResourceGroupWizardContext> 
         return !wizardContext.newResourceGroupName;
     }
 
-    private async validateResourceGroupName(wizardContext: T, name: string): Promise<string | undefined> {
+    private validateResourceGroupName(name: string): string | undefined {
         name = name.trim();
 
         if (name.length < resourceGroupNamingRules.minLength || name.length > resourceGroupNamingRules.maxLength) {
@@ -32,10 +33,14 @@ export class ResourceGroupNameStep<T extends types.IResourceGroupWizardContext> 
             return vscode.l10n.t("The name can only contain alphanumeric characters or the symbols ._-()");
         } else if (name.endsWith('.')) {
             return vscode.l10n.t("The name cannot end in a period.");
-        } else if (!await ResourceGroupListStep.isNameAvailable(wizardContext, name)) {
-            return vscode.l10n.t('Resource group "{0}" already exists in subscription "{1}".', name, wizardContext.subscriptionDisplayName);
         } else {
             return undefined;
         }
+    }
+
+    private async asyncValidateResourceGroupAvailable(context: T, name: string): Promise<string | undefined> {
+        name = name.trim();
+        return !await ResourceGroupListStep.isNameAvailable(context, name) ?
+            vscode.l10n.t('Resource group "{0}" already exists in subscription "{1}".', name, context.subscriptionDisplayName) : undefined;
     }
 }

@@ -16,11 +16,11 @@ export class ResourceGroupVerifyStep<T extends types.IResourceGroupWizardContext
     public priority: number = 95;
     public stepName: string = 'resourceGroupVerifyStep';
 
-    protected getOutputLogFail = (context: T) => l10n.t('Failed to verify whether resource group with name "{0}" already exists.', nonNullProp(context, 'newResourceGroupName'));
+    protected getOutputLogFail = (context: T) => l10n.t('Failed to verify whether resource group with name "{0}" already exists.', context.newResourceGroupName ?? '');
     protected getOutputLogSuccess(context: T) {
         return context.resourceGroup?.name ?
             l10n.t('Verified resource group with name "{0}" already exists.  Using existing resource group.', context.resourceGroup.name) :
-            l10n.t('Verified resource group with name "{0}" is available for creation.', nonNullProp(context, 'newResourceGroupName'));
+            l10n.t('Verified resource group with name "{0}" is available for creation.', context.newResourceGroupName ?? '');
     }
     protected getTreeItemLabel(context: T) {
         return context.resourceGroup?.name ?
