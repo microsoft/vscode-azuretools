@@ -6,7 +6,7 @@
 import * as types from '../../index';
 import { ActivityChildType } from '../../index';
 
-export function insertAfterLastInfoChild(context: Partial<types.ExecuteActivityContext>, infoChild: types.ActivityInfoChild): void {
+export function prependOrInsertAfterLastInfoChild(context: Partial<types.ExecuteActivityContext>, infoChild: types.ActivityInfoChild): void {
     if (!context.activityChildren) {
         return;
     }
