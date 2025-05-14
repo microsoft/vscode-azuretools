@@ -20,7 +20,7 @@ export enum ActivityStatus {
 
 type ActivityBaseOptions = {
     copilot?: types.CopilotContext;
-}
+};
 
 export abstract class ActivityBase<R> implements hTypes.Activity {
 
