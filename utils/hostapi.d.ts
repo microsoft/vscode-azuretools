@@ -276,7 +276,7 @@ export interface Activity {
     endTime?: Date;
 
     /**
-     * Extra context about the activity that is being run, for use by Copilot
+     * Extra context for Copilot about the activity that is being run
      */
     copilot?: CopilotContext;
 
