@@ -1328,7 +1328,7 @@ export declare interface ExecuteActivityContext {
     wizardActivity?: new <TContext extends ExecuteActivityContext>(context: TContext, task: ActivityTask<void>) => ExecuteActivity;
 
     /**
-     * Children to show under the activity tree item. Children only appear once the activity is done.
+     * Children to show under the activity tree item.
      */
     activityChildren?: ActivityChildItemBase[];
 }
@@ -2280,6 +2280,14 @@ export declare namespace dateTimeUtils {
      */
     export function getFormattedDurationInMinutesAndSeconds(durationTime: number, units?: duration.DurationUnitType): string;
 }
+
+/**
+ * Adds a new activity child after the last info child in the `activityChildren` array.
+ * If no info child already exists, the new child is prepended to the front of the array.
+ * (This utility function is useful for keeping the info children grouped at the front of the list)
+ */
+export function prependOrInsertAfterLastInfoChild(context: Partial<ExecuteActivityContext>, infoChild: ActivityInfoChild): void;
+export type ActivityInfoChild = ActivityChildItemBase & { activityType: ActivityChildType.Info };
 
 /**
  * Verifies that the given resourceId is a valid Azure resource ID and sets telemetry properties for the resourceId as a TrustedTelemetryValue property.
