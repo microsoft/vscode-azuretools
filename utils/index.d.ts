@@ -1331,6 +1331,50 @@ export declare interface ExecuteActivityContext {
      * Children to show under the activity tree item.
      */
     activityChildren?: ActivityChildItemBase[];
+
+    /**
+     * Activity context to be shared with Copilot
+     */
+    copilot: CopilotContext;
+}
+
+export interface CopilotContext {
+    /**
+     * A description or summary of the activity being run
+     */
+    description?: string;
+    /**
+     * A troubleshooting guide that Copilot can reference to help users fix common issues
+     */
+    troubleshooting?: string | string[];
+    /**
+     * Any relevant logs related to the activity being run
+     */
+    logs?: CopilotContextLogs[];
+    /**
+     * Any relevant files related to the activity being run
+     */
+    files?: CopilotContextFiles[];
+    /**
+     * Any Azure resource envelope related to the activity being run
+     */
+    azureResource?: unknown;
+
+    // For other one-off properties that could be useful to Copilot
+    [key: string]: unknown;
+}
+
+export type CopilotContextLogs = {
+    name?: string;
+    description?: string;
+    content?: string;
+};
+
+export type CopilotContextFiles = {
+    name?: string;
+    path?: string;
+    description?: string;
+    content?: string;
 }
 
 export interface ExecuteActivityOutput {

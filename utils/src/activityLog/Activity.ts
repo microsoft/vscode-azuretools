@@ -18,6 +18,10 @@ export enum ActivityStatus {
     Cancelled = 'Cancelled',
 }
 
+type ActivityBaseOptions = {
+    copilot?: types.CopilotContext;
+}
+
 export abstract class ActivityBase<R> implements hTypes.Activity {
 
     public readonly onStart: typeof this._onStartEmitter.event;
@@ -36,6 +40,7 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
     private timer: NodeJS.Timeout;
     private _startTime: Date | undefined;
     private _endTime: Date | undefined;
+    protected _copilot: types.CopilotContext | undefined;
 
     public error?: types.IParsedError;
     public readonly task: types.ActivityTask<R>;
@@ -47,6 +52,10 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
     abstract progressState(): hTypes.ActivityTreeItemOptions;
     abstract errorState(error?: types.IParsedError): hTypes.ActivityTreeItemOptions;
 
+    public get copilot(): types.CopilotContext | undefined {
+        return this._copilot;
+    }
+
     public get startTime(): Date | undefined {
         return this._startTime;
     }
@@ -55,9 +64,10 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
         return this._endTime;
     }
 
-    public constructor(task: types.ActivityTask<R>) {
+    public constructor(task: types.ActivityTask<R>, options?: ActivityBaseOptions) {
         this.id = uuidv4();
         this.task = task;
+        this._copilot = options?.copilot;
 
         this.onStart = this._onStartEmitter.event;
         this.onProgress = this._onProgressEmitter.event;
