@@ -41,6 +41,8 @@ export class StorageAccountCreateStep<T extends types.IStorageAccountWizardConte
                 enableHttpsTrafficOnly: true,
                 allowBlobPublicAccess: false,
                 defaultToOAuthAuthentication: true,
+                // this controls whether the storage account can generate connection strings which is not required if using managed identity
+                allowSharedKeyAccess: wizardContext.managedIdentity ? false : true,
             }
         );
     }
