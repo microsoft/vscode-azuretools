@@ -1328,7 +1328,7 @@ export declare interface ExecuteActivityContext {
     wizardActivity?: new <TContext extends ExecuteActivityContext>(context: TContext, task: ActivityTask<void>) => ExecuteActivity;
 
     /**
-     * Children to show under the activity tree item. Children only appear once the activity is done.
+     * Children to show under the activity tree item.
      */
     activityChildren?: ActivityChildItemBase[];
 }
