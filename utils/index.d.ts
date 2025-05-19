@@ -1333,7 +1333,7 @@ export declare interface ExecuteActivityContext {
     activityChildren?: ActivityChildItemBase[];
 
     /**
-     * Activity insights to be shared with Copilot
+     * Activity / Command insights to be shared with Copilot
      */
     activityInsights: ActivityInsights;
 }
