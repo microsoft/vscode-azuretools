@@ -57,6 +57,7 @@ Error Message: ${issue.error.message}
 
 Version: ${extensionVersion}
 OS: ${process.platform}
+OS Arch: ${os.arch()}
 OS Release: ${os.release()}
 Product: ${vscode.env.appName}
 Product Version: ${vscode.version}
