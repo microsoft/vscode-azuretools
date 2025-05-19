@@ -1333,12 +1333,12 @@ export declare interface ExecuteActivityContext {
     activityChildren?: ActivityChildItemBase[];
 
     /**
-     * Activity / Command insights to be shared with Copilot
+     * Activity / Command details to be shared with Copilot
      */
-    activityInsights: ActivityInsights;
+    activityDetails: ActivityDetails;
 }
 
-export interface ActivityInsights {
+export interface ActivityDetails {
     /**
      * A description or summary of the command or activity being run
      */
@@ -1350,11 +1350,11 @@ export interface ActivityInsights {
     /**
      * Any relevant logs related to the command or activity being run
      */
-    logs?: ActivityInsightsLogs[];
+    logs?: ActivityDetailsLogs[];
     /**
      * Any relevant files related to the command or activity being run
      */
-    files?: ActivityInsightsFiles[];
+    files?: ActivityDetailsFiles[];
     /**
      * Any Azure resource envelope related to the command or activity being run
      */
@@ -1364,13 +1364,13 @@ export interface ActivityInsights {
     [key: string]: unknown;
 }
 
-export type ActivityInsightsLogs = {
+export type ActivityDetailsLogs = {
     name?: string;
     description?: string;
     content?: string;
 };
 
-export type ActivityInsightsFiles = {
+export type ActivityDetailsFiles = {
     name?: string;
     path?: string;
     description?: string;

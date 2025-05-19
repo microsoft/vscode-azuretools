@@ -15,7 +15,7 @@ import { ActivityBase, ActivityStatus } from "../Activity";
 export class ExecuteActivity<TContext extends types.ExecuteActivityContext = types.ExecuteActivityContext> extends ActivityBase<void> {
 
     public constructor(protected readonly context: TContext, task: types.ActivityTask<void>) {
-        super(task, { insights: context.activityInsights });
+        super(task, { details: context.activityDetails });
     }
 
     public initialState(): hTypes.ActivityTreeItemOptions {

@@ -19,7 +19,7 @@ export enum ActivityStatus {
 }
 
 type ActivityBaseOptions = {
-    insights?: types.ActivityInsights;
+    details?: types.ActivityDetails;
 };
 
 export abstract class ActivityBase<R> implements hTypes.Activity {
@@ -40,7 +40,7 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
     private timer: NodeJS.Timeout;
     private _startTime: Date | undefined;
     private _endTime: Date | undefined;
-    protected _insights: types.ActivityInsights | undefined;
+    protected _details: types.ActivityDetails | undefined;
 
     public error?: types.IParsedError;
     public readonly task: types.ActivityTask<R>;
@@ -52,8 +52,8 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
     abstract progressState(): hTypes.ActivityTreeItemOptions;
     abstract errorState(error?: types.IParsedError): hTypes.ActivityTreeItemOptions;
 
-    public get insights(): types.ActivityInsights | undefined {
-        return this._insights;
+    public get details(): types.ActivityDetails | undefined {
+        return this._details;
     }
 
     public get startTime(): Date | undefined {
@@ -67,7 +67,7 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
     public constructor(task: types.ActivityTask<R>, options?: ActivityBaseOptions) {
         this.id = uuidv4();
         this.task = task;
-        this._insights = options?.insights;
+        this._details = options?.details;
 
         this.onStart = this._onStartEmitter.event;
         this.onProgress = this._onProgressEmitter.event;

@@ -14,6 +14,6 @@ export function getSilentExecuteActivityContext(): ExecuteActivityContext {
         registerActivity: async (_activity) => {
             // do nothing
         },
-        activityInsights: {},
+        activityDetails: {},
     };
 }
