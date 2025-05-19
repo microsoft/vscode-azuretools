@@ -1350,11 +1350,11 @@ export interface ActivityInsights {
     /**
      * Any relevant logs related to the command or activity being run
      */
-    logs?: CommandInsightsLogs[];
+    logs?: ActivityInsightsLogs[];
     /**
      * Any relevant files related to the command or activity being run
      */
-    files?: CommandInsightsFiles[];
+    files?: ActivityInsightsFiles[];
     /**
      * Any Azure resource envelope related to the command or activity being run
      */
@@ -1364,13 +1364,13 @@ export interface ActivityInsights {
     [key: string]: unknown;
 }
 
-export type CommandInsightsLogs = {
+export type ActivityInsightsLogs = {
     name?: string;
     description?: string;
     content?: string;
 };
 
-export type CommandInsightsFiles = {
+export type ActivityInsightsFiles = {
     name?: string;
     path?: string;
     description?: string;
