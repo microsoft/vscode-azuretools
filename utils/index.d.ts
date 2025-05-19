@@ -1333,44 +1333,44 @@ export declare interface ExecuteActivityContext {
     activityChildren?: ActivityChildItemBase[];
 
     /**
-     * Activity context to be shared with Copilot
+     * Additional activity-related insights to be shared with Copilot
      */
-    copilot: CopilotContext;
+    activityInsights: ActivityInsights;
 }
 
-export interface CopilotContext {
+export interface ActivityInsights {
     /**
-     * A description or summary of the activity being run
+     * A description or summary of the command or activity being run
      */
     description?: string;
     /**
-     * A troubleshooting guide that Copilot can reference to help users fix common issues
+     * A troubleshooting guide that can be used for reference to help users fix common issues related to the command or activity being run
      */
     troubleshooting?: string | string[];
     /**
-     * Any relevant logs related to the activity being run
+     * Any relevant logs related to the command or activity being run
      */
-    logs?: CopilotContextLogs[];
+    logs?: CommandInsightsLogs[];
     /**
-     * Any relevant files related to the activity being run
+     * Any relevant files related to the command or activity being run
      */
-    files?: CopilotContextFiles[];
+    files?: CommandInsightsFiles[];
     /**
-     * Any Azure resource envelope related to the activity being run
+     * Any Azure resource envelope related to the command or activity being run
      */
     azureResource?: unknown;
 
-    // For other one-off properties that could be useful to Copilot
+    // For additional one-off properties that may offer valuable insights
     [key: string]: unknown;
 }
 
-export type CopilotContextLogs = {
+export type CommandInsightsLogs = {
     name?: string;
     description?: string;
     content?: string;
 };
 
-export type CopilotContextFiles = {
+export type CommandInsightsFiles = {
     name?: string;
     path?: string;
     description?: string;
