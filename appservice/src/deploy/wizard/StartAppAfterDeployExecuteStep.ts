@@ -11,21 +11,21 @@ export class StartAppAfterDeployExecuteStep extends AzureWizardExecuteStepWithAc
     public priority: number = 900;
     stepName: string = 'StartAppAfterDeployExecuteStep';
     protected getTreeItemLabel(context: InnerDeployContext): string {
-        return l10n.t('Start app "{0}" after deployment', context.site.fullName);
+        return context.site.isSlot ? l10n.t('Start slot "{0}" after deployment', context.site.fullName) : l10n.t('Start app "{0}" after deployment', context.site.fullName);
     }
     protected getOutputLogSuccess(context: InnerDeployContext): string {
-        return l10n.t('Successfully started app "{0}".', context.site.fullName);
+        return context.site.isSlot ? l10n.t('Successfully started slot "{0}".', context.site.fullName) : l10n.t('Successfully started app "{0}".', context.site.fullName);
     }
     protected getOutputLogFail(context: InnerDeployContext): string {
-        return l10n.t('Failed to start app "{0}".', context.site.fullName);
+        return context.site.isSlot ? l10n.t('Failed to start slot "{0}".', context.site.fullName) : l10n.t('Failed to start app "{0}".', context.site.fullName);
     }
     protected getOutputLogProgress(context: InnerDeployContext): string {
-        return l10n.t('Starting app "{0}"...', context.site.fullName);
+        return context.site.isSlot ? l10n.t('Starting slot "{0}"...', context.site.fullName) : l10n.t('Starting app "{0}"...', context.site.fullName);
     }
     public async execute(context: InnerDeployContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         const site = context.site;
 
-        const startingApp = l10n.t('Starting app...');
+        const startingApp = context.site.isSlot ? l10n.t('Starting slot...') : l10n.t('Starting app...');
         progress.report({ message: startingApp });
         const client = await site.createClient(context);
         await client.start();
