@@ -172,10 +172,6 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
     public async execute(): Promise<void> {
         await this.withProgress({ location: ProgressLocation.Notification }, async progress => {
             let currentStep: number = 1;
-            this._context.commandMetadata ??= {};
-            this._context.commandMetadata.outputChannelLogs ??= [];
-            this._context.commandMetadata.promptSteps = this._finishedPromptSteps.map(step => getEffectiveStepId(step));
-
             let steps: AzureWizardExecuteStep<T>[] = this._executeSteps.sort((a, b) => b.priority - a.priority);
 
             const internalProgress: vscode.Progress<{ message?: string; increment?: number }> = {
@@ -241,9 +237,6 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                     }
 
                     currentStep += 1;
-                    this._context.commandMetadata ??= {};
-                    this._context.commandMetadata.executeSteps ??= [];
-                    this._context.commandMetadata.executeSteps.push(getEffectiveStepId(step));
                     step = steps.pop();
                 }
             }
