@@ -102,7 +102,8 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
         }
 
         // a 0 status means the deployment is still ongoing
-        if (deployment.status !== 0) {
+        // a 2 status is also reported and seems to indicate that it is also currently building, but I have been unable to find any actual documentation on it
+        if (deployment.status !== 0 && deployment.status !== 2) {
             if (deployment.status === 3 /* Failed */ || deployment.isTemp) { // If the deployment completed without making it to the "permanent" phase, it must have failed
                 void showErrorMessageWithOutput(l10n.t('Deployment to "{0}" failed.', site.fullName));
                 const messageWithoutName: string = l10n.t('Deployment failed.');
@@ -124,9 +125,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
             context.syncTriggersPostDeploy = site.isFunctionApp &&
                 !/syncing/i.test(fullLog) &&
                 !site.isKubernetesApp &&
-                !site.isWorkflowApp &&
-                context.deployMethod !== 'flexconsumption';
-            // syncing is handled by kudu for flex consumption apps
+                !site.isWorkflowApp;
             return;
         } else {
             await delay(pollingInterval);
