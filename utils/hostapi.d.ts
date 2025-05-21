@@ -5,7 +5,7 @@
 
 import type { AzExtResourceType, AzureSubscription } from '@microsoft/vscode-azureresources-api';
 import type * as vscode from 'vscode';
-import type { AbstractAzExtTreeItem, ActivityChildItemBase, AzExtParentTreeItem, AzExtTreeDataProvider, AzExtTreeItem, IAzureQuickPickOptions, ISubscriptionContext, ITreeItemPickerContext, ResourceGroupsItem, SealedAzExtTreeItem } from './index'; // This must remain `import type` or else a circular reference will result
+import type { AbstractAzExtTreeItem, ActivityChildItemBase, ActivityDetails, AzExtParentTreeItem, AzExtTreeDataProvider, AzExtTreeItem, IAzureQuickPickOptions, ISubscriptionContext, ITreeItemPickerContext, ResourceGroupsItem, SealedAzExtTreeItem } from './index'; // This must remain `import type` or else a circular reference will result
 
 /**
  * The API implemented by the Azure Resource Groups host extension
@@ -274,6 +274,11 @@ export interface Activity {
      * A date representing the time when the activity finished.
      */
     endTime?: Date;
+
+    /**
+     * Activity / Command details to be shared with Copilot
+     */
+    details?: ActivityDetails;
 
     /**
      * If the activity supports cancellation, provide this `CancellationTokenSource`. The Activity Log will add a cancel button that will trigger this CTS.

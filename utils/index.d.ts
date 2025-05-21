@@ -1331,6 +1331,50 @@ export declare interface ExecuteActivityContext {
      * Children to show under the activity tree item.
      */
     activityChildren?: ActivityChildItemBase[];
+
+    /**
+     * Activity / Command details to be shared with Copilot
+     */
+    activityDetails: ActivityDetails;
+}
+
+export interface ActivityDetails {
+    /**
+     * A description or summary of the command or activity being run
+     */
+    description?: string;
+    /**
+     * A troubleshooting guide that can be used for reference to help users fix common issues related to the command or activity being run
+     */
+    troubleshooting?: string | string[];
+    /**
+     * Any relevant logs related to the command or activity being run
+     */
+    logs?: ActivityDetailsLogs[];
+    /**
+     * Any relevant files related to the command or activity being run
+     */
+    files?: ActivityDetailsFiles[];
+    /**
+     * Any Azure resource envelope related to the command or activity being run
+     */
+    azureResource?: unknown;
+
+    // For additional one-off properties that may offer valuable insights
+    [key: string]: unknown;
+}
+
+export type ActivityDetailsLogs = {
+    name?: string;
+    description?: string;
+    content?: string;
+};
+
+export type ActivityDetailsFiles = {
+    name?: string;
+    path?: string;
+    description?: string;
+    content?: string;
 }
 
 export interface ExecuteActivityOutput {
