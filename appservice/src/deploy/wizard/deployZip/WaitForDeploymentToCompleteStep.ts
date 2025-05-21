@@ -19,7 +19,7 @@ export class WaitForDeploymentToCompleteStep extends AzureWizardExecuteStep<Inne
     };
     private _childId: string = uuidv4(); // create child id in class to make it idempotent
     public createSuccessOutput(context: InnerDeployContext): ExecuteActivityOutput {
-        const label = l10n.t('Build app "{0}" in Azure', context.site.fullName);
+        const label = context.site.isSlot ? l10n.t('Build slot "{0}" in Azure', context.site.fullName) : l10n.t('Build app "{0}" in Azure', context.site.fullName);
         return {
             item: new ActivityChildItem({
                 contextValue: createContextValue([activitySuccessContext, context.site.id]),
@@ -31,7 +31,7 @@ export class WaitForDeploymentToCompleteStep extends AzureWizardExecuteStep<Inne
         };
     }
     public createProgressOutput(context: InnerDeployContext): ExecuteActivityOutput {
-        const label = l10n.t('Build app "{0}" in Azure', context.site.fullName);
+        const label = context.site.isSlot ? l10n.t('Build slot "{0}" in Azure', context.site.fullName) : l10n.t('Build app "{0}" in Azure', context.site.fullName);
         const item = new ActivityChildItem({
             contextValue: createContextValue([activityProgressContext, context.site.id]),
             label,
@@ -59,7 +59,7 @@ export class WaitForDeploymentToCompleteStep extends AzureWizardExecuteStep<Inne
         };
     }
     public createFailOutput(context: InnerDeployContext): ExecuteActivityOutput {
-        const label = l10n.t('Build app "{0}" in Azure', context.site.fullName);
+        const label = context.site.isSlot ? l10n.t('Build slot "{0}" in Azure', context.site.fullName) : l10n.t('Build app "{0}" in Azure', context.site.fullName);
         const item = new ActivityChildItem({
             contextValue: createContextValue([activityFailContext, context.site.id]),
             label,
