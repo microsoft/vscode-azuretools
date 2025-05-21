@@ -150,7 +150,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
 }
 
 export function isSettingConnectionString(key: string, value: string): boolean {
-    if (!value || value === 'UseDevelopmentStorage=true' || key === 'DEPLOYMENT_STORAGE_CONNECTION_STRING') {
+    if (!value || value === 'UseDevelopmentStorage=true' || key === 'DEPLOYMENT_STORAGE_CONNECTION_STRING' || key === 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING') {
         return false;
     }
 
