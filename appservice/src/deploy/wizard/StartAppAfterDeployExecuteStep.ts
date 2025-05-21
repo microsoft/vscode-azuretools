@@ -11,7 +11,7 @@ export class StartAppAfterDeployExecuteStep extends AzureWizardExecuteStepWithAc
     public priority: number = 900;
     stepName: string = 'StartAppAfterDeployExecuteStep';
     protected getTreeItemLabel(context: InnerDeployContext): string {
-        return context.site.isSlot ? l10n.t('Start slot "{0}" before deployment', context.site.fullName) : l10n.t('Start app "{0}" after deployment', context.site.fullName);
+        return context.site.isSlot ? l10n.t('Start slot "{0}" after deployment', context.site.fullName) : l10n.t('Start app "{0}" after deployment', context.site.fullName);
     }
     protected getOutputLogSuccess(context: InnerDeployContext): string {
         return context.site.isSlot ? l10n.t('Successfully started slot "{0}".', context.site.fullName) : l10n.t('Successfully started app "{0}".', context.site.fullName);
