@@ -668,6 +668,9 @@ export declare function isUserCancelledError(error: unknown): error is UserCance
 export declare class NoResourceFoundError extends Error {
     constructor(context?: ITreeItemPickerContext);
 }
+export class GoBackError extends Error {
+    constructor(numberOfStepsToGoBack?: number);
+}
 
 export type CommandCallback = (context: IActionContext, ...args: any[]) => any;
 
@@ -1290,6 +1293,13 @@ export declare class AzureWizard<T extends IActionContext & Partial<ExecuteActiv
      * @param options Options describing this wizard
      */
     public constructor(wizardContext: T, options: IWizardOptions<T>);
+    /**
+     * An array of objects with three properties
+     *      name: property which is  displayable name of the step
+     *      value: The label of the chosen value for the step
+     *      valueInContext: The name which can be used to access the value in the wizard context
+     */
+    public confirmationViewProperties: { name: string, value: string, valueInContext: string; }[];
 
     public prompt(): Promise<void>;
     public execute(): Promise<void>;
@@ -1364,19 +1374,14 @@ export declare abstract class AzureWizardExecuteStepWithActivityOutput<T extends
     protected abstract getTreeItemLabel(context: T): string;
     /**
      * Abstract method to get the success string for the output log.
-     * Will be called once upon a successful run.
-     * Only gets run if `shouldExecute` returns `true`.
      */
     protected abstract getOutputLogSuccess(context: T): string;
     /**
      * Abstract method to get the fail string for the output log.
-     * Will be called once upon a failed run.
-     * Only gets run if `shouldExecute` returns `true`.
      */
     protected abstract getOutputLogFail(context: T): string;
     /**
      * Optional method to get the progress string for the output log.
-     * Only gets run if `shouldExecute` returns `true`.
      */
     protected getOutputLogProgress?(context: T): string;
 
@@ -1495,6 +1500,19 @@ export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
      * This method will be called before `shouldPrompt`
      */
     public configureBeforePrompt?(wizardContext: T): void | Promise<void>;
+
+    /**
+     * Can be optionally added to a step to add properties which will be populated in the confirmation web view
+     * @returns An object with three properties
+     *      name: property which is  displayable name of the step
+     *      value: The label of the chosen value for the step
+     *      valueInContext: The name which can be used to access the value in the wizard context
+     */
+    public confirmationViewProperty?(wizardContext: T): {
+        name: string;
+        value: string;
+        valueInContext: string;
+    };
 
     /**
      * Return true if this step should prompt based on the current state of the wizardContext
