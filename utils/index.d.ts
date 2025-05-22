@@ -668,6 +668,9 @@ export declare function isUserCancelledError(error: unknown): error is UserCance
 export declare class NoResourceFoundError extends Error {
     constructor(context?: ITreeItemPickerContext);
 }
+export class GoBackError extends Error {
+    constructor(numberOfStepsToGoBack?: number);
+}
 
 export type CommandCallback = (context: IActionContext, ...args: any[]) => any;
 
@@ -1290,6 +1293,13 @@ export declare class AzureWizard<T extends IActionContext & Partial<ExecuteActiv
      * @param options Options describing this wizard
      */
     public constructor(wizardContext: T, options: IWizardOptions<T>);
+    /**
+     * An array of objects with three properties
+     *      name: The displayable name of the step
+     *      value: The label of the chosen value for the step
+     *      valueInContext: The name which can be used to access the value in the wizard context
+     */
+    public confirmationViewProperties: { name: string, value: string, valueInContext: string; }[];
 
     public prompt(): Promise<void>;
     public execute(): Promise<void>;
@@ -1495,6 +1505,19 @@ export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
      * This method will be called before `shouldPrompt`
      */
     public configureBeforePrompt?(wizardContext: T): void | Promise<void>;
+
+    /**
+     * Can be optionally added to a step so the properties can be populated in the confirmation web view
+     * @returns An object with three properties
+     *      name: A displayable name of the step
+     *      value: The label of the chosen value for the step
+     *      valueInContext: The name which can be used to access the value in the wizard context
+     */
+    public confirmationViewProperty?(wizardContext: T): {
+        name: string;
+        value: string;
+        valueInContext: string;
+    };
 
     /**
      * Return true if this step should prompt based on the current state of the wizardContext
