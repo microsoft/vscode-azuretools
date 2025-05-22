@@ -1295,7 +1295,7 @@ export declare class AzureWizard<T extends IActionContext & Partial<ExecuteActiv
     public constructor(wizardContext: T, options: IWizardOptions<T>);
     /**
      * An array of objects with three properties
-     *      name: property which is  displayable name of the step
+     *      name: The displayable name of the step
      *      value: The label of the chosen value for the step
      *      valueInContext: The name which can be used to access the value in the wizard context
      */
@@ -1502,9 +1502,9 @@ export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
     public configureBeforePrompt?(wizardContext: T): void | Promise<void>;
 
     /**
-     * Can be optionally added to a step to add properties which will be populated in the confirmation web view
+     * Can be optionally added to a step so the properties can be populated in the confirmation web view
      * @returns An object with three properties
-     *      name: property which is  displayable name of the step
+     *      name: A displayable name of the step
      *      value: The label of the chosen value for the step
      *      valueInContext: The name which can be used to access the value in the wizard context
      */
