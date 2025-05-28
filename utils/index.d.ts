@@ -1335,10 +1335,10 @@ export declare interface ExecuteActivityContext {
     /**
      * Activity / Command details to be shared with Copilot
      */
-    activityDetails: ActivityDetails;
+    activityAttributes: ActivityAttributes;
 }
 
-export interface ActivityDetails {
+export interface ActivityAttributes {
     /**
      * A description or summary of the command or activity being run
      */
@@ -1350,11 +1350,11 @@ export interface ActivityDetails {
     /**
      * Any relevant logs related to the command or activity being run
      */
-    logs?: ActivityDetailsLogs[];
+    logs?: LogActivityAttributes[];
     /**
      * Any relevant files related to the command or activity being run
      */
-    files?: ActivityDetailsFiles[];
+    files?: FileActivityAttributes[];
     /**
      * Any Azure resource envelope related to the command or activity being run
      */
@@ -1364,13 +1364,13 @@ export interface ActivityDetails {
     [key: string]: unknown;
 }
 
-export type ActivityDetailsLogs = {
+export type LogActivityAttributes = {
     name?: string;
     description?: string;
     content?: string;
 };
 
-export type ActivityDetailsFiles = {
+export type FileActivityAttributes = {
     name?: string;
     path?: string;
     description?: string;
