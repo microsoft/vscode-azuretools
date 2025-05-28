@@ -52,7 +52,7 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
     abstract progressState(): hTypes.ActivityTreeItemOptions;
     abstract errorState(error?: types.IParsedError): hTypes.ActivityTreeItemOptions;
 
-    public get details(): types.ActivityAttributes | undefined {
+    public get attributes(): types.ActivityAttributes | undefined {
         return this._attributes;
     }
 
