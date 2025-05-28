@@ -276,7 +276,7 @@ export interface Activity {
     endTime?: Date;
 
     /**
-     * Activity / Command details to be shared with Copilot
+     * Activity / Command attributes to be shared with Copilot
      */
     attributes?: ActivityAttributes;
 
