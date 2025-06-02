@@ -1321,12 +1321,14 @@ export declare interface ExecuteActivityContext {
      * Hide activity notifications
      */
     suppressNotification?: boolean;
-
+    /**
+     * Don't show custom progress report messages emitted from steps
+     */
+    suppressProgress?: boolean;
     /**
      * The activity implementation to use, defaults to ExecuteActivity
      */
     wizardActivity?: new <TContext extends ExecuteActivityContext>(context: TContext, task: ActivityTask<void>) => ExecuteActivity;
-
     /**
      * Children to show under the activity tree item.
      */

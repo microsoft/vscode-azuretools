@@ -27,7 +27,7 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
     protected override report(progress?: { message?: string; increment?: number }): void {
         // If an activity has children, only show a timer as the description since we can offload the responsibility of showing what's happening to the activity children.
         // If no children, default to showing any progress report messages to indicate to the user what is happening.
-        const message: string | undefined = this.context.activityChildren ? this.timerMessage : progress?.message;
+        const message: string | undefined = this.context.suppressProgress || this.context.activityChildren ? this.timerMessage : progress?.message;
         this._onProgressEmitter.fire({ ...this.getState(), message });
         this.status = ActivityStatus.Running;
     }
