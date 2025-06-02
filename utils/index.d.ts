@@ -1322,7 +1322,7 @@ export declare interface ExecuteActivityContext {
      */
     suppressNotification?: boolean;
     /**
-     * Don't show custom progress report messages emitted from steps
+     * Hide the progress report messages emitted from execute steps
      */
     suppressProgress?: boolean;
     /**
