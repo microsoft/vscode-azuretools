@@ -41,6 +41,7 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
     public readonly task: types.ActivityTask<R>;
     public readonly id: string;
     public readonly cancellationTokenSource: CancellationTokenSource = new CancellationTokenSource();
+    public readonly hasChildren?: boolean;
 
     abstract initialState(): hTypes.ActivityTreeItemOptions;
     abstract successState(): hTypes.ActivityTreeItemOptions;
@@ -55,9 +56,10 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
         return this._endTime;
     }
 
-    public constructor(task: types.ActivityTask<R>) {
+    public constructor(task: types.ActivityTask<R>, hasChildren?: boolean) {
         this.id = uuidv4();
         this.task = task;
+        this.hasChildren = hasChildren;
 
         this.onStart = this._onStartEmitter.event;
         this.onProgress = this._onProgressEmitter.event;

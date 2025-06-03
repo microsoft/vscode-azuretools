@@ -276,6 +276,11 @@ export interface Activity {
     endTime?: Date;
 
     /**
+     * A boolean representing whether or not the activity will include activity children
+     */
+    hasChildren?: boolean;
+
+    /**
      * If the activity supports cancellation, provide this `CancellationTokenSource`. The Activity Log will add a cancel button that will trigger this CTS.
      */
     cancellationTokenSource?: vscode.CancellationTokenSource;
