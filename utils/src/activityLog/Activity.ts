@@ -60,10 +60,10 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
         return this._endTime;
     }
 
-    public constructor(task: types.ActivityTask<R>, options: ActivityBaseOptions = {}) {
+    public constructor(task: types.ActivityTask<R>, options?: ActivityBaseOptions) {
         this.id = uuidv4();
         this.task = task;
-        this.hasChildren = options.hasChildren;
+        this.hasChildren = options?.hasChildren;
 
         this.onStart = this._onStartEmitter.event;
         this.onProgress = this._onProgressEmitter.event;
