@@ -276,7 +276,7 @@ export interface Activity {
     endTime?: Date;
 
     /**
-     * A boolean representing whether or not the activity will include activity children
+     * A boolean representing whether or not the activity will provide activity children for display
      */
     hasChildren?: boolean;
 
