@@ -1318,6 +1318,10 @@ export declare interface ExecuteActivityContext {
      */
     activityResult?: AppResource | string;
     /**
+     * Set to `true` to automatically attach a reveal output log item to the end of the activity children array
+     */
+    showOutputLogItem?: boolean;
+    /**
      * Hide activity notifications
      */
     suppressNotification?: boolean;

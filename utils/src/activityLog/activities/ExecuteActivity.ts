@@ -5,11 +5,13 @@
 
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from 'vscode';
+import { l10n, ThemeIcon } from "vscode";
 import * as hTypes from '../../../hostapi';
 import * as types from '../../../index';
 import { activityErrorContext, activityFailContext, activityFailIcon } from '../../constants';
 import { ResourceGroupsItem } from '../../pickTreeItem/quickPickAzureResource/tempTypes';
 import { ActivityChildItem, ActivityChildType } from '../../tree/v2/ActivityChildItem';
+import { createContextValue } from "../../utils/contextUtils";
 import { ActivityBase, ActivityStatus } from "../Activity";
 
 export class ExecuteActivity<TContext extends types.ExecuteActivityContext = types.ExecuteActivityContext> extends ActivityBase<void> {
@@ -32,6 +34,18 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
         this.status = ActivityStatus.Running;
     }
 
+    private _outputLogItem = new ActivityChildItem({
+        id: uuidv4(),
+        contextValue: createContextValue(['executeActivityItem', 'viewOutputChannel']),
+        activityType: ActivityChildType.Command,
+        label: l10n.t('Click to view output channel'),
+        iconPath: new ThemeIcon('output'),
+        command: {
+            title: '',
+            command: 'ext.prefix' + '.showOutputChannel'
+        },
+    });
+
     private _successItemId: string = uuidv4();
     public successState(): hTypes.ActivityTreeItemOptions {
         const activityResult = this.context.activityResult;
@@ -39,24 +53,24 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
         return {
             label: this.label,
             getChildren: activityResult || this.context.activityChildren ? ((_parent: ResourceGroupsItem) => {
+                const revealResourceItem = new ActivityChildItem({
+                    id: this._successItemId,
+                    contextValue: 'executeResult',
+                    label: vscode.l10n.t("Click to view resource"),
+                    activityType: ActivityChildType.Command,
+                    command: {
+                        title: '',
+                        command: 'azureResourceGroups.revealResource',
+                        arguments: [resourceId],
+                    },
+                });
 
-                if (this.context.activityChildren) {
-                    return this.context.activityChildren;
+                const activityChildren: types.ActivityChildItemBase[] = this.context.activityChildren?.slice() ?? [revealResourceItem];
+                if (this.context.showOutputLogItem) {
+                    activityChildren.push(this._outputLogItem);
                 }
 
-                return [
-                    new ActivityChildItem({
-                        id: this._successItemId,
-                        contextValue: 'executeResult',
-                        label: vscode.l10n.t("Click to view resource"),
-                        activityType: ActivityChildType.Command,
-                        command: {
-                            title: '',
-                            command: 'azureResourceGroups.revealResource',
-                            arguments: [resourceId],
-                        },
-                    }),
-                ];
+                return activityChildren;
 
             }) : undefined
         }
@@ -74,14 +88,20 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
                     activityType: ActivityChildType.Error,
                 };
 
+                const activityChildren: types.ActivityChildItemBase[] = [];
                 if (this.context.activityChildren) {
-                    // Operate on a copied array to ensure the operation remains idempotent
-                    const activityChildren: types.ActivityChildItemBase[] = this.context.activityChildren.slice();
+                    // If there are existing activity children, see if we can attach the error item to an activity fail child
+                    activityChildren.push(...this.context.activityChildren);
                     this.appendErrorItemToActivityChildren(activityChildren, errorItemOptions);
-                    return activityChildren;
+                } else {
+                    activityChildren.push(new ActivityChildItem(errorItemOptions));
                 }
 
-                return [new ActivityChildItem(errorItemOptions)];
+                if (this.context.showOutputLogItem) {
+                    activityChildren.push(this._outputLogItem);
+                }
+
+                return activityChildren;
             }
         }
     }
