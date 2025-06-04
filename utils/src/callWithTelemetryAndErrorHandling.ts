@@ -123,8 +123,6 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
         }
 
         const errorData: types.IParsedError = parseError(errorContext.error);
-        const unMaskedMessage: string = errorData.message;
-        errorData.message = maskUserInfo(errorData.message, context.valuesToMask);
 
         if (errorData.stepName) {
             context.telemetry.properties.lastStep = errorData.stepName;
@@ -168,14 +166,14 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
 
         if (!context.errorHandling.suppressDisplay) {
             // Always append the error to the output channel, but only 'show' the output channel for multiline errors
-            ext.outputChannel.appendLog(l10n.t('Error: {0}', unMaskedMessage));
+            ext.outputChannel.appendLog(l10n.t('Error: {0}', errorData.message));
 
-            let message: string;
-            if (unMaskedMessage.includes('\n')) {
+            let notificationMessage: string;
+            if (errorData.message.includes('\n')) {
                 ext.outputChannel.show();
-                message = l10n.t('An error has occurred. Check output window for more details.');
+                notificationMessage = l10n.t('An error has occurred. Check output window for more details.');
             } else {
-                message = unMaskedMessage;
+                notificationMessage = errorData.message;
             }
 
             const items: MessageItem[] = [];
@@ -188,7 +186,7 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
             }
 
             // don't wait
-            void window.showErrorMessage(message, ...items).then(async (result: MessageItem | types.AzExtErrorButton | undefined) => {
+            void window.showErrorMessage(notificationMessage, ...items).then(async (result: MessageItem | types.AzExtErrorButton | undefined) => {
                 if (result === DialogResponses.reportAnIssue) {
                     await reportAnIssue(issue);
                 } else if (result && 'callback' in result) {
