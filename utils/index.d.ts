@@ -1599,6 +1599,7 @@ export declare function createExperimentationService(ctx: ExtensionContext, targ
 export interface UIExtensionVariables {
     context: ExtensionContext;
     outputChannel: IAzExtOutputChannel;
+    prefix?: string;
 
     /**
      * Set to true if not running under a webpacked 'dist' folder as defined in '@microsoft/vscode-azext-dev'

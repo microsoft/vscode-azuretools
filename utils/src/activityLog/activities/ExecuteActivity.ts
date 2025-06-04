@@ -9,6 +9,7 @@ import { l10n, ThemeIcon } from "vscode";
 import * as hTypes from '../../../hostapi';
 import * as types from '../../../index';
 import { activityErrorContext, activityFailContext, activityFailIcon } from '../../constants';
+import { ext } from "../../extensionVariables";
 import { ResourceGroupsItem } from '../../pickTreeItem/quickPickAzureResource/tempTypes';
 import { ActivityChildItem, ActivityChildType } from '../../tree/v2/ActivityChildItem';
 import { createContextValue } from "../../utils/contextUtils";
@@ -42,7 +43,7 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
         iconPath: new ThemeIcon('output'),
         command: {
             title: '',
-            command: 'ext.prefix' + '.showOutputChannel'
+            command: `${ext.prefix}.showOutputChannel`,
         },
     });
 

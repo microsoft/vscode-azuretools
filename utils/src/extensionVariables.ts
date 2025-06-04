@@ -28,6 +28,10 @@ class UninitializedExtensionVariables implements types.UIExtensionVariables {
     public get _internalReporter(): IInternalTelemetryReporter {
         throw this._error;
     }
+
+    public get prefix(): string {
+        throw this._error;
+    }
 }
 
 /**
