@@ -1294,12 +1294,9 @@ export declare class AzureWizard<T extends IActionContext & Partial<ExecuteActiv
      */
     public constructor(wizardContext: T, options: IWizardOptions<T>);
     /**
-     * An array of objects with three properties
-     *      name: The displayable name of the step
-     *      value: The label of the chosen value for the step
-     *      valueInContext: The name which can be used to access the value in the wizard context
+     * An array of ConfirmationViewProperty's. This array is populated by the prompt steps and then displayed in the confirmation view
      */
-    public confirmationViewProperties: { name: string, value: string, valueInContext: string; }[];
+    public confirmationViewProperties: ConfirmationViewProperty[];
 
     public prompt(): Promise<void>;
     public execute(): Promise<void>;
@@ -1507,23 +1504,26 @@ export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
     public configureBeforePrompt?(wizardContext: T): void | Promise<void>;
 
     /**
-     * Can be optionally added to a step so the properties can be populated in the confirmation web view
-     * @returns An object with three properties
-     *      name: A displayable name of the step
-     *      value: The label of the chosen value for the step
-     *      valueInContext: The name which can be used to access the value in the wizard context
+     * Can be optionally added to a prompt step so the step info can be populated in the confirmation web view
      */
-    public confirmationViewProperty?(wizardContext: T): {
-        name: string;
-        value: string;
-        valueInContext: string;
-    };
+    public confirmationViewProperty?(wizardContext: T): ConfirmationViewProperty;
 
     /**
      * Return true if this step should prompt based on the current state of the wizardContext
      * Used to prevent duplicate prompts from sub wizards, unnecessary prompts for values that had a default, and to accurately describe the number of steps
      */
     public abstract shouldPrompt(wizardContext: T): boolean;
+}
+
+/**
+ * name: A displayable name of the step
+ * value: A displayable value chosen by the user (The label of the chosen value for the step)
+ * valueInContext: The name which can be used to access the value in the wizard context
+ */
+export type ConfirmationViewProperty = {
+    name: string;
+    value: string;
+    valueInContext: string;
 }
 
 export type ISubscriptionActionContext = ISubscriptionContext & IActionContext;

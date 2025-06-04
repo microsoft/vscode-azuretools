@@ -27,7 +27,7 @@ export enum ActivityOutputType {
 
 export class AzureWizard<T extends (IInternalActionContext & Partial<types.ExecuteActivityContext>)> implements types.AzureWizard<T>, IInternalAzureWizard {
     public title: string | undefined;
-    public confirmationViewProperties: { name: string, value: string, valueInContext: string; }[] = [];
+    public confirmationViewProperties: types.ConfirmationViewProperty[] = [];
     private readonly _promptSteps: AzureWizardPromptStep<T>[];
     private readonly _executeSteps: AzureWizardExecuteStep<T>[];
     private readonly _finishedPromptSteps: AzureWizardPromptStep<T>[] = [];
