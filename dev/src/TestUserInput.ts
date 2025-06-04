@@ -10,7 +10,7 @@ import * as types from '../index';
 export enum TestInput {
     UseDefaultValue,
     BackButton,
-    BackButtonWithNumberOfSteps
+    BackThreeSteps
 }
 
 class GoBackError extends Error {
@@ -66,7 +66,7 @@ export class TestUserInput implements types.TestUserInput {
             throw new Error(`No more inputs left for call to showQuickPick. Placeholder: '${options.placeHolder}'`);
         } else if (input === TestInput.BackButton) {
             throw new GoBackError();
-        } else if (input === TestInput.BackButtonWithNumberOfSteps) {
+        } else if (input === TestInput.BackThreeSteps) {
             throw new GoBackError(3);
         } else {
             if (resolvedItems.length === 0) {
