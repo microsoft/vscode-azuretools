@@ -18,6 +18,10 @@ export enum ActivityStatus {
     Cancelled = 'Cancelled',
 }
 
+type ActivityBaseOptions = {
+    hasChildren?: boolean;
+};
+
 export abstract class ActivityBase<R> implements hTypes.Activity {
 
     public readonly onStart: typeof this._onStartEmitter.event;
@@ -41,6 +45,7 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
     public readonly task: types.ActivityTask<R>;
     public readonly id: string;
     public readonly cancellationTokenSource: CancellationTokenSource = new CancellationTokenSource();
+    public readonly hasChildren?: boolean;
 
     abstract initialState(): hTypes.ActivityTreeItemOptions;
     abstract successState(): hTypes.ActivityTreeItemOptions;
@@ -55,9 +60,10 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
         return this._endTime;
     }
 
-    public constructor(task: types.ActivityTask<R>) {
+    public constructor(task: types.ActivityTask<R>, options?: ActivityBaseOptions) {
         this.id = uuidv4();
         this.task = task;
+        this.hasChildren = options?.hasChildren;
 
         this.onStart = this._onStartEmitter.event;
         this.onProgress = this._onProgressEmitter.event;
