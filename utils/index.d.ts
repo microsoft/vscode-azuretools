@@ -1527,7 +1527,7 @@ export type ConfirmationViewProperty = {
     /**
      * The name which can be used to access the value in the wizard context
      */
-    valueInContext: string;
+    contextPropertyName: string;
 }
 
 export type ISubscriptionActionContext = ISubscriptionContext & IActionContext;
