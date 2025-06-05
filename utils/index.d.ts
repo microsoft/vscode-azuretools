@@ -1515,14 +1515,18 @@ export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
     public abstract shouldPrompt(wizardContext: T): boolean;
 }
 
-/**
- * name: A displayable name of the step
- * value: A displayable value chosen by the user (The label of the chosen value for the step)
- * valueInContext: The name which can be used to access the value in the wizard context
- */
 export type ConfirmationViewProperty = {
+    /**
+     *  A displayable name of the step
+     */
     name: string;
+    /**
+     * A displayable value chosen by the user (The label of the chosen value for the step)
+     */
     value: string;
+    /**
+     * The name which can be used to access the value in the wizard context
+     */
     valueInContext: string;
 }
 
