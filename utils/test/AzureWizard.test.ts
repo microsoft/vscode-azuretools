@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { TestInput, TestUserInput } from '@microsoft/vscode-azext-dev';
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { TestInput, TestUserInput } from '@microsoft/vscode-azext-dev';
 import * as types from '../index';
 import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep } from '../src';
 
@@ -651,6 +651,17 @@ suite("AzureWizard tests", () => {
             },
             ['Pick 1', 'Pick 1', 'Pick 1', TestInput.BackButton, TestInput.BackButton, TestInput.BackButton, 'Pick 3', 'Pick 1'],
             { quickPick1: 'Pick 3', quickPick2: 'Pick 1', execute1: 'executeValue1', subQuickPick1: undefined, subQuickPick2: undefined }
+        );
+    });
+
+    test("Throw GoBackError a specific number of times to go back multiple steps", async () => {
+        await validateWizard(
+            {
+                promptSteps: [new QuickPickStep1(), new QuickPickStep2(), new InputBoxStep1(), new SubQuickPickStep1()],
+                executeSteps: [new ExecuteStep1()]
+            },
+            ['Pick 1', 'Pick 1', 'testValue', TestInput.BackThreeSteps, 'Pick 1', 'Pick 2', 'testValue2', 'Pick 3'],
+            { quickPick1: 'Pick 1', quickPick2: 'Pick 2', inputBox1: 'testValue2', subQuickPick1: 'Pick 3', execute1: 'executeValue1' }
         );
     });
 });
