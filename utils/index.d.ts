@@ -1344,7 +1344,7 @@ export interface ActivityAttributes {
      */
     description?: string;
     /**
-     * A troubleshooting guide that can be used for reference to help users fix common issues related to the command or activity being run
+     * A troubleshooting guide that can be used for reference by Copilot to help users fix issues
      */
     troubleshooting?: string | string[];
     /**
@@ -1360,7 +1360,7 @@ export interface ActivityAttributes {
      */
     azureResource?: unknown;
 
-    // For additional one-off properties that may offer valuable insights
+    // For additional one-off properties that could be useful for Copilot
     [key: string]: unknown;
 }
 
