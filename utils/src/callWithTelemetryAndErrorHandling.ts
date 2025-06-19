@@ -122,21 +122,23 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
             }
         }
 
-        const errorData: types.IParsedError = parseError(errorContext.error);
-        const unMaskedMessage: string = errorData.message;
-        errorData.message = maskUserInfo(errorData.message, context.valuesToMask);
+        // The original error data
+        const unMaskedErrorData: types.IParsedError = parseError(errorContext.error);
 
-        if (errorData.stepName) {
-            context.telemetry.properties.lastStep = errorData.stepName;
+        // A copy of the error data after masking private user information as much as possible
+        const maskedErrorMessage = maskUserInfo(unMaskedErrorData.message, context.valuesToMask);
+
+        if (unMaskedErrorData.stepName) {
+            context.telemetry.properties.lastStep = unMaskedErrorData.stepName;
         }
 
-        if (errorData.isUserCancelledError) {
+        if (unMaskedErrorData.isUserCancelledError) {
             context.telemetry.properties.result = 'Canceled';
             context.errorHandling.suppressDisplay = true;
             context.errorHandling.rethrow = false;
         } else {
             context.telemetry.properties.result = 'Failed';
-            context.telemetry.properties.error = errorData.errorType;
+            context.telemetry.properties.error = unMaskedErrorData.errorType;
 
             /**
              * @param errorMessage
@@ -146,10 +148,10 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
              * @param errorMessageV2
              * A duplicate replacement of the `errorMessage` telemetry property which should be used instead.
              */
-            context.telemetry.properties.errorMessage = errorData.message;
-            context.telemetry.properties.errorMessageV2 = errorData.message;
+            context.telemetry.properties.errorMessage = maskedErrorMessage;
+            context.telemetry.properties.errorMessageV2 = maskedErrorMessage;
 
-            context.telemetry.properties.stack = errorData.stack ? limitLines(errorData.stack, maxStackLines) : undefined;
+            context.telemetry.properties.stack = unMaskedErrorData.stack ? limitLines(unMaskedErrorData.stack, maxStackLines) : undefined;
             if (context.telemetry.suppressIfSuccessful || context.telemetry.suppressAll) {
                 context.telemetry.properties.suppressTelemetry = 'true';
             }
@@ -157,7 +159,7 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
 
         const issue: IReportableIssue = {
             callbackId: errorContext.callbackId,
-            error: errorData,
+            error: unMaskedErrorData,
             issueProperties: context.errorHandling.issueProperties,
             time: Date.now()
         };
@@ -168,14 +170,14 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
 
         if (!context.errorHandling.suppressDisplay) {
             // Always append the error to the output channel, but only 'show' the output channel for multiline errors
-            ext.outputChannel.appendLog(l10n.t('Error: {0}', unMaskedMessage));
+            ext.outputChannel.appendLog(l10n.t('Error: {0}', unMaskedErrorData.message));
 
-            let message: string;
-            if (unMaskedMessage.includes('\n')) {
+            let notificationMessage: string;
+            if (unMaskedErrorData.message.includes('\n')) {
                 ext.outputChannel.show();
-                message = l10n.t('An error has occurred. Check output window for more details.');
+                notificationMessage = l10n.t('An error has occurred. Check output window for more details.');
             } else {
-                message = unMaskedMessage;
+                notificationMessage = unMaskedErrorData.message;
             }
 
             const items: MessageItem[] = [];
@@ -188,7 +190,7 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
             }
 
             // don't wait
-            void window.showErrorMessage(message, ...items).then(async (result: MessageItem | types.AzExtErrorButton | undefined) => {
+            void window.showErrorMessage(notificationMessage, ...items).then(async (result: MessageItem | types.AzExtErrorButton | undefined) => {
                 if (result === DialogResponses.reportAnIssue) {
                     await reportAnIssue(issue);
                 } else if (result && 'callback' in result) {

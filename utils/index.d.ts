@@ -668,6 +668,9 @@ export declare function isUserCancelledError(error: unknown): error is UserCance
 export declare class NoResourceFoundError extends Error {
     constructor(context?: ITreeItemPickerContext);
 }
+export class GoBackError extends Error {
+    constructor(numberOfStepsToGoBack?: number);
+}
 
 export type CommandCallback = (context: IActionContext, ...args: any[]) => any;
 
@@ -1290,6 +1293,10 @@ export declare class AzureWizard<T extends IActionContext & Partial<ExecuteActiv
      * @param options Options describing this wizard
      */
     public constructor(wizardContext: T, options: IWizardOptions<T>);
+    /**
+     * An array of ConfirmationViewProperty's. This array is populated by the prompt steps and then displayed in the confirmation view
+     */
+    public confirmationViewProperties: ConfirmationViewProperty[];
 
     public prompt(): Promise<void>;
     public execute(): Promise<void>;
@@ -1321,12 +1328,14 @@ export declare interface ExecuteActivityContext {
      * Hide activity notifications
      */
     suppressNotification?: boolean;
-
+    /**
+     * Hide the progress report messages emitted from execute steps
+     */
+    suppressProgress?: boolean;
     /**
      * The activity implementation to use, defaults to ExecuteActivity
      */
     wizardActivity?: new <TContext extends ExecuteActivityContext>(context: TContext, task: ActivityTask<void>) => ExecuteActivity;
-
     /**
      * Children to show under the activity tree item.
      */
@@ -1541,10 +1550,30 @@ export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
     public configureBeforePrompt?(wizardContext: T): void | Promise<void>;
 
     /**
+     * Can be optionally added to a prompt step so the step info can be populated in the confirmation web view
+     */
+    public confirmationViewProperty?(wizardContext: T): ConfirmationViewProperty;
+
+    /**
      * Return true if this step should prompt based on the current state of the wizardContext
      * Used to prevent duplicate prompts from sub wizards, unnecessary prompts for values that had a default, and to accurately describe the number of steps
      */
     public abstract shouldPrompt(wizardContext: T): boolean;
+}
+
+export type ConfirmationViewProperty = {
+    /**
+     *  A displayable name of the step
+     */
+    name: string;
+    /**
+     * A displayable value chosen by the user (The label of the chosen value for the step)
+     */
+    value: string;
+    /**
+     * The name which can be used to access the value in the wizard context
+     */
+    contextPropertyName: string;
 }
 
 export type ISubscriptionActionContext = ISubscriptionContext & IActionContext;

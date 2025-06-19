@@ -9,12 +9,16 @@ import * as types from '../index';
 
 export enum TestInput {
     UseDefaultValue,
-    BackButton
+    BackButton,
+    BackThreeSteps
 }
 
 class GoBackError extends Error {
-    constructor() {
-        super('Go back.');
+    public numberOfStepsToGoBack?: number;
+
+    constructor(numberOfStepsToGoBack?: number) {
+        super(vscodeTypes.l10n.t('Go back.'));
+        this.numberOfStepsToGoBack = numberOfStepsToGoBack;
     }
 }
 
@@ -62,6 +66,8 @@ export class TestUserInput implements types.TestUserInput {
             throw new Error(`No more inputs left for call to showQuickPick. Placeholder: '${options.placeHolder}'`);
         } else if (input === TestInput.BackButton) {
             throw new GoBackError();
+        } else if (input === TestInput.BackThreeSteps) {
+            throw new GoBackError(3);
         } else {
             if (resolvedItems.length === 0) {
                 throw new Error(`No quick pick items found. Placeholder: '${options.placeHolder}'`);

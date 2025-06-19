@@ -202,7 +202,12 @@ export declare enum TestInput {
     /**
      * Simulates the user hitting the back button in an AzureWizard.
      */
-    BackButton
+    BackButton,
+
+    /**
+     * Simulates going back three quickpick steps in an AzureWizard.
+     */
+    BackThreeSteps
 }
 
 export type PromptResult = {

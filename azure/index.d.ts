@@ -295,6 +295,11 @@ export interface IStorageAccountWizardContext extends IResourceGroupWizardContex
     storageAccount?: StorageAccount;
 
     newStorageAccountName?: string;
+    /**
+     * This controls whether the storage account can generate connection strings.
+     * This should be disabled for storage accounts that are using managed identity only.
+     */
+    disableSharedKeyAccess?: boolean;
 }
 
 export declare enum StorageAccountKind {

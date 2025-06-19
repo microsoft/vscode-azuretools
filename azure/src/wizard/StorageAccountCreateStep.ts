@@ -41,6 +41,7 @@ export class StorageAccountCreateStep<T extends types.IStorageAccountWizardConte
                 enableHttpsTrafficOnly: true,
                 allowBlobPublicAccess: false,
                 defaultToOAuthAuthentication: true,
+                allowSharedKeyAccess: !wizardContext.disableSharedKeyAccess,
             }
         );
     }

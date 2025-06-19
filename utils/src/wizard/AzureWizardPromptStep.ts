@@ -22,6 +22,7 @@ export abstract class AzureWizardPromptStep<T extends types.IActionContext> impl
     public undo?(wizardContext: T): void;
 
     public configureBeforePrompt?(wizardContext: T): void | Promise<void>;
+    public confirmationViewProperty?(wizardContext: T): types.ConfirmationViewProperty
     public abstract shouldPrompt(wizardContext: T): boolean;
 
     public reset(): void {

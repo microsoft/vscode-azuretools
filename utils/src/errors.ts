@@ -23,8 +23,11 @@ export function isUserCancelledError(error: unknown): error is UserCancelledErro
 }
 
 export class GoBackError extends Error {
-    constructor() {
+    public numberOfStepsToGoBack?: number;
+
+    constructor(numberOfStepsToGoBack?: number) {
         super(vscode.l10n.t('Go back.'));
+        this.numberOfStepsToGoBack = numberOfStepsToGoBack;
     }
 }
 

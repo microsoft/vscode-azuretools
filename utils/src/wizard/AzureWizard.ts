@@ -27,6 +27,7 @@ export enum ActivityOutputType {
 
 export class AzureWizard<T extends (IInternalActionContext & Partial<types.ExecuteActivityContext>)> implements types.AzureWizard<T>, IInternalAzureWizard {
     public title: string | undefined;
+    public confirmationViewProperties: types.ConfirmationViewProperty[] = [];
     private readonly _promptSteps: AzureWizardPromptStep<T>[];
     private readonly _executeSteps: AzureWizardExecuteStep<T>[];
     private readonly _finishedPromptSteps: AzureWizardPromptStep<T>[] = [];
@@ -135,10 +136,25 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                         this.currentStepId = getEffectiveStepId(step);
                         loadingQuickPick?.show();
                         await step.prompt(this._context);
+                        if (step.confirmationViewProperty) {
+                            this.confirmationViewProperties.push(step.confirmationViewProperty(this._context));
+                        }
                     } catch (err) {
                         const pe: types.IParsedError = parseError(err);
                         if (pe.errorType === 'GoBackError') { // Use `errorType` instead of `instanceof` so that tests can also hit this case
-                            step = this.goBack(step);
+                            const goBackError = err as GoBackError;
+                            if (goBackError.numberOfStepsToGoBack) {
+                                const stepsToGoBack = goBackError.numberOfStepsToGoBack;
+                                for (let i = 0; i < stepsToGoBack; i++) {
+                                    step = this.goBack(step);
+                                    this.confirmationViewProperties.pop();
+                                }
+                            } else {
+                                if (this.confirmationViewProperties.length > 0) {
+                                    this.confirmationViewProperties.pop();
+                                }
+                                step = this.goBack(step);
+                            }
                             continue;
                         } else {
                             throw err;
