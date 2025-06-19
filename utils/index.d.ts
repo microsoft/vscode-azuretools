@@ -1355,7 +1355,7 @@ export interface ActivityAttributes {
     /**
      * A troubleshooting guide that can be used for reference by Copilot to help users fix issues
      */
-    troubleshooting?: string | string[];
+    troubleshooting?: string[];
     /**
      * Any relevant logs related to the command or activity being run
      */
