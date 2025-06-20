@@ -1344,7 +1344,7 @@ export declare interface ExecuteActivityContext {
     /**
      * Activity / Command attributes to be shared with Copilot
      */
-    activityAttributes: ActivityAttributes;
+    activityAttributes?: ActivityAttributes;
 }
 
 export interface ActivityAttributes {
