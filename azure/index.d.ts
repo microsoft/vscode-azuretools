@@ -558,7 +558,6 @@ export function addBasicAuthenticationCredentialsToClient(client: ServiceClient,
  */
 export declare const CommonRoleDefinitions: {
     readonly storageBlobDataContributor: {
-        readonly id: "/subscriptions/9b5c7ccb-9857-4307-843b-8875e83f65e9/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe";
         readonly name: "ba92f5b4-2d11-453d-a403-e96b0029c9fe";
         readonly type: "Microsoft.Authorization/roleDefinitions";
         readonly roleName: "Storage Blob Data Contributor";
