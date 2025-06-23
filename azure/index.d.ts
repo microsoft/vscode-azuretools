@@ -636,7 +636,14 @@ export declare const CommonRoleDefinitions: {
         readonly roleName: "DocumentDB Account Contributor",
         readonly description: "Can manage Azure Cosmos DB accounts.",
         readonly roleType: "BuiltInRole"
-    }
+    },
+    readonly durableTaskDataContributor: {
+        name: "0ad04412-c4d5-4796-b79c-f76d14c8d402",
+        type: "Microsoft.Authorization/roleDefinitions",
+        roleName: "Durable Task Data Contributor",
+        description: "Durable Task role for all data access operations.",
+        roleType: "BuiltInRole"
+    },
 };
 /**
  * Constructs the role id for a given subscription and role name id
