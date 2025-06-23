@@ -33,11 +33,11 @@ interface ILocationWizardContextInternal extends types.ILocationWizardContext {
     _location?: types.AzExtLocation;
 
     /**
-     * The suggested location to auto-select during prompting, if available.
+     * The location to auto-select during prompting, if available.
      * Leverage this rather than `setLocation` when you want to automatically select a location
      * that respects all future resource providers.
      */
-    _suggestedAutoSelectLocation?: types.AzExtLocation;
+    _autoSelectLocation?: types.AzExtLocation;
 
     /**
      * Location list step is intended to be compatible with an {@link IAzureAgentInput}, so we re-type `ui`.
@@ -76,15 +76,15 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
         wizardContext.telemetry.properties.locationType = wizardContext._location?.type;
     }
 
-    public static async setSuggestedAutoSelectLocation<T extends ILocationWizardContextInternal>(wizardContext: T, name: string): Promise<void> {
-        const [allLocationsTask] = this.getInternalVariables(wizardContext);
-        wizardContext._suggestedAutoSelectLocation = (await allLocationsTask).find(l => LocationListStep.locationMatchesName(l, name));
-        wizardContext.telemetry.properties.suggestedAutoSelectLocationType = wizardContext._suggestedAutoSelectLocation?.type;
-    }
-
     public static setLocationSubset<T extends ILocationWizardContextInternal>(wizardContext: T, task: Promise<string[]>, provider: string): void {
         const [, providerLocationsMap] = this.getInternalVariables(wizardContext);
         providerLocationsMap.set(provider.toLowerCase(), task);
+    }
+
+    public static async setAutoSelectLocation<T extends ILocationWizardContextInternal>(wizardContext: T, name: string): Promise<void> {
+        const [allLocationsTask] = this.getInternalVariables(wizardContext);
+        wizardContext._autoSelectLocation = (await allLocationsTask).find(l => LocationListStep.locationMatchesName(l, name));
+        wizardContext.telemetry.properties.autoSelectLocationType = wizardContext._autoSelectLocation?.type;
     }
 
     public static resetLocation<T extends ILocationWizardContextInternal>(wizardContext: T): void {
@@ -92,7 +92,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
         wizardContext._allLocationsTask = undefined;
         wizardContext._providerLocationsMap = undefined;
         wizardContext._alreadyHasLocationStep = undefined;
-        wizardContext._suggestedAutoSelectLocation = undefined;
+        wizardContext._autoSelectLocation = undefined;
     }
 
     public static addProviderForFiltering<T extends ILocationWizardContextInternal>(wizardContext: T, provider: string, resourceType: string): void {
@@ -115,6 +115,10 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
             location: locationName,
             extendedLocation
         }
+    }
+
+    public static getAutoSelectLocation<T extends ILocationWizardContextInternal>(wizardContext: T): types.AzExtLocation | undefined {
+        return wizardContext._autoSelectLocation;
     }
 
     public static async getLocation<T extends ILocationWizardContextInternal>(wizardContext: T, provider?: string, supportsExtendedLocations?: boolean): Promise<types.AzExtLocation> {
@@ -214,8 +218,8 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
         const picks = await this.getQuickPicks(wizardContext);
 
         let pick: AgentQuickPickItem<IAzureQuickPickItem<types.AzExtLocation>> | undefined;
-        if (wizardContext._suggestedAutoSelectLocation) {
-            pick = picks.find(p => p.data.id === wizardContext._suggestedAutoSelectLocation?.id);
+        if (wizardContext._autoSelectLocation) {
+            pick = picks.find(p => p.data.id === wizardContext._autoSelectLocation?.id);
         }
         pick ??= await wizardContext.ui.showQuickPick(picks, options);
 
