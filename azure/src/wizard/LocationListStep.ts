@@ -69,6 +69,13 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
         wizardContext.telemetry.properties.locationType = wizardContext._location?.type;
     }
 
+    public static resetLocation<T extends ILocationWizardContextInternal>(wizardContext: T): void {
+        wizardContext._location = undefined;
+        wizardContext._allLocationsTask = undefined;
+        wizardContext._providerLocationsMap = undefined;
+        wizardContext._alreadyHasLocationStep = undefined;
+    }
+
     public static setLocationSubset<T extends ILocationWizardContextInternal>(wizardContext: T, task: Promise<string[]>, provider: string): void {
         const [, providerLocationsMap] = this.getInternalVariables(wizardContext);
         providerLocationsMap.set(provider.toLowerCase(), task);
