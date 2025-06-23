@@ -72,7 +72,14 @@ export const CommonRoleDefinitions = {
         roleName: "DocumentDB Account Contributor",
         description: "Can manage Azure Cosmos DB accounts.",
         roleType: "BuiltInRole"
-    } as RoleDefinition
+    } as RoleDefinition,
+    durableTaskDataContributor: {
+        name: "0ad04412-c4d5-4796-b79c-f76d14c8d402",
+        type: "Microsoft.Authorization/roleDefinitions",
+        roleName: "Durable Task Data Contributor",
+        description: "Durable Task role for all data access operations.",
+        roleType: "BuiltInRole"
+    } as RoleDefinition,
 } as const;
 
 export function createRoleId(subscriptionId: string, RoleDefinition: RoleDefinition): string {
