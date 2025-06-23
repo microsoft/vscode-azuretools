@@ -117,12 +117,13 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
     public static setLocation<T extends ILocationWizardContext>(wizardContext: T, name: string): Promise<void>;
 
     /**
-     * Sets a suggested location on the wizard context. This does not force the location, but will show the location as the recommended option
-     * when prompting the user to choose a location. This is useful for guiding users toward a preferred region without restricting their choice.
+     * Sets a suggested location to auto-select during prompting, if available.
+     * Use this instead of `setLocation` when you want to automatically select a location
+     * that respects all future resource providers.
      * @param wizardContext The context of the wizard
      * @param name The name or display name of the suggested location
      */
-    public static setSuggestedLocation<T extends ILocationWizardContext>(wizardContext: T, name: string): Promise<void>;
+    public static setSuggestedAutoSelectLocation<T extends ILocationWizardContext>(wizardContext: T, name: string): Promise<void>;
 
     /**
      * Resets all location and location-related metadata on the wizard context back to its uninitialized state.
