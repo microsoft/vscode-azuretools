@@ -33,6 +33,11 @@ interface ILocationWizardContextInternal extends types.ILocationWizardContext {
     _location?: types.AzExtLocation;
 
     /**
+     * The suggested location to recommend when promping for locations
+     */
+    _suggestedLocation?: types.AzExtLocation;
+
+    /**
      * Location list step is intended to be compatible with an {@link IAzureAgentInput}, so we re-type `ui`.
      */
     ui: IAzureAgentInput;
@@ -69,16 +74,23 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
         wizardContext.telemetry.properties.locationType = wizardContext._location?.type;
     }
 
-    public static resetLocation<T extends ILocationWizardContextInternal>(wizardContext: T): void {
-        wizardContext._location = undefined;
-        wizardContext._allLocationsTask = undefined;
-        wizardContext._providerLocationsMap = undefined;
-        wizardContext._alreadyHasLocationStep = undefined;
+    public static async setSuggestedLocation<T extends ILocationWizardContextInternal>(wizardContext: T, name: string): Promise<void> {
+        const [allLocationsTask] = this.getInternalVariables(wizardContext);
+        wizardContext._suggestedLocation = (await allLocationsTask).find(l => LocationListStep.locationMatchesName(l, name));
+        wizardContext.telemetry.properties.suggestedLocationType = wizardContext._suggestedLocation?.type;
     }
 
     public static setLocationSubset<T extends ILocationWizardContextInternal>(wizardContext: T, task: Promise<string[]>, provider: string): void {
         const [, providerLocationsMap] = this.getInternalVariables(wizardContext);
         providerLocationsMap.set(provider.toLowerCase(), task);
+    }
+
+    public static resetLocation<T extends ILocationWizardContextInternal>(wizardContext: T): void {
+        wizardContext._location = undefined;
+        wizardContext._allLocationsTask = undefined;
+        wizardContext._providerLocationsMap = undefined;
+        wizardContext._alreadyHasLocationStep = undefined;
+        wizardContext._suggestedLocation = undefined;
     }
 
     public static addProviderForFiltering<T extends ILocationWizardContextInternal>(wizardContext: T, provider: string, resourceType: string): void {
