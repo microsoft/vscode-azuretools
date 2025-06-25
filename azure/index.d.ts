@@ -117,6 +117,23 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
     public static setLocation<T extends ILocationWizardContext>(wizardContext: T, name: string): Promise<void>;
 
     /**
+     * Sets a location to auto-select during prompting, if available.
+     * Use this instead of `setLocation` when you want to automatically select a location
+     * that respects all future resource providers.
+     * @param wizardContext The context of the wizard
+     * @param name The name or display name of the suggested location
+     */
+    public static setAutoSelectLocation<T extends ILocationWizardContext>(wizardContext: T, name: string): Promise<void>;
+
+    /**
+     * Resets all location and location-related metadata on the wizard context back to its uninitialized state.
+     * This includes clearing the selected location, cached location tasks, provider location maps, and any step-tracking flags.
+     * Use this to ensure the wizard context is fully reset before starting a new location selection process.
+     * @param wizardContext The context of the wizard
+     */
+    public static resetLocation<T extends ILocationWizardContext>(wizardContext: T): void;
+
+    /**
      * Specify a task that will be used to filter locations
      * @param wizardContext The context of the wizard
      * @param task A task evaluating to the locations supported by this provider
@@ -139,6 +156,12 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
      * @param location location or extended location
      */
     public static getExtendedLocation(location: AzExtLocation): { location: string, extendedLocation?: ExtendedLocation };
+
+    /**
+     * Gets the `autoSelectLocation` for this wizard.  This location will be automatically selected during prompting, if available.
+     * @param wizardContext The context of the wizard
+     */
+    public static getAutoSelectLocation<T extends ILocationWizardContext>(wizardContext: T): AzExtLocation | undefined;
 
     /**
      * Gets the selected location for this wizard.
