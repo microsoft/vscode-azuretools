@@ -1329,9 +1329,9 @@ export declare interface ExecuteActivityContext {
      */
     suppressNotification?: boolean;
     /**
-     * Hide the progress report messages emitted from execute steps
+     * Hide the progress report messages emitted from execute steps and only show the live timer
      */
-    suppressProgress?: boolean;
+    onlyShowTimer?: boolean;
     /**
      * The activity implementation to use, defaults to ExecuteActivity
      */
