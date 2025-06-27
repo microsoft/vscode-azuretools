@@ -16,6 +16,8 @@ export interface Role {
 }
 
 export class RoleAssignmentExecuteStep extends AzureWizardExecuteStep<types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>> {
+    public priority: number;
+
     public async execute(_wiardContext: types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>, _progress: Progress<{ message?: string; increment?: number; }>): Promise<void> {
         // nothing should execute, but we need shouldExecute to be true so that addExecuteSteps is called
         return undefined;
@@ -25,11 +27,11 @@ export class RoleAssignmentExecuteStep extends AzureWizardExecuteStep<types.IRes
     }
 
     private roles: () => Role[] | undefined;
-    public constructor(roles: () => Role[] | undefined) {
+    public constructor(roles: () => Role[] | undefined, options?: { priority?: number }) {
         super();
         this.roles = roles;
+        this.priority = options?.priority ?? 900;
     }
-    public priority: number = 900;
     public addExecuteSteps(_context: types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>): AzureWizardExecuteStep<types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>>[] {
         const roles = this.roles();
         const steps = [];
@@ -42,7 +44,9 @@ export class RoleAssignmentExecuteStep extends AzureWizardExecuteStep<types.IRes
 }
 
 class SingleRoleAssignmentExecuteStep<T extends types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>> extends AzureWizardExecuteStepWithActivityOutput<T> {
+    public priority: number;
     stepName: string = 'RoleAssignmentExecuteStep';
+
     protected getTreeItemLabel(_context: T): string {
         const { resourceName, resourceType } = this.resourceNameAndType;
         return l10n.t('Create role assignment "{0}" for the {1} resource "{2}"', this.role.roleDefinitionName, resourceType, resourceName);
@@ -60,10 +64,10 @@ class SingleRoleAssignmentExecuteStep<T extends types.IResourceGroupWizardContex
         const { resourceName, resourceType } = this.resourceNameAndType;
         return l10n.t('Creating role assignment "{0}" for the {1} resource "{2}"...', this.role.roleDefinitionName, resourceType, resourceName);
     }
-    public priority: number = 901;
     private _retries: number = 0;
-    public constructor(readonly role: Role) {
+    public constructor(readonly role: Role, options?: { priority?: number }) {
         super();
+        this.priority = options?.priority ? options.priority + 1 : 901;
     }
 
     public async executeCore(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
