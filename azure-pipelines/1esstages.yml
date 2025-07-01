@@ -21,10 +21,6 @@ parameters:
     default: [""]
 stages:
   - stage: BuildStage
-    pool:
-      name: AzurePipelines-EO
-      image: 1ESPT-Ubuntu22.04
-      os: linux
     jobs:
       - ${{ each job in parameters.jobs }}:
           - job: ${{ job.name }}
