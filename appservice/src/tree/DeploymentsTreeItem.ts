@@ -15,8 +15,8 @@ import { DeploymentTreeItem } from './DeploymentTreeItem';
 
 interface DeploymentsTreeItemOptions {
     site: ParsedSite;
-    siteConfig: SiteConfig;
-    sourceControl: SiteSourceControl;
+    //siteConfig: SiteConfig;
+    //sourceControl: SiteSourceControl;
     contextValuesToAdd?: string[];
 }
 
@@ -38,8 +38,6 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
     public constructor(parent: AzExtParentTreeItem, options: DeploymentsTreeItemOptions) {
         super(parent);
         this.site = options.site;
-        this._scmType = options.siteConfig.scmType;
-        this._repoUrl = options.sourceControl.repoUrl;
         this.contextValuesToAdd = options?.contextValuesToAdd || [];
     }
 
@@ -68,9 +66,18 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
         return false;
     }
 
-    public async loadMoreChildrenImpl(_clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {
+    public async init(context: IActionContext): Promise<void> {
         const client = await this.site.createClient(context);
         const siteConfig: SiteConfig = await client.getSiteConfig();
+        const sourceControl: SiteSourceControl = await client.getSourceControl();
+
+        this._scmType = siteConfig.scmType;
+        this._repoUrl = sourceControl.repoUrl;
+    }
+
+    public async loadMoreChildrenImpl(_clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {
+        await this.init(context);
+        const client = await this.site.createClient(context);
         const deployments: KuduModels.DeployResult[] = await retryKuduCall(context, 'getDeployResults', async () => {
             return client.getDeployResults(context);
         });
@@ -79,14 +86,14 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
             deployments,
             'invalidDeployment',
             dr => {
-                return new DeploymentTreeItem(this, dr, siteConfig.scmType);
+                return new DeploymentTreeItem(this, dr, this._scmType);
             },
             dr => {
                 return dr.id ? dr.id.substring(0, 7) : undefined;
             }
         );
 
-        if (siteConfig.scmType === ScmType.None) {
+        if (this._scmType === ScmType.None) {
             // redeploy does not support Push deploys, so we still guide users to connect to a GitHub repo
             children.push(new GenericTreeItem(this, {
                 commandId: ext.prefix + '.connectToGitHub',
