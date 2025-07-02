@@ -15,8 +15,6 @@ import { DeploymentTreeItem } from './DeploymentTreeItem';
 
 interface DeploymentsTreeItemOptions {
     site: ParsedSite;
-    //siteConfig: SiteConfig;
-    //sourceControl: SiteSourceControl;
     contextValuesToAdd?: string[];
 }
 
