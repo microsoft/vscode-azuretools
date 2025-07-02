@@ -1544,7 +1544,7 @@ export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
     public getSubWizard?(wizardContext: T): Promise<IWizardOptions<T> | undefined>;
 
     /**
-     * Optional. Run when the user presses the go back button.
+     * Optional. Called whenever the user presses the go back button.
      */
     public undo?(wizardContext: T): void;
 
