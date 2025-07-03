@@ -46,8 +46,8 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
         // Cache resource group separately per subscription
         const options: IAzureQuickPickOptions = { placeHolder: 'Select a resource group for new resources.', id: `ResourceGroupListStep/${wizardContext.subscriptionId}` };
         wizardContext.resourceGroup = (await wizardContext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
-        if (wizardContext.resourceGroup && !LocationListStep.hasLocation(wizardContext)) {
-            await LocationListStep.setLocation(wizardContext, nonNullProp(wizardContext.resourceGroup, 'location'));
+        if (wizardContext.resourceGroup && !LocationListStep.hasLocation(wizardContext) && !LocationListStep.getAutoSelectLocation(wizardContext)) {
+            await LocationListStep.setAutoSelectLocation(wizardContext, nonNullProp(wizardContext.resourceGroup, 'location'));
         }
     }
 
