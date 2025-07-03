@@ -1544,6 +1544,11 @@ export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
     public getSubWizard?(wizardContext: T): Promise<IWizardOptions<T> | undefined>;
 
     /**
+     * Optional. Called whenever the user presses the go back button.
+     */
+    public undo?(wizardContext: T): void;
+
+    /**
      * Can be used to optionally configure the wizard context before determining if prompting is required
      * This method will be called before `shouldPrompt`
      */
