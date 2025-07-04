@@ -36,7 +36,7 @@ export class RoleAssignmentExecuteStep extends AzureWizardExecuteStep<types.IRes
         const roles = this.roles();
         const steps = [];
         for (const role of roles ?? []) {
-            steps.push(new SingleRoleAssignmentExecuteStep(role));
+            steps.push(new SingleRoleAssignmentExecuteStep(role, { priority: this.priority + 1 }));
         }
 
         return steps;
@@ -67,7 +67,7 @@ class SingleRoleAssignmentExecuteStep<T extends types.IResourceGroupWizardContex
     private _retries: number = 0;
     public constructor(readonly role: Role, options?: { priority?: number }) {
         super();
-        this.priority = options?.priority ? options.priority + 1 : 901;
+        this.priority = options?.priority ?? 901;
     }
 
     public async executeCore(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
