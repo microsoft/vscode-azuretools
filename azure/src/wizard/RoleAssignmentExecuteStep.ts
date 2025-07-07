@@ -36,7 +36,7 @@ export class RoleAssignmentExecuteStep extends AzureWizardExecuteStep<types.IRes
         const roles = this.roles();
         const steps = [];
         for (const role of roles ?? []) {
-            steps.push(new SingleRoleAssignmentExecuteStep(role));
+            steps.push(new SingleRoleAssignmentExecuteStep(role, { priority: this.priority + 1 }));
         }
 
         return steps;
@@ -58,7 +58,6 @@ class SingleRoleAssignmentExecuteStep<T extends types.IResourceGroupWizardContex
     protected getOutputLogFail(_context: T): string {
         const { resourceName, resourceType } = this.resourceNameAndType;
         return l10n.t('Failed to create role assignment "{0}" for the {1} resource "{2}".', this.role.roleDefinitionName, resourceType, resourceName);
-        throw new Error('Method not implemented.');
     }
     protected getOutputLogProgress(_context: T): string {
         const { resourceName, resourceType } = this.resourceNameAndType;
@@ -67,7 +66,7 @@ class SingleRoleAssignmentExecuteStep<T extends types.IResourceGroupWizardContex
     private _retries: number = 0;
     public constructor(readonly role: Role, options?: { priority?: number }) {
         super();
-        this.priority = options?.priority ? options.priority + 1 : 901;
+        this.priority = options?.priority ?? 901;
     }
 
     public async executeCore(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
