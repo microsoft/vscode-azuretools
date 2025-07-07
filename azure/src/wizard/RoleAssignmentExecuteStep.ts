@@ -58,7 +58,6 @@ class SingleRoleAssignmentExecuteStep<T extends types.IResourceGroupWizardContex
     protected getOutputLogFail(_context: T): string {
         const { resourceName, resourceType } = this.resourceNameAndType;
         return l10n.t('Failed to create role assignment "{0}" for the {1} resource "{2}".', this.role.roleDefinitionName, resourceType, resourceName);
-        throw new Error('Method not implemented.');
     }
     protected getOutputLogProgress(_context: T): string {
         const { resourceName, resourceType } = this.resourceNameAndType;
