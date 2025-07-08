@@ -42,6 +42,7 @@ export class StorageAccountCreateStep<T extends types.IStorageAccountWizardConte
                 location: newLocation,
                 enableHttpsTrafficOnly: true,
                 defaultToOAuthAuthentication: true,
+                allowBlobPublicAccess: false,
             }
         );
         const createdStorageAccount: string = localize('CreatedStorageAccount', 'Successfully created storage account "{0}".', newName);
