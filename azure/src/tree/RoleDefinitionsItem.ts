@@ -29,27 +29,23 @@ export async function createRoleDefinitionsItems(context: IActionContext, subscr
             if (!ra.scope || !ra.roleDefinitionId) {
                 return;
             }
-            const scopeSplit = ra.scope.split('/');
-            const name = scopeSplit.pop();
 
-            if (name) {
-                const roleDefinition = await authClient.roleDefinitions.getById(ra.roleDefinitionId);
-                // if the role defition is not found, create a new one and push the role definition to it
-                if (!roleDefinitionsItems.some((rdi) => rdi.label === name)) {
-                    const rdi = await RoleDefinitionsItem.createRoleDefinitionsItem({
-                        context,
-                        subContext,
-                        roleDefinition,
-                        scope: ra.scope,
-                        msiId: msi.id,
-                        // if the msi resource id doesn't contain the subscription id, it's from another subscription
-                        withDescription: !msi.id?.includes(subContext.subscriptionId)
-                    });
-                    roleDefinitionsItems.push(rdi);
-                } else {
-                    // if the role definition is found, add the role definition to the existing role definition item
-                    roleDefinitionsItems.find((rdi) => rdi.label === name)?.addRoleDefinition(roleDefinition);
-                }
+            const roleDefinition = await authClient.roleDefinitions.getById(ra.roleDefinitionId);
+            // if the role defition is not found, create a new one and push the role definition to it
+            if (!roleDefinitionsItems.some((rdi) => rdi.id === ra.scope)) {
+                const rdi = await RoleDefinitionsItem.createRoleDefinitionsItem({
+                    context,
+                    subContext,
+                    roleDefinition,
+                    scope: ra.scope,
+                    msiId: msi.id,
+                    // if the msi resource id doesn't contain the subscription id, it's from another subscription
+                    withDescription: !msi.id?.includes(subContext.subscriptionId)
+                });
+                roleDefinitionsItems.push(rdi);
+            } else {
+                // if the role definition is found, add the role definition to the existing role definition item
+                roleDefinitionsItems.find((rdi) => rdi.id === ra.scope)?.addRoleDefinition(roleDefinition);
             }
         }));
 
@@ -128,7 +124,7 @@ export class RoleDefinitionsItem implements TreeElementBase {
         }
 
         return new RoleDefinitionsItem({
-            id: `${options.msiId}/${options.scope}`,
+            id: options.scope,
             label,
             iconPath,
             description,
@@ -176,6 +172,7 @@ export class RoleDefinitionsTreeItem extends AzExtParentTreeItem {
 
     constructor(parent: AzExtParentTreeItem, readonly roleDefinitionsItem: RoleDefinitionsItem) {
         super(parent);
+        this.id = roleDefinitionsItem.id;
         this.label = roleDefinitionsItem.label;
         this.iconPath = roleDefinitionsItem.iconPath;
         this.description = roleDefinitionsItem.description;
