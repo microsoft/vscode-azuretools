@@ -31,8 +31,9 @@ export async function createRoleDefinitionsItems(context: IActionContext, subscr
             }
 
             const roleDefinition = await authClient.roleDefinitions.getById(ra.roleDefinitionId);
+            const roleDefinitionsItem: RoleDefinitionsItem | undefined = roleDefinitionsItems.find((rdi) => rdi.id === RoleDefinitionsItem.getId(msi.id, ra.scope));
 
-            if (!roleDefinitionsItems.some((rdi) => rdi.id === RoleDefinitionsItem.getId(msi.id, ra.scope))) {
+            if (!roleDefinitionsItem) {
                 // if the role definition is not found, create a new one and push the role definition to it
                 const rdi = await RoleDefinitionsItem.createRoleDefinitionsItem({
                     context,
@@ -46,7 +47,7 @@ export async function createRoleDefinitionsItems(context: IActionContext, subscr
                 roleDefinitionsItems.push(rdi);
             } else {
                 // if the role definition is found, add the role definition to the existing role definitions item
-                roleDefinitionsItems.find((rdi) => rdi.id === RoleDefinitionsItem.getId(msi.id, ra.scope))?.addRoleDefinition(roleDefinition);
+                roleDefinitionsItem.addRoleDefinition(roleDefinition);
             }
         }));
 
