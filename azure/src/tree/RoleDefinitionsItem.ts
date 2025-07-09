@@ -29,27 +29,25 @@ export async function createRoleDefinitionsItems(context: IActionContext, subscr
             if (!ra.scope || !ra.roleDefinitionId) {
                 return;
             }
-            const scopeSplit = ra.scope.split('/');
-            const name = scopeSplit.pop();
 
-            if (name) {
-                const roleDefinition = await authClient.roleDefinitions.getById(ra.roleDefinitionId);
-                // if the role defition is not found, create a new one and push the role definition to it
-                if (!roleDefinitionsItems.some((rdi) => rdi.label === name)) {
-                    const rdi = await RoleDefinitionsItem.createRoleDefinitionsItem({
-                        context,
-                        subContext,
-                        roleDefinition,
-                        scope: ra.scope,
-                        msiId: msi.id,
-                        // if the msi resource id doesn't contain the subscription id, it's from another subscription
-                        withDescription: !msi.id?.includes(subContext.subscriptionId)
-                    });
-                    roleDefinitionsItems.push(rdi);
-                } else {
-                    // if the role definition is found, add the role definition to the existing role definition item
-                    roleDefinitionsItems.find((rdi) => rdi.label === name)?.addRoleDefinition(roleDefinition);
-                }
+            const roleDefinition = await authClient.roleDefinitions.getById(ra.roleDefinitionId);
+            const roleDefinitionsItem: RoleDefinitionsItem | undefined = roleDefinitionsItems.find((rdi) => rdi.id === RoleDefinitionsItem.getId(msi.id, ra.scope));
+
+            if (!roleDefinitionsItem) {
+                // if the role definition is not found, create a new one and push the role definition to it
+                const rdi = await RoleDefinitionsItem.createRoleDefinitionsItem({
+                    context,
+                    subContext,
+                    roleDefinition,
+                    scope: ra.scope,
+                    msiId: msi.id,
+                    // if the msi resource id doesn't contain the subscription id, it's from another subscription
+                    withDescription: !msi.id?.includes(subContext.subscriptionId)
+                });
+                roleDefinitionsItems.push(rdi);
+            } else {
+                // if the role definition is found, add the role definition to the existing role definitions item
+                roleDefinitionsItem.addRoleDefinition(roleDefinition);
             }
         }));
 
@@ -79,6 +77,10 @@ export class RoleDefinitionsItem implements TreeElementBase {
         this.roleDefintions.push(options.roleDefinition);
         this.description = options.description;
         this.portalUrl = createPortalUri(options.subscription, options.scope);
+    }
+
+    public static getId(msiId: string = '', scope: string = ''): string {
+        return `${msiId}/${scope}`;
     }
 
     public static async createRoleDefinitionsItem(
@@ -128,7 +130,7 @@ export class RoleDefinitionsItem implements TreeElementBase {
         }
 
         return new RoleDefinitionsItem({
-            id: `${options.msiId}/${options.scope}`,
+            id: RoleDefinitionsItem.getId(options.msiId, options.scope),
             label,
             iconPath,
             description,
@@ -176,6 +178,7 @@ export class RoleDefinitionsTreeItem extends AzExtParentTreeItem {
 
     constructor(parent: AzExtParentTreeItem, readonly roleDefinitionsItem: RoleDefinitionsItem) {
         super(parent);
+        this.id = roleDefinitionsItem.id;
         this.label = roleDefinitionsItem.label;
         this.iconPath = roleDefinitionsItem.iconPath;
         this.description = roleDefinitionsItem.description;
