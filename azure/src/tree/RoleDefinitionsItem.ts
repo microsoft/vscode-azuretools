@@ -32,7 +32,7 @@ export async function createRoleDefinitionsItems(context: IActionContext, subscr
 
             const roleDefinition = await authClient.roleDefinitions.getById(ra.roleDefinitionId);
 
-            if (!roleDefinitionsItems.some((rdi) => rdi.id === ra.scope)) {
+            if (!roleDefinitionsItems.some((rdi) => rdi.id === RoleDefinitionsItem.getId(msi.id, ra.scope))) {
                 // if the role definition is not found, create a new one and push the role definition to it
                 const rdi = await RoleDefinitionsItem.createRoleDefinitionsItem({
                     context,
@@ -46,7 +46,7 @@ export async function createRoleDefinitionsItems(context: IActionContext, subscr
                 roleDefinitionsItems.push(rdi);
             } else {
                 // if the role definition is found, add the role definition to the existing role definitions item
-                roleDefinitionsItems.find((rdi) => rdi.id === ra.scope)?.addRoleDefinition(roleDefinition);
+                roleDefinitionsItems.find((rdi) => rdi.id === RoleDefinitionsItem.getId(msi.id, ra.scope))?.addRoleDefinition(roleDefinition);
             }
         }));
 
@@ -76,6 +76,10 @@ export class RoleDefinitionsItem implements TreeElementBase {
         this.roleDefintions.push(options.roleDefinition);
         this.description = options.description;
         this.portalUrl = createPortalUri(options.subscription, options.scope);
+    }
+
+    public static getId(msiId: string = '', scope: string = ''): string {
+        return `${msiId}/${scope}`;
     }
 
     public static async createRoleDefinitionsItem(
@@ -125,7 +129,7 @@ export class RoleDefinitionsItem implements TreeElementBase {
         }
 
         return new RoleDefinitionsItem({
-            id: options.scope,
+            id: RoleDefinitionsItem.getId(options.msiId, options.scope),
             label,
             iconPath,
             description,
