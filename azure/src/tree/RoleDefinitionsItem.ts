@@ -31,8 +31,9 @@ export async function createRoleDefinitionsItems(context: IActionContext, subscr
             }
 
             const roleDefinition = await authClient.roleDefinitions.getById(ra.roleDefinitionId);
-            // if the role defition is not found, create a new one and push the role definition to it
+
             if (!roleDefinitionsItems.some((rdi) => rdi.id === ra.scope)) {
+                // if the role definition is not found, create a new one and push the role definition to it
                 const rdi = await RoleDefinitionsItem.createRoleDefinitionsItem({
                     context,
                     subContext,
@@ -44,7 +45,7 @@ export async function createRoleDefinitionsItems(context: IActionContext, subscr
                 });
                 roleDefinitionsItems.push(rdi);
             } else {
-                // if the role definition is found, add the role definition to the existing role definition item
+                // if the role definition is found, add the role definition to the existing role definitions item
                 roleDefinitionsItems.find((rdi) => rdi.id === ra.scope)?.addRoleDefinition(roleDefinition);
             }
         }));
