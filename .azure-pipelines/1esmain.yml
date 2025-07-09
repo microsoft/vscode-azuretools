@@ -1,0 +1,62 @@
+# Trigger the build whenever `main` is updated
+trigger:
+  - main
+  - rel/*
+
+# Disable PR trigger
+pr: none
+
+# Scheduled nightly build
+schedules:
+  - cron: "0 0 * * *"
+    displayName: Nightly scheduled build
+    always: false # Don't rebuild if there haven't been changes
+    branches:
+      include:
+        - main
+
+# `resources` specifies the location of templates to pick up, use it to get 1ES and AzExt templates
+resources:
+  repositories:
+    - repository: 1esPipelines
+      type: git
+      name: 1ESPipelineTemplates/1ESPipelineTemplates
+      ref: refs/tags/release
+
+# Use the templates
+extends:
+  template: v1/1ES.Official.PipelineTemplate.yml@1esPipelines
+  parameters:
+    sdl:
+      credscan:
+        suppressionsFile: $(Build.SourcesDirectory)/.azure-pipelines/compliance/CredScanSuppressions.json
+      componentgovernance:
+        ignoreDirectories: $(Build.SourcesDirectory)/appservice/.vscode-test,$(Build.SourcesDirectory)/appsettings/.vscode-test,$(Build.SourcesDirectory)/auth/.vscode-test,$(Build.SourcesDirectory)/azure/.vscode-test,$(Build.SourcesDirectory)/dev/.vscode-test,$(Build.SourcesDirectory)/eslint-config-azuretools/.vscode-test,$(Build.SourcesDirectory)/github/.vscode-test,$(Build.SourcesDirectory)/utils/.vscode-test
+      codeql:
+        excludePathPatterns: "**/.vscode-test, dist" # Exclude .vscode-test and dist directories from CodeQL alerting
+    #   We need to keep this pool defined because SDLSources stage requires us to specify a windows pool
+    pool:
+      name: VSEngSS-MicroBuild2022-1ES # Name of your hosted pool
+      image: server2022-microbuildVS2022-1es # Name of the image in your pool. If not specified, first image of the pool is used
+      os: windows # OS of the image. Allowed values: windows, linux, macOS
+    stages:
+      # Execute stages from the AzExt template
+      - template: ../azure-pipelines/1esstages.yml
+        parameters:
+          jobs:
+            - name: microsoft_vscode_azext_azureappservice
+              working_directory: appservice
+            - name: microsoft_vscode_azext_azureappsettings
+              working_directory: appsettings
+            - name: microsoft_vscode_azext_azureauth
+              working_directory: auth
+            - name: microsoft_vscode_azext_azureutils
+              working_directory: azure
+            - name: microsoft_vscode_azext_dev
+              working_directory: dev
+            - name: microsoft_eslint_config_azuretools
+              working_directory: eslint-config-azuretools
+            - name: microsoft_vscode_azext_github
+              working_directory: github
+            - name: microsoft_vscode_azext_utils
+              working_directory: utils
