@@ -91,7 +91,7 @@ export class RoleDefinitionsItem implements TreeElementBase {
     public static getId(parentResourceId: string = '', msiId: string = '', scope: string = ''): string {
         const identityBase: string = msiId.split('/').at(-1) ?? '{msiId}';
         const scopeBase: string = scope.split('/').at(-1) ?? '{scope}';
-        return `${parentResourceId}/managedIdentity/${identityBase}/scope/${scopeBase}`;
+        return `${parentResourceId}/identities/${identityBase}/scopes/${scopeBase}`;
     }
 
     public static async createRoleDefinitionsItem(
