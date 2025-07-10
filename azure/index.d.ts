@@ -665,7 +665,9 @@ export function createRoleId(subscriptionId: string, RoleDefinition: RoleDefinit
 export function createRoleDefinitionsItems(
     context: IActionContext,
     subscription: AzureSubscription | ISubscriptionContext,
-    msi: Identity): Promise<RoleDefinitionsItem[]>
+    msi: Identity,
+    parentResourceId: string,
+): Promise<RoleDefinitionsItem[]>
 
 /**
  * should not be created directly; use `createRoleDefinitionsItems` instead
