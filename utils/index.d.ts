@@ -719,7 +719,7 @@ export declare function addExtensionValueToMask(...values: (string | undefined)[
  */
 export interface IActionContext {
     /**
-     * The associated VS Code command ID, if it exists
+     * Any associated command (or callback) ID
      */
     commandId?: string;
 
@@ -1358,7 +1358,7 @@ export declare interface ExecuteActivityContext {
 
 export interface ActivityAttributes {
     /**
-     * The full VS Code command ID for the activity being run
+     * Any associated command (or callback) ID
      */
     commandId?: string;
     /**
