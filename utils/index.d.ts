@@ -719,6 +719,11 @@ export declare function addExtensionValueToMask(...values: (string | undefined)[
  */
 export interface IActionContext {
     /**
+     * The associated VS Code command ID, if it exists
+     */
+    commandId?: string;
+
+    /**
      * Describes the behavior of telemetry for this action
      */
     telemetry: ITelemetryContext;
@@ -1325,6 +1330,10 @@ export declare interface ExecuteActivityContext {
      */
     activityResult?: AppResource | string;
     /**
+     * Any associated command (or callback) ID
+     */
+    commandId?: string;
+    /**
      * Hide activity notifications
      */
     suppressNotification?: boolean;
@@ -1348,6 +1357,10 @@ export declare interface ExecuteActivityContext {
 }
 
 export interface ActivityAttributes {
+    /**
+     * The full VS Code command ID for the activity being run
+     */
+    commandId?: string;
     /**
      * A description or summary of the command or activity being run
      */

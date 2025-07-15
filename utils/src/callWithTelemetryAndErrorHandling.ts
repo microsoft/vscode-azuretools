@@ -19,6 +19,7 @@ const maxStackLines: number = 3;
 function initContext(callbackId: string): [number, types.IActionContext] {
     const start: number = Date.now();
     const context: types.IActionContext = {
+        commandId: callbackId,
         telemetry: {
             properties: {
                 isActivationEvent: 'false',
