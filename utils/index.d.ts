@@ -1358,10 +1358,6 @@ export declare interface ExecuteActivityContext {
 
 export interface ActivityAttributes {
     /**
-     * Any associated command (or callback) ID
-     */
-    commandId?: string;
-    /**
      * A description or summary of the command or activity being run
      */
     description?: string;
