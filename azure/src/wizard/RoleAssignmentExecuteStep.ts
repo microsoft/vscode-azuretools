@@ -26,14 +26,14 @@ export class RoleAssignmentExecuteStep extends AzureWizardExecuteStep<types.IRes
         return true;
     }
 
-    private roles: () => Role[] | undefined;
-    public constructor(roles: () => Role[] | undefined, options?: { priority?: number }) {
+    private roles: () => (Role[] | Promise<Role[]> | undefined);
+    public constructor(roles: () => (Role[] | Promise<Role[]> | undefined), options?: { priority?: number }) {
         super();
         this.roles = roles;
         this.priority = options?.priority ?? 900;
     }
-    public addExecuteSteps(_context: types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>): AzureWizardExecuteStep<types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>>[] {
-        const roles = this.roles();
+    public async addExecuteSteps(_context: types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>): Promise<AzureWizardExecuteStep<types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>>[]> {
+        const roles = await this.roles();
         const steps = [];
         for (const role of roles ?? []) {
             steps.push(new SingleRoleAssignmentExecuteStep(role, { priority: this.priority + 1 }));
