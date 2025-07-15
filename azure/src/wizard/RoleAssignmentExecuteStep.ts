@@ -26,8 +26,8 @@ export class RoleAssignmentExecuteStep extends AzureWizardExecuteStep<types.IRes
         return true;
     }
 
-    private roles: () => Role[] | Promise<Role[]> | undefined;
-    public constructor(roles: () => Role[] | undefined, options?: { priority?: number }) {
+    private roles: () => (Role[] | Promise<Role[]> | undefined);
+    public constructor(roles: () => (Role[] | Promise<Role[]> | undefined), options?: { priority?: number }) {
         super();
         this.roles = roles;
         this.priority = options?.priority ?? 900;

@@ -439,7 +439,7 @@ export declare class RoleAssignmentExecuteStep<T extends IResourceGroupWizardCon
     * If the scope ID is undefined, the step will throw an error.
     * @param roles An array of roles. Each role is an object and include the ARM role definition id and name of the role definition.
     * */
-    public constructor(roles: () => Role[] | Promise<Role[]> | undefined, options?: { priority?: number });
+    public constructor(roles: () => (Role[] | Promise<Role[]> | undefined), options?: { priority?: number });
 
     public execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
     public shouldExecute(wizardContext: T): boolean;
