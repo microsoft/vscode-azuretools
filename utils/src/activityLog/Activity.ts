@@ -20,7 +20,7 @@ export enum ActivityStatus {
 
 type ActivityBaseOptions = {
     attributes?: types.ActivityAttributes;
-    commandId?: string;
+    callbackId?: string;
     hasChildren?: boolean;
 };
 
@@ -49,7 +49,7 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
     public readonly id: string;
     public readonly cancellationTokenSource: CancellationTokenSource = new CancellationTokenSource();
     public readonly hasChildren?: boolean;
-    public readonly commandId?: string;
+    public readonly callbackId?: string;
 
     abstract initialState(): hTypes.ActivityTreeItemOptions;
     abstract successState(): hTypes.ActivityTreeItemOptions;
@@ -73,7 +73,7 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
         this.task = task;
         this._attributes = options?.attributes;
         this.hasChildren = options?.hasChildren;
-        this.commandId = options?.commandId;
+        this.callbackId = options?.callbackId;
 
         this.onStart = this._onStartEmitter.event;
         this.onProgress = this._onProgressEmitter.event;

@@ -1330,9 +1330,9 @@ export declare interface ExecuteActivityContext {
      */
     activityResult?: AppResource | string;
     /**
-     * Any associated command (or callback) ID
+     * The command / callback id for the activity.
      */
-    commandId?: string;
+    callbackId?: string;
     /**
      * Hide activity notifications
      */
