@@ -276,6 +276,11 @@ export interface Activity {
     endTime?: Date;
 
     /**
+     * The command / callback id for the activity.
+     */
+    callbackId?: string;
+
+    /**
      * Activity / Command attributes to be shared with Copilot
      */
     attributes?: ActivityAttributes;

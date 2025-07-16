@@ -719,6 +719,11 @@ export declare function addExtensionValueToMask(...values: (string | undefined)[
  */
 export interface IActionContext {
     /**
+     * The id for the callback, used as the id for the telemetry event.
+     */
+    callbackId?: string;
+
+    /**
      * Describes the behavior of telemetry for this action
      */
     telemetry: ITelemetryContext;
@@ -1324,6 +1329,10 @@ export declare interface ExecuteActivityContext {
      * Set to show a "Click to view resource" child on success.
      */
     activityResult?: AppResource | string;
+    /**
+     * The command / callback id for the activity.
+     */
+    callbackId?: string;
     /**
      * Hide activity notifications
      */
