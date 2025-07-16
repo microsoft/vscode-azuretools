@@ -719,9 +719,9 @@ export declare function addExtensionValueToMask(...values: (string | undefined)[
  */
 export interface IActionContext {
     /**
-     * Any associated command (or callback) ID
+     * The id for the callback, used as the id for the telemetry event.
      */
-    commandId?: string;
+    callbackId?: string;
 
     /**
      * Describes the behavior of telemetry for this action
