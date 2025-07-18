@@ -16,6 +16,8 @@ export function registerLMTool<T>(name: string, tool: types.AzExtLMTool<T>): voi
             let result: vscode.LanguageModelToolResult | undefined | null;
 
             await callWithTelemetryAndErrorHandling(`${name}.invoke`, async (context: types.IActionContext) => {
+                context.telemetry.properties.isCopilotEvent = 'true';
+
                 try {
                     result = await tool.invoke(context, options, token);
                 } catch (err) {

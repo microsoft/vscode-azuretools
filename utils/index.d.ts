@@ -833,6 +833,7 @@ export interface TelemetryProperties {
      * This is used to more accurately track usage, since activation events generally shouldn't 'count' as usage
      */
     isActivationEvent?: 'true' | 'false';
+    isCopilotEvent?: 'true' | 'false';
     result?: 'Succeeded' | 'Failed' | 'Canceled';
     error?: string;
     errorMessage?: string;
