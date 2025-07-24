@@ -5,7 +5,7 @@
 
 import type { AzExtResourceType, AzureSubscription } from '@microsoft/vscode-azureresources-api';
 import type * as vscode from 'vscode';
-import type { AbstractAzExtTreeItem, ActivityChildItemBase, AzExtParentTreeItem, AzExtTreeDataProvider, AzExtTreeItem, IAzureQuickPickOptions, ISubscriptionContext, ITreeItemPickerContext, ResourceGroupsItem, SealedAzExtTreeItem } from './index'; // This must remain `import type` or else a circular reference will result
+import type { AbstractAzExtTreeItem, ActivityAttributes, ActivityChildItemBase, AzExtParentTreeItem, AzExtTreeDataProvider, AzExtTreeItem, IAzureQuickPickOptions, ISubscriptionContext, ITreeItemPickerContext, ResourceGroupsItem, SealedAzExtTreeItem } from './index'; // This must remain `import type` or else a circular reference will result
 
 /**
  * The API implemented by the Azure Resource Groups host extension
@@ -274,6 +274,16 @@ export interface Activity {
      * A date representing the time when the activity finished.
      */
     endTime?: Date;
+
+    /**
+     * The command / callback id for the activity.
+     */
+    callbackId?: string;
+
+    /**
+     * Activity / Command attributes to be shared with Copilot
+     */
+    attributes?: ActivityAttributes;
 
     /**
      * A boolean representing whether or not the activity will provide activity children for display

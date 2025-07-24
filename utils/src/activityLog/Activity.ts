@@ -19,6 +19,8 @@ export enum ActivityStatus {
 }
 
 type ActivityBaseOptions = {
+    attributes?: types.ActivityAttributes;
+    callbackId?: string;
     hasChildren?: boolean;
 };
 
@@ -40,17 +42,23 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
     private timer: NodeJS.Timeout;
     private _startTime: Date | undefined;
     private _endTime: Date | undefined;
+    protected _attributes: types.ActivityAttributes | undefined;
 
     public error?: types.IParsedError;
     public readonly task: types.ActivityTask<R>;
     public readonly id: string;
     public readonly cancellationTokenSource: CancellationTokenSource = new CancellationTokenSource();
     public readonly hasChildren?: boolean;
+    public readonly callbackId?: string;
 
     abstract initialState(): hTypes.ActivityTreeItemOptions;
     abstract successState(): hTypes.ActivityTreeItemOptions;
     abstract progressState(): hTypes.ActivityTreeItemOptions;
     abstract errorState(error?: types.IParsedError): hTypes.ActivityTreeItemOptions;
+
+    public get attributes(): types.ActivityAttributes | undefined {
+        return this._attributes;
+    }
 
     public get startTime(): Date | undefined {
         return this._startTime;
@@ -63,7 +71,9 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
     public constructor(task: types.ActivityTask<R>, options?: ActivityBaseOptions) {
         this.id = uuidv4();
         this.task = task;
+        this._attributes = options?.attributes;
         this.hasChildren = options?.hasChildren;
+        this.callbackId = options?.callbackId;
 
         this.onStart = this._onStartEmitter.event;
         this.onProgress = this._onProgressEmitter.event;

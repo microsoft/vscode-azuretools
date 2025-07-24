@@ -719,6 +719,11 @@ export declare function addExtensionValueToMask(...values: (string | undefined)[
  */
 export interface IActionContext {
     /**
+     * The id for the callback, used as the id for the telemetry event.
+     */
+    callbackId?: string;
+
+    /**
      * Describes the behavior of telemetry for this action
      */
     telemetry: ITelemetryContext;
@@ -828,6 +833,7 @@ export interface TelemetryProperties {
      * This is used to more accurately track usage, since activation events generally shouldn't 'count' as usage
      */
     isActivationEvent?: 'true' | 'false';
+    isCopilotEvent?: 'true' | 'false';
     result?: 'Succeeded' | 'Failed' | 'Canceled';
     error?: string;
     errorMessage?: string;
@@ -1325,6 +1331,10 @@ export declare interface ExecuteActivityContext {
      */
     activityResult?: AppResource | string;
     /**
+     * The command / callback id for the activity.
+     */
+    callbackId?: string;
+    /**
      * Hide activity notifications
      */
     suppressNotification?: boolean;
@@ -1340,6 +1350,50 @@ export declare interface ExecuteActivityContext {
      * Children to show under the activity tree item.
      */
     activityChildren?: ActivityChildItemBase[];
+
+    /**
+     * Activity / Command attributes to be shared with Copilot
+     */
+    activityAttributes?: ActivityAttributes;
+}
+
+export interface ActivityAttributes {
+    /**
+     * A description or summary of the command or activity being run
+     */
+    description?: string;
+    /**
+     * A troubleshooting guide that can be used for reference by Copilot to help users fix issues
+     */
+    troubleshooting?: string[];
+    /**
+     * Any relevant logs related to the command or activity being run
+     */
+    logs?: LogActivityAttributes[];
+    /**
+     * Any relevant files related to the command or activity being run
+     */
+    files?: FileActivityAttributes[];
+    /**
+     * Any Azure resource envelope related to the command or activity being run
+     */
+    azureResource?: unknown;
+
+    // For additional one-off properties that could be useful for Copilot
+    [key: string]: unknown;
+}
+
+export type LogActivityAttributes = {
+    name?: string;
+    description?: string;
+    content?: string;
+};
+
+export type FileActivityAttributes = {
+    name?: string;
+    path?: string;
+    description?: string;
+    content?: string;
 }
 
 export interface ExecuteActivityOutput {
@@ -1505,6 +1559,11 @@ export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
      * Optionally return a subwizard. This will be called after `prompt`
      */
     public getSubWizard?(wizardContext: T): Promise<IWizardOptions<T> | undefined>;
+
+    /**
+     * Optional. Called whenever the user presses the go back button.
+     */
+    public undo?(wizardContext: T): void;
 
     /**
      * Can be used to optionally configure the wizard context before determining if prompting is required

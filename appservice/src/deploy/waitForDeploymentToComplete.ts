@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { sendRequestWithTimeout } from '@microsoft/vscode-azext-azureutils';
-import { IActionContext, IParsedError, nonNullProp, nonNullValue, parseError } from '@microsoft/vscode-azext-utils';
+import { ExecuteActivityContext, IActionContext, IParsedError, nonNullProp, nonNullValue, parseError } from '@microsoft/vscode-azext-utils';
 import { CancellationToken, Progress, l10n, window } from 'vscode';
 import type * as KuduModels from '../KuduModels';
 import { ParsedSite, SiteClient } from '../SiteClient';
@@ -21,7 +21,7 @@ type DeploymentOptions = {
     progress?: Progress<{ message?: string; increment?: number }>;
 }
 
-export async function waitForDeploymentToComplete(context: IActionContext & Partial<InnerDeployContext>, site: ParsedSite, options: DeploymentOptions = {}): Promise<void> {
+export async function waitForDeploymentToComplete(context: IActionContext & Partial<InnerDeployContext> & Partial<ExecuteActivityContext>, site: ParsedSite, options: DeploymentOptions = {}): Promise<void> {
     let fullLog: string = '';
 
     let lastLogTime: Date = new Date(0);
@@ -36,6 +36,8 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
     const { expectedId, token, locationUrl } = options;
     // recommended to poll every second or the deployment id can be recycled before we find it
     const pollingInterval = options.pollingInterval ?? 1000;
+    context.activityAttributes = context.activityAttributes || {};
+    context.activityAttributes.logs = context.activityAttributes.logs || [];
 
     while (!token?.isCancellationRequested) {
         if (locationUrl) {
@@ -81,6 +83,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
                 fullLog = fullLog.concat(newEntry.message);
                 options.progress?.report({ message: newEntry.message });
                 ext.outputChannel.appendLog(newEntry.message, { date: newEntry.logTime, resourceName: site.fullName });
+                context.activityAttributes.logs.push({ content: newEntry.message });
                 lastLogTimeForThisPoll = newEntry.logTime;
                 if (/error/i.test(newEntry.message)) {
                     lastErrorLine = newEntry.message;

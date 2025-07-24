@@ -16,7 +16,7 @@ import { parseAzureResourceGroupId, parseAzureResourceId } from "../utils/parseA
 import { uiUtils } from "../utils/uiUtils";
 import { getAzureIconPath } from "./IconPath";
 
-export async function createRoleDefinitionsItems(context: IActionContext, subscription: AzureSubscription | ISubscriptionContext, msi: Identity): Promise<RoleDefinitionsItem[]> {
+export async function createRoleDefinitionsItems(context: IActionContext, subscription: AzureSubscription | ISubscriptionContext, msi: Identity, parentResourceId: string): Promise<RoleDefinitionsItem[]> {
     const subContext = isAzureSubscription(subscription) ? createSubscriptionContext(subscription) : subscription;
     const authClient = await createAuthorizationManagementClient([context, subContext]);
     const roleAssignment = await uiUtils.listAllIterator(authClient.roleAssignments.listForSubscription());
@@ -29,27 +29,26 @@ export async function createRoleDefinitionsItems(context: IActionContext, subscr
             if (!ra.scope || !ra.roleDefinitionId) {
                 return;
             }
-            const scopeSplit = ra.scope.split('/');
-            const name = scopeSplit.pop();
 
-            if (name) {
-                const roleDefinition = await authClient.roleDefinitions.getById(ra.roleDefinitionId);
-                // if the role defition is not found, create a new one and push the role definition to it
-                if (!roleDefinitionsItems.some((rdi) => rdi.label === name)) {
-                    const rdi = await RoleDefinitionsItem.createRoleDefinitionsItem({
-                        context,
-                        subContext,
-                        roleDefinition,
-                        scope: ra.scope,
-                        msiId: msi.id,
-                        // if the msi resource id doesn't contain the subscription id, it's from another subscription
-                        withDescription: !msi.id?.includes(subContext.subscriptionId)
-                    });
-                    roleDefinitionsItems.push(rdi);
-                } else {
-                    // if the role definition is found, add the role definition to the existing role definition item
-                    roleDefinitionsItems.find((rdi) => rdi.label === name)?.addRoleDefinition(roleDefinition);
-                }
+            const roleDefinition = await authClient.roleDefinitions.getById(ra.roleDefinitionId);
+            const roleDefinitionsItem: RoleDefinitionsItem | undefined = roleDefinitionsItems.find((rdi) => rdi.id === RoleDefinitionsItem.getId(parentResourceId, msi.id, ra.scope));
+
+            if (!roleDefinitionsItem) {
+                // if the role definition is not found, create a new one and push the role definition to it
+                const rdi = await RoleDefinitionsItem.createRoleDefinitionsItem({
+                    context,
+                    subContext,
+                    roleDefinition,
+                    parentResourceId,
+                    scope: ra.scope,
+                    msiId: msi.id,
+                    // if the msi resource id doesn't contain the subscription id, it's from another subscription
+                    withDescription: !msi.id?.includes(subContext.subscriptionId)
+                });
+                roleDefinitionsItems.push(rdi);
+            } else {
+                // if the role definition is found, add the role definition to the existing role definitions item
+                roleDefinitionsItem.addRoleDefinition(roleDefinition);
             }
         }));
 
@@ -81,12 +80,27 @@ export class RoleDefinitionsItem implements TreeElementBase {
         this.portalUrl = createPortalUri(options.subscription, options.scope);
     }
 
+    /**
+     * Generates a unique tree item id for a `RoleDefinitionsItem`.
+     * Combines the core parent resource id, managed identity id, and scope to ensure uniqueness.
+     *
+     * @param parentResourceId The fully qualified parent resource id (e.g. resource group, function app, container app, etc.)
+     * @param msiId The fully qualified managed identity id
+     * @param scope The fully qualified scope for the role assignment
+     */
+    public static getId(parentResourceId: string = '', msiId: string = '', scope: string = ''): string {
+        const identityBase: string = msiId.split('/').at(-1) ?? '{msiId}';
+        const scopeBase: string = scope.split('/').at(-1) ?? '{scope}';
+        return `${parentResourceId}/identities/${identityBase}/scopes/${scopeBase}`;
+    }
+
     public static async createRoleDefinitionsItem(
         options: {
             context: IActionContext,
             scope: string,
             roleDefinition: RoleDefinition,
             msiId: string | undefined,
+            parentResourceId: string,
             subContext: ISubscriptionContext,
             withDescription?: boolean
         }): Promise<RoleDefinitionsItem> {
@@ -128,7 +142,7 @@ export class RoleDefinitionsItem implements TreeElementBase {
         }
 
         return new RoleDefinitionsItem({
-            id: `${options.msiId}/${options.scope}`,
+            id: RoleDefinitionsItem.getId(options.parentResourceId, options.msiId, options.scope),
             label,
             iconPath,
             description,
@@ -176,6 +190,7 @@ export class RoleDefinitionsTreeItem extends AzExtParentTreeItem {
 
     constructor(parent: AzExtParentTreeItem, readonly roleDefinitionsItem: RoleDefinitionsItem) {
         super(parent);
+        this.id = roleDefinitionsItem.id;
         this.label = roleDefinitionsItem.label;
         this.iconPath = roleDefinitionsItem.iconPath;
         this.description = roleDefinitionsItem.description;
@@ -183,9 +198,10 @@ export class RoleDefinitionsTreeItem extends AzExtParentTreeItem {
 
     public async loadMoreChildrenImpl(_clearCache: boolean, _context: IActionContext): Promise<AzExtTreeItem[]> {
         return this.roleDefinitionsItem.roleDefintions.map((rd) => {
+            const roleAssignmentBase: string = rd.id?.split('/').at(-1) ?? '{roleAssignment}';
             return new GenericTreeItem(this, {
                 label: "",
-                id: `${this.id}/${rd.id}`,
+                id: `${this.id}/roleAssignments/${roleAssignmentBase}`,
                 description: rd.roleName,
                 tooltip: rd.description,
                 contextValue: 'roleDefinition',

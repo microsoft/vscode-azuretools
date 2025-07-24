@@ -16,6 +16,8 @@ export interface Role {
 }
 
 export class RoleAssignmentExecuteStep extends AzureWizardExecuteStep<types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>> {
+    public priority: number;
+
     public async execute(_wiardContext: types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>, _progress: Progress<{ message?: string; increment?: number; }>): Promise<void> {
         // nothing should execute, but we need shouldExecute to be true so that addExecuteSteps is called
         return undefined;
@@ -24,17 +26,17 @@ export class RoleAssignmentExecuteStep extends AzureWizardExecuteStep<types.IRes
         return true;
     }
 
-    private roles: () => Role[] | undefined;
-    public constructor(roles: () => Role[] | undefined) {
+    private roles: () => (Role[] | Promise<Role[]> | undefined);
+    public constructor(roles: () => (Role[] | Promise<Role[]> | undefined), options?: { priority?: number }) {
         super();
         this.roles = roles;
+        this.priority = options?.priority ?? 900;
     }
-    public priority: number = 900;
-    public addExecuteSteps(_context: types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>): AzureWizardExecuteStep<types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>>[] {
-        const roles = this.roles();
+    public async addExecuteSteps(_context: types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>): Promise<AzureWizardExecuteStep<types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>>[]> {
+        const roles = await this.roles();
         const steps = [];
         for (const role of roles ?? []) {
-            steps.push(new SingleRoleAssignmentExecuteStep(role));
+            steps.push(new SingleRoleAssignmentExecuteStep(role, { priority: this.priority + 1 }));
         }
 
         return steps;
@@ -42,7 +44,9 @@ export class RoleAssignmentExecuteStep extends AzureWizardExecuteStep<types.IRes
 }
 
 class SingleRoleAssignmentExecuteStep<T extends types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>> extends AzureWizardExecuteStepWithActivityOutput<T> {
+    public priority: number;
     stepName: string = 'RoleAssignmentExecuteStep';
+
     protected getTreeItemLabel(_context: T): string {
         const { resourceName, resourceType } = this.resourceNameAndType;
         return l10n.t('Create role assignment "{0}" for the {1} resource "{2}"', this.role.roleDefinitionName, resourceType, resourceName);
@@ -54,16 +58,15 @@ class SingleRoleAssignmentExecuteStep<T extends types.IResourceGroupWizardContex
     protected getOutputLogFail(_context: T): string {
         const { resourceName, resourceType } = this.resourceNameAndType;
         return l10n.t('Failed to create role assignment "{0}" for the {1} resource "{2}".', this.role.roleDefinitionName, resourceType, resourceName);
-        throw new Error('Method not implemented.');
     }
     protected getOutputLogProgress(_context: T): string {
         const { resourceName, resourceType } = this.resourceNameAndType;
         return l10n.t('Creating role assignment "{0}" for the {1} resource "{2}"...', this.role.roleDefinitionName, resourceType, resourceName);
     }
-    public priority: number = 901;
     private _retries: number = 0;
-    public constructor(readonly role: Role) {
+    public constructor(readonly role: Role, options?: { priority?: number }) {
         super();
+        this.priority = options?.priority ?? 901;
     }
 
     public async executeCore(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {

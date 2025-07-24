@@ -117,6 +117,23 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
     public static setLocation<T extends ILocationWizardContext>(wizardContext: T, name: string): Promise<void>;
 
     /**
+     * Sets a location to auto-select during prompting, if available.
+     * Use this instead of `setLocation` when you want to automatically select a location
+     * that respects all future resource providers.
+     * @param wizardContext The context of the wizard
+     * @param name The name or display name of the suggested location
+     */
+    public static setAutoSelectLocation<T extends ILocationWizardContext>(wizardContext: T, name: string): Promise<void>;
+
+    /**
+     * Resets all location and location-related metadata on the wizard context back to its uninitialized state.
+     * This includes clearing the selected location, cached location tasks, provider location maps, and any step-tracking flags.
+     * Use this to ensure the wizard context is fully reset before starting a new location selection process.
+     * @param wizardContext The context of the wizard
+     */
+    public static resetLocation<T extends ILocationWizardContext>(wizardContext: T): void;
+
+    /**
      * Specify a task that will be used to filter locations
      * @param wizardContext The context of the wizard
      * @param task A task evaluating to the locations supported by this provider
@@ -139,6 +156,12 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
      * @param location location or extended location
      */
     public static getExtendedLocation(location: AzExtLocation): { location: string, extendedLocation?: ExtendedLocation };
+
+    /**
+     * Gets the `autoSelectLocation` for this wizard.  This location will be automatically selected during prompting, if available.
+     * @param wizardContext The context of the wizard
+     */
+    public static getAutoSelectLocation<T extends ILocationWizardContext>(wizardContext: T): AzExtLocation | undefined;
 
     /**
      * Gets the selected location for this wizard.
@@ -416,7 +439,7 @@ export declare class RoleAssignmentExecuteStep<T extends IResourceGroupWizardCon
     * If the scope ID is undefined, the step will throw an error.
     * @param roles An array of roles. Each role is an object and include the ARM role definition id and name of the role definition.
     * */
-    public constructor(roles: () => Role[] | undefined);
+    public constructor(roles: () => (Role[] | Promise<Role[]> | undefined), options?: { priority?: number });
 
     public execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
     public shouldExecute(wizardContext: T): boolean;
@@ -558,7 +581,6 @@ export function addBasicAuthenticationCredentialsToClient(client: ServiceClient,
  */
 export declare const CommonRoleDefinitions: {
     readonly storageBlobDataContributor: {
-        readonly id: "/subscriptions/9b5c7ccb-9857-4307-843b-8875e83f65e9/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe";
         readonly name: "ba92f5b4-2d11-453d-a403-e96b0029c9fe";
         readonly type: "Microsoft.Authorization/roleDefinitions";
         readonly roleName: "Storage Blob Data Contributor";
@@ -620,7 +642,14 @@ export declare const CommonRoleDefinitions: {
         readonly roleName: "DocumentDB Account Contributor",
         readonly description: "Can manage Azure Cosmos DB accounts.",
         readonly roleType: "BuiltInRole"
-    }
+    },
+    readonly durableTaskDataContributor: {
+        name: "0ad04412-c4d5-4796-b79c-f76d14c8d402",
+        type: "Microsoft.Authorization/roleDefinitions",
+        roleName: "Durable Task Data Contributor",
+        description: "Durable Task role for all data access operations.",
+        roleType: "BuiltInRole"
+    },
 };
 /**
  * Constructs the role id for a given subscription and role name id
@@ -636,7 +665,9 @@ export function createRoleId(subscriptionId: string, RoleDefinition: RoleDefinit
 export function createRoleDefinitionsItems(
     context: IActionContext,
     subscription: AzureSubscription | ISubscriptionContext,
-    msi: Identity): Promise<RoleDefinitionsItem[]>
+    msi: Identity,
+    parentResourceId: string,
+): Promise<RoleDefinitionsItem[]>
 
 /**
  * should not be created directly; use `createRoleDefinitionsItems` instead
