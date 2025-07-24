@@ -1544,11 +1544,11 @@ export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
     public id?: string;
 
     /**'
-     * Optional boolean used to determine if extra children were added during the prompt step. This value is checked in the
-     * go back function to pop off any extra children.
+     * Optional number used to determine how many extra children were added in a step.
+     * This value is checked in the go back function to pop off any extra children.
      */
 
-    public addedActivityChildren?: boolean;
+    public addedNumberOfActivityChildren?: number | undefined;
 
     /**
      * Prompt the user for input
