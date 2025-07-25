@@ -1257,6 +1257,7 @@ export interface ActivityChildItemBase extends TreeElementBase {
     activityType: ActivityChildType;
     contextValue?: string;
     description?: string;
+    stepId?: string;
     getChildren?(): ProviderResult<ActivityChildItemBase[]>;
 }
 
@@ -1269,6 +1270,7 @@ export type ActivityChildItemOptions = {
     description?: string;
     iconPath?: TreeItemIconPath;
     tooltip?: string | MarkdownString | undefined;
+    stepId?: string;
     initialCollapsibleState?: TreeItemCollapsibleState;
     /**
      * If set to true, will initialize `getChildren` with an empty array.
@@ -1544,11 +1546,11 @@ export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
     public id?: string;
 
     /**'
-     * Optional number used to determine how many extra children were added in a step.
-     * This value is checked in the go back function to pop off any extra children.
+     * Optional unique id used to identify the step when searching for added activity children.
+     * This is used to ensure the added children are only coming from the specific step when removed using goBack()
      */
 
-    public addedNumberOfActivityChildren?: number | undefined;
+    public uniqueId?: string;
 
     /**
      * Prompt the user for input

@@ -22,6 +22,7 @@ export class ActivityChildItem implements types.ActivityChildItemBase {
     contextValue: string;
     activityType: ActivityChildType;
     description?: string;
+    stepId?: string;
 
     constructor(readonly options: types.ActivityChildItemOptions) {
         this.id = options.id ?? uuidv4();
@@ -29,6 +30,7 @@ export class ActivityChildItem implements types.ActivityChildItemBase {
         this.activityType = options.activityType;
         this.contextValue = options.contextValue;
         this.description = options.description;
+        this.stepId = options.stepId;
 
         if (options.isParent) {
             this.getChildren = () => [];
