@@ -332,6 +332,12 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                 removeFromEnd(this._promptSteps, step.numSubPromptSteps);
                 removeFromEnd(this._executeSteps, step.numSubExecuteSteps);
             }
+
+            if (step.addedNumberOfActivityChildren && step.addedNumberOfActivityChildren > 0) {
+                for (let i = 0; i < step.addedNumberOfActivityChildren; i++) {
+                    this._context.activityChildren?.pop();
+                }
+            }
         } while (!step.prompted);
 
         for (const key of Object.keys(this._context)) {
