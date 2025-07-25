@@ -1545,13 +1545,6 @@ export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
      */
     public id?: string;
 
-    /**'
-     * Optional unique id used to identify the step when searching for added activity children.
-     * This is used to ensure the added children are only coming from the specific step when removed using goBack()
-     */
-
-    public uniqueId?: string;
-
     /**
      * Prompt the user for input
      */
