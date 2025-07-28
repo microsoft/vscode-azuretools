@@ -1540,10 +1540,10 @@ export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
     public supportsDuplicateSteps: boolean;
 
     /**
-     * Optional id used to determine if this step is unique, for things like caching values and telemetry
+     * A id used to determine if this step is unique, for things like caching values and telemetry
      * If not specified, the class name will be used instead
      */
-    public id?: string;
+    public id: string;
 
     /**
      * Prompt the user for input
