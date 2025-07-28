@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 export * from './clients';
-export { CommonRoleDefinitions, createRoleId } from './constants';
+export { CommonRoleDefinitions, createRoleId, IdentityProvider, UserAssignedIdentityResourceType } from './constants';
 export * from './createAzureClient';
 export { registerAzureUtilsExtensionVariables } from './extensionVariables';
 export * from './openInPortal';
