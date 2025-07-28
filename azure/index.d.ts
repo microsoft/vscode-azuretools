@@ -688,3 +688,6 @@ export class RoleDefinitionsTreeItem extends AzExtParentTreeItem {
     public label: string;
     public contextValue: string;
 }
+
+export const IdentityProvider: string;
+export const UserAssignedIdentityResourceType: string;

@@ -9,6 +9,9 @@ export const resourcesProvider: string = 'Microsoft.Resources';
 export const storageProvider: string = 'Microsoft.Storage';
 export const storageProviderType = "Microsoft.Storage/storageAccounts";
 
+export const IdentityProvider: string = 'Microsoft.ManagedIdentity';
+export const UserAssignedIdentityResourceType: string = 'userAssignedIdentities';
+
 export const CommonRoleDefinitions = {
     storageBlobDataContributor: {
         name: "ba92f5b4-2d11-453d-a403-e96b0029c9fe",

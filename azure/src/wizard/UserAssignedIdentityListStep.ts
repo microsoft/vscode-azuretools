@@ -8,7 +8,9 @@ import { AzureWizardPromptStep, IAzureQuickPickItem, IAzureQuickPickOptions, IWi
 import * as vscode from 'vscode';
 import * as types from '../../index';
 import { createManagedServiceIdentityClient } from '../clients';
+import { IdentityProvider, UserAssignedIdentityResourceType } from '../constants';
 import { uiUtils } from '../utils/uiUtils';
+import { LocationListStep } from './LocationListStep';
 import { ResourceGroupListStep } from './ResourceGroupListStep';
 import { UserAssignedIdentityCreateStep } from './UserAssignedIdentityCreateStep';
 
@@ -31,8 +33,15 @@ export class UserAssignedIdentityListStep<T extends types.IResourceGroupWizardCo
 
     public async getSubWizard(wizardContext: T): Promise<IWizardOptions<T> | undefined> {
         if (!wizardContext.managedIdentity) {
+            const promptSteps: AzureWizardPromptStep<T>[] = [
+                new ResourceGroupListStep(),
+            ];
+
+            LocationListStep.addProviderForFiltering(wizardContext, IdentityProvider, UserAssignedIdentityResourceType);
+            LocationListStep.addStep(wizardContext, promptSteps);
+
             return {
-                promptSteps: [new ResourceGroupListStep()],
+                promptSteps,
                 executeSteps: [new UserAssignedIdentityCreateStep()]
             }
         }
