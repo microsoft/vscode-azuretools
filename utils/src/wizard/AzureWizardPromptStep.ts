@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { v4 as uuid } from 'uuid';
 import * as types from '../../index';
 
 export abstract class AzureWizardPromptStep<T extends types.IActionContext> implements types.AzureWizardPromptStep<T> {
@@ -15,6 +16,10 @@ export abstract class AzureWizardPromptStep<T extends types.IActionContext> impl
     public propertiesBeforePrompt!: string[];
     public prompted!: boolean;
     public id?: string;
+
+    constructor(options?: { id?: string }) {
+        this.id = options?.id ?? uuid();
+    }
 
     public abstract prompt(wizardContext: T): Promise<void>;
 
