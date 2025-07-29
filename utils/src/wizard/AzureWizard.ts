@@ -333,10 +333,8 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                 removeFromEnd(this._executeSteps, step.numSubExecuteSteps);
             }
 
-            if (step.addedNumberOfActivityChildren && step.addedNumberOfActivityChildren > 0) {
-                for (let i = 0; i < step.addedNumberOfActivityChildren; i++) {
-                    this._context.activityChildren?.pop();
-                }
+            if (this._context.activityChildren && step.id) {
+                this._context.activityChildren = this._context.activityChildren.filter(child => child.stepId !== step?.id);
             }
         } while (!step.prompted);
 
