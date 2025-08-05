@@ -174,7 +174,7 @@ export class RoleDefinitionsItem implements TreeElementBase {
     }
 
     addRoleDefinition(roleDefinition: RoleDefinition): void {
-        if (!this.roleDefintions.some((rd) => rd.id === roleDefinition.id)) {
+        if (!this.roleDefintions.some((rd) => rd.roleName === roleDefinition.roleName)) {
             this.roleDefintions.push(roleDefinition);
         }
     }
