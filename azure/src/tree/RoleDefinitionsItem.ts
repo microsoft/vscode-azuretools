@@ -90,8 +90,7 @@ export class RoleDefinitionsItem implements TreeElementBase {
      */
     public static getId(parentResourceId: string = '', msiId: string = '', scope: string = ''): string {
         const identityBase: string = msiId.split('/').at(-1) ?? '{msiId}';
-        const scopeBase: string = scope.split('/').at(-1) ?? '{scope}';
-        return `${parentResourceId}/identities/${identityBase}/scopes/${scopeBase}`;
+        return `${parentResourceId}/identities/${identityBase}/scopes/${scope}`;
     }
 
     public static async createRoleDefinitionsItem(
