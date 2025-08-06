@@ -155,10 +155,10 @@ export class RoleDefinitionsItem implements TreeElementBase {
         const scopeId: string = parsedScopeId.rawId;
 
         if (parsedScopeId.provider.startsWith('Microsoft.DurableTask')) {
-            // "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DurableTask/schedulers/{schedulerName}/taskhubs/{taskHubName}"
+            // /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DurableTask/schedulers/{schedulerName}/taskhubs/{taskHubName}
             const dtsTaskHubMatch = scopeId.match(/Microsoft\.DurableTask\/schedulers\/([^/]+)\/taskhubs\/([^/]+)$/);
             if (dtsTaskHubMatch) {
-                // "{schedulerName}/{taskHubName}"
+                // {schedulerName}/{taskHubName}
                 return `${dtsTaskHubMatch[1]}/${dtsTaskHubMatch[2]}`;
             }
         }
