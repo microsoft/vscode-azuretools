@@ -114,7 +114,7 @@ export class RoleDefinitionsItem implements TreeElementBase {
         try {
             parsedScopeId = parseAzureResourceId(options.scope);
             subscriptionId = parsedScopeId.subscriptionId;
-            label = getResourceLabel(parsedScopeId);
+            label = this.getRoleDefinitionsResourceLabel(parsedScopeId);
             const resourceIconPath = getAzExtResourceType({ type: parsedScopeId.provider });
             iconPath = resourceIconPath ? getAzureIconPath(resourceIconPath) : new ThemeIcon('symbol-field');
         }
@@ -149,21 +149,21 @@ export class RoleDefinitionsItem implements TreeElementBase {
             subscription: options.subContext,
             scope: options.scope
         });
+    }
 
-        function getResourceLabel(parsedScopeId: types.ParsedAzureResourceId): string {
-            const scopeId: string = parsedScopeId.rawId;
+    private static getRoleDefinitionsResourceLabel(parsedScopeId: types.ParsedAzureResourceId): string {
+        const scopeId: string = parsedScopeId.rawId;
 
-            if (parsedScopeId.provider.startsWith('Microsoft.DurableTask')) {
-                // "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DurableTask/schedulers/{schedulerName}/taskhubs/{taskHubName}"
-                const dtsTaskHubMatch = scopeId.match(/Microsoft\.DurableTask\/schedulers\/([^/]+)\/taskhubs\/([^/]+)$/);
-                if (dtsTaskHubMatch) {
-                    // "{schedulerName}/{taskHubName}"
-                    return `${dtsTaskHubMatch[1]}/${dtsTaskHubMatch[2]}`;
-                }
+        if (parsedScopeId.provider.startsWith('Microsoft.DurableTask')) {
+            // "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DurableTask/schedulers/{schedulerName}/taskhubs/{taskHubName}"
+            const dtsTaskHubMatch = scopeId.match(/Microsoft\.DurableTask\/schedulers\/([^/]+)\/taskhubs\/([^/]+)$/);
+            if (dtsTaskHubMatch) {
+                // "{schedulerName}/{taskHubName}"
+                return `${dtsTaskHubMatch[1]}/${dtsTaskHubMatch[2]}`;
             }
-
-            return parsedScopeId.resourceName;
         }
+
+        return parsedScopeId.resourceName;
     }
 
     getTreeItem(): TreeItem {
