@@ -104,7 +104,7 @@ export class RoleDefinitionsItem implements TreeElementBase {
             withDescription?: boolean
         }): Promise<RoleDefinitionsItem> {
 
-        let parsedAzureResourceId: types.ParsedAzureResourceId | undefined;
+        let parsedScopeId: types.ParsedAzureResourceId | undefined;
         let parsedAzureResourceGroupId: types.ParsedAzureResourceGroupId | undefined;
         let label: string;
         let iconPath: TreeItemIconPath;
@@ -112,10 +112,10 @@ export class RoleDefinitionsItem implements TreeElementBase {
         const description: string | undefined = options.withDescription ? options.subContext.subscriptionDisplayName : undefined;
 
         try {
-            parsedAzureResourceId = parseAzureResourceId(options.scope);
-            subscriptionId = parsedAzureResourceId.subscriptionId;
-            label = parsedAzureResourceId.resourceName;
-            const resourceIconPath = getAzExtResourceType({ type: parsedAzureResourceId.provider });
+            parsedScopeId = parseAzureResourceId(options.scope);
+            subscriptionId = parsedScopeId.subscriptionId;
+            label = getResourceLabel(parsedScopeId);
+            const resourceIconPath = getAzExtResourceType({ type: parsedScopeId.provider });
             iconPath = resourceIconPath ? getAzureIconPath(resourceIconPath) : new ThemeIcon('symbol-field');
         }
         catch (error) {
@@ -149,6 +149,21 @@ export class RoleDefinitionsItem implements TreeElementBase {
             subscription: options.subContext,
             scope: options.scope
         });
+
+        function getResourceLabel(parsedScopeId: types.ParsedAzureResourceId): string {
+            const scopeId: string = parsedScopeId.rawId;
+
+            if (parsedScopeId.provider.startsWith('Microsoft.DurableTask')) {
+                // "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DurableTask/schedulers/{schedulerName}/taskhubs/{taskHubName}"
+                const dtsTaskHubMatch = scopeId.match(/Microsoft\.DurableTask\/schedulers\/([^/]+)\/taskhubs\/([^/]+)$/);
+                if (dtsTaskHubMatch) {
+                    // "{schedulerName}/{taskHubName}"
+                    return `${dtsTaskHubMatch[1]}/${dtsTaskHubMatch[2]}`;
+                }
+            }
+
+            return parsedScopeId.resourceName;
+        }
     }
 
     getTreeItem(): TreeItem {
