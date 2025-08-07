@@ -57,7 +57,7 @@
         "@microsoft/vscode-azext-dev": "^2.0.4",
         "@microsoft/vscode-azureresources-api": "^2.0.3",
         "@types/mocha": "^7.0.2",
-        "@types/node": "^18.19.0",
+        "@types/node": "^16.0.0",
         "@types/semver": "^7.3.9",
         "@types/uuid": "^9.0.1",
         "@types/vscode": "^1.95.0",
