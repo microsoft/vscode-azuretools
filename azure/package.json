@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-azureutils",
     "author": "Microsoft Corporation",
-    "version": "3.4.7",
+    "version": "3.4.8",
     "description": "Common Azure utils for developing Azure extensions for VS Code",
     "tags": [
         "azure",
@@ -55,7 +55,7 @@
         "@azure/core-paging": "^1.2.1",
         "@microsoft/eslint-config-azuretools": "^0.2.1",
         "@microsoft/vscode-azext-dev": "^2.0.4",
-        "@microsoft/vscode-azureresources-api": "^2.0.3",
+        "@microsoft/vscode-azureresources-api": "^2.5.1",
         "@types/mocha": "^7.0.2",
         "@types/node": "^16.0.0",
         "@types/semver": "^7.3.9",
