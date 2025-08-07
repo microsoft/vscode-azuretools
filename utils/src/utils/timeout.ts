@@ -27,7 +27,7 @@ export async function valueOnTimeout<T>(timeoutMs: number, timeoutValue: T, acti
 export async function rejectOnTimeout<T>(timeoutMs: number, action: () => Promise<T> | T, callerTimeOutMessage?: string): Promise<T> {
     // eslint-disable-next-line no-async-promise-executor, @typescript-eslint/no-misused-promises
     return await new Promise<T>(async (resolve, reject): Promise<void> => {
-        let timer: NodeJS.Timer | undefined = setTimeout(
+        let timer: NodeJS.Timeout | undefined = setTimeout(
             () => {
                 timer = undefined;
                 reject(new TimeoutError(callerTimeOutMessage || vscode.l10n.t('Execution timed out.')));
