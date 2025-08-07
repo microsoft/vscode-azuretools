@@ -147,7 +147,7 @@ function parseIfHtml(message: string): string {
 }
 
 function parseIfXml(message: string): string {
-    const matches: RegExpMatchArray | null = message.match(/<Message>(.*)<\/Message>/si);
+    const matches: RegExpMatchArray | null = message.match(/<Message>([\s\S]*?)<\/Message>/i);
     if (matches) {
         return matches[1];
     }
