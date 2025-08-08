@@ -51,7 +51,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
 
         jsonFilePath = path.join(workspacePath, jsonFile);
         ensureFile(jsonFilePath);
-        await workspace.fs.writeFile(Uri.file(jsonFilePath), Buffer.from(JSON.stringify(jsonContents)));
+        await workspace.fs.writeFile(Uri.file(jsonFilePath), new Uint8Array(Buffer.from(JSON.stringify(jsonContents))));
     });
 
     suiteTeardown(async function (this: Mocha.Context): Promise<void> {

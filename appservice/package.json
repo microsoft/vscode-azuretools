@@ -76,6 +76,6 @@
         "mocha": "^10.8.2",
         "mocha-junit-reporter": "^2.0.2",
         "mocha-multi-reporters": "^1.1.7",
-        "typescript": "^4.9.4"
+        "typescript": "^5.9.2"
     }
 }

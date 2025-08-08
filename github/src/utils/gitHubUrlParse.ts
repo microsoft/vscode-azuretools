@@ -27,10 +27,10 @@ export interface ParsedGitHubUrl {
  * @example 'https://github.com/microsoft/foo-bar'
  */
 export function gitHubUrlParse(url: string): ParsedGitHubUrl {
-    const match: RegExpMatchArray | null = url.match(/github\.com\/(?<ownerOrOrganization>[^/]+)\/(?<repositoryName>[^/]+)/i);
+    const match: RegExpMatchArray | null = url.match(/github\.com\/([^/]+)\/([^/]+)/i);
     return {
         urlReference: url,
-        ownerOrOrganization: match?.groups?.ownerOrOrganization,
-        repositoryName: match?.groups?.repositoryName
+        ownerOrOrganization: match?.[1],
+        repositoryName: match?.[2]
     };
 }

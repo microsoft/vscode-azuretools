@@ -60,7 +60,7 @@ export namespace AzExtFsExtra {
             }
         }
 
-        await workspace.fs.writeFile(uri, Buffer.from(''));
+        await workspace.fs.writeFile(uri, new Uint8Array());
     }
 
     export async function readFile(resource: Uri | string): Promise<string> {
@@ -70,7 +70,7 @@ export namespace AzExtFsExtra {
 
     export async function writeFile(resource: Uri | string, contents: string): Promise<void> {
         const uri = convertToUri(resource);
-        await workspace.fs.writeFile(uri, Buffer.from(contents));
+        await workspace.fs.writeFile(uri, new Uint8Array(Buffer.from(contents)));
     }
 
     export async function appendFile(resource: Uri | string, contents: string, separator: string = '\r\n\r\n'): Promise<void> {
