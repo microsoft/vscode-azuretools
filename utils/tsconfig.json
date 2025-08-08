@@ -2,7 +2,8 @@
     "extends": "../tsconfig.base.json",
     "compilerOptions": {
         "outDir": "out",
-        "rootDir": "."
+        "rootDir": ".",
+        "skipLibCheck": true
     },
     "exclude": [
         "node_modules",
