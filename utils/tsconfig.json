@@ -3,7 +3,7 @@
     "compilerOptions": {
         "outDir": "out",
         "rootDir": ".",
-        "skipLibCheck": true
+        "skipLibCheck": true // Required for TypeScript 5.9 compatibility with webpack types
     },
     "exclude": [
         "node_modules",
