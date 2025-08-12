@@ -51,7 +51,8 @@
         "mocha": "^11.1.0",
         "mocha-junit-reporter": "^2.0.2",
         "mocha-multi-reporters": "^1.1.7",
-        "typescript": "^5.8.2"
+        "typescript": "^5.9.2",
+        "node": "^22.17.0"
     },
     "dependencies": {
         "@azure/arm-resources-subscriptions": "^2.1.0",
