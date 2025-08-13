@@ -220,7 +220,7 @@ export declare class VerifyProvidersStep<T extends ISubscriptionActionContext> e
 
 export interface IResourceGroupWizardContext extends ILocationWizardContext, IRelatedNameWizardContext {
     /**
-     * Flag to indicate whether `ResourceGroupVerifyStep` has already been run to check for new resource group availability.
+     * Internal flag indicating whether `ResourceGroupVerifyStep` has already been run.
      */
     _hasResourceGroupBeenVerified?: boolean;
 
