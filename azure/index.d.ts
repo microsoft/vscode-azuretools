@@ -220,6 +220,12 @@ export declare class VerifyProvidersStep<T extends ISubscriptionActionContext> e
 
 export interface IResourceGroupWizardContext extends ILocationWizardContext, IRelatedNameWizardContext {
     /**
+     * Internal value indicating the last resource group name checked with `ResourceGroupVerifyStep`.
+     * This name does not indicate a successful outcome from the verification step, it only indicates that the check has taken place.
+     */
+    _lastResourceGroupNameVerified?: string;
+
+    /**
      * The resource group to use for new resources.
      * If an existing resource group is picked, this value will be defined after `ResourceGroupListStep.prompt` occurs
      * If a new resource group is picked, this value will be defined after the `execute` phase of the 'create' subwizard

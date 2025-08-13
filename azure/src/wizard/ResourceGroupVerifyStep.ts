@@ -47,11 +47,13 @@ export class ResourceGroupVerifyStep<T extends types.IResourceGroupWizardContext
                 this.options.continueOnFail = true;
             }
             throw error;
+        } finally {
+            context._lastResourceGroupNameVerified = context.newResourceGroupName;
         }
     }
 
     public shouldExecute(context: T): boolean {
-        return !context.resourceGroup;
+        return !context.resourceGroup && context._lastResourceGroupNameVerified !== context.newResourceGroupName;
     }
 
     private _errorItemId: string = uuidv4();
