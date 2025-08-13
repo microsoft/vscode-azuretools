@@ -220,7 +220,8 @@ export declare class VerifyProvidersStep<T extends ISubscriptionActionContext> e
 
 export interface IResourceGroupWizardContext extends ILocationWizardContext, IRelatedNameWizardContext {
     /**
-     * Internal flag indicating the last resource group name checked with `ResourceGroupVerifyStep`.
+     * Internal value indicating the last resource group name checked with `ResourceGroupVerifyStep`.
+     * This name does not indicate a successful outcome from the verification step, it only indicates that the check has taken place.
      */
     _lastResourceGroupNameVerified?: string;
 
