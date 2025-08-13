@@ -222,7 +222,7 @@ export interface IResourceGroupWizardContext extends ILocationWizardContext, IRe
     /**
      * Internal flag indicating the last resource group name checked with `ResourceGroupVerifyStep`.
      */
-    _lastResourceGroupVerified?: string;
+    _lastResourceGroupNameVerified?: string;
 
     /**
      * The resource group to use for new resources.

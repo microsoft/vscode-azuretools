@@ -26,7 +26,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
     private isMissingCreatePermissions: boolean = false;
 
     public async configureBeforeExecute(context: T): Promise<void> {
-        if (context.resourceGroup || context._lastResourceGroupVerified === context.newResourceGroupName) {
+        if (context.resourceGroup || context._lastResourceGroupNameVerified === context.newResourceGroupName) {
             return;
         }
 
