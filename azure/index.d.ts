@@ -220,9 +220,9 @@ export declare class VerifyProvidersStep<T extends ISubscriptionActionContext> e
 
 export interface IResourceGroupWizardContext extends ILocationWizardContext, IRelatedNameWizardContext {
     /**
-     * Internal flag indicating whether `ResourceGroupVerifyStep` has already been run.
+     * Internal flag indicating the last resource group name checked with `ResourceGroupVerifyStep`.
      */
-    _hasResourceGroupBeenVerified?: boolean;
+    _lastResourceGroupVerified?: string;
 
     /**
      * The resource group to use for new resources.

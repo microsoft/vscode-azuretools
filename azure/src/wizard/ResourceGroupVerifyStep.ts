@@ -48,12 +48,12 @@ export class ResourceGroupVerifyStep<T extends types.IResourceGroupWizardContext
             }
             throw error;
         } finally {
-            context._hasResourceGroupBeenVerified = true;
+            context._lastResourceGroupVerified = context.newResourceGroupName;
         }
     }
 
     public shouldExecute(context: T): boolean {
-        return !context.resourceGroup && !context._hasResourceGroupBeenVerified;
+        return !context.resourceGroup && context._lastResourceGroupVerified !== context.newResourceGroupName;
     }
 
     private _errorItemId: string = uuidv4();
