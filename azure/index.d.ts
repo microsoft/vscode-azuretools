@@ -220,6 +220,11 @@ export declare class VerifyProvidersStep<T extends ISubscriptionActionContext> e
 
 export interface IResourceGroupWizardContext extends ILocationWizardContext, IRelatedNameWizardContext {
     /**
+     * Flag to indicate whether `ResourceGroupVerifyStep` has already been run to check for new resource group availability.
+     */
+    _hasResourceGroupBeenVerified?: boolean;
+
+    /**
      * The resource group to use for new resources.
      * If an existing resource group is picked, this value will be defined after `ResourceGroupListStep.prompt` occurs
      * If a new resource group is picked, this value will be defined after the `execute` phase of the 'create' subwizard
