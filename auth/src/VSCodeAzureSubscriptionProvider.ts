@@ -340,8 +340,8 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
             credential: credential,
             authentication: {
                 getSession: () => session,
-                getSessionWithScopes: (scopes) => {
-                    return getSessionFromVSCode(scopes, tenantId, { createIfNone: false, silent: true, account });
+                getSessionWithScopes: (scopes, options) => {
+                    return getSessionFromVSCode(scopes, tenantId, { createIfNone: false, silent: true, account }, (options.challenge as string));
                 },
             }
         };

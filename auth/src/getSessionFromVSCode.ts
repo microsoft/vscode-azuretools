@@ -49,6 +49,19 @@ function getScopes(scopes: string | string[] | undefined, tenantId?: string): st
  * @param options - see {@link vscode.AuthenticationGetSessionOptions}
  * @returns An authentication session if available, or undefined if there are no sessions
  */
-export async function getSessionFromVSCode(scopes?: string | string[], tenantId?: string, options?: vscode.AuthenticationGetSessionOptions): Promise<vscode.AuthenticationSession | undefined> {
-    return await vscode.authentication.getSession(getConfiguredAuthProviderId(), getScopes(scopes, tenantId), options);
+export async function getSessionFromVSCode(scopes?: string | string[], tenantId?: string, options?: vscode.AuthenticationGetSessionOptions, challenge?: string): Promise<vscode.AuthenticationSession | undefined> {
+    const scopeList = getScopes(scopes, tenantId);
+
+    return await vscode.authentication.getSession(
+        getConfiguredAuthProviderId(),
+        challenge ? {
+            challenge,
+            scopes: scopeList
+        } : scopeList,
+        {
+            ...options,
+            silent: challenge ? false : options?.silent,
+            createIfNone: challenge ? true : options?.createIfNone
+        }
+    );
 }
