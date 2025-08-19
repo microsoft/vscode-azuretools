@@ -58,6 +58,7 @@ function formScopesArg(scopes?: string | string[] | vscode.AuthenticationSession
  * * Getting the list of scopes, adding the tenant id to the scope list if needed
  *
  * @param scopes - top-level resource scopes (e.g. http://management.azure.com, http://storage.azure.com) or .default scopes. All resources/scopes will be normalized to the `.default` scope for each resource.
+ * Use `vscode.AuthenticationSessionRequest` if you need to pass in a challenge (WWW-Authenticate header). Note: Use of `vscode.AuthenticationSessionRequest` requires VS Code 1.104 or newer.
  * @param tenantId - (Optional) The tenant ID, will be added to the scopes
  * @param options - see {@link vscode.AuthenticationGetSessionOptions}
  * @returns An authentication session if available, or undefined if there are no sessions
