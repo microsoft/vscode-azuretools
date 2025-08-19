@@ -169,7 +169,7 @@ export interface AzExtServiceClientCredentialsT2 {
      * @param options - The options used to configure any requests this
      *                TokenCredential implementation might make.
      */
-    getToken(scopes?: string | string[] | AuthenticationSessionRequest): Promise<any | null>;
+    getToken(scopes?: string | string[] | AuthenticationSessionRequest, options?: any): Promise<any | null>;
 }
 
 /**
