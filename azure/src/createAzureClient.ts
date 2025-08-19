@@ -51,7 +51,18 @@ export function createAzureClient<T extends ServiceClient>(clientContext: Intern
     });
 
     context.telemetry.properties.subscriptionId = context.subscriptionId;
-    addAzExtPipeline(context, client.pipeline, context.environment.resourceManagerEndpointUrl, undefined, undefined, new AzExtBearerChallengePolicy(getChallengeHandlerFromCredential(context.createCredentialsForScopes), context.environment.resourceManagerEndpointUrl));
+    addAzExtPipeline(
+        context,
+        client.pipeline,
+        context.environment.resourceManagerEndpointUrl,
+        undefined,
+        undefined,
+        new AzExtBearerChallengePolicy(
+            context,
+            getChallengeHandlerFromCredential(context.createCredentialsForScopes),
+            context.environment.resourceManagerEndpointUrl
+        )
+    );
     return client;
 }
 
@@ -62,7 +73,18 @@ export function createAzureSubscriptionClient<T extends ServiceClient>(clientCon
     });
 
     context.telemetry.properties.subscriptionId = context.subscriptionId;
-    addAzExtPipeline(context, client.pipeline, context.environment.resourceManagerEndpointUrl, undefined, undefined, new AzExtBearerChallengePolicy(getChallengeHandlerFromCredential(context.createCredentialsForScopes), context.environment.resourceManagerEndpointUrl));
+    addAzExtPipeline(
+        context,
+        client.pipeline,
+        context.environment.resourceManagerEndpointUrl,
+        undefined,
+        undefined,
+        new AzExtBearerChallengePolicy(
+            context,
+            getChallengeHandlerFromCredential(context.createCredentialsForScopes),
+            context.environment.resourceManagerEndpointUrl
+        )
+    );
     return client;
 }
 
@@ -309,50 +331,27 @@ function getDefaultScopeFromEndpoint(endpoint?: string): string {
 }
 
 /**
- * Try to extract an OAuth scope or resource from the raw WWW-Authenticate header.
- * Falls back to deriving a scope from the endpoint if not present.
- */
-function resolveScopesFromChallengeOrEndpoint(rawHeader: string, endpoint?: string): string[] {
-    const scopeMatch = /(?:^|[,\s])scope="([^"]+)"/i.exec(rawHeader);
-    if (scopeMatch && scopeMatch[1]) {
-        return [scopeMatch[1]];
-    }
-
-    const resourceMatch = /(?:^|[,\s])resource(?:_id)?=\"?([^\",\s]+)\"?/i.exec(rawHeader);
-    if (resourceMatch && resourceMatch[1]) {
-        let resource = resourceMatch[1].replace(/\/+$/, '');
-        if (!/\.default$/i.test(resource)) {
-            resource = `${resource}/.default`;
-        }
-        return [resource];
-    }
-
-    return [getDefaultScopeFromEndpoint(endpoint)];
-}
-
-/**
- * A custom bearer policy that pre-authorizes and then retries once on a 401/403 with a WWW-Authenticate challenge.
- * It passes the raw WWW-Authenticate header to the credential via options.challenge and enables CAE.
+ * A custom bearer policy that pre-authorizes and then retries once on a 401 with a WWW-Authenticate challenge.
  */
 class AzExtBearerChallengePolicy implements PipelinePolicy {
     public readonly name = 'AzExtBearerChallengePolicy';
-    private readonly endpoint?: string;
-    private readonly getTokenForChallenge: (scopes: vscode.AuthenticationSessionRequest) => Promise<string | undefined>;
     private readonly challengeRetryHeader = 'x-azext-challenge-retry';
 
-    public constructor(getTokenForChallenge: (scopes: vscode.AuthenticationSessionRequest) => Promise<string | undefined>, endpoint?: string) {
-        this.getTokenForChallenge = getTokenForChallenge;
-        this.endpoint = endpoint;
-    }
+    public constructor(
+        private readonly context: IActionContext,
+        private readonly getTokenForChallenge: (scopes: vscode.AuthenticationSessionRequest) => Promise<string | undefined>,
+        private readonly endpoint?: string
+    ) { }
 
     public async sendRequest(request: PipelineRequest, next: SendRequest): Promise<PipelineResponse> {
         const initial = await next(request);
 
         // Only attempt a single retry on auth challenges
-        if ((initial.status === 401 || initial.status === 403) && !request.headers.get(this.challengeRetryHeader)) {
+        if ((initial.status === 401) && !request.headers.get(this.challengeRetryHeader)) {
             const header = initial.headers.get('WWW-Authenticate') || initial.headers.get('www-authenticate');
             if (header) {
-                const scopes = resolveScopesFromChallengeOrEndpoint(header, this.endpoint);
+                this.context.telemetry.properties.challenge = 'true';
+                const scopes = [getDefaultScopeFromEndpoint(this.endpoint)];
                 // Mark the request as having attempted a challenge so that if the pipeline
                 // (or other policies like a retry policy) replays the request when token
                 // fetching fails, we don't attempt the challenge again.
@@ -360,8 +359,11 @@ class AzExtBearerChallengePolicy implements PipelinePolicy {
 
                 const token = await this.getTokenForChallenge({ challenge: header, scopes });
                 if (token) {
+                    this.context.telemetry.properties.challengeSuccess = 'true';
                     request.headers.set('Authorization', `Bearer ${token}`);
                     return await next(request);
+                } else {
+                    this.context.telemetry.properties.challengeSuccess = 'false';
                 }
             }
         }
