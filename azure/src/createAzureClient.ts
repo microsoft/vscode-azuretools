@@ -285,7 +285,6 @@ class StatusCodePolicy implements PipelinePolicy {
     }
 }
 
-
 /**
  * Encodes userName and password and signs a request with the Authentication header.
  * Imitates BasicAuthenticationCredentials from ms-rest-js
