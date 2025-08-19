@@ -40,6 +40,19 @@ function getScopes(scopes: string | string[] | undefined, tenantId?: string): st
 }
 
 /**
+ * Deconstructs and rebuilds the scopes arg in order to use the above utils to modify the scopes array.
+ * And then returns the proper type to pass directly to vscode.authentication.getSession
+ */
+function formScopesArg(scopes?: string | string[] | vscode.AuthenticationSessionRequest, tenantId?: string): string[] | vscode.AuthenticationSessionRequest {
+    const initialScopeList: string[] | undefined = typeof scopes === 'string' ? [scopes] : Array.isArray(scopes) ? scopes : Array.from(scopes?.scopes ?? []);
+    const scopeList = getScopes(initialScopeList, tenantId);
+
+    const challenge = (typeof scopes === 'object' && !Array.isArray(scopes)) ? scopes.challenge : undefined;
+
+    return challenge ? { scopes: scopeList, challenge } : scopeList;
+}
+
+/**
  * Wraps {@link vscode.authentication.getSession} and handles:
  * * Passing the configured auth provider id
  * * Getting the list of scopes, adding the tenant id to the scope list if needed
@@ -49,6 +62,6 @@ function getScopes(scopes: string | string[] | undefined, tenantId?: string): st
  * @param options - see {@link vscode.AuthenticationGetSessionOptions}
  * @returns An authentication session if available, or undefined if there are no sessions
  */
-export async function getSessionFromVSCode(scopes?: string | string[], tenantId?: string, options?: vscode.AuthenticationGetSessionOptions): Promise<vscode.AuthenticationSession | undefined> {
-    return await vscode.authentication.getSession(getConfiguredAuthProviderId(), getScopes(scopes, tenantId), options);
+export async function getSessionFromVSCode(scopes?: string | string[] | vscode.AuthenticationSessionRequest, tenantId?: string, options?: vscode.AuthenticationGetSessionOptions): Promise<vscode.AuthenticationSession | undefined> {
+    return await vscode.authentication.getSession(getConfiguredAuthProviderId(), formScopesArg(scopes, tenantId), options);
 }
