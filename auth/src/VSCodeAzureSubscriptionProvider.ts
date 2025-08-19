@@ -13,6 +13,7 @@ import { AzureTenant } from './AzureTenant';
 import { getSessionFromVSCode } from './getSessionFromVSCode';
 import { NotSignedInError } from './NotSignedInError';
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from './utils/configuredAzureEnv';
+import { isAuthenticationSessionRequest } from './utils/isAuthenticationSessionRequest';
 
 const EventDebounce = 5 * 1000; // 5 seconds
 
@@ -345,7 +346,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
                     // in order to handle a challenge, we must enable createIfNone so
                     // that we can prompt the user to step-up their session with MFA
                     // otherwise, never prompt the user
-                    return getSessionFromVSCode(scopes, tenantId, { ...('challenge' in scopes ? { createIfNone: true } : { silent: true }), account });
+                    return getSessionFromVSCode(scopes, tenantId, { ...(isAuthenticationSessionRequest(scopes) ? { createIfNone: true } : { silent: true }), account });
                 },
             }
         };

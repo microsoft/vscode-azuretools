@@ -5,6 +5,7 @@
 
 import * as vscode from "vscode";
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from "./utils/configuredAzureEnv";
+import { isAuthenticationSessionRequest } from "./utils/isAuthenticationSessionRequest";
 
 function ensureEndingSlash(value: string): string {
     return value.endsWith('/') ? value : `${value}/`;
@@ -46,10 +47,7 @@ function getScopes(scopes: string | string[] | undefined, tenantId?: string): st
 function formScopesArg(scopes?: string | string[] | vscode.AuthenticationSessionRequest, tenantId?: string): string[] | vscode.AuthenticationSessionRequest {
     const initialScopeList: string[] | undefined = typeof scopes === 'string' ? [scopes] : Array.isArray(scopes) ? scopes : Array.from(scopes?.scopes ?? []);
     const scopeList = getScopes(initialScopeList, tenantId);
-
-    const challenge = (typeof scopes === 'object' && !Array.isArray(scopes)) ? scopes.challenge : undefined;
-
-    return challenge ? { scopes: scopeList, challenge } : scopeList;
+    return isAuthenticationSessionRequest(scopes) ? { scopes: scopeList, challenge: scopes.challenge } : scopeList;
 }
 
 /**
