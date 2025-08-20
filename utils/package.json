@@ -32,7 +32,7 @@
         "l10n": "npx @vscode/l10n-dev export --outDir ./l10n ./src"
     },
     "dependencies": {
-        "@microsoft/vscode-azureresources-api": "file:../../vscode-azureresourcegroups/api/microsoft-vscode-azureresources-api-2.5.1.tgz",
+        "@microsoft/vscode-azureresources-api": "^2.6.0",
         "@vscode/extension-telemetry": "^0.9.6",
         "dayjs": "^1.11.2",
         "escape-string-regexp": "^2.0.0",
