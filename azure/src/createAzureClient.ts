@@ -5,7 +5,7 @@
 
 import { ServiceClient } from '@azure/core-client';
 import { createHttpHeaders, createPipelineRequest, defaultRetryPolicy, Pipeline, PipelineOptions, PipelinePolicy, PipelineRequest, PipelineResponse, RestError, RetryPolicyOptions, SendRequest, userAgentPolicy } from '@azure/core-rest-pipeline';
-import { appendExtensionUserAgent, AzExtTreeItem, IActionContext, ISubscriptionActionContext, ISubscriptionContext, parseError } from '@microsoft/vscode-azext-utils';
+import { appendExtensionUserAgent, AzExtServiceClientCredentialsT2, AzExtTreeItem, IActionContext, ISubscriptionActionContext, ISubscriptionContext, parseError } from '@microsoft/vscode-azext-utils';
 import { Agent as HttpsAgent } from 'https';
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
@@ -34,6 +34,16 @@ export function parseClientContext(clientContext: InternalAzExtClientContext): I
     }
 }
 
+function getChallengeHandlerFromCredential(createCredentialsForScopes: (scopes: vscode.AuthenticationSessionRequest) => Promise<AzExtServiceClientCredentialsT2>) {
+    const getTokenForChallenge = async (scopes: vscode.AuthenticationSessionRequest): Promise<string> => {
+        const credentials = await createCredentialsForScopes(scopes);
+        const token = await credentials.getToken(scopes) as { token: string };
+        return token.token;
+    }
+
+    return getTokenForChallenge;
+}
+
 export function createAzureClient<T extends ServiceClient>(clientContext: InternalAzExtClientContext, clientType: types.AzExtClientType<T>): T {
     const context = parseClientContext(clientContext);
     const client = new clientType(context.credentials, context.subscriptionId, {
@@ -41,7 +51,18 @@ export function createAzureClient<T extends ServiceClient>(clientContext: Intern
     });
 
     context.telemetry.properties.subscriptionId = context.subscriptionId;
-    addAzExtPipeline(context, client.pipeline);
+    addAzExtPipeline(
+        context,
+        client.pipeline,
+        context.environment.resourceManagerEndpointUrl,
+        undefined,
+        undefined,
+        new AzExtBearerChallengePolicy(
+            context,
+            getChallengeHandlerFromCredential(context.createCredentialsForScopes),
+            context.environment.resourceManagerEndpointUrl
+        )
+    );
     return client;
 }
 
@@ -52,7 +73,18 @@ export function createAzureSubscriptionClient<T extends ServiceClient>(clientCon
     });
 
     context.telemetry.properties.subscriptionId = context.subscriptionId;
-    addAzExtPipeline(context, client.pipeline);
+    addAzExtPipeline(
+        context,
+        client.pipeline,
+        context.environment.resourceManagerEndpointUrl,
+        undefined,
+        undefined,
+        new AzExtBearerChallengePolicy(
+            context,
+            getChallengeHandlerFromCredential(context.createCredentialsForScopes),
+            context.environment.resourceManagerEndpointUrl
+        )
+    );
     return client;
 }
 
@@ -97,7 +129,7 @@ export async function createGenericClient(context: IActionContext, clientInfo: t
     return client;
 }
 
-function addAzExtPipeline(context: IActionContext, pipeline: Pipeline, endpoint?: string, options?: PipelineOptions, addStatusCodePolicy?: boolean): Pipeline {
+function addAzExtPipeline(context: IActionContext, pipeline: Pipeline, endpoint?: string, options?: PipelineOptions, addStatusCodePolicy?: boolean, bearerChallengePolicy?: PipelinePolicy): Pipeline {
     // ServiceClient has default pipeline policies that the core-client SDKs require. Rather than building an entirely custom pipeline,
     // it's easier to just remove the default policies and add ours as-needed
 
@@ -128,6 +160,10 @@ function addAzExtPipeline(context: IActionContext, pipeline: Pipeline, endpoint?
     }
 
     pipeline.addPolicy(new AllowInsecureConnectionPolicy());
+
+    if (bearerChallengePolicy) {
+        pipeline.addPolicy(bearerChallengePolicy, { phase: 'Sign' });
+    }
 
     return pipeline;
 }
@@ -249,7 +285,6 @@ class StatusCodePolicy implements PipelinePolicy {
     }
 }
 
-
 /**
  * Encodes userName and password and signs a request with the Authentication header.
  * Imitates BasicAuthenticationCredentials from ms-rest-js
@@ -281,5 +316,57 @@ class AllowInsecureConnectionPolicy implements PipelinePolicy {
         }
 
         return await next(request);
+    }
+}
+
+/**
+ * Resolve a default scope from the Resource Manager endpoint or any provided endpoint.
+ * Example: https://management.azure.com/ -> https://management.azure.com/.default
+ */
+function getDefaultScopeFromEndpoint(endpoint?: string): string {
+    let base = endpoint ?? 'https://management.azure.com/';
+    base = base.replace(/\/+$/, '');
+    return `${base}/.default`;
+}
+
+/**
+ * A custom bearer policy that pre-authorizes and then retries once on a 401 with a WWW-Authenticate challenge.
+ */
+class AzExtBearerChallengePolicy implements PipelinePolicy {
+    public readonly name = 'AzExtBearerChallengePolicy';
+    private readonly challengeRetryHeader = 'x-azext-challenge-retry';
+
+    public constructor(
+        private readonly context: IActionContext,
+        private readonly getTokenForChallenge: (scopes: vscode.AuthenticationSessionRequest) => Promise<string | undefined>,
+        private readonly endpoint?: string
+    ) { }
+
+    public async sendRequest(request: PipelineRequest, next: SendRequest): Promise<PipelineResponse> {
+        const initial = await next(request);
+
+        // Only attempt a single retry on auth challenges
+        if ((initial.status === 401) && !request.headers.get(this.challengeRetryHeader)) {
+            const header = initial.headers.get('WWW-Authenticate') || initial.headers.get('www-authenticate');
+            if (header) {
+                this.context.telemetry.properties.challenge = 'true';
+                const scopes = [getDefaultScopeFromEndpoint(this.endpoint)];
+                // Mark the request as having attempted a challenge so that if the pipeline
+                // (or other policies like a retry policy) replays the request when token
+                // fetching fails, we don't attempt the challenge again.
+                request.headers.set(this.challengeRetryHeader, '1');
+
+                const token = await this.getTokenForChallenge({ challenge: header, scopes });
+                if (token) {
+                    this.context.telemetry.properties.challengeSuccess = 'true';
+                    request.headers.set('Authorization', `Bearer ${token}`);
+                    return await next(request);
+                } else {
+                    this.context.telemetry.properties.challengeSuccess = 'false';
+                }
+            }
+        }
+
+        return initial;
     }
 }
