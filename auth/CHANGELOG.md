@@ -1,5 +1,9 @@
 # Change Log
 
+## 4.2.0
+
+* [#2057](https://github.com/microsoft/vscode-azuretools/pull/2057) Support providing a challenge when getting sessions from VS Code
+
 ## 4.1.1 - 2025-02-03
 
 * Fix `VSCodeAzureSubscriptionProvider` implementation of `getSubscriptions` filtering returned subscriptions by `getSubscriptionFilters()` when the `filter` parameter is a `GetSubscriptionsFilter` object.
