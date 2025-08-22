@@ -33,6 +33,7 @@ stages:
                 signing:
                   enabled: ${{ parameters.enableSigning }}
                   signType: real # options are 'real' & 'test'
+                  signWithProd: true
                   zipSources: false
                   azureSubscription: "MicroBuild Signing Task (DevDiv)"
               outputs:
