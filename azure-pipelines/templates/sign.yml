@@ -42,6 +42,8 @@ steps:
       inputs:
         command: 'build'
         projects: $(Build.SourcesDirectory)/.azure-pipelines/SignExtension.signproj
+      env:
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
     - pwsh: |
         $filePath = "extension.signature.p7s"
