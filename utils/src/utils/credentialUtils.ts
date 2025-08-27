@@ -10,9 +10,9 @@ import { AzExtServiceClientCredentials, ISubscriptionContext } from '../../index
 /**
  * Converts a VS Code authentication session to an Azure Track 1 & 2 compatible compatible credential.
  */
-export function createCredential(getSession: (scopes?: string[] | vscode.AuthenticationSessionRequest) => vscode.ProviderResult<vscode.AuthenticationSession>): AzExtServiceClientCredentials {
+export function createCredential(getSession: (scopes?: string[] | vscode.AuthenticationWWWAuthenticateRequest) => vscode.ProviderResult<vscode.AuthenticationSession>): AzExtServiceClientCredentials {
     return {
-        getToken: async (scopes?: string | string[] | vscode.AuthenticationSessionRequest) => {
+        getToken: async (scopes?: string | string[] | vscode.AuthenticationWWWAuthenticateRequest) => {
             if (typeof scopes === 'string') {
                 scopes = [scopes];
             }
@@ -40,7 +40,7 @@ export function createSubscriptionContext(subscription: AzureSubscription): ISub
         subscriptionPath: subscription.subscriptionId,
         ...subscription,
         credentials: createCredential(subscription.authentication.getSession),
-        createCredentialsForScopes: async (scopes: string[] | vscode.AuthenticationSessionRequest) => {
+        createCredentialsForScopes: async (scopes: string[] | vscode.AuthenticationWWWAuthenticateRequest) => {
             // Have to use bind here because we need to pass a `getSessions` function with a `scopes` parameter to `createCredential`
             // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             return createCredential(subscription.authentication.getSessionWithScopes.bind(subscription.authentication, scopes));
