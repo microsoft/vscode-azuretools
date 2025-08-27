@@ -43,14 +43,14 @@ export function createPrimaryPromptForInputBox(inputQuestion: string, relevantCo
     return `The User is asking you to provide an input based on the following information:
         1. The questions is: ${inputQuestion}
         2. Use information from this context, if available, to make your decision: ${relevantContext ? relevantContext : "No context available"}
-        Respond with a string containing the input value. Do not respond in a conversational tone, only a single.`;
+        Respond with a string containing the input value. Do not respond in a conversational tone.`;
 }
 
 export function createPrimaryPromptForWarningMessage(message: string, items: vscode.MessageItem[]): string {
     return `The user is asking you to provide a response based on the following information:
         1. The warning message is: ${message}
         2. The options to pick from are ${items.map(i => i.title).join(", ")}}
-        Respond with a string of the item you have chosen. Do not respond in a conversational tone, only JSON. `;
+        Respond with a string of the item you have chosen. Do not respond in a conversational tone. `;
 }
 
 export function createPrimaryPromptForWorkspaceFolderPick(folders: readonly vscode.WorkspaceFolder[] | undefined, relevantContext?: string): string {
@@ -58,7 +58,7 @@ export function createPrimaryPromptForWorkspaceFolderPick(folders: readonly vsco
         1. Choose from this list of workspace folders ${folders ? folders.map(f => f.name).join(", ") : ''} If there are no folders in the list return ''.
         2. You must choose one workspace folder from the list
         3. Use information from this context, if available, to make your decision: ${relevantContext ? relevantContext : "No context available"}
-        Respond with a string of the workspace folder you have chosen. Do not respond in a conversational tone, only JSON. `;
+        Respond with the workspace folder you have chosen. Do not respond in a conversational tone. `;
 }
 
 export async function doCopilotInteraction(primaryPrompt: string): Promise<string> {
