@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type * as vscode from 'vscode';
+import type { IAuthenticationWWWAuthenticateRequest } from './utils/isAuthenticationWWWAuthenticateRequest';
 
 /**
  * Represents a means of obtaining authentication data for an Azure subscription.
@@ -23,5 +24,5 @@ export interface AzureAuthentication {
      *
      * @returns A VS Code authentication session or undefined, if none could be obtained.
      */
-    getSessionWithScopes(scopes: string[] | vscode.AuthenticationSessionRequest): vscode.ProviderResult<vscode.AuthenticationSession>;
+    getSessionWithScopes(scopes: string[] | IAuthenticationWWWAuthenticateRequest): vscode.ProviderResult<vscode.AuthenticationSession>;
 }
