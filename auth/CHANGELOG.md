@@ -2,7 +2,7 @@
 
 ## 4.2.1 - 2025-08-27
 
-* [#TODO](https://github.com/microsoft/vscode-azuretools/pull/TODO) Changes to adjust to proposed API changes
+* [#2068](https://github.com/microsoft/vscode-azuretools/pull/2068) Changes to adjust to proposed API changes
 
 ## 4.2.0 - 2025-08-21
 
