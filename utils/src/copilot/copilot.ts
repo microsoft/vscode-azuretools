@@ -47,7 +47,7 @@ export function createPrimaryPromptForInputBox(inputQuestion: string, relevantCo
 }
 
 export function createPrimaryPromptForWarningMessage(message: string, items: vscode.MessageItem[]): string {
-    return `The user is asking you to provide a response based on the following information:
+    return `The user is asking you to provide a response to a warning message based on the following information:
         1. The warning message is: ${message}
         2. The options to pick from are ${items.map(i => i.title).join(", ")}}
         Respond with a string of the item you have chosen. Do not respond in a conversational tone. `;
@@ -82,9 +82,6 @@ export async function doCopilotInteraction(primaryPrompt: string): Promise<strin
             // Combine fragments into a single string
             const responseText = fragments.join("");
             const cleanedResponse = extractJsonString(responseText);
-            // Attempt to parse the response as JSON
-            console.log(cleanedResponse);
-
             return cleanedResponse;
         } catch (e) {
             console.error("Error while processing the response stream:", e);
@@ -95,26 +92,4 @@ export async function doCopilotInteraction(primaryPrompt: string): Promise<strin
 
 function extractJsonString(raw: string): string {
     return raw.replace(/```json\s*|```/g, '').trim();
-}
-
-export function parseCopilotResponseMaybeWithStrJson(copilotResponseMaybeWithStrJson: string): { [key: string]: (string | boolean | number | object) } {
-    try {
-        copilotResponseMaybeWithStrJson = copilotResponseMaybeWithStrJson
-            .trim()
-            .replace(/\n/g, "");
-        if (copilotResponseMaybeWithStrJson.indexOf("{") === -1) {
-            copilotResponseMaybeWithStrJson = "{" + copilotResponseMaybeWithStrJson;
-        }
-        if (copilotResponseMaybeWithStrJson.endsWith(",")) {
-            copilotResponseMaybeWithStrJson = copilotResponseMaybeWithStrJson.substring(0, copilotResponseMaybeWithStrJson.length - 1);
-        }
-        if (copilotResponseMaybeWithStrJson.indexOf("}") === -1) {
-            copilotResponseMaybeWithStrJson = copilotResponseMaybeWithStrJson + "}";
-        }
-        const maybeJsonCopilotResponse = copilotResponseMaybeWithStrJson.substring(copilotResponseMaybeWithStrJson.indexOf("{"), copilotResponseMaybeWithStrJson.lastIndexOf("}") + 1);
-        return JSON.parse(maybeJsonCopilotResponse) as { [key: string]: (string | boolean | number | object) };
-    } catch (e) {
-        console.log(`Failed to parse copilot response maybe with string JSON, response: '${copilotResponseMaybeWithStrJson}'. Error: ${JSON.stringify(e)}`);
-        return {};
-    }
 }

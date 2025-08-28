@@ -5,7 +5,7 @@
 import type * as vscodeTypes from 'vscode';
 import { workspace } from 'vscode';
 import * as types from '../../index';
-import { createPrimaryPromptForInputBox, createPrimaryPromptForWarningMessage, createPrimaryPromptForWorkspaceFolderPick, createPrimaryPromptToGetPickManyQuickPickInput, createPrimaryPromptToGetSingleQuickPickInput, doCopilotInteraction } from '../copilot/copilot';
+import { createPrimaryPromptForInputBox, createPrimaryPromptForWarningMessage, createPrimaryPromptForWorkspaceFolderPick, createPrimaryPromptToGetSingleQuickPickInput, doCopilotInteraction } from '../copilot/copilot';
 import { InvalidInputError } from '../errors';
 
 export class CopilotUserInput implements types.IAzureUserInput {
@@ -83,23 +83,24 @@ export class CopilotUserInput implements types.IAzureUserInput {
         const jsonItems: string[] = resolvedItems.map(item => JSON.stringify(item));
 
         if (options.canPickMany) {
-            primaryPrompt = createPrimaryPromptToGetPickManyQuickPickInput(jsonItems, this._relevantContext);
+            // primaryPrompt = createPrimaryPromptToGetPickManyQuickPickInput(jsonItems, this._relevantContext);
+            throw new InvalidInputError();
         } else {
             primaryPrompt = createPrimaryPromptToGetSingleQuickPickInput(jsonItems, this._relevantContext);
+            const response = await doCopilotInteraction(primaryPrompt);
+            const jsonResponse: T = JSON.parse(response) as T;
+
+            const pick = resolvedItems.find(item => {
+                return JSON.stringify(item) === JSON.stringify(jsonResponse);
+            });
+
+            if (!pick) {
+                throw new InvalidInputError();
+            }
+
+            this._onDidFinishPromptEmitter.fire({ value: pick });
+
+            return pick;
         }
-        const response = await doCopilotInteraction(primaryPrompt);
-        const jsonResponse: T = JSON.parse(response) as T;
-
-        const pick = resolvedItems.find(item => {
-            return JSON.stringify(item) === JSON.stringify(jsonResponse);
-        });
-
-        if (!pick) {
-            throw new InvalidInputError();
-        }
-
-        this._onDidFinishPromptEmitter.fire({ value: pick });
-
-        return pick;
     }
 }
