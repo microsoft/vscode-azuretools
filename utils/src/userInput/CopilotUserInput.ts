@@ -5,7 +5,7 @@
 import type * as vscodeTypes from 'vscode';
 import { workspace } from 'vscode';
 import * as types from '../../index';
-import { createPrimaryPromptForInputBox, createPrimaryPromptForWarningMessage, createPrimaryPromptForWorkspaceFolderPick, createPrimaryPromptToGetSingleQuickPickInput, doCopilotInteraction } from '../copilot/copilot';
+import { createPrimaryPromptForInputBox, createPrimaryPromptForWarningMessage, createPrimaryPromptForWorkspaceFolderPick, createPrimaryPromptToGetPickManyQuickPickInput, createPrimaryPromptToGetSingleQuickPickInput, doCopilotInteraction } from '../copilot/copilot';
 import { InvalidInputError } from '../errors';
 
 export class CopilotUserInput implements types.IAzureUserInput {
@@ -83,8 +83,20 @@ export class CopilotUserInput implements types.IAzureUserInput {
         const jsonItems: string[] = resolvedItems.map(item => JSON.stringify(item));
 
         if (options.canPickMany) {
-            // primaryPrompt = createPrimaryPromptToGetPickManyQuickPickInput(jsonItems, this._relevantContext);
-            throw new InvalidInputError();
+            primaryPrompt = createPrimaryPromptToGetPickManyQuickPickInput(jsonItems, this._relevantContext);
+            const response = await doCopilotInteraction(primaryPrompt);
+            const jsonResponse: T[] = JSON.parse(response) as T[];
+            const picks = resolvedItems.filter(item => {
+                return jsonResponse.some(resp => JSON.stringify(resp) === JSON.stringify(item));
+            });
+
+            if (!picks || picks.length === 0) {
+                throw new InvalidInputError();
+            }
+
+            this._onDidFinishPromptEmitter.fire({ value: picks });
+
+            return picks;
         } else {
             primaryPrompt = createPrimaryPromptToGetSingleQuickPickInput(jsonItems, this._relevantContext);
             const response = await doCopilotInteraction(primaryPrompt);
