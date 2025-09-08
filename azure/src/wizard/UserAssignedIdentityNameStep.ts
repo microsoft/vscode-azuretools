@@ -56,7 +56,7 @@ export class UserAssignedIdentityNameStep<T extends types.IResourceGroupWizardCo
         }
 
         const isNameAvailable: boolean = await UserAssignedIdentityNameStep.isNameAvailable(context, rgName, identityName);
-        return !isNameAvailable ? vscode.l10n.t('User assigned identity with name "{0}" already exists in resource group "{1}".', identityName, rgName) : undefined;
+        return !isNameAvailable ? vscode.l10n.t('User-assigned identity with name "{0}" already exists in resource group "{1}".', identityName, rgName) : undefined;
     }
 
     static async isNameAvailable(context: types.IResourceGroupWizardContext, rgName: string, identityName: string): Promise<boolean> {
