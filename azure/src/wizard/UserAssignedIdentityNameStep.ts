@@ -16,7 +16,7 @@ export class UserAssignedIdentityNameStep<T extends types.IResourceGroupWizardCo
 
         if (rgName) {
             while (!suggestedName) {
-                suggestedName = await UserAssignedIdentityNameStep.generateRelatedName(context, rgName);
+                suggestedName = await UserAssignedIdentityNameStep.tryGenerateRelatedName(context, rgName);
             }
         }
 
@@ -69,7 +69,7 @@ export class UserAssignedIdentityNameStep<T extends types.IResourceGroupWizardCo
         return false;
     }
 
-    static async generateRelatedName(context: types.IResourceGroupWizardContext, rgName: string): Promise<string | undefined> {
+    static async tryGenerateRelatedName(context: types.IResourceGroupWizardContext, rgName: string): Promise<string | undefined> {
         const newName: string = `${rgName}-identities-${randomUtils.getRandomHexString(6)}`;
         const isNameAvailable: boolean = await UserAssignedIdentityNameStep.isNameAvailable(context, rgName, newName);
         return isNameAvailable ? newName : undefined;

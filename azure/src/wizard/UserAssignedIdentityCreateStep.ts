@@ -47,7 +47,7 @@ export class UserAssignedIdentityCreateStep<T extends types.IResourceGroupWizard
     public async configureBeforeExecute(wizardContext: T): Promise<void> {
         const rgName: string = wizardContext.newResourceGroupName ?? nonNullValueAndProp(wizardContext.resourceGroup, 'name');
         while (!wizardContext.newManagedIdentityName) {
-            wizardContext.newManagedIdentityName = await UserAssignedIdentityNameStep.generateRelatedName(wizardContext, rgName);
+            wizardContext.newManagedIdentityName = await UserAssignedIdentityNameStep.tryGenerateRelatedName(wizardContext, rgName);
         }
     }
 
