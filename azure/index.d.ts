@@ -421,6 +421,16 @@ export declare class UserAssignedIdentityListStep<T extends IResourceGroupWizard
     public shouldPrompt(wizardContext: T): boolean;
 }
 
+export declare class UserAssignedIdentityNameStep<T extends IResourceGroupWizardContext> extends AzureWizardPromptStep<T> {
+    public constructor();
+
+    public prompt(wizardContext: T): Promise<void>;
+    public shouldPrompt(wizardContext: T): boolean;
+
+    static isNameAvailable(wizardContext: IResourceGroupWizardContext, rgName: string, identityName: string): Promise<boolean>;
+    static tryGenerateRelatedName(wizardContext: IResourceGroupWizardContext, rgName: string): Promise<string | undefined>;
+}
+
 export declare class UserAssignedIdentityCreateStep<T extends IResourceGroupWizardContext> extends AzureWizardExecuteStep<T> {
     /**
      * 140
