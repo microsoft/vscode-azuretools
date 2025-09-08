@@ -35,6 +35,7 @@ export class UserAssignedIdentityListStep<T extends types.IResourceGroupWizardCo
     public async getSubWizard(wizardContext: T): Promise<IWizardOptions<T> | undefined> {
         if (!wizardContext.managedIdentity) {
             const promptSteps: AzureWizardPromptStep<T>[] = [
+                new UserAssignedIdentityNameStep(),
                 new ResourceGroupListStep(),
             ];
 
@@ -42,7 +43,7 @@ export class UserAssignedIdentityListStep<T extends types.IResourceGroupWizardCo
             LocationListStep.addStep(wizardContext, promptSteps);
 
             return {
-                promptSteps: [new UserAssignedIdentityNameStep()],
+                promptSteps,
                 executeSteps: [new UserAssignedIdentityCreateStep()]
             }
         }
