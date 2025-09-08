@@ -13,6 +13,7 @@ import { uiUtils } from '../utils/uiUtils';
 import { LocationListStep } from './LocationListStep';
 import { ResourceGroupListStep } from './ResourceGroupListStep';
 import { UserAssignedIdentityCreateStep } from './UserAssignedIdentityCreateStep';
+import { UserAssignedIdentityNameStep } from './UserAssignedIdentityNameStep';
 
 export class UserAssignedIdentityListStep<T extends types.IResourceGroupWizardContext> extends AzureWizardPromptStep<T> {
     private _suppressCreate: boolean | undefined;
@@ -41,7 +42,7 @@ export class UserAssignedIdentityListStep<T extends types.IResourceGroupWizardCo
             LocationListStep.addStep(wizardContext, promptSteps);
 
             return {
-                promptSteps,
+                promptSteps: [new UserAssignedIdentityNameStep()],
                 executeSteps: [new UserAssignedIdentityCreateStep()]
             }
         }
