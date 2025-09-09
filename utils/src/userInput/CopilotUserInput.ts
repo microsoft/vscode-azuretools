@@ -59,15 +59,20 @@ export class CopilotUserInput implements types.IAzureUserInput {
 
     public async showInputBox(options: vscodeTypes.InputBoxOptions): Promise<string> {
         if (options.prompt) {
-            const primaryPrompt: string = createPrimaryPromptForInputBox(options.prompt, this._relevantContext);
-            const response = await doCopilotInteraction(primaryPrompt)
-            const jsonResponse: string = JSON.parse(response) as string;
-            this._onDidFinishPromptEmitter.fire({ value: jsonResponse });
-            return jsonResponse;
-        } else if (options.value) {
-            // if copilot is unable to provide a response, fall back to the default value if it exists
-            this._onDidFinishPromptEmitter.fire({ value: options.value });
-            return options.value;
+            try {
+                const primaryPrompt: string = createPrimaryPromptForInputBox(options.prompt, this._relevantContext);
+                const response = await doCopilotInteraction(primaryPrompt)
+                const jsonResponse: string = JSON.parse(response) as string;
+                this._onDidFinishPromptEmitter.fire({ value: jsonResponse });
+                return jsonResponse;
+            } catch {
+                // if copilot is unable to provide a response, fall back to the default value if it exists
+                if (options.value) {
+                    this._onDidFinishPromptEmitter.fire({ value: options.value });
+                    return options.value;
+                }
+                throw new InvalidInputError();
+            }
         } else {
             throw new InvalidInputError();
         }

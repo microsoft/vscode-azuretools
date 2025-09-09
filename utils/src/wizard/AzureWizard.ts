@@ -159,6 +159,8 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                             }
                             continue;
                         } else if (pe.errorType === 'InvalidInputError') {
+                            // If this error is thrown it means copilot was unable to provide a valid response
+                            // In order to re prompt the user we need to set the ui back to AzExtUserInput
                             if (this._context.ui instanceof CopilotUserInput) {
                                 this._context.ui = new AzExtUserInput(this._context)
                             }
