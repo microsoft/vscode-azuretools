@@ -1002,6 +1002,38 @@ export interface AzExtUserInputOptions {
 }
 
 /**
+ * Wrapper class of several `vscode.window` methods that handle user input.
+ */
+export declare class AzExtUserInput implements IAzureUserInput {
+    constructor(context: IActionContext);
+    onDidFinishPrompt: Event<PromptResult>;
+    showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: IAzureQuickPickOptions & { canPickMany: true; }): Promise<T[]>;
+    showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: IAzureQuickPickOptions): Promise<T>;
+    showInputBox(options: AzExtInputBoxOptions): Promise<string>;
+    showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
+    showWarningMessage<T extends MessageItem>(message: string, options: IAzureMessageOptions, ...items: T[]): Promise<T>;
+    showOpenDialog(options: AzExtOpenDialogOptions): Promise<Uri[]>;
+    showWorkspaceFolderPick(options: AzExtWorkspaceFolderPickOptions): Promise<WorkspaceFolder>;
+}
+
+/**
+ * Wrapper class of several `vscode.window` methods that handle user input.
+ * This class is meant to only be used for copilot input scenerios
+ */
+
+export declare class CopilotUserInput implements IAzureUserInput {
+    constructor(vscode: typeof import('vscode'), relevantContext?: string);
+    onDidFinishPrompt: Event<PromptResult>;
+    showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: IAzureQuickPickOptions & { canPickMany: true; }): Promise<T[]>;
+    showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: IAzureQuickPickOptions): Promise<T>;
+    showInputBox(options: AzExtInputBoxOptions): Promise<string>;
+    showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
+    showWarningMessage<T extends MessageItem>(message: string, options: IAzureMessageOptions, ...items: T[]): Promise<T>;
+    showOpenDialog(options: AzExtOpenDialogOptions): Promise<Uri[]>;
+    showWorkspaceFolderPick(options: AzExtWorkspaceFolderPickOptions): Promise<WorkspaceFolder>;
+}
+
+/**
  * Specifies the sort priority of a quick pick item
  */
 export type AzureQuickPickItemPriority = 'highest' | 'normal'; // 'highest' items come before the recently used item
