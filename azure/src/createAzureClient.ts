@@ -34,8 +34,8 @@ export function parseClientContext(clientContext: InternalAzExtClientContext): I
     }
 }
 
-function getChallengeHandlerFromCredential(createCredentialsForScopes: (scopes: vscode.AuthenticationWWWAuthenticateRequest) => Promise<AzExtServiceClientCredentialsT2>) {
-    const getTokenForChallenge = async (scopes: vscode.AuthenticationWWWAuthenticateRequest): Promise<string> => {
+function getChallengeHandlerFromCredential(createCredentialsForScopes: (scopes: vscode.AuthenticationWwwAuthenticateRequest) => Promise<AzExtServiceClientCredentialsT2>) {
+    const getTokenForChallenge = async (scopes: vscode.AuthenticationWwwAuthenticateRequest): Promise<string> => {
         const credentials = await createCredentialsForScopes(scopes);
         const token = await credentials.getToken(scopes) as { token: string };
         return token.token;
@@ -338,7 +338,7 @@ class AzExtBearerChallengePolicy implements PipelinePolicy {
 
     public constructor(
         private readonly context: IActionContext,
-        private readonly getTokenForChallenge: (scopes: vscode.AuthenticationWWWAuthenticateRequest) => Promise<string | undefined>,
+        private readonly getTokenForChallenge: (scopes: vscode.AuthenticationWwwAuthenticateRequest) => Promise<string | undefined>,
         private readonly endpoint?: string
     ) { }
 
@@ -356,7 +356,7 @@ class AzExtBearerChallengePolicy implements PipelinePolicy {
                 // fetching fails, we don't attempt the challenge again.
                 request.headers.set(this.challengeRetryHeader, '1');
 
-                const token = await this.getTokenForChallenge({ challenge: header, wwwAuthenticate: header, scopes });
+                const token = await this.getTokenForChallenge({ challenge: header, wwwAuthenticate: header, fallbackScopes: scopes, scopes } as unknown as vscode.AuthenticationWwwAuthenticateRequest);
                 if (token) {
                     this.context.telemetry.properties.challengeSuccess = 'true';
                     request.headers.set('Authorization', `Bearer ${token}`);
