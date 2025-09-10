@@ -5,7 +5,7 @@
 
 import * as vscode from "vscode";
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from "./utils/configuredAzureEnv";
-import { isAuthenticationWWWAuthenticateRequest } from "./utils/isAuthenticationWWWAuthenticateRequest";
+import { isAuthenticationWwwAuthenticateRequest } from "./utils/isAuthenticationWwwAuthenticateRequest";
 
 function ensureEndingSlash(value: string): string {
     return value.endsWith('/') ? value : `${value}/`;
@@ -40,14 +40,21 @@ function getScopes(scopes: string | string[] | undefined, tenantId?: string): st
     return scopeArr;
 }
 
+type DeprecatedChallenge = {
+    /**
+     * @deprecated Use wwwAuthenticate instead.
+     */
+    challenge?: string;
+}
+
 /**
  * Deconstructs and rebuilds the scopes arg in order to use the above utils to modify the scopes array.
  * And then returns the proper type to pass directly to vscode.authentication.getSession
  */
-function formScopesArg(scopes?: string | string[] | vscode.AuthenticationWWWAuthenticateRequest, tenantId?: string): string[] | vscode.AuthenticationWWWAuthenticateRequest {
-    const initialScopeList: string[] | undefined = typeof scopes === 'string' ? [scopes] : Array.isArray(scopes) ? scopes : Array.from(scopes?.scopes ?? []);
+function formScopesArg(scopes?: string | string[] | (vscode.AuthenticationWwwAuthenticateRequest & DeprecatedChallenge), tenantId?: string): string[] | (vscode.AuthenticationWwwAuthenticateRequest & DeprecatedChallenge) {
+    const initialScopeList: string[] | undefined = typeof scopes === 'string' ? [scopes] : Array.isArray(scopes) ? scopes : Array.from(scopes?.fallbackScopes ?? scopes?.scopes ?? []);
     const scopeList = getScopes(initialScopeList, tenantId);
-    return isAuthenticationWWWAuthenticateRequest(scopes) ? { scopes: scopeList, challenge: scopes.wwwAuthenticate ?? scopes.challenge, wwwAuthenticate: scopes.wwwAuthenticate ?? scopes.challenge } : scopeList;
+    return isAuthenticationWwwAuthenticateRequest(scopes) ? { scopes: scopeList, fallbackScopes: scopeList, challenge: scopes.wwwAuthenticate ?? scopes.challenge, wwwAuthenticate: scopes.wwwAuthenticate ?? scopes.challenge } : scopeList;
 }
 
 /**
@@ -56,11 +63,11 @@ function formScopesArg(scopes?: string | string[] | vscode.AuthenticationWWWAuth
  * * Getting the list of scopes, adding the tenant id to the scope list if needed
  *
  * @param scopes - top-level resource scopes (e.g. http://management.azure.com, http://storage.azure.com) or .default scopes. All resources/scopes will be normalized to the `.default` scope for each resource.
- * Use `vscode.AuthenticationWWWAuthenticateRequest` if you need to pass in a challenge (WWW-Authenticate header). Note: Use of `vscode.AuthenticationWWWAuthenticateRequest` requires VS Code 1.104 or newer.
+ * Use `vscode.AuthenticationWwwAuthenticateRequest` if you need to pass in a challenge (WWW-Authenticate header). Note: Use of `vscode.AuthenticationWwwAuthenticateRequest` requires VS Code 1.104 or newer.
  * @param tenantId - (Optional) The tenant ID, will be added to the scopes
  * @param options - see {@link vscode.AuthenticationGetSessionOptions}
  * @returns An authentication session if available, or undefined if there are no sessions
  */
-export async function getSessionFromVSCode(scopes?: string | string[] | vscode.AuthenticationWWWAuthenticateRequest, tenantId?: string, options?: vscode.AuthenticationGetSessionOptions): Promise<vscode.AuthenticationSession | undefined> {
+export async function getSessionFromVSCode(scopes?: string | string[] | vscode.AuthenticationWwwAuthenticateRequest, tenantId?: string, options?: vscode.AuthenticationGetSessionOptions): Promise<vscode.AuthenticationSession | undefined> {
     return await vscode.authentication.getSession(getConfiguredAuthProviderId(), formScopesArg(scopes, tenantId), options);
 }
