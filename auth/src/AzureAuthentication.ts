@@ -23,5 +23,5 @@ export interface AzureAuthentication {
      *
      * @returns A VS Code authentication session or undefined, if none could be obtained.
      */
-    getSessionWithScopes(scopes: string[] | vscode.AuthenticationWWWAuthenticateRequest): vscode.ProviderResult<vscode.AuthenticationSession>;
+    getSessionWithScopes(scopes: string[] | vscode.AuthenticationWwwAuthenticateRequest): vscode.ProviderResult<vscode.AuthenticationSession>;
 }
