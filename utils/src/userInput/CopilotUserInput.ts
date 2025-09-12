@@ -12,29 +12,35 @@ export class CopilotUserInput implements types.IAzureUserInput {
     private readonly _vscode: typeof vscodeTypes;
     private readonly _onDidFinishPromptEmitter: vscodeTypes.EventEmitter<types.PromptResult>;
     private readonly _relevantContext: string | undefined;
+    public getLoadingView: undefined | (() => vscodeTypes.WebviewPanel | undefined);
 
-    constructor(vscode: typeof vscodeTypes, relevantContext?: string) {
+    constructor(vscode: typeof vscodeTypes, relevantContext?: string, getLoadingView?: () => vscodeTypes.WebviewPanel | undefined) {
         this._vscode = vscode;
         this._onDidFinishPromptEmitter = new this._vscode.EventEmitter<types.PromptResult>();
         this._relevantContext = relevantContext;
+        this.getLoadingView = getLoadingView;
     }
 
     public async showWarningMessage<T extends vscodeTypes.MessageItem>(message: string, ...items: T[]): Promise<T> {
-        const primaryPrompt: string = createPrimaryPromptForWarningMessage(message, items);
-        const response = await doCopilotInteraction(primaryPrompt)
+        try {
+            const primaryPrompt: string = createPrimaryPromptForWarningMessage(message, items);
+            const response = await doCopilotInteraction(primaryPrompt)
 
-        const pick = items.find(
-            item => {
-                return item.title === response;
+            const pick = items.find(
+                item => {
+                    return item.title === response;
+                }
+            );
+
+            if (!pick) {
+                throw new InvalidInputError();
             }
-        );
 
-        if (!pick) {
+            this._onDidFinishPromptEmitter.fire({ value: pick });
+            return pick;
+        } catch {
             throw new InvalidInputError();
         }
-
-        this._onDidFinishPromptEmitter.fire({ value: pick });
-        return pick;
     }
 
     public showOpenDialog(): Promise<vscodeTypes.Uri[]> {
@@ -43,18 +49,22 @@ export class CopilotUserInput implements types.IAzureUserInput {
     }
 
     public async showWorkspaceFolderPick(_options: types.AzExtWorkspaceFolderPickOptions,): Promise<vscodeTypes.WorkspaceFolder> {
-        const primaryPrompt: string = createPrimaryPromptForWorkspaceFolderPick(workspace.workspaceFolders, this._relevantContext);
-        const response = await doCopilotInteraction(primaryPrompt)
-        const pick = (workspace.workspaceFolders || []).find(folder => {
-            return folder.name === response;
-        });
+        try {
+            const primaryPrompt: string = createPrimaryPromptForWorkspaceFolderPick(workspace.workspaceFolders, this._relevantContext);
+            const response = await doCopilotInteraction(primaryPrompt)
+            const pick = (workspace.workspaceFolders || []).find(folder => {
+                return folder.name === response;
+            });
 
-        if (!pick) {
+            if (!pick) {
+                throw new InvalidInputError();
+            }
+
+            this._onDidFinishPromptEmitter.fire({ value: pick });
+            return pick;
+        } catch {
             throw new InvalidInputError();
         }
-
-        this._onDidFinishPromptEmitter.fire({ value: pick });
-        return pick;
     }
 
     public async showInputBox(options: vscodeTypes.InputBoxOptions): Promise<string> {
@@ -90,38 +100,40 @@ export class CopilotUserInput implements types.IAzureUserInput {
         let primaryPrompt: string;
         const resolvedItems: T[] = await Promise.resolve(items);
         const jsonItems: string[] = resolvedItems.map(item => JSON.stringify(item));
+        try {
+            if (options.canPickMany) {
+                primaryPrompt = createPrimaryPromptToGetPickManyQuickPickInput(jsonItems, this._relevantContext);
+                const response = await doCopilotInteraction(primaryPrompt);
+                const jsonResponse: T[] = JSON.parse(response) as T[];
+                const picks = resolvedItems.filter(item => {
+                    return jsonResponse.some(resp => JSON.stringify(resp) === JSON.stringify(item));
+                });
 
-        if (options.canPickMany) {
-            primaryPrompt = createPrimaryPromptToGetPickManyQuickPickInput(jsonItems, this._relevantContext);
-            const response = await doCopilotInteraction(primaryPrompt);
-            const jsonResponse: T[] = JSON.parse(response) as T[];
-            const picks = resolvedItems.filter(item => {
-                return jsonResponse.some(resp => JSON.stringify(resp) === JSON.stringify(item));
-            });
+                if (!picks || picks.length === 0) {
+                    throw new InvalidInputError();
+                }
 
-            if (!picks || picks.length === 0) {
-                throw new InvalidInputError();
+                this._onDidFinishPromptEmitter.fire({ value: picks });
+
+                return picks;
+            } else {
+                primaryPrompt = createPrimaryPromptToGetSingleQuickPickInput(jsonItems, this._relevantContext);
+                const response = await doCopilotInteraction(primaryPrompt);
+                const jsonResponse: T = JSON.parse(response) as T;
+                const pick = resolvedItems.find(item => {
+                    return JSON.stringify(item) === JSON.stringify(jsonResponse);
+                });
+
+                if (!pick) {
+                    throw new InvalidInputError();
+                }
+
+                this._onDidFinishPromptEmitter.fire({ value: pick });
+
+                return pick;
             }
-
-            this._onDidFinishPromptEmitter.fire({ value: picks });
-
-            return picks;
-        } else {
-            primaryPrompt = createPrimaryPromptToGetSingleQuickPickInput(jsonItems, this._relevantContext);
-            const response = await doCopilotInteraction(primaryPrompt);
-            const jsonResponse: T = JSON.parse(response) as T;
-
-            const pick = resolvedItems.find(item => {
-                return JSON.stringify(item) === JSON.stringify(jsonResponse);
-            });
-
-            if (!pick) {
-                throw new InvalidInputError();
-            }
-
-            this._onDidFinishPromptEmitter.fire({ value: pick });
-
-            return pick;
+        } catch {
+            throw new InvalidInputError();
         }
     }
 }
