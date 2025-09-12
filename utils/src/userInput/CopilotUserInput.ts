@@ -12,11 +12,13 @@ export class CopilotUserInput implements types.IAzureUserInput {
     private readonly _vscode: typeof vscodeTypes;
     private readonly _onDidFinishPromptEmitter: vscodeTypes.EventEmitter<types.PromptResult>;
     private readonly _relevantContext: string | undefined;
+    public getLoadingView: undefined | (() => vscodeTypes.WebviewPanel | undefined);
 
-    constructor(vscode: typeof vscodeTypes, relevantContext?: string) {
+    constructor(vscode: typeof vscodeTypes, relevantContext?: string, getLoadingView?: () => vscodeTypes.WebviewPanel | undefined) {
         this._vscode = vscode;
         this._onDidFinishPromptEmitter = new this._vscode.EventEmitter<types.PromptResult>();
         this._relevantContext = relevantContext;
+        this.getLoadingView = getLoadingView;
     }
 
     public async showWarningMessage<T extends vscodeTypes.MessageItem>(message: string, ...items: T[]): Promise<T> {
