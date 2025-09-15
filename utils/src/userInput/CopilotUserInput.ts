@@ -22,25 +22,21 @@ export class CopilotUserInput implements types.IAzureUserInput {
     }
 
     public async showWarningMessage<T extends vscodeTypes.MessageItem>(message: string, ...items: T[]): Promise<T> {
-        try {
-            const primaryPrompt: string = createPrimaryPromptForWarningMessage(message, items);
-            const response = await doCopilotInteraction(primaryPrompt)
+        const primaryPrompt: string = createPrimaryPromptForWarningMessage(message, items);
+        const response = await doCopilotInteraction(primaryPrompt)
 
-            const pick = items.find(
-                item => {
-                    return item.title === response;
-                }
-            );
-
-            if (!pick) {
-                throw new InvalidInputError();
+        const pick = items.find(
+            item => {
+                return item.title === response;
             }
+        );
 
-            this._onDidFinishPromptEmitter.fire({ value: pick });
-            return pick;
-        } catch {
+        if (!pick) {
             throw new InvalidInputError();
         }
+
+        this._onDidFinishPromptEmitter.fire({ value: pick });
+        return pick;
     }
 
     public showOpenDialog(): Promise<vscodeTypes.Uri[]> {
@@ -49,22 +45,18 @@ export class CopilotUserInput implements types.IAzureUserInput {
     }
 
     public async showWorkspaceFolderPick(_options: types.AzExtWorkspaceFolderPickOptions,): Promise<vscodeTypes.WorkspaceFolder> {
-        try {
-            const primaryPrompt: string = createPrimaryPromptForWorkspaceFolderPick(workspace.workspaceFolders, this._relevantContext);
-            const response = await doCopilotInteraction(primaryPrompt)
-            const pick = (workspace.workspaceFolders || []).find(folder => {
-                return folder.name === response;
-            });
+        const primaryPrompt: string = createPrimaryPromptForWorkspaceFolderPick(workspace.workspaceFolders, this._relevantContext);
+        const response = await doCopilotInteraction(primaryPrompt)
+        const pick = (workspace.workspaceFolders || []).find(folder => {
+            return folder.name === response;
+        });
 
-            if (!pick) {
-                throw new InvalidInputError();
-            }
-
-            this._onDidFinishPromptEmitter.fire({ value: pick });
-            return pick;
-        } catch {
+        if (!pick) {
             throw new InvalidInputError();
         }
+
+        this._onDidFinishPromptEmitter.fire({ value: pick });
+        return pick;
     }
 
     public async showInputBox(options: vscodeTypes.InputBoxOptions): Promise<string> {

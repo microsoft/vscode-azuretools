@@ -3,6 +3,7 @@
 *  Licensed under the MIT License. See License.md in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 import * as vscode from "vscode";
+import { InvalidInputError } from "../errors";
 
 const languageModelPreference: { vendor: "copilot", family: string }[] = [
     // not yet seen/available
@@ -83,8 +84,8 @@ export async function doCopilotInteraction(primaryPrompt: string): Promise<strin
             const responseText = fragments.join("");
             const cleanedResponse = extractJsonString(responseText);
             return cleanedResponse;
-        } catch (e) {
-            console.error("Error while processing the response stream:", e);
+        } catch {
+            throw new InvalidInputError();
         }
     }
     return "";
