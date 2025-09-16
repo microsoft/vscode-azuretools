@@ -158,11 +158,17 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                                 step = this.goBack(step);
                             }
                             continue;
-                        } else if (pe.errorType === 'InvalidInputError') {
+                        } else if (pe.errorType === 'InvalidCopilotResponseError') {
                             // If this error is thrown it means copilot was unable to provide a valid response
                             // To let the user take over completing the wizard, we should initialize an AzExtUserInput with the existing context
                             if (this._context.ui instanceof CopilotUserInput) {
-                                this._context.ui = new AzExtUserInput(this._context)
+                                // if the loading view is open, close it before switching input modes
+                                const loadingView = this._context.ui.getLoadingView?.();
+                                if (loadingView) {
+                                    loadingView.dispose();
+                                }
+
+                                this._context.ui = new AzExtUserInput(this._context);
                             }
                             await step.prompt(this._context);
                             if (step.confirmationViewProperty) {
