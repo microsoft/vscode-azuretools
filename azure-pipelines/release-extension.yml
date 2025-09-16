@@ -145,7 +145,7 @@ extends:
                     - ${{ each publishCommand in parameters.publishCommands }}:
                         # log the publishCommand
                         - powershell: |
-                            Write-Output "Publish command: $publishCommand"
+                            Write-Output "Publish command: ${{ publishCommand }}"
                           displayName: "\U0001F449 Log publish command"
                         - task: AzureCLI@2
                           displayName: "\U0001F449 Run vsce publish"
