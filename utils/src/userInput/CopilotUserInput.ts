@@ -6,7 +6,7 @@ import type * as vscodeTypes from 'vscode';
 import { workspace } from 'vscode';
 import * as types from '../../index';
 import { createPrimaryPromptForInputBox, createPrimaryPromptForWarningMessage, createPrimaryPromptForWorkspaceFolderPick, createPrimaryPromptToGetPickManyQuickPickInput, createPrimaryPromptToGetSingleQuickPickInput, doCopilotInteraction } from '../copilot/copilot';
-import { InvalidInputError } from '../errors';
+import { InvalidCopilotResponseError } from '../errors';
 
 export class CopilotUserInput implements types.IAzureUserInput {
     private readonly _vscode: typeof vscodeTypes;
@@ -32,7 +32,7 @@ export class CopilotUserInput implements types.IAzureUserInput {
         );
 
         if (!pick) {
-            throw new InvalidInputError();
+            throw new InvalidCopilotResponseError();
         }
 
         this._onDidFinishPromptEmitter.fire({ value: pick });
@@ -41,7 +41,7 @@ export class CopilotUserInput implements types.IAzureUserInput {
 
     public showOpenDialog(): Promise<vscodeTypes.Uri[]> {
         // Throw this back to the user
-        throw new InvalidInputError();
+        throw new InvalidCopilotResponseError();
     }
 
     public async showWorkspaceFolderPick(_options: types.AzExtWorkspaceFolderPickOptions,): Promise<vscodeTypes.WorkspaceFolder> {
@@ -52,7 +52,7 @@ export class CopilotUserInput implements types.IAzureUserInput {
         });
 
         if (!pick) {
-            throw new InvalidInputError();
+            throw new InvalidCopilotResponseError();
         }
 
         this._onDidFinishPromptEmitter.fire({ value: pick });
@@ -81,7 +81,7 @@ export class CopilotUserInput implements types.IAzureUserInput {
             this._onDidFinishPromptEmitter.fire({ value: options.value });
             return options.value;
         }
-        throw new InvalidInputError();
+        throw new InvalidCopilotResponseError();
     }
 
     public get onDidFinishPrompt(): vscodeTypes.Event<types.PromptResult> {
@@ -102,7 +102,7 @@ export class CopilotUserInput implements types.IAzureUserInput {
                 });
 
                 if (!picks || picks.length === 0) {
-                    throw new InvalidInputError();
+                    throw new InvalidCopilotResponseError();
                 }
 
                 this._onDidFinishPromptEmitter.fire({ value: picks });
@@ -117,7 +117,7 @@ export class CopilotUserInput implements types.IAzureUserInput {
                 });
 
                 if (!pick) {
-                    throw new InvalidInputError();
+                    throw new InvalidCopilotResponseError();
                 }
 
                 this._onDidFinishPromptEmitter.fire({ value: pick });
@@ -125,7 +125,7 @@ export class CopilotUserInput implements types.IAzureUserInput {
                 return pick;
             }
         } catch {
-            throw new InvalidInputError();
+            throw new InvalidCopilotResponseError();
         }
     }
 }
