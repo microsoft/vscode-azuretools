@@ -20,7 +20,7 @@ steps:
         displayName: "\U0001F449 Get AzCodeE2ETests service connection secrets"
         inputs:
           azureSubscription: 'AzCodeE2ETests'
-          KeyVaultName: 'AzCodeE2ETestsKeyVault'
+          KeyVaultName: 'AzCodeE2ETestsKeyVault '
           SecretsFilter: 'AzCodeServiceConnectionID, AzCodeServiceConnectionDomain, AzCodeServiceConnectionClientID'
           RunAsPreJob: true
         env:
