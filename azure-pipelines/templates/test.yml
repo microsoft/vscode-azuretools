@@ -9,7 +9,7 @@ steps:
       - task: AzureKeyVault@1
         displayName: "\U0001F449 Authorize AzCodeE2ETests service connection"
         inputs:
-          azureSubscription: 'AzCode2509'
+          azureSubscription: 'AzCodeE2ETests'
           KeyVaultName: 'AzCodeE2ETestsKeyVault'
         env:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
@@ -19,7 +19,7 @@ steps:
       - task: AzureKeyVault@2
         displayName: "\U0001F449 Get AzCodeE2ETests service connection secrets"
         inputs:
-          azureSubscription: 'AzCode2509'
+          azureSubscription: 'AzCodeE2ETests'
           KeyVaultName: 'AzCodeE2ETestsKeyVault'
           SecretsFilter: 'AzCodeServiceConnectionID, AzCodeServiceConnectionDomain, AzCodeServiceConnectionClientID'
           RunAsPreJob: true
