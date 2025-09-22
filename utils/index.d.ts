@@ -188,7 +188,7 @@ export interface ISubscriptionContext {
     isCustomCloud: boolean;
 }
 
-export type TreeItemIconPath = vscodeTypes.IconPath | string;
+export type TreeItemIconPath = vscodeTypes.IconPath;
 
 
 /**
