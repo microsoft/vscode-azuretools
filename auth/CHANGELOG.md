@@ -1,5 +1,9 @@
 # Change Log
 
+## 4.2.2 - 2025-09-10
+
+* [#2073](https://github.com/microsoft/vscode-azuretools/pull/2073) Changes to adjust to proposed API changes
+
 ## 4.2.1 - 2025-08-27
 
 * [#2068](https://github.com/microsoft/vscode-azuretools/pull/2068) Changes to adjust to proposed API changes

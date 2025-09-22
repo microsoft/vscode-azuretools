@@ -22,6 +22,12 @@ export function isUserCancelledError(error: unknown): error is UserCancelledErro
         error._isUserCancelledError === true;
 }
 
+export class InvalidCopilotResponseError extends Error {
+    constructor() {
+        super(vscode.l10n.t('Invalid input.'));
+    }
+}
+
 export class GoBackError extends Error {
     public numberOfStepsToGoBack?: number;
 

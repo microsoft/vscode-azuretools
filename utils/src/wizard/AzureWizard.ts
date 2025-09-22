@@ -11,6 +11,8 @@ import { ExecuteActivity } from '../activityLog/activities/ExecuteActivity';
 import { GoBackError, UserCancelledError } from '../errors';
 import { ext } from '../extensionVariables';
 import { parseError } from '../parseError';
+import { AzExtUserInput } from '../userInput/AzExtUserInput';
+import { CopilotUserInput } from '../userInput/CopilotUserInput';
 import { IInternalActionContext, IInternalAzureWizard } from '../userInput/IInternalActionContext';
 import { createQuickPick } from '../userInput/showQuickPick';
 import { dateTimeUtils } from '../utils/dateTimeUtils';
@@ -156,6 +158,22 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                                 step = this.goBack(step);
                             }
                             continue;
+                        } else if (pe.errorType === 'InvalidCopilotResponseError') {
+                            // If this error is thrown it means copilot was unable to provide a valid response
+                            // To let the user take over completing the wizard, we should initialize an AzExtUserInput with the existing context
+                            if (this._context.ui instanceof CopilotUserInput) {
+                                // if the loading view is open, close it before switching input modes
+                                const loadingView = this._context.ui.getLoadingView?.();
+                                if (loadingView) {
+                                    loadingView.dispose();
+                                }
+
+                                this._context.ui = new AzExtUserInput(this._context);
+                            }
+                            await step.prompt(this._context);
+                            if (step.confirmationViewProperty) {
+                                this.confirmationViewProperties.push(step.confirmationViewProperty(this._context));
+                            }
                         } else {
                             throw err;
                         }
