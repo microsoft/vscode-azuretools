@@ -62,11 +62,10 @@ export class UserAssignedIdentityNameStep<T extends types.IResourceGroupWizardCo
     static async isNameAvailable(context: types.IResourceGroupWizardContext, rgName: string, identityName: string): Promise<boolean> {
         try {
             const client: ManagedServiceIdentityClient = await createManagedServiceIdentityClient(context);
-            await client.userAssignedIdentities.get(rgName, identityName);
+            return !await client.userAssignedIdentities.get(rgName, identityName);
         } catch {
             return true;
         }
-        return false;
     }
 
     static async tryGenerateRelatedName(context: types.IResourceGroupWizardContext, rgName: string): Promise<string | undefined> {
