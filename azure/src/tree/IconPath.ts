@@ -5,14 +5,15 @@
 
 import type { TreeItemIconPath } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
+import { Uri } from 'vscode';
 import { ext } from '../extensionVariables';
 
 export function getIconPath(iconName: string): TreeItemIconPath {
-    return path.join(getResourcesPath(), `${iconName}.svg`);
+    return Uri.file(path.join(getResourcesPath(), `${iconName}.svg`));
 }
 
 export function getAzureIconPath(iconName: string): TreeItemIconPath {
-    return path.join(getResourcesPath(), 'azureIcons', `${iconName}.svg`);
+    return Uri.file(path.join(getResourcesPath(), 'azureIcons', `${iconName}.svg`));
 }
 
 function getResourcesPath(): string {
