@@ -3,9 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { SkuDescription } from '@azure/arm-appservice';
+import type { GeoRegion, SkuDescription } from '@azure/arm-appservice';
+import { LocationListStep, uiUtils } from '@microsoft/vscode-azext-azureutils';
 import { AzureWizardPromptStep, IAzureQuickPickItem, nonNullProp } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
+import { createWebSiteClient } from '../utils/azureClients';
 import { openUrl } from '../utils/openUrl';
 import { AppKind, WebsiteOS } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
@@ -15,7 +17,13 @@ type ExtendedSkuDescription = SkuDescription & { label?: string; description?: s
 
 export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(context: IAppServiceWizardContext): Promise<void> {
-        let skus: ExtendedSkuDescription[] = context.advancedCreation ? this.getRecommendedSkus().concat(this.getAdvancedSkus()) : this.getRecommendedSkus();
+        let skus: ExtendedSkuDescription[] = [];
+        if (await this.isPV4Region(context)) {
+            skus = context.advancedCreation ? this.pv4RecommendedSkus().concat(this.getAdvancedSkus()) : this.pv4RecommendedSkus();
+        } else {
+            skus = context.advancedCreation ? this.nonPV4RecommendedSkus().concat(this.getAdvancedSkus()) : this.nonPV4RecommendedSkus();
+        }
+
         if (context.newSiteKind === AppKind.functionapp) {
             skus.push(...this.getElasticPremiumSkus());
         } else if (context.newSiteKind?.includes(AppKind.workflowapp)) {
@@ -62,7 +70,101 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
         return !context.newPlanSku;
     }
 
-    private getRecommendedSkus(): ExtendedSkuDescription[] {
+    private async isPV4Region(context: IAppServiceWizardContext): Promise<boolean> {
+        const client = await createWebSiteClient(context);
+        const geoRegions: GeoRegion[] = await uiUtils.listAllIterator(client.listGeoRegions());
+        const pv4Regions = geoRegions.filter((region: GeoRegion) => region.orgDomain?.includes('PV4SERIES'));
+        if (LocationListStep.hasLocation(context)) {
+            const location = await LocationListStep.getLocation(context);
+            if (pv4Regions.some(region => region.displayName === location.displayName)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    private pv4RecommendedSkus(): ExtendedSkuDescription[] {
+        const recommendedGroup: string = vscode.l10n.t('Recommended');
+        return [
+            {
+                name: 'F1',
+                tier: 'Free',
+                size: 'F1',
+                family: 'F',
+                capacity: 1,
+                label: vscode.l10n.t('Free (F1)'),
+                group: recommendedGroup
+            },
+            {
+                name: 'B1',
+                tier: 'Basic',
+                size: 'B1',
+                family: 'B',
+                capacity: 1,
+                label: vscode.l10n.t('Basic (B1)'),
+                group: recommendedGroup
+            },
+            {
+                name: 'P0V4',
+                tier: 'Premium V4',
+                size: 'P0V4',
+                family: 'Pv4',
+                capacity: 1,
+                label: vscode.l10n.t('Premium V4 (P0V4)'),
+                group: recommendedGroup
+            },
+            {
+                name: 'P1V4',
+                tier: 'Premium V4',
+                size: 'P1V4',
+                family: 'Pv4',
+                capacity: 1,
+                label: vscode.l10n.t('Premium V4 (P1V4)'),
+                group: recommendedGroup
+            },
+            {
+                name: 'P1MV4',
+                tier: 'Premium V4',
+                size: 'P1MV4',
+                family: 'Pv4',
+                capacity: 1,
+                label: vscode.l10n.t('Premium V4 (P1MV4)'),
+                group: recommendedGroup
+            },
+            {
+                name: 'P0V3',
+                tier: 'Premium V3',
+                size: 'P0V3',
+                family: 'Pv3',
+                capacity: 1,
+                label: vscode.l10n.t('Premium V3 (P0V3)'),
+                group: recommendedGroup
+            },
+            {
+                name: 'P1V3',
+                tier: 'Premium V3',
+                size: 'P1V3',
+                family: 'Pv3',
+                capacity: 1,
+                label: vscode.l10n.t('Premium V3 (P1V3)'),
+                group: recommendedGroup
+            },
+            {
+                name: 'P1MV3',
+                tier: 'Premium V3',
+                size: 'P1MV3',
+                family: 'Pv3',
+                capacity: 1,
+                label: vscode.l10n.t('Premium V3 (P1MV3)'),
+                group: recommendedGroup
+            }
+        ]
+    }
+
+    private nonPV4RecommendedSkus(): ExtendedSkuDescription[] {
         const recommendedGroup: string = vscode.l10n.t('Recommended');
         return [
             {
@@ -86,16 +188,33 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
                 group: recommendedGroup
             },
             {
-                name: 'P1v2',
-                tier: 'Premium V2',
-                size: 'P1v2',
-                family: 'Pv2',
+                name: 'P0V3',
+                tier: 'Premium V3',
+                size: 'P0V3',
+                family: 'Pv3',
                 capacity: 1,
-                label: vscode.l10n.t('Premium (P1v2)'),
-                description: vscode.l10n.t('Use in production'),
+                label: vscode.l10n.t('Premium V3 (P0V3)'),
+                group: recommendedGroup
+            },
+            {
+                name: 'P1V3',
+                tier: 'Premium V3',
+                size: 'P1V3',
+                family: 'Pv3',
+                capacity: 1,
+                label: vscode.l10n.t('Premium V3 (P1V3)'),
+                group: recommendedGroup
+            },
+            {
+                name: 'P1MV3',
+                tier: 'Premium V3',
+                size: 'P1MV3',
+                family: 'Pv3',
+                capacity: 1,
+                label: vscode.l10n.t('Premium V3 (P1MV3)'),
                 group: recommendedGroup
             }
-        ];
+        ]
     }
 
     private getAdvancedSkus(): SkuDescription[] {
