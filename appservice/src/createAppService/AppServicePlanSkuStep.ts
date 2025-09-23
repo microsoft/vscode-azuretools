@@ -42,7 +42,7 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
         const pricingTiers: IAzureQuickPickItem<SkuDescription | undefined>[] = skus.map(s => {
             return {
                 label: s.label || nonNullProp(s, 'name'),
-                description: s.description || s.tier,
+                description: s.description,
                 data: s,
                 group: s.group || vscode.l10n.t('Additional Options')
             };
@@ -222,49 +222,49 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
     private getAdvancedSkus(): SkuDescription[] {
         return [
             {
-                name: 'B2',
+                name: 'Basic (B2)',
                 tier: 'Basic',
                 size: 'B2',
                 family: 'B',
                 capacity: 1
             },
             {
-                name: 'B3',
+                name: 'Basic (B3)',
                 tier: 'Basic',
                 size: 'B3',
                 family: 'B',
                 capacity: 1
             },
             {
-                name: 'S1',
+                name: 'Standard (S1)',
                 tier: 'Standard',
                 size: 'S1',
                 family: 'S',
                 capacity: 1
             },
             {
-                name: 'S2',
+                name: 'Standard (S2)',
                 tier: 'Standard',
                 size: 'S2',
                 family: 'S',
                 capacity: 1
             },
             {
-                name: 'S3',
+                name: 'Standard (S3)',
                 tier: 'Standard',
                 size: 'S3',
                 family: 'S',
                 capacity: 1
             },
             {
-                name: 'P2v2',
+                name: 'Premium V2 (P2v2)',
                 tier: 'Premium V2',
                 size: 'P2v2',
                 family: 'Pv2',
                 capacity: 1
             },
             {
-                name: 'P3v2',
+                name: 'Premium V2 (P3v2)',
                 tier: 'Premium V2',
                 size: 'P3v2',
                 family: 'Pv2',
@@ -276,21 +276,21 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
     private getPremiumV3Skus(): SkuDescription[] {
         return [
             {
-                name: 'P1v3',
+                name: 'Premium V3 (P1v3)',
                 tier: 'Premium V3',
                 size: 'P1v3',
                 family: 'Pv3',
                 capacity: 1
             },
             {
-                name: 'P2v3',
+                name: 'Premium V3 (P2v3)',
                 tier: 'Premium V3',
                 size: 'P2v3',
                 family: 'Pv3',
                 capacity: 1
             },
             {
-                name: 'P3v3',
+                name: 'Premium V3 (P3v3)',
                 tier: 'Premium V3',
                 size: 'P3v3',
                 family: 'Pv3',
@@ -302,21 +302,21 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
     private getElasticPremiumSkus(): SkuDescription[] {
         return [
             {
-                name: 'EP1',
+                name: 'Elastic Premium (EP1)',
                 tier: 'Elastic Premium',
                 size: 'EP1',
                 family: 'EP',
                 capacity: 1
             },
             {
-                name: 'EP2',
+                name: 'Elastic Premium (EP2)',
                 tier: 'Elastic Premium',
                 size: 'EP2',
                 family: 'EP',
                 capacity: 1
             },
             {
-                name: 'EP3',
+                name: 'Elastic Premium (EP3)',
                 tier: 'Elastic Premium',
                 size: 'EP3',
                 family: 'EP',
@@ -328,21 +328,21 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
     private getWorkflowStandardSkus(): SkuDescription[] {
         return [
             {
-                name: 'WS1',
+                name: 'Workflow Standard WS1',
                 tier: 'Workflow Standard',
                 size: 'WS1',
                 family: 'WS',
                 capacity: 1
             },
             {
-                name: 'WS2',
+                name: 'Workflow Standard WS2',
                 tier: 'Workflow Standard',
                 size: 'WS2',
                 family: 'WS',
                 capacity: 1
             },
             {
-                name: 'WS3',
+                name: 'Workflow Standard WS3',
                 tier: 'Workflow Standard',
                 size: 'WS3',
                 family: 'WS',
