@@ -96,6 +96,7 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
                 family: 'F',
                 capacity: 1,
                 label: vscode.l10n.t('Free (F1)'),
+                description: vscode.l10n.t('Try out Azure at no cost'),
                 group: recommendedGroup
             },
             {
@@ -105,6 +106,7 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
                 family: 'B',
                 capacity: 1,
                 label: vscode.l10n.t('Basic (B1)'),
+                description: vscode.l10n.t('Develop and test'),
                 group: recommendedGroup
             },
             {
