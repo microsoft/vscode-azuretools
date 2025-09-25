@@ -53,18 +53,18 @@ export class UserAssignedIdentityCreateStep<T extends types.IResourceGroupWizard
 
     protected getTreeItemLabel(context: T): string {
         const newName: string = nonNullProp(context, 'newManagedIdentityName');
-        return l10n.t('Create user assigned identity "{0}"', newName);
+        return l10n.t('Create user-assigned identity "{0}"', newName);
     }
     protected getOutputLogSuccess(context: T): string {
         const newName: string = nonNullProp(context, 'newManagedIdentityName');
-        return l10n.t('Successfully created user assigned identity "{0}".', newName);
+        return l10n.t('Successfully created user-assigned identity "{0}".', newName);
     }
     protected getOutputLogFail(context: T): string {
         const newName: string = nonNullProp(context, 'newManagedIdentityName');
-        return l10n.t('Failed to create user assigned identity "{0}".', newName);
+        return l10n.t('Failed to create user-assigned identity "{0}".', newName);
     }
     protected getOutputLogProgress(context: T): string {
         const newName: string = nonNullProp(context, 'newManagedIdentityName');
-        return l10n.t('Creating user assigned identity "{0}"...', newName);
+        return l10n.t('Creating user-assigned identity "{0}"...', newName);
     }
 }
