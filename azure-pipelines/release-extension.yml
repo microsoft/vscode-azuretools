@@ -154,4 +154,5 @@ extends:
                             azureSubscription: ${{ parameters.ExtensionReleaseServiceConnection }}
                             scriptType: pscore
                             scriptLocation: inlineScript
-                            inlineScript: ${{ publishCommand }}
+                            inlineScript: |
+                              vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s --allow-proposed-apis terminalDataWriteEvent
