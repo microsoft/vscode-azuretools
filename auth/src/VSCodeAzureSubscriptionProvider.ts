@@ -141,8 +141,9 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
 
         // It's possible that by listing subscriptions in all tenants and the "home" tenant there could be duplicate subscriptions
         // Thus, we remove duplicate subscriptions. However, if multiple accounts have the same subscription, we keep them.
+        // There are also cases where the same subscription could appear in different tenants under the same account so we also need to keep those
         const subscriptionMap = new Map<string, AzureSubscription>();
-        allSubscriptions.forEach(sub => subscriptionMap.set(`${sub.account.id}/${sub.subscriptionId}`, sub));
+        allSubscriptions.forEach(sub => subscriptionMap.set(`${sub.account.id}/${sub.tenantId}/${sub.subscriptionId}`, sub));
         const uniqueSubscriptions = Array.from(subscriptionMap.values());
 
         const endTime = Date.now();
