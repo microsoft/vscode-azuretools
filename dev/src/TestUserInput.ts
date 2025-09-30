@@ -17,7 +17,7 @@ class GoBackError extends Error {
     public numberOfStepsToGoBack?: number;
 
     constructor(numberOfStepsToGoBack?: number) {
-        super(vscodeTypes.l10n.t('Go back.'));
+        super('Go back.');
         this.numberOfStepsToGoBack = numberOfStepsToGoBack;
     }
 }
