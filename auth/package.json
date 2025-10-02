@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-azureauth",
     "author": "Microsoft Corporation",
-    "version": "4.2.2",
+    "version": "5.0.0-alpha.1",
     "description": "Azure authentication helpers for Visual Studio Code",
     "tags": [
         "azure",
@@ -11,7 +11,7 @@
         "azure",
         "vscode"
     ],
-    "main": "out/src/index.js",
+    "module": "out/src/index.js",
     "types": "out/src/index.d.ts",
     "license": "MIT",
     "repository": {
@@ -31,6 +31,9 @@
         "package": "npm pack",
         "l10n": "npx @vscode/l10n-dev export --outDir ./l10n ./src"
     },
+    "engines": {
+        "vscode": "^1.105.0"
+    },
     "devDependencies": {
         "@azure/core-auth": "^1.4.0",
         "@azure/identity": "^4.2.0",
@@ -42,7 +45,7 @@
         "@types/node-fetch": "2.6.7",
         "@types/semver": "^7.3.9",
         "@types/uuid": "^9.0.1",
-        "@types/vscode": "^1.94.0",
+        "@types/vscode": "1.104.0",
         "@typescript-eslint/eslint-plugin": "^5.53.0",
         "@vscode/test-electron": "^2.3.8",
         "eslint": "^8.34.0",

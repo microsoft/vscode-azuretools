@@ -44,12 +44,15 @@ export abstract class ActionsItemBase implements TreeElementBase {
      * @param contextValueExtensionPrefix The extension prefix used in constructing context values for the 'ActionsItem'
      * and its children. Passing 'containerApps' becomes `containerApps${ActionsItemBase.contextValueSuffix}`.
      */
-    constructor(readonly parentId: string, readonly contextValueExtensionPrefix: string) { }
+    constructor(private readonly parentId: string, private readonly contextValueExtensionPrefix: string) { }
 
     /**
      * Constructed using the format: `${this.parentId}/${ActionsTreeItemBase.idSuffix}`
      */
-    readonly id: string = `${this.parentId}/${ActionsItemBase.idSuffix}`;
+    public get id(): string {
+        return `${this.parentId}/${ActionsItemBase.idSuffix}`;
+    }
+
     readonly label: string = 'Actions';
 
     private getContextValue(isConnected: boolean): string {

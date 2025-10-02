@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { TestUserInput } from "@microsoft/vscode-azext-dev";
+import assert from "assert";
 import * as vscode from 'vscode';
 import { IActionContext } from "..";
 import { AzExtTreeFileSystem } from "../src";
-import assert = require("assert");
 
 type MockItemType = { id: string };
 

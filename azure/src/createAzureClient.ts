@@ -6,8 +6,8 @@
 import { ServiceClient } from '@azure/core-client';
 import { createHttpHeaders, createPipelineRequest, defaultRetryPolicy, Pipeline, PipelineOptions, PipelinePolicy, PipelineRequest, PipelineResponse, RestError, RetryPolicyOptions, SendRequest, userAgentPolicy } from '@azure/core-rest-pipeline';
 import { appendExtensionUserAgent, AzExtServiceClientCredentialsT2, AzExtTreeItem, IActionContext, ISubscriptionActionContext, ISubscriptionContext, parseError } from '@microsoft/vscode-azext-utils';
+import { randomUUID } from 'crypto';
 import { Agent as HttpsAgent } from 'https';
-import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import * as types from '../index';
 import { parseJson, removeBom } from './utils/parseJson';
@@ -34,10 +34,10 @@ export function parseClientContext(clientContext: InternalAzExtClientContext): I
     }
 }
 
-function getChallengeHandlerFromCredential(createCredentialsForScopes: (scopes: vscode.AuthenticationWwwAuthenticateRequest) => Promise<AzExtServiceClientCredentialsT2>) {
-    const getTokenForChallenge = async (scopes: vscode.AuthenticationWwwAuthenticateRequest): Promise<string> => {
-        const credentials = await createCredentialsForScopes(scopes);
-        const token = await credentials.getToken(scopes) as { token: string };
+function getChallengeHandlerFromCredential(createCredentialsForScopes: (request: vscode.AuthenticationWwwAuthenticateRequest) => Promise<AzExtServiceClientCredentialsT2>) {
+    const getTokenForChallenge = async (request: vscode.AuthenticationWwwAuthenticateRequest): Promise<string> => {
+        const credentials = await createCredentialsForScopes(request);
+        const token = await credentials.getToken(request) as { token: string };
         return token.token;
     }
 
@@ -183,7 +183,7 @@ export class CorrelationIdPolicy implements PipelinePolicy {
 
     public async sendRequest(request: PipelineRequest, next: SendRequest): Promise<PipelineResponse> {
         const headerName = 'x-ms-correlation-request-id';
-        const id: string = (this.context.telemetry.properties[headerName] as string | undefined) ||= uuidv4();
+        const id: string = (this.context.telemetry.properties[headerName] as string | undefined) ||= randomUUID();
         request.headers.set(headerName, id);
         return await next(request);
     }
@@ -338,7 +338,7 @@ class AzExtBearerChallengePolicy implements PipelinePolicy {
 
     public constructor(
         private readonly context: IActionContext,
-        private readonly getTokenForChallenge: (scopes: vscode.AuthenticationWwwAuthenticateRequest) => Promise<string | undefined>,
+        private readonly getTokenForChallenge: (request: vscode.AuthenticationWwwAuthenticateRequest) => Promise<string | undefined>,
         private readonly endpoint?: string
     ) { }
 
@@ -356,7 +356,7 @@ class AzExtBearerChallengePolicy implements PipelinePolicy {
                 // fetching fails, we don't attempt the challenge again.
                 request.headers.set(this.challengeRetryHeader, '1');
 
-                const token = await this.getTokenForChallenge({ challenge: header, wwwAuthenticate: header, fallbackScopes: scopes, scopes } as unknown as vscode.AuthenticationWwwAuthenticateRequest);
+                const token = await this.getTokenForChallenge({ wwwAuthenticate: header, fallbackScopes: scopes });
                 if (token) {
                     this.context.telemetry.properties.challengeSuccess = 'true';
                     request.headers.set('Authorization', `Bearer ${token}`);

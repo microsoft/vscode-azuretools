@@ -32,7 +32,7 @@ function addTenantIdScope(scopes: string[], tenantId: string): string[] {
     return Array.from(scopeSet);
 }
 
-function getScopes(scopes: string | string[] | undefined, tenantId?: string): string[] {
+function getModifiedScopes(scopes: string | string[] | undefined, tenantId?: string): string[] {
     let scopeArr = getResourceScopes(scopes);
     if (tenantId) {
         scopeArr = addTenantIdScope(scopeArr, tenantId);
@@ -40,21 +40,26 @@ function getScopes(scopes: string | string[] | undefined, tenantId?: string): st
     return scopeArr;
 }
 
-type DeprecatedChallenge = {
-    /**
-     * @deprecated Use wwwAuthenticate instead.
-     */
-    challenge?: string;
-}
-
 /**
  * Deconstructs and rebuilds the scopes arg in order to use the above utils to modify the scopes array.
  * And then returns the proper type to pass directly to vscode.authentication.getSession
  */
-function formScopesArg(scopes?: string | string[] | (vscode.AuthenticationWwwAuthenticateRequest & DeprecatedChallenge), tenantId?: string): string[] | (vscode.AuthenticationWwwAuthenticateRequest & DeprecatedChallenge) {
-    const initialScopeList: string[] | undefined = typeof scopes === 'string' ? [scopes] : Array.isArray(scopes) ? scopes : Array.from(scopes?.fallbackScopes ?? scopes?.scopes ?? []);
-    const scopeList = getScopes(initialScopeList, tenantId);
-    return isAuthenticationWwwAuthenticateRequest(scopes) ? { scopes: scopeList, fallbackScopes: scopeList, challenge: scopes.wwwAuthenticate ?? scopes.challenge, wwwAuthenticate: scopes.wwwAuthenticate ?? scopes.challenge } : scopeList;
+function formScopesArg(scopeOrListOrRequest?: string | string[] | vscode.AuthenticationWwwAuthenticateRequest, tenantId?: string): string[] | vscode.AuthenticationWwwAuthenticateRequest {
+    const isChallenge = isAuthenticationWwwAuthenticateRequest(scopeOrListOrRequest);
+
+    let initialScopeList: string[] | undefined = undefined;
+    if (typeof scopeOrListOrRequest === 'string' && !!scopeOrListOrRequest) {
+        initialScopeList = [scopeOrListOrRequest];
+    } else if (Array.isArray(scopeOrListOrRequest)) {
+        initialScopeList = scopeOrListOrRequest;
+    } else if (isChallenge) {
+        // `scopeOrListOrRequest.fallbackScopes` being readonly forces us to rebuild the array
+        initialScopeList = scopeOrListOrRequest.fallbackScopes ? Array.from(scopeOrListOrRequest.fallbackScopes) : undefined;
+    }
+
+    const modifiedScopeList = getModifiedScopes(initialScopeList, tenantId);
+
+    return isChallenge ? { fallbackScopes: modifiedScopeList, wwwAuthenticate: scopeOrListOrRequest.wwwAuthenticate } : modifiedScopeList;
 }
 
 /**
@@ -62,12 +67,12 @@ function formScopesArg(scopes?: string | string[] | (vscode.AuthenticationWwwAut
  * * Passing the configured auth provider id
  * * Getting the list of scopes, adding the tenant id to the scope list if needed
  *
- * @param scopes - top-level resource scopes (e.g. http://management.azure.com, http://storage.azure.com) or .default scopes. All resources/scopes will be normalized to the `.default` scope for each resource.
- * Use `vscode.AuthenticationWwwAuthenticateRequest` if you need to pass in a challenge (WWW-Authenticate header). Note: Use of `vscode.AuthenticationWwwAuthenticateRequest` requires VS Code 1.104 or newer.
+ * @param scopeOrListOrRequest - top-level resource scopes (e.g. http://management.azure.com, http://storage.azure.com) or .default scopes. All resources/scopes will be normalized to the `.default` scope for each resource.
+ * Use `vscode.AuthenticationWwwAuthenticateRequest` if you need to pass in a challenge (WWW-Authenticate header). Note: Use of `vscode.AuthenticationWwwAuthenticateRequest` requires VS Code 1.105.0 or newer.
  * @param tenantId - (Optional) The tenant ID, will be added to the scopes
  * @param options - see {@link vscode.AuthenticationGetSessionOptions}
  * @returns An authentication session if available, or undefined if there are no sessions
  */
-export async function getSessionFromVSCode(scopes?: string | string[] | vscode.AuthenticationWwwAuthenticateRequest, tenantId?: string, options?: vscode.AuthenticationGetSessionOptions): Promise<vscode.AuthenticationSession | undefined> {
-    return await vscode.authentication.getSession(getConfiguredAuthProviderId(), formScopesArg(scopes, tenantId), options);
+export async function getSessionFromVSCode(scopeOrListOrRequest?: string | string[] | vscode.AuthenticationWwwAuthenticateRequest, tenantId?: string, options?: vscode.AuthenticationGetSessionOptions): Promise<vscode.AuthenticationSession | undefined> {
+    return await vscode.authentication.getSession(getConfiguredAuthProviderId(), formScopesArg(scopeOrListOrRequest, tenantId), options);
 }

@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-azureappsettings",
     "author": "Microsoft Corporation",
-    "version": "0.2.11",
+    "version": "1.0.0-alpha.1",
     "description": "Common features and tools surrounding App Settings for the Azure VS Code extensions",
     "tags": [
         "azure",
@@ -11,7 +11,7 @@
         "azure",
         "vscode"
     ],
-    "main": "out/src/index.js",
+    "module": "out/src/index.js",
     "types": "out/src/index.d.ts",
     "license": "MIT",
     "repository": {
@@ -31,17 +31,20 @@
         "package": "npm pack",
         "l10n": "npx @vscode/l10n-dev export --outDir ./l10n ./src"
     },
+    "engines": {
+        "vscode": "^1.105.0"
+    },
     "dependencies": {
-        "@microsoft/vscode-azext-utils": "^3.4.2"
+        "@microsoft/vscode-azext-utils": "file:../utils/microsoft-vscode-azext-utils-4.0.0-alpha.1.tgz"
     },
     "devDependencies": {
         "@azure/arm-appservice": "^13.0.2",
         "@microsoft/eslint-config-azuretools": "^0.2.1",
-        "@microsoft/vscode-azext-dev": "^2.0.0",
+        "@microsoft/vscode-azext-dev": "file:../dev/microsoft-vscode-azext-dev-3.0.0-alpha.1.tgz",
         "@types/fs-extra": "^9.0.13",
         "@types/mocha": "^7.0.2",
-        "@types/node": "^16.0.0",
-        "@types/vscode": "1.95.0",
+        "@types/node": "22.x",
+        "@types/vscode": "1.104.0",
         "@typescript-eslint/eslint-plugin": "^5.53.0",
         "@vscode/test-electron": "^2.3.8",
         "eslint": "^8.34.0",
@@ -51,6 +54,6 @@
         "mocha": "^10.8.2",
         "mocha-junit-reporter": "^2.0.2",
         "mocha-multi-reporters": "^1.1.7",
-        "typescript": "^4.9.4"
+        "typescript": "^5.9.3"
     }
 }

@@ -16,18 +16,18 @@ export function createAzExtOutputChannel(name: string, extensionPrefix: string):
     return outputChannel;
 }
 
-class AzExtOutputChannel implements types.IAzExtOutputChannel {
+class AzExtOutputChannel<TChannel extends OutputChannel = OutputChannel> implements types.IAzExtOutputChannel {
     public readonly name: string;
     public extensionPrefix!: string;
-    protected _outputChannel: OutputChannel | LogOutputChannel;
+    protected _outputChannel: TChannel;
 
     constructor(name: string) {
         this.name = name;
         this._outputChannel = this.createOutputChannel(name);
     }
 
-    protected createOutputChannel(name: string): OutputChannel {
-        return window.createOutputChannel(name);
+    protected createOutputChannel(name: string): TChannel {
+        return window.createOutputChannel(name) as TChannel;
     }
 
     public append(value: string): void {
@@ -78,9 +78,7 @@ class AzExtOutputChannel implements types.IAzExtOutputChannel {
     }
 }
 
-class AzExtLogOutputChannel extends AzExtOutputChannel implements LogOutputChannel {
-    // assigned in AzExtOutputChannel constructor
-    protected override _outputChannel!: LogOutputChannel;
+class AzExtLogOutputChannel extends AzExtOutputChannel<LogOutputChannel> implements LogOutputChannel {
     readonly onDidChangeLogLevel: Event<LogLevel>;
 
     constructor(name: string) {

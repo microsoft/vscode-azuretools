@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzExtFsExtra } from '@microsoft/vscode-azext-utils';
+import assert from 'assert';
 import * as path from 'path';
 import { getFilesFromGitignore, getFilesFromGlob } from '../src/deploy/runWithZipStream';
 import { testWorkspaceRoot } from './global.test';
-import assert = require('assert');
 
 suite("getDeployFsPath", () => {
     type TestFolder = { name: string; path?: string; }

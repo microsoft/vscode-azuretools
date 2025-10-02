@@ -3,7 +3,7 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "crypto";
 import { ProviderResult, TreeItem } from "vscode";
 import * as types from '../../../index';
 
@@ -25,7 +25,7 @@ export class ActivityChildItem implements types.ActivityChildItemBase {
     stepId?: string;
 
     constructor(readonly options: types.ActivityChildItemOptions) {
-        this.id = options.id ?? uuidv4();
+        this.id = options.id ?? randomUUID();
         this.label = options.label;
         this.activityType = options.activityType;
         this.contextValue = options.contextValue;
