@@ -36,7 +36,7 @@
         "@vscode/extension-telemetry": "^0.9.6",
         "dayjs": "^1.11.2",
         "escape-string-regexp": "^2.0.0",
-        "html-to-text": "^8.2.0",
+        "html-to-text": "^9.0.0",
         "semver": "^7.3.7",
         "uuid": "^9.0.0",
         "vscode-tas-client": "^0.1.84",
@@ -48,7 +48,6 @@
     "devDependencies": {
         "@microsoft/eslint-config-azuretools": "^0.2.1",
         "@microsoft/vscode-azext-dev": "^2.1.1",
-        "@types/html-to-text": "^8.1.0",
         "@types/mocha": "^7.0.2",
         "@types/node": "^16.0.0",
         "@types/semver": "^7.3.9",
