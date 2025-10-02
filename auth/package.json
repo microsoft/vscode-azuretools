@@ -33,15 +33,10 @@
     },
     "devDependencies": {
         "@azure/core-auth": "^1.4.0",
-        "@azure/identity": "^4.2.0",
         "@microsoft/eslint-config-azuretools": "^0.2.1",
         "@types/glob": "^8.1.0",
-        "@types/html-to-text": "^8.1.0",
         "@types/mocha": "^7.0.2",
         "@types/node": "^18.18.7",
-        "@types/node-fetch": "2.6.7",
-        "@types/semver": "^7.3.9",
-        "@types/uuid": "^9.0.1",
         "@types/vscode": "^1.94.0",
         "@typescript-eslint/eslint-plugin": "^5.53.0",
         "@vscode/test-electron": "^2.3.8",
@@ -57,6 +52,7 @@
         "@azure/arm-resources-subscriptions": "^2.1.0",
         "@azure/core-client": "^1.9.2",
         "@azure/core-rest-pipeline": "^1.16.0",
+        "@azure/identity": "^4.2.0",
         "@azure/ms-rest-azure-env": "^2.0.0"
     }
 }
