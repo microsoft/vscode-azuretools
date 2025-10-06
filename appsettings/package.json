@@ -27,7 +27,6 @@
         "build": "npm run build:esm && npm run build:cjs",
         "build:esm": "tsc -p ./ --outDir ./dist/esm",
         "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext",
-        "compile": "tsc -watch -p ./",
         "lint": "eslint --ext .ts .",
         "lint-fix": "eslint --ext .ts . --fix",
         "test": "node ./dist/cjs/test/runTest.js",
