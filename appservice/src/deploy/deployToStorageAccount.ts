@@ -6,11 +6,11 @@
 import type { StringDictionary } from '@azure/arm-appservice';
 import { BlobSASPermissions, BlobServiceClient, BlockBlobClient, ContainerClient, generateBlobSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
 import { IActionContext, parseError } from '@microsoft/vscode-azext-utils';
-import * as dayjs from 'dayjs';
+import dayjs from 'dayjs';
 // eslint-disable-next-line import/no-internal-modules
-import * as relativeTime from 'dayjs/plugin/relativeTime';
+import relativeTime from 'dayjs/plugin/relativeTime';
 // eslint-disable-next-line import/no-internal-modules
-import * as utc from 'dayjs/plugin/utc';
+import utc from 'dayjs/plugin/utc';
 import { URL } from 'url';
 import * as vscode from 'vscode';
 import { ext } from '../extensionVariables';

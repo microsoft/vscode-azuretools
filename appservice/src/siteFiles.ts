@@ -7,7 +7,7 @@ import { ServiceClient } from '@azure/core-client';
 import { RestError, createPipelineRequest } from '@azure/core-rest-pipeline';
 import { AzExtPipelineResponse, createGenericClient } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, IParsedError, parseError } from '@microsoft/vscode-azext-utils';
-import * as retry from 'p-retry';
+import retry from 'p-retry';
 import { ParsedSite } from './SiteClient';
 
 export interface ISiteFile {
