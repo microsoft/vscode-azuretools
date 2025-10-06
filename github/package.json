@@ -11,8 +11,9 @@
         "azure",
         "vscode"
     ],
-    "module": "out/src/index.js",
-    "types": "out/src/index.d.ts",
+    "module": "dist/esm/src/index.js",
+    "main": "dist/cjs/src/index.js",
+    "types": "dist/esm/src/index.d.ts",
     "license": "MIT",
     "repository": {
         "type": "git",
