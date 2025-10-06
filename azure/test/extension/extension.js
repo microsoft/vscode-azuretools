@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 const vscode = require('vscode');
-const azure = require('../../out/src/index');
+const azure = require('../../dist/cjs/src/index');
 
 function activate(context) {
     const extVars = {

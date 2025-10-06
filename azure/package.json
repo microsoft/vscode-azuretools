@@ -11,7 +11,8 @@
         "azure",
         "vscode"
     ],
-    "module": "out/src/index.js",
+    "module": "dist/esm/src/index.js",
+    "main": "dist/cjs/src/index.js",
     "types": "index.d.ts",
     "license": "MIT",
     "repository": {
@@ -23,11 +24,13 @@
     },
     "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/azure/README.md",
     "scripts": {
-        "build": "tsc -p ./",
+        "build": "npm run build:esm && npm run build:cjs",
+        "build:esm": "tsc -p ./ --outDir ./dist/esm",
+        "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext",
         "compile": "tsc -watch -p ./",
         "lint": "eslint --ext .ts .",
         "lint-fix": "eslint --ext .ts . --fix",
-        "test": "node ./out/test/runTest.js",
+        "test": "node ./dist/cjs/test/runTest.js",
         "package": "npm pack",
         "l10n": "npx @vscode/l10n-dev export --outDir ./l10n ./src"
     },
@@ -57,7 +60,7 @@
         "@azure/core-paging": "^1.2.1",
         "@microsoft/eslint-config-azuretools": "^0.2.1",
         "@microsoft/vscode-azext-dev": "file:../dev/microsoft-vscode-azext-dev-3.0.0-alpha.1.tgz",
-        "@microsoft/vscode-azureresources-api": "^2.6.2",
+        "@microsoft/vscode-azureresources-api": "file:../../vscode-azureresourcegroups/api/microsoft-vscode-azureresources-api-3.0.0-alpha.1.tgz",
         "@types/mocha": "^7.0.2",
         "@types/node": "22.x",
         "@types/semver": "^7.3.9",
