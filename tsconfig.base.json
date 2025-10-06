@@ -13,10 +13,11 @@
         "strictNullChecks": true,
         "noUnusedParameters": true,
         "incremental": true,
+        "declaration": true,
     },
     "exclude": [
         "**/node_modules",
         "**/lib",
-        "**/dist"
+        "**/dist",
     ],
 }
