@@ -37,7 +37,7 @@
         "vscode": "^1.105.0"
     },
     "dependencies": {
-        "@microsoft/vscode-azureresources-api": "file:../../vscode-azureresourcegroups/api/microsoft-vscode-azureresources-api-3.0.0-alpha.1.tgz",
+        "@microsoft/vscode-azureresources-api": "file:../../vscode-azureresourcegroups/api/microsoft-vscode-azureresources-api-3.0.0.tgz",
         "@vscode/extension-telemetry": "^0.9.6",
         "dayjs": "^1.11.2",
         "escape-string-regexp": "^2.0.0",
