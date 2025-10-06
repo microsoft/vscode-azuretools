@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as globby from 'globby';
-import * as Mocha from 'mocha';
+import globby from 'globby';
+import Mocha from 'mocha';
 import * as path from 'path';
 
 export async function run(): Promise<void> {
