@@ -15,7 +15,7 @@ import type { PagedAsyncIterableIterator } from '@azure/core-paging';
 import type { PipelineRequestOptions, PipelineResponse } from '@azure/core-rest-pipeline';
 import type { Environment } from '@azure/ms-rest-azure-env';
 import type { AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtServiceClientCredentialsT2, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardExecuteStepWithActivityOutput, AzureWizardPromptStep, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, IRelatedNameWizardContext, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, TreeElementBase, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
-import { AzureSubscription } from '@microsoft/vscode-azureresources-api';
+import type { AzureSubscription } from '@microsoft/vscode-azureresources-api';
 import { Disposable, LogOutputChannel, Progress, ProviderResult, TreeItem, Uri } from 'vscode';
 
 export type OpenInPortalOptions = {
