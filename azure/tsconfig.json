@@ -5,5 +5,6 @@
         "rootDir": ".",
         "declaration": false,
         "strict": true,
+        "skipLibCheck": true, // TODO: webpack typings issue
     },
 }
