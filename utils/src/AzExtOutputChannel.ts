@@ -78,7 +78,9 @@ class AzExtOutputChannel<TChannel extends OutputChannel = OutputChannel> impleme
     }
 }
 
-class AzExtLogOutputChannel extends AzExtOutputChannel<LogOutputChannel> implements LogOutputChannel {
+class AzExtLogOutputChannel extends AzExtOutputChannel implements LogOutputChannel {
+    // assigned in AzExtOutputChannel constructor
+    protected declare _outputChannel: LogOutputChannel;
     readonly onDidChangeLogLevel: Event<LogLevel>;
 
     constructor(name: string) {
