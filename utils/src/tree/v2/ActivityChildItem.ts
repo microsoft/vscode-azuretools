@@ -3,9 +3,9 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { randomUUID } from "crypto";
 import { ProviderResult, TreeItem } from "vscode";
 import * as types from '../../../index';
+import { crypto } from '../../node/crypto';
 
 export enum ActivityChildType {
     Success = 'success',
@@ -25,7 +25,7 @@ export class ActivityChildItem implements types.ActivityChildItemBase {
     stepId?: string;
 
     constructor(readonly options: types.ActivityChildItemOptions) {
-        this.id = options.id ?? randomUUID();
+        this.id = options.id ?? crypto.randomUUID();
         this.label = options.label;
         this.activityType = options.activityType;
         this.contextValue = options.contextValue;
