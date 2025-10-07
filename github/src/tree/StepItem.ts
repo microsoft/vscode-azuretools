@@ -13,17 +13,24 @@ export class StepItem implements TreeElementBase {
     static contextValueSuffix: string = 'StepItem';
 
     constructor(
-        readonly parentResourceId: string,
-        readonly extensionPrefixContextValue: string,
-        readonly step: JobStep) { }
+        private readonly parentResourceId: string,
+        private readonly extensionPrefixContextValue: string,
+        private readonly step: JobStep) { }
 
-    id: string = `${this.parentResourceId}/steps/${this.step.number}`;
-    label: string = this.step.name;
+    public get id(): string {
+        return `${this.parentResourceId}/steps/${this.step.number}`;
+    }
 
-    viewProperties: ViewPropertiesModel = {
-        data: this.step,
-        label: this.step.name,
-    };
+    public get label(): string {
+        return this.step.name;
+    }
+
+    public get viewProperties(): ViewPropertiesModel {
+        return {
+            data: this.step,
+            label: this.step.name,
+        };
+    }
 
     getTreeItem(): TreeItem {
         return {

@@ -1,12 +1,7 @@
 {
-    "extends": "../tsconfig.base.json",
+    "extends": "../tsconfig.base.new.json",
     "compilerOptions": {
-        "declaration": true,
-        "outDir": "out",
-        "rootDir": "."
+        "outDir": "dist/esm",
+        "rootDir": ".",
     },
-    "exclude": [
-        "node_modules",
-        "out"
-    ]
 }

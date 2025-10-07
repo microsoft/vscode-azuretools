@@ -8,11 +8,11 @@
             "runtimeExecutable": "${execPath}",
             "args": [
                 "--extensionDevelopmentPath=${workspaceFolder}/test/extension",
-                "--extensionTestsPath=${workspaceFolder}/out/test/index",
+                "--extensionTestsPath=${workspaceFolder}/dist/cjs/test/index",
                 "${workspaceFolder}/test/test.code-workspace"
             ],
             "outFiles": [
-                "${workspaceFolder}/out/test/**/*.js"
+                "${workspaceFolder}/dist/cjs/test/**/*.js"
             ],
             "preLaunchTask": "${defaultBuildTask}",
             "env": {
