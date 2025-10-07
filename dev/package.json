@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-dev",
     "author": "Microsoft Corporation",
-    "version": "2.1.2",
+    "version": "3.0.0",
     "description": "Common dev dependency tools for developing Azure extensions for VS Code",
     "tags": [
         "azure",
@@ -14,7 +14,8 @@
     "bin": {
         "vscode-sort-package-json": "scripts/sortPackageJson.mjs"
     },
-    "main": "out/src/index.js",
+    "module": "dist/esm/src/index.js",
+    "main": "dist/cjs/src/index.js",
     "types": "index.d.ts",
     "license": "MIT",
     "repository": {
@@ -26,13 +27,17 @@
     },
     "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/dev/README.md",
     "scripts": {
-        "build": "tsc -p ./",
-        "compile": "tsc -watch -p ./",
+        "build": "npm run build:esm && npm run build:cjs",
+        "build:esm": "tsc -p ./",
+        "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext",
         "lint": "eslint --ext .ts .",
         "lint-fix": "eslint --ext .ts . --fix",
-        "test": "node ./out/test/runTest.js",
+        "test": "node ./dist/cjs/test/runTest.js",
         "package": "npm pack",
         "l10n": "npx @vscode/l10n-dev export --outDir ./l10n ./src"
+    },
+    "engines": {
+        "vscode": "^1.105.0"
     },
     "devDependencies": {
         "@azure/ms-rest-azure-env": "^2.0.0",
@@ -41,15 +46,15 @@
         "@types/fs-extra": "^8.0.0",
         "@types/glob": "^8.1.0",
         "@types/mocha": "^7.0.2",
-        "@types/node": "^16.0.0",
-        "@types/vscode": "^1.94.0",
+        "@types/node": "22.x",
+        "@types/vscode": "1.104.0",
         "@typescript-eslint/eslint-plugin": "^5.53.0",
         "@vscode/test-electron": "^2.3.8",
         "eslint": "^8.34.0",
         "eslint-plugin-import": "^2.22.1",
         "glob": "^7.1.6",
         "ts-node": "^10.9.1",
-        "typescript": "^4.9.4"
+        "typescript": "^5.9.2"
     },
     "dependencies": {
         "assert": "^2.0.0",
