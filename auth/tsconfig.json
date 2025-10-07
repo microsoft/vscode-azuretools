@@ -1,6 +1,7 @@
 {
     "extends": "../tsconfig.base.new.json",
     "compilerOptions": {
+        "outDir": "dist/esm",
         "rootDir": ".",
     },
 }
