@@ -5,8 +5,6 @@
 
 const vscode = require('vscode');
 const ui_1 = require('@microsoft/vscode-azext-utils');
-const azure_1 = require('@microsoft/vscode-azext-azureutils');
-const appservice_1 = require('../../out/src/index');
 
 function activate(context) {
     const extVars = {
@@ -14,8 +12,6 @@ function activate(context) {
         outputChannel: vscode.window.createOutputChannel('azureappsettings')
     };
     ui_1.registerUIExtensionVariables(extVars);
-    azure_1.registerAzureUtilsExtensionVariables(extVars);
-    appservice_1.registerAppServiceExtensionVariables(extVars);
 }
 exports.activate = activate;
 
