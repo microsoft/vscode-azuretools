@@ -28,7 +28,7 @@
     "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/dev/README.md",
     "scripts": {
         "build": "npm run build:esm && npm run build:cjs",
-        "build:esm": "tsc -p ./ --outDir ./dist/esm",
+        "build:esm": "tsc -p ./",
         "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext",
         "lint": "eslint --ext .ts .",
         "lint-fix": "eslint --ext .ts . --fix",
