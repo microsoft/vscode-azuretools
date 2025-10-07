@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-azureutils",
     "author": "Microsoft Corporation",
-    "version": "4.0.0-alpha.1",
+    "version": "4.0.0",
     "description": "Common Azure utils for developing Azure extensions for VS Code",
     "tags": [
         "azure",
@@ -48,7 +48,8 @@
         "@azure/core-client": "^1.6.0",
         "@azure/core-rest-pipeline": "^1.9.0",
         "@azure/logger": "^1.0.4",
-        "@microsoft/vscode-azext-utils": "file:../utils/microsoft-vscode-azext-utils-4.0.0-alpha.1.tgz",
+        "@microsoft/vscode-azext-utils": "file:../utils/microsoft-vscode-azext-utils-4.0.0.tgz",
+        "@microsoft/vscode-azureresources-api": "^3.0.0",
         "semver": "^7.3.7"
     },
     "peerDependencies": {
@@ -58,8 +59,7 @@
         "@azure/core-auth": "^1.3.2",
         "@azure/core-paging": "^1.2.1",
         "@microsoft/eslint-config-azuretools": "^0.2.1",
-        "@microsoft/vscode-azext-dev": "file:../dev/microsoft-vscode-azext-dev-3.0.0-alpha.1.tgz",
-        "@microsoft/vscode-azureresources-api": "file:../../vscode-azureresourcegroups/api/microsoft-vscode-azureresources-api-3.0.0-alpha.1.tgz",
+        "@microsoft/vscode-azext-dev": "^3.0.0",
         "@types/mocha": "^7.0.2",
         "@types/node": "22.x",
         "@types/semver": "^7.3.9",
