@@ -10,14 +10,14 @@ import { AzExtServiceClientCredentials, ISubscriptionContext } from '../../index
 /**
  * Converts a VS Code authentication session to an Azure Track 1 & 2 compatible compatible credential.
  */
-export function createCredential(getSession: (scopes?: string[] | vscode.AuthenticationWwwAuthenticateRequest) => vscode.ProviderResult<vscode.AuthenticationSession>): AzExtServiceClientCredentials {
+export function createCredential(getSession: (scopeListOrRequest?: string[] | vscode.AuthenticationWwwAuthenticateRequest) => vscode.ProviderResult<vscode.AuthenticationSession>): AzExtServiceClientCredentials {
     return {
-        getToken: async (scopes?: string | string[] | vscode.AuthenticationWwwAuthenticateRequest) => {
-            if (typeof scopes === 'string') {
-                scopes = [scopes];
+        getToken: async (scopeListOrRequest?: string | string[] | vscode.AuthenticationWwwAuthenticateRequest) => {
+            if (typeof scopeListOrRequest === 'string') {
+                scopeListOrRequest = [scopeListOrRequest];
             }
 
-            const session = await getSession(scopes);
+            const session = await getSession(scopeListOrRequest);
 
             if (session) {
                 return {
@@ -40,10 +40,10 @@ export function createSubscriptionContext(subscription: AzureSubscription): ISub
         subscriptionPath: subscription.subscriptionId,
         ...subscription,
         credentials: createCredential(subscription.authentication.getSession),
-        createCredentialsForScopes: async (scopes: string[] | vscode.AuthenticationWwwAuthenticateRequest) => {
+        createCredentialsForScopes: async (scopeListOrRequest: string[] | vscode.AuthenticationWwwAuthenticateRequest) => {
             // Have to use bind here because we need to pass a `getSessions` function with a `scopes` parameter to `createCredential`
             // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-            return createCredential(subscription.authentication.getSessionWithScopes.bind(subscription.authentication, scopes));
+            return createCredential(subscription.authentication.getSessionWithScopes.bind(subscription.authentication, scopeListOrRequest));
         }
     };
 }

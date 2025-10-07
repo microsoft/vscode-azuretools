@@ -166,11 +166,11 @@ export interface AzExtServiceClientCredentialsT2 {
      * This method is called automatically by Azure SDK client libraries. You may call this method
      * directly, but you must also handle token caching and token refreshing.
      *
-     * @param scopes - The list of scopes for which the token will have access.
+     * @param scopeOrListOrRequest - The list of scopes for which the token will have access.
      * @param options - The options used to configure any requests this
      *                TokenCredential implementation might make.
      */
-    getToken(scopes?: string | string[] | AuthenticationWwwAuthenticateRequest, options?: any): Promise<any | null>;
+    getToken(scopeOrListOrRequest?: string | string[] | AuthenticationWwwAuthenticateRequest, options?: any): Promise<any | null>;
 }
 
 /**
@@ -178,7 +178,7 @@ export interface AzExtServiceClientCredentialsT2 {
  */
 export interface ISubscriptionContext {
     credentials: AzExtServiceClientCredentials;
-    createCredentialsForScopes: (scopes: string[] | AuthenticationWwwAuthenticateRequest) => Promise<AzExtServiceClientCredentials>;
+    createCredentialsForScopes: (scopeListOrRequest: string[] | AuthenticationWwwAuthenticateRequest) => Promise<AzExtServiceClientCredentials>;
     subscriptionDisplayName: string;
     subscriptionId: string;
     subscriptionPath: string;
@@ -2801,3 +2801,30 @@ export declare interface AzExtLMTool<T> {
 }
 
 // #endregion
+
+// Temporary until @types/vscode 1.105.0 is published
+declare module 'vscode' {
+    /**
+     * Represents parameters for creating a session based on a WWW-Authenticate header value.
+     * This is used when an API returns a 401 with a WWW-Authenticate header indicating
+     * that additional authentication is required. The details of which will be passed down
+     * to the authentication provider to create a session.
+     *
+     * @note The authorization provider must support handling challenges and specifically
+     * the challenges in this WWW-Authenticate value.
+     * @note For more information on WWW-Authenticate please see https://developer.mozilla.org/docs/Web/HTTP/Reference/Headers/WWW-Authenticate
+     */
+    export interface AuthenticationWwwAuthenticateRequest {
+        /**
+         * The raw WWW-Authenticate header value that triggered this challenge.
+         * This will be parsed by the authentication provider to extract the necessary
+         * challenge information.
+         */
+        readonly wwwAuthenticate: string;
+
+        /**
+         * The fallback scopes to use if no scopes are found in the WWW-Authenticate header.
+         */
+        readonly fallbackScopes?: readonly string[];
+    }
+}

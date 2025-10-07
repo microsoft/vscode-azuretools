@@ -80,7 +80,7 @@ class AzExtOutputChannel implements types.IAzExtOutputChannel {
 
 class AzExtLogOutputChannel extends AzExtOutputChannel implements LogOutputChannel {
     // assigned in AzExtOutputChannel constructor
-    protected override _outputChannel!: LogOutputChannel;
+    protected declare _outputChannel: LogOutputChannel;
     readonly onDidChangeLogLevel: Event<LogLevel>;
 
     constructor(name: string) {
