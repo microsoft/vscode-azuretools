@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-utils",
     "author": "Microsoft Corporation",
-    "version": "3.5.1",
+    "version": "4.0.0",
     "description": "Common UI tools for developing Azure extensions for VS Code",
     "tags": [
         "azure",
@@ -11,7 +11,8 @@
         "azure",
         "vscode"
     ],
-    "main": "out/src/index.js",
+    "module": "dist/esm/src/index.js",
+    "main": "dist/cjs/src/index.js",
     "types": "index.d.ts",
     "license": "MIT",
     "repository": {
@@ -23,35 +24,36 @@
     },
     "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/utils/README.md",
     "scripts": {
-        "build": "tsc -p ./",
-        "compile": "tsc -watch -p ./",
+        "build": "npm run build:esm && npm run build:cjs",
+        "build:esm": "tsc -p ./",
+        "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext",
         "lint": "eslint --ext .ts .",
         "lint-fix": "eslint --ext .ts . --fix",
-        "test": "node ./out/test/runTest.js",
+        "test": "node ./dist/cjs/test/runTest.js",
         "package": "npm pack",
         "l10n": "npx @vscode/l10n-dev export --outDir ./l10n ./src"
     },
+    "engines": {
+        "vscode": "^1.105.0"
+    },
     "dependencies": {
-        "@microsoft/vscode-azureresources-api": "^2.6.2",
+        "@microsoft/vscode-azureresources-api": "^3.0.0",
         "@vscode/extension-telemetry": "^0.9.6",
         "dayjs": "^1.11.2",
         "escape-string-regexp": "^2.0.0",
         "html-to-text": "^9.0.0",
         "semver": "^7.3.7",
-        "uuid": "^9.0.0",
-        "vscode-tas-client": "^0.1.84",
-        "vscode-uri": "^3.0.6"
+        "vscode-tas-client": "^0.1.84"
     },
     "peerDependencies": {
         "@azure/ms-rest-azure-env": "^2.0.0"
     },
     "devDependencies": {
         "@microsoft/eslint-config-azuretools": "^0.2.1",
-        "@microsoft/vscode-azext-dev": "^2.1.1",
+        "@microsoft/vscode-azext-dev": "^3.0.0",
         "@types/mocha": "^7.0.2",
-        "@types/node": "^16.0.0",
+        "@types/node": "22.x",
         "@types/semver": "^7.3.9",
-        "@types/uuid": "^9.0.1",
         "@types/vscode": "1.104.0",
         "@typescript-eslint/eslint-plugin": "^5.53.0",
         "@vscode/test-electron": "^2.3.8",
@@ -61,6 +63,6 @@
         "mocha": "^10.8.2",
         "mocha-junit-reporter": "^2.0.2",
         "mocha-multi-reporters": "^1.1.7",
-        "typescript": "^4.9.4"
+        "typescript": "^5.9.3"
     }
 }
