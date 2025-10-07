@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-azureappservice",
     "author": "Microsoft Corporation",
-    "version": "3.6.8",
+    "version": "4.0.0",
     "description": "Common tools for developing Azure App Service extensions for VS Code",
     "tags": [
         "azure",
@@ -11,8 +11,9 @@
         "azure",
         "vscode"
     ],
-    "main": "out/src/index.js",
-    "types": "out/src/index.d.ts",
+    "module": "dist/esm/src/index.js",
+    "main": "dist/cjs/src/index.js",
+    "types": "dist/esm/src/index.d.ts",
     "license": "MIT",
     "repository": {
         "type": "git",
@@ -23,13 +24,17 @@
     },
     "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/appservice/README.md",
     "scripts": {
-        "build": "tsc -p ./",
-        "compile": "tsc -watch -p ./",
+        "build": "npm run build:esm && npm run build:cjs",
+        "build:esm": "tsc -p ./",
+        "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext",
         "lint": "eslint --ext .ts .",
         "lint-fix": "eslint --ext .ts . --fix",
-        "test": "node ./out/test/runTest.js",
+        "test": "node ./dist/cjs/test/runTest.js",
         "package": "npm pack",
         "l10n": "npx @vscode/l10n-dev export --outDir ./l10n ./src"
+    },
+    "engines": {
+        "vscode": "^1.105.0"
     },
     "dependencies": {
         "@azure/abort-controller": "^1.0.4",
@@ -41,9 +46,9 @@
         "@azure/core-client": "^1.7.2",
         "@azure/core-rest-pipeline": "^1.10.3",
         "@azure/storage-blob": "^12.3.0",
-        "@microsoft/vscode-azext-azureutils": "^3.5.2",
-        "@microsoft/vscode-azext-github": "^1.0.7",
-        "@microsoft/vscode-azext-utils": "^3.4.2",
+        "@microsoft/vscode-azext-azureutils": "^4.0.0",
+        "@microsoft/vscode-azext-github": "^2.0.0",
+        "@microsoft/vscode-azext-utils": "^4.0.0",
         "dayjs": "^1.11.2",
         "fs-extra": "^10.0.0",
         "p-retry": "^3.0.1",
@@ -54,18 +59,17 @@
     },
     "peerDependencies": {
         "@azure/ms-rest-azure-env": "^2.0.0",
-        "@microsoft/vscode-azext-azureappsettings": "^0.2.11"
+        "@microsoft/vscode-azext-azureappsettings": "^1.0.0"
     },
     "devDependencies": {
         "@azure/core-auth": "^1.4.0",
         "@microsoft/eslint-config-azuretools": "^0.2.1",
-        "@microsoft/vscode-azext-dev": "^2.0.4",
+        "@microsoft/vscode-azext-dev": "^3.0.0",
         "@types/fs-extra": "^9.0.13",
         "@types/mocha": "^7.0.2",
-        "@types/node": "^18.0.0",
+        "@types/node": "22.x",
         "@types/p-retry": "^2.0.0",
-        "@types/uuid": "^10.0.0",
-        "@types/vscode": "1.95.0",
+        "@types/vscode": "1.104.0",
         "@types/ws": "^8.5.3",
         "@types/yazl": "^2.4.2",
         "@typescript-eslint/eslint-plugin": "^5.53.0",
@@ -76,6 +80,6 @@
         "mocha": "^10.8.2",
         "mocha-junit-reporter": "^2.0.2",
         "mocha-multi-reporters": "^1.1.7",
-        "typescript": "^4.9.4"
+        "typescript": "^5.9.3"
     }
 }

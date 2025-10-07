@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IActionContext } from '@microsoft/vscode-azext-utils';
-import * as retry from 'p-retry';
+import retry from 'p-retry';
 import * as vscode from 'vscode';
 import { ext } from '../extensionVariables';
 import { ParsedSite } from '../SiteClient';

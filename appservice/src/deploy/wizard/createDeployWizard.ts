@@ -5,6 +5,7 @@
 
 import { SiteConfigResource } from "@azure/arm-appservice";
 import { AzureWizardExecuteStep } from "@microsoft/vscode-azext-utils";
+import * as path from 'path';
 import { ScmType } from "../../ScmType";
 import { InnerDeployContext } from "../IDeployContext";
 import { DeployGitHubExecuteStep } from "./DeployGitHubExecuteStep";
@@ -19,7 +20,6 @@ import { DeployStorageAccountExecuteStep } from "./deployZip/DeployStorageAccoun
 import { DeployWarExecuteStep } from "./deployZip/DeployWarExecuteStep";
 import { DeployZipPushExecuteStep } from "./deployZip/DeployZipPushExecuteStep";
 import { WaitForDeploymentToCompleteStep } from "./deployZip/WaitForDeploymentToCompleteStep";
-import path = require("path");
 
 export async function createDeployExecuteSteps(context: InnerDeployContext): Promise<AzureWizardExecuteStep<InnerDeployContext>[]> {
     const executeSteps: AzureWizardExecuteStep<InnerDeployContext>[] = [];

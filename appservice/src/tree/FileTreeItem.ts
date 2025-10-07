@@ -19,7 +19,7 @@ export class FileTreeItem extends AzExtTreeItem {
     public readonly url: string;
     public readonly isReadOnly: boolean;
     public readonly site: ParsedSite;
-    public readonly parent: FolderTreeItem;
+    public readonly declare parent: FolderTreeItem;
 
     constructor(parent: FolderTreeItem, site: ParsedSite, label: string, url: string, isReadOnly: boolean) {
         super(parent);
