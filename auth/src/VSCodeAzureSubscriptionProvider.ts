@@ -341,12 +341,12 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
             credential: credential,
             authentication: {
                 getSession: () => session,
-                getSessionWithScopes: (scopes) => {
+                getSessionWithScopes: (scopeListOrRequest) => {
 
                     // in order to handle a challenge, we must enable createIfNone so
                     // that we can prompt the user to step-up their session with MFA
                     // otherwise, never prompt the user
-                    return getSessionFromVSCode(scopes, tenantId, { ...(isAuthenticationWwwAuthenticateRequest(scopes) ? { createIfNone: true } : { silent: true }), account });
+                    return getSessionFromVSCode(scopeListOrRequest, tenantId, { ...(isAuthenticationWwwAuthenticateRequest(scopeListOrRequest) ? { createIfNone: true } : { silent: true }), account });
                 },
             }
         };
