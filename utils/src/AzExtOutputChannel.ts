@@ -16,18 +16,18 @@ export function createAzExtOutputChannel(name: string, extensionPrefix: string):
     return outputChannel;
 }
 
-class AzExtOutputChannel<TChannel extends OutputChannel = OutputChannel> implements types.IAzExtOutputChannel {
+class AzExtOutputChannel implements types.IAzExtOutputChannel {
     public readonly name: string;
     public extensionPrefix!: string;
-    protected _outputChannel: TChannel;
+    protected _outputChannel: OutputChannel | LogOutputChannel;
 
     constructor(name: string) {
         this.name = name;
         this._outputChannel = this.createOutputChannel(name);
     }
 
-    protected createOutputChannel(name: string): TChannel {
-        return window.createOutputChannel(name) as TChannel;
+    protected createOutputChannel(name: string): OutputChannel {
+        return window.createOutputChannel(name);
     }
 
     public append(value: string): void {
