@@ -4,6 +4,6 @@
         "outDir": "dist/esm",
         "rootDir": ".",
         "declaration": false,
-        "skipLibCheck": true, // Webpack typings issue
+        "skipLibCheck": true, // TODO: webpack typings issue
     },
 }
