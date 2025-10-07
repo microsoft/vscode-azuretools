@@ -50,7 +50,7 @@
     },
     "devDependencies": {
         "@microsoft/eslint-config-azuretools": "^0.2.1",
-        "@microsoft/vscode-azext-dev": "file:../dev/microsoft-vscode-azext-dev-3.0.0-alpha.1.tgz",
+        "@microsoft/vscode-azext-dev": "file:../dev/microsoft-vscode-azext-dev-3.0.0.tgz",
         "@types/mocha": "^7.0.2",
         "@types/node": "22.x",
         "@types/semver": "^7.3.9",
