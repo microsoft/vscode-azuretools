@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { v4 as uuid } from 'uuid';
+import { randomUUID } from 'crypto';
 import * as types from '../../index';
 
 export abstract class AzureWizardPromptStep<T extends types.IActionContext> implements types.AzureWizardPromptStep<T> {
@@ -18,7 +18,7 @@ export abstract class AzureWizardPromptStep<T extends types.IActionContext> impl
     public id: string;
 
     constructor() {
-        this.id = uuid();
+        this.id = randomUUID();
     }
 
     public abstract prompt(wizardContext: T): Promise<void>;

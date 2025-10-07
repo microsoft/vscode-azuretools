@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dayjs from 'dayjs';
+import dayjs from 'dayjs';
 // eslint-disable-next-line import/no-internal-modules
-import * as duration from 'dayjs/plugin/duration';
+import duration from 'dayjs/plugin/duration';
 
 dayjs.extend(duration);
 
