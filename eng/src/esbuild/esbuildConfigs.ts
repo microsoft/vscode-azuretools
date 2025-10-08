@@ -14,7 +14,7 @@ import { copy } from 'esbuild-plugin-copy';
  * Base config - shared between prod/dev/debug
  * @note This is exported but not meant to be used in isolation, but rather as a building block for other configs
  */
-export const baseConfig: BuildOptions = {
+export const baseEsbuildConfig: BuildOptions = {
     bundle: true,
     external: ['vscode'],
     outdir: './dist',
@@ -39,7 +39,7 @@ export const baseConfig: BuildOptions = {
  * Production config - minified, no sourcemap
  */
 export const azExtEsbuildConfigProd: BuildOptions = {
-    ...baseConfig,
+    ...baseEsbuildConfig,
     minify: true,
     sourcemap: false,
 };
@@ -48,7 +48,7 @@ export const azExtEsbuildConfigProd: BuildOptions = {
  * Dev config - not minified, linked sourcemap
  */
 export const azExtEsbuildConfigDev: BuildOptions = {
-    ...baseConfig,
+    ...baseEsbuildConfig,
     minify: false,
     sourcemap: 'linked',
 };

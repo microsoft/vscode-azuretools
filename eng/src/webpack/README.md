@@ -3,7 +3,7 @@
 1. Add `webpack.config.mjs` to the root of your extension package:
 ```js
 // Many other configurations exist
-export { prodWebpackConfig as default } from '@microsoft/vscode-azext-eng';
+export { azExtWebpackConfigProd as default } from '@microsoft/vscode-azext-eng';
 ```
 
 2. Add the script to `package.json`:
@@ -21,17 +21,3 @@ export { prodWebpackConfig as default } from '@microsoft/vscode-azext-eng';
 ```
 
 [Back to Root](../../README.md)
-
-Looking at what we need from the original.
-
-- VSCode extern
-- Copy plugin for resources SVGs. Something to fix executable bit?
-- Entrypoint fixes
-- Source map stuff?
-- Terser settings
-- ESBuild loader settings
-- Ignore some warnings
-
-Looking at what we can probably skip for now.
-
-- Webworker everything, replacements, polyfills etc.

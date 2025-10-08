@@ -56,7 +56,7 @@ export const baseWebpackConfig: Configuration = {
 /**
  * Production config - minified, no sourcemap
  */
-export const prodWebpackConfig: Configuration = {
+export const azExtWebpackConfigProd: Configuration = {
     ...baseWebpackConfig,
     mode: 'production',
     devtool: false,
@@ -65,7 +65,7 @@ export const prodWebpackConfig: Configuration = {
 /**
  * Dev config - not minified, with sourcemaps
  */
-export const devWebpackConfig: Configuration = {
+export const azExtWebpackConfigDev: Configuration = {
     ...baseWebpackConfig,
     mode: 'development',
     devtool: 'source-map',
@@ -74,10 +74,10 @@ export const devWebpackConfig: Configuration = {
 /**
  * Debug config - minified, no sourcemap, with bundle analyzer
  */
-export const debugWebpackConfig: Configuration = {
-    ...prodWebpackConfig,
+export const azExtWebpackConfigDebug: Configuration = {
+    ...azExtWebpackConfigProd,
     plugins: [
-        ...(prodWebpackConfig.plugins as []),
+        ...(azExtWebpackConfigProd.plugins as []),
         new BundleAnalyzerPlugin({ analyzerMode: 'static' }),
     ],
 };
