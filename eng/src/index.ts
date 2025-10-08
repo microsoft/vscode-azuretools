@@ -5,3 +5,5 @@
 
 export * from './esbuild/esbuildConfigs';
 export * from './eslint/eslintConfigs';
+export * from './vscode-test/vscodeTestConfigs';
+export * from './webpack/webpackConfigs';
