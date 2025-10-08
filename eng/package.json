@@ -14,7 +14,6 @@
     "scripts": {
         "build": "npm run build:esm && npm run build:cjs",
         "build:esm": "tsc",
-        "build:esm:watch": "npm run build:esm -- --watch",
         "build:cjs": "tsc --outDir ./dist/cjs --module nodenext --moduleResolution nodenext",
         "test": "exit 0",
         "lint": "eslint --max-warnings 0",

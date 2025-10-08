@@ -3,14 +3,15 @@
     "tasks": [
         {
             "type": "npm",
-            "script": "build:esm:watch",
+            "script": "build:esm -- --watch",
+            "label": "Build+Watch",
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
             "isBackground": true,
             "presentation": {
-                "reveal": "never"
+                "revealProblems": "onProblem",
             },
             "problemMatcher": "$tsc-watch"
         }
