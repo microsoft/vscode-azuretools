@@ -27,6 +27,7 @@
         "@vscode/test-electron": "^2.5.2",
         "chai": "^6.2.0",
         "copy-webpack-plugin": "^13.0.1",
+        "esbuild": "^0.25.10",
         "mocha": "^11.7.4",
         "tsx": "^4.20.6",
         "typescript": "~5.9",
