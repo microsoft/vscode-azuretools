@@ -54,10 +54,10 @@ export const azExtEsbuildConfigDev: BuildOptions = {
 };
 
 /**
- * Debug config - not minified, linked sourcemap, metafile
+ * Debug config - minified, no sourcemap, with metafile
  * @note To use the metafile, it also needs to be written to disk. See https://esbuild.github.io/api/#metafile
  */
 export const azExtEsbuildConfigDebug: BuildOptions = {
-    ...azExtEsbuildConfigDev,
+    ...azExtEsbuildConfigProd,
     metafile: true,
 };

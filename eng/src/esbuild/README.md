@@ -20,7 +20,7 @@ await build(azExtEsbuildConfigProd);
     ]
 ```
 
-3. (Recommended) ESBuild does not do type-checking. Add a type-checking script to `package.json`:
+3. (Recommended) esbuild does not do type-checking. Add a type-checking script to `package.json`:
 ```diff
     "scripts": [
 +        "check": "tsc --noEmit"
