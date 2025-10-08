@@ -21,14 +21,17 @@ export const baseEsbuildConfig: BuildOptions = {
     platform: 'node',
     target: 'es2022',
     keepNames: true,
-    entryPoints: ['./src/extension.ts'],
+    entryPoints: [{
+        in: './src/extension.ts',
+        out: 'extension.bundle',
+    }],
     format: 'cjs',
     plugins: [
         copy({
             assets: [
                 {
                     from: './node_modules/@microsoft/vscode-azext-azureutils/resources/*.svg',
-                    to: './dist/node_modules/@microsoft/vscode-azext-azureutils/resources',
+                    to: './node_modules/@microsoft/vscode-azext-azureutils/resources',
                 },
             ],
         }),
