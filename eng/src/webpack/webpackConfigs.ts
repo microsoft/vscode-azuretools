@@ -34,6 +34,7 @@ export const baseWebpackConfig: Configuration = {
             ],
         }),
     ],
+    // TODO: resolve?
     module: {
         rules: [
             {
