@@ -21,7 +21,7 @@ export const baseConfig: BuildOptions = {
     platform: 'node',
     target: 'es2022',
     keepNames: true,
-    entryPoints: ['./main.js'],
+    entryPoints: ['./src/extension.ts'],
     format: 'cjs',
     plugins: [
         copy({

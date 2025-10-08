@@ -18,7 +18,7 @@ import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 export const baseWebpackConfig: Configuration = {
     target: 'node',
     cache: true,
-    entry: './main.js',
+    entry: './src/extension.ts',
     output: {
         clean: true,
         filename: '[name].js',
