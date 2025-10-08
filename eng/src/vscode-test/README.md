@@ -28,7 +28,7 @@ export { azExtTestConfig as default } from '@microsoft/vscode-azext-eng';
         "DEBUGTELEMETRY": "1",
     },
     "outFiles": [ // We are using TSX so out files *are* the source files
-        "${workspaceFolder}/src/**/*.ts"
+        "${workspaceFolder}/src/**/*.{ts,mts,cts}"
     ],
 },
 ```

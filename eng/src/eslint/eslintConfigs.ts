@@ -13,7 +13,7 @@ import tseslint from 'typescript-eslint';
  * @note This is exported but not meant to be used in isolation, but rather as a building block for other configs
  */
 export const azExtUniversalRules: EslintConfig = {
-    ignores: ['out/**', 'node_modules/**', 'dist/**', '**/*.d.ts', '.vscode-test/**', 'eslint.config.mjs'],
+    ignores: ['out/**', 'node_modules/**', 'dist/**', '**/*.d.ts', '.vscode-test*', 'eslint.config.mjs', 'webpack.config.mjs', 'esbuild.mjs'],
     languageOptions: {
         parserOptions: {
             projectService: true,
