@@ -11,7 +11,7 @@
             },
             "isBackground": true,
             "presentation": {
-                "revealProblems": "onProblem",
+                "revealProblems": "onProblem"
             },
             "problemMatcher": "$tsc-watch"
         }
