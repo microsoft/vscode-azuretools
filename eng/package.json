@@ -1,0 +1,35 @@
+{
+    "name": "@microsoft/vscode-azext-eng",
+    "author": "Microsoft Corporation",
+    "version": "1.0.0",
+    "description": "Engineering package for Azure extensions for VS Code",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Microsoft/vscode-azuretools"
+    },
+    "license": "MIT",
+    "main": "dist/cjs/index.js",
+    "module": "dist/esm/index.js",
+    "types": "dist/esm/index.d.ts",
+    "scripts": {
+        "build": "npm run build:esm && npm run build:cjs",
+        "build:esm": "tsc",
+        "build:esm:watch": "npm run build:esm -- --watch",
+        "build:cjs": "tsc --outDir ./dist/cjs --module nodenext --moduleResolution nodenext",
+        "test": "exit 0",
+        "lint": "eslint --max-warnings 0",
+        "package": "npm pack"
+    },
+    "dependencies": {
+        "@types/chai": "^5.2.2",
+        "@types/mocha": "^10.0.10",
+        "chai": "^6.2.0",
+        "mocha": "^11.7.4",
+        "tsx": "^4.20.6",
+        "typescript": "~5.9",
+        "typescript-eslint": "^8.46.0"
+    },
+    "devDependencies": {
+        "@types/node": "^22.x"
+    }
+}
