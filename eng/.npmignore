@@ -1,6 +1,8 @@
 node_modules/
 .vscode/
-src/*
+src/
+!src/**/*.md
+src/**/*.ts
 tsconfig.json
 *.tgz
 .vscode-test/
