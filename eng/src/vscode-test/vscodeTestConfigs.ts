@@ -12,7 +12,7 @@ import { defineConfig } from '@vscode/test-cli';
 export const azExtTestConfig = defineConfig({
     files: 'src/test/**/*.test.{ts,mts,cts}',
     mocha: {
-        // TODO: import: ['tsx'],
+        require: ['tsx'],
         timeout: 10000,
     },
 });
