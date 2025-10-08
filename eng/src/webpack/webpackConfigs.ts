@@ -8,6 +8,7 @@
  */
 
 import CopyPlugin from 'copy-webpack-plugin';
+import * as path from 'path';
 import type { Configuration } from 'webpack';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 
@@ -18,11 +19,15 @@ import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 export const baseWebpackConfig: Configuration = {
     target: 'node',
     cache: true,
-    entry: './src/extension.ts',
+    entry: {
+        /* eslint-disable @typescript-eslint/naming-convention */
+        './extension.bundle': './src/extension.ts',
+        /* eslint-enable @typescript-eslint/naming-convention */
+    },
     output: {
         clean: true,
         filename: '[name].js',
-        path: './dist',
+        path: path.resolve(process.cwd(), 'dist'),
         libraryTarget: 'commonjs2',
     },
     externals: {
@@ -35,11 +40,13 @@ export const baseWebpackConfig: Configuration = {
             ],
         }),
     ],
-    // TODO: resolve?
+    resolve: {
+        extensions: ['.ts', '.mts', '.cts', '.js', '.mjs', '.cjs'],
+    },
     module: {
         rules: [
             {
-                test: /\.(ts|mts|cts)$/,
+                test: /\.(ts|mts|cts|js|mjs|cjs)$/,
                 exclude: /node_modules/,
                 loader: 'esbuild-loader',
                 options: {
