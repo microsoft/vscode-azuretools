@@ -74,7 +74,7 @@ export const azExtStylisticRules: EslintConfig = {
 /**
  * Recommended ESLint configuration for Azure extensions
  */
-export const azextEslintRecommended: EslintConfig[] = defineConfig(
+export const azExtEslintRecommended: EslintConfig[] = defineConfig(
     eslint.configs.recommended,
     tseslint.configs.recommended,
     tseslint.configs.stylistic,

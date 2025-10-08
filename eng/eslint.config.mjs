@@ -3,4 +3,4 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-export { azextEslintRecommended as default } from './src/eslint/eslintConfigs.ts';
+export { azExtEslintRecommended as default } from './src/eslint/eslintConfigs.ts';
