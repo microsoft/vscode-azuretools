@@ -20,7 +20,8 @@ export const baseWebpackConfig: Configuration = {
     cache: true,
     entry: './main.js',
     output: {
-        filename: 'extension.bundle.js',
+        clean: true,
+        filename: '[name].js',
         path: './dist',
         libraryTarget: 'commonjs2',
     },
