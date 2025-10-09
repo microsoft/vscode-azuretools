@@ -26,7 +26,7 @@
     "scripts": {
         "build": "npm run build:esm && npm run build:cjs",
         "build:esm": "tsc -p ./",
-        "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext",
+        "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
         "lint": "eslint --ext .ts .",
         "lint-fix": "eslint --ext .ts . --fix",
         "package": "npm pack",
