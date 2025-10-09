@@ -8,7 +8,6 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "isBackground": true,
             "presentation": {
                 "reveal": "never"
             },
