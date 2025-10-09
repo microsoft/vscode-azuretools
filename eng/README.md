@@ -20,10 +20,6 @@ In addition, universal and recommended configurations are provided. They can be 
   - These could be just reference items that consumers can copy into their own projects, or if we want to get fancy, we could do it on install.
 - Use `tsgo` (TypeScript native) instead of `tsc`. Correspondingly, use native language server.
 
-# TODO: Other
-
-- Need to make sure VSCode doesn't get mad about projects referencing dependencies that are indirectly added by this project. For example, `mocha`/`@types/mocha`.
-
 # TODONT: Things Not to Do
 
 - Don't put `@types/vscode` or a `vscode` engine version into this package--that should remain up to the consuming extensions.
