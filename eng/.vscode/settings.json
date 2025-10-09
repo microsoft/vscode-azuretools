@@ -9,6 +9,7 @@
     },
     "search.exclude": {
         "out": true,
+        "dist": true,
         "**/node_modules": true
     },
     "editor.codeActionsOnSave": {
