@@ -84,7 +84,7 @@ export const azExtWebpackConfigDev: Configuration = {
 export const azExtWebpackConfigDebug: Configuration = {
     ...azExtWebpackConfigProd,
     plugins: [
-        ...(azExtWebpackConfigProd.plugins as []),
+        ...azExtWebpackConfigProd.plugins ?? [],
         new BundleAnalyzerPlugin({ analyzerMode: 'static' }),
     ],
 };
