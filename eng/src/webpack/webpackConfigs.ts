@@ -14,7 +14,7 @@ import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 
 /**
  * Base config - shared between prod/dev/debug
- * @note This is exported but not meant to be used in isolation, but rather as a building block for other configs
+ * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
  */
 export const baseWebpackConfig: Configuration = {
     target: 'node',

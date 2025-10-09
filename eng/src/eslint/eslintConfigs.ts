@@ -10,7 +10,7 @@ import tseslint from 'typescript-eslint';
 
 /**
  * Universal rules that should apply to all projects
- * @note This is exported but not meant to be used in isolation, but rather as a building block for other configs
+ * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
  */
 export const azExtUniversalRules: EslintConfig = {
     languageOptions: {
@@ -31,7 +31,7 @@ export const azExtUniversalRules: EslintConfig = {
 
 /**
  * Stylistic rules that should apply to all projects
- * @note This is exported but not meant to be used in isolation, but rather as a building block for other configs
+ * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
  */
 export const azExtStylisticRules: EslintConfig = {
     rules: {
