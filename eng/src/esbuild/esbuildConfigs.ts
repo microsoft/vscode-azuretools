@@ -39,6 +39,8 @@ export const baseEsbuildConfig: BuildOptions = {
     ],
 };
 
+// #region CJS configs
+
 /**
  * Production config - minified, no sourcemap
  */
@@ -46,15 +48,6 @@ export const azExtEsbuildConfigProd: BuildOptions = {
     ...baseEsbuildConfig,
     minify: true,
     sourcemap: false,
-};
-
-/**
- * ESM production config - minified, no sourcemap
- */
-export const azExtEsbuildConfigProdEsm: BuildOptions = {
-    ...azExtEsbuildConfigProd,
-    format: 'esm',
-    splitting: true,
 };
 
 /**
@@ -70,10 +63,12 @@ export const azExtEsbuildConfigDev: BuildOptions = {
             name: 'watch-plugin',
             setup(build) {
                 let start: bigint, end: bigint;
+
                 build.onStart(() => {
                     console.log('[watch] build started');
                     start = process.hrtime.bigint();
                 });
+
                 build.onEnd(() => {
                     end = process.hrtime.bigint();
                     console.log(`[watch] build finished in ${(end - start) / 1000000n} milliseconds`);
@@ -81,15 +76,6 @@ export const azExtEsbuildConfigDev: BuildOptions = {
             },
         },
     ],
-};
-
-/**
- * ESM dev config - not minified, linked sourcemap, watch plugin added
- */
-export const azExtEsbuildConfigDevEsm: BuildOptions = {
-    ...azExtEsbuildConfigDev,
-    format: 'esm',
-    splitting: true,
 };
 
 /**
@@ -101,6 +87,37 @@ export const azExtEsbuildConfigDebug: BuildOptions = {
     metafile: true,
 };
 
+// #endregion
+
+// #region ESM configs - Here be dragons
+
+// For ESM builds, a banner is needed to create the 'require' function, since not all of our dependencies are available as ESM
+// I have no idea what other effects this might have :)
+const esmBanner = `
+import {createRequire} from 'module';
+const require = createRequire(import.meta.url);
+`;
+
+/**
+ * ESM production config - minified, no sourcemap
+ */
+export const azExtEsbuildConfigProdEsm: BuildOptions = {
+    ...azExtEsbuildConfigProd,
+    banner: { js: esmBanner },
+    format: 'esm',
+    splitting: true,
+};
+
+/**
+ * ESM dev config - not minified, linked sourcemap, watch plugin added
+ */
+export const azExtEsbuildConfigDevEsm: BuildOptions = {
+    ...azExtEsbuildConfigDev,
+    banner: { js: esmBanner },
+    format: 'esm',
+    splitting: true,
+};
+
 /**
  * ESM debug config - minified, no sourcemap, with metafile
  * @note To use the metafile, it also needs to be written to disk. See https://esbuild.github.io/api/#metafile
@@ -109,3 +126,5 @@ export const azExtEsbuildConfigDebugEsm: BuildOptions = {
     ...azExtEsbuildConfigProdEsm,
     metafile: true,
 };
+
+// #endregion
