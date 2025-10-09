@@ -73,7 +73,7 @@ export const azExtStylisticRules: EslintConfig = {
     },
 };
 
-const globalIgnoresList = ['out/**', 'node_modules/**', 'dist/**', '**/*.d.ts', '.vscode-test*', 'eslint.config.mjs', 'webpack.config.mjs', 'esbuild.mjs'];
+const globalIgnoresList = ['out/**', 'node_modules/**', 'dist/**', '**/*.d.ts', '.vscode-test*', 'eslint.config.mjs', 'webpack.config.mjs', 'esbuild.mjs', 'main.*js'];
 
 /**
  * Recommended ESLint configuration for Azure extensions
