@@ -3,7 +3,7 @@
 1. Add `webpack.config.mjs` to the root of your extension package:
 ```js
 // Many other configurations exist
-export { azExtWebpackConfigProd as default } from '@microsoft/vscode-azext-eng';
+export { azExtWebpackConfigProd as default } from '@microsoft/vscode-azext-eng/webpack';
 ```
 
 2. Add the script to `package.json`:

@@ -7,7 +7,7 @@ Contains default esbuild configuration for Azure extensions.
 1. Add `esbuild.mjs` to the root of your extension package:
 ```js
 // Many other configurations exist
-import { azExtEsbuildConfigProd } from '@microsoft/vscode-azext-eng';
+import { azExtEsbuildConfigProd } from '@microsoft/vscode-azext-eng/esbuild';
 import { build } from 'esbuild';
 
 await build(azExtEsbuildConfigProd);

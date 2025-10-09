@@ -6,7 +6,7 @@ Contains default test configuration for Azure extensions.
 
 1. Add `.vscode-test.mjs` to the root of your extension package:
 ```js
-export { azExtTestConfig as default } from '@microsoft/vscode-azext-eng';
+export { azExtTestConfig as default } from '@microsoft/vscode-azext-eng/vscode-test';
 ```
 
 2. Add the script to `package.json`:
