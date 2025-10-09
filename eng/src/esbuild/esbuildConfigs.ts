@@ -79,7 +79,7 @@ export const azExtEsbuildConfigDev: BuildOptions = {
 };
 
 /**
- * Debug config - minified, no sourcemap, with metafile
+ * Debug config - same as prod, plus metafile
  * @note To use the metafile, it also needs to be written to disk. See https://esbuild.github.io/api/#metafile
  */
 export const azExtEsbuildConfigDebug: BuildOptions = {
@@ -119,7 +119,7 @@ export const azExtEsbuildConfigDevEsm: BuildOptions = {
 };
 
 /**
- * ESM debug config - minified, no sourcemap, with metafile
+ * ESM debug config - same as ESM prod, plus metafile
  * @note To use the metafile, it also needs to be written to disk. See https://esbuild.github.io/api/#metafile
  */
 export const azExtEsbuildConfigDebugEsm: BuildOptions = {
