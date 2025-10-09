@@ -8,6 +8,8 @@ import eslint from '@eslint/js';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
+/* eslint-disable @typescript-eslint/naming-convention */
+
 /**
  * Universal rules that should apply to all projects
  * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
@@ -19,13 +21,11 @@ export const azExtUniversalRules: EslintConfig = {
         },
     },
     rules: {
-        /* eslint-disable @typescript-eslint/naming-convention */
         curly: 'warn',
         eqeqeq: 'warn',
         'no-extra-boolean-cast': 'off', // Unnecessarily restrictive
         'no-template-curly-in-string': 'warn',
         semi: 'warn',
-        /* eslint-enable @typescript-eslint/naming-convention */
     },
 };
 
@@ -35,7 +35,6 @@ export const azExtUniversalRules: EslintConfig = {
  */
 export const azExtStylisticRules: EslintConfig = {
     rules: {
-        /* eslint-disable @typescript-eslint/naming-convention */
         '@typescript-eslint/array-type': 'off', // Unnecessarily restrictive
         '@typescript-eslint/class-literal-property-style': 'off', // Unnecessarily restrictive
         '@typescript-eslint/consistent-indexed-object-style': 'off', // Unnecessarily restrictive
@@ -73,9 +72,31 @@ export const azExtStylisticRules: EslintConfig = {
                 args: 'none',
             },
         ],
-        /* eslint-enable @typescript-eslint/naming-convention */
     },
 };
+
+/**
+ * A config that enforces lazy imports for certain packages to reduce extension activation time
+ * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
+ */
+export const azExtLazyImportRules: EslintConfig = {
+    rules: {
+        '@typescript-eslint/no-restricted-imports': [
+            'error',
+            {
+                patterns: [
+                    {
+                        group: ['@azure/*'],
+                        message: 'Please lazily import this package within the function that uses it to reduce extension activation time.',
+                        allowTypeImports: true,
+                    },
+                ],
+            },
+        ],
+    },
+};
+
+/* eslint-enable @typescript-eslint/naming-convention */
 
 const globalIgnoresList = ['out/**', 'node_modules/**', 'dist/**', '**/*.d.ts', '.vscode-test*', 'eslint.config.mjs', 'webpack.config.mjs', 'esbuild.mjs', 'main.*js'];
 

@@ -18,6 +18,7 @@ In addition, universal and recommended configurations are provided. They can be 
 - Common/base `tsconfig.json` items
 - Common/base ignores, e.g. `.npmignore`, `.vscodeignore`
   - These could be just reference items that consumers can copy into their own projects, or if we want to get fancy, we could do it on install.
+- Use `tsgo` (TypeScript native) instead of `tsc`. Correspondingly, use native language server.
 
 # TODO: Other
 
