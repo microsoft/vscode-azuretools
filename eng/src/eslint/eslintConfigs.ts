@@ -5,7 +5,7 @@
 
 import type { ConfigObject as EslintConfig } from '@eslint/core';
 import eslint from '@eslint/js';
-import { defineConfig } from 'eslint/config';
+import { defineConfig, globalIgnores } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
 /**
@@ -13,7 +13,6 @@ import tseslint from 'typescript-eslint';
  * @note This is exported but not meant to be used in isolation, but rather as a building block for other configs
  */
 export const azExtUniversalRules: EslintConfig = {
-    ignores: ['out/**', 'node_modules/**', 'dist/**', '**/*.d.ts', '.vscode-test*', 'eslint.config.mjs', 'webpack.config.mjs', 'esbuild.mjs'],
     languageOptions: {
         parserOptions: {
             projectService: true,
@@ -71,10 +70,13 @@ export const azExtStylisticRules: EslintConfig = {
     },
 };
 
+const globalIgnoresList = ['out/**', 'node_modules/**', 'dist/**', '**/*.d.ts', '.vscode-test*', 'eslint.config.mjs', 'webpack.config.mjs', 'esbuild.mjs'];
+
 /**
  * Recommended ESLint configuration for Azure extensions
  */
 export const azExtEslintRecommended: EslintConfig[] = defineConfig(
+    globalIgnores(globalIgnoresList),
     eslint.configs.recommended,
     tseslint.configs.recommended,
     tseslint.configs.stylistic,
@@ -86,6 +88,7 @@ export const azExtEslintRecommended: EslintConfig[] = defineConfig(
  * Recommended ESLint configuration for Azure extensions with extra type-checked rules enabled
  */
 export const azExtEslintRecommendedTypeChecked: EslintConfig[] = defineConfig(
+    globalIgnores(globalIgnoresList),
     eslint.configs.recommended,
     tseslint.configs.recommendedTypeChecked,
     tseslint.configs.stylisticTypeChecked,
@@ -97,6 +100,7 @@ export const azExtEslintRecommendedTypeChecked: EslintConfig[] = defineConfig(
  * Strict ESLint configuration for Azure extensions
  */
 export const azExtEslintStrict: EslintConfig[] = defineConfig(
+    globalIgnores(globalIgnoresList),
     eslint.configs.recommended,
     tseslint.configs.strict,
     tseslint.configs.stylistic,
@@ -108,6 +112,7 @@ export const azExtEslintStrict: EslintConfig[] = defineConfig(
  * Strict ESLint configuration for Azure extensions with extra type-checked rules enabled
  */
 export const azExtEslintStrictTypeChecked: EslintConfig[] = defineConfig(
+    globalIgnores(globalIgnoresList),
     eslint.configs.recommended,
     tseslint.configs.strictTypeChecked,
     tseslint.configs.stylisticTypeChecked,
