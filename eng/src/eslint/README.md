@@ -24,6 +24,11 @@ export { azExtEslintRecommended as default } from '@microsoft/vscode-azext-eng/e
     ],
 ```
 
+# Normal Usage
+
+Check out [Container Tools](https://github.com/microsoft/vscode-containers) for a more advanced example,
+including custom linter rules. The important file to check out is `eslint.config.mjs`.
+
 ---
 
 [Back to Root](../../README.md)
