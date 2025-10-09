@@ -48,6 +48,15 @@ export const azExtEsbuildConfigProd: BuildOptions = {
 };
 
 /**
+ * ESM production config - minified, no sourcemap
+ */
+export const azExtEsbuildConfigProdEsm: BuildOptions = {
+    ...azExtEsbuildConfigProd,
+    format: 'esm',
+    splitting: true,
+};
+
+/**
  * Dev config - not minified, linked sourcemap, watch plugin added
  */
 export const azExtEsbuildConfigDev: BuildOptions = {
@@ -67,10 +76,28 @@ export const azExtEsbuildConfigDev: BuildOptions = {
 };
 
 /**
+ * ESM dev config - not minified, linked sourcemap, watch plugin added
+ */
+export const azExtEsbuildConfigDevEsm: BuildOptions = {
+    ...azExtEsbuildConfigDev,
+    format: 'esm',
+    splitting: true,
+};
+
+/**
  * Debug config - minified, no sourcemap, with metafile
  * @note To use the metafile, it also needs to be written to disk. See https://esbuild.github.io/api/#metafile
  */
 export const azExtEsbuildConfigDebug: BuildOptions = {
     ...azExtEsbuildConfigProd,
+    metafile: true,
+};
+
+/**
+ * ESM debug config - minified, no sourcemap, with metafile
+ * @note To use the metafile, it also needs to be written to disk. See https://esbuild.github.io/api/#metafile
+ */
+export const azExtEsbuildConfigDebugEsm: BuildOptions = {
+    ...azExtEsbuildConfigProdEsm,
     metafile: true,
 };
