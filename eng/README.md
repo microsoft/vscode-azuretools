@@ -2,13 +2,13 @@
 
 This package provides shared engineering dependencies for the Azure extensions for Visual Studio Code.
 
-In addition, universal and recommended configuration is provided. It can be overridden as needed by the projects.
+In addition, universal and recommended configurations are provided. They can be overridden as needed by the projects.
 
 # Contents
 
 - [ESBuild Config](./src/esbuild/README.md)
 - [ESLint Config](./src/eslint/README.md)
-- [Test Config](./src/vscode-test/README.md)
+- [VS Code Test Config](./src/vscode-test/README.md)
 - [Webpack Config](./src/webpack/README.md)
 
 # TODO: Future Ideas
@@ -23,10 +23,10 @@ In addition, universal and recommended configuration is provided. It can be over
 
 - Need to make sure VSCode doesn't get mad about projects referencing dependencies that are indirectly added by this project. For example, `mocha`/`@types/mocha`.
 
-# Things NOT to do
+# TODONT: Things Not to Do
 
-- Put `@types/vscode` or a `vscode` engine version into this package--that should remain up to the consuming extensions.
-- Put `@types/node` into this package--that should remain up to the consuming extensions.
+- Don't put `@types/vscode` or a `vscode` engine version into this package--that should remain up to the consuming extensions.
+- Don't put `@types/node` into this package--that should remain up to the consuming extensions.
 
 # License
 

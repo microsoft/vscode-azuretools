@@ -1,8 +1,8 @@
-# Test Config for Azure Visual Studio Code Extensions
+# VS Code Test Config for Azure Visual Studio Code Extensions
 
-Contains default test configuration for Azure extensions.
+Contains default VS Code test configuration for Azure extensions.
 
-# Sample Usage
+# Minimal Usage
 
 1. Add `.vscode-test.mjs` to the root of your extension package:
 ```js
@@ -16,21 +16,24 @@ export { azExtTestConfig as default } from '@microsoft/vscode-azext-eng/vscode-t
     ]
 ```
 
-3. Add a launch configuration to `.vscode/launch.json`:
+3. (Recommended) Add a launch configuration to `.vscode/launch.json`:
 ```json
 {
+    "label": "Run Tests",
 	"type": "extensionHost",
 	"request": "launch",
-	"name": "My extension tests",
  	"testConfiguration": "${workspaceFolder}/.vscode-test.mjs",
-    "preLaunchTask": "${defaultBuildTask}",
     "env": {
         "DEBUGTELEMETRY": "1",
     },
-    "outFiles": [ // We are using TSX so out files *are* the source files
-        "${workspaceFolder}/src/**/*.{ts,mts,cts}"
+    "outFiles": [
+        "${workspaceFolder}/dist/**/*.{js,mjs,cjs}",
+        "${workspaceFolder}/src/**/*.{ts,mts,cts}", // We are using TSX so out files *are* the source files
     ],
+    "preLaunchTask": "${defaultBuildTask}",
 },
 ```
+
+---
 
 [Back to Root](../../README.md)
