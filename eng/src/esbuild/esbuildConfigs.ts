@@ -69,8 +69,15 @@ export const azExtEsbuildConfigDev: BuildOptions = {
         {
             name: 'watch-plugin',
             setup(build) {
-                build.onStart(() => console.log('[watch] build started'));
-                build.onEnd(() => console.log('[watch] build finished'));
+                let start: bigint, end: bigint;
+                build.onStart(() => {
+                    console.log('[watch] build started');
+                    start = process.hrtime.bigint();
+                });
+                build.onEnd(() => {
+                    end = process.hrtime.bigint();
+                    console.log(`[watch] build finished in ${(end - start) / 1000000n} milliseconds`);
+                });
             },
         },
     ],
