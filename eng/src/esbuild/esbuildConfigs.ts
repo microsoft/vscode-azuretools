@@ -48,12 +48,22 @@ export const azExtEsbuildConfigProd: BuildOptions = {
 };
 
 /**
- * Dev config - not minified, linked sourcemap
+ * Dev config - not minified, linked sourcemap, watch plugin added
  */
 export const azExtEsbuildConfigDev: BuildOptions = {
     ...baseEsbuildConfig,
     minify: false,
     sourcemap: 'linked',
+    plugins: [
+        ...baseEsbuildConfig.plugins ?? [],
+        {
+            name: 'watch-plugin',
+            setup(build) {
+                build.onStart(() => console.log('[watch] build started'));
+                build.onEnd(() => console.log('[watch] build finished'));
+            },
+        },
+    ],
 };
 
 /**
