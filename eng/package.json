@@ -8,9 +8,25 @@
         "url": "https://github.com/Microsoft/vscode-azuretools"
     },
     "license": "MIT",
-    "main": "dist/cjs/index.js",
-    "module": "dist/esm/index.js",
     "types": "dist/esm/index.d.ts",
+    "exports": {
+        "./esbuild": {
+            "import": "./dist/esm/esbuild/esbuildConfigs.js",
+            "require": "./dist/cjs/esbuild/esbuildConfigs.js"
+        },
+        "./eslint": {
+            "import": "./dist/esm/eslint/eslintConfigs.js",
+            "require": "./dist/cjs/eslint/eslintConfigs.js"
+        },
+        "./vscode-test": {
+            "import": "./dist/esm/vscode-test/vscodeTestConfigs.js",
+            "require": "./dist/cjs/vscode-test/vscodeTestConfigs.js"
+        },
+        "./webpack": {
+            "import": "./dist/esm/webpack/webpackConfigs.js",
+            "require": "./dist/cjs/webpack/webpackConfigs.js"
+        }
+    },
     "scripts": {
         "build": "npm run build:esm && npm run build:cjs",
         "build:esm": "tsc",

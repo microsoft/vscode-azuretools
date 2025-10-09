@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-export * from './esbuild/esbuildConfigs';
-export * from './eslint/eslintConfigs';
-export * from './vscode-test/vscodeTestConfigs';
-export * from './webpack/webpackConfigs';
+export type * from './esbuild/esbuildConfigs';
+export type * from './eslint/eslintConfigs';
+export type * from './vscode-test/vscodeTestConfigs';
+export type * from './webpack/webpackConfigs';
