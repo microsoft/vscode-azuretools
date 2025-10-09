@@ -6,7 +6,7 @@ Contains default Webpack configuration for Azure extensions.
 
 1. Add `webpack.config.mjs` to the root of your extension package:
 ```js
-// Many other configurations exist
+// Other configurations exist
 export { azExtWebpackConfigProd as default } from '@microsoft/vscode-azext-eng/webpack';
 ```
 

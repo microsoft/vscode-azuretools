@@ -6,7 +6,7 @@ Contains default eslint configuration for Azure extensions.
 
 1. Add `eslint.config.mjs` to the root of your extension package:
 ```js
-// Many other configurations exist
+// Other configurations exist
 export { azExtEslintRecommended as default } from '@microsoft/vscode-azext-eng/eslint';
 ```
 
