@@ -22,7 +22,7 @@ export const azExtUniversalRules: EslintConfig = {
         /* eslint-disable @typescript-eslint/naming-convention */
         curly: 'warn',
         eqeqeq: 'warn',
-        'no-extra-boolean-cast': 'off',
+        'no-extra-boolean-cast': 'off', // Unnecessarily restrictive
         'no-template-curly-in-string': 'warn',
         semi: 'warn',
         /* eslint-enable @typescript-eslint/naming-convention */
@@ -36,13 +36,14 @@ export const azExtUniversalRules: EslintConfig = {
 export const azExtStylisticRules: EslintConfig = {
     rules: {
         /* eslint-disable @typescript-eslint/naming-convention */
-        '@typescript-eslint/array-type': 'off',
-        '@typescript-eslint/class-literal-property-style': 'off',
-        '@typescript-eslint/consistent-indexed-object-style': 'off',
-        '@typescript-eslint/consistent-type-assertions': 'off',
-        '@typescript-eslint/consistent-type-definitions': 'off',
+        '@typescript-eslint/array-type': 'off', // Unnecessarily restrictive
+        '@typescript-eslint/class-literal-property-style': 'off', // Unnecessarily restrictive
+        '@typescript-eslint/consistent-indexed-object-style': 'off', // Unnecessarily restrictive
+        '@typescript-eslint/consistent-generic-constructors': 'warn', // Move from error to warn
+        '@typescript-eslint/consistent-type-assertions': 'off', // Unnecessarily restrictive
+        '@typescript-eslint/consistent-type-definitions': 'off', // Unnecessarily restrictive
         '@typescript-eslint/naming-convention': [
-            // Naming is enforced with some exceptions below
+            // Naming convention is enforced, with some exceptions below
             'warn',
             {
                 // Names should be either camelCase or PascalCase, both are extensively used throughout our projects
@@ -61,15 +62,16 @@ export const azExtStylisticRules: EslintConfig = {
                 modifiers: ['private'],
                 format: ['camelCase', 'PascalCase'],
                 leadingUnderscore: 'allow',
-            }
+            },
         ],
-        '@typescript-eslint/no-inferrable-types': 'off',
+        '@typescript-eslint/no-inferrable-types': 'off', // Unnecessarily restrictive
         '@typescript-eslint/no-unused-vars': [
+            // No unused variables, with some exceptions below
             'warn',
             {
                 // As a function parameter, unused parameters are allowed
                 args: 'none',
-            }
+            },
         ],
         /* eslint-enable @typescript-eslint/naming-convention */
     },
