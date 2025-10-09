@@ -26,6 +26,7 @@ export const baseEsbuildConfig: BuildOptions = {
         out: 'extension.bundle',
     }],
     format: 'cjs',
+    mainFields: ['module', 'main'],
     plugins: [
         copy({
             assets: [
