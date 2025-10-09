@@ -36,6 +36,9 @@ export const azExtUniversalRules: EslintConfig = {
 export const azExtStylisticRules: EslintConfig = {
     rules: {
         /* eslint-disable @typescript-eslint/naming-convention */
+        '@typescript-eslint/consistent-indexed-object-style': 'off',
+        '@typescript-eslint/consistent-type-assertions': 'off',
+        '@typescript-eslint/consistent-type-definitions': 'off',
         '@typescript-eslint/naming-convention': [
             // Naming is enforced with some exceptions below
             'warn',
