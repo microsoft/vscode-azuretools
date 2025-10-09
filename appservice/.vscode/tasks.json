@@ -11,7 +11,7 @@
             "presentation": {
                 "reveal": "never"
             },
-            "problemMatcher": "$tsc-watch"
+            "problemMatcher": "$tsc"
         },
         {
             "type": "npm",
