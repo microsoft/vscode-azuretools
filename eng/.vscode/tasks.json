@@ -2,9 +2,9 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "Build+Watch",
             "type": "npm",
             "script": "build:esm -- --watch",
-            "label": "Build+Watch",
             "group": {
                 "kind": "build",
                 "isDefault": true
