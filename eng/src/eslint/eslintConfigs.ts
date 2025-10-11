@@ -76,25 +76,34 @@ export const azExtStylisticRules: EslintConfig = {
 };
 
 /**
- * A config that enforces lazy imports for certain packages to reduce extension activation time
+ * A config that enforces lazy imports for @azure/* packages to reduce extension activation time
  * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
  */
-export const azExtLazyImportRules: EslintConfig = {
-    rules: {
-        '@typescript-eslint/no-restricted-imports': [
-            'error',
-            {
-                patterns: [
-                    {
-                        group: ['@azure/*'],
-                        message: 'Please lazily import this package within the function that uses it to reduce extension activation time.',
-                        allowTypeImports: true,
-                    },
-                ],
-            },
-        ],
-    },
-};
+export const lazyImportAzurePackages = lazyImportRuleConfig(['@azure/*']);
+
+/**
+ * Gets a config that enforces lazy imports for certain packages to reduce extension activation time
+ * @param patterns The patterns for packages that should be lazily imported
+ * @returns The {@link EslintConfig}
+ */
+export function lazyImportRuleConfig(patterns: string[]): EslintConfig {
+    return {
+        rules: {
+            '@typescript-eslint/no-restricted-imports': [
+                'error',
+                {
+                    patterns: [
+                        {
+                            group: patterns,
+                            message: 'Please lazily import this package within the function that uses it to reduce extension activation time.',
+                            allowTypeImports: true,
+                        },
+                    ],
+                },
+            ],
+        },
+    };
+}
 
 /* eslint-enable @typescript-eslint/naming-convention */
 
