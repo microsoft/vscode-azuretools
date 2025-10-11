@@ -132,19 +132,19 @@ export const azExtEsbuildConfigDebugEsm: BuildOptions = {
 
 /**
  * Auto-selects the appropriate esbuild config based on environment variables and command line args
- * @param esm true if the ESM config should be returned
+ * @param esm (Optional) True if the ESM config should be returned
  * @returns
  * - if `process.env.DEBUG_ESBUILD` is truthy, returns the debug config
  * - else if `--watch` is passed, returns the dev config
  * - else, returns the prod config
  */
-export function autoSelectEsbuildConfig(esm: boolean): BuildOptions {
+export function autoSelectEsbuildConfig(esm?: boolean): BuildOptions {
     if (isAutoDebug) {
-        return esm ? azExtEsbuildConfigDebugEsm : azExtEsbuildConfigDebug;
+        return !!esm ? azExtEsbuildConfigDebugEsm : azExtEsbuildConfigDebug;
     } else if (isAutoWatch) {
-        return esm ? azExtEsbuildConfigDevEsm : azExtEsbuildConfigDev;
+        return !!esm ? azExtEsbuildConfigDevEsm : azExtEsbuildConfigDev;
     } else {
-        return esm ? azExtEsbuildConfigProdEsm : azExtEsbuildConfigProd;
+        return !!esm ? azExtEsbuildConfigProdEsm : azExtEsbuildConfigProd;
     }
 }
 

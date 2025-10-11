@@ -8,8 +8,7 @@ Contains default esbuild configuration for Azure extensions.
 ```js
 import { autoEsbuildOrWatch, autoSelectEsbuildConfig } from '@microsoft/vscode-azext-eng/esbuild';
 
-const config = autoSelectEsbuildConfig(false);
-await autoEsbuildOrWatch(config);
+await autoEsbuildOrWatch(autoSelectEsbuildConfig());
 ```
 
 2. Add the script to `package.json`:
