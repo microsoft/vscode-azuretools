@@ -8,11 +8,10 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "isBackground": true,
             "presentation": {
                 "reveal": "never"
             },
-            "problemMatcher": "$tsc-watch"
+            "problemMatcher": "$tsc"
         },
         {
             "type": "npm",

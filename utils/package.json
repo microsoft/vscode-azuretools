@@ -26,7 +26,7 @@
     "scripts": {
         "build": "npm run build:esm && npm run build:cjs",
         "build:esm": "tsc -p ./",
-        "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext",
+        "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
         "lint": "eslint --ext .ts .",
         "lint-fix": "eslint --ext .ts . --fix",
         "test": "node ./dist/cjs/test/runTest.js",
@@ -54,7 +54,7 @@
         "@types/mocha": "^7.0.2",
         "@types/node": "22.x",
         "@types/semver": "^7.3.9",
-        "@types/vscode": "1.104.0",
+        "@types/vscode": "1.105.0",
         "@typescript-eslint/eslint-plugin": "^5.53.0",
         "@vscode/test-electron": "^2.3.8",
         "eslint": "^8.34.0",
