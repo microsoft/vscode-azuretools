@@ -138,7 +138,7 @@ export const azExtEsbuildConfigDebugEsm: BuildOptions = {
  * - else if `--watch` is passed, returns the dev config
  * - else, returns the prod config
  */
-export function autoSelectConfig(esm: boolean): BuildOptions {
+export function autoSelectEsbuildConfig(esm: boolean): BuildOptions {
     if (isAutoDebug) {
         return esm ? azExtEsbuildConfigDebugEsm : azExtEsbuildConfigDebug;
     } else if (isAutoWatch) {
@@ -152,7 +152,7 @@ export function autoSelectConfig(esm: boolean): BuildOptions {
  * Builds or watches the given esbuild config based on environment variables and command line args
  * @param config The config to build or watch
  */
-export async function autoBuildOrWatch(config: BuildOptions): Promise<void> {
+export async function autoEsbuildOrWatch(config: BuildOptions): Promise<void> {
     if (isAutoWatch) {
         const ctx = await context(config);
         process.on('SIGINT', () => {
