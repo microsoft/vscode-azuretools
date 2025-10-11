@@ -12,6 +12,9 @@ import * as path from 'path';
 import type { Configuration } from 'webpack';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 
+const isAutoDebug = !!process.env.DEBUG_WEBPACK;
+const isAutoWatch = process.argv.includes('--watch');
+
 /**
  * Base config - shared between prod/dev/debug
  * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
@@ -20,9 +23,9 @@ export const baseWebpackConfig: Configuration = {
     target: 'node',
     cache: true,
     entry: {
-        /* eslint-disable @typescript-eslint/naming-convention */
+
+        // eslint-disable-next-line @typescript-eslint/naming-convention
         './extension.bundle': './src/extension.ts',
-        /* eslint-enable @typescript-eslint/naming-convention */
     },
     output: {
         clean: true,
@@ -79,7 +82,7 @@ export const azExtWebpackConfigDev: Configuration = {
 };
 
 /**
- * Debug config - minified, no sourcemap, with bundle analyzer
+ * Debug config - same as prod, plus bundle analyzer
  */
 export const azExtWebpackConfigDebug: Configuration = {
     ...azExtWebpackConfigProd,
@@ -88,3 +91,20 @@ export const azExtWebpackConfigDebug: Configuration = {
         new BundleAnalyzerPlugin({ analyzerMode: 'static' }),
     ],
 };
+
+/**
+ * Auto-selects the appropriate webpack config based on environment variables and command line args
+ * @returns
+ * - if `process.env.DEBUG_WEBPACK` is truthy, returns the debug config
+ * - else if `--watch` is passed, returns the dev config
+ * - else, returns the prod config
+ */
+export function autoSelectWebpackConfig(): Configuration {
+    if (isAutoDebug) {
+        return azExtWebpackConfigDebug;
+    } else if (isAutoWatch) {
+        return azExtWebpackConfigDev;
+    } else {
+        return azExtWebpackConfigProd;
+    }
+}
