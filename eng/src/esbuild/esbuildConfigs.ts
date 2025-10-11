@@ -7,8 +7,12 @@
  * @important When updating these configs, be sure to update the corresponding webpack configs in file://./../webpack/webpackConfigs.ts
  */
 
-import type { BuildOptions } from 'esbuild';
+import { type BuildOptions, build, context } from 'esbuild';
 import { copy } from 'esbuild-plugin-copy';
+import * as fs from 'fs/promises';
+
+const isAutoDebug = !!process.env.DEBUG_ESBUILD;
+const isAutoWatch = process.argv.includes('--watch');
 
 /**
  * Base config - shared between prod/dev/debug
@@ -36,6 +40,22 @@ export const baseEsbuildConfig: BuildOptions = {
                 },
             ],
         }),
+        {
+            name: 'start-stop-log',
+            setup(build) {
+                let start: bigint, end: bigint;
+
+                build.onStart(() => {
+                    console.log(`${isAutoWatch ? '[watch] ' : ''}build started`);
+                    start = process.hrtime.bigint();
+                });
+
+                build.onEnd(() => {
+                    end = process.hrtime.bigint();
+                    console.log(`${isAutoWatch ? '[watch] ' : ''}build finished in ${(end - start) / 1000000n} milliseconds`);
+                });
+            },
+        },
     ],
 };
 
@@ -51,31 +71,12 @@ export const azExtEsbuildConfigProd: BuildOptions = {
 };
 
 /**
- * Dev config - not minified, linked sourcemap, watch plugin added
+ * Dev config - not minified, linked sourcemap
  */
 export const azExtEsbuildConfigDev: BuildOptions = {
     ...baseEsbuildConfig,
     minify: false,
     sourcemap: 'linked',
-    plugins: [
-        ...baseEsbuildConfig.plugins ?? [],
-        {
-            name: 'watch-plugin',
-            setup(build) {
-                let start: bigint, end: bigint;
-
-                build.onStart(() => {
-                    console.log('[watch] build started');
-                    start = process.hrtime.bigint();
-                });
-
-                build.onEnd(() => {
-                    end = process.hrtime.bigint();
-                    console.log(`[watch] build finished in ${(end - start) / 1000000n} milliseconds`);
-                });
-            },
-        },
-    ],
 };
 
 /**
@@ -109,7 +110,7 @@ export const azExtEsbuildConfigProdEsm: BuildOptions = {
 };
 
 /**
- * ESM dev config - not minified, linked sourcemap, watch plugin added
+ * ESM dev config - not minified, linked sourcemap
  */
 export const azExtEsbuildConfigDevEsm: BuildOptions = {
     ...azExtEsbuildConfigDev,
@@ -128,3 +129,42 @@ export const azExtEsbuildConfigDebugEsm: BuildOptions = {
 };
 
 // #endregion
+
+/**
+ * Auto-selects the appropriate esbuild config based on environment variables and command line args
+ * @param esm true if the ESM config should be returned
+ * @returns
+ * - if `process.env.DEBUG_ESBUILD` is truthy, returns the debug config
+ * - else if `--watch` is passed, returns the dev config
+ * - else, returns the prod config
+ */
+export function autoSelectConfig(esm: boolean): BuildOptions {
+    if (isAutoDebug) {
+        return esm ? azExtEsbuildConfigDebugEsm : azExtEsbuildConfigDebug;
+    } else if (isAutoWatch) {
+        return esm ? azExtEsbuildConfigDevEsm : azExtEsbuildConfigDev;
+    } else {
+        return esm ? azExtEsbuildConfigProdEsm : azExtEsbuildConfigProd;
+    }
+}
+
+/**
+ * Builds or watches the given esbuild config based on environment variables and command line args
+ * @param config The config to build or watch
+ */
+export async function autoBuildOrWatch(config: BuildOptions): Promise<void> {
+    if (isAutoWatch) {
+        const ctx = await context(config);
+        process.on('SIGINT', () => {
+            console.log('Stopping esbuild watch');
+            ctx.dispose();
+        });
+        await ctx.watch();
+    } else {
+        const result = await build(config);
+
+        if (isAutoDebug) {
+            await fs.writeFile('esbuild.meta.json', JSON.stringify(result.metafile));
+        }
+    }
+}

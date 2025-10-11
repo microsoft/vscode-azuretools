@@ -6,11 +6,10 @@ Contains default esbuild configuration for Azure extensions.
 
 1. Add `esbuild.mjs` to the root of your extension package:
 ```js
-// Other configurations exist
-import { azExtEsbuildConfigProd } from '@microsoft/vscode-azext-eng/esbuild';
-import { build } from 'esbuild';
+import { autoBuildOrWatch, autoSelectBaseConfig } from '@microsoft/vscode-azext-eng/esbuild';
 
-await build(azExtEsbuildConfigProd);
+const config = autoSelectConfig(false);
+await autoBuildOrWatch(config);
 ```
 
 2. Add the script to `package.json`:
