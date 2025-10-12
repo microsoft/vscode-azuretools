@@ -8,23 +8,26 @@
         "url": "https://github.com/Microsoft/vscode-azuretools"
     },
     "license": "MIT",
-    "types": "dist/esm/index.d.ts",
     "exports": {
         "./esbuild": {
             "import": "./dist/esm/esbuild/esbuildConfigs.js",
-            "require": "./dist/cjs/esbuild/esbuildConfigs.js"
+            "require": "./dist/cjs/esbuild/esbuildConfigs.js",
+            "types": "./dist/esm/esbuild/esbuildConfigs.d.ts"
         },
         "./eslint": {
             "import": "./dist/esm/eslint/eslintConfigs.js",
-            "require": "./dist/cjs/eslint/eslintConfigs.js"
+            "require": "./dist/cjs/eslint/eslintConfigs.js",
+            "types": "./dist/esm/eslint/eslintConfigs.d.ts"
         },
         "./vscode-test": {
             "import": "./dist/esm/vscode-test/vscodeTestConfigs.js",
-            "require": "./dist/cjs/vscode-test/vscodeTestConfigs.js"
+            "require": "./dist/cjs/vscode-test/vscodeTestConfigs.js",
+            "types": "./dist/esm/vscode-test/vscodeTestConfigs.d.ts"
         },
         "./webpack": {
             "import": "./dist/esm/webpack/webpackConfigs.js",
-            "require": "./dist/cjs/webpack/webpackConfigs.js"
+            "require": "./dist/cjs/webpack/webpackConfigs.js",
+            "types": "./dist/esm/webpack/webpackConfigs.d.ts"
         }
     },
     "scripts": {
