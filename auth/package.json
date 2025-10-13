@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-azureauth",
     "author": "Microsoft Corporation",
-    "version": "4.2.2",
+    "version": "5.0.0",
     "description": "Azure authentication helpers for Visual Studio Code",
     "tags": [
         "azure",
@@ -11,8 +11,9 @@
         "azure",
         "vscode"
     ],
-    "main": "out/src/index.js",
-    "types": "out/src/index.d.ts",
+    "module": "dist/esm/src/index.js",
+    "main": "dist/cjs/src/index.js",
+    "types": "dist/esm/src/index.d.ts",
     "license": "MIT",
     "repository": {
         "type": "git",
@@ -23,26 +24,25 @@
     },
     "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/auth/README.md",
     "scripts": {
-        "build": "tsc -p ./",
-        "compile": "tsc -watch -p ./",
+        "build": "npm run build:esm && npm run build:cjs",
+        "build:esm": "tsc -p ./",
+        "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
         "lint": "eslint --ext .ts .",
         "lint-fix": "eslint --ext .ts . --fix",
-        "test": "node ./out/test/runTest.js",
+        "test": "node ./dist/cjs/test/runTest.js",
         "package": "npm pack",
         "l10n": "npx @vscode/l10n-dev export --outDir ./l10n ./src"
     },
+    "engines": {
+        "vscode": "^1.105.0"
+    },
     "devDependencies": {
         "@azure/core-auth": "^1.4.0",
-        "@azure/identity": "^4.2.0",
         "@microsoft/eslint-config-azuretools": "^0.2.1",
         "@types/glob": "^8.1.0",
-        "@types/html-to-text": "^8.1.0",
         "@types/mocha": "^7.0.2",
         "@types/node": "^18.18.7",
-        "@types/node-fetch": "2.6.7",
-        "@types/semver": "^7.3.9",
-        "@types/uuid": "^9.0.1",
-        "@types/vscode": "^1.94.0",
+        "@types/vscode": "1.105.0",
         "@typescript-eslint/eslint-plugin": "^5.53.0",
         "@vscode/test-electron": "^2.3.8",
         "eslint": "^8.34.0",
@@ -57,6 +57,7 @@
         "@azure/arm-resources-subscriptions": "^2.1.0",
         "@azure/core-client": "^1.9.2",
         "@azure/core-rest-pipeline": "^1.16.0",
+        "@azure/identity": "^4.2.0",
         "@azure/ms-rest-azure-env": "^2.0.0"
     }
 }

@@ -19,7 +19,7 @@ export abstract class AzExtTreeFileSystem<TItem extends types.AzExtTreeFileSyste
 
     private readonly _emitter: EventEmitter<FileChangeEvent[]> = new EventEmitter<FileChangeEvent[]>();
     private readonly _bufferedEvents: FileChangeEvent[] = [];
-    private _fireSoonHandle?: NodeJS.Timer;
+    private _fireSoonHandle?: NodeJS.Timeout;
 
     public get onDidChangeFile(): Event<FileChangeEvent[]> {
         return this._emitter.event;

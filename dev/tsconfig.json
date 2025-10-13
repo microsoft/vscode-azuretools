@@ -1,14 +1,11 @@
 {
     "extends": "../tsconfig.base.json",
     "compilerOptions": {
-        "outDir": "out",
         "rootDir": ".",
+        "outDir": "dist/esm",
+        "declaration": false,
         "strict": true,
         "alwaysStrict": true,
         "skipLibCheck": true, // https://github.com/Azure/ms-rest-js/issues/367,
     },
-    "exclude": [
-        "node_modules",
-        "lib"
-    ]
 }

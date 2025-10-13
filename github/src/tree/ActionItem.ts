@@ -18,16 +18,23 @@ export class ActionItem implements TreeElementBase {
     static readonly inProgressContextValue: string = 'actionState:inProgress';
 
     constructor(
-        readonly parentResourceId: string,
-        readonly extensionPrefixContextValue: string,
-        readonly actionWorkflowRuns: ActionWorkflowRuns) { }
+        private readonly parentResourceId: string,
+        private readonly extensionPrefixContextValue: string,
+        private readonly actionWorkflowRuns: ActionWorkflowRuns) { }
 
-    id: string = `${this.parentResourceId}/${this.actionWorkflowRuns.id}`;
-    label: string = this.actionWorkflowRuns.head_commit?.message || this.actionWorkflowRuns.head_sha;
+    public get id(): string {
+        return `${this.parentResourceId}/${this.actionWorkflowRuns.id}`;
+    }
 
-    viewProperties: ViewPropertiesModel = {
-        data: this.actionWorkflowRuns,
-        label: this.label,
+    public get label(): string {
+        return this.actionWorkflowRuns.head_commit?.message || this.actionWorkflowRuns.head_sha;
+    }
+
+    public get viewProperties(): ViewPropertiesModel {
+        return {
+            data: this.actionWorkflowRuns,
+            label: this.label,
+        };
     }
 
     private get contextValue(): string {

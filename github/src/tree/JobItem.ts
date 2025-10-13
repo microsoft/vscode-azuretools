@@ -14,17 +14,24 @@ export class JobItem implements TreeElementBase {
     static contextValueSuffix: string = 'JobItem';
 
     constructor(
-        readonly parentResourceId: string,
-        readonly extensionPrefixContextValue: string,
-        readonly job: Job) { }
+        private readonly parentResourceId: string,
+        private readonly extensionPrefixContextValue: string,
+        private readonly job: Job) { }
 
-    id: string = `${this.parentResourceId}/jobs/${this.job.id}`;
-    label: string = this.job.name || this.id;
+    public get id(): string {
+        return `${this.parentResourceId}/jobs/${this.job.id}`;
+    }
 
-    viewProperties: ViewPropertiesModel = {
-        data: this.job,
-        label: this.label,
-    };
+    public get label(): string {
+        return this.job.name || this.id;
+    }
+
+    public get viewProperties(): ViewPropertiesModel {
+        return {
+            data: this.job,
+            label: this.label,
+        };
+    }
 
     getTreeItem(): TreeItem {
         return {

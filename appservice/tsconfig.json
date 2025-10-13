@@ -1,12 +1,8 @@
 {
     "extends": "../tsconfig.base.json",
     "compilerOptions": {
-        "declaration": true,
-        "outDir": "out",
-        "rootDir": "."
+        "outDir": "dist/esm",
+        "rootDir": ".",
+        "skipLibCheck": true, // TODO: webpack typings issue
     },
-    "exclude": [
-        "node_modules",
-        "out"
-    ]
 }

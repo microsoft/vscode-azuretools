@@ -30,7 +30,7 @@ export class DeploymentTreeItem extends AzExtTreeItem {
     public static contextValue: RegExp = new RegExp('deployment\/.*');
     public label: string;
     public receivedTime: Date;
-    public parent: DeploymentsTreeItem;
+    public declare parent: DeploymentsTreeItem;
     private _deployResult: KuduModels.DeployResult;
     private _scmType?: string;
 

@@ -13,6 +13,7 @@ import { uiUtils } from '../utils/uiUtils';
 import { LocationListStep } from './LocationListStep';
 import { ResourceGroupListStep } from './ResourceGroupListStep';
 import { UserAssignedIdentityCreateStep } from './UserAssignedIdentityCreateStep';
+import { UserAssignedIdentityNameStep } from './UserAssignedIdentityNameStep';
 
 export class UserAssignedIdentityListStep<T extends types.IResourceGroupWizardContext> extends AzureWizardPromptStep<T> {
     private _suppressCreate: boolean | undefined;
@@ -23,7 +24,7 @@ export class UserAssignedIdentityListStep<T extends types.IResourceGroupWizardCo
     }
 
     public async prompt(wizardContext: T): Promise<void> {
-        const options: IAzureQuickPickOptions = { placeHolder: 'Select a user assigned identity.', id: `UserAssignedIdentityListStep` };
+        const options: IAzureQuickPickOptions = { placeHolder: vscode.l10n.t('Select a user-assigned identity.'), id: `UserAssignedIdentityListStep` };
         wizardContext.managedIdentity = (await wizardContext.ui.showQuickPick(this.getQuickPicks(wizardContext), options)).data;
     }
 
@@ -34,6 +35,7 @@ export class UserAssignedIdentityListStep<T extends types.IResourceGroupWizardCo
     public async getSubWizard(wizardContext: T): Promise<IWizardOptions<T> | undefined> {
         if (!wizardContext.managedIdentity) {
             const promptSteps: AzureWizardPromptStep<T>[] = [
+                new UserAssignedIdentityNameStep(),
                 new ResourceGroupListStep(),
             ];
 
@@ -56,7 +58,7 @@ export class UserAssignedIdentityListStep<T extends types.IResourceGroupWizardCo
 
         if (!this._suppressCreate) {
             picks.push({
-                label: vscode.l10n.t('$(plus) Create new user assigned identity'),
+                label: vscode.l10n.t('$(plus) Create new user-assigned identity'),
                 description: '',
                 data: undefined
             });

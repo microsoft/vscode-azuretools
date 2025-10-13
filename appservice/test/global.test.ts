@@ -7,7 +7,7 @@ import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
-export const testWorkspaceRoot: string = path.resolve(__dirname, '..', '..', 'testWorkspace');
+export const testWorkspaceRoot: string = path.resolve(__dirname, '..', '..', '..', 'testWorkspace');
 
 // Runs before all tests
 suiteSetup(async () => {

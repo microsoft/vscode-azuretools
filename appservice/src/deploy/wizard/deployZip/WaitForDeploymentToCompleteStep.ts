@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, activityProgressContext, activityProgressIcon, activitySuccessContext, activitySuccessIcon, AzureWizardExecuteStep, createContextValue, ExecuteActivityOutput, nonNullProp } from "@microsoft/vscode-azext-utils";
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "crypto";
 import { l10n, Progress, ThemeIcon, TreeItemCollapsibleState } from "vscode";
 import { ext } from "../../../extensionVariables";
 import { InnerDeployContext } from "../../IDeployContext";
@@ -17,7 +17,7 @@ export class WaitForDeploymentToCompleteStep extends AzureWizardExecuteStep<Inne
         title: '',
         command: ext.prefix + '.showOutputChannel'
     };
-    private _childId: string = uuidv4(); // create child id in class to make it idempotent
+    private _childId: string = randomUUID(); // create child id in class to make it idempotent
     public createSuccessOutput(context: InnerDeployContext): ExecuteActivityOutput {
         const label = context.site.isSlot ? l10n.t('Build slot "{0}" in Azure', context.site.fullName) : l10n.t('Build app "{0}" in Azure', context.site.fullName);
         return {

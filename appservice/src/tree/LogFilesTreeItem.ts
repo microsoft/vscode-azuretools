@@ -7,8 +7,8 @@ import { AzExtParentTreeItem, AzExtTreeItem, createContextValue, GenericTreeItem
 import { l10n, ThemeIcon } from 'vscode';
 import { ext } from '../extensionVariables';
 import { ParsedSite } from '../SiteClient';
-import { FolderTreeItem } from './FolderTreeItem';
 import { createSiteFilesUrl } from '../siteFiles';
+import { FolderTreeItem } from './FolderTreeItem';
 
 interface LogFilesTreeItemOptions {
     site: ParsedSite;
@@ -21,7 +21,6 @@ interface LogFilesTreeItemOptions {
 export class LogFilesTreeItem extends FolderTreeItem {
     public static contextValue: string = 'logFiles';
     public suppressMaskLabel: boolean = true;
-    public readonly contextValuesToAdd: string[];
 
     protected readonly _isRoot: boolean = true;
 

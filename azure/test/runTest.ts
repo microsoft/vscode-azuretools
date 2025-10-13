@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as path from 'path';
 import { runTests } from '@vscode/test-electron';
+import * as path from 'path';
 
 async function main(): Promise<void> {
     try {
-        const repoRoot: string = path.resolve(__dirname, '..', '..');
+        const repoRoot: string = path.resolve(__dirname, '..', '..', '..');
         await runTests({
             extensionDevelopmentPath: path.resolve(repoRoot, 'test', 'extension'),
             launchArgs: [

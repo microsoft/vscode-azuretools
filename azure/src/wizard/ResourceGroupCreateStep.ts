@@ -5,7 +5,7 @@
 
 import type { ResourceGroup, ResourceManagementClient } from '@azure/arm-resources';
 import { ActivityChildItem, ActivityChildType, activityErrorContext, activityFailContext, activityFailIcon, ActivityOutputType, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityOutput, nonNullProp, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from 'crypto';
 import { l10n, MessageItem, Progress, TreeItemCollapsibleState } from 'vscode';
 import * as types from '../../index';
 import { createResourcesClient } from '../clients';
@@ -81,7 +81,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
         return !wizardContext.resourceGroup;
     }
 
-    private _errorItemId: string = uuidv4();
+    private _errorItemId: string = randomUUID();
     public override createFailOutput(context: T): ExecuteActivityOutput {
         const item: ActivityChildItem = new ActivityChildItem({
             label: this.getTreeItemLabel(context),

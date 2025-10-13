@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
-import * as CopyWebpackPlugin from 'copy-webpack-plugin';
+import CopyWebpackPlugin from 'copy-webpack-plugin';
 import * as fse from 'fs-extra';
 import * as path from 'path';
-import * as TerserPlugin from 'terser-webpack-plugin';
+import TerserPlugin from 'terser-webpack-plugin';
 import * as webpack from 'webpack';
 import { Verbosity } from '../..';
 import { DefaultWebpackOptions } from '../../index';

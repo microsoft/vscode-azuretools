@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { nonNullProp } from "@microsoft/vscode-azext-utils";
-import * as dayjs from "dayjs";
+import dayjs from "dayjs";
 // eslint-disable-next-line import/no-internal-modules
-import * as relativeTime from 'dayjs/plugin/relativeTime';
+import relativeTime from 'dayjs/plugin/relativeTime';
 import { ThemeColor, ThemeIcon, l10n } from "vscode";
 import { ActionWorkflowRuns } from "../wrappers/getActions";
 import { Job, JobStep } from "../wrappers/getJobs";

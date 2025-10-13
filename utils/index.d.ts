@@ -166,11 +166,11 @@ export interface AzExtServiceClientCredentialsT2 {
      * This method is called automatically by Azure SDK client libraries. You may call this method
      * directly, but you must also handle token caching and token refreshing.
      *
-     * @param scopes - The list of scopes for which the token will have access.
+     * @param scopeOrListOrRequest - The list of scopes for which the token will have access.
      * @param options - The options used to configure any requests this
      *                TokenCredential implementation might make.
      */
-    getToken(scopes?: string | string[] | AuthenticationWwwAuthenticateRequest, options?: any): Promise<any | null>;
+    getToken(scopeOrListOrRequest?: string | string[] | AuthenticationWwwAuthenticateRequest, options?: any): Promise<any | null>;
 }
 
 /**
@@ -178,7 +178,7 @@ export interface AzExtServiceClientCredentialsT2 {
  */
 export interface ISubscriptionContext {
     credentials: AzExtServiceClientCredentials;
-    createCredentialsForScopes: (scopes: string[] | AuthenticationWwwAuthenticateRequest) => Promise<AzExtServiceClientCredentials>;
+    createCredentialsForScopes: (scopeListOrRequest: string[] | AuthenticationWwwAuthenticateRequest) => Promise<AzExtServiceClientCredentials>;
     subscriptionDisplayName: string;
     subscriptionId: string;
     subscriptionPath: string;
@@ -188,7 +188,7 @@ export interface ISubscriptionContext {
     isCustomCloud: boolean;
 }
 
-export type TreeItemIconPath = string | Uri | { light: string | Uri; dark: string | Uri } | ThemeIcon;
+export type TreeItemIconPath = vscodeTypes.IconPath;
 
 
 /**
