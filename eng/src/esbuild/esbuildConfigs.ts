@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 /**
- * @important When updating these configs, be sure to update the corresponding webpack configs in file://./../webpack/webpackConfigs.ts
+ * @important When updating these configs, be sure to update the corresponding webpack configs in
+ * file://./../webpack/webpackConfigs.ts as needed
  */
 
 import { type BuildOptions, build, context } from 'esbuild';

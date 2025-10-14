@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 /**
- * @important When updating these configs, be sure to update the corresponding esbuild configs in file://./../esbuild/esbuildConfigs.ts
+ * @important When updating these configs, be sure to update the corresponding esbuild configs in
+ * file://./../esbuild/esbuildConfigs.ts as needed
  */
 
 import CopyPlugin from 'copy-webpack-plugin';
