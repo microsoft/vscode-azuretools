@@ -107,13 +107,26 @@ export function lazyImportRuleConfig(patterns: string[]): EslintConfig {
 
 /* eslint-enable @typescript-eslint/naming-convention */
 
-const globalIgnoresList = ['out/**', 'node_modules/**', 'dist/**', '**/*.d.ts', '.vscode-test*', 'eslint.config.mjs', 'webpack.config.mjs', 'esbuild.mjs', 'main.*js'];
+/**
+ * Global ignores that should apply to all projects
+ * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
+ */
+export const ignoresConfig: EslintConfig = globalIgnores([
+    'node_modules/**',
+    'out/**',
+    'dist/**',
+    '**/*.d.ts',
+    '.vscode-test*',
+    'eslint.config.mjs',
+    'webpack.config.mjs',
+    'esbuild.mjs',
+]);
 
 /**
  * Recommended ESLint configuration for Azure extensions
  */
 export const azExtEslintRecommended: EslintConfig[] = defineConfig(
-    globalIgnores(globalIgnoresList),
+    ignoresConfig,
     eslint.configs.recommended,
     tseslint.configs.recommended,
     tseslint.configs.stylistic,
@@ -125,7 +138,7 @@ export const azExtEslintRecommended: EslintConfig[] = defineConfig(
  * Recommended ESLint configuration for Azure extensions with extra type-checked rules enabled
  */
 export const azExtEslintRecommendedTypeChecked: EslintConfig[] = defineConfig(
-    globalIgnores(globalIgnoresList),
+    ignoresConfig,
     eslint.configs.recommended,
     tseslint.configs.recommendedTypeChecked,
     tseslint.configs.stylisticTypeChecked,
@@ -137,7 +150,7 @@ export const azExtEslintRecommendedTypeChecked: EslintConfig[] = defineConfig(
  * Strict ESLint configuration for Azure extensions
  */
 export const azExtEslintStrict: EslintConfig[] = defineConfig(
-    globalIgnores(globalIgnoresList),
+    ignoresConfig,
     eslint.configs.recommended,
     tseslint.configs.strict,
     tseslint.configs.stylistic,
@@ -149,7 +162,7 @@ export const azExtEslintStrict: EslintConfig[] = defineConfig(
  * Strict ESLint configuration for Azure extensions with extra type-checked rules enabled
  */
 export const azExtEslintStrictTypeChecked: EslintConfig[] = defineConfig(
-    globalIgnores(globalIgnoresList),
+    ignoresConfig,
     eslint.configs.recommended,
     tseslint.configs.strictTypeChecked,
     tseslint.configs.stylisticTypeChecked,
