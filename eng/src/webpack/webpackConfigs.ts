@@ -11,9 +11,9 @@ import CopyPlugin from 'copy-webpack-plugin';
 import * as path from 'path';
 import type { Configuration } from 'webpack';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
+import { getAutoBuildSettings } from '../utils/getAutoBuildSettings';
 
-const isAutoDebug = !!process.env.DEBUG_WEBPACK;
-const isAutoWatch = process.argv.includes('--watch');
+const { isAutoDebug, isAutoWatch } = getAutoBuildSettings('webpack');
 
 /**
  * Base config - shared between prod/dev/debug
@@ -104,7 +104,7 @@ export const azExtWebpackConfigDebug: Configuration = {
 /**
  * Auto-selects the appropriate webpack config based on environment variables and command line args
  * @returns
- * - if `process.env.DEBUG_WEBPACK` is truthy, returns the debug config
+ * - if `process.env.DEBUG_WEBPACK` is true or 1, returns the debug config
  * - else if `--watch` is passed, returns the dev config
  * - else, returns the prod config
  */

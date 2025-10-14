@@ -10,9 +10,9 @@
 import { type BuildOptions, build, context } from 'esbuild';
 import { copy } from 'esbuild-plugin-copy';
 import * as fs from 'fs/promises';
+import { getAutoBuildSettings } from '../utils/getAutoBuildSettings';
 
-const isAutoDebug = !!process.env.DEBUG_ESBUILD;
-const isAutoWatch = process.argv.includes('--watch');
+const { isAutoDebug, isAutoWatch } = getAutoBuildSettings('esbuild');
 
 /**
  * Base config - shared between prod/dev/debug
@@ -134,7 +134,7 @@ export const azExtEsbuildConfigDebugEsm: BuildOptions = {
  * Auto-selects the appropriate esbuild config based on environment variables and command line args
  * @param esm (Optional) True if the ESM config should be returned
  * @returns
- * - if `process.env.DEBUG_ESBUILD` is truthy, returns the debug config
+ * - if `process.env.DEBUG_ESBUILD` is true or 1, returns the debug config
  * - else if `--watch` is passed, returns the dev config
  * - else, returns the prod config
  */
@@ -150,6 +150,10 @@ export function autoSelectEsbuildConfig(esm?: boolean): BuildOptions {
 
 /**
  * Builds or watches the given esbuild config based on environment variables and command line args
+ * - if `--watch` is passed, starts esbuild in watch mode
+ * - else, builds once
+ *
+ * Additionally, if a metafile is generated, it is written to `esbuild.meta.json`
  * @param config The config to build or watch
  */
 export async function autoEsbuildOrWatch(config: BuildOptions): Promise<void> {
@@ -163,7 +167,7 @@ export async function autoEsbuildOrWatch(config: BuildOptions): Promise<void> {
     } else {
         const result = await build(config);
 
-        if (isAutoDebug) {
+        if (!!config.metafile && !!result.metafile) {
             await fs.writeFile('esbuild.meta.json', JSON.stringify(result.metafile));
         }
     }
