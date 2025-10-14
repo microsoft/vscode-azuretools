@@ -17,7 +17,7 @@ export const baseConfig: Partial<TestConfiguration> = {
 };
 
 /**
- * Default `./src/test` config for Azure extensions for VS Code.
+ * Test configuration for extensions with tests in `./src/test/` directory.
  * @see https://github.com/microsoft/vscode-test-cli for more options
  */
 export const azExtSrcTestConfig = defineConfig({
@@ -27,7 +27,7 @@ export const azExtSrcTestConfig = defineConfig({
 });
 
 /**
- * Default `./test` config for Azure extensions for VS Code.
+ * Test configuration for extensions with tests in `./test/` directory.
  * @see https://github.com/microsoft/vscode-test-cli for more options
  */
 export const azExtTestConfig = defineConfig({
