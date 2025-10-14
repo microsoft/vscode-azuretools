@@ -59,6 +59,16 @@ export const baseWebpackConfig: Configuration = {
         ],
     },
     ignoreWarnings: [
+        {
+            // Ignore a warning for a missing optional dependency of `ws` via `@microsoft/vscode-azext-azureappservice`
+            module: /node_modules\/ws/,
+            message: /Can't resolve 'bufferutil'/,
+        },
+        {
+            // Ignore another warning for a missing optional dependency of `ws` via `@microsoft/vscode-azext-azureappservice`
+            module: /node_modules\/ws/,
+            message: /Can't resolve 'utf-8-validate'/,
+        },
         () => false, // No other warnings should be ignored
     ],
 };
