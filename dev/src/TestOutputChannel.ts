@@ -5,6 +5,9 @@
 
 import type { LogLevel, LogOutputChannel, Event } from "vscode";
 
+/**
+ * Re-routes output to the console instead of a VS Code output channel (which disappears after a test run has finished)
+ */
 export class TestOutputChannel implements LogOutputChannel {
     public name: string = 'Extension Test Output';
 

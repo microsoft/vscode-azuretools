@@ -12,11 +12,6 @@
                 "reveal": "never"
             },
             "problemMatcher": "$tsc"
-        },
-        {
-            "type": "npm",
-            "script": "lint",
-            "problemMatcher": "$eslint-stylish"
         }
     ]
 }
