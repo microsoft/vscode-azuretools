@@ -8,7 +8,7 @@
  * file://./../webpack/webpackConfigs.ts as needed
  */
 
-import { type BuildOptions, build, context } from 'esbuild';
+import { type BuildOptions as EsbuildConfig, build, context } from 'esbuild';
 import { copy } from 'esbuild-plugin-copy';
 import * as fs from 'fs/promises';
 import { getAutoBuildSettings } from '../utils/getAutoBuildSettings';
@@ -19,7 +19,7 @@ const { isAutoDebug, isAutoWatch } = getAutoBuildSettings('esbuild');
  * Base config - shared between prod/dev/debug
  * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
  */
-export const baseEsbuildConfig: BuildOptions = {
+export const baseEsbuildConfig: EsbuildConfig = {
     bundle: true,
     external: ['vscode'],
     outdir: './dist',
@@ -74,7 +74,7 @@ export const baseEsbuildConfig: BuildOptions = {
 /**
  * Production config - minified, no sourcemap
  */
-export const azExtEsbuildConfigProd: BuildOptions = {
+export const azExtEsbuildConfigProd: EsbuildConfig = {
     ...baseEsbuildConfig,
     minify: true,
     sourcemap: false,
@@ -83,7 +83,7 @@ export const azExtEsbuildConfigProd: BuildOptions = {
 /**
  * Dev config - not minified, linked sourcemap
  */
-export const azExtEsbuildConfigDev: BuildOptions = {
+export const azExtEsbuildConfigDev: EsbuildConfig = {
     ...baseEsbuildConfig,
     minify: false,
     sourcemap: 'linked',
@@ -93,7 +93,7 @@ export const azExtEsbuildConfigDev: BuildOptions = {
  * Debug config - same as prod, plus metafile
  * @note To use the metafile, it also needs to be written to disk. See https://esbuild.github.io/api/#metafile
  */
-export const azExtEsbuildConfigDebug: BuildOptions = {
+export const azExtEsbuildConfigDebug: EsbuildConfig = {
     ...azExtEsbuildConfigProd,
     metafile: true,
 };
@@ -112,7 +112,7 @@ const require = createRequire(import.meta.url);
 /**
  * ESM production config - minified, no sourcemap
  */
-export const azExtEsbuildConfigProdEsm: BuildOptions = {
+export const azExtEsbuildConfigProdEsm: EsbuildConfig = {
     ...azExtEsbuildConfigProd,
     banner: { js: esmBanner },
     format: 'esm',
@@ -122,7 +122,7 @@ export const azExtEsbuildConfigProdEsm: BuildOptions = {
 /**
  * ESM dev config - not minified, linked sourcemap
  */
-export const azExtEsbuildConfigDevEsm: BuildOptions = {
+export const azExtEsbuildConfigDevEsm: EsbuildConfig = {
     ...azExtEsbuildConfigDev,
     banner: { js: esmBanner },
     format: 'esm',
@@ -133,7 +133,7 @@ export const azExtEsbuildConfigDevEsm: BuildOptions = {
  * ESM debug config - same as ESM prod, plus metafile
  * @note To use the metafile, it also needs to be written to disk. See https://esbuild.github.io/api/#metafile
  */
-export const azExtEsbuildConfigDebugEsm: BuildOptions = {
+export const azExtEsbuildConfigDebugEsm: EsbuildConfig = {
     ...azExtEsbuildConfigProdEsm,
     metafile: true,
 };
@@ -148,7 +148,7 @@ export const azExtEsbuildConfigDebugEsm: BuildOptions = {
  * - else if `--watch` is passed, returns the dev config
  * - else, returns the prod config
  */
-export function autoSelectEsbuildConfig(esm?: boolean): BuildOptions {
+export function autoSelectEsbuildConfig(esm?: boolean): EsbuildConfig {
     if (isAutoDebug) {
         return !!esm ? azExtEsbuildConfigDebugEsm : azExtEsbuildConfigDebug;
     } else if (isAutoWatch) {
@@ -166,7 +166,7 @@ export function autoSelectEsbuildConfig(esm?: boolean): BuildOptions {
  * Additionally, if a metafile is generated, it is written to `esbuild.meta.json`
  * @param config The config to build or watch
  */
-export async function autoEsbuildOrWatch(config: BuildOptions): Promise<void> {
+export async function autoEsbuildOrWatch(config: EsbuildConfig): Promise<void> {
     if (isAutoWatch) {
         const ctx = await context(config);
         process.on('SIGINT', () => {

@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { defineConfig, type TestConfiguration } from '@vscode/test-cli';
+import { defineConfig, type TestConfiguration as VscodeTestConfig } from '@vscode/test-cli';
 
 /**
  * Base config - shared between different test configs
  * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
  */
-export const baseConfig: Partial<TestConfiguration> = {
+export const baseConfig: Partial<VscodeTestConfig> = {
     mocha: {
         require: ['tsx'],
         timeout: 10000,

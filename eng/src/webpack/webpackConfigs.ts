@@ -10,7 +10,7 @@
 
 import CopyPlugin from 'copy-webpack-plugin';
 import * as path from 'path';
-import type { Configuration } from 'webpack';
+import type { Configuration as WebpackConfig } from 'webpack';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import { getAutoBuildSettings } from '../utils/getAutoBuildSettings';
 
@@ -20,7 +20,7 @@ const { isAutoDebug, isAutoWatch } = getAutoBuildSettings('webpack');
  * Base config - shared between prod/dev/debug
  * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
  */
-export const baseWebpackConfig: Configuration = {
+export const baseWebpackConfig: WebpackConfig = {
     target: 'node',
     cache: true,
     entry: {
@@ -76,7 +76,7 @@ export const baseWebpackConfig: Configuration = {
 /**
  * Production config - minified, no sourcemap
  */
-export const azExtWebpackConfigProd: Configuration = {
+export const azExtWebpackConfigProd: WebpackConfig = {
     ...baseWebpackConfig,
     mode: 'production',
     devtool: false,
@@ -85,7 +85,7 @@ export const azExtWebpackConfigProd: Configuration = {
 /**
  * Dev config - not minified, with sourcemaps
  */
-export const azExtWebpackConfigDev: Configuration = {
+export const azExtWebpackConfigDev: WebpackConfig = {
     ...baseWebpackConfig,
     mode: 'development',
     devtool: 'source-map',
@@ -94,7 +94,7 @@ export const azExtWebpackConfigDev: Configuration = {
 /**
  * Debug config - same as prod, plus bundle analyzer
  */
-export const azExtWebpackConfigDebug: Configuration = {
+export const azExtWebpackConfigDebug: WebpackConfig = {
     ...azExtWebpackConfigProd,
     plugins: [
         ...azExtWebpackConfigProd.plugins ?? [],
@@ -109,7 +109,7 @@ export const azExtWebpackConfigDebug: Configuration = {
  * - else if `--watch` is passed, returns the dev config
  * - else, returns the prod config
  */
-export function autoSelectWebpackConfig(): Configuration {
+export function autoSelectWebpackConfig(): WebpackConfig {
     if (isAutoDebug) {
         return azExtWebpackConfigDebug;
     } else if (isAutoWatch) {
