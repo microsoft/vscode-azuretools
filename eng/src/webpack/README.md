@@ -6,8 +6,8 @@ Contains default Webpack configuration for Azure extensions.
 
 1. Add `webpack.config.mjs` to the root of your extension package:
 ```js
-// Other configurations exist
-export { azExtWebpackConfigProd as default } from '@microsoft/vscode-azext-eng/webpack';
+import { autoSelectWebpackConfig } from '@microsoft/vscode-azext-eng/webpack';
+export default autoSelectWebpackConfig();
 ```
 
 2. Add the script to `package.json`:
