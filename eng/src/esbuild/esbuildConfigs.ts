@@ -11,7 +11,7 @@
 import { type BuildOptions as EsbuildConfig, build, context } from 'esbuild';
 import { copy } from 'esbuild-plugin-copy';
 import * as fs from 'fs/promises';
-import { getAutoBuildSettings } from '../utils/getAutoBuildSettings';
+import { getAutoBuildSettings } from '../utils/getAutoBuildSettings.js';
 
 const { isAutoDebug, isAutoWatch } = getAutoBuildSettings('esbuild');
 

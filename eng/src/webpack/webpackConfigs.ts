@@ -12,7 +12,7 @@ import CopyPlugin from 'copy-webpack-plugin';
 import * as path from 'path';
 import type { Configuration as WebpackConfig } from 'webpack';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
-import { getAutoBuildSettings } from '../utils/getAutoBuildSettings';
+import { getAutoBuildSettings } from '../utils/getAutoBuildSettings.js';
 
 const { isAutoDebug, isAutoWatch } = getAutoBuildSettings('webpack');
 
