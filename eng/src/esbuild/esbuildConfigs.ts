@@ -43,16 +43,25 @@ export const baseEsbuildConfig: BuildOptions = {
         {
             name: 'start-stop-log',
             setup(build) {
-                let start: bigint, end: bigint;
-
+                let start: bigint;
                 build.onStart(() => {
-                    console.log(`${isAutoWatch ? '[watch] ' : ''}build started`);
+                    if (isAutoWatch) {
+                        // This format is important for the problem matcher to work
+                        console.log('[watch] build started');
+                    } else {
+                        console.log('esbuild started');
+                    }
                     start = process.hrtime.bigint();
                 });
 
                 build.onEnd(() => {
-                    end = process.hrtime.bigint();
-                    console.log(`${isAutoWatch ? '[watch] ' : ''}build finished in ${(end - start) / 1000000n} milliseconds`);
+                    const elapsed = (process.hrtime.bigint() - start) / 1000000n;
+                    if (isAutoWatch) {
+                        // This format is important for the problem matcher to work
+                        console.log(`[watch] build finished in ${elapsed} milliseconds`);
+                    } else {
+                        console.log(`esbuild finished in ${elapsed} milliseconds`);
+                    }
                 });
             },
         },
