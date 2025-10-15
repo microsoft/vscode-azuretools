@@ -17,6 +17,8 @@ import { isAuthenticationWwwAuthenticateRequest } from './utils/isAuthentication
 
 const EventDebounce = 5 * 1000; // 5 seconds
 
+let armSubs: typeof import('@azure/arm-resources-subscriptions') | undefined;
+
 /**
  * A class for obtaining Azure subscription information using VSCode's built-in authentication
  * provider.
@@ -317,7 +319,7 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      * @returns A client, the credential used by the client, and the authentication function
      */
     private async getSubscriptionClient(account: vscode.AuthenticationSessionAccountInformation, tenantId?: string, scopes?: string[]): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
-        const armSubs = await import('@azure/arm-resources-subscriptions');
+        armSubs ||= await import('@azure/arm-resources-subscriptions');
 
         const session = await getSessionFromVSCode(scopes, tenantId, { createIfNone: false, silent: true, account });
 
