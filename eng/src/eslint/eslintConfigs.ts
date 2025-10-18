@@ -22,10 +22,18 @@ export const azExtUniversalRules: EslintConfig = {
     },
     rules: {
         curly: 'warn',
-        eqeqeq: 'warn',
-        'no-extra-boolean-cast': 'off', // Unnecessarily restrictive
+        eqeqeq: 'error',
         'no-template-curly-in-string': 'warn',
         semi: 'warn',
+
+        // All of these are unnecessarily restrictive for our projects, so we shut them off
+        '@typescript-eslint/array-type': 'off',
+        '@typescript-eslint/class-literal-property-style': 'off',
+        '@typescript-eslint/consistent-indexed-object-style': 'off',
+        '@typescript-eslint/consistent-type-assertions': 'off',
+        '@typescript-eslint/consistent-type-definitions': 'off',
+        '@typescript-eslint/no-inferrable-types': 'off',
+        'no-extra-boolean-cast': 'off',
     },
 };
 
@@ -35,12 +43,7 @@ export const azExtUniversalRules: EslintConfig = {
  */
 export const azExtStylisticRules: EslintConfig = {
     rules: {
-        '@typescript-eslint/array-type': 'off', // Unnecessarily restrictive
-        '@typescript-eslint/class-literal-property-style': 'off', // Unnecessarily restrictive
-        '@typescript-eslint/consistent-indexed-object-style': 'off', // Unnecessarily restrictive
         '@typescript-eslint/consistent-generic-constructors': 'warn', // Move from error to warn
-        '@typescript-eslint/consistent-type-assertions': 'off', // Unnecessarily restrictive
-        '@typescript-eslint/consistent-type-definitions': 'off', // Unnecessarily restrictive
         '@typescript-eslint/naming-convention': [
             // Naming convention is enforced, with some exceptions below
             'warn',
@@ -63,7 +66,6 @@ export const azExtStylisticRules: EslintConfig = {
                 leadingUnderscore: 'allow',
             },
         ],
-        '@typescript-eslint/no-inferrable-types': 'off', // Unnecessarily restrictive
         '@typescript-eslint/no-unused-vars': [
             // No unused variables, with some exceptions below
             'warn',
