@@ -38,14 +38,14 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
     public constructor(private readonly logger?: vscode.LogOutputChannel) {
         const isASignInEvent = async () => {
             const currentAccounts = Array.from(await vscode.authentication.getAccounts(getConfiguredAuthProviderId())); // The Array.from is to get rid of the readonly marker on the array returned by the API
+            const priorAccountCount = this.priorAccounts?.length ?? 0;
+            this.priorAccounts = currentAccounts;
 
             // The only way a sign out happens is if an account is removed entirely from the list of accounts
-            if (currentAccounts.length === 0 || currentAccounts.length < (this.priorAccounts?.length ?? 0)) {
-                this.priorAccounts = currentAccounts;
+            if (currentAccounts.length === 0 || currentAccounts.length < priorAccountCount) {
                 return false;
             }
 
-            this.priorAccounts = currentAccounts;
             return true;
         }
 
