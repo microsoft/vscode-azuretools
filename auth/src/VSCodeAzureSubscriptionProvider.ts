@@ -32,15 +32,32 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
     private readonly onDidSignOutEmitter = new vscode.EventEmitter<void>();
     private lastSignOutEventFired: number = 0;
 
+    private priorAccounts: vscode.AuthenticationSessionAccountInformation[] | undefined;
+
     // So that customers can easily share logs, try to only log PII using trace level
     public constructor(private readonly logger?: vscode.LogOutputChannel) {
+        const isASignInEvent = async () => {
+            const currentAccounts = Array.from(await vscode.authentication.getAccounts(getConfiguredAuthProviderId())); // The Array.from is to get rid of the readonly marker on the array returned by the API
+
+            // The only way a sign out happens is if an account is removed entirely from the list of accounts
+            if (currentAccounts.length === 0 || currentAccounts.length < (this.priorAccounts?.length ?? 0)) {
+                this.priorAccounts = currentAccounts;
+                return false;
+            }
+
+            this.priorAccounts = currentAccounts;
+            return true;
+        }
+
+        void isASignInEvent(); // Run once, asynchronously, to set priorAccounts initially--so that the first real event can be compared against it
+
         const disposable = vscode.authentication.onDidChangeSessions(async e => {
             // Ignore any sign in that isn't for the configured auth provider
             if (e.provider.id !== getConfiguredAuthProviderId()) {
                 return;
             }
 
-            if (await this.isSignedIn()) {
+            if (await isASignInEvent()) {
                 if (!this.suppressSignInEvents && Date.now() > this.lastSignInEventFired + EventDebounce) {
                     this.lastSignInEventFired = Date.now();
                     this.onDidSignInEmitter.fire();
