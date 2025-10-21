@@ -5,8 +5,8 @@
 
 import type { TokenCredential } from '@azure/core-auth';
 import type { Environment } from '@azure/ms-rest-azure-env';
-import * as vscode from "vscode";
-import { AzureAuthentication } from './AzureAuthentication';
+import type * as vscode from "vscode";
+import type { AzureAuthentication } from './AzureAuthentication';
 
 /**
  * A type representing an Azure subscription ID, not including the tenant ID.

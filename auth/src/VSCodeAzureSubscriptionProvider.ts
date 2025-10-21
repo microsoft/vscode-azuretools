@@ -6,14 +6,15 @@
 import type { SubscriptionClient } from '@azure/arm-resources-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
 import type { TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
 import * as vscode from 'vscode';
-import { AzureAuthentication } from './AzureAuthentication';
+import type { AzureAuthentication } from './AzureAuthentication';
 import { AzureSubscription, SubscriptionId, TenantId } from './AzureSubscription';
-import { AzureSubscriptionProvider, GetSubscriptionsFilter } from './AzureSubscriptionProvider';
-import { AzureTenant } from './AzureTenant';
+import type { AzureSubscriptionProvider, GetSubscriptionsFilter } from './AzureSubscriptionProvider';
+import type { AzureTenant } from './AzureTenant';
 import { getSessionFromVSCode } from './getSessionFromVSCode';
 import { NotSignedInError } from './NotSignedInError';
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from './utils/configuredAzureEnv';
 import { isAuthenticationWwwAuthenticateRequest } from './utils/isAuthenticationWwwAuthenticateRequest';
+import { isGetSubscriptionsAccountFilter, isGetSubscriptionsTenantFilter } from './utils/isGetSubscriptionsFilter';
 
 const EventDebounce = 5 * 1000; // 5 seconds
 
@@ -31,20 +32,39 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
     private readonly onDidSignOutEmitter = new vscode.EventEmitter<void>();
     private lastSignOutEventFired: number = 0;
 
+    private priorAccounts: vscode.AuthenticationSessionAccountInformation[] | undefined;
+
     // So that customers can easily share logs, try to only log PII using trace level
     public constructor(private readonly logger?: vscode.LogOutputChannel) {
+        const isASignInEvent = async () => {
+            const currentAccounts = Array.from(await vscode.authentication.getAccounts(getConfiguredAuthProviderId())); // The Array.from is to get rid of the readonly marker on the array returned by the API
+            const priorAccountCount = this.priorAccounts?.length ?? 0;
+            this.priorAccounts = currentAccounts;
+
+            // The only way a sign out happens is if an account is removed entirely from the list of accounts
+            if (currentAccounts.length === 0 || currentAccounts.length < priorAccountCount) {
+                return false;
+            }
+
+            return true;
+        }
+
+        void isASignInEvent(); // Run once, asynchronously, to set priorAccounts initially--so that the first real event can be compared against it
+
         const disposable = vscode.authentication.onDidChangeSessions(async e => {
             // Ignore any sign in that isn't for the configured auth provider
             if (e.provider.id !== getConfiguredAuthProviderId()) {
                 return;
             }
 
-            if (await this.isSignedIn()) {
+            if (await isASignInEvent()) {
                 if (!this.suppressSignInEvents && Date.now() > this.lastSignInEventFired + EventDebounce) {
+                    this.logger?.debug('auth: Firing onDidSignIn event');
                     this.lastSignInEventFired = Date.now();
                     this.onDidSignInEmitter.fire();
                 }
             } else if (Date.now() > this.lastSignOutEventFired + EventDebounce) {
+                this.logger?.debug('auth: Firing onDidSignOut event');
                 this.lastSignOutEventFired = Date.now();
                 this.onDidSignOutEmitter.fire();
             }
@@ -105,27 +125,29 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
         this.logger?.debug('auth: Loading subscriptions...');
         const startTime = Date.now();
 
-        const configuredTenantFilter = await this.getTenantFilters();
-        const tenantIdsToFilterBy =
+        let tenantIdsToFilterBy: string[] | undefined;
+        if (isGetSubscriptionsTenantFilter(filter)) {
             // Only filter by the tenant ID option if it is provided
-            (typeof filter === 'object' && filter.tenantId ? [filter.tenantId] :
-                // Only filter by the configured filter if `filter` is true AND there are tenants in the configured filter
-                filter === true && configuredTenantFilter.length > 0 ? configuredTenantFilter :
-                    undefined);
-
+            tenantIdsToFilterBy = [filter.tenantId];
+        } else if (filter === true) {
+            // Only filter by the configured filter if `filter` is true AND there are tenants in the configured filter
+            const configuredTenantFilter = await this.getTenantFilters();
+            if (configuredTenantFilter.length > 0) {
+                tenantIdsToFilterBy = configuredTenantFilter;
+            }
+        }
 
         const allSubscriptions: AzureSubscription[] = [];
         let accountCount: number; // only used for logging
         try {
             this.suppressSignInEvents = true;
             // Get the list of tenants from each account (filtered or all)
-            const accounts = typeof filter === 'object' && filter.account ? [filter.account] : await vscode.authentication.getAccounts(getConfiguredAuthProviderId());
+            const accounts = isGetSubscriptionsAccountFilter(filter) ? [filter.account] : await vscode.authentication.getAccounts(getConfiguredAuthProviderId());
             accountCount = accounts.length;
             for (const account of accounts) {
-                for (const tenant of await this.getTenants(account)) {
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                    const tenantId = tenant.tenantId!;
+                const tenantIds = isGetSubscriptionsTenantFilter(filter) ? [filter.tenantId] : (await this.getTenants(account)).map(t => t.tenantId) as string[];
 
+                for (const tenantId of tenantIds) {
                     if (tenantIdsToFilterBy?.includes(tenantId) === false) {
                         continue;
                     }
