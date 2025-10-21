@@ -8,4 +8,5 @@ import type * as vscode from 'vscode';
 
 export interface AzureTenant extends TenantIdDescription {
     account: vscode.AuthenticationSessionAccountInformation;
+    tenantId: string; // Override to make required
 }

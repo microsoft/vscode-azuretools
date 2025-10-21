@@ -4,8 +4,8 @@
 *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from "vscode";
-import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from "./utils/configuredAzureEnv";
-import { isAuthenticationWwwAuthenticateRequest } from "./utils/isAuthenticationWwwAuthenticateRequest";
+import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from "./configuredAzureEnv";
+import { isAuthenticationWwwAuthenticateRequest } from "./isAuthenticationWwwAuthenticateRequest";
 
 function ensureEndingSlash(value: string): string {
     return value.endsWith('/') ? value : `${value}/`;

@@ -7,11 +7,12 @@ import type { SubscriptionClient } from '@azure/arm-resources-subscriptions';
 import type { TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
 import type { PipelineRequest } from '@azure/core-rest-pipeline';
 import type * as vscode from 'vscode';
-import type { AzureAuthentication } from './AzureAuthentication';
-import type { AzureSubscription } from './AzureSubscription';
-import type { AzureSubscriptionProvider, GetSubscriptionsFilter } from './AzureSubscriptionProvider';
-import type { AzureTenant } from './AzureTenant';
-import { getConfiguredAzureEnv } from './utils/configuredAzureEnv';
+import type { AzureAuthentication } from '../contracts/AzureAuthentication';
+import type { AzureSubscription } from '../contracts/AzureSubscription';
+import type { AzureSubscriptionProvider, GetOptions, GetSubscriptionsOptions, SignInOptions, TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
+import type { AzureTenant } from '../contracts/AzureTenant';
+import { getConfiguredAzureEnv } from '../utils/configuredAzureEnv';
+import { NotSignedInError } from '../utils/NotSignedInError';
 
 export interface AzureDevOpsSubscriptionProviderInitializer {
     /**
@@ -76,52 +77,69 @@ export class AzureDevOpsSubscriptionProvider implements AzureSubscriptionProvide
         this._CLIENT_ID = clientId;
     }
 
-    async getSubscriptions(_filter: boolean | GetSubscriptionsFilter): Promise<AzureSubscription[]> {
-        // ignore the filter setting because not every consumer of this provider will use the Resources extension
-        const results: AzureSubscription[] = [];
-        for (const tenant of await this.getTenants()) {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            const tenantId = tenant.tenantId!;
-            results.push(...await this.getSubscriptionsForTenant(tenantId));
+    /**
+     * @inheritdoc
+     */
+    public readonly onRefreshSuggested = () => { return { dispose: () => { /* empty */ } }; };
+
+    /**
+     * @inheritdoc
+     */
+    public async getAvailableSubscriptions(_options?: GetOptions): Promise<AzureSubscription[]> {
+        const allSubscriptions: AzureSubscription[] = [];
+
+        for (const account of await this.getAccounts()) {
+            for (const tenant of await this.getTenantsForAccount(account)) {
+                allSubscriptions.push(...await this.getSubscriptionsForTenant(tenant));
+            }
         }
-        const sortSubscriptions = (subscriptions: AzureSubscription[]): AzureSubscription[] =>
-            subscriptions.sort((a, b) => a.name.localeCompare(b.name));
 
-        return sortSubscriptions(results);
+        return allSubscriptions;
     }
 
-    public async isSignedIn(): Promise<boolean> {
-        return !!this._tokenCredential;
+    /**
+     * @inheritdoc
+     */
+    public async getAccounts(_options?: GetOptions): Promise<vscode.AuthenticationSessionAccountInformation[]> {
+        return [
+            {
+                id: 'test-account-id',
+                label: 'test-account',
+            }
+        ]
     }
 
-    public async signIn(): Promise<boolean> {
+    /**
+     * @inheritdoc
+     */
+    public async getUnauthenticatedTenants(_account: vscode.AuthenticationSessionAccountInformation, _options?: GetOptions): Promise<AzureTenant[]> {
+        // For DevOps federated service connection, there is only one tenant associated with the service principal, and we will be authenticated
+        return [];
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public async getTenantsForAccount(account: vscode.AuthenticationSessionAccountInformation, _options?: GetOptions): Promise<AzureTenant[]> {
+        return [{
+            tenantId: 'test-tenant-id',
+            account: account,
+        }]
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public async signIn(_tenant?: TenantIdAndAccount, _options?: SignInOptions): Promise<boolean> {
         this._tokenCredential = await getTokenCredential(this._SERVICE_CONNECTION_ID, this._DOMAIN, this._CLIENT_ID);
         return !!this._tokenCredential;
     }
 
-    public async signOut(): Promise<void> {
-        this._tokenCredential = undefined;
-    }
-
-    public async getTenants(): Promise<AzureTenant[]> {
-        return [{
-            tenantId: this._tokenCredential?.tenantId,
-            account: {
-                id: "test-account-id",
-                label: "test-account",
-            }
-        }];
-    }
-
     /**
-     * Gets the subscriptions for a given tenant.
-     *
-     * @param tenantId The tenant ID to get subscriptions for.
-     *
-     * @returns The list of subscriptions for the tenant.
+     * @inheritdoc
      */
-    private async getSubscriptionsForTenant(tenantId: string): Promise<AzureSubscription[]> {
-        const { client, credential, authentication } = await this.getSubscriptionClient(tenantId);
+    public async getSubscriptionsForTenant(tenant: TenantIdAndAccount, _options?: GetSubscriptionsOptions): Promise<AzureSubscription[]> {
+        const { client, credential, authentication } = await this.getSubscriptionClient();
         const environment = getConfiguredAzureEnv();
 
         const subscriptions: AzureSubscription[] = [];
@@ -136,28 +154,25 @@ export class AzureDevOpsSubscriptionProvider implements AzureSubscriptionProvide
                 name: subscription.displayName!,
                 subscriptionId: subscription.subscriptionId!,
                 /* eslint-enable @typescript-eslint/no-non-null-assertion */
-                tenantId,
-                account: {
-                    id: "test-account-id",
-                    label: "test-account",
-                },
+                tenantId: subscription.tenantId || tenant.tenantId,
+                account: tenant.account,
             });
         }
 
-        return subscriptions;
+        return subscriptions.sort((a, b) => a.name.localeCompare(b.name));
     }
 
     /**
      * Gets a fully-configured subscription client for a given tenant ID
      *
-     * @param tenantId (Optional) The tenant ID to get a client for
+     * @param scopes Optional scopes to request in the authentication token
      *
      * @returns A client, the credential used by the client, and the authentication function
      */
-    private async getSubscriptionClient(_tenantId?: string, scopes?: string[]): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
+    private async getSubscriptionClient(scopes?: string[]): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
         const armSubs = await import('@azure/arm-resources-subscriptions');
         if (!this._tokenCredential) {
-            throw new Error('Not signed in');
+            throw new NotSignedInError();
         }
 
         const accessToken = (await this._tokenCredential?.getToken("https://management.azure.com/.default"))?.token || '';
@@ -182,9 +197,6 @@ export class AzureDevOpsSubscriptionProvider implements AzureSubscriptionProvide
             }
         }
     }
-
-    public onDidSignIn: vscode.Event<void> = () => { return { dispose(): void { /*empty*/ } }; };
-    public onDidSignOut: vscode.Event<void> = () => { return { dispose(): void { /*empty*/ } }; };
 }
 
 /*
