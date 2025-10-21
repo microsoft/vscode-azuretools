@@ -235,13 +235,18 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
      */
     public async signIn(tenantId?: string, account?: vscode.AuthenticationSessionAccountInformation): Promise<boolean> {
         this.logger?.debug(`auth: Signing in (account="${account?.label ?? 'none'}") (tenantId="${tenantId ?? 'none'}")`);
-        const session = await getSessionFromVSCode([], tenantId, {
-            createIfNone: true,
-            // If no account is provided, then clear the session preference which tells VS Code to show the account picker
-            clearSessionPreference: !account,
-            account,
-        });
-        return !!session;
+        try {
+            this.suppressSignInEvents = true;
+            const session = await getSessionFromVSCode([], tenantId, {
+                createIfNone: true,
+                // If no account is provided, then clear the session preference which tells VS Code to show the account picker
+                clearSessionPreference: !account,
+                account,
+            });
+            return !!session;
+        } finally {
+            this.suppressSignInEvents = false;
+        }
     }
 
     /**
