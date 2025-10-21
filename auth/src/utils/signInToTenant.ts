@@ -4,20 +4,21 @@
 *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from "vscode";
+import { AzureAccount } from "../contracts/AzureAccount";
 import type { AzureSubscriptionProvider, TenantIdAndAccount } from "../contracts/AzureSubscriptionProvider";
 
 /**
  * Prompts user to select from a list of unauthenticated tenants.
  * Once selected, requests a new session from VS Code specifially for this tenant.
  */
-export async function signInToTenant(subscriptionProvider: AzureSubscriptionProvider, account: vscode.AuthenticationSessionAccountInformation): Promise<void> {
+export async function signInToTenant(subscriptionProvider: AzureSubscriptionProvider, account: AzureAccount): Promise<void> {
     const tenant = await pickTenant(subscriptionProvider, account);
     if (tenant) {
         await subscriptionProvider.signIn(tenant);
     }
 }
 
-async function pickTenant(subscriptionProvider: AzureSubscriptionProvider, account: vscode.AuthenticationSessionAccountInformation): Promise<TenantIdAndAccount | undefined> {
+async function pickTenant(subscriptionProvider: AzureSubscriptionProvider, account: AzureAccount): Promise<TenantIdAndAccount | undefined> {
     const pick = await vscode.window.showQuickPick(getPicks(subscriptionProvider, account), {
         placeHolder: vscode.l10n.t('Select a Tenant (Directory) to Sign In To'),
         matchOnDescription: true, // allow searching by tenantId
@@ -30,7 +31,7 @@ interface TenantQuickPickItem extends vscode.QuickPickItem {
     tenant: TenantIdAndAccount;
 }
 
-async function getPicks(subscriptionProvider: AzureSubscriptionProvider, account: vscode.AuthenticationSessionAccountInformation): Promise<TenantQuickPickItem[]> {
+async function getPicks(subscriptionProvider: AzureSubscriptionProvider, account: AzureAccount): Promise<TenantQuickPickItem[]> {
     const unauthenticatedTenants = await subscriptionProvider.getUnauthenticatedTenants(account);
     const duplicateTenants: Set<string | undefined> = new Set(
         unauthenticatedTenants

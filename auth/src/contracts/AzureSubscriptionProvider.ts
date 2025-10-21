@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type * as vscode from 'vscode';
+import type { AzureAccount } from './AzureAccount';
 import type { AzureSubscription } from './AzureSubscription';
 import type { AzureTenant } from './AzureTenant';
 import type { NotSignedInError } from '../utils/NotSignedInError'; // eslint-disable-line @typescript-eslint/no-unused-vars -- It is used in the doc comments
@@ -52,7 +53,7 @@ export interface AzureSubscriptionProvider {
      * @throws A {@link NotSignedInError} if the user is not signed in to any accounts.
      * @throws A {@link vscode.CancellationError} if the operation is cancelled via the provided cancellation token.
      */
-    getAccounts(options?: GetOptions): Promise<vscode.AuthenticationSessionAccountInformation[]>;
+    getAccounts(options?: GetOptions): Promise<AzureAccount[]>;
 
     /**
      * Returns a list of all unauthenticated tenants for a given account.
@@ -63,7 +64,7 @@ export interface AzureSubscriptionProvider {
      * @throws A {@link NotSignedInError} if the user is not signed in to the specified account.
      * @throws A {@link vscode.CancellationError} if the operation is cancelled via the provided cancellation token.
      */
-    getUnauthenticatedTenants(account: vscode.AuthenticationSessionAccountInformation, options?: GetOptions): Promise<AzureTenant[]>;
+    getUnauthenticatedTenants(account: AzureAccount, options?: GetOptions): Promise<AzureTenant[]>;
 
     /**
      * Returns a list of all tenants for a given account.
@@ -74,7 +75,7 @@ export interface AzureSubscriptionProvider {
      * @throws A {@link NotSignedInError} if the user is not signed in to the specified account.
      * @throws A {@link vscode.CancellationError} if the operation is cancelled via the provided cancellation token.
      */
-    getTenantsForAccount(account: vscode.AuthenticationSessionAccountInformation, options?: GetOptions): Promise<AzureTenant[]>;
+    getTenantsForAccount(account: AzureAccount, options?: GetOptions): Promise<AzureTenant[]>;
 
     /**
      * Returns a list of all {@link AzureSubscription}s for a given tenant and account.

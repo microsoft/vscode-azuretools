@@ -6,6 +6,7 @@
 import type { SubscriptionClient } from '@azure/arm-resources-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
 import type { GetTokenOptions, TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
 import * as vscode from 'vscode';
+import type { AzureAccount } from '../contracts/AzureAccount';
 import type { AzureAuthentication } from '../contracts/AzureAuthentication';
 import type { AzureSubscription, SubscriptionId, TenantId } from '../contracts/AzureSubscription';
 import type { AzureSubscriptionProvider, GetOptions, GetSubscriptionsOptions, SignInOptions, TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
@@ -120,12 +121,12 @@ export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvide
         return availableSubscriptions.sort((a, b) => a.name.localeCompare(b.name));
     }
 
-    private readonly accountCache: Set<vscode.AuthenticationSessionAccountInformation> = new Set();
+    private readonly accountCache: Set<AzureAccount> = new Set();
 
     /**
      * @inheritdoc
      */
-    public async getAccounts(options: GetOptions = DefaultGetOptions): Promise<vscode.AuthenticationSessionAccountInformation[]> {
+    public async getAccounts(options: GetOptions = DefaultGetOptions): Promise<AzureAccount[]> {
         if (options.noCache) {
             this.accountCache.clear();
         }
@@ -158,7 +159,7 @@ export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvide
         return results.sort((a, b) => a.label.localeCompare(b.label));
     }
 
-    private async getAllAccountsImpl(options: GetOptions): Promise<vscode.AuthenticationSessionAccountInformation[]> {
+    private async getAllAccountsImpl(options: GetOptions): Promise<AzureAccount[]> {
         try {
             this.logger?.debug('auth: Fetching accounts');
             return Array.from(await vscode.authentication.getAccounts(getConfiguredAuthProviderId()));
@@ -171,7 +172,7 @@ export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvide
     /**
      * @inheritdoc
      */
-    public async getUnauthenticatedTenants(account: vscode.AuthenticationSessionAccountInformation, options?: GetOptions): Promise<AzureTenant[]> {
+    public async getUnauthenticatedTenants(account: AzureAccount, options?: GetOptions): Promise<AzureTenant[]> {
         const allTenants = await this.getTenantsForAccount(account, { ...options, all: true });
 
         const unauthenticatedTenants: AzureTenant[] = [];
@@ -203,7 +204,7 @@ export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvide
     /**
      * @inheritdoc
      */
-    public async getTenantsForAccount(account: vscode.AuthenticationSessionAccountInformation, options: GetOptions = DefaultGetOptions): Promise<AzureTenant[]> {
+    public async getTenantsForAccount(account: AzureAccount, options: GetOptions = DefaultGetOptions): Promise<AzureTenant[]> {
         if (options.noCache) {
             this.tenantCache.clear();
         }
@@ -238,7 +239,7 @@ export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvide
         });
     }
 
-    private async getAllTenantsForAccountImpl(account: vscode.AuthenticationSessionAccountInformation, options: GetOptions): Promise<AzureTenant[]> {
+    private async getAllTenantsForAccountImpl(account: AzureAccount, options: GetOptions): Promise<AzureTenant[]> {
         try {
             this.logger?.debug(`auth: Fetching tenants for account '${account.id}'`);
 

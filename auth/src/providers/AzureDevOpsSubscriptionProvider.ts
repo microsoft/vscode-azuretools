@@ -6,7 +6,7 @@
 import type { SubscriptionClient } from '@azure/arm-resources-subscriptions';
 import type { TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
 import type { PipelineRequest } from '@azure/core-rest-pipeline';
-import type * as vscode from 'vscode';
+import type { AzureAccount } from '../contracts/AzureAccount';
 import type { AzureAuthentication } from '../contracts/AzureAuthentication';
 import type { AzureSubscription } from '../contracts/AzureSubscription';
 import type { AzureSubscriptionProvider, GetOptions, GetSubscriptionsOptions, SignInOptions, TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
@@ -100,7 +100,7 @@ export class AzureDevOpsSubscriptionProvider implements AzureSubscriptionProvide
     /**
      * @inheritdoc
      */
-    public async getAccounts(_options?: GetOptions): Promise<vscode.AuthenticationSessionAccountInformation[]> {
+    public async getAccounts(_options?: GetOptions): Promise<AzureAccount[]> {
         return [
             {
                 id: 'test-account-id',
@@ -112,7 +112,7 @@ export class AzureDevOpsSubscriptionProvider implements AzureSubscriptionProvide
     /**
      * @inheritdoc
      */
-    public async getUnauthenticatedTenants(_account: vscode.AuthenticationSessionAccountInformation, _options?: GetOptions): Promise<AzureTenant[]> {
+    public async getUnauthenticatedTenants(_account: AzureAccount, _options?: GetOptions): Promise<AzureTenant[]> {
         // For DevOps federated service connection, there is only one tenant associated with the service principal, and we will be authenticated
         return [];
     }
@@ -120,7 +120,7 @@ export class AzureDevOpsSubscriptionProvider implements AzureSubscriptionProvide
     /**
      * @inheritdoc
      */
-    public async getTenantsForAccount(account: vscode.AuthenticationSessionAccountInformation, _options?: GetOptions): Promise<AzureTenant[]> {
+    public async getTenantsForAccount(account: AzureAccount, _options?: GetOptions): Promise<AzureTenant[]> {
         return [{
             tenantId: 'test-tenant-id',
             account: account,
