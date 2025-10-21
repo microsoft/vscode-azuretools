@@ -1,0 +1,325 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+import type { SubscriptionClient } from '@azure/arm-resources-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
+import type { GetTokenOptions, TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
+import * as vscode from 'vscode';
+import type { AzureAccount } from '../contracts/AzureAccount';
+import type { AzureAuthentication } from '../contracts/AzureAuthentication';
+import type { AzureSubscription } from '../contracts/AzureSubscription';
+import type { AzureSubscriptionProvider, GetOptions, GetSubscriptionsOptions, SignInOptions, TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
+import type { AzureTenant } from '../contracts/AzureTenant';
+import { getSessionFromVSCode } from '../utils/getSessionFromVSCode';
+import { isNotSignedInError, NotSignedInError } from '../utils/NotSignedInError';
+import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from '../utils/configuredAzureEnv';
+import { isAuthenticationWwwAuthenticateRequest } from '../utils/isAuthenticationWwwAuthenticateRequest';
+
+const EventDebounce = 5 * 1000; // 5 seconds minimum between `onRefreshSuggested` events
+const EventSilenceTime = 5 * 1000; // 5 seconds after sign-in to silence `onRefreshSuggested` events
+
+let armSubs: typeof import('@azure/arm-resources-subscriptions') | undefined;
+
+/**
+ * Base class for Azure subscription providers that use VS Code authentication.
+ * Handles actual communication with Azure via the Azure SDK, as well as
+ * controlling the firing of `onRefreshSuggested` events.
+ */
+export abstract class AzureSubscriptionProviderBase implements AzureSubscriptionProvider {
+    /**
+     * Constructs a new {@link AzureSubscriptionProviderBase}.
+     * @param logger (Optional) A logger to record information to
+     */
+    public constructor(protected readonly logger?: vscode.LogOutputChannel) { }
+
+    private lastRefreshSuggestedTime: number = 0;
+    private suppressRefreshSuggestedEvents: boolean = false;
+
+    /**
+     * @inheritdoc
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Want to match the VSCode API
+    public onRefreshSuggested(callback: () => any, thisArg?: any, disposables?: vscode.Disposable[]): vscode.Disposable {
+        const disposable = vscode.authentication.onDidChangeSessions((evt) => {
+            if (evt.provider.id !== getConfiguredAuthProviderId()) {
+                // If it's not for the configured provider, ignore it
+                return;
+            }
+
+            if (this.suppressRefreshSuggestedEvents || Date.now() < this.lastRefreshSuggestedTime + EventDebounce) {
+                // Suppress and/or debounce events to avoid flooding
+                return;
+            }
+
+            this.logger?.debug('auth: Firing onRefreshSuggested event');
+
+            // Call the callback asynchronously to avoid potential issues
+            const timeout = setTimeout(() => {
+                clearTimeout(timeout);
+                this.lastRefreshSuggestedTime = Date.now();
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+                void callback.bind(thisArg)();
+            }, 0);
+        });
+
+        disposables?.push(disposable);
+        return disposable;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public async signIn(tenant?: TenantIdAndAccount, options: SignInOptions = DefaultSignInOptions): Promise<boolean> {
+        this.silenceRefreshEvents();
+        const session = await getSessionFromVSCode(
+            undefined,
+            tenant?.tenantId,
+            {
+                account: tenant?.account,
+                clearSessionPreference: !!options.clearSessionPreference,
+                createIfNone: !options.silent,
+                silent: !!options.silent,
+            }
+        );
+
+        if (!options.silent) {
+            // Interactive sign in can take a while, so silence events for a bit longer
+            this.silenceRefreshEvents();
+        }
+
+        return !!session;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public async getAvailableSubscriptions(options: GetOptions = DefaultGetSubscriptionsOptions): Promise<AzureSubscription[]> {
+        const availableSubscriptions: AzureSubscription[] = [];
+
+        // Intentionally not catching any errors from getAccounts(), since we want to rethrow NotSignedInError if it is thrown
+        for (const account of await this.getAccounts(options)) {
+            try {
+                for (const tenant of await this.getTenantsForAccount(account, options)) {
+                    try {
+                        availableSubscriptions.push(...await this.getSubscriptionsForTenant(tenant, options));
+                    } catch (err) {
+                        if (isNotSignedInError(err)) {
+                            this.logger?.debug(`auth: Skipping tenant '${tenant.id}' for account '${account.id}' because it is not signed in`);
+                        } else {
+                            this.remapAndLogError(err, options.token);
+                        }
+                    }
+                }
+            } catch (err) {
+                if (isNotSignedInError(err)) {
+                    this.logger?.debug(`auth: Skipping account '${account.id}' because it is not signed in`);
+                    continue;
+                } else {
+                    this.remapAndLogError(err, options.token);
+                }
+            }
+        }
+
+        // Deduping and caching are handled already so nothing extra is needed here
+        return availableSubscriptions.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public async getAccounts(options: GetOptions): Promise<AzureAccount[]> {
+        try {
+            this.logger?.debug('auth: Fetching accounts');
+            return Array.from(await vscode.authentication.getAccounts(getConfiguredAuthProviderId()));
+        } catch (err) {
+            // Cancellation is not actually supported by vscode.authentication.getAccounts, but just in case it is added in the future...
+            this.remapAndLogError(err, options.token);
+        }
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public async getUnauthenticatedTenants(account: AzureAccount, options?: GetOptions): Promise<AzureTenant[]> {
+        const allTenants = await this.getTenantsForAccount(account, { ...options, all: true });
+
+        const unauthenticatedTenants: AzureTenant[] = [];
+        for (const tenant of allTenants) {
+            this.silenceRefreshEvents();
+            const session = await getSessionFromVSCode(
+                undefined,
+                tenant.tenantId,
+                {
+                    account: account,
+                    createIfNone: false,
+                    silent: true,
+                }
+            );
+
+            if (!session) {
+                unauthenticatedTenants.push(tenant);
+            }
+        }
+
+        return unauthenticatedTenants;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public async getTenantsForAccount(account: AzureAccount, options: GetOptions): Promise<AzureTenant[]> {
+        try {
+            this.logger?.debug(`auth: Fetching tenants for account '${account.id}'`);
+
+            const { client } = await this.getSubscriptionClient({ account: account, tenantId: undefined });
+
+            const allTenants: AzureTenant[] = [];
+
+            for await (const tenant of client.tenants.list({ abortSignal: getSignalForToken(options.token) })) {
+                allTenants.push({
+                    ...tenant,
+                    tenantId: tenant.tenantId!, // eslint-disable-line @typescript-eslint/no-non-null-assertion -- This is never null in practice
+                    account: account,
+                });
+            }
+
+            return allTenants;
+        } catch (err) {
+            this.remapAndLogError(err, options.token);
+        }
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public async getSubscriptionsForTenant(tenant: TenantIdAndAccount, options: GetSubscriptionsOptions): Promise<AzureSubscription[]> {
+        try {
+            this.logger?.debug(`auth: Fetching subscriptions for account '${tenant.account.id}' and tenant '${tenant.tenantId}'`);
+
+            const { client, credential, authentication } = await this.getSubscriptionClient(tenant);
+            const environment = getConfiguredAzureEnv();
+
+            const allSubs: AzureSubscription[] = [];
+
+            for await (const subscription of client.subscriptions.list({ abortSignal: getSignalForToken(options.token) })) {
+                allSubs.push({
+                    authentication: authentication,
+                    environment: environment,
+                    credential: credential,
+                    isCustomCloud: environment.isCustomCloud,
+                    /* eslint-disable @typescript-eslint/no-non-null-assertion */
+                    name: subscription.displayName!,
+                    subscriptionId: subscription.subscriptionId!,
+                    /* eslint-enable @typescript-eslint/no-non-null-assertion */
+                    tenantId: tenant.tenantId,
+                    account: tenant.account,
+                });
+            }
+
+            return allSubs;
+        } catch (err) {
+            this.remapAndLogError(err, options.token);
+        }
+    }
+
+    private async getSubscriptionClient(tenant: Partial<TenantIdAndAccount>): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
+        const credential: TokenCredential = {
+            getToken: async (scopes: string | string[], options?: GetTokenOptions) => {
+                this.silenceRefreshEvents();
+                const session = await getSessionFromVSCode(scopes, options?.tenantId || tenant.tenantId, { createIfNone: false, silent: true, account: tenant.account });
+                if (!session) {
+                    throw new NotSignedInError();
+                }
+                return {
+                    token: session.accessToken,
+                    expiresOnTimestamp: 0, // TODO: can we get the actual expiry? Certainly not from any encrypted tokens
+                };
+            }
+        }
+
+        const configuredAzureEnv = getConfiguredAzureEnv();
+        const endpoint = configuredAzureEnv.resourceManagerEndpointUrl;
+
+        armSubs ??= await import('@azure/arm-resources-subscriptions');
+
+        return {
+            client: new armSubs.SubscriptionClient(credential, { endpoint }),
+            credential: credential,
+            authentication: {
+                getSession: async () => {
+                    this.silenceRefreshEvents();
+                    const session = await getSessionFromVSCode(undefined, tenant.tenantId, { createIfNone: false, silent: true, account: tenant.account });
+                    if (!session) {
+                        throw new NotSignedInError();
+                    }
+                    return session;
+                },
+                getSessionWithScopes: async (scopeListOrRequest) => {
+                    this.silenceRefreshEvents();
+                    // in order to handle a challenge, we must enable createIfNone so
+                    // that we can prompt the user to step-up their session with MFA
+                    // otherwise, never prompt the user
+                    const session = await getSessionFromVSCode(scopeListOrRequest, tenant.tenantId, { ...(isAuthenticationWwwAuthenticateRequest(scopeListOrRequest) ? { createIfNone: true } : { silent: true }), account: tenant.account });
+                    if (!session) {
+                        throw new NotSignedInError();
+                    }
+                    return session;
+                },
+            }
+        };
+    }
+
+    private timeout: NodeJS.Timeout | undefined;
+    private silenceRefreshEvents(): void {
+        this.suppressRefreshSuggestedEvents = true;
+
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+            this.timeout = undefined;
+        }
+
+        this.timeout = setTimeout(() => {
+            clearTimeout(this.timeout);
+            this.timeout = undefined;
+            this.suppressRefreshSuggestedEvents = false;
+        }, EventSilenceTime);
+    }
+
+    private remapAndLogError(err: unknown, token: vscode.CancellationToken | undefined): never {
+        if (token?.isCancellationRequested) {
+            throw new vscode.CancellationError();
+        }
+        this.logger?.error(`auth: Error occurred: ${err}`);
+        throw err;
+    }
+}
+
+export const DefaultGetOptions: GetOptions = {
+    all: false,
+    noCache: false,
+};
+
+export const DefaultGetSubscriptionsOptions: GetSubscriptionsOptions = {
+    ...DefaultGetOptions,
+    dedupe: true,
+};
+
+const DefaultSignInOptions: SignInOptions = {
+    clearSessionPreference: false,
+    silent: false,
+};
+
+function getSignalForToken(token: vscode.CancellationToken | undefined): AbortSignal | undefined {
+    if (!token) {
+        return undefined;
+    }
+
+    const controller = new AbortController();
+    const disposable = token.onCancellationRequested(() => {
+        disposable.dispose();
+        controller.abort();
+    });
+
+    return controller.signal;
+}
