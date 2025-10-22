@@ -225,7 +225,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                     name: subscription.displayName!,
                     subscriptionId: subscription.subscriptionId!,
                     /* eslint-enable @typescript-eslint/no-non-null-assertion */
-                    tenantId: tenant.tenantId,
+                    tenantId: subscription.tenantId || tenant.tenantId,
                     account: tenant.account,
                 });
             }
