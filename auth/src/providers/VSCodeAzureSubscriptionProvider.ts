@@ -104,7 +104,6 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
             if (a.displayName && b.displayName) {
                 return a.displayName.localeCompare(b.displayName);
             }
-
             return a.tenantId.localeCompare(b.tenantId);
         });
     }
