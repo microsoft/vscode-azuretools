@@ -142,8 +142,6 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
         return results.sort((a, b) => a.name.localeCompare(b.name));
     }
 
-
-
     /**
      * Gets the account filters that are configured in `azureResourceGroups.selectedSubscriptions`. To
      * override the settings with a custom filter, implement a child class with filter methods overridden.
