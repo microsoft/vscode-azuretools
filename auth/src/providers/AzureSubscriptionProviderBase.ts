@@ -14,6 +14,7 @@ import type { AzureTenant } from '../contracts/AzureTenant';
 import { getSessionFromVSCode } from '../utils/getSessionFromVSCode';
 import { isNotSignedInError, NotSignedInError } from '../utils/NotSignedInError';
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from '../utils/configuredAzureEnv';
+import { dedupeSubscriptions } from '../utils/dedupeSubscriptions';
 import { isAuthenticationWwwAuthenticateRequest } from '../utils/isAuthenticationWwwAuthenticateRequest';
 
 const EventDebounce = 5 * 1000; // 5 seconds minimum between `onRefreshSuggested` events
@@ -39,8 +40,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
     /**
      * @inheritdoc
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Want to match the VSCode API
-    public onRefreshSuggested(callback: () => any, thisArg?: any, disposables?: vscode.Disposable[]): vscode.Disposable {
+    public onRefreshSuggested(callback: () => any, thisArg?: any, disposables?: vscode.Disposable[]): vscode.Disposable { // eslint-disable-line @typescript-eslint/no-explicit-any -- Want to match the VSCode API
         const disposable = vscode.authentication.onDidChangeSessions((evt) => {
             if (evt.provider.id !== getConfiguredAuthProviderId()) {
                 // If it's not for the configured provider, ignore it
@@ -97,32 +97,45 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
     public async getAvailableSubscriptions(options: GetOptions = DefaultGetSubscriptionsOptions): Promise<AzureSubscription[]> {
         const availableSubscriptions: AzureSubscription[] = [];
 
-        // Intentionally not catching any errors from getAccounts(), since we want to rethrow NotSignedInError if it is thrown
-        for (const account of await this.getAccounts(options)) {
-            try {
-                for (const tenant of await this.getTenantsForAccount(account, options)) {
-                    try {
-                        availableSubscriptions.push(...await this.getSubscriptionsForTenant(tenant, options));
-                    } catch (err) {
-                        if (isNotSignedInError(err)) {
-                            this.logger?.debug(`auth: Skipping tenant '${tenant.id}' for account '${account.id}' because it is not signed in`);
-                        } else {
-                            this.remapAndLogError(err, options.token);
+        try {
+            const accounts = await this.getAccounts(options);
+
+            // Parallelize fetching tenants for all accounts
+            const tenantPromises = accounts.map(async (account) => {
+                try {
+                    const tenants = await this.getTenantsForAccount(account, options);
+
+                    // Parallelize fetching subscriptions for all tenants of this account
+                    const subscriptionPromises = tenants.map(async (tenant) => {
+                        try {
+                            const subscriptions = await this.getSubscriptionsForTenant(tenant, options);
+                            availableSubscriptions.push(...subscriptions);
+                        } catch (err) {
+                            if (isNotSignedInError(err)) {
+                                this.logger?.debug(`auth: Skipping tenant '${tenant.id}' for account '${account.id}' because it is not signed in`);
+                                return;
+                            }
+                            throw err;
                         }
+                    });
+
+                    await Promise.all(subscriptionPromises);
+                } catch (err) {
+                    if (isNotSignedInError(err)) {
+                        this.logger?.debug(`auth: Skipping account '${account.id}' because it is not signed in`);
+                        return;
                     }
+                    throw err;
                 }
-            } catch (err) {
-                if (isNotSignedInError(err)) {
-                    this.logger?.debug(`auth: Skipping account '${account.id}' because it is not signed in`);
-                    continue;
-                } else {
-                    this.remapAndLogError(err, options.token);
-                }
-            }
+            });
+
+            await Promise.all(tenantPromises);
+        } catch (err) {
+            // Intentionally not catching NotSignedInError here, if it is thrown by getAccounts()
+            this.remapLogRethrow(err, options.token);
         }
 
-        // Deduping and caching are handled already so nothing extra is needed here
-        return availableSubscriptions.sort((a, b) => a.name.localeCompare(b.name));
+        return dedupeSubscriptions(availableSubscriptions);
     }
 
     /**
@@ -134,7 +147,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
             return Array.from(await vscode.authentication.getAccounts(getConfiguredAuthProviderId()));
         } catch (err) {
             // Cancellation is not actually supported by vscode.authentication.getAccounts, but just in case it is added in the future...
-            this.remapAndLogError(err, options.token);
+            this.remapLogRethrow(err, options.token);
         }
     }
 
@@ -186,7 +199,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
 
             return allTenants;
         } catch (err) {
-            this.remapAndLogError(err, options.token);
+            this.remapLogRethrow(err, options.token);
         }
     }
 
@@ -219,7 +232,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
 
             return allSubs;
         } catch (err) {
-            this.remapAndLogError(err, options.token);
+            this.remapLogRethrow(err, options.token);
         }
     }
 
@@ -286,7 +299,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
         }, EventSilenceTime);
     }
 
-    private remapAndLogError(err: unknown, token: vscode.CancellationToken | undefined): never {
+    private remapLogRethrow(err: unknown, token: vscode.CancellationToken | undefined): never {
         if (token?.isCancellationRequested) {
             throw new vscode.CancellationError();
         }
