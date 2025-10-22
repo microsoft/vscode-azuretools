@@ -3,19 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { SubscriptionClient } from '@azure/arm-resources-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
 import type { GetTokenOptions, TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
+import type { SubscriptionClient } from '@azure/arm-resources-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
 import * as vscode from 'vscode';
 import type { AzureAccount } from '../contracts/AzureAccount';
 import type { AzureAuthentication } from '../contracts/AzureAuthentication';
 import type { AzureSubscription } from '../contracts/AzureSubscription';
 import type { AzureSubscriptionProvider, GetOptions, GetSubscriptionsOptions, SignInOptions, TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
 import type { AzureTenant } from '../contracts/AzureTenant';
-import { getSessionFromVSCode } from '../utils/getSessionFromVSCode';
-import { isNotSignedInError, NotSignedInError } from '../utils/NotSignedInError';
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from '../utils/configuredAzureEnv';
 import { dedupeSubscriptions } from '../utils/dedupeSubscriptions';
+import { getSessionFromVSCode } from '../utils/getSessionFromVSCode';
 import { isAuthenticationWwwAuthenticateRequest } from '../utils/isAuthenticationWwwAuthenticateRequest';
+import { isNotSignedInError, NotSignedInError } from '../utils/NotSignedInError';
 
 const EventDebounce = 5 * 1000; // 5 seconds minimum between `onRefreshSuggested` events
 const EventSilenceTime = 5 * 1000; // 5 seconds after sign-in to silence `onRefreshSuggested` events
