@@ -72,12 +72,14 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
      * @inheritdoc
      */
     public override async getTenantsForAccount(account: AzureAccount, options: GetOptions = DefaultGetOptions): Promise<AzureTenant[]> {
+        const cacheKey = account.id.toLowerCase();
+
+        // If needed, delete the cache for this account
         if (options.noCache) {
-            this.tenantCache.clear();
+            this.tenantCache.delete(cacheKey);
         }
 
         // If needed, refill the cache
-        const cacheKey = account.id.toLowerCase();
         if (!this.tenantCache.has(cacheKey)) {
             const tenants = await super.getTenantsForAccount(account, options);
             this.tenantCache.set(cacheKey, tenants);
@@ -97,6 +99,7 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
             }
         }
 
+        // Finally, sort
         return results.sort((a, b) => {
             if (a.displayName && b.displayName) {
                 return a.displayName.localeCompare(b.displayName);
@@ -110,12 +113,14 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
      * @inheritdoc
      */
     public override async getSubscriptionsForTenant(tenant: TenantIdAndAccount, options: GetSubscriptionsOptions = DefaultGetSubscriptionsOptions): Promise<AzureSubscription[]> {
+        const cacheKey = `${tenant.account.id.toLowerCase()}/${tenant.tenantId.toLowerCase()}`;
+
+        // If needed, delete the cache for this tenant
         if (options.noCache) {
-            this.subscriptionCache.clear();
+            this.subscriptionCache.delete(cacheKey);
         }
 
         // If needed, refill the cache
-        const cacheKey = `${tenant.account.id.toLowerCase()}/${tenant.tenantId.toLowerCase()}`;
         if (!this.subscriptionCache.has(cacheKey)) {
             const subscriptions = await super.getSubscriptionsForTenant(tenant, options);
             this.subscriptionCache.set(cacheKey, subscriptions);
@@ -139,6 +144,7 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
             results = dedupeSubscriptions(results);
         }
 
+        // Finally, sort
         return results.sort((a, b) => a.name.localeCompare(b.name));
     }
 
@@ -167,7 +173,6 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
     protected getTenantFilters(): Promise<TenantId[]> {
         const config = vscode.workspace.getConfiguration('azureResourceGroups');
         const fullSubscriptionIds = config.get<string[]>('selectedSubscriptions', []);
-
         return Promise.resolve(fullSubscriptionIds.map(id => id.split('/')[0].toLowerCase()));
     }
 
@@ -182,7 +187,6 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
     protected getSubscriptionFilters(): Promise<SubscriptionId[]> {
         const config = vscode.workspace.getConfiguration('azureResourceGroups');
         const fullSubscriptionIds = config.get<string[]>('selectedSubscriptions', []);
-
         return Promise.resolve(fullSubscriptionIds.map(id => id.split('/')[1].toLowerCase()));
     }
 }
