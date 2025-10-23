@@ -5,4 +5,7 @@
 
 import type * as vscode from 'vscode';
 
+/**
+ * A shortcut type for {@link vscode.AuthenticationSessionAccountInformation}
+ */
 export type AzureAccount = Readonly<vscode.AuthenticationSessionAccountInformation>;
