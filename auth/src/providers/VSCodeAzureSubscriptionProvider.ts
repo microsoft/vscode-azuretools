@@ -9,7 +9,6 @@ import type { AzureSubscription, SubscriptionId, TenantId } from '../contracts/A
 import type { GetOptions, GetSubscriptionsOptions, TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
 import type { AzureTenant } from '../contracts/AzureTenant';
 import { dedupeSubscriptions } from '../utils/dedupeSubscriptions';
-import { NotSignedInError } from '../utils/NotSignedInError';
 import { AzureSubscriptionProviderBase, DefaultGetOptions, DefaultGetSubscriptionsOptions } from './AzureSubscriptionProviderBase';
 
 /**
@@ -43,13 +42,8 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
         // If needed, refill the cache
         if (this.accountCache.size === 0) {
             const accounts = await super.getAccounts(options);
-            if (accounts.length === 0) {
-                this.logger?.debug('auth: No accounts found');
-                throw new NotSignedInError();
-            } else {
-                accounts.forEach(account => this.accountCache.add(account));
-                this.logger?.debug(`auth: Cached ${accounts.length} accounts`);
-            }
+            accounts.forEach(account => this.accountCache.add(account));
+            this.logger?.debug(`auth: Cached ${accounts.length} accounts`);
         } else {
             this.logger?.debug('auth: Using cached accounts');
         }
@@ -64,6 +58,8 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
                 results = results.filter(account => accountFilters.includes(account.id.toLowerCase()));
             }
         }
+
+        this.logger?.debug(`auth: Returning ${results.length} accounts.`);
 
         return results.sort((a, b) => a.label.localeCompare(b.label));
     }
@@ -99,6 +95,8 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
             }
         }
 
+        this.logger?.debug(`auth: Returning ${results.length} tenants for account '${account.id}'.`);
+
         // Finally, sort
         return results.sort((a, b) => {
             if (a.displayName && b.displayName) {
@@ -125,7 +123,7 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
             this.subscriptionCache.set(cacheKey, subscriptions);
             this.logger?.debug(`auth: Cached ${subscriptions.length} subscriptions for account '${tenant.account.id}' and tenant '${tenant.tenantId}'`);
         } else {
-            this.logger?.debug(`auth: Using cached subscriptions for account '${account.id}' and tenant '${tenant.tenantId}'`);
+            this.logger?.debug(`auth: Using cached subscriptions for account '${tenant.account.id}' and tenant '${tenant.tenantId}'`);
         }
 
         let results: AzureSubscription[] = this.subscriptionCache.get(cacheKey)!; // eslint-disable-line @typescript-eslint/no-non-null-assertion -- We just filled it
@@ -145,6 +143,8 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
             results = dedupeSubscriptions(results);
         }
 
+        this.logger?.debug(`auth: Returning ${results.length} subscriptions for account '${tenant.account.id}' and tenant '${tenant.tenantId}'.`);
+
         // Finally, sort
         return results.sort((a, b) => a.name.localeCompare(b.name));
     }
@@ -159,7 +159,6 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
      */
     protected getAccountFilters(): Promise<string[]> {
         // TODO: implement account filtering based on configuration if needed
-        // TODO: cannot have PII in the settings so it has to be an ID--test that
         return Promise.resolve([]);
     }
 

@@ -14,6 +14,7 @@ import type { AzureTenant } from '../contracts/AzureTenant';
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from '../utils/configuredAzureEnv';
 import { dedupeSubscriptions } from '../utils/dedupeSubscriptions';
 import { getSessionFromVSCode } from '../utils/getSessionFromVSCode';
+import { getSignalForToken } from '../utils/getSignalForToken';
 import { isAuthenticationWwwAuthenticateRequest } from '../utils/isAuthenticationWwwAuthenticateRequest';
 import { isNotSignedInError, NotSignedInError } from '../utils/NotSignedInError';
 
@@ -149,7 +150,14 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
     public async getAccounts(options: GetOptions): Promise<AzureAccount[]> {
         try {
             this.logger?.debug('auth: Fetching accounts');
-            return Array.from(await vscode.authentication.getAccounts(getConfiguredAuthProviderId()));
+            const results = await vscode.authentication.getAccounts(getConfiguredAuthProviderId());
+
+            if (results.length === 0) {
+                this.logger?.debug('auth: No accounts found');
+                throw new NotSignedInError();
+            }
+
+            return Array.from(results);
         } catch (err) {
             // Cancellation is not actually supported by vscode.authentication.getAccounts, but just in case it is added in the future...
             this.remapLogRethrow(err, options.token);
@@ -327,17 +335,3 @@ const DefaultSignInOptions: SignInOptions = {
     clearSessionPreference: false,
     silent: false,
 };
-
-function getSignalForToken(token: vscode.CancellationToken | undefined): AbortSignal | undefined {
-    if (!token) {
-        return undefined;
-    }
-
-    const controller = new AbortController();
-    const disposable = token.onCancellationRequested(() => {
-        disposable.dispose();
-        controller.abort();
-    });
-
-    return controller.signal;
-}
