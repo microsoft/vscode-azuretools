@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createTestActionContext } from '@microsoft/vscode-azext-dev';
 import * as assert from 'assert';
 import { ContextValueFilterQuickPickOptions, IActionContext, QuickPickWizardContext } from '../../index';
+import { createTestActionContext } from '../../src';
 import { ContextValueQuickPickStep } from '../../src/pickTreeItem/contextValue/ContextValueQuickPickStep';
 import { getLastNode } from '../../src/pickTreeItem/getLastNode';
 import { createContextValue } from '../../src/utils/contextUtils';
