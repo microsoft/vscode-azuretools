@@ -11,6 +11,7 @@ parameters:
       - microsoft-vscode-azext-azureappsettings
       - microsoft-vscode-azext-azureauth
       - microsoft-vscode-azext-azureutils
+      - microsoft-vscode-azext-eng
       - microsoft-vscode-azext-dev
       - microsoft-eslint-config-azuretools
       - microsoft-vscode-azext-github

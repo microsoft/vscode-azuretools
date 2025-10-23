@@ -10,9 +10,10 @@
     "files.insertFinalNewline": true,
     "files.trimTrailingWhitespace": true,
     "search.exclude": {
-        "out": true,
+        "**/out": true,
+        "**/dist": true,
         "**/node_modules": true,
-        ".vscode-test": true
+        "**/.vscode-test": true
     },
     "typescript.preferences.importModuleSpecifier": "relative",
     "typescript.tsdk": "node_modules/typescript/lib",

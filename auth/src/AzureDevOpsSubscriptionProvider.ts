@@ -6,11 +6,11 @@
 import type { SubscriptionClient } from '@azure/arm-resources-subscriptions';
 import type { TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
 import type { PipelineRequest } from '@azure/core-rest-pipeline';
-import { Disposable, Event } from 'vscode';
-import { AzureAuthentication } from './AzureAuthentication';
-import { AzureSubscription } from './AzureSubscription';
-import { AzureSubscriptionProvider, GetSubscriptionsFilter } from './AzureSubscriptionProvider';
-import { AzureTenant } from './AzureTenant';
+import type * as vscode from 'vscode';
+import type { AzureAuthentication } from './AzureAuthentication';
+import type { AzureSubscription } from './AzureSubscription';
+import type { AzureSubscriptionProvider, GetSubscriptionsFilter } from './AzureSubscriptionProvider';
+import type { AzureTenant } from './AzureTenant';
 import { getConfiguredAzureEnv } from './utils/configuredAzureEnv';
 
 export interface AzureDevOpsSubscriptionProviderInitializer {
@@ -183,8 +183,8 @@ export class AzureDevOpsSubscriptionProvider implements AzureSubscriptionProvide
         }
     }
 
-    public onDidSignIn: Event<void> = () => { return new Disposable(() => { /*empty*/ }) };
-    public onDidSignOut: Event<void> = () => { return new Disposable(() => { /*empty*/ }) };
+    public onDidSignIn: vscode.Event<void> = () => { return { dispose(): void { /*empty*/ } }; };
+    public onDidSignOut: vscode.Event<void> = () => { return { dispose(): void { /*empty*/ } }; };
 }
 
 /*
