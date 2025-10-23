@@ -62,7 +62,8 @@ OS Release: ${os.release()}
 Product: ${vscode.env.appName}
 Product Version: ${vscode.version}
 Language: ${vscode.env.language}
-UTC time: ${issue?.time ? new Date(issue.time).toUTCString() : new Date().toUTCString()}`;
+UTC time: ${issue?.time ? new Date(issue.time).toUTCString() : new Date().toUTCString()}
+VS Code sessionId: ${vscode.env.sessionId}`;
 
     // Add stack and any custom issue properties as individual details
     const details: { [key: string]: string | undefined } = Object.assign({}, stack ? { 'Call Stack': stack } : {}, issue?.issueProperties); // Don't localize call stack
