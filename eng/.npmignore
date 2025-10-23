@@ -1,0 +1,10 @@
+node_modules/
+.vscode/
+src/
+!src/**/*.md
+src/**/*.ts
+tsconfig.json
+*.tgz
+.vscode-test/
+eslint.config.mjs
+*.tsbuildinfo
