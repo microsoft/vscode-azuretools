@@ -3,11 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { TestUserInput } from "@microsoft/vscode-azext-dev";
 import assert from "assert";
 import * as vscode from 'vscode';
 import { IActionContext } from "..";
-import { AzExtTreeFileSystem } from "../src";
+import { AzExtTreeFileSystem, TestUserInput } from "../src";
 
 type MockItemType = { id: string };
 
