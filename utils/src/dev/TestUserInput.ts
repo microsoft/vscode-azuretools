@@ -22,11 +22,19 @@ class GoBackError extends Error {
     }
 }
 
+/**
+ * Wrapper class of several `vscode.window` methods that handle user input.
+ * This class is meant to be used for testing in non-interactive mode.
+ */
 export class TestUserInput implements types.TestUserInput {
     private readonly _onDidFinishPromptEmitter: vscodeTypes.EventEmitter<types.PromptResult>;
     private readonly _vscode: typeof vscodeTypes;
     private _inputs: (string | RegExp | TestInput)[] = [];
 
+    /**
+     * Boolean set to indicate whether the UI is being used for test inputs. For`TestUserInput`, this will always default to true.
+     * See: https://github.com/microsoft/vscode-azuretools/pull/1807
+     */
     readonly isTesting: boolean = true;
 
     constructor(vscode: typeof vscodeTypes) {
@@ -42,6 +50,9 @@ export class TestUserInput implements types.TestUserInput {
         return this._onDidFinishPromptEmitter.event;
     }
 
+    /**
+     * An ordered array of inputs that will be used instead of interactively prompting in VS Code. RegExp is only applicable for QuickPicks and will pick the first input that matches the RegExp.
+     */
     public async runWithInputs<T>(inputs: (string | RegExp | types.TestInput)[], callback: () => Promise<T>): Promise<T> {
         this.setInputs(inputs);
         const result: T = await callback();
@@ -210,7 +221,14 @@ export class TestUserInput implements types.TestUserInput {
     }
 }
 
-
+/**
+ * Alternative to `TestUserInput.runWithInputs` that can be used on the rare occasion when the `IActionContext` must be created inside `callback` instead of before `callback`
+ *
+ * @param callbackId The expected callbackId for the action to be run
+ * @param inputs An ordered array of inputs that will be used instead of interactively prompting in VS Code
+ * @param registerOnActionStartHandler The function defined in 'vscode-azureextensionui' for registering onActionStart handlers
+ * @param callback The callback to run
+ */
 export async function runWithInputs<T>(callbackId: string, inputs: (string | RegExp | types.TestInput)[], registerOnActionStartHandler: types.registerOnActionStartHandlerType, callback: () => Promise<T>): Promise<T> {
     const testUserInput = await TestUserInput.create();
     testUserInput.setInputs(inputs);
