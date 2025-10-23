@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-eng",
     "author": "Microsoft Corporation",
-    "version": "1.0.0",
+    "version": "1.0.0-alpha.1",
     "description": "Engineering package for Azure extensions for VS Code",
     "repository": {
         "type": "git",
@@ -63,5 +63,8 @@
     "devDependencies": {
         "@types/node": "22.x",
         "@types/webpack-bundle-analyzer": "^4.7.0"
+    },
+    "publishConfig": {
+        "tag": "alpha"
     }
 }
