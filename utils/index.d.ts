@@ -2801,3 +2801,121 @@ export declare interface AzExtLMTool<T> {
 }
 
 // #endregion
+
+// #region Dev/Test features (formerly in `@microsoft/vscode-azext-dev`)
+
+export declare interface TestActionContext {
+    telemetry: {
+        properties: {
+            [key: string]: string | undefined;
+        };
+        measurements: {
+            [key: string]: number | undefined;
+        };
+    };
+    errorHandling: {
+        issueProperties: {};
+    };
+    valuesToMask: string[];
+    ui: TestUserInput;
+}
+
+/**
+ * Re-routes output to the console instead of a VS Code output channel (which disappears after a test run has finished)
+ */
+export declare class TestOutputChannel implements LogOutputChannel {
+    name: string;
+    append(value: string): void;
+    appendLine(value: string): void;
+    appendLog(value: string, options?: {
+        resourceName?: string;
+        date?: Date;
+    }): void;
+    replace(value: string): void;
+    clear(): void;
+    show(): void;
+    hide(): void;
+    dispose(): void;
+    logLevel: LogLevel;
+    onDidChangeLogLevel: Event<LogLevel>;
+    trace(message: string, ...args: unknown[]): void;
+    debug(message: string, ...args: unknown[]): void;
+    info(message: string, ...args: unknown[]): void;
+    warn(message: string, ...args: unknown[]): void;
+    error(error: string | Error, ...args: unknown[]): void;
+}
+
+export declare function createTestActionContext(): Promise<TestActionContext>;
+
+/**
+ * Similar to `createTestActionContext` but with some extra logging
+ */
+export declare function runWithTestActionContext(callbackId: string, callback: (context: TestActionContext) => Promise<void>): Promise<void>;
+
+export declare enum TestInput {
+    /**
+     * Use the first entry in a quick pick or the default value (if it's defined) for an input box. In all other cases, throw an error
+     */
+    UseDefaultValue = 0,
+    /**
+     * Simulates the user hitting the back button in an AzureWizard.
+     */
+    BackButton = 1,
+    /**
+     * Simulates going back three quickpick steps in an AzureWizard.
+     */
+    BackThreeSteps = 2
+}
+
+export declare type PromptResult = {
+    value: string | vscodeTypes.QuickPickItem | vscodeTypes.QuickPickItem[] | vscodeTypes.MessageItem | vscodeTypes.Uri[] | vscodeTypes.WorkspaceFolder;
+    /**
+     * True if the user did not change from the default value, currently only supported for `showInputBox`
+     */
+    matchesDefault?: boolean;
+};
+
+/**
+ * Wrapper class of several `vscode.window` methods that handle user input.
+ * This class is meant to be used for testing in non-interactive mode.
+ */
+export declare class TestUserInput {
+    /**
+     * Boolean set to indicate whether the UI is being used for test inputs. For`TestUserInput`, this will always default to true.
+     * See: https://github.com/microsoft/vscode-azuretools/pull/1807
+     */
+    readonly isTesting: boolean;
+    constructor(vscode: typeof vscodeTypes);
+    static create(): Promise<TestUserInput>;
+    get onDidFinishPrompt(): vscodeTypes.Event<PromptResult>;
+    /**
+     * An ordered array of inputs that will be used instead of interactively prompting in VS Code. RegExp is only applicable for QuickPicks and will pick the first input that matches the RegExp.
+     */
+    runWithInputs<T>(inputs: (string | RegExp | TestInput)[], callback: () => Promise<T>): Promise<T>;
+    setInputs(inputs: (string | RegExp | TestInput)[]): void;
+    validateAllInputsUsed(): void;
+    showQuickPick<T extends vscodeTypes.QuickPickItem>(items: T[] | Thenable<T[]>, options: vscodeTypes.QuickPickOptions): Promise<T | T[]>;
+    showInputBox(options: vscodeTypes.InputBoxOptions): Promise<string>;
+    showWarningMessage<T extends vscodeTypes.MessageItem>(message: string, ...items: T[]): Promise<T>;
+    showWarningMessage<T extends vscodeTypes.MessageItem>(message: string, options: vscodeTypes.MessageOptions, ...items: T[]): Promise<vscodeTypes.MessageItem>;
+    showOpenDialog(options: vscodeTypes.OpenDialogOptions): Promise<vscodeTypes.Uri[]>;
+    showWorkspaceFolderPick(options: vscodeTypes.WorkspaceFolderPickOptions): Promise<vscodeTypes.WorkspaceFolder>;
+}
+
+declare type registerOnActionStartHandlerType = (handler: (context: {
+    callbackId: string;
+    ui: Partial<TestUserInput>;
+}) => void) => vscodeTypes.Disposable;
+
+/**
+ * Alternative to `TestUserInput.runWithInputs` that can be used on the rare occasion when the `IActionContext` must be created inside `callback` instead of before `callback`
+ *
+ * @param callbackId The expected callbackId for the action to be run
+ * @param inputs An ordered array of inputs that will be used instead of interactively prompting in VS Code
+ * @param registerOnActionStartHandler The function defined in 'vscode-azureextensionui' for registering onActionStart handlers
+ * @param callback The callback to run
+ */
+export declare function runWithInputs<T>(callbackId: string, inputs: (string | RegExp | TestInput)[], registerOnActionStartHandler: registerOnActionStartHandlerType, callback: () => Promise<T>): Promise<T>;
+
+
+// #endregion
