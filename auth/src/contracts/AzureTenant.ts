@@ -10,6 +10,13 @@ import type { AzureAccount } from "./AzureAccount";
  * An Azure tenant associated with a specific account
  */
 export interface AzureTenant extends TenantIdDescription {
+    /**
+     * The account associated with this tenant
+     */
     readonly account: AzureAccount;
+
+    /**
+     * @inheritdoc
+     */
     readonly tenantId: string; // Override to make required
 }
