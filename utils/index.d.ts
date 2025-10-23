@@ -9,7 +9,7 @@ import type { Environment } from '@azure/ms-rest-azure-env';
 import type { AzExtResourceType, AzureResource, AzureSubscription, ResourceModelBase } from '@microsoft/vscode-azureresources-api';
 import type * as duration from 'dayjs/plugin/duration';
 import type * as vscodeTypes from 'vscode';
-import { AuthenticationSession, AuthenticationWwwAuthenticateRequest, CancellationToken, CancellationTokenSource, Command, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, LanguageModelToolInvocationOptions, LanguageModelToolInvocationPrepareOptions, LanguageModelToolResult, LogOutputChannel, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, PreparedToolInvocation, Progress, ProviderResult, QuickPickItem, TelemetryTrustedValue, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri, QuickPickOptions as VSCodeQuickPickOptions, WorkspaceFolder, WorkspaceFolderPickOptions } from 'vscode';
+import { AuthenticationSession, AuthenticationWwwAuthenticateRequest, CancellationToken, CancellationTokenSource, Command, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, LanguageModelToolInvocationOptions, LanguageModelToolInvocationPrepareOptions, LanguageModelToolResult, LogLevel, LogOutputChannel, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, PreparedToolInvocation, Progress, ProviderResult, QuickPickItem, TelemetryTrustedValue, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri, QuickPickOptions as VSCodeQuickPickOptions, WorkspaceFolder, WorkspaceFolderPickOptions } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
 
@@ -2824,25 +2824,22 @@ export declare interface TestActionContext {
  * Re-routes output to the console instead of a VS Code output channel (which disappears after a test run has finished)
  */
 export declare class TestOutputChannel implements LogOutputChannel {
-    name: string;
-    append(value: string): void;
-    appendLine(value: string): void;
-    appendLog(value: string, options?: {
-        resourceName?: string;
-        date?: Date;
-    }): void;
-    replace(value: string): void;
-    clear(): void;
-    show(): void;
-    hide(): void;
-    dispose(): void;
+    public name: string;
+    public append(value: string): void;
+    public appendLine(value: string): void;
+    public appendLog(value: string, options?: { resourceName?: string, date?: Date }): void;
+    public replace(value: string): void;
+    public clear(): void;
+    public show(): void;
+    public hide(): void;
+    public dispose(): void;
     logLevel: LogLevel;
     onDidChangeLogLevel: Event<LogLevel>;
-    trace(message: string, ...args: unknown[]): void;
-    debug(message: string, ...args: unknown[]): void;
-    info(message: string, ...args: unknown[]): void;
-    warn(message: string, ...args: unknown[]): void;
-    error(error: string | Error, ...args: unknown[]): void;
+    trace(message: string, ...args: any[]): void;
+    debug(message: string, ...args: any[]): void;
+    info(message: string, ...args: any[]): void;
+    warn(message: string, ...args: any[]): void;
+    error(error: string | Error, ...args: any[]): void;
 }
 
 export declare function createTestActionContext(): Promise<TestActionContext>;
@@ -2856,19 +2853,22 @@ export declare enum TestInput {
     /**
      * Use the first entry in a quick pick or the default value (if it's defined) for an input box. In all other cases, throw an error
      */
-    UseDefaultValue = 0,
+    UseDefaultValue,
+
     /**
      * Simulates the user hitting the back button in an AzureWizard.
      */
-    BackButton = 1,
+    BackButton,
+
     /**
      * Simulates going back three quickpick steps in an AzureWizard.
      */
-    BackThreeSteps = 2
+    BackThreeSteps
 }
 
 export declare type PromptResult = {
-    value: string | vscodeTypes.QuickPickItem | vscodeTypes.QuickPickItem[] | vscodeTypes.MessageItem | vscodeTypes.Uri[] | vscodeTypes.WorkspaceFolder;
+    value: string | QuickPickItem | QuickPickItem[] | MessageItem | Uri[] | WorkspaceFolder;
+
     /**
      * True if the user did not change from the default value, currently only supported for `showInputBox`
      */
@@ -2880,32 +2880,31 @@ export declare type PromptResult = {
  * This class is meant to be used for testing in non-interactive mode.
  */
 export declare class TestUserInput {
+    public readonly onDidFinishPrompt: Event<PromptResult>;
+
+    public constructor(vscode: typeof import('vscode'));
+
     /**
      * Boolean set to indicate whether the UI is being used for test inputs. For`TestUserInput`, this will always default to true.
      * See: https://github.com/microsoft/vscode-azuretools/pull/1807
      */
     readonly isTesting: boolean;
-    constructor(vscode: typeof vscodeTypes);
-    static create(): Promise<TestUserInput>;
-    get onDidFinishPrompt(): vscodeTypes.Event<PromptResult>;
+
     /**
      * An ordered array of inputs that will be used instead of interactively prompting in VS Code. RegExp is only applicable for QuickPicks and will pick the first input that matches the RegExp.
      */
-    runWithInputs<T>(inputs: (string | RegExp | TestInput)[], callback: () => Promise<T>): Promise<T>;
-    setInputs(inputs: (string | RegExp | TestInput)[]): void;
-    validateAllInputsUsed(): void;
-    showQuickPick<T extends vscodeTypes.QuickPickItem>(items: T[] | Thenable<T[]>, options: vscodeTypes.QuickPickOptions): Promise<T | T[]>;
-    showInputBox(options: vscodeTypes.InputBoxOptions): Promise<string>;
-    showWarningMessage<T extends vscodeTypes.MessageItem>(message: string, ...items: T[]): Promise<T>;
-    showWarningMessage<T extends vscodeTypes.MessageItem>(message: string, options: vscodeTypes.MessageOptions, ...items: T[]): Promise<vscodeTypes.MessageItem>;
-    showOpenDialog(options: vscodeTypes.OpenDialogOptions): Promise<vscodeTypes.Uri[]>;
-    showWorkspaceFolderPick(options: vscodeTypes.WorkspaceFolderPickOptions): Promise<vscodeTypes.WorkspaceFolder>;
+    public runWithInputs<T>(inputs: (string | RegExp | TestInput)[], callback: () => Promise<T>): Promise<T>;
+
+    public showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: VSCodeQuickPickOptions): Promise<T>;
+    public showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: VSCodeQuickPickOptions & { canPickMany: true }): Promise<T[]>;
+    public showInputBox(options: InputBoxOptions): Promise<string>;
+    public showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
+    public showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Promise<MessageItem>;
+    public showOpenDialog(options: OpenDialogOptions): Promise<Uri[]>;
+    public showWorkspaceFolderPick(options: WorkspaceFolderPickOptions): Promise<WorkspaceFolder>;
 }
 
-declare type registerOnActionStartHandlerType = (handler: (context: {
-    callbackId: string;
-    ui: Partial<TestUserInput>;
-}) => void) => vscodeTypes.Disposable;
+declare type registerOnActionStartHandlerType = (handler: (context: { callbackId: string; ui: Partial<TestUserInput>; }) => void) => Disposable;
 
 /**
  * Alternative to `TestUserInput.runWithInputs` that can be used on the rare occasion when the `IActionContext` must be created inside `callback` instead of before `callback`
@@ -2916,6 +2915,5 @@ declare type registerOnActionStartHandlerType = (handler: (context: {
  * @param callback The callback to run
  */
 export declare function runWithInputs<T>(callbackId: string, inputs: (string | RegExp | TestInput)[], registerOnActionStartHandler: registerOnActionStartHandlerType, callback: () => Promise<T>): Promise<T>;
-
 
 // #endregion
