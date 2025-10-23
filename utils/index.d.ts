@@ -2826,7 +2826,6 @@ export declare class TestOutputChannel implements LogOutputChannel {
     error(error: string | Error, ...args: any[]): void;
 }
 
-
 export declare enum TestInput {
     /**
      * Use the first entry in a quick pick or the default value (if it's defined) for an input box. In all other cases, throw an error

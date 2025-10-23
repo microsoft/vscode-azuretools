@@ -8,8 +8,19 @@ import type * as vscodeTypes from 'vscode'; // `TestUserInput._vscode` should be
 import type * as types from '../../index';
 
 export enum TestInput {
+    /**
+     * Use the first entry in a quick pick or the default value (if it's defined) for an input box. In all other cases, throw an error
+     */
     UseDefaultValue = 0,
+
+    /**
+     * Simulates the user hitting the back button in an AzureWizard.
+     */
     BackButton = 1,
+
+    /**
+     * Simulates going back three quickpick steps in an AzureWizard.
+     */
     BackThreeSteps = 2
 }
 
