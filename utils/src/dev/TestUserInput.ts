@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import * as vscodeTypes from 'vscode'; // `TestUserInput._vscode` should be used for anything that's not purely a type (e.g. instantiating a class)
-import * as types from '../../index';
+import type * as vscodeTypes from 'vscode'; // `TestUserInput._vscode` should be used for anything that's not purely a type (e.g. instantiating a class)
+import type * as types from '../../index';
 
 export enum TestInput {
     UseDefaultValue,
