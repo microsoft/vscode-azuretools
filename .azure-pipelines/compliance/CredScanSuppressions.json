@@ -14,7 +14,7 @@
             "_justification": "No need to scan external node modules."
         },
         {
-            "folder": "dev\\node_modules\\",
+            "folder": "eng\\node_modules\\",
             "_justification": "No need to scan external node modules."
         },
         {
@@ -42,7 +42,7 @@
             "_justification": "No need to scan VS Code test folder."
         },
         {
-            "folder": "dev\\.vscode-test\\",
+            "folder": "eng\\.vscode-test\\",
             "_justification": "No need to scan VS Code test folder."
         },
         {
