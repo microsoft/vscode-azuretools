@@ -4,8 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import type * as vscodeTypes from 'vscode'; // `TestUserInput._vscode` should be used for anything that's not purely a type (e.g. instantiating a class)
+import * as vscodeTypes from 'vscode'; // `TestUserInput._vscode` should be used for anything that's not purely a type (e.g. instantiating a class)
 import * as types from '../../index';
+
+export enum TestInput {
+    UseDefaultValue,
+    BackButton,
+    BackThreeSteps
+}
 
 class GoBackError extends Error {
     public numberOfStepsToGoBack?: number;
@@ -16,19 +22,11 @@ class GoBackError extends Error {
     }
 }
 
-/**
- * Wrapper class of several `vscode.window` methods that handle user input.
- * This class is meant to be used for testing in non-interactive mode.
- */
 export class TestUserInput implements types.TestUserInput {
     private readonly _onDidFinishPromptEmitter: vscodeTypes.EventEmitter<types.PromptResult>;
     private readonly _vscode: typeof vscodeTypes;
-    private _inputs: (string | RegExp | types.TestInput)[] = [];
+    private _inputs: (string | RegExp | TestInput)[] = [];
 
-    /**
-     * Boolean set to indicate whether the UI is being used for test inputs. For`TestUserInput`, this will always default to true.
-     * See: https://github.com/microsoft/vscode-azuretools/pull/1807
-     */
     readonly isTesting: boolean = true;
 
     constructor(vscode: typeof vscodeTypes) {
@@ -44,9 +42,6 @@ export class TestUserInput implements types.TestUserInput {
         return this._onDidFinishPromptEmitter.event;
     }
 
-    /**
-     * An ordered array of inputs that will be used instead of interactively prompting in VS Code. RegExp is only applicable for QuickPicks and will pick the first input that matches the RegExp.
-     */
     public async runWithInputs<T>(inputs: (string | RegExp | types.TestInput)[], callback: () => Promise<T>): Promise<T> {
         this.setInputs(inputs);
         const result: T = await callback();
@@ -55,7 +50,7 @@ export class TestUserInput implements types.TestUserInput {
     }
 
     public setInputs(inputs: (string | RegExp | types.TestInput)[]): void {
-        this._inputs = <(string | RegExp | types.TestInput)[]>inputs;
+        this._inputs = <(string | RegExp | TestInput)[]>inputs;
     }
 
     public validateAllInputsUsed(): void {
@@ -66,17 +61,17 @@ export class TestUserInput implements types.TestUserInput {
         const resolvedItems: T[] = await Promise.resolve(items);
 
         let result: T | T[];
-        const input: string | RegExp | types.TestInput | undefined = this._inputs.shift();
+        const input: string | RegExp | TestInput | undefined = this._inputs.shift();
         if (input === undefined) {
             throw new Error(`No more inputs left for call to showQuickPick. Placeholder: '${options.placeHolder}'`);
-        } else if (input === types.TestInput.BackButton) {
+        } else if (input === TestInput.BackButton) {
             throw new GoBackError();
-        } else if (input === types.TestInput.BackThreeSteps) {
+        } else if (input === TestInput.BackThreeSteps) {
             throw new GoBackError(3);
         } else {
             if (resolvedItems.length === 0) {
                 throw new Error(`No quick pick items found. Placeholder: '${options.placeHolder}'`);
-            } else if (input === types.TestInput.UseDefaultValue) {
+            } else if (input === TestInput.UseDefaultValue) {
                 result = resolvedItems[0];
             } else {
                 function qpiMatchesInput(qpi: vscodeTypes.QuickPickItem): boolean {
@@ -112,12 +107,12 @@ export class TestUserInput implements types.TestUserInput {
 
     public async showInputBox(options: vscodeTypes.InputBoxOptions): Promise<string> {
         let result: string;
-        const input: string | RegExp | types.TestInput | undefined = this._inputs.shift();
+        const input: string | RegExp | TestInput | undefined = this._inputs.shift();
         if (input === undefined) {
             throw new Error(`No more inputs left for call to showInputBox. Placeholder: '${options.placeHolder}'. Prompt: '${options.prompt}'`);
-        } else if (input === types.TestInput.BackButton) {
+        } else if (input === TestInput.BackButton) {
             throw new GoBackError();
-        } else if (input === types.TestInput.UseDefaultValue) {
+        } else if (input === TestInput.UseDefaultValue) {
             if (!options.value) {
                 throw new Error('Can\'t use default value because none was specified');
             } else {
@@ -151,7 +146,7 @@ export class TestUserInput implements types.TestUserInput {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public async showWarningMessage<T extends vscodeTypes.MessageItem>(message: string, ...args: any[]): Promise<T> {
         let result: T;
-        const input: string | RegExp | types.TestInput | undefined = this._inputs.shift();
+        const input: string | RegExp | TestInput | undefined = this._inputs.shift();
         if (input === undefined) {
             throw new Error(`No more inputs left for call to showWarningMessage. Message: ${message}`);
         } else if (typeof input === 'string') {
@@ -172,7 +167,7 @@ export class TestUserInput implements types.TestUserInput {
 
     public async showOpenDialog(options: vscodeTypes.OpenDialogOptions): Promise<vscodeTypes.Uri[]> {
         let result: vscodeTypes.Uri[];
-        const input: string | RegExp | types.TestInput | undefined = this._inputs.shift();
+        const input: string | RegExp | TestInput | undefined = this._inputs.shift();
         if (input === undefined) {
             throw new Error(`No more inputs left for call to showOpenDialog. Message: ${options.openLabel}`);
         } else if (typeof input === 'string') {
@@ -187,7 +182,7 @@ export class TestUserInput implements types.TestUserInput {
 
     public async showWorkspaceFolderPick(options: vscodeTypes.WorkspaceFolderPickOptions): Promise<vscodeTypes.WorkspaceFolder> {
         let result: vscodeTypes.WorkspaceFolder;
-        const input: string | RegExp | types.TestInput | undefined = this._inputs.shift();
+        const input: string | RegExp | TestInput | undefined = this._inputs.shift();
 
         if (input === undefined) {
             throw new Error(`No more inputs left for call to showWorkspaceFolderPick. Placeholder: ${options.placeHolder}`);
@@ -215,14 +210,7 @@ export class TestUserInput implements types.TestUserInput {
     }
 }
 
-/**
- * Alternative to `TestUserInput.runWithInputs` that can be used on the rare occasion when the `IActionContext` must be created inside `callback` instead of before `callback`
- *
- * @param callbackId The expected callbackId for the action to be run
- * @param inputs An ordered array of inputs that will be used instead of interactively prompting in VS Code
- * @param registerOnActionStartHandler The function defined in 'vscode-azureextensionui' for registering onActionStart handlers
- * @param callback The callback to run
- */
+
 export async function runWithInputs<T>(callbackId: string, inputs: (string | RegExp | types.TestInput)[], registerOnActionStartHandler: types.registerOnActionStartHandlerType, callback: () => Promise<T>): Promise<T> {
     const testUserInput = await TestUserInput.create();
     testUserInput.setInputs(inputs);
