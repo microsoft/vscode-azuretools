@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import { ContextValueFilterQuickPickOptions, IActionContext, QuickPickWizardContext } from '../../index';
+import type { ContextValueFilterQuickPickOptions, IActionContext, QuickPickWizardContext } from '../../index';
 import { createTestActionContext } from '../../src';
 import { ContextValueQuickPickStep } from '../../src/pickTreeItem/contextValue/ContextValueQuickPickStep';
 import { getLastNode } from '../../src/pickTreeItem/getLastNode';

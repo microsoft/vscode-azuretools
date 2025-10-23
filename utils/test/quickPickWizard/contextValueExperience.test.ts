@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import { TestActionContext, TestInput } from '../../index';
-import { runWithTestActionContext } from '../../src';
+import type { TestActionContext } from '../../index';
+import { runWithTestActionContext, TestInput } from '../../src';
 import { contextValueExperience } from '../../src/pickTreeItem/experiences/contextValueExperience';
 import { createContextValue } from '../../src/utils/contextUtils';
 import { assertNoMatchingQuickPickItem } from './assertNoMatchingQuickPickItem';

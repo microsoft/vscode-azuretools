@@ -5,7 +5,7 @@
 
 import assert from "assert";
 import * as vscode from 'vscode';
-import { IActionContext } from "..";
+import type { IActionContext } from "../index";
 import { AzExtTreeFileSystem, TestUserInput } from "../src";
 
 type MockItemType = { id: string };

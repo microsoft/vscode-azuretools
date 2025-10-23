@@ -8,9 +8,9 @@ import type * as vscodeTypes from 'vscode'; // `TestUserInput._vscode` should be
 import type * as types from '../../index';
 
 export enum TestInput {
-    UseDefaultValue,
-    BackButton,
-    BackThreeSteps
+    UseDefaultValue = 0,
+    BackButton = 1,
+    BackThreeSteps = 2
 }
 
 class GoBackError extends Error {

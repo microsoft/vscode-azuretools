@@ -5,9 +5,8 @@
 
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import * as types from '../index';
-import { TestInput } from '../index';
-import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, TestUserInput } from '../src';
+import type * as types from '../index';
+import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, TestInput, TestUserInput } from '../src';
 
 interface ITestWizardContext extends types.IActionContext {
     [key: string]: {} | boolean | string | undefined;
