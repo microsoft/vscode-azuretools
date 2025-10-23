@@ -124,6 +124,8 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
             const subscriptions = await super.getSubscriptionsForTenant(tenant, options);
             this.subscriptionCache.set(cacheKey, subscriptions);
             this.logger?.debug(`auth: Cached ${subscriptions.length} subscriptions for account '${tenant.account.id}' and tenant '${tenant.tenantId}'`);
+        } else {
+            this.logger?.debug(`auth: Using cached subscriptions for account '${account.id}' and tenant '${tenant.tenantId}'`);
         }
 
         let results: AzureSubscription[] = this.subscriptionCache.get(cacheKey)!; // eslint-disable-line @typescript-eslint/no-non-null-assertion -- We just filled it

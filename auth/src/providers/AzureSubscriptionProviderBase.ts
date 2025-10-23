@@ -71,7 +71,12 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
      * @inheritdoc
      */
     public async signIn(tenant?: TenantIdAndAccount, options: SignInOptions = DefaultSignInOptions): Promise<boolean> {
-        this.silenceRefreshEvents();
+        if (!options.silent) {
+            // Suppress without timeout, until sign in is done--it can take a while when done interactively
+            this.suppressRefreshSuggestedEvents = true;
+        } else {
+            this.silenceRefreshEvents();
+        }
         const session = await getSessionFromVSCode(
             undefined,
             tenant?.tenantId,
@@ -154,7 +159,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
     /**
      * @inheritdoc
      */
-    public async getUnauthenticatedTenants(account: AzureAccount, options?: GetOptions): Promise<AzureTenant[]> {
+    public async getUnauthenticatedTenants(account: AzureAccount, options?: Omit<GetOptions, 'all'>): Promise<AzureTenant[]> {
         const allTenants = await this.getTenantsForAccount(account, { ...options, all: true });
 
         const unauthenticatedTenants: AzureTenant[] = [];

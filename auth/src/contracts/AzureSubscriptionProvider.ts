@@ -46,7 +46,7 @@ export interface AzureSubscriptionProvider {
     getAvailableSubscriptions(options?: GetOptions): Promise<AzureSubscription[]>;
 
     /**
-     * Returns a list of all signed-in accounts.
+     * Returns a list of all accounts.
      *
      * @param options (Optional) Additional options for getting the accounts.
      *
@@ -64,10 +64,10 @@ export interface AzureSubscriptionProvider {
      * @throws A {@link NotSignedInError} if the user is not signed in to the specified account.
      * @throws A {@link vscode.CancellationError} if the operation is cancelled via the provided cancellation token.
      */
-    getUnauthenticatedTenants(account: AzureAccount, options?: GetOptions): Promise<AzureTenant[]>;
+    getUnauthenticatedTenants(account: AzureAccount, options?: Omit<GetOptions, 'all'>): Promise<AzureTenant[]>;
 
     /**
-     * Returns a list of all tenants for a given account.
+     * Returns a list of tenants for a given account.
      *
      * @param account The account to get tenants for.
      * @param options (Optional) Additional options for getting the tenants.
@@ -78,7 +78,7 @@ export interface AzureSubscriptionProvider {
     getTenantsForAccount(account: AzureAccount, options?: GetOptions): Promise<AzureTenant[]>;
 
     /**
-     * Returns a list of all {@link AzureSubscription}s for a given tenant and account.
+     * Returns a list of {@link AzureSubscription}s for a given tenant and account.
      *
      * @example
      * ```typescript
