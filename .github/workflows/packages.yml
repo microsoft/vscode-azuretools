@@ -23,8 +23,6 @@ jobs:
             auth: "auth/**"
             azure: "azure/**"
             eng: "eng/**"
-            dev: "dev/**"
-            eslint-config-azuretools: "eslint-config-azuretools/**"
             github: "github/**"
             utils: "utils/**"
     outputs:
