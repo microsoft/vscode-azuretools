@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+export * from './contracts/AzureAccount';
 export * from './contracts/AzureAuthentication';
 export * from './contracts/AzureSubscription';
 export * from './contracts/AzureSubscriptionProvider';
