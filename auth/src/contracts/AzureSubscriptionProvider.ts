@@ -4,11 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type * as vscode from 'vscode';
+import type { NotSignedInError } from '../utils/NotSignedInError'; // eslint-disable-line @typescript-eslint/no-unused-vars -- It is used in the doc comments
+import type { dedupeSubscriptions } from '../utils/dedupeSubscriptions'; // eslint-disable-line @typescript-eslint/no-unused-vars -- It is used in the doc comments
 import type { AzureAccount } from './AzureAccount';
 import type { AzureSubscription } from './AzureSubscription';
 import type { AzureTenant } from './AzureTenant';
-import type { NotSignedInError } from '../utils/NotSignedInError'; // eslint-disable-line @typescript-eslint/no-unused-vars -- It is used in the doc comments
-import type { dedupeSubscriptions } from '../utils/dedupeSubscriptions'; // eslint-disable-line @typescript-eslint/no-unused-vars -- It is used in the doc comments
 
 /**
  * An interface for obtaining Azure subscription information
