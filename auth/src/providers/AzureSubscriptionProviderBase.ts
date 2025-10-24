@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { GetTokenOptions, TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
 import type { SubscriptionClient } from '@azure/arm-resources-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
+import type { GetTokenOptions, TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
 import * as vscode from 'vscode';
 import type { AzureAccount } from '../contracts/AzureAccount';
 import type { AzureAuthentication } from '../contracts/AzureAuthentication';
@@ -72,24 +72,28 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
      * @inheritdoc
      */
     public async signIn(tenant?: TenantIdAndAccount, options: SignInOptions = DefaultSignInOptions): Promise<boolean> {
-        if (!options.silent) {
-            // Suppress without timeout, until sign in is done--it can take a while when done interactively
+        const prompt = options.promptIfNeeded ?? true;
+
+        if (prompt) {
+            // If interactive, suppress without timeout until sign in is done (it can take a while when done interactively)
             this.suppressRefreshSuggestedEvents = true;
         } else {
+            // If silent, suppress with normal timeout
             this.silenceRefreshEvents();
         }
+
         const session = await getSessionFromVSCode(
             undefined,
             tenant?.tenantId,
             {
                 account: tenant?.account,
                 clearSessionPreference: !!options.clearSessionPreference,
-                createIfNone: !options.silent,
-                silent: !!options.silent,
+                createIfNone: prompt,
+                silent: !prompt,
             }
         );
 
-        if (!options.silent) {
+        if (prompt) {
             // Interactive sign in can take a while, so silence events for a bit longer
             this.silenceRefreshEvents();
         }
@@ -333,5 +337,5 @@ export const DefaultGetSubscriptionsOptions: GetSubscriptionsOptions = {
 
 const DefaultSignInOptions: SignInOptions = {
     clearSessionPreference: false,
-    silent: false,
+    promptIfNeeded: true,
 };

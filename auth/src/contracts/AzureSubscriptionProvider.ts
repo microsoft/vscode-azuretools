@@ -117,9 +117,11 @@ export type SignInOptions = {
     clearSessionPreference?: boolean;
 
     /**
-     * (Optional, default false) The interaction mode for signing in.
+     * (Optional, default true) If true, the user will be prompted to sign in if needed.
+     * If false, the {@link AzureSubscriptionProvider.signIn} method will return false if
+     * interactive sign-in is required.
      */
-    silent?: boolean;
+    promptIfNeeded?: boolean;
 };
 
 /**
