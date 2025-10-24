@@ -3,8 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { runWithTestActionContext, TestActionContext, TestInput } from '@microsoft/vscode-azext-dev';
 import * as assert from 'assert';
+import type { TestActionContext } from '../../index';
+import { runWithTestActionContext, TestInput } from '../../src';
 import { contextValueExperience } from '../../src/pickTreeItem/experiences/contextValueExperience';
 import { createContextValue } from '../../src/utils/contextUtils';
 import { assertNoMatchingQuickPickItem } from './assertNoMatchingQuickPickItem';

@@ -4,13 +4,24 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import * as vscodeTypes from 'vscode'; // `TestUserInput._vscode` should be used for anything that's not purely a type (e.g. instantiating a class)
-import * as types from '../index';
+import type * as vscodeTypes from 'vscode'; // `TestUserInput._vscode` should be used for anything that's not purely a type (e.g. instantiating a class)
+import type * as types from '../../index';
 
 export enum TestInput {
-    UseDefaultValue,
-    BackButton,
-    BackThreeSteps
+    /**
+     * Use the first entry in a quick pick or the default value (if it's defined) for an input box. In all other cases, throw an error
+     */
+    UseDefaultValue = 0,
+
+    /**
+     * Simulates the user hitting the back button in an AzureWizard.
+     */
+    BackButton = 1,
+
+    /**
+     * Simulates going back three quickpick steps in an AzureWizard.
+     */
+    BackThreeSteps = 2
 }
 
 class GoBackError extends Error {
@@ -22,11 +33,19 @@ class GoBackError extends Error {
     }
 }
 
+/**
+ * Wrapper class of several `vscode.window` methods that handle user input.
+ * This class is meant to be used for testing in non-interactive mode.
+ */
 export class TestUserInput implements types.TestUserInput {
     private readonly _onDidFinishPromptEmitter: vscodeTypes.EventEmitter<types.PromptResult>;
     private readonly _vscode: typeof vscodeTypes;
     private _inputs: (string | RegExp | TestInput)[] = [];
 
+    /**
+     * Boolean set to indicate whether the UI is being used for test inputs. For`TestUserInput`, this will always default to true.
+     * See: https://github.com/microsoft/vscode-azuretools/pull/1807
+     */
     readonly isTesting: boolean = true;
 
     constructor(vscode: typeof vscodeTypes) {
@@ -42,6 +61,9 @@ export class TestUserInput implements types.TestUserInput {
         return this._onDidFinishPromptEmitter.event;
     }
 
+    /**
+     * An ordered array of inputs that will be used instead of interactively prompting in VS Code. RegExp is only applicable for QuickPicks and will pick the first input that matches the RegExp.
+     */
     public async runWithInputs<T>(inputs: (string | RegExp | types.TestInput)[], callback: () => Promise<T>): Promise<T> {
         this.setInputs(inputs);
         const result: T = await callback();
@@ -210,7 +232,14 @@ export class TestUserInput implements types.TestUserInput {
     }
 }
 
-
+/**
+ * Alternative to `TestUserInput.runWithInputs` that can be used on the rare occasion when the `IActionContext` must be created inside `callback` instead of before `callback`
+ *
+ * @param callbackId The expected callbackId for the action to be run
+ * @param inputs An ordered array of inputs that will be used instead of interactively prompting in VS Code
+ * @param registerOnActionStartHandler The function defined in 'vscode-azureextensionui' for registering onActionStart handlers
+ * @param callback The callback to run
+ */
 export async function runWithInputs<T>(callbackId: string, inputs: (string | RegExp | types.TestInput)[], registerOnActionStartHandler: types.registerOnActionStartHandlerType, callback: () => Promise<T>): Promise<T> {
     const testUserInput = await TestUserInput.create();
     testUserInput.setInputs(inputs);
