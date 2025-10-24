@@ -53,7 +53,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                 return;
             }
 
-            this.logger?.debug('auth: Firing onRefreshSuggested event');
+            this.logger?.debug('[auth] Firing onRefreshSuggested event');
 
             // Call the callback asynchronously to avoid potential issues
             const timeout = setTimeout(() => {
@@ -120,7 +120,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                             availableSubscriptions.push(...subscriptions);
                         } catch (err) {
                             if (isNotSignedInError(err)) {
-                                this.logger?.debug(`auth: Skipping tenant '${tenant.id}' for account '${account.id}' because it is not signed in`);
+                                this.logger?.debug(`[auth] Skipping tenant '${tenant.id}' for account '${account.id}' because it is not signed in`);
                                 return;
                             }
                             throw err;
@@ -130,7 +130,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                     await Promise.all(subscriptionPromises);
                 } catch (err) {
                     if (isNotSignedInError(err)) {
-                        this.logger?.debug(`auth: Skipping account '${account.id}' because it is not signed in`);
+                        this.logger?.debug(`[auth] Skipping account '${account.id}' because it is not signed in`);
                         continue;
                     }
                     throw err;
@@ -149,11 +149,11 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
      */
     public async getAccounts(options: GetOptions): Promise<AzureAccount[]> {
         try {
-            this.logger?.debug('auth: Fetching accounts');
+            this.logger?.debug('[auth] Fetching accounts');
             const results = await vscode.authentication.getAccounts(getConfiguredAuthProviderId());
 
             if (results.length === 0) {
-                this.logger?.debug('auth: No accounts found');
+                this.logger?.debug('[auth] No accounts found');
                 throw new NotSignedInError();
             }
 
@@ -196,7 +196,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
      */
     public async getTenantsForAccount(account: AzureAccount, options: GetOptions): Promise<AzureTenant[]> {
         try {
-            this.logger?.debug(`auth: Fetching tenants for account '${account.id}'`);
+            this.logger?.debug(`[auth] Fetching tenants for account '${account.id}'`);
 
             const { client } = await this.getSubscriptionClient({ account: account, tenantId: undefined });
 
@@ -221,7 +221,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
      */
     public async getSubscriptionsForTenant(tenant: TenantIdAndAccount, options: GetSubscriptionsOptions): Promise<AzureSubscription[]> {
         try {
-            this.logger?.debug(`auth: Fetching subscriptions for account '${tenant.account.id}' and tenant '${tenant.tenantId}'`);
+            this.logger?.debug(`[auth] Fetching subscriptions for account '${tenant.account.id}' and tenant '${tenant.tenantId}'`);
 
             const { client, credential, authentication } = await this.getSubscriptionClient(tenant);
             const environment = getConfiguredAzureEnv();
@@ -316,7 +316,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
         if (token?.isCancellationRequested) {
             throw new vscode.CancellationError();
         }
-        this.logger?.error(`auth: Error occurred: ${err}`);
+        this.logger?.error(`[auth] Error occurred: ${err}`);
         throw err;
     }
 }
