@@ -108,7 +108,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
         const availableSubscriptions: AzureSubscription[] = [];
 
         try {
-            // Due to a bug in the VSCode auth provider, we must serialize fetching tenants for accounts TODO: link that bug
+            // Due to a bug in VSCode, we must serialize fetching tenants for accounts https://github.com/microsoft/vscode/issues/273176
             for (const account of await this.getAccounts(options)) {
                 try {
                     const tenants = await this.getTenantsForAccount(account, options);
