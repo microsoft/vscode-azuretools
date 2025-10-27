@@ -170,7 +170,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
     /**
      * @inheritdoc
      */
-    public async getUnauthenticatedTenants(account: AzureAccount, options?: Omit<GetOptions, 'all'>): Promise<AzureTenant[]> {
+    public async getUnauthenticatedTenantsForAccount(account: AzureAccount, options?: Omit<GetOptions, 'all'>): Promise<AzureTenant[]> {
         const allTenants = await this.getTenantsForAccount(account, { ...options, all: true });
 
         const unauthenticatedTenants: AzureTenant[] = [];

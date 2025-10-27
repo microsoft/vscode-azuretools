@@ -64,7 +64,7 @@ export interface AzureSubscriptionProvider {
      * @throws A {@link NotSignedInError} if the user is not signed in to the specified account.
      * @throws A {@link vscode.CancellationError} if the operation is cancelled via the provided cancellation token.
      */
-    getUnauthenticatedTenants(account: AzureAccount, options?: Omit<GetOptions, 'all'>): Promise<AzureTenant[]>;
+    getUnauthenticatedTenantsForAccount(account: AzureAccount, options?: Omit<GetOptions, 'all'>): Promise<AzureTenant[]>;
 
     /**
      * Returns a list of tenants for a given account.

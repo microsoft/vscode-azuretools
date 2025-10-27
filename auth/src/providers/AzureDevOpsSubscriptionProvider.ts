@@ -112,7 +112,7 @@ export class AzureDevOpsSubscriptionProvider implements AzureSubscriptionProvide
     /**
      * @inheritdoc
      */
-    public async getUnauthenticatedTenants(_account: AzureAccount, _options?: GetOptions): Promise<AzureTenant[]> {
+    public async getUnauthenticatedTenantsForAccount(_account: AzureAccount, _options?: GetOptions): Promise<AzureTenant[]> {
         // For DevOps federated service connection, there is only one tenant associated with the service principal, and we will be authenticated
         return [];
     }
