@@ -3,9 +3,9 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import * as vscode from "vscode";
-import { AzureAccount } from "../contracts/AzureAccount";
-import type { AzureSubscriptionProvider, TenantIdAndAccount } from "../contracts/AzureSubscriptionProvider";
+import * as vscode from 'vscode';
+import type { AzureAccount } from '../contracts/AzureAccount';
+import type { AzureSubscriptionProvider, TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
 
 /**
  * Prompts user to select from a list of unauthenticated tenants.
