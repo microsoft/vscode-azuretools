@@ -13,6 +13,9 @@ function ensureEndingSlash(value: string): string {
 
 function getResourceScopes(scopes?: string | string[]): string[] {
     if (scopes === undefined || scopes === "" || scopes.length === 0) {
+        // For https://github.com/microsoft/vscode-azurefunctions/issues/3913, the default scope was changed from
+        // ~'https://management.azure.com/.default' (`AzureEnv.resourceManagerEndpointUrl`) to
+        // ~'https://management.core.windows.net/.default' (`AzureEnv.managementEndpointUrl`)
         scopes = ensureEndingSlash(getConfiguredAzureEnv().managementEndpointUrl);
     }
     const arrScopes = (Array.isArray(scopes) ? scopes : [scopes])
