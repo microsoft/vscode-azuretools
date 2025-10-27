@@ -58,7 +58,7 @@ export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvide
             this.priorAccounts = currentAccounts;
 
             // The only way a sign out happens is if an account is removed entirely from the list of accounts
-            if (currentAccounts.length < priorAccountCount) {
+            if (currentAccounts.length === 0 || currentAccounts.length < priorAccountCount) {
                 return false;
             }
 
