@@ -71,7 +71,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
     /**
      * @inheritdoc
      */
-    public async signIn(tenant?: TenantIdAndAccount, options: SignInOptions = DefaultSignInOptions): Promise<boolean> {
+    public async signIn(tenant?: Partial<TenantIdAndAccount>, options: SignInOptions = DefaultSignInOptions): Promise<boolean> {
         const prompt = options.promptIfNeeded ?? true;
 
         if (prompt) {
