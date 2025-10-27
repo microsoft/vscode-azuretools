@@ -57,12 +57,11 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
             this.log('Firing onRefreshSuggested event');
 
             // Call the callback asynchronously to avoid potential issues
-            const timeout = setTimeout(() => {
-                clearTimeout(timeout);
+            const immediate = setImmediate(() => {
+                clearImmediate(immediate);
                 this.lastRefreshSuggestedTime = Date.now();
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-                void callback.bind(thisArg)();
-            }, 0);
+                void callback.call(thisArg);
+            });
         });
 
         disposables?.push(disposable);
