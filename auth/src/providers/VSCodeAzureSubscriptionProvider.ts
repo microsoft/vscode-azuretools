@@ -43,9 +43,9 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
         if (this.accountCache.size === 0) {
             const accounts = await super.getAccounts(options);
             accounts.forEach(account => this.accountCache.add(account));
-            this.logger?.debug(`[auth] Cached ${accounts.length} accounts`);
+            this.log(`Cached ${accounts.length} accounts`);
         } else {
-            this.logger?.debug('[auth] Using cached accounts');
+            this.log('Using cached accounts');
         }
 
         let results = Array.from(this.accountCache);
@@ -54,12 +54,12 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
         if (!options.all) {
             const accountFilters = await this.getAccountFilters();
             if (accountFilters.length > 0) {
-                this.logger?.debug(`[auth] Filtering accounts to ${accountFilters.length} configured accounts`);
+                this.log(`Filtering accounts to ${accountFilters.length} configured accounts`);
                 results = results.filter(account => accountFilters.includes(account.id.toLowerCase()));
             }
         }
 
-        this.logger?.debug(`[auth] Returning ${results.length} accounts.`);
+        this.log(`Returning ${results.length} accounts.`);
 
         return results.sort((a, b) => a.label.localeCompare(b.label));
     }
@@ -79,9 +79,9 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
         if (!this.tenantCache.has(cacheKey)) {
             const tenants = await super.getTenantsForAccount(account, options);
             this.tenantCache.set(cacheKey, tenants);
-            this.logger?.debug(`[auth] Cached ${tenants.length} tenants for account '${account.id}'`);
+            this.logForAccount(account, `Cached ${tenants.length} tenants for account`);
         } else {
-            this.logger?.debug(`[auth] Using cached tenants for account '${account.id}'`);
+            this.logForAccount(account, 'Using cached tenants for account');
         }
 
         let results: AzureTenant[] = this.tenantCache.get(cacheKey)!; // eslint-disable-line @typescript-eslint/no-non-null-assertion -- We just filled it
@@ -90,12 +90,12 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
         if (!options.all) {
             const tenantFilters = await this.getTenantFilters();
             if (tenantFilters.length > 0) {
-                this.logger?.debug(`[auth] Filtering tenants for account '${account.id}' to ${tenantFilters.length} configured tenants`);
+                this.logForAccount(account, `Filtering tenants for account to ${tenantFilters.length} configured tenants`);
                 results = results.filter(tenant => tenantFilters.includes(tenant.tenantId.toLowerCase()));
             }
         }
 
-        this.logger?.debug(`[auth] Returning ${results.length} tenants for account '${account.id}'.`);
+        this.logForAccount(account, `Returning ${results.length} tenants for account`);
 
         // Finally, sort
         return results.sort((a, b) => {
@@ -121,9 +121,9 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
         if (!this.subscriptionCache.has(cacheKey)) {
             const subscriptions = await super.getSubscriptionsForTenant(tenant, options);
             this.subscriptionCache.set(cacheKey, subscriptions);
-            this.logger?.debug(`[auth] Cached ${subscriptions.length} subscriptions for account '${tenant.account.id}' and tenant '${tenant.tenantId}'`);
+            this.logForTenant(tenant, `Cached ${subscriptions.length} subscriptions for account+tenant`);
         } else {
-            this.logger?.debug(`[auth] Using cached subscriptions for account '${tenant.account.id}' and tenant '${tenant.tenantId}'`);
+            this.logForTenant(tenant, 'Using cached subscriptions for account+tenant');
         }
 
         let results: AzureSubscription[] = this.subscriptionCache.get(cacheKey)!; // eslint-disable-line @typescript-eslint/no-non-null-assertion -- We just filled it
@@ -132,18 +132,18 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
         if (!options.all) {
             const subscriptionFilters = await this.getSubscriptionFilters();
             if (subscriptionFilters.length > 0) {
-                this.logger?.debug(`[auth] Filtering subscriptions for account '${tenant.account.id}' and tenant '${tenant.tenantId}' to ${subscriptionFilters.length} configured subscriptions`);
+                this.logForTenant(tenant, `Filtering subscriptions for account+tenant to ${subscriptionFilters.length} configured subscriptions`);
                 results = results.filter(sub => subscriptionFilters.includes(sub.subscriptionId.toLowerCase()));
             }
         }
 
         // If needed, dedupe according to options
         if (options.dedupe ?? true) {
-            this.logger?.debug(`[auth] Deduping subscriptions for account '${tenant.account.id}' and tenant '${tenant.tenantId}'`);
+            this.logForTenant(tenant, 'Deduping subscriptions for account+tenant');
             results = dedupeSubscriptions(results);
         }
 
-        this.logger?.debug(`[auth] Returning ${results.length} subscriptions for account '${tenant.account.id}' and tenant '${tenant.tenantId}'.`);
+        this.logForTenant(tenant, `Returning ${results.length} subscriptions for account+tenant`);
 
         // Finally, sort
         return results.sort((a, b) => a.name.localeCompare(b.name));

@@ -17,6 +17,7 @@ import { getSessionFromVSCode } from '../utils/getSessionFromVSCode';
 import { getSignalForToken } from '../utils/getSignalForToken';
 import { isAuthenticationWwwAuthenticateRequest } from '../utils/isAuthenticationWwwAuthenticateRequest';
 import { isNotSignedInError, NotSignedInError } from '../utils/NotSignedInError';
+import { screen } from '../utils/screen';
 
 const EventDebounce = 5 * 1000; // 5 seconds minimum between `onRefreshSuggested` events
 const EventSilenceTime = 5 * 1000; // 5 seconds after sign-in to silence `onRefreshSuggested` events
@@ -33,7 +34,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
      * Constructs a new {@link AzureSubscriptionProviderBase}.
      * @param logger (Optional) A logger to record information to
      */
-    public constructor(protected readonly logger?: vscode.LogOutputChannel) { }
+    public constructor(private readonly logger?: vscode.LogOutputChannel) { }
 
     private lastRefreshSuggestedTime: number = 0;
     private suppressRefreshSuggestedEvents: boolean = false;
@@ -53,7 +54,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                 return;
             }
 
-            this.logger?.debug('[auth] Firing onRefreshSuggested event');
+            this.log('Firing onRefreshSuggested event');
 
             // Call the callback asynchronously to avoid potential issues
             const timeout = setTimeout(() => {
@@ -121,7 +122,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                             availableSubscriptions.push(...subscriptions);
                         } catch (err) {
                             if (isNotSignedInError(err)) {
-                                this.logger?.debug(`[auth] Skipping tenant '${tenant.id}' for account '${account.id}' because it is not signed in`);
+                                this.logForTenant(tenant, 'Skipping account+tenant because it is not signed in');
                                 return;
                             }
                             throw err;
@@ -131,7 +132,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                     await Promise.all(subscriptionPromises);
                 } catch (err) {
                     if (isNotSignedInError(err)) {
-                        this.logger?.debug(`[auth] Skipping account '${account.id}' because it is not signed in`);
+                        this.logForAccount(account, 'Skipping account because it is not signed in');
                         return;
                     }
                     throw err;
@@ -152,11 +153,11 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
      */
     public async getAccounts(options: GetOptions): Promise<AzureAccount[]> {
         try {
-            this.logger?.debug('[auth] Fetching accounts');
+            this.log('Fetching accounts');
             const results = await vscode.authentication.getAccounts(getConfiguredAuthProviderId());
 
             if (results.length === 0) {
-                this.logger?.debug('[auth] No accounts found');
+                this.log('No accounts found');
                 throw new NotSignedInError();
             }
 
@@ -199,7 +200,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
      */
     public async getTenantsForAccount(account: AzureAccount, options: GetOptions): Promise<AzureTenant[]> {
         try {
-            this.logger?.debug(`[auth] Fetching tenants for account '${account.id}'`);
+            this.logForAccount(account, 'Fetching tenants for account');
 
             const { client } = await this.getSubscriptionClient({ account: account, tenantId: undefined });
 
@@ -224,7 +225,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
      */
     public async getSubscriptionsForTenant(tenant: TenantIdAndAccount, options: GetSubscriptionsOptions): Promise<AzureSubscription[]> {
         try {
-            this.logger?.debug(`[auth] Fetching subscriptions for account '${tenant.account.id}' and tenant '${tenant.tenantId}'`);
+            this.logForTenant(tenant, 'Fetching subscriptions for account+tenant');
 
             const { client, credential, authentication } = await this.getSubscriptionClient(tenant);
             const environment = getConfiguredAzureEnv();
@@ -297,6 +298,18 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                 },
             }
         };
+    }
+
+    protected log(message: string): void {
+        this.logger?.debug(`[auth] ${message}`);
+    }
+
+    protected logForAccount(account: AzureAccount, message: string): void {
+        this.logger?.debug(`[auth] [account: ${screen(account)}] ${message}`);
+    }
+
+    protected logForTenant(tenant: TenantIdAndAccount, message: string): void {
+        this.logger?.debug(`[auth] [account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}] ${message}`);
     }
 
     private timeout: NodeJS.Timeout | undefined;
