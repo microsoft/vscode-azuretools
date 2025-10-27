@@ -13,6 +13,7 @@ const domainRegex = /^(?<domain>[^.]+)(?<safeTld>\.com(\..*)?|\.net|\.org|\.co\.
 
 /**
  * Screens the label or display name of an Azure account or tenant so that it can be logged without exposing PII.
+ * This should *NOT* be considered fool-proof nor safe for telemetry, but is acceptable for local logging.
  * @param accountOrTenant The account or tenant to screen the label / display name of
  * @returns The screened label / display name
  */
