@@ -14,6 +14,8 @@ import { AzureSubscriptionProviderBase, DefaultGetOptions, DefaultGetSubscriptio
 /**
  * Extension of {@link AzureSubscriptionProviderBase} that adds caching of accounts, tenants, and subscriptions,
  * as well as filtering and deduplication according to configured settings.
+ *
+ * @note See important notes about caching on {@link GetOptions.noCache}
  */
 export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBase {
     /**
