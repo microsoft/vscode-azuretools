@@ -108,8 +108,9 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
         const availableSubscriptions: AzureSubscription[] = [];
 
         try {
-            // Due to a bug in VSCode, we must serialize fetching tenants for accounts https://github.com/microsoft/vscode/issues/273176
-            for (const account of await this.getAccounts(options)) {
+            const accounts = await this.getAccounts(options);
+
+            const tenantPromises = accounts.map(async (account) => {
                 try {
                     const tenants = await this.getTenantsForAccount(account, options);
 
@@ -131,11 +132,13 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                 } catch (err) {
                     if (isNotSignedInError(err)) {
                         this.logger?.debug(`[auth] Skipping account '${account.id}' because it is not signed in`);
-                        continue;
+                        return;
                     }
                     throw err;
                 }
-            }
+            });
+
+            await Promise.all(tenantPromises);
         } catch (err) {
             // Intentionally not catching NotSignedInError here, if it is thrown by getAccounts()
             this.remapLogRethrow(err, options.token);
