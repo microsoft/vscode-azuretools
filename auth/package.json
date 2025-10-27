@@ -34,7 +34,7 @@
         "l10n": "npx @vscode/l10n-dev export --outDir ./l10n ./src"
     },
     "engines": {
-        "vscode": "^1.105.0"
+        "vscode": "^1.106.0"
     },
     "devDependencies": {
         "@azure/core-auth": "^1.4.0",
