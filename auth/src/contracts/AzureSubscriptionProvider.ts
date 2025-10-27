@@ -135,6 +135,14 @@ export type GetOptions = {
 
     /**
      * (Optional, default false) Whether to bypass any cached data and refresh from the source.
+     *
+     * @note In the reference implementation, `VSCodeAzureSubscriptionProvider`, it is NOT necessary to use
+     * `noCache: true` in the following cases:
+     *     - Subscription filters have changed (caching is done before filtering)
+     *     - A new sign-in has occurred (a partial cache refill will occur automatically)
+     *
+     * It is only necessary to use `noCache: true` if you expect that the subscriptions/tenants that an
+     * account has access to have changed--e.g. a subscription is created or removed, or RBAC changes.
      */
     noCache?: boolean;
 
