@@ -152,8 +152,9 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
      * @inheritdoc
      */
     public async getAccounts(options: GetOptions): Promise<AzureAccount[]> {
+        const startTime = Date.now();
         try {
-            this.log('Fetching accounts');
+            this.log('Fetching accounts...');
             const results = await vscode.authentication.getAccounts(getConfiguredAuthProviderId());
 
             if (results.length === 0) {
@@ -161,6 +162,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                 throw new NotSignedInError();
             }
 
+            this.log(`Fetched ${results.length} accounts (before filter) in ${Date.now() - startTime}ms`);
             return Array.from(results);
         } catch (err) {
             // Cancellation is not actually supported by vscode.authentication.getAccounts, but just in case it is added in the future...
@@ -172,6 +174,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
      * @inheritdoc
      */
     public async getUnauthenticatedTenantsForAccount(account: AzureAccount, options?: Omit<GetOptions, 'all'>): Promise<AzureTenant[]> {
+        const startTime = Date.now();
         const allTenants = await this.getTenantsForAccount(account, { ...options, all: true });
 
         const unauthenticatedTenants: AzureTenant[] = [];
@@ -196,7 +199,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
             }
         }
 
-        this.logForAccount(account, `Found ${unauthenticatedTenants.length} unauthenticated tenants`);
+        this.logForAccount(account, `Found ${unauthenticatedTenants.length} unauthenticated tenants in ${Date.now() - startTime}ms`);
 
         return unauthenticatedTenants;
     }
@@ -205,8 +208,9 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
      * @inheritdoc
      */
     public async getTenantsForAccount(account: AzureAccount, options: GetOptions): Promise<AzureTenant[]> {
+        const startTime = Date.now();
         try {
-            this.logForAccount(account, 'Fetching tenants for account');
+            this.logForAccount(account, 'Fetching tenants for account...');
 
             const { client } = await this.getSubscriptionClient({ account: account, tenantId: undefined });
 
@@ -220,6 +224,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                 });
             }
 
+            this.logForAccount(account, `Fetched ${allTenants.length} tenants (before filter) in ${Date.now() - startTime}ms`);
             return allTenants;
         } catch (err) {
             this.remapLogRethrow(err, options.token);
@@ -230,8 +235,9 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
      * @inheritdoc
      */
     public async getSubscriptionsForTenant(tenant: TenantIdAndAccount, options: GetSubscriptionsOptions): Promise<AzureSubscription[]> {
+        const startTime = Date.now();
         try {
-            this.logForTenant(tenant, 'Fetching subscriptions for account+tenant');
+            this.logForTenant(tenant, 'Fetching subscriptions for account+tenant...');
 
             const { client, credential, authentication } = await this.getSubscriptionClient(tenant);
             const environment = getConfiguredAzureEnv();
@@ -253,6 +259,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                 });
             }
 
+            this.logForTenant(tenant, `Fetched ${allSubs.length} subscriptions (before filter) in ${Date.now() - startTime}ms`);
             return allSubs;
         } catch (err) {
             this.remapLogRethrow(err, options.token);
