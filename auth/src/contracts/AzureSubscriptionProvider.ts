@@ -18,7 +18,7 @@ export interface AzureSubscriptionProvider {
      * Fires when the list of available subscriptions may have changed, and a refresh is suggested.
      * @note This will be fired at most every 5 seconds, to avoid flooding.
      */
-    onRefreshSuggested: vscode.Event<void>;
+    onRefreshSuggested: vscode.Event<RefreshSuggestedReason>;
 
     /**
      * Signs in to Azure, if not already signed in. This will suppress {@link onRefreshSuggested} events until the sign-in is complete.
@@ -105,6 +105,11 @@ export interface AzureSubscriptionProvider {
  * A type representing just the tenant ID and account information of an Azure tenant.
  */
 export type TenantIdAndAccount = Required<Pick<AzureTenant, 'tenantId' | 'account'>>;
+
+/**
+ * Reasons why a refresh of subscriptions is suggested.
+ */
+export type RefreshSuggestedReason = 'sessionChange' | 'subscriptionFilterChange';
 
 /**
  * Options for signing in to a tenant.
