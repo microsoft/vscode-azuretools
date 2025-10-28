@@ -2,7 +2,7 @@
 
 ## 5.1.1 - 2025-10-28
 
-* [#TODO](https://github.com/microsoft/vscode-azuretools/pull/TODO) Same as https://github.com/microsoft/vscode-azuretools/pull/2110 but a better fix.
+* [#2111](https://github.com/microsoft/vscode-azuretools/pull/2111) Same as https://github.com/microsoft/vscode-azuretools/pull/2110 but a better fix.
 
 ## 5.1.0 - 2025-10-27
 
