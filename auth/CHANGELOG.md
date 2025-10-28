@@ -1,5 +1,9 @@
 # Change Log
 
+## 5.1.1 - 2025-10-28
+
+* [#2111](https://github.com/microsoft/vscode-azuretools/pull/2111) Same as https://github.com/microsoft/vscode-azuretools/pull/2110 but a better fix.
+
 ## 5.1.0 - 2025-10-27
 
 * [#2102](https://github.com/microsoft/vscode-azuretools/pull/2102) Fixes an issue causing infinite event loops especially in https://vscode.dev/azure
