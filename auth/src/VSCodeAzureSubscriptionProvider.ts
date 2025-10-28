@@ -24,7 +24,9 @@ let armSubs: typeof import('@azure/arm-resources-subscriptions') | undefined;
  * A class for obtaining Azure subscription information using VSCode's built-in authentication
  * provider.
  */
-export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implements AzureSubscriptionProvider {
+export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvider, vscode.Disposable {
+    private listenerDisposable: vscode.Disposable | undefined;
+
     private readonly onDidSignInEmitter = new vscode.EventEmitter<void>();
     private lastSignInEventFired: number = 0;
     private suppressSignInEvents: boolean = false;
@@ -36,28 +38,37 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
 
     // So that customers can easily share logs, try to only log PII using trace level
     public constructor(private readonly logger?: vscode.LogOutputChannel) {
-        const isASignInEvent = async () => {
-            const currentAccounts = Array.from(await vscode.authentication.getAccounts(getConfiguredAuthProviderId())); // The Array.from is to get rid of the readonly marker on the array returned by the API
-            const priorAccountCount = this.priorAccounts?.length ?? 0;
-            this.priorAccounts = currentAccounts;
+        void this.accountsRemoved(); // Initialize priorAccounts
+    }
 
-            // The only way a sign out happens is if an account is removed entirely from the list of accounts
-            if (currentAccounts.length === 0 || currentAccounts.length < priorAccountCount) {
-                return false;
-            }
+    public dispose(): void {
+        this.listenerDisposable?.dispose();
+        this.onDidSignInEmitter.dispose();
+        this.onDidSignOutEmitter.dispose();
+    }
 
-            return true;
+    public onDidSignIn(callback: () => unknown, thisArg?: unknown, disposables?: vscode.Disposable[]): vscode.Disposable {
+        this.listenIfNeeded();
+        return this.onDidSignInEmitter.event(callback, thisArg, disposables);
+    }
+
+    public onDidSignOut(callback: () => unknown, thisArg?: unknown, disposables?: vscode.Disposable[]): vscode.Disposable {
+        this.listenIfNeeded();
+        return this.onDidSignOutEmitter.event(callback, thisArg, disposables);
+    }
+
+    private listenIfNeeded(): void {
+        if (this.listenerDisposable) {
+            return;
         }
 
-        void isASignInEvent(); // Run once, asynchronously, to set priorAccounts initially--so that the first real event can be compared against it
-
-        const disposable = vscode.authentication.onDidChangeSessions(async e => {
+        this.listenerDisposable = vscode.authentication.onDidChangeSessions(async e => {
             // Ignore any sign in that isn't for the configured auth provider
             if (e.provider.id !== getConfiguredAuthProviderId()) {
                 return;
             }
 
-            if (await isASignInEvent()) {
+            if (!await this.accountsRemoved()) {
                 if (!this.suppressSignInEvents && Date.now() > this.lastSignInEventFired + EventDebounce) {
                     this.logger?.debug('auth: Firing onDidSignIn event');
                     this.lastSignInEventFired = Date.now();
@@ -69,12 +80,24 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
                 this.onDidSignOutEmitter.fire();
             }
         });
+    }
 
-        super(() => {
-            this.onDidSignInEmitter.dispose();
-            this.onDidSignOutEmitter.dispose();
-            disposable.dispose();
-        });
+    private async accountsRemoved(): Promise<boolean> {
+        try {
+            this.suppressSignInEvents = true;
+            const currentAccounts = Array.from(await vscode.authentication.getAccounts(getConfiguredAuthProviderId()));
+            const priorAccountCount = this.priorAccounts?.length ?? 0;
+            this.priorAccounts = currentAccounts;
+
+            // The only way a sign out happens is if an account is removed entirely from the list of accounts
+            if (currentAccounts.length === 0 || currentAccounts.length < priorAccountCount) {
+                return true;
+            }
+
+            return false;
+        } finally {
+            this.suppressSignInEvents = false;
+        }
     }
 
     /**
@@ -250,11 +273,6 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
     }
 
     /**
-     * An event that is fired when the user signs in. Debounced to fire at most once every 5 seconds.
-     */
-    public readonly onDidSignIn = this.onDidSignInEmitter.event;
-
-    /**
      * Signs the user out
      *
      * @deprecated Not currently supported by VS Code auth providers
@@ -262,11 +280,6 @@ export class VSCodeAzureSubscriptionProvider extends vscode.Disposable implement
     public signOut(): Promise<void> {
         throw new Error(vscode.l10n.t('Signing out programmatically is not supported. You must sign out by selecting the account in the Accounts menu and choosing Sign Out.'));
     }
-
-    /**
-     * An event that is fired when the user signs out. Debounced to fire at most once every 5 seconds.
-     */
-    public readonly onDidSignOut = this.onDidSignOutEmitter.event;
 
     /**
      * Gets the tenant filters that are configured in `azureResourceGroups.selectedSubscriptions`. To
