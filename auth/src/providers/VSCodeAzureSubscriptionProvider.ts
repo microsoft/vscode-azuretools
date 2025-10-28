@@ -23,9 +23,9 @@ const SelectedSubscriptionsConfigKey = 'selectedSubscriptions';
  */
 export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBase {
     /**
-     * Cache of accounts.
+     * Cache of accounts. The key is the account ID, lowercase.
      */
-    private readonly accountCache = new Set<AzureAccount>();
+    private readonly accountCache = new Map<string, AzureAccount>();
 
     /**
      * Cache of tenants. The key is the account ID, lowercase.
@@ -95,13 +95,13 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
         // If needed, refill the cache
         if (this.accountCache.size === 0) {
             const accounts = await super.getAccounts(options);
-            accounts.forEach(account => this.accountCache.add(account));
+            accounts.forEach(account => this.accountCache.set(account.id.toLowerCase(), account));
             this.log(`Cached ${accounts.length} accounts`);
         } else {
             this.log('Using cached accounts');
         }
 
-        let results = Array.from(this.accountCache);
+        let results = Array.from(this.accountCache.values());
 
         // If needed, filter according to configured filters
         if (!options.all) {
