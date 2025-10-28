@@ -9,7 +9,7 @@ import * as vscode from 'vscode';
 import type { AzureAccount } from '../contracts/AzureAccount';
 import type { AzureAuthentication } from '../contracts/AzureAuthentication';
 import type { AzureSubscription } from '../contracts/AzureSubscription';
-import type { AzureSubscriptionProvider, GetOptions, GetSubscriptionsOptions, SignInOptions, TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
+import type { AzureSubscriptionProvider, GetOptions, GetSubscriptionsOptions, RefreshSuggestedReason, SignInOptions, TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
 import type { AzureTenant } from '../contracts/AzureTenant';
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from '../utils/configuredAzureEnv';
 import { dedupeSubscriptions } from '../utils/dedupeSubscriptions';
@@ -42,30 +42,31 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
     /**
      * @inheritdoc
      */
-    public onRefreshSuggested(callback: () => any, thisArg?: any, disposables?: vscode.Disposable[]): vscode.Disposable { // eslint-disable-line @typescript-eslint/no-explicit-any -- Want to match the VSCode API
-        const disposable = vscode.authentication.onDidChangeSessions((evt) => {
-            if (evt.provider.id !== getConfiguredAuthProviderId()) {
-                // If it's not for the configured provider, ignore it
-                return;
+    public onRefreshSuggested(callback: (reason: RefreshSuggestedReason) => unknown, thisArg?: unknown, disposables?: vscode.Disposable[]): vscode.Disposable {
+        const disposable = vscode.authentication.onDidChangeSessions(evt => {
+            if (evt.provider.id === getConfiguredAuthProviderId()) {
+                // If it's for the configured provider, fire the event if needed
+                this.fireRefreshSuggestedIfNeeded('sessionChange', callback, thisArg);
             }
-
-            if (this.suppressRefreshSuggestedEvents || Date.now() < this.lastRefreshSuggestedTime + EventDebounce) {
-                // Suppress and/or debounce events to avoid flooding
-                return;
-            }
-
-            this.log('Firing onRefreshSuggested event');
-
-            // Call the callback asynchronously to avoid potential issues
-            const immediate = setImmediate(() => {
-                clearImmediate(immediate);
-                this.lastRefreshSuggestedTime = Date.now();
-                void callback.call(thisArg);
-            });
         });
-
         disposables?.push(disposable);
         return disposable;
+    }
+
+    protected fireRefreshSuggestedIfNeeded(reason: RefreshSuggestedReason, callback: (reason: RefreshSuggestedReason) => unknown, thisArg?: unknown): void {
+        if (this.suppressRefreshSuggestedEvents || Date.now() < this.lastRefreshSuggestedTime + EventDebounce) {
+            // Suppress and/or debounce events to avoid flooding
+            return;
+        }
+
+        this.log('Firing onRefreshSuggested event');
+
+        // Call the callback asynchronously to avoid potential issues
+        const immediate = setImmediate(() => {
+            clearImmediate(immediate);
+            this.lastRefreshSuggestedTime = Date.now();
+            void callback.call(thisArg, reason);
+        });
     }
 
     /**
