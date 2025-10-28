@@ -22,42 +22,28 @@ const SelectedSubscriptionsConfigKey = 'selectedSubscriptions';
  * @note See important notes about caching on {@link GetOptions.noCache}
  */
 export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBase {
-    /**
-     * Cache of accounts. The key is the account ID, lowercase.
-     */
-    private readonly accountCache = new Map<string, AzureAccount>();
+    private readonly accountCache = new Map<string, AzureAccount>(); // Key is the account ID, lowercase.
+    private readonly tenantCache = new Map<string, AzureTenant[]>(); // Key is the account ID, lowercase.
+    private readonly subscriptionCache = new Map<string, AzureSubscription[]>(); // Key is `${accountId}/${tenantId}`, lowercase.
 
-    /**
-     * Cache of tenants. The key is the account ID, lowercase.
-     */
-    private readonly tenantCache = new Map<string, AzureTenant[]>();
+    private readonly availableSubscriptionsPromises = new Map<string, Promise<AzureSubscription[]>>(); // Key is from getOptionsCoalescenceKey
 
-    /**
-     * Cache of subscriptions. The key is `${accountId}/${tenantId}`, lowercase.
-     */
-    private readonly subscriptionCache = new Map<string, AzureSubscription[]>();
-
-    /**
-     * Pending promises for `getAvailableSubscriptions`, to coalesce multiple identical calls
-     */
-    private readonly availableSubscriptionsPromises = new Map<string, Promise<AzureSubscription[]>>();
+    private isListeningForConfigChanges: boolean = false;
 
     /**
      * @inheritdoc
      */
     public override onRefreshSuggested(callback: (reason: RefreshSuggestedReason) => unknown, thisArg?: unknown, disposables?: vscode.Disposable[]): vscode.Disposable {
-        const one = super.onRefreshSuggested(callback, thisArg, disposables); // TODO: if we can figure out that it's a sign out event without causing event loops, we need to wipe the account cache
-        const two = vscode.workspace.onDidChangeConfiguration(e => {
-            if (e.affectsConfiguration(`${ConfigPrefix}.${SelectedSubscriptionsConfigKey}`)) {
-                this.fireRefreshSuggestedIfNeeded('subscriptionFilterChange', callback, thisArg);
-            }
-        });
+        if (!this.isListeningForConfigChanges) {
+            this.isListeningForConfigChanges = true;
+            this.disposables.push(vscode.workspace.onDidChangeConfiguration(e => {
+                if (e.affectsConfiguration(`${ConfigPrefix}.${SelectedSubscriptionsConfigKey}`)) {
+                    this.fireRefreshSuggestedIfNeeded('subscriptionFilterChange');
+                }
+            }));
+        }
 
-        // disposable one will have already been pushed to disposables by super
-        disposables?.push(two);
-
-        // Return a combined disposable, even though that's not what gets pushed to disposables
-        return vscode.Disposable.from(one, two);
+        return super.onRefreshSuggested(callback, thisArg, disposables);
     }
 
     /**

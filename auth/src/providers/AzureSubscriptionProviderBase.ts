@@ -30,31 +30,41 @@ let armSubs: typeof import('@azure/arm-resources-subscriptions') | undefined;
  * Handles actual communication with Azure via the Azure SDK, as well as
  * controlling the firing of `onRefreshSuggested` events.
  */
-export abstract class AzureSubscriptionProviderBase implements AzureSubscriptionProvider {
+export abstract class AzureSubscriptionProviderBase implements AzureSubscriptionProvider, vscode.Disposable {
     /**
      * Constructs a new {@link AzureSubscriptionProviderBase}.
      * @param logger (Optional) A logger to record information to
      */
     public constructor(private readonly logger?: vscode.LogOutputChannel) { }
 
+    private isListeningForSessionChanges: boolean = false;
+    private readonly refreshSuggestedEmitter = new vscode.EventEmitter<RefreshSuggestedReason>();
     private lastRefreshSuggestedTime: number = 0;
     private suppressRefreshSuggestedEvents: boolean = false;
+
+    protected readonly disposables: vscode.Disposable[] = [];
+    public dispose(): void {
+        this.disposables.forEach(d => void d.dispose());
+        this.refreshSuggestedEmitter.dispose();
+    }
 
     /**
      * @inheritdoc
      */
     public onRefreshSuggested(callback: (reason: RefreshSuggestedReason) => unknown, thisArg?: unknown, disposables?: vscode.Disposable[]): vscode.Disposable {
-        const disposable = vscode.authentication.onDidChangeSessions(evt => {
-            if (evt.provider.id === getConfiguredAuthProviderId()) {
-                // If it's for the configured provider, fire the event if needed
-                this.fireRefreshSuggestedIfNeeded('sessionChange', callback, thisArg);
-            }
-        });
-        disposables?.push(disposable);
-        return disposable;
+        if (!this.isListeningForSessionChanges) {
+            this.isListeningForSessionChanges = true;
+            this.disposables.push(vscode.authentication.onDidChangeSessions(evt => {
+                if (evt.provider.id === getConfiguredAuthProviderId()) {
+                    this.fireRefreshSuggestedIfNeeded('sessionChange');
+                }
+            }));
+        }
+
+        return this.refreshSuggestedEmitter.event(callback, thisArg, disposables);
     }
 
-    protected fireRefreshSuggestedIfNeeded(reason: RefreshSuggestedReason, callback: (reason: RefreshSuggestedReason) => unknown, thisArg?: unknown): void {
+    protected fireRefreshSuggestedIfNeeded(reason: RefreshSuggestedReason): void {
         if (this.suppressRefreshSuggestedEvents || Date.now() < this.lastRefreshSuggestedTime + EventDebounce) {
             // Suppress and/or debounce events to avoid flooding
             return;
@@ -62,12 +72,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
 
         this.log('Firing onRefreshSuggested event');
         this.lastRefreshSuggestedTime = Date.now();
-
-        // Call the callback asynchronously to avoid potential issues
-        const immediate = setImmediate(() => {
-            clearImmediate(immediate);
-            void callback.call(thisArg, reason);
-        });
+        this.refreshSuggestedEmitter.fire(reason);
     }
 
     /**
