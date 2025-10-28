@@ -183,6 +183,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
         const allTenants = await this.getTenantsForAccount(account, { ...options, all: true });
 
         const unauthenticatedTenants: AzureTenant[] = [];
+        // TODO: parallelize?
         for (const tenant of allTenants) {
             this.silenceRefreshEvents();
             const session = await getSessionFromVSCode(
