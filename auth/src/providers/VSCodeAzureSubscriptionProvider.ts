@@ -46,7 +46,7 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
      * @inheritdoc
      */
     public override onRefreshSuggested(callback: (reason: RefreshSuggestedReason) => unknown, thisArg?: unknown, disposables?: vscode.Disposable[]): vscode.Disposable {
-        const one = super.onRefreshSuggested(callback, thisArg, disposables);
+        const one = super.onRefreshSuggested(callback, thisArg, disposables); // TODO: if we can figure out that it's a sign out event without causing event loops, we need to wipe the account cache
         const two = vscode.workspace.onDidChangeConfiguration(e => {
             if (e.affectsConfiguration(`${ConfigPrefix}.${SelectedSubscriptionsConfigKey}`)) {
                 this.fireRefreshSuggestedIfNeeded('subscriptionFilterChange', callback, thisArg);
