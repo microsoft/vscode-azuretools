@@ -28,19 +28,23 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
 
     private readonly availableSubscriptionsPromises = new Map<string, Promise<AzureSubscription[]>>(); // Key is from getOptionsCoalescenceKey
 
-    private isListeningForConfigChanges: boolean = false;
+    private configChangeListener: vscode.Disposable | undefined;
+
+    public override dispose(): void {
+        this.configChangeListener?.dispose();
+        super.dispose();
+    }
 
     /**
      * @inheritdoc
      */
     public override onRefreshSuggested(callback: (reason: RefreshSuggestedReason) => unknown, thisArg?: unknown, disposables?: vscode.Disposable[]): vscode.Disposable {
-        if (!this.isListeningForConfigChanges) {
-            this.isListeningForConfigChanges = true;
-            this.disposables.push(vscode.workspace.onDidChangeConfiguration(e => {
+        if (!this.configChangeListener) {
+            this.configChangeListener = vscode.workspace.onDidChangeConfiguration(e => {
                 if (e.affectsConfiguration(`${ConfigPrefix}.${SelectedSubscriptionsConfigKey}`)) {
                     this.fireRefreshSuggestedIfNeeded('subscriptionFilterChange');
                 }
-            }));
+            });
         }
 
         return super.onRefreshSuggested(callback, thisArg, disposables);

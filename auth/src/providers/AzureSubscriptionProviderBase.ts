@@ -31,20 +31,19 @@ let armSubs: typeof import('@azure/arm-resources-subscriptions') | undefined;
  * controlling the firing of `onRefreshSuggested` events.
  */
 export abstract class AzureSubscriptionProviderBase implements AzureSubscriptionProvider, vscode.Disposable {
+    private sessionChangeListener: vscode.Disposable | undefined;
+    private readonly refreshSuggestedEmitter = new vscode.EventEmitter<RefreshSuggestedReason>();
+    private lastRefreshSuggestedTime: number = 0;
+    private suppressRefreshSuggestedEvents: boolean = false;
+
     /**
      * Constructs a new {@link AzureSubscriptionProviderBase}.
      * @param logger (Optional) A logger to record information to
      */
     public constructor(private readonly logger?: vscode.LogOutputChannel) { }
 
-    private isListeningForSessionChanges: boolean = false;
-    private readonly refreshSuggestedEmitter = new vscode.EventEmitter<RefreshSuggestedReason>();
-    private lastRefreshSuggestedTime: number = 0;
-    private suppressRefreshSuggestedEvents: boolean = false;
-
-    protected readonly disposables: vscode.Disposable[] = [];
     public dispose(): void {
-        this.disposables.forEach(d => void d.dispose());
+        this.sessionChangeListener?.dispose();
         this.refreshSuggestedEmitter.dispose();
     }
 
@@ -52,13 +51,12 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
      * @inheritdoc
      */
     public onRefreshSuggested(callback: (reason: RefreshSuggestedReason) => unknown, thisArg?: unknown, disposables?: vscode.Disposable[]): vscode.Disposable {
-        if (!this.isListeningForSessionChanges) {
-            this.isListeningForSessionChanges = true;
-            this.disposables.push(vscode.authentication.onDidChangeSessions(evt => {
+        if (!this.sessionChangeListener) {
+            this.sessionChangeListener = vscode.authentication.onDidChangeSessions(evt => {
                 if (evt.provider.id === getConfiguredAuthProviderId()) {
                     this.fireRefreshSuggestedIfNeeded('sessionChange');
                 }
-            }));
+            });
         }
 
         return this.refreshSuggestedEmitter.event(callback, thisArg, disposables);
