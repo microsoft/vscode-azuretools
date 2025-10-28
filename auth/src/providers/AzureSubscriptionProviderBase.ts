@@ -9,7 +9,7 @@ import * as vscode from 'vscode';
 import type { AzureAccount } from '../contracts/AzureAccount';
 import type { AzureAuthentication } from '../contracts/AzureAuthentication';
 import type { AzureSubscription } from '../contracts/AzureSubscription';
-import type { AzureSubscriptionProvider, GetOptions, GetSubscriptionsOptions, RefreshSuggestedReason, SignInOptions, TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
+import { DefaultGetSubscriptionsOptions, DefaultSignInOptions, type AzureSubscriptionProvider, type GetOptions, type GetSubscriptionsOptions, type RefreshSuggestedReason, type SignInOptions, type TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
 import type { AzureTenant } from '../contracts/AzureTenant';
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from '../utils/configuredAzureEnv';
 import { dedupeSubscriptions } from '../utils/dedupeSubscriptions';
@@ -187,6 +187,10 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                 }
             );
 
+            if (options?.token?.isCancellationRequested) {
+                throw new vscode.CancellationError();
+            }
+
             if (!session) {
                 unauthenticatedTenants.push(tenant);
             }
@@ -336,18 +340,3 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
         throw err;
     }
 }
-
-export const DefaultGetOptions: GetOptions = {
-    all: false,
-    noCache: false,
-};
-
-export const DefaultGetSubscriptionsOptions: GetSubscriptionsOptions = {
-    ...DefaultGetOptions,
-    dedupe: true,
-};
-
-const DefaultSignInOptions: SignInOptions = {
-    clearSessionPreference: false,
-    promptIfNeeded: true,
-};

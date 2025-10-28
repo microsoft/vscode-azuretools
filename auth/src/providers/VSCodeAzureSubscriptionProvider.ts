@@ -6,17 +6,18 @@
 import * as vscode from 'vscode';
 import type { AzureAccount } from '../contracts/AzureAccount';
 import type { AzureSubscription, SubscriptionId, TenantId } from '../contracts/AzureSubscription';
-import type { GetOptions, GetSubscriptionsOptions, RefreshSuggestedReason, TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
+import { DefaultGetOptions, DefaultGetSubscriptionsOptions, getOptionsCoalescenceKey, type GetOptions, type GetSubscriptionsOptions, type RefreshSuggestedReason, type TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
 import type { AzureTenant } from '../contracts/AzureTenant';
 import { dedupeSubscriptions } from '../utils/dedupeSubscriptions';
-import { AzureSubscriptionProviderBase, DefaultGetOptions, DefaultGetSubscriptionsOptions } from './AzureSubscriptionProviderBase';
+import { AzureSubscriptionProviderBase } from './AzureSubscriptionProviderBase';
 
 const ConfigPrefix = 'azureResourceGroups';
 const SelectedSubscriptionsConfigKey = 'selectedSubscriptions';
 
 /**
  * Extension of {@link AzureSubscriptionProviderBase} that adds caching of accounts, tenants, and subscriptions,
- * as well as filtering and deduplication according to configured settings.
+ * as well as filtering and deduplication according to configured settings. Additionally, promise
+ * coalescence is added for {@link getAvailableSubscriptions}.
  *
  * @note See important notes about caching on {@link GetOptions.noCache}
  */
@@ -24,17 +25,22 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
     /**
      * Cache of accounts.
      */
-    private readonly accountCache: Set<AzureAccount> = new Set();
+    private readonly accountCache = new Set<AzureAccount>();
 
     /**
      * Cache of tenants. The key is the account ID, lowercase.
      */
-    private readonly tenantCache: Map<string, AzureTenant[]> = new Map();
+    private readonly tenantCache = new Map<string, AzureTenant[]>();
 
     /**
      * Cache of subscriptions. The key is `${accountId}/${tenantId}`, lowercase.
      */
-    private readonly subscriptionCache: Map<string, AzureSubscription[]> = new Map();
+    private readonly subscriptionCache = new Map<string, AzureSubscription[]>();
+
+    /**
+     * Pending promises for `getAvailableSubscriptions`, to coalesce multiple identical calls
+     */
+    private readonly availableSubscriptionsPromises = new Map<string, Promise<AzureSubscription[]>>();
 
     /**
      * @inheritdoc
@@ -52,6 +58,30 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
 
         // Return a combined disposable, even though that's not what gets pushed to disposables
         return vscode.Disposable.from(one, two);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public async getAvailableSubscriptions(options: GetOptions = DefaultGetSubscriptionsOptions): Promise<AzureSubscription[]> {
+        const key = getOptionsCoalescenceKey(options);
+        if (key && this.availableSubscriptionsPromises.has(key)) {
+            return this.availableSubscriptionsPromises.get(key)!; // eslint-disable-line @typescript-eslint/no-non-null-assertion -- We just checked it has the key
+        } else {
+            try {
+                const promise = super.getAvailableSubscriptions(options);
+
+                if (key) {
+                    this.availableSubscriptionsPromises.set(key, promise);
+                }
+
+                return await promise;
+            } finally {
+                if (key) {
+                    this.availableSubscriptionsPromises.delete(key);
+                }
+            }
+        }
     }
 
     /**

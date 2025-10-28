@@ -130,7 +130,16 @@ export type SignInOptions = {
 };
 
 /**
- * Options for getting items from the {@link AzureSubscriptionProvider}.
+ * Default options for signing in to a tenant
+ */
+export const DefaultSignInOptions: SignInOptions = {
+    clearSessionPreference: false,
+    promptIfNeeded: true,
+};
+
+/**
+ * Options for getting items from the {@link AzureSubscriptionProvider}. As needed, remember
+ * to update the {@link getOptionsCoalescenceKey} function when modifying this type.
  */
 export type GetOptions = {
     /**
@@ -158,6 +167,37 @@ export type GetOptions = {
 };
 
 /**
+ * Default options for getting items from the {@link AzureSubscriptionProvider}.
+ */
+export const DefaultGetOptions: GetOptions = {
+    all: false,
+    noCache: false,
+};
+
+/**
+ * Gets a promise coalescence key for the given {@link GetOptions}.
+ * @param options The options to get the key for
+ * @returns A string key for coalescing promises, or undefined if coalescing is not applicable
+ * @internal
+ * @deprecated This should not be used by external code. This is placed here so it can be adjacent
+ * to the {@link GetOptions} type, but should be used only by internal implementations of
+ * {@link AzureSubscriptionProvider}.
+ */
+export function getOptionsCoalescenceKey(options: GetOptions): string | undefined {
+    // Never coalesce if there is a cancellation token
+    if (options.token) {
+        return undefined;
+    }
+
+    return Object
+        .keys(options)
+        .filter(k => k !== 'token') // ignore token
+        .sort()
+        .map(k => `${k}:${options[k] ?? DefaultGetSubscriptionsOptions[k]}`) // use default value if undefined
+        .join(',');
+}
+
+/**
  * Options for getting subscriptions from the {@link AzureSubscriptionProvider}.
  */
 export type GetSubscriptionsOptions = GetOptions & {
@@ -166,4 +206,12 @@ export type GetSubscriptionsOptions = GetOptions & {
      * strategy in {@link dedupeSubscriptions}.
      */
     dedupe?: boolean;
+};
+
+/**
+ * Default options for getting subscriptions from the {@link AzureSubscriptionProvider}.
+ */
+export const DefaultGetSubscriptionsOptions: GetSubscriptionsOptions = {
+    ...DefaultGetOptions,
+    dedupe: true,
 };
