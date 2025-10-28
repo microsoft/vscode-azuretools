@@ -6,10 +6,13 @@
 import * as vscode from 'vscode';
 import type { AzureAccount } from '../contracts/AzureAccount';
 import type { AzureSubscription, SubscriptionId, TenantId } from '../contracts/AzureSubscription';
-import type { GetOptions, GetSubscriptionsOptions, TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
+import type { GetOptions, GetSubscriptionsOptions, RefreshSuggestedReason, TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
 import type { AzureTenant } from '../contracts/AzureTenant';
 import { dedupeSubscriptions } from '../utils/dedupeSubscriptions';
 import { AzureSubscriptionProviderBase, DefaultGetOptions, DefaultGetSubscriptionsOptions } from './AzureSubscriptionProviderBase';
+
+const ConfigPrefix = 'azureResourceGroups';
+const SelectedSubscriptionsConfigKey = 'selectedSubscriptions';
 
 /**
  * Extension of {@link AzureSubscriptionProviderBase} that adds caching of accounts, tenants, and subscriptions,
@@ -32,6 +35,24 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
      * Cache of subscriptions. The key is `${accountId}/${tenantId}`, lowercase.
      */
     private readonly subscriptionCache: Map<string, AzureSubscription[]> = new Map();
+
+    /**
+     * @inheritdoc
+     */
+    public override onRefreshSuggested(callback: (reason: RefreshSuggestedReason) => unknown, thisArg?: unknown, disposables?: vscode.Disposable[]): vscode.Disposable {
+        const one = super.onRefreshSuggested(callback, thisArg, disposables);
+        const two = vscode.workspace.onDidChangeConfiguration(e => {
+            if (e.affectsConfiguration(`${ConfigPrefix}.${SelectedSubscriptionsConfigKey}`)) {
+                this.fireRefreshSuggestedIfNeeded('subscriptionFilterChange', callback, thisArg);
+            }
+        });
+
+        // disposable one will have already been pushed to disposables by super
+        disposables?.push(two);
+
+        // Return a combined disposable, even though that's not what gets pushed to disposables
+        return vscode.Disposable.from(one, two);
+    }
 
     /**
      * @inheritdoc
@@ -173,8 +194,8 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
      * @returns A list of tenant IDs that are configured in `azureResourceGroups.selectedSubscriptions`.
      */
     protected getTenantFilters(): Promise<TenantId[]> {
-        const config = vscode.workspace.getConfiguration('azureResourceGroups');
-        const fullSubscriptionIds = config.get<string[]>('selectedSubscriptions', []);
+        const config = vscode.workspace.getConfiguration(ConfigPrefix);
+        const fullSubscriptionIds = config.get<string[]>(SelectedSubscriptionsConfigKey, []);
         return Promise.resolve(fullSubscriptionIds.map(id => id.split('/')[0].toLowerCase()));
     }
 
@@ -187,8 +208,8 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
      * @returns A list of subscription IDs that are configured in `azureResourceGroups.selectedSubscriptions`.
      */
     protected getSubscriptionFilters(): Promise<SubscriptionId[]> {
-        const config = vscode.workspace.getConfiguration('azureResourceGroups');
-        const fullSubscriptionIds = config.get<string[]>('selectedSubscriptions', []);
+        const config = vscode.workspace.getConfiguration(ConfigPrefix);
+        const fullSubscriptionIds = config.get<string[]>(SelectedSubscriptionsConfigKey, []);
         return Promise.resolve(fullSubscriptionIds.map(id => id.split('/')[1].toLowerCase()));
     }
 }
