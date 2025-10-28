@@ -18,6 +18,7 @@ import { getSignalForToken } from '../utils/getSignalForToken';
 import { isAuthenticationWwwAuthenticateRequest } from '../utils/isAuthenticationWwwAuthenticateRequest';
 import { isNotSignedInError, NotSignedInError } from '../utils/NotSignedInError';
 import { screen } from '../utils/screen';
+import { tryGetTokenExpiration } from '../utils/tryGetTokenExpiration';
 
 const EventDebounce = 5 * 1000; // 5 seconds minimum between `onRefreshSuggested` events
 const EventSilenceTime = 5 * 1000; // 5 seconds after sign-in to silence `onRefreshSuggested` events
@@ -277,7 +278,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                 }
                 return {
                     token: session.accessToken,
-                    expiresOnTimestamp: 0, // TODO: can we get the actual expiry? Certainly not from any encrypted tokens
+                    expiresOnTimestamp: tryGetTokenExpiration(session),
                 };
             }
         }
