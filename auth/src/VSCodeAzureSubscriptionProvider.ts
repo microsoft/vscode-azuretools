@@ -35,6 +35,7 @@ export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvide
     private lastSignOutEventFired: number = 0;
 
     private priorAccounts: vscode.AuthenticationSessionAccountInformation[] | undefined;
+    private accountsRemovedPromise: Promise<boolean> | undefined;
 
     // So that customers can easily share logs, try to only log PII using trace level
     public constructor(private readonly logger?: vscode.LogOutputChannel) {
@@ -83,20 +84,35 @@ export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvide
     }
 
     private async accountsRemoved(): Promise<boolean> {
-        try {
-            this.suppressSignInEvents = true;
-            const currentAccounts = Array.from(await vscode.authentication.getAccounts(getConfiguredAuthProviderId()));
-            const priorAccountCount = this.priorAccounts?.length ?? 0;
-            this.priorAccounts = currentAccounts;
+        // If there's already an ongoing accountsRemoved operation, return its result
+        if (this.accountsRemovedPromise) {
+            return this.accountsRemovedPromise;
+        }
 
-            // The only way a sign out happens is if an account is removed entirely from the list of accounts
-            if (currentAccounts.length === 0 || currentAccounts.length < priorAccountCount) {
-                return true;
+        // Create a new promise for this operation
+        this.accountsRemovedPromise = (async () => {
+            try {
+                this.suppressSignInEvents = true;
+                const currentAccounts = Array.from(await vscode.authentication.getAccounts(getConfiguredAuthProviderId()));
+                const priorAccountCount = this.priorAccounts?.length ?? 0;
+                this.priorAccounts = currentAccounts;
+
+                // The only way a sign out happens is if an account is removed entirely from the list of accounts
+                if (currentAccounts.length === 0 || currentAccounts.length < priorAccountCount) {
+                    return true;
+                }
+
+                return false;
+            } finally {
+                this.suppressSignInEvents = false;
             }
+        })();
 
-            return false;
+        try {
+            return await this.accountsRemovedPromise;
         } finally {
-            this.suppressSignInEvents = false;
+            // Clear the promise when done so future calls can proceed
+            this.accountsRemovedPromise = undefined;
         }
     }
 
