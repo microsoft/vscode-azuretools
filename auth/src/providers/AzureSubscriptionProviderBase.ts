@@ -60,11 +60,11 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
         }
 
         this.log('Firing onRefreshSuggested event');
+        this.lastRefreshSuggestedTime = Date.now();
 
         // Call the callback asynchronously to avoid potential issues
         const immediate = setImmediate(() => {
             clearImmediate(immediate);
-            this.lastRefreshSuggestedTime = Date.now();
             void callback.call(thisArg, reason);
         });
     }
