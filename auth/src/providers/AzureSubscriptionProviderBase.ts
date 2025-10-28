@@ -196,6 +196,8 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
             }
         }
 
+        this.logForAccount(account, `Found ${unauthenticatedTenants.length} unauthenticated tenants`);
+
         return unauthenticatedTenants;
     }
 
