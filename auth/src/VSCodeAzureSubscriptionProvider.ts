@@ -28,11 +28,9 @@ export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvide
     private listenerDisposable: vscode.Disposable | undefined;
 
     private readonly onDidSignInEmitter = new vscode.EventEmitter<void>();
-    private lastSignInEventFired: number = 0;
-    private suppressSignInEvents: boolean = false;
-
     private readonly onDidSignOutEmitter = new vscode.EventEmitter<void>();
-    private lastSignOutEventFired: number = 0;
+    private lastEventFired: number = 0;
+    private suppressEvents: boolean = false;
 
     private priorAccounts: vscode.AuthenticationSessionAccountInformation[] | undefined;
     private accountsRemovedPromise: Promise<boolean> | undefined;
@@ -69,15 +67,17 @@ export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvide
                 return;
             }
 
+            if (this.suppressEvents || Date.now() < this.lastEventFired + EventDebounce) {
+                return;
+            }
+
+            this.lastEventFired = Date.now();
+
             if (!await this.accountsRemoved()) {
-                if (!this.suppressSignInEvents && Date.now() > this.lastSignInEventFired + EventDebounce) {
-                    this.logger?.debug('auth: Firing onDidSignIn event');
-                    this.lastSignInEventFired = Date.now();
-                    this.onDidSignInEmitter.fire();
-                }
-            } else if (Date.now() > this.lastSignOutEventFired + EventDebounce) {
+                this.logger?.debug('auth: Firing onDidSignIn event');
+                this.onDidSignInEmitter.fire();
+            } else {
                 this.logger?.debug('auth: Firing onDidSignOut event');
-                this.lastSignOutEventFired = Date.now();
                 this.onDidSignOutEmitter.fire();
             }
         });
@@ -92,7 +92,7 @@ export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvide
         // Create a new promise for this operation
         this.accountsRemovedPromise = (async () => {
             try {
-                this.suppressSignInEvents = true;
+                this.suppressEvents = true;
                 const currentAccounts = Array.from(await vscode.authentication.getAccounts(getConfiguredAuthProviderId()));
                 const priorAccountCount = this.priorAccounts?.length ?? 0;
                 this.priorAccounts = currentAccounts;
@@ -104,7 +104,7 @@ export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvide
 
                 return false;
             } finally {
-                this.suppressSignInEvents = false;
+                this.suppressEvents = false;
             }
         })();
 
@@ -179,7 +179,7 @@ export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvide
         const allSubscriptions: AzureSubscription[] = [];
         let accountCount: number; // only used for logging
         try {
-            this.suppressSignInEvents = true;
+            this.suppressEvents = true;
             // Get the list of tenants from each account (filtered or all)
             const accounts = isGetSubscriptionsAccountFilter(filter) ? [filter.account] : await vscode.authentication.getAccounts(getConfiguredAuthProviderId());
             accountCount = accounts.length;
@@ -199,7 +199,7 @@ export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvide
                 allSubscriptions.push(...await this.getSubscriptionsForTenant(account));
             }
         } finally {
-            this.suppressSignInEvents = false;
+            this.suppressEvents = false;
         }
 
         // It's possible that by listing subscriptions in all tenants and the "home" tenant there could be duplicate subscriptions
@@ -275,7 +275,7 @@ export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvide
     public async signIn(tenantId?: string, account?: vscode.AuthenticationSessionAccountInformation): Promise<boolean> {
         this.logger?.debug(`auth: Signing in (account="${account?.label ?? 'none'}") (tenantId="${tenantId ?? 'none'}")`);
         try {
-            this.suppressSignInEvents = true;
+            this.suppressEvents = true;
             const session = await getSessionFromVSCode([], tenantId, {
                 createIfNone: true,
                 // If no account is provided, then clear the session preference which tells VS Code to show the account picker
@@ -284,7 +284,7 @@ export class VSCodeAzureSubscriptionProvider implements AzureSubscriptionProvide
             });
             return !!session;
         } finally {
-            this.suppressSignInEvents = false;
+            this.suppressEvents = false;
         }
     }
 
