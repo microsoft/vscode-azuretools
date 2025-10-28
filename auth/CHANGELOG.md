@@ -1,9 +1,8 @@
 # Change Log
 
-## 5.1.0 - 2025-10-27
+## 5.0.1 - 2025-10-20
 
 * [#2102](https://github.com/microsoft/vscode-azuretools/pull/2102) Fixes an issue causing infinite event loops especially in https://vscode.dev/azure
-* [#2110](https://github.com/microsoft/vscode-azuretools/pull/2110) `vscode.authentication.onDidChangeSessions()` is no longer subscribed to unless the caller calls `AzureSubscriptionProvider.onDidSignIn()` or `AzureSubscriptionProvider.onDidSignOut()`.
 
 ## 5.0.0 - 2025-10-07
 
