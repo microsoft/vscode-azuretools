@@ -117,7 +117,6 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
         const availableSubscriptions: AzureSubscription[] = [];
 
         try {
-            this.silenceRefreshEvents();
             const accounts = await this.getAccounts(options);
 
             const tenantPromises = accounts.map(async (account) => {
@@ -164,6 +163,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
         const startTime = Date.now();
         try {
             this.log('Fetching accounts...');
+            this.silenceRefreshEvents();
             const results = await vscode.authentication.getAccounts(getConfiguredAuthProviderId());
 
             if (results.length === 0) {
