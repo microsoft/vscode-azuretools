@@ -193,7 +193,7 @@ export function getOptionsCoalescenceKey(options: GetOptions): string | undefine
         .keys(options)
         .filter(k => k !== 'token') // ignore token
         .sort()
-        .map(k => `${k}:${options[k] ?? DefaultGetSubscriptionsOptions[k]}`) // use default value if undefined
+        .map(k => `${k}:${options[k] ?? DefaultGetSubscriptionsOptions[k]}`) // use default value if undefined--use of DefaultGetSubscriptionsOptions is intentional since this supports both GetOptions and GetSubscriptionsOptions
         .join(',');
 }
 

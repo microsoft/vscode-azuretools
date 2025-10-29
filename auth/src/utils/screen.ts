@@ -6,7 +6,7 @@
 import type { AzureAccount } from '../contracts/AzureAccount';
 import type { AzureTenant } from '../contracts/AzureTenant';
 
-// These regexs are not perfect, but should work for common cases
+// These regexes are not perfect, but should work for common cases
 // If they don't work, we'll just return the account ID, which does not need to be screened
 const accountLabelRegex = /^(?<email>[^@]+)@(?<domain>[\w]+(\.[\w]+)+)$/i;
 const domainRegex = /^(?<domain>[^.]+)(?<safeTld>\.com(\..*)?|\.net|\.org|\.co\..*|\.gov)$/i;
