@@ -211,12 +211,13 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
      *
      * If no values are returned by `getTenantFilters()`, then all tenants will be scanned for subscriptions.
      *
-     * @returns A list of tenant IDs that are configured in `azureResourceGroups.selectedSubscriptions`.
+     * @returns A list of unique tenant IDs that are configured in `azureResourceGroups.selectedSubscriptions`.
      */
     protected getTenantFilters(): Promise<TenantId[]> {
         const config = vscode.workspace.getConfiguration(ConfigPrefix);
         const fullSubscriptionIds = config.get<string[]>(SelectedSubscriptionsConfigKey, []);
-        return Promise.resolve(fullSubscriptionIds.map(id => id.split('/')[0].toLowerCase()));
+        const tenantIds = fullSubscriptionIds.map(id => id.split('/')[0].toLowerCase());
+        return Promise.resolve(Array.from(new Set(tenantIds)));
     }
 
     /**
@@ -225,11 +226,12 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
      *
      * If no values are returned by `getSubscriptionFilters()`, then all subscriptions will be scanned.
      *
-     * @returns A list of subscription IDs that are configured in `azureResourceGroups.selectedSubscriptions`.
+     * @returns A list of unique subscription IDs that are configured in `azureResourceGroups.selectedSubscriptions`.
      */
     protected getSubscriptionFilters(): Promise<SubscriptionId[]> {
         const config = vscode.workspace.getConfiguration(ConfigPrefix);
         const fullSubscriptionIds = config.get<string[]>(SelectedSubscriptionsConfigKey, []);
-        return Promise.resolve(fullSubscriptionIds.map(id => id.split('/')[1].toLowerCase()));
+        const subscriptionIds = fullSubscriptionIds.map(id => id.split('/')[1].toLowerCase());
+        return Promise.resolve(Array.from(new Set(subscriptionIds)));
     }
 }
