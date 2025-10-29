@@ -16,12 +16,16 @@ import { dedupeSubscriptions } from '../utils/dedupeSubscriptions';
 import { getSessionFromVSCode } from '../utils/getSessionFromVSCode';
 import { getSignalForToken } from '../utils/getSignalForToken';
 import { isAuthenticationWwwAuthenticateRequest } from '../utils/isAuthenticationWwwAuthenticateRequest';
+import { Limiter } from '../utils/Limiter';
 import { isNotSignedInError, NotSignedInError } from '../utils/NotSignedInError';
 import { screen } from '../utils/screen';
 import { tryGetTokenExpiration } from '../utils/tryGetTokenExpiration';
 
 const EventDebounce = 5 * 1000; // 5 seconds minimum between `onRefreshSuggested` events
 const EventSilenceTime = 5 * 1000; // 5 seconds after sign-in to silence `onRefreshSuggested` events
+
+const TenantListConcurrency = 3; // We will try to list tenants for at most 3 accounts in parallel
+const SubscriptionListConcurrency = 5; // We will try to list subscriptions for at most 5 account+tenants in parallel
 
 let armSubs: typeof import('@azure/arm-resources-subscriptions') | undefined;
 
@@ -116,40 +120,47 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
     public async getAvailableSubscriptions(options: GetOptions = DefaultGetSubscriptionsOptions): Promise<AzureSubscription[]> {
         const availableSubscriptions: AzureSubscription[] = [];
 
+        const tenantListLimiter = new Limiter<void>(TenantListConcurrency);
+        const tenantListPromises: Promise<void>[] = [];
+
+        const subscriptionListLimiter = new Limiter<void>(SubscriptionListConcurrency);
+        const subscriptionListPromisesFlat: Promise<void>[] = [];
+
         try {
             const accounts = await this.getAccounts(options);
 
-            const tenantPromises = accounts.map(async (account) => {
-                try {
-                    const tenants = await this.getTenantsForAccount(account, options);
+            for (const account of accounts) {
+                tenantListPromises.push(tenantListLimiter.queue(async () => {
+                    try {
+                        const tenants = await this.getTenantsForAccount(account, options);
 
-                    // Parallelize fetching subscriptions for all tenants of this account
-                    const subscriptionPromises = tenants.map(async (tenant) => {
-                        try {
-                            const subscriptions = await this.getSubscriptionsForTenant(tenant, options);
-                            availableSubscriptions.push(...subscriptions);
-                        } catch (err) {
-                            if (isNotSignedInError(err)) {
-                                this.logForTenant(tenant, 'Skipping account+tenant because it is not signed in');
-                                return;
-                            }
-                            throw err;
+                        for (const tenant of tenants) {
+                            subscriptionListPromisesFlat.push(subscriptionListLimiter.queue(async () => {
+                                try {
+                                    const subscriptions = await this.getSubscriptionsForTenant(tenant, options);
+                                    availableSubscriptions.push(...subscriptions);
+                                } catch (err) {
+                                    if (isNotSignedInError(err)) {
+                                        this.logForTenant(tenant, 'Skipping account+tenant because it is not signed in');
+                                        return;
+                                    }
+                                    throw err;
+                                }
+                            }));
                         }
-                    });
-
-                    await Promise.all(subscriptionPromises);
-                } catch (err) {
-                    if (isNotSignedInError(err)) {
-                        this.logForAccount(account, 'Skipping account because it is not signed in');
-                        return;
+                    } catch (err) {
+                        if (isNotSignedInError(err)) {
+                            this.logForAccount(account, 'Skipping account because it is not signed in');
+                            return;
+                        }
                     }
-                    throw err;
-                }
-            });
+                }));
+            }
 
-            await Promise.all(tenantPromises);
+            await Promise.all(tenantListPromises);
+            await Promise.all(subscriptionListPromisesFlat);
         } catch (err) {
-            // Intentionally not catching NotSignedInError here, if it is thrown by getAccounts()
+            // Intentionally not eating NotSignedInError here, if it is thrown by getAccounts()
             this.remapLogRethrow(err, options.token);
         }
 
@@ -184,30 +195,37 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
      */
     public async getUnauthenticatedTenantsForAccount(account: AzureAccount, options?: Omit<GetOptions, 'all'>): Promise<AzureTenant[]> {
         const startTime = Date.now();
+
+        const tenantListLimiter = new Limiter<void>(TenantListConcurrency);
+        const tenantListPromises: Promise<void>[] = [];
+
         const allTenants = await this.getTenantsForAccount(account, { ...options, all: true });
 
         const unauthenticatedTenants: AzureTenant[] = [];
-        // TODO: parallelize?
         for (const tenant of allTenants) {
-            this.silenceRefreshEvents();
-            const session = await getSessionFromVSCode(
-                undefined,
-                tenant.tenantId,
-                {
-                    account: account,
-                    createIfNone: false,
-                    silent: true,
+            tenantListPromises.push(tenantListLimiter.queue(async () => {
+                if (options?.token?.isCancellationRequested) {
+                    throw new vscode.CancellationError();
                 }
-            );
 
-            if (options?.token?.isCancellationRequested) {
-                throw new vscode.CancellationError();
-            }
+                this.silenceRefreshEvents();
+                const session = await getSessionFromVSCode(
+                    undefined,
+                    tenant.tenantId,
+                    {
+                        account: account,
+                        createIfNone: false,
+                        silent: true,
+                    }
+                );
 
-            if (!session) {
-                unauthenticatedTenants.push(tenant);
-            }
+                if (!session) {
+                    unauthenticatedTenants.push(tenant);
+                }
+            }));
         }
+
+        await Promise.all(tenantListPromises);
 
         this.logForAccount(account, `Found ${unauthenticatedTenants.length} unauthenticated tenants in ${Date.now() - startTime}ms`);
 
