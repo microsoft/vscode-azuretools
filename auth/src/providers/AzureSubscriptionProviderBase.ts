@@ -43,6 +43,10 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
     public constructor(private readonly logger?: vscode.LogOutputChannel) { }
 
     public dispose(): void {
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+            this.timeout = undefined;
+        }
         this.sessionChangeListener?.dispose();
         this.refreshSuggestedEmitter.dispose();
     }
