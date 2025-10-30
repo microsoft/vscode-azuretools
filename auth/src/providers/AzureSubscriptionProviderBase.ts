@@ -294,7 +294,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
         }
     }
 
-    private async getSubscriptionClient(tenant: Partial<TenantIdAndAccount>): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
+    protected async getSubscriptionClient(tenant: Partial<TenantIdAndAccount>): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
         const credential: TokenCredential = {
             getToken: async (scopes: string | string[], options?: GetTokenOptions) => {
                 this.silenceRefreshEvents();
