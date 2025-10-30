@@ -42,6 +42,7 @@ export function createAzureDevOpsSubscriptionProviderFactory(initializer: AzureD
 }
 
 let armSubs: typeof import('@azure/arm-resources-subscriptions') | undefined;
+let azIdentity: typeof import('@azure/identity') | undefined;
 
 /**
  * AzureSubscriptionProvider implemented to authenticate via federated DevOps service connection, using workflow identity federation
@@ -171,9 +172,7 @@ async function getTokenCredential(serviceConnectionId: string, tenantId: string,
     } else if (!process.env.SYSTEM_ACCESSTOKEN) {
         throw new Error('Cannot create DevOps federated service connection credential because the SYSTEM_ACCESSTOKEN environment variable is not set.');
     } else {
-        console.log('Creating DevOps federated service connection credential for service connection...');
-
-        const { AzurePipelinesCredential } = await import('@azure/identity');
-        return new AzurePipelinesCredential(tenantId, clientId, serviceConnectionId, process.env.SYSTEM_ACCESSTOKEN);
+        azIdentity ??= await import('@azure/identity');
+        return new azIdentity.AzurePipelinesCredential(tenantId, clientId, serviceConnectionId, process.env.SYSTEM_ACCESSTOKEN);
     }
 }
