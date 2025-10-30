@@ -11,6 +11,18 @@
         "azure",
         "vscode"
     ],
+    "exports": {
+        ".": {
+            "import": "./dist/esm/src/index.js",
+            "require": "./dist/cjs/src/index.js",
+            "types": "./dist/esm/src/index.d.ts"
+        },
+        "./azdo": {
+            "import": "./dist/esm/src/providers/AzureDevOpsSubscriptionProvider.js",
+            "require": "./dist/cjs/src/providers/AzureDevOpsSubscriptionProvider.js",
+            "types": "./dist/esm/src/providers/AzureDevOpsSubscriptionProvider.d.ts"
+        }
+    },
     "module": "dist/esm/src/index.js",
     "main": "dist/cjs/src/index.js",
     "types": "dist/esm/src/index.d.ts",
