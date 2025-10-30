@@ -8,7 +8,6 @@ export * from './contracts/AzureAuthentication';
 export * from './contracts/AzureSubscription';
 export * from './contracts/AzureSubscriptionProvider';
 export * from './contracts/AzureTenant';
-export * from './providers/AzureDevOpsSubscriptionProvider';
 export * from './providers/VSCodeAzureSubscriptionProvider';
 export * from './utils/configuredAzureEnv';
 export * from './utils/dedupeSubscriptions';
