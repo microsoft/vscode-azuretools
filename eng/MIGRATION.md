@@ -2,10 +2,12 @@
 1. In package.json, remove dev dependencies that are covered by this package. This includes everything related to
    linting (eslint), bundling (webpack/esbuild), testing (mocha, chai, VS Code testing), and publish (vsce). Remove
    typescript as well.
+1. Spend some time validating the remaining dependencies (dev and real), to see if they are actually in use.
 1. Run `npm i`. Briefly revel in your much-smaller package-lock.json.
 1. Run `npm i --save-dev @microsoft/vscode-azext-eng` to install the latest eng package. Bye bye small package-lock.json.
 1. Update your .nvmrc to Node 22+, and update `@types/node` accordingly. The minimum VS Code version for Node 22 is 1.101.0.
    As appropriate, add a minimum VS Code engine version to your package.json as well.
+1. If needed, update `@microsoft/vscode-azext-utils` to 4.0.1 to get the replacements for TestUserInput, TestActionContext, etc.
 
 # Migrating an NPM package to use this
 This is relatively easy.
@@ -23,14 +25,15 @@ Hard mode engage!
 
 1. Follow the subsection above on [universal steps](#universal-steps).
 1. Update your tsconfig.json to use target=es2022, lib=es2022, module=nodenext, moduleResolution=nodenext.
-1. Remove extension.bundle.ts. This will break loads of imports in the test code. Fix those by importing directly from src.
-1. Rewrite main.js at the root, it will look like [this](https://github.com/microsoft/vscode-containers/blob/main/main.js).
+1. Rewrite main.js at the root, it will look more like [this](https://github.com/microsoft/vscode-containers/blob/main/main.js).
    You no longer use an environment variable to switch between loading the bundled or unbundled code--there is only the bundle.
 1. Rewrite files in the .vscode folder. See [Container Tools](https://github.com/microsoft/vscode-containers/tree/main/.vscode)
    for examples.
 1. Follow the subsection below on [linting](#linting).
 1. Follow the subsection below on [bundling](#bundling).
 1. Follow the subsection below on [testing](#tests).
+1. Clean up old files--webpack config, gulpfile, eslintrc, test/runTest, test/index, etc.
+1. Clean up old scripts in package.json.
 
 # Linting
 1. Create an eslint.config.mjs file at the root, and update the lint script. Read more [here](./src/eslint/README.md).
@@ -68,4 +71,7 @@ WIP
 
 ## VS Code Tests
 Your tests run in the VS Code extension test host, because **you do have VS Code dependencies**.
-WIP
+
+1. Remove extension.bundle.ts. This will break loads of imports in the test code. Fix those by importing directly from src.
+1. Also fix other imports as needed.
+1. Create a .vscode-test.mjs file at the root. Read more [here](./src/vscode-test/README.md).
