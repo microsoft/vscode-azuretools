@@ -171,7 +171,7 @@ export async function autoEsbuildOrWatch(config: EsbuildConfig): Promise<void> {
         const ctx = await context(config);
         process.on('SIGINT', () => {
             console.log('Stopping esbuild watch');
-            ctx.dispose();
+            void ctx.dispose();
         });
         await ctx.watch();
     } else {
