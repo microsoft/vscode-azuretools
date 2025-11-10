@@ -24,7 +24,6 @@ export const baseWebpackConfig: WebpackConfig = {
     target: 'node',
     cache: true,
     entry: {
-        // eslint-disable-next-line @typescript-eslint/naming-convention
         './extension.bundle': './src/extension.ts',
     },
     output: {
