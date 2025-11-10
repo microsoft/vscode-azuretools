@@ -8,8 +8,6 @@ import eslint from '@eslint/js';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
-/* eslint-disable @typescript-eslint/naming-convention */
-
 /**
  * Universal rules that should apply to all projects
  * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
@@ -21,10 +19,11 @@ export const azExtUniversalRules: EslintConfig = {
         },
     },
     rules: {
-        curly: 'warn',
-        eqeqeq: 'error',
-        'no-template-curly-in-string': 'warn',
-        semi: 'warn',
+        '@typescript-eslint/no-floating-promises': 'error', // Raise to error--we want to ensure promises are thoughtfully handled everywhere
+        curly: 'warn', // Raise to warning
+        eqeqeq: 'error', // Raise to error
+        'no-template-curly-in-string': 'warn', // Raise to warning
+        semi: 'warn', // Raise to warning
 
         // All of these are unnecessarily restrictive for our projects, so we shut them off
         '@typescript-eslint/array-type': 'off',
@@ -38,6 +37,17 @@ export const azExtUniversalRules: EslintConfig = {
 };
 
 /**
+ * Rules that apply only to test code
+ * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
+ */
+export const azExtTestRules: EslintConfig = {
+    files: ['**/*.test.ts'],
+    rules: {
+        '@typescript-eslint/no-explicit-any': 'off', // Allow 'any' in test files
+    },
+};
+
+/**
  * Stylistic rules that should apply to all projects
  * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
  */
@@ -46,7 +56,7 @@ export const azExtStylisticRules: EslintConfig = {
         '@typescript-eslint/consistent-generic-constructors': 'warn', // Move from error to warn
         '@typescript-eslint/naming-convention': [
             // Naming convention is enforced, with some exceptions below
-            'warn',
+            'warn', // Move from error to warn
             {
                 // Names should be either camelCase or PascalCase, both are extensively used throughout our projects
                 selector: 'default',
@@ -59,16 +69,33 @@ export const azExtStylisticRules: EslintConfig = {
                 format: ['camelCase', 'PascalCase', 'UPPER_CASE'],
             },
             {
-                // private class properties can also have leading _underscores
-                selector: 'classProperty',
-                modifiers: ['private'],
-                format: ['camelCase', 'PascalCase'],
+                // Function parameters should be camelCase, but can have a leading underscore if unused
+                selector: 'parameter',
+                format: ['camelCase'],
                 leadingUnderscore: 'allow',
+            },
+            {
+                // Object literal properties that require quotes are exempt
+                selector: 'objectLiteralProperty',
+                format: null,
+                modifiers: ['requiresQuotes'],
+            },
+            {
+                // private class properties can also have leading _underscores
+                selector: 'memberLike',
+                modifiers: ['private'],
+                format: ['camelCase'],
+                leadingUnderscore: 'allow',
+            },
+            {
+                // Types (classes, interfaces, type aliases, enums) should be PascalCase
+                selector: 'typeLike',
+                format: ['PascalCase'],
             },
         ],
         '@typescript-eslint/no-unused-vars': [
             // No unused variables, with some exceptions below
-            'warn',
+            'warn', // Move from error to warn
             {
                 // As a function parameter, unused parameters are allowed
                 args: 'none',
@@ -81,7 +108,7 @@ export const azExtStylisticRules: EslintConfig = {
  * A config that enforces lazy imports for @azure/* packages to reduce extension activation time
  * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
  */
-export const lazyImportAzurePackages = lazyImportRuleConfig(['@azure/*']);
+export const lazyImportAzurePackages = lazyImportRuleConfig(['@azure/*', '!@azure/ms-rest-azure-env']);
 
 /**
  * Gets a config that enforces lazy imports for certain packages to reduce extension activation time
@@ -107,8 +134,6 @@ export function lazyImportRuleConfig(patterns: string[]): EslintConfig {
     };
 }
 
-/* eslint-enable @typescript-eslint/naming-convention */
-
 /**
  * Global ignores that should apply to all projects
  * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
@@ -122,6 +147,7 @@ export const ignoresConfig: EslintConfig = globalIgnores([
     'eslint.config.mjs',
     'webpack.config.mjs',
     'esbuild.mjs',
+    'main.js',
 ]);
 
 /**
@@ -133,6 +159,7 @@ export const azExtEslintRecommended: EslintConfig[] = defineConfig(
     tseslint.configs.recommended,
     tseslint.configs.stylistic,
     azExtUniversalRules,
+    azExtTestRules,
     azExtStylisticRules,
 );
 
@@ -145,6 +172,7 @@ export const azExtEslintRecommendedTypeChecked: EslintConfig[] = defineConfig(
     tseslint.configs.recommendedTypeChecked,
     tseslint.configs.stylisticTypeChecked,
     azExtUniversalRules,
+    azExtTestRules,
     azExtStylisticRules,
 );
 
@@ -157,6 +185,7 @@ export const azExtEslintStrict: EslintConfig[] = defineConfig(
     tseslint.configs.strict,
     tseslint.configs.stylistic,
     azExtUniversalRules,
+    azExtTestRules,
     azExtStylisticRules,
 );
 
@@ -169,5 +198,6 @@ export const azExtEslintStrictTypeChecked: EslintConfig[] = defineConfig(
     tseslint.configs.strictTypeChecked,
     tseslint.configs.stylisticTypeChecked,
     azExtUniversalRules,
+    azExtTestRules,
     azExtStylisticRules,
 );
