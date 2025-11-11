@@ -1,9 +1,11 @@
 # Universal steps
+> [Sample PR](https://github.com/microsoft/vscode-azurestaticwebapps/pull/1000/files)
 1. In package.json, remove dev dependencies that are covered by this package. This includes everything related to
    linting (eslint), bundling (webpack/esbuild), testing (mocha, chai, VS Code testing), and publish (vsce). Remove
    typescript as well.
 1. Spend some time validating the remaining dependencies (dev and real), to see if they are actually in use.
 1. Run `npm i`. Briefly revel in your much-smaller package-lock.json.
+1. No, seriously, `npm i` now before you install the eng pkg in the next step, so that things get updated.
 1. Run `npm i --save-dev @microsoft/vscode-azext-eng` to install the latest eng package. Bye bye small package-lock.json.
 1. Update your .nvmrc to Node 22+, and update `@types/node` accordingly. The minimum VS Code version for Node 22 is 1.101.0.
    As appropriate, add a minimum VS Code engine version to your package.json as well.
@@ -25,10 +27,13 @@ Hard mode engage!
 
 1. Follow the subsection above on [universal steps](#universal-steps).
 1. Update your tsconfig.json to use target=es2022, lib=es2022, module=nodenext, moduleResolution=nodenext.
+   > [Sample PR](https://github.com/microsoft/vscode-azurestaticwebapps/pull/1001/files)
 1. Rewrite main.js at the root, it will look more like [this](https://github.com/microsoft/vscode-containers/blob/main/main.js).
    You no longer use an environment variable to switch between loading the bundled or unbundled code--there is only the bundle.
+   > [Sample PR](https://github.com/microsoft/vscode-azurestaticwebapps/pull/1002/files)
 1. Rewrite files in the .vscode folder. See [Container Tools](https://github.com/microsoft/vscode-containers/tree/main/.vscode)
    for examples.
+   > [Sample PR](https://github.com/microsoft/vscode-azurestaticwebapps/pull/1003/files)
 1. Follow the subsection below on [linting](#linting).
 1. Follow the subsection below on [bundling](#bundling).
 1. Follow the subsection below on [testing](#tests).
@@ -36,6 +41,7 @@ Hard mode engage!
 1. Clean up old scripts in package.json.
 
 # Linting
+> Samples: [Enabling linting](https://github.com/microsoft/vscode-azurestaticwebapps/pull/1004/files), [Auto fix](https://github.com/microsoft/vscode-azurestaticwebapps/pull/1005/files), [Manual fix](https://github.com/microsoft/vscode-azurestaticwebapps/pull/1006/files)
 1. Create an eslint.config.mjs file at the root, and update the lint script. Read more [here](./src/eslint/README.md).
 1. Fix lint issues as needed. You can do `npm run lint -- --fix` and it will auto-fix everything it can. I suggest
    committing auto-fixed issues separately from manually-fixed, so it's easier to read the PRs.
@@ -44,6 +50,7 @@ Hard mode engage!
 Extensions must be bundled to improve loading performance and VSIX size. You can use esbuild or Webpack for bundling.
 
 ## ESBuild
+> [Sample PR](https://github.com/microsoft/vscode-azurestaticwebapps/pull/1007/files)
 1. Create an esbuild.mjs file at the root. Read more [here](./src/esbuild/README.md).
 1. Very, very closely examine your existing webpack.config.js. Typically it is going to have zero or more things you
    will need to migrate to your esbuild config.
@@ -102,6 +109,7 @@ Your tests run directly in Mocha, because **you do not have VS Code dependencies
 
 ## VS Code Tests
 Your tests run in the VS Code extension test host, because **you do have VS Code dependencies**.
+> Samples: [Enabling testing](https://github.com/microsoft/vscode-azurestaticwebapps/pull/1008/files), [Fixing imports](https://github.com/microsoft/vscode-azurestaticwebapps/pull/1009/files)
 
 1. Remove extension.bundle.ts. This will break loads of imports in the test code. Fix those by importing directly from src.
     > **NOTE:** Because the extension is running from the bundle and the tests are running directly in TSX, that means
