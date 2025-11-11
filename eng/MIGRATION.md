@@ -58,8 +58,8 @@ Extensions must be bundled to improve loading performance and VSIX size. You can
    whether it still needs to be done, and then you must migrate accordingly.
 1. Replace your NPM build script to build the bundle *and* type check with `--noEmit`. Again, go see
    [Container Tools](https://github.com/microsoft/vscode-containers/blob/main/package.json) for an example.
-1. Build your VSIX. Unzip it and compare contents to the previous version--aside from splitting, it should have exactly
-   the same contents as before, minus anything you expected to disappear.
+1. Build your VSIX. Unzip it and compare contents to the previous version--aside from differences in code-splitting,
+   it should have exactly the same contents as before, minus anything you expected to disappear.
 
 ## Webpack
 I'm not even gonna write a guide for bundling with Webpack 'cause nobody likes it lol.
@@ -73,8 +73,10 @@ WIP
 
 ## VS Code Tests
 Your tests run in the VS Code extension test host, because **you do have VS Code dependencies**.
-
+WIP
+<!--
 1. Remove extension.bundle.ts. This will break loads of imports in the test code. Fix those by importing directly from src.
 1. Also fix other imports as needed.
 1. Create a .vscode-test.mjs file at the root. Read more [here](./src/vscode-test/README.md).
 1. Run the tests. Take note of how many are running, and make sure it's the same as before.
+-->
