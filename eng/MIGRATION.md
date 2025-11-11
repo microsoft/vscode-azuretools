@@ -37,7 +37,8 @@ Hard mode engage!
 
 # Linting
 1. Create an eslint.config.mjs file at the root, and update the lint script. Read more [here](./src/eslint/README.md).
-1. Fix lint issues as needed.
+1. Fix lint issues as needed. You can do `npm run lint -- --fix` and it will auto-fix everything it can. I suggest
+   committing auto-fixed issues separately from manually-fixed, so it's easier to read the PRs.
 
 # Bundling
 Extensions must be bundled to improve loading performance and VSIX size. You can use esbuild or Webpack for bundling.
@@ -69,14 +70,58 @@ Depending on how your tests run, you will do one of the below.
 
 ## Mocha Tests
 Your tests run directly in Mocha, because **you do not have VS Code dependencies**.
-WIP
+
+1. Remove any scripts or tasks that are used to build the tests. Use just `"test": "mocha"` as your test script.
+1. Add the following to your package.json, at the root (sub in your actual test location):
+    ```json
+        "mocha": {
+            "node-option": [
+                "import=tsx"
+            ],
+            "spec": [
+                "src/test/**/*.test.ts"
+            ]
+        }
+    ```
+1. Optionally, you can choose a grep to select specific tests. All mocha options are supported here.
+1. Add in your launch config. It will look something like this:
+    ```json
+        {
+            "name": "Launch tests",
+            "request": "launch",
+            "runtimeArgs": [
+                "test",
+            ],
+            "runtimeExecutable": "npm",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "node"
+        },
+    ```
 
 ## VS Code Tests
 Your tests run in the VS Code extension test host, because **you do have VS Code dependencies**.
-WIP
-<!--
+
 1. Remove extension.bundle.ts. This will break loads of imports in the test code. Fix those by importing directly from src.
+    > **NOTE:** Because the extension is running from the bundle and the tests are running directly in TSX, that means
+    > anything the tests import from the src is a *copy* at runtime--not the same as what the extension has loaded.
+    > In practice, this means things like extension state cannot be accessed or manipulated. A very common example
+    > of that is `extensionVariables`, which will not work.
+    >
+    > Instead, imagine that the tests are another extension within the extension host. You can import some of the same things,
+    > but you get a copy, not the original. You can also use the VS Code APIs to interact with your extension.
+    >
+    > See the following for what can be imported from src:
+    >   - ✔️ Simple functions
+    >   - ✔️ Types
+    >   - ✔️ Enums
+    >   - ✔️ Constants
+    >   - ❔ Classes--depends on how they are implemented
+    >   - ❌ Variables or other state you expect to be shared
+    >
+    > To migrate, you may have to rewrite the tests to be more like unit tests, or otherwise, export the necessary
+    > objects from the extension API *but only when running tests*. Use a magic environment variable to control that.
 1. Also fix other imports as needed.
 1. Create a .vscode-test.mjs file at the root. Read more [here](./src/vscode-test/README.md).
 1. Run the tests. Take note of how many are running, and make sure it's the same as before.
--->
