@@ -44,7 +44,7 @@
         "@types/mocha": "^10.0.10",
         "@vscode/test-cli": "^0.0.12",
         "@vscode/test-electron": "^2.5.2",
-        "@vscode/vsce": "^3.6.2",
+        "@vscode/vsce": "^3.7.0",
         "chai": "^6.2.0",
         "chai-as-promised": "^8.0.2",
         "copy-webpack-plugin": "^13.0.1",
