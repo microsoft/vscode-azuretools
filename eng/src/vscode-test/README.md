@@ -29,7 +29,7 @@ export { azExtTestConfig as default } from '@microsoft/vscode-azext-eng/vscode-t
     },
     "outFiles": [
         "${workspaceFolder}/dist/**/*.{js,mjs,cjs}",
-        "${workspaceFolder}/src/**/*.{ts,mts,cts}", // We are using TSX so out files *are* the source files
+        "${workspaceFolder}/test/**/*.{ts,mts,cts}", // We are using TSX so out files *are* the source files
     ],
     "preLaunchTask": "${defaultBuildTask}",
 },
