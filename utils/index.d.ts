@@ -2843,15 +2843,6 @@ export declare enum TestInput {
     BackThreeSteps = 2
 }
 
-export declare type PromptResult = {
-    value: string | QuickPickItem | QuickPickItem[] | MessageItem | Uri[] | WorkspaceFolder;
-
-    /**
-     * True if the user did not change from the default value, currently only supported for `showInputBox`
-     */
-    matchesDefault?: boolean;
-};
-
 /**
  * Wrapper class of several `vscode.window` methods that handle user input.
  * This class is meant to be used for testing in non-interactive mode.
