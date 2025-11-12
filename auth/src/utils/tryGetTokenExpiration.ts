@@ -12,7 +12,7 @@ export function tryGetTokenExpiration(session: vscode.AuthenticationSession | un
             const idTokenParts = session.idToken.split('.');
             if (idTokenParts.length === 3) {
                 const payload = JSON.parse(Buffer.from(idTokenParts[1], 'base64').toString()) as { exp?: number };
-                if (payload.exp) {
+                if (payload.exp !== undefined && Number.isInteger(payload.exp)) {
                     return payload.exp * 1000; // Convert to milliseconds
                 }
             }
