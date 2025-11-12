@@ -3,17 +3,12 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-/**
- * @important When updating these configs, be sure to update the corresponding webpack configs in
- * file://./../webpack/webpackConfigs.ts as needed
- */
-
 import { type BuildOptions as EsbuildConfig, build, context } from 'esbuild';
 import { copy } from 'esbuild-plugin-copy';
 import * as fs from 'fs/promises';
-import { getAutoBuildSettings } from '../utils/getAutoBuildSettings.js';
+import { getAutoBuildSettings } from './getAutoBuildSettings.js';
 
-const { isAutoDebug, isAutoWatch } = getAutoBuildSettings('esbuild');
+const { isAutoDebug, isAutoWatch } = getAutoBuildSettings();
 
 /**
  * Base config - shared between prod/dev/debug

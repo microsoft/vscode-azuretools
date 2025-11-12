@@ -9,7 +9,6 @@ In addition, universal and recommended configurations are provided. They can be 
 - [ESBuild Config](./src/esbuild/README.md)
 - [ESLint Config](./src/eslint/README.md)
 - [VS Code Test Config](./src/vscode-test/README.md)
-- [Webpack Config](./src/webpack/README.md)
 
 # TODO: Future Ideas
 

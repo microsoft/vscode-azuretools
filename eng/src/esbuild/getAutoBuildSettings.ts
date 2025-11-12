@@ -4,15 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 /**
- * Gets the auto-build settings
- * @param builder Whether the builder is webpack or esbuild
- * @returns The auto-build settings
+ * Gets the auto-build settings from environment variables and command-line arguments.
  */
-export function getAutoBuildSettings(builder: 'webpack' | 'esbuild'): { isAutoDebug: boolean; isAutoWatch: boolean; } {
-    const autoDebugEnvValue =
-        builder === 'webpack' ?
-            process.env.DEBUG_WEBPACK :
-            process.env.DEBUG_ESBUILD;
+export function getAutoBuildSettings(): { isAutoDebug: boolean; isAutoWatch: boolean; } {
+    const autoDebugEnvValue = process.env.DEBUG_ESBUILD;
     const isAutoDebug = ['1', 'true', 'yes', 'y', 'on'].includes((autoDebugEnvValue ?? '').toLowerCase());
     const isAutoWatch = process.argv.includes('--watch');
     return { isAutoDebug, isAutoWatch, };

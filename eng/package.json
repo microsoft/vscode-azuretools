@@ -23,11 +23,6 @@
             "import": "./dist/esm/vscode-test/vscodeTestConfigs.js",
             "require": "./dist/cjs/vscode-test/vscodeTestConfigs.js",
             "types": "./dist/esm/vscode-test/vscodeTestConfigs.d.ts"
-        },
-        "./webpack": {
-            "import": "./dist/esm/webpack/webpackConfigs.js",
-            "require": "./dist/cjs/webpack/webpackConfigs.js",
-            "types": "./dist/esm/webpack/webpackConfigs.d.ts"
         }
     },
     "scripts": {
@@ -39,30 +34,23 @@
         "package": "npm pack"
     },
     "dependencies": {
-        "@types/chai": "^5.2.2",
+        "@types/chai": "^5.2.3",
         "@types/chai-as-promised": "^8.0.2",
         "@types/mocha": "^10.0.10",
         "@vscode/test-cli": "^0.0.12",
-        "@vscode/test-electron": "^2.5.2",
         "@vscode/vsce": "^3.7.0",
-        "chai": "^6.2.0",
+        "chai": "^6.2.1",
         "chai-as-promised": "^8.0.2",
-        "copy-webpack-plugin": "^13.0.1",
-        "esbuild": "^0.25.10",
-        "esbuild-loader": "^4.4.0",
+        "esbuild": "^0.25.12",
         "esbuild-plugin-copy": "^2.1.1",
-        "eslint": "^9.37.0",
-        "mocha": "^11.7.4",
+        "eslint": "^9.39.1",
+        "mocha": "^11.7.5",
         "tsx": "^4.20.6",
         "typescript": "~5.9",
-        "typescript-eslint": "^8.46.1",
-        "webpack": "^5.102.1",
-        "webpack-bundle-analyzer": "^4.10.2",
-        "webpack-cli": "^6.0.1"
+        "typescript-eslint": "^8.46.4"
     },
     "devDependencies": {
-        "@types/node": "22.x",
-        "@types/webpack-bundle-analyzer": "^4.7.0"
+        "@types/node": "22.x"
     },
     "publishConfig": {
         "tag": "alpha"
