@@ -1,7 +1,7 @@
 # Universal steps
 > [Sample PR](https://github.com/microsoft/vscode-azurestaticwebapps/pull/1000/files)
 1. In package.json, remove dev dependencies that are covered by this package. This includes everything related to
-   linting (eslint), bundling (webpack/esbuild), testing (mocha, chai, VS Code testing), and publish (vsce). Remove
+   linting (eslint), bundling (esbuild), testing (mocha, chai, VS Code testing), and publish (vsce). Remove
    typescript as well.
 1. Spend some time validating the remaining dependencies (dev and real), to see if they are actually in use.
 1. Run `npm i`. Briefly revel in your much-smaller package-lock.json.
@@ -47,9 +47,8 @@ Hard mode engage!
    committing auto-fixed issues separately from manually-fixed, so it's easier to read the PRs.
 
 # Bundling
-Extensions must be bundled to improve loading performance and VSIX size. You can use esbuild or Webpack for bundling.
+Extensions must be bundled to improve loading performance and VSIX size. We use esbuild for bundling.
 
-## ESBuild
 > [Sample PR](https://github.com/microsoft/vscode-azurestaticwebapps/pull/1007/files)
 1. Create an esbuild.mjs file at the root. Read more [here](./src/esbuild/README.md).
 1. Very, very closely examine your existing webpack.config.js. Typically it is going to have zero or more things you
@@ -68,9 +67,6 @@ Extensions must be bundled to improve loading performance and VSIX size. You can
    [Container Tools](https://github.com/microsoft/vscode-containers/blob/main/package.json) for an example.
 1. Build your VSIX. Unzip it and compare contents to the previous version--aside from differences in code-splitting,
    it should have exactly the same contents as before, minus anything you expected to disappear.
-
-## Webpack
-I'm not even gonna write a guide for bundling with Webpack 'cause nobody likes it lol.
 
 # Tests
 Depending on how your tests run, you will do one of the below.
