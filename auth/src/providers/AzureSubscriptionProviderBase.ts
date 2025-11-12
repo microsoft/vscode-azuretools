@@ -9,7 +9,7 @@ import * as vscode from 'vscode';
 import type { AzureAccount } from '../contracts/AzureAccount';
 import type { AzureAuthentication } from '../contracts/AzureAuthentication';
 import type { AzureSubscription } from '../contracts/AzureSubscription';
-import { DefaultGetSubscriptionsOptions, DefaultSignInOptions, type AzureSubscriptionProvider, type GetOptions, type GetSubscriptionsOptions, type RefreshSuggestedReason, type SignInOptions, type TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
+import { DefaultGetSubscriptionsOptions, DefaultSignInOptions, type AzureSubscriptionProvider, type GetOptions, type GetSubscriptionsOptions, type RefreshSuggestedEvent, type SignInOptions, type TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
 import type { AzureTenant } from '../contracts/AzureTenant';
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from '../utils/configuredAzureEnv';
 import { dedupeSubscriptions } from '../utils/dedupeSubscriptions';
@@ -36,7 +36,7 @@ let armSubs: typeof import('@azure/arm-resources-subscriptions') | undefined;
  */
 export abstract class AzureSubscriptionProviderBase implements AzureSubscriptionProvider, vscode.Disposable {
     private sessionChangeListener: vscode.Disposable | undefined;
-    private readonly refreshSuggestedEmitter = new vscode.EventEmitter<RefreshSuggestedReason>();
+    private readonly refreshSuggestedEmitter = new vscode.EventEmitter<RefreshSuggestedEvent>();
     private lastRefreshSuggestedTime: number = 0;
     private suppressRefreshSuggestedEvents: boolean = false;
 
@@ -58,11 +58,11 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
     /**
      * @inheritdoc
      */
-    public onRefreshSuggested(callback: (reason: RefreshSuggestedReason) => unknown, thisArg?: unknown, disposables?: vscode.Disposable[]): vscode.Disposable {
+    public onRefreshSuggested(callback: (reason: RefreshSuggestedEvent) => unknown, thisArg?: unknown, disposables?: vscode.Disposable[]): vscode.Disposable {
         if (!this.sessionChangeListener) {
             this.sessionChangeListener = vscode.authentication.onDidChangeSessions(evt => {
                 if (evt.provider.id === getConfiguredAuthProviderId()) {
-                    this.fireRefreshSuggestedIfNeeded('sessionChange');
+                    this.fireRefreshSuggestedIfNeeded({ reason: 'sessionChange' });
                 }
             });
         }
@@ -70,7 +70,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
         return this.refreshSuggestedEmitter.event(callback, thisArg, disposables);
     }
 
-    protected fireRefreshSuggestedIfNeeded(reason: RefreshSuggestedReason): void {
+    protected fireRefreshSuggestedIfNeeded(reason: RefreshSuggestedEvent): void {
         if (this.suppressRefreshSuggestedEvents || Date.now() < this.lastRefreshSuggestedTime + EventDebounce) {
             // Suppress and/or debounce events to avoid flooding
             return;

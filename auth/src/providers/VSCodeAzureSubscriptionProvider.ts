@@ -6,7 +6,7 @@
 import * as vscode from 'vscode';
 import type { AzureAccount } from '../contracts/AzureAccount';
 import type { AzureSubscription, SubscriptionId, TenantId } from '../contracts/AzureSubscription';
-import { DefaultGetOptions, DefaultGetSubscriptionsOptions, getOptionsCoalescenceKey, type GetOptions, type GetSubscriptionsOptions, type RefreshSuggestedReason, type TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
+import { DefaultGetOptions, DefaultGetSubscriptionsOptions, getOptionsCoalescenceKey, type GetOptions, type GetSubscriptionsOptions, type RefreshSuggestedEvent, type TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
 import type { AzureTenant } from '../contracts/AzureTenant';
 import { dedupeSubscriptions } from '../utils/dedupeSubscriptions';
 import { AzureSubscriptionProviderBase } from './AzureSubscriptionProviderBase';
@@ -38,11 +38,11 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
     /**
      * @inheritdoc
      */
-    public override onRefreshSuggested(callback: (reason: RefreshSuggestedReason) => unknown, thisArg?: unknown, disposables?: vscode.Disposable[]): vscode.Disposable {
+    public override onRefreshSuggested(callback: (reason: RefreshSuggestedEvent) => unknown, thisArg?: unknown, disposables?: vscode.Disposable[]): vscode.Disposable {
         if (!this.configChangeListener) {
             this.configChangeListener = vscode.workspace.onDidChangeConfiguration(e => {
                 if (e.affectsConfiguration(`${ConfigPrefix}.${SelectedSubscriptionsConfigKey}`)) {
-                    this.fireRefreshSuggestedIfNeeded('subscriptionFilterChange');
+                    this.fireRefreshSuggestedIfNeeded({ reason: 'subscriptionFilterChange' });
                 }
             });
         }

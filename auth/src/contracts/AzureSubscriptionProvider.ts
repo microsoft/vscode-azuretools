@@ -16,9 +16,10 @@ import type { AzureTenant } from './AzureTenant';
 export interface AzureSubscriptionProvider {
     /**
      * Fires when the list of available subscriptions may have changed, and a refresh is suggested.
+     * The callback will be given a {@link RefreshSuggestedEvent} with more information.
      * @note This will be fired at most every 5 seconds, to avoid flooding.
      */
-    onRefreshSuggested: vscode.Event<RefreshSuggestedReason>;
+    onRefreshSuggested: vscode.Event<RefreshSuggestedEvent>;
 
     /**
      * Signs in to Azure, if not already signed in. This will suppress {@link onRefreshSuggested} events until the sign-in is complete.
@@ -107,9 +108,14 @@ export interface AzureSubscriptionProvider {
 export type TenantIdAndAccount = Required<Pick<AzureTenant, 'tenantId' | 'account'>>;
 
 /**
- * Reasons why a refresh of subscriptions is suggested.
+ * Information included when a refresh is suggested.
  */
-export type RefreshSuggestedReason = 'sessionChange' | 'subscriptionFilterChange';
+export interface RefreshSuggestedEvent {
+    /**
+     * The reason a refresh was suggested.
+     */
+    reason: 'sessionChange' | 'subscriptionFilterChange';
+}
 
 /**
  * Options for signing in to a tenant.
