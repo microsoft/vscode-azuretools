@@ -143,11 +143,12 @@ export const ignoresConfig: EslintConfig = globalIgnores([
     'out/**',
     'dist/**',
     '**/*.d.ts',
-    '.vscode-test*',
-    'eslint.config.mjs',
-    'webpack.config.mjs',
+    '.vscode-test/**',
+    '.vscode-test.mjs',
     'esbuild.mjs',
+    'eslint.config.mjs',
     'main.js',
+    'main.mjs',
 ]);
 
 /**
