@@ -16,7 +16,6 @@ const ConfigPrefix = 'azureResourceGroups';
 const SelectedSubscriptionsConfigKey = 'selectedSubscriptions';
 
 // TODO: cache clearing on account sign out
-// TODO: `noCache` only clears one level of the cache, if subsequent calls do not also have `noCache` they may get unexpected cached data
 
 /**
  * Extension of {@link AzureSubscriptionProviderBase} that adds caching of accounts, tenants, and subscriptions,
@@ -253,5 +252,20 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
         const fullSubscriptionIds = config.get<string[]>(SelectedSubscriptionsConfigKey, []);
         const subscriptionIds = fullSubscriptionIds.map(id => id.split('/')[1].toLowerCase());
         return Promise.resolve(Array.from(new Set(subscriptionIds)));
+    }
+
+    /**
+     * Clears all caches related to the given signed-out account.
+     * @param accountId The ID of the signed-out account
+     */
+    private onDidSignOutAccount(accountId: string): void {
+        const lowerAccountId = accountId.toLowerCase();
+        this.accountCache.delete(lowerAccountId);
+        this.tenantCache.delete(lowerAccountId);
+        this.subscriptionCache.forEach((_, key) => {
+            if (key.startsWith(`${lowerAccountId}/`)) {
+                this.subscriptionCache.delete(key);
+            }
+        });
     }
 }

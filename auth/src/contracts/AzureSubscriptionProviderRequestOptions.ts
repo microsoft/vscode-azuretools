@@ -51,6 +51,9 @@ export type BaseOptions = {
      *
      * It is only necessary to use `noCache: true` if you expect that the subscriptions/tenants that an
      * account has access to have changed--e.g. a subscription is created or removed, or RBAC changes.
+     *
+     * @note When `noCache: true` is used, it applies *only to that function call*. The entire cache will
+     * not be cleared--only the data needed for that call will be refreshed.
      */
     noCache?: boolean;
 
