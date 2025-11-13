@@ -37,9 +37,9 @@ export const DefaultSignInOptions = {
  */
 export type BaseOptions = {
     /**
-     * (Optional, default false) Whether to get all items, or only those explicitly selected by the user.
+     * (Optional, default true) If true, only items explicitly selected by the user will be returned.
      */
-    all?: boolean;
+    filter?: boolean;
 
     /**
      * (Optional, default false) Whether to bypass any cached data and refresh from the source.
@@ -99,7 +99,7 @@ export type GetAvailableSubscriptionsOptions = GetAccountsOptions & GetTenantsFo
  * is a superset of all of the availble options.
  */
 export const DefaultOptions = {
-    all: false,
+    filter: true,
     noCache: false,
     token: undefined,
     dedupe: true,

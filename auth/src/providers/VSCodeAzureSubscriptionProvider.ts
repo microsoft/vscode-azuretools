@@ -95,7 +95,7 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
         let results = Array.from(this.accountCache.values());
 
         // If needed, filter according to configured filters
-        if (!(options.all ?? DefaultOptions.all)) {
+        if (options.filter ?? DefaultOptions.filter) {
             const accountFilters = await this.getAccountFilters();
             if (accountFilters.length > 0) {
                 this.log(`Filtering accounts to ${accountFilters.length} configured accounts`);
@@ -131,7 +131,7 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
         let results: AzureTenant[] = this.tenantCache.get(cacheKey)!; // eslint-disable-line @typescript-eslint/no-non-null-assertion -- We just filled it
 
         // If needed, filter according to configured filters
-        if (!(options.all ?? DefaultOptions.all)) {
+        if (options.filter ?? DefaultOptions.filter) {
             const tenantFilters = await this.getTenantFilters();
             if (tenantFilters.length > 0) {
                 this.logForAccount(account, `Filtering tenants for account to ${tenantFilters.length} configured tenants`);
@@ -173,7 +173,7 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
         let results: AzureSubscription[] = this.subscriptionCache.get(cacheKey)!; // eslint-disable-line @typescript-eslint/no-non-null-assertion -- We just filled it
 
         // If needed, filter according to configured filters
-        if (!(options.all ?? DefaultOptions.all)) {
+        if (options.filter ?? DefaultOptions.filter) {
             const subscriptionFilters = await this.getSubscriptionFilters();
             if (subscriptionFilters.length > 0) {
                 this.logForTenant(tenant, `Filtering subscriptions for account+tenant to ${subscriptionFilters.length} configured subscriptions`);

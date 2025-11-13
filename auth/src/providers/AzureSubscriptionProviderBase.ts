@@ -207,13 +207,13 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
     /**
      * @inheritdoc
      */
-    public async getUnauthenticatedTenantsForAccount(account: AzureAccount, options?: Omit<GetTenantsForAccountOptions, 'all'>): Promise<AzureTenant[]> {
+    public async getUnauthenticatedTenantsForAccount(account: AzureAccount, options: Omit<GetTenantsForAccountOptions, 'filter'> = DefaultOptions): Promise<AzureTenant[]> {
         const startTime = Date.now();
 
         const tenantListLimiter = new Limiter<void>(TenantListConcurrency);
         const tenantListPromises: Promise<void>[] = [];
 
-        const allTenants = await this.getTenantsForAccount(account, { ...options, all: true });
+        const allTenants = await this.getTenantsForAccount(account, { ...options, filter: false });
 
         const unauthenticatedTenants: AzureTenant[] = [];
         for (const tenant of allTenants) {
