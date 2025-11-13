@@ -5,11 +5,14 @@
 
 // This is lifted directly from https://github.com/microsoft/vscode/blob/f8e2f71c2f78ac1ce63389e761e2aefc724646fc/extensions/git/src/util.ts#L411-L454,
 // which itself looks like just a simplified version of https://github.com/microsoft/vscode/blob/f8e2f71c2f78ac1ce63389e761e2aefc724646fc/src/vs/base/common/async.ts#L696-L786
+// There have been no changes made, even to fix typos
+
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 
 interface ILimitedTaskFactory<T> {
     factory: () => Promise<T>;
     c: (value: T | Promise<T>) => void;
-    e: (error?: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
+    e: (error?: any) => void;
 }
 
 export class Limiter<T> {
@@ -33,7 +36,7 @@ export class Limiter<T> {
 
     private consume(): void {
         while (this.outstandingPromises.length && this.runningPromises < this.maxDegreeOfParalellism) {
-            const iLimitedTask = this.outstandingPromises.shift()!; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            const iLimitedTask = this.outstandingPromises.shift()!;
             this.runningPromises++;
 
             const promise = iLimitedTask.factory();
@@ -50,3 +53,5 @@ export class Limiter<T> {
         }
     }
 }
+
+/* eslint-enable @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
