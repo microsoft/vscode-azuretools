@@ -15,6 +15,9 @@ import { AzureSubscriptionProviderBase } from './AzureSubscriptionProviderBase';
 const ConfigPrefix = 'azureResourceGroups';
 const SelectedSubscriptionsConfigKey = 'selectedSubscriptions';
 
+// TODO: cache clearing on account sign out
+// TODO: `noCache` only clears one level of the cache, if subsequent calls do not also have `noCache` they may get unexpected cached data
+
 /**
  * Extension of {@link AzureSubscriptionProviderBase} that adds caching of accounts, tenants, and subscriptions,
  * as well as filtering and deduplication according to configured settings. Additionally, promise
@@ -56,23 +59,23 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
      */
     public async getAvailableSubscriptions(options: GetAvailableSubscriptionsOptions = DefaultOptions): Promise<AzureSubscription[]> {
         try {
-        const key = getCoalescenceKey(options);
-        if (key && this.availableSubscriptionsPromises.has(key)) {
-            return this.availableSubscriptionsPromises.get(key)!; // eslint-disable-line @typescript-eslint/no-non-null-assertion -- We just checked it has the key
-        } else {
-            try {
-                const promise = super.getAvailableSubscriptions(options);
+            const key = getCoalescenceKey(options);
+            if (key && this.availableSubscriptionsPromises.has(key)) {
+                return this.availableSubscriptionsPromises.get(key)!; // eslint-disable-line @typescript-eslint/no-non-null-assertion -- We just checked it has the key
+            } else {
+                try {
+                    const promise = super.getAvailableSubscriptions(options);
 
-                if (key) {
-                    this.availableSubscriptionsPromises.set(key, promise);
-                }
+                    if (key) {
+                        this.availableSubscriptionsPromises.set(key, promise);
+                    }
 
-                return await promise;
-            } finally {
-                if (key) {
-                    this.availableSubscriptionsPromises.delete(key);
+                    return await promise;
+                } finally {
+                    if (key) {
+                        this.availableSubscriptionsPromises.delete(key);
+                    }
                 }
-            }
             }
         } finally {
             this.throwIfCancelled(options.token);
@@ -84,33 +87,33 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
      */
     public override async getAccounts(options: GetAccountsOptions = DefaultOptions): Promise<AzureAccount[]> {
         try {
-        if (options.noCache ?? DefaultOptions.noCache) {
-            this.accountCache.clear();
-        }
-
-        // If needed, refill the cache
-        if (this.accountCache.size === 0) {
-            const accounts = await super.getAccounts(options);
-            accounts.forEach(account => this.accountCache.set(account.id.toLowerCase(), account));
-            this.log(`Cached ${accounts.length} accounts`);
-        } else {
-            this.log('Using cached accounts');
-        }
-
-        let results = Array.from(this.accountCache.values());
-
-        // If needed, filter according to configured filters
-        if (options.filter ?? DefaultOptions.filter) {
-            const accountFilters = await this.getAccountFilters();
-            if (accountFilters.length > 0) {
-                this.log(`Filtering accounts to ${accountFilters.length} configured accounts`);
-                results = results.filter(account => accountFilters.includes(account.id.toLowerCase()));
+            if (options.noCache ?? DefaultOptions.noCache) {
+                this.accountCache.clear();
             }
-        }
 
-        this.log(`Returning ${results.length} accounts.`);
+            // If needed, refill the cache
+            if (this.accountCache.size === 0) {
+                const accounts = await super.getAccounts(options);
+                accounts.forEach(account => this.accountCache.set(account.id.toLowerCase(), account));
+                this.log(`Cached ${accounts.length} accounts`);
+            } else {
+                this.log('Using cached accounts');
+            }
 
-        return results.sort((a, b) => a.label.localeCompare(b.label));
+            let results = Array.from(this.accountCache.values());
+
+            // If needed, filter according to configured filters
+            if (options.filter ?? DefaultOptions.filter) {
+                const accountFilters = await this.getAccountFilters();
+                if (accountFilters.length > 0) {
+                    this.log(`Filtering accounts to ${accountFilters.length} configured accounts`);
+                    results = results.filter(account => accountFilters.includes(account.id.toLowerCase()));
+                }
+            }
+
+            this.log(`Returning ${results.length} accounts.`);
+
+            return results.sort((a, b) => a.label.localeCompare(b.label));
         } finally {
             this.throwIfCancelled(options.token);
         }
@@ -121,42 +124,42 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
      */
     public override async getTenantsForAccount(account: AzureAccount, options: GetTenantsForAccountOptions = DefaultOptions): Promise<AzureTenant[]> {
         try {
-        const cacheKey = account.id.toLowerCase();
+            const cacheKey = account.id.toLowerCase();
 
-        // If needed, delete the cache for this account
-        if (options.noCache ?? DefaultOptions.noCache) {
-            this.tenantCache.delete(cacheKey);
-        }
-
-        // If needed, refill the cache
-        if (!this.tenantCache.has(cacheKey)) {
-            const tenants = await super.getTenantsForAccount(account, options);
-            this.tenantCache.set(cacheKey, tenants);
-            this.logForAccount(account, `Cached ${tenants.length} tenants for account`);
-        } else {
-            this.logForAccount(account, 'Using cached tenants for account');
-        }
-
-        let results: AzureTenant[] = this.tenantCache.get(cacheKey)!; // eslint-disable-line @typescript-eslint/no-non-null-assertion -- We just filled it
-
-        // If needed, filter according to configured filters
-        if (options.filter ?? DefaultOptions.filter) {
-            const tenantFilters = await this.getTenantFilters();
-            if (tenantFilters.length > 0) {
-                this.logForAccount(account, `Filtering tenants for account to ${tenantFilters.length} configured tenants`);
-                results = results.filter(tenant => tenantFilters.includes(tenant.tenantId.toLowerCase()));
+            // If needed, delete the cache for this account
+            if (options.noCache ?? DefaultOptions.noCache) {
+                this.tenantCache.delete(cacheKey);
             }
-        }
 
-        this.logForAccount(account, `Returning ${results.length} tenants for account`);
-
-        // Finally, sort
-        return results.sort((a, b) => {
-            if (a.displayName && b.displayName) {
-                return a.displayName.localeCompare(b.displayName);
+            // If needed, refill the cache
+            if (!this.tenantCache.has(cacheKey)) {
+                const tenants = await super.getTenantsForAccount(account, options);
+                this.tenantCache.set(cacheKey, tenants);
+                this.logForAccount(account, `Cached ${tenants.length} tenants for account`);
+            } else {
+                this.logForAccount(account, 'Using cached tenants for account');
             }
-            return a.tenantId.localeCompare(b.tenantId);
-        });
+
+            let results: AzureTenant[] = this.tenantCache.get(cacheKey)!; // eslint-disable-line @typescript-eslint/no-non-null-assertion -- We just filled it
+
+            // If needed, filter according to configured filters
+            if (options.filter ?? DefaultOptions.filter) {
+                const tenantFilters = await this.getTenantFilters();
+                if (tenantFilters.length > 0) {
+                    this.logForAccount(account, `Filtering tenants for account to ${tenantFilters.length} configured tenants`);
+                    results = results.filter(tenant => tenantFilters.includes(tenant.tenantId.toLowerCase()));
+                }
+            }
+
+            this.logForAccount(account, `Returning ${results.length} tenants for account`);
+
+            // Finally, sort
+            return results.sort((a, b) => {
+                if (a.displayName && b.displayName) {
+                    return a.displayName.localeCompare(b.displayName);
+                }
+                return a.tenantId.localeCompare(b.tenantId);
+            });
         } finally {
             this.throwIfCancelled(options.token);
         }
@@ -167,43 +170,43 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
      */
     public override async getSubscriptionsForTenant(tenant: TenantIdAndAccount, options: GetSubscriptionsForTenantOptions = DefaultOptions): Promise<AzureSubscription[]> {
         try {
-        const cacheKey = `${tenant.account.id.toLowerCase()}/${tenant.tenantId.toLowerCase()}`;
+            const cacheKey = `${tenant.account.id.toLowerCase()}/${tenant.tenantId.toLowerCase()}`;
 
-        // If needed, delete the cache for this tenant
-        if (options.noCache ?? DefaultOptions.noCache) {
-            this.subscriptionCache.delete(cacheKey);
-        }
-
-        // If needed, refill the cache
-        if (!this.subscriptionCache.has(cacheKey)) {
-            const subscriptions = await super.getSubscriptionsForTenant(tenant, options);
-            this.subscriptionCache.set(cacheKey, subscriptions);
-            this.logForTenant(tenant, `Cached ${subscriptions.length} subscriptions for account+tenant`);
-        } else {
-            this.logForTenant(tenant, 'Using cached subscriptions for account+tenant');
-        }
-
-        let results: AzureSubscription[] = this.subscriptionCache.get(cacheKey)!; // eslint-disable-line @typescript-eslint/no-non-null-assertion -- We just filled it
-
-        // If needed, filter according to configured filters
-        if (options.filter ?? DefaultOptions.filter) {
-            const subscriptionFilters = await this.getSubscriptionFilters();
-            if (subscriptionFilters.length > 0) {
-                this.logForTenant(tenant, `Filtering subscriptions for account+tenant to ${subscriptionFilters.length} configured subscriptions`);
-                results = results.filter(sub => subscriptionFilters.includes(sub.subscriptionId.toLowerCase()));
+            // If needed, delete the cache for this tenant
+            if (options.noCache ?? DefaultOptions.noCache) {
+                this.subscriptionCache.delete(cacheKey);
             }
-        }
 
-        // If needed, dedupe according to options
-        if (options.dedupe ?? DefaultOptions.dedupe) {
-            this.logForTenant(tenant, 'Deduping subscriptions for account+tenant');
-            results = dedupeSubscriptions(results);
-        }
+            // If needed, refill the cache
+            if (!this.subscriptionCache.has(cacheKey)) {
+                const subscriptions = await super.getSubscriptionsForTenant(tenant, options);
+                this.subscriptionCache.set(cacheKey, subscriptions);
+                this.logForTenant(tenant, `Cached ${subscriptions.length} subscriptions for account+tenant`);
+            } else {
+                this.logForTenant(tenant, 'Using cached subscriptions for account+tenant');
+            }
 
-        this.logForTenant(tenant, `Returning ${results.length} subscriptions for account+tenant`);
+            let results: AzureSubscription[] = this.subscriptionCache.get(cacheKey)!; // eslint-disable-line @typescript-eslint/no-non-null-assertion -- We just filled it
 
-        // Finally, sort
-        return results.sort((a, b) => a.name.localeCompare(b.name));
+            // If needed, filter according to configured filters
+            if (options.filter ?? DefaultOptions.filter) {
+                const subscriptionFilters = await this.getSubscriptionFilters();
+                if (subscriptionFilters.length > 0) {
+                    this.logForTenant(tenant, `Filtering subscriptions for account+tenant to ${subscriptionFilters.length} configured subscriptions`);
+                    results = results.filter(sub => subscriptionFilters.includes(sub.subscriptionId.toLowerCase()));
+                }
+            }
+
+            // If needed, dedupe according to options
+            if (options.dedupe ?? DefaultOptions.dedupe) {
+                this.logForTenant(tenant, 'Deduping subscriptions for account+tenant');
+                results = dedupeSubscriptions(results);
+            }
+
+            this.logForTenant(tenant, `Returning ${results.length} subscriptions for account+tenant`);
+
+            // Finally, sort
+            return results.sort((a, b) => a.name.localeCompare(b.name));
         } finally {
             this.throwIfCancelled(options.token);
         }
