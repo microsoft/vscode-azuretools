@@ -127,15 +127,28 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
         const subscriptionListLimiter = new Limiter<void>(SubscriptionListConcurrency);
         const subscriptionListPromisesFlat: Promise<void>[] = [];
 
+        let tenantsProcessed = 0;
+        const maximumTenants = options.maximumTenants ?? DefaultOptions.maximumTenants;
+
         try {
             const accounts = await this.getAccounts(options);
 
             for (const account of accounts) {
                 tenantListPromises.push(tenantListLimiter.queue(async () => {
                     try {
+                        if (tenantsProcessed >= maximumTenants) {
+                            this.logForAccount(account, `Skipping account because maximum tenants of ${maximumTenants} has been reached`);
+                            return;
+                        }
+
                         const tenants = await this.getTenantsForAccount(account, options);
 
                         for (const tenant of tenants) {
+                            if (tenantsProcessed >= maximumTenants) {
+                                this.logForAccount(account, `Skipping remaining tenants because maximum tenants of ${maximumTenants} has been reached`);
+                                break;
+                            }
+                            tenantsProcessed++;
                             subscriptionListPromisesFlat.push(subscriptionListLimiter.queue(async () => {
                                 try {
                                     const subscriptions = await this.getSubscriptionsForTenant(tenant, options);
