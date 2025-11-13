@@ -33,7 +33,7 @@ export const DefaultSignInOptions = {
 
 /**
  * Options for getting items from the subscription provider
- * @note - As needed, remember to update the {@link getCoalescenceKey} function when modifying this type.
+ * @note As needed, remember to update the {@link getCoalescenceKey} function when modifying this type.
  */
 export type BaseOptions = {
     /**
@@ -95,7 +95,7 @@ export type GetAvailableSubscriptionsOptions = GetAccountsOptions & GetTenantsFo
 
 /**
  * The default options when getting availble subscriptions.
- * @note - This same value also is passed as the default to all the get* methods, since it
+ * @note This same value also is passed as the default to all the get* methods, since it
  * is a superset of all of the availble options.
  */
 export const DefaultOptions = {

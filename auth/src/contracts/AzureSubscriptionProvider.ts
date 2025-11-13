@@ -18,7 +18,8 @@ export interface AzureSubscriptionProvider {
     /**
      * Fires when the list of available subscriptions may have changed, and a refresh is suggested.
      * The callback will be given a {@link RefreshSuggestedEvent} with more information.
-     * @note This will be fired at most every 5 seconds, to avoid flooding.
+     * @note This will be fired at most every 5 seconds, to avoid flooding. It is also suppressed
+     * during operations this provider is performing itself, such as during sign-in.
      */
     onRefreshSuggested: vscode.Event<RefreshSuggestedEvent>;
 
@@ -33,11 +34,16 @@ export interface AzureSubscriptionProvider {
     signIn(tenant?: TenantIdAndAccount, options?: SignInOptions): Promise<boolean>;
 
     /**
-     * The easier API. Across all accounts and all tenants, returns the list of {@link AzureSubscription}s the user can access.
-     * No additional sign-in is performed; unauthenticated tenants will simply be skipped.
+     * The easier API. Across all accounts and all tenants*, returns the list of {@link AzureSubscription}s the user can access.
+     * No additional automatic sign-in is performed; unauthenticated accounts or tenants will simply be skipped.
+     *
      * If you aren't interested in managing multiple accounts or tenant sign ins, this is the only method you need to call.
+     *
      * The subscriptions will be deduplicated according to the strategy in {@link dedupeSubscriptions}. If you want a different
-     * strategy, you can use {@link getAccounts}, {@link getTenantsForAccount}, and {@link getSubscriptionsForTenant} instead.
+     * strategy, you can use request all and deduplicate according to your needs.
+     *
+     * *The number of tenants processed will be limited to `options.maximumTenants` (default 10),
+     * to avoid excessive requests.
      *
      * @param options (Optional) Additional options for getting the subscriptions.
      *
@@ -48,7 +54,8 @@ export interface AzureSubscriptionProvider {
     getAvailableSubscriptions(options?: GetAvailableSubscriptionsOptions): Promise<AzureSubscription[]>;
 
     /**
-     * Returns a list of all accounts.
+     * Returns a list of all accounts. It is up to the caller to get tenants and subscriptions if needed, and the caller
+     * is also responsible for limiting the amount of subsequent requests made.
      *
      * @param options (Optional) Additional options for getting the accounts.
      *
@@ -69,7 +76,8 @@ export interface AzureSubscriptionProvider {
     getUnauthenticatedTenantsForAccount(account: AzureAccount, options?: Omit<GetTenantsForAccountOptions, 'all'>): Promise<AzureTenant[]>;
 
     /**
-     * Returns a list of tenants for a given account.
+     * Returns a list of tenants for a given account. It is up to the caller to get subscriptions if needed, and the caller
+     * is also responsible for limiting the amount of subsequent requests made.
      *
      * @param account The account to get tenants for.
      * @param options (Optional) Additional options for getting the tenants.
@@ -80,7 +88,8 @@ export interface AzureSubscriptionProvider {
     getTenantsForAccount(account: AzureAccount, options?: GetTenantsForAccountOptions): Promise<AzureTenant[]>;
 
     /**
-     * Returns a list of {@link AzureSubscription}s for a given tenant and account.
+     * Returns a list of {@link AzureSubscription}s for a given tenant and account. The caller is responsible for
+     * limiting the amount of subsequent requests made.
      *
      * @example
      * ```typescript
