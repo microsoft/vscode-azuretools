@@ -10,7 +10,7 @@ import * as crypto from 'crypto';
 import type * as vscode from 'vscode';
 import type { AzureAccount } from '../contracts/AzureAccount';
 import type { AzureAuthentication } from '../contracts/AzureAuthentication';
-import type { GetOptions, SignInOptions, TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
+import type { TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
 import type { AzureTenant } from '../contracts/AzureTenant';
 import { isAuthenticationWwwAuthenticateRequest } from '../utils/isAuthenticationWwwAuthenticateRequest';
 import { NotSignedInError } from '../utils/NotSignedInError';
@@ -81,7 +81,7 @@ export class AzureDevOpsSubscriptionProvider extends AzureSubscriptionProviderBa
     /**
      * For {@link AzureSubscriptionProviderBase}, this returns a single account with a fixed ID and label
      */
-    public override async getAccounts(_options?: GetOptions): Promise<AzureAccount[]> {
+    public override async getAccounts(): Promise<AzureAccount[]> {
         return [
             {
                 id: 'test-account-id',
@@ -93,7 +93,7 @@ export class AzureDevOpsSubscriptionProvider extends AzureSubscriptionProviderBa
     /**
      * For {@link AzureSubscriptionProviderBase}, this returns an empty array
      */
-    public override async getUnauthenticatedTenantsForAccount(_account: AzureAccount, _options?: GetOptions): Promise<AzureTenant[]> {
+    public override async getUnauthenticatedTenantsForAccount(): Promise<AzureTenant[]> {
         // For DevOps federated service connection, there is only one tenant associated with the service principal, and we will be authenticated
         return [];
     }
@@ -101,7 +101,7 @@ export class AzureDevOpsSubscriptionProvider extends AzureSubscriptionProviderBa
     /**
      * For {@link AzureSubscriptionProviderBase}, this returns a single tenant associated with the service principal
      */
-    public override async getTenantsForAccount(account: AzureAccount, _options?: GetOptions): Promise<AzureTenant[]> {
+    public override async getTenantsForAccount(account: AzureAccount): Promise<AzureTenant[]> {
         return [{
             tenantId: this._TENANT_ID,
             account: account,
@@ -111,7 +111,7 @@ export class AzureDevOpsSubscriptionProvider extends AzureSubscriptionProviderBa
     /**
      * @inheritdoc
      */
-    public override async signIn(_tenant?: TenantIdAndAccount, _options?: SignInOptions): Promise<boolean> {
+    public override async signIn(): Promise<boolean> {
         this._tokenCredential ??= await getTokenCredential(this._SERVICE_CONNECTION_ID, this._TENANT_ID, this._CLIENT_ID);
         return !!this._tokenCredential;
     }

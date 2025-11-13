@@ -9,7 +9,8 @@ import * as vscode from 'vscode';
 import type { AzureAccount } from '../contracts/AzureAccount';
 import type { AzureAuthentication } from '../contracts/AzureAuthentication';
 import type { AzureSubscription } from '../contracts/AzureSubscription';
-import { DefaultGetSubscriptionsOptions, DefaultSignInOptions, type AzureSubscriptionProvider, type GetOptions, type GetSubscriptionsOptions, type RefreshSuggestedEvent, type SignInOptions, type TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
+import type { AzureSubscriptionProvider, RefreshSuggestedEvent, TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
+import { DefaultOptions, DefaultSignInOptions, type GetAccountsOptions, type GetAvailableSubscriptionsOptions, type GetSubscriptionsForTenantOptions, type GetTenantsForAccountOptions, type SignInOptions } from '../contracts/AzureSubscriptionProviderRequestOptions';
 import type { AzureTenant } from '../contracts/AzureTenant';
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from '../utils/configuredAzureEnv';
 import { dedupeSubscriptions } from '../utils/dedupeSubscriptions';
@@ -85,7 +86,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
      * @inheritdoc
      */
     public async signIn(tenant?: Partial<TenantIdAndAccount>, options: SignInOptions = DefaultSignInOptions): Promise<boolean> {
-        const prompt = options.promptIfNeeded ?? true;
+        const prompt = options.promptIfNeeded ?? DefaultSignInOptions.promptIfNeeded;
 
         if (prompt) {
             // If interactive, suppress without timeout until sign in is done (it can take a while when done interactively)
@@ -100,7 +101,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
             tenant?.tenantId,
             {
                 account: tenant?.account,
-                clearSessionPreference: !!options.clearSessionPreference,
+                clearSessionPreference: options.clearSessionPreference ?? DefaultSignInOptions.clearSessionPreference,
                 createIfNone: prompt,
                 silent: !prompt,
             }
@@ -117,7 +118,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
     /**
      * @inheritdoc
      */
-    public async getAvailableSubscriptions(options: GetOptions = DefaultGetSubscriptionsOptions): Promise<AzureSubscription[]> {
+    public async getAvailableSubscriptions(options: GetAvailableSubscriptionsOptions): Promise<AzureSubscription[]> {
         const availableSubscriptions: AzureSubscription[] = [];
 
         const tenantListLimiter = new Limiter<void>(TenantListConcurrency);
@@ -170,7 +171,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
     /**
      * @inheritdoc
      */
-    public async getAccounts(options: GetOptions): Promise<AzureAccount[]> {
+    public async getAccounts(options: GetAccountsOptions): Promise<AzureAccount[]> {
         const startTime = Date.now();
         try {
             this.log('Fetching accounts...');
@@ -193,7 +194,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
     /**
      * @inheritdoc
      */
-    public async getUnauthenticatedTenantsForAccount(account: AzureAccount, options?: Omit<GetOptions, 'all'>): Promise<AzureTenant[]> {
+    public async getUnauthenticatedTenantsForAccount(account: AzureAccount, options?: Omit<GetTenantsForAccountOptions, 'all'>): Promise<AzureTenant[]> {
         const startTime = Date.now();
 
         const tenantListLimiter = new Limiter<void>(TenantListConcurrency);
@@ -235,7 +236,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
     /**
      * @inheritdoc
      */
-    public async getTenantsForAccount(account: AzureAccount, options: GetOptions): Promise<AzureTenant[]> {
+    public async getTenantsForAccount(account: AzureAccount, options: GetTenantsForAccountOptions): Promise<AzureTenant[]> {
         const startTime = Date.now();
         try {
             this.logForAccount(account, 'Fetching tenants for account...');
@@ -262,7 +263,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
     /**
      * @inheritdoc
      */
-    public async getSubscriptionsForTenant(tenant: TenantIdAndAccount, options: GetSubscriptionsOptions): Promise<AzureSubscription[]> {
+    public async getSubscriptionsForTenant(tenant: TenantIdAndAccount, options: GetSubscriptionsForTenantOptions): Promise<AzureSubscription[]> {
         const startTime = Date.now();
         try {
             this.logForTenant(tenant, 'Fetching subscriptions for account+tenant...');
@@ -294,6 +295,12 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
         }
     }
 
+    /**
+     * Gets a {@link SubscriptionClient} plus extras for the given account+tenant.
+     * @param tenant (Optional) The account+tenant to get a subscription client for. If not specified, the default account and home tenant
+     * will be used.
+     * @returns A {@link SubscriptionClient}, {@link TokenCredential}, and {@link AzureAuthentication} for the given account+tenant.
+     */
     protected async getSubscriptionClient(tenant: Partial<TenantIdAndAccount>): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
         const credential: TokenCredential = {
             getToken: async (scopes: string | string[], options?: GetTokenOptions) => {

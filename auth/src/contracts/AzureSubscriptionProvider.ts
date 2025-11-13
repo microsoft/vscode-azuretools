@@ -8,6 +8,7 @@ import type { NotSignedInError } from '../utils/NotSignedInError'; // eslint-dis
 import type { dedupeSubscriptions } from '../utils/dedupeSubscriptions'; // eslint-disable-line @typescript-eslint/no-unused-vars -- It is used in the doc comments
 import type { AzureAccount } from './AzureAccount';
 import type { AzureSubscription } from './AzureSubscription';
+import type { GetAccountsOptions, GetAvailableSubscriptionsOptions, GetSubscriptionsForTenantOptions, GetTenantsForAccountOptions, SignInOptions } from './AzureSubscriptionProviderRequestOptions';
 import type { AzureTenant } from './AzureTenant';
 
 /**
@@ -44,7 +45,7 @@ export interface AzureSubscriptionProvider {
      * at least one account is signed in, even if no subscriptions are found.
      * @throws A {@link vscode.CancellationError} if the operation is cancelled via the provided cancellation token.
      */
-    getAvailableSubscriptions(options?: GetOptions): Promise<AzureSubscription[]>;
+    getAvailableSubscriptions(options?: GetAvailableSubscriptionsOptions): Promise<AzureSubscription[]>;
 
     /**
      * Returns a list of all accounts.
@@ -54,7 +55,7 @@ export interface AzureSubscriptionProvider {
      * @throws A {@link NotSignedInError} if the user is not signed in to any accounts.
      * @throws A {@link vscode.CancellationError} if the operation is cancelled via the provided cancellation token.
      */
-    getAccounts(options?: GetOptions): Promise<AzureAccount[]>;
+    getAccounts(options?: GetAccountsOptions): Promise<AzureAccount[]>;
 
     /**
      * Returns a list of all unauthenticated tenants for a given account.
@@ -65,7 +66,7 @@ export interface AzureSubscriptionProvider {
      * @throws A {@link NotSignedInError} if the user is not signed in to the specified account.
      * @throws A {@link vscode.CancellationError} if the operation is cancelled via the provided cancellation token.
      */
-    getUnauthenticatedTenantsForAccount(account: AzureAccount, options?: Omit<GetOptions, 'all'>): Promise<AzureTenant[]>;
+    getUnauthenticatedTenantsForAccount(account: AzureAccount, options?: Omit<GetTenantsForAccountOptions, 'all'>): Promise<AzureTenant[]>;
 
     /**
      * Returns a list of tenants for a given account.
@@ -76,7 +77,7 @@ export interface AzureSubscriptionProvider {
      * @throws A {@link NotSignedInError} if the user is not signed in to the specified account.
      * @throws A {@link vscode.CancellationError} if the operation is cancelled via the provided cancellation token.
      */
-    getTenantsForAccount(account: AzureAccount, options?: GetOptions): Promise<AzureTenant[]>;
+    getTenantsForAccount(account: AzureAccount, options?: GetTenantsForAccountOptions): Promise<AzureTenant[]>;
 
     /**
      * Returns a list of {@link AzureSubscription}s for a given tenant and account.
@@ -99,7 +100,7 @@ export interface AzureSubscriptionProvider {
      * @throws A {@link NotSignedInError} if the user is not signed in to the specified account *and* tenant.
      * @throws A {@link vscode.CancellationError} if the operation is cancelled via the provided cancellation token.
      */
-    getSubscriptionsForTenant(tenant: TenantIdAndAccount, options?: GetSubscriptionsOptions): Promise<AzureSubscription[]>;
+    getSubscriptionsForTenant(tenant: TenantIdAndAccount, options?: GetSubscriptionsForTenantOptions): Promise<AzureSubscription[]>;
 }
 
 /**
@@ -116,108 +117,3 @@ export interface RefreshSuggestedEvent {
      */
     reason: 'sessionChange' | 'subscriptionFilterChange';
 }
-
-/**
- * Options for signing in to a tenant.
- */
-export type SignInOptions = {
-    /**
-     * (Optional, default false) Whether to force the account picker to reappear.
-     * Equivalent to setting {@link vscode.AuthenticationGetSessionOptions.clearSessionPreference} to true.
-     */
-    clearSessionPreference?: boolean;
-
-    /**
-     * (Optional, default true) If true, the user will be prompted to sign in if needed.
-     * If false, the {@link AzureSubscriptionProvider.signIn} method will return false if
-     * interactive sign-in is required.
-     */
-    promptIfNeeded?: boolean;
-};
-
-/**
- * Default options for signing in to a tenant
- */
-export const DefaultSignInOptions: SignInOptions = {
-    clearSessionPreference: false,
-    promptIfNeeded: true,
-};
-
-/**
- * Options for getting items from the {@link AzureSubscriptionProvider}. As needed, remember
- * to update the {@link getOptionsCoalescenceKey} function when modifying this type.
- */
-export type GetOptions = {
-    /**
-     * (Optional, default false) Whether to get all items, or only those explicitly selected by the user.
-     */
-    all?: boolean;
-
-    /**
-     * (Optional, default false) Whether to bypass any cached data and refresh from the source.
-     *
-     * @note In the reference implementation, `VSCodeAzureSubscriptionProvider`, it is NOT necessary to use
-     * `noCache: true` in the following cases:
-     *     - Subscription filters have changed (caching is done before filtering)
-     *     - A new sign-in has occurred (a partial cache refill will occur automatically)
-     *
-     * It is only necessary to use `noCache: true` if you expect that the subscriptions/tenants that an
-     * account has access to have changed--e.g. a subscription is created or removed, or RBAC changes.
-     */
-    noCache?: boolean;
-
-    /**
-     * (Optional) A cancellation token to cancel the operation.
-     */
-    token?: vscode.CancellationToken;
-};
-
-/**
- * Default options for getting items from the {@link AzureSubscriptionProvider}.
- */
-export const DefaultGetOptions: GetOptions = {
-    all: false,
-    noCache: false,
-};
-
-/**
- * Gets a promise coalescence key for the given {@link GetOptions}.
- * @param options The options to get the key for
- * @returns A string key for coalescing promises, or undefined if coalescing is not applicable
- * @internal
- * @deprecated This should not be used by external code. This is placed here so it can be adjacent
- * to the {@link GetOptions} type, but should be used only by internal implementations of
- * {@link AzureSubscriptionProvider}.
- */
-export function getOptionsCoalescenceKey(options: GetOptions): string | undefined {
-    // Never coalesce if there is a cancellation token
-    if (options.token) {
-        return undefined;
-    }
-
-    return Object
-        .keys(options)
-        .filter(k => k !== 'token') // ignore token
-        .sort()
-        .map((k: keyof GetOptions) => `${k}:${options[k] ?? DefaultGetSubscriptionsOptions[k]}`) // use default value if undefined--use of DefaultGetSubscriptionsOptions is intentional since this supports both GetOptions and GetSubscriptionsOptions
-        .join(',');
-}
-
-/**
- * Options for getting subscriptions from the {@link AzureSubscriptionProvider}.
- */
-export type GetSubscriptionsOptions = GetOptions & {
-    /**
-     * (Optional, default true) Whether to deduplicate the subscriptions returned, according to the
-     * strategy in {@link dedupeSubscriptions}.
-     */
-    dedupe?: boolean;
-};
-
-/**
- * Default options for getting subscriptions from the {@link AzureSubscriptionProvider}.
- */
-export const DefaultGetSubscriptionsOptions: GetSubscriptionsOptions = {
-    ...DefaultGetOptions,
-    dedupe: true,
-};
