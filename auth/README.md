@@ -4,79 +4,9 @@ This package provides a simple way to authenticate to Azure and receive Azure su
 
 ## Azure Subscription Provider
 
-The `AzureSubscriptionProvider` interface describes the functions of this package.
+The [`AzureSubscriptionProvider`](./src/contracts/AzureSubscriptionProvider.ts) interface describes the functions of this package.
 
-```typescript
-/**
- * An interface for obtaining Azure subscription information
- */
-export interface AzureSubscriptionProvider {
-    /**
-     * Gets a list of tenants available to the user.
-     * Use {@link isSignedIn} to check if the user is signed in to a particular tenant.
-     *
-     * @returns A list of tenants.
-     */
-    getTenants(): Promise<TenantIdDescription[]>;
-
-    /**
-     * Gets a list of Azure subscriptions available to the user.
-     *
-     * @param filter - Whether to filter the list returned. When:
-     * - `true`: according to the list returned by `getTenantFilters()` and `getSubscriptionFilters()`.
-     * - `false`: return all subscriptions.
-     * - `GetSubscriptionsFilter`: according to the values in the filter.
-     *
-     * Optional, default true.
-     *
-     * @returns A list of Azure subscriptions.
-     *
-     * @throws A {@link NotSignedInError} If the user is not signed in to Azure.
-     * Use {@link isSignedIn} and/or {@link signIn} before this method to ensure
-     * the user is signed in.
-     */
-    getSubscriptions(filter: boolean): Promise<AzureSubscription[]>;
-
-    /**
-     * Checks to see if a user is signed in.
-     *
-     * @param tenantId (Optional) Provide to check if a user is signed in to a specific tenant.
-     *
-     * @returns True if the user is signed in, false otherwise.
-     */
-    isSignedIn(tenantId?: string): Promise<boolean>;
-
-    /**
-     * Asks the user to sign in or pick an account to use.
-     *
-     * @param tenantId (Optional) Provide to sign in to a specific tenant.
-     *
-     * @returns True if the user is signed in, false otherwise.
-     */
-    signIn(tenantId?: string): Promise<boolean>;
-
-    /**
-     * An event that is fired when the user signs in. Debounced to fire at most once every 5 seconds.
-     */
-    onDidSignIn: vscode.Event<void>;
-
-    /**
-     * Signs the user out
-     *
-     * @deprecated Not currently supported by VS Code auth providers
-     *
-     * @throws Throws an {@link Error} every time
-     */
-    signOut(): Promise<void>;
-
-    /**
-     * An event that is fired when the user signs out. Debounced to fire at most once every 5 seconds.
-     */
-    onDidSignOut: vscode.Event<void>;
-}
-```
-
-If the caller calls `getSubscriptions()` when the user is not signed in, a `NotSignedInError` will be thrown. You can check to see if a caught error is an instance of this error with `isNotSignedInError()`.
+If the caller calls `getAvailableSubscriptions()` or `getAccounts()` when the user is not signed in, a `NotSignedInError` will be thrown. You can check to see if a caught error is an instance of this error with `isNotSignedInError()`.
 
 ## Azure Cloud Configuration
 Two methods are available for controlling the VSCode settings that determine what cloud is connected to when enumerating subscriptions.
@@ -104,7 +34,7 @@ export declare function setConfiguredAzureEnv(cloud: string | azureEnv.Environme
 
 ## Azure DevOps Subscription Provider
 
-The auth package also exports `AzureDevOpsSubscriptionProvider`, a class which implements the `AzureSubscriptionProvider` interface, which authenticates via
+The auth package also exports [`AzureDevOpsSubscriptionProvider`](./src/providers/AzureDevOpsSubscriptionProvider.ts), a class which implements the `AzureSubscriptionProvider` interface, which authenticates via
 a federated Azure DevOps service connection, using [workflow identity federation](https://learn.microsoft.com/entra/workload-id/workload-identity-federation).
 
 This provider only works when running in the context of an Azure DevOps pipeline. It can be used to run end-to-end tests that require authentication to Azure,
@@ -135,9 +65,9 @@ if (!signedIn) {
     throw new Error("Couldn't sign in");
 }
 
-const subscriptions = await subscriptionProvider.getSubscriptions();
+const subscriptions = await subscriptionProvider.getAvailableSubscriptions();
 
-// logic on the subscriptions object
+// logic on the subscriptions objects
 ```
 
 For more detailed steps on how to setup your Azure environment to use workflow identity federation and use this `AzureDevOpsSubscriptionProvider` object effectively,
