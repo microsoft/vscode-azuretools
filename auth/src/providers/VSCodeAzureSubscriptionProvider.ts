@@ -258,14 +258,14 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
      * Clears all caches related to the given signed-out account.
      * @param accountId The ID of the signed-out account
      */
-    private onDidSignOutAccount(accountId: string): void {
-        const lowerAccountId = accountId.toLowerCase();
-        this.accountCache.delete(lowerAccountId);
-        this.tenantCache.delete(lowerAccountId);
-        this.subscriptionCache.forEach((_, key) => {
-            if (key.startsWith(`${lowerAccountId}/`)) {
-                this.subscriptionCache.delete(key);
-            }
-        });
-    }
+    // private onDidSignOutAccount(accountId: string): void {
+    //     const lowerAccountId = accountId.toLowerCase();
+    //     this.accountCache.delete(lowerAccountId);
+    //     this.tenantCache.delete(lowerAccountId);
+    //     this.subscriptionCache.forEach((_, key) => {
+    //         if (key.startsWith(`${lowerAccountId}/`)) {
+    //             this.subscriptionCache.delete(key);
+    //         }
+    //     });
+    // }
 }
