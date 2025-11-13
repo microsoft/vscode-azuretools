@@ -94,9 +94,9 @@ export type GetAvailableSubscriptionsOptions = GetAccountsOptions & GetTenantsFo
 };
 
 /**
- * The default options when getting availble subscriptions.
+ * The default options when getting available subscriptions.
  * @note This same value also is passed as the default to all the get* methods, since it
- * is a superset of all of the availble options.
+ * is a superset of all of the available options.
  */
 export const DefaultOptions = {
     filter: true,
