@@ -327,7 +327,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                     expiresOnTimestamp: tryGetTokenExpiration(session),
                 };
             }
-        }
+        };
 
         const configuredAzureEnv = getConfiguredAzureEnv();
         const endpoint = configuredAzureEnv.resourceManagerEndpointUrl;
