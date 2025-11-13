@@ -55,6 +55,7 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
      * @inheritdoc
      */
     public async getAvailableSubscriptions(options: GetAvailableSubscriptionsOptions = DefaultOptions): Promise<AzureSubscription[]> {
+        try {
         const key = getCoalescenceKey(options);
         if (key && this.availableSubscriptionsPromises.has(key)) {
             return this.availableSubscriptionsPromises.get(key)!; // eslint-disable-line @typescript-eslint/no-non-null-assertion -- We just checked it has the key
@@ -72,6 +73,9 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
                     this.availableSubscriptionsPromises.delete(key);
                 }
             }
+            }
+        } finally {
+            this.throwIfCancelled(options.token);
         }
     }
 
@@ -79,6 +83,7 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
      * @inheritdoc
      */
     public override async getAccounts(options: GetAccountsOptions = DefaultOptions): Promise<AzureAccount[]> {
+        try {
         if (options.noCache ?? DefaultOptions.noCache) {
             this.accountCache.clear();
         }
@@ -106,12 +111,16 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
         this.log(`Returning ${results.length} accounts.`);
 
         return results.sort((a, b) => a.label.localeCompare(b.label));
+        } finally {
+            this.throwIfCancelled(options.token);
+        }
     }
 
     /**
      * @inheritdoc
      */
     public override async getTenantsForAccount(account: AzureAccount, options: GetTenantsForAccountOptions = DefaultOptions): Promise<AzureTenant[]> {
+        try {
         const cacheKey = account.id.toLowerCase();
 
         // If needed, delete the cache for this account
@@ -148,12 +157,16 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
             }
             return a.tenantId.localeCompare(b.tenantId);
         });
+        } finally {
+            this.throwIfCancelled(options.token);
+        }
     }
 
     /**
      * @inheritdoc
      */
     public override async getSubscriptionsForTenant(tenant: TenantIdAndAccount, options: GetSubscriptionsForTenantOptions = DefaultOptions): Promise<AzureSubscription[]> {
+        try {
         const cacheKey = `${tenant.account.id.toLowerCase()}/${tenant.tenantId.toLowerCase()}`;
 
         // If needed, delete the cache for this tenant
@@ -191,6 +204,9 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
 
         // Finally, sort
         return results.sort((a, b) => a.name.localeCompare(b.name));
+        } finally {
+            this.throwIfCancelled(options.token);
+        }
     }
 
     /**

@@ -118,22 +118,23 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
     /**
      * @inheritdoc
      */
-    public async getAvailableSubscriptions(options: GetAvailableSubscriptionsOptions): Promise<AzureSubscription[]> {
-        const availableSubscriptions: AzureSubscription[] = [];
-
-        const tenantListLimiter = new Limiter<void>(TenantListConcurrency);
-        const tenantListPromises: Promise<void>[] = [];
-
-        const subscriptionListLimiter = new Limiter<void>(SubscriptionListConcurrency);
-        const subscriptionListPromisesFlat: Promise<void>[] = [];
-
-        let tenantsProcessed = 0;
-        const maximumTenants = options.maximumTenants ?? DefaultOptions.maximumTenants;
-
+    public async getAvailableSubscriptions(options: GetAvailableSubscriptionsOptions = DefaultOptions): Promise<AzureSubscription[]> {
         try {
+            const availableSubscriptions: AzureSubscription[] = [];
+
+            const tenantListLimiter = new Limiter<void>(TenantListConcurrency);
+            const tenantListPromises: Promise<void>[] = [];
+
+            const subscriptionListLimiter = new Limiter<void>(SubscriptionListConcurrency);
+            const subscriptionListPromisesFlat: Promise<void>[] = [];
+
+            let tenantsProcessed = 0;
+            const maximumTenants = options.maximumTenants ?? DefaultOptions.maximumTenants;
+
             const accounts = await this.getAccounts(options);
 
             for (const account of accounts) {
+                this.throwIfCancelled(options.token);
                 tenantListPromises.push(tenantListLimiter.queue(async () => {
                     try {
                         if (tenantsProcessed >= maximumTenants) {
@@ -144,11 +145,14 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                         const tenants = await this.getTenantsForAccount(account, options);
 
                         for (const tenant of tenants) {
+                            this.throwIfCancelled(options.token);
+
                             if (tenantsProcessed >= maximumTenants) {
                                 this.logForAccount(account, `Skipping remaining tenants because maximum tenants of ${maximumTenants} has been reached`);
                                 break;
                             }
                             tenantsProcessed++;
+
                             subscriptionListPromisesFlat.push(subscriptionListLimiter.queue(async () => {
                                 try {
                                     const subscriptions = await this.getSubscriptionsForTenant(tenant, options);
@@ -173,22 +177,25 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
 
             await Promise.all(tenantListPromises);
             await Promise.all(subscriptionListPromisesFlat);
+
+            return dedupeSubscriptions(availableSubscriptions);
         } catch (err) {
             // Intentionally not eating NotSignedInError here, if it is thrown by getAccounts()
             this.remapLogRethrow(err, options.token);
+        } finally {
+            this.throwIfCancelled(options.token);
         }
-
-        return dedupeSubscriptions(availableSubscriptions);
     }
 
     /**
      * @inheritdoc
      */
-    public async getAccounts(options: GetAccountsOptions): Promise<AzureAccount[]> {
-        const startTime = Date.now();
+    public async getAccounts(options: GetAccountsOptions = DefaultOptions): Promise<AzureAccount[]> {
         try {
+            const startTime = Date.now();
             this.log('Fetching accounts...');
             this.silenceRefreshEvents();
+
             const results = await vscode.authentication.getAccounts(getConfiguredAuthProviderId());
 
             if (results.length === 0) {
@@ -201,6 +208,8 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
         } catch (err) {
             // Cancellation is not actually supported by vscode.authentication.getAccounts, but just in case it is added in the future...
             this.remapLogRethrow(err, options.token);
+        } finally {
+            this.throwIfCancelled(options.token);
         }
     }
 
@@ -208,50 +217,51 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
      * @inheritdoc
      */
     public async getUnauthenticatedTenantsForAccount(account: AzureAccount, options: Omit<GetTenantsForAccountOptions, 'filter'> = DefaultOptions): Promise<AzureTenant[]> {
-        const startTime = Date.now();
+        try {
+            const startTime = Date.now();
 
-        const tenantListLimiter = new Limiter<void>(TenantListConcurrency);
-        const tenantListPromises: Promise<void>[] = [];
+            const tenantListLimiter = new Limiter<void>(TenantListConcurrency);
+            const tenantListPromises: Promise<void>[] = [];
 
-        const allTenants = await this.getTenantsForAccount(account, { ...options, filter: false });
+            const allTenants = await this.getTenantsForAccount(account, { ...options, filter: false });
 
-        const unauthenticatedTenants: AzureTenant[] = [];
-        for (const tenant of allTenants) {
-            tenantListPromises.push(tenantListLimiter.queue(async () => {
-                if (options?.token?.isCancellationRequested) {
-                    throw new vscode.CancellationError();
-                }
+            const unauthenticatedTenants: AzureTenant[] = [];
+            for (const tenant of allTenants) {
+                tenantListPromises.push(tenantListLimiter.queue(async () => {
+                    this.throwIfCancelled(options.token);
+                    this.silenceRefreshEvents();
+                    const session = await getSessionFromVSCode(
+                        undefined,
+                        tenant.tenantId,
+                        {
+                            account: account,
+                            createIfNone: false,
+                            silent: true,
+                        }
+                    );
 
-                this.silenceRefreshEvents();
-                const session = await getSessionFromVSCode(
-                    undefined,
-                    tenant.tenantId,
-                    {
-                        account: account,
-                        createIfNone: false,
-                        silent: true,
+                    if (!session) {
+                        unauthenticatedTenants.push(tenant);
                     }
-                );
+                }));
+            }
 
-                if (!session) {
-                    unauthenticatedTenants.push(tenant);
-                }
-            }));
+            await Promise.all(tenantListPromises);
+
+            this.logForAccount(account, `Found ${unauthenticatedTenants.length} unauthenticated tenants in ${Date.now() - startTime}ms`);
+
+            return unauthenticatedTenants;
+        } finally {
+            this.throwIfCancelled(options.token);
         }
-
-        await Promise.all(tenantListPromises);
-
-        this.logForAccount(account, `Found ${unauthenticatedTenants.length} unauthenticated tenants in ${Date.now() - startTime}ms`);
-
-        return unauthenticatedTenants;
     }
 
     /**
      * @inheritdoc
      */
-    public async getTenantsForAccount(account: AzureAccount, options: GetTenantsForAccountOptions): Promise<AzureTenant[]> {
-        const startTime = Date.now();
+    public async getTenantsForAccount(account: AzureAccount, options: GetTenantsForAccountOptions = DefaultOptions): Promise<AzureTenant[]> {
         try {
+            const startTime = Date.now();
             this.logForAccount(account, 'Fetching tenants for account...');
 
             const { client } = await this.getSubscriptionClient({ account: account, tenantId: undefined });
@@ -270,15 +280,17 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
             return allTenants;
         } catch (err) {
             this.remapLogRethrow(err, options.token);
+        } finally {
+            this.throwIfCancelled(options.token);
         }
     }
 
     /**
      * @inheritdoc
      */
-    public async getSubscriptionsForTenant(tenant: TenantIdAndAccount, options: GetSubscriptionsForTenantOptions): Promise<AzureSubscription[]> {
-        const startTime = Date.now();
+    public async getSubscriptionsForTenant(tenant: TenantIdAndAccount, options: GetSubscriptionsForTenantOptions = DefaultOptions): Promise<AzureSubscription[]> {
         try {
+            const startTime = Date.now();
             this.logForTenant(tenant, 'Fetching subscriptions for account+tenant...');
 
             const { client, credential, authentication } = await this.getSubscriptionClient(tenant);
@@ -305,6 +317,8 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
             return allSubs;
         } catch (err) {
             this.remapLogRethrow(err, options.token);
+        } finally {
+            this.throwIfCancelled(options.token);
         }
     }
 
@@ -390,10 +404,14 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
     }
 
     private remapLogRethrow(err: unknown, token: vscode.CancellationToken | undefined): never {
+        this.throwIfCancelled(token);
+        this.logger?.error(`[auth] Error occurred: ${err}`);
+        throw err;
+    }
+
+    protected throwIfCancelled(token: vscode.CancellationToken | undefined): void {
         if (token?.isCancellationRequested) {
             throw new vscode.CancellationError();
         }
-        this.logger?.error(`[auth] Error occurred: ${err}`);
-        throw err;
     }
 }
